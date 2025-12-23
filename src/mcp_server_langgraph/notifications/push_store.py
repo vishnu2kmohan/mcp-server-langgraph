@@ -199,16 +199,11 @@ class InMemoryPushSubscriptionStore(PushSubscriptionStore):
         Uses endpoint as the unique key, so saving with the same endpoint updates.
         """
         self._subscriptions[subscription.endpoint] = subscription
-        logger.debug(
-            f"Saved push subscription for user {subscription.user_id} "
-            f"to endpoint {subscription.endpoint[:50]}..."
-        )
+        logger.debug(f"Saved push subscription for user {subscription.user_id} to endpoint {subscription.endpoint[:50]}...")
 
     async def get_subscriptions_for_user(self, user_id: str) -> list[PushSubscription]:
         """Get all subscriptions for a user."""
-        return [
-            sub for sub in self._subscriptions.values() if sub.user_id == user_id
-        ]
+        return [sub for sub in self._subscriptions.values() if sub.user_id == user_id]
 
     async def get_all_subscriptions(self) -> list[PushSubscription]:
         """Get all subscriptions."""
@@ -231,11 +226,7 @@ class InMemoryPushSubscriptionStore(PushSubscriptionStore):
         Returns:
             Number of subscriptions deleted.
         """
-        expired_endpoints = [
-            endpoint
-            for endpoint, sub in self._subscriptions.items()
-            if sub.is_expired()
-        ]
+        expired_endpoints = [endpoint for endpoint, sub in self._subscriptions.items() if sub.is_expired()]
 
         for endpoint in expired_endpoints:
             del self._subscriptions[endpoint]
@@ -287,18 +278,10 @@ class PushSubscriptionRecord(Base):  # type: ignore[misc, valid-type]
     auth_key: Mapped[str] = mapped_column(Text, nullable=False)
     user_agent: Mapped[str | None] = mapped_column(Text, nullable=True)
     device_name: Mapped[str | None] = mapped_column(String(255), nullable=True)
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), nullable=False
-    )
-    updated_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), nullable=False
-    )
-    expires_at: Mapped[datetime | None] = mapped_column(
-        DateTime(timezone=True), nullable=True, index=True
-    )
-    last_used_at: Mapped[datetime | None] = mapped_column(
-        DateTime(timezone=True), nullable=True
-    )
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True, index=True)
+    last_used_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
 
 # =============================================================================
@@ -313,9 +296,7 @@ class PostgresPushSubscriptionStore(PushSubscriptionStore):
     Production-ready implementation using SQLAlchemy async sessions.
     """
 
-    def __init__(
-        self, session_maker: async_sessionmaker[AsyncSession]
-    ) -> None:
+    def __init__(self, session_maker: async_sessionmaker[AsyncSession]) -> None:
         """
         Initialize the PostgreSQL push subscription store.
 
@@ -324,9 +305,7 @@ class PostgresPushSubscriptionStore(PushSubscriptionStore):
         """
         self._session_maker = session_maker
 
-    def _record_to_subscription(
-        self, record: PushSubscriptionRecord
-    ) -> PushSubscription:
+    def _record_to_subscription(self, record: PushSubscriptionRecord) -> PushSubscription:
         """
         Convert a database record to a PushSubscription dataclass.
 
@@ -358,9 +337,7 @@ class PostgresPushSubscriptionStore(PushSubscriptionStore):
         """
         async with self._session_maker() as session:
             # Check if subscription exists
-            stmt = select(PushSubscriptionRecord).where(
-                PushSubscriptionRecord.endpoint == subscription.endpoint
-            )
+            stmt = select(PushSubscriptionRecord).where(PushSubscriptionRecord.endpoint == subscription.endpoint)
             result = await session.execute(stmt)
             existing = result.scalar_one_or_none()
 
@@ -392,18 +369,13 @@ class PostgresPushSubscriptionStore(PushSubscriptionStore):
 
             await session.commit()
             logger.debug(
-                f"Saved push subscription for user {subscription.user_id} "
-                f"to endpoint {subscription.endpoint[:50]}..."
+                f"Saved push subscription for user {subscription.user_id} to endpoint {subscription.endpoint[:50]}..."
             )
 
-    async def get_subscriptions_for_user(
-        self, user_id: str
-    ) -> list[PushSubscription]:
+    async def get_subscriptions_for_user(self, user_id: str) -> list[PushSubscription]:
         """Get all subscriptions for a user."""
         async with self._session_maker() as session:
-            stmt = select(PushSubscriptionRecord).where(
-                PushSubscriptionRecord.user_id == user_id
-            )
+            stmt = select(PushSubscriptionRecord).where(PushSubscriptionRecord.user_id == user_id)
             result = await session.execute(stmt)
             records = result.scalars().all()
             return [self._record_to_subscription(r) for r in records]
@@ -419,9 +391,7 @@ class PostgresPushSubscriptionStore(PushSubscriptionStore):
     async def get_by_endpoint(self, endpoint: str) -> PushSubscription | None:
         """Get a subscription by endpoint."""
         async with self._session_maker() as session:
-            stmt = select(PushSubscriptionRecord).where(
-                PushSubscriptionRecord.endpoint == endpoint
-            )
+            stmt = select(PushSubscriptionRecord).where(PushSubscriptionRecord.endpoint == endpoint)
             result = await session.execute(stmt)
             record = result.scalar_one_or_none()
             if record:
@@ -431,9 +401,7 @@ class PostgresPushSubscriptionStore(PushSubscriptionStore):
     async def delete_subscription(self, endpoint: str) -> None:
         """Delete a subscription by endpoint."""
         async with self._session_maker() as session:
-            stmt = delete(PushSubscriptionRecord).where(
-                PushSubscriptionRecord.endpoint == endpoint
-            )
+            stmt = delete(PushSubscriptionRecord).where(PushSubscriptionRecord.endpoint == endpoint)
             await session.execute(stmt)
             await session.commit()
             logger.debug(f"Deleted push subscription for endpoint {endpoint[:50]}...")
@@ -447,9 +415,7 @@ class PostgresPushSubscriptionStore(PushSubscriptionStore):
         """
         async with self._session_maker() as session:
             now = datetime.now(UTC)
-            stmt = delete(PushSubscriptionRecord).where(
-                PushSubscriptionRecord.expires_at < now
-            )
+            stmt = delete(PushSubscriptionRecord).where(PushSubscriptionRecord.expires_at < now)
             result = await session.execute(stmt)
             await session.commit()
 
@@ -461,9 +427,7 @@ class PostgresPushSubscriptionStore(PushSubscriptionStore):
     async def update_last_used(self, endpoint: str, timestamp: datetime) -> None:
         """Update the last_used_at timestamp for a subscription."""
         async with self._session_maker() as session:
-            stmt = select(PushSubscriptionRecord).where(
-                PushSubscriptionRecord.endpoint == endpoint
-            )
+            stmt = select(PushSubscriptionRecord).where(PushSubscriptionRecord.endpoint == endpoint)
             result = await session.execute(stmt)
             record = result.scalar_one_or_none()
 

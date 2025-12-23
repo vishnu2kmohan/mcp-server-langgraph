@@ -19,9 +19,7 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 
 from mcp_server_langgraph.alerts.broadcaster import (
-    ALLOWED_SEVERITIES,
     AlertBroadcaster,
-    AlertSubscriber,
 )
 from mcp_server_langgraph.observability.query.interfaces import (
     Alert,
@@ -149,9 +147,7 @@ class TestBroadcasterPushCriticalAlerts:
 
         await broadcaster.broadcast_alert(sample_critical_alert)
 
-        mock_push_sender.send_critical_alert.assert_called_once_with(
-            sample_critical_alert
-        )
+        mock_push_sender.send_critical_alert.assert_called_once_with(sample_critical_alert)
 
     @pytest.mark.asyncio
     async def test_push_not_sent_for_warning_alert(
@@ -243,11 +239,7 @@ class TestBroadcasterPushErrorHandling:
             await broadcaster.broadcast_alert(sample_critical_alert)
 
         # Check that success was logged
-        assert any(
-            "push notification" in record.message.lower()
-            and "5" in record.message
-            for record in caplog.records
-        )
+        assert any("push notification" in record.message.lower() and "5" in record.message for record in caplog.records)
 
     @pytest.mark.asyncio
     async def test_push_logs_failure_as_warning(
@@ -266,11 +258,7 @@ class TestBroadcasterPushErrorHandling:
             await broadcaster.broadcast_alert(sample_critical_alert)
 
         # Check that failure was logged as warning
-        assert any(
-            "failed" in record.message.lower()
-            and "push" in record.message.lower()
-            for record in caplog.records
-        )
+        assert any("failed" in record.message.lower() and "push" in record.message.lower() for record in caplog.records)
 
 
 # =============================================================================

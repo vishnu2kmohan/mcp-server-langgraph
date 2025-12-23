@@ -157,9 +157,7 @@ class EncryptedLookupTable:
         return base64.b64encode(encrypted_data).decode("utf-8")
 
     @classmethod
-    def from_encrypted(
-        cls, encrypted: str, key: bytes | None = None
-    ) -> EncryptedLookupTable:
+    def from_encrypted(cls, encrypted: str, key: bytes | None = None) -> EncryptedLookupTable:
         """Create a lookup table from an encrypted export.
 
         Args:

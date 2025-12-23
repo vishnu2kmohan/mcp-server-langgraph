@@ -109,9 +109,7 @@ class ToolDescription:
         text = self.get_description(level)
         return len(text) // self.CHARS_PER_TOKEN
 
-    def savings_percentage(
-        self, from_level: DescriptionLevel, to_level: DescriptionLevel
-    ) -> float:
+    def savings_percentage(self, from_level: DescriptionLevel, to_level: DescriptionLevel) -> float:
         """Calculate percentage savings between levels.
 
         Args:
@@ -166,9 +164,7 @@ class ToolDescriptionRegistry:
         """
         return self._descriptions.get(name)
 
-    def get_description(
-        self, name: str, level: DescriptionLevel = "short"
-    ) -> str | None:
+    def get_description(self, name: str, level: DescriptionLevel = "short") -> str | None:
         """Get description text for a tool at specified level.
 
         Args:

@@ -255,7 +255,8 @@ class TestSkillLoaderFile:
 
         # Create a temporary SKILL.md file
         skill_file = tmp_path / "SKILL.md"
-        skill_file.write_text(textwrap.dedent("""
+        skill_file.write_text(
+            textwrap.dedent("""
         ---
         name: file-skill
         description: Skill loaded from file
@@ -264,7 +265,8 @@ class TestSkillLoaderFile:
         # File Skill
 
         Instructions here.
-        """))
+        """)
+        )
 
         loader = SkillLoader()
         skill = loader.load_from_path(skill_file)
@@ -283,14 +285,16 @@ class TestSkillLoaderFile:
         skill_dir = tmp_path / "my-skill"
         skill_dir.mkdir()
         skill_file = skill_dir / "SKILL.md"
-        skill_file.write_text(textwrap.dedent("""
+        skill_file.write_text(
+            textwrap.dedent("""
         ---
         name: dir-skill
         description: Skill from directory
         ---
 
         # Directory Skill
-        """))
+        """)
+        )
 
         loader = SkillLoader()
         skill = loader.load_from_directory(skill_dir)
@@ -392,26 +396,30 @@ class TestSkillLoaderDiscovery:
         # Create skill 1
         skill1_dir = tmp_path / "skill-one"
         skill1_dir.mkdir()
-        (skill1_dir / "SKILL.md").write_text(textwrap.dedent("""
+        (skill1_dir / "SKILL.md").write_text(
+            textwrap.dedent("""
         ---
         name: skill-one
         description: First skill
         ---
 
         # Skill One
-        """))
+        """)
+        )
 
         # Create skill 2 (nested)
         skill2_dir = tmp_path / "category" / "skill-two"
         skill2_dir.mkdir(parents=True)
-        (skill2_dir / "SKILL.md").write_text(textwrap.dedent("""
+        (skill2_dir / "SKILL.md").write_text(
+            textwrap.dedent("""
         ---
         name: skill-two
         description: Second skill
         ---
 
         # Skill Two
-        """))
+        """)
+        )
 
         loader = SkillLoader()
         skills = loader.discover_skills(tmp_path)
@@ -431,25 +439,29 @@ class TestSkillLoaderDiscovery:
         # Create valid skill
         valid_dir = tmp_path / "valid-skill"
         valid_dir.mkdir()
-        (valid_dir / "SKILL.md").write_text(textwrap.dedent("""
+        (valid_dir / "SKILL.md").write_text(
+            textwrap.dedent("""
         ---
         name: valid-skill
         description: A valid skill
         ---
 
         # Valid Skill
-        """))
+        """)
+        )
 
         # Create invalid skill (missing required description)
         invalid_dir = tmp_path / "invalid-skill"
         invalid_dir.mkdir()
-        (invalid_dir / "SKILL.md").write_text(textwrap.dedent("""
+        (invalid_dir / "SKILL.md").write_text(
+            textwrap.dedent("""
         ---
         name: invalid-skill
         ---
 
         # Invalid Skill
-        """))
+        """)
+        )
 
         loader = SkillLoader()
         skills = loader.discover_skills(tmp_path)

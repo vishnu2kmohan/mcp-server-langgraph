@@ -108,9 +108,7 @@ class TestMCPWebSocketHandlerLifecycle:
         # Mock the roles attribute
         user.roles = ["admin", "viewer"]
 
-        with patch(
-            "mcp_server_langgraph.mcp.message_handler.AuthenticatedMCPHandler"
-        ) as mock_auth_handler:
+        with patch("mcp_server_langgraph.mcp.message_handler.AuthenticatedMCPHandler") as mock_auth_handler:
             await handler.on_connect(user)
 
         assert handler._user_id == "user-123"
@@ -125,9 +123,7 @@ class TestMCPWebSocketHandlerLifecycle:
         with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
             handler = MCPWebSocketHandler()
 
-        with patch(
-            "mcp_server_langgraph.mcp.message_handler.MCPMessageHandler"
-        ) as mock_handler:
+        with patch("mcp_server_langgraph.mcp.message_handler.MCPMessageHandler") as mock_handler:
             await handler.on_connect(None)
 
         mock_handler.assert_called_once()
@@ -257,9 +253,7 @@ class TestMCPWebSocketHandlerMessages:
 
         handler._mcp_handler = None
 
-        with patch(
-            "mcp_server_langgraph.mcp.message_handler.MCPMessageHandler"
-        ) as mock_handler_class:
+        with patch("mcp_server_langgraph.mcp.message_handler.MCPMessageHandler") as mock_handler_class:
             mock_instance = AsyncMock()
             mock_instance.handle.return_value = {"jsonrpc": "2.0", "id": 1, "result": {}}
             mock_handler_class.return_value = mock_instance

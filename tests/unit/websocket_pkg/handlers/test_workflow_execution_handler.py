@@ -151,9 +151,7 @@ class TestWorkflowExecutionHandlerMessages:
                 workflow_id="workflow-123",
             )
 
-        message = MessageEnvelope(
-            type="start", id="msg-1", payload={"input": {"key": "value"}}
-        )
+        message = MessageEnvelope(type="start", id="msg-1", payload={"input": {"key": "value"}})
         response = await handler.handle_message(message)
 
         assert response is not None
@@ -161,9 +159,7 @@ class TestWorkflowExecutionHandlerMessages:
         assert response.id == "msg-1"
         assert response.payload["execution_id"] == "exec-123"
         assert handler._current_execution_id == "exec-123"
-        mock_service.start_execution.assert_called_once_with(
-            "workflow-123", {"key": "value"}
-        )
+        mock_service.start_execution.assert_called_once_with("workflow-123", {"key": "value"})
 
     @pytest.mark.asyncio
     async def test_handle_start_no_input(self) -> None:

@@ -728,13 +728,15 @@ def hitl_request_span(
             add_hitl_decision_to_span(span, "approved", 30.5)
     """
     with hitl_tracer.start_as_current_span("hitl.request") as span:
-        span.set_attributes({
-            "hitl.request_type": request_type,
-            "hitl.request_id": request_id,
-            "hitl.agent_name": agent_name,
-            "hitl.confidence": confidence,
-            "hitl.trigger_reason": trigger_reason,
-        })
+        span.set_attributes(
+            {
+                "hitl.request_type": request_type,
+                "hitl.request_id": request_id,
+                "hitl.agent_name": agent_name,
+                "hitl.confidence": confidence,
+                "hitl.trigger_reason": trigger_reason,
+            }
+        )
         yield span
 
 
@@ -752,11 +754,13 @@ def add_hitl_decision_to_span(
         latency_seconds: Time from request to decision in seconds
         reason: Optional reason for the decision
     """
-    span.set_attributes({
-        "hitl.decision": decision,
-        "hitl.latency_seconds": latency_seconds,
-        "hitl.reason": reason or "",
-    })
+    span.set_attributes(
+        {
+            "hitl.decision": decision,
+            "hitl.latency_seconds": latency_seconds,
+            "hitl.reason": reason or "",
+        }
+    )
 
     if decision == "rejected":
         span.set_status(Status(StatusCode.OK, "User rejected"))
@@ -806,13 +810,15 @@ def create_hitl_span(
             span.end()
     """
     span = hitl_tracer.start_span("hitl.request")
-    span.set_attributes({
-        "hitl.request_type": request_type,
-        "hitl.request_id": request_id,
-        "hitl.agent_name": agent_name,
-        "hitl.confidence": confidence,
-        "hitl.trigger_reason": trigger_reason,
-    })
+    span.set_attributes(
+        {
+            "hitl.request_type": request_type,
+            "hitl.request_id": request_id,
+            "hitl.agent_name": agent_name,
+            "hitl.confidence": confidence,
+            "hitl.trigger_reason": trigger_reason,
+        }
+    )
     return span
 
 

@@ -14,10 +14,8 @@ from __future__ import annotations
 import asyncio
 import gc
 from typing import TYPE_CHECKING
-from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-from langchain_core.messages import AIMessage, HumanMessage
 
 if TYPE_CHECKING:
     pass
@@ -167,8 +165,6 @@ class TestAgentNodeInterruptIntegration:
     async def test_route_input_checks_interrupt(self) -> None:
         """route_input node should check for interrupt."""
         from mcp_server_langgraph.core.interrupt import (
-            InterruptController,
-            InterruptedOperationError,
             get_interrupt_controller,
             reset_interrupt_controller,
         )

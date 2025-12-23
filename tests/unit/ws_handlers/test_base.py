@@ -9,20 +9,15 @@ from __future__ import annotations
 
 import asyncio
 import gc
-from datetime import UTC, datetime
-from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from starlette.websockets import WebSocketDisconnect
 
 from mcp_server_langgraph.websocket import (
-    AuthenticationError,
-    AuthorizationError,
     AuthUser,
     ConnectionState,
     MessageEnvelope,
-    MessageType,
     WebSocketConfig,
 )
 
@@ -41,9 +36,7 @@ class TestWebSocketBaseLifecycle:
         gc.collect()
 
     @pytest.mark.asyncio
-    async def test_connection_starts_in_connecting_state(
-        self, mock_websocket: MagicMock
-    ) -> None:
+    async def test_connection_starts_in_connecting_state(self, mock_websocket: MagicMock) -> None:
         """
         GIVEN a new WebSocket connection
         WHEN the WebSocketBase is instantiated
@@ -52,18 +45,14 @@ class TestWebSocketBaseLifecycle:
         from mcp_server_langgraph.websocket.base import WebSocketBase
 
         class TestWebSocket(WebSocketBase):
-            async def handle_message(
-                self, message: MessageEnvelope
-            ) -> MessageEnvelope | None:
+            async def handle_message(self, message: MessageEnvelope) -> MessageEnvelope | None:
                 return None
 
         ws = TestWebSocket(config=WebSocketConfig(endpoint_name="test"))
         assert ws.state == ConnectionState.CONNECTING
 
     @pytest.mark.asyncio
-    async def test_run_accepts_websocket_connection(
-        self, mock_websocket: MagicMock
-    ) -> None:
+    async def test_run_accepts_websocket_connection(self, mock_websocket: MagicMock) -> None:
         """
         GIVEN a WebSocket connection
         WHEN run() is called
@@ -72,15 +61,11 @@ class TestWebSocketBaseLifecycle:
         from mcp_server_langgraph.websocket.base import WebSocketBase
 
         class TestWebSocket(WebSocketBase):
-            async def handle_message(
-                self, message: MessageEnvelope
-            ) -> MessageEnvelope | None:
+            async def handle_message(self, message: MessageEnvelope) -> MessageEnvelope | None:
                 return None
 
         # Use WebSocketDisconnect which is handled gracefully
-        mock_websocket.receive_json = AsyncMock(
-            side_effect=WebSocketDisconnect(code=1000)
-        )
+        mock_websocket.receive_json = AsyncMock(side_effect=WebSocketDisconnect(code=1000))
 
         ws = TestWebSocket(config=WebSocketConfig(require_auth=False, endpoint_name="test"))
         await ws.run(mock_websocket)
@@ -88,9 +73,7 @@ class TestWebSocketBaseLifecycle:
         mock_websocket.accept.assert_called_once()
 
     @pytest.mark.asyncio
-    async def test_on_connect_called_after_auth(
-        self, mock_websocket: MagicMock, sample_user: AuthUser
-    ) -> None:
+    async def test_on_connect_called_after_auth(self, mock_websocket: MagicMock, sample_user: AuthUser) -> None:
         """
         GIVEN a WebSocket with authentication disabled
         WHEN run() completes authentication
@@ -102,9 +85,7 @@ class TestWebSocketBaseLifecycle:
         received_user: AuthUser | None = None
 
         class TestWebSocket(WebSocketBase):
-            async def handle_message(
-                self, message: MessageEnvelope
-            ) -> MessageEnvelope | None:
+            async def handle_message(self, message: MessageEnvelope) -> MessageEnvelope | None:
                 return None
 
             async def on_connect(self, user: AuthUser) -> None:
@@ -112,9 +93,7 @@ class TestWebSocketBaseLifecycle:
                 on_connect_called = True
                 received_user = user
 
-        mock_websocket.receive_json = AsyncMock(
-            side_effect=WebSocketDisconnect(code=1000)
-        )
+        mock_websocket.receive_json = AsyncMock(side_effect=WebSocketDisconnect(code=1000))
 
         ws = TestWebSocket(config=WebSocketConfig(require_auth=False, endpoint_name="test"))
         await ws.run(mock_websocket)
@@ -124,9 +103,7 @@ class TestWebSocketBaseLifecycle:
         assert received_user is not None
 
     @pytest.mark.asyncio
-    async def test_on_disconnect_called_on_close(
-        self, mock_websocket: MagicMock
-    ) -> None:
+    async def test_on_disconnect_called_on_close(self, mock_websocket: MagicMock) -> None:
         """
         GIVEN an active WebSocket connection
         WHEN the connection closes
@@ -137,18 +114,14 @@ class TestWebSocketBaseLifecycle:
         on_disconnect_called = False
 
         class TestWebSocket(WebSocketBase):
-            async def handle_message(
-                self, message: MessageEnvelope
-            ) -> MessageEnvelope | None:
+            async def handle_message(self, message: MessageEnvelope) -> MessageEnvelope | None:
                 return None
 
             async def on_disconnect(self) -> None:
                 nonlocal on_disconnect_called
                 on_disconnect_called = True
 
-        mock_websocket.receive_json = AsyncMock(
-            side_effect=WebSocketDisconnect(code=1000)
-        )
+        mock_websocket.receive_json = AsyncMock(side_effect=WebSocketDisconnect(code=1000))
 
         ws = TestWebSocket(config=WebSocketConfig(require_auth=False, endpoint_name="test"))
 
@@ -175,9 +148,7 @@ class TestWebSocketBaseMessageHandling:
         from mcp_server_langgraph.websocket.base import WebSocketBase
 
         class TestWebSocket(WebSocketBase):
-            async def handle_message(
-                self, message: MessageEnvelope
-            ) -> MessageEnvelope | None:
+            async def handle_message(self, message: MessageEnvelope) -> MessageEnvelope | None:
                 return None
 
         # First call returns ping, second raises to end loop
@@ -195,15 +166,11 @@ class TestWebSocketBaseMessageHandling:
         # Verify pong was sent
         calls = mock_websocket.send_json.call_args_list
         assert len(calls) >= 1
-        pong_sent = any(
-            call[0][0].get("type") == "pong" for call in calls
-        )
+        pong_sent = any(call[0][0].get("type") == "pong" for call in calls)
         assert pong_sent, "Pong response should be sent for ping"
 
     @pytest.mark.asyncio
-    async def test_handle_message_called_for_custom_types(
-        self, mock_websocket: MagicMock
-    ) -> None:
+    async def test_handle_message_called_for_custom_types(self, mock_websocket: MagicMock) -> None:
         """
         GIVEN an active WebSocket connection
         WHEN a custom message type is received
@@ -214,9 +181,7 @@ class TestWebSocketBaseMessageHandling:
         received_messages: list[MessageEnvelope] = []
 
         class TestWebSocket(WebSocketBase):
-            async def handle_message(
-                self, message: MessageEnvelope
-            ) -> MessageEnvelope | None:
+            async def handle_message(self, message: MessageEnvelope) -> MessageEnvelope | None:
                 received_messages.append(message)
                 return MessageEnvelope(type="response", payload={"received": True})
 
@@ -236,9 +201,7 @@ class TestWebSocketBaseMessageHandling:
         assert received_messages[0].payload == {"data": "test"}
 
     @pytest.mark.asyncio
-    async def test_response_sent_when_handler_returns_message(
-        self, mock_websocket: MagicMock
-    ) -> None:
+    async def test_response_sent_when_handler_returns_message(self, mock_websocket: MagicMock) -> None:
         """
         GIVEN an active WebSocket connection
         WHEN handle_message() returns a MessageEnvelope
@@ -247,9 +210,7 @@ class TestWebSocketBaseMessageHandling:
         from mcp_server_langgraph.websocket.base import WebSocketBase
 
         class TestWebSocket(WebSocketBase):
-            async def handle_message(
-                self, message: MessageEnvelope
-            ) -> MessageEnvelope | None:
+            async def handle_message(self, message: MessageEnvelope) -> MessageEnvelope | None:
                 return MessageEnvelope(
                     type="response",
                     payload={"echo": message.payload},
@@ -269,10 +230,7 @@ class TestWebSocketBaseMessageHandling:
 
         # Verify response was sent
         calls = mock_websocket.send_json.call_args_list
-        response_sent = any(
-            call[0][0].get("type") == "response" and call[0][0].get("id") == "req-1"
-            for call in calls
-        )
+        response_sent = any(call[0][0].get("type") == "response" and call[0][0].get("id") == "req-1" for call in calls)
         assert response_sent, "Response should be sent with correlation ID"
 
     @pytest.mark.asyncio
@@ -285,9 +243,7 @@ class TestWebSocketBaseMessageHandling:
         from mcp_server_langgraph.websocket.base import WebSocketBase
 
         class TestWebSocket(WebSocketBase):
-            async def handle_message(
-                self, message: MessageEnvelope
-            ) -> MessageEnvelope | None:
+            async def handle_message(self, message: MessageEnvelope) -> MessageEnvelope | None:
                 return None
 
         # Simulate JSON decode error by returning non-dict
@@ -317,9 +273,7 @@ class TestWebSocketBaseMessageHandling:
         from mcp_server_langgraph.websocket.base import WebSocketBase
 
         class SlowWebSocket(WebSocketBase):
-            async def handle_message(
-                self, message: MessageEnvelope
-            ) -> MessageEnvelope | None:
+            async def handle_message(self, message: MessageEnvelope) -> MessageEnvelope | None:
                 # Simulate slow processing
                 await asyncio.sleep(2)
                 return MessageEnvelope(type="response")
@@ -344,9 +298,7 @@ class TestWebSocketBaseMessageHandling:
         # Verify timeout error was sent
         calls = mock_websocket.send_json.call_args_list
         timeout_error_sent = any(
-            call[0][0].get("type") == "error"
-            and call[0][0].get("payload", {}).get("code") == "timeout"
-            for call in calls
+            call[0][0].get("type") == "error" and call[0][0].get("payload", {}).get("code") == "timeout" for call in calls
         )
         assert timeout_error_sent, "Timeout error should be sent when message handling times out"
 
@@ -360,9 +312,7 @@ class TestWebSocketBaseAuthentication:
         gc.collect()
 
     @pytest.mark.asyncio
-    async def test_auth_required_closes_without_token(
-        self, mock_websocket: MagicMock
-    ) -> None:
+    async def test_auth_required_closes_without_token(self, mock_websocket: MagicMock) -> None:
         """
         GIVEN a WebSocket requiring authentication
         WHEN no token is provided
@@ -371,9 +321,7 @@ class TestWebSocketBaseAuthentication:
         from mcp_server_langgraph.websocket.base import WebSocketBase
 
         class TestWebSocket(WebSocketBase):
-            async def handle_message(
-                self, message: MessageEnvelope
-            ) -> MessageEnvelope | None:
+            async def handle_message(self, message: MessageEnvelope) -> MessageEnvelope | None:
                 return None
 
         mock_websocket.query_params = {}
@@ -388,9 +336,7 @@ class TestWebSocketBaseAuthentication:
         assert close_args[1].get("code") == 4001 or close_args[0][0] == 4001
 
     @pytest.mark.asyncio
-    async def test_auth_token_from_query_param(
-        self, mock_websocket: MagicMock
-    ) -> None:
+    async def test_auth_token_from_query_param(self, mock_websocket: MagicMock) -> None:
         """
         GIVEN a WebSocket connection
         WHEN token is provided in query params
@@ -399,20 +345,14 @@ class TestWebSocketBaseAuthentication:
         from mcp_server_langgraph.websocket.base import WebSocketBase
 
         class TestWebSocket(WebSocketBase):
-            async def handle_message(
-                self, message: MessageEnvelope
-            ) -> MessageEnvelope | None:
+            async def handle_message(self, message: MessageEnvelope) -> MessageEnvelope | None:
                 return None
 
         mock_websocket.query_params = {"token": "test-jwt-token"}
-        mock_websocket.receive_json = AsyncMock(
-            side_effect=WebSocketDisconnect(code=1000)
-        )
+        mock_websocket.receive_json = AsyncMock(side_effect=WebSocketDisconnect(code=1000))
 
         # Mock the auth middleware
-        with patch(
-            "mcp_server_langgraph.websocket.base.get_auth_middleware_from_websocket"
-        ) as mock_auth:
+        with patch("mcp_server_langgraph.websocket.base.get_auth_middleware_from_websocket") as mock_auth:
             mock_middleware = MagicMock()
             mock_middleware.verify_token = AsyncMock(
                 return_value=MagicMock(
@@ -422,9 +362,7 @@ class TestWebSocketBaseAuthentication:
             )
             mock_auth.return_value = mock_middleware
 
-            ws = TestWebSocket(
-                config=WebSocketConfig(require_auth=True, endpoint_name="test")
-            )
+            ws = TestWebSocket(config=WebSocketConfig(require_auth=True, endpoint_name="test"))
 
             await ws.run(mock_websocket)
 
@@ -440,20 +378,14 @@ class TestWebSocketBaseAuthentication:
         from mcp_server_langgraph.websocket.base import WebSocketBase
 
         class TestWebSocket(WebSocketBase):
-            async def handle_message(
-                self, message: MessageEnvelope
-            ) -> MessageEnvelope | None:
+            async def handle_message(self, message: MessageEnvelope) -> MessageEnvelope | None:
                 return None
 
         mock_websocket.query_params = {}
         mock_websocket.headers = {"Authorization": "Bearer header-jwt-token"}
-        mock_websocket.receive_json = AsyncMock(
-            side_effect=WebSocketDisconnect(code=1000)
-        )
+        mock_websocket.receive_json = AsyncMock(side_effect=WebSocketDisconnect(code=1000))
 
-        with patch(
-            "mcp_server_langgraph.websocket.base.get_auth_middleware_from_websocket"
-        ) as mock_auth:
+        with patch("mcp_server_langgraph.websocket.base.get_auth_middleware_from_websocket") as mock_auth:
             mock_middleware = MagicMock()
             mock_middleware.verify_token = AsyncMock(
                 return_value=MagicMock(
@@ -463,9 +395,7 @@ class TestWebSocketBaseAuthentication:
             )
             mock_auth.return_value = mock_middleware
 
-            ws = TestWebSocket(
-                config=WebSocketConfig(require_auth=True, endpoint_name="test")
-            )
+            ws = TestWebSocket(config=WebSocketConfig(require_auth=True, endpoint_name="test"))
 
             await ws.run(mock_websocket)
 
@@ -481,9 +411,7 @@ class TestWebSocketBaseAuthorization:
         gc.collect()
 
     @pytest.mark.asyncio
-    async def test_authz_check_performed_when_configured(
-        self, mock_websocket: MagicMock
-    ) -> None:
+    async def test_authz_check_performed_when_configured(self, mock_websocket: MagicMock) -> None:
         """
         GIVEN a WebSocket with OpenFGA authorization configured
         WHEN user authenticates successfully
@@ -492,23 +420,15 @@ class TestWebSocketBaseAuthorization:
         from mcp_server_langgraph.websocket.base import WebSocketBase
 
         class TestWebSocket(WebSocketBase):
-            async def handle_message(
-                self, message: MessageEnvelope
-            ) -> MessageEnvelope | None:
+            async def handle_message(self, message: MessageEnvelope) -> MessageEnvelope | None:
                 return None
 
         mock_websocket.query_params = {"token": "test-token"}
-        mock_websocket.receive_json = AsyncMock(
-            side_effect=WebSocketDisconnect(code=1000)
-        )
+        mock_websocket.receive_json = AsyncMock(side_effect=WebSocketDisconnect(code=1000))
 
         with (
-            patch(
-                "mcp_server_langgraph.websocket.base.get_auth_middleware_from_websocket"
-            ) as mock_auth,
-            patch(
-                "mcp_server_langgraph.websocket.authz.get_openfga_client"
-            ) as mock_fga,
+            patch("mcp_server_langgraph.websocket.base.get_auth_middleware_from_websocket") as mock_auth,
+            patch("mcp_server_langgraph.websocket.authz.get_openfga_client") as mock_fga,
         ):
             mock_middleware = MagicMock()
             mock_middleware.verify_token = AsyncMock(
@@ -538,9 +458,7 @@ class TestWebSocketBaseAuthorization:
             mock_fga_client.check_permission.assert_called_once()
 
     @pytest.mark.asyncio
-    async def test_authz_denied_closes_connection(
-        self, mock_websocket: MagicMock
-    ) -> None:
+    async def test_authz_denied_closes_connection(self, mock_websocket: MagicMock) -> None:
         """
         GIVEN a WebSocket with OpenFGA authorization
         WHEN OpenFGA denies access
@@ -549,20 +467,14 @@ class TestWebSocketBaseAuthorization:
         from mcp_server_langgraph.websocket.base import WebSocketBase
 
         class TestWebSocket(WebSocketBase):
-            async def handle_message(
-                self, message: MessageEnvelope
-            ) -> MessageEnvelope | None:
+            async def handle_message(self, message: MessageEnvelope) -> MessageEnvelope | None:
                 return None
 
         mock_websocket.query_params = {"token": "test-token"}
 
         with (
-            patch(
-                "mcp_server_langgraph.websocket.base.get_auth_middleware_from_websocket"
-            ) as mock_auth,
-            patch(
-                "mcp_server_langgraph.websocket.authz.get_openfga_client"
-            ) as mock_fga,
+            patch("mcp_server_langgraph.websocket.base.get_auth_middleware_from_websocket") as mock_auth,
+            patch("mcp_server_langgraph.websocket.authz.get_openfga_client") as mock_fga,
         ):
             mock_middleware = MagicMock()
             mock_middleware.verify_token = AsyncMock(
@@ -596,9 +508,7 @@ class TestWebSocketBaseAuthorization:
             assert close_args[1].get("code") == 4003 or close_args[0][0] == 4003
 
     @pytest.mark.asyncio
-    async def test_authz_fail_closed_on_error(
-        self, mock_websocket: MagicMock
-    ) -> None:
+    async def test_authz_fail_closed_on_error(self, mock_websocket: MagicMock) -> None:
         """
         GIVEN a WebSocket with fail-closed authorization
         WHEN OpenFGA check fails with an exception
@@ -607,20 +517,14 @@ class TestWebSocketBaseAuthorization:
         from mcp_server_langgraph.websocket.base import WebSocketBase
 
         class TestWebSocket(WebSocketBase):
-            async def handle_message(
-                self, message: MessageEnvelope
-            ) -> MessageEnvelope | None:
+            async def handle_message(self, message: MessageEnvelope) -> MessageEnvelope | None:
                 return None
 
         mock_websocket.query_params = {"token": "test-token"}
 
         with (
-            patch(
-                "mcp_server_langgraph.websocket.base.get_auth_middleware_from_websocket"
-            ) as mock_auth,
-            patch(
-                "mcp_server_langgraph.websocket.authz.get_openfga_client"
-            ) as mock_fga,
+            patch("mcp_server_langgraph.websocket.base.get_auth_middleware_from_websocket") as mock_auth,
+            patch("mcp_server_langgraph.websocket.authz.get_openfga_client") as mock_fga,
         ):
             mock_middleware = MagicMock()
             mock_middleware.verify_token = AsyncMock(
@@ -632,9 +536,7 @@ class TestWebSocketBaseAuthorization:
             mock_auth.return_value = mock_middleware
 
             mock_fga_client = AsyncMock()
-            mock_fga_client.check_permission = AsyncMock(
-                side_effect=Exception("OpenFGA unavailable")
-            )
+            mock_fga_client.check_permission = AsyncMock(side_effect=Exception("OpenFGA unavailable"))
             mock_fga.return_value = mock_fga_client
 
             ws = TestWebSocket(

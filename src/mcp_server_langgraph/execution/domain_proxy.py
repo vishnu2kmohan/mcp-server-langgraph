@@ -33,10 +33,8 @@ Usage:
 from __future__ import annotations
 
 import asyncio
-import fnmatch
 import logging
 import re
-from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any
 
 from pydantic import BaseModel, Field
@@ -320,12 +318,7 @@ def create_blocked_response(domain: str) -> bytes:
     """
     body = f"<html><body><h1>403 Forbidden</h1><p>Access to {domain} is blocked.</p></body></html>"
     response = (
-        f"HTTP/1.1 403 Forbidden\r\n"
-        f"Content-Type: text/html\r\n"
-        f"Content-Length: {len(body)}\r\n"
-        f"Connection: close\r\n"
-        f"\r\n"
-        f"{body}"
+        f"HTTP/1.1 403 Forbidden\r\nContent-Type: text/html\r\nContent-Length: {len(body)}\r\nConnection: close\r\n\r\n{body}"
     )
     return response.encode("utf-8")
 

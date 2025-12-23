@@ -17,8 +17,6 @@ import gc
 import hashlib
 import hmac
 import json
-from datetime import UTC, datetime
-from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -210,9 +208,7 @@ class TestWebhookClientDelivery:
         mock_http_client.post.assert_called_once()
 
     @pytest.mark.asyncio
-    async def test_deliver_includes_headers(
-        self, mock_http_manager, mock_http_client
-    ) -> None:
+    async def test_deliver_includes_headers(self, mock_http_manager, mock_http_client) -> None:
         """
         GIVEN a webhook delivery
         WHEN sending request
@@ -257,9 +253,7 @@ class TestWebhookClientDelivery:
         assert headers["X-Webhook-Signature"].startswith("sha256=")
 
     @pytest.mark.asyncio
-    async def test_deliver_retries_on_server_error(
-        self, mock_http_manager, mock_http_client
-    ) -> None:
+    async def test_deliver_retries_on_server_error(self, mock_http_manager, mock_http_client) -> None:
         """
         GIVEN a 500 server error followed by success
         WHEN delivering webhook
@@ -288,12 +282,15 @@ class TestWebhookClientDelivery:
             retry_base_delay=0.01,  # Fast for testing
         )
 
-        with patch(
-            "mcp_server_langgraph.mcp.webhook_client.get_http_client_manager",
-            return_value=mock_http_manager,
-        ), patch(
-            "mcp_server_langgraph.mcp.webhook_client._async_sleep",
-            new_callable=AsyncMock,
+        with (
+            patch(
+                "mcp_server_langgraph.mcp.webhook_client.get_http_client_manager",
+                return_value=mock_http_manager,
+            ),
+            patch(
+                "mcp_server_langgraph.mcp.webhook_client._async_sleep",
+                new_callable=AsyncMock,
+            ),
         ):
             client = WebhookClient(config)
 
@@ -308,9 +305,7 @@ class TestWebhookClientDelivery:
         assert mock_http_client.post.call_count == 2
 
     @pytest.mark.asyncio
-    async def test_deliver_no_retry_on_client_error(
-        self, mock_http_manager, mock_http_client
-    ) -> None:
+    async def test_deliver_no_retry_on_client_error(self, mock_http_manager, mock_http_client) -> None:
         """
         GIVEN a 400 client error
         WHEN delivering webhook
@@ -350,9 +345,7 @@ class TestWebhookClientDelivery:
         assert mock_http_client.post.call_count == 1  # No retries
 
     @pytest.mark.asyncio
-    async def test_deliver_returns_false_after_max_retries(
-        self, mock_http_manager, mock_http_client
-    ) -> None:
+    async def test_deliver_returns_false_after_max_retries(self, mock_http_manager, mock_http_client) -> None:
         """
         GIVEN persistent server errors
         WHEN max retries exhausted
@@ -376,12 +369,15 @@ class TestWebhookClientDelivery:
             retry_base_delay=0.01,
         )
 
-        with patch(
-            "mcp_server_langgraph.mcp.webhook_client.get_http_client_manager",
-            return_value=mock_http_manager,
-        ), patch(
-            "mcp_server_langgraph.mcp.webhook_client._async_sleep",
-            new_callable=AsyncMock,
+        with (
+            patch(
+                "mcp_server_langgraph.mcp.webhook_client.get_http_client_manager",
+                return_value=mock_http_manager,
+            ),
+            patch(
+                "mcp_server_langgraph.mcp.webhook_client._async_sleep",
+                new_callable=AsyncMock,
+            ),
         ):
             client = WebhookClient(config)
 
@@ -405,9 +401,7 @@ class TestCreateWebhookCallback:
         gc.collect()
 
     @pytest.mark.asyncio
-    async def test_callback_returns_hook_result(
-        self, mock_http_manager, mock_http_client
-    ) -> None:
+    async def test_callback_returns_hook_result(self, mock_http_manager, mock_http_client) -> None:
         """
         GIVEN a webhook callback
         WHEN called with input data
@@ -438,9 +432,7 @@ class TestCreateWebhookCallback:
         assert result.behavior == "allow"
 
     @pytest.mark.asyncio
-    async def test_callback_extracts_context(
-        self, mock_http_manager, mock_http_client
-    ) -> None:
+    async def test_callback_extracts_context(self, mock_http_manager, mock_http_client) -> None:
         """
         GIVEN a webhook callback with HookContext
         WHEN called
@@ -486,9 +478,7 @@ class TestCreateWebhookCallback:
         assert payload["context"]["metadata"] == {"key": "value"}
 
     @pytest.mark.asyncio
-    async def test_callback_allows_on_delivery_failure(
-        self, mock_http_manager, mock_http_client
-    ) -> None:
+    async def test_callback_allows_on_delivery_failure(self, mock_http_manager, mock_http_client) -> None:
         """
         GIVEN a failed webhook delivery
         WHEN callback is called
@@ -499,12 +489,15 @@ class TestCreateWebhookCallback:
         # Simulate failure
         mock_http_client.post.side_effect = Exception("Network error")
 
-        with patch(
-            "mcp_server_langgraph.mcp.webhook_client.get_http_client_manager",
-            return_value=mock_http_manager,
-        ), patch(
-            "mcp_server_langgraph.mcp.webhook_client._async_sleep",
-            new_callable=AsyncMock,
+        with (
+            patch(
+                "mcp_server_langgraph.mcp.webhook_client.get_http_client_manager",
+                return_value=mock_http_manager,
+            ),
+            patch(
+                "mcp_server_langgraph.mcp.webhook_client._async_sleep",
+                new_callable=AsyncMock,
+            ),
         ):
             callback = create_webhook_callback(
                 webhook_url="https://example.com/webhook",

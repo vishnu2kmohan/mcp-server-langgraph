@@ -7,7 +7,6 @@ TDD tests for the Workflow Execution WebSocket using the standardized WebSocketB
 from __future__ import annotations
 
 import gc
-from typing import Any
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
@@ -40,17 +39,21 @@ def mock_websocket() -> MagicMock:
 def mock_execution_service() -> MagicMock:
     """Create a mock execution service."""
     service = MagicMock()
-    service.get_workflow = AsyncMock(return_value={
-        "id": "workflow-1",
-        "name": "Test Workflow",
-        "nodes": [],
-    })
+    service.get_workflow = AsyncMock(
+        return_value={
+            "id": "workflow-1",
+            "name": "Test Workflow",
+            "nodes": [],
+        }
+    )
     service.start_execution = AsyncMock(return_value="exec-123")
     service.stop_execution = AsyncMock(return_value=True)
-    service.get_execution_status = AsyncMock(return_value={
-        "id": "exec-123",
-        "status": "running",
-    })
+    service.get_execution_status = AsyncMock(
+        return_value={
+            "id": "exec-123",
+            "status": "running",
+        }
+    )
     return service
 
 
@@ -77,9 +80,7 @@ class TestWorkflowExecutionHandler:
         assert issubclass(WorkflowExecutionHandler, WebSocketBase)
 
     @pytest.mark.asyncio
-    async def test_handles_start_message(
-        self, mock_websocket: MagicMock, mock_execution_service: MagicMock
-    ) -> None:
+    async def test_handles_start_message(self, mock_websocket: MagicMock, mock_execution_service: MagicMock) -> None:
         """
         GIVEN an active connection
         WHEN a start message is received
@@ -109,9 +110,7 @@ class TestWorkflowExecutionHandler:
         mock_execution_service.start_execution.assert_called_once()
 
     @pytest.mark.asyncio
-    async def test_handles_stop_message(
-        self, mock_websocket: MagicMock, mock_execution_service: MagicMock
-    ) -> None:
+    async def test_handles_stop_message(self, mock_websocket: MagicMock, mock_execution_service: MagicMock) -> None:
         """
         GIVEN an active execution
         WHEN a stop message is received
@@ -139,9 +138,7 @@ class TestWorkflowExecutionHandler:
         mock_execution_service.stop_execution.assert_called_once()
 
     @pytest.mark.asyncio
-    async def test_handles_status_message(
-        self, mock_websocket: MagicMock, mock_execution_service: MagicMock
-    ) -> None:
+    async def test_handles_status_message(self, mock_websocket: MagicMock, mock_execution_service: MagicMock) -> None:
         """
         GIVEN an active execution
         WHEN a status message is received
@@ -198,9 +195,7 @@ class TestWorkflowExecutionHandler:
         assert response.type == "error"
 
     @pytest.mark.asyncio
-    async def test_push_node_update(
-        self, mock_websocket: MagicMock, mock_execution_service: MagicMock
-    ) -> None:
+    async def test_push_node_update(self, mock_websocket: MagicMock, mock_execution_service: MagicMock) -> None:
         """
         GIVEN an active connection
         WHEN push_node_update is called

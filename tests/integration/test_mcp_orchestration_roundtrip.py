@@ -16,8 +16,7 @@ import gc
 import json
 import os
 from datetime import UTC, datetime
-from typing import Any
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock
 
 import pytest
 
@@ -32,12 +31,8 @@ pytestmark = [
 def enable_orchestration_features():
     """Enable orchestration MCP feature flags."""
     originals = {
-        "FF_ENABLE_ORCHESTRATION_MCP_TOOLS": os.environ.get(
-            "FF_ENABLE_ORCHESTRATION_MCP_TOOLS"
-        ),
-        "FF_ENABLE_ORCHESTRATION_MCP_RESOURCES": os.environ.get(
-            "FF_ENABLE_ORCHESTRATION_MCP_RESOURCES"
-        ),
+        "FF_ENABLE_ORCHESTRATION_MCP_TOOLS": os.environ.get("FF_ENABLE_ORCHESTRATION_MCP_TOOLS"),
+        "FF_ENABLE_ORCHESTRATION_MCP_RESOURCES": os.environ.get("FF_ENABLE_ORCHESTRATION_MCP_RESOURCES"),
     }
     os.environ["FF_ENABLE_ORCHESTRATION_MCP_TOOLS"] = "true"
     os.environ["FF_ENABLE_ORCHESTRATION_MCP_RESOURCES"] = "true"
@@ -127,9 +122,7 @@ class TestTaskResourceProvider:
         gc.collect()
 
     @pytest.mark.asyncio
-    async def test_task_provider_returns_task_data(
-        self, mock_orchestrator
-    ) -> None:
+    async def test_task_provider_returns_task_data(self, mock_orchestrator) -> None:
         """
         GIVEN a task exists in orchestrator
         WHEN task_provider is called
@@ -151,9 +144,7 @@ class TestTaskResourceProvider:
         assert "subtasks" in data
 
     @pytest.mark.asyncio
-    async def test_task_provider_raises_for_missing_task(
-        self, mock_orchestrator
-    ) -> None:
+    async def test_task_provider_raises_for_missing_task(self, mock_orchestrator) -> None:
         """
         GIVEN task does not exist
         WHEN task_provider is called
@@ -194,9 +185,7 @@ class TestArtifactResourceProvider:
         gc.collect()
 
     @pytest.mark.asyncio
-    async def test_artifact_provider_returns_artifact_data(
-        self, mock_artifact_storage
-    ) -> None:
+    async def test_artifact_provider_returns_artifact_data(self, mock_artifact_storage) -> None:
         """
         GIVEN an artifact exists in storage
         WHEN artifact_provider is called
@@ -219,9 +208,7 @@ class TestArtifactResourceProvider:
         assert data["data"]["score"] == 0.95
 
     @pytest.mark.asyncio
-    async def test_artifact_provider_raises_for_missing_artifact(
-        self, mock_artifact_storage
-    ) -> None:
+    async def test_artifact_provider_raises_for_missing_artifact(self, mock_artifact_storage) -> None:
         """
         GIVEN artifact does not exist
         WHEN artifact_provider is called
@@ -247,9 +234,7 @@ class TestSubagentResourceProvider:
         gc.collect()
 
     @pytest.mark.asyncio
-    async def test_subagent_provider_returns_status_list(
-        self, mock_coordinator
-    ) -> None:
+    async def test_subagent_provider_returns_status_list(self, mock_coordinator) -> None:
         """
         GIVEN subagents exist for a task
         WHEN subagents_provider is called
@@ -457,9 +442,7 @@ class TestOrchestratorResourceProviderClass:
         provider = OrchestratorResourceProvider()
 
         mock_decomposition = MagicMock()
-        mock_decomposition.model_dump = MagicMock(
-            return_value={"task_id": "task-789", "status": "pending"}
-        )
+        mock_decomposition.model_dump = MagicMock(return_value={"task_id": "task-789", "status": "pending"})
 
         provider.store_task("task-789", mock_decomposition)
 

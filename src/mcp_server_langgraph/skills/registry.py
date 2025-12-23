@@ -108,11 +108,7 @@ class SkillRegistry:
             List of skills from the specified source
         """
         source_lower = source.lower()
-        return [
-            skill
-            for skill in self._skills.values()
-            if source_lower in skill.source.lower()
-        ]
+        return [skill for skill in self._skills.values() if source_lower in skill.source.lower()]
 
     def clear(self) -> None:
         """Remove all skills from the registry."""

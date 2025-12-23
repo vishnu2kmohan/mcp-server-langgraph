@@ -7,7 +7,6 @@ TDD tests for the Cost Tracking WebSocket using the standardized WebSocketBase.
 from __future__ import annotations
 
 import gc
-from typing import Any
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
@@ -40,17 +39,21 @@ def mock_websocket() -> MagicMock:
 def mock_cost_service() -> MagicMock:
     """Create a mock cost tracking service."""
     service = MagicMock()
-    service.get_session_cost = AsyncMock(return_value={
-        "session_id": "session-1",
-        "total_cost": 1.25,
-        "token_count": 5000,
-    })
-    service.get_user_budget = AsyncMock(return_value={
-        "user_id": "user-1",
-        "budget_limit": 100.0,
-        "current_usage": 45.50,
-        "remaining": 54.50,
-    })
+    service.get_session_cost = AsyncMock(
+        return_value={
+            "session_id": "session-1",
+            "total_cost": 1.25,
+            "token_count": 5000,
+        }
+    )
+    service.get_user_budget = AsyncMock(
+        return_value={
+            "user_id": "user-1",
+            "budget_limit": 100.0,
+            "current_usage": 45.50,
+            "remaining": 54.50,
+        }
+    )
     return service
 
 
@@ -77,9 +80,7 @@ class TestCostTrackingHandler:
         assert issubclass(CostTrackingHandler, WebSocketBase)
 
     @pytest.mark.asyncio
-    async def test_handles_subscribe_session(
-        self, mock_websocket: MagicMock, mock_cost_service: MagicMock
-    ) -> None:
+    async def test_handles_subscribe_session(self, mock_websocket: MagicMock, mock_cost_service: MagicMock) -> None:
         """
         GIVEN an active connection
         WHEN a subscribe_session message is received
@@ -106,9 +107,7 @@ class TestCostTrackingHandler:
         assert "session-1" in handler.subscribed_sessions
 
     @pytest.mark.asyncio
-    async def test_handles_subscribe_user(
-        self, mock_websocket: MagicMock, mock_cost_service: MagicMock
-    ) -> None:
+    async def test_handles_subscribe_user(self, mock_websocket: MagicMock, mock_cost_service: MagicMock) -> None:
         """
         GIVEN an active connection
         WHEN a subscribe_user message is received
@@ -135,9 +134,7 @@ class TestCostTrackingHandler:
         assert "user-1" in handler.subscribed_users
 
     @pytest.mark.asyncio
-    async def test_handles_unsubscribe(
-        self, mock_websocket: MagicMock, mock_cost_service: MagicMock
-    ) -> None:
+    async def test_handles_unsubscribe(self, mock_websocket: MagicMock, mock_cost_service: MagicMock) -> None:
         """
         GIVEN an active connection with subscriptions
         WHEN an unsubscribe message is received

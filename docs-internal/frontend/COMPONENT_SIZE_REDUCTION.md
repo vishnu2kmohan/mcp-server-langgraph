@@ -1,7 +1,7 @@
 # Component Size Reduction Patterns
 
 **Last Updated**: 2025-12-21
-**Case Study**: HybridShellLayout.tsx (1,004 → 746 lines, 26% reduction)
+**Case Study**: StudioShellLayout.tsx (1,004 → 746 lines, 26% reduction)
 
 This document captures patterns for reducing component size while maintaining functionality and test coverage.
 
@@ -20,7 +20,7 @@ Apply these patterns when a component exceeds **500 lines**, which typically ind
 | Component | Lines | Status | Priority |
 |-----------|-------|--------|----------|
 | ChatMessages.tsx | 1,143 | Pending | High |
-| HybridShellLayout.tsx | 746 | ✅ Refactored | Done |
+| StudioShellLayout.tsx | 746 | ✅ Refactored | Done |
 
 ---
 
@@ -28,8 +28,8 @@ Apply these patterns when a component exceeds **500 lines**, which typically ind
 
 **Before** (inline state + handlers):
 ```typescript
-// HybridShellLayout.tsx - Before
-export function HybridShellLayout() {
+// StudioShellLayout.tsx - Before
+export function StudioShellLayout() {
   // HITL dialog state - 30+ lines
   const [activeApproval, setActiveApproval] = useState<ApprovalPayload | null>(null);
   const [showApprovalDialog, setShowApprovalDialog] = useState(false);
@@ -52,10 +52,10 @@ export function useHITLDialogs(): UseHITLDialogsReturn {
   return { showApprovalDialog, handleApprove, handleReject, ... };
 }
 
-// HybridShellLayout.tsx - After
+// StudioShellLayout.tsx - After
 import { useHITLDialogs } from "../hooks/useHITLDialogs";
 
-export function HybridShellLayout() {
+export function StudioShellLayout() {
   const {
     showApprovalDialog,
     activeApproval,
@@ -79,7 +79,7 @@ export function HybridShellLayout() {
 
 **Before** (types scattered):
 ```typescript
-// HybridShellLayout.tsx
+// StudioShellLayout.tsx
 interface ApprovalRequiredPayload { /* ... */ }
 interface ClarificationRequiredPayload { /* ... */ }
 function convertUIToAPI(response: UIResponse): APIResponse { /* ... */ }
@@ -198,7 +198,7 @@ import { DiagramLoadingFallback, CodeLoadingFallback } from "../LoadingFallbacks
 
 ---
 
-## Case Study: HybridShellLayout Refactoring
+## Case Study: StudioShellLayout Refactoring
 
 ### Timeline
 

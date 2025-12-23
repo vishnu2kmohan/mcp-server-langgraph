@@ -20,9 +20,12 @@ function renderWithRouter(initialPath: string = "/") {
     <MemoryRouter initialEntries={[initialPath]}>
       <Routes>
         <Route path="/" element={<RootRedirect />} />
-        <Route path="/studio" element={<div data-testid="studio">Studio</div>} />
+        <Route
+          path="/studio"
+          element={<div data-testid="studio">Studio</div>}
+        />
       </Routes>
-    </MemoryRouter>
+    </MemoryRouter>,
   );
 }
 

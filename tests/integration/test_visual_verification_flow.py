@@ -10,7 +10,6 @@ TDD: RED phase - these tests define expected behavior before integration.
 from __future__ import annotations
 
 import gc
-from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -457,10 +456,6 @@ class TestMultiURLVisualVerificationIntegration:
         THEN all URLs up to max are verified and scores are aggregated
         """
         from mcp_server_langgraph.core.agent_config import AgentConfig
-        from mcp_server_langgraph.llm.verifier import (
-            OutputVerifier,
-            VisualVerificationResult,
-        )
 
         config = AgentConfig(
             enable_visual_verification=True,
@@ -575,8 +570,7 @@ class TestMultiURLVisualVerificationIntegration:
 
         # Calculate combined score with custom weights
         combined_score = (
-            text_score * config.visual_verification_text_weight
-            + visual_score * config.visual_verification_visual_weight
+            text_score * config.visual_verification_text_weight + visual_score * config.visual_verification_visual_weight
         )
 
         expected = 0.9 * 0.7 + 0.6 * 0.3  # 0.63 + 0.18 = 0.81

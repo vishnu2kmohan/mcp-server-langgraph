@@ -60,11 +60,11 @@ class TestAgentRequestWSMessageType:
         """Test EXECUTION_RESUMED has correct value."""
         assert AgentRequestWSMessageType.EXECUTION_RESUMED == "execution_resumed"
 
-    def test_pong_value(self) -> None:
+    def test_message_type_pong_has_correct_string_value(self) -> None:
         """Test PONG has correct value."""
         assert AgentRequestWSMessageType.PONG == "pong"
 
-    def test_error_value(self) -> None:
+    def test_message_type_error_has_correct_string_value(self) -> None:
         """Test ERROR has correct value."""
         assert AgentRequestWSMessageType.ERROR == "error"
 
@@ -157,7 +157,7 @@ class TestApprovalRequiredMessage:
         )
         assert msg.context == {}
 
-    def test_with_context(self) -> None:
+    def test_message_with_context_stores_custom_data(self) -> None:
         """Test creating message with custom context."""
         context = {"key": "value", "nested": {"a": 1}}
         msg = ApprovalRequiredMessage(
@@ -203,7 +203,7 @@ class TestClarificationRequiredMessage:
         assert msg.placeholder is None
         assert msg.required is True
 
-    def test_with_options(self) -> None:
+    def test_clarification_with_options_stores_choice_list(self) -> None:
         """Test creating message with options."""
         options = [
             {"value": "a", "label": "Option A"},
@@ -221,7 +221,7 @@ class TestClarificationRequiredMessage:
         )
         assert msg.options == options
 
-    def test_with_placeholder(self) -> None:
+    def test_clarification_with_placeholder_stores_hint_text(self) -> None:
         """Test creating message with placeholder."""
         msg = ClarificationRequiredMessage(
             request_id="req-123",
@@ -292,7 +292,7 @@ class TestExecutionResumedMessage:
         """Force GC to prevent mock accumulation in xdist workers."""
         gc.collect()
 
-    def test_create_message(self) -> None:
+    def test_execution_resumed_message_stores_approval_status(self) -> None:
         """Test creating an ExecutionResumedMessage."""
         msg = ExecutionResumedMessage(
             request_id="req-123",
@@ -321,7 +321,7 @@ class TestWebSocketConnection:
         """Force GC to prevent mock accumulation in xdist workers."""
         gc.collect()
 
-    def test_create_connection(self) -> None:
+    def test_websocket_connection_stores_session_and_user_ids(self) -> None:
         """Test creating a WebSocketConnection."""
         mock_ws = MagicMock()
         conn = WebSocketConnection(
@@ -363,7 +363,7 @@ class TestAgentRequestBroadcaster:
         """Force GC to prevent mock accumulation in xdist workers."""
         gc.collect()
 
-    def test_initial_state(self) -> None:
+    def test_broadcaster_initial_state_has_zero_connections(self) -> None:
         """Test broadcaster starts with no connections."""
         broadcaster = AgentRequestBroadcaster()
         assert broadcaster.connection_count == 0
@@ -372,7 +372,7 @@ class TestAgentRequestBroadcaster:
     async def test_connect(self) -> None:
         """Test connecting a WebSocket."""
         broadcaster = AgentRequestBroadcaster()
-        mock_ws = AsyncMock()
+        mock_ws = AsyncMock()  # noqa: async-mock-config - mock used for method call assertions
 
         await broadcaster.connect(mock_ws, "sess-123", "user-456")
 
@@ -383,15 +383,15 @@ class TestAgentRequestBroadcaster:
     async def test_connect_multiple(self) -> None:
         """Test connecting multiple WebSockets."""
         broadcaster = AgentRequestBroadcaster()
-        mock_ws1 = AsyncMock()
-        mock_ws2 = AsyncMock()
+        mock_ws1 = AsyncMock()  # noqa: async-mock-config - mock used for connection tracking
+        mock_ws2 = AsyncMock()  # noqa: async-mock-config - mock used for connection tracking
 
         await broadcaster.connect(mock_ws1, "sess-1", "user-1")
         await broadcaster.connect(mock_ws2, "sess-2", "user-2")
 
         assert broadcaster.connection_count == 2
 
-    def test_disconnect(self) -> None:
+    def test_broadcaster_disconnect_removes_connection(self) -> None:
         """Test disconnecting a WebSocket."""
         broadcaster = AgentRequestBroadcaster()
         mock_ws = MagicMock()
@@ -414,8 +414,8 @@ class TestAgentRequestBroadcaster:
     async def test_broadcast_to_all(self) -> None:
         """Test broadcasting message to all connections."""
         broadcaster = AgentRequestBroadcaster()
-        mock_ws1 = AsyncMock()
-        mock_ws2 = AsyncMock()
+        mock_ws1 = AsyncMock()  # noqa: async-mock-config - mock for send_json assertions
+        mock_ws2 = AsyncMock()  # noqa: async-mock-config - mock for send_json assertions
 
         broadcaster._connections[mock_ws1] = WebSocketConnection(websocket=mock_ws1, session_id="sess-1", user_id="user-1")
         broadcaster._connections[mock_ws2] = WebSocketConnection(websocket=mock_ws2, session_id="sess-2", user_id="user-2")
@@ -430,8 +430,8 @@ class TestAgentRequestBroadcaster:
     async def test_broadcast_removes_disconnected(self) -> None:
         """Test broadcast removes connections that fail."""
         broadcaster = AgentRequestBroadcaster()
-        mock_ws1 = AsyncMock()
-        mock_ws2 = AsyncMock()
+        mock_ws1 = AsyncMock()  # noqa: async-mock-config - mock for connection tracking
+        mock_ws2 = AsyncMock()  # noqa: async-mock-config - configured with side_effect
         mock_ws2.send_json.side_effect = Exception("Connection closed")
 
         broadcaster._connections[mock_ws1] = WebSocketConnection(websocket=mock_ws1, session_id="sess-1", user_id="user-1")
@@ -448,9 +448,9 @@ class TestAgentRequestBroadcaster:
     async def test_send_to_session(self) -> None:
         """Test sending message to specific session."""
         broadcaster = AgentRequestBroadcaster()
-        mock_ws1 = AsyncMock()
-        mock_ws2 = AsyncMock()
-        mock_ws3 = AsyncMock()
+        mock_ws1 = AsyncMock()  # noqa: async-mock-config - mock for session routing
+        mock_ws2 = AsyncMock()  # noqa: async-mock-config - mock for session routing
+        mock_ws3 = AsyncMock()  # noqa: async-mock-config - mock for session routing
 
         broadcaster._connections[mock_ws1] = WebSocketConnection(websocket=mock_ws1, session_id="sess-A", user_id="user-1")
         broadcaster._connections[mock_ws2] = WebSocketConnection(websocket=mock_ws2, session_id="sess-B", user_id="user-2")
@@ -468,7 +468,7 @@ class TestAgentRequestBroadcaster:
     async def test_send_to_session_removes_disconnected(self) -> None:
         """Test send_to_session removes failed connections."""
         broadcaster = AgentRequestBroadcaster()
-        mock_ws1 = AsyncMock()
+        mock_ws1 = AsyncMock()  # noqa: async-mock-config - configured with side_effect
         mock_ws1.send_json.side_effect = Exception("Closed")
 
         broadcaster._connections[mock_ws1] = WebSocketConnection(websocket=mock_ws1, session_id="sess-A", user_id="user-1")

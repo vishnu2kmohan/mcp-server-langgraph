@@ -13,14 +13,13 @@ TDD: These tests are written FIRST before implementation.
 from __future__ import annotations
 
 import gc
-import os
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 import pytest
 
 
-
 pytestmark = pytest.mark.unit
+
 
 @pytest.mark.xdist_group(name="explanation_metrics")
 class TestExplanationMetrics:
@@ -58,12 +57,8 @@ class TestExplanationMetrics:
         """Test that record_explanation_generation records correct attributes."""
         from mcp_server_langgraph.agents.metrics import record_explanation_generation
 
-        with patch(
-            "mcp_server_langgraph.agents.metrics.explanation_generation_counter"
-        ) as mock_counter:
-            with patch(
-                "mcp_server_langgraph.agents.metrics.explanation_latency_histogram"
-            ) as mock_histogram:
+        with patch("mcp_server_langgraph.agents.metrics.explanation_generation_counter") as mock_counter:
+            with patch("mcp_server_langgraph.agents.metrics.explanation_latency_histogram") as mock_histogram:
                 record_explanation_generation(
                     approval_id="test-approval-123",
                     duration_ms=150.5,
@@ -89,12 +84,8 @@ class TestExplanationMetrics:
         """Test that cache hit is recorded correctly."""
         from mcp_server_langgraph.agents.metrics import record_explanation_generation
 
-        with patch(
-            "mcp_server_langgraph.agents.metrics.explanation_generation_counter"
-        ) as mock_counter:
-            with patch(
-                "mcp_server_langgraph.agents.metrics.explanation_cache_counter"
-            ) as mock_cache:
+        with patch("mcp_server_langgraph.agents.metrics.explanation_generation_counter") as mock_counter:
+            with patch("mcp_server_langgraph.agents.metrics.explanation_cache_counter") as mock_cache:
                 record_explanation_generation(
                     approval_id="test-approval-456",
                     duration_ms=5.0,  # Fast because cached
@@ -112,12 +103,8 @@ class TestExplanationMetrics:
         """Test that cache miss is recorded correctly."""
         from mcp_server_langgraph.agents.metrics import record_explanation_generation
 
-        with patch(
-            "mcp_server_langgraph.agents.metrics.explanation_generation_counter"
-        ) as mock_counter:
-            with patch(
-                "mcp_server_langgraph.agents.metrics.explanation_cache_counter"
-            ) as mock_cache:
+        with patch("mcp_server_langgraph.agents.metrics.explanation_generation_counter") as mock_counter:
+            with patch("mcp_server_langgraph.agents.metrics.explanation_cache_counter") as mock_cache:
                 record_explanation_generation(
                     approval_id="test-approval-789",
                     duration_ms=200.0,
@@ -135,12 +122,8 @@ class TestExplanationMetrics:
         """Test that failed generation is recorded with error type."""
         from mcp_server_langgraph.agents.metrics import record_explanation_generation
 
-        with patch(
-            "mcp_server_langgraph.agents.metrics.explanation_generation_counter"
-        ) as mock_counter:
-            with patch(
-                "mcp_server_langgraph.agents.metrics.explanation_error_counter"
-            ) as mock_error:
+        with patch("mcp_server_langgraph.agents.metrics.explanation_generation_counter") as mock_counter:
+            with patch("mcp_server_langgraph.agents.metrics.explanation_error_counter") as mock_error:
                 record_explanation_generation(
                     approval_id="test-approval-fail",
                     duration_ms=50.0,
@@ -168,12 +151,8 @@ class TestExplanationAnalysisMetrics:
         """Test recording individual analysis task metrics."""
         from mcp_server_langgraph.agents.metrics import record_explanation_analysis_task
 
-        with patch(
-            "mcp_server_langgraph.agents.metrics.explanation_analysis_counter"
-        ) as mock_counter:
-            with patch(
-                "mcp_server_langgraph.agents.metrics.explanation_analysis_duration_histogram"
-            ) as mock_histogram:
+        with patch("mcp_server_langgraph.agents.metrics.explanation_analysis_counter") as mock_counter:
+            with patch("mcp_server_langgraph.agents.metrics.explanation_analysis_duration_histogram") as mock_histogram:
                 record_explanation_analysis_task(
                     analysis_type="uncertainty_analysis",
                     duration_ms=45.0,
@@ -201,9 +180,7 @@ class TestExplanationAnalysisMetrics:
             "evidence_extraction",
         ]
 
-        with patch(
-            "mcp_server_langgraph.agents.metrics.explanation_analysis_counter"
-        ) as mock_counter:
+        with patch("mcp_server_langgraph.agents.metrics.explanation_analysis_counter") as mock_counter:
             for analysis_type in analysis_types:
                 record_explanation_analysis_task(
                     analysis_type=analysis_type,
@@ -226,12 +203,8 @@ class TestExplanationOrchestratorMetrics:
         """Test recording full orchestration metrics."""
         from mcp_server_langgraph.agents.metrics import record_explanation_orchestration
 
-        with patch(
-            "mcp_server_langgraph.agents.metrics.explanation_orchestration_counter"
-        ) as mock_counter:
-            with patch(
-                "mcp_server_langgraph.agents.metrics.explanation_orchestration_duration_histogram"
-            ) as mock_histogram:
+        with patch("mcp_server_langgraph.agents.metrics.explanation_orchestration_counter") as mock_counter:
+            with patch("mcp_server_langgraph.agents.metrics.explanation_orchestration_duration_histogram") as mock_histogram:
                 record_explanation_orchestration(
                     task_count=4,
                     successful_count=4,
@@ -246,9 +219,7 @@ class TestExplanationOrchestratorMetrics:
         """Test recording partial failure metrics."""
         from mcp_server_langgraph.agents.metrics import record_explanation_orchestration
 
-        with patch(
-            "mcp_server_langgraph.agents.metrics.explanation_orchestration_counter"
-        ) as mock_counter:
+        with patch("mcp_server_langgraph.agents.metrics.explanation_orchestration_counter") as mock_counter:
             record_explanation_orchestration(
                 task_count=4,
                 successful_count=3,

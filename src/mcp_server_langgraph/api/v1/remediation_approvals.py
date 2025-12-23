@@ -200,12 +200,8 @@ class RejectRequest(BaseModel):
     """Request body for rejecting a remediation."""
 
     rejected_by: str = Field(..., description="Email/ID of the rejector")
-    reason: RejectionReason = Field(
-        RejectionReason.OTHER, description="Structured rejection reason"
-    )
-    reason_detail: str | None = Field(
-        None, description="Additional details for rejection reason"
-    )
+    reason: RejectionReason = Field(RejectionReason.OTHER, description="Structured rejection reason")
+    reason_detail: str | None = Field(None, description="Additional details for rejection reason")
 
 
 class ApprovalResponse(BaseModel):

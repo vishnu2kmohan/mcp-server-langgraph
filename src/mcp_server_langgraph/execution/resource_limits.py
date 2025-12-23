@@ -138,7 +138,7 @@ class ResourceLimits:
         }
 
     @classmethod
-    def from_dict(cls, data: dict[str, Any]) -> "ResourceLimits":
+    def from_dict(cls, data: dict[str, Any]) -> ResourceLimits:
         """Create resource limits from dictionary"""
         # Convert allowed_domains list to tuple for immutability
         if "allowed_domains" in data and isinstance(data["allowed_domains"], list):
@@ -146,7 +146,7 @@ class ResourceLimits:
 
         return cls(**data)
 
-    def is_within(self, other: "ResourceLimits") -> bool:
+    def is_within(self, other: ResourceLimits) -> bool:
         """
         Check if these limits are within (stricter than or equal to) another set of limits.
 
@@ -165,7 +165,7 @@ class ResourceLimits:
         )
 
     @classmethod
-    def development(cls) -> "ResourceLimits":
+    def development(cls) -> ResourceLimits:
         """
         Development profile with relaxed limits for local testing.
 
@@ -183,7 +183,7 @@ class ResourceLimits:
         )
 
     @classmethod
-    def production(cls) -> "ResourceLimits":
+    def production(cls) -> ResourceLimits:
         """
         Production profile with conservative limits for security.
 
@@ -209,7 +209,7 @@ class ResourceLimits:
         )
 
     @classmethod
-    def testing(cls) -> "ResourceLimits":
+    def testing(cls) -> ResourceLimits:
         """
         Testing profile with minimal limits for fast execution.
 
@@ -227,7 +227,7 @@ class ResourceLimits:
         )
 
     @classmethod
-    def data_processing(cls) -> "ResourceLimits":
+    def data_processing(cls) -> ResourceLimits:
         """
         Data processing profile with higher memory and CPU for analytics.
 

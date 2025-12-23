@@ -273,9 +273,7 @@ class UnifiedHookAdapter:
         # Extract tool_input from modified_input if present
         updated_input = None
         if result.modified_input:
-            updated_input = result.modified_input.get(
-                "tool_input", result.modified_input
-            )
+            updated_input = result.modified_input.get("tool_input", result.modified_input)
 
         return CoreHookResult(
             behavior=behavior,

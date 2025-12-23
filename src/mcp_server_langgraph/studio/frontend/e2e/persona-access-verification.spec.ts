@@ -299,7 +299,7 @@ async function setupPersonaApiMocks(
         status: 200,
         contentType: "application/json",
         body: JSON.stringify({
-          canvas_studio_shell: true,
+          studio_canvas_shell: true,
           canvas_editable: true,
           canvas_agents: true,
           canvas_ai_palette: true,

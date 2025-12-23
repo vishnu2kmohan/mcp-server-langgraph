@@ -92,10 +92,7 @@ export function PersonaRouter({ children, className }: PersonaRouterProps) {
 
   const canAccess = useMemo(() => {
     // Allow access to exact index route (will redirect)
-    if (
-      location.pathname === "/studio" ||
-      location.pathname === "/studio/"
-    ) {
+    if (location.pathname === "/studio" || location.pathname === "/studio/") {
       return true;
     }
 
@@ -118,10 +115,7 @@ export function PersonaRouter({ children, className }: PersonaRouterProps) {
     if (isLoading) return;
 
     // Redirect index route to default view
-    if (
-      location.pathname === "/studio" ||
-      location.pathname === "/studio/"
-    ) {
+    if (location.pathname === "/studio" || location.pathname === "/studio/") {
       navigate(defaultRoute, { replace: true });
     }
   }, [isLoading, location.pathname, defaultRoute, navigate]);

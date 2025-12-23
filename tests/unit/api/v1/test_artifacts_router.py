@@ -112,9 +112,7 @@ class TestArtifactsListEndpoint:
         WHEN GET request is made
         THEN response should be 200 OK
         """
-        with patch(
-            "mcp_server_langgraph.api.v1.artifacts.get_artifacts_service"
-        ) as mock_get_service:
+        with patch("mcp_server_langgraph.api.v1.artifacts.get_artifacts_service") as mock_get_service:
             mock_service = AsyncMock()
             mock_service.list_artifacts.return_value = ([], None, False)
             mock_get_service.return_value = mock_service
@@ -124,17 +122,13 @@ class TestArtifactsListEndpoint:
 
             assert response.status_code == 200
 
-    def test_list_artifacts_returns_items_array(
-        self, test_app: FastAPI, sample_artifact: dict[str, Any]
-    ) -> None:
+    def test_list_artifacts_returns_items_array(self, test_app: FastAPI, sample_artifact: dict[str, Any]) -> None:
         """
         GIVEN artifacts exist
         WHEN GET request is made
         THEN response should contain items array
         """
-        with patch(
-            "mcp_server_langgraph.api.v1.artifacts.get_artifacts_service"
-        ) as mock_get_service:
+        with patch("mcp_server_langgraph.api.v1.artifacts.get_artifacts_service") as mock_get_service:
             mock_service = AsyncMock()
             mock_service.list_artifacts.return_value = (
                 [sample_artifact],
@@ -151,18 +145,14 @@ class TestArtifactsListEndpoint:
             assert "items" in data
             assert len(data["items"]) == 1
 
-    def test_list_artifacts_filters_by_session_id(
-        self, test_app: FastAPI, sample_artifact: dict[str, Any]
-    ) -> None:
+    def test_list_artifacts_filters_by_session_id(self, test_app: FastAPI, sample_artifact: dict[str, Any]) -> None:
         """
         GIVEN session_id query parameter
         WHEN GET request is made with session_id
         THEN should filter artifacts by session
         """
         session_id = sample_artifact["session_id"]
-        with patch(
-            "mcp_server_langgraph.api.v1.artifacts.get_artifacts_service"
-        ) as mock_get_service:
+        with patch("mcp_server_langgraph.api.v1.artifacts.get_artifacts_service") as mock_get_service:
             mock_service = AsyncMock()
             mock_service.list_artifacts.return_value = (
                 [sample_artifact],
@@ -185,9 +175,7 @@ class TestArtifactsListEndpoint:
         WHEN GET request is made
         THEN should return paginated response with hasMore
         """
-        with patch(
-            "mcp_server_langgraph.api.v1.artifacts.get_artifacts_service"
-        ) as mock_get_service:
+        with patch("mcp_server_langgraph.api.v1.artifacts.get_artifacts_service") as mock_get_service:
             mock_service = AsyncMock()
             mock_service.list_artifacts.return_value = ([], "next-cursor", True)
             mock_get_service.return_value = mock_service
@@ -209,18 +197,14 @@ class TestArtifactsGetEndpoint:
         """Force GC to prevent mock accumulation in xdist workers."""
         gc.collect()
 
-    def test_get_artifact_returns_200(
-        self, test_app: FastAPI, sample_artifact: dict[str, Any]
-    ) -> None:
+    def test_get_artifact_returns_200(self, test_app: FastAPI, sample_artifact: dict[str, Any]) -> None:
         """
         GIVEN an artifact exists
         WHEN GET request is made with artifact ID
         THEN response should be 200 OK
         """
         artifact_id = sample_artifact["id"]
-        with patch(
-            "mcp_server_langgraph.api.v1.artifacts.get_artifacts_service"
-        ) as mock_get_service:
+        with patch("mcp_server_langgraph.api.v1.artifacts.get_artifacts_service") as mock_get_service:
             mock_service = AsyncMock()
             mock_service.get_artifact.return_value = sample_artifact
             mock_get_service.return_value = mock_service
@@ -230,17 +214,13 @@ class TestArtifactsGetEndpoint:
 
             assert response.status_code == 200
 
-    def test_get_artifact_returns_404_when_not_found(
-        self, test_app: FastAPI
-    ) -> None:
+    def test_get_artifact_returns_404_when_not_found(self, test_app: FastAPI) -> None:
         """
         GIVEN artifact does not exist
         WHEN GET request is made
         THEN response should be 404 Not Found
         """
-        with patch(
-            "mcp_server_langgraph.api.v1.artifacts.get_artifacts_service"
-        ) as mock_get_service:
+        with patch("mcp_server_langgraph.api.v1.artifacts.get_artifacts_service") as mock_get_service:
             mock_service = AsyncMock()
             mock_service.get_artifact.return_value = None
             mock_get_service.return_value = mock_service
@@ -265,9 +245,7 @@ class TestArtifactsCreateEndpoint:
         WHEN POST request is made
         THEN response should be 201 Created
         """
-        with patch(
-            "mcp_server_langgraph.api.v1.artifacts.get_artifacts_service"
-        ) as mock_get_service:
+        with patch("mcp_server_langgraph.api.v1.artifacts.get_artifacts_service") as mock_get_service:
             mock_service = AsyncMock()
             mock_service.create_artifact.return_value = {
                 "id": "art-new123",
@@ -294,9 +272,7 @@ class TestArtifactsCreateEndpoint:
             assert "version" in data
             assert "created_at" in data
 
-    def test_create_artifact_validates_required_fields(
-        self, test_app: FastAPI
-    ) -> None:
+    def test_create_artifact_validates_required_fields(self, test_app: FastAPI) -> None:
         """
         GIVEN missing required fields
         WHEN POST request is made
@@ -316,18 +292,14 @@ class TestArtifactsUpdateEndpoint:
         """Force GC to prevent mock accumulation in xdist workers."""
         gc.collect()
 
-    def test_update_artifact_returns_200(
-        self, test_app: FastAPI, sample_artifact: dict[str, Any]
-    ) -> None:
+    def test_update_artifact_returns_200(self, test_app: FastAPI, sample_artifact: dict[str, Any]) -> None:
         """
         GIVEN an artifact exists
         WHEN PUT request is made with update data
         THEN response should be 200 OK with new version
         """
         artifact_id = sample_artifact["id"]
-        with patch(
-            "mcp_server_langgraph.api.v1.artifacts.get_artifacts_service"
-        ) as mock_get_service:
+        with patch("mcp_server_langgraph.api.v1.artifacts.get_artifacts_service") as mock_get_service:
             mock_service = AsyncMock()
             mock_service.update_artifact.return_value = {
                 "id": artifact_id,
@@ -346,17 +318,13 @@ class TestArtifactsUpdateEndpoint:
             data = response.json()
             assert data["version"] == 2
 
-    def test_update_artifact_returns_404_when_not_found(
-        self, test_app: FastAPI
-    ) -> None:
+    def test_update_artifact_returns_404_when_not_found(self, test_app: FastAPI) -> None:
         """
         GIVEN artifact does not exist
         WHEN PUT request is made
         THEN response should be 404 Not Found
         """
-        with patch(
-            "mcp_server_langgraph.api.v1.artifacts.get_artifacts_service"
-        ) as mock_get_service:
+        with patch("mcp_server_langgraph.api.v1.artifacts.get_artifacts_service") as mock_get_service:
             mock_service = AsyncMock()
             mock_service.update_artifact.return_value = None
             mock_get_service.return_value = mock_service
@@ -378,18 +346,14 @@ class TestArtifactsDeleteEndpoint:
         """Force GC to prevent mock accumulation in xdist workers."""
         gc.collect()
 
-    def test_delete_artifact_returns_204(
-        self, test_app: FastAPI, sample_artifact: dict[str, Any]
-    ) -> None:
+    def test_delete_artifact_returns_204(self, test_app: FastAPI, sample_artifact: dict[str, Any]) -> None:
         """
         GIVEN an artifact exists
         WHEN DELETE request is made
         THEN response should be 204 No Content
         """
         artifact_id = sample_artifact["id"]
-        with patch(
-            "mcp_server_langgraph.api.v1.artifacts.get_artifacts_service"
-        ) as mock_get_service:
+        with patch("mcp_server_langgraph.api.v1.artifacts.get_artifacts_service") as mock_get_service:
             mock_service = AsyncMock()
             mock_service.delete_artifact.return_value = True
             mock_get_service.return_value = mock_service
@@ -399,17 +363,13 @@ class TestArtifactsDeleteEndpoint:
 
             assert response.status_code == 204
 
-    def test_delete_artifact_returns_404_when_not_found(
-        self, test_app: FastAPI
-    ) -> None:
+    def test_delete_artifact_returns_404_when_not_found(self, test_app: FastAPI) -> None:
         """
         GIVEN artifact does not exist
         WHEN DELETE request is made
         THEN response should be 404 Not Found
         """
-        with patch(
-            "mcp_server_langgraph.api.v1.artifacts.get_artifacts_service"
-        ) as mock_get_service:
+        with patch("mcp_server_langgraph.api.v1.artifacts.get_artifacts_service") as mock_get_service:
             mock_service = AsyncMock()
             mock_service.delete_artifact.return_value = False
             mock_get_service.return_value = mock_service
@@ -437,9 +397,7 @@ class TestArtifactsVersionsEndpoint:
         THEN response should be 200 OK with versions array
         """
         artifact_id = sample_artifact["id"]
-        with patch(
-            "mcp_server_langgraph.api.v1.artifacts.get_artifacts_service"
-        ) as mock_get_service:
+        with patch("mcp_server_langgraph.api.v1.artifacts.get_artifacts_service") as mock_get_service:
             mock_service = AsyncMock()
             mock_service.get_artifact_versions.return_value = [sample_version]
             mock_get_service.return_value = mock_service
@@ -452,17 +410,13 @@ class TestArtifactsVersionsEndpoint:
             assert isinstance(data, list)
             assert len(data) == 1
 
-    def test_get_versions_returns_404_when_artifact_not_found(
-        self, test_app: FastAPI
-    ) -> None:
+    def test_get_versions_returns_404_when_artifact_not_found(self, test_app: FastAPI) -> None:
         """
         GIVEN artifact does not exist
         WHEN GET request is made to versions endpoint
         THEN response should be 404 Not Found
         """
-        with patch(
-            "mcp_server_langgraph.api.v1.artifacts.get_artifacts_service"
-        ) as mock_get_service:
+        with patch("mcp_server_langgraph.api.v1.artifacts.get_artifacts_service") as mock_get_service:
             mock_service = AsyncMock()
             mock_service.get_artifact_versions.return_value = None
             mock_get_service.return_value = mock_service
@@ -481,18 +435,14 @@ class TestArtifactsForkEndpoint:
         """Force GC to prevent mock accumulation in xdist workers."""
         gc.collect()
 
-    def test_fork_artifact_returns_201(
-        self, test_app: FastAPI, sample_artifact: dict[str, Any]
-    ) -> None:
+    def test_fork_artifact_returns_201(self, test_app: FastAPI, sample_artifact: dict[str, Any]) -> None:
         """
         GIVEN an artifact exists
         WHEN POST request is made to fork endpoint
         THEN response should be 201 Created with new artifact ID
         """
         artifact_id = sample_artifact["id"]
-        with patch(
-            "mcp_server_langgraph.api.v1.artifacts.get_artifacts_service"
-        ) as mock_get_service:
+        with patch("mcp_server_langgraph.api.v1.artifacts.get_artifacts_service") as mock_get_service:
             mock_service = AsyncMock()
             mock_service.fork_artifact.return_value = {
                 "id": "art-forked123",
@@ -512,17 +462,13 @@ class TestArtifactsForkEndpoint:
             assert "id" in data
             assert data["parent_id"] == artifact_id
 
-    def test_fork_artifact_returns_404_when_not_found(
-        self, test_app: FastAPI
-    ) -> None:
+    def test_fork_artifact_returns_404_when_not_found(self, test_app: FastAPI) -> None:
         """
         GIVEN artifact does not exist
         WHEN POST request is made to fork endpoint
         THEN response should be 404 Not Found
         """
-        with patch(
-            "mcp_server_langgraph.api.v1.artifacts.get_artifacts_service"
-        ) as mock_get_service:
+        with patch("mcp_server_langgraph.api.v1.artifacts.get_artifacts_service") as mock_get_service:
             mock_service = AsyncMock()
             mock_service.fork_artifact.return_value = None
             mock_get_service.return_value = mock_service
@@ -550,9 +496,7 @@ class TestArtifactsSemanticSearchEndpoint:
         WHEN POST request is made to search endpoint
         THEN response should be 200 OK with results
         """
-        with patch(
-            "mcp_server_langgraph.api.v1.artifacts.get_artifacts_service"
-        ) as mock_get_service:
+        with patch("mcp_server_langgraph.api.v1.artifacts.get_artifacts_service") as mock_get_service:
             mock_service = AsyncMock()
             mock_service.semantic_search.return_value = [
                 {"artifact_id": "art-1", "score": 0.95, "title": "Function Sum"},
@@ -571,9 +515,7 @@ class TestArtifactsSemanticSearchEndpoint:
             assert len(data["results"]) == 1
             assert data["results"][0]["score"] == 0.95
 
-    def test_semantic_search_with_empty_query_returns_400(
-        self, test_app: FastAPI
-    ) -> None:
+    def test_semantic_search_with_empty_query_returns_400(self, test_app: FastAPI) -> None:
         """
         GIVEN an empty search query
         WHEN POST request is made
@@ -593,9 +535,7 @@ class TestArtifactsSemanticSearchEndpoint:
         WHEN POST request is made
         THEN should pass limit to service
         """
-        with patch(
-            "mcp_server_langgraph.api.v1.artifacts.get_artifacts_service"
-        ) as mock_get_service:
+        with patch("mcp_server_langgraph.api.v1.artifacts.get_artifacts_service") as mock_get_service:
             mock_service = AsyncMock()
             mock_service.semantic_search.return_value = []
             mock_get_service.return_value = mock_service
@@ -611,17 +551,13 @@ class TestArtifactsSemanticSearchEndpoint:
             call_kwargs = mock_service.semantic_search.call_args[1]
             assert call_kwargs["limit"] == 5
 
-    def test_semantic_search_returns_empty_on_no_results(
-        self, test_app: FastAPI
-    ) -> None:
+    def test_semantic_search_returns_empty_on_no_results(self, test_app: FastAPI) -> None:
         """
         GIVEN a query with no matching artifacts
         WHEN POST request is made
         THEN response should be 200 with empty results
         """
-        with patch(
-            "mcp_server_langgraph.api.v1.artifacts.get_artifacts_service"
-        ) as mock_get_service:
+        with patch("mcp_server_langgraph.api.v1.artifacts.get_artifacts_service") as mock_get_service:
             mock_service = AsyncMock()
             mock_service.semantic_search.return_value = []
             mock_get_service.return_value = mock_service
@@ -645,18 +581,14 @@ class TestArtifactsFindSimilarEndpoint:
         """Force GC to prevent mock accumulation in xdist workers."""
         gc.collect()
 
-    def test_find_similar_returns_200(
-        self, test_app: FastAPI, sample_artifact: dict[str, Any]
-    ) -> None:
+    def test_find_similar_returns_200(self, test_app: FastAPI, sample_artifact: dict[str, Any]) -> None:
         """
         GIVEN an artifact exists
         WHEN GET request is made to similar endpoint
         THEN response should be 200 OK with similar artifacts
         """
         artifact_id = sample_artifact["id"]
-        with patch(
-            "mcp_server_langgraph.api.v1.artifacts.get_artifacts_service"
-        ) as mock_get_service:
+        with patch("mcp_server_langgraph.api.v1.artifacts.get_artifacts_service") as mock_get_service:
             mock_service = AsyncMock()
             mock_service.find_similar.return_value = [
                 {"artifact_id": "art-similar-1", "score": 0.92, "title": "Similar Code"},
@@ -671,18 +603,14 @@ class TestArtifactsFindSimilarEndpoint:
             assert "results" in data
             assert len(data["results"]) == 1
 
-    def test_find_similar_with_limit_parameter(
-        self, test_app: FastAPI, sample_artifact: dict[str, Any]
-    ) -> None:
+    def test_find_similar_with_limit_parameter(self, test_app: FastAPI, sample_artifact: dict[str, Any]) -> None:
         """
         GIVEN limit query parameter
         WHEN GET request is made
         THEN should pass limit to service
         """
         artifact_id = sample_artifact["id"]
-        with patch(
-            "mcp_server_langgraph.api.v1.artifacts.get_artifacts_service"
-        ) as mock_get_service:
+        with patch("mcp_server_langgraph.api.v1.artifacts.get_artifacts_service") as mock_get_service:
             mock_service = AsyncMock()
             mock_service.find_similar.return_value = []
             mock_get_service.return_value = mock_service
@@ -695,18 +623,14 @@ class TestArtifactsFindSimilarEndpoint:
             call_kwargs = mock_service.find_similar.call_args[1]
             assert call_kwargs["limit"] == 3
 
-    def test_find_similar_returns_empty_when_no_matches(
-        self, test_app: FastAPI, sample_artifact: dict[str, Any]
-    ) -> None:
+    def test_find_similar_returns_empty_when_no_matches(self, test_app: FastAPI, sample_artifact: dict[str, Any]) -> None:
         """
         GIVEN no similar artifacts exist
         WHEN GET request is made
         THEN response should be 200 with empty results
         """
         artifact_id = sample_artifact["id"]
-        with patch(
-            "mcp_server_langgraph.api.v1.artifacts.get_artifacts_service"
-        ) as mock_get_service:
+        with patch("mcp_server_langgraph.api.v1.artifacts.get_artifacts_service") as mock_get_service:
             mock_service = AsyncMock()
             mock_service.find_similar.return_value = []
             mock_get_service.return_value = mock_service
@@ -858,9 +782,7 @@ class TestArtifactsContentSizeValidation:
         """Force GC to prevent mock accumulation in xdist workers."""
         gc.collect()
 
-    def test_create_artifact_rejects_oversized_content(
-        self, test_app: FastAPI
-    ) -> None:
+    def test_create_artifact_rejects_oversized_content(self, test_app: FastAPI) -> None:
         """
         GIVEN content exceeding max size limit
         WHEN POST request is made to create artifact
@@ -886,9 +808,7 @@ class TestArtifactsContentSizeValidation:
         data = response.json()
         assert "content size" in data["detail"].lower() or "too large" in data["detail"].lower()
 
-    def test_update_artifact_rejects_oversized_content(
-        self, test_app: FastAPI, sample_artifact: dict[str, Any]
-    ) -> None:
+    def test_update_artifact_rejects_oversized_content(self, test_app: FastAPI, sample_artifact: dict[str, Any]) -> None:
         """
         GIVEN content exceeding max size limit
         WHEN PUT request is made to update artifact
@@ -899,9 +819,7 @@ class TestArtifactsContentSizeValidation:
         artifact_id = sample_artifact["id"]
         oversized_content = "x" * (settings.artifacts_max_content_size + 1)
 
-        with patch(
-            "mcp_server_langgraph.api.v1.artifacts.get_artifacts_service"
-        ) as mock_get_service:
+        with patch("mcp_server_langgraph.api.v1.artifacts.get_artifacts_service") as mock_get_service:
             mock_service = AsyncMock()
             mock_service.update_artifact.return_value = {
                 "id": artifact_id,
@@ -918,17 +836,13 @@ class TestArtifactsContentSizeValidation:
 
             assert response.status_code == 413
 
-    def test_create_artifact_accepts_content_within_limit(
-        self, test_app: FastAPI
-    ) -> None:
+    def test_create_artifact_accepts_content_within_limit(self, test_app: FastAPI) -> None:
         """
         GIVEN content within max size limit
         WHEN POST request is made to create artifact
         THEN response should be 201 Created
         """
-        with patch(
-            "mcp_server_langgraph.api.v1.artifacts.get_artifacts_service"
-        ) as mock_get_service:
+        with patch("mcp_server_langgraph.api.v1.artifacts.get_artifacts_service") as mock_get_service:
             mock_service = AsyncMock()
             mock_service.create_artifact.return_value = {
                 "id": "art-new123",
@@ -977,7 +891,7 @@ class TestArtifactsServiceProtocol:
         # Check that semantic_search is an abstract method
         assert hasattr(ArtifactsServiceProtocol, "semantic_search")
         # Verify it's marked as abstract
-        method = getattr(ArtifactsServiceProtocol, "semantic_search")
+        method = ArtifactsServiceProtocol.semantic_search
         assert getattr(method, "__isabstractmethod__", False)
 
     def test_protocol_defines_find_similar(self) -> None:
@@ -991,7 +905,7 @@ class TestArtifactsServiceProtocol:
         # Check that find_similar is an abstract method
         assert hasattr(ArtifactsServiceProtocol, "find_similar")
         # Verify it's marked as abstract
-        method = getattr(ArtifactsServiceProtocol, "find_similar")
+        method = ArtifactsServiceProtocol.find_similar
         assert getattr(method, "__isabstractmethod__", False)
 
     def test_in_memory_service_implements_semantic_search(self) -> None:

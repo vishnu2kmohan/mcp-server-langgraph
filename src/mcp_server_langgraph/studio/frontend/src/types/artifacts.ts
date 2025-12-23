@@ -332,7 +332,7 @@ export interface FileUploadResult {
 }
 
 // =============================================================================
-// Canvas Artifact Types (Phase 0 - Hybrid Canvas Support)
+// Canvas Artifact Types (Phase 0 - Studio Canvas Support)
 // =============================================================================
 
 /**

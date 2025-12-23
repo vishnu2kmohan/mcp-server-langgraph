@@ -250,8 +250,7 @@ class MockFeatureFlags:
             from mcp_server_langgraph.core.exceptions import FeatureDisabledError
 
             raise FeatureDisabledError(
-                feature_name=display_name
-                or feature_name.replace("enable_", "").replace("_", " ").title(),
+                feature_name=display_name or feature_name.replace("enable_", "").replace("_", " ").title(),
                 flag_name=f"FF_{feature_name.upper()}",
             )
 

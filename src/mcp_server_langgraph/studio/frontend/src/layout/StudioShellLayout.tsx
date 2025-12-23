@@ -534,7 +534,10 @@ export function StudioShellLayout() {
           defaultSize={devToolsCollapsed ? 100 : 75}
           minSize={50}
         >
-          <div data-testid="left-sidebar" className="flex h-full overflow-hidden">
+          <div
+            data-testid="left-sidebar"
+            className="flex h-full overflow-hidden"
+          >
             {/* Activity Bar - fixed width */}
             <ActivityBar />
 

@@ -70,9 +70,7 @@ class TestPushSubscription:
         assert sample_subscription.p256dh_key == "BGV2vxH1234567890abcdef"
         assert sample_subscription.auth_key == "auth123secret"
 
-    def test_is_expired_when_no_expiration(
-        self, sample_subscription: PushSubscription
-    ) -> None:
+    def test_is_expired_when_no_expiration(self, sample_subscription: PushSubscription) -> None:
         """Subscription without expires_at should not be expired."""
         assert not sample_subscription.is_expired()
 
@@ -126,9 +124,7 @@ class TestInMemoryPushSubscriptionStore:
         assert result[0].endpoint == sample_subscription.endpoint
 
     @pytest.mark.asyncio
-    async def test_get_subscriptions_for_user(
-        self, store: InMemoryPushSubscriptionStore
-    ) -> None:
+    async def test_get_subscriptions_for_user(self, store: InMemoryPushSubscriptionStore) -> None:
         """Test getting all subscriptions for a user."""
         user_id = "user-001"
 
@@ -150,9 +146,7 @@ class TestInMemoryPushSubscriptionStore:
         assert len(result) == 3
 
     @pytest.mark.asyncio
-    async def test_get_subscriptions_for_user_empty(
-        self, store: InMemoryPushSubscriptionStore
-    ) -> None:
+    async def test_get_subscriptions_for_user_empty(self, store: InMemoryPushSubscriptionStore) -> None:
         """Test getting subscriptions for a user with none."""
         result = await store.get_subscriptions_for_user("nonexistent-user")
         assert result == []
@@ -172,17 +166,13 @@ class TestInMemoryPushSubscriptionStore:
         assert len(result) == 0
 
     @pytest.mark.asyncio
-    async def test_delete_nonexistent_subscription(
-        self, store: InMemoryPushSubscriptionStore
-    ) -> None:
+    async def test_delete_nonexistent_subscription(self, store: InMemoryPushSubscriptionStore) -> None:
         """Test deleting a subscription that doesn't exist (should not raise)."""
         # Should not raise
         await store.delete_subscription("https://nonexistent.com/endpoint")
 
     @pytest.mark.asyncio
-    async def test_delete_expired_subscriptions(
-        self, store: InMemoryPushSubscriptionStore
-    ) -> None:
+    async def test_delete_expired_subscriptions(self, store: InMemoryPushSubscriptionStore) -> None:
         """Test deleting all expired subscriptions."""
         # Create expired subscription
         expired_sub = PushSubscription(
@@ -253,9 +243,7 @@ class TestInMemoryPushSubscriptionStore:
         assert result[0].last_used_at == new_time
 
     @pytest.mark.asyncio
-    async def test_get_by_endpoint(
-        self, store: InMemoryPushSubscriptionStore, sample_subscription: PushSubscription
-    ) -> None:
+    async def test_get_by_endpoint(self, store: InMemoryPushSubscriptionStore, sample_subscription: PushSubscription) -> None:
         """Test getting a subscription by endpoint."""
         await store.save_subscription(sample_subscription)
 
@@ -264,17 +252,13 @@ class TestInMemoryPushSubscriptionStore:
         assert result.user_id == sample_subscription.user_id
 
     @pytest.mark.asyncio
-    async def test_get_by_endpoint_not_found(
-        self, store: InMemoryPushSubscriptionStore
-    ) -> None:
+    async def test_get_by_endpoint_not_found(self, store: InMemoryPushSubscriptionStore) -> None:
         """Test getting a subscription by endpoint that doesn't exist."""
         result = await store.get_by_endpoint("https://nonexistent.com/endpoint")
         assert result is None
 
     @pytest.mark.asyncio
-    async def test_get_all_subscriptions(
-        self, store: InMemoryPushSubscriptionStore
-    ) -> None:
+    async def test_get_all_subscriptions(self, store: InMemoryPushSubscriptionStore) -> None:
         """Test getting all subscriptions."""
         # Create subscriptions for multiple users
         for i in range(5):
@@ -294,9 +278,7 @@ class TestInMemoryPushSubscriptionStore:
         assert len(result) == 5
 
     @pytest.mark.asyncio
-    async def test_subscription_endpoint_uniqueness(
-        self, store: InMemoryPushSubscriptionStore
-    ) -> None:
+    async def test_subscription_endpoint_uniqueness(self, store: InMemoryPushSubscriptionStore) -> None:
         """Test that saving a subscription with same endpoint updates existing."""
         endpoint = "https://push.example.com/unique"
 

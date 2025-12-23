@@ -18,7 +18,7 @@ from __future__ import annotations
 import gc
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
@@ -87,14 +87,10 @@ class TestLoopAgentFeatureFlag:
         from mcp_server_langgraph.agents.loop_agent import LoopAgent
         from mcp_server_langgraph.core.exceptions import FeatureDisabledError
 
-        with patch(
-            "mcp_server_langgraph.agents.loop_agent.feature_flags"
-        ) as mock_flags:
+        with patch("mcp_server_langgraph.agents.loop_agent.feature_flags") as mock_flags:
             mock_flags.enable_loop_agent = False
             # Mock require_feature to actually raise the error
-            mock_flags.require_feature.side_effect = FeatureDisabledError(
-                "Loop Agent", "enable_loop_agent"
-            )
+            mock_flags.require_feature.side_effect = FeatureDisabledError("Loop Agent", "enable_loop_agent")
 
             with pytest.raises(FeatureDisabledError):
                 LoopAgent(max_iterations=5)
@@ -167,9 +163,7 @@ class TestLoopAgentInitialization:
         """
         from mcp_server_langgraph.agents.loop_agent import LoopAgent
 
-        with patch(
-            "mcp_server_langgraph.agents.loop_agent.feature_flags"
-        ) as mock_flags:
+        with patch("mcp_server_langgraph.agents.loop_agent.feature_flags") as mock_flags:
             mock_flags.enable_loop_agent = True
 
             with pytest.raises(TypeError):
@@ -182,9 +176,7 @@ class TestLoopAgentInitialization:
         """
         from mcp_server_langgraph.agents.loop_agent import LoopAgent
 
-        with patch(
-            "mcp_server_langgraph.agents.loop_agent.feature_flags"
-        ) as mock_flags:
+        with patch("mcp_server_langgraph.agents.loop_agent.feature_flags") as mock_flags:
             mock_flags.enable_loop_agent = True
 
             agent = LoopAgent(max_iterations=10)
@@ -197,9 +189,7 @@ class TestLoopAgentInitialization:
         """
         from mcp_server_langgraph.agents.loop_agent import LoopAgent
 
-        with patch(
-            "mcp_server_langgraph.agents.loop_agent.feature_flags"
-        ) as mock_flags:
+        with patch("mcp_server_langgraph.agents.loop_agent.feature_flags") as mock_flags:
             mock_flags.enable_loop_agent = True
 
             def my_condition(result: Any) -> bool:
@@ -215,9 +205,7 @@ class TestLoopAgentInitialization:
         """
         from mcp_server_langgraph.agents.loop_agent import LoopAgent
 
-        with patch(
-            "mcp_server_langgraph.agents.loop_agent.feature_flags"
-        ) as mock_flags:
+        with patch("mcp_server_langgraph.agents.loop_agent.feature_flags") as mock_flags:
             mock_flags.enable_loop_agent = True
 
             agent = LoopAgent(max_iterations=10)
@@ -246,9 +234,7 @@ class TestLoopAgentExecution:
         """
         from mcp_server_langgraph.agents.loop_agent import LoopAgent
 
-        with patch(
-            "mcp_server_langgraph.agents.loop_agent.feature_flags"
-        ) as mock_flags:
+        with patch("mcp_server_langgraph.agents.loop_agent.feature_flags") as mock_flags:
             mock_flags.enable_loop_agent = True
 
             task_fn = AsyncMock(return_value={"done": True})
@@ -267,9 +253,7 @@ class TestLoopAgentExecution:
         """
         from mcp_server_langgraph.agents.loop_agent import LoopAgent
 
-        with patch(
-            "mcp_server_langgraph.agents.loop_agent.feature_flags"
-        ) as mock_flags:
+        with patch("mcp_server_langgraph.agents.loop_agent.feature_flags") as mock_flags:
             mock_flags.enable_loop_agent = True
 
             task_fn = AsyncMock(return_value={"done": False})
@@ -288,9 +272,7 @@ class TestLoopAgentExecution:
         """
         from mcp_server_langgraph.agents.loop_agent import LoopAgent
 
-        with patch(
-            "mcp_server_langgraph.agents.loop_agent.feature_flags"
-        ) as mock_flags:
+        with patch("mcp_server_langgraph.agents.loop_agent.feature_flags") as mock_flags:
             mock_flags.enable_loop_agent = True
 
             # Task returns done=True on 3rd iteration
@@ -319,9 +301,7 @@ class TestLoopAgentExecution:
         """
         from mcp_server_langgraph.agents.loop_agent import LoopAgent
 
-        with patch(
-            "mcp_server_langgraph.agents.loop_agent.feature_flags"
-        ) as mock_flags:
+        with patch("mcp_server_langgraph.agents.loop_agent.feature_flags") as mock_flags:
             mock_flags.enable_loop_agent = True
 
             async def accumulating_task(context: dict[str, Any]) -> dict[str, Any]:
@@ -360,9 +340,7 @@ class TestLoopAgentErrorHandling:
         """
         from mcp_server_langgraph.agents.loop_agent import LoopAgent
 
-        with patch(
-            "mcp_server_langgraph.agents.loop_agent.feature_flags"
-        ) as mock_flags:
+        with patch("mcp_server_langgraph.agents.loop_agent.feature_flags") as mock_flags:
             mock_flags.enable_loop_agent = True
 
             call_count = 0
@@ -390,9 +368,7 @@ class TestLoopAgentErrorHandling:
         """
         from mcp_server_langgraph.agents.loop_agent import LoopAgent
 
-        with patch(
-            "mcp_server_langgraph.agents.loop_agent.feature_flags"
-        ) as mock_flags:
+        with patch("mcp_server_langgraph.agents.loop_agent.feature_flags") as mock_flags:
             mock_flags.enable_loop_agent = True
 
             call_count = 0
@@ -439,9 +415,7 @@ class TestLoopAgentStateTracking:
         """
         from mcp_server_langgraph.agents.loop_agent import LoopAgent
 
-        with patch(
-            "mcp_server_langgraph.agents.loop_agent.feature_flags"
-        ) as mock_flags:
+        with patch("mcp_server_langgraph.agents.loop_agent.feature_flags") as mock_flags:
             mock_flags.enable_loop_agent = True
 
             iteration = 0
@@ -470,9 +444,7 @@ class TestLoopAgentStateTracking:
         """
         from mcp_server_langgraph.agents.loop_agent import LoopAgent
 
-        with patch(
-            "mcp_server_langgraph.agents.loop_agent.feature_flags"
-        ) as mock_flags:
+        with patch("mcp_server_langgraph.agents.loop_agent.feature_flags") as mock_flags:
             mock_flags.enable_loop_agent = True
 
             task_fn = AsyncMock(return_value={"done": True})

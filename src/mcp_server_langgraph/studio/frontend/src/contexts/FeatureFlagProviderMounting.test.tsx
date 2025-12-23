@@ -3,7 +3,7 @@
  *
  * TDD test to ensure FeatureFlagProvider is mounted in main.tsx.
  * This is a critical test because:
- * - StudioShellGuard depends on useFeatureFlag("canvas_studio_shell")
+ * - StudioShellGuard depends on useFeatureFlag("studio_canvas_shell")
  * - Without FeatureFlagProvider, the guard always returns false
  * - This causes /studio/* routes to not render correctly
  *

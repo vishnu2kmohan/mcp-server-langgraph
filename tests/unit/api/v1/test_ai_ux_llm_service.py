@@ -169,6 +169,7 @@ SAMPLE_METRICS_INSIGHTS_LLM_RESPONSE = """
 def reset_ai_circuit_breakers():
     """Reset all AI UX circuit breakers before each test to ensure clean state."""
     from mcp_server_langgraph.resilience.circuit_breaker import reset_circuit_breaker
+
     reset_circuit_breaker("ai_ux_llm")
     yield
     # Clean up after test
@@ -202,9 +203,7 @@ class TestAIUXServiceInitialization:
     """Test AIUXService initialization."""
 
     @pytest.mark.asyncio
-    async def test_service_creates_with_llm_factory(
-        self, mock_llm_factory, mock_settings
-    ):
+    async def test_service_creates_with_llm_factory(self, mock_llm_factory, mock_settings):
         """Service initializes with LLM factory when enabled."""
         from mcp_server_langgraph.api.v1.ai_ux_service import AIUXService
 
@@ -258,9 +257,7 @@ class TestErrorAnalysisWithLLM:
         assert result.classification.confidence >= 0.9
 
     @pytest.mark.asyncio
-    async def test_error_analysis_includes_context_in_prompt(
-        self, mock_llm_factory, mock_settings
-    ):
+    async def test_error_analysis_includes_context_in_prompt(self, mock_llm_factory, mock_settings):
         """Error analysis prompt includes user context."""
         from mcp_server_langgraph.api.v1.ai_ux_service import AIUXService
         from mcp_server_langgraph.api.v1.ai_ux import ErrorInfo, UserContext
@@ -284,21 +281,16 @@ class TestErrorAnalysisWithLLM:
         call_args = mock_llm_factory.ainvoke.call_args
         messages = call_args[0][0]  # First positional arg is messages
         # Combine all message contents for checking
-        all_content = " ".join(
-            m.content if hasattr(m, "content") else str(m)
-            for m in messages
-        )
+        all_content = " ".join(m.content if hasattr(m, "content") else str(m) for m in messages)
 
         assert "Permission denied" in all_content
         assert "alice-builder" in all_content
 
     @pytest.mark.asyncio
-    async def test_error_analysis_falls_back_on_llm_error(
-        self, mock_llm_factory, mock_settings
-    ):
+    async def test_error_analysis_falls_back_on_llm_error(self, mock_llm_factory, mock_settings):
         """Error analysis falls back to heuristics when LLM fails."""
         from mcp_server_langgraph.api.v1.ai_ux_service import AIUXService
-        from mcp_server_langgraph.api.v1.ai_ux import ErrorInfo, UserContext
+        from mcp_server_langgraph.api.v1.ai_ux import ErrorInfo
 
         mock_llm_factory.ainvoke.side_effect = Exception("LLM service unavailable")
 
@@ -314,12 +306,10 @@ class TestErrorAnalysisWithLLM:
         assert result.classification.category.value == "timeout"
 
     @pytest.mark.asyncio
-    async def test_error_analysis_uses_heuristics_when_llm_disabled(
-        self, mock_llm_factory, mock_settings
-    ):
+    async def test_error_analysis_uses_heuristics_when_llm_disabled(self, mock_llm_factory, mock_settings):
         """Error analysis uses heuristics when LLM is disabled."""
         from mcp_server_langgraph.api.v1.ai_ux_service import AIUXService
-        from mcp_server_langgraph.api.v1.ai_ux import ErrorInfo, UserContext
+        from mcp_server_langgraph.api.v1.ai_ux import ErrorInfo
 
         mock_settings.ff_enable_ai_suggestions = False
         service = AIUXService(llm_factory=mock_llm_factory, settings=mock_settings)
@@ -344,9 +334,7 @@ class TestEmptyStateSuggestionsWithLLM:
         from mcp_server_langgraph.api.v1.ai_ux_service import AIUXService
         from mcp_server_langgraph.api.v1.ai_ux import EmptyStateSuggestionsRequest
 
-        mock_llm_factory.ainvoke.return_value = AIMessage(
-            content=SAMPLE_EMPTY_STATE_LLM_RESPONSE
-        )
+        mock_llm_factory.ainvoke.return_value = AIMessage(content=SAMPLE_EMPTY_STATE_LLM_RESPONSE)
 
         service = AIUXService(llm_factory=mock_llm_factory, settings=mock_settings)
 
@@ -365,9 +353,7 @@ class TestEmptyStateSuggestionsWithLLM:
         assert len(result.suggestions) >= 1
 
     @pytest.mark.asyncio
-    async def test_empty_state_falls_back_on_llm_error(
-        self, mock_llm_factory, mock_settings
-    ):
+    async def test_empty_state_falls_back_on_llm_error(self, mock_llm_factory, mock_settings):
         """Empty state falls back to heuristics when LLM fails."""
         from mcp_server_langgraph.api.v1.ai_ux_service import AIUXService
         from mcp_server_langgraph.api.v1.ai_ux import EmptyStateSuggestionsRequest
@@ -397,9 +383,7 @@ class TestPersonaAnalysisWithLLM:
         from mcp_server_langgraph.api.v1.ai_ux_service import AIUXService
         from mcp_server_langgraph.api.v1.ai_ux import PersonaAnalyzeRequest
 
-        mock_llm_factory.ainvoke.return_value = AIMessage(
-            content=SAMPLE_PERSONA_LLM_RESPONSE
-        )
+        mock_llm_factory.ainvoke.return_value = AIMessage(content=SAMPLE_PERSONA_LLM_RESPONSE)
 
         service = AIUXService(llm_factory=mock_llm_factory, settings=mock_settings)
 
@@ -419,16 +403,12 @@ class TestPersonaAnalysisWithLLM:
         assert result.detected_persona != result.assigned_persona
 
     @pytest.mark.asyncio
-    async def test_persona_analysis_returns_behavior_signals(
-        self, mock_llm_factory, mock_settings
-    ):
+    async def test_persona_analysis_returns_behavior_signals(self, mock_llm_factory, mock_settings):
         """Persona analysis includes behavior signals from LLM."""
         from mcp_server_langgraph.api.v1.ai_ux_service import AIUXService
         from mcp_server_langgraph.api.v1.ai_ux import PersonaAnalyzeRequest
 
-        mock_llm_factory.ainvoke.return_value = AIMessage(
-            content=SAMPLE_PERSONA_LLM_RESPONSE
-        )
+        mock_llm_factory.ainvoke.return_value = AIMessage(content=SAMPLE_PERSONA_LLM_RESPONSE)
 
         service = AIUXService(llm_factory=mock_llm_factory, settings=mock_settings)
 
@@ -449,9 +429,7 @@ class TestLLMPromptConstruction:
     """Test prompt construction for LLM calls."""
 
     @pytest.mark.asyncio
-    async def test_error_prompt_includes_system_message(
-        self, mock_llm_factory, mock_settings
-    ):
+    async def test_error_prompt_includes_system_message(self, mock_llm_factory, mock_settings):
         """Error analysis prompt includes system instructions."""
         from mcp_server_langgraph.api.v1.ai_ux_service import AIUXService
         from mcp_server_langgraph.api.v1.ai_ux import ErrorInfo
@@ -495,16 +473,12 @@ class TestResponseParsing:
     """Test LLM response parsing."""
 
     @pytest.mark.asyncio
-    async def test_handles_malformed_json_response(
-        self, mock_llm_factory, mock_settings
-    ):
+    async def test_handles_malformed_json_response(self, mock_llm_factory, mock_settings):
         """Falls back to heuristics when LLM returns invalid JSON."""
         from mcp_server_langgraph.api.v1.ai_ux_service import AIUXService
         from mcp_server_langgraph.api.v1.ai_ux import ErrorInfo
 
-        mock_llm_factory.ainvoke.return_value = AIMessage(
-            content="This is not valid JSON"
-        )
+        mock_llm_factory.ainvoke.return_value = AIMessage(content="This is not valid JSON")
 
         service = AIUXService(llm_factory=mock_llm_factory, settings=mock_settings)
 
@@ -518,9 +492,7 @@ class TestResponseParsing:
         assert result.classification is not None
 
     @pytest.mark.asyncio
-    async def test_handles_json_with_markdown_wrapping(
-        self, mock_llm_factory, mock_settings
-    ):
+    async def test_handles_json_with_markdown_wrapping(self, mock_llm_factory, mock_settings):
         """Parses JSON even when wrapped in markdown code blocks."""
         from mcp_server_langgraph.api.v1.ai_ux_service import AIUXService
         from mcp_server_langgraph.api.v1.ai_ux import ErrorInfo
@@ -593,9 +565,7 @@ class TestDisclosureAnalysisWithLLM:
         from mcp_server_langgraph.api.v1.ai_ux_service import AIUXService
         from mcp_server_langgraph.api.v1.ai_ux import DisclosureAnalyzeRequest
 
-        mock_llm_factory.ainvoke.return_value = AIMessage(
-            content=SAMPLE_DISCLOSURE_LLM_RESPONSE
-        )
+        mock_llm_factory.ainvoke.return_value = AIMessage(content=SAMPLE_DISCLOSURE_LLM_RESPONSE)
 
         service = AIUXService(llm_factory=mock_llm_factory, settings=mock_settings)
 
@@ -615,9 +585,7 @@ class TestDisclosureAnalysisWithLLM:
         assert result.confidence >= 0.8
 
     @pytest.mark.asyncio
-    async def test_disclosure_includes_feature_usage_in_prompt(
-        self, mock_llm_factory, mock_settings
-    ):
+    async def test_disclosure_includes_feature_usage_in_prompt(self, mock_llm_factory, mock_settings):
         """Disclosure prompt includes feature usage data."""
         from mcp_server_langgraph.api.v1.ai_ux_service import AIUXService
         from mcp_server_langgraph.api.v1.ai_ux import (
@@ -625,9 +593,7 @@ class TestDisclosureAnalysisWithLLM:
             SessionHistoryItem,
         )
 
-        mock_llm_factory.ainvoke.return_value = AIMessage(
-            content=SAMPLE_DISCLOSURE_LLM_RESPONSE
-        )
+        mock_llm_factory.ainvoke.return_value = AIMessage(content=SAMPLE_DISCLOSURE_LLM_RESPONSE)
 
         service = AIUXService(llm_factory=mock_llm_factory, settings=mock_settings)
 
@@ -643,16 +609,12 @@ class TestDisclosureAnalysisWithLLM:
 
         call_args = mock_llm_factory.ainvoke.call_args
         messages = call_args[0][0]
-        all_content = " ".join(
-            m.content if hasattr(m, "content") else str(m) for m in messages
-        )
+        all_content = " ".join(m.content if hasattr(m, "content") else str(m) for m in messages)
 
         assert "workflow_builder" in all_content or "mcp" in all_content
 
     @pytest.mark.asyncio
-    async def test_disclosure_falls_back_on_llm_error(
-        self, mock_llm_factory, mock_settings
-    ):
+    async def test_disclosure_falls_back_on_llm_error(self, mock_llm_factory, mock_settings):
         """Disclosure falls back to heuristics when LLM fails."""
         from mcp_server_langgraph.api.v1.ai_ux_service import AIUXService
         from mcp_server_langgraph.api.v1.ai_ux import DisclosureAnalyzeRequest
@@ -692,9 +654,7 @@ class TestNudgeRecommendationsWithLLM:
             NudgeContext,
         )
 
-        mock_llm_factory.ainvoke.return_value = AIMessage(
-            content=SAMPLE_NUDGE_LLM_RESPONSE
-        )
+        mock_llm_factory.ainvoke.return_value = AIMessage(content=SAMPLE_NUDGE_LLM_RESPONSE)
 
         service = AIUXService(llm_factory=mock_llm_factory, settings=mock_settings)
 
@@ -718,9 +678,7 @@ class TestNudgeRecommendationsWithLLM:
         assert result.nudge is not None
 
     @pytest.mark.asyncio
-    async def test_nudge_considers_history_in_prompt(
-        self, mock_llm_factory, mock_settings
-    ):
+    async def test_nudge_considers_history_in_prompt(self, mock_llm_factory, mock_settings):
         """Nudge prompt includes dismissal history."""
         from mcp_server_langgraph.api.v1.ai_ux_service import AIUXService
         from mcp_server_langgraph.api.v1.ai_ux import (
@@ -729,9 +687,7 @@ class TestNudgeRecommendationsWithLLM:
             NudgeHistoryItem,
         )
 
-        mock_llm_factory.ainvoke.return_value = AIMessage(
-            content=SAMPLE_NUDGE_LLM_RESPONSE
-        )
+        mock_llm_factory.ainvoke.return_value = AIMessage(content=SAMPLE_NUDGE_LLM_RESPONSE)
 
         service = AIUXService(llm_factory=mock_llm_factory, settings=mock_settings)
 
@@ -751,17 +707,13 @@ class TestNudgeRecommendationsWithLLM:
 
         call_args = mock_llm_factory.ainvoke.call_args
         messages = call_args[0][0]
-        all_content = " ".join(
-            m.content if hasattr(m, "content") else str(m) for m in messages
-        )
+        all_content = " ".join(m.content if hasattr(m, "content") else str(m) for m in messages)
 
         # Should mention nudge history
         assert "keyboard-shortcuts" in all_content or "dismissed" in all_content
 
     @pytest.mark.asyncio
-    async def test_nudge_falls_back_on_llm_error(
-        self, mock_llm_factory, mock_settings
-    ):
+    async def test_nudge_falls_back_on_llm_error(self, mock_llm_factory, mock_settings):
         """Nudge falls back to heuristics when LLM fails."""
         from mcp_server_langgraph.api.v1.ai_ux_service import AIUXService
         from mcp_server_langgraph.api.v1.ai_ux import (
@@ -803,9 +755,7 @@ class TestOnboardingPersonalizationWithLLM:
             SignupContext,
         )
 
-        mock_llm_factory.ainvoke.return_value = AIMessage(
-            content=SAMPLE_ONBOARDING_LLM_RESPONSE
-        )
+        mock_llm_factory.ainvoke.return_value = AIMessage(content=SAMPLE_ONBOARDING_LLM_RESPONSE)
 
         service = AIUXService(llm_factory=mock_llm_factory, settings=mock_settings)
 
@@ -825,16 +775,12 @@ class TestOnboardingPersonalizationWithLLM:
         assert result.confidence >= 0.9
 
     @pytest.mark.asyncio
-    async def test_onboarding_includes_actions_in_prompt(
-        self, mock_llm_factory, mock_settings
-    ):
+    async def test_onboarding_includes_actions_in_prompt(self, mock_llm_factory, mock_settings):
         """Onboarding prompt includes user's initial actions."""
         from mcp_server_langgraph.api.v1.ai_ux_service import AIUXService
         from mcp_server_langgraph.api.v1.ai_ux import OnboardingPersonalizeRequest
 
-        mock_llm_factory.ainvoke.return_value = AIMessage(
-            content=SAMPLE_ONBOARDING_LLM_RESPONSE
-        )
+        mock_llm_factory.ainvoke.return_value = AIMessage(content=SAMPLE_ONBOARDING_LLM_RESPONSE)
 
         service = AIUXService(llm_factory=mock_llm_factory, settings=mock_settings)
 
@@ -847,16 +793,12 @@ class TestOnboardingPersonalizationWithLLM:
 
         call_args = mock_llm_factory.ainvoke.call_args
         messages = call_args[0][0]
-        all_content = " ".join(
-            m.content if hasattr(m, "content") else str(m) for m in messages
-        )
+        all_content = " ".join(m.content if hasattr(m, "content") else str(m) for m in messages)
 
         assert "explored_workflows" in all_content or "viewed_traces" in all_content
 
     @pytest.mark.asyncio
-    async def test_onboarding_falls_back_on_llm_error(
-        self, mock_llm_factory, mock_settings
-    ):
+    async def test_onboarding_falls_back_on_llm_error(self, mock_llm_factory, mock_settings):
         """Onboarding falls back to heuristics when LLM fails."""
         from mcp_server_langgraph.api.v1.ai_ux_service import AIUXService
         from mcp_server_langgraph.api.v1.ai_ux import OnboardingPersonalizeRequest
@@ -891,9 +833,7 @@ class TestMetricsInsightsWithLLM:
         """Metrics insights uses LLM when available."""
         from mcp_server_langgraph.api.v1.ai_ux_service import AIUXService
 
-        mock_llm_factory.ainvoke.return_value = AIMessage(
-            content=SAMPLE_METRICS_INSIGHTS_LLM_RESPONSE
-        )
+        mock_llm_factory.ainvoke.return_value = AIMessage(content=SAMPLE_METRICS_INSIGHTS_LLM_RESPONSE)
 
         service = AIUXService(llm_factory=mock_llm_factory, settings=mock_settings)
 
@@ -907,15 +847,11 @@ class TestMetricsInsightsWithLLM:
         assert any(i.type == "anomaly" for i in result.insights)
 
     @pytest.mark.asyncio
-    async def test_metrics_insights_includes_predictions(
-        self, mock_llm_factory, mock_settings
-    ):
+    async def test_metrics_insights_includes_predictions(self, mock_llm_factory, mock_settings):
         """Metrics insights includes predictions from LLM."""
         from mcp_server_langgraph.api.v1.ai_ux_service import AIUXService
 
-        mock_llm_factory.ainvoke.return_value = AIMessage(
-            content=SAMPLE_METRICS_INSIGHTS_LLM_RESPONSE
-        )
+        mock_llm_factory.ainvoke.return_value = AIMessage(content=SAMPLE_METRICS_INSIGHTS_LLM_RESPONSE)
 
         service = AIUXService(llm_factory=mock_llm_factory, settings=mock_settings)
 
@@ -926,9 +862,7 @@ class TestMetricsInsightsWithLLM:
         assert result.predictions[0].metric == "monthly_active_users"
 
     @pytest.mark.asyncio
-    async def test_metrics_insights_falls_back_on_llm_error(
-        self, mock_llm_factory, mock_settings
-    ):
+    async def test_metrics_insights_falls_back_on_llm_error(self, mock_llm_factory, mock_settings):
         """Metrics insights falls back to heuristics when LLM fails."""
         from mcp_server_langgraph.api.v1.ai_ux_service import AIUXService
 
@@ -956,9 +890,10 @@ def reset_metrics():
         ai_ux_llm_fallbacks_total,
         ai_ux_llm_latency_seconds,
     )
+
     # Reset counters - Prometheus counters can't be reset in tests easily
     # so we just get the current values and verify increments
-    yield {
+    return {
         "calls": ai_ux_llm_calls_total,
         "fallbacks": ai_ux_llm_fallbacks_total,
         "latency": ai_ux_llm_latency_seconds,
@@ -977,9 +912,7 @@ class TestAIUXServiceObservabilityMetrics:
         )
         from mcp_server_langgraph.api.v1.ai_ux import ErrorInfo
 
-        mock_llm_factory.ainvoke.return_value = AIMessage(
-            content=SAMPLE_ERROR_LLM_RESPONSE
-        )
+        mock_llm_factory.ainvoke.return_value = AIMessage(content=SAMPLE_ERROR_LLM_RESPONSE)
 
         # Get initial value
         initial = ai_ux_llm_calls_total.labels(method="error_analysis")._value.get()
@@ -995,9 +928,7 @@ class TestAIUXServiceObservabilityMetrics:
         assert after > initial
 
     @pytest.mark.asyncio
-    async def test_fallback_increments_fallback_counter(
-        self, mock_llm_factory, mock_settings
-    ):
+    async def test_fallback_increments_fallback_counter(self, mock_llm_factory, mock_settings):
         """Fallback to heuristics increments the fallback counter."""
         from mcp_server_langgraph.api.v1.ai_ux_service import (
             AIUXService,
@@ -1008,9 +939,7 @@ class TestAIUXServiceObservabilityMetrics:
         mock_llm_factory.ainvoke.side_effect = Exception("LLM failed")
 
         # Get initial value
-        initial = ai_ux_llm_fallbacks_total.labels(
-            method="error_analysis"
-        )._value.get()
+        initial = ai_ux_llm_fallbacks_total.labels(method="error_analysis")._value.get()
 
         service = AIUXService(llm_factory=mock_llm_factory, settings=mock_settings)
         await service.analyze_error(
@@ -1031,9 +960,7 @@ class TestAIUXServiceObservabilityMetrics:
         )
         from mcp_server_langgraph.api.v1.ai_ux import ErrorInfo
 
-        mock_llm_factory.ainvoke.return_value = AIMessage(
-            content=SAMPLE_ERROR_LLM_RESPONSE
-        )
+        mock_llm_factory.ainvoke.return_value = AIMessage(content=SAMPLE_ERROR_LLM_RESPONSE)
 
         # Get initial sum from histogram
         labeled_histogram = ai_ux_llm_latency_seconds.labels(method="error_analysis")
@@ -1092,24 +1019,16 @@ class TestAIUXServiceObservabilityMetrics:
         ]
 
         await service.analyze_error(ErrorInfo(name="E", message="test"), None)
-        await service.get_empty_state_suggestions(
-            EmptyStateSuggestionsRequest(context="workflows", persona="bob")
-        )
-        await service.analyze_persona(
-            PersonaAnalyzeRequest(user_id="u1", assigned_persona="bob")
-        )
-        await service.analyze_disclosure(
-            DisclosureAnalyzeRequest(user_id="u1", feature_usage={"chat": 10})
-        )
+        await service.get_empty_state_suggestions(EmptyStateSuggestionsRequest(context="workflows", persona="bob"))
+        await service.analyze_persona(PersonaAnalyzeRequest(user_id="u1", assigned_persona="bob"))
+        await service.analyze_disclosure(DisclosureAnalyzeRequest(user_id="u1", feature_usage={"chat": 10}))
         await service.recommend_nudge(
             NudgeRecommendRequest(
                 user_id="u1",
                 current_context=NudgeContext(page="/chat", action="viewing"),
             )
         )
-        await service.personalize_onboarding(
-            OnboardingPersonalizeRequest(user_id="u1", initial_actions=["chat"])
-        )
+        await service.personalize_onboarding(OnboardingPersonalizeRequest(user_id="u1", initial_actions=["chat"]))
         await service.get_metrics_insights()
 
         # All methods should have incremented counters
@@ -1118,9 +1037,7 @@ class TestAIUXServiceObservabilityMetrics:
             assert counter >= 1, f"Counter for {method} should be >= 1"
 
     @pytest.mark.asyncio
-    async def test_heuristic_mode_does_not_increment_llm_counter(
-        self, mock_settings
-    ):
+    async def test_heuristic_mode_does_not_increment_llm_counter(self, mock_settings):
         """Heuristic-only mode does not increment LLM counters."""
         from mcp_server_langgraph.api.v1.ai_ux_service import (
             AIUXService,
@@ -1157,9 +1074,7 @@ class TestAIUXServiceResponseCaching:
         from mcp_server_langgraph.api.v1.ai_ux_service import AIUXService
         from mcp_server_langgraph.api.v1.ai_ux import EmptyStateSuggestionsRequest
 
-        mock_llm_factory.ainvoke.return_value = AIMessage(
-            content=SAMPLE_EMPTY_STATE_LLM_RESPONSE
-        )
+        mock_llm_factory.ainvoke.return_value = AIMessage(content=SAMPLE_EMPTY_STATE_LLM_RESPONSE)
 
         service = AIUXService(llm_factory=mock_llm_factory, settings=mock_settings)
 
@@ -1184,9 +1099,7 @@ class TestAIUXServiceResponseCaching:
         from mcp_server_langgraph.api.v1.ai_ux_service import AIUXService
         from mcp_server_langgraph.api.v1.ai_ux import EmptyStateSuggestionsRequest
 
-        mock_llm_factory.ainvoke.return_value = AIMessage(
-            content=SAMPLE_EMPTY_STATE_LLM_RESPONSE
-        )
+        mock_llm_factory.ainvoke.return_value = AIMessage(content=SAMPLE_EMPTY_STATE_LLM_RESPONSE)
 
         service = AIUXService(llm_factory=mock_llm_factory, settings=mock_settings)
 
@@ -1216,9 +1129,7 @@ class TestAIUXServiceResponseCaching:
         )
         from mcp_server_langgraph.api.v1.ai_ux import EmptyStateSuggestionsRequest
 
-        mock_llm_factory.ainvoke.return_value = AIMessage(
-            content=SAMPLE_EMPTY_STATE_LLM_RESPONSE
-        )
+        mock_llm_factory.ainvoke.return_value = AIMessage(content=SAMPLE_EMPTY_STATE_LLM_RESPONSE)
 
         # Get initial value
         initial = ai_ux_cache_hits_total.labels(method="empty_state")._value.get()
@@ -1242,9 +1153,7 @@ class TestAIUXServiceResponseCaching:
         from mcp_server_langgraph.api.v1.ai_ux_service import AIUXService
         from mcp_server_langgraph.api.v1.ai_ux import PersonaAnalyzeRequest
 
-        mock_llm_factory.ainvoke.return_value = AIMessage(
-            content=SAMPLE_PERSONA_LLM_RESPONSE
-        )
+        mock_llm_factory.ainvoke.return_value = AIMessage(content=SAMPLE_PERSONA_LLM_RESPONSE)
 
         service = AIUXService(llm_factory=mock_llm_factory, settings=mock_settings)
 

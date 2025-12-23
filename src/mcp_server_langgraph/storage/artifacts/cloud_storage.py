@@ -34,9 +34,7 @@ CloudProvider = Literal["s3", "gcs", "azure"]
 class CloudStorageClient(Protocol):
     """Protocol for cloud storage clients."""
 
-    async def put_object(
-        self, bucket: str, key: str, body: bytes, content_type: str | None = None
-    ) -> dict[str, Any]:
+    async def put_object(self, bucket: str, key: str, body: bytes, content_type: str | None = None) -> dict[str, Any]:
         """Upload object to cloud storage."""
         ...
 

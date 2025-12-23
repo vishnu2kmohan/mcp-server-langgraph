@@ -4,7 +4,7 @@ Artifacts Router
 Provides CRUD operations for canvas artifact management under /api/v1/artifacts/*.
 
 This implements the API contract defined in the frontend MSW handlers
-(studio/frontend/src/mocks/handlers/canvasHandlers.ts) for the Hybrid Canvas feature.
+(studio/frontend/src/mocks/handlers/canvasHandlers.ts) for the Studio Canvas feature.
 
 Usage:
     GET /api/v1/artifacts - List artifacts (with pagination, session filtering)
@@ -73,11 +73,7 @@ AuditService = Annotated[UnifiedAuditService | None, Depends(get_audit_service)]
 
 def _get_user_id(current_user: dict[str, Any]) -> str:
     """Extract user ID from the current user context."""
-    user_id: str | None = (
-        current_user.get("sub")
-        or current_user.get("user_id")
-        or current_user.get("preferred_username")
-    )
+    user_id: str | None = current_user.get("sub") or current_user.get("user_id") or current_user.get("preferred_username")
 
     if not user_id:
         logger.warning(
@@ -101,13 +97,9 @@ artifacts_router = APIRouter(tags=["artifacts"])
 class EditMetadata(BaseModel):
     """Metadata about artifact editing."""
 
-    edited_by: Literal["user", "ai-suggestion", "ai-generation"] = Field(
-        default="user", description="Who edited the artifact"
-    )
+    edited_by: Literal["user", "ai-suggestion", "ai-generation"] = Field(default="user", description="Who edited the artifact")
     language: str | None = Field(default=None, description="Programming language")
-    ai_confidence: float | None = Field(
-        default=None, ge=0, le=1, description="AI confidence score"
-    )
+    ai_confidence: float | None = Field(default=None, ge=0, le=1, description="AI confidence score")
 
 
 class ArtifactCreateRequest(BaseModel):
@@ -242,23 +234,17 @@ class ArtifactsServiceProtocol(ABC):
         ...
 
     @abstractmethod
-    async def get_artifact(
-        self, artifact_id: str, user_id: str
-    ) -> dict[str, Any] | None:
+    async def get_artifact(self, artifact_id: str, user_id: str) -> dict[str, Any] | None:
         """Get a specific artifact."""
         ...
 
     @abstractmethod
-    async def create_artifact(
-        self, data: dict[str, Any], user_id: str
-    ) -> dict[str, Any]:
+    async def create_artifact(self, data: dict[str, Any], user_id: str) -> dict[str, Any]:
         """Create a new artifact."""
         ...
 
     @abstractmethod
-    async def update_artifact(
-        self, artifact_id: str, data: dict[str, Any], user_id: str
-    ) -> dict[str, Any] | None:
+    async def update_artifact(self, artifact_id: str, data: dict[str, Any], user_id: str) -> dict[str, Any] | None:
         """Update an artifact."""
         ...
 
@@ -268,23 +254,17 @@ class ArtifactsServiceProtocol(ABC):
         ...
 
     @abstractmethod
-    async def get_artifact_versions(
-        self, artifact_id: str, user_id: str
-    ) -> list[dict[str, Any]] | None:
+    async def get_artifact_versions(self, artifact_id: str, user_id: str) -> list[dict[str, Any]] | None:
         """Get version history for an artifact."""
         ...
 
     @abstractmethod
-    async def fork_artifact(
-        self, artifact_id: str, new_name: str | None, user_id: str
-    ) -> dict[str, Any] | None:
+    async def fork_artifact(self, artifact_id: str, new_name: str | None, user_id: str) -> dict[str, Any] | None:
         """Fork an artifact."""
         ...
 
     @abstractmethod
-    async def semantic_search(
-        self, query: str, user_id: str, limit: int = 10
-    ) -> list[dict[str, Any]]:
+    async def semantic_search(self, query: str, user_id: str, limit: int = 10) -> list[dict[str, Any]]:
         """Search artifacts by semantic similarity.
 
         Args:
@@ -298,9 +278,7 @@ class ArtifactsServiceProtocol(ABC):
         ...
 
     @abstractmethod
-    async def find_similar(
-        self, artifact_id: str, user_id: str, limit: int = 5
-    ) -> list[dict[str, Any]]:
+    async def find_similar(self, artifact_id: str, user_id: str, limit: int = 5) -> list[dict[str, Any]]:
         """Find artifacts similar to a given artifact.
 
         Args:
@@ -358,18 +336,14 @@ class InMemoryArtifactsService(ArtifactsServiceProtocol):
 
         return paginated, next_cursor, has_more
 
-    async def get_artifact(
-        self, artifact_id: str, user_id: str
-    ) -> dict[str, Any] | None:
+    async def get_artifact(self, artifact_id: str, user_id: str) -> dict[str, Any] | None:
         """Get a specific artifact."""
         artifact = self._artifacts.get(artifact_id)
         if artifact and artifact.get("user_id") == user_id:
             return artifact
         return None
 
-    async def create_artifact(
-        self, data: dict[str, Any], user_id: str
-    ) -> dict[str, Any]:
+    async def create_artifact(self, data: dict[str, Any], user_id: str) -> dict[str, Any]:
         """Create a new artifact."""
         artifact_id = f"art-{uuid4().hex[:8]}"
         now = datetime.now(UTC).isoformat()
@@ -409,9 +383,7 @@ class InMemoryArtifactsService(ArtifactsServiceProtocol):
             "created_at": now,
         }
 
-    async def update_artifact(
-        self, artifact_id: str, data: dict[str, Any], user_id: str
-    ) -> dict[str, Any] | None:
+    async def update_artifact(self, artifact_id: str, data: dict[str, Any], user_id: str) -> dict[str, Any] | None:
         """Update an artifact."""
         artifact = self._artifacts.get(artifact_id)
         if not artifact or artifact.get("user_id") != user_id:
@@ -482,9 +454,7 @@ class InMemoryArtifactsService(ArtifactsServiceProtocol):
 
         return True
 
-    async def get_artifact_versions(
-        self, artifact_id: str, user_id: str
-    ) -> list[dict[str, Any]] | None:
+    async def get_artifact_versions(self, artifact_id: str, user_id: str) -> list[dict[str, Any]] | None:
         """Get version history for an artifact."""
         artifact = self._artifacts.get(artifact_id)
         if not artifact or artifact.get("user_id") != user_id:
@@ -492,9 +462,7 @@ class InMemoryArtifactsService(ArtifactsServiceProtocol):
 
         return self._versions.get(artifact_id, [])
 
-    async def fork_artifact(
-        self, artifact_id: str, new_name: str | None, user_id: str
-    ) -> dict[str, Any] | None:
+    async def fork_artifact(self, artifact_id: str, new_name: str | None, user_id: str) -> dict[str, Any] | None:
         """Fork an artifact."""
         artifact = self._artifacts.get(artifact_id)
         if not artifact:
@@ -692,9 +660,7 @@ async def semantic_search(
         },
     )
 
-    return SemanticSearchResponse(
-        results=[SemanticSearchResult(**r) for r in results]
-    )
+    return SemanticSearchResponse(results=[SemanticSearchResult(**r) for r in results])
 
 
 @artifacts_router.get("/artifacts")
@@ -801,9 +767,7 @@ async def create_artifact(
     return ArtifactCreateResponse(**result)
 
 
-@artifacts_router.put(
-    "/artifacts/{artifact_id}"
-)
+@artifacts_router.put("/artifacts/{artifact_id}")
 async def update_artifact(
     artifact_id: str,
     request: ArtifactUpdateRequest,
@@ -860,9 +824,7 @@ async def update_artifact(
     return ArtifactUpdateResponse(**result)
 
 
-@artifacts_router.delete(
-    "/artifacts/{artifact_id}", status_code=status.HTTP_204_NO_CONTENT
-)
+@artifacts_router.delete("/artifacts/{artifact_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_artifact(
     artifact_id: str,
     current_user: CurrentUser,
@@ -936,9 +898,7 @@ async def find_similar_artifacts(
         },
     )
 
-    return FindSimilarResponse(
-        results=[SemanticSearchResult(**r) for r in results]
-    )
+    return FindSimilarResponse(results=[SemanticSearchResult(**r) for r in results])
 
 
 @artifacts_router.get(

@@ -212,7 +212,10 @@ export interface UseMCPWebSocketReturn {
 /**
  * Get default MCP WebSocket URL
  */
-function getDefaultMCPWebSocketUrl(authenticated: boolean, token?: string): string {
+function getDefaultMCPWebSocketUrl(
+  authenticated: boolean,
+  token?: string,
+): string {
   if (typeof window === "undefined") {
     return authenticated
       ? "ws://localhost:8000/api/v1/ws/mcp/auth"

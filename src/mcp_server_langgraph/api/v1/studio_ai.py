@@ -1,7 +1,7 @@
 """
 Studio AI API Router (Sprint 1)
 
-Unified API endpoint for all HybridShell AI capabilities.
+Unified API endpoint for all StudioShell AI capabilities.
 
 Provides a single composite analysis endpoint that:
 - Accepts multiple task types across 8 categories
@@ -21,7 +21,7 @@ Usage:
         ]
     }
 
-Reference: HybridShell AI Enhancement Analysis Plan
+Reference: StudioShell AI Enhancement Analysis Plan
 """
 
 from __future__ import annotations
@@ -35,8 +35,6 @@ from pydantic import BaseModel, Field
 
 from mcp_server_langgraph.agents.studio_orchestrator import (
     StudioOrchestrator,
-    StudioTask,
-    TaskCategory,
 )
 from mcp_server_langgraph.core.feature_flags import feature_flags
 
@@ -128,7 +126,7 @@ def get_studio_orchestrator() -> StudioOrchestrator:
 @studio_ai_router.post(
     "/analyze",
     response_model=StudioAnalyzeResponse,
-    summary="Unified composite analysis for HybridShell AI",
+    summary="Unified composite analysis for StudioShell AI",
     description="""
     Execute multiple AI analysis tasks in parallel and synthesize results.
 
@@ -190,10 +188,8 @@ async def analyze(
             user_id=request.user_id,
             session_id=request.session_id,
             persona=request.persona,
-            include_ux=any(
-                t in task_types
-                for t in ("persona_analysis", "disclosure_analysis", "error_analysis")
-            ) or "ux" in task_categories,
+            include_ux=any(t in task_types for t in ("persona_analysis", "disclosure_analysis", "error_analysis"))
+            or "ux" in task_categories,
             include_session="session" in task_categories,
             include_conversation="conversation" in task_categories,
             include_canvas="canvas" in task_categories,

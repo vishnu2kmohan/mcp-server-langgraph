@@ -2,7 +2,7 @@
  * Canvas Handlers - Phase 2
  *
  * MSW handlers for Canvas API endpoints.
- * These define the API contracts for artifact management in the Hybrid Canvas.
+ * These define the API contracts for artifact management in the Studio Canvas.
  *
  * Endpoints:
  * - GET /api/v1/artifacts - List artifacts for a session

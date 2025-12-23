@@ -8,11 +8,9 @@ from __future__ import annotations
 
 import gc
 from datetime import UTC, datetime
-from typing import Any
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
-from starlette.websockets import WebSocketDisconnect
 
 from mcp_server_langgraph.websocket import (
     MessageEnvelope,
@@ -70,9 +68,7 @@ class TestMCPTaskWebSocketHandler:
         assert issubclass(MCPTaskWebSocketHandler, WebSocketBase)
 
     @pytest.mark.asyncio
-    async def test_sends_initial_task_list_on_connect(
-        self, mock_websocket: MagicMock, mock_mcp_service: MagicMock
-    ) -> None:
+    async def test_sends_initial_task_list_on_connect(self, mock_websocket: MagicMock, mock_mcp_service: MagicMock) -> None:
         """
         GIVEN a new WebSocket connection
         WHEN on_connect is called
@@ -101,9 +97,7 @@ class TestMCPTaskWebSocketHandler:
         assert "tasks" in call_args
 
     @pytest.mark.asyncio
-    async def test_handles_subscribe_message(
-        self, mock_websocket: MagicMock, mock_mcp_service: MagicMock
-    ) -> None:
+    async def test_handles_subscribe_message(self, mock_websocket: MagicMock, mock_mcp_service: MagicMock) -> None:
         """
         GIVEN an active connection
         WHEN a subscribe message is received
@@ -141,9 +135,7 @@ class TestMCPTaskWebSocketHandler:
         assert "task-123" in handler.subscriptions
 
     @pytest.mark.asyncio
-    async def test_handles_unsubscribe_message(
-        self, mock_websocket: MagicMock, mock_mcp_service: MagicMock
-    ) -> None:
+    async def test_handles_unsubscribe_message(self, mock_websocket: MagicMock, mock_mcp_service: MagicMock) -> None:
         """
         GIVEN an active connection with subscriptions
         WHEN an unsubscribe message is received
@@ -171,9 +163,7 @@ class TestMCPTaskWebSocketHandler:
         assert "task-123" not in handler.subscriptions
 
     @pytest.mark.asyncio
-    async def test_handles_refresh_message(
-        self, mock_websocket: MagicMock, mock_mcp_service: MagicMock
-    ) -> None:
+    async def test_handles_refresh_message(self, mock_websocket: MagicMock, mock_mcp_service: MagicMock) -> None:
         """
         GIVEN an active connection
         WHEN a refresh message is received
@@ -199,9 +189,7 @@ class TestMCPTaskWebSocketHandler:
         mock_mcp_service.list_tasks.assert_called_once()
 
     @pytest.mark.asyncio
-    async def test_returns_error_for_missing_task_id(
-        self, mock_websocket: MagicMock, mock_mcp_service: MagicMock
-    ) -> None:
+    async def test_returns_error_for_missing_task_id(self, mock_websocket: MagicMock, mock_mcp_service: MagicMock) -> None:
         """
         GIVEN an active connection
         WHEN a subscribe message without task_id is received
@@ -228,9 +216,7 @@ class TestMCPTaskWebSocketHandler:
         assert "task_id" in response.payload.get("message", "").lower()
 
     @pytest.mark.asyncio
-    async def test_rejects_unauthenticated_connection(
-        self, mock_websocket: MagicMock, mock_mcp_service: MagicMock
-    ) -> None:
+    async def test_rejects_unauthenticated_connection(self, mock_websocket: MagicMock, mock_mcp_service: MagicMock) -> None:
         """
         GIVEN a WebSocket connection without auth token
         WHEN require_auth=True is configured

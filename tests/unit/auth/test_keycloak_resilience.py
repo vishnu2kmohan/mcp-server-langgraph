@@ -68,9 +68,7 @@ class TestTokenValidatorRetryLogic:
         gc.collect()
 
     @pytest.mark.asyncio
-    async def test_get_jwks_retries_on_connect_error(
-        self, keycloak_config, mock_jwks_response
-    ):
+    async def test_get_jwks_retries_on_connect_error(self, keycloak_config, mock_jwks_response):
         """
         GIVEN: TokenValidator configured with Keycloak
         WHEN: JWKS fetch fails twice with connection error, then succeeds
@@ -95,9 +93,7 @@ class TestTokenValidatorRetryLogic:
             response.raise_for_status = MagicMock()
             return response
 
-        with patch(
-            "mcp_server_langgraph.auth.keycloak.get_http_client_manager"
-        ) as mock_get_manager:
+        with patch("mcp_server_langgraph.auth.keycloak.get_http_client_manager") as mock_get_manager:
             mock_manager = MagicMock()
             mock_client = AsyncMock()
             mock_client.get = mock_get
@@ -130,9 +126,7 @@ class TestTokenValidatorRetryLogic:
         async def mock_get_always_fails(*args, **kwargs):
             raise httpx.ConnectError("Connection refused")
 
-        with patch(
-            "mcp_server_langgraph.auth.keycloak.get_http_client_manager"
-        ) as mock_get_manager:
+        with patch("mcp_server_langgraph.auth.keycloak.get_http_client_manager") as mock_get_manager:
             mock_manager = MagicMock()
             mock_client = AsyncMock()
             mock_client.get = mock_get_always_fails
@@ -144,9 +138,7 @@ class TestTokenValidatorRetryLogic:
                     await validator.get_jwks()
 
     @pytest.mark.asyncio
-    async def test_get_jwks_does_not_retry_on_http_error(
-        self, keycloak_config
-    ):
+    async def test_get_jwks_does_not_retry_on_http_error(self, keycloak_config):
         """
         GIVEN: TokenValidator configured with Keycloak
         WHEN: JWKS endpoint returns HTTP 404
@@ -168,9 +160,7 @@ class TestTokenValidatorRetryLogic:
             )
             return response
 
-        with patch(
-            "mcp_server_langgraph.auth.keycloak.get_http_client_manager"
-        ) as mock_get_manager:
+        with patch("mcp_server_langgraph.auth.keycloak.get_http_client_manager") as mock_get_manager:
             mock_manager = MagicMock()
             mock_client = AsyncMock()
             mock_client.get = mock_get
@@ -193,9 +183,7 @@ class TestTokenValidatorCircuitBreaker:
         gc.collect()
 
     @pytest.mark.asyncio
-    async def test_circuit_breaker_opens_after_threshold_failures(
-        self, keycloak_config
-    ):
+    async def test_circuit_breaker_opens_after_threshold_failures(self, keycloak_config):
         """
         GIVEN: TokenValidator with circuit breaker
         WHEN: JWKS fetch fails repeatedly (exceeds threshold)
@@ -216,9 +204,7 @@ class TestTokenValidatorCircuitBreaker:
         async def mock_get_always_fails(*args, **kwargs):
             raise httpx.ConnectError("Connection refused")
 
-        with patch(
-            "mcp_server_langgraph.auth.keycloak.get_http_client_manager"
-        ) as mock_get_manager:
+        with patch("mcp_server_langgraph.auth.keycloak.get_http_client_manager") as mock_get_manager:
             mock_manager = MagicMock()
             mock_client = AsyncMock()
             mock_client.get = mock_get_always_fails
@@ -250,9 +236,7 @@ class TestTokenValidatorConnectionPooling:
         gc.collect()
 
     @pytest.mark.asyncio
-    async def test_uses_shared_http_client_manager(
-        self, keycloak_config, mock_jwks_response
-    ):
+    async def test_uses_shared_http_client_manager(self, keycloak_config, mock_jwks_response):
         """
         GIVEN: TokenValidator configured with Keycloak
         WHEN: Making multiple JWKS requests
@@ -267,9 +251,7 @@ class TestTokenValidatorConnectionPooling:
         mock_response.json.return_value = mock_jwks_response
         mock_response.raise_for_status = MagicMock()
 
-        with patch(
-            "mcp_server_langgraph.auth.keycloak.get_http_client_manager"
-        ) as mock_get_manager:
+        with patch("mcp_server_langgraph.auth.keycloak.get_http_client_manager") as mock_get_manager:
             mock_manager = MagicMock()
             mock_client = AsyncMock()
             mock_client.get.return_value = mock_response
@@ -312,9 +294,7 @@ class TestTokenValidatorTimeout:
             # Simulate timeout by raising TimeoutException
             raise httpx.TimeoutException("Request timed out")
 
-        with patch(
-            "mcp_server_langgraph.auth.keycloak.get_http_client_manager"
-        ) as mock_get_manager:
+        with patch("mcp_server_langgraph.auth.keycloak.get_http_client_manager") as mock_get_manager:
             mock_manager = MagicMock()
             mock_client = AsyncMock()
             mock_client.get = mock_slow_get

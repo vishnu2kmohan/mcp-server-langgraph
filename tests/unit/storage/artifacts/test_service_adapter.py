@@ -15,7 +15,7 @@ from __future__ import annotations
 
 import gc
 from typing import Any
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import AsyncMock
 
 import pytest
 
@@ -97,9 +97,7 @@ class TestServiceAdapterListArtifacts:
 
         mock_composite = AsyncMock()
         # Return 11 items (1 more than limit) to indicate has_more
-        mock_composite.list.return_value = [
-            create_test_artifact(artifact_id=f"art-{i}") for i in range(11)
-        ]
+        mock_composite.list.return_value = [create_test_artifact(artifact_id=f"art-{i}") for i in range(11)]
 
         adapter = CompositeArtifactsServiceAdapter(mock_composite)
 
@@ -123,9 +121,7 @@ class TestServiceAdapterListArtifacts:
 
         mock_composite = AsyncMock()
         # Return fewer items than limit
-        mock_composite.list.return_value = [
-            create_test_artifact(artifact_id=f"art-{i}") for i in range(5)
-        ]
+        mock_composite.list.return_value = [create_test_artifact(artifact_id=f"art-{i}") for i in range(5)]
 
         adapter = CompositeArtifactsServiceAdapter(mock_composite)
 

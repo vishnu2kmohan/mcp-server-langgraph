@@ -241,7 +241,7 @@ class TestSkillLoaderBenchmarks:
         from mcp_server_langgraph.skills.loader import SkillLoader
 
         loader = SkillLoader()
-        skill_md = '''---
+        skill_md = """---
 name: web-research
 description: Research topics using web search
 version: "1.0.0"
@@ -266,7 +266,7 @@ This skill allows agents to research topics using web search.
 
 - Research quantum computing advances
 - Find latest AI news
-'''
+"""
 
         result = benchmark(loader.parse_skill_content, skill_md)
 
@@ -280,7 +280,7 @@ This skill allows agents to research topics using web search.
         loader = SkillLoader()
 
         # Create temporary skill file
-        skill_content = '''---
+        skill_content = """---
 name: benchmark-skill
 description: Skill for benchmarking
 version: "1.0.0"
@@ -289,7 +289,7 @@ version: "1.0.0"
 # Benchmark Skill
 
 Instructions for the benchmark skill.
-'''
+"""
 
         with TemporaryDirectory() as tmpdir:
             skill_path = Path(tmpdir) / "SKILL.md"

@@ -69,9 +69,7 @@ class TestEncryptedSessionsFeatureFlag:
         )
 
         # With flag disabled, metadata should not be encrypted
-        with patch(
-            "mcp_server_langgraph.auth.encrypted_session_store.feature_flags"
-        ) as mock_flags:
+        with patch("mcp_server_langgraph.auth.encrypted_session_store.feature_flags") as mock_flags:
             mock_flags.enable_encrypted_sessions = False
             result = store._encrypt_metadata({"sensitive": "data"})
             assert ENCRYPTED_MARKER not in result
@@ -284,9 +282,7 @@ class TestEncryptedSessionStore:
             backend="memory",
         )
 
-        with patch(
-            "mcp_server_langgraph.auth.encrypted_session_store.feature_flags"
-        ) as mock_flags:
+        with patch("mcp_server_langgraph.auth.encrypted_session_store.feature_flags") as mock_flags:
             mock_flags.enable_encrypted_sessions = True
 
             session = await store.create(
@@ -315,9 +311,7 @@ class TestEncryptedSessionStore:
             backend="memory",
         )
 
-        with patch(
-            "mcp_server_langgraph.auth.encrypted_session_store.feature_flags"
-        ) as mock_flags:
+        with patch("mcp_server_langgraph.auth.encrypted_session_store.feature_flags") as mock_flags:
             mock_flags.enable_encrypted_sessions = True
 
             created = await store.create(

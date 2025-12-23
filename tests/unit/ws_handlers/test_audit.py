@@ -7,7 +7,6 @@ TDD tests for the Audit WebSocket using the standardized WebSocketBase.
 from __future__ import annotations
 
 import gc
-from typing import Any
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
@@ -69,9 +68,7 @@ class TestAuditHandler:
         assert issubclass(AuditHandler, WebSocketBase)
 
     @pytest.mark.asyncio
-    async def test_handles_set_filter_message(
-        self, mock_websocket: MagicMock, mock_audit_broadcaster: MagicMock
-    ) -> None:
+    async def test_handles_set_filter_message(self, mock_websocket: MagicMock, mock_audit_broadcaster: MagicMock) -> None:
         """
         GIVEN an active connection
         WHEN a set_filter message is received
@@ -105,9 +102,7 @@ class TestAuditHandler:
         mock_audit_broadcaster.subscribe.assert_called()
 
     @pytest.mark.asyncio
-    async def test_handles_clear_filter_message(
-        self, mock_websocket: MagicMock, mock_audit_broadcaster: MagicMock
-    ) -> None:
+    async def test_handles_clear_filter_message(self, mock_websocket: MagicMock, mock_audit_broadcaster: MagicMock) -> None:
         """
         GIVEN an active connection with filters
         WHEN a clear_filter message is received
@@ -167,9 +162,7 @@ class TestAuditHandler:
         assert response.type == "error"
 
     @pytest.mark.asyncio
-    async def test_push_audit_event(
-        self, mock_websocket: MagicMock, mock_audit_broadcaster: MagicMock
-    ) -> None:
+    async def test_push_audit_event(self, mock_websocket: MagicMock, mock_audit_broadcaster: MagicMock) -> None:
         """
         GIVEN an active connection
         WHEN push_audit_event is called
@@ -185,13 +178,15 @@ class TestAuditHandler:
         )
         handler._websocket = mock_websocket
 
-        await handler.push_audit_event({
-            "event_id": "evt-001",
-            "timestamp": "2025-01-15T10:30:00Z",
-            "category": "authentication",
-            "event_type": "login_success",
-            "actor": "user:alice",
-        })
+        await handler.push_audit_event(
+            {
+                "event_id": "evt-001",
+                "timestamp": "2025-01-15T10:30:00Z",
+                "category": "authentication",
+                "event_type": "login_success",
+                "actor": "user:alice",
+            }
+        )
 
         mock_websocket.send_json.assert_called_once()
         call_args = mock_websocket.send_json.call_args[0][0]

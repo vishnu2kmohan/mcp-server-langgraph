@@ -13,8 +13,7 @@ TDD: These tests are written FIRST before full integration is wired.
 from __future__ import annotations
 
 import gc
-from datetime import UTC, datetime
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -208,7 +207,7 @@ class TestAIExplanationE2EFlow:
         # If sequential: 4 tasks × 50ms = 200ms
         # If parallel: ~50ms (all start together)
         # Allow some overhead, but should be < 150ms (< 3x single task)
-        assert total_time < 0.15, f"Expected parallel execution < 150ms, got {total_time*1000:.0f}ms"
+        assert total_time < 0.15, f"Expected parallel execution < 150ms, got {total_time * 1000:.0f}ms"
 
     @pytest.mark.asyncio
     async def test_metrics_recorded_on_generation(self) -> None:
@@ -219,7 +218,6 @@ class TestAIExplanationE2EFlow:
         from mcp_server_langgraph.agents.explanation_orchestrator import (
             CachedExplanationOrchestrator,
         )
-        from mcp_server_langgraph.core.interrupts.ai_explanation import AIExplanation
 
         # Create mock LLM
         mock_llm = MagicMock()
@@ -237,9 +235,7 @@ class TestAIExplanationE2EFlow:
             cache=mock_cache,
         )
 
-        with patch(
-            "mcp_server_langgraph.agents.explanation_orchestrator.record_explanation_generation"
-        ) as mock_record:
+        with patch("mcp_server_langgraph.agents.explanation_orchestrator.record_explanation_generation") as mock_record:
             await orchestrator.generate_explanation_cached(
                 approval_id="approval-e2e-004",
                 agent_name="TestAgent",
@@ -363,9 +359,7 @@ class TestAIExplanationFeatureFlagIntegration:
         orchestrator = ExplanationOrchestrator()
 
         # Default is disabled for gradual rollout
-        with patch(
-            "mcp_server_langgraph.core.feature_flags.feature_flags"
-        ) as mock_ff:
+        with patch("mcp_server_langgraph.core.feature_flags.feature_flags") as mock_ff:
             mock_ff.enable_ai_explanations = False
             mock_ff.is_test_mode = False
 

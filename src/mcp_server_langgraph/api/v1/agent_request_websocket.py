@@ -213,9 +213,7 @@ async def broadcast_approval_required(message: Any) -> None:
 
     # Convert message to dict (handles both Pydantic models)
     payload = (
-        message.model_dump()
-        if hasattr(message, "model_dump")
-        else (dict(message) if hasattr(message, "__iter__") else {})
+        message.model_dump() if hasattr(message, "model_dump") else (dict(message) if hasattr(message, "__iter__") else {})
     )
 
     await broadcaster.broadcast(
@@ -239,9 +237,7 @@ async def broadcast_clarification_required(message: Any) -> None:
     broadcaster = get_broadcaster()
 
     payload = (
-        message.model_dump()
-        if hasattr(message, "model_dump")
-        else (dict(message) if hasattr(message, "__iter__") else {})
+        message.model_dump() if hasattr(message, "model_dump") else (dict(message) if hasattr(message, "__iter__") else {})
     )
 
     await broadcaster.broadcast(
@@ -265,9 +261,7 @@ async def broadcast_approval_updated(message: Any) -> None:
     broadcaster = get_broadcaster()
 
     payload = (
-        message.model_dump()
-        if hasattr(message, "model_dump")
-        else (dict(message) if hasattr(message, "__iter__") else {})
+        message.model_dump() if hasattr(message, "model_dump") else (dict(message) if hasattr(message, "__iter__") else {})
     )
 
     await broadcaster.broadcast(
@@ -291,9 +285,7 @@ async def broadcast_execution_resumed(message: Any) -> None:
     broadcaster = get_broadcaster()
 
     payload = (
-        message.model_dump()
-        if hasattr(message, "model_dump")
-        else (dict(message) if hasattr(message, "__iter__") else {})
+        message.model_dump() if hasattr(message, "model_dump") else (dict(message) if hasattr(message, "__iter__") else {})
     )
 
     await broadcaster.broadcast(

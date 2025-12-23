@@ -219,13 +219,7 @@ class TestMiddlewareTokenizeValueCoverage:
 
         middleware = PIIMiddleware()
         lookup: dict[str, str] = {}
-        data = {
-            "level1": {
-                "level2": {
-                    "email": "deep@example.com"
-                }
-            }
-        }
+        data = {"level1": {"level2": {"email": "deep@example.com"}}}
         result = middleware._tokenize_value(data, lookup)
 
         assert "deep@example.com" not in str(result)

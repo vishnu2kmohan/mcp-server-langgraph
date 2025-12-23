@@ -293,6 +293,7 @@ class TestApprovalRequiredAIExplanation:
 
         # Verify can be deserialized
         import json as json_module
+
         data = json_module.loads(json_str)
         assert data["ai_explanation"]["why_uncertain"] == "JSON test"
 

@@ -752,9 +752,7 @@ class TestVisualVerificationMetricsIntegration:
         with patch("mcp_server_langgraph.tools.screenshot_tools.capture_screenshot") as mock_capture:
             mock_capture.ainvoke = AsyncMock(return_value=mock_screenshot_result)
 
-            with patch(
-                "mcp_server_langgraph.llm.verifier.record_visual_verification_request"
-            ) as mock_record:
+            with patch("mcp_server_langgraph.llm.verifier.record_visual_verification_request") as mock_record:
                 await visual_verifier.verify_with_visual(
                     url="https://example.com",
                     expected_state="Login form visible",
@@ -778,9 +776,7 @@ class TestVisualVerificationMetricsIntegration:
         with patch("mcp_server_langgraph.tools.screenshot_tools.capture_screenshot") as mock_capture:
             mock_capture.ainvoke = AsyncMock(return_value=mock_screenshot_result)
 
-            with patch(
-                "mcp_server_langgraph.llm.verifier.record_visual_verification_request"
-            ) as mock_record:
+            with patch("mcp_server_langgraph.llm.verifier.record_visual_verification_request") as mock_record:
                 await visual_verifier.verify_with_visual(
                     url="https://example.com",
                     expected_state="Login form visible",
@@ -809,9 +805,7 @@ class TestVisualVerificationMetricsIntegration:
             mock_cache.aset = AsyncMock()
             mock_get_cache.return_value = mock_cache
 
-            with patch(
-                "mcp_server_langgraph.llm.verifier.record_visual_verification_request"
-            ) as mock_record:
+            with patch("mcp_server_langgraph.llm.verifier.record_visual_verification_request") as mock_record:
                 await visual_verifier.verify_with_visual(
                     url="https://example.com",
                     expected_state="Login form visible",
@@ -835,9 +829,7 @@ class TestVisualVerificationMetricsIntegration:
         with patch("mcp_server_langgraph.tools.screenshot_tools.capture_screenshot") as mock_capture:
             mock_capture.ainvoke = AsyncMock(return_value=mock_screenshot_result)
 
-            with patch(
-                "mcp_server_langgraph.llm.verifier.record_visual_verification_duration"
-            ) as mock_record:
+            with patch("mcp_server_langgraph.llm.verifier.record_visual_verification_duration") as mock_record:
                 await visual_verifier.verify_with_visual(
                     url="https://example.com",
                     expected_state="Login form visible",
@@ -861,9 +853,7 @@ class TestVisualVerificationMetricsIntegration:
         with patch("mcp_server_langgraph.tools.screenshot_tools.capture_screenshot") as mock_capture:
             mock_capture.ainvoke = AsyncMock(return_value=mock_screenshot_result)
 
-            with patch(
-                "mcp_server_langgraph.llm.verifier.record_visual_verification_score"
-            ) as mock_record:
+            with patch("mcp_server_langgraph.llm.verifier.record_visual_verification_score") as mock_record:
                 await visual_verifier.verify_with_visual(
                     url="https://example.com",
                     expected_state="Login form visible",
@@ -887,9 +877,7 @@ class TestVisualVerificationMetricsIntegration:
         with patch("mcp_server_langgraph.tools.screenshot_tools.capture_screenshot") as mock_capture:
             mock_capture.ainvoke = AsyncMock(return_value=mock_screenshot_result)
 
-            with patch(
-                "mcp_server_langgraph.llm.verifier.record_visual_verification_urls"
-            ) as mock_record:
+            with patch("mcp_server_langgraph.llm.verifier.record_visual_verification_urls") as mock_record:
                 await visual_verifier.verify_with_visual(
                     url="https://example.com",
                     expected_state="Login form visible",
@@ -899,9 +887,7 @@ class TestVisualVerificationMetricsIntegration:
                 mock_record.assert_called_with(1)
 
     @pytest.mark.asyncio
-    async def test_verify_with_visual_records_metrics_on_llm_exception(
-        self, visual_verifier, mock_screenshot_result
-    ):
+    async def test_verify_with_visual_records_metrics_on_llm_exception(self, visual_verifier, mock_screenshot_result):
         """GIVEN LLM throws exception during verification
         WHEN verify_with_visual catches exception
         THEN error metric should still be recorded
@@ -920,9 +906,7 @@ class TestVisualVerificationMetricsIntegration:
             mock_cache.aset = AsyncMock()
             mock_get_cache.return_value = mock_cache
 
-            with patch(
-                "mcp_server_langgraph.llm.verifier.record_visual_verification_request"
-            ) as mock_record:
+            with patch("mcp_server_langgraph.llm.verifier.record_visual_verification_request") as mock_record:
                 # Should not raise, should handle gracefully
                 await visual_verifier.verify_with_visual(
                     url="https://example.com",

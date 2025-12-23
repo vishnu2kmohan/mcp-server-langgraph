@@ -43,9 +43,7 @@ def create_mock_subagent(
     subagent = MagicMock(spec=Subagent)
     subagent.task_id = task_id
     subagent.status = status
-    subagent.execute = AsyncMock(
-        return_value={"status": "completed", "result": f"Result from {task_id}"}
-    )
+    subagent.execute = AsyncMock(return_value={"status": "completed", "result": f"Result from {task_id}"})
     subagent.cancel = MagicMock()
     return subagent
 
@@ -297,10 +295,7 @@ class TestArtifactBenchmarks:
             )
 
         def retrieve_all():
-            return [
-                storage.retrieve(f"task-{i % 10}", f"artifact_{i}")
-                for i in range(50)
-            ]
+            return [storage.retrieve(f"task-{i % 10}", f"artifact_{i}") for i in range(50)]
 
         result = benchmark(retrieve_all)
         assert len(result) == 50
@@ -348,13 +343,15 @@ class TestParallelExecutionBenchmarks:
                         instructions=f"Analyze the topic from a {focus} perspective",
                         complexity="complicated",
                     )
-                    for i, focus in enumerate([
-                        "security",
-                        "performance",
-                        "usability",
-                        "reliability",
-                        "scalability",
-                    ])
+                    for i, focus in enumerate(
+                        [
+                            "security",
+                            "performance",
+                            "usability",
+                            "reliability",
+                            "scalability",
+                        ]
+                    )
                 ],
             )
 

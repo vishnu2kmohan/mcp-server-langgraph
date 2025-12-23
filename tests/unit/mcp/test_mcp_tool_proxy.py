@@ -6,16 +6,14 @@ that wraps external MCP tools as LangChain BaseTool.
 Written FIRST before implementation (RED phase) per ADR-0082.
 """
 
-import asyncio
 import gc
-from typing import Any
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
 
-
 pytestmark = pytest.mark.unit
+
 
 @pytest.mark.xdist_group(name="mcp_tool_proxy")
 class TestMCPToolProxy:
@@ -127,7 +125,7 @@ class TestMCPToolProxy:
         )
 
         mock_executor = AsyncMock()
-        mock_executor.call_tool.side_effect = asyncio.TimeoutError("Operation timed out")
+        mock_executor.call_tool.side_effect = TimeoutError("Operation timed out")
 
         proxy = MCPToolProxy.from_definition(tool_def, mock_executor)
 
@@ -302,9 +300,7 @@ class TestMCPToolProxyFactory:
         registry._server_tools["github"] = ["github:create_pr"]
 
         mock_executor = MagicMock()
-        proxies = create_proxies_from_registry(
-            registry, mock_executor, server_name="playwright"
-        )
+        proxies = create_proxies_from_registry(registry, mock_executor, server_name="playwright")
 
         assert len(proxies) == 2
         assert all("playwright" in p.name for p in proxies)

@@ -378,9 +378,7 @@ class TestConversationIntelligenceErrors:
         )
 
         mock_service = MagicMock()
-        mock_service.detect_intent = AsyncMock(
-            side_effect=Exception("Service unavailable")
-        )
+        mock_service.detect_intent = AsyncMock(side_effect=Exception("Service unavailable"))
 
         orchestrator = StudioOrchestrator(ai_ux_service=mock_service)
         task = StudioTask(

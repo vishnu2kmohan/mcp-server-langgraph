@@ -12,8 +12,7 @@ from __future__ import annotations
 
 import gc
 from datetime import UTC, datetime
-from typing import Any
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
@@ -165,9 +164,7 @@ class TestQueueApprovalRequestWithExplanation:
             what_could_go_wrong="Action may have unintended effects",
         )
 
-        with patch(
-            "mcp_server_langgraph.api.v1.agent_requests.feature_flags"
-        ) as mock_ff:
+        with patch("mcp_server_langgraph.api.v1.agent_requests.feature_flags") as mock_ff:
             mock_ff.enable_ai_explanations = True
 
             # Patch at the source module, not where it's imported
@@ -175,9 +172,7 @@ class TestQueueApprovalRequestWithExplanation:
                 "mcp_server_langgraph.agents.explanation_orchestrator.CachedExplanationOrchestrator"
             ) as mock_orch_class:
                 mock_orch = AsyncMock()
-                mock_orch.generate_explanation_cached = AsyncMock(
-                    return_value=mock_explanation
-                )
+                mock_orch.generate_explanation_cached = AsyncMock(return_value=mock_explanation)
                 mock_orch_class.return_value = mock_orch
 
                 request = await queue.queue_approval_request(
@@ -206,9 +201,7 @@ class TestQueueApprovalRequestWithExplanation:
 
         queue = AgentRequestQueue()
 
-        with patch(
-            "mcp_server_langgraph.api.v1.agent_requests.feature_flags"
-        ) as mock_ff:
+        with patch("mcp_server_langgraph.api.v1.agent_requests.feature_flags") as mock_ff:
             mock_ff.enable_ai_explanations = False
 
             request = await queue.queue_approval_request(
@@ -236,9 +229,7 @@ class TestQueueApprovalRequestWithExplanation:
 
         queue = AgentRequestQueue()
 
-        with patch(
-            "mcp_server_langgraph.api.v1.agent_requests.feature_flags"
-        ) as mock_ff:
+        with patch("mcp_server_langgraph.api.v1.agent_requests.feature_flags") as mock_ff:
             mock_ff.enable_ai_explanations = True
 
             # Patch at the source module, not where it's imported
@@ -246,9 +237,7 @@ class TestQueueApprovalRequestWithExplanation:
                 "mcp_server_langgraph.agents.explanation_orchestrator.CachedExplanationOrchestrator"
             ) as mock_orch_class:
                 mock_orch = AsyncMock()
-                mock_orch.generate_explanation_cached = AsyncMock(
-                    side_effect=Exception("LLM service unavailable")
-                )
+                mock_orch.generate_explanation_cached = AsyncMock(side_effect=Exception("LLM service unavailable"))
                 mock_orch_class.return_value = mock_orch
 
                 # Should not raise, should gracefully handle error
@@ -284,9 +273,7 @@ class TestQueueApprovalRequestWithExplanation:
             what_could_go_wrong="Test",
         )
 
-        with patch(
-            "mcp_server_langgraph.api.v1.agent_requests.feature_flags"
-        ) as mock_ff:
+        with patch("mcp_server_langgraph.api.v1.agent_requests.feature_flags") as mock_ff:
             mock_ff.enable_ai_explanations = True
 
             # Patch at the source module, not where it's imported
@@ -294,9 +281,7 @@ class TestQueueApprovalRequestWithExplanation:
                 "mcp_server_langgraph.agents.explanation_orchestrator.CachedExplanationOrchestrator"
             ) as mock_orch_class:
                 mock_orch = AsyncMock()
-                mock_orch.generate_explanation_cached = AsyncMock(
-                    return_value=mock_explanation
-                )
+                mock_orch.generate_explanation_cached = AsyncMock(return_value=mock_explanation)
                 mock_orch_class.return_value = mock_orch
 
                 reasoning_trace = [
@@ -338,9 +323,7 @@ class TestQueueApprovalRequestWithTriggerReason:
 
         queue = AgentRequestQueue()
 
-        with patch(
-            "mcp_server_langgraph.api.v1.agent_requests.feature_flags"
-        ) as mock_ff:
+        with patch("mcp_server_langgraph.api.v1.agent_requests.feature_flags") as mock_ff:
             mock_ff.enable_ai_explanations = False
 
             request = await queue.queue_approval_request(
@@ -368,9 +351,7 @@ class TestQueueApprovalRequestWithTriggerReason:
 
         queue = AgentRequestQueue()
 
-        with patch(
-            "mcp_server_langgraph.api.v1.agent_requests.feature_flags"
-        ) as mock_ff:
+        with patch("mcp_server_langgraph.api.v1.agent_requests.feature_flags") as mock_ff:
             mock_ff.enable_ai_explanations = False
 
             request = await queue.queue_approval_request(

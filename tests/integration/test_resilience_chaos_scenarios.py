@@ -14,7 +14,7 @@ For full chaos testing, use a chaos engineering tool like Litmus or Chaos Monkey
 """
 
 import gc
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, patch
 
 import httpx
 import pytest
@@ -215,9 +215,7 @@ class TestPostgreSQLChaosScenario:
         ):
             # Trigger enough failures to trip circuit breaker
             for _ in range(6):
-                await check_database_connectivity(
-                    "postgresql://test:test@localhost:5432/test"
-                )
+                await check_database_connectivity("postgresql://test:test@localhost:5432/test")
 
             # Verify circuit breaker is OPEN
             breaker = get_circuit_breaker("postgres")
@@ -255,9 +253,7 @@ class TestPostgreSQLChaosScenario:
         assert breaker.current_state == pybreaker.STATE_OPEN
 
         # Check should fail fast with circuit breaker message
-        is_healthy, message = await check_database_connectivity(
-            "postgresql://test:test@localhost:5432/test"
-        )
+        is_healthy, message = await check_database_connectivity("postgresql://test:test@localhost:5432/test")
 
         assert is_healthy is False
         assert "circuit breaker" in message.lower()

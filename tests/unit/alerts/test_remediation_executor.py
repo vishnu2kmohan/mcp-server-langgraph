@@ -11,7 +11,7 @@ from __future__ import annotations
 
 import gc
 from datetime import UTC, datetime
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import patch
 
 import pytest
 
@@ -217,7 +217,6 @@ class TestRemediationExecutor:
         """
         from mcp_server_langgraph.alerts.executor import RemediationExecutor
         from mcp_server_langgraph.alerts.approval_queue import RemediationRequest
-        import asyncio
 
         executor = RemediationExecutor(timeout_seconds=1)
 
@@ -236,7 +235,7 @@ class TestRemediationExecutor:
 
         # Mock _run_command to simulate timeout
         async def slow_command(cmd, timeout):
-            raise asyncio.TimeoutError()
+            raise TimeoutError()
 
         # Also mock validate_command to allow the command
         with patch.object(executor, "validate_command", return_value=True):

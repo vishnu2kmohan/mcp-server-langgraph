@@ -11,8 +11,8 @@ from typing import Any
 import pytest
 
 
-
 pytestmark = pytest.mark.unit
+
 
 @pytest.mark.xdist_group(name="output_guardrails")
 class TestGuardrailResult:
@@ -226,8 +226,12 @@ class TestDisclaimerGuardrail:
         assert result.modified_output is not None
         # Should contain some form of AI disclaimer
         modified_lower = result.modified_output.lower()
-        assert ("ai" in modified_lower or "generated" in modified_lower or
-                "disclaimer" in modified_lower or "note" in modified_lower)
+        assert (
+            "ai" in modified_lower
+            or "generated" in modified_lower
+            or "disclaimer" in modified_lower
+            or "note" in modified_lower
+        )
 
     @pytest.mark.unit
     @pytest.mark.asyncio

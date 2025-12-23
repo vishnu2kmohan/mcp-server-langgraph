@@ -322,9 +322,7 @@ class Settings(BaseSettings):
         # - CHECKPOINT_REDIS_URL: Primary (docker-compose.test.yml, .env.example)
         # - REDIS_CHECKPOINT_URL: SCREAMING_SNAKE_CASE alternative
         # - redis_checkpoint_url: snake_case for constructor args (test compatibility)
-        validation_alias=AliasChoices(
-            "CHECKPOINT_REDIS_URL", "REDIS_CHECKPOINT_URL", "redis_checkpoint_url"
-        ),
+        validation_alias=AliasChoices("CHECKPOINT_REDIS_URL", "REDIS_CHECKPOINT_URL", "redis_checkpoint_url"),
     )
     checkpoint_redis_ttl: int = 604800  # 7 days TTL for conversation checkpoints
 
@@ -519,7 +517,7 @@ class Settings(BaseSettings):
     azure_storage_connection_string: str | None = None  # Azure storage connection string
 
     # ==========================================================================
-    # Artifacts Storage Configuration (Hybrid Canvas Multi-Layer Storage)
+    # Artifacts Storage Configuration (Studio Canvas Multi-Layer Storage)
     # ==========================================================================
     # Multi-layer storage system:
     # - PostgreSQL: Primary storage with versioning and metadata

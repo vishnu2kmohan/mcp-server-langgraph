@@ -45,6 +45,7 @@ SAMPLE_PERSONA_ANALYSIS_RESULT = {
 def artifact_storage():
     """Create ArtifactStorage instance."""
     from mcp_server_langgraph.agents.artifacts import ArtifactStorage
+
     return ArtifactStorage()
 
 
@@ -234,9 +235,7 @@ class TestAIUXServiceArtifactIntegration:
         """Force GC to prevent mock accumulation in xdist workers."""
         gc.collect()
 
-    def test_aiux_service_accepts_artifact_storage(
-        self, mock_llm_factory, mock_settings, artifact_storage
-    ):
+    def test_aiux_service_accepts_artifact_storage(self, mock_llm_factory, mock_settings, artifact_storage):
         """AIUXService can optionally accept ArtifactStorage."""
         from mcp_server_langgraph.api.v1.ai_ux_service import AIUXService
 
@@ -253,9 +252,7 @@ class TestAIUXServiceArtifactIntegration:
         # Future: assert service.artifact_storage is artifact_storage
 
     @pytest.mark.asyncio
-    async def test_analyze_error_stores_to_artifact_storage(
-        self, mock_llm_factory, mock_settings, artifact_storage
-    ):
+    async def test_analyze_error_stores_to_artifact_storage(self, mock_llm_factory, mock_settings, artifact_storage):
         """analyze_error should optionally store results to ArtifactStorage."""
         from mcp_server_langgraph.api.v1.ai_ux_service import AIUXService
         from mcp_server_langgraph.api.v1.ai_ux import ErrorInfo

@@ -24,7 +24,7 @@ const backendEnabled = process.env.BACKEND_ENABLED !== 'false';
 
 // Mock feature flags
 const mockFeatureFlags = {
-  canvas_studio_shell: true,
+  studio_canvas_shell: true,
   canvas_editable: true,
   canvas_agents: true,
   canvas_ai_palette: true,

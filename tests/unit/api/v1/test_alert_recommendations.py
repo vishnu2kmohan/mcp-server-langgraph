@@ -10,7 +10,7 @@ Reference: ADR-0026 - Comprehensive Client Resilience Patterns
 
 import gc
 import pytest
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock
 from datetime import datetime, UTC
 
 from mcp_server_langgraph.alerts.ai_recommendation import (
@@ -24,6 +24,7 @@ from mcp_server_langgraph.observability.query.interfaces import (
 )
 
 pytestmark = pytest.mark.unit
+
 
 @pytest.mark.xdist_group(name="alert_recommendations_api")
 class TestAlertRecommendationRouter:
@@ -175,9 +176,7 @@ class TestGetAlertRecommendation:
         mock_service.generate_recommendation.assert_called_once()
 
     @pytest.mark.asyncio
-    async def test_get_recommendation_404_if_alert_not_found(
-        self, mock_service: AsyncMock
-    ) -> None:
+    async def test_get_recommendation_404_if_alert_not_found(self, mock_service: AsyncMock) -> None:
         """Should return 404 if alert doesn't exist."""
         from fastapi import HTTPException
         from mcp_server_langgraph.api.v1.alert_recommendations import (
@@ -288,14 +287,10 @@ class TestRegenerateRecommendation:
         )
 
         assert result.recommendation_id == "rec-new-789"
-        mock_service.generate_recommendation.assert_called_once_with(
-            sample_alert, force_regenerate=True
-        )
+        mock_service.generate_recommendation.assert_called_once_with(sample_alert, force_regenerate=True)
 
     @pytest.mark.asyncio
-    async def test_regenerate_404_if_alert_not_found(
-        self, mock_service: AsyncMock
-    ) -> None:
+    async def test_regenerate_404_if_alert_not_found(self, mock_service: AsyncMock) -> None:
         """Should return 404 if alert doesn't exist."""
         from fastapi import HTTPException
         from mcp_server_langgraph.api.v1.alert_recommendations import (
@@ -364,7 +359,15 @@ class TestAlertHistoryEndpoint:
 
         routes = [r.path for r in alert_recommendation_router.routes if hasattr(r, "path")]
         # The router has prefix /alerts, so root path is just /alerts
-        assert "/alerts" in routes or "/alerts/" in routes or any(r.path == "/" for r in alert_recommendation_router.routes if hasattr(r, "path") and r.methods and "GET" in r.methods)
+        assert (
+            "/alerts" in routes
+            or "/alerts/" in routes
+            or any(
+                r.path == "/"
+                for r in alert_recommendation_router.routes
+                if hasattr(r, "path") and r.methods and "GET" in r.methods
+            )
+        )
 
     def test_list_alerts_function_exists(self) -> None:
         """
@@ -435,30 +438,34 @@ class TestAlertHistoryEndpoint:
         store = InMemoryAlertStore()
 
         # Add critical alert
-        await store.add_alert(Alert(
-            alert_id="alert-critical",
-            name="CriticalAlert",
-            severity=AlertSeverity.CRITICAL,
-            state=AlertState.FIRING,
-            message="Critical",
-            labels={},
-            annotations={},
-            started_at=datetime.now(UTC),
-            ended_at=None,
-        ))
+        await store.add_alert(
+            Alert(
+                alert_id="alert-critical",
+                name="CriticalAlert",
+                severity=AlertSeverity.CRITICAL,
+                state=AlertState.FIRING,
+                message="Critical",
+                labels={},
+                annotations={},
+                started_at=datetime.now(UTC),
+                ended_at=None,
+            )
+        )
 
         # Add warning alert
-        await store.add_alert(Alert(
-            alert_id="alert-warning",
-            name="WarningAlert",
-            severity=AlertSeverity.WARNING,
-            state=AlertState.FIRING,
-            message="Warning",
-            labels={},
-            annotations={},
-            started_at=datetime.now(UTC),
-            ended_at=None,
-        ))
+        await store.add_alert(
+            Alert(
+                alert_id="alert-warning",
+                name="WarningAlert",
+                severity=AlertSeverity.WARNING,
+                state=AlertState.FIRING,
+                message="Warning",
+                labels={},
+                annotations={},
+                started_at=datetime.now(UTC),
+                ended_at=None,
+            )
+        )
 
         result = await list_alerts(
             alert_store=store,
@@ -487,30 +494,34 @@ class TestAlertHistoryEndpoint:
         store = InMemoryAlertStore()
 
         # Add firing alert
-        await store.add_alert(Alert(
-            alert_id="alert-firing",
-            name="FiringAlert",
-            severity=AlertSeverity.CRITICAL,
-            state=AlertState.FIRING,
-            message="Firing",
-            labels={},
-            annotations={},
-            started_at=datetime.now(UTC),
-            ended_at=None,
-        ))
+        await store.add_alert(
+            Alert(
+                alert_id="alert-firing",
+                name="FiringAlert",
+                severity=AlertSeverity.CRITICAL,
+                state=AlertState.FIRING,
+                message="Firing",
+                labels={},
+                annotations={},
+                started_at=datetime.now(UTC),
+                ended_at=None,
+            )
+        )
 
         # Add resolved alert
-        await store.add_alert(Alert(
-            alert_id="alert-resolved",
-            name="ResolvedAlert",
-            severity=AlertSeverity.CRITICAL,
-            state=AlertState.RESOLVED,
-            message="Resolved",
-            labels={},
-            annotations={},
-            started_at=datetime.now(UTC),
-            ended_at=datetime.now(UTC),
-        ))
+        await store.add_alert(
+            Alert(
+                alert_id="alert-resolved",
+                name="ResolvedAlert",
+                severity=AlertSeverity.CRITICAL,
+                state=AlertState.RESOLVED,
+                message="Resolved",
+                labels={},
+                annotations={},
+                started_at=datetime.now(UTC),
+                ended_at=datetime.now(UTC),
+            )
+        )
 
         result = await list_alerts(
             alert_store=store,
@@ -637,14 +648,10 @@ class TestAlertCorrelationEndpoint:
         )
 
         routes = [
-            (r.path, r.methods)
-            for r in alert_recommendation_router.routes
-            if hasattr(r, "path") and hasattr(r, "methods")
+            (r.path, r.methods) for r in alert_recommendation_router.routes if hasattr(r, "path") and hasattr(r, "methods")
         ]
         # Check for correlate endpoint
-        assert any(
-            "/correlate" in path and "POST" in methods for path, methods in routes
-        )
+        assert any("/correlate" in path and "POST" in methods for path, methods in routes)
 
     def test_correlate_function_exists(self) -> None:
         """
@@ -706,9 +713,7 @@ class TestAlertCorrelationEndpoint:
         result = await correlate_alerts(request=request, alert_store=store)
 
         assert len(result.groups) >= 1
-        api_server_group = next(
-            (g for g in result.groups if g.label_value == "api-server"), None
-        )
+        api_server_group = next((g for g in result.groups if g.label_value == "api-server"), None)
         assert api_server_group is not None
         assert len(api_server_group.alerts) == 2
 

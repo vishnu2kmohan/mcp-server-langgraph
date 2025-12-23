@@ -11,7 +11,7 @@ TDD: Tests written FIRST before implementation.
 """
 
 import gc
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
@@ -62,7 +62,6 @@ class TestUXOrchestratorInheritance:
 
     def test_ux_orchestrator_inherits_execute_method(self) -> None:
         """Test that UXOrchestrator uses inherited execute method."""
-        from mcp_server_langgraph.agents.base_orchestrator import BaseOrchestrator
         from mcp_server_langgraph.agents.ux_orchestrator import UXOrchestrator
 
         # The execute method should come from the base class
@@ -195,7 +194,6 @@ class TestUXAnalysisTask:
         """Test that UXAnalysisTask supports all analysis types."""
         from mcp_server_langgraph.agents.ux_orchestrator import (
             UX_ANALYSIS_TYPES,
-            UXAnalysisTask,
         )
 
         # Check all types are defined

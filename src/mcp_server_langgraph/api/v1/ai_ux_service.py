@@ -2529,11 +2529,7 @@ Compare with last period and generate actionable insights."""
         deleted_count = 0
 
         # Clear legacy _response_cache entries for this user
-        keys_to_delete = [
-            key
-            for key in list(self._response_cache.keys())
-            if user_id in str(key)
-        ]
+        keys_to_delete = [key for key in list(self._response_cache.keys()) if user_id in str(key)]
         for key in keys_to_delete:
             del self._response_cache[key]
             deleted_count += 1
@@ -2559,11 +2555,7 @@ Compare with last period and generate actionable insights."""
         deleted_count = 0
 
         # Clear legacy _response_cache entries for this method
-        keys_to_delete = [
-            key
-            for key in list(self._response_cache.keys())
-            if method in str(key)
-        ]
+        keys_to_delete = [key for key in list(self._response_cache.keys()) if method in str(key)]
         for key in keys_to_delete:
             del self._response_cache[key]
             deleted_count += 1

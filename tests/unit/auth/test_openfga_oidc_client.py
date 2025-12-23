@@ -662,9 +662,7 @@ class TestOpenFGAClientOIDCRetryLogic:
             mock_client_class.return_value.__aenter__.return_value = mock_client
 
             with patch("asyncio.sleep", new_callable=AsyncMock):
-                with patch(
-                    "mcp_server_langgraph.auth.openfga.logger"
-                ) as mock_logger:
+                with patch("mcp_server_langgraph.auth.openfga.logger") as mock_logger:
                     await client._get_oidc_access_token()
 
                     # Should log warning for the retry

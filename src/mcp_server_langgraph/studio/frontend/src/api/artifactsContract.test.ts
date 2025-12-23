@@ -2,7 +2,7 @@
  * Artifacts API Contract Tests
  *
  * These tests validate that frontend TypeScript types match backend API responses
- * for the Hybrid Canvas artifacts endpoints.
+ * for the Studio Canvas artifacts endpoints.
  *
  * Contract tests verify:
  * - Response shape matches TypeScript interfaces

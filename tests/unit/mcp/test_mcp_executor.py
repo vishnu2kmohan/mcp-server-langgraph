@@ -8,14 +8,13 @@ Written FIRST before implementation (RED phase) per ADR-0082.
 
 import asyncio
 import gc
-from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
 
-
 pytestmark = pytest.mark.unit
+
 
 @pytest.mark.xdist_group(name="mcp_executor")
 class TestMCPExecutor:
@@ -49,9 +48,7 @@ class TestMCPExecutor:
 
         # Patch the _create_session method to return our mock
         with patch.object(registry, "_create_session", return_value=mock_session):
-            await registry.register_server(
-                MCPServerConfig(name="playwright", command="npx", args=["playwright"])
-            )
+            await registry.register_server(MCPServerConfig(name="playwright", command="npx", args=["playwright"]))
 
         executor = MCPExecutor(registry)
 
@@ -61,9 +58,7 @@ class TestMCPExecutor:
             arguments={"url": "https://example.com"},
         )
 
-        mock_session.call_tool.assert_called_once_with(
-            "screenshot", {"url": "https://example.com"}
-        )
+        mock_session.call_tool.assert_called_once_with("screenshot", {"url": "https://example.com"})
         assert result["success"] is True
 
     @pytest.mark.unit
@@ -113,9 +108,7 @@ class TestMCPExecutor:
         mock_session.call_tool.side_effect = slow_call
 
         with patch.object(registry, "_create_session", return_value=mock_session):
-            await registry.register_server(
-                MCPServerConfig(name="slow", command="slow", timeout=0.1)
-            )
+            await registry.register_server(MCPServerConfig(name="slow", command="slow", timeout=0.1))
 
         executor = MCPExecutor(registry)
 
@@ -160,9 +153,7 @@ class TestMCPExecutor:
         mock_session.call_tool.side_effect = tracked_call
 
         with patch.object(registry, "_create_session", return_value=mock_session):
-            await registry.register_server(
-                MCPServerConfig(name="server", command="cmd")
-            )
+            await registry.register_server(MCPServerConfig(name="server", command="cmd"))
 
         executor = MCPExecutor(registry)
 
@@ -207,9 +198,7 @@ class TestMCPExecutor:
         mock_session.call_tool.side_effect = mixed_call
 
         with patch.object(registry, "_create_session", return_value=mock_session):
-            await registry.register_server(
-                MCPServerConfig(name="server", command="cmd")
-            )
+            await registry.register_server(MCPServerConfig(name="server", command="cmd"))
 
         executor = MCPExecutor(registry)
 
@@ -265,9 +254,7 @@ class TestMCPExecutor:
         mock_session.connect = connect
 
         with patch.object(registry, "_create_session", return_value=mock_session):
-            await registry.register_server(
-                MCPServerConfig(name="server", command="cmd")
-            )
+            await registry.register_server(MCPServerConfig(name="server", command="cmd"))
 
         # Manually disconnect
         connected = False

@@ -29,8 +29,8 @@ from typing import TYPE_CHECKING, Any
 
 from fastapi import APIRouter, WebSocket
 
-from mcp_server_langgraph.websocket.base import WebSocketBase, WebSocketConfig
-from mcp_server_langgraph.websocket.types import MessageEnvelope
+from mcp_server_langgraph.websocket.base import WebSocketBase
+from mcp_server_langgraph.websocket.types import AuthUser, MessageEnvelope, WebSocketConfig
 
 if TYPE_CHECKING:
     pass
@@ -188,11 +188,11 @@ class HeartMetricsWebSocketHandler(WebSocketBase):
             "task_success": {"score": 0.91, "trend": "up", "samples": 3400},
         }
 
-    async def on_connect(self) -> None:
+    async def on_connect(self, user: AuthUser) -> None:
         """Called when connection is established."""
         logger.info(
             "HEART metrics WebSocket connected",
-            extra={"user_id": self._user.id if self._user else "unknown"},
+            extra={"user_id": user.id},
         )
 
     async def on_disconnect(self) -> None:

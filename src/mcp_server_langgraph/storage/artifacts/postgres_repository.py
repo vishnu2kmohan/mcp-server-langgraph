@@ -49,9 +49,7 @@ class PostgresArtifactsRepository:
         """
         self._session = session
 
-    async def create(
-        self, data: dict[str, Any], user_id: str
-    ) -> dict[str, Any]:
+    async def create(self, data: dict[str, Any], user_id: str) -> dict[str, Any]:
         """
         Create a new artifact with initial version.
 
@@ -111,9 +109,7 @@ class PostgresArtifactsRepository:
             "created_at": now.isoformat(),
         }
 
-    async def get(
-        self, artifact_id: str, user_id: str
-    ) -> dict[str, Any] | None:
+    async def get(self, artifact_id: str, user_id: str) -> dict[str, Any] | None:
         """
         Get artifact by ID.
 
@@ -145,9 +141,7 @@ class PostgresArtifactsRepository:
 
         return artifact.to_dict()
 
-    async def update(
-        self, artifact_id: str, data: dict[str, Any], user_id: str
-    ) -> dict[str, Any] | None:
+    async def update(self, artifact_id: str, data: dict[str, Any], user_id: str) -> dict[str, Any] | None:
         """
         Update artifact and create new version.
 
@@ -315,9 +309,7 @@ class PostgresArtifactsRepository:
 
         return items, next_cursor, has_more
 
-    async def get_versions(
-        self, artifact_id: str, user_id: str
-    ) -> list[dict[str, Any]] | None:  # type: ignore[valid-type]
+    async def get_versions(self, artifact_id: str, user_id: str) -> list[dict[str, Any]] | None:  # type: ignore[valid-type]
         """
         Get version history for artifact.
 
@@ -350,9 +342,7 @@ class PostgresArtifactsRepository:
 
         return [v.to_dict() for v in versions]
 
-    async def fork(
-        self, artifact_id: str, new_name: str | None, user_id: str
-    ) -> dict[str, Any] | None:
+    async def fork(self, artifact_id: str, new_name: str | None, user_id: str) -> dict[str, Any] | None:
         """
         Fork an artifact (create a copy).
 

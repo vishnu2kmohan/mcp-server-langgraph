@@ -96,9 +96,7 @@ class TestParallelExecutionWithSendAPI:
 
         assert callable(create_parallel_ux_graph)
 
-    def test_parallel_graph_uses_send_for_distribution(
-        self, mock_llm_factory, mock_settings
-    ):
+    def test_parallel_graph_uses_send_for_distribution(self, mock_llm_factory, mock_settings):
         """Parallel graph uses Send API for state distribution."""
         from mcp_server_langgraph.api.v1.ai_ux_graph import create_parallel_ux_graph
 
@@ -109,9 +107,7 @@ class TestParallelExecutionWithSendAPI:
         assert compiled is not None
 
     @pytest.mark.asyncio
-    async def test_parallel_execution_runs_analyses_concurrently(
-        self, mock_llm_factory, mock_settings
-    ):
+    async def test_parallel_execution_runs_analyses_concurrently(self, mock_llm_factory, mock_settings):
         """Parallel graph runs multiple analyses concurrently."""
         import time
 
@@ -160,9 +156,7 @@ class TestParallelExecutionWithSendAPI:
         assert elapsed < 0.2  # Should be much faster than 150ms
 
     @pytest.mark.asyncio
-    async def test_parallel_graph_collects_all_results(
-        self, mock_llm_factory, mock_settings
-    ):
+    async def test_parallel_graph_collects_all_results(self, mock_llm_factory, mock_settings):
         """Parallel graph collects results from all branches."""
         from mcp_server_langgraph.api.v1.ai_ux_graph import (
             UXAnalysisState,
@@ -232,18 +226,12 @@ class TestOpenTelemetrySpansInNodes:
             create_ux_analysis_graph,
         )
 
-        mock_llm_factory.ainvoke = AsyncMock(
-            return_value=AIMessage(content=SAMPLE_PERSONA_LLM_RESPONSE)
-        )
+        mock_llm_factory.ainvoke = AsyncMock(return_value=AIMessage(content=SAMPLE_PERSONA_LLM_RESPONSE))
 
         with patch("mcp_server_langgraph.api.v1.ai_ux_graph.tracer") as mock_tracer:
             mock_span = MagicMock()
-            mock_tracer.start_as_current_span.return_value.__enter__ = MagicMock(
-                return_value=mock_span
-            )
-            mock_tracer.start_as_current_span.return_value.__exit__ = MagicMock(
-                return_value=None
-            )
+            mock_tracer.start_as_current_span.return_value.__enter__ = MagicMock(return_value=mock_span)
+            mock_tracer.start_as_current_span.return_value.__exit__ = MagicMock(return_value=None)
 
             graph = create_ux_analysis_graph(mock_llm_factory, mock_settings)
             compiled = graph.compile()
@@ -270,18 +258,14 @@ class TestOpenTelemetrySpansInNodes:
             assert mock_tracer.start_as_current_span.called
 
     @pytest.mark.asyncio
-    async def test_spans_include_node_name_attribute(
-        self, mock_llm_factory, mock_settings
-    ):
+    async def test_spans_include_node_name_attribute(self, mock_llm_factory, mock_settings):
         """Spans include node name as attribute."""
         from mcp_server_langgraph.api.v1.ai_ux_graph import (
             UXAnalysisState,
             create_ux_analysis_graph,
         )
 
-        mock_llm_factory.ainvoke = AsyncMock(
-            return_value=AIMessage(content=SAMPLE_PERSONA_LLM_RESPONSE)
-        )
+        mock_llm_factory.ainvoke = AsyncMock(return_value=AIMessage(content=SAMPLE_PERSONA_LLM_RESPONSE))
 
         span_names: list[str] = []
 
@@ -322,18 +306,14 @@ class TestOpenTelemetrySpansInNodes:
             assert any("persona" in name.lower() for name in span_names)
 
     @pytest.mark.asyncio
-    async def test_spans_record_user_id_attribute(
-        self, mock_llm_factory, mock_settings
-    ):
+    async def test_spans_record_user_id_attribute(self, mock_llm_factory, mock_settings):
         """Spans record user_id as attribute."""
         from mcp_server_langgraph.api.v1.ai_ux_graph import (
             UXAnalysisState,
             create_ux_analysis_graph,
         )
 
-        mock_llm_factory.ainvoke = AsyncMock(
-            return_value=AIMessage(content=SAMPLE_PERSONA_LLM_RESPONSE)
-        )
+        mock_llm_factory.ainvoke = AsyncMock(return_value=AIMessage(content=SAMPLE_PERSONA_LLM_RESPONSE))
 
         recorded_attributes: list[dict[str, Any]] = []
 
@@ -377,9 +357,7 @@ class TestOpenTelemetrySpansInNodes:
                 all_attrs.update(attrs)
 
             # Check user_id was recorded
-            assert "user_id" in all_attrs or any(
-                "user" in str(k).lower() for k in all_attrs.keys()
-            )
+            assert "user_id" in all_attrs or any("user" in str(k).lower() for k in all_attrs.keys())
 
 
 # =============================================================================
@@ -404,9 +382,7 @@ class TestStreamingCompositeAnalysis:
         assert "/composite/stream" in routes or any("stream" in r for r in routes)
 
     @pytest.mark.asyncio
-    async def test_streaming_returns_async_generator(
-        self, mock_llm_factory, mock_settings, artifact_storage
-    ):
+    async def test_streaming_returns_async_generator(self, mock_llm_factory, mock_settings, artifact_storage):
         """Streaming method returns async generator."""
         from mcp_server_langgraph.api.v1.ai_ux import CompositeAnalysisRequest
         from mcp_server_langgraph.api.v1.ai_ux_service import AIUXService
@@ -442,9 +418,7 @@ class TestStreamingCompositeAnalysis:
         assert hasattr(stream, "__aiter__")
 
     @pytest.mark.asyncio
-    async def test_streaming_yields_progress_events(
-        self, mock_llm_factory, mock_settings, artifact_storage
-    ):
+    async def test_streaming_yields_progress_events(self, mock_llm_factory, mock_settings, artifact_storage):
         """Streaming yields progress events for each analysis."""
         from mcp_server_langgraph.api.v1.ai_ux import CompositeAnalysisRequest
         from mcp_server_langgraph.api.v1.ai_ux_service import AIUXService
@@ -484,9 +458,7 @@ class TestStreamingCompositeAnalysis:
         assert any("persona" in str(t).lower() for t in event_types) or len(events) >= 2
 
     @pytest.mark.asyncio
-    async def test_streaming_final_event_contains_complete_result(
-        self, mock_llm_factory, mock_settings, artifact_storage
-    ):
+    async def test_streaming_final_event_contains_complete_result(self, mock_llm_factory, mock_settings, artifact_storage):
         """Final streaming event contains complete composite result."""
         from mcp_server_langgraph.api.v1.ai_ux import CompositeAnalysisRequest
         from mcp_server_langgraph.api.v1.ai_ux_service import AIUXService
@@ -537,9 +509,7 @@ class TestAIUXServiceAdvancedIntegration:
         gc.collect()
 
     @pytest.mark.asyncio
-    async def test_service_uses_parallel_graph_when_enabled(
-        self, mock_llm_factory, mock_settings, artifact_storage
-    ):
+    async def test_service_uses_parallel_graph_when_enabled(self, mock_llm_factory, mock_settings, artifact_storage):
         """Service uses parallel graph when parallel mode enabled."""
         from mcp_server_langgraph.api.v1.ai_ux import CompositeAnalysisRequest
         from mcp_server_langgraph.api.v1.ai_ux_service import AIUXService
@@ -577,9 +547,7 @@ class TestAIUXServiceAdvancedIntegration:
         assert result.disclosure_result is not None
 
     @pytest.mark.asyncio
-    async def test_service_has_get_parallel_graph_method(
-        self, mock_llm_factory, mock_settings
-    ):
+    async def test_service_has_get_parallel_graph_method(self, mock_llm_factory, mock_settings):
         """Service has method to get parallel graph."""
         from mcp_server_langgraph.api.v1.ai_ux_service import AIUXService
 
@@ -589,6 +557,4 @@ class TestAIUXServiceAdvancedIntegration:
         )
 
         # Should have method to get parallel graph
-        assert hasattr(service, "get_parallel_graph") or hasattr(
-            service, "_parallel_graph"
-        )
+        assert hasattr(service, "get_parallel_graph") or hasattr(service, "_parallel_graph")

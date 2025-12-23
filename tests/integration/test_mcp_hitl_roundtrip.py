@@ -13,10 +13,6 @@ TDD: Tests written FIRST.
 from __future__ import annotations
 
 import gc
-import json
-from datetime import UTC, datetime
-from typing import Any
-from unittest.mock import MagicMock
 
 import pytest
 
@@ -115,9 +111,7 @@ class TestApprovalToElicitationConversion:
         assert "reason" in props
         assert elicitation.requestedSchema.required == ["approved"]
 
-    def test_approval_with_explanation_to_elicitation(
-        self, mock_approval_required, mock_ai_explanation
-    ) -> None:
+    def test_approval_with_explanation_to_elicitation(self, mock_approval_required, mock_ai_explanation) -> None:
         """
         GIVEN an ApprovalRequired with AI explanation
         WHEN converted to elicitation
@@ -613,9 +607,7 @@ class TestHITLFullLifecycle:
         assert approval_response.status == ApprovalStatus.REJECTED
         assert "Too risky" in approval_response.reason
 
-    def test_full_lifecycle_with_ai_explanation(
-        self, mock_approval_required, mock_ai_explanation
-    ) -> None:
+    def test_full_lifecycle_with_ai_explanation(self, mock_approval_required, mock_ai_explanation) -> None:
         """
         GIVEN an ApprovalRequired with AI explanation
         WHEN going through full elicitation lifecycle with alternative selection

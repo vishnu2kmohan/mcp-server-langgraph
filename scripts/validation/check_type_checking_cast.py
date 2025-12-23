@@ -99,12 +99,14 @@ class TypeCheckingCastChecker(ast.NodeVisitor):
         # Check if any name is from TYPE_CHECKING imports
         for name in names:
             if name in self.type_checking_imports:
-                self.errors.append((
-                    lineno,
-                    col_offset,
-                    f"cast() uses '{name}' which is only imported under TYPE_CHECKING. "
-                    f"Use string forward reference: cast(\"{name}[...]\", value)",
-                ))
+                self.errors.append(
+                    (
+                        lineno,
+                        col_offset,
+                        f"cast() uses '{name}' which is only imported under TYPE_CHECKING. "
+                        f'Use string forward reference: cast("{name}[...]", value)',
+                    )
+                )
                 break
 
     def _extract_names(self, node: ast.expr) -> set[str]:
@@ -173,10 +175,7 @@ def main(paths: list[str] | None = None) -> int:
             files_to_check.extend(path.rglob("*.py"))
 
     # Skip test files and __pycache__
-    files_to_check = [
-        f for f in files_to_check
-        if "__pycache__" not in str(f)
-    ]
+    files_to_check = [f for f in files_to_check if "__pycache__" not in str(f)]
 
     all_errors: list[tuple[Path, int, int, str]] = []
 

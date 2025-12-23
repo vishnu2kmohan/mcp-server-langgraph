@@ -43,9 +43,7 @@ class TestWithCircuitBreaker:
         async def successful_op():
             return expected
 
-        with patch(
-            "mcp_server_langgraph.websocket.resilience.get_circuit_breaker"
-        ) as mock_get_cb:
+        with patch("mcp_server_langgraph.websocket.resilience.get_circuit_breaker") as mock_get_cb:
             mock_breaker = MagicMock()
             mock_breaker.call_async = AsyncMock(return_value=expected)
             mock_get_cb.return_value = mock_breaker
@@ -67,13 +65,9 @@ class TestWithCircuitBreaker:
         async def failing_op():
             raise Exception("Service down")
 
-        with patch(
-            "mcp_server_langgraph.websocket.resilience.get_circuit_breaker"
-        ) as mock_get_cb:
+        with patch("mcp_server_langgraph.websocket.resilience.get_circuit_breaker") as mock_get_cb:
             mock_breaker = MagicMock()
-            mock_breaker.call_async = AsyncMock(
-                side_effect=pybreaker.CircuitBreakerError()
-            )
+            mock_breaker.call_async = AsyncMock(side_effect=pybreaker.CircuitBreakerError())
             mock_get_cb.return_value = mock_breaker
 
             result = await with_circuit_breaker(
@@ -101,13 +95,9 @@ class TestWithCircuitBreaker:
             fallback_called.append(True)
             return True  # Fail open
 
-        with patch(
-            "mcp_server_langgraph.websocket.resilience.get_circuit_breaker"
-        ) as mock_get_cb:
+        with patch("mcp_server_langgraph.websocket.resilience.get_circuit_breaker") as mock_get_cb:
             mock_breaker = MagicMock()
-            mock_breaker.call_async = AsyncMock(
-                side_effect=pybreaker.CircuitBreakerError()
-            )
+            mock_breaker.call_async = AsyncMock(side_effect=pybreaker.CircuitBreakerError())
             mock_get_cb.return_value = mock_breaker
 
             result = await with_circuit_breaker(
@@ -133,13 +123,9 @@ class TestWithCircuitBreaker:
         async def async_fallback():
             return {"cached": True}
 
-        with patch(
-            "mcp_server_langgraph.websocket.resilience.get_circuit_breaker"
-        ) as mock_get_cb:
+        with patch("mcp_server_langgraph.websocket.resilience.get_circuit_breaker") as mock_get_cb:
             mock_breaker = MagicMock()
-            mock_breaker.call_async = AsyncMock(
-                side_effect=pybreaker.CircuitBreakerError()
-            )
+            mock_breaker.call_async = AsyncMock(side_effect=pybreaker.CircuitBreakerError())
             mock_get_cb.return_value = mock_breaker
 
             result = await with_circuit_breaker(
@@ -161,13 +147,9 @@ class TestWithCircuitBreaker:
         async def failing_op():
             raise Exception("Service down")
 
-        with patch(
-            "mcp_server_langgraph.websocket.resilience.get_circuit_breaker"
-        ) as mock_get_cb:
+        with patch("mcp_server_langgraph.websocket.resilience.get_circuit_breaker") as mock_get_cb:
             mock_breaker = MagicMock()
-            mock_breaker.call_async = AsyncMock(
-                side_effect=pybreaker.CircuitBreakerError()
-            )
+            mock_breaker.call_async = AsyncMock(side_effect=pybreaker.CircuitBreakerError())
             mock_get_cb.return_value = mock_breaker
 
             with pytest.raises(pybreaker.CircuitBreakerError):
@@ -184,13 +166,9 @@ class TestWithCircuitBreaker:
         async def failing_op():
             raise Exception("Service down")
 
-        with patch(
-            "mcp_server_langgraph.websocket.resilience.get_circuit_breaker"
-        ) as mock_get_cb:
+        with patch("mcp_server_langgraph.websocket.resilience.get_circuit_breaker") as mock_get_cb:
             mock_breaker = MagicMock()
-            mock_breaker.call_async = AsyncMock(
-                side_effect=pybreaker.CircuitBreakerError()
-            )
+            mock_breaker.call_async = AsyncMock(side_effect=pybreaker.CircuitBreakerError())
             mock_get_cb.return_value = mock_breaker
 
             result = await with_circuit_breaker(
@@ -217,9 +195,7 @@ class TestGetCircuitBreakerState:
         WHEN getting state
         THEN it should return CircuitBreakerState.CLOSED.
         """
-        with patch(
-            "mcp_server_langgraph.websocket.resilience.get_circuit_breaker"
-        ) as mock_get_cb:
+        with patch("mcp_server_langgraph.websocket.resilience.get_circuit_breaker") as mock_get_cb:
             mock_breaker = MagicMock()
             mock_breaker.current_state = pybreaker.STATE_CLOSED
             mock_get_cb.return_value = mock_breaker
@@ -234,9 +210,7 @@ class TestGetCircuitBreakerState:
         WHEN getting state
         THEN it should return CircuitBreakerState.OPEN.
         """
-        with patch(
-            "mcp_server_langgraph.websocket.resilience.get_circuit_breaker"
-        ) as mock_get_cb:
+        with patch("mcp_server_langgraph.websocket.resilience.get_circuit_breaker") as mock_get_cb:
             mock_breaker = MagicMock()
             mock_breaker.current_state = pybreaker.STATE_OPEN
             mock_get_cb.return_value = mock_breaker
@@ -251,9 +225,7 @@ class TestGetCircuitBreakerState:
         WHEN getting state
         THEN it should return CircuitBreakerState.HALF_OPEN.
         """
-        with patch(
-            "mcp_server_langgraph.websocket.resilience.get_circuit_breaker"
-        ) as mock_get_cb:
+        with patch("mcp_server_langgraph.websocket.resilience.get_circuit_breaker") as mock_get_cb:
             mock_breaker = MagicMock()
             mock_breaker.current_state = pybreaker.STATE_HALF_OPEN
             mock_get_cb.return_value = mock_breaker
@@ -277,9 +249,7 @@ class TestIsCircuitOpen:
         WHEN checking is_circuit_open
         THEN it should return True.
         """
-        with patch(
-            "mcp_server_langgraph.websocket.resilience.get_circuit_breaker_state"
-        ) as mock_get_state:
+        with patch("mcp_server_langgraph.websocket.resilience.get_circuit_breaker_state") as mock_get_state:
             mock_get_state.return_value = CircuitBreakerState.OPEN
 
             result = is_circuit_open("test_service")
@@ -292,9 +262,7 @@ class TestIsCircuitOpen:
         WHEN checking is_circuit_open
         THEN it should return False.
         """
-        with patch(
-            "mcp_server_langgraph.websocket.resilience.get_circuit_breaker_state"
-        ) as mock_get_state:
+        with patch("mcp_server_langgraph.websocket.resilience.get_circuit_breaker_state") as mock_get_state:
             mock_get_state.return_value = CircuitBreakerState.CLOSED
 
             result = is_circuit_open("test_service")
@@ -307,9 +275,7 @@ class TestIsCircuitOpen:
         WHEN checking is_circuit_open
         THEN it should return False (allowing test request).
         """
-        with patch(
-            "mcp_server_langgraph.websocket.resilience.get_circuit_breaker_state"
-        ) as mock_get_state:
+        with patch("mcp_server_langgraph.websocket.resilience.get_circuit_breaker_state") as mock_get_state:
             mock_get_state.return_value = CircuitBreakerState.HALF_OPEN
 
             result = is_circuit_open("test_service")

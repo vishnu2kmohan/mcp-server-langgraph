@@ -21,12 +21,12 @@ import { test, expect } from './fixtures/auth';
 const backendEnabled = process.env.BACKEND_ENABLED !== 'false';
 
 // Feature flag for StudioShell (matches backend feature flag)
-const HYBRID_SHELL_FLAG = 'canvas_studio_shell';
+const STUDIO_SHELL_FLAG = 'studio_canvas_shell';
 
 // Mock feature flags - matches the format from MSW handlers (flat object, not wrapped)
 // IMPORTANT: The API returns flags directly, not wrapped in { features: {...} }
 const mockFeatureFlags = {
-  [HYBRID_SHELL_FLAG]: true,
+  [STUDIO_SHELL_FLAG]: true,
   canvas_editable: true,
   canvas_agents: true,
   canvas_ai_palette: true,

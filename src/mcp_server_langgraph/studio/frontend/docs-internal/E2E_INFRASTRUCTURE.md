@@ -235,7 +235,7 @@ Before removing AppShell, E2E tests must validate:
 # Run all persona journeys
 npx playwright test *-journey.spec.ts
 
-# Verify hybrid shell smoke test
+# Verify studio shell smoke test
 npx playwright test studio-shell-smoke.spec.ts
 ```
 

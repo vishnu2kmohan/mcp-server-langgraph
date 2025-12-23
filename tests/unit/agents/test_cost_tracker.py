@@ -25,8 +25,8 @@ if TYPE_CHECKING:
     pass
 
 
-
 pytestmark = pytest.mark.unit
+
 
 @pytest.mark.unit
 @pytest.mark.agents
@@ -537,9 +537,7 @@ class TestCostTrackerMetrics:
 
         from mcp_server_langgraph.agents.cost_tracker import CostTracker
 
-        with patch(
-            "mcp_server_langgraph.agents.cost_tracker.record_cost_usage"
-        ) as mock_record:
+        with patch("mcp_server_langgraph.agents.cost_tracker.record_cost_usage") as mock_record:
             tracker = CostTracker()
             tracker.track_usage(
                 model="claude-opus-4-5-20251101",

@@ -18,8 +18,6 @@ Acceptance Criteria:
 """
 
 import gc
-import os
-from typing import Any
 
 import pytest
 

@@ -95,9 +95,7 @@ class MCPExecutor:
         self.registry = registry
         self.auth_provider = auth_provider
 
-    async def _ensure_connected(
-        self, session: "MCPClientSessionProtocol", server_name: str
-    ) -> None:
+    async def _ensure_connected(self, session: "MCPClientSessionProtocol", server_name: str) -> None:
         """Ensure the session is connected, reconnecting if necessary."""
         if not session.is_connected:
             logger.info(
@@ -156,7 +154,7 @@ class MCPExecutor:
                 timeout=timeout,
             )
             return result
-        except asyncio.TimeoutError:
+        except TimeoutError:
             logger.warning(
                 "Tool execution timed out",
                 extra={"server": server, "tool": tool, "timeout": timeout},

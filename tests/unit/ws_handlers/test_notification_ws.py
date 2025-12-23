@@ -7,11 +7,9 @@ TDD tests for the Notification WebSocket using the standardized WebSocketBase.
 from __future__ import annotations
 
 import gc
-from typing import Any
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
-from starlette.websockets import WebSocketDisconnect
 
 from mcp_server_langgraph.websocket import (
     MessageEnvelope,
@@ -69,9 +67,7 @@ class TestNotificationWebSocketHandler:
         assert issubclass(NotificationWebSocketHandler, WebSocketBase)
 
     @pytest.mark.asyncio
-    async def test_subscribes_on_connect(
-        self, mock_websocket: MagicMock, mock_broadcaster: MagicMock
-    ) -> None:
+    async def test_subscribes_on_connect(self, mock_websocket: MagicMock, mock_broadcaster: MagicMock) -> None:
         """
         GIVEN a new WebSocket connection
         WHEN on_connect is called
@@ -96,9 +92,7 @@ class TestNotificationWebSocketHandler:
         assert call_kwargs.get("user_id") == "test-user"
 
     @pytest.mark.asyncio
-    async def test_unsubscribes_on_disconnect(
-        self, mock_websocket: MagicMock, mock_broadcaster: MagicMock
-    ) -> None:
+    async def test_unsubscribes_on_disconnect(self, mock_websocket: MagicMock, mock_broadcaster: MagicMock) -> None:
         """
         GIVEN an active connection
         WHEN on_disconnect is called
@@ -152,9 +146,7 @@ class TestNotificationWebSocketHandler:
         assert response is None
 
     @pytest.mark.asyncio
-    async def test_requires_auth_by_default(
-        self, mock_websocket: MagicMock, mock_broadcaster: MagicMock
-    ) -> None:
+    async def test_requires_auth_by_default(self, mock_websocket: MagicMock, mock_broadcaster: MagicMock) -> None:
         """
         GIVEN a notification WebSocket handler
         WHEN checking the config

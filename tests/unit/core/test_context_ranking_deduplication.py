@@ -21,7 +21,7 @@ from __future__ import annotations
 import gc
 from datetime import datetime, UTC
 from typing import TYPE_CHECKING
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import patch
 
 import pytest
 
@@ -34,8 +34,8 @@ if TYPE_CHECKING:
 # =============================================================================
 
 
-
 pytestmark = pytest.mark.unit
+
 
 @pytest.mark.unit
 @pytest.mark.core
@@ -105,7 +105,7 @@ class TestContextRankingLogic:
 
     def test_rank_contexts_returns_sorted_list(self) -> None:
         """rank_contexts should return contexts sorted by score descending."""
-        from mcp_server_langgraph.core.context_ranker import ContextRanker, RankedContext
+        from mcp_server_langgraph.core.context_ranker import ContextRanker
         from mcp_server_langgraph.core.dynamic_context_loader import ContextReference
 
         ranker = ContextRanker()

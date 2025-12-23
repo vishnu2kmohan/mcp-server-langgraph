@@ -15,7 +15,6 @@ import gc
 from abc import ABC
 from dataclasses import dataclass
 from typing import Any
-from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
@@ -392,7 +391,7 @@ class TestBaseOrchestratorGenerics:
 
     def test_orchestrator_supports_custom_task_type(self) -> None:
         """Test that orchestrator supports custom task types."""
-        from dataclasses import dataclass, field
+        from dataclasses import field
 
         from mcp_server_langgraph.agents.base_orchestrator import (
             BaseOrchestrator,
@@ -426,7 +425,6 @@ class TestBaseOrchestratorGenerics:
 
     def test_orchestrator_supports_custom_result_type(self) -> None:
         """Test that orchestrator supports custom result types."""
-        from dataclasses import dataclass
 
         from mcp_server_langgraph.agents.base_orchestrator import (
             BaseOrchestrator,

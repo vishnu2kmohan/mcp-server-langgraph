@@ -366,7 +366,8 @@ export function useStateHistory(
     return snapshots[currentIndex];
   }, [snapshots, currentIndex]);
 
-  const isAtLatest = currentIndex === snapshots.length - 1 || snapshots.length === 0;
+  const isAtLatest =
+    currentIndex === snapshots.length - 1 || snapshots.length === 0;
   const canGoBack = currentIndex > 0;
   const canGoForward = currentIndex < snapshots.length - 1;
 

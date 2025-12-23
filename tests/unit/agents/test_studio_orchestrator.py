@@ -2,7 +2,7 @@
 Unit tests for Studio Orchestrator.
 
 Tests unified orchestration for ALL Studio AI capabilities:
-- Consolidates UXOrchestrator + HybridShellOrchestrator
+- Consolidates UXOrchestrator + StudioShellOrchestrator
 - 8 task categories: UX, SESSION, CONVERSATION, CANVAS, DIAGRAM, TRACE, HITL, COMMAND
 - 25+ task types across all categories
 - Cross-category insights synthesis

@@ -19,7 +19,7 @@ Reference: ADR-0026 - Comprehensive Client Resilience Patterns
 import gc
 import uuid
 from datetime import UTC, datetime
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import MagicMock
 
 import pytest
 
@@ -272,9 +272,7 @@ class TestQueueRemediation:
             assert request.recommendation_id == sample_recommendation.recommendation_id
 
     @pytest.mark.asyncio
-    async def test_queue_remediation_empty_when_no_approval_needed(
-        self, queue: RemediationApprovalQueue
-    ) -> None:
+    async def test_queue_remediation_empty_when_no_approval_needed(self, queue: RemediationApprovalQueue) -> None:
         """Should return empty list when no steps require approval."""
         recommendation = MagicMock()
         recommendation.recommendation_id = str(uuid.uuid4())
@@ -308,9 +306,7 @@ class TestListPending:
         gc.collect()
 
     @pytest.mark.asyncio
-    async def test_list_pending_empty(
-        self, queue: RemediationApprovalQueue
-    ) -> None:
+    async def test_list_pending_empty(self, queue: RemediationApprovalQueue) -> None:
         """Should return empty list when no pending remediations."""
         result = await queue.list_pending()
         assert result == []
@@ -348,9 +344,7 @@ class TestGetRemediation:
         gc.collect()
 
     @pytest.mark.asyncio
-    async def test_get_remediation_found(
-        self, queue: RemediationApprovalQueue, sample_recommendation: MagicMock
-    ) -> None:
+    async def test_get_remediation_found(self, queue: RemediationApprovalQueue, sample_recommendation: MagicMock) -> None:
         """Should return remediation when found."""
         queued = await queue.queue_remediation(
             alert_id="alert-001",
@@ -364,9 +358,7 @@ class TestGetRemediation:
         assert result.remediation_id == queued[0].remediation_id
 
     @pytest.mark.asyncio
-    async def test_get_remediation_not_found(
-        self, queue: RemediationApprovalQueue
-    ) -> None:
+    async def test_get_remediation_not_found(self, queue: RemediationApprovalQueue) -> None:
         """Should return None when remediation not found."""
         result = await queue.get_remediation("nonexistent-id")
         assert result is None
@@ -399,17 +391,13 @@ class TestApprove:
         assert result.approved_at is not None
 
     @pytest.mark.asyncio
-    async def test_approve_not_found(
-        self, queue: RemediationApprovalQueue
-    ) -> None:
+    async def test_approve_not_found(self, queue: RemediationApprovalQueue) -> None:
         """Should raise KeyError when remediation not found."""
         with pytest.raises(KeyError, match="not found"):
             await queue.approve("nonexistent-id", "admin@example.com")
 
     @pytest.mark.asyncio
-    async def test_approve_already_approved(
-        self, queue: RemediationApprovalQueue, sample_recommendation: MagicMock
-    ) -> None:
+    async def test_approve_already_approved(self, queue: RemediationApprovalQueue, sample_recommendation: MagicMock) -> None:
         """Should raise ValueError when remediation already approved."""
         queued = await queue.queue_remediation(
             alert_id="alert-001",
@@ -433,9 +421,7 @@ class TestReject:
         gc.collect()
 
     @pytest.mark.asyncio
-    async def test_reject_pending_remediation(
-        self, queue: RemediationApprovalQueue, sample_recommendation: MagicMock
-    ) -> None:
+    async def test_reject_pending_remediation(self, queue: RemediationApprovalQueue, sample_recommendation: MagicMock) -> None:
         """Should reject a pending remediation."""
         queued = await queue.queue_remediation(
             alert_id="alert-001",
@@ -456,9 +442,7 @@ class TestReject:
         assert result.reason == "Too risky for production"
 
     @pytest.mark.asyncio
-    async def test_reject_without_reason(
-        self, queue: RemediationApprovalQueue, sample_recommendation: MagicMock
-    ) -> None:
+    async def test_reject_without_reason(self, queue: RemediationApprovalQueue, sample_recommendation: MagicMock) -> None:
         """Should reject without requiring a reason."""
         queued = await queue.queue_remediation(
             alert_id="alert-001",
@@ -473,17 +457,13 @@ class TestReject:
         assert result.reason is None
 
     @pytest.mark.asyncio
-    async def test_reject_not_found(
-        self, queue: RemediationApprovalQueue
-    ) -> None:
+    async def test_reject_not_found(self, queue: RemediationApprovalQueue) -> None:
         """Should raise KeyError when remediation not found."""
         with pytest.raises(KeyError, match="not found"):
             await queue.reject("nonexistent-id", "admin@example.com")
 
     @pytest.mark.asyncio
-    async def test_reject_already_rejected(
-        self, queue: RemediationApprovalQueue, sample_recommendation: MagicMock
-    ) -> None:
+    async def test_reject_already_rejected(self, queue: RemediationApprovalQueue, sample_recommendation: MagicMock) -> None:
         """Should raise ValueError when remediation already rejected."""
         queued = await queue.queue_remediation(
             alert_id="alert-001",
@@ -507,9 +487,7 @@ class TestGetHistory:
         gc.collect()
 
     @pytest.mark.asyncio
-    async def test_get_history_empty(
-        self, queue: RemediationApprovalQueue
-    ) -> None:
+    async def test_get_history_empty(self, queue: RemediationApprovalQueue) -> None:
         """Should return empty list when no completed remediations."""
         result = await queue.get_history()
         assert result == []
@@ -554,9 +532,7 @@ class TestGetHistory:
         assert len(history) == 0
 
     @pytest.mark.asyncio
-    async def test_get_history_respects_limit(
-        self, queue: RemediationApprovalQueue
-    ) -> None:
+    async def test_get_history_respects_limit(self, queue: RemediationApprovalQueue) -> None:
         """Should respect limit parameter."""
         # Create many remediations
         for i in range(10):
@@ -582,9 +558,7 @@ class TestGetHistory:
         assert len(history) == 5
 
     @pytest.mark.asyncio
-    async def test_get_history_respects_offset(
-        self, queue: RemediationApprovalQueue
-    ) -> None:
+    async def test_get_history_respects_offset(self, queue: RemediationApprovalQueue) -> None:
         """Should respect offset parameter for pagination."""
         # Create many remediations
         for i in range(10):

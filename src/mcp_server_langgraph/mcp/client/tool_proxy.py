@@ -15,7 +15,7 @@ from mcp_server_langgraph.mcp.client.tool_registry import MCPToolDefinition, MCP
 from mcp_server_langgraph.observability.telemetry import logger
 
 if TYPE_CHECKING:
-    from mcp_server_langgraph.mcp.client.executor import MCPExecutor
+    pass
 
 
 def _json_type_to_python(json_type: str) -> type:
@@ -179,10 +179,7 @@ class MCPToolProxy(BaseTool):
             Tool execution result as string
         """
         # Remove any internal/placeholder fields from kwargs
-        arguments = {
-            k: v for k, v in kwargs.items()
-            if not k.startswith("_") and k != "empty_placeholder" and v is not None
-        }
+        arguments = {k: v for k, v in kwargs.items() if not k.startswith("_") and k != "empty_placeholder" and v is not None}
 
         logger.info(
             "Executing MCP tool via proxy",
@@ -204,11 +201,12 @@ class MCPToolProxy(BaseTool):
                 return result
             elif isinstance(result, dict):
                 import json
+
                 return json.dumps(result, indent=2)
             else:
                 return str(result)
 
-        except asyncio.TimeoutError:
+        except TimeoutError:
             error_msg = f"Error: Tool '{self.mcp_tool_name}' timed out on server '{self.mcp_server}'"
             logger.warning(error_msg)
             return error_msg

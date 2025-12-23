@@ -124,9 +124,9 @@ class Orchestrator:
 
         for i in range(num_subtasks):
             subtask = Subtask(
-                task_id=f"subtask-{i+1}",
-                title=f"Subtask {i+1}",
-                instructions=f"Execute part {i+1} of: {task}",
+                task_id=f"subtask-{i + 1}",
+                title=f"Subtask {i + 1}",
+                instructions=f"Execute part {i + 1} of: {task}",
                 complexity="simple" if i < num_subtasks - 1 else "complicated",
             )
             subtasks.append(subtask)
@@ -151,8 +151,14 @@ class Orchestrator:
 
         # Complex keywords that suggest more subagents
         complex_keywords = {
-            "comprehensive", "thorough", "detailed", "analyze",
-            "research", "investigate", "compare", "multiple",
+            "comprehensive",
+            "thorough",
+            "detailed",
+            "analyze",
+            "research",
+            "investigate",
+            "compare",
+            "multiple",
         }
 
         complexity_score = sum(1 for w in words if w in complex_keywords)
@@ -309,10 +315,7 @@ class Orchestrator:
 
         try:
             # Collect all successful outputs
-            successful_outputs = [
-                r.output for r in results
-                if r.success and r.output
-            ]
+            successful_outputs = [r.output for r in results if r.success and r.output]
 
             synthesis_result = {
                 "original_task": decomposition.original_task,
@@ -450,10 +453,7 @@ class Orchestrator:
                 confidence_pct = f"{result.confidence:.0%}"
                 threshold_pct = f"{threshold:.0%}"
 
-                approval_reason = (
-                    f"Confidence {confidence_pct} is below threshold {threshold_pct}. "
-                    f"Human approval required."
-                )
+                approval_reason = f"Confidence {confidence_pct} is below threshold {threshold_pct}. Human approval required."
 
                 # Create updated result with approval fields set
                 result = SubagentResult(

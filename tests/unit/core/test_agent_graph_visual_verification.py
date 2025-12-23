@@ -16,7 +16,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 
 if TYPE_CHECKING:
-    from mcp_server_langgraph.core.agent_config import AgentConfig
+    pass
 
 
 pytestmark = [pytest.mark.unit, pytest.mark.visual_verification]
@@ -113,9 +113,7 @@ class TestAgentGraphVisualVerificationNode:
         gc.collect()
 
     @pytest.mark.asyncio
-    async def test_graph_includes_visual_verify_node_when_enabled(
-        self, agent_config_with_visual, mock_settings
-    ):
+    async def test_graph_includes_visual_verify_node_when_enabled(self, agent_config_with_visual, mock_settings):
         """GIVEN AgentConfig with visual verification enabled
         WHEN building agent graph
         THEN graph should include visual_verify node
@@ -137,9 +135,7 @@ class TestAgentGraphVisualVerificationNode:
             assert "verify" in node_names
 
     @pytest.mark.asyncio
-    async def test_graph_excludes_visual_verify_when_disabled(
-        self, agent_config_without_visual, mock_settings
-    ):
+    async def test_graph_excludes_visual_verify_when_disabled(self, agent_config_without_visual, mock_settings):
         """GIVEN AgentConfig with visual verification disabled
         WHEN building agent graph
         THEN graph should NOT include visual_verify node
@@ -282,7 +278,6 @@ class TestVisualVerifyAgentIntegration:
         THEN both should contribute to final result
         """
         from mcp_server_langgraph.llm.verifier import (
-            OutputVerifier,
             VerificationResult,
             VisualVerificationResult,
         )

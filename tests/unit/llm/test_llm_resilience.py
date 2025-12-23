@@ -87,7 +87,6 @@ class TestLLMRateLimiting:
         """
         from mcp_server_langgraph.llm.factory import LLMFactory
         from mcp_server_langgraph.resilience.rate_limit import (
-            TokenBucket,
             get_provider_token_bucket,
             reset_all_token_buckets,
         )
@@ -192,10 +191,7 @@ class TestLLMAdaptiveBulkhead:
             # Launch many concurrent calls
             num_calls = initial_limit + 5  # More than the limit
 
-            tasks = [
-                factory.ainvoke([{"role": "user", "content": f"Request {i}"}])
-                for i in range(num_calls)
-            ]
+            tasks = [factory.ainvoke([{"role": "user", "content": f"Request {i}"}]) for i in range(num_calls)]
 
             await asyncio.gather(*tasks, return_exceptions=True)
 
@@ -411,6 +407,7 @@ class TestLLMRateLimitErrorHandling:
             call_count += 1
             if call_count < 3:
                 from litellm.exceptions import RateLimitError
+
                 raise RateLimitError(
                     message="Rate limit exceeded",
                     model="gpt-4",
@@ -456,6 +453,7 @@ class TestLLMRateLimitErrorHandling:
             call_count += 1
             if call_count < 3:  # Fail first 2 attempts, succeed on 3rd
                 from litellm.exceptions import ServiceUnavailableError
+
                 raise ServiceUnavailableError(
                     message="Overloaded",
                     model="claude-3-sonnet",

@@ -169,6 +169,9 @@ class AlertBroadcaster:
         self._lock = asyncio.Lock()
         self._push_sender = push_sender
         self._router = router
+        # Buffer for recent alerts (for get_recent_alerts)
+        self._recent_alerts: list[dict[str, Any]] = []
+        self._max_recent_alerts: int = 100
 
     @property
     def subscriber_count(self) -> int:
@@ -186,6 +189,30 @@ class AlertBroadcaster:
             Number of connections for the user.
         """
         return sum(1 for s in self._subscribers if s.user_id == user_id)
+
+    async def get_recent_alerts(self, limit: int = 10) -> list[dict[str, Any]]:
+        """
+        Get recent alerts from internal buffer.
+
+        Args:
+            limit: Maximum number of alerts to return.
+
+        Returns:
+            List of recent alerts as dictionaries.
+        """
+        return self._recent_alerts[-limit:] if limit > 0 else self._recent_alerts.copy()
+
+    def _store_recent_alert(self, alert_dict: dict[str, Any]) -> None:
+        """
+        Store an alert in the recent alerts buffer.
+
+        Args:
+            alert_dict: Alert dictionary to store.
+        """
+        self._recent_alerts.append(alert_dict)
+        # Keep buffer size limited
+        if len(self._recent_alerts) > self._max_recent_alerts:
+            self._recent_alerts = self._recent_alerts[-self._max_recent_alerts:]
 
     async def subscribe(
         self,
@@ -207,9 +234,7 @@ class AlertBroadcaster:
             self._subscribers.append(subscriber)
             # Update WebSocket connections gauge
             update_websocket_connections(self.subscriber_count)
-            logger.info(
-                f"Alert subscriber added. User: {user_id}. Total: {self.subscriber_count}"
-            )
+            logger.info(f"Alert subscriber added. User: {user_id}. Total: {self.subscriber_count}")
 
     async def unsubscribe(self, connection: WebSocketConnection) -> None:
         """
@@ -219,9 +244,7 @@ class AlertBroadcaster:
             connection: The WebSocket connection to unsubscribe.
         """
         async with self._lock:
-            self._subscribers = [
-                s for s in self._subscribers if s.connection != connection
-            ]
+            self._subscribers = [s for s in self._subscribers if s.connection != connection]
             # Update WebSocket connections gauge
             update_websocket_connections(self.subscriber_count)
             logger.info(f"Alert subscriber removed. Total: {self.subscriber_count}")
@@ -255,9 +278,7 @@ class AlertBroadcaster:
         ) as span:
             # Filter by severity (only critical and warning)
             if alert.severity not in ALLOWED_SEVERITIES:
-                logger.debug(
-                    f"Filtering alert {alert.alert_id} with severity {alert.severity.value}"
-                )
+                logger.debug(f"Filtering alert {alert.alert_id} with severity {alert.severity.value}")
                 span.set_attribute("alert.filtered", True)
                 span.set_attribute("alert.filter_reason", "severity")
                 return
@@ -269,15 +290,11 @@ class AlertBroadcaster:
             if self._router is not None:
                 try:
                     # Convert Alert to routing format and route
-                    routing_result = await self._router.route_async(
-                        self._convert_to_routing_alert(alert)
-                    )
+                    routing_result = await self._router.route_async(self._convert_to_routing_alert(alert))
 
                     # If routing filtered out the alert, don't broadcast
                     if not routing_result.routed:
-                        logger.debug(
-                            f"Alert {alert.alert_id} filtered by routing rules"
-                        )
+                        logger.debug(f"Alert {alert.alert_id} filtered by routing rules")
                         span.set_attribute("alert.filtered", True)
                         span.set_attribute("alert.filter_reason", "routing")
                         return
@@ -285,15 +302,11 @@ class AlertBroadcaster:
                     # Get subscribed users from routing result
                     if routing_result.subscribed_users:
                         subscribed_user_ids = set(routing_result.subscribed_users)
-                        logger.debug(
-                            f"Alert {alert.alert_id} routed to {len(subscribed_user_ids)} users"
-                        )
+                        logger.debug(f"Alert {alert.alert_id} routed to {len(subscribed_user_ids)} users")
                         span.set_attribute("alert.routed_users", len(subscribed_user_ids))
 
                 except Exception as e:
-                    logger.warning(
-                        f"Router error for alert {alert.alert_id}, falling back to all: {e}"
-                    )
+                    logger.warning(f"Router error for alert {alert.alert_id}, falling back to all: {e}")
                     span.record_exception(e)
                     # On router error, fall back to broadcasting to all subscribers
 
@@ -301,15 +314,10 @@ class AlertBroadcaster:
             if self._push_sender and alert.severity == AlertSeverity.CRITICAL:
                 try:
                     push_count = await self._push_sender.send_critical_alert(alert)
-                    logger.info(
-                        f"Sent push notification for critical alert {alert.alert_id} "
-                        f"to {push_count} subscribers"
-                    )
+                    logger.info(f"Sent push notification for critical alert {alert.alert_id} to {push_count} subscribers")
                     span.set_attribute("alert.push_sent", push_count)
                 except Exception as e:
-                    logger.warning(
-                        f"Failed to send push notification for alert {alert.alert_id}: {e}"
-                    )
+                    logger.warning(f"Failed to send push notification for alert {alert.alert_id}: {e}")
                     span.record_exception(e)
 
             if not self._subscribers:
@@ -339,9 +347,7 @@ class AlertBroadcaster:
                         record_websocket_message("alert")
                         broadcast_count += 1
                     except Exception as e:
-                        logger.warning(
-                            f"Failed to send alert to subscriber {subscriber.user_id}: {e}"
-                        )
+                        logger.warning(f"Failed to send alert to subscriber {subscriber.user_id}: {e}")
                         failed_connections.append(subscriber.connection)
 
                 span.set_attribute("alert.broadcast_count", broadcast_count)
@@ -349,17 +355,10 @@ class AlertBroadcaster:
 
                 # Remove failed connections
                 if failed_connections:
-                    self._subscribers = [
-                        s
-                        for s in self._subscribers
-                        if s.connection not in failed_connections
-                    ]
+                    self._subscribers = [s for s in self._subscribers if s.connection not in failed_connections]
                     # Update connections gauge after removing failed
                     update_websocket_connections(self.subscriber_count)
-                    logger.info(
-                        f"Removed {len(failed_connections)} failed subscribers. "
-                        f"Remaining: {self.subscriber_count}"
-                    )
+                    logger.info(f"Removed {len(failed_connections)} failed subscribers. Remaining: {self.subscriber_count}")
 
     def _convert_to_routing_alert(self, alert: Alert) -> Any:
         """
@@ -428,20 +427,14 @@ class AlertBroadcaster:
                         record_websocket_message("alert_update")
                         broadcast_count += 1
                     except Exception as e:
-                        logger.warning(
-                            f"Failed to send alert update to {subscriber.user_id}: {e}"
-                        )
+                        logger.warning(f"Failed to send alert update to {subscriber.user_id}: {e}")
                         failed_connections.append(subscriber.connection)
 
                 span.set_attribute("alert.broadcast_count", broadcast_count)
                 span.set_attribute("alert.failed_count", len(failed_connections))
 
                 if failed_connections:
-                    self._subscribers = [
-                        s
-                        for s in self._subscribers
-                        if s.connection not in failed_connections
-                    ]
+                    self._subscribers = [s for s in self._subscribers if s.connection not in failed_connections]
                     # Update connections gauge after removing failed
                     update_websocket_connections(self.subscriber_count)
 
@@ -465,21 +458,12 @@ class AlertBroadcaster:
                     # Record message sent metric
                     record_websocket_message("execution_result")
                 except Exception as e:
-                    logger.warning(
-                        f"Failed to send execution result to {subscriber.user_id}: {e}"
-                    )
+                    logger.warning(f"Failed to send execution result to {subscriber.user_id}: {e}")
                     failed_connections.append(subscriber.connection)
 
             # Remove failed connections
             if failed_connections:
-                self._subscribers = [
-                    s
-                    for s in self._subscribers
-                    if s.connection not in failed_connections
-                ]
+                self._subscribers = [s for s in self._subscribers if s.connection not in failed_connections]
                 # Update connections gauge after removing failed
                 update_websocket_connections(self.subscriber_count)
-                logger.info(
-                    f"Removed {len(failed_connections)} failed subscribers. "
-                    f"Remaining: {self.subscriber_count}"
-                )
+                logger.info(f"Removed {len(failed_connections)} failed subscribers. Remaining: {self.subscriber_count}")

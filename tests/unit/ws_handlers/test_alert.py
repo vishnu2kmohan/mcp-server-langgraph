@@ -7,7 +7,6 @@ TDD tests for the Alert WebSocket using the standardized WebSocketBase.
 from __future__ import annotations
 
 import gc
-from typing import Any
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
@@ -69,9 +68,7 @@ class TestAlertHandler:
         assert issubclass(AlertHandler, WebSocketBase)
 
     @pytest.mark.asyncio
-    async def test_handles_subscribe_message(
-        self, mock_websocket: MagicMock, mock_alert_broadcaster: MagicMock
-    ) -> None:
+    async def test_handles_subscribe_message(self, mock_websocket: MagicMock, mock_alert_broadcaster: MagicMock) -> None:
         """
         GIVEN an active admin connection
         WHEN a subscribe message is received
@@ -97,9 +94,7 @@ class TestAlertHandler:
         assert response.type == "subscribed"
 
     @pytest.mark.asyncio
-    async def test_handles_unsubscribe_message(
-        self, mock_websocket: MagicMock, mock_alert_broadcaster: MagicMock
-    ) -> None:
+    async def test_handles_unsubscribe_message(self, mock_websocket: MagicMock, mock_alert_broadcaster: MagicMock) -> None:
         """
         GIVEN an active subscription
         WHEN an unsubscribe message is received
@@ -127,9 +122,7 @@ class TestAlertHandler:
         assert handler._subscribed is False
 
     @pytest.mark.asyncio
-    async def test_handles_get_recent_message(
-        self, mock_websocket: MagicMock, mock_alert_broadcaster: MagicMock
-    ) -> None:
+    async def test_handles_get_recent_message(self, mock_websocket: MagicMock, mock_alert_broadcaster: MagicMock) -> None:
         """
         GIVEN an active connection
         WHEN a get_recent message is received
@@ -139,10 +132,12 @@ class TestAlertHandler:
             AlertHandler,
         )
 
-        mock_alert_broadcaster.get_recent_alerts = AsyncMock(return_value=[
-            {"alert_id": "alert-1", "severity": "critical"},
-            {"alert_id": "alert-2", "severity": "warning"},
-        ])
+        mock_alert_broadcaster.get_recent_alerts = AsyncMock(
+            return_value=[
+                {"alert_id": "alert-1", "severity": "critical"},
+                {"alert_id": "alert-2", "severity": "warning"},
+            ]
+        )
 
         handler = AlertHandler(
             config=WebSocketConfig(require_auth=False, endpoint_name="alerts"),
@@ -190,9 +185,7 @@ class TestAlertHandler:
         assert response.type == "error"
 
     @pytest.mark.asyncio
-    async def test_push_alert(
-        self, mock_websocket: MagicMock, mock_alert_broadcaster: MagicMock
-    ) -> None:
+    async def test_push_alert(self, mock_websocket: MagicMock, mock_alert_broadcaster: MagicMock) -> None:
         """
         GIVEN an active subscription
         WHEN push_alert is called
@@ -209,13 +202,15 @@ class TestAlertHandler:
         handler._websocket = mock_websocket
         handler._subscribed = True
 
-        await handler.push_alert({
-            "alert_id": "alert-1",
-            "name": "High CPU",
-            "severity": "critical",
-            "state": "firing",
-            "message": "CPU usage above 90%",
-        })
+        await handler.push_alert(
+            {
+                "alert_id": "alert-1",
+                "name": "High CPU",
+                "severity": "critical",
+                "state": "firing",
+                "message": "CPU usage above 90%",
+            }
+        )
 
         mock_websocket.send_json.assert_called_once()
         call_args = mock_websocket.send_json.call_args[0][0]
@@ -242,9 +237,11 @@ class TestAlertHandler:
         handler._websocket = mock_websocket
         handler._subscribed = False
 
-        await handler.push_alert({
-            "alert_id": "alert-1",
-            "severity": "critical",
-        })
+        await handler.push_alert(
+            {
+                "alert_id": "alert-1",
+                "severity": "critical",
+            }
+        )
 
         mock_websocket.send_json.assert_not_called()

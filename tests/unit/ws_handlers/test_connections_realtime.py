@@ -8,7 +8,6 @@ from __future__ import annotations
 
 import gc
 from datetime import UTC, datetime
-from typing import Any
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
@@ -83,9 +82,11 @@ class TestConnectionsRealtimeHandler:
         )
         from mcp_server_langgraph.websocket.types import AuthUser
 
-        mock_connection_service.list_connections = AsyncMock(return_value=[
-            {"id": "conn-1", "name": "Test Connection", "status": "connected"},
-        ])
+        mock_connection_service.list_connections = AsyncMock(
+            return_value=[
+                {"id": "conn-1", "name": "Test Connection", "status": "connected"},
+            ]
+        )
 
         handler = ConnectionsRealtimeHandler(
             config=WebSocketConfig(require_auth=True, endpoint_name="connections-realtime"),
@@ -103,9 +104,7 @@ class TestConnectionsRealtimeHandler:
         assert "connections" in call_args
 
     @pytest.mark.asyncio
-    async def test_handles_subscribe_message(
-        self, mock_websocket: MagicMock, mock_connection_service: MagicMock
-    ) -> None:
+    async def test_handles_subscribe_message(self, mock_websocket: MagicMock, mock_connection_service: MagicMock) -> None:
         """
         GIVEN an active connection
         WHEN a subscribe message is received
@@ -115,11 +114,13 @@ class TestConnectionsRealtimeHandler:
             ConnectionsRealtimeHandler,
         )
 
-        mock_connection_service.get_connection = AsyncMock(return_value={
-            "id": "conn-1",
-            "name": "Test Connection",
-            "status": "connected",
-        })
+        mock_connection_service.get_connection = AsyncMock(
+            return_value={
+                "id": "conn-1",
+                "name": "Test Connection",
+                "status": "connected",
+            }
+        )
 
         handler = ConnectionsRealtimeHandler(
             config=WebSocketConfig(require_auth=True, endpoint_name="connections-realtime"),
@@ -138,9 +139,7 @@ class TestConnectionsRealtimeHandler:
         assert "conn-1" in handler.subscriptions
 
     @pytest.mark.asyncio
-    async def test_handles_subscribe_all_message(
-        self, mock_websocket: MagicMock, mock_connection_service: MagicMock
-    ) -> None:
+    async def test_handles_subscribe_all_message(self, mock_websocket: MagicMock, mock_connection_service: MagicMock) -> None:
         """
         GIVEN an active connection
         WHEN a subscribe_all message is received
@@ -164,9 +163,7 @@ class TestConnectionsRealtimeHandler:
         assert handler.subscribe_all is True
 
     @pytest.mark.asyncio
-    async def test_handles_request_health_check(
-        self, mock_websocket: MagicMock, mock_connection_service: MagicMock
-    ) -> None:
+    async def test_handles_request_health_check(self, mock_websocket: MagicMock, mock_connection_service: MagicMock) -> None:
         """
         GIVEN an active connection
         WHEN a request_health_check message is received
@@ -176,12 +173,14 @@ class TestConnectionsRealtimeHandler:
             ConnectionsRealtimeHandler,
         )
 
-        mock_connection_service.get_connection_health = AsyncMock(return_value={
-            "connection_id": "conn-1",
-            "status": "healthy",
-            "latency_ms": 42,
-            "last_check": datetime.now(UTC).isoformat(),
-        })
+        mock_connection_service.get_connection_health = AsyncMock(
+            return_value={
+                "connection_id": "conn-1",
+                "status": "healthy",
+                "latency_ms": 42,
+                "last_check": datetime.now(UTC).isoformat(),
+            }
+        )
 
         handler = ConnectionsRealtimeHandler(
             config=WebSocketConfig(require_auth=True, endpoint_name="connections-realtime"),
@@ -200,9 +199,7 @@ class TestConnectionsRealtimeHandler:
         mock_connection_service.get_connection_health.assert_called_once_with("conn-1")
 
     @pytest.mark.asyncio
-    async def test_handles_unsubscribe_message(
-        self, mock_websocket: MagicMock, mock_connection_service: MagicMock
-    ) -> None:
+    async def test_handles_unsubscribe_message(self, mock_websocket: MagicMock, mock_connection_service: MagicMock) -> None:
         """
         GIVEN an active connection with subscriptions
         WHEN an unsubscribe message is received

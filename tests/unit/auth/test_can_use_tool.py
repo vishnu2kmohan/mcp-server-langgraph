@@ -8,7 +8,7 @@ permission checks beyond static OpenFGA rules.
 import gc
 
 import pytest
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, patch
 
 pytestmark = [pytest.mark.unit, pytest.mark.sdk]
 
@@ -72,9 +72,7 @@ class TestCanUseTool:
         )
 
         # Enable feature flag
-        with patch(
-            "mcp_server_langgraph.auth.middleware.feature_flags"
-        ) as mock_flags:
+        with patch("mcp_server_langgraph.auth.middleware.feature_flags") as mock_flags:
             mock_flags.enable_sdk_can_use_tool = True
 
             result = await middleware.can_use_tool(
@@ -107,9 +105,7 @@ class TestCanUseTool:
         )
 
         # Enable feature flag
-        with patch(
-            "mcp_server_langgraph.auth.middleware.feature_flags"
-        ) as mock_flags:
+        with patch("mcp_server_langgraph.auth.middleware.feature_flags") as mock_flags:
             mock_flags.enable_sdk_can_use_tool = True
 
             # Allowed path
@@ -147,9 +143,7 @@ class TestCanUseTool:
         )
 
         # Enable feature flag
-        with patch(
-            "mcp_server_langgraph.auth.middleware.feature_flags"
-        ) as mock_flags:
+        with patch("mcp_server_langgraph.auth.middleware.feature_flags") as mock_flags:
             mock_flags.enable_sdk_can_use_tool = True
 
             result = await middleware.can_use_tool(
@@ -175,9 +169,7 @@ class TestCanUseTool:
         )
 
         # When feature flag is disabled, callback should not be invoked
-        with patch(
-            "mcp_server_langgraph.auth.middleware.feature_flags"
-        ) as mock_flags:
+        with patch("mcp_server_langgraph.auth.middleware.feature_flags") as mock_flags:
             mock_flags.enable_sdk_can_use_tool = False
 
             result = await middleware.can_use_tool(
@@ -205,9 +197,7 @@ class TestCanUseTool:
         )
 
         # When callback raises, should deny for safety
-        with patch(
-            "mcp_server_langgraph.auth.middleware.feature_flags"
-        ) as mock_flags:
+        with patch("mcp_server_langgraph.auth.middleware.feature_flags") as mock_flags:
             mock_flags.enable_sdk_can_use_tool = True
 
             result = await middleware.can_use_tool(

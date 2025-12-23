@@ -1,6 +1,6 @@
 # Frontend Testing Patterns
 
-This document describes the testing patterns used in the Studio Frontend codebase for AI-Native Hybrid Canvas components.
+This document describes the testing patterns used in the Studio Frontend codebase for AI-Native Studio Canvas components.
 
 ## Table of Contents
 
@@ -272,7 +272,7 @@ describe("Revalidation", () => {
 
 **Full example (ConnectedCanvasPanel):**
 
-See `src/canvas/ConnectedCanvasPanel.test.tsx` and `src/layout/HybridShellLayout.test.tsx`
+See `src/canvas/ConnectedCanvasPanel.test.tsx` and `src/layout/StudioShellLayout.test.tsx`
 for complete working examples of useRevalidator mocking patterns.
 
 ### Mocking Redux Actions
@@ -911,7 +911,7 @@ These test files demonstrate the patterns documented above:
 |------|----------------------|
 | `src/canvas/ConnectedCanvasPanel.test.tsx` | Fetch mocking, save status indicators, concurrent operation prevention, cleanup on unmount, localStorage mocking |
 | `src/canvas/CanvasWorkspace.test.tsx` | Redux integration, artifact selection, AI edit overlay |
-| `src/layout/HybridShellLayout.test.tsx` | useRevalidator mocking, feature flag integration |
+| `src/layout/StudioShellLayout.test.tsx` | useRevalidator mocking, feature flag integration |
 | `src/pages/MCPPage.test.tsx` | Tab navigation, search filtering, Redux state |
 | `src/components/Layout/ActivityLog.test.tsx` | Notification types, compact mode, maxItems limiting |
 | `src/components/Artifacts/MDXArtifact.test.tsx` | Accordion expansion, tab switching, interactive components |

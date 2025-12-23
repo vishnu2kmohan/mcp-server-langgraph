@@ -184,9 +184,7 @@ class NotesManager:
             lines.append(note.to_markdown())
 
         # Also persist as JSON for reliable loading
-        json_data = {
-            "notes": [note.model_dump(mode="json") for note in self._notes.values()]
-        }
+        json_data = {"notes": [note.model_dump(mode="json") for note in self._notes.values()]}
 
         self.notes_path.write_text("\n".join(lines))
 

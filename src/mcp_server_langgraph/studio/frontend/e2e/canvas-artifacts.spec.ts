@@ -2,7 +2,7 @@
  * Canvas Artifact E2E Tests
  *
  * Tests for artifact viewing, editing, and management in the Canvas Panel.
- * Validates the Hybrid Canvas paradigm (Gemini/ChatGPT Canvas style).
+ * Validates the Studio Canvas paradigm (Gemini/ChatGPT Canvas style).
  *
  * Test Coverage:
  * - Artifact viewing and rendering
@@ -19,7 +19,7 @@ const backendEnabled = process.env.BACKEND_ENABLED !== 'false';
 
 // Mock feature flags
 const mockFeatureFlags = {
-  canvas_studio_shell: true,
+  studio_canvas_shell: true,
   canvas_editable: true,
   canvas_agents: true,
   canvas_ai_palette: true,

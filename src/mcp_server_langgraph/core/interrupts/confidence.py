@@ -130,8 +130,7 @@ class ConfidenceApprovalNode:
         threshold_pct = f"{self.threshold:.0%}"
 
         action_description = (
-            f"Agent confidence ({confidence_pct}) is below threshold ({threshold_pct}). "
-            f"Human approval required to proceed."
+            f"Agent confidence ({confidence_pct}) is below threshold ({threshold_pct}). Human approval required to proceed."
         )
 
         # Determine risk level based on how far below threshold

@@ -86,7 +86,12 @@ const createTestStore = (isAuthenticated = true) => {
     preloadedState: {
       auth: {
         user: isAuthenticated
-          ? { id: "test-user", email: "test@example.com", roles: ["user"], persona: "user" as const }
+          ? {
+              id: "test-user",
+              email: "test@example.com",
+              roles: ["user"],
+              persona: "user" as const,
+            }
           : null,
         tokens: null,
         organizations: [],

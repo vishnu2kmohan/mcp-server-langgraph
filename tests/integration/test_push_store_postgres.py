@@ -22,7 +22,6 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_asyn
 from mcp_server_langgraph.notifications.push_store import (
     PostgresPushSubscriptionStore,
     PushSubscription,
-    PushSubscriptionRecord,
     PushSubscriptionStore,
 )
 
@@ -123,10 +122,7 @@ async def setup_database(test_engine):
     async with test_engine.begin() as conn:
         # Check if table already exists
         result = await conn.execute(
-            text(
-                "SELECT EXISTS (SELECT FROM information_schema.tables "
-                "WHERE table_name = 'push_subscriptions')"
-            )
+            text("SELECT EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'push_subscriptions')")
         )
         tables_exist = result.scalar()
 
@@ -227,9 +223,7 @@ class TestPostgresPushStoreCRUD:
         """Force GC to prevent mock accumulation in xdist workers."""
         gc.collect()
 
-    async def test_save_and_retrieve_subscription(
-        self, store, sample_subscription
-    ):
+    async def test_save_and_retrieve_subscription(self, store, sample_subscription):
         """
         GIVEN a PostgresPushSubscriptionStore
         WHEN saving a subscription

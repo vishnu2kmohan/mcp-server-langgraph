@@ -13,9 +13,8 @@ Reference: UX Audit Plan - Integration Opportunities
 """
 
 import gc
-import os
 import pytest
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock
 
 from langchain_core.messages import AIMessage
 
@@ -73,11 +72,13 @@ SAMPLE_METRICS_LLM_RESPONSE = """
 def mock_model_selector():
     """Create mock ModelSelector."""
     selector = MagicMock()
-    selector.select_model = MagicMock(side_effect=lambda complexity: {
-        "simple": "gemini-flash",
-        "complicated": "gemini-2.5-flash",
-        "complex": "gemini-pro",
-    }.get(complexity, "gemini-flash"))
+    selector.select_model = MagicMock(
+        side_effect=lambda complexity: {
+            "simple": "gemini-flash",
+            "complicated": "gemini-2.5-flash",
+            "complex": "gemini-pro",
+        }.get(complexity, "gemini-flash")
+    )
     return selector
 
 
@@ -114,9 +115,7 @@ class TestAIUXServiceModelSelectorIntegration:
         gc.collect()
 
     @pytest.mark.asyncio
-    async def test_service_accepts_model_selector(
-        self, mock_llm_factory, mock_settings, mock_model_selector
-    ):
+    async def test_service_accepts_model_selector(self, mock_llm_factory, mock_settings, mock_model_selector):
         """Service can be initialized with optional ModelSelector."""
         from mcp_server_langgraph.api.v1.ai_ux_service import AIUXService
 
@@ -128,9 +127,7 @@ class TestAIUXServiceModelSelectorIntegration:
         assert service.model_selector is mock_model_selector
 
     @pytest.mark.asyncio
-    async def test_service_works_without_model_selector(
-        self, mock_llm_factory, mock_settings
-    ):
+    async def test_service_works_without_model_selector(self, mock_llm_factory, mock_settings):
         """Service works without ModelSelector (backward compatible)."""
         from mcp_server_langgraph.api.v1.ai_ux_service import AIUXService
 
@@ -163,16 +160,12 @@ class TestModelSelectionByService:
         gc.collect()
 
     @pytest.mark.asyncio
-    async def test_error_analysis_uses_simple_tier(
-        self, mock_llm_factory, mock_settings, mock_model_selector
-    ):
+    async def test_error_analysis_uses_simple_tier(self, mock_llm_factory, mock_settings, mock_model_selector):
         """Error analysis uses simple tier (fast pattern matching)."""
         from mcp_server_langgraph.api.v1.ai_ux_service import AIUXService
         from mcp_server_langgraph.api.v1.ai_ux import ErrorInfo, UserContext
 
-        mock_llm_factory.ainvoke = AsyncMock(
-            return_value=AIMessage(content=SAMPLE_ERROR_LLM_RESPONSE)
-        )
+        mock_llm_factory.ainvoke = AsyncMock(return_value=AIMessage(content=SAMPLE_ERROR_LLM_RESPONSE))
 
         service = AIUXService(
             llm_factory=mock_llm_factory,
@@ -189,16 +182,12 @@ class TestModelSelectionByService:
         mock_model_selector.select_model.assert_called_with("simple")
 
     @pytest.mark.asyncio
-    async def test_disclosure_analysis_uses_complicated_tier(
-        self, mock_llm_factory, mock_settings, mock_model_selector
-    ):
+    async def test_disclosure_analysis_uses_complicated_tier(self, mock_llm_factory, mock_settings, mock_model_selector):
         """Disclosure analysis uses complicated tier (behavior analysis)."""
         from mcp_server_langgraph.api.v1.ai_ux_service import AIUXService
         from mcp_server_langgraph.api.v1.ai_ux import DisclosureAnalyzeRequest
 
-        mock_llm_factory.ainvoke = AsyncMock(
-            return_value=AIMessage(content=SAMPLE_DISCLOSURE_LLM_RESPONSE)
-        )
+        mock_llm_factory.ainvoke = AsyncMock(return_value=AIMessage(content=SAMPLE_DISCLOSURE_LLM_RESPONSE))
 
         service = AIUXService(
             llm_factory=mock_llm_factory,
@@ -218,15 +207,11 @@ class TestModelSelectionByService:
         mock_model_selector.select_model.assert_called_with("complicated")
 
     @pytest.mark.asyncio
-    async def test_metrics_insights_uses_complex_tier(
-        self, mock_llm_factory, mock_settings, mock_model_selector
-    ):
+    async def test_metrics_insights_uses_complex_tier(self, mock_llm_factory, mock_settings, mock_model_selector):
         """Metrics insights uses complex tier (anomaly detection)."""
         from mcp_server_langgraph.api.v1.ai_ux_service import AIUXService
 
-        mock_llm_factory.ainvoke = AsyncMock(
-            return_value=AIMessage(content=SAMPLE_METRICS_LLM_RESPONSE)
-        )
+        mock_llm_factory.ainvoke = AsyncMock(return_value=AIMessage(content=SAMPLE_METRICS_LLM_RESPONSE))
 
         service = AIUXService(
             llm_factory=mock_llm_factory,
@@ -250,16 +235,12 @@ class TestModelSelectionFallback:
         gc.collect()
 
     @pytest.mark.asyncio
-    async def test_uses_default_model_without_selector(
-        self, mock_llm_factory, mock_settings
-    ):
+    async def test_uses_default_model_without_selector(self, mock_llm_factory, mock_settings):
         """Service uses default model when ModelSelector not provided."""
         from mcp_server_langgraph.api.v1.ai_ux_service import AIUXService
         from mcp_server_langgraph.api.v1.ai_ux import ErrorInfo
 
-        mock_llm_factory.ainvoke = AsyncMock(
-            return_value=AIMessage(content=SAMPLE_ERROR_LLM_RESPONSE)
-        )
+        mock_llm_factory.ainvoke = AsyncMock(return_value=AIMessage(content=SAMPLE_ERROR_LLM_RESPONSE))
 
         service = AIUXService(
             llm_factory=mock_llm_factory,
@@ -274,18 +255,14 @@ class TestModelSelectionFallback:
         mock_llm_factory.ainvoke.assert_called_once()
 
     @pytest.mark.asyncio
-    async def test_handles_model_selector_exception(
-        self, mock_llm_factory, mock_settings, mock_model_selector
-    ):
+    async def test_handles_model_selector_exception(self, mock_llm_factory, mock_settings, mock_model_selector):
         """Service gracefully handles ModelSelector exceptions."""
         from mcp_server_langgraph.api.v1.ai_ux_service import AIUXService
         from mcp_server_langgraph.api.v1.ai_ux import ErrorInfo
 
         # Make selector raise exception
         mock_model_selector.select_model.side_effect = Exception("Model selection failed")
-        mock_llm_factory.ainvoke = AsyncMock(
-            return_value=AIMessage(content=SAMPLE_ERROR_LLM_RESPONSE)
-        )
+        mock_llm_factory.ainvoke = AsyncMock(return_value=AIMessage(content=SAMPLE_ERROR_LLM_RESPONSE))
 
         service = AIUXService(
             llm_factory=mock_llm_factory,
@@ -342,8 +319,7 @@ class TestServiceComplexityMapping:
         simple_services = ["error_analysis", "empty_state", "nudge_recommendation"]
 
         for service in simple_services:
-            assert SERVICE_COMPLEXITY[service] == "simple", \
-                f"Expected {service} to use simple tier"
+            assert SERVICE_COMPLEXITY[service] == "simple", f"Expected {service} to use simple tier"
 
     def test_complicated_services_require_reasoning(self):
         """Complicated tier services require multi-step reasoning."""
@@ -352,8 +328,7 @@ class TestServiceComplexityMapping:
         complicated_services = ["disclosure_analysis", "persona_analysis", "onboarding_personalization"]
 
         for service in complicated_services:
-            assert SERVICE_COMPLEXITY[service] == "complicated", \
-                f"Expected {service} to use complicated tier"
+            assert SERVICE_COMPLEXITY[service] == "complicated", f"Expected {service} to use complicated tier"
 
     def test_complex_services_require_deep_analysis(self):
         """Complex tier services require deep analysis."""
@@ -362,5 +337,4 @@ class TestServiceComplexityMapping:
         complex_services = ["metrics_insights"]
 
         for service in complex_services:
-            assert SERVICE_COMPLEXITY[service] == "complex", \
-                f"Expected {service} to use complex tier"
+            assert SERVICE_COMPLEXITY[service] == "complex", f"Expected {service} to use complex tier"

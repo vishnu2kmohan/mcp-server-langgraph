@@ -89,11 +89,10 @@ class TestHITLPushNotificationIntegration:
         )
 
         # Patch feature flag and push sender
-        with patch(
-            "mcp_server_langgraph.api.v1.agent_request_websocket.get_feature_flags"
-        ) as mock_flags, patch(
-            "mcp_server_langgraph.api.v1.agent_request_websocket.get_push_sender"
-        ) as mock_get_sender:
+        with (
+            patch("mcp_server_langgraph.api.v1.agent_request_websocket.get_feature_flags") as mock_flags,
+            patch("mcp_server_langgraph.api.v1.agent_request_websocket.get_push_sender") as mock_get_sender,
+        ):
             mock_flags.return_value.enable_agent_hitl_push_notifications = True
             mock_get_sender.return_value = mock_push_sender
 
@@ -145,11 +144,10 @@ class TestHITLPushNotificationIntegration:
         )
 
         # Patch feature flag to disable push notifications
-        with patch(
-            "mcp_server_langgraph.api.v1.agent_request_websocket.get_feature_flags"
-        ) as mock_flags, patch(
-            "mcp_server_langgraph.api.v1.agent_request_websocket.get_push_sender"
-        ) as mock_get_sender:
+        with (
+            patch("mcp_server_langgraph.api.v1.agent_request_websocket.get_feature_flags") as mock_flags,
+            patch("mcp_server_langgraph.api.v1.agent_request_websocket.get_push_sender") as mock_get_sender,
+        ):
             mock_flags.return_value.enable_agent_hitl_push_notifications = False
             mock_get_sender.return_value = mock_push_sender
 
@@ -207,11 +205,10 @@ class TestHITLPushNotificationIntegration:
         )
 
         # Patch feature flag and push sender
-        with patch(
-            "mcp_server_langgraph.api.v1.agent_request_websocket.get_feature_flags"
-        ) as mock_flags, patch(
-            "mcp_server_langgraph.api.v1.agent_request_websocket.get_push_sender"
-        ) as mock_get_sender:
+        with (
+            patch("mcp_server_langgraph.api.v1.agent_request_websocket.get_feature_flags") as mock_flags,
+            patch("mcp_server_langgraph.api.v1.agent_request_websocket.get_push_sender") as mock_get_sender,
+        ):
             mock_flags.return_value.enable_agent_hitl_push_notifications = True
             mock_get_sender.return_value = mock_push_sender
 
@@ -379,11 +376,6 @@ class TestHITLPushBroadcastIntegration:
         from mcp_server_langgraph.api.v1.agent_request_websocket import (
             broadcast_approval_required,
         )
-        from mcp_server_langgraph.api.v1.agent_requests import (
-            AgentRequest,
-            AgentRequestType,
-            AgentRequestStatus,
-        )
 
         # Create a mock request with user context
         request = MagicMock()
@@ -399,11 +391,10 @@ class TestHITLPushBroadcastIntegration:
         request.requested_at = datetime.now(UTC)
 
         # Patch broadcaster and push notification function
-        with patch(
-            "mcp_server_langgraph.api.v1.agent_request_websocket.get_broadcaster"
-        ) as mock_get_broadcaster, patch(
-            "mcp_server_langgraph.api.v1.agent_request_websocket.send_hitl_approval_notification"
-        ) as mock_send_push:
+        with (
+            patch("mcp_server_langgraph.api.v1.agent_request_websocket.get_broadcaster") as mock_get_broadcaster,
+            patch("mcp_server_langgraph.api.v1.agent_request_websocket.send_hitl_approval_notification") as mock_send_push,
+        ):
             mock_broadcaster = AsyncMock()
             mock_get_broadcaster.return_value = mock_broadcaster
             mock_send_push.return_value = None

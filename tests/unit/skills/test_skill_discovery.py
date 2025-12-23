@@ -240,15 +240,9 @@ class TestSkillDiscoverySearch:
         from mcp_server_langgraph.skills.models import Skill
 
         discovery = SkillDiscovery()
-        discovery.registry.register(
-            Skill(name="web-research", description="Research using web search")
-        )
-        discovery.registry.register(
-            Skill(name="code-analysis", description="Analyze code")
-        )
-        discovery.registry.register(
-            Skill(name="file-search", description="Search files")
-        )
+        discovery.registry.register(Skill(name="web-research", description="Research using web search"))
+        discovery.registry.register(Skill(name="code-analysis", description="Analyze code"))
+        discovery.registry.register(Skill(name="file-search", description="Search files"))
 
         results = discovery.search("search")
 

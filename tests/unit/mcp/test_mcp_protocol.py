@@ -9,7 +9,6 @@ Reference: https://modelcontextprotocol.io/specification/2025-11-25
 
 import gc
 import json
-from typing import Any
 
 import pytest
 
@@ -17,8 +16,8 @@ import pytest
 MCP_PROTOCOL_VERSION = "2025-11-25"
 
 
-
 pytestmark = pytest.mark.unit
+
 
 @pytest.mark.xdist_group(name="mcp_protocol")
 class TestMCPProtocolMessages:

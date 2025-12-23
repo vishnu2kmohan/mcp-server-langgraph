@@ -164,21 +164,15 @@ class AnalyticsStore(Protocol):
         """Save an engagement event."""
         ...
 
-    async def get_delivery_stats(
-        self, start_time: datetime, end_time: datetime
-    ) -> dict[str, int]:
+    async def get_delivery_stats(self, start_time: datetime, end_time: datetime) -> dict[str, int]:
         """Get delivery statistics for a time range."""
         ...
 
-    async def get_engagement_stats(
-        self, start_time: datetime, end_time: datetime
-    ) -> dict[str, int]:
+    async def get_engagement_stats(self, start_time: datetime, end_time: datetime) -> dict[str, int]:
         """Get engagement statistics for a time range."""
         ...
 
-    async def get_latency_stats(
-        self, start_time: datetime, end_time: datetime
-    ) -> dict[str, float]:
+    async def get_latency_stats(self, start_time: datetime, end_time: datetime) -> dict[str, float]:
         """Get latency statistics for a time range."""
         ...
 
@@ -212,9 +206,7 @@ class PushAnalytics:
             event: The delivery event to record.
         """
         await self._store.save_event(event)
-        logger.debug(
-            f"Recorded delivery event: {event.notification_id} - {event.status}"
-        )
+        logger.debug(f"Recorded delivery event: {event.notification_id} - {event.status}")
 
     async def record_engagement(self, event: EngagementEvent) -> None:
         """
@@ -224,9 +216,7 @@ class PushAnalytics:
             event: The engagement event to record.
         """
         await self._store.save_engagement(event)
-        logger.debug(
-            f"Recorded engagement: {event.notification_id} - {event.action}"
-        )
+        logger.debug(f"Recorded engagement: {event.notification_id} - {event.action}")
 
     async def get_delivery_summary(
         self,

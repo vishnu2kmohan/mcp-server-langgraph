@@ -14,7 +14,7 @@ Tests verify:
 
 import gc
 from decimal import Decimal
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -94,6 +94,7 @@ class TestOrchestratorCostExecute:
         # Execute with mocked subagent execution
         with patch.object(orchestrator.coordinator, "execute_all") as mock_execute:
             from mcp_server_langgraph.agents.subagent import SubagentResult
+
             mock_result = SubagentResult(
                 task_id="subtask-1",
                 success=True,
@@ -186,6 +187,7 @@ class TestOrchestratorCostAccumulation:
         # Execute twice
         with patch.object(orchestrator.coordinator, "execute_all") as mock_execute:
             from mcp_server_langgraph.agents.subagent import SubagentResult
+
             mock_result = SubagentResult(
                 task_id="subtask-1",
                 success=True,
@@ -273,7 +275,6 @@ class TestOrchestratorCostBudget:
     @pytest.mark.asyncio
     async def test_execute_checks_budget_before_execution(self) -> None:
         """execute() should check budget status before running."""
-        from mcp_server_langgraph.agents.cost_models import BudgetStatus
         from mcp_server_langgraph.agents.cost_tracker import CostTracker
         from mcp_server_langgraph.agents.orchestrator import Orchestrator, TaskDecomposition
         from mcp_server_langgraph.core.exceptions import BudgetExceededError

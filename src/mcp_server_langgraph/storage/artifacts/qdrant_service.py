@@ -182,11 +182,7 @@ class QdrantArtifactVectorService:
             query_embedding = await self._embedder.embed(query)
 
             # Build user filter for security
-            user_filter = {
-                "must": [
-                    {"key": "user_id", "match": {"value": user_id}}
-                ]
-            }
+            user_filter = {"must": [{"key": "user_id", "match": {"value": user_id}}]}
 
             # Search Qdrant
             results = await self._client.search(
@@ -251,11 +247,7 @@ class QdrantArtifactVectorService:
             embedding = points[0].vector
 
             # Build user filter
-            user_filter = {
-                "must": [
-                    {"key": "user_id", "match": {"value": user_id}}
-                ]
-            }
+            user_filter = {"must": [{"key": "user_id", "match": {"value": user_id}}]}
 
             # Search for similar (request more to filter source)
             results = await self._client.search(

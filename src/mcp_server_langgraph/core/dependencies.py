@@ -79,9 +79,7 @@ def get_token_validator() -> TokenValidator | None:
     if _token_validator is None:
         # Only create validator for Keycloak auth
         if settings.auth_provider.lower() != "keycloak":
-            logger.debug(
-                f"Token validator not created: auth_provider is '{settings.auth_provider}', not 'keycloak'"
-            )
+            logger.debug(f"Token validator not created: auth_provider is '{settings.auth_provider}', not 'keycloak'")
             return None
 
         from mcp_server_langgraph.auth.keycloak import KeycloakConfig

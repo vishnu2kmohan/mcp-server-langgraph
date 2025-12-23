@@ -22,6 +22,7 @@ from mcp_server_langgraph.mcp.resources import (
 
 pytestmark = pytest.mark.unit
 
+
 class TestStudioResourceHandlerNaming:
     """Verify studio resource handler uses correct naming."""
 
@@ -50,8 +51,7 @@ class TestStudioURIScheme:
 
         for template in templates:
             assert template.uriTemplate.startswith("studio://"), (
-                f"Template '{template.name}' uses wrong scheme: {template.uriTemplate}. "
-                "Expected studio:// scheme."
+                f"Template '{template.name}' uses wrong scheme: {template.uriTemplate}. Expected studio:// scheme."
             )
 
     def test_session_traces_uses_studio_uri(self) -> None:
@@ -167,6 +167,4 @@ class TestNoPlaygroundReferences:
         for uri, provider in test_cases:
             result = await provider(uri)
             # If parsing is correct, session_id should be "my-session"
-            assert "my-session" in result.text, (
-                f"Provider {provider.__name__} failed to parse session_id from {uri}"
-            )
+            assert "my-session" in result.text, f"Provider {provider.__name__} failed to parse session_id from {uri}"

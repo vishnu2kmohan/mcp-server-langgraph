@@ -4,7 +4,13 @@
  * Tests for inline AI edit overlay in the canvas.
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { render, screen, fireEvent, waitFor, cleanup } from "@testing-library/react";
+import {
+  render,
+  screen,
+  fireEvent,
+  waitFor,
+  cleanup,
+} from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { AIEditOverlay } from "./AIEditOverlay";
 

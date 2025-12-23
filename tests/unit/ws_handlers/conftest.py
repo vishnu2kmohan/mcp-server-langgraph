@@ -7,11 +7,9 @@ Provides common fixtures for WebSocket unit tests.
 from __future__ import annotations
 
 import gc
-from typing import Any, AsyncGenerator
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
-from fastapi import WebSocket
 
 from mcp_server_langgraph.websocket import AuthUser, MessageEnvelope, WebSocketConfig
 

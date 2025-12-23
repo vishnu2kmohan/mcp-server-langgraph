@@ -57,9 +57,7 @@ class TestCostTrackingHandlerInit:
         mock_metrics = MagicMock()
 
         with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
-            handler = CostTrackingHandler(
-                config=config, cost_service=mock_service, metrics=mock_metrics
-            )
+            handler = CostTrackingHandler(config=config, cost_service=mock_service, metrics=mock_metrics)
 
         assert handler._metrics is mock_metrics
 
@@ -141,9 +139,7 @@ class TestCostTrackingHandlerMessages:
         with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
             handler = CostTrackingHandler(config=config, cost_service=mock_service)
 
-        message = MessageEnvelope(
-            type="subscribe_session", id="msg-1", payload={"session_id": "session-1"}
-        )
+        message = MessageEnvelope(type="subscribe_session", id="msg-1", payload={"session_id": "session-1"})
         response = await handler.handle_message(message)
 
         assert response is not None
@@ -188,9 +184,7 @@ class TestCostTrackingHandlerMessages:
         with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
             handler = CostTrackingHandler(config=config, cost_service=mock_service)
 
-        message = MessageEnvelope(
-            type="subscribe_session", id="msg-1", payload={"session_id": "session-1"}
-        )
+        message = MessageEnvelope(type="subscribe_session", id="msg-1", payload={"session_id": "session-1"})
         response = await handler.handle_message(message)
 
         assert response is not None
@@ -217,9 +211,7 @@ class TestCostTrackingHandlerMessages:
         with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
             handler = CostTrackingHandler(config=config, cost_service=mock_service)
 
-        message = MessageEnvelope(
-            type="subscribe_user", id="msg-1", payload={"user_id": "user-1"}
-        )
+        message = MessageEnvelope(type="subscribe_user", id="msg-1", payload={"user_id": "user-1"})
         response = await handler.handle_message(message)
 
         assert response is not None
@@ -264,9 +256,7 @@ class TestCostTrackingHandlerMessages:
         with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
             handler = CostTrackingHandler(config=config, cost_service=mock_service)
 
-        message = MessageEnvelope(
-            type="subscribe_user", id="msg-1", payload={"user_id": "user-1"}
-        )
+        message = MessageEnvelope(type="subscribe_user", id="msg-1", payload={"user_id": "user-1"})
         response = await handler.handle_message(message)
 
         assert response is not None
@@ -289,9 +279,7 @@ class TestCostTrackingHandlerMessages:
 
         handler.subscribed_sessions = {"session-1", "session-2"}
 
-        message = MessageEnvelope(
-            type="unsubscribe", id="msg-1", payload={"session_id": "session-1"}
-        )
+        message = MessageEnvelope(type="unsubscribe", id="msg-1", payload={"session_id": "session-1"})
         response = await handler.handle_message(message)
 
         assert response is not None
@@ -315,9 +303,7 @@ class TestCostTrackingHandlerMessages:
 
         handler.subscribed_users = {"user-1", "user-2"}
 
-        message = MessageEnvelope(
-            type="unsubscribe", id="msg-1", payload={"user_id": "user-1"}
-        )
+        message = MessageEnvelope(type="unsubscribe", id="msg-1", payload={"user_id": "user-1"})
         response = await handler.handle_message(message)
 
         assert response is not None
@@ -373,9 +359,7 @@ class TestCostTrackingHandlerPush:
         handler._websocket = mock_ws
         handler.subscribed_sessions.add("session-1")
 
-        await handler.push_cost_event(
-            "session-1", {"cost": 0.05, "tokens": 500, "model": "gpt-4"}
-        )
+        await handler.push_cost_event("session-1", {"cost": 0.05, "tokens": 500, "model": "gpt-4"})
 
         mock_ws.send_json.assert_called_once()
 
@@ -419,9 +403,7 @@ class TestCostTrackingHandlerPush:
         handler._websocket = mock_ws
         handler.subscribed_users.add("user-1")
 
-        await handler.push_budget_warning(
-            "user-1", {"threshold": 0.80, "current_usage_percent": 0.85}
-        )
+        await handler.push_budget_warning("user-1", {"threshold": 0.80, "current_usage_percent": 0.85})
 
         mock_ws.send_json.assert_called_once()
 

@@ -10,9 +10,7 @@ TDD: Tests written to verify integration behavior.
 import asyncio
 import gc
 import os
-from dataclasses import dataclass
-from typing import Any
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import MagicMock
 
 import pytest
 
@@ -69,21 +67,25 @@ def mock_correlation_engine():
         # Simple correlation based on alert IDs
         groups = []
         if len(alert_ids) >= 2:
-            groups.append({
-                "alerts": alert_ids[:2],
-                "pattern": "cascade",
-                "confidence": 0.9,
-            })
+            groups.append(
+                {
+                    "alerts": alert_ids[:2],
+                    "pattern": "cascade",
+                    "confidence": 0.9,
+                }
+            )
         return groups
 
     def detect_patterns(alert_ids: list[str]):
         patterns = []
         if len(alert_ids) >= 3:
-            patterns.append({
-                "type": "recurring",
-                "frequency": "hourly",
-                "alerts": alert_ids,
-            })
+            patterns.append(
+                {
+                    "type": "recurring",
+                    "frequency": "hourly",
+                    "alerts": alert_ids,
+                }
+            )
         return patterns
 
     engine.correlate = correlate
@@ -137,9 +139,7 @@ class TestUXOrchestratorIntegration:
         gc.collect()
 
     @pytest.mark.asyncio
-    async def test_composite_analysis_runs_all_analyses(
-        self, mock_ai_ux_service
-    ) -> None:
+    async def test_composite_analysis_runs_all_analyses(self, mock_ai_ux_service) -> None:
         """Test that composite analysis runs persona, disclosure, and error analyses."""
         from mcp_server_langgraph.agents.ux_orchestrator import UXOrchestrator
 
@@ -161,9 +161,7 @@ class TestUXOrchestratorIntegration:
         assert result["failed_analyses"] == []
 
     @pytest.mark.asyncio
-    async def test_composite_analysis_generates_cross_insights(
-        self, mock_ai_ux_service
-    ) -> None:
+    async def test_composite_analysis_generates_cross_insights(self, mock_ai_ux_service) -> None:
         """Test that composite analysis generates cross-service insights."""
         from mcp_server_langgraph.agents.ux_orchestrator import UXOrchestrator
 
@@ -181,9 +179,7 @@ class TestUXOrchestratorIntegration:
         assert isinstance(result["cross_insights"], list)
 
     @pytest.mark.asyncio
-    async def test_composite_analysis_handles_partial_failure(
-        self, mock_ai_ux_service
-    ) -> None:
+    async def test_composite_analysis_handles_partial_failure(self, mock_ai_ux_service) -> None:
         """Test that composite analysis continues if one analysis fails."""
         from mcp_server_langgraph.agents.ux_orchestrator import UXOrchestrator
 
@@ -211,9 +207,7 @@ class TestUXOrchestratorIntegration:
         assert "error_analysis" in result["failed_analyses"]
 
     @pytest.mark.asyncio
-    async def test_composite_analysis_parallel_performance(
-        self, mock_ai_ux_service
-    ) -> None:
+    async def test_composite_analysis_parallel_performance(self, mock_ai_ux_service) -> None:
         """Test that composite analysis runs analyses in parallel."""
         import time
 
@@ -268,9 +262,7 @@ class TestAlertOrchestratorIntegration:
         gc.collect()
 
     @pytest.mark.asyncio
-    async def test_analyze_alerts_runs_all_analyses(
-        self, mock_correlation_engine, mock_recommendation_service
-    ) -> None:
+    async def test_analyze_alerts_runs_all_analyses(self, mock_correlation_engine, mock_recommendation_service) -> None:
         """Test that analyze_alerts runs all requested analyses."""
         from mcp_server_langgraph.agents.alert_orchestrator import AlertOrchestrator
 
@@ -295,9 +287,7 @@ class TestAlertOrchestratorIntegration:
         assert result["failed_analyses"] == []
 
     @pytest.mark.asyncio
-    async def test_analyze_alerts_correlation_summary(
-        self, mock_correlation_engine, mock_recommendation_service
-    ) -> None:
+    async def test_analyze_alerts_correlation_summary(self, mock_correlation_engine, mock_recommendation_service) -> None:
         """Test that analyze_alerts generates correlation summary."""
         from mcp_server_langgraph.agents.alert_orchestrator import AlertOrchestrator
 
@@ -318,9 +308,7 @@ class TestAlertOrchestratorIntegration:
         assert "successful" in summary
 
     @pytest.mark.asyncio
-    async def test_analyze_alerts_handles_partial_failure(
-        self, mock_correlation_engine, mock_recommendation_service
-    ) -> None:
+    async def test_analyze_alerts_handles_partial_failure(self, mock_correlation_engine, mock_recommendation_service) -> None:
         """Test that analyze_alerts continues if one analysis fails."""
         from mcp_server_langgraph.agents.alert_orchestrator import AlertOrchestrator
 
@@ -350,9 +338,7 @@ class TestAlertOrchestratorIntegration:
         assert "root_cause" in result["failed_analyses"]
 
     @pytest.mark.asyncio
-    async def test_analyze_alerts_parallel_performance(
-        self, mock_correlation_engine, mock_recommendation_service
-    ) -> None:
+    async def test_analyze_alerts_parallel_performance(self, mock_correlation_engine, mock_recommendation_service) -> None:
         """Test that analyze_alerts runs analyses in parallel."""
         import time
 
@@ -391,17 +377,13 @@ class TestAlertOrchestratorIntegration:
         assert len(result["analyses"]) == 4
 
     @pytest.mark.asyncio
-    async def test_detect_patterns_integration(
-        self, mock_correlation_engine
-    ) -> None:
+    async def test_detect_patterns_integration(self, mock_correlation_engine) -> None:
         """Test synchronous pattern detection."""
         from mcp_server_langgraph.agents.alert_orchestrator import AlertOrchestrator
 
         orchestrator = AlertOrchestrator(correlation_engine=mock_correlation_engine)
 
-        patterns = orchestrator.detect_patterns(
-            alert_ids=["alert-1", "alert-2", "alert-3", "alert-4"]
-        )
+        patterns = orchestrator.detect_patterns(alert_ids=["alert-1", "alert-2", "alert-3", "alert-4"])
 
         assert isinstance(patterns, list)
         # With 4 alerts, should detect patterns
@@ -459,12 +441,9 @@ class TestCrossOrchestratorIntegration:
         assert len(alert_result["analyses"]) >= 2
 
     @pytest.mark.asyncio
-    async def test_orchestrators_share_base_class_behavior(
-        self, mock_ai_ux_service, mock_correlation_engine
-    ) -> None:
+    async def test_orchestrators_share_base_class_behavior(self, mock_ai_ux_service, mock_correlation_engine) -> None:
         """Test that both orchestrators share BaseOrchestrator behavior."""
         from mcp_server_langgraph.agents.alert_orchestrator import AlertOrchestrator
-        from mcp_server_langgraph.agents.base_orchestrator import BaseOrchestrator
         from mcp_server_langgraph.agents.ux_orchestrator import UXOrchestrator
 
         ux_orchestrator = UXOrchestrator(ai_ux_service=mock_ai_ux_service)
@@ -501,9 +480,7 @@ class TestOrchestratorPerformance:
         gc.collect()
 
     @pytest.mark.asyncio
-    async def test_ux_orchestrator_handles_many_tasks(
-        self, mock_ai_ux_service
-    ) -> None:
+    async def test_ux_orchestrator_handles_many_tasks(self, mock_ai_ux_service) -> None:
         """Test UX orchestrator handles many concurrent tasks."""
         from mcp_server_langgraph.agents.ux_orchestrator import (
             UXAnalysisTask,
@@ -513,10 +490,7 @@ class TestOrchestratorPerformance:
         orchestrator = UXOrchestrator(ai_ux_service=mock_ai_ux_service)
 
         # Create many tasks
-        tasks = [
-            UXAnalysisTask(task_type="persona_analysis", user_id=f"user-{i}")
-            for i in range(10)
-        ]
+        tasks = [UXAnalysisTask(task_type="persona_analysis", user_id=f"user-{i}") for i in range(10)]
 
         results = await orchestrator.execute(tasks)
 
@@ -524,9 +498,7 @@ class TestOrchestratorPerformance:
         assert all(r.success for r in results)
 
     @pytest.mark.asyncio
-    async def test_alert_orchestrator_handles_many_alerts(
-        self, mock_correlation_engine, mock_recommendation_service
-    ) -> None:
+    async def test_alert_orchestrator_handles_many_alerts(self, mock_correlation_engine, mock_recommendation_service) -> None:
         """Test Alert orchestrator handles many alerts."""
         from mcp_server_langgraph.agents.alert_orchestrator import AlertOrchestrator
 

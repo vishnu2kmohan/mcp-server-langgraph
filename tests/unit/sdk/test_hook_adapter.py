@@ -10,7 +10,7 @@ from __future__ import annotations
 import asyncio
 import gc
 from typing import Any
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -33,7 +33,6 @@ class TestUnifiedHookAdapter:
         from mcp_server_langgraph.core.hooks import (
             HookContext,
             PreToolUseInput,
-            HookResult as CoreHookResult,
         )
 
         # SDK-style hook function
@@ -64,7 +63,6 @@ class TestUnifiedHookAdapter:
     async def test_adapter_converts_core_hook_to_sdk_format(self) -> None:
         """Core hooks should work with SDK registry via adapter."""
         from mcp_server_langgraph.sdk.hook_adapter import UnifiedHookAdapter
-        from mcp_server_langgraph.sdk.hooks import HookResult as SDKHookResult
         from mcp_server_langgraph.core.hooks import (
             HookContext,
             PreToolUseInput,

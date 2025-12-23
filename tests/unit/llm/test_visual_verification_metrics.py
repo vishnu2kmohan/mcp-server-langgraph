@@ -9,7 +9,6 @@ Verifies that visual verification operations record metrics for:
 """
 
 import gc
-from unittest.mock import MagicMock, patch
 
 import pytest
 

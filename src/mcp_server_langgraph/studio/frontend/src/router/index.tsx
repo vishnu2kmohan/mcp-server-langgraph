@@ -260,9 +260,8 @@ export const router = createBrowserRouter(
                   id: "compliance-dashboard",
                   loader: complianceLoader,
                   lazy: async () => {
-                    const { ConnectedComplianceDashboard } = await import(
-                      "../compliance/ConnectedComplianceDashboard"
-                    );
+                    const { ConnectedComplianceDashboard } =
+                      await import("../compliance/ConnectedComplianceDashboard");
                     return { Component: ConnectedComplianceDashboard };
                   },
                 },
@@ -283,9 +282,8 @@ export const router = createBrowserRouter(
                 {
                   index: true,
                   lazy: async () => {
-                    const { AuditLogPage } = await import(
-                      "../pages/AuditLogPage"
-                    );
+                    const { AuditLogPage } =
+                      await import("../pages/AuditLogPage");
                     return { Component: AuditLogPage };
                   },
                 },
@@ -306,9 +304,8 @@ export const router = createBrowserRouter(
                 {
                   index: true,
                   lazy: async () => {
-                    const { AnalyticsDashboardPage } = await import(
-                      "../pages/AnalyticsDashboardPage"
-                    );
+                    const { AnalyticsDashboardPage } =
+                      await import("../pages/AnalyticsDashboardPage");
                     return { Component: AnalyticsDashboardPage };
                   },
                 },

@@ -15,12 +15,12 @@ Reference: ADR-0026 - Comprehensive Client Resilience Patterns
 from __future__ import annotations
 
 import gc
-from datetime import UTC, datetime, timedelta
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import AsyncMock
 
 import pytest
 
 pytestmark = pytest.mark.unit
+
 
 @pytest.mark.unit
 @pytest.mark.xdist_group(name="recommendation_scoring")
@@ -214,7 +214,6 @@ class TestQualityMetrics:
         """Test quality score includes all components."""
         from mcp_server_langgraph.alerts.recommendation_scoring import (
             RecommendationScorer,
-            QualityScore,
             ScoringHistory,
         )
 

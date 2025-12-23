@@ -1,7 +1,7 @@
 /**
  * Canvas Module - Phase 1
  *
- * Exports for the Hybrid Canvas system components.
+ * Exports for the Studio Canvas system components.
  */
 
 export { CanvasWorkspace, type CanvasWorkspaceProps } from "./CanvasWorkspace";

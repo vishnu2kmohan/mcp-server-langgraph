@@ -8,7 +8,6 @@ TDD: RED phase - these tests define expected behavior before implementation.
 """
 
 import gc
-from typing import Any
 
 import pytest
 

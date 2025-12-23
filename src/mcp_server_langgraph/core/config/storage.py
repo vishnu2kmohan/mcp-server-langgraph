@@ -53,9 +53,7 @@ class StorageSettings(DomainSettings):
         # - CHECKPOINT_REDIS_URL: Primary (docker-compose.test.yml, .env.example)
         # - REDIS_CHECKPOINT_URL: SCREAMING_SNAKE_CASE alternative
         # - redis_checkpoint_url: snake_case for constructor args (test compatibility)
-        validation_alias=AliasChoices(
-            "CHECKPOINT_REDIS_URL", "REDIS_CHECKPOINT_URL", "redis_checkpoint_url"
-        ),
+        validation_alias=AliasChoices("CHECKPOINT_REDIS_URL", "REDIS_CHECKPOINT_URL", "redis_checkpoint_url"),
     )
     checkpoint_redis_ttl: int = 604800  # 7 days
 

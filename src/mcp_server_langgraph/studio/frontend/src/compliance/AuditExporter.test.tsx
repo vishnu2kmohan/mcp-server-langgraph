@@ -4,7 +4,13 @@
  * Tests for compliance audit export functionality.
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { render, screen, fireEvent, waitFor, cleanup } from "@testing-library/react";
+import {
+  render,
+  screen,
+  fireEvent,
+  waitFor,
+  cleanup,
+} from "@testing-library/react";
 import { AuditExporter, type AuditFilter } from "./AuditExporter";
 
 // =============================================================================

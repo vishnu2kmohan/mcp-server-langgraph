@@ -13,12 +13,10 @@ Reference: ADR-0026 - Comprehensive Client Resilience Patterns
 
 import gc
 from datetime import UTC, datetime
-from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
 from mcp_server_langgraph.alerts.feedback import (
-    FeedbackStore,
     InMemoryFeedbackStore,
     RejectionReason,
     RemediationFeedback,

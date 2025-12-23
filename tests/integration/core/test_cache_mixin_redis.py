@@ -13,7 +13,6 @@ Reference: docs-internal/CACHING_ARCHITECTURE_AUDIT.md
 
 import asyncio
 import gc
-import os
 import time
 
 import pytest
@@ -67,7 +66,7 @@ async def redis_cache_service():
 
 
 @pytest.fixture
-def cache_mixin_service(redis_cache_service):
+async def cache_mixin_service(redis_cache_service):
     """Create a test service using TieredCacheMixin."""
     from mcp_server_langgraph.core.cache_mixin import TieredCacheMixin
 
@@ -82,7 +81,7 @@ def cache_mixin_service(redis_cache_service):
 
 
 @pytest.fixture
-def swr_mixin_service(redis_cache_service):
+async def swr_mixin_service(redis_cache_service):
     """Create a test service using StaleWhileRevalidateMixin."""
     from mcp_server_langgraph.core.cache_mixin import StaleWhileRevalidateMixin
 
@@ -156,9 +155,7 @@ class TestTieredCacheMixinRedisIntegration:
         result = await cache_mixin_service._cache_get(key)
         assert result is None
 
-    async def test_cache_invalidate_prefix_removes_matching_keys(
-        self, cache_mixin_service
-    ):
+    async def test_cache_invalidate_prefix_removes_matching_keys(self, cache_mixin_service):
         """Test prefix-based invalidation removes matching keys."""
         # Set multiple keys with same method prefix
         method = "persona"
@@ -223,9 +220,7 @@ class TestTieredCacheMixinRedisIntegration:
             fetch_called = True
             return {"status": "freshly_fetched"}
 
-        result, is_stale = await swr_mixin_service._cache_get_swr(
-            key, "swr_test", fetcher
-        )
+        result, is_stale = await swr_mixin_service._cache_get_swr(key, "swr_test", fetcher)
 
         assert fetch_called
         assert result is not None
@@ -248,9 +243,7 @@ class TestTieredCacheMixinRedisIntegration:
         await swr_mixin_service._cache_get_swr(key, "swr_test", fetcher)
 
         # Second call - should use cache (within stale threshold)
-        result, is_stale = await swr_mixin_service._cache_get_swr(
-            key, "swr_test", fetcher
-        )
+        result, is_stale = await swr_mixin_service._cache_get_swr(key, "swr_test", fetcher)
 
         assert call_count == 1  # Fetcher should only be called once
         assert result["status"] == "fetched"
@@ -271,9 +264,7 @@ class TestTieredCacheMixinRedisIntegration:
         async def fetcher():
             return {"status": "refreshed"}
 
-        result, is_stale = await swr_mixin_service._cache_get_swr(
-            key, "swr_test", fetcher
-        )
+        result, is_stale = await swr_mixin_service._cache_get_swr(key, "swr_test", fetcher)
 
         # Should return stale data
         assert result["status"] == "old"
@@ -330,9 +321,7 @@ class TestTieredCacheMixinRedisIntegration:
     # Error Handling Tests
     # =========================================================================
 
-    async def test_cache_get_handles_connection_error_gracefully(
-        self, cache_mixin_service
-    ):
+    async def test_cache_get_handles_connection_error_gracefully(self, cache_mixin_service):
         """Test that cache get handles Redis errors gracefully."""
         # Get with key that definitely doesn't exist
         result = await cache_mixin_service._cache_get("invalid:key:format")

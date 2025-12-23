@@ -14,7 +14,7 @@ from __future__ import annotations
 
 import gc
 import json
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
@@ -81,12 +81,8 @@ class TestHooksListOperation:
         # Mock hook registry
         mock_registry = MagicMock()
         mock_registry._hooks = {
-            HookEvent.PRE_TOOL_USE: [
-                HookMatcher(hooks=[MagicMock()], matcher="file_*", timeout=30.0)
-            ],
-            HookEvent.POST_TOOL_USE: [
-                HookMatcher(hooks=[MagicMock(), MagicMock()], matcher=None, timeout=60.0)
-            ],
+            HookEvent.PRE_TOOL_USE: [HookMatcher(hooks=[MagicMock()], matcher="file_*", timeout=30.0)],
+            HookEvent.POST_TOOL_USE: [HookMatcher(hooks=[MagicMock(), MagicMock()], matcher=None, timeout=60.0)],
         }
 
         handler = HooksToolHandler(

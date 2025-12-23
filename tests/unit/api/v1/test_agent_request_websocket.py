@@ -15,9 +15,8 @@ Message types:
 from __future__ import annotations
 
 import gc
-import json
 from datetime import UTC, datetime
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -26,8 +25,8 @@ if TYPE_CHECKING:
     pass
 
 
-
 pytestmark = pytest.mark.unit
+
 
 @pytest.mark.unit
 @pytest.mark.xdist_group(name="agent_request_websocket")

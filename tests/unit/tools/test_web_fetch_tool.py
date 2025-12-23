@@ -11,8 +11,8 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 
 
-
 pytestmark = pytest.mark.unit
+
 
 @pytest.mark.xdist_group(name="web_fetch_tool")
 class TestWebFetchTool:
@@ -41,9 +41,7 @@ class TestWebFetchTool:
         mock_response.__aenter__ = AsyncMock(return_value=mock_response)
         mock_response.__aexit__ = AsyncMock(return_value=None)
 
-        with patch(
-            "mcp_server_langgraph.tools.web_fetch_tools.aiohttp.ClientSession"
-        ) as mock_session:
+        with patch("mcp_server_langgraph.tools.web_fetch_tools.aiohttp.ClientSession") as mock_session:
             mock_session_instance = MagicMock()
             mock_session_instance.get = MagicMock(return_value=mock_response)
             mock_session_instance.__aenter__ = AsyncMock(return_value=mock_session_instance)
@@ -70,19 +68,19 @@ class TestWebFetchTool:
         mock_response.__aenter__ = AsyncMock(return_value=mock_response)
         mock_response.__aexit__ = AsyncMock(return_value=None)
 
-        with patch(
-            "mcp_server_langgraph.tools.web_fetch_tools.aiohttp.ClientSession"
-        ) as mock_session:
+        with patch("mcp_server_langgraph.tools.web_fetch_tools.aiohttp.ClientSession") as mock_session:
             mock_session_instance = MagicMock()
             mock_session_instance.get = MagicMock(return_value=mock_response)
             mock_session_instance.__aenter__ = AsyncMock(return_value=mock_session_instance)
             mock_session_instance.__aexit__ = AsyncMock(return_value=None)
             mock_session.return_value = mock_session_instance
 
-            result = await web_fetch.ainvoke({
-                "url": "https://example.com",
-                "convert_html": True,
-            })
+            result = await web_fetch.ainvoke(
+                {
+                    "url": "https://example.com",
+                    "convert_html": True,
+                }
+            )
 
         # Should contain markdown-style formatting or plain text, not raw HTML tags
         # The exact format depends on implementation
@@ -105,19 +103,19 @@ class TestWebFetchTool:
         mock_response.__aenter__ = AsyncMock(return_value=mock_response)
         mock_response.__aexit__ = AsyncMock(return_value=None)
 
-        with patch(
-            "mcp_server_langgraph.tools.web_fetch_tools.aiohttp.ClientSession"
-        ) as mock_session:
+        with patch("mcp_server_langgraph.tools.web_fetch_tools.aiohttp.ClientSession") as mock_session:
             mock_session_instance = MagicMock()
             mock_session_instance.get = MagicMock(return_value=mock_response)
             mock_session_instance.__aenter__ = AsyncMock(return_value=mock_session_instance)
             mock_session_instance.__aexit__ = AsyncMock(return_value=None)
             mock_session.return_value = mock_session_instance
 
-            result = await web_fetch.ainvoke({
-                "url": "https://example.com/product",
-                "prompt": "What is the price?",
-            })
+            result = await web_fetch.ainvoke(
+                {
+                    "url": "https://example.com/product",
+                    "prompt": "What is the price?",
+                }
+            )
 
         # Should contain the price information
         assert "99.99" in result or "price" in result.lower()
@@ -178,9 +176,7 @@ class TestWebFetchTool:
         mock_response.__aenter__ = AsyncMock(return_value=mock_response)
         mock_response.__aexit__ = AsyncMock(return_value=None)
 
-        with patch(
-            "mcp_server_langgraph.tools.web_fetch_tools.aiohttp.ClientSession"
-        ) as mock_session:
+        with patch("mcp_server_langgraph.tools.web_fetch_tools.aiohttp.ClientSession") as mock_session:
             mock_session_instance = MagicMock()
             mock_session_instance.get = MagicMock(return_value=mock_response)
             mock_session_instance.__aenter__ = AsyncMock(return_value=mock_session_instance)
@@ -286,13 +282,10 @@ class TestWebFetchTool:
         WHEN web_fetch is called
         THEN it returns a timeout error"""
         from mcp_server_langgraph.tools.web_fetch_tools import web_fetch
-        import asyncio
 
-        with patch(
-            "mcp_server_langgraph.tools.web_fetch_tools.aiohttp.ClientSession"
-        ) as mock_session:
+        with patch("mcp_server_langgraph.tools.web_fetch_tools.aiohttp.ClientSession") as mock_session:
             mock_session_instance = MagicMock()
-            mock_session_instance.get = MagicMock(side_effect=asyncio.TimeoutError())
+            mock_session_instance.get = MagicMock(side_effect=TimeoutError())
             mock_session_instance.__aenter__ = AsyncMock(return_value=mock_session_instance)
             mock_session_instance.__aexit__ = AsyncMock(return_value=None)
             mock_session.return_value = mock_session_instance
@@ -320,9 +313,7 @@ class TestWebFetchTool:
         mock_response.__aenter__ = AsyncMock(return_value=mock_response)
         mock_response.__aexit__ = AsyncMock(return_value=None)
 
-        with patch(
-            "mcp_server_langgraph.tools.web_fetch_tools.aiohttp.ClientSession"
-        ) as mock_session:
+        with patch("mcp_server_langgraph.tools.web_fetch_tools.aiohttp.ClientSession") as mock_session:
             mock_session_instance = MagicMock()
             mock_session_instance.get = MagicMock(return_value=mock_response)
             mock_session_instance.__aenter__ = AsyncMock(return_value=mock_session_instance)
@@ -354,9 +345,7 @@ class TestWebFetchTool:
         mock_response.__aenter__ = AsyncMock(return_value=mock_response)
         mock_response.__aexit__ = AsyncMock(return_value=None)
 
-        with patch(
-            "mcp_server_langgraph.tools.web_fetch_tools.aiohttp.ClientSession"
-        ) as mock_session:
+        with patch("mcp_server_langgraph.tools.web_fetch_tools.aiohttp.ClientSession") as mock_session:
             mock_session_instance = MagicMock()
             mock_session_instance.get = MagicMock(return_value=mock_response)
             mock_session_instance.__aenter__ = AsyncMock(return_value=mock_session_instance)
@@ -386,9 +375,7 @@ class TestWebFetchTool:
         mock_response.__aenter__ = AsyncMock(return_value=mock_response)
         mock_response.__aexit__ = AsyncMock(return_value=None)
 
-        with patch(
-            "mcp_server_langgraph.tools.web_fetch_tools.aiohttp.ClientSession"
-        ) as mock_session:
+        with patch("mcp_server_langgraph.tools.web_fetch_tools.aiohttp.ClientSession") as mock_session:
             mock_session_instance = MagicMock()
             mock_session_instance.get = MagicMock(return_value=mock_response)
             mock_session_instance.__aenter__ = AsyncMock(return_value=mock_session_instance)
@@ -414,9 +401,7 @@ class TestWebFetchTool:
         mock_response.__aenter__ = AsyncMock(return_value=mock_response)
         mock_response.__aexit__ = AsyncMock(return_value=None)
 
-        with patch(
-            "mcp_server_langgraph.tools.web_fetch_tools.aiohttp.ClientSession"
-        ) as mock_session:
+        with patch("mcp_server_langgraph.tools.web_fetch_tools.aiohttp.ClientSession") as mock_session:
             mock_session_instance = MagicMock()
             mock_session_instance.get = MagicMock(return_value=mock_response)
             mock_session_instance.__aenter__ = AsyncMock(return_value=mock_session_instance)

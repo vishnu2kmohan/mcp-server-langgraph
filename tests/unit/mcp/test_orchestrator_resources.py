@@ -166,9 +166,7 @@ class TestArtifactResourceProvider:
 
         provider = OrchestratorResourceProvider(artifact_storage=storage)
 
-        content = await provider.read_artifact(
-            "orchestrator://artifacts/task-001/research_summary"
-        )
+        content = await provider.read_artifact("orchestrator://artifacts/task-001/research_summary")
 
         assert content is not None
         assert content.mimeType == "application/json"
@@ -201,7 +199,7 @@ class TestSubagentResourceProvider:
     @pytest.mark.asyncio
     async def test_subagent_provider_returns_status_list(self) -> None:
         """Subagent provider should return list of subagent statuses."""
-        from mcp_server_langgraph.agents.subagent import SubagentResult, SubagentStatus
+        from mcp_server_langgraph.agents.subagent import SubagentResult
         from mcp_server_langgraph.mcp.resources_orchestrator import (
             OrchestratorResourceProvider,
         )

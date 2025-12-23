@@ -107,9 +107,7 @@ class RemediationExecutor:
         """
         self.timeout_seconds = timeout_seconds
         self.allowed_prefixes = allowed_prefixes or ALLOWED_COMMAND_PREFIXES
-        self._dangerous_patterns = [
-            re.compile(p, re.IGNORECASE) for p in DANGEROUS_PATTERNS
-        ]
+        self._dangerous_patterns = [re.compile(p, re.IGNORECASE) for p in DANGEROUS_PATTERNS]
 
     def validate_command(self, command: str) -> bool:
         """
@@ -137,10 +135,7 @@ class RemediationExecutor:
 
         # Check if command starts with allowed prefix
         command_lower = command.lower()
-        has_allowed_prefix = any(
-            command_lower.startswith(prefix.lower())
-            for prefix in self.allowed_prefixes
-        )
+        has_allowed_prefix = any(command_lower.startswith(prefix.lower()) for prefix in self.allowed_prefixes)
 
         if not has_allowed_prefix:
             logger.warning(
@@ -216,9 +211,7 @@ class RemediationExecutor:
 
             # Execute command
             try:
-                exit_code, stdout, stderr = await self._run_command(
-                    remediation.command, self.timeout_seconds
-                )
+                exit_code, stdout, stderr = await self._run_command(remediation.command, self.timeout_seconds)
                 duration_ms = int((time.monotonic() - start_time) * 1000)
 
                 success = exit_code == 0
@@ -289,9 +282,7 @@ class RemediationExecutor:
                     error_message=f"Execution error: {str(e)}",
                 )
 
-    async def _run_command(
-        self, command: str, timeout: int
-    ) -> tuple[int, str, str]:
+    async def _run_command(self, command: str, timeout: int) -> tuple[int, str, str]:
         """
         Run a shell command with timeout.
 
@@ -314,9 +305,7 @@ class RemediationExecutor:
         )
 
         try:
-            stdout_bytes, stderr_bytes = await asyncio.wait_for(
-                process.communicate(), timeout=timeout
-            )
+            stdout_bytes, stderr_bytes = await asyncio.wait_for(process.communicate(), timeout=timeout)
             return (
                 process.returncode or 0,
                 stdout_bytes.decode("utf-8", errors="replace"),

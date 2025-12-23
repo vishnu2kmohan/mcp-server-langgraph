@@ -52,9 +52,7 @@ class TestAgentRequestHandlerInit:
         mock_broadcaster = MagicMock()
 
         with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
-            handler = AgentRequestHandler(
-                config=config, broadcaster=mock_broadcaster, session_id="sess-123"
-            )
+            handler = AgentRequestHandler(config=config, broadcaster=mock_broadcaster, session_id="sess-123")
 
         assert handler._session_id == "sess-123"
 
@@ -77,9 +75,7 @@ class TestAgentRequestHandlerLifecycle:
         mock_broadcaster = AsyncMock()
 
         with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
-            handler = AgentRequestHandler(
-                config=config, broadcaster=mock_broadcaster, session_id="sess-123"
-            )
+            handler = AgentRequestHandler(config=config, broadcaster=mock_broadcaster, session_id="sess-123")
 
         mock_ws = AsyncMock()
         handler._websocket = mock_ws
@@ -152,9 +148,7 @@ class TestAgentRequestHandlerMessages:
         with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
             handler = AgentRequestHandler(config=config, broadcaster=mock_broadcaster)
 
-        message = MessageEnvelope(
-            type="subscribe", id="msg-1", payload={"session_id": "new-session"}
-        )
+        message = MessageEnvelope(type="subscribe", id="msg-1", payload={"session_id": "new-session"})
         response = await handler.handle_message(message)
 
         assert response is not None

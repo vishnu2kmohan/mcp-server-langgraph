@@ -124,16 +124,12 @@ def group_alerts_by_service_and_name(
     return groups
 
 
-def filter_alerts_by_severity(
-    alerts: list[Alert], severities: set[AlertSeverity]
-) -> list[Alert]:
+def filter_alerts_by_severity(alerts: list[Alert], severities: set[AlertSeverity]) -> list[Alert]:
     """Filter alerts by severity."""
     return [a for a in alerts if a.severity in severities]
 
 
-def filter_alerts_by_state(
-    alerts: list[Alert], states: set[AlertState]
-) -> list[Alert]:
+def filter_alerts_by_state(alerts: list[Alert], states: set[AlertState]) -> list[Alert]:
     """Filter alerts by state."""
     return [a for a in alerts if a.state in states]
 
@@ -162,9 +158,7 @@ class TestAlertGroupingPerformance:
         gc.collect()
 
     @pytest.mark.parametrize("count", [100, 500, 1000, 5000])
-    def test_group_by_service_performance(
-        self, count: int, benchmark: Any
-    ) -> None:
+    def test_group_by_service_performance(self, count: int, benchmark: Any) -> None:
         """Benchmark grouping alerts by service."""
         alerts = generate_alerts(count)
 
@@ -174,9 +168,7 @@ class TestAlertGroupingPerformance:
         assert sum(len(v) for v in result.values()) == count
 
     @pytest.mark.parametrize("count", [100, 500, 1000, 5000])
-    def test_group_by_service_and_name_performance(
-        self, count: int, benchmark: Any
-    ) -> None:
+    def test_group_by_service_and_name_performance(self, count: int, benchmark: Any) -> None:
         """Benchmark grouping alerts by service + name composite key."""
         alerts = generate_alerts(count)
 
@@ -196,9 +188,7 @@ class TestAlertFilteringPerformance:
         gc.collect()
 
     @pytest.mark.parametrize("count", [100, 500, 1000, 5000])
-    def test_filter_by_severity_performance(
-        self, count: int, benchmark: Any
-    ) -> None:
+    def test_filter_by_severity_performance(self, count: int, benchmark: Any) -> None:
         """Benchmark filtering alerts by severity."""
         alerts = generate_alerts(count)
         severities = {AlertSeverity.CRITICAL, AlertSeverity.WARNING}
@@ -209,9 +199,7 @@ class TestAlertFilteringPerformance:
         assert len(result) <= count
 
     @pytest.mark.parametrize("count", [100, 500, 1000, 5000])
-    def test_filter_by_state_performance(
-        self, count: int, benchmark: Any
-    ) -> None:
+    def test_filter_by_state_performance(self, count: int, benchmark: Any) -> None:
         """Benchmark filtering alerts by state."""
         alerts = generate_alerts(count)
         states = {AlertState.FIRING}
@@ -232,9 +220,7 @@ class TestAlertSeverityPerformance:
         gc.collect()
 
     @pytest.mark.parametrize("count", [100, 500, 1000, 5000])
-    def test_get_highest_severity_performance(
-        self, count: int, benchmark: Any
-    ) -> None:
+    def test_get_highest_severity_performance(self, count: int, benchmark: Any) -> None:
         """Benchmark finding highest severity in alert list."""
         alerts = generate_alerts(count)
 
@@ -261,9 +247,9 @@ class TestAlertGroupingScalability:
         # Define counts and maximum acceptable times (ms)
         # These are generous limits - actual times should be well under
         test_cases = [
-            (100, 10),    # 100 alerts: max 10ms
-            (500, 25),    # 500 alerts: max 25ms
-            (1000, 50),   # 1000 alerts: max 50ms
+            (100, 10),  # 100 alerts: max 10ms
+            (500, 25),  # 500 alerts: max 25ms
+            (1000, 50),  # 1000 alerts: max 50ms
             (2000, 100),  # 2000 alerts: max 100ms
             (5000, 250),  # 5000 alerts: max 250ms
         ]
@@ -285,8 +271,7 @@ class TestAlertGroupingScalability:
             print(f"    {count:5d} alerts: {median_time:.2f}ms (max: {max_time_ms}ms)")
 
             assert median_time < max_time_ms, (
-                f"Grouping {count} alerts took {median_time:.2f}ms, "
-                f"exceeds {max_time_ms}ms threshold"
+                f"Grouping {count} alerts took {median_time:.2f}ms, exceeds {max_time_ms}ms threshold"
             )
 
     def test_many_unique_groups(self) -> None:
@@ -359,9 +344,7 @@ class TestCombinedOperationsPerformance:
         start = time.perf_counter()
 
         # Filter by severity and state (typical admin dashboard filter)
-        filtered = filter_alerts_by_severity(
-            alerts, {AlertSeverity.CRITICAL, AlertSeverity.WARNING}
-        )
+        filtered = filter_alerts_by_severity(alerts, {AlertSeverity.CRITICAL, AlertSeverity.WARNING})
         filtered = filter_alerts_by_state(filtered, {AlertState.FIRING})
 
         # Group filtered alerts
@@ -432,9 +415,7 @@ class TestCombinedOperationsPerformance:
 # =============================================================================
 
 
-def generate_correlated_alert(
-    index: int, base_time: datetime | None = None
-) -> "CorrelatedAlert":
+def generate_correlated_alert(index: int, base_time: datetime | None = None) -> "CorrelatedAlert":
     """Generate a CorrelatedAlert for correlation engine benchmarks."""
     from mcp_server_langgraph.alerts.correlation import CorrelatedAlert
 
@@ -479,9 +460,7 @@ class TestCorrelationEnginePerformance:
         gc.collect()
 
     @pytest.mark.parametrize("count", [100, 500, 1000, 2000])
-    def test_correlate_by_label_performance(
-        self, count: int, benchmark: Any
-    ) -> None:
+    def test_correlate_by_label_performance(self, count: int, benchmark: Any) -> None:
         """Benchmark label-based correlation."""
         from mcp_server_langgraph.alerts.correlation import AlertCorrelationEngine
 
@@ -496,9 +475,7 @@ class TestCorrelationEnginePerformance:
         assert total_alerts == count
 
     @pytest.mark.parametrize("count", [100, 500, 1000, 2000])
-    def test_correlate_by_time_performance(
-        self, count: int, benchmark: Any
-    ) -> None:
+    def test_correlate_by_time_performance(self, count: int, benchmark: Any) -> None:
         """Benchmark time-based correlation."""
         from mcp_server_langgraph.alerts.correlation import AlertCorrelationEngine
 
@@ -513,9 +490,7 @@ class TestCorrelationEnginePerformance:
         assert total_alerts == count
 
     @pytest.mark.parametrize("count", [50, 100, 200])
-    def test_detect_pattern_performance(
-        self, count: int, benchmark: Any
-    ) -> None:
+    def test_detect_pattern_performance(self, count: int, benchmark: Any) -> None:
         """Benchmark pattern detection."""
         from mcp_server_langgraph.alerts.correlation import AlertCorrelationEngine
 
@@ -544,8 +519,8 @@ class TestCorrelationScalability:
         engine = AlertCorrelationEngine()
 
         test_cases = [
-            (100, 20),    # 100 alerts: max 20ms
-            (500, 50),    # 500 alerts: max 50ms
+            (100, 20),  # 100 alerts: max 20ms
+            (500, 50),  # 500 alerts: max 50ms
             (1000, 100),  # 1000 alerts: max 100ms
             (2000, 200),  # 2000 alerts: max 200ms
         ]
@@ -566,8 +541,7 @@ class TestCorrelationScalability:
             print(f"    {count:5d} alerts: {median_time:.2f}ms (max: {max_time_ms}ms)")
 
             assert median_time < max_time_ms, (
-                f"Label correlation for {count} alerts took {median_time:.2f}ms, "
-                f"exceeds {max_time_ms}ms threshold"
+                f"Label correlation for {count} alerts took {median_time:.2f}ms, exceeds {max_time_ms}ms threshold"
             )
 
     def test_time_correlation_scalability(self) -> None:
@@ -581,8 +555,8 @@ class TestCorrelationScalability:
         engine = AlertCorrelationEngine()
 
         test_cases = [
-            (100, 50),    # 100 alerts: max 50ms
-            (500, 150),   # 500 alerts: max 150ms
+            (100, 50),  # 100 alerts: max 50ms
+            (500, 150),  # 500 alerts: max 150ms
             (1000, 350),  # 1000 alerts: max 350ms
         ]
 
@@ -602,8 +576,7 @@ class TestCorrelationScalability:
             print(f"    {count:5d} alerts: {median_time:.2f}ms (max: {max_time_ms}ms)")
 
             assert median_time < max_time_ms, (
-                f"Time correlation for {count} alerts took {median_time:.2f}ms, "
-                f"exceeds {max_time_ms}ms threshold"
+                f"Time correlation for {count} alerts took {median_time:.2f}ms, exceeds {max_time_ms}ms threshold"
             )
 
     def test_pattern_detection_scalability(self) -> None:
@@ -613,8 +586,8 @@ class TestCorrelationScalability:
         engine = AlertCorrelationEngine()
 
         test_cases = [
-            (50, 30),    # 50 alerts: max 30ms
-            (100, 50),   # 100 alerts: max 50ms
+            (50, 30),  # 50 alerts: max 30ms
+            (100, 50),  # 100 alerts: max 50ms
             (200, 100),  # 200 alerts: max 100ms
         ]
 
@@ -634,8 +607,7 @@ class TestCorrelationScalability:
             print(f"    {count:5d} alerts: {median_time:.2f}ms (max: {max_time_ms}ms)")
 
             assert median_time < max_time_ms, (
-                f"Pattern detection for {count} alerts took {median_time:.2f}ms, "
-                f"exceeds {max_time_ms}ms threshold"
+                f"Pattern detection for {count} alerts took {median_time:.2f}ms, exceeds {max_time_ms}ms threshold"
             )
 
 
@@ -673,9 +645,7 @@ class TestCorrelationConfidencePerformance:
 
             # Performance expectation: ~10,000 pairs/second
             max_time = max(10, pair_count / 10)
-            assert elapsed < max_time, (
-                f"Pairwise confidence for {pair_count} pairs took {elapsed:.2f}ms"
-            )
+            assert elapsed < max_time, f"Pairwise confidence for {pair_count} pairs took {elapsed:.2f}ms"
 
 
 @pytest.mark.unit
@@ -721,9 +691,7 @@ class TestCorrelationRootCausePerformance:
 
             # Should be very fast (just sorting + linear scan)
             max_time = max(5, size / 50)
-            assert median_time < max_time, (
-                f"Root cause identification for {size} alerts took {median_time:.2f}ms"
-            )
+            assert median_time < max_time, f"Root cause identification for {size} alerts took {median_time:.2f}ms"
 
 
 @pytest.mark.unit
@@ -761,7 +729,7 @@ class TestCorrelationCombinedWorkflow:
 
         elapsed = (time.perf_counter() - start) * 1000
 
-        print(f"\n  Full Correlation Pipeline (500 alerts):")
+        print("\n  Full Correlation Pipeline (500 alerts):")
         print(f"    Service groups: {len(service_groups)}")
         print(f"    Patterns detected: {len([p for p in patterns if p.confidence > 0.5])}")
         print(f"    Root causes identified: {len([r for r in root_causes if r])}")
@@ -800,7 +768,7 @@ class TestCorrelationCombinedWorkflow:
         groups = engine.correlate_by_label(alerts, "service")
         elapsed = (time.perf_counter() - start) * 1000
 
-        print(f"\n  High Cardinality Labels (1000 unique services):")
+        print("\n  High Cardinality Labels (1000 unique services):")
         print(f"    Groups created: {len(groups)}")
         print(f"    Time: {elapsed:.2f}ms")
 
@@ -835,7 +803,7 @@ class TestCorrelationCombinedWorkflow:
         groups = engine.correlate_by_time(alerts, window_minutes=5)
         elapsed = (time.perf_counter() - start) * 1000
 
-        print(f"\n  Tightly Clustered Alerts (500 alerts, <1min span):")
+        print("\n  Tightly Clustered Alerts (500 alerts, <1min span):")
         print(f"    Groups created: {len(groups)}")
         print(f"    Time: {elapsed:.2f}ms")
 

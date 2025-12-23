@@ -1,7 +1,7 @@
 """
 SQLAlchemy models for Postgres-backed artifact storage.
 
-These models support durable persistence of canvas artifacts for the Hybrid Canvas
+These models support durable persistence of canvas artifacts for the Studio Canvas
 feature, with full version history tracking.
 
 Schema Design:
@@ -59,13 +59,9 @@ class ArtifactModel(ArtifactBase):
 
     # Content fields
     type: Mapped[str] = mapped_column(String(50), nullable=False, default="code")
-    title: Mapped[str] = mapped_column(
-        String(255), nullable=False, default="Untitled Artifact"
-    )
+    title: Mapped[str] = mapped_column(String(255), nullable=False, default="Untitled Artifact")
     content: Mapped[str] = mapped_column(Text, nullable=False)
-    content_type: Mapped[str] = mapped_column(
-        String(20), nullable=False, default="code"
-    )
+    content_type: Mapped[str] = mapped_column(String(20), nullable=False, default="code")
 
     # Versioning
     version: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
@@ -73,9 +69,7 @@ class ArtifactModel(ArtifactBase):
     # Storage type for hybrid storage
     # 'inline' = content stored in PostgreSQL
     # 's3', 'gcs', 'azure' = content stored in cloud, this field stores the key
-    storage_type: Mapped[str] = mapped_column(
-        String(20), nullable=False, default="inline"
-    )
+    storage_type: Mapped[str] = mapped_column(String(20), nullable=False, default="inline")
     storage_key: Mapped[str | None] = mapped_column(String(512), nullable=True)
 
     # Metadata (JSONB for flexibility)
@@ -173,14 +167,10 @@ class ArtifactVersionModel(ArtifactBase):
 
     # Content snapshot
     content: Mapped[str] = mapped_column(Text, nullable=False)
-    content_type: Mapped[str] = mapped_column(
-        String(20), nullable=False, default="code"
-    )
+    content_type: Mapped[str] = mapped_column(String(20), nullable=False, default="code")
 
     # Storage type for hybrid storage (same as ArtifactModel)
-    storage_type: Mapped[str] = mapped_column(
-        String(20), nullable=False, default="inline"
-    )
+    storage_type: Mapped[str] = mapped_column(String(20), nullable=False, default="inline")
     storage_key: Mapped[str | None] = mapped_column(String(512), nullable=True)
 
     # Who created this version
@@ -195,9 +185,7 @@ class ArtifactVersionModel(ArtifactBase):
 
     # Version metadata (JSONB for flexibility)
     # Can store: edit_type, ai_confidence, diff_stats, etc.
-    version_metadata: Mapped[dict[str, Any] | None] = mapped_column(
-        JSONB, nullable=True
-    )
+    version_metadata: Mapped[dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
 
     # Relationship back to parent artifact
     artifact: Mapped["ArtifactModel"] = relationship(

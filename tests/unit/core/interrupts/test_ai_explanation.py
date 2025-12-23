@@ -17,7 +17,7 @@ Tests:
 from __future__ import annotations
 
 import gc
-from datetime import datetime, timezone
+from datetime import datetime, UTC
 
 import pytest
 
@@ -300,12 +300,12 @@ class TestAIExplanationModel:
         """AIExplanation should auto-set generated_at to current time."""
         from mcp_server_langgraph.core.interrupts.ai_explanation import AIExplanation
 
-        before = datetime.now(timezone.utc)
+        before = datetime.now(UTC)
         explanation = AIExplanation(
             why_uncertain="Test",
             what_could_go_wrong="Test",
         )
-        after = datetime.now(timezone.utc)
+        after = datetime.now(UTC)
 
         assert before <= explanation.generated_at <= after
 

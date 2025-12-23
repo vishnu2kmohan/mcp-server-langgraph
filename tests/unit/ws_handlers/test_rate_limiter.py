@@ -8,7 +8,6 @@ from __future__ import annotations
 
 import gc
 from datetime import UTC, datetime, timedelta
-from unittest.mock import patch
 
 import pytest
 
@@ -34,7 +33,7 @@ class TestMessageRateLimiter:
         limiter = MessageRateLimiter(max_messages=5, window_seconds=60)
 
         for i in range(5):
-            assert limiter.check_and_increment() is True, f"Message {i+1} should be allowed"
+            assert limiter.check_and_increment() is True, f"Message {i + 1} should be allowed"
 
     def test_blocks_messages_over_limit(self) -> None:
         """
@@ -173,9 +172,7 @@ class TestWebSocketRateLimiter:
         """
         from mcp_server_langgraph.websocket.rate_limiter import WebSocketRateLimiter
 
-        limiter = WebSocketRateLimiter(
-            messages_per_minute=2, max_users=100
-        )
+        limiter = WebSocketRateLimiter(messages_per_minute=2, max_users=100)
 
         assert limiter.check_message("user-a") is True
         assert limiter.check_message("user-a") is True
@@ -189,9 +186,7 @@ class TestWebSocketRateLimiter:
         """
         from mcp_server_langgraph.websocket.rate_limiter import WebSocketRateLimiter
 
-        limiter = WebSocketRateLimiter(
-            messages_per_minute=3, max_users=100
-        )
+        limiter = WebSocketRateLimiter(messages_per_minute=3, max_users=100)
 
         assert limiter.check_message() is True
         assert limiter.check_message() is True
@@ -206,9 +201,7 @@ class TestWebSocketRateLimiter:
         """
         from mcp_server_langgraph.websocket.rate_limiter import WebSocketRateLimiter
 
-        limiter = WebSocketRateLimiter(
-            messages_per_minute=5, max_users=100
-        )
+        limiter = WebSocketRateLimiter(messages_per_minute=5, max_users=100)
 
         limiter.check_message("user-a")
         limiter.check_message("user-a")
@@ -224,9 +217,7 @@ class TestWebSocketRateLimiter:
         """
         from mcp_server_langgraph.websocket.rate_limiter import WebSocketRateLimiter
 
-        limiter = WebSocketRateLimiter(
-            messages_per_minute=10, max_users=100
-        )
+        limiter = WebSocketRateLimiter(messages_per_minute=10, max_users=100)
 
         limiter.check_message("user-a")
         limiter.check_message("user-b")

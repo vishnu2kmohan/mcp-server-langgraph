@@ -171,9 +171,7 @@ class TestUXAnalysisGraphExecution:
             create_ux_analysis_graph,
         )
 
-        mock_llm_factory.ainvoke = AsyncMock(
-            return_value=AIMessage(content=SAMPLE_PERSONA_LLM_RESPONSE)
-        )
+        mock_llm_factory.ainvoke = AsyncMock(return_value=AIMessage(content=SAMPLE_PERSONA_LLM_RESPONSE))
 
         graph = create_ux_analysis_graph(mock_llm_factory, mock_settings)
         compiled = graph.compile()
@@ -286,9 +284,7 @@ class TestCrossInsightsNode:
         gc.collect()
 
     @pytest.mark.asyncio
-    async def test_cross_insights_generated_after_analyses(
-        self, mock_llm_factory, mock_settings
-    ):
+    async def test_cross_insights_generated_after_analyses(self, mock_llm_factory, mock_settings):
         """Cross insights are generated after individual analyses."""
         from mcp_server_langgraph.api.v1.ai_ux_graph import (
             UXAnalysisState,
@@ -327,9 +323,7 @@ class TestCrossInsightsNode:
         assert len(result["cross_insights"]) > 0
 
     @pytest.mark.asyncio
-    async def test_confidence_calculated_in_final_state(
-        self, mock_llm_factory, mock_settings
-    ):
+    async def test_confidence_calculated_in_final_state(self, mock_llm_factory, mock_settings):
         """Confidence is calculated from analysis results."""
         from mcp_server_langgraph.api.v1.ai_ux_graph import (
             UXAnalysisState,
@@ -394,9 +388,7 @@ class TestAIUXServiceGraphIntegration:
         assert hasattr(service, "get_analysis_graph") or hasattr(service, "_analysis_graph")
 
     @pytest.mark.asyncio
-    async def test_graph_results_match_service_results(
-        self, mock_llm_factory, mock_settings
-    ):
+    async def test_graph_results_match_service_results(self, mock_llm_factory, mock_settings):
         """Graph execution produces same results as direct service calls."""
         from mcp_server_langgraph.api.v1.ai_ux import CompositeAnalysisRequest
         from mcp_server_langgraph.api.v1.ai_ux_service import AIUXService

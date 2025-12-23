@@ -354,7 +354,7 @@ class SkillExecutor:
         if script_content is not None:
             # Use actual script with argument injection
             args_repr = repr(args) if args else "{}"
-            return f'''# Skill: {skill.name}
+            return f"""# Skill: {skill.name}
 # Script: {script_name}
 # Injected arguments: SKILL_ARGS
 
@@ -364,11 +364,11 @@ SKILL_ARGS = {args_repr}
 
 # --- Actual script content below ---
 {script_content}
-'''
+"""
 
         # Fallback: generate a placeholder wrapper
         args_repr = repr(args) if args else "{}"
-        return f'''
+        return f"""
 # Skill: {skill.name}
 # Script: {script_name}
 # Auto-generated wrapper (no script file found)
@@ -385,4 +385,4 @@ def main():
 if __name__ == "__main__":
     result = main()
     print(result)
-'''
+"""

@@ -1236,7 +1236,7 @@ class TestFrontendRedisL2CacheFeatureFlags:
 
 @pytest.mark.xdist_group(name="feature_flags_intelligence")
 class TestGranularIntelligenceFeatureFlags:
-    """Test granular intelligence feature flags for HybridShell AI capabilities.
+    """Test granular intelligence feature flags for StudioShell AI capabilities.
 
     These flags provide fine-grained control over AI intelligence features:
     - Session Intelligence (summarize, group, similarity)

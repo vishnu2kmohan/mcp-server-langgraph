@@ -111,10 +111,7 @@ class MarketplaceCreateRequest(BaseModel):
     def validate_name(cls, v: str) -> str:
         """Validate marketplace name format."""
         if not re.match(r"^[a-z][a-z0-9-]*$", v):
-            raise ValueError(
-                "Name must start with lowercase letter and contain only "
-                "lowercase letters, numbers, and hyphens"
-            )
+            raise ValueError("Name must start with lowercase letter and contain only lowercase letters, numbers, and hyphens")
         return v
 
 

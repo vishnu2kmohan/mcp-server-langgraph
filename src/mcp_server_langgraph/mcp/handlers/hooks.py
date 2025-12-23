@@ -187,9 +187,9 @@ class HooksToolHandler:
 
     def __init__(
         self,
-        auth: "AuthMiddleware",
+        auth: AuthMiddleware,
         agent_graph: Any,
-        hook_registry: "HookRegistry | None" = None,
+        hook_registry: HookRegistry | None = None,
     ) -> None:
         """Initialize the handler.
 
@@ -204,7 +204,7 @@ class HooksToolHandler:
         self._registry = hook_registry
 
     @property
-    def registry(self) -> "HookRegistry":
+    def registry(self) -> HookRegistry:
         """Get the hook registry."""
         if self._registry is None:
             from mcp_server_langgraph.core.hook_registry import get_hook_registry
@@ -291,9 +291,7 @@ class HooksToolHandler:
 
         return [TextContent(type="text", text=json.dumps(events))]
 
-    async def _handle_register(
-        self, arguments: dict[str, Any], user_id: str
-    ) -> list[TextContent]:
+    async def _handle_register(self, arguments: dict[str, Any], user_id: str) -> list[TextContent]:
         """Register a webhook for hook events (admin only).
 
         Args:
@@ -340,9 +338,7 @@ class HooksToolHandler:
         try:
             hook_event = HookEvent[event_name]
         except KeyError:
-            return [
-                TextContent(type="text", text=f"Error: Unknown event '{event_name}'")
-            ]
+            return [TextContent(type="text", text=f"Error: Unknown event '{event_name}'")]
 
         # Create webhook callback using the webhook client
         from mcp_server_langgraph.mcp.webhook_client import create_webhook_callback
@@ -374,9 +370,7 @@ class HooksToolHandler:
             )
         ]
 
-    async def _handle_unregister(
-        self, arguments: dict[str, Any], user_id: str
-    ) -> list[TextContent]:
+    async def _handle_unregister(self, arguments: dict[str, Any], user_id: str) -> list[TextContent]:
         """Unregister a webhook (admin only).
 
         Args:
@@ -418,9 +412,7 @@ class HooksToolHandler:
         try:
             hook_event = HookEvent[event_name]
         except KeyError:
-            return [
-                TextContent(type="text", text=f"Error: Unknown event '{event_name}'")
-            ]
+            return [TextContent(type="text", text=f"Error: Unknown event '{event_name}'")]
 
         # Unregister all hooks for this event
         self.registry.unregister_all(event=hook_event)
@@ -478,9 +470,9 @@ class HooksToolHandler:
 
 
 def create_hooks_tool_handler(
-    auth: "AuthMiddleware",
+    auth: AuthMiddleware,
     agent_graph: Any,
-    hook_registry: "HookRegistry | None" = None,
+    hook_registry: HookRegistry | None = None,
 ) -> HooksToolHandler:
     """Create a hooks tool handler.
 

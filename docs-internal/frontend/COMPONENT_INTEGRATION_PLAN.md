@@ -1,6 +1,6 @@
 # Component Integration Plan: AI Intelligence Hooks
 
-**Purpose**: Guide for integrating AI intelligence hooks into HybridShell UI components
+**Purpose**: Guide for integrating AI intelligence hooks into StudioShell UI components
 **Status**: Implementation Complete (Sprints 1-6)
 **Last Updated**: 2025-12-22
 
@@ -8,13 +8,13 @@
 
 ## Overview
 
-This document provides a comprehensive guide for integrating the 7 intelligence hook modules into HybridShell UI components. All hooks use the unified `POST /api/v1/studio/analyze` endpoint backed by the `StudioOrchestrator`.
+This document provides a comprehensive guide for integrating the 7 intelligence hook modules into StudioShell UI components. All hooks use the unified `POST /api/v1/studio/analyze` endpoint backed by the `StudioOrchestrator`.
 
 ### Architecture Summary
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────┐
-│                         HybridShell Components                          │
+│                         StudioShell Components                          │
 ├─────────────────────────────────────────────────────────────────────────┤
 │  TopBar │ ActivityBar │ SessionNav │ ConversationPanel │ CanvasWorkspace│
 │         │             │            │                   │                │

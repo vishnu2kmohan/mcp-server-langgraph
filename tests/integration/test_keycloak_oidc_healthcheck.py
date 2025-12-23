@@ -17,8 +17,6 @@ Reference:
 """
 
 import gc
-import os
-from pathlib import Path
 
 import pytest
 import yaml
@@ -98,7 +96,7 @@ class TestKeycloakOIDCHealthcheck:
             f"NOTE: KC_HTTP_RELATIVE_PATH=/authn applies to ALL endpoints including health"
         )
 
-        print(f"✅ Keycloak healthcheck correctly validates OIDC endpoint")
+        print("✅ Keycloak healthcheck correctly validates OIDC endpoint")
         print(f"Command: {full_command}")
 
     def test_keycloak_healthcheck_does_not_use_curl_or_wget(self):
@@ -139,7 +137,7 @@ class TestKeycloakOIDCHealthcheck:
                 f"NOTE: KC_HTTP_RELATIVE_PATH=/authn applies to ALL endpoints including health"
             )
 
-        print(f"✅ Keycloak healthcheck correctly avoids curl/wget")
+        print("✅ Keycloak healthcheck correctly avoids curl/wget")
 
     def test_keycloak_healthcheck_validates_http_response(self):
         """
@@ -189,7 +187,7 @@ class TestKeycloakOIDCHealthcheck:
             f"NOTE: KC_HTTP_RELATIVE_PATH=/authn applies to ALL endpoints including health"
         )
 
-        print(f"✅ Keycloak healthcheck correctly validates HTTP response")
+        print("✅ Keycloak healthcheck correctly validates HTTP response")
 
 
 @pytest.mark.integration
@@ -245,7 +243,7 @@ class TestKeycloakDockerfileHealthcheck:
             f"NOTE: KC_HTTP_RELATIVE_PATH=/authn applies to ALL endpoints including health"
         )
 
-        print(f"✅ Dockerfile HEALTHCHECK correctly avoids curl")
+        print("✅ Dockerfile HEALTHCHECK correctly avoids curl")
 
 
 @pytest.mark.integration

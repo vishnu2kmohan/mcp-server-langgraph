@@ -99,18 +99,13 @@ class SubscriptionCleanupJob:
                 # Check explicit expiry
                 if sub.expires_at is not None and sub.expires_at < now:
                     should_delete = True
-                    logger.debug(
-                        f"Subscription {sub.endpoint[:40]} expired at {sub.expires_at}"
-                    )
+                    logger.debug(f"Subscription {sub.endpoint[:40]} expired at {sub.expires_at}")
 
                 # Check for staleness (last_used_at or updated_at)
                 last_activity = sub.last_used_at or sub.updated_at
                 if last_activity is not None and last_activity < stale_cutoff:
                     should_delete = True
-                    logger.debug(
-                        f"Subscription {sub.endpoint[:40]} is stale "
-                        f"(last activity: {last_activity})"
-                    )
+                    logger.debug(f"Subscription {sub.endpoint[:40]} is stale (last activity: {last_activity})")
 
                 if should_delete:
                     endpoints_to_delete.append(sub.endpoint)
@@ -127,10 +122,7 @@ class SubscriptionCleanupJob:
             duration = time.monotonic() - start_time
 
             if cleaned_count > 0:
-                logger.info(
-                    f"Cleanup completed: removed {cleaned_count} subscriptions "
-                    f"in {duration:.2f}s"
-                )
+                logger.info(f"Cleanup completed: removed {cleaned_count} subscriptions in {duration:.2f}s")
             else:
                 logger.debug("Cleanup completed: no subscriptions to remove")
 
@@ -152,8 +144,7 @@ class SubscriptionCleanupJob:
         self._running = True
         self._task = asyncio.create_task(self._background_loop())
         logger.info(
-            f"Started background cleanup job (interval: {self._interval_seconds}s, "
-            f"stale threshold: {self._stale_days} days)"
+            f"Started background cleanup job (interval: {self._interval_seconds}s, stale threshold: {self._stale_days} days)"
         )
 
     def stop_background_cleanup(self) -> None:

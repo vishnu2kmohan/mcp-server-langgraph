@@ -19,7 +19,6 @@ from __future__ import annotations
 
 import gc
 from typing import TYPE_CHECKING
-from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from httpx import ASGITransport, AsyncClient
@@ -44,7 +43,7 @@ def mock_llm_response() -> dict:
 
 
 @pytest.fixture
-async def test_app() -> "FastAPI":
+async def test_app() -> FastAPI:
     """Create a test FastAPI app with AI UX routes."""
     from fastapi import FastAPI
 
@@ -56,7 +55,7 @@ async def test_app() -> "FastAPI":
 
 
 @pytest.fixture
-async def client(test_app: "FastAPI") -> AsyncClient:
+async def client(test_app: FastAPI) -> AsyncClient:
     """Create an async test client."""
     transport = ASGITransport(app=test_app)
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
@@ -94,9 +93,7 @@ class TestDisclosureAnalyzer:
         assert response.status_code != 404
 
     @pytest.mark.asyncio
-    async def test_disclosure_analyze_returns_level_recommendation(
-        self, client: AsyncClient
-    ) -> None:
+    async def test_disclosure_analyze_returns_level_recommendation(self, client: AsyncClient) -> None:
         """
         GIVEN a user with intermediate feature usage
         WHEN analyzing disclosure level
@@ -152,9 +149,7 @@ class TestEmptyStateSuggestions:
         gc.collect()
 
     @pytest.mark.asyncio
-    async def test_empty_state_suggestions_endpoint_exists(
-        self, client: AsyncClient
-    ) -> None:
+    async def test_empty_state_suggestions_endpoint_exists(self, client: AsyncClient) -> None:
         """
         GIVEN the AI UX router
         WHEN calling POST /api/v1/ai/empty-state/suggestions
@@ -224,9 +219,7 @@ class TestNudgeRecommendations:
         assert response.status_code != 404
 
     @pytest.mark.asyncio
-    async def test_nudge_recommend_returns_nudge_or_null(
-        self, client: AsyncClient
-    ) -> None:
+    async def test_nudge_recommend_returns_nudge_or_null(self, client: AsyncClient) -> None:
         """
         GIVEN user context
         WHEN requesting nudge recommendation
@@ -284,9 +277,7 @@ class TestErrorAnalysis:
         assert response.status_code != 404
 
     @pytest.mark.asyncio
-    async def test_errors_analyze_returns_classification(
-        self, client: AsyncClient
-    ) -> None:
+    async def test_errors_analyze_returns_classification(self, client: AsyncClient) -> None:
         """
         GIVEN an error object
         WHEN analyzing the error
@@ -329,9 +320,7 @@ class TestOnboardingPersonalization:
         gc.collect()
 
     @pytest.mark.asyncio
-    async def test_onboarding_personalize_endpoint_exists(
-        self, client: AsyncClient
-    ) -> None:
+    async def test_onboarding_personalize_endpoint_exists(self, client: AsyncClient) -> None:
         """
         GIVEN the AI UX router
         WHEN calling POST /api/v1/ai/onboarding/personalize
@@ -347,9 +336,7 @@ class TestOnboardingPersonalization:
         assert response.status_code != 404
 
     @pytest.mark.asyncio
-    async def test_onboarding_returns_personalized_path(
-        self, client: AsyncClient
-    ) -> None:
+    async def test_onboarding_returns_personalized_path(self, client: AsyncClient) -> None:
         """
         GIVEN a new user with initial actions
         WHEN personalizing onboarding
@@ -438,9 +425,7 @@ class TestPersonaAnalysis:
         assert response.status_code != 404
 
     @pytest.mark.asyncio
-    async def test_persona_analyze_returns_behavior_analysis(
-        self, client: AsyncClient
-    ) -> None:
+    async def test_persona_analyze_returns_behavior_analysis(self, client: AsyncClient) -> None:
         """
         GIVEN user behavior data
         WHEN analyzing persona fit

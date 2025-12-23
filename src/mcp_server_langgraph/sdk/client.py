@@ -73,9 +73,7 @@ class LangGraphAgentClient:
         """
         self.model_tier = model_tier
         self.model_selector = model_selector or ModelSelector()
-        self.orchestrator = orchestrator or Orchestrator(
-            model_selector=self.model_selector
-        )
+        self.orchestrator = orchestrator or Orchestrator(model_selector=self.model_selector)
         self.tool_server = tool_server or create_default_server()
         self.hook_registry = hook_registry or DEFAULT_SECURITY_HOOKS
         self.state_manager = state_manager or AgentStateManager()
@@ -108,9 +106,7 @@ class LangGraphAgentClient:
 
         try:
             # Execute UserPromptSubmit hooks before processing
-            prompt = await self._execute_user_prompt_submit_hook(
-                prompt, query_id, context
-            )
+            prompt = await self._execute_user_prompt_submit_hook(prompt, query_id, context)
 
             # Get model for this query
             model = self.model_selector.select_model(self.model_tier)
@@ -126,10 +122,13 @@ class LangGraphAgentClient:
 
             # Save session state if tracking
             if session_id:
-                await self.state_manager.save_state(session_id, {
-                    "last_query": prompt,
-                    "last_response": response,
-                })
+                await self.state_manager.save_state(
+                    session_id,
+                    {
+                        "last_query": prompt,
+                        "last_response": response,
+                    },
+                )
 
         except PermissionError:
             # Re-raise permission errors (from hook denials)
@@ -343,15 +342,11 @@ class LangGraphAgentClient:
             is_error = True
             tool_output = str(e)
             # Execute PostToolUse hooks even on error
-            await self._execute_post_tool_use_hook(
-                tool_name, arguments, tool_output, is_error, tool_use_id, context
-            )
+            await self._execute_post_tool_use_hook(tool_name, arguments, tool_output, is_error, tool_use_id, context)
             raise
 
         # Execute PostToolUse hooks on success
-        await self._execute_post_tool_use_hook(
-            tool_name, arguments, tool_output, is_error, tool_use_id, context
-        )
+        await self._execute_post_tool_use_hook(tool_name, arguments, tool_output, is_error, tool_use_id, context)
 
         return tool_output
 

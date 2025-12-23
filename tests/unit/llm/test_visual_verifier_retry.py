@@ -27,8 +27,8 @@ if TYPE_CHECKING:
 SCREENSHOT_TOOLS_PATCH = "mcp_server_langgraph.tools.screenshot_tools.capture_screenshot"
 
 
-
 pytestmark = pytest.mark.unit
+
 
 @pytest.mark.xdist_group(name="visual_verifier_retry")
 class TestVisualVerificationRetry:
@@ -53,6 +53,7 @@ class TestVisualVerificationRetry:
 
         # Mock screenshot tool to fail twice then succeed
         call_count = 0
+
         async def mock_screenshot(args):
             nonlocal call_count
             call_count += 1
@@ -124,6 +125,7 @@ Page looks good."""
             verifier = OutputVerifier()
 
         call_count = 0
+
         async def mock_screenshot(args):
             nonlocal call_count
             call_count += 1
@@ -182,6 +184,7 @@ Looks good."""
             verifier = OutputVerifier()
 
         call_count = 0
+
         async def mock_screenshot(args):
             nonlocal call_count
             call_count += 1
@@ -227,10 +230,12 @@ Looks good."""
             patch(SCREENSHOT_TOOLS_PATCH) as mock_capture,
             patch("mcp_server_langgraph.llm.verifier.get_screenshot_cache") as mock_get_cache,
         ):
-            mock_capture.ainvoke = AsyncMock(return_value={
-                "image_data": "base64-image-data",
-                "mime_type": "image/png",
-            })
+            mock_capture.ainvoke = AsyncMock(
+                return_value={
+                    "image_data": "base64-image-data",
+                    "mime_type": "image/png",
+                }
+            )
 
             # Mock cache to return None (cache miss) - forces screenshot capture
             mock_cache = MagicMock()
@@ -240,6 +245,7 @@ Looks good."""
 
             # LLM fails once then succeeds
             call_count = 0
+
             async def mock_llm_invoke(messages):
                 nonlocal call_count
                 call_count += 1
@@ -284,10 +290,12 @@ OK"""
             patch(SCREENSHOT_TOOLS_PATCH) as mock_capture,
             patch("mcp_server_langgraph.llm.verifier.get_screenshot_cache") as mock_get_cache,
         ):
-            mock_capture.ainvoke = AsyncMock(return_value={
-                "image_data": "base64-image-data",
-                "mime_type": "image/png",
-            })
+            mock_capture.ainvoke = AsyncMock(
+                return_value={
+                    "image_data": "base64-image-data",
+                    "mime_type": "image/png",
+                }
+            )
 
             # Mock cache to return None (cache miss) - forces screenshot capture
             mock_cache = MagicMock()
@@ -297,6 +305,7 @@ OK"""
 
             # Simulate 529 overload error (LiteLLM pattern)
             call_count = 0
+
             class OverloadError(Exception):
                 status_code = 529
                 message = "Service overloaded"
@@ -344,6 +353,7 @@ OK"""
             verifier = OutputVerifier()
 
         call_count = 0
+
         async def mock_screenshot(args):
             nonlocal call_count
             call_count += 1
@@ -392,6 +402,7 @@ class TestVisualVerificationRetryMetrics:
             verifier = OutputVerifier()
 
         call_count = 0
+
         async def mock_screenshot(args):
             nonlocal call_count
             call_count += 1
@@ -402,9 +413,7 @@ class TestVisualVerificationRetryMetrics:
         with (
             patch(SCREENSHOT_TOOLS_PATCH) as mock_capture,
             patch("mcp_server_langgraph.llm.verifier.get_screenshot_cache") as mock_get_cache,
-            patch(
-                "mcp_server_langgraph.llm.verifier.record_visual_verification_retry"
-            ) as mock_record_retry,
+            patch("mcp_server_langgraph.llm.verifier.record_visual_verification_retry") as mock_record_retry,
         ):
             mock_capture.ainvoke = mock_screenshot
 
@@ -414,9 +423,7 @@ class TestVisualVerificationRetryMetrics:
             mock_cache.aset = AsyncMock()
             mock_get_cache.return_value = mock_cache
 
-            mock_llm.ainvoke.return_value = MagicMock(
-                content="OVERALL: 0.9\nFEEDBACK: Good"
-            )
+            mock_llm.ainvoke.return_value = MagicMock(content="OVERALL: 0.9\nFEEDBACK: Good")
 
             await verifier.verify_with_visual(
                 url="https://example.com",
@@ -449,6 +456,7 @@ class TestVisualVerificationRetryConfig:
             verifier = OutputVerifier()
 
         call_count = 0
+
         async def mock_screenshot(args):
             nonlocal call_count
             call_count += 1

@@ -85,9 +85,7 @@ class ClarificationRequiredMessage(BaseModel):
     agent_name: str = Field(description="Name of the agent")
     clarification_type: str = Field(description="Type: text, choice, confirmation")
     question: str = Field(description="The question to ask")
-    options: list[dict[str, Any]] = Field(
-        default_factory=list, description="Options for choice type"
-    )
+    options: list[dict[str, Any]] = Field(default_factory=list, description="Options for choice type")
     placeholder: str | None = Field(default=None, description="Placeholder for text input")
     required: bool = Field(default=True, description="Whether response is required")
     context: dict[str, Any] = Field(default_factory=dict, description="Additional context")
@@ -209,10 +207,7 @@ class AgentRequestBroadcaster:
 
     def get_connections_for_session(self, session_id: str) -> list[WebSocketConnection]:
         """Get all connections for a specific session."""
-        return [
-            conn for conn in self._connections.values()
-            if conn.session_id == session_id
-        ]
+        return [conn for conn in self._connections.values() if conn.session_id == session_id]
 
 
 __all__ = [

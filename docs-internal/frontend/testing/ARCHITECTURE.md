@@ -19,7 +19,7 @@ This document describes the component architecture patterns used in the Studio F
 │  (Route components: ChatPage, MCPPage, AdminDashboardPage)  │
 ├─────────────────────────────────────────────────────────────┤
 │                    Connected Components                      │
-│  (Redux-connected: ConnectedCanvasPanel, HybridShellLayout) │
+│  (Redux-connected: ConnectedCanvasPanel, StudioShellLayout) │
 ├─────────────────────────────────────────────────────────────┤
 │                  Presentational Components                   │
 │  (Pure UI: CanvasWorkspace, CanvasArtifact, CanvasTabs)     │

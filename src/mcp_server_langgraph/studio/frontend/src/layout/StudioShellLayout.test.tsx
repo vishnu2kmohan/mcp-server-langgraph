@@ -22,6 +22,7 @@ import personaReducer, {
 import authReducer, { initialAuthState } from "../store/slices/authSlice";
 import sessionReducer from "../store/slices/sessionSlice";
 import backgroundAgentReducer from "../store/slices/backgroundAgentSlice";
+import devToolsReducer from "../store/slices/devToolsSlice";
 import type { User } from "../types/auth";
 import { TelemetryProvider } from "../contexts/TelemetryContext";
 
@@ -245,6 +246,7 @@ const createTestStore = (
       auth: authReducer,
       session: sessionReducer,
       backgroundAgent: backgroundAgentReducer,
+      devTools: devToolsReducer,
     },
     preloadedState: {
       ...preloadedState,

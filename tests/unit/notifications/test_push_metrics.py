@@ -11,7 +11,7 @@ Reference: ADR-0026 - Comprehensive Client Resilience Patterns
 """
 
 import gc
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 import pytest
 
@@ -40,9 +40,7 @@ class TestPushNotificationMetrics:
         )
 
         # Mock the counter
-        with patch(
-            "mcp_server_langgraph.notifications.push_metrics.push_sent_counter"
-        ) as mock_counter:
+        with patch("mcp_server_langgraph.notifications.push_metrics.push_sent_counter") as mock_counter:
             record_push_sent(user_id="user-001", success=True)
 
             mock_counter.add.assert_called_once()
@@ -61,9 +59,7 @@ class TestPushNotificationMetrics:
             record_push_sent,
         )
 
-        with patch(
-            "mcp_server_langgraph.notifications.push_metrics.push_sent_counter"
-        ) as mock_counter:
+        with patch("mcp_server_langgraph.notifications.push_metrics.push_sent_counter") as mock_counter:
             record_push_sent(user_id="user-001", success=False, reason="expired")
 
             mock_counter.add.assert_called_once()
@@ -82,9 +78,7 @@ class TestPushNotificationMetrics:
             record_push_latency,
         )
 
-        with patch(
-            "mcp_server_langgraph.notifications.push_metrics.push_latency_histogram"
-        ) as mock_histogram:
+        with patch("mcp_server_langgraph.notifications.push_metrics.push_latency_histogram") as mock_histogram:
             record_push_latency(duration_seconds=0.125)
 
             mock_histogram.record.assert_called_once()
@@ -101,9 +95,7 @@ class TestPushNotificationMetrics:
             record_subscription_created,
         )
 
-        with patch(
-            "mcp_server_langgraph.notifications.push_metrics.subscription_created_counter"
-        ) as mock_counter:
+        with patch("mcp_server_langgraph.notifications.push_metrics.subscription_created_counter") as mock_counter:
             record_subscription_created(user_id="user-001")
 
             mock_counter.add.assert_called_once_with(1, {"user_id": "user-001"[:8]})
@@ -118,9 +110,7 @@ class TestPushNotificationMetrics:
             record_subscription_deleted,
         )
 
-        with patch(
-            "mcp_server_langgraph.notifications.push_metrics.subscription_deleted_counter"
-        ) as mock_counter:
+        with patch("mcp_server_langgraph.notifications.push_metrics.subscription_deleted_counter") as mock_counter:
             record_subscription_deleted(reason="expired")
 
             mock_counter.add.assert_called_once()
@@ -138,9 +128,7 @@ class TestPushNotificationMetrics:
             record_subscription_expired,
         )
 
-        with patch(
-            "mcp_server_langgraph.notifications.push_metrics.subscription_expired_counter"
-        ) as mock_counter:
+        with patch("mcp_server_langgraph.notifications.push_metrics.subscription_expired_counter") as mock_counter:
             record_subscription_expired()
 
             mock_counter.add.assert_called_once_with(1)
@@ -155,9 +143,7 @@ class TestPushNotificationMetrics:
             update_active_subscriptions,
         )
 
-        with patch(
-            "mcp_server_langgraph.notifications.push_metrics.active_subscriptions_gauge"
-        ) as mock_gauge:
+        with patch("mcp_server_langgraph.notifications.push_metrics.active_subscriptions_gauge") as mock_gauge:
             update_active_subscriptions(count=42)
 
             mock_gauge.set.assert_called_once_with(42)
@@ -181,9 +167,7 @@ class TestCleanupJobMetrics:
             record_cleanup_run,
         )
 
-        with patch(
-            "mcp_server_langgraph.notifications.push_metrics.cleanup_runs_counter"
-        ) as mock_counter:
+        with patch("mcp_server_langgraph.notifications.push_metrics.cleanup_runs_counter") as mock_counter:
             record_cleanup_run(cleaned_count=15, duration_seconds=2.5)
 
             mock_counter.add.assert_called_once()
@@ -200,12 +184,8 @@ class TestCleanupJobMetrics:
             record_cleanup_run,
         )
 
-        with patch(
-            "mcp_server_langgraph.notifications.push_metrics.cleanup_runs_counter"
-        ):
-            with patch(
-                "mcp_server_langgraph.notifications.push_metrics.cleanup_duration_histogram"
-            ) as mock_histogram:
+        with patch("mcp_server_langgraph.notifications.push_metrics.cleanup_runs_counter"):
+            with patch("mcp_server_langgraph.notifications.push_metrics.cleanup_duration_histogram") as mock_histogram:
                 record_cleanup_run(cleaned_count=15, duration_seconds=2.5)
 
                 mock_histogram.record.assert_called_once()
@@ -222,15 +202,9 @@ class TestCleanupJobMetrics:
             record_cleanup_run,
         )
 
-        with patch(
-            "mcp_server_langgraph.notifications.push_metrics.cleanup_runs_counter"
-        ):
-            with patch(
-                "mcp_server_langgraph.notifications.push_metrics.cleanup_duration_histogram"
-            ):
-                with patch(
-                    "mcp_server_langgraph.notifications.push_metrics.subscriptions_cleaned_counter"
-                ) as mock_counter:
+        with patch("mcp_server_langgraph.notifications.push_metrics.cleanup_runs_counter"):
+            with patch("mcp_server_langgraph.notifications.push_metrics.cleanup_duration_histogram"):
+                with patch("mcp_server_langgraph.notifications.push_metrics.subscriptions_cleaned_counter") as mock_counter:
                     record_cleanup_run(cleaned_count=15, duration_seconds=2.5)
 
                     mock_counter.add.assert_called_once_with(15)

@@ -35,10 +35,7 @@ import {
 import { cn } from "../../../utils/cn";
 import { useConsoleEntries } from "../hooks/useConsoleEntries";
 import { exportConsoleToJSON, exportConsoleToCSV } from "../utils/export";
-import {
-  useBatchedUpdates,
-  useStableCallback,
-} from "../utils/performance";
+import { useBatchedUpdates, useStableCallback } from "../utils/performance";
 import type {
   ConsoleTabProps,
   ConsoleEntry,
@@ -321,10 +318,11 @@ export function ConsoleTab({
    * Only applies batching when list exceeds threshold.
    */
   const shouldBatch = allEntries.length > BATCHING_THRESHOLD;
-  const { displayedItems: batchedEntries, hasMore, loadMore } = useBatchedUpdates(
-    allEntries,
-    INITIAL_BATCH_SIZE,
-  );
+  const {
+    displayedItems: batchedEntries,
+    hasMore,
+    loadMore,
+  } = useBatchedUpdates(allEntries, INITIAL_BATCH_SIZE);
 
   // Use batched entries for large lists, otherwise use all entries
   const displayEntries = shouldBatch ? batchedEntries : allEntries;
@@ -333,13 +331,17 @@ export function ConsoleTab({
    * Load more entries when scrolling near bottom.
    */
   const stableLoadMore = useStableCallback(loadMore);
-  const handleScroll = useCallback((e: React.UIEvent<HTMLDivElement>) => {
-    const target = e.currentTarget;
-    const nearBottom = target.scrollHeight - target.scrollTop - target.clientHeight < 100;
-    if (nearBottom && hasMore) {
-      stableLoadMore();
-    }
-  }, [hasMore, stableLoadMore]);
+  const handleScroll = useCallback(
+    (e: React.UIEvent<HTMLDivElement>) => {
+      const target = e.currentTarget;
+      const nearBottom =
+        target.scrollHeight - target.scrollTop - target.clientHeight < 100;
+      if (nearBottom && hasMore) {
+        stableLoadMore();
+      }
+    },
+    [hasMore, stableLoadMore],
+  );
 
   return (
     <div
@@ -465,7 +467,8 @@ export function ConsoleTab({
               data-testid="load-more-indicator"
               className="flex items-center justify-center py-2 text-xs text-gray-400 dark:text-gray-500"
             >
-              Scroll to load more ({allEntries.length - displayEntries.length} remaining)
+              Scroll to load more ({allEntries.length - displayEntries.length}{" "}
+              remaining)
             </div>
           )}
         </div>

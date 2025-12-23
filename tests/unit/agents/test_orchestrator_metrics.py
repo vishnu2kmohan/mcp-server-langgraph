@@ -11,7 +11,6 @@ TDD: Tests written FIRST before implementation.
 """
 
 import gc
-from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -90,7 +89,6 @@ class TestUXOrchestrationMetrics:
         """Test that record_ux_orchestration records the counter."""
         from mcp_server_langgraph.agents.metrics import (
             record_ux_orchestration,
-            ux_orchestration_counter,
         )
 
         # Should not raise

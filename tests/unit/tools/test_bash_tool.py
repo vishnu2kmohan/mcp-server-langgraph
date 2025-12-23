@@ -8,8 +8,7 @@ TDD Phase: RED - Write failing tests first
 """
 
 import gc
-import os
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -27,8 +26,18 @@ def mock_settings():
     settings = MagicMock()
     settings.enable_bash_execution = True
     settings.bash_allowed_commands = [
-        "ls", "cat", "head", "tail", "grep", "find", "wc",
-        "echo", "pwd", "date", "whoami", "uname",
+        "ls",
+        "cat",
+        "head",
+        "tail",
+        "grep",
+        "find",
+        "wc",
+        "echo",
+        "pwd",
+        "date",
+        "whoami",
+        "uname",
     ]
     settings.bash_execution_timeout = 30
     settings.bash_working_directory = "/tmp"
@@ -201,9 +210,7 @@ class TestBashToolExecution:
         """Test executing a simple allowed command."""
         from mcp_server_langgraph.tools.bash_tools import execute_bash
 
-        with patch(
-            "mcp_server_langgraph.tools.bash_tools.feature_flags"
-        ) as mock_flags:
+        with patch("mcp_server_langgraph.tools.bash_tools.feature_flags") as mock_flags:
             mock_flags.enable_bash_tool = True
 
             result = execute_bash.invoke({"command": "echo hello"})
@@ -215,9 +222,7 @@ class TestBashToolExecution:
         """Test command output is captured."""
         from mcp_server_langgraph.tools.bash_tools import execute_bash
 
-        with patch(
-            "mcp_server_langgraph.tools.bash_tools.feature_flags"
-        ) as mock_flags:
+        with patch("mcp_server_langgraph.tools.bash_tools.feature_flags") as mock_flags:
             mock_flags.enable_bash_tool = True
 
             result = execute_bash.invoke({"command": "pwd"})
@@ -237,16 +242,16 @@ class TestBashToolExecution:
         """Test command execution respects timeout."""
         from mcp_server_langgraph.tools.bash_tools import execute_bash
 
-        with patch(
-            "mcp_server_langgraph.tools.bash_tools.feature_flags"
-        ) as mock_flags:
+        with patch("mcp_server_langgraph.tools.bash_tools.feature_flags") as mock_flags:
             mock_flags.enable_bash_tool = True
 
             # A command that should complete quickly
-            result = execute_bash.invoke({
-                "command": "echo fast",
-                "timeout": 5,
-            })
+            result = execute_bash.invoke(
+                {
+                    "command": "echo fast",
+                    "timeout": 5,
+                }
+            )
 
             # Should complete without timeout
             assert "fast" in result
@@ -351,9 +356,7 @@ class TestBashToolFeatureFlag:
         """Test that bash tool returns error when disabled."""
         from mcp_server_langgraph.tools.bash_tools import execute_bash
 
-        with patch(
-            "mcp_server_langgraph.tools.bash_tools.feature_flags"
-        ) as mock_flags:
+        with patch("mcp_server_langgraph.tools.bash_tools.feature_flags") as mock_flags:
             mock_flags.enable_bash_tool = False
 
             result = execute_bash.invoke({"command": "echo hello"})

@@ -23,7 +23,6 @@ describe("Design Tokens", () => {
     vi.clearAllMocks();
   });
 
-
   describe("Colors", () => {
     it("should have primary brand colors", () => {
       expect(colors.primary).toBeDefined();

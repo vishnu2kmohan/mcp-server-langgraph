@@ -95,10 +95,7 @@ class Coordinator:
         Returns:
             List of SubagentResult from all executions
         """
-        pending = [
-            sa for sa in self._subagents.values()
-            if sa.status == SubagentStatus.PENDING
-        ]
+        pending = [sa for sa in self._subagents.values() if sa.status == SubagentStatus.PENDING]
 
         if not pending:
             return []
@@ -110,11 +107,13 @@ class Coordinator:
         final_results: list[SubagentResult] = []
         for i, result in enumerate(results):
             if isinstance(result, BaseException):
-                final_results.append(SubagentResult(
-                    task_id=pending[i].task_id,
-                    success=False,
-                    error=str(result),
-                ))
+                final_results.append(
+                    SubagentResult(
+                        task_id=pending[i].task_id,
+                        success=False,
+                        error=str(result),
+                    )
+                )
             else:
                 final_results.append(result)
 

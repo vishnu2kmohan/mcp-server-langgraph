@@ -29,8 +29,8 @@ from typing import TYPE_CHECKING, Any
 
 from fastapi import APIRouter, WebSocket
 
-from mcp_server_langgraph.websocket.base import WebSocketBase, WebSocketConfig
-from mcp_server_langgraph.websocket.types import MessageEnvelope
+from mcp_server_langgraph.websocket.base import WebSocketBase
+from mcp_server_langgraph.websocket.types import AuthUser, MessageEnvelope, WebSocketConfig
 
 if TYPE_CHECKING:
     pass
@@ -202,11 +202,11 @@ class CostTrackingWebSocketHandler(WebSocketBase):
             "warning_threshold": 0.8,  # Warn at 80% usage
         }
 
-    async def on_connect(self) -> None:
+    async def on_connect(self, user: AuthUser) -> None:
         """Called when connection is established."""
         logger.info(
             "Cost tracking WebSocket connected",
-            extra={"user_id": self._user.id if self._user else "unknown"},
+            extra={"user_id": user.id},
         )
 
     async def on_disconnect(self) -> None:

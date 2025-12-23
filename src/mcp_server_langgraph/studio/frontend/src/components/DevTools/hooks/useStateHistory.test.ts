@@ -36,9 +36,7 @@ describe("useStateHistory", () => {
 
     it("should accept initial snapshot if provided", () => {
       const initialState = { counter: 0 };
-      const { result } = renderHook(() =>
-        useStateHistory({ initialState }),
-      );
+      const { result } = renderHook(() => useStateHistory({ initialState }));
 
       expect(result.current.snapshots).toHaveLength(1);
       expect(result.current.snapshots[0].state).toEqual(initialState);
@@ -46,9 +44,7 @@ describe("useStateHistory", () => {
     });
 
     it("should accept maxSnapshots option", () => {
-      const { result } = renderHook(() =>
-        useStateHistory({ maxSnapshots: 5 }),
-      );
+      const { result } = renderHook(() => useStateHistory({ maxSnapshots: 5 }));
 
       // Record 10 snapshots
       for (let i = 0; i < 10; i++) {

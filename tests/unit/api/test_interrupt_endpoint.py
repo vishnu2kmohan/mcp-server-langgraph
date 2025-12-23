@@ -13,7 +13,7 @@ from __future__ import annotations
 
 import gc
 from typing import TYPE_CHECKING
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import patch
 
 import pytest
 from fastapi import FastAPI
@@ -76,7 +76,6 @@ class TestInterruptEndpointSignal:
         """POST interrupt should set interrupt state."""
         from mcp_server_langgraph.api.v1.interrupt import router
         from mcp_server_langgraph.core.interrupt import (
-            get_interrupt_controller,
             reset_interrupt_controller,
         )
 

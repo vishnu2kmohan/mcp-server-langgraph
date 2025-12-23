@@ -202,9 +202,5 @@ class TestHandlerClassStructure:
         ]
 
         for handler_cls in handlers:
-            assert hasattr(
-                handler_cls, "handle_message"
-            ), f"{handler_cls.__name__} missing handle_message"
-            assert callable(
-                handler_cls.handle_message
-            ), f"{handler_cls.__name__}.handle_message not callable"
+            assert hasattr(handler_cls, "handle_message"), f"{handler_cls.__name__} missing handle_message"
+            assert callable(handler_cls.handle_message), f"{handler_cls.__name__}.handle_message not callable"

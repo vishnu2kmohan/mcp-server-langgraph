@@ -140,9 +140,7 @@ class TestPushMessage:
 class TestPushNotificationSender:
     """Tests for the push notification sender service."""
 
-    def test_create_sender(
-        self, mock_subscription_store: InMemoryPushSubscriptionStore
-    ) -> None:
+    def test_create_sender(self, mock_subscription_store: InMemoryPushSubscriptionStore) -> None:
         """Test creating a push notification sender."""
         sender = PushNotificationSender(
             vapid_private_key="fake-private-key",
@@ -249,9 +247,7 @@ class TestPushNotificationSender:
         await mock_subscription_store.save_subscription(sample_subscription)
         captured_message: PushMessage | None = None
 
-        async def capture_send(
-            subscription: PushSubscription, message: PushMessage
-        ) -> bool:
+        async def capture_send(subscription: PushSubscription, message: PushMessage) -> bool:
             nonlocal captured_message
             captured_message = message
             return True
@@ -331,9 +327,7 @@ class TestPushSenderErrorHandling:
         message = PushMessage(title="Test", body="Test message")
 
         # Simulate 410 Gone (subscription expired)
-        with patch.object(
-            sender, "_send_webpush", new_callable=AsyncMock
-        ) as mock_send:
+        with patch.object(sender, "_send_webpush", new_callable=AsyncMock) as mock_send:
             mock_send.return_value = False
             # The sender should handle 410 internally
 
@@ -487,7 +481,6 @@ class TestPushSenderCircuitBreaker:
         """Test that circuit breaker state is checked before attempting webpush."""
         from mcp_server_langgraph.resilience.circuit_breaker import (
             get_circuit_breaker,
-            CircuitBreakerState,
         )
         import pybreaker
 
@@ -592,9 +585,7 @@ class TestPushSenderFallbackQueue:
         assert cb.current_state == pybreaker.STATE_OPEN
 
         # Try to send - should queue instead of failing
-        result = await sender_with_queue._send_webpush(
-            sample_subscription, message, user_id="user-001"
-        )
+        result = await sender_with_queue._send_webpush(sample_subscription, message, user_id="user-001")
 
         # Should return True (queued successfully)
         assert result is True
@@ -632,9 +623,7 @@ class TestPushSenderFallbackQueue:
         # Make queue.enqueue fail
         mock_fallback_queue.enqueue.side_effect = Exception("Queue full")
 
-        result = await sender_with_queue._send_webpush(
-            sample_subscription, message, user_id="user-001"
-        )
+        result = await sender_with_queue._send_webpush(sample_subscription, message, user_id="user-001")
 
         # Should return False (queue failed)
         assert result is False
@@ -717,9 +706,7 @@ class TestPushSenderFallbackQueue:
         mock_fallback_queue.dequeue_batch.return_value = [queued]
 
         # Mock _send_webpush to succeed
-        with patch.object(
-            sender_with_queue, "_send_webpush", new_callable=AsyncMock
-        ) as mock_send:
+        with patch.object(sender_with_queue, "_send_webpush", new_callable=AsyncMock) as mock_send:
             mock_send.return_value = True
             result = await sender_with_queue.process_fallback_queue()
 
@@ -751,9 +738,7 @@ class TestPushSenderFallbackQueue:
         mock_fallback_queue.dequeue_batch.return_value = [queued]
 
         # Mock _send_webpush to fail
-        with patch.object(
-            sender_with_queue, "_send_webpush", new_callable=AsyncMock
-        ) as mock_send:
+        with patch.object(sender_with_queue, "_send_webpush", new_callable=AsyncMock) as mock_send:
             mock_send.return_value = False
             result = await sender_with_queue.process_fallback_queue()
 

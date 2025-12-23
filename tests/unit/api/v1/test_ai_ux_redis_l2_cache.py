@@ -12,13 +12,12 @@ Lookup flow:
 2. If L1 miss, check L2 (Redis) - if hit, populate L1 and return
 3. If L2 miss, call LLM, populate both L1 and L2
 
-Reference: HybridShell AI Enhancement Plan - Backend Redis Cache Integration
+Reference: StudioShell AI Enhancement Plan - Backend Redis Cache Integration
 """
 
 import gc
 import json
-from typing import Any
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 from langchain_core.messages import AIMessage
@@ -102,9 +101,7 @@ class TestL1L2CacheLookup:
         gc.collect()
 
     @pytest.mark.asyncio
-    async def test_l1_cache_hit_returns_immediately(
-        self, mock_llm_factory, mock_settings_no_redis, mock_redis_client
-    ):
+    async def test_l1_cache_hit_returns_immediately(self, mock_llm_factory, mock_settings_no_redis, mock_redis_client):
         """L1 cache hit returns immediately without checking L2 or calling LLM."""
         from mcp_server_langgraph.api.v1.ai_ux_service import AIUXService
 
@@ -130,16 +127,12 @@ class TestL1L2CacheLookup:
         mock_llm_factory.ainvoke.assert_not_called()
 
     @pytest.mark.asyncio
-    async def test_l1_miss_l2_hit_populates_l1(
-        self, mock_llm_factory, mock_settings_no_redis, mock_redis_client
-    ):
+    async def test_l1_miss_l2_hit_populates_l1(self, mock_llm_factory, mock_settings_no_redis, mock_redis_client):
         """L1 miss + L2 hit populates L1 cache and returns."""
         from mcp_server_langgraph.api.v1.ai_ux_service import AIUXService
 
         cached_data = {"cached": True, "data": "from_l2"}
-        mock_redis_client.get = AsyncMock(
-            return_value=json.dumps(cached_data).encode()
-        )
+        mock_redis_client.get = AsyncMock(return_value=json.dumps(cached_data).encode())
 
         service = AIUXService(
             llm_factory=mock_llm_factory,
@@ -159,9 +152,7 @@ class TestL1L2CacheLookup:
         assert service._response_cache[cache_key] == cached_data
 
     @pytest.mark.asyncio
-    async def test_l1_miss_l2_miss_returns_none(
-        self, mock_llm_factory, mock_settings_no_redis, mock_redis_client
-    ):
+    async def test_l1_miss_l2_miss_returns_none(self, mock_llm_factory, mock_settings_no_redis, mock_redis_client):
         """L1 miss + L2 miss returns None."""
         from mcp_server_langgraph.api.v1.ai_ux_service import AIUXService
 
@@ -195,9 +186,7 @@ class TestL1L2CacheStore:
         gc.collect()
 
     @pytest.mark.asyncio
-    async def test_stores_to_both_l1_and_l2(
-        self, mock_llm_factory, mock_settings, mock_redis_client
-    ):
+    async def test_stores_to_both_l1_and_l2(self, mock_llm_factory, mock_settings, mock_redis_client):
         """Storing response populates both L1 and L2 caches."""
         from mcp_server_langgraph.api.v1.ai_ux_service import AIUXService
 
@@ -225,9 +214,7 @@ class TestL1L2CacheStore:
         )
 
     @pytest.mark.asyncio
-    async def test_stores_to_l1_only_when_redis_disabled(
-        self, mock_llm_factory, mock_settings_no_redis
-    ):
+    async def test_stores_to_l1_only_when_redis_disabled(self, mock_llm_factory, mock_settings_no_redis):
         """When Redis is disabled, only L1 cache is populated."""
         from mcp_server_langgraph.api.v1.ai_ux_service import AIUXService
 
@@ -344,16 +331,12 @@ class TestStaleWhileRevalidate:
         gc.collect()
 
     @pytest.mark.asyncio
-    async def test_returns_stale_data_while_revalidating(
-        self, mock_llm_factory, mock_settings_no_redis, mock_redis_client
-    ):
+    async def test_returns_stale_data_while_revalidating(self, mock_llm_factory, mock_settings_no_redis, mock_redis_client):
         """Returns stale data immediately while revalidating in background."""
         from mcp_server_langgraph.api.v1.ai_ux_service import AIUXService
 
         stale_data = {"stale": True, "data": "old_value"}
-        mock_redis_client.get = AsyncMock(
-            return_value=json.dumps(stale_data).encode()
-        )
+        mock_redis_client.get = AsyncMock(return_value=json.dumps(stale_data).encode())
         # Simulate TTL check returning low value (near expiry)
         mock_redis_client.ttl = AsyncMock(return_value=30)  # 30 seconds left
 
@@ -365,24 +348,18 @@ class TestStaleWhileRevalidate:
         service.redis_cache = mock_redis_client
 
         cache_key = "test_swr_key"
-        result = await service.get_tiered_cached_response(
-            cache_key, stale_threshold_seconds=60
-        )
+        result = await service.get_tiered_cached_response(cache_key, stale_threshold_seconds=60)
 
         # Should return stale data immediately
         assert result == stale_data
 
     @pytest.mark.asyncio
-    async def test_returns_fresh_data_without_revalidate(
-        self, mock_llm_factory, mock_settings_no_redis, mock_redis_client
-    ):
+    async def test_returns_fresh_data_without_revalidate(self, mock_llm_factory, mock_settings_no_redis, mock_redis_client):
         """Returns fresh data without triggering revalidation."""
         from mcp_server_langgraph.api.v1.ai_ux_service import AIUXService
 
         fresh_data = {"fresh": True, "data": "new_value"}
-        mock_redis_client.get = AsyncMock(
-            return_value=json.dumps(fresh_data).encode()
-        )
+        mock_redis_client.get = AsyncMock(return_value=json.dumps(fresh_data).encode())
         # Simulate TTL check returning high value (not near expiry)
         mock_redis_client.ttl = AsyncMock(return_value=250)  # 250 seconds left
 
@@ -394,9 +371,7 @@ class TestStaleWhileRevalidate:
         service.redis_cache = mock_redis_client
 
         cache_key = "test_fresh_key"
-        result = await service.get_tiered_cached_response(
-            cache_key, stale_threshold_seconds=60
-        )
+        result = await service.get_tiered_cached_response(cache_key, stale_threshold_seconds=60)
 
         # Should return fresh data
         assert result == fresh_data
@@ -416,9 +391,7 @@ class TestCacheMetrics:
         gc.collect()
 
     @pytest.mark.asyncio
-    async def test_l1_cache_hit_increments_metric(
-        self, mock_llm_factory, mock_settings_no_redis
-    ):
+    async def test_l1_cache_hit_increments_metric(self, mock_llm_factory, mock_settings_no_redis):
         """L1 cache hit increments l1_hit metric."""
         from mcp_server_langgraph.api.v1.ai_ux_service import AIUXService
 
@@ -438,16 +411,12 @@ class TestCacheMetrics:
         # prometheus_client internals. This test documents the expected behavior.
 
     @pytest.mark.asyncio
-    async def test_l2_cache_hit_increments_metric(
-        self, mock_llm_factory, mock_settings_no_redis, mock_redis_client
-    ):
+    async def test_l2_cache_hit_increments_metric(self, mock_llm_factory, mock_settings_no_redis, mock_redis_client):
         """L2 cache hit increments l2_hit metric."""
         from mcp_server_langgraph.api.v1.ai_ux_service import AIUXService
 
         cached_data = {"data": "from_l2"}
-        mock_redis_client.get = AsyncMock(
-            return_value=json.dumps(cached_data).encode()
-        )
+        mock_redis_client.get = AsyncMock(return_value=json.dumps(cached_data).encode())
 
         service = AIUXService(
             llm_factory=mock_llm_factory,
@@ -477,15 +446,11 @@ class TestCacheInvalidation:
         gc.collect()
 
     @pytest.mark.asyncio
-    async def test_invalidate_by_user(
-        self, mock_llm_factory, mock_settings_no_redis, mock_redis_client
-    ):
+    async def test_invalidate_by_user(self, mock_llm_factory, mock_settings_no_redis, mock_redis_client):
         """Can invalidate all cache entries for a specific user."""
         from mcp_server_langgraph.api.v1.ai_ux_service import AIUXService
 
-        mock_redis_client.scan = AsyncMock(
-            return_value=(0, [b"ai_ux:user-123:key1", b"ai_ux:user-123:key2"])
-        )
+        mock_redis_client.scan = AsyncMock(return_value=(0, [b"ai_ux:user-123:key1", b"ai_ux:user-123:key2"]))
         mock_redis_client.delete = AsyncMock(return_value=2)
 
         service = AIUXService(
@@ -509,9 +474,7 @@ class TestCacheInvalidation:
         assert "user-456:persona" in service._response_cache
 
     @pytest.mark.asyncio
-    async def test_invalidate_by_method(
-        self, mock_llm_factory, mock_settings_no_redis, mock_redis_client
-    ):
+    async def test_invalidate_by_method(self, mock_llm_factory, mock_settings_no_redis, mock_redis_client):
         """Can invalidate all cache entries for a specific method."""
         from mcp_server_langgraph.api.v1.ai_ux_service import AIUXService
 
@@ -550,9 +513,7 @@ class TestCacheErrorHandling:
         gc.collect()
 
     @pytest.mark.asyncio
-    async def test_redis_connection_error_falls_back_to_l1(
-        self, mock_llm_factory, mock_settings_no_redis, mock_redis_client
-    ):
+    async def test_redis_connection_error_falls_back_to_l1(self, mock_llm_factory, mock_settings_no_redis, mock_redis_client):
         """Redis connection error falls back to L1 cache only."""
         from mcp_server_langgraph.api.v1.ai_ux_service import AIUXService
 
@@ -572,16 +533,11 @@ class TestCacheErrorHandling:
         assert result is None
 
     @pytest.mark.asyncio
-    async def test_redis_timeout_is_handled_gracefully(
-        self, mock_llm_factory, mock_settings_no_redis, mock_redis_client
-    ):
+    async def test_redis_timeout_is_handled_gracefully(self, mock_llm_factory, mock_settings_no_redis, mock_redis_client):
         """Redis timeout is handled gracefully."""
-        import asyncio
         from mcp_server_langgraph.api.v1.ai_ux_service import AIUXService
 
-        mock_redis_client.get = AsyncMock(
-            side_effect=asyncio.TimeoutError("Redis timeout")
-        )
+        mock_redis_client.get = AsyncMock(side_effect=TimeoutError("Redis timeout"))
 
         service = AIUXService(
             llm_factory=mock_llm_factory,
@@ -597,9 +553,7 @@ class TestCacheErrorHandling:
         assert result is None
 
     @pytest.mark.asyncio
-    async def test_json_decode_error_is_handled(
-        self, mock_llm_factory, mock_settings_no_redis, mock_redis_client
-    ):
+    async def test_json_decode_error_is_handled(self, mock_llm_factory, mock_settings_no_redis, mock_redis_client):
         """Corrupted JSON in Redis is handled gracefully."""
         from mcp_server_langgraph.api.v1.ai_ux_service import AIUXService
 

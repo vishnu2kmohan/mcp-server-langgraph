@@ -20,8 +20,8 @@ from unittest.mock import patch
 import pytest
 
 
-
 pytestmark = pytest.mark.unit
+
 
 @pytest.mark.unit
 @pytest.mark.agents
@@ -82,10 +82,19 @@ class TestScaleEffortCap:
         orchestrator = Orchestrator()
 
         # Very complex task that would normally exceed 10
-        complex_task = " ".join([
-            "comprehensive", "thorough", "detailed", "analyze",
-            "research", "investigate", "compare", "multiple",
-        ] * 5)  # 40 complex keywords + lots of words
+        complex_task = " ".join(
+            [
+                "comprehensive",
+                "thorough",
+                "detailed",
+                "analyze",
+                "research",
+                "investigate",
+                "compare",
+                "multiple",
+            ]
+            * 5
+        )  # 40 complex keywords + lots of words
 
         result = orchestrator.scale_effort(complex_task)
 
@@ -99,10 +108,19 @@ class TestScaleEffortCap:
         orchestrator = Orchestrator()
 
         # Very complex task
-        complex_task = " ".join([
-            "comprehensive", "thorough", "detailed", "analyze",
-            "research", "investigate", "compare", "multiple",
-        ] * 5)
+        complex_task = " ".join(
+            [
+                "comprehensive",
+                "thorough",
+                "detailed",
+                "analyze",
+                "research",
+                "investigate",
+                "compare",
+                "multiple",
+            ]
+            * 5
+        )
 
         with patch("mcp_server_langgraph.agents.orchestrator.feature_flags") as mock_flags:
             mock_flags.max_subagents = 20

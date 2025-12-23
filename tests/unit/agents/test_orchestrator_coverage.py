@@ -20,7 +20,7 @@ from mcp_server_langgraph.agents.orchestrator import (
     Subtask,
     TaskDecomposition,
 )
-from mcp_server_langgraph.agents.subagent import SubagentResult, SubagentStatus
+from mcp_server_langgraph.agents.subagent import SubagentResult
 
 pytestmark = [pytest.mark.unit, pytest.mark.agents]
 
@@ -47,9 +47,7 @@ class TestOrchestratorScaleEffort:
         orchestrator = Orchestrator()
 
         simple_count = orchestrator.scale_effort("Do something")
-        complex_count = orchestrator.scale_effort(
-            "Comprehensive thorough detailed analyze research investigate compare"
-        )
+        complex_count = orchestrator.scale_effort("Comprehensive thorough detailed analyze research investigate compare")
 
         assert complex_count > simple_count
 

@@ -36,9 +36,7 @@ class TestNotificationBroadcaster:
         # Reset to ensure clean state
         registry._notification_broadcaster = None
 
-        with patch(
-            "mcp_server_langgraph.notifications.broadcast.NotificationBroadcaster"
-        ) as mock_class:
+        with patch("mcp_server_langgraph.notifications.broadcast.NotificationBroadcaster") as mock_class:
             mock_instance = MagicMock()
             mock_class.return_value = mock_instance
 
@@ -94,9 +92,7 @@ class TestAlertBroadcaster:
 
         registry._alert_broadcaster = None
 
-        with patch(
-            "mcp_server_langgraph.alerts.broadcaster.AlertBroadcaster"
-        ) as mock_class:
+        with patch("mcp_server_langgraph.alerts.broadcaster.AlertBroadcaster") as mock_class:
             mock_instance = MagicMock()
             mock_class.return_value = mock_instance
 
@@ -143,9 +139,7 @@ class TestAuditEventBroadcaster:
 
         registry._audit_broadcaster = None
 
-        with patch(
-            "mcp_server_langgraph.audit.broadcast.AuditEventBroadcaster"
-        ) as mock_class:
+        with patch("mcp_server_langgraph.audit.broadcast.AuditEventBroadcaster") as mock_class:
             mock_instance = MagicMock()
             mock_class.return_value = mock_instance
 
@@ -192,9 +186,7 @@ class TestAgentRequestBroadcaster:
 
         registry._agent_request_broadcaster = None
 
-        with patch(
-            "mcp_server_langgraph.hitl.broadcast.AgentRequestBroadcaster"
-        ) as mock_class:
+        with patch("mcp_server_langgraph.hitl.broadcast.AgentRequestBroadcaster") as mock_class:
             mock_instance = MagicMock()
             mock_class.return_value = mock_instance
 

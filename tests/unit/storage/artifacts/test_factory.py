@@ -16,8 +16,7 @@ The factory creates:
 from __future__ import annotations
 
 import gc
-from typing import Any
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -48,15 +47,12 @@ class TestArtifactsServiceFactory:
         )
 
         # Create with mock dependencies
-        with patch(
-            "mcp_server_langgraph.storage.artifacts.factory.PostgresArtifactsRepository"
-        ) as mock_pg, patch(
-            "mcp_server_langgraph.storage.artifacts.factory.RedisCachedArtifactsService"
-        ) as mock_redis, patch(
-            "mcp_server_langgraph.storage.artifacts.factory.HybridCloudStorageService"
-        ) as mock_cloud, patch(
-            "mcp_server_langgraph.storage.artifacts.factory.QdrantArtifactVectorService"
-        ) as mock_qdrant:
+        with (
+            patch("mcp_server_langgraph.storage.artifacts.factory.PostgresArtifactsRepository") as mock_pg,
+            patch("mcp_server_langgraph.storage.artifacts.factory.RedisCachedArtifactsService") as mock_redis,
+            patch("mcp_server_langgraph.storage.artifacts.factory.HybridCloudStorageService") as mock_cloud,
+            patch("mcp_server_langgraph.storage.artifacts.factory.QdrantArtifactVectorService") as mock_qdrant,
+        ):
             mock_pg.return_value = MagicMock()
             mock_redis.return_value = MagicMock()
             mock_cloud.return_value = MagicMock()
@@ -75,15 +71,12 @@ class TestArtifactsServiceFactory:
             create_artifacts_service,
         )
 
-        with patch(
-            "mcp_server_langgraph.storage.artifacts.factory.PostgresArtifactsRepository"
-        ) as mock_pg, patch(
-            "mcp_server_langgraph.storage.artifacts.factory.RedisCachedArtifactsService"
-        ) as mock_redis, patch(
-            "mcp_server_langgraph.storage.artifacts.factory.HybridCloudStorageService"
-        ) as mock_cloud, patch(
-            "mcp_server_langgraph.storage.artifacts.factory.QdrantArtifactVectorService"
-        ) as mock_qdrant:
+        with (
+            patch("mcp_server_langgraph.storage.artifacts.factory.PostgresArtifactsRepository") as mock_pg,
+            patch("mcp_server_langgraph.storage.artifacts.factory.RedisCachedArtifactsService") as mock_redis,
+            patch("mcp_server_langgraph.storage.artifacts.factory.HybridCloudStorageService") as mock_cloud,
+            patch("mcp_server_langgraph.storage.artifacts.factory.QdrantArtifactVectorService") as mock_qdrant,
+        ):
             mock_pg.return_value = MagicMock()
             mock_redis.return_value = MagicMock()
             mock_cloud.return_value = MagicMock()
@@ -114,15 +107,12 @@ class TestArtifactsServiceFactoryConfiguration:
             create_artifacts_service,
         )
 
-        with patch(
-            "mcp_server_langgraph.storage.artifacts.factory.PostgresArtifactsRepository"
-        ) as mock_pg, patch(
-            "mcp_server_langgraph.storage.artifacts.factory.RedisCachedArtifactsService"
-        ) as mock_redis, patch(
-            "mcp_server_langgraph.storage.artifacts.factory.HybridCloudStorageService"
-        ) as mock_cloud, patch(
-            "mcp_server_langgraph.storage.artifacts.factory.QdrantArtifactVectorService"
-        ) as mock_qdrant:
+        with (
+            patch("mcp_server_langgraph.storage.artifacts.factory.PostgresArtifactsRepository") as mock_pg,
+            patch("mcp_server_langgraph.storage.artifacts.factory.RedisCachedArtifactsService") as mock_redis,
+            patch("mcp_server_langgraph.storage.artifacts.factory.HybridCloudStorageService") as mock_cloud,
+            patch("mcp_server_langgraph.storage.artifacts.factory.QdrantArtifactVectorService") as mock_qdrant,
+        ):
             mock_pg.return_value = MagicMock()
             mock_redis.return_value = MagicMock()
             mock_cloud.return_value = MagicMock()
@@ -145,15 +135,12 @@ class TestArtifactsServiceFactoryConfiguration:
             create_artifacts_service,
         )
 
-        with patch(
-            "mcp_server_langgraph.storage.artifacts.factory.PostgresArtifactsRepository"
-        ) as mock_pg, patch(
-            "mcp_server_langgraph.storage.artifacts.factory.RedisCachedArtifactsService"
-        ) as mock_redis, patch(
-            "mcp_server_langgraph.storage.artifacts.factory.HybridCloudStorageService"
-        ) as mock_cloud, patch(
-            "mcp_server_langgraph.storage.artifacts.factory.QdrantArtifactVectorService"
-        ) as mock_qdrant:
+        with (
+            patch("mcp_server_langgraph.storage.artifacts.factory.PostgresArtifactsRepository") as mock_pg,
+            patch("mcp_server_langgraph.storage.artifacts.factory.RedisCachedArtifactsService") as mock_redis,
+            patch("mcp_server_langgraph.storage.artifacts.factory.HybridCloudStorageService") as mock_cloud,
+            patch("mcp_server_langgraph.storage.artifacts.factory.QdrantArtifactVectorService") as mock_qdrant,
+        ):
             mock_pg.return_value = MagicMock()
             mock_redis.return_value = MagicMock()
             mock_cloud.return_value = MagicMock()
@@ -174,15 +161,12 @@ class TestArtifactsServiceFactoryConfiguration:
             create_artifacts_service,
         )
 
-        with patch(
-            "mcp_server_langgraph.storage.artifacts.factory.PostgresArtifactsRepository"
-        ) as mock_pg, patch(
-            "mcp_server_langgraph.storage.artifacts.factory.RedisCachedArtifactsService"
-        ) as mock_redis, patch(
-            "mcp_server_langgraph.storage.artifacts.factory.HybridCloudStorageService"
-        ) as mock_cloud, patch(
-            "mcp_server_langgraph.storage.artifacts.factory.QdrantArtifactVectorService"
-        ) as mock_qdrant:
+        with (
+            patch("mcp_server_langgraph.storage.artifacts.factory.PostgresArtifactsRepository") as mock_pg,
+            patch("mcp_server_langgraph.storage.artifacts.factory.RedisCachedArtifactsService") as mock_redis,
+            patch("mcp_server_langgraph.storage.artifacts.factory.HybridCloudStorageService") as mock_cloud,
+            patch("mcp_server_langgraph.storage.artifacts.factory.QdrantArtifactVectorService") as mock_qdrant,
+        ):
             mock_pg.return_value = MagicMock()
             mock_redis.return_value = MagicMock()
             mock_cloud.return_value = MagicMock()
@@ -228,9 +212,7 @@ class TestArtifactsServiceFactoryNoOpVector:
         )
 
         service = NoOpVectorService()
-        results = await service.find_similar(
-            artifact_id="art-1", user_id="user1", limit=5
-        )
+        results = await service.find_similar(artifact_id="art-1", user_id="user1", limit=5)
 
         assert results == []
 

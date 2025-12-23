@@ -80,7 +80,7 @@ v1_router.include_router(workflow_executions_router)
 # Include sessions CRUD endpoints
 v1_router.include_router(sessions_router)
 
-# Include artifacts CRUD endpoints (Hybrid Canvas feature)
+# Include artifacts CRUD endpoints (Studio Canvas feature)
 v1_router.include_router(artifacts_router)
 
 # Include workflow bootstrap endpoints
@@ -143,7 +143,7 @@ v1_router.include_router(ai_router, prefix="/ai", tags=["ai"])
 # Include AI UX endpoints (disclosure, nudges, error recovery, onboarding, metrics)
 v1_router.include_router(ai_ux_router, prefix="/ai", tags=["ai-ux"])
 
-# Include Studio AI endpoints (unified HybridShell AI capabilities - Sprint 1)
+# Include Studio AI endpoints (unified StudioShell AI capabilities - Sprint 1)
 v1_router.include_router(studio_ai_router, prefix="/studio", tags=["studio-ai"])
 
 # Include push notification endpoints (PWA support)

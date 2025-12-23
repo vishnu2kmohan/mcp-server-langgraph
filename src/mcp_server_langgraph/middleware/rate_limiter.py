@@ -65,7 +65,7 @@ PATH_RATE_LIMITS: dict[str, str] = {
     "/api/v1/webhooks/alertmanager": "120/minute",  # Alertmanager webhook
     # Push notifications - prevent subscription spam
     "/api/v1/notifications/push/subscribe": "10/minute",  # Push subscription
-    # Artifacts search - AI-intensive endpoints (Hybrid Canvas)
+    # Artifacts search - AI-intensive endpoints (Studio Canvas)
     "/api/v1/artifacts/search": f"{settings.artifacts_search_rate_limit}/minute",
     # AI UX endpoints - LLM-backed, cost control (Phase 6)
     "/api/v1/ai/persona/analyze": "30/minute",

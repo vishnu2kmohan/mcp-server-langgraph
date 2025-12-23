@@ -27,7 +27,6 @@ describe("ErrorTypes", () => {
     vi.clearAllMocks();
   });
 
-
   describe("ERROR_CATEGORIES", () => {
     it("defines all 9 error categories", () => {
       expect(ERROR_CATEGORIES).toHaveLength(9);

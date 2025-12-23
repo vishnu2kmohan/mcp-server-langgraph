@@ -56,9 +56,7 @@ class TestNotificationHandlerInit:
         mock_metrics = MagicMock()
 
         with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
-            handler = NotificationWebSocketHandler(
-                config=config, broadcaster=mock_broadcaster, metrics=mock_metrics
-            )
+            handler = NotificationWebSocketHandler(config=config, broadcaster=mock_broadcaster, metrics=mock_metrics)
 
         assert handler._metrics is mock_metrics
 

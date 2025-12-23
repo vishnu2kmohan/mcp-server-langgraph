@@ -17,7 +17,6 @@ from __future__ import annotations
 
 import gc
 from typing import Any
-from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -263,9 +262,7 @@ class TestConfidenceApprovalNodePayload:
         request = result["approval_requests"][0]
 
         assert "confidence" in request["action_description"].lower()
-        assert "55%" in request["action_description"] or "0.55" in request[
-            "action_description"
-        ]
+        assert "55%" in request["action_description"] or "0.55" in request["action_description"]
 
     def test_node_sets_current_approval_id(self) -> None:
         """Node should set current_approval_id in state."""

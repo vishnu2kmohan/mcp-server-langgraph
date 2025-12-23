@@ -13,7 +13,7 @@ TDD: Tests verify integration between actual HITL components.
 from __future__ import annotations
 
 import gc
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -221,7 +221,6 @@ class TestHITLWebSocketIntegration:
         from mcp_server_langgraph.api.v1.agent_request_websocket import (
             broadcast_approval_required,
             get_broadcaster,
-            ApprovalRequiredMessage,
         )
         from mcp_server_langgraph.api.v1.agent_requests import AgentRequest, AgentRequestType, AgentRequestStatus
 
@@ -469,9 +468,7 @@ class TestHITLFeatureFlagIntegration:
         from mcp_server_langgraph.agents.subagent import SubagentResult
 
         # Patch feature flags to disable HITL
-        with patch(
-            "mcp_server_langgraph.agents.orchestrator.feature_flags"
-        ) as mock_flags:
+        with patch("mcp_server_langgraph.agents.orchestrator.feature_flags") as mock_flags:
             mock_flags.enable_agent_hitl = False
 
             orchestrator = Orchestrator()
@@ -833,7 +830,6 @@ class TestHITLAIExplanationIntegration:
         from mcp_server_langgraph.core.interrupts.ai_explanation import AIExplanation
         from mcp_server_langgraph.api.v1.agent_requests import (
             AgentRequestQueue,
-            AgentRequestType,
         )
 
         # 1. Create low-confidence result

@@ -188,7 +188,7 @@ const NAV_ITEMS: NavItem[] = [
 ### Fix 3: Deny-by-default pattern
 
 ```typescript
-// In HybridShell ActivityBar (Phase 3)
+// In StudioShell ActivityBar (Phase 3)
 const useVisibleNavItems = () => {
   const persona = useAppSelector(selectPersona);
 
@@ -202,11 +202,11 @@ const useVisibleNavItems = () => {
 
 ---
 
-## Impact on Hybrid Canvas Rebuild
+## Impact on Studio Canvas Rebuild
 
 ### Phase 3 (Weeks 6-8): Migration
 
-The new HybridShell `ActivityBar` component will implement proper RBAC from the start:
+The new StudioShell `ActivityBar` component will implement proper RBAC from the start:
 
 1. **Deny-by-default** - Items only shown if explicitly allowed
 2. **Persona-aware groups** - Only show groups user can access
@@ -216,7 +216,7 @@ The new HybridShell `ActivityBar` component will implement proper RBAC from the 
 
 When removing AppShell:
 1. Document that legacy LeftSidebar had RBAC gaps
-2. Verify HybridShell ActivityBar has proper filtering
+2. Verify StudioShell ActivityBar has proper filtering
 3. Run E2E tests for each persona to verify correct visibility
 
 ---
@@ -257,4 +257,4 @@ describe('ActivityBar RBAC', () => {
 
 The current LeftSidebar has a significant RBAC gap - all navigation items are visible to all users regardless of role. While routes are protected by PersonaGuard, the UI incorrectly shows links that lead to access-denied pages.
 
-**Recommendation:** Fix this in the new HybridShell ActivityBar (Phase 3) rather than modifying legacy LeftSidebar. This aligns with the Strangler Fig pattern.
+**Recommendation:** Fix this in the new StudioShell ActivityBar (Phase 3) rather than modifying legacy LeftSidebar. This aligns with the Strangler Fig pattern.

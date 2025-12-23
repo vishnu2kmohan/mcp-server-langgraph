@@ -57,9 +57,7 @@ class TestHeartMetricsHandlerInit:
         mock_metrics = MagicMock()
 
         with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
-            handler = HeartMetricsHandler(
-                config=config, metrics_service=mock_service, metrics=mock_metrics
-            )
+            handler = HeartMetricsHandler(config=config, metrics_service=mock_service, metrics=mock_metrics)
 
         assert handler._metrics is mock_metrics
 
@@ -149,9 +147,7 @@ class TestHeartMetricsHandlerMessages:
         with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
             handler = HeartMetricsHandler(config=config, metrics_service=mock_service)
 
-        message = MessageEnvelope(
-            type="set_time_range", id="msg-1", payload={"time_range": "7d"}
-        )
+        message = MessageEnvelope(type="set_time_range", id="msg-1", payload={"time_range": "7d"})
         response = await handler.handle_message(message)
 
         assert response is not None
@@ -174,9 +170,7 @@ class TestHeartMetricsHandlerMessages:
         with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
             handler = HeartMetricsHandler(config=config, metrics_service=mock_service)
 
-        message = MessageEnvelope(
-            type="set_time_range", id="msg-1", payload={"time_range": "invalid"}
-        )
+        message = MessageEnvelope(type="set_time_range", id="msg-1", payload={"time_range": "invalid"})
         response = await handler.handle_message(message)
 
         assert response is not None
@@ -224,9 +218,7 @@ class TestHeartMetricsHandlerMessages:
         with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
             handler = HeartMetricsHandler(config=config, metrics_service=mock_service)
 
-        message = MessageEnvelope(
-            type="subscribe_dimension", id="msg-1", payload={"dimension": "happiness"}
-        )
+        message = MessageEnvelope(type="subscribe_dimension", id="msg-1", payload={"dimension": "happiness"})
         response = await handler.handle_message(message)
 
         assert response is not None
@@ -270,9 +262,7 @@ class TestHeartMetricsHandlerMessages:
         with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
             handler = HeartMetricsHandler(config=config, metrics_service=mock_service)
 
-        message = MessageEnvelope(
-            type="subscribe_dimension", id="msg-1", payload={"dimension": "invalid"}
-        )
+        message = MessageEnvelope(type="subscribe_dimension", id="msg-1", payload={"dimension": "invalid"})
         response = await handler.handle_message(message)
 
         assert response is not None
@@ -295,9 +285,7 @@ class TestHeartMetricsHandlerMessages:
 
         handler.subscribed_dimensions = {"happiness", "engagement"}
 
-        message = MessageEnvelope(
-            type="unsubscribe_dimension", id="msg-1", payload={"dimension": "happiness"}
-        )
+        message = MessageEnvelope(type="unsubscribe_dimension", id="msg-1", payload={"dimension": "happiness"})
         response = await handler.handle_message(message)
 
         assert response is not None
@@ -439,7 +427,7 @@ class TestHeartMetricsConstants:
         )
 
         expected = {"happiness", "engagement", "adoption", "retention", "task_success"}
-        assert HEART_DIMENSIONS == expected
+        assert expected == HEART_DIMENSIONS
 
     def test_valid_time_ranges(self) -> None:
         """GIVEN VALID_TIME_RANGES WHEN accessed THEN contains expected ranges."""
@@ -448,7 +436,7 @@ class TestHeartMetricsConstants:
         )
 
         expected = {"1h", "6h", "24h", "7d", "30d", "90d"}
-        assert VALID_TIME_RANGES == expected
+        assert expected == VALID_TIME_RANGES
 
 
 @pytest.mark.xdist_group(name="websocket_heart_metrics_protocol")

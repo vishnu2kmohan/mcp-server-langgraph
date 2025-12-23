@@ -20,7 +20,7 @@ from __future__ import annotations
 
 import gc
 from datetime import UTC, datetime
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
@@ -65,9 +65,7 @@ class TestAlertWebSocketEndpoint:
         from mcp_server_langgraph.api.v1.alert_websocket import alert_websocket_router
 
         routes = [r for r in alert_websocket_router.routes]
-        websocket_routes = [
-            r for r in routes if hasattr(r, "path") and "alerts" in r.path
-        ]
+        websocket_routes = [r for r in routes if hasattr(r, "path") and "alerts" in r.path]
         assert len(websocket_routes) > 0, "Should have /alerts websocket route"
 
     def test_broadcaster_getter_exists(self) -> None:

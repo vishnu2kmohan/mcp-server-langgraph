@@ -13,7 +13,6 @@ Reference: ADR-0026 - Resilience Patterns
 """
 
 import gc
-from unittest.mock import MagicMock, patch
 
 import pytest
 

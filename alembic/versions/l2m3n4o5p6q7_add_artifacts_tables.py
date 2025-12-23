@@ -82,31 +82,13 @@ def upgrade() -> None:
     )
 
     # INDEXES FOR ARTIFACTS
-    op.execute(
-        "CREATE INDEX IF NOT EXISTS ix_artifacts_session_id "
-        "ON artifacts(session_id)"
-    )
-    op.execute(
-        "CREATE INDEX IF NOT EXISTS ix_artifacts_user_id "
-        "ON artifacts(user_id)"
-    )
-    op.execute(
-        "CREATE INDEX IF NOT EXISTS ix_artifacts_session_updated "
-        "ON artifacts(session_id, updated_at DESC)"
-    )
-    op.execute(
-        "CREATE INDEX IF NOT EXISTS ix_artifacts_user_updated "
-        "ON artifacts(user_id, updated_at DESC)"
-    )
-    op.execute(
-        "CREATE INDEX IF NOT EXISTS ix_artifacts_user_session "
-        "ON artifacts(user_id, session_id)"
-    )
+    op.execute("CREATE INDEX IF NOT EXISTS ix_artifacts_session_id ON artifacts(session_id)")
+    op.execute("CREATE INDEX IF NOT EXISTS ix_artifacts_user_id ON artifacts(user_id)")
+    op.execute("CREATE INDEX IF NOT EXISTS ix_artifacts_session_updated ON artifacts(session_id, updated_at DESC)")
+    op.execute("CREATE INDEX IF NOT EXISTS ix_artifacts_user_updated ON artifacts(user_id, updated_at DESC)")
+    op.execute("CREATE INDEX IF NOT EXISTS ix_artifacts_user_session ON artifacts(user_id, session_id)")
     # GIN index for full-text search
-    op.execute(
-        "CREATE INDEX IF NOT EXISTS ix_artifacts_search_vector "
-        "ON artifacts USING gin(search_vector)"
-    )
+    op.execute("CREATE INDEX IF NOT EXISTS ix_artifacts_search_vector ON artifacts USING gin(search_vector)")
 
     # UPDATED_AT TRIGGER FOR ARTIFACTS
     op.execute(
@@ -158,30 +140,12 @@ def upgrade() -> None:
     )
 
     # COMMENTS FOR ARTIFACTS
-    op.execute(
-        "COMMENT ON TABLE artifacts IS "
-        "'Canvas artifacts storage for Hybrid Canvas feature with versioning support'"
-    )
-    op.execute(
-        "COMMENT ON COLUMN artifacts.type IS "
-        "'Artifact type: code, markdown, json, jsx, mermaid, html'"
-    )
-    op.execute(
-        "COMMENT ON COLUMN artifacts.content_type IS "
-        "'Content MIME type hint: code, markdown, json, etc.'"
-    )
-    op.execute(
-        "COMMENT ON COLUMN artifacts.storage_type IS "
-        "'Storage backend: inline (PostgreSQL), s3, gcs, or azure'"
-    )
-    op.execute(
-        "COMMENT ON COLUMN artifacts.storage_key IS "
-        "'Cloud storage key when storage_type is not inline'"
-    )
-    op.execute(
-        "COMMENT ON COLUMN artifacts.edit_metadata IS "
-        "'JSONB metadata: {edit_type, ai_confidence, language, etc.}'"
-    )
+    op.execute("COMMENT ON TABLE artifacts IS 'Canvas artifacts storage for Hybrid Canvas feature with versioning support'")
+    op.execute("COMMENT ON COLUMN artifacts.type IS 'Artifact type: code, markdown, json, jsx, mermaid, html'")
+    op.execute("COMMENT ON COLUMN artifacts.content_type IS 'Content MIME type hint: code, markdown, json, etc.'")
+    op.execute("COMMENT ON COLUMN artifacts.storage_type IS 'Storage backend: inline (PostgreSQL), s3, gcs, or azure'")
+    op.execute("COMMENT ON COLUMN artifacts.storage_key IS 'Cloud storage key when storage_type is not inline'")
+    op.execute("COMMENT ON COLUMN artifacts.edit_metadata IS 'JSONB metadata: {edit_type, ai_confidence, language, etc.}'")
 
     # ==========================================================================
     # ARTIFACT_VERSIONS TABLE (Shadow table for version history)
@@ -224,32 +188,16 @@ def upgrade() -> None:
     )
 
     # INDEXES FOR ARTIFACT_VERSIONS
-    op.execute(
-        "CREATE INDEX IF NOT EXISTS ix_artifact_versions_artifact_id "
-        "ON artifact_versions(artifact_id)"
-    )
-    op.execute(
-        "CREATE INDEX IF NOT EXISTS ix_artifact_versions_artifact_version "
-        "ON artifact_versions(artifact_id, version)"
-    )
-    op.execute(
-        "CREATE INDEX IF NOT EXISTS ix_artifact_versions_created_at "
-        "ON artifact_versions(created_at DESC)"
-    )
+    op.execute("CREATE INDEX IF NOT EXISTS ix_artifact_versions_artifact_id ON artifact_versions(artifact_id)")
+    op.execute("CREATE INDEX IF NOT EXISTS ix_artifact_versions_artifact_version ON artifact_versions(artifact_id, version)")
+    op.execute("CREATE INDEX IF NOT EXISTS ix_artifact_versions_created_at ON artifact_versions(created_at DESC)")
 
     # COMMENTS FOR ARTIFACT_VERSIONS
+    op.execute("COMMENT ON TABLE artifact_versions IS 'Version history shadow table for artifacts, enables history/rollback'")
     op.execute(
-        "COMMENT ON TABLE artifact_versions IS "
-        "'Version history shadow table for artifacts, enables history/rollback'"
+        "COMMENT ON COLUMN artifact_versions.parent_version IS 'Version this was derived from (for future DAG support)'"
     )
-    op.execute(
-        "COMMENT ON COLUMN artifact_versions.parent_version IS "
-        "'Version this was derived from (for future DAG support)'"
-    )
-    op.execute(
-        "COMMENT ON COLUMN artifact_versions.created_by IS "
-        "'User ID who created this version'"
-    )
+    op.execute("COMMENT ON COLUMN artifact_versions.created_by IS 'User ID who created this version'")
     op.execute(
         "COMMENT ON COLUMN artifact_versions.version_metadata IS "
         "'JSONB metadata: {edit_type: user|ai-suggestion|ai-generation, ai_confidence, diff_stats}'"
@@ -293,8 +241,7 @@ def upgrade() -> None:
     )
 
     op.execute(
-        "COMMENT ON FUNCTION get_artifact_versions IS "
-        "'Retrieve latest N versions of an artifact for version history display'"
+        "COMMENT ON FUNCTION get_artifact_versions IS 'Retrieve latest N versions of an artifact for version history display'"
     )
 
 

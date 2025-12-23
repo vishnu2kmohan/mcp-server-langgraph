@@ -110,17 +110,17 @@ class TestUIFeatureFlags:
 
         assert flags.enable_ai_suggestions is True
 
-    def test_enable_mcp_websocket_default_false(self) -> None:
+    def test_enable_mcp_websocket_default_true(self) -> None:
         """
         GIVEN default feature flags
         WHEN FeatureFlags is instantiated
-        THEN enable_mcp_websocket should be False (experimental)
+        THEN enable_mcp_websocket should be True (production-ready)
         """
         from mcp_server_langgraph.core.feature_flags import FeatureFlags
 
         flags = FeatureFlags()
 
-        assert flags.enable_mcp_websocket is False
+        assert flags.enable_mcp_websocket is True
 
     def test_enable_interactive_artifacts_default_true(self) -> None:
         """
@@ -233,7 +233,7 @@ class TestUIFeatureFlagsHelperMethods:
         flags = FeatureFlags()
 
         assert flags.is_feature_enabled("enable_workflows_feature") is True
-        assert flags.is_feature_enabled("enable_mcp_websocket") is False
+        assert flags.is_feature_enabled("enable_mcp_websocket") is True
 
     def test_get_feature_value_works_for_ui_flags(self) -> None:
         """
@@ -319,8 +319,8 @@ class TestGetUIFeaturesForRole:
         features = flags.get_ui_features_for_role("admin")
 
         assert "mcp_websocket" in features
-        # Experimental, so False by default
-        assert features["mcp_websocket"] is False
+        # Production-ready, so True by default
+        assert features["mcp_websocket"] is True
 
     def test_features_dict_includes_interactive_artifacts(self) -> None:
         """
@@ -513,9 +513,7 @@ class TestDevToolsFeatureFlagsInUIFeatures:
         assert "devtools_panel" in features
         assert features["devtools_panel"] is True
 
-    def test_devtools_ai_flags_enabled_via_env_reflected_in_features(
-        self, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
+    def test_devtools_ai_flags_enabled_via_env_reflected_in_features(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """
         GIVEN devtools AI flags enabled via environment
         WHEN get_ui_features_for_role is called

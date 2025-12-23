@@ -18,9 +18,7 @@ from __future__ import annotations
 
 import asyncio
 import gc
-import hashlib
-import os
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -50,10 +48,7 @@ def _redis_available() -> bool:
         return False
 
 
-SKIP_IF_NO_REDIS = pytest.mark.skipif(
-    not _redis_available(),
-    reason="Redis not available for integration tests"
-)
+SKIP_IF_NO_REDIS = pytest.mark.skipif(not _redis_available(), reason="Redis not available for integration tests")
 
 
 @pytest.mark.integration
@@ -250,6 +245,7 @@ class TestScreenshotCacheRealRedis:
             }
 
             import pickle
+
             serialized = pickle.dumps(test_data)
 
             await redis_client.setex(cache_key, SCREENSHOT_CACHE_TTL, serialized)
@@ -292,6 +288,7 @@ class TestScreenshotCacheRealRedis:
 
             # Store with 1 second TTL
             import pickle
+
             test_data = {"image_data": "ttltest"}
             serialized = pickle.dumps(test_data)
 
@@ -342,6 +339,7 @@ class TestScreenshotCacheRealRedis:
 
             # Store different data for each
             import pickle
+
             data1 = {"image_data": "image1"}
             data2 = {"image_data": "image2"}
 
@@ -381,7 +379,6 @@ class TestVisualVerificationRetryIntegration:
         THEN delays should follow exponential pattern
         """
         import time
-        from unittest.mock import AsyncMock, MagicMock, patch
 
         import httpx
 
@@ -442,7 +439,6 @@ class TestVisualVerificationRetryIntegration:
         THEN retry metrics should be recorded
         """
         import httpx
-        from unittest.mock import AsyncMock, MagicMock, patch
 
         from mcp_server_langgraph.llm.verifier import OutputVerifier
 
@@ -500,7 +496,6 @@ class TestVisualVerificationCacheHitIntegration:
         WHEN verifying URL
         THEN screenshot capture should be skipped
         """
-        from unittest.mock import AsyncMock, MagicMock, patch
 
         from mcp_server_langgraph.llm.verifier import OutputVerifier
 
@@ -559,7 +554,6 @@ FEEDBACK: OK"""
         WHEN verifying URL
         THEN screenshot should be captured and cached
         """
-        from unittest.mock import AsyncMock, MagicMock, patch
 
         from mcp_server_langgraph.llm.verifier import OutputVerifier
 
@@ -587,9 +581,7 @@ FEEDBACK: OK"""
             mock_cache.aset = AsyncMock()
             mock_get_cache.return_value = mock_cache
 
-            mock_llm.ainvoke.return_value = MagicMock(
-                content="OVERALL: 0.9\nFEEDBACK: OK"
-            )
+            mock_llm.ainvoke.return_value = MagicMock(content="OVERALL: 0.9\nFEEDBACK: OK")
 
             result = await verifier.verify_with_visual(
                 url="https://example.com",
@@ -611,7 +603,6 @@ FEEDBACK: OK"""
         WHEN verifying URL
         THEN cache should be bypassed
         """
-        from unittest.mock import AsyncMock, MagicMock, patch
 
         from mcp_server_langgraph.llm.verifier import OutputVerifier
 
@@ -637,9 +628,7 @@ FEEDBACK: OK"""
             mock_cache.aset = AsyncMock()
             mock_get_cache.return_value = mock_cache
 
-            mock_llm.ainvoke.return_value = MagicMock(
-                content="OVERALL: 0.9\nFEEDBACK: OK"
-            )
+            mock_llm.ainvoke.return_value = MagicMock(content="OVERALL: 0.9\nFEEDBACK: OK")
 
             result = await verifier.verify_with_visual(
                 url="https://example.com",

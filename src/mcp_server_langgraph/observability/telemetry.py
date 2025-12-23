@@ -957,13 +957,21 @@ error_counter = type(
 rate_limit_token_exhausted_counter = type(
     "LazyMetric",
     (),
-    {"add": lambda self, *args, **kwargs: _safe_metric_operation("rate_limit_token_exhausted_counter", "add", *args, **kwargs)},
+    {
+        "add": lambda self, *args, **kwargs: _safe_metric_operation(
+            "rate_limit_token_exhausted_counter", "add", *args, **kwargs
+        )
+    },
 )()
 
 rate_limit_wait_time_histogram = type(
     "LazyMetric",
     (),
-    {"record": lambda self, *args, **kwargs: _safe_metric_operation("rate_limit_wait_time_histogram", "record", *args, **kwargs)},
+    {
+        "record": lambda self, *args, **kwargs: _safe_metric_operation(
+            "rate_limit_wait_time_histogram", "record", *args, **kwargs
+        )
+    },
 )()
 
 rate_limit_tokens_available_gauge = type(
@@ -982,20 +990,32 @@ adaptive_bulkhead_limit_gauge = type(
 adaptive_bulkhead_error_rate_gauge = type(
     "LazyMetric",
     (),
-    {"set": lambda self, *args, **kwargs: _safe_metric_operation("adaptive_bulkhead_error_rate_gauge", "set", *args, **kwargs)},
+    {
+        "set": lambda self, *args, **kwargs: _safe_metric_operation(
+            "adaptive_bulkhead_error_rate_gauge", "set", *args, **kwargs
+        )
+    },
 )()
 
 adaptive_bulkhead_adjustment_counter = type(
     "LazyMetric",
     (),
-    {"add": lambda self, *args, **kwargs: _safe_metric_operation("adaptive_bulkhead_adjustment_counter", "add", *args, **kwargs)},
+    {
+        "add": lambda self, *args, **kwargs: _safe_metric_operation(
+            "adaptive_bulkhead_adjustment_counter", "add", *args, **kwargs
+        )
+    },
 )()
 
 # HTTP connection pool metrics (ADR-0026)
 http_pool_active_connections_gauge = type(
     "LazyMetric",
     (),
-    {"set": lambda self, *args, **kwargs: _safe_metric_operation("http_pool_active_connections_gauge", "set", *args, **kwargs)},
+    {
+        "set": lambda self, *args, **kwargs: _safe_metric_operation(
+            "http_pool_active_connections_gauge", "set", *args, **kwargs
+        )
+    },
 )()
 
 http_pool_max_connections_gauge = type(

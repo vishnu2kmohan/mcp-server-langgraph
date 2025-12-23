@@ -4,7 +4,13 @@
  * Tests for AI-enhanced command palette with natural language interpretation.
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { render, screen, fireEvent, waitFor, cleanup } from "@testing-library/react";
+import {
+  render,
+  screen,
+  fireEvent,
+  waitFor,
+  cleanup,
+} from "@testing-library/react";
 import { axe, toHaveNoViolations } from "jest-axe";
 
 expect.extend(toHaveNoViolations);

@@ -270,15 +270,9 @@ class TestAgentRegistry:
 
         registry = AgentRegistry()
 
-        registry.register(
-            AgentDefinition(name="agent1", description="First", prompt="First prompt")
-        )
-        registry.register(
-            AgentDefinition(name="agent2", description="Second", prompt="Second prompt")
-        )
-        registry.register(
-            AgentDefinition(name="agent3", description="Third", prompt="Third prompt")
-        )
+        registry.register(AgentDefinition(name="agent1", description="First", prompt="First prompt"))
+        registry.register(AgentDefinition(name="agent2", description="Second", prompt="Second prompt"))
+        registry.register(AgentDefinition(name="agent3", description="Third", prompt="Third prompt"))
 
         agents = registry.list_agents()
 
@@ -295,9 +289,7 @@ class TestAgentRegistry:
         )
 
         registry = AgentRegistry()
-        registry.register(
-            AgentDefinition(name="temp", description="Temp", prompt="Temp")
-        )
+        registry.register(AgentDefinition(name="temp", description="Temp", prompt="Temp"))
 
         assert "temp" in registry.list_agents()
 

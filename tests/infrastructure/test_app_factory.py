@@ -453,6 +453,7 @@ class TestProductionStoreWiring:
                 assert isinstance(push_store, PostgresPushSubscriptionStore)
                 # Feedback store type check
                 from mcp_server_langgraph.alerts.feedback import PostgresFeedbackStore
+
                 assert isinstance(feedback_store, PostgresFeedbackStore)
 
     @pytest.mark.asyncio

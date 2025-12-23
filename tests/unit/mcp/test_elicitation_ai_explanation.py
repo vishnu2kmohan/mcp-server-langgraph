@@ -10,7 +10,6 @@ TDD: These tests are written FIRST before implementation.
 from __future__ import annotations
 
 import gc
-from unittest.mock import MagicMock
 
 import pytest
 

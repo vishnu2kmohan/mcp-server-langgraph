@@ -12,7 +12,6 @@ Reference: https://modelcontextprotocol.io/specification/2025-11-25/server/tools
 
 from __future__ import annotations
 
-import json
 import logging
 from typing import TYPE_CHECKING, Any
 
@@ -110,15 +109,11 @@ class OrchestrationToolHandler:
 
         try:
             max_subtasks = arguments.get("max_subtasks", 5)
-            decomposition = await self._orchestrator.decompose_task(
-                task, max_subtasks=max_subtasks
-            )
+            decomposition = await self._orchestrator.decompose_task(task, max_subtasks=max_subtasks)
 
             # Store in resource provider if available
             if self._resource_provider is not None:
-                self._resource_provider.store_task(
-                    decomposition.task_id, decomposition
-                )
+                self._resource_provider.store_task(decomposition.task_id, decomposition)
 
             return decomposition.model_dump()
 
@@ -161,9 +156,7 @@ class OrchestrationToolHandler:
 
             if hitl_threshold is not None:
                 # Use HITL-aware execution
-                results = await self._orchestrator.execute_with_hitl(
-                    decomposition, threshold=hitl_threshold
-                )
+                results = await self._orchestrator.execute_with_hitl(decomposition, threshold=hitl_threshold)
             else:
                 # Standard execution
                 results = await self._orchestrator.execute(decomposition)

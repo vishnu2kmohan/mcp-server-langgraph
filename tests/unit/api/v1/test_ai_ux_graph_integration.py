@@ -63,6 +63,7 @@ def mock_settings():
 def artifact_storage():
     """Create ArtifactStorage instance."""
     from mcp_server_langgraph.agents.artifacts import ArtifactStorage
+
     return ArtifactStorage()
 
 
@@ -92,9 +93,7 @@ class TestRunCompositeAnalysisWithGraph:
         assert hasattr(service, "get_analysis_graph") or hasattr(service, "_analysis_graph")
 
     @pytest.mark.asyncio
-    async def test_run_composite_with_graph_produces_same_results(
-        self, mock_llm_factory, mock_settings, artifact_storage
-    ):
+    async def test_run_composite_with_graph_produces_same_results(self, mock_llm_factory, mock_settings, artifact_storage):
         """Graph-based composite analysis produces same results as direct calls."""
         from mcp_server_langgraph.api.v1.ai_ux import CompositeAnalysisRequest
         from mcp_server_langgraph.api.v1.ai_ux_service import AIUXService
@@ -130,9 +129,7 @@ class TestRunCompositeAnalysisWithGraph:
         assert result.disclosure_result is not None
 
     @pytest.mark.asyncio
-    async def test_graph_execution_stores_to_artifact_storage(
-        self, mock_llm_factory, mock_settings, artifact_storage
-    ):
+    async def test_graph_execution_stores_to_artifact_storage(self, mock_llm_factory, mock_settings, artifact_storage):
         """StateGraph execution stores results to artifact storage."""
         from mcp_server_langgraph.api.v1.ai_ux import CompositeAnalysisRequest
         from mcp_server_langgraph.api.v1.ai_ux_service import AIUXService
@@ -191,9 +188,7 @@ class TestParallelNodeExecution:
         assert graph is not None
 
     @pytest.mark.asyncio
-    async def test_parallel_analyses_complete_faster(
-        self, mock_llm_factory, mock_settings
-    ):
+    async def test_parallel_analyses_complete_faster(self, mock_llm_factory, mock_settings):
         """Parallel execution should complete faster than sequential."""
         import time
         from mcp_server_langgraph.api.v1.ai_ux_graph import (
@@ -204,6 +199,7 @@ class TestParallelNodeExecution:
         # Add artificial delay to mock LLM calls
         async def slow_response(*args, **kwargs):
             import asyncio
+
             await asyncio.sleep(0.05)  # 50ms delay
             return AIMessage(content=SAMPLE_PERSONA_LLM_RESPONSE)
 
@@ -239,9 +235,7 @@ class TestParallelNodeExecution:
         # Sequential would take ~100ms+, parallel could be ~50ms+
 
     @pytest.mark.asyncio
-    async def test_all_analyses_run_when_enabled(
-        self, mock_llm_factory, mock_settings
-    ):
+    async def test_all_analyses_run_when_enabled(self, mock_llm_factory, mock_settings):
         """All enabled analyses run in graph execution."""
         from mcp_server_langgraph.api.v1.ai_ux_graph import (
             UXAnalysisState,
@@ -295,18 +289,14 @@ class TestOpenTelemetrySpans:
         gc.collect()
 
     @pytest.mark.asyncio
-    async def test_graph_execution_creates_trace_span(
-        self, mock_llm_factory, mock_settings
-    ):
+    async def test_graph_execution_creates_trace_span(self, mock_llm_factory, mock_settings):
         """Graph execution creates OpenTelemetry trace spans."""
         from mcp_server_langgraph.api.v1.ai_ux_graph import (
             UXAnalysisState,
             create_ux_analysis_graph,
         )
 
-        mock_llm_factory.ainvoke = AsyncMock(
-            return_value=AIMessage(content=SAMPLE_PERSONA_LLM_RESPONSE)
-        )
+        mock_llm_factory.ainvoke = AsyncMock(return_value=AIMessage(content=SAMPLE_PERSONA_LLM_RESPONSE))
 
         graph = create_ux_analysis_graph(mock_llm_factory, mock_settings)
         compiled = graph.compile()
@@ -332,18 +322,14 @@ class TestOpenTelemetrySpans:
         assert result is not None
 
     @pytest.mark.asyncio
-    async def test_node_execution_logs_debug_info(
-        self, mock_llm_factory, mock_settings
-    ):
+    async def test_node_execution_logs_debug_info(self, mock_llm_factory, mock_settings):
         """Node execution logs debug information."""
         from mcp_server_langgraph.api.v1.ai_ux_graph import (
             UXAnalysisState,
             create_ux_analysis_graph,
         )
 
-        mock_llm_factory.ainvoke = AsyncMock(
-            return_value=AIMessage(content=SAMPLE_PERSONA_LLM_RESPONSE)
-        )
+        mock_llm_factory.ainvoke = AsyncMock(return_value=AIMessage(content=SAMPLE_PERSONA_LLM_RESPONSE))
 
         with patch("mcp_server_langgraph.api.v1.ai_ux_graph.logger") as mock_logger:
             graph = create_ux_analysis_graph(mock_llm_factory, mock_settings)
@@ -395,9 +381,7 @@ class TestCompositeEndpointE2E:
         gc.collect()
 
     @pytest.mark.asyncio
-    async def test_composite_endpoint_full_flow(
-        self, mock_llm_factory, mock_settings, artifact_storage
-    ):
+    async def test_composite_endpoint_full_flow(self, mock_llm_factory, mock_settings, artifact_storage):
         """Full E2E flow for composite analysis."""
         from mcp_server_langgraph.api.v1.ai_ux import CompositeAnalysisRequest
         from mcp_server_langgraph.api.v1.ai_ux_service import AIUXService
@@ -437,17 +421,13 @@ class TestCompositeEndpointE2E:
         assert 0 <= result.confidence <= 1
 
     @pytest.mark.asyncio
-    async def test_composite_endpoint_handles_llm_failures_gracefully(
-        self, mock_llm_factory, mock_settings, artifact_storage
-    ):
+    async def test_composite_endpoint_handles_llm_failures_gracefully(self, mock_llm_factory, mock_settings, artifact_storage):
         """Composite endpoint handles LLM failures gracefully."""
         from mcp_server_langgraph.api.v1.ai_ux import CompositeAnalysisRequest
         from mcp_server_langgraph.api.v1.ai_ux_service import AIUXService
 
         # All LLM calls fail
-        mock_llm_factory.ainvoke = AsyncMock(
-            side_effect=RuntimeError("LLM unavailable")
-        )
+        mock_llm_factory.ainvoke = AsyncMock(side_effect=RuntimeError("LLM unavailable"))
 
         service = AIUXService(
             llm_factory=mock_llm_factory,
@@ -474,9 +454,7 @@ class TestCompositeEndpointE2E:
         assert result.disclosure_result is not None
 
     @pytest.mark.asyncio
-    async def test_composite_endpoint_cross_insights_correlate_data(
-        self, mock_llm_factory, mock_settings, artifact_storage
-    ):
+    async def test_composite_endpoint_cross_insights_correlate_data(self, mock_llm_factory, mock_settings, artifact_storage):
         """Cross insights correlate persona and disclosure data."""
         from mcp_server_langgraph.api.v1.ai_ux import CompositeAnalysisRequest
         from mcp_server_langgraph.api.v1.ai_ux_service import AIUXService

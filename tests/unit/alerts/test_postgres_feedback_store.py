@@ -16,7 +16,7 @@ Reference: ADR-0026 - Comprehensive Client Resilience Patterns
 import gc
 import uuid
 from datetime import UTC, datetime, timedelta
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
@@ -117,9 +117,7 @@ class TestPostgresFeedbackStoreExists:
 
         assert PostgresFeedbackStore is not None
 
-    def test_postgres_feedback_store_implements_protocol(
-        self, mock_session_maker: MagicMock
-    ) -> None:
+    def test_postgres_feedback_store_implements_protocol(self, mock_session_maker: MagicMock) -> None:
         """
         GIVEN a PostgresFeedbackStore instance
         WHEN checking protocol implementation

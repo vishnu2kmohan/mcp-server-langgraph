@@ -10,11 +10,11 @@ TDD: Tests written FIRST before implementation.
 from __future__ import annotations
 
 import gc
-from unittest.mock import MagicMock, patch
 
 import pytest
 
 pytestmark = pytest.mark.unit
+
 
 @pytest.mark.unit
 @pytest.mark.xdist_group(name="test_agents_metrics")

@@ -40,10 +40,10 @@ KNOWN_UNMATCHED_TESTIDS: frozenset[str] = frozenset(
         "metric",  # admin-journey.spec.ts:124 - uses partial match
         "user",  # admin-journey.spec.ts:173 - uses partial match
         "chat-messages",  # api-verification.spec.ts:412 - optional component
-        # Hybrid Canvas WIP - components being developed
-        "nav-chat",  # hybrid-shell-smoke.spec.ts - ActivityBar component
-        "nav-admin",  # hybrid-shell-smoke.spec.ts - ActivityBar component
-        "new-chat-button",  # hybrid-shell-smoke.spec.ts - SessionNav component
+        # Studio Canvas WIP - components being developed
+        "nav-chat",  # studio-shell-smoke.spec.ts - ActivityBar component
+        "nav-admin",  # studio-shell-smoke.spec.ts - ActivityBar component
+        "new-chat-button",  # studio-shell-smoke.spec.ts - SessionNav component
     }
 )
 

@@ -121,11 +121,7 @@ class ContextRanker:
             recency = self._calculate_recency_score(ctx)
             frequency = self._calculate_frequency_score(ctx)
 
-            composite = (
-                self.semantic_weight * semantic
-                + self.recency_weight * recency
-                + self.frequency_weight * frequency
-            )
+            composite = self.semantic_weight * semantic + self.recency_weight * recency + self.frequency_weight * frequency
 
             ranked.append(
                 RankedContext(

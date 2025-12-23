@@ -13,7 +13,7 @@ Reference: ADR-0026 - Comprehensive Client Resilience Patterns
 import asyncio
 import gc
 from datetime import UTC, datetime, timedelta
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import patch
 import uuid
 
 import pytest
@@ -121,9 +121,7 @@ class TestSubscriptionCleanupJob:
 
         cleanup_job = SubscriptionCleanupJob(store)
 
-        with patch(
-            "mcp_server_langgraph.notifications.cleanup.record_cleanup_run"
-        ) as mock_record:
+        with patch("mcp_server_langgraph.notifications.cleanup.record_cleanup_run") as mock_record:
             await cleanup_job.run_cleanup()
 
             mock_record.assert_called_once()
@@ -217,9 +215,7 @@ class TestSubscriptionCleanupJob:
 
         cleanup_job = SubscriptionCleanupJob(store)
 
-        with patch(
-            "mcp_server_langgraph.notifications.cleanup.update_active_subscriptions"
-        ) as mock_update:
+        with patch("mcp_server_langgraph.notifications.cleanup.update_active_subscriptions") as mock_update:
             await cleanup_job.run_cleanup()
 
             mock_update.assert_called_once_with(count=5)

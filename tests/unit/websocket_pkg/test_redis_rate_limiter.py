@@ -515,9 +515,7 @@ class TestRedisWebSocketRateLimiterFactory:
             WebSocketRateLimiter,
         )
 
-        with patch(
-            "mcp_server_langgraph.core.feature_flags.get_feature_flags"
-        ) as mock_ff:
+        with patch("mcp_server_langgraph.core.feature_flags.get_feature_flags") as mock_ff:
             mock_ff.return_value = MagicMock(
                 enable_distributed_rate_limiting=False,
             )

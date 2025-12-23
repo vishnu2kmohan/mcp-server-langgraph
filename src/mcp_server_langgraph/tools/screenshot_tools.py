@@ -286,10 +286,12 @@ async def capture_screenshot(
             page = await context.new_page()
 
             # Set viewport size
-            await page.set_viewport_size({
-                "width": resolved_viewport_width,
-                "height": resolved_viewport_height,
-            })
+            await page.set_viewport_size(
+                {
+                    "width": resolved_viewport_width,
+                    "height": resolved_viewport_height,
+                }
+            )
 
             # Navigate to URL
             try:
@@ -716,10 +718,12 @@ async def wait_and_capture(
             context = await browser.new_context()
             page = await context.new_page()
 
-            await page.set_viewport_size({
-                "width": resolved_viewport_width,
-                "height": resolved_viewport_height,
-            })
+            await page.set_viewport_size(
+                {
+                    "width": resolved_viewport_width,
+                    "height": resolved_viewport_height,
+                }
+            )
 
             try:
                 await page.goto(url, timeout=resolved_timeout)

@@ -15,12 +15,12 @@ from __future__ import annotations
 import gc
 from contextlib import contextmanager
 from datetime import UTC, datetime
-from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
 pytestmark = pytest.mark.unit
+
 
 def create_test_alert():
     """Create a test alert for tracing tests."""
@@ -499,7 +499,6 @@ class TestTracingEdgeCases:
         from mcp_server_langgraph.alerts.correlation import (
             AlertCorrelationEngine,
             CorrelatedAlert,
-            PatternType,
         )
 
         with mock_tracer("mcp_server_langgraph.alerts.correlation") as (mock_tracer_obj, mock_span):
@@ -532,9 +531,7 @@ class TestTracingEdgeCases:
             # Verify span attributes were set for pattern type
             # The span should have pattern.type set
             set_attribute_calls = mock_span.set_attribute.call_args_list
-            pattern_type_set = any(
-                call[0][0] == "pattern.type" for call in set_attribute_calls
-            )
+            pattern_type_set = any(call[0][0] == "pattern.type" for call in set_attribute_calls)
             assert pattern_type_set, "Expected pattern.type to be set in span"
 
     @pytest.mark.asyncio

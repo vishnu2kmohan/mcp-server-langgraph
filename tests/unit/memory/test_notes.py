@@ -11,15 +11,13 @@ import gc
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import TYPE_CHECKING
-from unittest.mock import MagicMock, patch
 
 import pytest
 
 pytestmark = pytest.mark.unit
 
 if TYPE_CHECKING:
-    from mcp_server_langgraph.memory.notes import Note, NotesManager
-    from mcp_server_langgraph.memory.checkpoints import Checkpoint, CheckpointManager
+    pass
 
 
 @pytest.mark.unit
@@ -509,7 +507,7 @@ class TestNotesManagerTimestamps:
 
     def test_notes_sorted_by_timestamp_in_persist(self, tmp_path: Path) -> None:
         """Test that notes are sorted by created_at when persisted."""
-        from mcp_server_langgraph.memory.notes import Note, NotesManager
+        from mcp_server_langgraph.memory.notes import NotesManager
         import time
 
         notes_file = tmp_path / "NOTES.md"

@@ -14,7 +14,7 @@ Reference: ADR-0026 - Comprehensive Client Resilience Patterns
 import gc
 import uuid
 from datetime import UTC, datetime, timedelta
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock
 
 import pytest
 
@@ -499,9 +499,7 @@ class TestConstraintLearning:
             await feedback_store.save_feedback(fb)
 
         # Get patterns
-        patterns = await feedback_store.get_rejection_patterns(
-            alert_type=sample_alert.name
-        )
+        patterns = await feedback_store.get_rejection_patterns(alert_type=sample_alert.name)
 
         assert patterns[RejectionReason.TOO_RISKY] == 3
         assert patterns[RejectionReason.WRONG_COMMAND] == 2
@@ -536,9 +534,7 @@ class TestConstraintLearning:
                 await feedback_store.save_feedback(fb)
 
         # Get patterns for specific type
-        cpu_patterns = await feedback_store.get_rejection_patterns(
-            alert_type="HighCPUUsage"
-        )
+        cpu_patterns = await feedback_store.get_rejection_patterns(alert_type="HighCPUUsage")
 
         assert cpu_patterns[RejectionReason.TOO_RISKY] == 3
 
@@ -574,9 +570,7 @@ class TestConstraintLearning:
             )
             await feedback_store.save_feedback(fb)
 
-        patterns = await feedback_store.get_rejection_patterns(
-            alert_type=sample_alert.name
-        )
+        patterns = await feedback_store.get_rejection_patterns(alert_type=sample_alert.name)
 
         # More than 2 rejections for TOO_RISKY should trigger constraint
         assert patterns[RejectionReason.TOO_RISKY] > 2
@@ -662,9 +656,7 @@ class TestFeedbackEnhancedRecommendations:
         )
         assert examples == []
 
-        patterns = await feedback_store.get_rejection_patterns(
-            alert_type="NonExistent"
-        )
+        patterns = await feedback_store.get_rejection_patterns(alert_type="NonExistent")
         assert patterns == {}
 
         recent = await feedback_store.get_recent_feedback(limit=10)

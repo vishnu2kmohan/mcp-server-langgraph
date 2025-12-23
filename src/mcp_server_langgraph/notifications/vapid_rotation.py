@@ -196,10 +196,7 @@ class InMemoryVAPIDKeyRepository:
     async def delete_expired(self) -> int:
         """Delete all expired keys. Returns count of deleted keys."""
         now = datetime.now(UTC)
-        expired_keys = [
-            k for k, v in self._keys.items()
-            if v.expires_at and v.expires_at < now
-        ]
+        expired_keys = [k for k, v in self._keys.items() if v.expires_at and v.expires_at < now]
         for key_id in expired_keys:
             del self._keys[key_id]
         return len(expired_keys)
@@ -290,8 +287,7 @@ class VAPIDKeyRotationService:
         except ImportError:
             logger.error("cryptography package not installed")
             raise RuntimeError(
-                "cryptography package required for VAPID key generation. "
-                "Install with: pip install cryptography"
+                "cryptography package required for VAPID key generation. Install with: pip install cryptography"
             )
 
     def validate_key_pair(self, key_pair: VAPIDKeyPair) -> bool:
@@ -402,8 +398,7 @@ class VAPIDKeyRotationService:
             await self._repository.set_expiry(old_key.key_id, expiry)
             await self._repository.deactivate(old_key.key_id)
             logger.info(
-                f"Rotated VAPID key: {old_key.key_id} -> {new_key.key_id} "
-                f"(old key expires in {self._overlap_days} days)"
+                f"Rotated VAPID key: {old_key.key_id} -> {new_key.key_id} (old key expires in {self._overlap_days} days)"
             )
         else:
             logger.info(f"Created initial VAPID key: {new_key.key_id}")

@@ -17,8 +17,6 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 
 from mcp_server_langgraph.skills.installer import (
-    DependencyResolution,
-    InstallationResult,
     SkillInstaller,
 )
 
@@ -206,9 +204,7 @@ class TestSkillInstallerDependencies:
         assert len(resolution.packages) == 0
 
     @pytest.mark.asyncio
-    async def test_install_dependencies_with_pyproject_toml(
-        self, tmp_path: Path
-    ) -> None:
+    async def test_install_dependencies_with_pyproject_toml(self, tmp_path: Path) -> None:
         """GIVEN a skill directory with pyproject.toml
         WHEN installing dependencies
         THEN uv sync should be called
@@ -248,9 +244,7 @@ class TestSkillInstallerDependencies:
         assert "sync" in call_args
 
     @pytest.mark.asyncio
-    async def test_install_dependencies_with_requirements_txt(
-        self, tmp_path: Path
-    ) -> None:
+    async def test_install_dependencies_with_requirements_txt(self, tmp_path: Path) -> None:
         """GIVEN a skill directory with requirements.txt
         WHEN installing dependencies
         THEN uv pip install should be called
@@ -284,9 +278,7 @@ class TestSkillInstallerDependencies:
         assert "install" in call_args
 
     @pytest.mark.asyncio
-    async def test_install_dependencies_creates_requirements_from_list(
-        self, tmp_path: Path
-    ) -> None:
+    async def test_install_dependencies_creates_requirements_from_list(self, tmp_path: Path) -> None:
         """GIVEN a skill directory without dependency files
         WHEN installing with a dependencies list
         THEN requirements.txt should be created and uv called
@@ -317,9 +309,7 @@ class TestSkillInstallerDependencies:
         assert "pyyaml>=6.0" in content
 
     @pytest.mark.asyncio
-    async def test_install_dependencies_handles_uv_failure(
-        self, tmp_path: Path
-    ) -> None:
+    async def test_install_dependencies_handles_uv_failure(self, tmp_path: Path) -> None:
         """GIVEN uv command fails
         WHEN installing dependencies
         THEN result should be False
@@ -336,9 +326,7 @@ class TestSkillInstallerDependencies:
         ) as mock_exec:
             mock_process = AsyncMock()
             mock_process.returncode = 1
-            mock_process.communicate = AsyncMock(
-                return_value=(b"", b"ERROR: Package not found")
-            )
+            mock_process.communicate = AsyncMock(return_value=(b"", b"ERROR: Package not found"))
             mock_exec.return_value = mock_process
 
             result = await installer.install_dependencies(skill_dir, [])
@@ -404,9 +392,7 @@ class TestSkillInstallerList:
 
         assert result == []
 
-    def test_list_installed_returns_skills_with_skill_md(
-        self, tmp_path: Path
-    ) -> None:
+    def test_list_installed_returns_skills_with_skill_md(self, tmp_path: Path) -> None:
         """GIVEN directories with SKILL.md
         WHEN listing installed
         THEN only valid skill directories should be returned
@@ -459,21 +445,15 @@ class TestSkillInstallerMarketplace:
         gc.collect()
 
     @pytest.mark.asyncio
-    async def test_fetch_skill_from_marketplace_success(
-        self, tmp_path: Path
-    ) -> None:
+    async def test_fetch_skill_from_marketplace_success(self, tmp_path: Path) -> None:
         """GIVEN a valid marketplace and skill
         WHEN fetching skill from marketplace
         THEN skill data should be returned
         """
         installer = SkillInstaller(install_path=tmp_path)
 
-        with patch(
-            "mcp_server_langgraph.skills.marketplace.MarketplaceRegistry"
-        ) as mock_registry_class:
-            with patch(
-                "mcp_server_langgraph.skills.marketplace.MarketplaceClient"
-            ) as mock_client_class:
+        with patch("mcp_server_langgraph.skills.marketplace.MarketplaceRegistry") as mock_registry_class:
+            with patch("mcp_server_langgraph.skills.marketplace.MarketplaceClient") as mock_client_class:
                 # Setup registry mock
                 mock_registry = MagicMock()
                 mock_marketplace = MagicMock()
@@ -491,59 +471,41 @@ class TestSkillInstallerMarketplace:
                 )
                 mock_client_class.return_value = mock_client
 
-                result = await installer._fetch_skill_from_marketplace(
-                    "test-skill", "anthropic"
-                )
+                result = await installer._fetch_skill_from_marketplace("test-skill", "anthropic")
 
                 assert result["name"] == "test-skill"
                 assert "content" in result
                 mock_registry.get.assert_called_once_with("anthropic")
-                mock_client.fetch_skill.assert_called_once_with(
-                    mock_marketplace, "test-skill"
-                )
+                mock_client.fetch_skill.assert_called_once_with(mock_marketplace, "test-skill")
 
     @pytest.mark.asyncio
-    async def test_fetch_skill_from_marketplace_unknown_marketplace(
-        self, tmp_path: Path
-    ) -> None:
+    async def test_fetch_skill_from_marketplace_unknown_marketplace(self, tmp_path: Path) -> None:
         """GIVEN an unknown marketplace name
         WHEN fetching skill from marketplace
         THEN ValueError should be raised
         """
         installer = SkillInstaller(install_path=tmp_path)
 
-        with patch(
-            "mcp_server_langgraph.skills.marketplace.MarketplaceRegistry"
-        ) as mock_registry_class:
-            with patch(
-                "mcp_server_langgraph.skills.marketplace.MarketplaceClient"
-            ):
+        with patch("mcp_server_langgraph.skills.marketplace.MarketplaceRegistry") as mock_registry_class:
+            with patch("mcp_server_langgraph.skills.marketplace.MarketplaceClient"):
                 # Registry returns None for unknown marketplace
                 mock_registry = MagicMock()
                 mock_registry.get.return_value = None
                 mock_registry_class.return_value = mock_registry
 
                 with pytest.raises(ValueError, match="Unknown marketplace"):
-                    await installer._fetch_skill_from_marketplace(
-                        "test-skill", "unknown-marketplace"
-                    )
+                    await installer._fetch_skill_from_marketplace("test-skill", "unknown-marketplace")
 
     @pytest.mark.asyncio
-    async def test_fetch_skill_from_marketplace_skill_not_found(
-        self, tmp_path: Path
-    ) -> None:
+    async def test_fetch_skill_from_marketplace_skill_not_found(self, tmp_path: Path) -> None:
         """GIVEN a valid marketplace but non-existent skill
         WHEN fetching skill from marketplace
         THEN ValueError should be raised
         """
         installer = SkillInstaller(install_path=tmp_path)
 
-        with patch(
-            "mcp_server_langgraph.skills.marketplace.MarketplaceRegistry"
-        ) as mock_registry_class:
-            with patch(
-                "mcp_server_langgraph.skills.marketplace.MarketplaceClient"
-            ) as mock_client_class:
+        with patch("mcp_server_langgraph.skills.marketplace.MarketplaceRegistry") as mock_registry_class:
+            with patch("mcp_server_langgraph.skills.marketplace.MarketplaceClient") as mock_client_class:
                 # Setup registry mock - marketplace exists
                 mock_registry = MagicMock()
                 mock_marketplace = MagicMock()
@@ -556,9 +518,7 @@ class TestSkillInstallerMarketplace:
                 mock_client_class.return_value = mock_client
 
                 with pytest.raises(ValueError, match="Skill not found"):
-                    await installer._fetch_skill_from_marketplace(
-                        "nonexistent-skill", "anthropic"
-                    )
+                    await installer._fetch_skill_from_marketplace("nonexistent-skill", "anthropic")
 
 
 @pytest.mark.xdist_group(name="test_skill_installer_exception_handling")
@@ -570,9 +530,7 @@ class TestSkillInstallerExceptionHandling:
         gc.collect()
 
     @pytest.mark.asyncio
-    async def test_install_dependencies_no_deps_returns_true(
-        self, tmp_path: Path
-    ) -> None:
+    async def test_install_dependencies_no_deps_returns_true(self, tmp_path: Path) -> None:
         """GIVEN a skill directory without dependency files and empty list
         WHEN installing dependencies
         THEN should return True without calling uv
@@ -593,9 +551,7 @@ class TestSkillInstallerExceptionHandling:
         mock_exec.assert_not_called()
 
     @pytest.mark.asyncio
-    async def test_install_dependencies_exception_returns_false(
-        self, tmp_path: Path
-    ) -> None:
+    async def test_install_dependencies_exception_returns_false(self, tmp_path: Path) -> None:
         """GIVEN an exception during dependency installation
         WHEN installing dependencies
         THEN should log error and return False
@@ -613,14 +569,10 @@ class TestSkillInstallerExceptionHandling:
             new_callable=AsyncMock,
             side_effect=OSError("Command not found: uv"),
         ):
-            with patch(
-                "mcp_server_langgraph.skills.installer.logger"
-            ) as mock_logger:
+            with patch("mcp_server_langgraph.skills.installer.logger") as mock_logger:
                 result = await installer.install_dependencies(skill_dir, [])
 
         assert result is False
         # Error should be logged
         mock_logger.error.assert_called_once()
-        assert "Failed to install dependencies" in str(
-            mock_logger.error.call_args
-        )
+        assert "Failed to install dependencies" in str(mock_logger.error.call_args)

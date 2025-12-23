@@ -13,7 +13,7 @@ from __future__ import annotations
 
 import gc
 from typing import Any
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import AsyncMock
 
 import pytest
 
@@ -178,9 +178,7 @@ class TestCompositeArtifactsServiceGet:
         # Assert
         assert result is not None
         assert result["id"] == TEST_ARTIFACT_ID
-        mock_cached_service.get.assert_awaited_once_with(
-            artifact_id=TEST_ARTIFACT_ID, user_id=TEST_USER_ID
-        )
+        mock_cached_service.get.assert_awaited_once_with(artifact_id=TEST_ARTIFACT_ID, user_id=TEST_USER_ID)
 
     @pytest.mark.asyncio
     async def test_get_fetches_content_from_cloud_when_stored_there(self) -> None:
@@ -214,9 +212,7 @@ class TestCompositeArtifactsServiceGet:
         # Assert - content should be fetched from cloud
         assert result is not None
         assert result["content"] == "cloud content here"
-        mock_cloud_storage.download.assert_awaited_once_with(
-            "artifacts/art-comp-789/abc123"
-        )
+        mock_cloud_storage.download.assert_awaited_once_with("artifacts/art-comp-789/abc123")
 
 
 @pytest.mark.xdist_group(name="test_composite_service")
@@ -316,12 +312,8 @@ class TestCompositeArtifactsServiceDelete:
         # Assert
         assert result is True
         mock_cached_service.delete.assert_awaited_once()
-        mock_cloud_storage.delete.assert_awaited_once_with(
-            "artifacts/art-comp-789/abc123"
-        )
-        mock_vector_service.delete.assert_awaited_once_with(
-            artifact_id=TEST_ARTIFACT_ID
-        )
+        mock_cloud_storage.delete.assert_awaited_once_with("artifacts/art-comp-789/abc123")
+        mock_vector_service.delete.assert_awaited_once_with(artifact_id=TEST_ARTIFACT_ID)
 
 
 @pytest.mark.xdist_group(name="test_composite_service")

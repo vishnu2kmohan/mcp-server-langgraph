@@ -7,7 +7,6 @@ TDD tests for the HEART Metrics WebSocket using the standardized WebSocketBase.
 from __future__ import annotations
 
 import gc
-from typing import Any
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
@@ -40,18 +39,22 @@ def mock_websocket() -> MagicMock:
 def mock_metrics_service() -> MagicMock:
     """Create a mock HEART metrics service."""
     service = MagicMock()
-    service.get_current_snapshot = AsyncMock(return_value={
-        "happiness": {"score": 85, "trend": "up"},
-        "engagement": {"score": 72, "trend": "stable"},
-        "adoption": {"score": 90, "trend": "up"},
-        "retention": {"score": 88, "trend": "stable"},
-        "task_success": {"score": 95, "trend": "up"},
-    })
-    service.get_dimension_metrics = AsyncMock(return_value={
-        "score": 85,
-        "trend": "up",
-        "samples": 1000,
-    })
+    service.get_current_snapshot = AsyncMock(
+        return_value={
+            "happiness": {"score": 85, "trend": "up"},
+            "engagement": {"score": 72, "trend": "stable"},
+            "adoption": {"score": 90, "trend": "up"},
+            "retention": {"score": 88, "trend": "stable"},
+            "task_success": {"score": 95, "trend": "up"},
+        }
+    )
+    service.get_dimension_metrics = AsyncMock(
+        return_value={
+            "score": 85,
+            "trend": "up",
+            "samples": 1000,
+        }
+    )
     return service
 
 
@@ -78,9 +81,7 @@ class TestHeartMetricsHandler:
         assert issubclass(HeartMetricsHandler, WebSocketBase)
 
     @pytest.mark.asyncio
-    async def test_sends_initial_snapshot_on_connect(
-        self, mock_websocket: MagicMock, mock_metrics_service: MagicMock
-    ) -> None:
+    async def test_sends_initial_snapshot_on_connect(self, mock_websocket: MagicMock, mock_metrics_service: MagicMock) -> None:
         """
         GIVEN a new WebSocket connection
         WHEN on_connect is called
@@ -107,9 +108,7 @@ class TestHeartMetricsHandler:
         assert "metrics" in call_args
 
     @pytest.mark.asyncio
-    async def test_handles_set_time_range(
-        self, mock_websocket: MagicMock, mock_metrics_service: MagicMock
-    ) -> None:
+    async def test_handles_set_time_range(self, mock_websocket: MagicMock, mock_metrics_service: MagicMock) -> None:
         """
         GIVEN an active connection
         WHEN a set_time_range message is received
@@ -136,9 +135,7 @@ class TestHeartMetricsHandler:
         assert handler.time_range == "7d"
 
     @pytest.mark.asyncio
-    async def test_handles_subscribe_dimension(
-        self, mock_websocket: MagicMock, mock_metrics_service: MagicMock
-    ) -> None:
+    async def test_handles_subscribe_dimension(self, mock_websocket: MagicMock, mock_metrics_service: MagicMock) -> None:
         """
         GIVEN an active connection
         WHEN a subscribe_dimension message is received
@@ -165,9 +162,7 @@ class TestHeartMetricsHandler:
         assert "happiness" in handler.subscribed_dimensions
 
     @pytest.mark.asyncio
-    async def test_handles_unsubscribe_dimension(
-        self, mock_websocket: MagicMock, mock_metrics_service: MagicMock
-    ) -> None:
+    async def test_handles_unsubscribe_dimension(self, mock_websocket: MagicMock, mock_metrics_service: MagicMock) -> None:
         """
         GIVEN an active connection with dimension subscriptions
         WHEN an unsubscribe_dimension message is received

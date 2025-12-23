@@ -197,7 +197,10 @@ export function useStableCallback<T extends (...args: any[]) => any>(
   callbackRef.current = callback;
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  return useCallback(((...args: any[]) => callbackRef.current(...args)) as T, []);
+  return useCallback(
+    ((...args: any[]) => callbackRef.current(...args)) as T,
+    [],
+  );
 }
 
 // =============================================================================
@@ -213,7 +216,9 @@ export function useRenderCount(componentName: string): void {
   useEffect(() => {
     renderCount.current += 1;
     if (process.env.NODE_ENV === "development") {
-      console.debug(`[DevTools] ${componentName} rendered: ${renderCount.current}`);
+      console.debug(
+        `[DevTools] ${componentName} rendered: ${renderCount.current}`,
+      );
     }
   });
 }

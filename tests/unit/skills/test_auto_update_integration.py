@@ -53,9 +53,7 @@ class TestAutoUpdateLifecycleIntegration:
         )
 
         # Should check feature flag
-        with patch(
-            "mcp_server_langgraph.skills.auto_update.get_feature_flags"
-        ) as mock_flags:
+        with patch("mcp_server_langgraph.skills.auto_update.get_feature_flags") as mock_flags:
             mock_flags.return_value = MagicMock(enable_skills_marketplace=True)
             assert is_auto_update_enabled() is True
 
@@ -72,9 +70,7 @@ class TestAutoUpdateLifecycleIntegration:
 
         reset_auto_update_scheduler()
 
-        with patch(
-            "mcp_server_langgraph.skills.auto_update.get_feature_flags"
-        ) as mock_flags:
+        with patch("mcp_server_langgraph.skills.auto_update.get_feature_flags") as mock_flags:
             mock_flags.return_value = MagicMock(enable_skills_marketplace=True)
 
             scheduler = await initialize_auto_update_scheduler(
@@ -101,9 +97,7 @@ class TestAutoUpdateLifecycleIntegration:
 
         reset_auto_update_scheduler()
 
-        with patch(
-            "mcp_server_langgraph.skills.auto_update.get_feature_flags"
-        ) as mock_flags:
+        with patch("mcp_server_langgraph.skills.auto_update.get_feature_flags") as mock_flags:
             mock_flags.return_value = MagicMock(enable_skills_marketplace=True)
 
             scheduler = await initialize_auto_update_scheduler(
@@ -139,9 +133,7 @@ class TestAutoUpdateAPIEndpoint:
         """Test check updates returns list of available updates."""
         from mcp_server_langgraph.api.v1.skills import check_skill_updates
 
-        with patch(
-            "mcp_server_langgraph.api.v1.skills.get_auto_update_scheduler"
-        ) as mock_get:
+        with patch("mcp_server_langgraph.api.v1.skills.get_auto_update_scheduler") as mock_get:
             mock_scheduler = AsyncMock()
             mock_scheduler.check_updates_available = AsyncMock(return_value=[])
             mock_get.return_value = mock_scheduler
@@ -155,9 +147,7 @@ class TestAutoUpdateAPIEndpoint:
         """Test apply updates endpoint applies updates."""
         from mcp_server_langgraph.api.v1.skills import apply_skill_updates
 
-        with patch(
-            "mcp_server_langgraph.api.v1.skills.get_auto_update_scheduler"
-        ) as mock_get:
+        with patch("mcp_server_langgraph.api.v1.skills.get_auto_update_scheduler") as mock_get:
             mock_scheduler = AsyncMock()
             mock_scheduler.apply_updates = AsyncMock(return_value=[])
             mock_get.return_value = mock_scheduler

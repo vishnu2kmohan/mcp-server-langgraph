@@ -50,7 +50,12 @@ function createTestStore(isAuthenticated = true) {
     preloadedState: {
       auth: {
         user: isAuthenticated
-          ? { id: "test-user", email: "test@example.com", roles: ["user"], persona: "user" as const }
+          ? {
+              id: "test-user",
+              email: "test@example.com",
+              roles: ["user"],
+              persona: "user" as const,
+            }
           : null,
         tokens: null,
         organizations: [],
@@ -86,7 +91,9 @@ describe("useMCPWebSocket", () => {
 
   describe("hook structure", () => {
     it("should return required properties and methods", () => {
-      const { result } = renderHook(() => useMCPWebSocket(), { wrapper: createWrapper(store) });
+      const { result } = renderHook(() => useMCPWebSocket(), {
+        wrapper: createWrapper(store),
+      });
 
       // Status properties
       expect(result.current).toHaveProperty("status");
@@ -113,7 +120,9 @@ describe("useMCPWebSocket", () => {
     });
 
     it("should return initial disconnected state", () => {
-      const { result } = renderHook(() => useMCPWebSocket(), { wrapper: createWrapper(store) });
+      const { result } = renderHook(() => useMCPWebSocket(), {
+        wrapper: createWrapper(store),
+      });
 
       expect(result.current.status).toBe("disconnected");
       expect(result.current.isInitialized).toBe(false);
@@ -126,7 +135,9 @@ describe("useMCPWebSocket", () => {
     });
 
     it("should return callable functions", () => {
-      const { result } = renderHook(() => useMCPWebSocket(), { wrapper: createWrapper(store) });
+      const { result } = renderHook(() => useMCPWebSocket(), {
+        wrapper: createWrapper(store),
+      });
 
       expect(typeof result.current.initialize).toBe("function");
       expect(typeof result.current.listTools).toBe("function");
@@ -138,7 +149,9 @@ describe("useMCPWebSocket", () => {
 
   describe("connection management", () => {
     it("should provide disconnect function", () => {
-      const { result } = renderHook(() => useMCPWebSocket(), { wrapper: createWrapper(store) });
+      const { result } = renderHook(() => useMCPWebSocket(), {
+        wrapper: createWrapper(store),
+      });
 
       act(() => {
         result.current.disconnect();
@@ -148,7 +161,9 @@ describe("useMCPWebSocket", () => {
     });
 
     it("should provide reconnect function", () => {
-      const { result } = renderHook(() => useMCPWebSocket(), { wrapper: createWrapper(store) });
+      const { result } = renderHook(() => useMCPWebSocket(), {
+        wrapper: createWrapper(store),
+      });
 
       act(() => {
         result.current.reconnect();
@@ -159,7 +174,9 @@ describe("useMCPWebSocket", () => {
 
     it("should clear state on disconnect", async () => {
       mockStatus = "connected";
-      const { result } = renderHook(() => useMCPWebSocket(), { wrapper: createWrapper(store) });
+      const { result } = renderHook(() => useMCPWebSocket(), {
+        wrapper: createWrapper(store),
+      });
 
       // Simulate disconnect
       await act(async () => {
@@ -183,7 +200,9 @@ describe("useMCPWebSocket", () => {
   describe("request handling", () => {
     it("should throw error when not connected", async () => {
       mockStatus = "disconnected";
-      const { result } = renderHook(() => useMCPWebSocket(), { wrapper: createWrapper(store) });
+      const { result } = renderHook(() => useMCPWebSocket(), {
+        wrapper: createWrapper(store),
+      });
 
       await act(async () => {
         await expect(result.current.initialize()).rejects.toThrow(
@@ -194,7 +213,9 @@ describe("useMCPWebSocket", () => {
 
     it("should send initialize request with correct format when connected", async () => {
       mockStatus = "connected";
-      const { result } = renderHook(() => useMCPWebSocket(), { wrapper: createWrapper(store) });
+      const { result } = renderHook(() => useMCPWebSocket(), {
+        wrapper: createWrapper(store),
+      });
 
       // Don't await - just check that send was called with correct format
       result.current.initialize().catch(() => {});
@@ -214,7 +235,9 @@ describe("useMCPWebSocket", () => {
 
     it("should send tools/call with correct format", async () => {
       mockStatus = "connected";
-      const { result } = renderHook(() => useMCPWebSocket(), { wrapper: createWrapper(store) });
+      const { result } = renderHook(() => useMCPWebSocket(), {
+        wrapper: createWrapper(store),
+      });
 
       // Don't await - just check that send was called with correct format
       result.current
@@ -235,7 +258,9 @@ describe("useMCPWebSocket", () => {
 
     it("should include unique message IDs", () => {
       mockStatus = "connected";
-      const { result } = renderHook(() => useMCPWebSocket(), { wrapper: createWrapper(store) });
+      const { result } = renderHook(() => useMCPWebSocket(), {
+        wrapper: createWrapper(store),
+      });
 
       // Make two requests
       result.current.listTools().catch(() => {});

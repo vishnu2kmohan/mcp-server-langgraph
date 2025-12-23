@@ -295,9 +295,7 @@ class TestUserRateLimiter:
         limiter.check_and_increment("user-2")
 
         # Expire one user's window
-        limiter._user_limiters["user-1"]._window_start = datetime.now(UTC) - timedelta(
-            seconds=61
-        )
+        limiter._user_limiters["user-1"]._window_start = datetime.now(UTC) - timedelta(seconds=61)
 
         # Cleanup
         limiter.cleanup_expired()
@@ -397,9 +395,7 @@ class TestWebSocketRateLimiter:
         """GIVEN params WHEN creating THEN stores them."""
         from mcp_server_langgraph.websocket.rate_limiter import WebSocketRateLimiter
 
-        limiter = WebSocketRateLimiter(
-            messages_per_minute=600, max_users=10000, cleanup_interval=300
-        )
+        limiter = WebSocketRateLimiter(messages_per_minute=600, max_users=10000, cleanup_interval=300)
 
         assert limiter.messages_per_minute == 600
         assert limiter.max_users == 10000
@@ -519,9 +515,7 @@ class TestWebSocketRateLimiter:
         limiter.check_message("user-1")
 
         # Expire the user's window
-        limiter._user_limiter._user_limiters["user-1"]._window_start = datetime.now(
-            UTC
-        ) - timedelta(seconds=61)
+        limiter._user_limiter._user_limiters["user-1"]._window_start = datetime.now(UTC) - timedelta(seconds=61)
 
         # Set last cleanup to long ago
         limiter._last_cleanup = datetime.now(UTC) - timedelta(seconds=61)
@@ -552,9 +546,7 @@ class TestRedisUserRateLimiterExtras:
         mock_redis = AsyncMock()
         mock_redis.ttl.return_value = 45
 
-        limiter = RedisUserRateLimiter(
-            redis_client=mock_redis, max_messages=100, window_seconds=60
-        )
+        limiter = RedisUserRateLimiter(redis_client=mock_redis, max_messages=100, window_seconds=60)
 
         retry_after = await limiter.get_retry_after("user-123")
 
@@ -570,9 +562,7 @@ class TestRedisUserRateLimiterExtras:
         mock_redis = AsyncMock()
         mock_redis.ttl.return_value = -2  # Key doesn't exist
 
-        limiter = RedisUserRateLimiter(
-            redis_client=mock_redis, max_messages=100, window_seconds=60
-        )
+        limiter = RedisUserRateLimiter(redis_client=mock_redis, max_messages=100, window_seconds=60)
 
         retry_after = await limiter.get_retry_after("user-123")
 
@@ -588,9 +578,7 @@ class TestRedisUserRateLimiterExtras:
         mock_redis = AsyncMock()
         mock_redis.ttl.return_value = -1  # Key has no expire
 
-        limiter = RedisUserRateLimiter(
-            redis_client=mock_redis, max_messages=100, window_seconds=60
-        )
+        limiter = RedisUserRateLimiter(redis_client=mock_redis, max_messages=100, window_seconds=60)
 
         retry_after = await limiter.get_retry_after("user-123")
 
@@ -606,9 +594,7 @@ class TestRedisUserRateLimiterExtras:
         mock_redis = AsyncMock()
         mock_redis.ttl.side_effect = Exception("Redis error")
 
-        limiter = RedisUserRateLimiter(
-            redis_client=mock_redis, max_messages=100, window_seconds=60
-        )
+        limiter = RedisUserRateLimiter(redis_client=mock_redis, max_messages=100, window_seconds=60)
 
         retry_after = await limiter.get_retry_after("user-123")
 
@@ -637,13 +623,9 @@ class TestRedisWebSocketRateLimiterExtras:
         mock_redis.incr.return_value = 1
         mock_redis.expire.return_value = True
 
-        limiter = RedisWebSocketRateLimiter(
-            redis_url="redis://localhost:6379/3", messages_per_minute=600
-        )
+        limiter = RedisWebSocketRateLimiter(redis_url="redis://localhost:6379/3", messages_per_minute=600)
         limiter._redis_client = mock_redis
-        limiter._user_limiter = RedisUserRateLimiter(
-            redis_client=mock_redis, max_messages=600, window_seconds=60
-        )
+        limiter._user_limiter = RedisUserRateLimiter(redis_client=mock_redis, max_messages=600, window_seconds=60)
 
         result = await limiter.check_message()  # No user_id
 
@@ -658,9 +640,7 @@ class TestRedisWebSocketRateLimiterExtras:
             RedisWebSocketRateLimiter,
         )
 
-        limiter = RedisWebSocketRateLimiter(
-            redis_url="redis://localhost:6379/3", messages_per_minute=600, fail_open=True
-        )
+        limiter = RedisWebSocketRateLimiter(redis_url="redis://localhost:6379/3", messages_per_minute=600, fail_open=True)
         limiter._redis_client = MagicMock()
         limiter._user_limiter = None
 
@@ -676,9 +656,7 @@ class TestRedisWebSocketRateLimiterExtras:
             RedisWebSocketRateLimiter,
         )
 
-        limiter = RedisWebSocketRateLimiter(
-            redis_url="redis://localhost:6379/3", messages_per_minute=600
-        )
+        limiter = RedisWebSocketRateLimiter(redis_url="redis://localhost:6379/3", messages_per_minute=600)
         limiter._redis_client = MagicMock()
         limiter._user_limiter = None
 
@@ -700,13 +678,9 @@ class TestRedisWebSocketRateLimiterExtras:
         mock_redis = AsyncMock()
         mock_redis.get.return_value = b"10"
 
-        limiter = RedisWebSocketRateLimiter(
-            redis_url="redis://localhost:6379/3", messages_per_minute=600
-        )
+        limiter = RedisWebSocketRateLimiter(redis_url="redis://localhost:6379/3", messages_per_minute=600)
         limiter._redis_client = mock_redis
-        limiter._user_limiter = RedisUserRateLimiter(
-            redis_client=mock_redis, max_messages=600, window_seconds=60
-        )
+        limiter._user_limiter = RedisUserRateLimiter(redis_client=mock_redis, max_messages=600, window_seconds=60)
 
         stats = await limiter.get_stats()  # No user_id
 
@@ -727,13 +701,9 @@ class TestRedisWebSocketRateLimiterExtras:
         mock_redis.get.return_value = b"50"
         mock_redis.ttl.return_value = 30
 
-        limiter = RedisWebSocketRateLimiter(
-            redis_url="redis://localhost:6379/3", messages_per_minute=600
-        )
+        limiter = RedisWebSocketRateLimiter(redis_url="redis://localhost:6379/3", messages_per_minute=600)
         limiter._redis_client = mock_redis
-        limiter._user_limiter = RedisUserRateLimiter(
-            redis_client=mock_redis, max_messages=600, window_seconds=60
-        )
+        limiter._user_limiter = RedisUserRateLimiter(redis_client=mock_redis, max_messages=600, window_seconds=60)
 
         info = await limiter.get_rate_limit_info()  # No user_id
 
@@ -751,9 +721,7 @@ class TestRedisWebSocketRateLimiterExtras:
 
         mock_redis = AsyncMock()
 
-        limiter = RedisWebSocketRateLimiter(
-            redis_url="redis://localhost:6379/3", messages_per_minute=600
-        )
+        limiter = RedisWebSocketRateLimiter(redis_url="redis://localhost:6379/3", messages_per_minute=600)
         limiter._redis_client = mock_redis
         limiter._user_limiter = MagicMock()
 
@@ -782,9 +750,7 @@ class TestRateLimiterFactory:
         mock_ff = MagicMock()
         mock_ff.enable_distributed_rate_limiting = True
 
-        mock_settings = MagicMock(
-            redis_host="localhost", redis_port=6379, redis_rate_limit_db=5
-        )
+        mock_settings = MagicMock(redis_host="localhost", redis_port=6379, redis_rate_limit_db=5)
 
         with patch(
             "mcp_server_langgraph.core.feature_flags.get_feature_flags",

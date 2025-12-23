@@ -148,11 +148,7 @@ class CheckpointManager:
         self.storage_dir.mkdir(parents=True, exist_ok=True)
 
         checkpoints_file = self.storage_dir / "checkpoints.json"
-        data = {
-            "checkpoints": [
-                c.model_dump(mode="json") for c in self._checkpoints.values()
-            ]
-        }
+        data = {"checkpoints": [c.model_dump(mode="json") for c in self._checkpoints.values()]}
         checkpoints_file.write_text(json.dumps(data, indent=2, default=str))
 
     def load(self) -> None:
@@ -165,12 +161,8 @@ class CheckpointManager:
         data = json.loads(checkpoints_file.read_text())
         for checkpoint_data in data.get("checkpoints", []):
             # Parse datetime string back to datetime
-            if "created_at" in checkpoint_data and isinstance(
-                checkpoint_data["created_at"], str
-            ):
-                checkpoint_data["created_at"] = datetime.fromisoformat(
-                    checkpoint_data["created_at"]
-                )
+            if "created_at" in checkpoint_data and isinstance(checkpoint_data["created_at"], str):
+                checkpoint_data["created_at"] = datetime.fromisoformat(checkpoint_data["created_at"])
             checkpoint = Checkpoint(**checkpoint_data)
             self._checkpoints[checkpoint.id] = checkpoint
 

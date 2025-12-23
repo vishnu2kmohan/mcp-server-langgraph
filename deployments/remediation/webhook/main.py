@@ -12,7 +12,7 @@ import os
 import subprocess
 import time
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from datetime import datetime, UTC
 from enum import Enum
 from typing import Any
 
@@ -138,7 +138,7 @@ app = FastAPI(
 @app.get("/health")
 async def health() -> dict[str, str]:
     """Health check endpoint."""
-    return {"status": "healthy", "timestamp": datetime.now(timezone.utc).isoformat()}
+    return {"status": "healthy", "timestamp": datetime.now(UTC).isoformat()}
 
 
 @app.get("/metrics", response_class=PlainTextResponse)
@@ -241,9 +241,7 @@ async def execute_remediation(action: str, service: str, alertname: str) -> None
     script_path = os.path.join(SCRIPTS_PATH, action)
     if not os.path.exists(script_path):
         logger.error("Remediation script not found: %s", script_path)
-        remediation_actions_total.labels(
-            action=action, service=service, status="error"
-        ).inc()
+        remediation_actions_total.labels(action=action, service=service, status="error").inc()
         return
 
     logger.info(
@@ -285,9 +283,7 @@ async def execute_remediation(action: str, service: str, alertname: str) -> None
         )
 
         duration = time.time() - start_time
-        remediation_duration_seconds.labels(action=action, service=service).observe(
-            duration
-        )
+        remediation_duration_seconds.labels(action=action, service=service).observe(duration)
 
         if result.returncode == 0:
             logger.info(
@@ -296,9 +292,7 @@ async def execute_remediation(action: str, service: str, alertname: str) -> None
                 service,
                 duration,
             )
-            remediation_actions_total.labels(
-                action=action, service=service, status="success"
-            ).inc()
+            remediation_actions_total.labels(action=action, service=service, status="success").inc()
             cooldown_tracker.record_action(cooldown_key)
         else:
             logger.error(
@@ -307,9 +301,7 @@ async def execute_remediation(action: str, service: str, alertname: str) -> None
                 service,
                 result.stderr,
             )
-            remediation_actions_total.labels(
-                action=action, service=service, status="failure"
-            ).inc()
+            remediation_actions_total.labels(action=action, service=service, status="failure").inc()
 
     except subprocess.TimeoutExpired:
         duration = time.time() - start_time
@@ -319,17 +311,11 @@ async def execute_remediation(action: str, service: str, alertname: str) -> None
             service,
             duration,
         )
-        remediation_actions_total.labels(
-            action=action, service=service, status="timeout"
-        ).inc()
-        remediation_duration_seconds.labels(action=action, service=service).observe(
-            duration
-        )
+        remediation_actions_total.labels(action=action, service=service, status="timeout").inc()
+        remediation_duration_seconds.labels(action=action, service=service).observe(duration)
     except Exception as e:
         logger.exception("Remediation error: %s for %s - %s", action, service, e)
-        remediation_actions_total.labels(
-            action=action, service=service, status="error"
-        ).inc()
+        remediation_actions_total.labels(action=action, service=service, status="error").inc()
 
 
 @app.get("/cooldowns")
@@ -340,7 +326,7 @@ async def get_cooldowns() -> dict[str, Any]:
         elapsed = time.time() - last_time
         remaining = max(0, COOLDOWN_SECONDS - int(elapsed))
         cooldowns[key] = {
-            "last_action": datetime.fromtimestamp(last_time, tz=timezone.utc).isoformat(),
+            "last_action": datetime.fromtimestamp(last_time, tz=UTC).isoformat(),
             "remaining_seconds": remaining,
             "in_cooldown": remaining > 0,
         }

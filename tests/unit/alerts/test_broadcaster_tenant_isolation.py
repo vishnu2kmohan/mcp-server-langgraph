@@ -19,6 +19,7 @@ import pytest
 
 pytestmark = pytest.mark.unit
 
+
 def create_test_alert(tenant: str = "default"):
     """Create a test alert for a specific tenant."""
     from mcp_server_langgraph.observability.query.interfaces import (
@@ -56,7 +57,6 @@ class TestBroadcasterTenantIsolation:
         """
         from mcp_server_langgraph.alerts.broadcaster import AlertBroadcaster
         from mcp_server_langgraph.alerts.routing import (
-            Alert as RoutingAlert,
             AlertRouter,
             RoutingResult,
         )

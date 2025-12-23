@@ -15,7 +15,6 @@ TDD: RED phase - these tests define expected GDPR compliance behavior.
 """
 
 import gc
-from datetime import datetime
 
 import pytest
 
@@ -385,10 +384,7 @@ class TestGDPRArticle20DataPortability:
         # Tokens should include type information for structure
         for token in lookup.keys():
             # Token format includes PII type (e.g., <<EMAIL_hash>>)
-            assert any(
-                pii_type in token
-                for pii_type in ["EMAIL", "PHONE", "SSN", "CREDIT_CARD", "DOB"]
-            )
+            assert any(pii_type in token for pii_type in ["EMAIL", "PHONE", "SSN", "CREDIT_CARD", "DOB"])
 
 
 @pytest.mark.compliance

@@ -281,20 +281,15 @@ class TestServiceHealthcheckConfiguration:
 
             # Check interval >= timeout
             if interval_s < timeout_s:
-                issues.append(
-                    f"{service_name}: interval ({interval}) < timeout ({timeout})"
-                )
+                issues.append(f"{service_name}: interval ({interval}) < timeout ({timeout})")
 
             # Check retries > 0
             if retries < 1:
                 issues.append(f"{service_name}: retries ({retries}) should be >= 1")
 
-        assert not issues, (
-            f"Healthcheck configuration issues found:\n"
-            + "\n".join(f"  - {issue}" for issue in issues)
-        )
+        assert not issues, "Healthcheck configuration issues found:\n" + "\n".join(f"  - {issue}" for issue in issues)
 
-        print(f"✅ All healthchecks have reasonable timeout configurations")
+        print("✅ All healthchecks have reasonable timeout configurations")
 
     def test_distroless_services_have_disabled_or_tcp_healthchecks(self):
         """
@@ -310,8 +305,8 @@ class TestServiceHealthcheckConfiguration:
 
         # Known distroless services
         distroless_services = [
-            "loki-test",      # grafana/loki uses distroless
-            "mimir-test",     # grafana/mimir uses distroless
+            "loki-test",  # grafana/loki uses distroless
+            "mimir-test",  # grafana/mimir uses distroless
         ]
 
         for service_name in distroless_services:
@@ -337,7 +332,7 @@ class TestServiceHealthcheckConfiguration:
                 f"Either disable healthcheck or use native binary."
             )
 
-        print(f"✅ Distroless services have appropriate healthcheck configuration")
+        print("✅ Distroless services have appropriate healthcheck configuration")
 
 
 @pytest.mark.integration
@@ -379,18 +374,12 @@ class TestKeycloakHealthcheckScript:
             content = f.read()
 
         # Check shebang
-        assert content.startswith("#!/bin/bash"), (
-            "Keycloak healthcheck script must start with #!/bin/bash"
-        )
+        assert content.startswith("#!/bin/bash"), "Keycloak healthcheck script must start with #!/bin/bash"
 
         # Check for two-phase validation
-        assert "/health/ready" in content, (
-            "Script must check /health/ready endpoint (Phase 1)"
-        )
+        assert "/health/ready" in content, "Script must check /health/ready endpoint (Phase 1)"
 
-        assert "openid-configuration" in content, (
-            "Script must check OIDC discovery endpoint (Phase 2)"
-        )
+        assert "openid-configuration" in content, "Script must check OIDC discovery endpoint (Phase 2)"
 
         # Check for path prefix handling
         assert "PATH_PREFIX" in content or "KC_PATH_PREFIX" in content, (
@@ -412,14 +401,10 @@ class TestKeycloakHealthcheckScript:
             content = f.read()
 
         # Check COPY instruction
-        assert "healthcheck.sh" in content, (
-            "Dockerfile.keycloak must COPY the healthcheck script"
-        )
+        assert "healthcheck.sh" in content, "Dockerfile.keycloak must COPY the healthcheck script"
 
         # Check HEALTHCHECK instruction uses the script
-        assert "/opt/keycloak/bin/healthcheck.sh" in content, (
-            "Dockerfile HEALTHCHECK must use the healthcheck script"
-        )
+        assert "/opt/keycloak/bin/healthcheck.sh" in content, "Dockerfile HEALTHCHECK must use the healthcheck script"
 
         print("✅ Dockerfile.keycloak uses healthcheck script")
 
@@ -438,10 +423,7 @@ class TestServiceHealthcheckLive:
         """Force GC to prevent mock accumulation in xdist workers."""
         gc.collect()
 
-    @pytest.mark.skipif(
-        not Path("/var/run/docker.sock").exists(),
-        reason="Docker not available"
-    )
+    @pytest.mark.skipif(not Path("/var/run/docker.sock").exists(), reason="Docker not available")
     def test_qdrant_health_endpoint_responds(self):
         """
         Test that Qdrant /readyz endpoint responds when service is running.
@@ -452,7 +434,7 @@ class TestServiceHealthcheckLive:
             # Try to connect to Qdrant
             sock = socket.create_connection(("localhost", 6333), timeout=2)
             sock.close()
-        except (socket.error, socket.timeout):
+        except (TimeoutError, OSError):
             pytest.skip("Qdrant not running on localhost:6333")
 
         import urllib.request
@@ -465,10 +447,7 @@ class TestServiceHealthcheckLive:
         except urllib.error.URLError as e:
             pytest.fail(f"Qdrant /readyz failed: {e}")
 
-    @pytest.mark.skipif(
-        not Path("/var/run/docker.sock").exists(),
-        reason="Docker not available"
-    )
+    @pytest.mark.skipif(not Path("/var/run/docker.sock").exists(), reason="Docker not available")
     def test_alloy_ready_endpoint_responds(self):
         """
         Test that Alloy /-/ready endpoint responds when service is running.
@@ -478,7 +457,7 @@ class TestServiceHealthcheckLive:
         try:
             sock = socket.create_connection(("localhost", 12345), timeout=2)
             sock.close()
-        except (socket.error, socket.timeout):
+        except (TimeoutError, OSError):
             pytest.skip("Alloy not running on localhost:12345")
 
         import urllib.request

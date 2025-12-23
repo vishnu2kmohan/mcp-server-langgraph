@@ -8,14 +8,13 @@ Reference: ADR-0080 LLM-Level Callback System
 """
 
 import gc
-from typing import Any
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 
 
-
 pytestmark = pytest.mark.unit
+
 
 @pytest.mark.xdist_group(name="llm_factory_hooks")
 class TestHookDispatcherConvenienceMethods:

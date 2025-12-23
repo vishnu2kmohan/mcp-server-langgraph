@@ -1,7 +1,7 @@
 /**
  * Conversation Module - Phase 2
  *
- * Chat experience components for the Hybrid Canvas.
+ * Chat experience components for the Studio Canvas.
  */
 
 export {

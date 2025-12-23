@@ -708,9 +708,7 @@ class CacheService:
         deleted_count = 0
 
         # Delete from L1 (pattern match on in-memory keys)
-        l1_keys_to_delete = [
-            key for key in list(self.l1_cache.keys()) if fnmatch.fnmatch(key, pattern)
-        ]
+        l1_keys_to_delete = [key for key in list(self.l1_cache.keys()) if fnmatch.fnmatch(key, pattern)]
         for key in l1_keys_to_delete:
             self.l1_cache.pop(key, None)
             deleted_count += 1
@@ -723,9 +721,7 @@ class CacheService:
                 if keys:
                     await async_redis.delete(*keys)
                     deleted_count += len(keys)
-                    logger.info(
-                        f"Deleted {len(keys)} L2 cache keys matching pattern: {pattern}"
-                    )
+                    logger.info(f"Deleted {len(keys)} L2 cache keys matching pattern: {pattern}")
             except Exception as e:
                 logger.warning(f"L2 async cache pattern delete failed: {e}")
 

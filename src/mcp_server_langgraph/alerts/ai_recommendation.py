@@ -199,18 +199,12 @@ class AIRecommendation(BaseModel):
     recommendation_id: str = Field(..., description="Unique recommendation ID")
     alert_id: str = Field(..., description="Associated alert ID")
     root_cause_analysis: str = Field(..., description="Analysis of the root cause")
-    remediation_steps: list[dict[str, Any]] = Field(
-        default_factory=list, description="Ordered list of remediation steps"
-    )
-    risk_assessment: dict[str, Any] = Field(
-        default_factory=dict, description="Risk assessment details"
-    )
+    remediation_steps: list[dict[str, Any]] = Field(default_factory=list, description="Ordered list of remediation steps")
+    risk_assessment: dict[str, Any] = Field(default_factory=dict, description="Risk assessment details")
     runbook_reference: str | None = Field(None, description="Link to relevant runbook")
     generated_at: str = Field(..., description="ISO8601 timestamp of generation")
     model_used: str = Field(..., description="LLM model used for generation")
-    confidence_score: float = Field(
-        default=0.5, description="Confidence score (0.0-1.0) for the recommendation"
-    )
+    confidence_score: float = Field(default=0.5, description="Confidence score (0.0-1.0) for the recommendation")
 
 
 class LLMFactoryProtocol(Protocol):
@@ -349,9 +343,7 @@ The following remediations were approved and executed successfully for similar a
 """
 
         # Add constraints from rejection patterns
-        constraints = await _build_constraints_from_rejections(
-            alert.name, feedback_store
-        )
+        constraints = await _build_constraints_from_rejections(alert.name, feedback_store)
         if constraints:
             prompt += f"""## Important Constraints
 Based on previous feedback, avoid these approaches:
@@ -485,11 +477,7 @@ def generate_recommendation_cache_key(alert: Alert) -> str:
     """
     # Create a fingerprint from alert characteristics
     key_labels = ["service", "namespace", "job", "alertname"]
-    label_parts = [
-        f"{k}:{alert.labels.get(k, '')}"
-        for k in key_labels
-        if alert.labels.get(k)
-    ]
+    label_parts = [f"{k}:{alert.labels.get(k, '')}" for k in key_labels if alert.labels.get(k)]
 
     # Build key components
     components = [
@@ -623,9 +611,7 @@ class AIRecommendationService:
         # Fallback to in-memory cache (L1)
         return self._cache.get(cache_key)
 
-    def _set_cached_recommendation(
-        self, cache_key: str, recommendation: AIRecommendation
-    ) -> None:
+    def _set_cached_recommendation(self, cache_key: str, recommendation: AIRecommendation) -> None:
         """
         Cache recommendation in L2 (Redis) and L1 (in-memory).
 
@@ -698,15 +684,14 @@ class AIRecommendationService:
             if not force_regenerate:
                 cached = self._get_cached_recommendation(cache_key)
                 if cached:
-                    logger.debug(
-                        f"Cache hit for alert {alert.alert_id} (key: {cache_key})"
-                    )
+                    logger.debug(f"Cache hit for alert {alert.alert_id} (key: {cache_key})")
                     span.set_attribute("recommendation.cache_hit", True)
                     # Record metrics
                     try:
                         from mcp_server_langgraph.alerts.metrics import (
                             record_recommendation_request,
                         )
+
                         record_recommendation_request(alert.alert_id, cached=True)
                     except ImportError:
                         pass
@@ -716,9 +701,7 @@ class AIRecommendationService:
 
             # Build prompt - use feedback-enhanced prompt if feedback store is available
             if self._feedback_store:
-                prompt = await build_recommendation_prompt_with_feedback(
-                    alert, self._feedback_store
-                )
+                prompt = await build_recommendation_prompt_with_feedback(alert, self._feedback_store)
                 logger.debug(f"Using feedback-enhanced prompt for alert {alert.alert_id}")
                 span.set_attribute("recommendation.feedback_enhanced", True)
             else:
@@ -748,9 +731,7 @@ class AIRecommendationService:
                 parsed = _parse_llm_response(response_text)
 
                 # Compute confidence score
-                baseline_confidence = await compute_baseline_confidence(
-                    alert, self._feedback_store
-                )
+                baseline_confidence = await compute_baseline_confidence(alert, self._feedback_store)
                 # Use LLM-provided confidence if available, otherwise use baseline
                 llm_confidence = parsed.get("confidence_score")
                 if llm_confidence is not None and isinstance(llm_confidence, (int, float)):
@@ -790,6 +771,7 @@ class AIRecommendationService:
                         record_recommendation_quality,
                         record_recommendation_request,
                     )
+
                     record_recommendation_request(alert.alert_id, cached=False)
                     record_recommendation_generated(alert.alert_id, 0.0, success=True)
                     # Record quality score for Grafana dashboard tracking
@@ -829,9 +811,7 @@ class AIRecommendationService:
                     model_used=self._model_name,
                 )
 
-    async def get_cached_recommendation(
-        self, alert_id: str
-    ) -> AIRecommendation | None:
+    async def get_cached_recommendation(self, alert_id: str) -> AIRecommendation | None:
         """
         Get a cached recommendation by alert ID.
 

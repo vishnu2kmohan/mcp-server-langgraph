@@ -17,11 +17,12 @@ from __future__ import annotations
 
 import gc
 from datetime import UTC, datetime, timedelta
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import AsyncMock
 
 import pytest
 
 pytestmark = pytest.mark.unit
+
 
 @pytest.mark.unit
 @pytest.mark.xdist_group(name="alert_routing")
@@ -60,7 +61,6 @@ class TestAlertRouter:
         from mcp_server_langgraph.alerts.routing import (
             AlertRouter,
             Alert,
-            RoutingResult,
         )
 
         router = AlertRouter(default_tenant="system")
@@ -82,7 +82,6 @@ class TestAlertRouter:
         from mcp_server_langgraph.alerts.routing import (
             AlertRouter,
             Alert,
-            RoutingResult,
         )
 
         router = AlertRouter()

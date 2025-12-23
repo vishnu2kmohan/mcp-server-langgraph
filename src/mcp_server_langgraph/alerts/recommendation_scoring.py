@@ -208,16 +208,11 @@ class RecommendationScorer:
         approval_rate = history.approved_count / history.total_recommendations
 
         # Weight the score
-        weighted_score = (
-            approval_rate * self.APPROVAL_WEIGHT
-            + history.success_rate * self.SUCCESS_WEIGHT
-        )
+        weighted_score = approval_rate * self.APPROVAL_WEIGHT + history.success_rate * self.SUCCESS_WEIGHT
 
         # Normalize to 0-1 range
         # Max weighted score would be 0.8 (0.4 + 0.4), so normalize
-        normalized_score = weighted_score / (
-            self.APPROVAL_WEIGHT + self.SUCCESS_WEIGHT
-        )
+        normalized_score = weighted_score / (self.APPROVAL_WEIGHT + self.SUCCESS_WEIGHT)
 
         return min(1.0, max(0.0, normalized_score))
 
@@ -285,11 +280,7 @@ class RecommendationScorer:
         base_score = self.calculate_base_score(alert_type, history)
         confidence = self.calculate_confidence(alert_type, history)
 
-        approval_rate = (
-            history.approved_count / history.total_recommendations
-            if history.total_recommendations > 0
-            else 0.0
-        )
+        approval_rate = history.approved_count / history.total_recommendations if history.total_recommendations > 0 else 0.0
 
         # Overall score is base score weighted by confidence
         overall_score = base_score * (0.5 + 0.5 * confidence)
@@ -341,9 +332,7 @@ class RecommendationScorer:
                 suggestions.append(self.IMPROVEMENT_SUGGESTIONS[pattern.reason])
 
         if not suggestions:
-            suggestions.append(
-                "Review rejected recommendations to identify common patterns."
-            )
+            suggestions.append("Review rejected recommendations to identify common patterns.")
 
         return suggestions
 
@@ -426,19 +415,13 @@ class ScoringHistoryRepository:
             history.approved_count += 1
             if feedback.execution_success:
                 # Update success rate
-                total_successes = int(
-                    history.success_rate * (history.approved_count - 1)
-                )
+                total_successes = int(history.success_rate * (history.approved_count - 1))
                 history.success_rate = (total_successes + 1) / history.approved_count
 
                 # Update average execution time
                 if feedback.execution_time_seconds is not None:
-                    old_total = history.avg_execution_time_seconds * (
-                        history.approved_count - 1
-                    )
-                    history.avg_execution_time_seconds = (
-                        old_total + feedback.execution_time_seconds
-                    ) / history.approved_count
+                    old_total = history.avg_execution_time_seconds * (history.approved_count - 1)
+                    history.avg_execution_time_seconds = (old_total + feedback.execution_time_seconds) / history.approved_count
         else:
             history.rejected_count += 1
 
@@ -448,6 +431,4 @@ class ScoringHistoryRepository:
         # Update cache
         self._cache[feedback.alert_type] = history
 
-        logger.debug(
-            f"Recorded feedback for {feedback.alert_type}: {feedback.action}"
-        )
+        logger.debug(f"Recorded feedback for {feedback.alert_type}: {feedback.action}")

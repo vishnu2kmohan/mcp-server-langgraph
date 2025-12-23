@@ -7,7 +7,7 @@ following the OpenAI Agents SDK guardrails pattern.
 
 import json
 import re
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Any, Protocol
 
 from mcp_server_langgraph.observability.telemetry import logger
@@ -56,14 +56,12 @@ class PIIGuardrail:
     """Detect and redact PII from outputs."""
 
     # Email pattern
-    EMAIL_PATTERN = re.compile(
-        r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b"
-    )
+    EMAIL_PATTERN = re.compile(r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b")
 
     # Phone patterns (US format)
     PHONE_PATTERNS = [
         re.compile(r"\b\d{3}[-.\s]?\d{3}[-.\s]?\d{4}\b"),  # 555-123-4567
-        re.compile(r"\(\d{3}\)\s*\d{3}[-.\s]?\d{4}"),      # (555) 123-4567
+        re.compile(r"\(\d{3}\)\s*\d{3}[-.\s]?\d{4}"),  # (555) 123-4567
     ]
 
     # SSN pattern
@@ -72,8 +70,9 @@ class PIIGuardrail:
     # Credit card pattern (basic)
     CREDIT_CARD_PATTERN = re.compile(r"\b\d{4}[-\s]?\d{4}[-\s]?\d{4}[-\s]?\d{4}\b")
 
-    def __init__(self, redact_emails: bool = True, redact_phones: bool = True,
-                 redact_ssn: bool = True, redact_credit_cards: bool = True):
+    def __init__(
+        self, redact_emails: bool = True, redact_phones: bool = True, redact_ssn: bool = True, redact_credit_cards: bool = True
+    ):
         """Initialize PII guardrail with options."""
         self.redact_emails = redact_emails
         self.redact_phones = redact_phones
@@ -120,10 +119,7 @@ class PIIGuardrail:
                 modified = new_output
 
         if redactions_made:
-            logger.info(
-                "PII redacted from output",
-                extra={"redaction_types": redactions_made}
-            )
+            logger.info("PII redacted from output", extra={"redaction_types": redactions_made})
             return GuardrailResult(
                 allowed=True,
                 modified_output=modified,
@@ -138,7 +134,11 @@ class ProfanityGuardrail:
 
     # Basic word list - in production, use a more comprehensive list
     DEFAULT_PROFANITY = {
-        "damn", "darn", "crap", "hell", "heck",
+        "damn",
+        "darn",
+        "crap",
+        "hell",
+        "heck",
         # Additional words would be added in production
     }
 
@@ -165,10 +165,7 @@ class ProfanityGuardrail:
                 modified = new_output
 
         if words_filtered:
-            logger.info(
-                "Profanity filtered from output",
-                extra={"words_filtered": len(words_filtered)}
-            )
+            logger.info("Profanity filtered from output", extra={"words_filtered": len(words_filtered)})
             return GuardrailResult(
                 allowed=True,
                 modified_output=modified,
@@ -267,6 +264,7 @@ class FormatGuardrail:
         """Validate XML format."""
         try:
             import xml.etree.ElementTree as ET
+
             ET.fromstring(output.strip())
             return GuardrailResult(allowed=True)
         except ET.ParseError as e:
@@ -319,7 +317,7 @@ class GuardrailChain:
                     extra={
                         "guardrail": type(guardrail).__name__,
                         "reason": result.reason,
-                    }
+                    },
                 )
                 return result
 
@@ -330,7 +328,7 @@ class GuardrailChain:
                     extra={
                         "guardrail": type(guardrail).__name__,
                         "reason": result.reason,
-                    }
+                    },
                 )
                 return result
 
@@ -353,16 +351,20 @@ class GuardrailChain:
 # Factory function for common guardrail configurations
 def create_default_guardrails() -> GuardrailChain:
     """Create a default guardrail chain with common protections."""
-    return GuardrailChain([
-        PIIGuardrail(),
-        ProfanityGuardrail(),
-    ])
+    return GuardrailChain(
+        [
+            PIIGuardrail(),
+            ProfanityGuardrail(),
+        ]
+    )
 
 
 def create_strict_guardrails() -> GuardrailChain:
     """Create a strict guardrail chain with all protections."""
-    return GuardrailChain([
-        PIIGuardrail(),
-        ProfanityGuardrail(),
-        DisclaimerGuardrail(),
-    ])
+    return GuardrailChain(
+        [
+            PIIGuardrail(),
+            ProfanityGuardrail(),
+            DisclaimerGuardrail(),
+        ]
+    )

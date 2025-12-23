@@ -227,6 +227,7 @@ class TestCacheServiceCircuitBreaker:
             # Verify circuit breaker is now OPEN
             breaker = get_circuit_breaker("redis")
             import pybreaker
+
             assert breaker.current_state == pybreaker.STATE_OPEN
 
             # Reset call count to verify Redis is skipped
@@ -359,6 +360,7 @@ class TestCacheServiceTimeout:
 
         User Journey: Prevent hanging on slow Redis in async operations
         """
+
         async def slow_get(key):
             raise redis.exceptions.TimeoutError("Timeout")
 

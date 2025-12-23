@@ -9,14 +9,14 @@ from __future__ import annotations
 import gc
 from datetime import UTC, datetime
 from typing import TYPE_CHECKING, Any
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
 pytestmark = pytest.mark.unit
 
 if TYPE_CHECKING:
-    from sqlalchemy.ext.asyncio import AsyncSession
+    pass
 
 
 # Test constants
@@ -434,9 +434,7 @@ class TestPostgresArtifactsRepositoryList:
         repo = PostgresArtifactsRepository(session=mock_session)
 
         # Act
-        items, _, _ = await repo.list(
-            user_id=TEST_USER_ID, session_id=TEST_SESSION_ID
-        )
+        items, _, _ = await repo.list(user_id=TEST_USER_ID, session_id=TEST_SESSION_ID)
 
         # Assert
         assert len(items) == 1
@@ -452,10 +450,7 @@ class TestPostgresArtifactsRepositoryList:
 
         mock_session = AsyncMock()
         # Create 3 artifacts to test pagination
-        mock_artifacts = [
-            MagicMock(to_dict=lambda i=i: create_mock_artifact_data(artifact_id=f"art-{i}"))
-            for i in range(3)
-        ]
+        mock_artifacts = [MagicMock(to_dict=lambda i=i: create_mock_artifact_data(artifact_id=f"art-{i}")) for i in range(3)]
 
         mock_result = MagicMock()
         mock_result.scalars.return_value.all.return_value = mock_artifacts
@@ -575,9 +570,7 @@ class TestPostgresArtifactsRepositoryFork:
         repo = PostgresArtifactsRepository(session=mock_session)
 
         # Act
-        result = await repo.fork(
-            TEST_ARTIFACT_ID, new_name="Forked Copy", user_id=TEST_USER_ID
-        )
+        result = await repo.fork(TEST_ARTIFACT_ID, new_name="Forked Copy", user_id=TEST_USER_ID)
 
         # Assert
         assert result is not None

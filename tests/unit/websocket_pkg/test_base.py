@@ -468,9 +468,7 @@ class TestWebSocketBaseAuthorization:
 
         user = AuthUser(id="user-123", username="testuser")
 
-        with patch(
-            "mcp_server_langgraph.websocket.base.WebSocketAuthorizationMiddleware"
-        ) as MockAuthz:
+        with patch("mcp_server_langgraph.websocket.base.WebSocketAuthorizationMiddleware") as MockAuthz:
             mock_instance = AsyncMock()
             mock_instance.authorize_connection = AsyncMock(return_value=True)
             MockAuthz.return_value = mock_instance

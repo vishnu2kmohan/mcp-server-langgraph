@@ -76,9 +76,7 @@ class TestLLMWithFallbackInstantiation:
 
         assert LLMWithFallback is not None
 
-    def test_base_class_accepts_required_params(
-        self, mock_llm_factory, mock_settings
-    ):
+    def test_base_class_accepts_required_params(self, mock_llm_factory, mock_settings):
         """Base class accepts llm_factory and settings."""
         from mcp_server_langgraph.api.v1.ai_ux_service import LLMWithFallback
 
@@ -89,9 +87,7 @@ class TestLLMWithFallbackInstantiation:
         assert instance.llm_factory is mock_llm_factory
         assert instance.settings is mock_settings
 
-    def test_base_class_accepts_model_selector(
-        self, mock_llm_factory, mock_settings, mock_model_selector
-    ):
+    def test_base_class_accepts_model_selector(self, mock_llm_factory, mock_settings, mock_model_selector):
         """Base class accepts optional ModelSelector."""
         from mcp_server_langgraph.api.v1.ai_ux_service import LLMWithFallback
 
@@ -112,9 +108,7 @@ class TestLLMWithFallbackExecution:
         gc.collect()
 
     @pytest.mark.asyncio
-    async def test_execute_with_fallback_calls_llm_when_enabled(
-        self, mock_llm_factory, mock_settings
-    ):
+    async def test_execute_with_fallback_calls_llm_when_enabled(self, mock_llm_factory, mock_settings):
         """execute_with_fallback calls LLM when enabled."""
         from mcp_server_langgraph.api.v1.ai_ux_service import LLMWithFallback
 
@@ -138,9 +132,7 @@ class TestLLMWithFallbackExecution:
         assert result == {"from": "llm"}
 
     @pytest.mark.asyncio
-    async def test_execute_with_fallback_uses_heuristic_when_llm_disabled(
-        self, mock_llm_factory, mock_settings
-    ):
+    async def test_execute_with_fallback_uses_heuristic_when_llm_disabled(self, mock_llm_factory, mock_settings):
         """execute_with_fallback uses heuristic when LLM disabled."""
         from mcp_server_langgraph.api.v1.ai_ux_service import LLMWithFallback
 
@@ -166,9 +158,7 @@ class TestLLMWithFallbackExecution:
         assert result == {"from": "heuristic"}
 
     @pytest.mark.asyncio
-    async def test_execute_with_fallback_falls_back_on_llm_error(
-        self, mock_llm_factory, mock_settings
-    ):
+    async def test_execute_with_fallback_falls_back_on_llm_error(self, mock_llm_factory, mock_settings):
         """execute_with_fallback falls back to heuristic on LLM error."""
         from mcp_server_langgraph.api.v1.ai_ux_service import LLMWithFallback
 
@@ -201,9 +191,7 @@ class TestLLMWithFallbackCaching:
         gc.collect()
 
     @pytest.mark.asyncio
-    async def test_caching_returns_cached_result(
-        self, mock_llm_factory, mock_settings
-    ):
+    async def test_caching_returns_cached_result(self, mock_llm_factory, mock_settings):
         """execute_with_fallback returns cached result on cache hit."""
         from mcp_server_langgraph.api.v1.ai_ux_service import LLMWithFallback
 
@@ -251,9 +239,7 @@ class TestLLMWithFallbackModelSelection:
         gc.collect()
 
     @pytest.mark.asyncio
-    async def test_selects_model_based_on_method_complexity(
-        self, mock_llm_factory, mock_settings, mock_model_selector
-    ):
+    async def test_selects_model_based_on_method_complexity(self, mock_llm_factory, mock_settings, mock_model_selector):
         """execute_with_fallback selects model based on method complexity."""
         from mcp_server_langgraph.api.v1.ai_ux_service import LLMWithFallback
 
@@ -279,9 +265,7 @@ class TestLLMWithFallbackModelSelection:
         mock_model_selector.select_model.assert_called_with("simple")
 
     @pytest.mark.asyncio
-    async def test_works_without_model_selector(
-        self, mock_llm_factory, mock_settings
-    ):
+    async def test_works_without_model_selector(self, mock_llm_factory, mock_settings):
         """execute_with_fallback works without ModelSelector."""
         from mcp_server_langgraph.api.v1.ai_ux_service import LLMWithFallback
 

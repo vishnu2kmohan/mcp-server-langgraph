@@ -14,15 +14,13 @@ TDD: These tests are written FIRST before implementation.
 from __future__ import annotations
 
 import gc
-import hashlib
-from datetime import datetime, timezone
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
 
-
 pytestmark = pytest.mark.unit
+
 
 @pytest.mark.xdist_group(name="explanation_caching")
 class TestExplanationCacheKeyGeneration:
@@ -314,9 +312,7 @@ class TestExplanationCacheMetrics:
             cache=mock_cache,
         )
 
-        with patch(
-            "mcp_server_langgraph.agents.explanation_orchestrator.record_explanation_generation"
-        ) as mock_record:
+        with patch("mcp_server_langgraph.agents.explanation_orchestrator.record_explanation_generation") as mock_record:
             await orchestrator.generate_explanation_cached(
                 approval_id="test-123",
                 agent_name="FileAgent",
@@ -349,9 +345,7 @@ class TestExplanationCacheMetrics:
             cache=mock_cache,
         )
 
-        with patch(
-            "mcp_server_langgraph.agents.explanation_orchestrator.record_explanation_generation"
-        ) as mock_record:
+        with patch("mcp_server_langgraph.agents.explanation_orchestrator.record_explanation_generation") as mock_record:
             await orchestrator.generate_explanation_cached(
                 approval_id="test-123",
                 agent_name="FileAgent",

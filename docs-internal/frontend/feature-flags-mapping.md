@@ -1,4 +1,4 @@
-# Feature Flags Mapping - Hybrid Canvas
+# Feature Flags Mapping - Studio Canvas
 
 **Date:** 2025-12-19
 **Phase:** 0 - Baseline Analysis
@@ -52,13 +52,13 @@
 
 ## Canvas Feature Flags
 
-These flags control the Hybrid Canvas feature rollout:
+These flags control the Studio Canvas feature rollout:
 
 ### Phase 1-2 Flags
 
 | Flag Name | Purpose | Default | Gate |
 |-----------|---------|---------|------|
-| ~~`canvas_hybrid_shell`~~ | ~~Enable HybridShellLayout at /studio~~ | N/A | **REMOVED** - HybridShell is now the default at `/studio` |
+| ~~`canvas_hybrid_shell`~~ | ~~Enable StudioShellLayout at /studio~~ | N/A | **REMOVED** - StudioShell is now the default at `/studio` |
 | `canvas_editable` | Enable artifact editing in Canvas | `false` | Edit buttons |
 
 ### Phase 3-4 Flags
@@ -90,7 +90,7 @@ These flags control the Hybrid Canvas feature rollout:
 
 ### Granular Intelligence Feature Flags (Sprint 1-4)
 
-These flags control specific AI Intelligence capabilities in the HybridShell UI:
+These flags control specific AI Intelligence capabilities in the StudioShell UI:
 
 | Flag Name (Backend) | Frontend Property | Purpose | Default | Task Categories |
 |---------------------|-------------------|---------|---------|-----------------|
@@ -136,7 +136,7 @@ Add to `src/types/api.ts`:
 export interface FeatureFlags {
   // ... existing flags ...
 
-  // Canvas Features (HybridShell is now default at /studio)
+  // Canvas Features (StudioShell is now default at /studio)
   /** Enable editable artifacts in Canvas panel */
   canvas_editable?: boolean;
   /** Enable background agent panel */
@@ -159,15 +159,15 @@ export interface FeatureFlags {
 
 ### Route-Level Structure (router/index.tsx)
 
-HybridShellLayout is now the default at `/studio`:
+StudioShellLayout is now the default at `/studio`:
 
 ```typescript
-// In router - HybridShell is the default shell
+// In router - StudioShell is the default shell
 {
   path: "studio",
   element: (
     <AuthGuard>
-      <HybridShellLayout />
+      <StudioShellLayout />
     </AuthGuard>
   ),
   children: [
@@ -180,7 +180,7 @@ HybridShellLayout is now the default at `/studio`:
 ### Component-Level Gating
 
 ```typescript
-// In HybridShellLayout
+// In StudioShellLayout
 const enableEditable = useFeatureFlag('canvas_editable');
 
 return (
@@ -194,7 +194,7 @@ return (
 
 ## Rollback Strategy
 
-HybridShellLayout is now the default at `/studio`. Feature flags control individual canvas features:
+StudioShellLayout is now the default at `/studio`. Feature flags control individual canvas features:
 
 ```typescript
 // Feature-level rollback (no shell-level rollback needed):
@@ -238,7 +238,7 @@ http.get('/api/v1/features', () => {
     // Existing flags
     url_content_fetch: true,
     slash_commands: true,
-    // Canvas feature flags (HybridShell is now default)
+    // Canvas feature flags (StudioShell is now default)
     canvas_editable: true,
     canvas_agents: true,
     canvas_ai_palette: true,
@@ -252,9 +252,9 @@ http.get('/api/v1/features', () => {
 
 ## Status
 
-**COMPLETED:** HybridShellLayout is now the default UI at `/studio`.
+**COMPLETED:** StudioShellLayout is now the default UI at `/studio`.
 
-- ~~Phase 1: Add `canvas_hybrid_shell` flag~~ - **REMOVED** (HybridShell is default)
+- ~~Phase 1: Add `canvas_hybrid_shell` flag~~ - **REMOVED** (StudioShell is default)
 - ✅ Phase 2: `canvas_editable` controls artifact editing
 - ✅ Phase 3-4: `canvas_agents`, `canvas_ai_palette` control agent features
 - ✅ Phase 5: `canvas_compliance`, `canvas_help` control advanced features

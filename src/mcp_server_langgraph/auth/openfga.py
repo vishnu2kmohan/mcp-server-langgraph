@@ -302,8 +302,7 @@ class OpenFGAClient:
                 if attempt < max_attempts:
                     delay = base_delay * (2 ** (attempt - 1))  # Exponential backoff
                     logger.warning(
-                        f"OIDC token acquisition failed (attempt {attempt}/{max_attempts}), "
-                        f"retrying in {delay}s: {e}",
+                        f"OIDC token acquisition failed (attempt {attempt}/{max_attempts}), retrying in {delay}s: {e}",
                         extra={
                             "attempt": attempt,
                             "max_attempts": max_attempts,

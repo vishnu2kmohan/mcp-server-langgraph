@@ -121,7 +121,6 @@ class TestAlertOrchestratorBatchAnalysis:
         from mcp_server_langgraph.agents.alert_orchestrator import AlertOrchestrator
         from mcp_server_langgraph.api.v1.alert_recommendations import (
             correlate_alerts,
-            get_alert_store,
             set_alert_orchestrator,
             CorrelateAlertsRequest,
         )
@@ -129,12 +128,14 @@ class TestAlertOrchestratorBatchAnalysis:
         # Create mock orchestrator
         mock_orchestrator = MagicMock(spec=AlertOrchestrator)
         mock_orchestrator.is_enabled = True
-        mock_orchestrator.analyze_alerts = AsyncMock(return_value={
-            "alert_ids": ["alert-1"],
-            "correlation_summary": {"total_results": 1},
-            "analyses": {},
-            "failed_analyses": [],
-        })
+        mock_orchestrator.analyze_alerts = AsyncMock(
+            return_value={
+                "alert_ids": ["alert-1"],
+                "correlation_summary": {"total_results": 1},
+                "analyses": {},
+                "failed_analyses": [],
+            }
+        )
 
         set_alert_orchestrator(mock_orchestrator)
 
@@ -149,9 +150,7 @@ class TestAlertOrchestratorBatchAnalysis:
             )
 
             # With orchestrator enabled, it should be used
-            with patch(
-                "mcp_server_langgraph.api.v1.alert_recommendations.feature_flags"
-            ) as mock_flags:
+            with patch("mcp_server_langgraph.api.v1.alert_recommendations.feature_flags") as mock_flags:
                 mock_flags.enable_orchestrated_alert_analysis = True
 
                 # Should not raise - correlate should work
@@ -292,9 +291,8 @@ class TestAlertOrchestratorAnalyzeEndpoint:
         from mcp_server_langgraph.api.v1 import alert_recommendations
 
         # Check if BatchAnalyzeAlertsRequest or similar exists
-        has_batch_request = (
-            hasattr(alert_recommendations, "BatchAnalyzeAlertsRequest")
-            or hasattr(alert_recommendations, "CorrelateAlertsRequest")
+        has_batch_request = hasattr(alert_recommendations, "BatchAnalyzeAlertsRequest") or hasattr(
+            alert_recommendations, "CorrelateAlertsRequest"
         )
         assert has_batch_request
 
@@ -303,8 +301,7 @@ class TestAlertOrchestratorAnalyzeEndpoint:
         from mcp_server_langgraph.api.v1 import alert_recommendations
 
         # Check if BatchAnalyzeAlertsResponse or similar exists
-        has_batch_response = (
-            hasattr(alert_recommendations, "BatchAnalyzeAlertsResponse")
-            or hasattr(alert_recommendations, "CorrelateAlertsResponse")
+        has_batch_response = hasattr(alert_recommendations, "BatchAnalyzeAlertsResponse") or hasattr(
+            alert_recommendations, "CorrelateAlertsResponse"
         )
         assert has_batch_response

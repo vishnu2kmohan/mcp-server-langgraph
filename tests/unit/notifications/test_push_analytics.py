@@ -16,11 +16,12 @@ from __future__ import annotations
 
 import gc
 from datetime import UTC, datetime, timedelta
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import AsyncMock
 
 import pytest
 
 pytestmark = pytest.mark.unit
+
 
 @pytest.mark.unit
 @pytest.mark.xdist_group(name="push_analytics")
@@ -285,9 +286,7 @@ class TestReportGeneration:
         )
 
         mock_store = AsyncMock()
-        mock_store.get_delivery_stats = AsyncMock(
-            return_value={"total_sent": 500, "delivered": 480, "failed": 20}
-        )
+        mock_store.get_delivery_stats = AsyncMock(return_value={"total_sent": 500, "delivered": 480, "failed": 20})
         mock_store.get_engagement_stats = AsyncMock(
             return_value={
                 "delivered": 480,

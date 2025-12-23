@@ -414,17 +414,13 @@ class TestProtocols:
         """GIVEN WebSocketHandler protocol WHEN checking if runtime_checkable THEN is True."""
         from mcp_server_langgraph.websocket.types import WebSocketHandler
 
-        assert hasattr(WebSocketHandler, "__protocol_attrs__") or hasattr(
-            WebSocketHandler, "_is_protocol"
-        )
+        assert hasattr(WebSocketHandler, "__protocol_attrs__") or hasattr(WebSocketHandler, "_is_protocol")
 
     def test_websocket_lifecycle_is_runtime_checkable(self) -> None:
         """GIVEN WebSocketLifecycle protocol WHEN checking if runtime_checkable THEN is True."""
         from mcp_server_langgraph.websocket.types import WebSocketLifecycle
 
-        assert hasattr(WebSocketLifecycle, "__protocol_attrs__") or hasattr(
-            WebSocketLifecycle, "_is_protocol"
-        )
+        assert hasattr(WebSocketLifecycle, "__protocol_attrs__") or hasattr(WebSocketLifecycle, "_is_protocol")
 
     def test_class_implementing_handler_passes_isinstance(self) -> None:
         """GIVEN class implementing handle_message WHEN isinstance checked THEN passes."""

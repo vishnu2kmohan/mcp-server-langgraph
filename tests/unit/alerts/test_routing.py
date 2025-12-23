@@ -15,12 +15,12 @@ from __future__ import annotations
 
 import gc
 from datetime import UTC, datetime, timedelta
-from typing import Any
 from unittest.mock import AsyncMock
 
 import pytest
 
 pytestmark = pytest.mark.unit
+
 
 @pytest.mark.xdist_group(name="test_routing")
 class TestAlertRouterBasicRouting:

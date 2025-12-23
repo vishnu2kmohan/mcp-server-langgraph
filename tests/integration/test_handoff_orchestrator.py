@@ -11,7 +11,7 @@ import asyncio
 import gc
 import os
 from typing import Any
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import MagicMock
 
 import pytest
 
@@ -103,9 +103,7 @@ class TestHandoffOrchestratorIntegration:
         gc.collect()
 
     @pytest.mark.asyncio
-    async def test_handoff_executes_with_full_context(
-        self, sample_messages: list[dict[str, Any]]
-    ) -> None:
+    async def test_handoff_executes_with_full_context(self, sample_messages: list[dict[str, Any]]) -> None:
         """Test that handoff passes full conversation context by default."""
         from mcp_server_langgraph.agents.handoff import Handoff
 
@@ -123,9 +121,7 @@ class TestHandoffOrchestratorIntegration:
         assert result.filtered_messages == sample_messages
 
     @pytest.mark.asyncio
-    async def test_handoff_with_keep_last_n_filter(
-        self, sample_messages: list[dict[str, Any]]
-    ) -> None:
+    async def test_handoff_with_keep_last_n_filter(self, sample_messages: list[dict[str, Any]]) -> None:
         """Test handoff with KeepLastNFilter reduces context."""
         from mcp_server_langgraph.agents.context_filter import KeepLastNFilter
         from mcp_server_langgraph.agents.handoff import Handoff
@@ -146,9 +142,7 @@ class TestHandoffOrchestratorIntegration:
         assert result.filtered_messages == sample_messages[-3:]
 
     @pytest.mark.asyncio
-    async def test_handoff_with_remove_tool_calls_filter(
-        self, sample_messages: list[dict[str, Any]]
-    ) -> None:
+    async def test_handoff_with_remove_tool_calls_filter(self, sample_messages: list[dict[str, Any]]) -> None:
         """Test handoff removes tool calls from context."""
         from mcp_server_langgraph.agents.context_filter import RemoveToolCallsFilter
         from mcp_server_langgraph.agents.handoff import Handoff
@@ -172,9 +166,7 @@ class TestHandoffOrchestratorIntegration:
         assert len(result.filtered_messages) == 6
 
     @pytest.mark.asyncio
-    async def test_handoff_with_summarize_filter(
-        self, sample_messages: list[dict[str, Any]]
-    ) -> None:
+    async def test_handoff_with_summarize_filter(self, sample_messages: list[dict[str, Any]]) -> None:
         """Test handoff with SummarizeHistoryFilter creates summary."""
         from mcp_server_langgraph.agents.context_filter import SummarizeHistoryFilter
         from mcp_server_langgraph.agents.handoff import Handoff
@@ -196,9 +188,7 @@ class TestHandoffOrchestratorIntegration:
         assert "6 messages" in result.filtered_messages[0]["content"]
 
     @pytest.mark.asyncio
-    async def test_handoff_with_chained_filters(
-        self, sample_messages: list[dict[str, Any]]
-    ) -> None:
+    async def test_handoff_with_chained_filters(self, sample_messages: list[dict[str, Any]]) -> None:
         """Test handoff with multiple chained filters."""
         from mcp_server_langgraph.agents.context_filter import (
             ChainedFilter,
@@ -244,9 +234,7 @@ class TestHandoffCallbackIntegration:
         gc.collect()
 
     @pytest.mark.asyncio
-    async def test_handoff_invokes_on_handoff_callback(
-        self, sample_messages: list[dict[str, Any]]
-    ) -> None:
+    async def test_handoff_invokes_on_handoff_callback(self, sample_messages: list[dict[str, Any]]) -> None:
         """Test that on_handoff callback is invoked with correct context."""
         from mcp_server_langgraph.agents.handoff import Handoff, HandoffContext
 
@@ -277,9 +265,7 @@ class TestHandoffCallbackIntegration:
         assert callback_context.message_count == len(sample_messages)
 
     @pytest.mark.asyncio
-    async def test_handoff_callback_can_log_metrics(
-        self, sample_messages: list[dict[str, Any]]
-    ) -> None:
+    async def test_handoff_callback_can_log_metrics(self, sample_messages: list[dict[str, Any]]) -> None:
         """Test handoff callback can be used for logging/metrics."""
         from mcp_server_langgraph.agents.handoff import Handoff, HandoffContext
 
@@ -431,9 +417,7 @@ class TestHandoffAgentDefinitionIntegration:
         assert "process_refund" in target.tools
 
     @pytest.mark.asyncio
-    async def test_handoff_with_input_data_for_target_agent(
-        self, sample_messages: list[dict[str, Any]]
-    ) -> None:
+    async def test_handoff_with_input_data_for_target_agent(self, sample_messages: list[dict[str, Any]]) -> None:
         """Test handoff passes input_data to target agent."""
         from mcp_server_langgraph.agents.handoff import Handoff
 
@@ -471,9 +455,7 @@ class TestHandoffChainIntegration:
         gc.collect()
 
     @pytest.mark.asyncio
-    async def test_sequential_handoffs(
-        self, sample_messages: list[dict[str, Any]]
-    ) -> None:
+    async def test_sequential_handoffs(self, sample_messages: list[dict[str, Any]]) -> None:
         """Test sequential handoffs from triage -> refund -> confirmation."""
         from mcp_server_langgraph.agents.handoff import Handoff
 
@@ -521,9 +503,7 @@ class TestHandoffChainIntegration:
         assert result2.target_agent == "confirmation_agent"
 
     @pytest.mark.asyncio
-    async def test_handoff_preserves_source_agent_chain(
-        self, sample_messages: list[dict[str, Any]]
-    ) -> None:
+    async def test_handoff_preserves_source_agent_chain(self, sample_messages: list[dict[str, Any]]) -> None:
         """Test handoff result tracks source agent for chain tracking."""
         from mcp_server_langgraph.agents.handoff import Handoff
 
@@ -565,10 +545,7 @@ class TestHandoffPerformanceIntegration:
         from mcp_server_langgraph.agents.handoff import Handoff
 
         # Create 1000 messages
-        large_messages = [
-            {"role": "user" if i % 2 == 0 else "assistant", "content": f"Message {i}"}
-            for i in range(1000)
-        ]
+        large_messages = [{"role": "user" if i % 2 == 0 else "assistant", "content": f"Message {i}"} for i in range(1000)]
 
         handoff = Handoff(
             target_agent="refund_agent",
@@ -598,17 +575,11 @@ class TestHandoffPerformanceIntegration:
             {"role": "assistant", "content": "Response"},
         ]
 
-        handoffs = [
-            Handoff(target_agent=f"agent_{i}")
-            for i in range(100)
-        ]
+        handoffs = [Handoff(target_agent=f"agent_{i}") for i in range(100)]
 
         start = time.time()
         results = await asyncio.gather(
-            *[
-                h.execute(messages=messages, session_id=f"session-{i}")
-                for i, h in enumerate(handoffs)
-            ]
+            *[h.execute(messages=messages, session_id=f"session-{i}") for i, h in enumerate(handoffs)]
         )
         elapsed = time.time() - start
 

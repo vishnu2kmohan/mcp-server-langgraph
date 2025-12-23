@@ -27,7 +27,6 @@ Usage:
 from __future__ import annotations
 
 import operator
-import re
 from typing import TYPE_CHECKING, Annotated, Any, Literal, Sequence, TypedDict
 
 from langchain_core.messages import AIMessage, BaseMessage, HumanMessage, SystemMessage

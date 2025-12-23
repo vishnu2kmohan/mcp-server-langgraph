@@ -2,7 +2,7 @@
 
 ## Overview
 
-This document captures open questions that require stakeholder input before completing Phase 7 (Legacy Cleanup) of the Hybrid Canvas Frontend Rebuild. These questions were identified during planning and remain unresolved.
+This document captures open questions that require stakeholder input before completing Phase 7 (Legacy Cleanup) of the Studio Canvas Frontend Rebuild. These questions were identified during planning and remain unresolved.
 
 **Last Updated:** 2025-12-20
 **Status:** ✅ All Critical Questions Resolved - Ready for Phase 7

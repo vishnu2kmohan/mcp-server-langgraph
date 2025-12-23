@@ -639,9 +639,7 @@ class TestModelSelectorVertexAIAnthropic:
         from mcp_server_langgraph.agents.model_selector import MODEL_TIERS
 
         for tier in ["simple", "complicated", "complex"]:
-            assert "vertex_ai_anthropic" in MODEL_TIERS[tier], (
-                f"Missing vertex_ai_anthropic in {tier} tier"
-            )
+            assert "vertex_ai_anthropic" in MODEL_TIERS[tier], f"Missing vertex_ai_anthropic in {tier} tier"
 
     def test_vertex_ai_anthropic_simple_tier(self) -> None:
         """Vertex AI Anthropic simple tier should use Haiku."""

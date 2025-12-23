@@ -19,11 +19,10 @@ Reference:
 from __future__ import annotations
 
 import gc
-from datetime import UTC, datetime
-from unittest.mock import AsyncMock, MagicMock, patch
+from datetime import datetime
+from unittest.mock import AsyncMock
 
 import pytest
-from fastapi import HTTPException
 
 from mcp_server_langgraph.observability.query.interfaces import AlertSeverity, AlertState
 
@@ -108,9 +107,7 @@ class TestAlertmanagerWebhookEndpoint:
         )
 
         routes = [r for r in alertmanager_webhook_router.routes]
-        webhook_routes = [
-            r for r in routes if hasattr(r, "path") and "alertmanager" in r.path
-        ]
+        webhook_routes = [r for r in routes if hasattr(r, "path") and "alertmanager" in r.path]
         assert len(webhook_routes) > 0, "Should have /webhooks/alertmanager route"
 
 

@@ -6,13 +6,18 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { renderHook, waitFor, act } from "@testing-library/react";
 
-import { useWorkflowExecution, type ExecutionStep } from "./useWorkflowExecution";
+import {
+  useWorkflowExecution,
+  type ExecutionStep,
+} from "./useWorkflowExecution";
 
 // =============================================================================
 // Test Data
 // =============================================================================
 
-const createMockStep = (overrides: Partial<ExecutionStep> = {}): ExecutionStep => ({
+const createMockStep = (
+  overrides: Partial<ExecutionStep> = {},
+): ExecutionStep => ({
   id: `step-${Date.now()}-${Math.random()}`,
   nodeId: "node-1",
   nodeName: "Process Data",

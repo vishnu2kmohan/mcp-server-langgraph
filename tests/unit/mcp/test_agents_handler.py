@@ -8,15 +8,15 @@ Following TDD - these tests define the expected behavior.
 from __future__ import annotations
 
 import gc
-from typing import TYPE_CHECKING, Any
-from unittest.mock import AsyncMock, MagicMock, patch
+from typing import TYPE_CHECKING
+from unittest.mock import MagicMock, patch
 
 import pytest
 
 pytestmark = pytest.mark.unit
 
 if TYPE_CHECKING:
-    from mcp_server_langgraph.mcp.handlers.agents import AgentsToolHandler
+    pass
 
 
 @pytest.mark.unit

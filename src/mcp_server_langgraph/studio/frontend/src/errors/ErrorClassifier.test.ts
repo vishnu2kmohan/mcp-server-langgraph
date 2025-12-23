@@ -20,7 +20,6 @@ describe("ErrorClassifier", () => {
     vi.clearAllMocks();
   });
 
-
   describe("classifyError", () => {
     describe("from Error objects", () => {
       it("classifies TypeError as client error", () => {

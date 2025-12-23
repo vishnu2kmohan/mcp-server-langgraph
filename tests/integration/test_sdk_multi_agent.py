@@ -10,11 +10,10 @@ Tests cross-module integration:
 from __future__ import annotations
 
 import gc
-import os
 import pytest
-from unittest.mock import AsyncMock, MagicMock, patch
 
 pytestmark = pytest.mark.integration
+
 
 @pytest.mark.integration
 @pytest.mark.sdk
@@ -43,7 +42,7 @@ class TestSDKSkillsIntegration:
     @pytest.mark.asyncio
     async def test_sdk_tool_server_can_register_skill_tools(self):
         """In-process tool server should register skill-based tools."""
-        from mcp_server_langgraph.sdk import InProcessToolServer, ToolDefinition
+        from mcp_server_langgraph.sdk import InProcessToolServer
         from mcp_server_langgraph.skills import SkillRegistry
 
         server = InProcessToolServer(name="skill-tools")

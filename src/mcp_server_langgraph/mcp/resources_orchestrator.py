@@ -206,7 +206,7 @@ class OrchestratorResourceProvider:
 
 async def task_provider(
     uri: str,
-    orchestrator: "Orchestrator | None" = None,
+    orchestrator: Orchestrator | None = None,
 ) -> ResourceContent:
     """Provider for task resources.
 
@@ -241,7 +241,7 @@ async def task_provider(
 
 async def artifact_provider(
     uri: str,
-    artifact_storage: "ArtifactStorage | None" = None,
+    artifact_storage: ArtifactStorage | None = None,
 ) -> ResourceContent:
     """Provider for artifact resources.
 
@@ -289,7 +289,7 @@ async def artifact_provider(
 
 async def subagents_provider(
     uri: str,
-    coordinator: "Coordinator | None" = None,
+    coordinator: Coordinator | None = None,
 ) -> ResourceContent:
     """Provider for subagent status resources.
 

@@ -17,7 +17,7 @@ import re
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
-    from mcp_server_langgraph.llm.verifier import VerificationResult, VisualVerificationResult
+    pass
 
 logger = logging.getLogger(__name__)
 

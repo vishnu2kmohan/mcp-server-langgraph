@@ -38,6 +38,7 @@ def get_tracer() -> trace.Tracer:
     """Get the OpenTelemetry tracer for this module."""
     return tracer
 
+
 if TYPE_CHECKING:
     from unittest.mock import MagicMock
 
@@ -107,10 +108,10 @@ def create_persona_analysis_node(llm_factory: Any, settings: Any) -> AnalysisNod
             try:
                 # Build prompt for persona analysis (persona_data verified non-None above)
                 prompt = f"""Analyze user persona based on behavior:
-User ID: {state['user_id']}
-Assigned Persona: {persona_data.get('assigned_persona', 'unknown')}
-Recent Actions: {persona_data.get('recent_actions', [])}
-Feature Usage: {persona_data.get('feature_usage', {})}
+User ID: {state["user_id"]}
+Assigned Persona: {persona_data.get("assigned_persona", "unknown")}
+Recent Actions: {persona_data.get("recent_actions", [])}
+Feature Usage: {persona_data.get("feature_usage", {})}
 
 Return JSON with: detected_persona, confidence, behavior_signals, recommendation, ui_adaptations"""
 
@@ -160,9 +161,9 @@ def create_disclosure_analysis_node(llm_factory: Any, settings: Any) -> Analysis
             try:
                 # Build prompt for disclosure analysis (disclosure_data verified non-None above)
                 prompt = f"""Analyze user expertise level:
-User ID: {state['user_id']}
-Feature Usage: {disclosure_data.get('feature_usage', {})}
-Session History: {disclosure_data.get('session_history', [])}
+User ID: {state["user_id"]}
+Feature Usage: {disclosure_data.get("feature_usage", {})}
+Session History: {disclosure_data.get("session_history", [])}
 
 Return JSON with: current_level, recommended_level, confidence, unlock_features, personalized_message"""
 
@@ -210,9 +211,9 @@ def create_error_analysis_node(llm_factory: Any, settings: Any) -> AnalysisNode:
             try:
                 # Build prompt for error analysis (error_data verified non-None above)
                 prompt = f"""Analyze error and suggest recovery:
-Error Name: {error_data.get('name', 'Unknown')}
-Error Message: {error_data.get('message', '')}
-Stack Trace: {error_data.get('stack_trace', 'N/A')}
+Error Name: {error_data.get("name", "Unknown")}
+Error Message: {error_data.get("message", "")}
+Stack Trace: {error_data.get("stack_trace", "N/A")}
 
 Return JSON with: category, subcategory, confidence, root_cause, suggestions"""
 
@@ -278,8 +279,7 @@ def create_cross_insights_node(llm_factory: Any, settings: Any) -> AnalysisNode:
                 if "builder" in detected_persona.lower() or "analyst" in detected_persona.lower():
                     if recommended_level in ("beginner", "intermediate"):
                         insights.append(
-                            "Power user behavior detected with lower disclosure level. "
-                            "Consider enabling advanced features."
+                            "Power user behavior detected with lower disclosure level. Consider enabling advanced features."
                         )
 
         if disclosure_result:
@@ -296,10 +296,7 @@ def create_cross_insights_node(llm_factory: Any, settings: Any) -> AnalysisNode:
             if persona_result:
                 detected_persona = persona_result.get("detected_persona", "")
                 if "builder" in detected_persona.lower():
-                    insights.append(
-                        "Power user encountering errors. "
-                        "Review workflow complexity and error messaging."
-                    )
+                    insights.append("Power user encountering errors. Review workflow complexity and error messaging.")
 
         # Calculate weighted confidence
         avg_confidence = sum(confidences) / len(confidences) if confidences else 0.0
@@ -310,10 +307,7 @@ def create_cross_insights_node(llm_factory: Any, settings: Any) -> AnalysisNode:
 
         # Add general insight if we have cross-service data
         if persona_result and disclosure_result:
-            insights.append(
-                "Cross-service analysis complete. "
-                "Persona and disclosure data correlated for personalized UX."
-            )
+            insights.append("Cross-service analysis complete. Persona and disclosure data correlated for personalized UX.")
 
         return {
             "cross_insights": insights,

@@ -21,6 +21,7 @@ from mcp_server_langgraph.api.metrics import (
 
 pytestmark = pytest.mark.unit
 
+
 class TestStudioAppName:
     """Verify app_name only accepts 'studio'."""
 

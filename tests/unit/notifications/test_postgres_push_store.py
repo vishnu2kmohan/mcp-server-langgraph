@@ -16,8 +16,8 @@ Reference: ADR-0026 - Comprehensive Client Resilience Patterns
 
 import gc
 import uuid
-from datetime import UTC, datetime, timedelta
-from unittest.mock import AsyncMock, MagicMock, patch
+from datetime import UTC, datetime
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
@@ -95,9 +95,7 @@ class TestPostgresPushSubscriptionStoreExists:
 
         assert PostgresPushSubscriptionStore is not None
 
-    def test_postgres_push_store_implements_protocol(
-        self, mock_session_maker: MagicMock
-    ) -> None:
+    def test_postgres_push_store_implements_protocol(self, mock_session_maker: MagicMock) -> None:
         """
         GIVEN a PostgresPushSubscriptionStore instance
         WHEN checking protocol implementation

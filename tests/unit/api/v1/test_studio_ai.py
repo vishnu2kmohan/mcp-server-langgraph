@@ -4,9 +4,9 @@ Studio AI API Router Unit Tests.
 Tests for unified Studio AI endpoints following TDD methodology.
 
 Endpoints tested:
-- POST /api/v1/studio/analyze - Unified composite analysis for all HybridShell AI capabilities
+- POST /api/v1/studio/analyze - Unified composite analysis for all StudioShell AI capabilities
 
-Reference: HybridShell AI Enhancement Analysis Plan - Sprint 1
+Reference: StudioShell AI Enhancement Analysis Plan - Sprint 1
 """
 
 from __future__ import annotations
@@ -269,7 +269,7 @@ class TestStudioAIResponseModels:
 
 
 @pytest.fixture
-async def test_app() -> "FastAPI":
+async def test_app() -> FastAPI:
     """Create a test FastAPI app with Studio AI routes."""
     from fastapi import FastAPI
 
@@ -281,7 +281,7 @@ async def test_app() -> "FastAPI":
 
 
 @pytest.fixture
-async def client(test_app: "FastAPI") -> AsyncClient:
+async def client(test_app: FastAPI) -> AsyncClient:
     """Create an async test client."""
     transport = ASGITransport(app=test_app)
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
@@ -319,9 +319,7 @@ class TestStudioAnalyzeEndpoint:
         WHEN calling POST /api/v1/studio/analyze
         THEN should return JSON response.
         """
-        with patch(
-            "mcp_server_langgraph.api.v1.studio_ai.get_studio_orchestrator"
-        ) as mock_get:
+        with patch("mcp_server_langgraph.api.v1.studio_ai.get_studio_orchestrator") as mock_get:
             mock_orchestrator = MagicMock()
             mock_orchestrator.analyze = AsyncMock(
                 return_value={
@@ -351,14 +349,10 @@ class TestStudioAnalyzeEndpoint:
         WHEN calling POST /api/v1/studio/analyze
         THEN should return response with user_id.
         """
-        with patch(
-            "mcp_server_langgraph.api.v1.studio_ai.feature_flags"
-        ) as mock_flags:
+        with patch("mcp_server_langgraph.api.v1.studio_ai.feature_flags") as mock_flags:
             mock_flags.enable_studio_ai = True
 
-            with patch(
-                "mcp_server_langgraph.api.v1.studio_ai.get_studio_orchestrator"
-            ) as mock_get:
+            with patch("mcp_server_langgraph.api.v1.studio_ai.get_studio_orchestrator") as mock_get:
                 mock_orchestrator = MagicMock()
                 mock_orchestrator.analyze = AsyncMock(
                     return_value={
@@ -389,14 +383,10 @@ class TestStudioAnalyzeEndpoint:
         WHEN calling POST /api/v1/studio/analyze
         THEN should return response with session_id.
         """
-        with patch(
-            "mcp_server_langgraph.api.v1.studio_ai.feature_flags"
-        ) as mock_flags:
+        with patch("mcp_server_langgraph.api.v1.studio_ai.feature_flags") as mock_flags:
             mock_flags.enable_studio_ai = True
 
-            with patch(
-                "mcp_server_langgraph.api.v1.studio_ai.get_studio_orchestrator"
-            ) as mock_get:
+            with patch("mcp_server_langgraph.api.v1.studio_ai.get_studio_orchestrator") as mock_get:
                 mock_orchestrator = MagicMock()
                 mock_orchestrator.analyze = AsyncMock(
                     return_value={
@@ -421,7 +411,7 @@ class TestStudioAnalyzeEndpoint:
                 assert data.get("session_id") == "session-456"
 
     @pytest.mark.asyncio
-    async def test_analyze_returns_analyses(self, test_app: "FastAPI") -> None:
+    async def test_analyze_returns_analyses(self, test_app: FastAPI) -> None:
         """
         GIVEN the Studio AI router
         WHEN calling POST /api/v1/studio/analyze with tasks
@@ -429,9 +419,7 @@ class TestStudioAnalyzeEndpoint:
         """
         from mcp_server_langgraph.api.v1.studio_ai import get_studio_orchestrator
 
-        with patch(
-            "mcp_server_langgraph.api.v1.studio_ai.feature_flags"
-        ) as mock_flags:
+        with patch("mcp_server_langgraph.api.v1.studio_ai.feature_flags") as mock_flags:
             mock_flags.enable_studio_ai = True
 
             # Create mock orchestrator
@@ -440,9 +428,7 @@ class TestStudioAnalyzeEndpoint:
                 return_value={
                     "user_id": "user-123",
                     "session_id": "session-456",
-                    "analyses": {
-                        "persona_analysis": {"detected_persona": "bob", "confidence": 0.9}
-                    },
+                    "analyses": {"persona_analysis": {"detected_persona": "bob", "confidence": 0.9}},
                     "cross_insights": [],
                     "failed_analyses": [],
                     "total_cost": Decimal("0.02"),
@@ -477,14 +463,10 @@ class TestStudioAnalyzeEndpoint:
         WHEN calling POST /api/v1/studio/analyze
         THEN should return cross_insights in response.
         """
-        with patch(
-            "mcp_server_langgraph.api.v1.studio_ai.feature_flags"
-        ) as mock_flags:
+        with patch("mcp_server_langgraph.api.v1.studio_ai.feature_flags") as mock_flags:
             mock_flags.enable_studio_ai = True
 
-            with patch(
-                "mcp_server_langgraph.api.v1.studio_ai.get_studio_orchestrator"
-            ) as mock_get:
+            with patch("mcp_server_langgraph.api.v1.studio_ai.get_studio_orchestrator") as mock_get:
                 mock_orchestrator = MagicMock()
                 mock_orchestrator.analyze = AsyncMock(
                     return_value={
@@ -509,7 +491,7 @@ class TestStudioAnalyzeEndpoint:
                 assert "cross_insights" in data
 
     @pytest.mark.asyncio
-    async def test_analyze_returns_failed_analyses(self, test_app: "FastAPI") -> None:
+    async def test_analyze_returns_failed_analyses(self, test_app: FastAPI) -> None:
         """
         GIVEN the Studio AI router
         WHEN a task fails during analysis
@@ -517,9 +499,7 @@ class TestStudioAnalyzeEndpoint:
         """
         from mcp_server_langgraph.api.v1.studio_ai import get_studio_orchestrator
 
-        with patch(
-            "mcp_server_langgraph.api.v1.studio_ai.feature_flags"
-        ) as mock_flags:
+        with patch("mcp_server_langgraph.api.v1.studio_ai.feature_flags") as mock_flags:
             mock_flags.enable_studio_ai = True
 
             # Create mock orchestrator
@@ -571,17 +551,13 @@ class TestStudioAIFeatureFlag:
         gc.collect()
 
     @pytest.mark.asyncio
-    async def test_analyze_respects_feature_flag_disabled(
-        self, client: AsyncClient
-    ) -> None:
+    async def test_analyze_respects_feature_flag_disabled(self, client: AsyncClient) -> None:
         """
         GIVEN the Studio AI router with feature flag disabled
         WHEN calling POST /api/v1/studio/analyze
         THEN should return 503 or appropriate error.
         """
-        with patch(
-            "mcp_server_langgraph.api.v1.studio_ai.feature_flags"
-        ) as mock_flags:
+        with patch("mcp_server_langgraph.api.v1.studio_ai.feature_flags") as mock_flags:
             mock_flags.enable_studio_ai = False
 
             response = await client.post(
@@ -595,22 +571,16 @@ class TestStudioAIFeatureFlag:
             assert response.status_code == 503
 
     @pytest.mark.asyncio
-    async def test_analyze_works_when_feature_flag_enabled(
-        self, client: AsyncClient
-    ) -> None:
+    async def test_analyze_works_when_feature_flag_enabled(self, client: AsyncClient) -> None:
         """
         GIVEN the Studio AI router with feature flag enabled
         WHEN calling POST /api/v1/studio/analyze
         THEN should return 200 OK.
         """
-        with patch(
-            "mcp_server_langgraph.api.v1.studio_ai.feature_flags"
-        ) as mock_flags:
+        with patch("mcp_server_langgraph.api.v1.studio_ai.feature_flags") as mock_flags:
             mock_flags.enable_studio_ai = True
 
-            with patch(
-                "mcp_server_langgraph.api.v1.studio_ai.get_studio_orchestrator"
-            ) as mock_get:
+            with patch("mcp_server_langgraph.api.v1.studio_ai.get_studio_orchestrator") as mock_get:
                 mock_orchestrator = MagicMock()
                 mock_orchestrator.analyze = AsyncMock(
                     return_value={

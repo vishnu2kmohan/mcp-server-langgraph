@@ -8,7 +8,7 @@ TDD: RED phase - these tests define expected behavior before implementation.
 """
 
 import gc
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
@@ -45,11 +45,10 @@ class TestOrchestratorHITLMethod:
         # Just check the method signature accepts threshold
         # The actual execution will be tested separately
         import inspect
+
         sig = inspect.signature(orchestrator.execute_with_hitl)
         params = list(sig.parameters.keys())
-        assert "threshold" in params or any(
-            p.name == "threshold" for p in sig.parameters.values()
-        )
+        assert "threshold" in params or any(p.name == "threshold" for p in sig.parameters.values())
 
 
 @pytest.mark.unit
@@ -305,9 +304,7 @@ class TestOrchestratorHITLFeatureFlag:
 
         with (
             patch.object(orchestrator.coordinator, "execute_all") as mock_execute,
-            patch(
-                "mcp_server_langgraph.agents.orchestrator.feature_flags"
-            ) as mock_flags,
+            patch("mcp_server_langgraph.agents.orchestrator.feature_flags") as mock_flags,
         ):
             mock_flags.enable_agent_hitl = False
             mock_execute.return_value = [

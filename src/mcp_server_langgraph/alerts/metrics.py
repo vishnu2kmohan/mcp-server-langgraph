@@ -210,9 +210,7 @@ def record_recommendation_request(alert_id: str, cached: bool) -> None:
         recommendation_cache_miss_counter.add(1)
 
 
-def record_recommendation_generated(
-    alert_id: str, duration_seconds: float, success: bool
-) -> None:
+def record_recommendation_generated(alert_id: str, duration_seconds: float, success: bool) -> None:
     """Record AI recommendation generation result."""
     if success:
         recommendation_generated_counter.add(1, {"alert_id": alert_id[:8]})
@@ -236,9 +234,7 @@ def record_rate_limit_exceeded(endpoint: str) -> None:
     rate_limit_exceeded_counter.add(1, {"endpoint": endpoint})
 
 
-def record_remediation_workflow(
-    action: str, remediation_id: str, success: bool = True
-) -> None:
+def record_remediation_workflow(action: str, remediation_id: str, success: bool = True) -> None:
     """Record remediation workflow events."""
     labels = {"remediation_id": remediation_id[:8]}
     if action == "requested":
@@ -255,9 +251,7 @@ def record_remediation_workflow(
             remediation_execution_failed_counter.add(1, labels)
 
 
-def record_remediation_execution(
-    remediation_id: str, duration_seconds: float, success: bool
-) -> None:
+def record_remediation_execution(remediation_id: str, duration_seconds: float, success: bool) -> None:
     """Record remediation execution result."""
     labels = {"remediation_id": remediation_id[:8], "success": str(success).lower()}
     remediation_execution_duration_histogram.record(duration_seconds, labels)
@@ -488,13 +482,9 @@ def record_fewshot_usage(
 ) -> None:
     """Record few-shot example usage in recommendation generation."""
     if example_count > 0:
-        recommendation_with_fewshot_counter.add(
-            1, {"alert_type": alert_type[:50], "example_count": str(example_count)}
-        )
+        recommendation_with_fewshot_counter.add(1, {"alert_type": alert_type[:50], "example_count": str(example_count)})
     else:
-        recommendation_without_fewshot_counter.add(
-            1, {"alert_type": alert_type[:50]}
-        )
+        recommendation_without_fewshot_counter.add(1, {"alert_type": alert_type[:50]})
 
 
 def record_constraint_usage(

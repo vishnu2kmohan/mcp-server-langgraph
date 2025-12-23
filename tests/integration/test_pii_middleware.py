@@ -199,9 +199,7 @@ class TestPIIMiddlewareRoundtrip:
         # Request with multiple PII
         request = {
             "method": "tools/call",
-            "params": {
-                "input": "Contact: john@example.com, Phone: 555-123-4567, SSN: 123-45-6789"
-            },
+            "params": {"input": "Contact: john@example.com, Phone: 555-123-4567, SSN: 123-45-6789"},
         }
 
         # Process request (tokenize)

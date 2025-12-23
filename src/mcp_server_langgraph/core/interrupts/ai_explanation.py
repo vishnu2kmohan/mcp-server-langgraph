@@ -51,7 +51,7 @@ Example:
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import datetime, UTC
 from enum import Enum
 from typing import Any
 
@@ -162,12 +162,8 @@ class AIExplanation(BaseModel):
     """
 
     # Core explanation fields
-    why_uncertain: str = Field(
-        description="Natural language explanation of why the agent is uncertain"
-    )
-    what_could_go_wrong: str = Field(
-        description="Risk analysis of potential negative outcomes"
-    )
+    why_uncertain: str = Field(description="Natural language explanation of why the agent is uncertain")
+    what_could_go_wrong: str = Field(description="Risk analysis of potential negative outcomes")
 
     # Optional lists (default to empty)
     safer_alternatives: list[AlternativeSuggestion] = Field(
@@ -193,7 +189,7 @@ class AIExplanation(BaseModel):
         description="LLM model used to generate the explanation",
     )
     generated_at: datetime = Field(
-        default_factory=lambda: datetime.now(timezone.utc),
+        default_factory=lambda: datetime.now(UTC),
         description="Timestamp when explanation was generated",
     )
     generation_latency_ms: float = Field(

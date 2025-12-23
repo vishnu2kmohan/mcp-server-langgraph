@@ -24,7 +24,6 @@ from typing import TYPE_CHECKING, Any
 from mcp_server_langgraph.resilience.circuit_breaker import get_circuit_breaker
 
 if TYPE_CHECKING:
-
     from mcp_server_langgraph.notifications.push_analytics import (
         PushAnalytics,
     )
@@ -157,9 +156,7 @@ class PushNotificationSender:
         Returns:
             Number of successful sends.
         """
-        subscriptions = await self._subscription_store.get_subscriptions_for_user(
-            user_id
-        )
+        subscriptions = await self._subscription_store.get_subscriptions_for_user(user_id)
 
         if not subscriptions:
             logger.debug(f"No push subscriptions for user {user_id}")
@@ -171,18 +168,14 @@ class PushNotificationSender:
                 if await self._send_webpush(subscription, message, user_id=user_id):
                     success_count += 1
                     # Update last_used_at on success
-                    await self._subscription_store.update_last_used(
-                        subscription.endpoint, datetime.now(UTC)
-                    )
+                    await self._subscription_store.update_last_used(subscription.endpoint, datetime.now(UTC))
             except Exception as e:
                 logger.warning(
                     f"Failed to send push notification: {e}",
                     extra={"user_id": user_id, "endpoint": subscription.endpoint[:50]},
                 )
 
-        logger.info(
-            f"Sent push notification to user {user_id}: {success_count}/{len(subscriptions)} successful"
-        )
+        logger.info(f"Sent push notification to user {user_id}: {success_count}/{len(subscriptions)} successful")
         return success_count
 
     async def send_to_all(
@@ -209,18 +202,14 @@ class PushNotificationSender:
             try:
                 if await self._send_webpush(subscription, message):
                     success_count += 1
-                    await self._subscription_store.update_last_used(
-                        subscription.endpoint, datetime.now(UTC)
-                    )
+                    await self._subscription_store.update_last_used(subscription.endpoint, datetime.now(UTC))
             except Exception as e:
                 logger.warning(
                     f"Failed to send push notification: {e}",
                     extra={"endpoint": subscription.endpoint[:50]},
                 )
 
-        logger.info(
-            f"Sent broadcast push notification: {success_count}/{len(subscriptions)} successful"
-        )
+        logger.info(f"Sent broadcast push notification: {success_count}/{len(subscriptions)} successful")
         return success_count
 
     async def send_critical_alert(
@@ -377,9 +366,7 @@ class PushNotificationSender:
                         )
                     )
 
-                logger.debug(
-                    f"Successfully sent push notification to {subscription.endpoint[:50]}..."
-                )
+                logger.debug(f"Successfully sent push notification to {subscription.endpoint[:50]}...")
                 return True
 
             except Exception as e:
@@ -422,12 +409,8 @@ class PushNotificationSender:
                 # Check for 410 Gone (subscription expired)
                 error_str = str(e)
                 if "410" in error_str or "Gone" in error_str:
-                    logger.info(
-                        f"Removing expired subscription: {subscription.endpoint[:50]}..."
-                    )
-                    await self._subscription_store.delete_subscription(
-                        subscription.endpoint
-                    )
+                    logger.info(f"Removing expired subscription: {subscription.endpoint[:50]}...")
+                    await self._subscription_store.delete_subscription(subscription.endpoint)
                 else:
                     logger.warning(
                         f"WebPush error: {e}",
@@ -436,9 +419,7 @@ class PushNotificationSender:
                 return False
 
         except ImportError:
-            logger.warning(
-                "pywebpush not installed. Install with: pip install pywebpush"
-            )
+            logger.warning("pywebpush not installed. Install with: pip install pywebpush")
             return False
 
     async def process_fallback_queue(self, batch_size: int = 100) -> int:
@@ -480,9 +461,7 @@ class PushNotificationSender:
         for queued in messages:
             # Reconstruct subscription from endpoint
             subscriptions = (
-                await self._subscription_store.get_subscriptions_for_user(
-                    queued.user_id
-                )
+                await self._subscription_store.get_subscriptions_for_user(queued.user_id)
                 if queued.user_id
                 else await self._subscription_store.get_all_subscriptions()
             )
@@ -494,42 +473,28 @@ class PushNotificationSender:
             )
 
             if subscription is None:
-                logger.info(
-                    f"Subscription no longer exists, dropping queued message {queued.message_id}"
-                )
+                logger.info(f"Subscription no longer exists, dropping queued message {queued.message_id}")
                 continue
 
             try:
                 # Try to send (this will check circuit breaker again)
-                if await self._send_webpush(
-                    subscription, queued.message, user_id=queued.user_id
-                ):
+                if await self._send_webpush(subscription, queued.message, user_id=queued.user_id):
                     success_count += 1
-                    await self._subscription_store.update_last_used(
-                        subscription.endpoint, datetime.now(UTC)
-                    )
+                    await self._subscription_store.update_last_used(subscription.endpoint, datetime.now(UTC))
                 else:
                     # Send failed but circuit might have opened - requeue
                     try:
                         await self._fallback_queue.requeue(queued)
                     except MaxRetriesExceededError:
-                        logger.warning(
-                            f"Message {queued.message_id} exceeded max retries, dropping"
-                        )
+                        logger.warning(f"Message {queued.message_id} exceeded max retries, dropping")
             except Exception as e:
-                logger.warning(
-                    f"Error processing queued message {queued.message_id}: {e}"
-                )
+                logger.warning(f"Error processing queued message {queued.message_id}: {e}")
                 try:
                     await self._fallback_queue.requeue(queued)
                 except MaxRetriesExceededError:
-                    logger.warning(
-                        f"Message {queued.message_id} exceeded max retries, dropping"
-                    )
+                    logger.warning(f"Message {queued.message_id} exceeded max retries, dropping")
 
-        logger.info(
-            f"Processed fallback queue: {success_count}/{len(messages)} successful"
-        )
+        logger.info(f"Processed fallback queue: {success_count}/{len(messages)} successful")
         return success_count
 
     @property

@@ -8,7 +8,6 @@ Reference: ADR-0026 - Comprehensive Client Resilience Patterns
 
 import gc
 from datetime import datetime, UTC
-from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
@@ -19,6 +18,7 @@ from mcp_server_langgraph.observability.query.interfaces import (
 )
 
 pytestmark = pytest.mark.unit
+
 
 @pytest.mark.xdist_group(name="postgres_alert_store")
 class TestPostgresAlertStore:
@@ -93,7 +93,6 @@ class TestPostgresAlertStore:
     def test_postgres_alert_store_implements_protocol(self) -> None:
         """PostgresAlertStore should implement AlertStoreProtocol."""
         from mcp_server_langgraph.alerts.stores import (
-            AlertStoreProtocol,
             PostgresAlertStore,
         )
 
@@ -120,7 +119,6 @@ class TestAlertStoreProtocol:
     def test_in_memory_alert_store_implements_protocol(self) -> None:
         """InMemoryAlertStore should implement AlertStoreProtocol."""
         from mcp_server_langgraph.alerts.stores import (
-            AlertStoreProtocol,
             InMemoryAlertStore,
         )
 

@@ -12,7 +12,7 @@ from __future__ import annotations
 import gc
 
 import pytest
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock, patch
 
 pytestmark = [pytest.mark.unit, pytest.mark.sdk]
 
@@ -47,15 +47,11 @@ class TestOrchestratorAgentDefinitionAdapter:
             prompt="Execute the test task",
         )
 
-        with patch(
-            "mcp_server_langgraph.agents.orchestrator.feature_flags"
-        ) as mock_flags:
+        with patch("mcp_server_langgraph.agents.orchestrator.feature_flags") as mock_flags:
             mock_flags.enable_sdk_agent_definition = True
             mock_flags.require_feature = MagicMock()
 
-            result = await orchestrator.execute_definition(
-                agent, task_id="test-task-1"
-            )
+            result = await orchestrator.execute_definition(agent, task_id="test-task-1")
 
             assert result is not None
 
@@ -73,15 +69,11 @@ class TestOrchestratorAgentDefinitionAdapter:
             prompt="Return a result",
         )
 
-        with patch(
-            "mcp_server_langgraph.agents.orchestrator.feature_flags"
-        ) as mock_flags:
+        with patch("mcp_server_langgraph.agents.orchestrator.feature_flags") as mock_flags:
             mock_flags.enable_sdk_agent_definition = True
             mock_flags.require_feature = MagicMock()
 
-            result = await orchestrator.execute_definition(
-                agent, task_id="test-task-2"
-            )
+            result = await orchestrator.execute_definition(agent, task_id="test-task-2")
 
             assert isinstance(result, SubagentResult)
 
@@ -100,16 +92,12 @@ class TestOrchestratorAgentDefinitionAdapter:
             model="haiku",
         )
 
-        with patch(
-            "mcp_server_langgraph.agents.orchestrator.feature_flags"
-        ) as mock_flags:
+        with patch("mcp_server_langgraph.agents.orchestrator.feature_flags") as mock_flags:
             mock_flags.enable_sdk_agent_definition = True
             mock_flags.require_feature = MagicMock()
 
             # Execute and verify the result reflects the model was used
-            result = await orchestrator.execute_definition(
-                agent, task_id="test-task-3"
-            )
+            result = await orchestrator.execute_definition(agent, task_id="test-task-3")
 
             assert isinstance(result, SubagentResult)
             assert result.task_id == "test-task-3"
@@ -143,9 +131,7 @@ class TestOrchestratorAgentDefinitionAdapter:
             mock_flags.enable_sdk_agent_definition = False
 
             with pytest.raises(FeatureDisabledError):
-                await orchestrator.execute_definition(
-                    agent, task_id="test-task-flag"
-                )
+                await orchestrator.execute_definition(agent, task_id="test-task-flag")
         finally:
             # Restore original values
             mock_flags.is_test_mode = original_is_test_mode
@@ -164,15 +150,11 @@ class TestOrchestratorAgentDefinitionAdapter:
             prompt="You are a helpful assistant. Complete this task.",
         )
 
-        with patch(
-            "mcp_server_langgraph.agents.orchestrator.feature_flags"
-        ) as mock_flags:
+        with patch("mcp_server_langgraph.agents.orchestrator.feature_flags") as mock_flags:
             mock_flags.enable_sdk_agent_definition = True
             mock_flags.require_feature = MagicMock()
 
-            result = await orchestrator.execute_definition(
-                agent, task_id="test-prompt"
-            )
+            result = await orchestrator.execute_definition(agent, task_id="test-prompt")
 
             # Result should succeed (placeholder execution)
             assert result.success is True
@@ -273,9 +255,7 @@ class TestOrchestratorRegistryIntegration:
 
         orchestrator = Orchestrator()
 
-        with patch(
-            "mcp_server_langgraph.agents.orchestrator.feature_flags"
-        ) as mock_flags:
+        with patch("mcp_server_langgraph.agents.orchestrator.feature_flags") as mock_flags:
             mock_flags.enable_sdk_agent_definition = True
             mock_flags.require_feature = MagicMock()
 
@@ -283,8 +263,6 @@ class TestOrchestratorRegistryIntegration:
             agent = registry.get("code_reviewer")
             assert agent is not None
 
-            result = await orchestrator.execute_definition(
-                agent, task_id="review-task"
-            )
+            result = await orchestrator.execute_definition(agent, task_id="review-task")
 
             assert result.success is True

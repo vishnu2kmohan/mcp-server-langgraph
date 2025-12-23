@@ -11,7 +11,6 @@ Performance Targets:
 """
 
 import gc
-import string
 
 import pytest
 

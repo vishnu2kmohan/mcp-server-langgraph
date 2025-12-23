@@ -134,10 +134,7 @@ class RemediationApprovalQueue:
             List of pending remediation requests.
         """
         async with self._lock:
-            return [
-                r for r in self._remediations.values()
-                if r.status == ApprovalStatus.PENDING
-            ]
+            return [r for r in self._remediations.values() if r.status == ApprovalStatus.PENDING]
 
     async def get_remediation(self, remediation_id: str) -> RemediationRequest | None:
         """
@@ -256,8 +253,7 @@ class RemediationApprovalQueue:
         """
         async with self._lock:
             completed = [
-                r for r in self._remediations.values()
-                if r.status in (ApprovalStatus.APPROVED, ApprovalStatus.REJECTED)
+                r for r in self._remediations.values() if r.status in (ApprovalStatus.APPROVED, ApprovalStatus.REJECTED)
             ]
             # Sort by approved_at descending (most recent first)
             completed.sort(key=lambda x: x.approved_at or "", reverse=True)

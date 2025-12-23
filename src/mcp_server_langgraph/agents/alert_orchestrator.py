@@ -57,12 +57,14 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 # Supported analysis types for alert orchestration
-ALERT_ANALYSIS_TYPES = frozenset({
-    "correlation",
-    "root_cause",
-    "remediation",
-    "pattern_detection",
-})
+ALERT_ANALYSIS_TYPES = frozenset(
+    {
+        "correlation",
+        "root_cause",
+        "remediation",
+        "pattern_detection",
+    }
+)
 
 
 @dataclass
@@ -145,9 +147,7 @@ class AlertOrchestrator(BaseOrchestrator[AlertAnalysisTask, AlertAnalysisResult]
         """Return the feature flag name for this orchestrator."""
         return "enable_orchestrated_alert_analysis"
 
-    def _create_failed_result(
-        self, task: AlertAnalysisTask, error: str
-    ) -> AlertAnalysisResult:
+    def _create_failed_result(self, task: AlertAnalysisTask, error: str) -> AlertAnalysisResult:
         """Create a failed result for a task.
 
         Args:

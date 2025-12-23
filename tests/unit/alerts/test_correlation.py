@@ -16,11 +16,11 @@ from __future__ import annotations
 
 import gc
 from datetime import UTC, datetime, timedelta
-from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
 pytestmark = pytest.mark.unit
+
 
 @pytest.mark.unit
 @pytest.mark.xdist_group(name="alert_correlation")
@@ -36,7 +36,6 @@ class TestAlertCorrelation:
         from mcp_server_langgraph.alerts.correlation import (
             AlertCorrelationEngine,
             CorrelatedAlert,
-            CorrelationGroup,
         )
 
         engine = AlertCorrelationEngine()
@@ -155,9 +154,7 @@ class TestTimeBasedCorrelation:
         ]
 
         # 5-minute window should group first two alerts
-        groups = engine.correlate_by_time(
-            alerts, window_minutes=5, reference_time=now - timedelta(minutes=10)
-        )
+        groups = engine.correlate_by_time(alerts, window_minutes=5, reference_time=now - timedelta(minutes=10))
 
         # Find the group containing the first alert
         first_group = next(
@@ -195,14 +192,10 @@ class TestTimeBasedCorrelation:
         ]
 
         # 5-minute window should not group alerts 2 hours apart
-        groups = engine.correlate_by_time(
-            alerts, window_minutes=5, reference_time=now - timedelta(hours=2)
-        )
+        groups = engine.correlate_by_time(alerts, window_minutes=5, reference_time=now - timedelta(hours=2))
 
         assert len(groups) >= 1
-        first_group = next(
-            g for g in groups if any(a.alert_id == "alert-001" for a in g.alerts)
-        )
+        first_group = next(g for g in groups if any(a.alert_id == "alert-001" for a in g.alerts))
         assert len(first_group.alerts) == 1
 
 

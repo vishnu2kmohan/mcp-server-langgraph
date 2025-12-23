@@ -16,6 +16,18 @@ export { useDevToolsAI } from "./hooks/useDevToolsAI";
 export { useDevToolsWebSocket } from "./hooks/useDevToolsWebSocket";
 export { useTraceLinking } from "./hooks/useTraceLinking";
 export { useStateHistory } from "./hooks/useStateHistory";
+export { useDevToolsTimeline } from "./hooks/useDevToolsTimeline";
+
+// Context providers
+export {
+  DevToolsTimelineProvider,
+  useTimelineContext,
+} from "./context/DevToolsTimelineProvider";
+
+export type {
+  TimelineContextValue,
+  DevToolsTimelineProviderProps,
+} from "./context/DevToolsTimelineProvider";
 
 // Lazy loading
 export {
@@ -82,3 +94,16 @@ export type {
   ProblemsTabProps,
   AIInsightsTabProps,
 } from "./types";
+
+// Timeline types
+export type {
+  TimelineEvent,
+  TimelineEventType,
+  TimelineBookmark,
+  SpanHierarchy,
+  SpanStats,
+  TimeWindow,
+  ActiveFilters,
+  UseDevToolsTimelineOptions,
+  UseDevToolsTimelineReturn,
+} from "./hooks/useDevToolsTimeline";

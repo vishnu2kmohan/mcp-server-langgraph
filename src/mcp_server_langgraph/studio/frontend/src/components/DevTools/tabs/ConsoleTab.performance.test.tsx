@@ -4,7 +4,13 @@
  * TDD tests for performance optimizations in ConsoleTab.
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { render, screen, fireEvent, waitFor, act } from "@testing-library/react";
+import {
+  render,
+  screen,
+  fireEvent,
+  waitFor,
+  act,
+} from "@testing-library/react";
 
 import { ConsoleTab } from "./ConsoleTab";
 import type { ConsoleEntry } from "../types";
@@ -32,7 +38,9 @@ vi.mock("../hooks/useConsoleEntries", () => ({
 function generateMockEntries(count: number): ConsoleEntry[] {
   return Array.from({ length: count }, (_, i) => ({
     id: `entry-${i}`,
-    level: ["info", "warning", "error", "debug"][i % 4] as ConsoleEntry["level"],
+    level: ["info", "warning", "error", "debug"][
+      i % 4
+    ] as ConsoleEntry["level"],
     source: ["system", "api", "mcp", "notification", "execution", "websocket"][
       i % 6
     ] as ConsoleEntry["source"],
@@ -164,9 +172,7 @@ describe("ConsoleTab Performance", () => {
 
       // Expanded data should be visible
       await waitFor(() => {
-        expect(
-          screen.getByTestId("expanded-data-entry-0"),
-        ).toBeInTheDocument();
+        expect(screen.getByTestId("expanded-data-entry-0")).toBeInTheDocument();
       });
     });
 
@@ -299,7 +305,13 @@ describe("ConsoleTab Performance", () => {
       for (let i = 0; i < 10; i++) {
         rerender(
           <ConsoleTab
-            filter={["all", "info", "warning", "error"][i % 4] as "all" | "info" | "warning" | "error"}
+            filter={
+              ["all", "info", "warning", "error"][i % 4] as
+                | "all"
+                | "info"
+                | "warning"
+                | "error"
+            }
             onFilterChange={vi.fn()}
             contextEntityId={`session-${i}`}
           />,

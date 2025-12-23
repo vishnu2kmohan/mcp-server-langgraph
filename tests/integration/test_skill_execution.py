@@ -9,7 +9,6 @@ TDD: RED phase - these tests define expected behavior before implementation.
 
 import gc
 import os
-import tempfile
 from pathlib import Path
 from unittest.mock import AsyncMock, MagicMock
 
@@ -313,9 +312,7 @@ print(json.dumps(result))
         executor = SkillExecutor()
         executor.set_sandbox(sandbox)
 
-        result = await executor.execute(
-            skill, "hello.py", args={"name": "Claude"}
-        )
+        result = await executor.execute(skill, "hello.py", args={"name": "Claude"})
 
         # Verify
         assert result.success is True

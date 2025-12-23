@@ -1,9 +1,9 @@
 """
-Studio Orchestrator (HybridShell AI Enhancement)
+Studio Orchestrator (StudioShell AI Enhancement)
 
 Unified orchestrator for ALL Studio AI capabilities.
 
-Consolidates UXOrchestrator + HybridShellOrchestrator for:
+Consolidates UXOrchestrator + StudioShellOrchestrator for:
 - 8 task categories: UX, SESSION, CONVERSATION, CANVAS, DIAGRAM, TRACE, HITL, COMMAND
 - 25+ task types across all categories
 - Cross-category insights synthesis
@@ -207,7 +207,7 @@ class StudioResult(BaseResult):
 class StudioOrchestrator(BaseOrchestrator[StudioTask, StudioResult]):
     """Unified orchestrator for ALL Studio AI capabilities.
 
-    Consolidates UXOrchestrator + HybridShellOrchestrator to:
+    Consolidates UXOrchestrator + StudioShellOrchestrator to:
     - Single cost tracking pool across all AI features
     - Unified resilience patterns
     - Cross-category insights synthesis

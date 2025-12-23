@@ -125,7 +125,7 @@ class MCPClientSession:
             extra={
                 "server_name": self.config.name,
                 "transport": self.transport_type.value,
-            }
+            },
         )
 
         if self.transport_type == MCPTransportType.STDIO:
@@ -139,10 +139,7 @@ class MCPClientSession:
 
         self._connected = True
 
-        logger.info(
-            "Connected to MCP server",
-            extra={"server_name": self.config.name}
-        )
+        logger.info("Connected to MCP server", extra={"server_name": self.config.name})
 
     async def _connect_stdio(self) -> None:
         """Establish STDIO connection by spawning subprocess.
@@ -358,16 +355,13 @@ class MCPClientSession:
         if not self._connected:
             return
 
-        logger.info(
-            "Disconnecting from MCP server",
-            extra={"server_name": self.config.name}
-        )
+        logger.info("Disconnecting from MCP server", extra={"server_name": self.config.name})
 
         if self.transport_type == MCPTransportType.STDIO and self._process:
             self._process.terminate()
             try:
                 await asyncio.wait_for(self._process.wait(), timeout=5.0)
-            except asyncio.TimeoutError:
+            except TimeoutError:
                 self._process.kill()
             self._process = None
 
@@ -380,10 +374,7 @@ class MCPClientSession:
         self.server_info = None
         self._session_id = None
 
-        logger.info(
-            "Disconnected from MCP server",
-            extra={"server_name": self.config.name}
-        )
+        logger.info("Disconnected from MCP server", extra={"server_name": self.config.name})
 
     async def list_tools(self) -> list[dict[str, Any]]:
         """Get available tools from the server.
@@ -478,7 +469,7 @@ class MCPClientSession:
             extra={
                 "server_name": self.config.name,
                 "tool_name": name,
-            }
+            },
         )
 
         if self.transport_type == MCPTransportType.STDIO:

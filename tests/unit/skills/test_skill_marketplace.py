@@ -344,11 +344,13 @@ class TestMarketplaceGitHubAPI:
 
         # Mock HTTP client response
         mock_response = MagicMock()
-        mock_response.json = MagicMock(return_value=[
-            {"name": "web-research", "type": "dir"},
-            {"name": "code-review", "type": "dir"},
-            {"name": "README.md", "type": "file"},  # Should be filtered out
-        ])
+        mock_response.json = MagicMock(
+            return_value=[
+                {"name": "web-research", "type": "dir"},
+                {"name": "code-review", "type": "dir"},
+                {"name": "README.md", "type": "file"},  # Should be filtered out
+            ]
+        )
         mock_response.status_code = 200
 
         with patch("httpx.AsyncClient") as mock_client_class:
@@ -435,9 +437,11 @@ description: Research topics using web search
         )
 
         mock_response = MagicMock()
-        mock_response.json = MagicMock(return_value=[
-            {"name": "skill-1", "type": "dir"},
-        ])
+        mock_response.json = MagicMock(
+            return_value=[
+                {"name": "skill-1", "type": "dir"},
+            ]
+        )
         mock_response.status_code = 200
 
         with patch("httpx.AsyncClient") as mock_client_class:
@@ -591,7 +595,7 @@ class TestMarketplaceCoverage:
         WHEN listing skills
         THEN an empty list is returned
         """
-        from unittest.mock import AsyncMock, MagicMock, patch
+        from unittest.mock import AsyncMock, patch
 
         from mcp_server_langgraph.skills.marketplace import (
             MarketplaceClient,
@@ -794,13 +798,13 @@ version: '1.0.0'
 
         client = MarketplaceClient()
 
-        content = '''---
+        content = """---
 name: "double-quoted"
 description: "A skill with double quotes"
 ---
 
 # Instructions
-'''
+"""
 
         result = client._parse_skill_md(content, "fallback-name")
 
@@ -925,10 +929,12 @@ class TestMarketplaceOCI:
 
         # Mock the OCI registry tags list response
         mock_response = MagicMock()
-        mock_response.json = MagicMock(return_value={
-            "name": "anthropics/skills",
-            "tags": ["web-research", "code-review", "document-analysis"],
-        })
+        mock_response.json = MagicMock(
+            return_value={
+                "name": "anthropics/skills",
+                "tags": ["web-research", "code-review", "document-analysis"],
+            }
+        )
         mock_response.status_code = 200
 
         with patch("httpx.AsyncClient") as mock_client_class:
@@ -974,19 +980,21 @@ class TestMarketplaceOCI:
         }
 
         mock_manifest_response = MagicMock()
-        mock_manifest_response.json = MagicMock(return_value={
-            "schemaVersion": 2,
-            "config": {
-                "mediaType": "application/vnd.mcp.skill.config.v1+json",
-                "digest": "sha256:abc123",
-            },
-            "layers": [
-                {
-                    "mediaType": "application/vnd.mcp.skill.instructions.v1+md",
-                    "digest": "sha256:def456",
+        mock_manifest_response.json = MagicMock(
+            return_value={
+                "schemaVersion": 2,
+                "config": {
+                    "mediaType": "application/vnd.mcp.skill.config.v1+json",
+                    "digest": "sha256:abc123",
                 },
-            ],
-        })
+                "layers": [
+                    {
+                        "mediaType": "application/vnd.mcp.skill.instructions.v1+md",
+                        "digest": "sha256:def456",
+                    },
+                ],
+            }
+        )
         mock_manifest_response.status_code = 200
 
         mock_config_response = MagicMock()
@@ -995,10 +1003,12 @@ class TestMarketplaceOCI:
 
         with patch("httpx.AsyncClient") as mock_client_class:
             mock_client = AsyncMock()
-            mock_client.get = AsyncMock(side_effect=[
-                mock_manifest_response,
-                mock_config_response,
-            ])
+            mock_client.get = AsyncMock(
+                side_effect=[
+                    mock_manifest_response,
+                    mock_config_response,
+                ]
+            )
             mock_client.__aenter__ = AsyncMock(return_value=mock_client)
             mock_client.__aexit__ = AsyncMock(return_value=None)
             mock_client_class.return_value = mock_client
@@ -1108,10 +1118,12 @@ class TestMarketplaceOCI:
         )
 
         mock_response = MagicMock()
-        mock_response.json = MagicMock(return_value={
-            "name": "org/skills",
-            "tags": ["skill-1"],
-        })
+        mock_response.json = MagicMock(
+            return_value={
+                "name": "org/skills",
+                "tags": ["skill-1"],
+            }
+        )
         mock_response.status_code = 200
 
         with patch("httpx.AsyncClient") as mock_client_class:
@@ -1217,12 +1229,14 @@ class TestMarketplaceRegistryAPI:
 
         # Mock the registry API response
         mock_response = MagicMock()
-        mock_response.json = MagicMock(return_value={
-            "skills": [
-                {"name": "web-research", "version": "1.0.0"},
-                {"name": "code-review", "version": "2.1.0"},
-            ],
-        })
+        mock_response.json = MagicMock(
+            return_value={
+                "skills": [
+                    {"name": "web-research", "version": "1.0.0"},
+                    {"name": "code-review", "version": "2.1.0"},
+                ],
+            }
+        )
         mock_response.status_code = 200
 
         with patch("httpx.AsyncClient") as mock_client_class:
@@ -1261,12 +1275,14 @@ class TestMarketplaceRegistryAPI:
         )
 
         mock_response = MagicMock()
-        mock_response.json = MagicMock(return_value={
-            "name": "web-research",
-            "description": "Research topics using web search",
-            "version": "1.0.0",
-            "instructions": "# Web Research\n\nSearch the web for topics.",
-        })
+        mock_response.json = MagicMock(
+            return_value={
+                "name": "web-research",
+                "description": "Research topics using web search",
+                "version": "1.0.0",
+                "instructions": "# Web Research\n\nSearch the web for topics.",
+            }
+        )
         mock_response.status_code = 200
 
         with patch("httpx.AsyncClient") as mock_client_class:
@@ -1415,9 +1431,11 @@ class TestMarketplaceRegistryAPI:
         )
 
         mock_response = MagicMock()
-        mock_response.json = MagicMock(return_value={
-            "skills": [{"name": "skill-1"}],
-        })
+        mock_response.json = MagicMock(
+            return_value={
+                "skills": [{"name": "skill-1"}],
+            }
+        )
         mock_response.status_code = 200
 
         with patch("httpx.AsyncClient") as mock_client_class:

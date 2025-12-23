@@ -63,12 +63,14 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 # Supported analysis types for explanation orchestration
-EXPLANATION_ANALYSIS_TYPES = frozenset({
-    "uncertainty_analysis",
-    "risk_analysis",
-    "alternatives_analysis",
-    "evidence_extraction",
-})
+EXPLANATION_ANALYSIS_TYPES = frozenset(
+    {
+        "uncertainty_analysis",
+        "risk_analysis",
+        "alternatives_analysis",
+        "evidence_extraction",
+    }
+)
 
 
 @dataclass
@@ -154,9 +156,7 @@ class ExplanationOrchestrator(BaseOrchestrator[ExplanationTask, ExplanationResul
         """Return the feature flag name for this orchestrator."""
         return "enable_ai_explanations"
 
-    def _create_failed_result(
-        self, task: ExplanationTask, error: str
-    ) -> ExplanationResult:
+    def _create_failed_result(self, task: ExplanationTask, error: str) -> ExplanationResult:
         """Create a failed result for a task.
 
         Args:
@@ -230,9 +230,7 @@ class ExplanationOrchestrator(BaseOrchestrator[ExplanationTask, ExplanationResul
         context = task.context
         prompt = self._build_uncertainty_prompt(context)
 
-        response = await self._llm_factory.ainvoke(
-            [{"role": "user", "content": prompt}]
-        )
+        response = await self._llm_factory.ainvoke([{"role": "user", "content": prompt}])
 
         # Extract content from response
         content = self._extract_content(response)
@@ -251,9 +249,7 @@ class ExplanationOrchestrator(BaseOrchestrator[ExplanationTask, ExplanationResul
         context = task.context
         prompt = self._build_risk_prompt(context)
 
-        response = await self._llm_factory.ainvoke(
-            [{"role": "user", "content": prompt}]
-        )
+        response = await self._llm_factory.ainvoke([{"role": "user", "content": prompt}])
 
         content = self._extract_content(response)
 
@@ -271,9 +267,7 @@ class ExplanationOrchestrator(BaseOrchestrator[ExplanationTask, ExplanationResul
         context = task.context
         prompt = self._build_alternatives_prompt(context)
 
-        response = await self._llm_factory.ainvoke(
-            [{"role": "user", "content": prompt}]
-        )
+        response = await self._llm_factory.ainvoke([{"role": "user", "content": prompt}])
 
         content = self._extract_content(response)
 
@@ -298,29 +292,37 @@ class ExplanationOrchestrator(BaseOrchestrator[ExplanationTask, ExplanationResul
         for step in trace:
             step_lower = step.lower()
             if "ambiguous" in step_lower:
-                factors.append({
-                    "factor": "ambiguous_input",
-                    "weight": -0.2,
-                    "evidence": step,
-                })
+                factors.append(
+                    {
+                        "factor": "ambiguous_input",
+                        "weight": -0.2,
+                        "evidence": step,
+                    }
+                )
             if "multiple" in step_lower and "option" in step_lower:
-                factors.append({
-                    "factor": "multiple_interpretations",
-                    "weight": -0.15,
-                    "evidence": step,
-                })
+                factors.append(
+                    {
+                        "factor": "multiple_interpretations",
+                        "weight": -0.15,
+                        "evidence": step,
+                    }
+                )
             if "unclear" in step_lower or "uncertain" in step_lower:
-                factors.append({
-                    "factor": "unclear_intent",
-                    "weight": -0.1,
-                    "evidence": step,
-                })
+                factors.append(
+                    {
+                        "factor": "unclear_intent",
+                        "weight": -0.1,
+                        "evidence": step,
+                    }
+                )
             if "confident" in step_lower or "certain" in step_lower:
-                factors.append({
-                    "factor": "confidence_indicator",
-                    "weight": 0.1,
-                    "evidence": step,
-                })
+                factors.append(
+                    {
+                        "factor": "confidence_indicator",
+                        "weight": 0.1,
+                        "evidence": step,
+                    }
+                )
 
         return {
             "confidence_factors": factors,
@@ -423,9 +425,7 @@ Respond with just the alternatives, one per line."""
             return response
         return str(response)
 
-    def _parse_alternatives(
-        self, content: str, context: dict[str, Any]
-    ) -> list[dict[str, Any]]:
+    def _parse_alternatives(self, content: str, context: dict[str, Any]) -> list[dict[str, Any]]:
         """Parse alternatives from LLM response.
 
         Args:
@@ -455,18 +455,22 @@ Respond with just the alternatives, one per line."""
                 except ValueError:
                     confidence = 0.85
 
-                alternatives.append({
-                    "action": action,
-                    "confidence": min(max(confidence, 0.0), 1.0),
-                    "trade_off": trade_off,
-                })
+                alternatives.append(
+                    {
+                        "action": action,
+                        "confidence": min(max(confidence, 0.0), 1.0),
+                        "trade_off": trade_off,
+                    }
+                )
             elif len(parts) == 1 and len(line) > 10:
                 # Single action without structured format
-                alternatives.append({
-                    "action": line,
-                    "confidence": 0.85,
-                    "trade_off": "Alternative approach",
-                })
+                alternatives.append(
+                    {
+                        "action": line,
+                        "confidence": 0.85,
+                        "trade_off": "Alternative approach",
+                    }
+                )
 
         # Limit to 3 alternatives
         return alternatives[:3]
@@ -498,24 +502,14 @@ Respond with just the alternatives, one per line."""
             result_data = result.result or {}
 
             if result.task_type == "uncertainty_analysis":
-                explanation_data["why_uncertain"] = result_data.get(
-                    "why_uncertain", ""
-                )
+                explanation_data["why_uncertain"] = result_data.get("why_uncertain", "")
             elif result.task_type == "risk_analysis":
-                explanation_data["what_could_go_wrong"] = result_data.get(
-                    "what_could_go_wrong", ""
-                )
+                explanation_data["what_could_go_wrong"] = result_data.get("what_could_go_wrong", "")
             elif result.task_type == "alternatives_analysis":
-                explanation_data["safer_alternatives"] = result_data.get(
-                    "safer_alternatives", []
-                )
+                explanation_data["safer_alternatives"] = result_data.get("safer_alternatives", [])
             elif result.task_type == "evidence_extraction":
-                explanation_data["confidence_factors"] = result_data.get(
-                    "confidence_factors", []
-                )
-                explanation_data["reasoning_trace"] = result_data.get(
-                    "reasoning_trace", []
-                )
+                explanation_data["confidence_factors"] = result_data.get("confidence_factors", [])
+                explanation_data["reasoning_trace"] = result_data.get("reasoning_trace", [])
 
         return {
             "explanation": explanation_data,
@@ -607,14 +601,8 @@ Respond with just the alternatives, one per line."""
         return AIExplanation(
             why_uncertain=explanation_data.get("why_uncertain", ""),
             what_could_go_wrong=explanation_data.get("what_could_go_wrong", ""),
-            safer_alternatives=[
-                AlternativeSuggestion(**alt)
-                for alt in explanation_data.get("safer_alternatives", [])
-            ],
-            confidence_factors=[
-                ConfidenceFactor(**factor)
-                for factor in explanation_data.get("confidence_factors", [])
-            ],
+            safer_alternatives=[AlternativeSuggestion(**alt) for alt in explanation_data.get("safer_alternatives", [])],
+            confidence_factors=[ConfidenceFactor(**factor) for factor in explanation_data.get("confidence_factors", [])],
             reasoning_trace=explanation_data.get("reasoning_trace", []),
             generation_latency_ms=latency_ms,
         )

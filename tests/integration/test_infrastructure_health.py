@@ -20,7 +20,6 @@ Note: These tests require test infrastructure to be running:
 from __future__ import annotations
 
 import gc
-import os
 import socket
 import time
 from typing import TYPE_CHECKING
@@ -77,9 +76,7 @@ def wait_for_port(host: str, port: int, timeout: float = 30.0) -> bool:
 def skip_if_no_infra() -> None:
     """Skip test if infrastructure is not running."""
     if not is_port_open("localhost", TEST_POSTGRES_PORT, timeout=1.0):
-        pytest.skip(
-            "Test infrastructure not running. Start with: make test-infra-up"
-        )
+        pytest.skip("Test infrastructure not running. Start with: make test-infra-up")
 
 
 @pytest.mark.integration
@@ -100,40 +97,35 @@ class TestInfrastructurePortConnectivity:
         """Test that PostgreSQL is accepting connections on port 9432."""
         skip_if_no_infra()
         assert is_port_open("localhost", TEST_POSTGRES_PORT), (
-            f"PostgreSQL port {TEST_POSTGRES_PORT} is not open. "
-            f"Ensure docker-compose.test.yml is running."
+            f"PostgreSQL port {TEST_POSTGRES_PORT} is not open. Ensure docker-compose.test.yml is running."
         )
 
     def test_redis_port_is_open(self) -> None:
         """Test that Redis is accepting connections on port 9379."""
         skip_if_no_infra()
         assert is_port_open("localhost", TEST_REDIS_PORT), (
-            f"Redis port {TEST_REDIS_PORT} is not open. "
-            f"Ensure docker-compose.test.yml is running."
+            f"Redis port {TEST_REDIS_PORT} is not open. Ensure docker-compose.test.yml is running."
         )
 
     def test_openfga_http_port_is_open(self) -> None:
         """Test that OpenFGA HTTP API is accepting connections on port 9080."""
         skip_if_no_infra()
         assert is_port_open("localhost", TEST_OPENFGA_HTTP_PORT), (
-            f"OpenFGA HTTP port {TEST_OPENFGA_HTTP_PORT} is not open. "
-            f"Ensure docker-compose.test.yml is running."
+            f"OpenFGA HTTP port {TEST_OPENFGA_HTTP_PORT} is not open. Ensure docker-compose.test.yml is running."
         )
 
     def test_keycloak_http_port_is_open(self) -> None:
         """Test that Keycloak HTTP API is accepting connections on port 9082."""
         skip_if_no_infra()
         assert is_port_open("localhost", TEST_KEYCLOAK_PORT), (
-            f"Keycloak HTTP port {TEST_KEYCLOAK_PORT} is not open. "
-            f"Ensure docker-compose.test.yml is running."
+            f"Keycloak HTTP port {TEST_KEYCLOAK_PORT} is not open. Ensure docker-compose.test.yml is running."
         )
 
     def test_qdrant_port_is_open(self) -> None:
         """Test that Qdrant is accepting connections on port 9333."""
         skip_if_no_infra()
         assert is_port_open("localhost", TEST_QDRANT_PORT), (
-            f"Qdrant port {TEST_QDRANT_PORT} is not open. "
-            f"Ensure docker-compose.test.yml is running."
+            f"Qdrant port {TEST_QDRANT_PORT} is not open. Ensure docker-compose.test.yml is running."
         )
 
 
@@ -159,8 +151,7 @@ class TestInfrastructureHealthEndpoints:
         response = get_http_response(url)
         assert response is not None, f"Failed to connect to OpenFGA health endpoint: {url}"
         assert response.status_code == 200, (
-            f"OpenFGA health check failed. Status: {response.status_code}, "
-            f"Body: {response.text[:200]}"
+            f"OpenFGA health check failed. Status: {response.status_code}, Body: {response.text[:200]}"
         )
 
     def test_qdrant_readiness_endpoint(self) -> None:
@@ -170,8 +161,7 @@ class TestInfrastructureHealthEndpoints:
         response = get_http_response(url)
         assert response is not None, f"Failed to connect to Qdrant readiness endpoint: {url}"
         assert response.status_code == 200, (
-            f"Qdrant readiness check failed. Status: {response.status_code}, "
-            f"Body: {response.text[:200]}"
+            f"Qdrant readiness check failed. Status: {response.status_code}, Body: {response.text[:200]}"
         )
 
 
@@ -200,8 +190,7 @@ class TestKeycloakConnectivity:
         """
         skip_if_no_infra()
         assert is_port_open("localhost", TEST_KEYCLOAK_PORT), (
-            f"Keycloak not reachable at localhost:{TEST_KEYCLOAK_PORT}. "
-            f"This is a critical E2E test infrastructure issue."
+            f"Keycloak not reachable at localhost:{TEST_KEYCLOAK_PORT}. This is a critical E2E test infrastructure issue."
         )
 
     def test_keycloak_oidc_wellknown_endpoint(self) -> None:
@@ -264,9 +253,7 @@ class TestKeycloakConnectivity:
         # The token endpoint only accepts POST, so GET returns 405 Method Not Allowed
         # We just verify it's reachable and responds appropriately
         token_response = get_http_response(token_endpoint)
-        assert token_response is not None, (
-            f"Failed to connect to Keycloak token endpoint: {token_endpoint}"
-        )
+        assert token_response is not None, f"Failed to connect to Keycloak token endpoint: {token_endpoint}"
         # Token endpoint returns:
         # - 405: Method Not Allowed (GET not allowed, POST required)
         # - 400/401: Bad request / unauthorized (if POST without proper credentials)
@@ -286,14 +273,11 @@ class TestKeycloakConnectivity:
         url = f"http://localhost:{TEST_KEYCLOAK_PORT}/authn/admin/master/console/"
         response = get_http_response(url)
 
-        assert response is not None, (
-            f"Failed to connect to Keycloak admin console: {url}"
-        )
+        assert response is not None, f"Failed to connect to Keycloak admin console: {url}"
         # Admin console redirects to login, so 200 (with redirect followed) is expected
         # or 302 if redirect not followed
         assert response.status_code in (200, 302), (
-            f"Keycloak admin console returned {response.status_code}. "
-            f"Expected 200 or 302."
+            f"Keycloak admin console returned {response.status_code}. Expected 200 or 302."
         )
 
 
@@ -335,9 +319,9 @@ class TestAllServicesHealthy:
                 unreachable.append(f"{service} (port {port})")
 
         assert not unreachable, (
-            f"The following services are not reachable:\n"
-            f"  - " + "\n  - ".join(unreachable) + "\n\n"
-            f"Start infrastructure with: make test-infra-up"
+            "The following services are not reachable:\n"
+            "  - " + "\n  - ".join(unreachable) + "\n\n"
+            "Start infrastructure with: make test-infra-up"
         )
 
     def test_health_endpoints_return_success(self) -> None:
@@ -359,10 +343,7 @@ class TestAllServicesHealthy:
                 status = response.status_code if response else "Connection failed"
                 unhealthy.append(f"{service}: {url} -> {status}")
 
-        assert not unhealthy, (
-            f"The following services are unhealthy:\n"
-            f"  - " + "\n  - ".join(unhealthy)
-        )
+        assert not unhealthy, "The following services are unhealthy:\n  - " + "\n  - ".join(unhealthy)
 
 
 @pytest.mark.integration
@@ -433,6 +414,4 @@ class TestInfrastructureHealthTiming:
             else:
                 print(f"{service}: {elapsed:.3f}s")
 
-        assert not slow_services, (
-            f"Some services are slow:\n  - " + "\n  - ".join(slow_services)
-        )
+        assert not slow_services, "Some services are slow:\n  - " + "\n  - ".join(slow_services)

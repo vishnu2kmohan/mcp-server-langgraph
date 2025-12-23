@@ -56,9 +56,7 @@ class TestExecutionCheckpointIntegration:
             mock_execute.invoke.return_value = "Success: 42"
 
             # Mock feature flags singleton to enable checkpointing
-            with patch(
-                "mcp_server_langgraph.mcp.handlers.execution.feature_flags"
-            ) as mock_flags:
+            with patch("mcp_server_langgraph.mcp.handlers.execution.feature_flags") as mock_flags:
                 mock_flags.enable_sdk_file_checkpointing = True
 
                 span = MagicMock()
@@ -89,9 +87,7 @@ class TestExecutionCheckpointIntegration:
             mock_execute.invoke.return_value = "Success: 42"
 
             # Mock feature flags singleton to disable checkpointing (default)
-            with patch(
-                "mcp_server_langgraph.mcp.handlers.execution.feature_flags"
-            ) as mock_flags:
+            with patch("mcp_server_langgraph.mcp.handlers.execution.feature_flags") as mock_flags:
                 mock_flags.enable_sdk_file_checkpointing = False
 
                 span = MagicMock()
@@ -125,15 +121,11 @@ class TestExecutionCheckpointIntegration:
             mock_execute.invoke.return_value = "Success: result"
 
             # Mock feature flags singleton to enable checkpointing
-            with patch(
-                "mcp_server_langgraph.mcp.handlers.execution.feature_flags"
-            ) as mock_flags:
+            with patch("mcp_server_langgraph.mcp.handlers.execution.feature_flags") as mock_flags:
                 mock_flags.enable_sdk_file_checkpointing = True
 
                 # Mock get_file_journal at the source location (dynamic import)
-                with patch(
-                    "mcp_server_langgraph.core.file_journal.get_file_journal"
-                ) as mock_get_journal:
+                with patch("mcp_server_langgraph.core.file_journal.get_file_journal") as mock_get_journal:
                     mock_get_journal.return_value = mock_journal
 
                     span = MagicMock()
@@ -179,9 +171,7 @@ class TestExecutionCheckpointIntegration:
             mock_execute.invoke.return_value = "Success"
 
             # Mock feature flags singleton to enable checkpointing
-            with patch(
-                "mcp_server_langgraph.mcp.handlers.execution.feature_flags"
-            ) as mock_flags:
+            with patch("mcp_server_langgraph.mcp.handlers.execution.feature_flags") as mock_flags:
                 mock_flags.enable_sdk_file_checkpointing = True
 
                 span = MagicMock()

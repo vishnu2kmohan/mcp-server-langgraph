@@ -1,7 +1,7 @@
 /**
  * Telemetry Events Tests
  *
- * Comprehensive tests for telemetry event tracking across the Hybrid Canvas UI.
+ * Comprehensive tests for telemetry event tracking across the Studio Canvas UI.
  * These tests verify that key user actions trigger the appropriate telemetry events
  * for analytics and observability.
  *

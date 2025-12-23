@@ -142,14 +142,16 @@ def generate_screenshot_cache_key(url: str) -> str:
     # Normalize: lowercase scheme and host, remove trailing slash from path
     normalized_path = parsed.path.rstrip("/") if parsed.path else ""
 
-    normalized = urlunparse((
-        parsed.scheme.lower(),
-        parsed.netloc.lower(),
-        normalized_path,
-        parsed.params,
-        parsed.query,
-        "",  # Remove fragment
-    ))
+    normalized = urlunparse(
+        (
+            parsed.scheme.lower(),
+            parsed.netloc.lower(),
+            normalized_path,
+            parsed.params,
+            parsed.query,
+            "",  # Remove fragment
+        )
+    )
 
     # Generate hash for cache key (URL may be too long for key)
     url_hash = hashlib.md5(normalized.encode(), usedforsecurity=False).hexdigest()
@@ -226,7 +228,7 @@ def _calculate_backoff_delay(attempt: int) -> float:
         Delay in seconds
     """
     # Exponential backoff: 2^attempt
-    base_delay = VISUAL_VERIFICATION_EXPONENTIAL_BASE ** attempt
+    base_delay = VISUAL_VERIFICATION_EXPONENTIAL_BASE**attempt
 
     # Cap at max
     capped_delay = min(base_delay, VISUAL_VERIFICATION_EXPONENTIAL_MAX)

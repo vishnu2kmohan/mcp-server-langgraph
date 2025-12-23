@@ -246,9 +246,7 @@ class TieredCacheMixin:
             logger.warning(f"Cache get failed for {key}: {e}")
             return None
 
-    async def _cache_get_with_metrics(
-        self, key: str, method: str = "unknown"
-    ) -> Any | None:
+    async def _cache_get_with_metrics(self, key: str, method: str = "unknown") -> Any | None:
         """
         Get value from cache with Prometheus metrics tracking.
 
@@ -269,9 +267,7 @@ class TieredCacheMixin:
 
         return result
 
-    async def _cache_set(
-        self, key: str, value: Any, ttl: int | None = None
-    ) -> None:
+    async def _cache_set(self, key: str, value: Any, ttl: int | None = None) -> None:
         """
         Set value in both L1 and L2 cache.
 
@@ -343,9 +339,7 @@ class TieredCacheMixin:
     # L1/L2 Layer-Aware Operations (ADR-0030)
     # =========================================================================
 
-    async def _cache_get_tiered(
-        self, key: str, method: str = "unknown"
-    ) -> Any | None:
+    async def _cache_get_tiered(self, key: str, method: str = "unknown") -> Any | None:
         """
         Get value from cache with L1/L2 layer separation in metrics.
 
@@ -372,9 +366,7 @@ class TieredCacheMixin:
         try:
             result = await cache_service.aget(key)
             if result is not None:
-                CACHE_MIXIN_L2_HITS.labels(
-                    service=self.cache_prefix, method=method
-                ).inc()
+                CACHE_MIXIN_L2_HITS.labels(service=self.cache_prefix, method=method).inc()
                 logger.debug(f"L2 cache hit for {self.cache_prefix}:{method}")
                 return result
         except Exception as e:
@@ -388,9 +380,7 @@ class TieredCacheMixin:
     # OpenTelemetry Traced Operations (ADR-0030)
     # =========================================================================
 
-    async def _cache_get_traced(
-        self, key: str, method: str = "unknown"
-    ) -> Any | None:
+    async def _cache_get_traced(self, key: str, method: str = "unknown") -> Any | None:
         """
         Get value from cache with OpenTelemetry tracing.
 
@@ -415,9 +405,7 @@ class TieredCacheMixin:
     # Observed Operations with Latency and Error Tracking (ADR-0030)
     # =========================================================================
 
-    async def _cache_get_observed(
-        self, key: str, method: str = "unknown"
-    ) -> Any | None:
+    async def _cache_get_observed(self, key: str, method: str = "unknown") -> Any | None:
         """
         Get value from cache with latency and error metrics.
 
@@ -447,9 +435,7 @@ class TieredCacheMixin:
             return None
         finally:
             duration = time.perf_counter() - start_time
-            CACHE_MIXIN_LATENCY.labels(
-                service=self.cache_prefix, method=method, operation="get"
-            ).observe(duration)
+            CACHE_MIXIN_LATENCY.labels(service=self.cache_prefix, method=method, operation="get").observe(duration)
 
     async def _cache_set_observed(
         self,
@@ -483,9 +469,7 @@ class TieredCacheMixin:
             logger.warning(f"Cache set error for {key}: {e}")
         finally:
             duration = time.perf_counter() - start_time
-            CACHE_MIXIN_LATENCY.labels(
-                service=self.cache_prefix, method=method, operation="set"
-            ).observe(duration)
+            CACHE_MIXIN_LATENCY.labels(service=self.cache_prefix, method=method, operation="set").observe(duration)
 
 
 # =============================================================================

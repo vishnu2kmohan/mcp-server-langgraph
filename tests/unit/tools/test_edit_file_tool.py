@@ -12,8 +12,8 @@ from unittest.mock import patch
 import pytest
 
 
-
 pytestmark = pytest.mark.unit
+
 
 @pytest.mark.xdist_group(name="edit_file_tool")
 class TestEditFileTool:
@@ -49,9 +49,7 @@ class TestEditFileTool:
     # =========================================================================
 
     @pytest.mark.unit
-    def test_edit_file_applies_replacement(
-        self, temp_workspace: Path, existing_file: Path
-    ):
+    def test_edit_file_applies_replacement(self, temp_workspace: Path, existing_file: Path):
         """GIVEN a file with specific content
         WHEN edit_file is called with old_string and new_string
         THEN the old_string is replaced with new_string"""
@@ -61,19 +59,19 @@ class TestEditFileTool:
             "mcp_server_langgraph.tools.edit_file_tools.get_workspace_root",
             return_value=temp_workspace,
         ):
-            result = edit_file.invoke({
-                "file_path": str(existing_file),
-                "old_string": "Hello, World!",
-                "new_string": "Greetings, Universe!",
-            })
+            result = edit_file.invoke(
+                {
+                    "file_path": str(existing_file),
+                    "old_string": "Hello, World!",
+                    "new_string": "Greetings, Universe!",
+                }
+            )
 
         assert existing_file.read_text().startswith("Greetings, Universe!")
         assert "successfully" in result.lower() or "edited" in result.lower()
 
     @pytest.mark.unit
-    def test_edit_file_replaces_only_once_by_default(
-        self, temp_workspace: Path, file_with_duplicates: Path
-    ):
+    def test_edit_file_replaces_only_once_by_default(self, temp_workspace: Path, file_with_duplicates: Path):
         """GIVEN a file with duplicate patterns
         WHEN edit_file is called with replace_all=False (default)
         THEN only the first occurrence is replaced"""
@@ -83,11 +81,13 @@ class TestEditFileTool:
             "mcp_server_langgraph.tools.edit_file_tools.get_workspace_root",
             return_value=temp_workspace,
         ):
-            result = edit_file.invoke({
-                "file_path": str(file_with_duplicates),
-                "old_string": "foo",
-                "new_string": "XXX",
-            })
+            result = edit_file.invoke(
+                {
+                    "file_path": str(file_with_duplicates),
+                    "old_string": "foo",
+                    "new_string": "XXX",
+                }
+            )
 
         content = file_with_duplicates.read_text()
         # Should replace first occurrence only
@@ -95,9 +95,7 @@ class TestEditFileTool:
         assert content.count("foo") == 2  # Two remaining
 
     @pytest.mark.unit
-    def test_edit_file_with_replace_all_flag(
-        self, temp_workspace: Path, file_with_duplicates: Path
-    ):
+    def test_edit_file_with_replace_all_flag(self, temp_workspace: Path, file_with_duplicates: Path):
         """GIVEN a file with duplicate patterns
         WHEN edit_file is called with replace_all=True
         THEN all occurrences are replaced"""
@@ -107,12 +105,14 @@ class TestEditFileTool:
             "mcp_server_langgraph.tools.edit_file_tools.get_workspace_root",
             return_value=temp_workspace,
         ):
-            result = edit_file.invoke({
-                "file_path": str(file_with_duplicates),
-                "old_string": "foo",
-                "new_string": "XXX",
-                "replace_all": True,
-            })
+            result = edit_file.invoke(
+                {
+                    "file_path": str(file_with_duplicates),
+                    "old_string": "foo",
+                    "new_string": "XXX",
+                    "replace_all": True,
+                }
+            )
 
         content = file_with_duplicates.read_text()
         assert content.count("XXX") == 3
@@ -135,19 +135,19 @@ class TestEditFileTool:
             "mcp_server_langgraph.tools.edit_file_tools.get_workspace_root",
             return_value=temp_workspace,
         ):
-            result = edit_file.invoke({
-                "file_path": str(nonexistent),
-                "old_string": "foo",
-                "new_string": "bar",
-            })
+            result = edit_file.invoke(
+                {
+                    "file_path": str(nonexistent),
+                    "old_string": "foo",
+                    "new_string": "bar",
+                }
+            )
 
         assert "error" in result.lower()
         assert "exist" in result.lower() or "not found" in result.lower()
 
     @pytest.mark.unit
-    def test_edit_file_rejects_missing_old_string(
-        self, temp_workspace: Path, existing_file: Path
-    ):
+    def test_edit_file_rejects_missing_old_string(self, temp_workspace: Path, existing_file: Path):
         """GIVEN a file that doesn't contain the old_string
         WHEN edit_file is called
         THEN it returns an error"""
@@ -157,19 +157,19 @@ class TestEditFileTool:
             "mcp_server_langgraph.tools.edit_file_tools.get_workspace_root",
             return_value=temp_workspace,
         ):
-            result = edit_file.invoke({
-                "file_path": str(existing_file),
-                "old_string": "this text does not exist in file",
-                "new_string": "replacement",
-            })
+            result = edit_file.invoke(
+                {
+                    "file_path": str(existing_file),
+                    "old_string": "this text does not exist in file",
+                    "new_string": "replacement",
+                }
+            )
 
         assert "error" in result.lower()
         assert "not found" in result.lower() or "does not exist" in result.lower()
 
     @pytest.mark.unit
-    def test_edit_file_warns_on_ambiguous_match(
-        self, temp_workspace: Path, file_with_duplicates: Path
-    ):
+    def test_edit_file_warns_on_ambiguous_match(self, temp_workspace: Path, file_with_duplicates: Path):
         """GIVEN a file with multiple occurrences of old_string
         WHEN edit_file is called with replace_all=False
         THEN it replaces first occurrence but may warn about multiple matches"""
@@ -179,12 +179,14 @@ class TestEditFileTool:
             "mcp_server_langgraph.tools.edit_file_tools.get_workspace_root",
             return_value=temp_workspace,
         ):
-            result = edit_file.invoke({
-                "file_path": str(file_with_duplicates),
-                "old_string": "foo",
-                "new_string": "XXX",
-                "replace_all": False,
-            })
+            result = edit_file.invoke(
+                {
+                    "file_path": str(file_with_duplicates),
+                    "old_string": "foo",
+                    "new_string": "XXX",
+                    "replace_all": False,
+                }
+            )
 
         # Should still work (replace first)
         content = file_with_duplicates.read_text()
@@ -197,9 +199,7 @@ class TestEditFileTool:
     # =========================================================================
 
     @pytest.mark.unit
-    def test_edit_file_creates_backup(
-        self, temp_workspace: Path, existing_file: Path
-    ):
+    def test_edit_file_creates_backup(self, temp_workspace: Path, existing_file: Path):
         """GIVEN an existing file and backup enabled
         WHEN edit_file modifies the file
         THEN a backup is created"""
@@ -207,18 +207,23 @@ class TestEditFileTool:
 
         original_content = existing_file.read_text()
 
-        with patch(
-            "mcp_server_langgraph.tools.edit_file_tools.get_workspace_root",
-            return_value=temp_workspace,
-        ), patch(
-            "mcp_server_langgraph.tools.edit_file_tools.EDIT_FILE_CREATE_BACKUP",
-            True,
+        with (
+            patch(
+                "mcp_server_langgraph.tools.edit_file_tools.get_workspace_root",
+                return_value=temp_workspace,
+            ),
+            patch(
+                "mcp_server_langgraph.tools.edit_file_tools.EDIT_FILE_CREATE_BACKUP",
+                True,
+            ),
         ):
-            result = edit_file.invoke({
-                "file_path": str(existing_file),
-                "old_string": "Hello",
-                "new_string": "Goodbye",
-            })
+            result = edit_file.invoke(
+                {
+                    "file_path": str(existing_file),
+                    "old_string": "Hello",
+                    "new_string": "Goodbye",
+                }
+            )
 
         # Check backup exists
         backup_candidates = [
@@ -249,11 +254,13 @@ class TestEditFileTool:
             "mcp_server_langgraph.tools.edit_file_tools.get_workspace_root",
             return_value=temp_workspace,
         ):
-            result = edit_file.invoke({
-                "file_path": str(unicode_file),
-                "old_string": "Hello",
-                "new_string": "你好",
-            })
+            result = edit_file.invoke(
+                {
+                    "file_path": str(unicode_file),
+                    "old_string": "Hello",
+                    "new_string": "你好",
+                }
+            )
 
         content = unicode_file.read_text(encoding="utf-8")
         assert "你好" in content
@@ -261,9 +268,7 @@ class TestEditFileTool:
         assert "🎉" in content
 
     @pytest.mark.unit
-    def test_edit_file_handles_multiline_replacement(
-        self, temp_workspace: Path
-    ):
+    def test_edit_file_handles_multiline_replacement(self, temp_workspace: Path):
         """GIVEN a file with multiline content
         WHEN edit_file replaces a multiline section
         THEN the replacement is applied correctly"""
@@ -276,11 +281,13 @@ class TestEditFileTool:
             "mcp_server_langgraph.tools.edit_file_tools.get_workspace_root",
             return_value=temp_workspace,
         ):
-            result = edit_file.invoke({
-                "file_path": str(multiline_file),
-                "old_string": "Line 2\nLine 3",
-                "new_string": "New Line A\nNew Line B\nNew Line C",
-            })
+            result = edit_file.invoke(
+                {
+                    "file_path": str(multiline_file),
+                    "old_string": "Line 2\nLine 3",
+                    "new_string": "New Line A\nNew Line B\nNew Line C",
+                }
+            )
 
         content = multiline_file.read_text()
         assert "New Line A" in content
@@ -309,11 +316,13 @@ class TestEditFileTool:
                 "mcp_server_langgraph.tools.edit_file_tools.get_workspace_root",
                 return_value=temp_workspace,
             ):
-                result = edit_file.invoke({
-                    "file_path": str(temp_workspace / ".." / "outside.txt"),
-                    "old_string": "content",
-                    "new_string": "hacked",
-                })
+                result = edit_file.invoke(
+                    {
+                        "file_path": str(temp_workspace / ".." / "outside.txt"),
+                        "old_string": "content",
+                        "new_string": "hacked",
+                    }
+                )
 
             assert "error" in result.lower()
         finally:
@@ -321,9 +330,7 @@ class TestEditFileTool:
                 parent_file.unlink()
 
     @pytest.mark.unit
-    def test_edit_file_rejects_absolute_paths_outside_workspace(
-        self, temp_workspace: Path
-    ):
+    def test_edit_file_rejects_absolute_paths_outside_workspace(self, temp_workspace: Path):
         """GIVEN an absolute path outside the workspace
         WHEN edit_file is called
         THEN it is rejected"""
@@ -333,11 +340,13 @@ class TestEditFileTool:
             "mcp_server_langgraph.tools.edit_file_tools.get_workspace_root",
             return_value=temp_workspace,
         ):
-            result = edit_file.invoke({
-                "file_path": "/tmp/outside_workspace.txt",
-                "old_string": "foo",
-                "new_string": "bar",
-            })
+            result = edit_file.invoke(
+                {
+                    "file_path": "/tmp/outside_workspace.txt",
+                    "old_string": "foo",
+                    "new_string": "bar",
+                }
+            )
 
         assert "error" in result.lower()
 
@@ -346,9 +355,7 @@ class TestEditFileTool:
     # =========================================================================
 
     @pytest.mark.unit
-    def test_edit_file_handles_empty_old_string(
-        self, temp_workspace: Path, existing_file: Path
-    ):
+    def test_edit_file_handles_empty_old_string(self, temp_workspace: Path, existing_file: Path):
         """GIVEN an empty old_string
         WHEN edit_file is called
         THEN it returns an error (empty string would match everywhere)"""
@@ -358,18 +365,18 @@ class TestEditFileTool:
             "mcp_server_langgraph.tools.edit_file_tools.get_workspace_root",
             return_value=temp_workspace,
         ):
-            result = edit_file.invoke({
-                "file_path": str(existing_file),
-                "old_string": "",
-                "new_string": "something",
-            })
+            result = edit_file.invoke(
+                {
+                    "file_path": str(existing_file),
+                    "old_string": "",
+                    "new_string": "something",
+                }
+            )
 
         assert "error" in result.lower()
 
     @pytest.mark.unit
-    def test_edit_file_handles_same_old_and_new_string(
-        self, temp_workspace: Path, existing_file: Path
-    ):
+    def test_edit_file_handles_same_old_and_new_string(self, temp_workspace: Path, existing_file: Path):
         """GIVEN old_string equals new_string
         WHEN edit_file is called
         THEN it handles gracefully (no-op or warning)"""
@@ -381,11 +388,13 @@ class TestEditFileTool:
             "mcp_server_langgraph.tools.edit_file_tools.get_workspace_root",
             return_value=temp_workspace,
         ):
-            result = edit_file.invoke({
-                "file_path": str(existing_file),
-                "old_string": "Hello",
-                "new_string": "Hello",
-            })
+            result = edit_file.invoke(
+                {
+                    "file_path": str(existing_file),
+                    "old_string": "Hello",
+                    "new_string": "Hello",
+                }
+            )
 
         # Content should be unchanged
         assert existing_file.read_text() == original_content

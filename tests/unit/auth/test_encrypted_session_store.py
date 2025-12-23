@@ -7,9 +7,7 @@ TDD tests for at-rest session encryption (GDPR/HIPAA compliance).
 from __future__ import annotations
 
 import gc
-import os
 import pytest
-from unittest.mock import AsyncMock, MagicMock, patch
 
 
 pytestmark = [pytest.mark.unit, pytest.mark.auth, pytest.mark.sessions, pytest.mark.privacy]

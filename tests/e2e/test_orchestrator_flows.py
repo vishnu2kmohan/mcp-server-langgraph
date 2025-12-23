@@ -13,9 +13,8 @@ TDD: Tests written FIRST before implementation.
 
 import asyncio
 import gc
-import os
 import time
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
@@ -42,13 +41,7 @@ def mock_llm_factory():
     async def mock_acompletion(messages, **kwargs):
         await asyncio.sleep(0.01)  # Simulate API latency
         mock_response = MagicMock()
-        mock_response.choices = [
-            MagicMock(
-                message=MagicMock(
-                    content='{"detected_persona": "developer", "confidence": 0.85}'
-                )
-            )
-        ]
+        mock_response.choices = [MagicMock(message=MagicMock(content='{"detected_persona": "developer", "confidence": 0.85}'))]
         return mock_response
 
     factory.acompletion = mock_acompletion
@@ -93,12 +86,9 @@ class TestUXOrchestratorE2E:
         gc.collect()
 
     @pytest.mark.asyncio
-    async def test_ux_orchestrator_end_to_end_flow(
-        self, mock_feature_flags_enabled
-    ) -> None:
+    async def test_ux_orchestrator_end_to_end_flow(self, mock_feature_flags_enabled) -> None:
         """Test complete UX orchestration flow from service to response."""
         from mcp_server_langgraph.agents.ux_orchestrator import UXOrchestrator
-        from mcp_server_langgraph.api.v1.ai_ux_service import AIUXService
 
         # Create mock AI UX service methods
         mock_service = MagicMock()
@@ -141,9 +131,7 @@ class TestUXOrchestratorE2E:
         assert result["failed_analyses"] == []
 
     @pytest.mark.asyncio
-    async def test_ux_service_with_orchestrator_injection(
-        self, mock_feature_flags_enabled
-    ) -> None:
+    async def test_ux_service_with_orchestrator_injection(self, mock_feature_flags_enabled) -> None:
         """Test AIUXService with UXOrchestrator injected and enabled."""
         from mcp_server_langgraph.agents.ux_orchestrator import UXOrchestrator
         from mcp_server_langgraph.api.v1.ai_ux_service import AIUXService
@@ -204,10 +192,7 @@ class TestUXOrchestratorE2E:
         # Sequential would take ~150ms (3 x 50ms)
         # Parallel should take ~50ms + overhead
         # Allow up to 100ms for parallel (50ms task + 50ms overhead)
-        assert elapsed_ms < TASK_DELAY_MS * 2, (
-            f"Parallel execution took {elapsed_ms:.0f}ms, "
-            f"expected < {TASK_DELAY_MS * 2}ms"
-        )
+        assert elapsed_ms < TASK_DELAY_MS * 2, f"Parallel execution took {elapsed_ms:.0f}ms, expected < {TASK_DELAY_MS * 2}ms"
 
 
 # =============================================================================
@@ -230,14 +215,8 @@ class TestAlertOrchestratorE2E:
 
         # Create mock services
         mock_engine = MagicMock()
-        mock_engine.correlate = MagicMock(
-            return_value=[
-                {"alerts": ["alert-1", "alert-2"], "pattern": "cascade"}
-            ]
-        )
-        mock_engine.detect_patterns = MagicMock(
-            return_value=[{"type": "recurring", "frequency": "hourly"}]
-        )
+        mock_engine.correlate = MagicMock(return_value=[{"alerts": ["alert-1", "alert-2"], "pattern": "cascade"}])
+        mock_engine.detect_patterns = MagicMock(return_value=[{"type": "recurring", "frequency": "hourly"}])
 
         mock_service = MagicMock()
 
@@ -391,10 +370,7 @@ class TestAlertOrchestratorE2E:
 
         # With 4 tasks, sequential would take ~200ms
         # Parallel should take ~50ms + overhead
-        assert elapsed_ms < TASK_DELAY_MS * 2, (
-            f"Parallel execution took {elapsed_ms:.0f}ms, "
-            f"expected < {TASK_DELAY_MS * 2}ms"
-        )
+        assert elapsed_ms < TASK_DELAY_MS * 2, f"Parallel execution took {elapsed_ms:.0f}ms, expected < {TASK_DELAY_MS * 2}ms"
 
 
 # =============================================================================
@@ -514,9 +490,7 @@ class TestCrossInsightsE2E:
                 {"alerts": ["a3", "a4"], "pattern": "temporal"},
             ]
         )
-        mock_engine.detect_patterns = MagicMock(
-            return_value=[{"type": "recurring"}]
-        )
+        mock_engine.detect_patterns = MagicMock(return_value=[{"type": "recurring"}])
 
         mock_service = MagicMock()
 

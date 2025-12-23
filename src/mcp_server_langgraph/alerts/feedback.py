@@ -179,11 +179,7 @@ class InMemoryFeedbackStore:
         limit: int = 5,
     ) -> list[RemediationFeedback]:
         """Get approved examples for the given alert type."""
-        approved = [
-            fb
-            for fb in self._feedback
-            if fb.action == "approved" and fb.alert_type == alert_type
-        ]
+        approved = [fb for fb in self._feedback if fb.action == "approved" and fb.alert_type == alert_type]
 
         # Sort by timestamp (most recent first) and limit
         approved.sort(key=lambda fb: fb.timestamp, reverse=True)
@@ -256,9 +252,7 @@ class FeedbackRecord(Base):  # type: ignore[misc,valid-type]
     reason: Mapped[str | None] = mapped_column(String(100), nullable=True, index=True)
     reason_detail: Mapped[str | None] = mapped_column(Text, nullable=True)
     admin_user_id: Mapped[str] = mapped_column(String(255), nullable=False)
-    timestamp: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), nullable=False, index=True
-    )
+    timestamp: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, index=True)
     execution_success: Mapped[bool | None] = mapped_column(Boolean, nullable=True)
     execution_time_seconds: Mapped[float | None] = mapped_column(Float, nullable=True)
     admin_notes: Mapped[str | None] = mapped_column(Text, nullable=True)
@@ -276,9 +270,7 @@ class PostgresFeedbackStore(FeedbackStore):
     Production-ready implementation using SQLAlchemy async sessions.
     """
 
-    def __init__(
-        self, session_maker: async_sessionmaker[AsyncSession]
-    ) -> None:
+    def __init__(self, session_maker: async_sessionmaker[AsyncSession]) -> None:
         """
         Initialize the PostgreSQL feedback store.
 
@@ -394,11 +386,7 @@ class PostgresFeedbackStore(FeedbackStore):
     ) -> list[RemediationFeedback]:
         """Get recent feedback entries."""
         async with self._session_maker() as session:
-            stmt = (
-                select(FeedbackRecord)
-                .order_by(FeedbackRecord.timestamp.desc())
-                .limit(limit)
-            )
+            stmt = select(FeedbackRecord).order_by(FeedbackRecord.timestamp.desc()).limit(limit)
             result = await session.execute(stmt)
             records = result.scalars().all()
             return [self._record_to_feedback(r) for r in records]
@@ -411,9 +399,7 @@ class PostgresFeedbackStore(FeedbackStore):
     ) -> None:
         """Update the execution result for a feedback entry."""
         async with self._session_maker() as session:
-            stmt = select(FeedbackRecord).where(
-                FeedbackRecord.remediation_id == remediation_id
-            )
+            stmt = select(FeedbackRecord).where(FeedbackRecord.remediation_id == remediation_id)
             result = await session.execute(stmt)
             record = result.scalar_one_or_none()
 

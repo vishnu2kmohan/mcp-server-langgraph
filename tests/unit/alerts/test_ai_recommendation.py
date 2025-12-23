@@ -917,7 +917,6 @@ class TestAIRecommendationConfidenceScores:
         THEN should have higher baseline confidence due to prior examples.
         """
         from mcp_server_langgraph.alerts.ai_recommendation import (
-            AIRecommendationService,
             compute_baseline_confidence,
         )
         from mcp_server_langgraph.alerts.feedback import (
@@ -1293,12 +1292,8 @@ class TestRedisCaching:
         cache_key = generate_recommendation_cache_key(alert)
 
         # Generate recommendation (patch metrics functions at their source)
-        with patch(
-            "mcp_server_langgraph.alerts.metrics.record_recommendation_request"
-        ):
-            with patch(
-                "mcp_server_langgraph.alerts.metrics.record_recommendation_generated"
-            ):
+        with patch("mcp_server_langgraph.alerts.metrics.record_recommendation_request"):
+            with patch("mcp_server_langgraph.alerts.metrics.record_recommendation_generated"):
                 recommendation = await service.generate_recommendation(alert)
 
         # Should have called cache.get first
@@ -1318,7 +1313,6 @@ class TestRedisCaching:
         """
         from mcp_server_langgraph.alerts.ai_recommendation import (
             AIRecommendationService,
-            generate_recommendation_cache_key,
         )
 
         # Create cached recommendation data
@@ -1349,9 +1343,7 @@ class TestRedisCaching:
         alert = create_test_alert()
 
         # Generate recommendation - should use cache
-        with patch(
-            "mcp_server_langgraph.alerts.metrics.record_recommendation_request"
-        ):
+        with patch("mcp_server_langgraph.alerts.metrics.record_recommendation_request"):
             recommendation = await service.generate_recommendation(alert)
 
         # Should NOT have called LLM
@@ -1398,12 +1390,8 @@ class TestRedisCaching:
         alert = create_test_alert()
 
         # Should not raise, should fallback and generate
-        with patch(
-            "mcp_server_langgraph.alerts.metrics.record_recommendation_request"
-        ):
-            with patch(
-                "mcp_server_langgraph.alerts.metrics.record_recommendation_generated"
-            ):
+        with patch("mcp_server_langgraph.alerts.metrics.record_recommendation_request"):
+            with patch("mcp_server_langgraph.alerts.metrics.record_recommendation_generated"):
                 recommendation = await service.generate_recommendation(alert)
 
         # Should have generated new recommendation

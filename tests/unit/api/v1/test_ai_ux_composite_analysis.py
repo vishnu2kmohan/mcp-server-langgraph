@@ -60,6 +60,7 @@ SAMPLE_ERROR_LLM_RESPONSE = """{
 def artifact_storage():
     """Create ArtifactStorage instance."""
     from mcp_server_langgraph.agents.artifacts import ArtifactStorage
+
     return ArtifactStorage()
 
 
@@ -140,9 +141,7 @@ class TestAIUXServiceCompositeMethod:
         gc.collect()
 
     @pytest.mark.asyncio
-    async def test_composite_analysis_runs_all_requested_analyses(
-        self, mock_llm_factory, mock_settings, artifact_storage
-    ):
+    async def test_composite_analysis_runs_all_requested_analyses(self, mock_llm_factory, mock_settings, artifact_storage):
         """Composite analysis runs all requested analyses."""
         from mcp_server_langgraph.api.v1.ai_ux_service import AIUXService
         from mcp_server_langgraph.api.v1.ai_ux import CompositeAnalysisRequest
@@ -179,9 +178,7 @@ class TestAIUXServiceCompositeMethod:
         assert result.error_result is None  # Not requested
 
     @pytest.mark.asyncio
-    async def test_composite_analysis_stores_all_to_session(
-        self, mock_llm_factory, mock_settings, artifact_storage
-    ):
+    async def test_composite_analysis_stores_all_to_session(self, mock_llm_factory, mock_settings, artifact_storage):
         """Composite analysis stores all results to session context."""
         from mcp_server_langgraph.api.v1.ai_ux_service import AIUXService
         from mcp_server_langgraph.api.v1.ai_ux import CompositeAnalysisRequest
@@ -220,9 +217,7 @@ class TestAIUXServiceCompositeMethod:
         assert "composite_analysis" in artifact_names
 
     @pytest.mark.asyncio
-    async def test_composite_analysis_generates_cross_insights(
-        self, mock_llm_factory, mock_settings, artifact_storage
-    ):
+    async def test_composite_analysis_generates_cross_insights(self, mock_llm_factory, mock_settings, artifact_storage):
         """Composite analysis generates cross-service insights."""
         from mcp_server_langgraph.api.v1.ai_ux_service import AIUXService
         from mcp_server_langgraph.api.v1.ai_ux import CompositeAnalysisRequest
@@ -257,9 +252,7 @@ class TestAIUXServiceCompositeMethod:
         assert len(result.cross_insights) > 0
 
     @pytest.mark.asyncio
-    async def test_composite_analysis_handles_partial_failures(
-        self, mock_llm_factory, mock_settings, artifact_storage
-    ):
+    async def test_composite_analysis_handles_partial_failures(self, mock_llm_factory, mock_settings, artifact_storage):
         """Composite analysis handles partial failures gracefully."""
         from mcp_server_langgraph.api.v1.ai_ux_service import AIUXService
         from mcp_server_langgraph.api.v1.ai_ux import CompositeAnalysisRequest
@@ -309,9 +302,7 @@ class TestCrossInsightsGeneration:
         """Force GC to prevent mock accumulation in xdist workers."""
         gc.collect()
 
-    def test_persona_disclosure_mismatch_generates_insight(
-        self, mock_llm_factory, mock_settings
-    ):
+    def test_persona_disclosure_mismatch_generates_insight(self, mock_llm_factory, mock_settings):
         """Persona-disclosure mismatch generates insight."""
         from mcp_server_langgraph.api.v1.ai_ux_service import AIUXService
 
@@ -357,9 +348,7 @@ class TestCrossInsightsGeneration:
         assert len(insights) > 0
         assert any("mismatch" in i.lower() or "upgrade" in i.lower() for i in insights)
 
-    def test_high_confidence_results_boost_overall_confidence(
-        self, mock_llm_factory, mock_settings
-    ):
+    def test_high_confidence_results_boost_overall_confidence(self, mock_llm_factory, mock_settings):
         """High confidence results boost overall composite confidence."""
         from mcp_server_langgraph.api.v1.ai_ux_service import AIUXService
         from mcp_server_langgraph.api.v1.ai_ux import (
@@ -417,7 +406,6 @@ class TestCompositeAnalysisEndpoint:
     async def test_endpoint_exists(self, mock_llm_factory, mock_settings):
         """POST /ai/composite/analyze endpoint exists."""
         from mcp_server_langgraph.api.v1.ai_ux import (
-            CompositeAnalysisRequest,
             composite_analyze,
         )
 
@@ -425,9 +413,7 @@ class TestCompositeAnalysisEndpoint:
         assert callable(composite_analyze)
 
     @pytest.mark.asyncio
-    async def test_endpoint_returns_composite_response(
-        self, mock_llm_factory, mock_settings
-    ):
+    async def test_endpoint_returns_composite_response(self, mock_llm_factory, mock_settings):
         """Endpoint returns CompositeAnalysisResponse."""
         from mcp_server_langgraph.api.v1.ai_ux import (
             CompositeAnalysisRequest,

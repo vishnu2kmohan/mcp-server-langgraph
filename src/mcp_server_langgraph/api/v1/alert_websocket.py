@@ -147,9 +147,7 @@ async def validate_alert_websocket_auth(websocket: WebSocket) -> dict[str, Any] 
         return None
 
 
-async def handle_client_message(
-    websocket: WebSocket, data: dict[str, Any]
-) -> dict[str, Any] | None:
+async def handle_client_message(websocket: WebSocket, data: dict[str, Any]) -> dict[str, Any] | None:
     """
     Handle messages from the client.
 

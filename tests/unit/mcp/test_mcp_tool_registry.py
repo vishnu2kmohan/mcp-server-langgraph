@@ -6,14 +6,13 @@ Written FIRST before implementation (RED phase) per ADR-0082.
 """
 
 import gc
-from typing import Any
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
 
-
 pytestmark = pytest.mark.unit
+
 
 @pytest.mark.xdist_group(name="mcp_tool_registry")
 class TestMCPToolDefinition:

@@ -111,10 +111,7 @@ class SkillLoader:
 
         # Convert secret_volumes list to SecretVolume objects
         if "secret_volumes" in data and isinstance(data["secret_volumes"], list):
-            data["secret_volumes"] = [
-                SecretVolume(**v) if isinstance(v, dict) else v
-                for v in data["secret_volumes"]
-            ]
+            data["secret_volumes"] = [SecretVolume(**v) if isinstance(v, dict) else v for v in data["secret_volumes"]]
 
         # Validate and create Skill
         try:

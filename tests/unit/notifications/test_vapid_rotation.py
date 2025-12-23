@@ -16,11 +16,12 @@ from __future__ import annotations
 
 import gc
 from datetime import UTC, datetime, timedelta
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock
 
 import pytest
 
 pytestmark = pytest.mark.unit
+
 
 @pytest.mark.unit
 @pytest.mark.xdist_group(name="vapid_rotation")

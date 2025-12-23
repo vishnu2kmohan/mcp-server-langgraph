@@ -13,7 +13,7 @@ These tests verify:
 
 import gc
 from decimal import Decimal
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import patch
 
 import pytest
 
@@ -99,9 +99,7 @@ class TestCostResilienceIntegration:
         )
 
         # Even with resilience wrappers, budget exceeded should raise
-        with patch(
-            "mcp_server_langgraph.agents.orchestrator.feature_flags"
-        ) as mock_flags:
+        with patch("mcp_server_langgraph.agents.orchestrator.feature_flags") as mock_flags:
             mock_flags.enable_cost_tracking = True
             mock_flags.enable_multi_agent_orchestration = True
 
@@ -218,7 +216,6 @@ class TestCostResilienceMetrics:
     @pytest.mark.asyncio
     async def test_orchestrator_metrics_include_cost_and_resilience(self) -> None:
         """Test that orchestrator execution records both cost and resilience metrics."""
-        from mcp_server_langgraph.agents.metrics import record_orchestrator_execution
         from mcp_server_langgraph.agents.orchestrator import Orchestrator, TaskDecomposition
 
         orchestrator = Orchestrator()

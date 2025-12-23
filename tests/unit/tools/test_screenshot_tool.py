@@ -255,9 +255,7 @@ class TestScreenshotToolValidation:
         from mcp_server_langgraph.tools.screenshot_tools import capture_screenshot
 
         # Test internal host patterns
-        result = await capture_screenshot.ainvoke(
-            {"url": "https://192.168.1.1"}
-        )
+        result = await capture_screenshot.ainvoke({"url": "https://192.168.1.1"})
 
         assert isinstance(result, dict)
         assert "error" in result
@@ -346,11 +344,13 @@ class TestScreenshotToolOptions:
             "playwright.async_api.async_playwright",
             return_value=mock_async_playwright,
         ):
-            await capture_screenshot.ainvoke({
-                "url": "https://example.com",
-                "viewport_width": 1920,
-                "viewport_height": 1080,
-            })
+            await capture_screenshot.ainvoke(
+                {
+                    "url": "https://example.com",
+                    "viewport_width": 1920,
+                    "viewport_height": 1080,
+                }
+            )
 
             # Verify viewport was set
             mock_page.set_viewport_size.assert_called_once()
@@ -415,9 +415,7 @@ class TestScreenshotToolErrorHandling:
         from mcp_server_langgraph.tools.screenshot_tools import capture_screenshot
 
         mock_playwright = MagicMock()
-        mock_playwright.chromium.launch = AsyncMock(
-            side_effect=RuntimeError("Browser not available")
-        )
+        mock_playwright.chromium.launch = AsyncMock(side_effect=RuntimeError("Browser not available"))
 
         mock_async_playwright = MagicMock()
         mock_async_playwright.__aenter__ = AsyncMock(return_value=mock_playwright)
@@ -623,10 +621,12 @@ class TestElementScreenshot:
             "playwright.async_api.async_playwright",
             return_value=mock_async_playwright,
         ):
-            result = await capture_element_screenshot.ainvoke({
-                "url": "https://example.com",
-                "selector": "#main-content",
-            })
+            result = await capture_element_screenshot.ainvoke(
+                {
+                    "url": "https://example.com",
+                    "selector": "#main-content",
+                }
+            )
 
             assert isinstance(result, dict)
             assert "image_data" in result
@@ -641,9 +641,7 @@ class TestElementScreenshot:
         from mcp_server_langgraph.tools.screenshot_tools import capture_element_screenshot
 
         mock_element = MagicMock()
-        mock_element.screenshot = AsyncMock(
-            side_effect=Exception("Element not found")
-        )
+        mock_element.screenshot = AsyncMock(side_effect=Exception("Element not found"))
 
         mock_page = MagicMock()
         mock_page.locator = MagicMock(return_value=mock_element)
@@ -671,10 +669,12 @@ class TestElementScreenshot:
             "playwright.async_api.async_playwright",
             return_value=mock_async_playwright,
         ):
-            result = await capture_element_screenshot.ainvoke({
-                "url": "https://example.com",
-                "selector": "#nonexistent",
-            })
+            result = await capture_element_screenshot.ainvoke(
+                {
+                    "url": "https://example.com",
+                    "selector": "#nonexistent",
+                }
+            )
 
             assert isinstance(result, dict)
             assert "error" in result
@@ -835,10 +835,12 @@ class TestWaitForSelector:
             "playwright.async_api.async_playwright",
             return_value=mock_async_playwright,
         ):
-            result = await wait_and_capture.ainvoke({
-                "url": "https://example.com",
-                "wait_for": ".dynamic-content",
-            })
+            result = await wait_and_capture.ainvoke(
+                {
+                    "url": "https://example.com",
+                    "wait_for": ".dynamic-content",
+                }
+            )
 
             assert isinstance(result, dict)
             mock_page.wait_for_selector.assert_called()
@@ -854,9 +856,7 @@ class TestWaitForSelector:
         mock_page = MagicMock()
         mock_page.goto = AsyncMock()
         mock_page.wait_for_load_state = AsyncMock()
-        mock_page.wait_for_selector = AsyncMock(
-            side_effect=TimeoutError("Waiting for selector timed out")
-        )
+        mock_page.wait_for_selector = AsyncMock(side_effect=TimeoutError("Waiting for selector timed out"))
         mock_page.close = AsyncMock()
         mock_page.set_viewport_size = AsyncMock()
 
@@ -879,10 +879,12 @@ class TestWaitForSelector:
             "playwright.async_api.async_playwright",
             return_value=mock_async_playwright,
         ):
-            result = await wait_and_capture.ainvoke({
-                "url": "https://example.com",
-                "wait_for": ".never-appears",
-            })
+            result = await wait_and_capture.ainvoke(
+                {
+                    "url": "https://example.com",
+                    "wait_for": ".never-appears",
+                }
+            )
 
             assert isinstance(result, dict)
             assert "error" in result

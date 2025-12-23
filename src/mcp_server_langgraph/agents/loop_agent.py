@@ -227,12 +227,14 @@ class LoopAgent(BaseOrchestrator[LoopTask, LoopIterationResult]):
                         result = task_fn()
 
                 iter_duration = (time.perf_counter() - iter_start) * 1000
-                iteration_results.append({
-                    "iteration": iteration,
-                    "success": True,
-                    "result": result,
-                    "duration_ms": iter_duration,
-                })
+                iteration_results.append(
+                    {
+                        "iteration": iteration,
+                        "success": True,
+                        "result": result,
+                        "duration_ms": iter_duration,
+                    }
+                )
 
                 # Update context with result for next iteration
                 if isinstance(result, dict):
@@ -254,12 +256,14 @@ class LoopAgent(BaseOrchestrator[LoopTask, LoopIterationResult]):
 
                 if self.continue_on_error:
                     errors.append(error_info)
-                    iteration_results.append({
-                        "iteration": iteration,
-                        "success": False,
-                        "error": str(e),
-                        "duration_ms": iter_duration,
-                    })
+                    iteration_results.append(
+                        {
+                            "iteration": iteration,
+                            "success": False,
+                            "error": str(e),
+                            "duration_ms": iter_duration,
+                        }
+                    )
                 else:
                     # Stop execution on error
                     error_msg = str(e)

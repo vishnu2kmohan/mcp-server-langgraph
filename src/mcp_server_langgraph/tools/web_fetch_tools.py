@@ -4,7 +4,6 @@ Web fetch tools for URL content retrieval.
 Provides secure URL fetching for the agent with comprehensive security controls.
 """
 
-import asyncio
 import ipaddress
 import os
 import re
@@ -33,11 +32,11 @@ ALLOWED_SCHEMES = {"http", "https"}
 
 # Internal IP ranges to block (SSRF protection)
 BLOCKED_IP_PREFIXES = [
-    "127.",        # Localhost
-    "10.",         # Private Class A
-    "192.168.",    # Private Class C
-    "169.254.",    # Link-local
-    "0.",          # Invalid
+    "127.",  # Localhost
+    "10.",  # Private Class A
+    "192.168.",  # Private Class C
+    "169.254.",  # Link-local
+    "0.",  # Invalid
 ]
 
 # Private Class B ranges (172.16.0.0 - 172.31.255.255)
@@ -271,7 +270,7 @@ async def web_fetch(
         logger.info("URL fetched successfully", extra={"url": url, "content_length": len(content)})
         return result
 
-    except asyncio.TimeoutError:
+    except TimeoutError:
         error_msg = f"Error: Timeout fetching URL (>{WEB_FETCH_TIMEOUT_SECONDS}s): {url}"
         logger.warning(error_msg)
         return error_msg

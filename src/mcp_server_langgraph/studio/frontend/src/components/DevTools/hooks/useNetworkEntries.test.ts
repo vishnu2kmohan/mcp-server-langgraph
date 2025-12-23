@@ -13,7 +13,9 @@ import type { NetworkEntry } from "../types";
 // Test Data
 // =============================================================================
 
-const createMockEntry = (overrides: Partial<NetworkEntry> = {}): NetworkEntry => ({
+const createMockEntry = (
+  overrides: Partial<NetworkEntry> = {},
+): NetworkEntry => ({
   id: `entry-${Date.now()}-${Math.random()}`,
   method: "GET",
   url: "/api/v1/test",
@@ -120,8 +122,12 @@ describe("useNetworkEntries", () => {
       const { result } = renderHook(() => useNetworkEntries());
 
       act(() => {
-        result.current.addEntry(createMockEntry({ id: "entry-1", startTime: 1000 }));
-        result.current.addEntry(createMockEntry({ id: "entry-2", startTime: 2000 }));
+        result.current.addEntry(
+          createMockEntry({ id: "entry-1", startTime: 1000 }),
+        );
+        result.current.addEntry(
+          createMockEntry({ id: "entry-2", startTime: 2000 }),
+        );
       });
 
       expect(result.current.entries[0].id).toBe("entry-1");
@@ -155,8 +161,12 @@ describe("useNetworkEntries", () => {
       const { result } = renderHook(() => useNetworkEntries());
 
       act(() => {
-        result.current.addEntry(createMockEntry({ id: "entry-1", status: "pending" }));
-        result.current.addEntry(createMockEntry({ id: "entry-2", status: "pending" }));
+        result.current.addEntry(
+          createMockEntry({ id: "entry-1", status: "pending" }),
+        );
+        result.current.addEntry(
+          createMockEntry({ id: "entry-2", status: "pending" }),
+        );
       });
 
       act(() => {
@@ -187,7 +197,9 @@ describe("useNetworkEntries", () => {
       const { result } = renderHook(() => useNetworkEntries());
 
       act(() => {
-        result.current.addEntry(createMockEntry({ id: "entry-1", status: "pending" }));
+        result.current.addEntry(
+          createMockEntry({ id: "entry-1", status: "pending" }),
+        );
       });
 
       act(() => {
@@ -265,7 +277,9 @@ describe("useNetworkEntries", () => {
     });
 
     it("should respect custom maxEntries option", () => {
-      const { result } = renderHook(() => useNetworkEntries({ maxEntries: 10 }));
+      const { result } = renderHook(() =>
+        useNetworkEntries({ maxEntries: 10 }),
+      );
 
       act(() => {
         for (let i = 0; i < 20; i++) {
@@ -326,7 +340,9 @@ describe("useNetworkEntries", () => {
       });
 
       expect(result.current.entries[0].method).toBe("POST");
-      expect(result.current.entries[0].requestBody).toEqual({ name: "Test User" });
+      expect(result.current.entries[0].requestBody).toEqual({
+        name: "Test User",
+      });
     });
 
     it("should handle error responses", () => {

@@ -9,22 +9,18 @@ Reference: ADR-0026 - Comprehensive Client Resilience Patterns
 
 from __future__ import annotations
 
-import asyncio
 import gc
 import json
 from datetime import UTC, datetime
 from typing import TYPE_CHECKING
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock
 
 import pytest
 
 pytestmark = pytest.mark.unit
 
 if TYPE_CHECKING:
-    from mcp_server_langgraph.notifications.push_fallback_queue import (
-        PushFallbackQueue,
-        QueuedMessage,
-    )
+    pass
 
 
 @pytest.mark.unit
@@ -41,7 +37,6 @@ class TestPushFallbackQueueEnqueue:
         """Test that enqueue stores message in Redis list."""
         from mcp_server_langgraph.notifications.push_fallback_queue import (
             PushFallbackQueue,
-            QueuedMessage,
         )
         from mcp_server_langgraph.notifications.push_sender import PushMessage
 
@@ -155,14 +150,16 @@ class TestPushFallbackQueueDequeue:
         )
 
         redis = AsyncMock()
-        stored_message = json.dumps({
-            "message_id": "msg-123",
-            "message": {"title": "Test", "body": "Hello"},
-            "subscription_endpoint": "https://push.example.com/abc",
-            "user_id": "user-1",
-            "enqueued_at": datetime.now(UTC).isoformat(),
-            "retry_count": 0,
-        })
+        stored_message = json.dumps(
+            {
+                "message_id": "msg-123",
+                "message": {"title": "Test", "body": "Hello"},
+                "subscription_endpoint": "https://push.example.com/abc",
+                "user_id": "user-1",
+                "enqueued_at": datetime.now(UTC).isoformat(),
+                "retry_count": 0,
+            }
+        )
         redis.rpop = AsyncMock(return_value=stored_message)
 
         queue = PushFallbackQueue(redis=redis, queue_key="push:queue", ttl_seconds=3600)
@@ -201,14 +198,16 @@ class TestPushFallbackQueueDequeue:
 
         redis = AsyncMock()
         messages = [
-            json.dumps({
-                "message_id": f"msg-{i}",
-                "message": {"title": f"Test {i}", "body": f"Body {i}"},
-                "subscription_endpoint": f"https://push.example.com/{i}",
-                "user_id": "user-1",
-                "enqueued_at": datetime.now(UTC).isoformat(),
-                "retry_count": 0,
-            })
+            json.dumps(
+                {
+                    "message_id": f"msg-{i}",
+                    "message": {"title": f"Test {i}", "body": f"Body {i}"},
+                    "subscription_endpoint": f"https://push.example.com/{i}",
+                    "user_id": "user-1",
+                    "enqueued_at": datetime.now(UTC).isoformat(),
+                    "retry_count": 0,
+                }
+            )
             for i in range(5)
         ]
 

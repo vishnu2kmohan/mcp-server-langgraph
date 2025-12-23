@@ -129,9 +129,7 @@ class ToolBridge:
         Returns:
             List of ToolResult in same order as calls
         """
-        tasks = [
-            self.call_tool(tool_name, args) for tool_name, args in calls
-        ]
+        tasks = [self.call_tool(tool_name, args) for tool_name, args in calls]
         return await asyncio.gather(*tasks)
 
     def list_tools(self) -> list[str]:

@@ -7,7 +7,6 @@ TDD tests for the Connection Health WebSocket using the standardized WebSocketBa
 from __future__ import annotations
 
 import gc
-from typing import Any
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
@@ -104,9 +103,7 @@ class TestConnectionHealthHandler:
         assert issubclass(ConnectionHealthHandler, WebSocketBase)
 
     @pytest.mark.asyncio
-    async def test_handles_refresh_message(
-        self, mock_websocket: MagicMock, mock_connection_repository: MagicMock
-    ) -> None:
+    async def test_handles_refresh_message(self, mock_websocket: MagicMock, mock_connection_repository: MagicMock) -> None:
         """
         GIVEN an active connection
         WHEN a refresh message is received
@@ -136,9 +133,7 @@ class TestConnectionHealthHandler:
         mock_connection_repository.list.assert_called_once()
 
     @pytest.mark.asyncio
-    async def test_handles_subscribe_message(
-        self, mock_websocket: MagicMock, mock_connection_repository: MagicMock
-    ) -> None:
+    async def test_handles_subscribe_message(self, mock_websocket: MagicMock, mock_connection_repository: MagicMock) -> None:
         """
         GIVEN an active connection
         WHEN a subscribe message is received
@@ -167,9 +162,7 @@ class TestConnectionHealthHandler:
         assert response.payload.get("connection_id") == "conn-1"
 
     @pytest.mark.asyncio
-    async def test_handles_unsubscribe_message(
-        self, mock_websocket: MagicMock, mock_connection_repository: MagicMock
-    ) -> None:
+    async def test_handles_unsubscribe_message(self, mock_websocket: MagicMock, mock_connection_repository: MagicMock) -> None:
         """
         GIVEN an active connection with a subscription
         WHEN an unsubscribe message is received
@@ -290,9 +283,7 @@ class TestConnectionHealthHandler:
         assert "connection_id" in response.payload.get("message", "").lower()
 
     @pytest.mark.asyncio
-    async def test_push_connection_update(
-        self, mock_websocket: MagicMock, mock_connection_repository: MagicMock
-    ) -> None:
+    async def test_push_connection_update(self, mock_websocket: MagicMock, mock_connection_repository: MagicMock) -> None:
         """
         GIVEN an active connection with subscription
         WHEN push_connection_update is called

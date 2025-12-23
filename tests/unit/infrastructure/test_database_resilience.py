@@ -43,7 +43,6 @@ class TestDatabaseConnectivityCircuitBreaker:
 
         User Journey: Recover from PostgreSQL blips
         """
-        import pybreaker
 
         from mcp_server_langgraph.infrastructure.database import (
             check_database_connectivity,
@@ -71,9 +70,7 @@ class TestDatabaseConnectivityCircuitBreaker:
             patch("asyncpg.connect", side_effect=mock_connect),
             patch("asyncio.sleep", new_callable=AsyncMock),
         ):
-            is_healthy, message = await check_database_connectivity(
-                "postgresql://test:test@localhost:5432/test"
-            )
+            is_healthy, message = await check_database_connectivity("postgresql://test:test@localhost:5432/test")
 
             # Should have retried and succeeded
             assert call_count >= 2
@@ -114,9 +111,7 @@ class TestDatabaseConnectivityCircuitBreaker:
             # Trigger enough failures to open the circuit breaker
             for _ in range(6):
                 try:
-                    await check_database_connectivity(
-                        "postgresql://test:test@localhost:5432/test"
-                    )
+                    await check_database_connectivity("postgresql://test:test@localhost:5432/test")
                 except (OSError, pybreaker.CircuitBreakerError):
                     pass
 
@@ -167,9 +162,7 @@ class TestConnectionPoolCircuitBreaker:
             patch("asyncpg.create_pool", side_effect=mock_create_pool),
             patch("asyncio.sleep", new_callable=AsyncMock),
         ):
-            pool = await create_connection_pool(
-                "postgresql://test:test@localhost:5432/test"
-            )
+            pool = await create_connection_pool("postgresql://test:test@localhost:5432/test")
 
             # Should have retried and succeeded
             assert call_count >= 2
@@ -208,9 +201,7 @@ class TestConnectionPoolCircuitBreaker:
             # Each pool creation attempt records one failure after all retries are exhausted
             for _ in range(6):
                 try:
-                    await create_connection_pool(
-                        "postgresql://test:test@localhost:5432/test"
-                    )
+                    await create_connection_pool("postgresql://test:test@localhost:5432/test")
                 except (OSError, RuntimeError, pybreaker.CircuitBreakerError, Exception):
                     pass
 

@@ -190,7 +190,7 @@ export interface SOC2Report extends ComplianceReportBase {
 - [ ] Type definitions (needs strong typing)
 - [ ] MSW mocks for development
 - [ ] UI components (Phase 5)
-- [ ] Integration with HybridShell
+- [ ] Integration with StudioShell
 
 ---
 
@@ -209,4 +209,4 @@ export interface SOC2Report extends ComplianceReportBase {
 2. Add MSW mock handlers
 3. Build ComplianceDashboard skeleton
 4. Integrate with existing hooks
-5. Add to HybridShell navigation
+5. Add to StudioShell navigation

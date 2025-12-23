@@ -13,8 +13,6 @@ Following TDD: These tests define the expected API behavior.
 from __future__ import annotations
 
 import gc
-from typing import Any
-from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 from fastapi.testclient import TestClient

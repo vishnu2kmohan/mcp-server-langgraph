@@ -239,8 +239,7 @@ async def handle_alertmanager_webhook(
                 ai_queued += 1
 
     logger.info(
-        f"Processed Alertmanager webhook: received={len(all_alerts)}, "
-        f"broadcast={broadcast_count}, ai_queued={ai_queued}"
+        f"Processed Alertmanager webhook: received={len(all_alerts)}, broadcast={broadcast_count}, ai_queued={ai_queued}"
     )
 
     return {

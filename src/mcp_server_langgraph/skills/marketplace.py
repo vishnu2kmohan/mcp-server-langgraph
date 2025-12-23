@@ -104,9 +104,7 @@ class MarketplaceConfig(BaseModel):
 
     name: str = Field(description="Unique marketplace identifier")
     uri: str = Field(description="Marketplace URI (GitHub URL, OCI registry, etc.)")
-    type: Literal["github", "oci", "registry"] = Field(
-        description="Marketplace type"
-    )
+    type: Literal["github", "oci", "registry"] = Field(description="Marketplace type")
     trusted: bool = Field(
         default=False,
         description="Whether skills from this marketplace are trusted",
@@ -329,10 +327,7 @@ class MarketplaceClient:
             contents = response.json()
 
             # Filter to only directories (skill folders)
-            skills = [
-                item for item in contents
-                if item.get("type") == "dir"
-            ]
+            skills = [item for item in contents if item.get("type") == "dir"]
 
             return skills
 
@@ -482,10 +477,7 @@ class MarketplaceClient:
 
         owner, repo = match.groups()
         # Fetch raw SKILL.md content
-        raw_url = (
-            f"https://raw.githubusercontent.com/{owner}/{repo}/main/skills/"
-            f"{skill_name}/SKILL.md"
-        )
+        raw_url = f"https://raw.githubusercontent.com/{owner}/{repo}/main/skills/{skill_name}/SKILL.md"
 
         async with httpx.AsyncClient() as client:
             response = await client.get(raw_url)
@@ -523,9 +515,7 @@ class MarketplaceClient:
         repository = parsed["repository"]
 
         # OCI Distribution spec: GET /v2/{name}/manifests/{reference}
-        manifest_url = (
-            f"https://{registry}/v2/{namespace}/{repository}/manifests/{skill_name}"
-        )
+        manifest_url = f"https://{registry}/v2/{namespace}/{repository}/manifests/{skill_name}"
 
         async with httpx.AsyncClient() as client:
             # Fetch the manifest
@@ -549,9 +539,7 @@ class MarketplaceClient:
                 return {"name": skill_name}
 
             # Fetch the config blob
-            blob_url = (
-                f"https://{registry}/v2/{namespace}/{repository}/blobs/{config_digest}"
-            )
+            blob_url = f"https://{registry}/v2/{namespace}/{repository}/blobs/{config_digest}"
             config_response = await client.get(blob_url)
 
             if config_response.status_code != 200:

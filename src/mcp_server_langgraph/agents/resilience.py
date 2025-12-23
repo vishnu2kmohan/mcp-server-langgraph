@@ -31,11 +31,8 @@ import pybreaker
 
 from mcp_server_langgraph.core.feature_flags import feature_flags
 from mcp_server_langgraph.resilience import (
-    circuit_breaker,
     get_circuit_breaker,
     reset_circuit_breaker,
-    retry_with_backoff,
-    with_timeout,
 )
 
 if TYPE_CHECKING:
@@ -114,7 +111,6 @@ async def resilient_orchestrate(
         CircuitBreakerOpenError: If circuit breaker is open
         Exception: If execution fails
     """
-    from mcp_server_langgraph.agents.subagent import SubagentResult
     from mcp_server_langgraph.core.exceptions import CircuitBreakerOpenError
 
     if not feature_flags.enable_orchestrator_resilience:
@@ -194,7 +190,7 @@ async def resilient_subagent_execute(
             last_exception = e
             if attempt < max_retries:
                 # Exponential backoff: 1s, 2s
-                delay = 2 ** attempt
+                delay = 2**attempt
                 await asyncio.sleep(delay)
             else:
                 # All retries exhausted

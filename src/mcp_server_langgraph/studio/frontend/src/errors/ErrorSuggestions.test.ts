@@ -21,7 +21,6 @@ describe("ErrorSuggestions", () => {
     vi.clearAllMocks();
   });
 
-
   describe("getSuggestions", () => {
     describe("for network errors", () => {
       it("returns network-specific suggestions", () => {

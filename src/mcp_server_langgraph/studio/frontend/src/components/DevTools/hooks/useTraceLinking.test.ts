@@ -210,9 +210,7 @@ describe("useTraceLinking", () => {
   describe("scroll to node", () => {
     it("should call scrollToNode when highlighting", () => {
       const scrollToNode = vi.fn();
-      const { result } = renderHook(() =>
-        useTraceLinking({ scrollToNode }),
-      );
+      const { result } = renderHook(() => useTraceLinking({ scrollToNode }));
 
       act(() => {
         result.current.highlightNode("node-123");

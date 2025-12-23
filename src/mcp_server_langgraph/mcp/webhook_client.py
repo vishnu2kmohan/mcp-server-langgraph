@@ -33,7 +33,6 @@ import hashlib
 import hmac
 import json
 import logging
-import time
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from typing import TYPE_CHECKING, Any
@@ -44,7 +43,7 @@ from mcp_server_langgraph.core.http_client import get_http_client_manager
 from mcp_server_langgraph.core.hooks import HookResult
 
 if TYPE_CHECKING:
-    import httpx
+    pass
 
 logger = logging.getLogger(__name__)
 tracer = trace.get_tracer(__name__)
@@ -232,7 +231,7 @@ class WebhookClient:
 
                 # Exponential backoff before retry
                 if attempt < self.config.max_retries - 1:
-                    delay = self.config.retry_base_delay * (2 ** attempt)
+                    delay = self.config.retry_base_delay * (2**attempt)
                     await _async_sleep(delay)
 
             # All retries exhausted
@@ -253,6 +252,7 @@ class WebhookClient:
 async def _async_sleep(seconds: float) -> None:
     """Async sleep wrapper for easier testing."""
     import asyncio
+
     await asyncio.sleep(seconds)
 
 

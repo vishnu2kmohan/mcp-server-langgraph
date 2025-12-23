@@ -89,15 +89,9 @@ class CostTracker:
             model_registry: ModelRegistry for pricing lookup.
                 Defaults to the global registry.
         """
-        self.per_orchestration_limit = Decimal(
-            str(per_orchestration_limit or feature_flags.orchestration_cost_limit)
-        )
-        self.session_limit = Decimal(
-            str(session_limit or feature_flags.session_cost_limit)
-        )
-        self.alert_thresholds = sorted(
-            alert_thresholds or feature_flags.cost_alert_thresholds
-        )
+        self.per_orchestration_limit = Decimal(str(per_orchestration_limit or feature_flags.orchestration_cost_limit))
+        self.session_limit = Decimal(str(session_limit or feature_flags.session_cost_limit))
+        self.alert_thresholds = sorted(alert_thresholds or feature_flags.cost_alert_thresholds)
         self.model_registry = model_registry or get_default_registry()
 
         # Internal storage for session costs
@@ -130,12 +124,8 @@ class CostTracker:
         caps = self.model_registry.get(model)
 
         # Calculate costs using registry pricing (per 1M tokens)
-        input_cost = Decimal(str(caps.input_cost_per_1m)) * Decimal(
-            str(input_tokens)
-        ) / Decimal("1000000")
-        output_cost = Decimal(str(caps.output_cost_per_1m)) * Decimal(
-            str(output_tokens)
-        ) / Decimal("1000000")
+        input_cost = Decimal(str(caps.input_cost_per_1m)) * Decimal(str(input_tokens)) / Decimal("1000000")
+        output_cost = Decimal(str(caps.output_cost_per_1m)) * Decimal(str(output_tokens)) / Decimal("1000000")
 
         total_cost = input_cost + output_cost
 

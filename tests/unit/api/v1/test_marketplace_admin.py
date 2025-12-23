@@ -9,7 +9,7 @@ listing available skills from each marketplace.
 from __future__ import annotations
 
 import gc
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 from fastapi import FastAPI
@@ -51,9 +51,7 @@ def mock_marketplace_registry():
     }
     registry.register_marketplace = AsyncMock(return_value=True)
     registry.remove_marketplace = AsyncMock(return_value=True)
-    registry.sync_marketplace = AsyncMock(
-        return_value={"synced": 16, "new": 2, "updated": 1}
-    )
+    registry.sync_marketplace = AsyncMock(return_value={"synced": 16, "new": 2, "updated": 1})
     registry.list_skills.return_value = [
         {"name": "pdf", "description": "PDF document handling"},
         {"name": "docx", "description": "Word document handling"},
@@ -83,9 +81,7 @@ class TestMarketplaceAdminList:
         gc.collect()
 
     @pytest.mark.asyncio
-    async def test_list_marketplaces_returns_all(
-        self, app_with_marketplace, mock_marketplace_registry
-    ):
+    async def test_list_marketplaces_returns_all(self, app_with_marketplace, mock_marketplace_registry):
         """Test listing all registered marketplaces."""
         async with AsyncClient(
             transport=ASGITransport(app=app_with_marketplace),
@@ -100,9 +96,7 @@ class TestMarketplaceAdminList:
         assert data["marketplaces"][0]["name"] == "anthropic"
 
     @pytest.mark.asyncio
-    async def test_list_marketplaces_includes_skill_count(
-        self, app_with_marketplace, mock_marketplace_registry
-    ):
+    async def test_list_marketplaces_includes_skill_count(self, app_with_marketplace, mock_marketplace_registry):
         """Test that marketplace listing includes skill counts."""
         async with AsyncClient(
             transport=ASGITransport(app=app_with_marketplace),
@@ -123,9 +117,7 @@ class TestMarketplaceAdminRegister:
         gc.collect()
 
     @pytest.mark.asyncio
-    async def test_register_marketplace_success(
-        self, app_with_marketplace, mock_marketplace_registry
-    ):
+    async def test_register_marketplace_success(self, app_with_marketplace, mock_marketplace_registry):
         """Test registering a new marketplace."""
         async with AsyncClient(
             transport=ASGITransport(app=app_with_marketplace),
@@ -147,9 +139,7 @@ class TestMarketplaceAdminRegister:
         mock_marketplace_registry.register_marketplace.assert_called_once()
 
     @pytest.mark.asyncio
-    async def test_register_marketplace_validates_uri(
-        self, app_with_marketplace, mock_marketplace_registry
-    ):
+    async def test_register_marketplace_validates_uri(self, app_with_marketplace, mock_marketplace_registry):
         """Test that marketplace registration validates URI format."""
         async with AsyncClient(
             transport=ASGITransport(app=app_with_marketplace),
@@ -167,9 +157,7 @@ class TestMarketplaceAdminRegister:
         assert response.status_code == 422  # Validation error
 
     @pytest.mark.asyncio
-    async def test_register_marketplace_requires_name(
-        self, app_with_marketplace, mock_marketplace_registry
-    ):
+    async def test_register_marketplace_requires_name(self, app_with_marketplace, mock_marketplace_registry):
         """Test that marketplace name is required."""
         async with AsyncClient(
             transport=ASGITransport(app=app_with_marketplace),
@@ -195,9 +183,7 @@ class TestMarketplaceAdminRemove:
         gc.collect()
 
     @pytest.mark.asyncio
-    async def test_remove_marketplace_success(
-        self, app_with_marketplace, mock_marketplace_registry
-    ):
+    async def test_remove_marketplace_success(self, app_with_marketplace, mock_marketplace_registry):
         """Test removing a marketplace."""
         async with AsyncClient(
             transport=ASGITransport(app=app_with_marketplace),
@@ -208,14 +194,10 @@ class TestMarketplaceAdminRemove:
         assert response.status_code == 200
         data = response.json()
         assert data["success"] is True
-        mock_marketplace_registry.remove_marketplace.assert_called_once_with(
-            "enterprise"
-        )
+        mock_marketplace_registry.remove_marketplace.assert_called_once_with("enterprise")
 
     @pytest.mark.asyncio
-    async def test_remove_anthropic_marketplace_forbidden(
-        self, app_with_marketplace, mock_marketplace_registry
-    ):
+    async def test_remove_anthropic_marketplace_forbidden(self, app_with_marketplace, mock_marketplace_registry):
         """Test that the default Anthropic marketplace cannot be removed."""
         mock_marketplace_registry.remove_marketplace = AsyncMock(
             side_effect=ValueError("Cannot remove default Anthropic marketplace")
@@ -230,13 +212,9 @@ class TestMarketplaceAdminRemove:
         assert response.status_code == 403
 
     @pytest.mark.asyncio
-    async def test_remove_nonexistent_marketplace(
-        self, app_with_marketplace, mock_marketplace_registry
-    ):
+    async def test_remove_nonexistent_marketplace(self, app_with_marketplace, mock_marketplace_registry):
         """Test removing a marketplace that doesn't exist."""
-        mock_marketplace_registry.remove_marketplace = AsyncMock(
-            side_effect=KeyError("Marketplace not found")
-        )
+        mock_marketplace_registry.remove_marketplace = AsyncMock(side_effect=KeyError("Marketplace not found"))
 
         async with AsyncClient(
             transport=ASGITransport(app=app_with_marketplace),
@@ -256,9 +234,7 @@ class TestMarketplaceAdminSync:
         gc.collect()
 
     @pytest.mark.asyncio
-    async def test_sync_marketplace_success(
-        self, app_with_marketplace, mock_marketplace_registry
-    ):
+    async def test_sync_marketplace_success(self, app_with_marketplace, mock_marketplace_registry):
         """Test syncing a marketplace."""
         async with AsyncClient(
             transport=ASGITransport(app=app_with_marketplace),
@@ -272,13 +248,9 @@ class TestMarketplaceAdminSync:
         assert data["new"] == 2
 
     @pytest.mark.asyncio
-    async def test_sync_nonexistent_marketplace(
-        self, app_with_marketplace, mock_marketplace_registry
-    ):
+    async def test_sync_nonexistent_marketplace(self, app_with_marketplace, mock_marketplace_registry):
         """Test syncing a marketplace that doesn't exist."""
-        mock_marketplace_registry.sync_marketplace = AsyncMock(
-            side_effect=KeyError("Marketplace not found")
-        )
+        mock_marketplace_registry.sync_marketplace = AsyncMock(side_effect=KeyError("Marketplace not found"))
 
         async with AsyncClient(
             transport=ASGITransport(app=app_with_marketplace),
@@ -298,9 +270,7 @@ class TestMarketplaceAdminSkills:
         gc.collect()
 
     @pytest.mark.asyncio
-    async def test_list_skills_from_marketplace(
-        self, app_with_marketplace, mock_marketplace_registry
-    ):
+    async def test_list_skills_from_marketplace(self, app_with_marketplace, mock_marketplace_registry):
         """Test listing skills from a specific marketplace."""
         async with AsyncClient(
             transport=ASGITransport(app=app_with_marketplace),
@@ -315,13 +285,9 @@ class TestMarketplaceAdminSkills:
         assert data["skills"][0]["name"] == "pdf"
 
     @pytest.mark.asyncio
-    async def test_list_skills_from_nonexistent_marketplace(
-        self, app_with_marketplace, mock_marketplace_registry
-    ):
+    async def test_list_skills_from_nonexistent_marketplace(self, app_with_marketplace, mock_marketplace_registry):
         """Test listing skills from a marketplace that doesn't exist."""
-        mock_marketplace_registry.list_skills = MagicMock(
-            side_effect=KeyError("Marketplace not found")
-        )
+        mock_marketplace_registry.list_skills = MagicMock(side_effect=KeyError("Marketplace not found"))
 
         async with AsyncClient(
             transport=ASGITransport(app=app_with_marketplace),
@@ -341,9 +307,7 @@ class TestMarketplaceAdminGetSingle:
         gc.collect()
 
     @pytest.mark.asyncio
-    async def test_get_marketplace_details(
-        self, app_with_marketplace, mock_marketplace_registry
-    ):
+    async def test_get_marketplace_details(self, app_with_marketplace, mock_marketplace_registry):
         """Test getting details for a specific marketplace."""
         async with AsyncClient(
             transport=ASGITransport(app=app_with_marketplace),
@@ -358,13 +322,9 @@ class TestMarketplaceAdminGetSingle:
         assert "last_sync" in data
 
     @pytest.mark.asyncio
-    async def test_get_nonexistent_marketplace(
-        self, app_with_marketplace, mock_marketplace_registry
-    ):
+    async def test_get_nonexistent_marketplace(self, app_with_marketplace, mock_marketplace_registry):
         """Test getting a marketplace that doesn't exist."""
-        mock_marketplace_registry.get_marketplace = MagicMock(
-            side_effect=KeyError("Marketplace not found")
-        )
+        mock_marketplace_registry.get_marketplace = MagicMock(side_effect=KeyError("Marketplace not found"))
 
         async with AsyncClient(
             transport=ASGITransport(app=app_with_marketplace),

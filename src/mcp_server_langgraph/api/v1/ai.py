@@ -565,9 +565,7 @@ async def get_ai_suggestions(
             conversation_history=history,
         )
         return UnifiedSuggestionsResponse(
-            suggestions=cast(
-                list["ChatFollowUpSuggestion | WorkflowSuggestion"], chat_suggestions
-            )
+            suggestions=cast(list["ChatFollowUpSuggestion | WorkflowSuggestion"], chat_suggestions)
         )
 
     elif suggestion_request.type == SuggestionType.WORKFLOW:
@@ -583,9 +581,7 @@ async def get_ai_suggestions(
             max_suggestions=suggestion_request.max_suggestions,
         )
         return UnifiedSuggestionsResponse(
-            suggestions=cast(
-                list["ChatFollowUpSuggestion | WorkflowSuggestion"], workflow_suggestions
-            )
+            suggestions=cast(list["ChatFollowUpSuggestion | WorkflowSuggestion"], workflow_suggestions)
         )
 
     else:

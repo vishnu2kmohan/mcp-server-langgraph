@@ -168,9 +168,7 @@ class TestSubagentLLMIntegration:
 
         # Create mock LLM that returns an AIMessage
         mock_llm = MagicMock()
-        mock_llm.ainvoke = AsyncMock(
-            return_value=AIMessage(content="This is the LLM response")
-        )
+        mock_llm.ainvoke = AsyncMock(return_value=AIMessage(content="This is the LLM response"))
 
         subagent = Subagent(
             task_id="task-1",
@@ -202,9 +200,7 @@ class TestSubagentLLMIntegration:
 
         expected_response = "The analysis shows positive results"
         mock_llm = MagicMock()
-        mock_llm.ainvoke = AsyncMock(
-            return_value=AIMessage(content=expected_response)
-        )
+        mock_llm.ainvoke = AsyncMock(return_value=AIMessage(content=expected_response))
 
         subagent = Subagent(
             task_id="task-1",
@@ -287,10 +283,7 @@ class TestSubagentLLMIntegration:
         await subagent.execute()
 
         # Check that context includes system message
-        assert any(
-            msg.get("role") == "system" and system_prompt in msg.get("content", "")
-            for msg in subagent.context_window
-        )
+        assert any(msg.get("role") == "system" and system_prompt in msg.get("content", "") for msg in subagent.context_window)
 
 
 @pytest.mark.unit
@@ -468,9 +461,7 @@ class TestOrchestratorMetricsIntegration:
         orchestrator = Orchestrator()
         decomposition = orchestrator.decompose_task("Test task", num_subtasks=2)
 
-        with patch(
-            "mcp_server_langgraph.agents.orchestrator.record_orchestrator_execution"
-        ) as mock_record:
+        with patch("mcp_server_langgraph.agents.orchestrator.record_orchestrator_execution") as mock_record:
             await orchestrator.execute(decomposition)
 
             # Verify metrics were recorded
@@ -495,9 +486,7 @@ class TestOrchestratorMetricsIntegration:
         orchestrator = Orchestrator()
         decomposition = orchestrator.decompose_task("Test task", num_subtasks=2)
 
-        with patch(
-            "mcp_server_langgraph.agents.orchestrator.record_artifact_storage"
-        ) as mock_record:
+        with patch("mcp_server_langgraph.agents.orchestrator.record_artifact_storage") as mock_record:
             await orchestrator.execute(decomposition)
 
             # Each successful result should record artifact storage
@@ -521,9 +510,7 @@ class TestOrchestratorMetricsIntegration:
             SubagentResult(task_id="subtask-2", success=True, output="Result 2"),
         ]
 
-        with patch(
-            "mcp_server_langgraph.agents.orchestrator.record_synthesis_operation"
-        ) as mock_record:
+        with patch("mcp_server_langgraph.agents.orchestrator.record_synthesis_operation") as mock_record:
             await orchestrator.synthesize(decomposition, results)
 
             mock_record.assert_called_once()
@@ -559,9 +546,7 @@ class TestSubagentMetricsIntegration:
             model="gemini-2.5-flash",
         )
 
-        with patch(
-            "mcp_server_langgraph.agents.subagent.record_subagent_execution"
-        ) as mock_record:
+        with patch("mcp_server_langgraph.agents.subagent.record_subagent_execution") as mock_record:
             await subagent.execute()
 
             mock_record.assert_called_once()
@@ -591,9 +576,7 @@ class TestSubagentMetricsIntegration:
             llm_factory=mock_llm,
         )
 
-        with patch(
-            "mcp_server_langgraph.agents.subagent.record_subagent_execution"
-        ) as mock_record:
+        with patch("mcp_server_langgraph.agents.subagent.record_subagent_execution") as mock_record:
             await subagent.execute()
 
             mock_record.assert_called_once()
@@ -622,9 +605,7 @@ class TestModelSelectorMetricsIntegration:
 
         selector = ModelSelector(available_vendors=["google"])
 
-        with patch(
-            "mcp_server_langgraph.agents.model_selector.record_model_selection"
-        ) as mock_record:
+        with patch("mcp_server_langgraph.agents.model_selector.record_model_selection") as mock_record:
             model = selector.select_model("complicated")
 
             mock_record.assert_called_once()
@@ -644,9 +625,7 @@ class TestModelSelectorMetricsIntegration:
 
         selector = ModelSelector(available_tiers=["simple"])
 
-        with patch(
-            "mcp_server_langgraph.agents.model_selector.record_model_selection"
-        ) as mock_record:
+        with patch("mcp_server_langgraph.agents.model_selector.record_model_selection") as mock_record:
             selector.select_model("complex")  # Will fallback
 
             mock_record.assert_called_once()
@@ -664,9 +643,7 @@ class TestModelSelectorMetricsIntegration:
 
         selector = ModelSelector(available_vendors=["google", "anthropic"])
 
-        with patch(
-            "mcp_server_langgraph.agents.model_selector.record_cross_vendor_verification"
-        ) as mock_record:
+        with patch("mcp_server_langgraph.agents.model_selector.record_cross_vendor_verification") as mock_record:
             selector.select_verifier("auto")
 
             mock_record.assert_called_once()
@@ -686,9 +663,7 @@ class TestModelSelectorMetricsIntegration:
 
         selector = ModelSelector(available_vendors=["google"])
 
-        with patch(
-            "mcp_server_langgraph.agents.model_selector.record_cross_vendor_verification"
-        ) as mock_record:
+        with patch("mcp_server_langgraph.agents.model_selector.record_cross_vendor_verification") as mock_record:
             selector.select_verifier("auto")
 
             mock_record.assert_called_once()

@@ -84,6 +84,5 @@ class CostAlert:
         if not self.message:
             pct = self.threshold_percentage * 100
             self.message = (
-                f"Session {self.session_id} has reached {pct:.0f}% "
-                f"of budget (${self.current_cost:.4f} / ${self.limit:.2f})"
+                f"Session {self.session_id} has reached {pct:.0f}% of budget (${self.current_cost:.4f} / ${self.limit:.2f})"
             )

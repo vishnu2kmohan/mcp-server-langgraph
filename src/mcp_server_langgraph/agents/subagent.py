@@ -176,16 +176,20 @@ class Subagent:
         try:
             # Add system prompt to context if provided
             if self.system_prompt:
-                self.add_to_context({
-                    "role": "system",
-                    "content": self.system_prompt,
-                })
+                self.add_to_context(
+                    {
+                        "role": "system",
+                        "content": self.system_prompt,
+                    }
+                )
 
             # Add instructions to context
-            self.add_to_context({
-                "role": "user",
-                "content": self.instructions,
-            })
+            self.add_to_context(
+                {
+                    "role": "user",
+                    "content": self.instructions,
+                }
+            )
 
             # Execute with LLM if factory is provided
             if self.llm_factory is not None:

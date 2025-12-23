@@ -7,10 +7,8 @@ Written FIRST before implementation (RED phase) per ADR-0082.
 Reference: https://modelcontextprotocol.io/specification/2025-11-25/basic/transports
 """
 
-import asyncio
 import gc
 import json
-from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -19,8 +17,8 @@ import pytest
 MCP_PROTOCOL_VERSION = "2025-11-25"
 
 
-
 pytestmark = pytest.mark.unit
+
 
 @pytest.mark.xdist_group(name="mcp_stdio_transport")
 class TestMCPSTDIOTransportConnect:
@@ -57,15 +55,20 @@ class TestMCPSTDIOTransportConnect:
         mock_process.returncode = None
 
         # Mock the initialize response
-        init_response = json.dumps({
-            "jsonrpc": "2.0",
-            "id": "mock-id",
-            "result": {
-                "protocolVersion": MCP_PROTOCOL_VERSION,
-                "capabilities": {"tools": {}},
-                "serverInfo": {"name": "test", "version": "1.0"},
-            },
-        }) + "\n"
+        init_response = (
+            json.dumps(
+                {
+                    "jsonrpc": "2.0",
+                    "id": "mock-id",
+                    "result": {
+                        "protocolVersion": MCP_PROTOCOL_VERSION,
+                        "capabilities": {"tools": {}},
+                        "serverInfo": {"name": "test", "version": "1.0"},
+                    },
+                }
+            )
+            + "\n"
+        )
         mock_process.stdout.readline = AsyncMock(return_value=init_response.encode())
 
         with patch("asyncio.create_subprocess_exec", return_value=mock_process) as mock_exec:
@@ -105,15 +108,20 @@ class TestMCPSTDIOTransportConnect:
         mock_stdin.drain = AsyncMock()
 
         # Mock the initialize response
-        init_response = json.dumps({
-            "jsonrpc": "2.0",
-            "id": "any",
-            "result": {
-                "protocolVersion": MCP_PROTOCOL_VERSION,
-                "capabilities": {"tools": {}},
-                "serverInfo": {"name": "test", "version": "1.0"},
-            },
-        }) + "\n"
+        init_response = (
+            json.dumps(
+                {
+                    "jsonrpc": "2.0",
+                    "id": "any",
+                    "result": {
+                        "protocolVersion": MCP_PROTOCOL_VERSION,
+                        "capabilities": {"tools": {}},
+                        "serverInfo": {"name": "test", "version": "1.0"},
+                    },
+                }
+            )
+            + "\n"
+        )
         mock_process.stdout.readline = AsyncMock(return_value=init_response.encode())
 
         with patch("asyncio.create_subprocess_exec", return_value=mock_process):
@@ -155,15 +163,20 @@ class TestMCPSTDIOTransportConnect:
         mock_stdin.drain = AsyncMock()
 
         # Mock the initialize response
-        init_response = json.dumps({
-            "jsonrpc": "2.0",
-            "id": "any",
-            "result": {
-                "protocolVersion": MCP_PROTOCOL_VERSION,
-                "capabilities": {"tools": {}},
-                "serverInfo": {"name": "test", "version": "1.0"},
-            },
-        }) + "\n"
+        init_response = (
+            json.dumps(
+                {
+                    "jsonrpc": "2.0",
+                    "id": "any",
+                    "result": {
+                        "protocolVersion": MCP_PROTOCOL_VERSION,
+                        "capabilities": {"tools": {}},
+                        "serverInfo": {"name": "test", "version": "1.0"},
+                    },
+                }
+            )
+            + "\n"
+        )
         mock_process.stdout.readline = AsyncMock(return_value=init_response.encode())
 
         with patch("asyncio.create_subprocess_exec", return_value=mock_process):
@@ -201,18 +214,23 @@ class TestMCPSTDIOTransportConnect:
         mock_stdin.drain = AsyncMock()
 
         # Mock the initialize response with capabilities
-        init_response = json.dumps({
-            "jsonrpc": "2.0",
-            "id": "any",
-            "result": {
-                "protocolVersion": MCP_PROTOCOL_VERSION,
-                "capabilities": {
-                    "tools": {"listChanged": True},
-                    "resources": {"subscribe": True},
-                },
-                "serverInfo": {"name": "playwright", "version": "1.2.0"},
-            },
-        }) + "\n"
+        init_response = (
+            json.dumps(
+                {
+                    "jsonrpc": "2.0",
+                    "id": "any",
+                    "result": {
+                        "protocolVersion": MCP_PROTOCOL_VERSION,
+                        "capabilities": {
+                            "tools": {"listChanged": True},
+                            "resources": {"subscribe": True},
+                        },
+                        "serverInfo": {"name": "playwright", "version": "1.2.0"},
+                    },
+                }
+            )
+            + "\n"
+        )
         mock_process.stdout.readline = AsyncMock(return_value=init_response.encode())
 
         with patch("asyncio.create_subprocess_exec", return_value=mock_process):
@@ -262,40 +280,40 @@ class TestMCPSTDIOTransportListTools:
 
         # Responses: initialize, then tools/list
         responses = [
-            json.dumps({
-                "jsonrpc": "2.0",
-                "id": "init",
-                "result": {
-                    "protocolVersion": MCP_PROTOCOL_VERSION,
-                    "capabilities": {"tools": {}},
-                    "serverInfo": {"name": "test", "version": "1.0"},
-                },
-            }) + "\n",
-            json.dumps({
-                "jsonrpc": "2.0",
-                "id": "tools",
-                "result": {
-                    "tools": [
-                        {"name": "screenshot", "description": "Take screenshot", "inputSchema": {}},
-                    ],
-                },
-            }) + "\n",
+            json.dumps(
+                {
+                    "jsonrpc": "2.0",
+                    "id": "init",
+                    "result": {
+                        "protocolVersion": MCP_PROTOCOL_VERSION,
+                        "capabilities": {"tools": {}},
+                        "serverInfo": {"name": "test", "version": "1.0"},
+                    },
+                }
+            )
+            + "\n",
+            json.dumps(
+                {
+                    "jsonrpc": "2.0",
+                    "id": "tools",
+                    "result": {
+                        "tools": [
+                            {"name": "screenshot", "description": "Take screenshot", "inputSchema": {}},
+                        ],
+                    },
+                }
+            )
+            + "\n",
         ]
         response_iter = iter(responses)
-        mock_process.stdout.readline = AsyncMock(
-            side_effect=lambda: next(response_iter).encode()
-        )
+        mock_process.stdout.readline = AsyncMock(side_effect=lambda: next(response_iter).encode())
 
         with patch("asyncio.create_subprocess_exec", return_value=mock_process):
             await session.connect()
             tools = await session.list_tools()
 
         # Find the tools/list request in written data
-        tools_requests = [
-            json.loads(d.decode())
-            for d in written_data
-            if b"tools/list" in d
-        ]
+        tools_requests = [json.loads(d.decode()) for d in written_data if b"tools/list" in d]
         assert len(tools_requests) == 1
         assert tools_requests[0]["method"] == "tools/list"
 
@@ -321,41 +339,45 @@ class TestMCPSTDIOTransportListTools:
 
         # Responses: initialize, then tools/list
         responses = [
-            json.dumps({
-                "jsonrpc": "2.0",
-                "id": "init",
-                "result": {
-                    "protocolVersion": MCP_PROTOCOL_VERSION,
-                    "capabilities": {"tools": {}},
-                    "serverInfo": {"name": "test", "version": "1.0"},
-                },
-            }) + "\n",
-            json.dumps({
-                "jsonrpc": "2.0",
-                "id": "tools",
-                "result": {
-                    "tools": [
-                        {
-                            "name": "screenshot",
-                            "description": "Take a screenshot",
-                            "inputSchema": {
-                                "type": "object",
-                                "properties": {"url": {"type": "string"}},
+            json.dumps(
+                {
+                    "jsonrpc": "2.0",
+                    "id": "init",
+                    "result": {
+                        "protocolVersion": MCP_PROTOCOL_VERSION,
+                        "capabilities": {"tools": {}},
+                        "serverInfo": {"name": "test", "version": "1.0"},
+                    },
+                }
+            )
+            + "\n",
+            json.dumps(
+                {
+                    "jsonrpc": "2.0",
+                    "id": "tools",
+                    "result": {
+                        "tools": [
+                            {
+                                "name": "screenshot",
+                                "description": "Take a screenshot",
+                                "inputSchema": {
+                                    "type": "object",
+                                    "properties": {"url": {"type": "string"}},
+                                },
                             },
-                        },
-                        {
-                            "name": "click",
-                            "description": "Click element",
-                            "inputSchema": {"type": "object"},
-                        },
-                    ],
-                },
-            }) + "\n",
+                            {
+                                "name": "click",
+                                "description": "Click element",
+                                "inputSchema": {"type": "object"},
+                            },
+                        ],
+                    },
+                }
+            )
+            + "\n",
         ]
         response_iter = iter(responses)
-        mock_process.stdout.readline = AsyncMock(
-            side_effect=lambda: next(response_iter).encode()
-        )
+        mock_process.stdout.readline = AsyncMock(side_effect=lambda: next(response_iter).encode())
 
         with patch("asyncio.create_subprocess_exec", return_value=mock_process):
             await session.connect()
@@ -398,39 +420,39 @@ class TestMCPSTDIOTransportCallTool:
 
         # Responses: initialize, then tools/call
         responses = [
-            json.dumps({
-                "jsonrpc": "2.0",
-                "id": "init",
-                "result": {
-                    "protocolVersion": MCP_PROTOCOL_VERSION,
-                    "capabilities": {"tools": {}},
-                    "serverInfo": {"name": "test", "version": "1.0"},
-                },
-            }) + "\n",
-            json.dumps({
-                "jsonrpc": "2.0",
-                "id": "call",
-                "result": {
-                    "content": [{"type": "text", "text": "Screenshot saved"}],
-                    "isError": False,
-                },
-            }) + "\n",
+            json.dumps(
+                {
+                    "jsonrpc": "2.0",
+                    "id": "init",
+                    "result": {
+                        "protocolVersion": MCP_PROTOCOL_VERSION,
+                        "capabilities": {"tools": {}},
+                        "serverInfo": {"name": "test", "version": "1.0"},
+                    },
+                }
+            )
+            + "\n",
+            json.dumps(
+                {
+                    "jsonrpc": "2.0",
+                    "id": "call",
+                    "result": {
+                        "content": [{"type": "text", "text": "Screenshot saved"}],
+                        "isError": False,
+                    },
+                }
+            )
+            + "\n",
         ]
         response_iter = iter(responses)
-        mock_process.stdout.readline = AsyncMock(
-            side_effect=lambda: next(response_iter).encode()
-        )
+        mock_process.stdout.readline = AsyncMock(side_effect=lambda: next(response_iter).encode())
 
         with patch("asyncio.create_subprocess_exec", return_value=mock_process):
             await session.connect()
             await session.call_tool("screenshot", {"url": "https://example.com"})
 
         # Find the tools/call request
-        call_requests = [
-            json.loads(d.decode())
-            for d in written_data
-            if b"tools/call" in d
-        ]
+        call_requests = [json.loads(d.decode()) for d in written_data if b"tools/call" in d]
         assert len(call_requests) == 1
         assert call_requests[0]["method"] == "tools/call"
         assert call_requests[0]["params"]["name"] == "screenshot"
@@ -458,31 +480,35 @@ class TestMCPSTDIOTransportCallTool:
 
         # Responses: initialize, then tools/call
         responses = [
-            json.dumps({
-                "jsonrpc": "2.0",
-                "id": "init",
-                "result": {
-                    "protocolVersion": MCP_PROTOCOL_VERSION,
-                    "capabilities": {"tools": {}},
-                    "serverInfo": {"name": "test", "version": "1.0"},
-                },
-            }) + "\n",
-            json.dumps({
-                "jsonrpc": "2.0",
-                "id": "call",
-                "result": {
-                    "content": [
-                        {"type": "text", "text": "Screenshot saved to /tmp/shot.png"},
-                        {"type": "image", "data": "base64...", "mimeType": "image/png"},
-                    ],
-                    "isError": False,
-                },
-            }) + "\n",
+            json.dumps(
+                {
+                    "jsonrpc": "2.0",
+                    "id": "init",
+                    "result": {
+                        "protocolVersion": MCP_PROTOCOL_VERSION,
+                        "capabilities": {"tools": {}},
+                        "serverInfo": {"name": "test", "version": "1.0"},
+                    },
+                }
+            )
+            + "\n",
+            json.dumps(
+                {
+                    "jsonrpc": "2.0",
+                    "id": "call",
+                    "result": {
+                        "content": [
+                            {"type": "text", "text": "Screenshot saved to /tmp/shot.png"},
+                            {"type": "image", "data": "base64...", "mimeType": "image/png"},
+                        ],
+                        "isError": False,
+                    },
+                }
+            )
+            + "\n",
         ]
         response_iter = iter(responses)
-        mock_process.stdout.readline = AsyncMock(
-            side_effect=lambda: next(response_iter).encode()
-        )
+        mock_process.stdout.readline = AsyncMock(side_effect=lambda: next(response_iter).encode())
 
         with patch("asyncio.create_subprocess_exec", return_value=mock_process):
             await session.connect()
@@ -515,30 +541,34 @@ class TestMCPSTDIOTransportCallTool:
 
         # Responses: initialize, then tools/call with error
         responses = [
-            json.dumps({
-                "jsonrpc": "2.0",
-                "id": "init",
-                "result": {
-                    "protocolVersion": MCP_PROTOCOL_VERSION,
-                    "capabilities": {"tools": {}},
-                    "serverInfo": {"name": "test", "version": "1.0"},
-                },
-            }) + "\n",
-            json.dumps({
-                "jsonrpc": "2.0",
-                "id": "call",
-                "result": {
-                    "content": [
-                        {"type": "text", "text": "Error: Element not found"},
-                    ],
-                    "isError": True,
-                },
-            }) + "\n",
+            json.dumps(
+                {
+                    "jsonrpc": "2.0",
+                    "id": "init",
+                    "result": {
+                        "protocolVersion": MCP_PROTOCOL_VERSION,
+                        "capabilities": {"tools": {}},
+                        "serverInfo": {"name": "test", "version": "1.0"},
+                    },
+                }
+            )
+            + "\n",
+            json.dumps(
+                {
+                    "jsonrpc": "2.0",
+                    "id": "call",
+                    "result": {
+                        "content": [
+                            {"type": "text", "text": "Error: Element not found"},
+                        ],
+                        "isError": True,
+                    },
+                }
+            )
+            + "\n",
         ]
         response_iter = iter(responses)
-        mock_process.stdout.readline = AsyncMock(
-            side_effect=lambda: next(response_iter).encode()
-        )
+        mock_process.stdout.readline = AsyncMock(side_effect=lambda: next(response_iter).encode())
 
         with patch("asyncio.create_subprocess_exec", return_value=mock_process):
             await session.connect()
@@ -578,15 +608,20 @@ class TestMCPSTDIOTransportDisconnect:
         mock_stdin.write = MagicMock()
         mock_stdin.drain = AsyncMock()
 
-        init_response = json.dumps({
-            "jsonrpc": "2.0",
-            "id": "init",
-            "result": {
-                "protocolVersion": MCP_PROTOCOL_VERSION,
-                "capabilities": {"tools": {}},
-                "serverInfo": {"name": "test", "version": "1.0"},
-            },
-        }) + "\n"
+        init_response = (
+            json.dumps(
+                {
+                    "jsonrpc": "2.0",
+                    "id": "init",
+                    "result": {
+                        "protocolVersion": MCP_PROTOCOL_VERSION,
+                        "capabilities": {"tools": {}},
+                        "serverInfo": {"name": "test", "version": "1.0"},
+                    },
+                }
+            )
+            + "\n"
+        )
         mock_process.stdout.readline = AsyncMock(return_value=init_response.encode())
 
         with patch("asyncio.create_subprocess_exec", return_value=mock_process):
@@ -620,15 +655,20 @@ class TestMCPSTDIOTransportDisconnect:
         mock_stdin.write = MagicMock()
         mock_stdin.drain = AsyncMock()
 
-        init_response = json.dumps({
-            "jsonrpc": "2.0",
-            "id": "init",
-            "result": {
-                "protocolVersion": MCP_PROTOCOL_VERSION,
-                "capabilities": {"tools": {}},
-                "serverInfo": {"name": "test", "version": "1.0"},
-            },
-        }) + "\n"
+        init_response = (
+            json.dumps(
+                {
+                    "jsonrpc": "2.0",
+                    "id": "init",
+                    "result": {
+                        "protocolVersion": MCP_PROTOCOL_VERSION,
+                        "capabilities": {"tools": {}},
+                        "serverInfo": {"name": "test", "version": "1.0"},
+                    },
+                }
+            )
+            + "\n"
+        )
         mock_process.stdout.readline = AsyncMock(return_value=init_response.encode())
 
         with patch("asyncio.create_subprocess_exec", return_value=mock_process):
@@ -694,14 +734,19 @@ class TestMCPSTDIOTransportErrorHandling:
         mock_stdin.drain = AsyncMock()
 
         # Return error response
-        error_response = json.dumps({
-            "jsonrpc": "2.0",
-            "id": "init",
-            "error": {
-                "code": -32600,
-                "message": "Invalid Request",
-            },
-        }) + "\n"
+        error_response = (
+            json.dumps(
+                {
+                    "jsonrpc": "2.0",
+                    "id": "init",
+                    "error": {
+                        "code": -32600,
+                        "message": "Invalid Request",
+                    },
+                }
+            )
+            + "\n"
+        )
         mock_process.stdout.readline = AsyncMock(return_value=error_response.encode())
 
         with patch("asyncio.create_subprocess_exec", return_value=mock_process):

@@ -7,7 +7,6 @@ TDD tests for the Agent Request (HITL) WebSocket using the standardized WebSocke
 from __future__ import annotations
 
 import gc
-from typing import Any
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
@@ -70,9 +69,7 @@ class TestAgentRequestHandler:
         assert issubclass(AgentRequestHandler, WebSocketBase)
 
     @pytest.mark.asyncio
-    async def test_handles_subscribe_message(
-        self, mock_websocket: MagicMock, mock_hitl_broadcaster: MagicMock
-    ) -> None:
+    async def test_handles_subscribe_message(self, mock_websocket: MagicMock, mock_hitl_broadcaster: MagicMock) -> None:
         """
         GIVEN an active connection
         WHEN a subscribe message is received
@@ -100,9 +97,7 @@ class TestAgentRequestHandler:
         assert response.type == "subscribed"
 
     @pytest.mark.asyncio
-    async def test_handles_unsubscribe_message(
-        self, mock_websocket: MagicMock, mock_hitl_broadcaster: MagicMock
-    ) -> None:
+    async def test_handles_unsubscribe_message(self, mock_websocket: MagicMock, mock_hitl_broadcaster: MagicMock) -> None:
         """
         GIVEN an active subscription
         WHEN an unsubscribe message is received
@@ -160,9 +155,7 @@ class TestAgentRequestHandler:
         assert response.type == "error"
 
     @pytest.mark.asyncio
-    async def test_push_approval_required(
-        self, mock_websocket: MagicMock, mock_hitl_broadcaster: MagicMock
-    ) -> None:
+    async def test_push_approval_required(self, mock_websocket: MagicMock, mock_hitl_broadcaster: MagicMock) -> None:
         """
         GIVEN an active subscription
         WHEN push_approval_required is called
@@ -180,12 +173,14 @@ class TestAgentRequestHandler:
         handler._websocket = mock_websocket
         handler._subscribed = True
 
-        await handler.push_approval_required({
-            "request_id": "req-001",
-            "agent_name": "TestAgent",
-            "confidence": 0.3,
-            "proposed_action": "Execute tool",
-        })
+        await handler.push_approval_required(
+            {
+                "request_id": "req-001",
+                "agent_name": "TestAgent",
+                "confidence": 0.3,
+                "proposed_action": "Execute tool",
+            }
+        )
 
         mock_websocket.send_json.assert_called_once()
         call_args = mock_websocket.send_json.call_args[0][0]
@@ -193,9 +188,7 @@ class TestAgentRequestHandler:
         assert call_args["payload"]["request_id"] == "req-001"
 
     @pytest.mark.asyncio
-    async def test_push_clarification_required(
-        self, mock_websocket: MagicMock, mock_hitl_broadcaster: MagicMock
-    ) -> None:
+    async def test_push_clarification_required(self, mock_websocket: MagicMock, mock_hitl_broadcaster: MagicMock) -> None:
         """
         GIVEN an active subscription
         WHEN push_clarification_required is called
@@ -213,12 +206,14 @@ class TestAgentRequestHandler:
         handler._websocket = mock_websocket
         handler._subscribed = True
 
-        await handler.push_clarification_required({
-            "request_id": "req-002",
-            "agent_name": "TestAgent",
-            "question": "What database should I use?",
-            "options": ["PostgreSQL", "MySQL", "SQLite"],
-        })
+        await handler.push_clarification_required(
+            {
+                "request_id": "req-002",
+                "agent_name": "TestAgent",
+                "question": "What database should I use?",
+                "options": ["PostgreSQL", "MySQL", "SQLite"],
+            }
+        )
 
         mock_websocket.send_json.assert_called_once()
         call_args = mock_websocket.send_json.call_args[0][0]
@@ -226,9 +221,7 @@ class TestAgentRequestHandler:
         assert call_args["payload"]["request_id"] == "req-002"
 
     @pytest.mark.asyncio
-    async def test_push_not_sent_when_unsubscribed(
-        self, mock_websocket: MagicMock, mock_hitl_broadcaster: MagicMock
-    ) -> None:
+    async def test_push_not_sent_when_unsubscribed(self, mock_websocket: MagicMock, mock_hitl_broadcaster: MagicMock) -> None:
         """
         GIVEN a connection that is not subscribed
         WHEN push_approval_required is called
@@ -246,9 +239,11 @@ class TestAgentRequestHandler:
         handler._websocket = mock_websocket
         handler._subscribed = False
 
-        await handler.push_approval_required({
-            "request_id": "req-001",
-            "agent_name": "TestAgent",
-        })
+        await handler.push_approval_required(
+            {
+                "request_id": "req-001",
+                "agent_name": "TestAgent",
+            }
+        )
 
         mock_websocket.send_json.assert_not_called()

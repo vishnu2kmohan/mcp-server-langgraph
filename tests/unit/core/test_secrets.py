@@ -10,7 +10,7 @@ Reference: TDD workflow - Write tests FIRST, then verify they define expected be
 
 import gc
 import os
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -204,9 +204,7 @@ class TestAWSSecretsManagerProvider:
         mock_client = MagicMock()
         with patch("boto3.client", return_value=mock_client) as mock_boto3:
             client = provider._get_client()
-            mock_boto3.assert_called_once_with(
-                "secretsmanager", region_name="us-west-2"
-            )
+            mock_boto3.assert_called_once_with("secretsmanager", region_name="us-west-2")
             assert client is mock_client
 
     @pytest.mark.asyncio
@@ -238,9 +236,7 @@ class TestAWSSecretsManagerProvider:
         with patch.object(provider, "_get_client", return_value=mock_client):
             await provider.set_secret("test-secret", "secret-value")
 
-            mock_client.create_secret.assert_called_once_with(
-                Name="test-secret", SecretString="secret-value"
-            )
+            mock_client.create_secret.assert_called_once_with(Name="test-secret", SecretString="secret-value")
 
     @pytest.mark.asyncio
     async def test_set_secret_updates_existing_secret(self) -> None:
@@ -261,9 +257,7 @@ class TestAWSSecretsManagerProvider:
         with patch.object(provider, "_get_client", return_value=mock_client):
             await provider.set_secret("existing-secret", "new-value")
 
-            mock_client.put_secret_value.assert_called_once_with(
-                SecretId="existing-secret", SecretString="new-value"
-            )
+            mock_client.put_secret_value.assert_called_once_with(SecretId="existing-secret", SecretString="new-value")
 
     @pytest.mark.asyncio
     async def test_get_secret_returns_value(self) -> None:
@@ -315,9 +309,7 @@ class TestAWSSecretsManagerProvider:
         with patch.object(provider, "_get_client", return_value=mock_client):
             await provider.delete_secret("delete-me")
 
-            mock_client.delete_secret.assert_called_once_with(
-                SecretId="delete-me", ForceDeleteWithoutRecovery=True
-            )
+            mock_client.delete_secret.assert_called_once_with(SecretId="delete-me", ForceDeleteWithoutRecovery=True)
 
     @pytest.mark.asyncio
     async def test_delete_secret_ignores_not_found(self) -> None:
@@ -362,9 +354,7 @@ class TestAzureKeyVaultProvider:
         WHEN creating AzureKeyVaultProvider
         THEN should use environment URL
         """
-        with patch.dict(
-            os.environ, {"AZURE_KEY_VAULT_URL": "https://env.vault.azure.net"}
-        ):
+        with patch.dict(os.environ, {"AZURE_KEY_VAULT_URL": "https://env.vault.azure.net"}):
             provider = AzureKeyVaultProvider()
             assert provider.vault_url == "https://env.vault.azure.net"
 
@@ -600,14 +590,8 @@ class TestGCPSecretManagerProvider:
             # Verify add_secret_version was called
             mock_client.add_secret_version.assert_called_once()
             version_args = mock_client.add_secret_version.call_args
-            assert (
-                version_args.kwargs["request"]["parent"]
-                == "projects/my-project/secrets/my-secret"
-            )
-            assert (
-                version_args.kwargs["request"]["payload"]["data"]
-                == b"my-value"
-            )
+            assert version_args.kwargs["request"]["parent"] == "projects/my-project/secrets/my-secret"
+            assert version_args.kwargs["request"]["payload"]["data"] == b"my-value"
 
     @pytest.mark.asyncio
     async def test_set_secret_handles_already_exists(self) -> None:
@@ -682,10 +666,7 @@ class TestGCPSecretManagerProvider:
 
             mock_client.delete_secret.assert_called_once()
             call_args = mock_client.delete_secret.call_args
-            assert (
-                call_args.kwargs["request"]["name"]
-                == "projects/my-project/secrets/my-secret"
-            )
+            assert call_args.kwargs["request"]["name"] == "projects/my-project/secrets/my-secret"
 
     @pytest.mark.asyncio
     async def test_delete_secret_ignores_not_found(self) -> None:
@@ -728,9 +709,7 @@ class TestDetectCloudProvider:
         WHEN detecting cloud provider
         THEN should return 'aws'
         """
-        with patch.dict(
-            os.environ, {"AWS_LAMBDA_FUNCTION_NAME": "my-function"}, clear=True
-        ):
+        with patch.dict(os.environ, {"AWS_LAMBDA_FUNCTION_NAME": "my-function"}, clear=True):
             assert detect_cloud_provider() == "aws"
 
     def test_detects_aws_from_secrets_prefix(self) -> None:
@@ -840,9 +819,7 @@ class TestCreateSecretsProvider:
         WHEN creating secrets provider
         THEN should return AzureKeyVaultProvider
         """
-        with patch.dict(
-            os.environ, {"AZURE_KEY_VAULT_URL": "https://test.vault.azure.net"}
-        ):
+        with patch.dict(os.environ, {"AZURE_KEY_VAULT_URL": "https://test.vault.azure.net"}):
             provider = create_secrets_provider("azure")
             assert isinstance(provider, AzureKeyVaultProvider)
 

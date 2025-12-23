@@ -41,7 +41,7 @@ Usage:
 from __future__ import annotations
 
 import logging
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any
 
 from mcp_server_langgraph.agents.base_orchestrator import (
@@ -56,11 +56,13 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 # Supported analysis types for UX orchestration
-UX_ANALYSIS_TYPES = frozenset({
-    "persona_analysis",
-    "disclosure_analysis",
-    "error_analysis",
-})
+UX_ANALYSIS_TYPES = frozenset(
+    {
+        "persona_analysis",
+        "disclosure_analysis",
+        "error_analysis",
+    }
+)
 
 
 @dataclass
@@ -143,9 +145,7 @@ class UXOrchestrator(BaseOrchestrator[UXAnalysisTask, UXAnalysisResult]):
         """Return the feature flag name for this orchestrator."""
         return "enable_orchestrated_ai_ux"
 
-    def _create_failed_result(
-        self, task: UXAnalysisTask, error: str
-    ) -> UXAnalysisResult:
+    def _create_failed_result(self, task: UXAnalysisTask, error: str) -> UXAnalysisResult:
         """Create a failed result for a task.
 
         Args:
@@ -269,8 +269,7 @@ class UXOrchestrator(BaseOrchestrator[UXAnalysisTask, UXAnalysisResult]):
 
             if confidence < 0.5:
                 cross_insights.append(
-                    "Low persona confidence may indicate user is exploring - "
-                    "consider more forgiving error recovery"
+                    "Low persona confidence may indicate user is exploring - consider more forgiving error recovery"
                 )
 
         return {

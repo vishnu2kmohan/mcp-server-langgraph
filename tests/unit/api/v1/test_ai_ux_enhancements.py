@@ -14,10 +14,8 @@ Reference: UX Audit Plan - Phase 6 Advanced Features
 
 from __future__ import annotations
 
-import asyncio
 import gc
-from typing import Any
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
@@ -28,6 +26,7 @@ pytestmark = pytest.mark.unit
 def reset_ai_circuit_breakers():
     """Reset all AI UX circuit breakers before each test to ensure clean state."""
     from mcp_server_langgraph.resilience.circuit_breaker import reset_circuit_breaker
+
     reset_circuit_breaker("ai_ux_llm")
     yield
     # Clean up after test
@@ -409,11 +408,7 @@ class TestRedisCaching:
         from mcp_server_langgraph.api.v1.ai_ux_service import AIUXService
 
         mock_llm = MagicMock()
-        mock_llm.ainvoke = AsyncMock(
-            return_value=MagicMock(
-                content='{"detected_persona": "builder", "confidence": 0.9}'
-            )
-        )
+        mock_llm.ainvoke = AsyncMock(return_value=MagicMock(content='{"detected_persona": "builder", "confidence": 0.9}'))
 
         service = AIUXService(llm_factory=mock_llm, settings=MagicMock())
         service.redis_cache = MagicMock()

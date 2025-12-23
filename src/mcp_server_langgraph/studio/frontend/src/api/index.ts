@@ -2176,7 +2176,7 @@ export const api = createApi({
     }),
 
     // =========================================================================
-    // Artifacts (Hybrid Canvas Multi-Layer Storage)
+    // Artifacts (Studio Canvas Multi-Layer Storage)
     // =========================================================================
 
     /**
@@ -3100,7 +3100,7 @@ export const {
   useListRemediationHistoryQuery,
   useApproveRemediationMutation,
   useRejectRemediationMutation,
-  // Artifacts (Hybrid Canvas)
+  // Artifacts (Studio Canvas)
   useListArtifactsQuery,
   useGetArtifactQuery,
   useCreateArtifactMutation,

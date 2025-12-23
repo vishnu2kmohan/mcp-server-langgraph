@@ -14,7 +14,6 @@ from __future__ import annotations
 
 import gc
 import os
-from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -69,9 +68,7 @@ def mock_auth():
 def mock_agent_graph():
     """Create mock agent graph."""
     graph = MagicMock()
-    graph.ainvoke = AsyncMock(return_value={
-        "messages": [MagicMock(content="Test response")]
-    })
+    graph.ainvoke = AsyncMock(return_value={"messages": [MagicMock(content="Test response")]})
     graph.checkpointer = None
     return graph
 
@@ -114,12 +111,9 @@ class TestMCPHandlerHookIntegration:
         # Register hooks using HookMatcher
         fresh_hook_registry.register(
             HookEvent.PRE_TOOL_USE,
-            HookMatcher(hooks=[pre_hook], matcher=None)  # None matches all
+            HookMatcher(hooks=[pre_hook], matcher=None),  # None matches all
         )
-        fresh_hook_registry.register(
-            HookEvent.POST_TOOL_USE,
-            HookMatcher(hooks=[post_hook], matcher=None)
-        )
+        fresh_hook_registry.register(HookEvent.POST_TOOL_USE, HookMatcher(hooks=[post_hook], matcher=None))
 
         handler = ChatToolHandler(
             auth=mock_auth,
@@ -162,14 +156,8 @@ class TestMCPHandlerHookIntegration:
             lifecycle_events.append("PostToolUse")
             return HookResult(behavior="allow")
 
-        fresh_hook_registry.register(
-            HookEvent.PRE_TOOL_USE,
-            HookMatcher(hooks=[pre_hook], matcher=None)
-        )
-        fresh_hook_registry.register(
-            HookEvent.POST_TOOL_USE,
-            HookMatcher(hooks=[post_hook], matcher=None)
-        )
+        fresh_hook_registry.register(HookEvent.PRE_TOOL_USE, HookMatcher(hooks=[pre_hook], matcher=None))
+        fresh_hook_registry.register(HookEvent.POST_TOOL_USE, HookMatcher(hooks=[post_hook], matcher=None))
 
         handler = ExecutionToolHandler(
             auth=mock_auth,
@@ -180,9 +168,7 @@ class TestMCPHandlerHookIntegration:
         mock_span = MagicMock()
 
         # Mock the execute_python tool
-        with patch(
-            "mcp_server_langgraph.tools.code_execution_tools.execute_python"
-        ) as mock_exec:
+        with patch("mcp_server_langgraph.tools.code_execution_tools.execute_python") as mock_exec:
             mock_exec.invoke.return_value = "Success: 42"
 
             await handler.handle(
@@ -212,14 +198,8 @@ class TestMCPHandlerHookIntegration:
             lifecycle_events.append("PostToolUse")
             return HookResult(behavior="allow")
 
-        fresh_hook_registry.register(
-            HookEvent.PRE_TOOL_USE,
-            HookMatcher(hooks=[pre_hook], matcher=None)
-        )
-        fresh_hook_registry.register(
-            HookEvent.POST_TOOL_USE,
-            HookMatcher(hooks=[post_hook], matcher=None)
-        )
+        fresh_hook_registry.register(HookEvent.PRE_TOOL_USE, HookMatcher(hooks=[pre_hook], matcher=None))
+        fresh_hook_registry.register(HookEvent.POST_TOOL_USE, HookMatcher(hooks=[post_hook], matcher=None))
 
         # Create mock orchestrator
         mock_orchestrator = MagicMock(spec=Orchestrator)
@@ -258,10 +238,7 @@ class TestMCPHandlerHookIntegration:
         async def deny_hook(input_data: PreToolUseInput, tool_use_id: str | None, context: HookContext) -> HookResult:
             return HookResult(behavior="deny", message="Blocked by policy")
 
-        fresh_hook_registry.register(
-            HookEvent.PRE_TOOL_USE,
-            HookMatcher(hooks=[deny_hook], matcher=None)
-        )
+        fresh_hook_registry.register(HookEvent.PRE_TOOL_USE, HookMatcher(hooks=[deny_hook], matcher=None))
 
         handler = ChatToolHandler(
             auth=mock_auth,
@@ -317,14 +294,8 @@ class TestFeatureFlagEnforcement:
             hooks_called = True
             return HookResult(behavior="allow")
 
-        fresh_hook_registry.register(
-            HookEvent.PRE_TOOL_USE,
-            HookMatcher(hooks=[tracking_hook], matcher=None)
-        )
-        fresh_hook_registry.register(
-            HookEvent.POST_TOOL_USE,
-            HookMatcher(hooks=[tracking_hook], matcher=None)
-        )
+        fresh_hook_registry.register(HookEvent.PRE_TOOL_USE, HookMatcher(hooks=[tracking_hook], matcher=None))
+        fresh_hook_registry.register(HookEvent.POST_TOOL_USE, HookMatcher(hooks=[tracking_hook], matcher=None))
 
         # Patch the feature_flags in hook_registry where dispatch checks it
         with patch("mcp_server_langgraph.core.hook_registry.feature_flags", fresh_flags):
@@ -369,10 +340,7 @@ class TestFeatureFlagEnforcement:
             hooks_called = True
             return HookResult(behavior="allow")
 
-        fresh_hook_registry.register(
-            HookEvent.PRE_TOOL_USE,
-            HookMatcher(hooks=[tracking_hook], matcher=None)
-        )
+        fresh_hook_registry.register(HookEvent.PRE_TOOL_USE, HookMatcher(hooks=[tracking_hook], matcher=None))
 
         handler = ChatToolHandler(
             auth=mock_auth,
@@ -469,14 +437,8 @@ class TestUnifiedHookRegistryIntegration:
                 message=result.reason,
             )
 
-        fresh_hook_registry.register(
-            HookEvent.PRE_TOOL_USE,
-            HookMatcher(hooks=[bridged_pre_hook], matcher=None)
-        )
-        fresh_hook_registry.register(
-            HookEvent.POST_TOOL_USE,
-            HookMatcher(hooks=[bridged_post_hook], matcher=None)
-        )
+        fresh_hook_registry.register(HookEvent.PRE_TOOL_USE, HookMatcher(hooks=[bridged_pre_hook], matcher=None))
+        fresh_hook_registry.register(HookEvent.POST_TOOL_USE, HookMatcher(hooks=[bridged_post_hook], matcher=None))
 
         handler = ChatToolHandler(
             auth=mock_auth,
@@ -502,9 +464,7 @@ class TestUnifiedHookRegistryIntegration:
         assert "SDK_PostToolUse" in lifecycle_events
 
     @pytest.mark.asyncio
-    async def test_unified_registry_timeout_handling(
-        self, enable_sdk_hooks
-    ) -> None:
+    async def test_unified_registry_timeout_handling(self, enable_sdk_hooks) -> None:
         """UnifiedHookRegistry should handle hook timeouts."""
         import asyncio
         from mcp_server_langgraph.sdk import UnifiedHookRegistry

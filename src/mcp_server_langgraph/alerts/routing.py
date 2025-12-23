@@ -215,9 +215,7 @@ class AlertRouter:
             self._rules_by_tenant[rule.tenant_id].append(rule)
 
         # Index escalation policies by tenant
-        self._policies_by_tenant: dict[str, EscalationPolicy] = {
-            p.tenant_id: p for p in self._escalation_policies
-        }
+        self._policies_by_tenant: dict[str, EscalationPolicy] = {p.tenant_id: p for p in self._escalation_policies}
 
     def route(self, alert: Alert) -> RoutingResult:
         """
@@ -290,9 +288,7 @@ class AlertRouter:
         ) as span:
             # Look up subscriptions with error handling
             try:
-                subscriptions = await self._subscription_store.get_subscriptions(
-                    result.tenant_id or self._default_tenant
-                )
+                subscriptions = await self._subscription_store.get_subscriptions(result.tenant_id or self._default_tenant)
             except Exception as e:
                 # Record error but continue with basic routing (graceful degradation)
                 logger.warning(f"Subscription store error: {e}")
@@ -347,9 +343,7 @@ class AlertRouter:
                 return EscalationResult(should_escalate=False)
 
             span.set_attribute("escalation.has_policy", True)
-            span.set_attribute(
-                "escalation.threshold_minutes", policy.escalation_after_minutes
-            )
+            span.set_attribute("escalation.threshold_minutes", policy.escalation_after_minutes)
 
             # Don't escalate acknowledged alerts
             if alert.acknowledged:

@@ -131,12 +131,8 @@ class DisclosureAnalyzeRequest(BaseModel):
     """Request for disclosure level analysis."""
 
     user_id: str = Field(..., description="User identifier")
-    session_history: list[SessionHistoryItem] = Field(
-        default_factory=list, description="Recent session history"
-    )
-    feature_usage: dict[str, int] = Field(
-        default_factory=dict, description="Feature usage counts"
-    )
+    session_history: list[SessionHistoryItem] = Field(default_factory=list, description="Recent session history")
+    feature_usage: dict[str, int] = Field(default_factory=dict, description="Feature usage counts")
 
 
 class DisclosureAnalyzeResponse(BaseModel):
@@ -408,15 +404,9 @@ class CompositeAnalysisRequest(BaseModel):
     include_persona: bool = Field(default=True, description="Include persona analysis")
     include_disclosure: bool = Field(default=True, description="Include disclosure analysis")
     include_error: bool = Field(default=False, description="Include error analysis")
-    persona_data: dict[str, Any] | None = Field(
-        default=None, description="Data for persona analysis"
-    )
-    disclosure_data: dict[str, Any] | None = Field(
-        default=None, description="Data for disclosure analysis"
-    )
-    error_data: dict[str, Any] | None = Field(
-        default=None, description="Error data for analysis"
-    )
+    persona_data: dict[str, Any] | None = Field(default=None, description="Data for persona analysis")
+    disclosure_data: dict[str, Any] | None = Field(default=None, description="Data for disclosure analysis")
+    error_data: dict[str, Any] | None = Field(default=None, description="Error data for analysis")
 
 
 class CompositeAnalysisResponse(BaseModel):
@@ -431,9 +421,7 @@ class CompositeAnalysisResponse(BaseModel):
         default_factory=list,
         description="Insights derived from combining multiple analyses",
     )
-    confidence: float = Field(
-        ge=0, le=1, description="Overall confidence score for the composite analysis"
-    )
+    confidence: float = Field(ge=0, le=1, description="Overall confidence score for the composite analysis")
 
 
 class BatchCompositeRequest(BaseModel):
@@ -442,9 +430,7 @@ class BatchCompositeRequest(BaseModel):
     requests: list[CompositeAnalysisRequest] = Field(
         ..., description="List of composite analysis requests", min_length=1, max_length=50
     )
-    max_concurrency: int = Field(
-        default=5, ge=1, le=20, description="Maximum concurrent requests"
-    )
+    max_concurrency: int = Field(default=5, ge=1, le=20, description="Maximum concurrent requests")
 
 
 class BatchCompositeErrorResult(BaseModel):

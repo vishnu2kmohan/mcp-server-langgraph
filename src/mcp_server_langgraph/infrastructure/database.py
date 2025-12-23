@@ -90,8 +90,7 @@ async def check_database_connectivity(postgres_url: str, timeout: float = 5.0) -
             if attempt < max_attempts:
                 delay = base_delay * (backoff_multiplier ** (attempt - 1))
                 logger.warning(
-                    f"PostgreSQL connectivity check failed (attempt {attempt}/{max_attempts}), "
-                    f"retrying in {delay:.1f}s: {e}",
+                    f"PostgreSQL connectivity check failed (attempt {attempt}/{max_attempts}), retrying in {delay:.1f}s: {e}",
                     extra={"attempt": attempt},
                 )
                 await asyncio.sleep(delay)

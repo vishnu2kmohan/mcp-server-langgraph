@@ -10,7 +10,6 @@ to their previous state using the FileJournal.
 from __future__ import annotations
 
 import gc
-import os
 import tempfile
 from pathlib import Path
 from typing import TYPE_CHECKING
@@ -56,7 +55,6 @@ class TestFileRewindCreatedFiles:
     async def test_rewind_deletes_created_file(self) -> None:
         """Rewind should delete files that were created."""
         from mcp_server_langgraph.core.file_journal import (
-            FileOperation,
             reset_file_journal,
         )
         from mcp_server_langgraph.core.file_rewind import FileRewind
@@ -221,12 +219,8 @@ class TestFileRewindMultipleChanges:
 
             # Record operations
             await rewind.record_create(checkpoint_id, str(created_file))
-            await rewind.record_modify(
-                checkpoint_id, str(modified_file), b"original modified"
-            )
-            await rewind.record_delete(
-                checkpoint_id, str(deleted_file), b"original deleted"
-            )
+            await rewind.record_modify(checkpoint_id, str(modified_file), b"original modified")
+            await rewind.record_delete(checkpoint_id, str(deleted_file), b"original deleted")
 
             # Simulate the operations
             created_file.write_text("new file")
@@ -298,9 +292,7 @@ class TestFileRewindResult:
         checkpoint_id = await rewind.checkpoint("message-123")
 
         # Record modification for non-writable path (will fail on rewind)
-        await rewind.record_modify(
-            checkpoint_id, "/root/protected/file.txt", b"content"
-        )
+        await rewind.record_modify(checkpoint_id, "/root/protected/file.txt", b"content")
 
         result = await rewind.rewind_to(checkpoint_id)
 

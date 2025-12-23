@@ -13,9 +13,8 @@ The OrchestrationToolHandler exposes multi-agent orchestration as MCP tools:
 from __future__ import annotations
 
 import gc
-import json
-from typing import TYPE_CHECKING, Any
-from unittest.mock import AsyncMock, MagicMock, patch
+from typing import TYPE_CHECKING
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
@@ -23,8 +22,8 @@ if TYPE_CHECKING:
     pass
 
 
-
 pytestmark = pytest.mark.unit
+
 
 @pytest.mark.xdist_group(name="orchestration_handler")
 class TestOrchestrationToolHandlerModule:
@@ -304,10 +303,12 @@ class TestDecomposeOperation:
                 subtasks=[
                     MagicMock(task_type="analysis", description="Analyze data"),
                 ],
-                model_dump=MagicMock(return_value={
-                    "task_id": "task-123",
-                    "subtasks": [{"task_type": "analysis", "description": "Analyze data"}],
-                }),
+                model_dump=MagicMock(
+                    return_value={
+                        "task_id": "task-123",
+                        "subtasks": [{"task_type": "analysis", "description": "Analyze data"}],
+                    }
+                ),
             )
         )
 
@@ -326,15 +327,11 @@ class TestDecomposeOperation:
 
         mock_orchestrator = MagicMock()
         mock_orchestrator.decompose_task = AsyncMock(
-            return_value=MagicMock(
-                model_dump=MagicMock(return_value={"task_id": "t1", "subtasks": []})
-            )
+            return_value=MagicMock(model_dump=MagicMock(return_value={"task_id": "t1", "subtasks": []}))
         )
 
         handler = OrchestrationToolHandler(orchestrator=mock_orchestrator)
-        await handler.handle_operation(
-            "decompose", {"task": "Test", "max_subtasks": 3}
-        )
+        await handler.handle_operation("decompose", {"task": "Test", "max_subtasks": 3})
 
         # Verify max_subtasks was passed
         call_kwargs = mock_orchestrator.decompose_task.call_args
@@ -371,10 +368,12 @@ class TestStatusOperation:
         mock_provider = MagicMock()
         mock_provider._tasks = {
             "task-123": MagicMock(
-                model_dump=MagicMock(return_value={
-                    "task_id": "task-123",
-                    "status": "running",
-                })
+                model_dump=MagicMock(
+                    return_value={
+                        "task_id": "task-123",
+                        "status": "running",
+                    }
+                )
             )
         }
 
@@ -466,10 +465,12 @@ class TestExecuteOperation:
         mock_provider = MagicMock()
         mock_provider._tasks = {
             "task-123": MagicMock(
-                model_dump=MagicMock(return_value={
-                    "task_id": "task-123",
-                    "subtasks": [],
-                })
+                model_dump=MagicMock(
+                    return_value={
+                        "task_id": "task-123",
+                        "subtasks": [],
+                    }
+                )
             )
         }
 
@@ -501,9 +502,7 @@ class TestExecuteOperation:
             orchestrator=mock_orchestrator,
             resource_provider=mock_provider,
         )
-        await handler.handle_operation(
-            "execute", {"task_id": "task-123", "hitl_threshold": 0.8}
-        )
+        await handler.handle_operation("execute", {"task_id": "task-123", "hitl_threshold": 0.8})
 
         # Should use execute_with_hitl when threshold is provided
         mock_orchestrator.execute_with_hitl.assert_called_once()

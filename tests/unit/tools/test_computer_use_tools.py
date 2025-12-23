@@ -17,8 +17,8 @@ Reference: Anthropic Computer Use, Google ADK Computer Use, OpenAI ComputerTool
 from __future__ import annotations
 
 import gc
-from typing import TYPE_CHECKING, Any
-from unittest.mock import AsyncMock, MagicMock, patch
+from typing import TYPE_CHECKING
+from unittest.mock import patch
 
 import pytest
 
@@ -89,16 +89,16 @@ class TestMouseInteractionTools:
         """
         from mcp_server_langgraph.tools.computer_use_tools import mouse_click
 
-        with patch(
-            "mcp_server_langgraph.tools.computer_use_tools.feature_flags"
-        ) as mock_flags:
+        with patch("mcp_server_langgraph.tools.computer_use_tools.feature_flags") as mock_flags:
             mock_flags.enable_computer_use = True
 
-            result = await mouse_click.ainvoke({
-                "x": 100,
-                "y": 200,
-                "button": "left",
-            })
+            result = await mouse_click.ainvoke(
+                {
+                    "x": 100,
+                    "y": 200,
+                    "button": "left",
+                }
+            )
 
             assert result["success"] is True
             assert result["action"] == "click"
@@ -112,15 +112,15 @@ class TestMouseInteractionTools:
         """
         from mcp_server_langgraph.tools.computer_use_tools import mouse_click
 
-        with patch(
-            "mcp_server_langgraph.tools.computer_use_tools.feature_flags"
-        ) as mock_flags:
+        with patch("mcp_server_langgraph.tools.computer_use_tools.feature_flags") as mock_flags:
             mock_flags.enable_computer_use = True
 
-            result = await mouse_click.ainvoke({
-                "selector": "#submit-button",
-                "button": "left",
-            })
+            result = await mouse_click.ainvoke(
+                {
+                    "selector": "#submit-button",
+                    "button": "left",
+                }
+            )
 
             assert result["success"] is True
             assert result["selector"] == "#submit-button"
@@ -133,17 +133,17 @@ class TestMouseInteractionTools:
         """
         from mcp_server_langgraph.tools.computer_use_tools import mouse_click
 
-        with patch(
-            "mcp_server_langgraph.tools.computer_use_tools.feature_flags"
-        ) as mock_flags:
+        with patch("mcp_server_langgraph.tools.computer_use_tools.feature_flags") as mock_flags:
             mock_flags.enable_computer_use = True
 
-            result = await mouse_click.ainvoke({
-                "x": 100,
-                "y": 200,
-                "button": "left",
-                "click_count": 2,
-            })
+            result = await mouse_click.ainvoke(
+                {
+                    "x": 100,
+                    "y": 200,
+                    "button": "left",
+                    "click_count": 2,
+                }
+            )
 
             assert result["success"] is True
             assert result["click_count"] == 2
@@ -167,15 +167,15 @@ class TestMouseInteractionTools:
         """
         from mcp_server_langgraph.tools.computer_use_tools import mouse_move
 
-        with patch(
-            "mcp_server_langgraph.tools.computer_use_tools.feature_flags"
-        ) as mock_flags:
+        with patch("mcp_server_langgraph.tools.computer_use_tools.feature_flags") as mock_flags:
             mock_flags.enable_computer_use = True
 
-            result = await mouse_move.ainvoke({
-                "x": 500,
-                "y": 300,
-            })
+            result = await mouse_move.ainvoke(
+                {
+                    "x": 500,
+                    "y": 300,
+                }
+            )
 
             assert result["success"] is True
             assert result["action"] == "move"
@@ -199,17 +199,17 @@ class TestMouseInteractionTools:
         """
         from mcp_server_langgraph.tools.computer_use_tools import mouse_drag
 
-        with patch(
-            "mcp_server_langgraph.tools.computer_use_tools.feature_flags"
-        ) as mock_flags:
+        with patch("mcp_server_langgraph.tools.computer_use_tools.feature_flags") as mock_flags:
             mock_flags.enable_computer_use = True
 
-            result = await mouse_drag.ainvoke({
-                "start_x": 100,
-                "start_y": 100,
-                "end_x": 300,
-                "end_y": 300,
-            })
+            result = await mouse_drag.ainvoke(
+                {
+                    "start_x": 100,
+                    "start_y": 100,
+                    "end_x": 300,
+                    "end_y": 300,
+                }
+            )
 
             assert result["success"] is True
             assert result["action"] == "drag"
@@ -248,14 +248,14 @@ class TestKeyboardInteractionTools:
         """
         from mcp_server_langgraph.tools.computer_use_tools import keyboard_type
 
-        with patch(
-            "mcp_server_langgraph.tools.computer_use_tools.feature_flags"
-        ) as mock_flags:
+        with patch("mcp_server_langgraph.tools.computer_use_tools.feature_flags") as mock_flags:
             mock_flags.enable_computer_use = True
 
-            result = await keyboard_type.ainvoke({
-                "text": "Hello, World!",
-            })
+            result = await keyboard_type.ainvoke(
+                {
+                    "text": "Hello, World!",
+                }
+            )
 
             assert result["success"] is True
             assert result["text_typed"] == "Hello, World!"
@@ -268,15 +268,15 @@ class TestKeyboardInteractionTools:
         """
         from mcp_server_langgraph.tools.computer_use_tools import keyboard_type
 
-        with patch(
-            "mcp_server_langgraph.tools.computer_use_tools.feature_flags"
-        ) as mock_flags:
+        with patch("mcp_server_langgraph.tools.computer_use_tools.feature_flags") as mock_flags:
             mock_flags.enable_computer_use = True
 
-            result = await keyboard_type.ainvoke({
-                "text": "user@example.com",
-                "selector": "#email-input",
-            })
+            result = await keyboard_type.ainvoke(
+                {
+                    "text": "user@example.com",
+                    "selector": "#email-input",
+                }
+            )
 
             assert result["success"] is True
             assert result["selector"] == "#email-input"
@@ -300,14 +300,14 @@ class TestKeyboardInteractionTools:
         """
         from mcp_server_langgraph.tools.computer_use_tools import keyboard_press
 
-        with patch(
-            "mcp_server_langgraph.tools.computer_use_tools.feature_flags"
-        ) as mock_flags:
+        with patch("mcp_server_langgraph.tools.computer_use_tools.feature_flags") as mock_flags:
             mock_flags.enable_computer_use = True
 
-            result = await keyboard_press.ainvoke({
-                "key": "Enter",
-            })
+            result = await keyboard_press.ainvoke(
+                {
+                    "key": "Enter",
+                }
+            )
 
             assert result["success"] is True
             assert result["key_pressed"] == "Enter"
@@ -320,15 +320,15 @@ class TestKeyboardInteractionTools:
         """
         from mcp_server_langgraph.tools.computer_use_tools import keyboard_press
 
-        with patch(
-            "mcp_server_langgraph.tools.computer_use_tools.feature_flags"
-        ) as mock_flags:
+        with patch("mcp_server_langgraph.tools.computer_use_tools.feature_flags") as mock_flags:
             mock_flags.enable_computer_use = True
 
-            result = await keyboard_press.ainvoke({
-                "key": "c",
-                "modifiers": ["Control"],
-            })
+            result = await keyboard_press.ainvoke(
+                {
+                    "key": "c",
+                    "modifiers": ["Control"],
+                }
+            )
 
             assert result["success"] is True
             assert result["key_pressed"] == "c"
@@ -368,15 +368,15 @@ class TestScrollTools:
         """
         from mcp_server_langgraph.tools.computer_use_tools import scroll
 
-        with patch(
-            "mcp_server_langgraph.tools.computer_use_tools.feature_flags"
-        ) as mock_flags:
+        with patch("mcp_server_langgraph.tools.computer_use_tools.feature_flags") as mock_flags:
             mock_flags.enable_computer_use = True
 
-            result = await scroll.ainvoke({
-                "direction": "down",
-                "amount": 500,
-            })
+            result = await scroll.ainvoke(
+                {
+                    "direction": "down",
+                    "amount": 500,
+                }
+            )
 
             assert result["success"] is True
             assert result["direction"] == "down"
@@ -389,15 +389,15 @@ class TestScrollTools:
         """
         from mcp_server_langgraph.tools.computer_use_tools import scroll
 
-        with patch(
-            "mcp_server_langgraph.tools.computer_use_tools.feature_flags"
-        ) as mock_flags:
+        with patch("mcp_server_langgraph.tools.computer_use_tools.feature_flags") as mock_flags:
             mock_flags.enable_computer_use = True
 
-            result = await scroll.ainvoke({
-                "selector": "#footer",
-                "scroll_into_view": True,
-            })
+            result = await scroll.ainvoke(
+                {
+                    "selector": "#footer",
+                    "scroll_into_view": True,
+                }
+            )
 
             assert result["success"] is True
             assert result["scrolled_to_selector"] == "#footer"
@@ -436,9 +436,7 @@ class TestScreenInfoTools:
         """
         from mcp_server_langgraph.tools.computer_use_tools import get_screen_info
 
-        with patch(
-            "mcp_server_langgraph.tools.computer_use_tools.feature_flags"
-        ) as mock_flags:
+        with patch("mcp_server_langgraph.tools.computer_use_tools.feature_flags") as mock_flags:
             mock_flags.enable_computer_use = True
 
             result = await get_screen_info.ainvoke({})
@@ -467,14 +465,14 @@ class TestScreenInfoTools:
         """
         from mcp_server_langgraph.tools.computer_use_tools import get_element_info
 
-        with patch(
-            "mcp_server_langgraph.tools.computer_use_tools.feature_flags"
-        ) as mock_flags:
+        with patch("mcp_server_langgraph.tools.computer_use_tools.feature_flags") as mock_flags:
             mock_flags.enable_computer_use = True
 
-            result = await get_element_info.ainvoke({
-                "selector": "#main-content",
-            })
+            result = await get_element_info.ainvoke(
+                {
+                    "selector": "#main-content",
+                }
+            )
 
             assert "bounds" in result
             assert "x" in result["bounds"]
@@ -516,14 +514,14 @@ class TestBrowserNavigationTools:
         """
         from mcp_server_langgraph.tools.computer_use_tools import navigate
 
-        with patch(
-            "mcp_server_langgraph.tools.computer_use_tools.feature_flags"
-        ) as mock_flags:
+        with patch("mcp_server_langgraph.tools.computer_use_tools.feature_flags") as mock_flags:
             mock_flags.enable_computer_use = True
 
-            result = await navigate.ainvoke({
-                "url": "https://example.com",
-            })
+            result = await navigate.ainvoke(
+                {
+                    "url": "https://example.com",
+                }
+            )
 
             assert result["success"] is True
             assert result["url"] == "https://example.com"
@@ -536,14 +534,14 @@ class TestBrowserNavigationTools:
         """
         from mcp_server_langgraph.tools.computer_use_tools import navigate
 
-        with patch(
-            "mcp_server_langgraph.tools.computer_use_tools.feature_flags"
-        ) as mock_flags:
+        with patch("mcp_server_langgraph.tools.computer_use_tools.feature_flags") as mock_flags:
             mock_flags.enable_computer_use = True
 
-            result = await navigate.ainvoke({
-                "url": "http://localhost:8080",
-            })
+            result = await navigate.ainvoke(
+                {
+                    "url": "http://localhost:8080",
+                }
+            )
 
             assert "error" in result
 
@@ -603,18 +601,18 @@ class TestFormInteractionTools:
         """
         from mcp_server_langgraph.tools.computer_use_tools import fill_form
 
-        with patch(
-            "mcp_server_langgraph.tools.computer_use_tools.feature_flags"
-        ) as mock_flags:
+        with patch("mcp_server_langgraph.tools.computer_use_tools.feature_flags") as mock_flags:
             mock_flags.enable_computer_use = True
 
-            result = await fill_form.ainvoke({
-                "fields": {
-                    "#username": "testuser",
-                    "#email": "test@example.com",
-                    "#password": "securepass123",
-                },
-            })
+            result = await fill_form.ainvoke(
+                {
+                    "fields": {
+                        "#username": "testuser",
+                        "#email": "test@example.com",
+                        "#password": "securepass123",
+                    },
+                }
+            )
 
             assert result["success"] is True
             assert result["fields_filled"] == 3
@@ -638,15 +636,15 @@ class TestFormInteractionTools:
         """
         from mcp_server_langgraph.tools.computer_use_tools import select_option
 
-        with patch(
-            "mcp_server_langgraph.tools.computer_use_tools.feature_flags"
-        ) as mock_flags:
+        with patch("mcp_server_langgraph.tools.computer_use_tools.feature_flags") as mock_flags:
             mock_flags.enable_computer_use = True
 
-            result = await select_option.ainvoke({
-                "selector": "#country-select",
-                "value": "US",
-            })
+            result = await select_option.ainvoke(
+                {
+                    "selector": "#country-select",
+                    "value": "US",
+                }
+            )
 
             assert result["success"] is True
             assert result["selected_value"] == "US"
@@ -674,9 +672,7 @@ class TestComputerUseSecurity:
         """
         from mcp_server_langgraph.tools.computer_use_tools import mouse_click
 
-        with patch(
-            "mcp_server_langgraph.tools.computer_use_tools.feature_flags"
-        ) as mock_flags:
+        with patch("mcp_server_langgraph.tools.computer_use_tools.feature_flags") as mock_flags:
             mock_flags.enable_computer_use = False
 
             result = await mouse_click.ainvoke({"x": 100, "y": 100})
@@ -692,15 +688,15 @@ class TestComputerUseSecurity:
         """
         from mcp_server_langgraph.tools.computer_use_tools import keyboard_type
 
-        with patch(
-            "mcp_server_langgraph.tools.computer_use_tools.feature_flags"
-        ) as mock_flags:
+        with patch("mcp_server_langgraph.tools.computer_use_tools.feature_flags") as mock_flags:
             mock_flags.enable_computer_use = True
 
             # Try to type a command that could be dangerous
-            result = await keyboard_type.ainvoke({
-                "text": "rm -rf /",  # Dangerous command
-            })
+            result = await keyboard_type.ainvoke(
+                {
+                    "text": "rm -rf /",  # Dangerous command
+                }
+            )
 
             # Should either sanitize or warn, but not blindly execute
             assert result.get("warning") or result.get("sanitized")

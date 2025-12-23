@@ -111,9 +111,7 @@ class TestSessionSummarize:
         )
 
         mock_service = MagicMock()
-        mock_service.summarize_session = AsyncMock(
-            return_value={"summary": "Test summary"}
-        )
+        mock_service.summarize_session = AsyncMock(return_value={"summary": "Test summary"})
 
         orchestrator = StudioOrchestrator(ai_ux_service=mock_service)
 

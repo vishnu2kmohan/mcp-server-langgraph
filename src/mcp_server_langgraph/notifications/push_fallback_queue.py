@@ -52,9 +52,7 @@ class MaxRetriesExceededError(Exception):
         self.message_id = message_id
         self.retry_count = retry_count
         self.max_retries = max_retries
-        super().__init__(
-            f"Message {message_id} exceeded max retries: {retry_count}/{max_retries}"
-        )
+        super().__init__(f"Message {message_id} exceeded max retries: {retry_count}/{max_retries}")
 
 
 # =============================================================================
@@ -187,9 +185,7 @@ class PushFallbackQueue:
         # Check queue size
         current_size = await self.get_length()
         if current_size >= self._max_size:
-            logger.warning(
-                f"Push fallback queue full: {current_size}/{self._max_size}"
-            )
+            logger.warning(f"Push fallback queue full: {current_size}/{self._max_size}")
             raise QueueFullError(current_size, self._max_size)
 
         # Create queued message
@@ -207,9 +203,7 @@ class PushFallbackQueue:
         await self._redis.lpush(self._queue_key, data)  # type: ignore[misc]
         await self._redis.expire(self._queue_key, self._ttl_seconds)
 
-        logger.debug(
-            f"Enqueued push message {queued.message_id} for {subscription_endpoint[:50]}..."
-        )
+        logger.debug(f"Enqueued push message {queued.message_id} for {subscription_endpoint[:50]}...")
 
         return queued
 
@@ -269,10 +263,7 @@ class PushFallbackQueue:
             MaxRetriesExceededError: If max retries exceeded.
         """
         if message.retry_count >= self._max_retries:
-            logger.warning(
-                f"Message {message.message_id} exceeded max retries "
-                f"({message.retry_count}/{self._max_retries})"
-            )
+            logger.warning(f"Message {message.message_id} exceeded max retries ({message.retry_count}/{self._max_retries})")
             raise MaxRetriesExceededError(
                 message.message_id,
                 message.retry_count,
@@ -294,9 +285,7 @@ class PushFallbackQueue:
         await self._redis.lpush(self._queue_key, data)  # type: ignore[misc]
         await self._redis.expire(self._queue_key, self._ttl_seconds)
 
-        logger.debug(
-            f"Requeued message {requeued.message_id} (retry {requeued.retry_count})"
-        )
+        logger.debug(f"Requeued message {requeued.message_id} (retry {requeued.retry_count})")
 
         return requeued
 

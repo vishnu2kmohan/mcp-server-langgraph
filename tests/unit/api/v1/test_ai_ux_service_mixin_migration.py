@@ -16,8 +16,6 @@ Reference: CACHING_ARCHITECTURE_AUDIT.md - Migration 3: AIUXService
 """
 
 import gc
-import json
-from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -232,9 +230,7 @@ class TestAIUXServiceTieredCacheViaMixin:
         gc.collect()
 
     @pytest.mark.asyncio
-    async def test_cache_get_tiered_returns_l1_hit(
-        self, mock_settings, mock_cache_service
-    ):
+    async def test_cache_get_tiered_returns_l1_hit(self, mock_settings, mock_cache_service):
         """_cache_get_tiered should return cached value on hit."""
         from mcp_server_langgraph.api.v1.ai_ux_service import AIUXService
 
@@ -248,23 +244,15 @@ class TestAIUXServiceTieredCacheViaMixin:
             # Configure L2 hit (L1 is checked via attribute, L2 via aget)
             mock_cache_service.aget = AsyncMock(return_value=SAMPLE_PERSONA_RESPONSE)
 
-            result = await service._cache_get_tiered(
-                "ai_ux:test_key", method="test"
-            )
+            result = await service._cache_get_tiered("ai_ux:test_key", method="test")
 
             assert result == SAMPLE_PERSONA_RESPONSE
             mock_cache_service.aget.assert_called_once_with("ai_ux:test_key")
 
     @pytest.mark.asyncio
-    async def test_cache_get_tiered_tracks_metrics(
-        self, mock_settings, mock_cache_service
-    ):
+    async def test_cache_get_tiered_tracks_metrics(self, mock_settings, mock_cache_service):
         """_cache_get_tiered should increment L1/L2 Prometheus counters."""
         from mcp_server_langgraph.api.v1.ai_ux_service import AIUXService
-        from mcp_server_langgraph.core.cache_mixin import (
-            CACHE_MIXIN_L1_HITS,
-            CACHE_MIXIN_L2_HITS,
-        )
 
         with patch(
             "mcp_server_langgraph.core.cache.get_cache",
@@ -298,9 +286,7 @@ class TestAIUXServiceSWRViaMixin:
         gc.collect()
 
     @pytest.mark.asyncio
-    async def test_cache_get_swr_returns_fresh_data(
-        self, mock_settings, mock_cache_service
-    ):
+    async def test_cache_get_swr_returns_fresh_data(self, mock_settings, mock_cache_service):
         """_cache_get_swr should return fresh data with is_stale=False."""
         import time
         from mcp_server_langgraph.api.v1.ai_ux_service import AIUXService
@@ -332,9 +318,7 @@ class TestAIUXServiceSWRViaMixin:
             assert is_stale is False
 
     @pytest.mark.asyncio
-    async def test_cache_get_swr_detects_stale_data(
-        self, mock_settings, mock_cache_service
-    ):
+    async def test_cache_get_swr_detects_stale_data(self, mock_settings, mock_cache_service):
         """_cache_get_swr should return data with is_stale=True when near expiry."""
         from mcp_server_langgraph.api.v1.ai_ux_service import AIUXService
 
@@ -361,9 +345,7 @@ class TestAIUXServiceSWRViaMixin:
             assert is_stale is True
 
     @pytest.mark.asyncio
-    async def test_cache_get_swr_calls_fetcher_on_miss(
-        self, mock_settings, mock_cache_service
-    ):
+    async def test_cache_get_swr_calls_fetcher_on_miss(self, mock_settings, mock_cache_service):
         """_cache_get_swr should call fetcher on cache miss."""
         from mcp_server_langgraph.api.v1.ai_ux_service import AIUXService
 
@@ -408,9 +390,7 @@ class TestAIUXServiceCacheInvalidationViaMixin:
         gc.collect()
 
     @pytest.mark.asyncio
-    async def test_invalidate_user_cache_uses_mixin(
-        self, mock_settings, mock_cache_service
-    ):
+    async def test_invalidate_user_cache_uses_mixin(self, mock_settings, mock_cache_service):
         """invalidate_user_cache should delegate to _cache_invalidate_user."""
         from mcp_server_langgraph.api.v1.ai_ux_service import AIUXService
 
@@ -431,9 +411,7 @@ class TestAIUXServiceCacheInvalidationViaMixin:
             assert "user-123" in pattern
 
     @pytest.mark.asyncio
-    async def test_invalidate_method_cache_uses_mixin(
-        self, mock_settings, mock_cache_service
-    ):
+    async def test_invalidate_method_cache_uses_mixin(self, mock_settings, mock_cache_service):
         """invalidate_method_cache should delegate to _cache_invalidate_prefix."""
         from mcp_server_langgraph.api.v1.ai_ux_service import AIUXService
 
@@ -482,9 +460,7 @@ class TestAIUXServiceBackwardCompatibility:
         assert hasattr(service, "set_tiered_cached_response")
 
     @pytest.mark.asyncio
-    async def test_existing_cache_key_format_compatible(
-        self, mock_settings, mock_cache_service
-    ):
+    async def test_existing_cache_key_format_compatible(self, mock_settings, mock_cache_service):
         """Cache keys should be compatible with existing format."""
         from mcp_server_langgraph.api.v1.ai_ux_service import AIUXService
 
@@ -531,10 +507,6 @@ class TestAIUXServiceDuplicateCodeRemoved:
     def test_mixin_provides_cache_methods(self, mock_settings):
         """Mixin should provide all necessary cache methods."""
         from mcp_server_langgraph.api.v1.ai_ux_service import AIUXService
-        from mcp_server_langgraph.core.cache_mixin import (
-            TieredCacheMixin,
-            StaleWhileRevalidateMixin,
-        )
 
         # All these methods should come from mixin, not be reimplemented
         mixin_methods = [

@@ -669,9 +669,7 @@ class DynamicContextLoader:
                             # Skip dict and list[list] as we only use dense vectors
 
                     # Check for semantic duplicates
-                    if embedding and is_semantically_duplicate(
-                        embedding, seen_embeddings, threshold=threshold
-                    ):
+                    if embedding and is_semantically_duplicate(embedding, seen_embeddings, threshold=threshold):
                         skipped_duplicates += 1
                         logger.debug(
                             f"Skipping duplicate context: {ref.ref_id}",

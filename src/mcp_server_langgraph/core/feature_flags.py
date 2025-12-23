@@ -195,8 +195,13 @@ class FeatureFlags(BaseSettings):
 
     # UI Features (Unified Studio/BFF)
     # =========================================================================
-    # Canvas Feature Flags (HybridShell is now default at /studio)
+    # Canvas Feature Flags (StudioShell is now default at /studio)
     # =========================================================================
+    studio_canvas_shell: bool = Field(
+        default=True,
+        description="Phase 1: Enable Studio Canvas shell at /studio (StudioShellLayout)",
+    )
+
     canvas_editable: bool = Field(
         default=False,
         description="Phase 2: Enable editable artifacts in Canvas panel",
@@ -758,11 +763,11 @@ class FeatureFlags(BaseSettings):
     )
 
     # =========================================================================
-    # Studio AI Orchestration (HybridShell AI Enhancement)
+    # Studio AI Orchestration (StudioShell AI Enhancement)
     # =========================================================================
     enable_studio_ai: bool = Field(
         default=False,
-        description="Enable unified Studio AI orchestration for HybridShell AI capabilities (gradual rollout)",
+        description="Enable unified Studio AI orchestration for StudioShell AI capabilities (gradual rollout)",
     )
 
     # -------------------------------------------------------------------------
@@ -1112,7 +1117,8 @@ class FeatureFlags(BaseSettings):
         is_admin = role.lower() == "admin"
 
         return {
-            # Canvas feature flags (HybridShell is now default at /studio)
+            # Canvas feature flags (StudioShell is now default at /studio)
+            "studio_canvas_shell": self.studio_canvas_shell,
             "canvas_editable": self.canvas_editable,
             "canvas_agents": self.canvas_agents,
             "canvas_ai_palette": self.canvas_ai_palette,
@@ -1162,7 +1168,7 @@ class FeatureFlags(BaseSettings):
             "batch_composite_analysis": self.enable_batch_composite_analysis,
             # HITL Features
             "agent_hitl": self.enable_agent_hitl,
-            # Granular Intelligence Flags (HybridShell AI)
+            # Granular Intelligence Flags (StudioShell AI)
             "studio_ai": self.enable_studio_ai,
             "session_intelligence": self.enable_session_intelligence,
             "conversation_intelligence": self.enable_conversation_intelligence,

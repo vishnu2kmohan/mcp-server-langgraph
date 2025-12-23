@@ -5,7 +5,13 @@
  * (Remix/Fork, Share, Export, Copy, Delete).
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { render, screen, fireEvent, waitFor, cleanup } from "@testing-library/react";
+import {
+  render,
+  screen,
+  fireEvent,
+  waitFor,
+  cleanup,
+} from "@testing-library/react";
 import { ArtifactActions } from "./ArtifactActions";
 import type { CanvasArtifact } from "../types/artifacts";
 

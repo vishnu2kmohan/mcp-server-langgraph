@@ -10,7 +10,7 @@ Reference: ADR-0026 - Comprehensive Client Resilience Patterns
 
 import gc
 from datetime import datetime, UTC
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 

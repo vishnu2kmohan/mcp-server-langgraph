@@ -10,8 +10,6 @@ for rollback capability following Claude Agent SDK patterns.
 from __future__ import annotations
 
 import gc
-import os
-import tempfile
 from typing import TYPE_CHECKING
 
 import pytest

@@ -88,9 +88,7 @@ class TestSkillExecutorValidation:
         )
 
         # With all secrets
-        result = executor.validate_secrets(
-            skill, {"DATABASE_URL": "postgres://...", "API_KEY": "secret"}
-        )
+        result = executor.validate_secrets(skill, {"DATABASE_URL": "postgres://...", "API_KEY": "secret"})
         assert result.is_valid is True
 
         # Missing secrets
@@ -319,9 +317,7 @@ class TestSkillExecutorSandboxIntegration:
         from mcp_server_langgraph.skills.models import Skill
 
         mock_sandbox = MagicMock()
-        mock_sandbox.aexecute = AsyncMock(
-            return_value=SandboxResult(success=True, stdout="OK", stderr="")
-        )
+        mock_sandbox.aexecute = AsyncMock(return_value=SandboxResult(success=True, stdout="OK", stderr=""))
 
         executor = SkillExecutor()
         executor.set_sandbox(mock_sandbox)
@@ -353,9 +349,7 @@ class TestSkillExecutorSandboxIntegration:
         from mcp_server_langgraph.skills.models import SandboxConfig, Skill
 
         mock_sandbox = MagicMock()
-        mock_sandbox.aexecute = AsyncMock(
-            return_value=SandboxResult(success=True, stdout="OK", stderr="")
-        )
+        mock_sandbox.aexecute = AsyncMock(return_value=SandboxResult(success=True, stdout="OK", stderr=""))
 
         executor = SkillExecutor()
         executor.set_sandbox(mock_sandbox)
@@ -439,7 +433,6 @@ description: Test skill
         WHEN loading a script
         THEN the script content should be returned
         """
-        from pathlib import Path
 
         from mcp_server_langgraph.skills.executor import SkillExecutor
         from mcp_server_langgraph.skills.models import Skill
@@ -745,9 +738,7 @@ class TestSkillSecretInjection:
         from mcp_server_langgraph.skills.models import Skill
 
         mock_sandbox = MagicMock()
-        mock_sandbox.aexecute = AsyncMock(
-            return_value=SandboxResult(success=True, stdout="Connected!", stderr="")
-        )
+        mock_sandbox.aexecute = AsyncMock(return_value=SandboxResult(success=True, stdout="Connected!", stderr=""))
 
         executor = SkillExecutor()
         executor.set_sandbox(mock_sandbox)
@@ -778,9 +769,7 @@ class TestSkillSecretInjection:
         from mcp_server_langgraph.skills.models import Skill
 
         mock_sandbox = MagicMock()
-        mock_sandbox.aexecute = AsyncMock(
-            return_value=SandboxResult(success=True, stdout="OK", stderr="")
-        )
+        mock_sandbox.aexecute = AsyncMock(return_value=SandboxResult(success=True, stdout="OK", stderr=""))
 
         executor = SkillExecutor()
         executor.set_sandbox(mock_sandbox)

@@ -111,6 +111,7 @@ async def verify_subscription_ownership(
             detail="Not authorized to manage this subscription",
         )
 
+
 notifications_router = APIRouter(prefix="/notifications", tags=["notifications"])
 
 
@@ -290,9 +291,7 @@ async def subscribe_to_notifications(
             f"Stored push subscription for user {user_id}",
             extra={"subscription_id": sub.id, "endpoint": subscription.endpoint[:50]},
         )
-        return NotificationResponse(
-            success=True, message="Successfully subscribed to push notifications"
-        )
+        return NotificationResponse(success=True, message="Successfully subscribed to push notifications")
     except Exception as e:
         logger.exception(f"Failed to store subscription: {e}")
         raise HTTPException(status_code=500, detail="Failed to store push subscription")
@@ -341,9 +340,7 @@ async def unsubscribe_from_notifications(
             f"Removed push subscription for user {user_id}",
             extra={"endpoint": request_body.endpoint[:50]},
         )
-        return NotificationResponse(
-            success=True, message="Successfully unsubscribed from push notifications"
-        )
+        return NotificationResponse(success=True, message="Successfully unsubscribed from push notifications")
     except Exception as e:
         logger.exception(f"Failed to remove subscription: {e}")
         raise HTTPException(status_code=500, detail="Failed to remove push subscription")
@@ -396,9 +393,7 @@ async def subscribe_legacy(
         extra={"endpoint": subscription.endpoint[:50]},
     )
     _legacy_subscriptions[subscription.endpoint] = subscription
-    return NotificationResponse(
-        success=True, message="Subscribed (deprecated - use /push/subscribe)"
-    )
+    return NotificationResponse(success=True, message="Subscribed (deprecated - use /push/subscribe)")
 
 
 @notifications_router.post("/unsubscribe")
@@ -414,6 +409,4 @@ async def unsubscribe_legacy(
         extra={"endpoint": request_body.endpoint[:50]},
     )
     _legacy_subscriptions.pop(request_body.endpoint, None)
-    return NotificationResponse(
-        success=True, message="Unsubscribed (deprecated - use /push/unsubscribe)"
-    )
+    return NotificationResponse(success=True, message="Unsubscribed (deprecated - use /push/unsubscribe)")

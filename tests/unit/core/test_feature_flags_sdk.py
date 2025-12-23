@@ -89,6 +89,4 @@ class TestSDKFeatureFlags:
             assert flag_name in properties, f"Missing flag: {flag_name}"
             assert "description" in properties[flag_name], f"Missing description for {flag_name}"
             # Description should mention Claude Agent SDK
-            assert "SDK" in properties[flag_name]["description"], (
-                f"Description for {flag_name} should mention SDK"
-            )
+            assert "SDK" in properties[flag_name]["description"], f"Description for {flag_name} should mention SDK"

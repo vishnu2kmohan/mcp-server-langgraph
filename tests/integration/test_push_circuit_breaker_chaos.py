@@ -320,9 +320,7 @@ class TestCircuitBreakerConcurrentAccess:
         async def send_push(should_fail: bool) -> None:
             nonlocal success_count, failure_count
             try:
-                with patch.object(
-                    push_sender, "_send_webpush", new_callable=AsyncMock
-                ) as mock_send:
+                with patch.object(push_sender, "_send_webpush", new_callable=AsyncMock) as mock_send:
                     if should_fail:
                         mock_send.side_effect = Exception("Service unavailable")
                     else:
@@ -358,9 +356,7 @@ class TestCircuitBreakerMetricsEmission:
         """Test that state changes emit OpenTelemetry metrics."""
         cb = get_circuit_breaker("webpush")
 
-        with patch(
-            "mcp_server_langgraph.observability.telemetry.circuit_breaker_state_gauge"
-        ) as mock_gauge:
+        with patch("mcp_server_langgraph.observability.telemetry.circuit_breaker_state_gauge") as mock_gauge:
             # Force circuit to OPEN
             for _ in range(cb.fail_max + 1):
                 try:
@@ -376,9 +372,7 @@ class TestCircuitBreakerMetricsEmission:
         """Test that failure counter metric increments on failures."""
         cb = get_circuit_breaker("webpush")
 
-        with patch(
-            "mcp_server_langgraph.observability.telemetry.circuit_breaker_failure_counter"
-        ) as mock_counter:
+        with patch("mcp_server_langgraph.observability.telemetry.circuit_breaker_failure_counter") as mock_counter:
             try:
                 cb.call(lambda: (_ for _ in ()).throw(Exception("failure")))
             except Exception:
@@ -398,9 +392,7 @@ class TestCircuitBreakerMetricsEmission:
         """Test that success counter metric increments on success."""
         cb = get_circuit_breaker("webpush")
 
-        with patch(
-            "mcp_server_langgraph.observability.telemetry.circuit_breaker_success_counter"
-        ) as mock_counter:
+        with patch("mcp_server_langgraph.observability.telemetry.circuit_breaker_success_counter") as mock_counter:
             cb.call(lambda: "success")
 
             # Verify success counter was incremented
@@ -551,9 +543,7 @@ class TestCircuitBreakerPushIntegration:
             except Exception:
                 pass
 
-        with patch(
-            "mcp_server_langgraph.notifications.push_sender.logger"
-        ) as mock_logger:
+        with patch("mcp_server_langgraph.notifications.push_sender.logger") as mock_logger:
             message = PushMessage(title="Test", body="Open circuit test")
             await push_sender.send_to_user(sample_subscription.user_id, message)
 
@@ -591,14 +581,10 @@ class TestCircuitBreakerPushIntegration:
         cb.close()
 
         # Push should work now
-        with patch.object(
-            push_sender, "_send_webpush", new_callable=AsyncMock
-        ) as mock_send:
+        with patch.object(push_sender, "_send_webpush", new_callable=AsyncMock) as mock_send:
             mock_send.return_value = True
             message = PushMessage(title="Recovery Test", body="Circuit recovered")
-            result = await push_sender.send_to_user(
-                sample_subscription.user_id, message
-            )
+            result = await push_sender.send_to_user(sample_subscription.user_id, message)
 
             assert result == 1
             mock_send.assert_called_once()

@@ -206,10 +206,10 @@ export interface FeatureFlags {
   confirmation_dialogs?: boolean;
 
   // ==========================================================================
-  // Canvas Studio Shell Feature Flags (Phase 0+)
+  // Studio Canvas Shell Feature Flags (Phase 0+)
   // ==========================================================================
   /** Enable Studio Canvas shell at /studio (Phase 1) */
-  canvas_studio_shell?: boolean;
+  studio_canvas_shell?: boolean;
   /** Enable editable artifacts in Canvas panel (Phase 2) */
   canvas_editable?: boolean;
   /** Enable background agent panel (Phase 4) */

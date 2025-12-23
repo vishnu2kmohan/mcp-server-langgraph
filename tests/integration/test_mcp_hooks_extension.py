@@ -15,8 +15,7 @@ from __future__ import annotations
 import gc
 import json
 import os
-from typing import Any
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
@@ -116,9 +115,7 @@ class TestHooksExtensionListOperation:
         assert hooks == []
 
     @pytest.mark.asyncio
-    async def test_list_returns_registered_hooks(
-        self, mock_auth_admin, mock_agent_graph, fresh_registry
-    ) -> None:
+    async def test_list_returns_registered_hooks(self, mock_auth_admin, mock_agent_graph, fresh_registry) -> None:
         """
         GIVEN hooks are registered in registry
         WHEN calling hooks tool with operation=list
@@ -156,9 +153,7 @@ class TestHooksExtensionListOperation:
         assert hooks[0]["hook_count"] == 1
 
     @pytest.mark.asyncio
-    async def test_list_filters_by_event_type(
-        self, mock_auth_admin, mock_agent_graph, fresh_registry
-    ) -> None:
+    async def test_list_filters_by_event_type(self, mock_auth_admin, mock_agent_graph, fresh_registry) -> None:
         """
         GIVEN hooks registered for multiple events
         WHEN calling list with event filter
@@ -207,9 +202,7 @@ class TestHooksExtensionEventsOperation:
         gc.collect()
 
     @pytest.mark.asyncio
-    async def test_events_returns_all_hook_events(
-        self, mock_auth_admin, mock_agent_graph, fresh_registry
-    ) -> None:
+    async def test_events_returns_all_hook_events(self, mock_auth_admin, mock_agent_graph, fresh_registry) -> None:
         """
         GIVEN hooks tool handler
         WHEN calling operation=events
@@ -248,9 +241,7 @@ class TestHooksExtensionEventsOperation:
         assert event_names == expected_events
 
     @pytest.mark.asyncio
-    async def test_events_include_descriptions(
-        self, mock_auth_admin, mock_agent_graph, fresh_registry
-    ) -> None:
+    async def test_events_include_descriptions(self, mock_auth_admin, mock_agent_graph, fresh_registry) -> None:
         """
         GIVEN hooks tool handler
         WHEN calling operation=events
@@ -287,9 +278,7 @@ class TestHooksExtensionRegisterOperation:
         gc.collect()
 
     @pytest.mark.asyncio
-    async def test_register_requires_admin_authorization(
-        self, mock_auth_non_admin, mock_agent_graph, fresh_registry
-    ) -> None:
+    async def test_register_requires_admin_authorization(self, mock_auth_non_admin, mock_agent_graph, fresh_registry) -> None:
         """
         GIVEN a non-admin user
         WHEN calling hooks/register
@@ -317,9 +306,7 @@ class TestHooksExtensionRegisterOperation:
         mock_auth_non_admin.authorize.assert_called_once()
 
     @pytest.mark.asyncio
-    async def test_register_succeeds_for_admin(
-        self, mock_auth_admin, mock_agent_graph, fresh_registry
-    ) -> None:
+    async def test_register_succeeds_for_admin(self, mock_auth_admin, mock_agent_graph, fresh_registry) -> None:
         """
         GIVEN an admin user
         WHEN calling hooks/register with valid params
@@ -350,9 +337,7 @@ class TestHooksExtensionRegisterOperation:
         assert len(matchers) >= 1
 
     @pytest.mark.asyncio
-    async def test_register_validates_event_name(
-        self, mock_auth_admin, mock_agent_graph, fresh_registry
-    ) -> None:
+    async def test_register_validates_event_name(self, mock_auth_admin, mock_agent_graph, fresh_registry) -> None:
         """
         GIVEN an admin user
         WHEN calling hooks/register with invalid event name
@@ -416,9 +401,7 @@ class TestHooksExtensionUnregisterOperation:
         assert "Unauthorized" in result[0].text
 
     @pytest.mark.asyncio
-    async def test_unregister_removes_hooks_for_event(
-        self, mock_auth_admin, mock_agent_graph, fresh_registry
-    ) -> None:
+    async def test_unregister_removes_hooks_for_event(self, mock_auth_admin, mock_agent_graph, fresh_registry) -> None:
         """
         GIVEN hooks registered for an event
         WHEN admin calls hooks/unregister
@@ -470,9 +453,7 @@ class TestHooksExtensionEndToEnd:
         gc.collect()
 
     @pytest.mark.asyncio
-    async def test_full_lifecycle_register_list_unregister(
-        self, mock_auth_admin, mock_agent_graph, fresh_registry
-    ) -> None:
+    async def test_full_lifecycle_register_list_unregister(self, mock_auth_admin, mock_agent_graph, fresh_registry) -> None:
         """
         GIVEN an admin user
         WHEN registering, listing, then unregistering a hook

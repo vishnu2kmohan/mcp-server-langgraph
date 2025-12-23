@@ -335,14 +335,11 @@ class TestLookupTableEncryptionEdgeCases:
 
         table = EncryptedLookupTable()
         table.store("<<PII_DATA_test>>", '{"key": "value", "special": "\n\t\r"}')
-        table.store("<<PII_DATA_quotes>>", "He said \"hello\"")
+        table.store("<<PII_DATA_quotes>>", 'He said "hello"')
 
         key = generate_encryption_key()
         encrypted = table.export_encrypted(key=key)
         restored = EncryptedLookupTable.from_encrypted(encrypted, key=key)
 
-        assert (
-            restored.retrieve("<<PII_DATA_test>>")
-            == '{"key": "value", "special": "\n\t\r"}'
-        )
-        assert restored.retrieve("<<PII_DATA_quotes>>") == "He said \"hello\""
+        assert restored.retrieve("<<PII_DATA_test>>") == '{"key": "value", "special": "\n\t\r"}'
+        assert restored.retrieve("<<PII_DATA_quotes>>") == 'He said "hello"'

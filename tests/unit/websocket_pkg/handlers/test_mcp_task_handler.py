@@ -76,9 +76,7 @@ class TestMCPTaskWebSocketHandlerInit:
         mock_metrics = MagicMock()
 
         with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
-            handler = MCPTaskWebSocketHandler(
-                config=config, mcp_service=mock_service, metrics=mock_metrics
-            )
+            handler = MCPTaskWebSocketHandler(config=config, mcp_service=mock_service, metrics=mock_metrics)
 
         assert handler._metrics is mock_metrics
 
@@ -165,9 +163,7 @@ class TestMCPTaskWebSocketHandlerMessages:
         with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
             handler = MCPTaskWebSocketHandler(config=config, mcp_service=mock_service)
 
-        message = MessageEnvelope(
-            type="subscribe", id="msg-1", payload={"task_id": "task-1"}
-        )
+        message = MessageEnvelope(type="subscribe", id="msg-1", payload={"task_id": "task-1"})
         response = await handler.handle_message(message)
 
         assert response is not None
@@ -212,9 +208,7 @@ class TestMCPTaskWebSocketHandlerMessages:
         with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
             handler = MCPTaskWebSocketHandler(config=config, mcp_service=mock_service)
 
-        message = MessageEnvelope(
-            type="subscribe", id="msg-1", payload={"task_id": "nonexistent"}
-        )
+        message = MessageEnvelope(type="subscribe", id="msg-1", payload={"task_id": "nonexistent"})
         response = await handler.handle_message(message)
 
         assert response is not None
@@ -236,9 +230,7 @@ class TestMCPTaskWebSocketHandlerMessages:
         with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
             handler = MCPTaskWebSocketHandler(config=config, mcp_service=mock_service)
 
-        message = MessageEnvelope(
-            type="subscribe", id="msg-1", payload={"task_id": "task-1"}
-        )
+        message = MessageEnvelope(type="subscribe", id="msg-1", payload={"task_id": "task-1"})
         response = await handler.handle_message(message)
 
         assert response is not None
@@ -261,9 +253,7 @@ class TestMCPTaskWebSocketHandlerMessages:
 
         handler.subscriptions = {"task-1", "task-2"}
 
-        message = MessageEnvelope(
-            type="unsubscribe", id="msg-1", payload={"task_id": "task-1"}
-        )
+        message = MessageEnvelope(type="unsubscribe", id="msg-1", payload={"task_id": "task-1"})
         response = await handler.handle_message(message)
 
         assert response is not None

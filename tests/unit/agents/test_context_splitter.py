@@ -27,8 +27,8 @@ if TYPE_CHECKING:
     pass
 
 
-
 pytestmark = pytest.mark.unit
+
 
 @pytest.mark.unit
 @pytest.mark.agents

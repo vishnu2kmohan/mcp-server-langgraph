@@ -68,18 +68,12 @@ def upgrade() -> None:
     )
 
     # INDEXES FOR PUSH_SUBSCRIPTIONS
-    op.execute(
-        "CREATE INDEX IF NOT EXISTS idx_push_subscriptions_user_id "
-        "ON push_subscriptions(user_id)"
-    )
+    op.execute("CREATE INDEX IF NOT EXISTS idx_push_subscriptions_user_id ON push_subscriptions(user_id)")
     op.execute(
         "CREATE INDEX IF NOT EXISTS idx_push_subscriptions_expires "
         "ON push_subscriptions(expires_at) WHERE expires_at IS NOT NULL"
     )
-    op.execute(
-        "CREATE INDEX IF NOT EXISTS idx_push_subscriptions_endpoint "
-        "ON push_subscriptions(endpoint)"
-    )
+    op.execute("CREATE INDEX IF NOT EXISTS idx_push_subscriptions_endpoint ON push_subscriptions(endpoint)")
     op.execute(
         "CREATE INDEX IF NOT EXISTS idx_push_subscriptions_last_used "
         "ON push_subscriptions(last_used_at) WHERE last_used_at IS NOT NULL"
@@ -109,25 +103,17 @@ def upgrade() -> None:
     )
 
     # COMMENTS FOR PUSH_SUBSCRIPTIONS
-    op.execute(
-        "COMMENT ON TABLE push_subscriptions IS "
-        "'Stores Web Push API subscriptions for browser push notifications'"
-    )
-    op.execute(
-        "COMMENT ON COLUMN push_subscriptions.endpoint IS "
-        "'Push service endpoint URL from PushSubscription.endpoint'"
-    )
+    op.execute("COMMENT ON TABLE push_subscriptions IS 'Stores Web Push API subscriptions for browser push notifications'")
+    op.execute("COMMENT ON COLUMN push_subscriptions.endpoint IS 'Push service endpoint URL from PushSubscription.endpoint'")
     op.execute(
         "COMMENT ON COLUMN push_subscriptions.p256dh_key IS "
         "'User public key from PushSubscription.getKey(\"p256dh\"), base64 encoded'"
     )
     op.execute(
-        "COMMENT ON COLUMN push_subscriptions.auth_key IS "
-        "'Auth secret from PushSubscription.getKey(\"auth\"), base64 encoded'"
+        "COMMENT ON COLUMN push_subscriptions.auth_key IS 'Auth secret from PushSubscription.getKey(\"auth\"), base64 encoded'"
     )
     op.execute(
-        "COMMENT ON COLUMN push_subscriptions.expires_at IS "
-        "'Optional expiration time from PushSubscription.expirationTime'"
+        "COMMENT ON COLUMN push_subscriptions.expires_at IS 'Optional expiration time from PushSubscription.expirationTime'"
     )
     op.execute(
         "COMMENT ON COLUMN push_subscriptions.last_used_at IS "
@@ -177,26 +163,11 @@ def upgrade() -> None:
     )
 
     # INDEXES FOR REMEDIATION_FEEDBACK
-    op.execute(
-        "CREATE INDEX IF NOT EXISTS idx_feedback_remediation_id "
-        "ON remediation_feedback(remediation_id)"
-    )
-    op.execute(
-        "CREATE INDEX IF NOT EXISTS idx_feedback_alert_type "
-        "ON remediation_feedback(alert_type)"
-    )
-    op.execute(
-        "CREATE INDEX IF NOT EXISTS idx_feedback_action "
-        "ON remediation_feedback(action)"
-    )
-    op.execute(
-        "CREATE INDEX IF NOT EXISTS idx_feedback_reason "
-        "ON remediation_feedback(reason) WHERE reason IS NOT NULL"
-    )
-    op.execute(
-        "CREATE INDEX IF NOT EXISTS idx_feedback_timestamp "
-        "ON remediation_feedback(timestamp DESC)"
-    )
+    op.execute("CREATE INDEX IF NOT EXISTS idx_feedback_remediation_id ON remediation_feedback(remediation_id)")
+    op.execute("CREATE INDEX IF NOT EXISTS idx_feedback_alert_type ON remediation_feedback(alert_type)")
+    op.execute("CREATE INDEX IF NOT EXISTS idx_feedback_action ON remediation_feedback(action)")
+    op.execute("CREATE INDEX IF NOT EXISTS idx_feedback_reason ON remediation_feedback(reason) WHERE reason IS NOT NULL")
+    op.execute("CREATE INDEX IF NOT EXISTS idx_feedback_timestamp ON remediation_feedback(timestamp DESC)")
     op.execute(
         "CREATE INDEX IF NOT EXISTS idx_feedback_approved_by_type "
         "ON remediation_feedback(alert_type, timestamp DESC) "
@@ -204,25 +175,14 @@ def upgrade() -> None:
     )
 
     # COMMENTS FOR REMEDIATION_FEEDBACK
+    op.execute("COMMENT ON TABLE remediation_feedback IS 'Stores remediation approval/rejection feedback for AI model tuning'")
+    op.execute("COMMENT ON COLUMN remediation_feedback.alert_type IS 'Alert name used for few-shot learning pattern matching'")
     op.execute(
-        "COMMENT ON TABLE remediation_feedback IS "
-        "'Stores remediation approval/rejection feedback for AI model tuning'"
+        "COMMENT ON COLUMN remediation_feedback.alert_labels IS 'Alert labels (service, namespace, etc.) for context matching'"
     )
+    op.execute("COMMENT ON COLUMN remediation_feedback.reason IS 'Structured rejection reason for constraint learning'")
     op.execute(
-        "COMMENT ON COLUMN remediation_feedback.alert_type IS "
-        "'Alert name used for few-shot learning pattern matching'"
-    )
-    op.execute(
-        "COMMENT ON COLUMN remediation_feedback.alert_labels IS "
-        "'Alert labels (service, namespace, etc.) for context matching'"
-    )
-    op.execute(
-        "COMMENT ON COLUMN remediation_feedback.reason IS "
-        "'Structured rejection reason for constraint learning'"
-    )
-    op.execute(
-        "COMMENT ON COLUMN remediation_feedback.execution_success IS "
-        "'True if approved remediation executed successfully'"
+        "COMMENT ON COLUMN remediation_feedback.execution_success IS 'True if approved remediation executed successfully'"
     )
 
     # ==========================================================================

@@ -151,10 +151,7 @@ class MCPToolRegistry:
         if config.name in self._servers:
             raise ValueError(f"Server '{config.name}' already registered")
 
-        logger.info(
-            "Registering MCP server",
-            extra={"server_name": config.name, "command": config.command, "url": config.url}
-        )
+        logger.info("Registering MCP server", extra={"server_name": config.name, "command": config.command, "url": config.url})
 
         # Create and connect session
         session = self._create_session(config)
@@ -169,10 +166,7 @@ class MCPToolRegistry:
         raw_tools = await session.list_tools()
         tools = self._import_tools(config.name, raw_tools, config)
 
-        logger.info(
-            "MCP server registered",
-            extra={"server_name": config.name, "tool_count": len(tools)}
-        )
+        logger.info("MCP server registered", extra={"server_name": config.name, "tool_count": len(tools)})
 
         return tools
 
@@ -292,10 +286,7 @@ class MCPToolRegistry:
         raw_tools = await session.list_tools()
         tools = self._import_tools(server_name, raw_tools, config)
 
-        logger.info(
-            "MCP server tools refreshed",
-            extra={"server_name": server_name, "tool_count": len(tools)}
-        )
+        logger.info("MCP server tools refreshed", extra={"server_name": server_name, "tool_count": len(tools)})
 
         return tools
 

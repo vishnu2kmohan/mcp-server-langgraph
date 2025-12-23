@@ -11,18 +11,17 @@ Features:
 """
 
 import gc
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock
 import pytest
 
 from mcp_server_langgraph.api.v1.ai_ux import (
     ErrorInfo,
     DisclosureAnalyzeRequest,
-    PersonaAnalyzeRequest,
-    NudgeRecommendRequest,
     CompositeAnalysisRequest,
 )
 
 pytestmark = pytest.mark.unit
+
 
 def create_test_service():
     """Create an AIUXService instance for testing."""
@@ -100,10 +99,7 @@ class TestRedisCacheIntegration:
         assert hasattr(service, "settings")
 
         # Service should have cache methods
-        has_cache_methods = (
-            hasattr(service, "get_cached_response")
-            and hasattr(service, "set_cached_response")
-        )
+        has_cache_methods = hasattr(service, "get_cached_response") and hasattr(service, "set_cached_response")
         assert has_cache_methods
 
 
@@ -199,9 +195,7 @@ class TestCircuitBreaker:
         # This tests the concept - circuit breaker will be implemented
         # For now, verify service has resilience attributes
         has_circuit = (
-            hasattr(service, "_circuit_breaker")
-            or hasattr(service, "circuit_breaker")
-            or hasattr(service, "_failure_count")
+            hasattr(service, "_circuit_breaker") or hasattr(service, "circuit_breaker") or hasattr(service, "_failure_count")
         )
         # Soft check - circuit breaker to be implemented
         assert has_circuit or True
@@ -336,9 +330,7 @@ class TestWebSocketHeartbeat:
         service = create_test_service()
 
         # Service should have heartbeat tracking
-        assert hasattr(service, "_websocket_connections") or hasattr(
-            service, "_connection_heartbeats"
-        )
+        assert hasattr(service, "_websocket_connections") or hasattr(service, "_connection_heartbeats")
 
     @pytest.mark.asyncio
     async def test_stale_connections_are_cleaned_up(self) -> None:
@@ -360,9 +352,8 @@ class TestWebSocketHeartbeat:
         from mcp_server_langgraph.core.feature_flags import feature_flags
 
         # Check if heartbeat interval setting exists
-        has_interval = (
-            hasattr(feature_flags, "ai_ux_websocket_heartbeat_interval")
-            or hasattr(feature_flags, "websocket_heartbeat_interval_seconds")
+        has_interval = hasattr(feature_flags, "ai_ux_websocket_heartbeat_interval") or hasattr(
+            feature_flags, "websocket_heartbeat_interval_seconds"
         )
         # This is a soft check - interval can be hardcoded for now
         assert True  # Passes as we're implementing

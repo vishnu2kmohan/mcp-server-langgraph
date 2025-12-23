@@ -212,8 +212,4 @@ class SessionForkManager:
             List of ForkInfo for all forks of the session
         """
         self._check_feature_enabled()
-        return [
-            info
-            for info in self._forks.values()
-            if info.parent_session_id == parent_session_id
-        ]
+        return [info for info in self._forks.values() if info.parent_session_id == parent_session_id]

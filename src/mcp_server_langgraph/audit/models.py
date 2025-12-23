@@ -143,7 +143,7 @@ class AuditEventType(StrEnum):
     DATA_ANONYMIZE = "data.anonymize"
     """Data anonymization (GDPR Art. 17)."""
 
-    # Artifact events (Hybrid Canvas - SOC 2, GDPR)
+    # Artifact events (Studio Canvas - SOC 2, GDPR)
     ARTIFACT_CREATED = "artifact.created"
     """Artifact created in canvas."""
 

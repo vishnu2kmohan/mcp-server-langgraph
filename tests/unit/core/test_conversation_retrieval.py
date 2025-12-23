@@ -35,8 +35,11 @@ class TestConversationRetrieval:
 
     @pytest.fixture
     def mock_openfga(self):
-        """Mock OpenFGA client."""
-        return MagicMock()
+        """Mock OpenFGA client with async check_permission."""
+        mock = MagicMock()
+        # check_permission is awaited, so must be AsyncMock
+        mock.check_permission = AsyncMock(return_value=True)
+        return mock
 
     @pytest.mark.asyncio
     async def test_conversation_retrieval_success(self, mock_auth, mock_openfga):
@@ -133,6 +136,8 @@ class TestConversationRetrieval:
         server = MCPAgentServer(openfga_client=mock_openfga)
         server.auth = mock_auth
         mock_auth.authorize.return_value = False
+        # OpenFGA check also needs to deny access
+        mock_openfga.check_permission = AsyncMock(return_value=False)
         mock_span = MagicMock()
         arguments = {"thread_id": "test-thread-123", "user_id": "alice"}
         with pytest.raises(PermissionError, match="Not authorized to view conversation"):

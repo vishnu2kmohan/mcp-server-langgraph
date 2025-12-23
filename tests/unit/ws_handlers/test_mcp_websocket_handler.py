@@ -12,12 +12,8 @@ Following TDD RED-GREEN-REFACTOR cycle:
 
 from __future__ import annotations
 
-import asyncio
 import gc
-import json
-from datetime import datetime, UTC
-from typing import Any
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
@@ -97,9 +93,7 @@ class TestMCPMessageHandling:
 
         # Mock the internal MCP handler
         mock_mcp_handler = AsyncMock()
-        mock_mcp_handler.handle = AsyncMock(
-            return_value={"jsonrpc": "2.0", "id": 1, "result": {"initialized": True}}
-        )
+        mock_mcp_handler.handle = AsyncMock(return_value={"jsonrpc": "2.0", "id": 1, "result": {"initialized": True}})
         handler._mcp_handler = mock_mcp_handler
 
         message = {

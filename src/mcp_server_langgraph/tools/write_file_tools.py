@@ -178,9 +178,7 @@ def _create_backup(file_path: Path) -> Path | None:
 def write_file(
     file_path: Annotated[str, Field(description="Relative path within workspace to create or overwrite")],
     content: Annotated[str, Field(description="Content to write to the file")],
-    create_directories: Annotated[
-        bool, Field(description="Create parent directories if they don't exist")
-    ] = True,
+    create_directories: Annotated[bool, Field(description="Create parent directories if they don't exist")] = True,
 ) -> str:
     """
     Create a new file or overwrite an existing file with the given content.

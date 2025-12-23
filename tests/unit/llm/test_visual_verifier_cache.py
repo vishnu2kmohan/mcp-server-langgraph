@@ -27,8 +27,8 @@ if TYPE_CHECKING:
 SCREENSHOT_TOOLS_PATCH = "mcp_server_langgraph.tools.screenshot_tools.capture_screenshot"
 
 
-
 pytestmark = pytest.mark.unit
+
 
 @pytest.mark.xdist_group(name="visual_verifier_cache")
 class TestVisualVerificationScreenshotCache:
@@ -366,21 +366,23 @@ FEEDBACK: Good"""
         with (
             patch(SCREENSHOT_TOOLS_PATCH) as mock_capture,
             patch("mcp_server_langgraph.llm.verifier.get_screenshot_cache") as mock_get_cache,
-            patch(
-                "mcp_server_langgraph.llm.verifier.record_screenshot_cache_hit"
-            ) as mock_record_hit,
+            patch("mcp_server_langgraph.llm.verifier.record_screenshot_cache_hit") as mock_record_hit,
         ):
-            mock_capture.ainvoke = AsyncMock(return_value={
-                "image_data": "base64",
-                "mime_type": "image/png",
-            })
+            mock_capture.ainvoke = AsyncMock(
+                return_value={
+                    "image_data": "base64",
+                    "mime_type": "image/png",
+                }
+            )
 
             # Cache returns a hit
             mock_cache = MagicMock()
-            mock_cache.aget = AsyncMock(return_value={
-                "image_data": "cached-base64",
-                "mime_type": "image/png",
-            })
+            mock_cache.aget = AsyncMock(
+                return_value={
+                    "image_data": "cached-base64",
+                    "mime_type": "image/png",
+                }
+            )
             mock_get_cache.return_value = mock_cache
 
             await verifier.verify_with_visual(
@@ -411,14 +413,14 @@ FEEDBACK: Good"""
         with (
             patch(SCREENSHOT_TOOLS_PATCH) as mock_capture,
             patch("mcp_server_langgraph.llm.verifier.get_screenshot_cache") as mock_get_cache,
-            patch(
-                "mcp_server_langgraph.llm.verifier.record_screenshot_cache_miss"
-            ) as mock_record_miss,
+            patch("mcp_server_langgraph.llm.verifier.record_screenshot_cache_miss") as mock_record_miss,
         ):
-            mock_capture.ainvoke = AsyncMock(return_value={
-                "image_data": "base64",
-                "mime_type": "image/png",
-            })
+            mock_capture.ainvoke = AsyncMock(
+                return_value={
+                    "image_data": "base64",
+                    "mime_type": "image/png",
+                }
+            )
 
             # Cache returns None (miss)
             mock_cache = MagicMock()

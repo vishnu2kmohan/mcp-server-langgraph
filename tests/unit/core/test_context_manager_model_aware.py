@@ -17,17 +17,17 @@ from __future__ import annotations
 
 import gc
 from typing import TYPE_CHECKING
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock, patch
 
 import pytest
-from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
+from langchain_core.messages import HumanMessage
 
 if TYPE_CHECKING:
     pass
 
 
-
 pytestmark = pytest.mark.unit
+
 
 @pytest.mark.unit
 @pytest.mark.agents
@@ -205,9 +205,7 @@ class TestBackwardCompatibility:
         """When model-aware compaction disabled, should use fixed threshold."""
         from mcp_server_langgraph.core.context_manager import ContextManager
 
-        with patch(
-            "mcp_server_langgraph.core.context_manager.feature_flags"
-        ) as mock_flags:
+        with patch("mcp_server_langgraph.core.context_manager.feature_flags") as mock_flags:
             mock_flags.enable_model_aware_compaction = False
             mock_flags.context_compaction_threshold_percentage = 0.5
 

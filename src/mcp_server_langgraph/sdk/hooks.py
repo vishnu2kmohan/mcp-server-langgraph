@@ -206,9 +206,7 @@ class SecurityHookRegistry:
     def __init__(self) -> None:
         """Initialize hook registry."""
         # Map: event_type -> tool_pattern -> list of hooks
-        self._hooks: dict[str, dict[str, list[HookFunction]]] = defaultdict(
-            lambda: defaultdict(list)
-        )
+        self._hooks: dict[str, dict[str, list[HookFunction]]] = defaultdict(lambda: defaultdict(list))
 
     def register(
         self,

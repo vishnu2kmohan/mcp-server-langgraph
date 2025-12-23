@@ -146,11 +146,7 @@ class Handoff:
             HandoffResult containing target agent and filtered messages
         """
         # Apply context filter if provided
-        filtered_messages = (
-            self.context_filter.filter(messages)
-            if self.context_filter is not None
-            else messages.copy()
-        )
+        filtered_messages = self.context_filter.filter(messages) if self.context_filter is not None else messages.copy()
 
         # Create handoff context for callback
         context = HandoffContext(

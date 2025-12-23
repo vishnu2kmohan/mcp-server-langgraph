@@ -23,7 +23,7 @@ from __future__ import annotations
 
 import gc
 from typing import TYPE_CHECKING
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 import pytest
 
@@ -234,9 +234,7 @@ class TestAlertRecordingHelpers:
 
         with patch.object(alert_received_counter, "add") as mock_add:
             record_alert_received("critical", "firing")
-            mock_add.assert_called_once_with(
-                1, {"severity": "critical", "status": "firing"}
-            )
+            mock_add.assert_called_once_with(1, {"severity": "critical", "status": "firing"})
 
     def test_record_alert_broadcast_calls_counter(self) -> None:
         """
@@ -251,9 +249,7 @@ class TestAlertRecordingHelpers:
 
         with patch.object(alert_broadcast_counter, "add") as mock_add:
             record_alert_broadcast("warning", 5)
-            mock_add.assert_called_once_with(
-                1, {"severity": "warning", "client_count": "5"}
-            )
+            mock_add.assert_called_once_with(1, {"severity": "warning", "client_count": "5"})
 
     def test_record_alert_filtered_calls_counter(self) -> None:
         """
@@ -268,9 +264,7 @@ class TestAlertRecordingHelpers:
 
         with patch.object(alert_filtered_counter, "add") as mock_add:
             record_alert_filtered("info", "severity_too_low")
-            mock_add.assert_called_once_with(
-                1, {"severity": "info", "reason": "severity_too_low"}
-            )
+            mock_add.assert_called_once_with(1, {"severity": "info", "reason": "severity_too_low"})
 
 
 @pytest.mark.xdist_group(name="test_alert_metrics")
@@ -505,13 +499,9 @@ class TestRemediationMetricHelpers:
             remediation_execution_duration_histogram,
         )
 
-        with patch.object(
-            remediation_execution_duration_histogram, "record"
-        ) as mock_record:
+        with patch.object(remediation_execution_duration_histogram, "record") as mock_record:
             record_remediation_execution("rem-exec1234", 3.5, success=True)
-            mock_record.assert_called_once_with(
-                3.5, {"remediation_id": "rem-exec", "success": "true"}
-            )
+            mock_record.assert_called_once_with(3.5, {"remediation_id": "rem-exec", "success": "true"})
 
     def test_record_command_blocked(self) -> None:
         """
@@ -812,9 +802,7 @@ class TestAIRecommendationQualityHelpers:
 
         with patch.object(recommendation_with_fewshot_counter, "add") as mock_add:
             record_fewshot_usage("HighCPU", example_count=3)
-            mock_add.assert_called_once_with(
-                1, {"alert_type": "HighCPU", "example_count": "3"}
-            )
+            mock_add.assert_called_once_with(1, {"alert_type": "HighCPU", "example_count": "3"})
 
     def test_record_fewshot_usage_without_examples(self) -> None:
         """
@@ -844,9 +832,7 @@ class TestAIRecommendationQualityHelpers:
 
         with patch.object(recommendation_with_constraints_counter, "add") as mock_add:
             record_constraint_usage("DiskFull", constraint_count=5)
-            mock_add.assert_called_once_with(
-                1, {"alert_type": "DiskFull", "constraint_count": "5"}
-            )
+            mock_add.assert_called_once_with(1, {"alert_type": "DiskFull", "constraint_count": "5"})
 
     def test_record_constraint_usage_no_constraints(self) -> None:
         """

@@ -404,10 +404,9 @@ describe("useStableCallback", () => {
     const callback1 = vi.fn(() => "first");
     const callback2 = vi.fn(() => "second");
 
-    const { result, rerender } = renderHook(
-      ({ cb }) => useStableCallback(cb),
-      { initialProps: { cb: callback1 } },
-    );
+    const { result, rerender } = renderHook(({ cb }) => useStableCallback(cb), {
+      initialProps: { cb: callback1 },
+    });
 
     const stableCallback = result.current;
 

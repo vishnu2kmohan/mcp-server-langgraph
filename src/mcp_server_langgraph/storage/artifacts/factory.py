@@ -164,19 +164,15 @@ def create_artifacts_service(
     # 4. Create vector service (or NoOp if disabled)
     # Note: Factory uses qdrant_url/collection_name but service expects client/embedder/collection
     if qdrant_enabled and qdrant_url:
-        vector_service: QdrantArtifactVectorService | NoOpVectorService = (
-            QdrantArtifactVectorService(
-                qdrant_url=qdrant_url,  # type: ignore[call-arg]
-                collection_name=qdrant_collection,
-            )
+        vector_service: QdrantArtifactVectorService | NoOpVectorService = QdrantArtifactVectorService(
+            qdrant_url=qdrant_url,  # type: ignore[call-arg]
+            collection_name=qdrant_collection,
         )
         logger.info("Qdrant vector service enabled", extra={"url": qdrant_url})
     else:
         vector_service = NoOpVectorService()
         if qdrant_enabled:
-            logger.warning(
-                "Qdrant enabled but no URL provided, using NoOp vector service"
-            )
+            logger.warning("Qdrant enabled but no URL provided, using NoOp vector service")
         else:
             logger.info("Qdrant vector service disabled, using NoOp")
 

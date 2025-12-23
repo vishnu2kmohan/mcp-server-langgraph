@@ -48,9 +48,7 @@ class SkillsToolHandler(AbstractToolHandler):
         """
         super().__init__(auth, agent_graph)
         self.skill_registry = skill_registry or SkillRegistry()
-        self.skill_discovery = skill_discovery or SkillDiscovery(
-            registry=self.skill_registry
-        )
+        self.skill_discovery = skill_discovery or SkillDiscovery(registry=self.skill_registry)
         self.skill_executor = skill_executor or SkillExecutor()
         self._test_skills: dict[str, Skill] = {}
 
@@ -129,10 +127,12 @@ class SkillsToolHandler(AbstractToolHandler):
         if category:
             summaries = [s for s in summaries if s.get("category") == category]
 
-        return [TextContent(
-            type="text",
-            text=json.dumps({"skills": summaries}, indent=2),
-        )]
+        return [
+            TextContent(
+                type="text",
+                text=json.dumps({"skills": summaries}, indent=2),
+            )
+        ]
 
     async def handle_get_skill(
         self,
@@ -154,23 +154,30 @@ class SkillsToolHandler(AbstractToolHandler):
 
         skill = self.skill_discovery.get_skill(name)
         if skill is None:
-            return [TextContent(
-                type="text",
-                text=f"Skill not found: {name}",
-            )]
+            return [
+                TextContent(
+                    type="text",
+                    text=f"Skill not found: {name}",
+                )
+            ]
 
         # Return full details including instructions
-        return [TextContent(
-            type="text",
-            text=json.dumps({
-                "name": skill.name,
-                "description": skill.description,
-                "version": skill.version,
-                "instructions": skill.instructions,
-                "tags": skill.tags,
-                "required_secrets": skill.required_secrets,
-            }, indent=2),
-        )]
+        return [
+            TextContent(
+                type="text",
+                text=json.dumps(
+                    {
+                        "name": skill.name,
+                        "description": skill.description,
+                        "version": skill.version,
+                        "instructions": skill.instructions,
+                        "tags": skill.tags,
+                        "required_secrets": skill.required_secrets,
+                    },
+                    indent=2,
+                ),
+            )
+        ]
 
     async def handle_search_skills(
         self,
@@ -202,10 +209,12 @@ class SkillsToolHandler(AbstractToolHandler):
             for s in results
         ]
 
-        return [TextContent(
-            type="text",
-            text=json.dumps({"results": summaries, "count": len(summaries)}, indent=2),
-        )]
+        return [
+            TextContent(
+                type="text",
+                text=json.dumps({"results": summaries, "count": len(summaries)}, indent=2),
+            )
+        ]
 
     async def handle_execute_skill(
         self,
@@ -225,36 +234,47 @@ class SkillsToolHandler(AbstractToolHandler):
         """
         # Check feature flag
         if not feature_flags.enable_skills_system:
-            return [TextContent(
-                type="text",
-                text="Skills system is disabled. Enable with FF_ENABLE_SKILLS_SYSTEM=true",
-            )]
+            return [
+                TextContent(
+                    type="text",
+                    text="Skills system is disabled. Enable with FF_ENABLE_SKILLS_SYSTEM=true",
+                )
+            ]
 
         name = arguments.get("name", "")
         skill_args = arguments.get("args", {})
 
         skill = self.skill_registry.get(name)
         if skill is None:
-            return [TextContent(
-                type="text",
-                text=f"Skill not found: {name}",
-            )]
+            return [
+                TextContent(
+                    type="text",
+                    text=f"Skill not found: {name}",
+                )
+            ]
 
         # Validate secrets if required
         available_secrets = arguments.get("secrets", {})
         validation = self.skill_executor.validate_secrets(skill, available_secrets)
         if not validation.is_valid:
-            return [TextContent(
-                type="text",
-                text=f"Missing required secrets: {', '.join(validation.missing_secrets)}",
-            )]
+            return [
+                TextContent(
+                    type="text",
+                    text=f"Missing required secrets: {', '.join(validation.missing_secrets)}",
+                )
+            ]
 
         # Execute skill (placeholder - actual execution would use sandbox)
-        return [TextContent(
-            type="text",
-            text=json.dumps({
-                "skill": name,
-                "status": "executed",
-                "message": f"Skill '{name}' executed successfully",
-            }, indent=2),
-        )]
+        return [
+            TextContent(
+                type="text",
+                text=json.dumps(
+                    {
+                        "skill": name,
+                        "status": "executed",
+                        "message": f"Skill '{name}' executed successfully",
+                    },
+                    indent=2,
+                ),
+            )
+        ]

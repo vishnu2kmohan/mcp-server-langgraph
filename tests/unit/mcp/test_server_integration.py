@@ -22,6 +22,7 @@ from mcp_server_langgraph.core.config import Settings
 
 pytestmark = pytest.mark.unit
 
+
 def create_mock_token_verification() -> TokenVerification:
     """Create a mock token verification result for tests."""
     return TokenVerification(
@@ -67,9 +68,7 @@ class TestSkillsToolRegistration:
         mock_graph = MagicMock()
         mock_settings = create_test_settings()
 
-        with patch(
-            "mcp_server_langgraph.mcp.server_streamable.feature_flags"
-        ) as mock_flags:
+        with patch("mcp_server_langgraph.mcp.server_streamable.feature_flags") as mock_flags:
             mock_flags.enable_skills_system = True
             mock_flags.enable_multi_agent_orchestration = False
             mock_flags.enable_think_tool = False
@@ -92,9 +91,7 @@ class TestSkillsToolRegistration:
         mock_graph = MagicMock()
         mock_settings = create_test_settings()
 
-        with patch(
-            "mcp_server_langgraph.mcp.server_streamable.feature_flags"
-        ) as mock_flags:
+        with patch("mcp_server_langgraph.mcp.server_streamable.feature_flags") as mock_flags:
             mock_flags.enable_skills_system = False
             mock_flags.enable_multi_agent_orchestration = False
             mock_flags.enable_think_tool = False
@@ -127,9 +124,7 @@ class TestAgentsToolRegistration:
         mock_graph = MagicMock()
         mock_settings = create_test_settings()
 
-        with patch(
-            "mcp_server_langgraph.mcp.server_streamable.feature_flags"
-        ) as mock_flags:
+        with patch("mcp_server_langgraph.mcp.server_streamable.feature_flags") as mock_flags:
             mock_flags.enable_multi_agent_orchestration = True
             mock_flags.enable_skills_system = False
             mock_flags.enable_think_tool = False
@@ -152,9 +147,7 @@ class TestAgentsToolRegistration:
         mock_graph = MagicMock()
         mock_settings = create_test_settings()
 
-        with patch(
-            "mcp_server_langgraph.mcp.server_streamable.feature_flags"
-        ) as mock_flags:
+        with patch("mcp_server_langgraph.mcp.server_streamable.feature_flags") as mock_flags:
             mock_flags.enable_multi_agent_orchestration = False
             mock_flags.enable_skills_system = False
             mock_flags.enable_think_tool = False
@@ -189,9 +182,7 @@ class TestSkillsRouting:
         mock_graph = MagicMock()
         mock_settings = create_test_settings()
 
-        with patch(
-            "mcp_server_langgraph.mcp.server_streamable.feature_flags"
-        ) as mock_flags:
+        with patch("mcp_server_langgraph.mcp.server_streamable.feature_flags") as mock_flags:
             mock_flags.enable_skills_system = True
             mock_flags.enable_multi_agent_orchestration = False
             mock_flags.enable_think_tool = False
@@ -202,9 +193,7 @@ class TestSkillsRouting:
             )
 
             # Mock auth to bypass token verification and authorization
-            server.auth.verify_token = AsyncMock(
-                return_value=create_mock_token_verification()
-            )
+            server.auth.verify_token = AsyncMock(return_value=create_mock_token_verification())
             server.auth.authorize = AsyncMock(return_value=True)
 
             # Call skills tool with list operation
@@ -231,9 +220,7 @@ class TestSkillsRouting:
         mock_graph = MagicMock()
         mock_settings = create_test_settings()
 
-        with patch(
-            "mcp_server_langgraph.mcp.server_streamable.feature_flags"
-        ) as mock_flags:
+        with patch("mcp_server_langgraph.mcp.server_streamable.feature_flags") as mock_flags:
             mock_flags.enable_skills_system = True
             mock_flags.enable_multi_agent_orchestration = False
             mock_flags.enable_think_tool = False
@@ -244,9 +231,7 @@ class TestSkillsRouting:
             )
 
             # Mock auth to bypass token verification and authorization
-            server.auth.verify_token = AsyncMock(
-                return_value=create_mock_token_verification()
-            )
+            server.auth.verify_token = AsyncMock(return_value=create_mock_token_verification())
             server.auth.authorize = AsyncMock(return_value=True)
 
             result = await server._call_tool_handler(
@@ -284,15 +269,9 @@ class TestAgentsRouting:
         mock_settings = create_test_settings()
 
         with (
-            patch(
-                "mcp_server_langgraph.mcp.server_streamable.feature_flags"
-            ) as mock_flags,
-            patch(
-                "mcp_server_langgraph.agents.orchestrator.feature_flags"
-            ) as mock_orch_flags,
-            patch(
-                "mcp_server_langgraph.core.feature_flags.feature_flags"
-            ) as mock_core_flags,
+            patch("mcp_server_langgraph.mcp.server_streamable.feature_flags") as mock_flags,
+            patch("mcp_server_langgraph.agents.orchestrator.feature_flags") as mock_orch_flags,
+            patch("mcp_server_langgraph.core.feature_flags.feature_flags") as mock_core_flags,
         ):
             # Configure all mocked feature_flags instances
             for mf in [mock_flags, mock_orch_flags, mock_core_flags]:
@@ -310,9 +289,7 @@ class TestAgentsRouting:
             )
 
             # Mock auth to bypass token verification and authorization
-            server.auth.verify_token = AsyncMock(
-                return_value=create_mock_token_verification()
-            )
+            server.auth.verify_token = AsyncMock(return_value=create_mock_token_verification())
             server.auth.authorize = AsyncMock(return_value=True)
 
             result = await server._call_tool_handler(
@@ -338,9 +315,7 @@ class TestAgentsRouting:
         mock_graph = MagicMock()
         mock_settings = create_test_settings()
 
-        with patch(
-            "mcp_server_langgraph.mcp.server_streamable.feature_flags"
-        ) as mock_flags:
+        with patch("mcp_server_langgraph.mcp.server_streamable.feature_flags") as mock_flags:
             mock_flags.enable_multi_agent_orchestration = True
             mock_flags.enable_skills_system = False
             mock_flags.enable_think_tool = False
@@ -351,9 +326,7 @@ class TestAgentsRouting:
             )
 
             # Mock auth to bypass token verification and authorization
-            server.auth.verify_token = AsyncMock(
-                return_value=create_mock_token_verification()
-            )
+            server.auth.verify_token = AsyncMock(return_value=create_mock_token_verification())
             server.auth.authorize = AsyncMock(return_value=True)
 
             result = await server._call_tool_handler(
@@ -397,9 +370,7 @@ class TestSecurityHooksIntegration:
         )
 
         # Verify server has security_hooks attribute after wiring
-        assert hasattr(server, "security_hooks") or hasattr(
-            server, "_security_hook_registry"
-        )
+        assert hasattr(server, "security_hooks") or hasattr(server, "_security_hook_registry")
 
     @pytest.mark.asyncio
     async def test_denied_hook_prevents_tool_execution(self) -> None:
@@ -416,16 +387,12 @@ class TestSecurityHooksIntegration:
         )
 
         # Mock auth to bypass token verification and authorization
-        server.auth.verify_token = AsyncMock(
-            return_value=create_mock_token_verification()
-        )
+        server.auth.verify_token = AsyncMock(return_value=create_mock_token_verification())
         server.auth.authorize = AsyncMock(return_value=True)
 
         # Mock the hook registry to deny
         mock_registry = MagicMock()
-        mock_registry.execute_hooks = AsyncMock(
-            return_value=HookResult.deny("PII detected - blocked")
-        )
+        mock_registry.execute_hooks = AsyncMock(return_value=HookResult.deny("PII detected - blocked"))
         server._security_hook_registry = mock_registry
 
         # Tool call should be blocked by the security hook
@@ -458,9 +425,7 @@ class TestThinkToolRegistration:
         mock_graph = MagicMock()
         mock_settings = create_test_settings()
 
-        with patch(
-            "mcp_server_langgraph.mcp.server_streamable.feature_flags"
-        ) as mock_flags:
+        with patch("mcp_server_langgraph.mcp.server_streamable.feature_flags") as mock_flags:
             mock_flags.enable_think_tool = True
             mock_flags.enable_skills_system = False
             mock_flags.enable_multi_agent_orchestration = False
@@ -483,9 +448,7 @@ class TestThinkToolRegistration:
         mock_graph = MagicMock()
         mock_settings = create_test_settings()
 
-        with patch(
-            "mcp_server_langgraph.mcp.server_streamable.feature_flags"
-        ) as mock_flags:
+        with patch("mcp_server_langgraph.mcp.server_streamable.feature_flags") as mock_flags:
             mock_flags.enable_think_tool = False
             mock_flags.enable_skills_system = False
             mock_flags.enable_multi_agent_orchestration = False
@@ -520,9 +483,7 @@ class TestThinkToolRouting:
         mock_graph = MagicMock()
         mock_settings = create_test_settings()
 
-        with patch(
-            "mcp_server_langgraph.mcp.server_streamable.feature_flags"
-        ) as mock_flags:
+        with patch("mcp_server_langgraph.mcp.server_streamable.feature_flags") as mock_flags:
             mock_flags.enable_think_tool = True
             mock_flags.enable_skills_system = False
             mock_flags.enable_multi_agent_orchestration = False
@@ -533,9 +494,7 @@ class TestThinkToolRouting:
             )
 
             # Mock auth to bypass token verification and authorization
-            server.auth.verify_token = AsyncMock(
-                return_value=create_mock_token_verification()
-            )
+            server.auth.verify_token = AsyncMock(return_value=create_mock_token_verification())
             server.auth.authorize = AsyncMock(return_value=True)
 
             result = await server._call_tool_handler(

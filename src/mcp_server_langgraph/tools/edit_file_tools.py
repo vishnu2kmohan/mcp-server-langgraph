@@ -100,9 +100,7 @@ def edit_file(
     file_path: Annotated[str, Field(description="Path to the file to edit")],
     old_string: Annotated[str, Field(description="Exact text to find and replace")],
     new_string: Annotated[str, Field(description="Replacement text")],
-    replace_all: Annotated[
-        bool, Field(description="Replace all occurrences (default: replace only first)")
-    ] = False,
+    replace_all: Annotated[bool, Field(description="Replace all occurrences (default: replace only first)")] = False,
 ) -> str:
     """
     Make precise edits to an existing file by replacing text.
@@ -120,12 +118,15 @@ def edit_file(
     SECURITY: Restricted to workspace directory.
     """
     try:
-        logger.info("Edit file tool invoked", extra={
-            "file_path": file_path,
-            "old_string_len": len(old_string),
-            "new_string_len": len(new_string),
-            "replace_all": replace_all,
-        })
+        logger.info(
+            "Edit file tool invoked",
+            extra={
+                "file_path": file_path,
+                "old_string_len": len(old_string),
+                "new_string_len": len(new_string),
+                "replace_all": replace_all,
+            },
+        )
         metrics.tool_calls.add(1, {"tool": "edit_file"})
 
         # Validate old_string is not empty
@@ -182,7 +183,7 @@ def edit_file(
 
         # Handle no-op case (old_string == new_string)
         if old_string == new_string:
-            return f"No changes made: old_string and new_string are identical"
+            return "No changes made: old_string and new_string are identical"
 
         # Write the modified content
         resolved_path.write_text(new_content, encoding="utf-8")
@@ -194,11 +195,14 @@ def edit_file(
         if not replace_all and occurrence_count > 1:
             result += f"\nNote: {occurrence_count - 1} additional occurrence(s) were not replaced. Use replace_all=True to replace all."
 
-        logger.info("File edited", extra={
-            "file_path": file_path,
-            "replacements": replacements_made,
-            "total_occurrences": occurrence_count,
-        })
+        logger.info(
+            "File edited",
+            extra={
+                "file_path": file_path,
+                "replacements": replacements_made,
+                "total_occurrences": occurrence_count,
+            },
+        )
 
         return result
 

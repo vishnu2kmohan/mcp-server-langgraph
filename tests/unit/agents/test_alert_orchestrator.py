@@ -11,7 +11,7 @@ TDD: Tests written FIRST before implementation.
 """
 
 import gc
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
@@ -145,7 +145,6 @@ class TestAlertAnalysisTask:
         """Test that AlertAnalysisTask supports all analysis types."""
         from mcp_server_langgraph.agents.alert_orchestrator import (
             ALERT_ANALYSIS_TYPES,
-            AlertAnalysisTask,
         )
 
         # Check all types are defined
@@ -429,7 +428,6 @@ class TestAlertOrchestratorInheritance:
 
     def test_alert_orchestrator_inherits_execute_method(self) -> None:
         """Test that AlertOrchestrator uses inherited execute method."""
-        from mcp_server_langgraph.agents.base_orchestrator import BaseOrchestrator
         from mcp_server_langgraph.agents.alert_orchestrator import AlertOrchestrator
 
         assert AlertOrchestrator.execute is not None
@@ -473,9 +471,11 @@ class TestAlertOrchestratorPatternDetection:
         from mcp_server_langgraph.agents.alert_orchestrator import AlertOrchestrator
 
         mock_engine = MagicMock()
-        mock_engine.detect_patterns = MagicMock(return_value=[
-            {"type": "cascade", "alerts": ["a1", "a2"]},
-        ])
+        mock_engine.detect_patterns = MagicMock(
+            return_value=[
+                {"type": "cascade", "alerts": ["a1", "a2"]},
+            ]
+        )
 
         orchestrator = AlertOrchestrator(correlation_engine=mock_engine)
 

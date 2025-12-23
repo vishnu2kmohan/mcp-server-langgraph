@@ -422,9 +422,7 @@ class AlertCorrelationEngine:
         alerts: list[CorrelatedAlert],
     ) -> PatternResult:
         """Check for resource exhaustion pattern."""
-        resource_alerts = [
-            a for a in alerts if a.name.lower() in RESOURCE_ALERT_NAMES
-        ]
+        resource_alerts = [a for a in alerts if a.name.lower() in RESOURCE_ALERT_NAMES]
 
         if len(resource_alerts) < 2:
             return PatternResult(
@@ -444,9 +442,7 @@ class AlertCorrelationEngine:
             pattern_type=PatternType.RESOURCE_EXHAUSTION,
             confidence=confidence,
             description="Multiple resource alerts from same host",
-            affected_services=[
-                a.labels.get("service", "unknown") for a in resource_alerts
-            ],
+            affected_services=[a.labels.get("service", "unknown") for a in resource_alerts],
         )
 
     def _check_cascading_failure(

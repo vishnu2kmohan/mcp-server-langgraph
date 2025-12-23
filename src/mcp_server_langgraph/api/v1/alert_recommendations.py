@@ -39,7 +39,6 @@ from mcp_server_langgraph.alerts.stores import (
     InMemoryAlertStore,
 )
 from mcp_server_langgraph.core.config import settings
-from mcp_server_langgraph.core.feature_flags import feature_flags
 from mcp_server_langgraph.observability.query.interfaces import (
     Alert,
     AlertSeverity,
@@ -83,10 +82,7 @@ def _get_recommendation_get_bucket() -> TokenBucket:
         refill_rate = _RECOMMENDATION_GET_RPM / 60.0
         capacity = refill_rate * 10  # 10 seconds burst
         _recommendation_get_bucket = TokenBucket(capacity=capacity, refill_rate=refill_rate)
-        logger.info(
-            f"Created recommendation GET rate limiter: {_RECOMMENDATION_GET_RPM} RPM, "
-            f"burst capacity {capacity:.1f}"
-        )
+        logger.info(f"Created recommendation GET rate limiter: {_RECOMMENDATION_GET_RPM} RPM, burst capacity {capacity:.1f}")
     return _recommendation_get_bucket
 
 
@@ -221,6 +217,7 @@ _alert_orchestrator: "AlertOrchestrator | None" = None
 
 # Type for AlertOrchestrator (imported lazily to avoid circular imports)
 from typing import TYPE_CHECKING as _TYPE_CHECKING
+
 if _TYPE_CHECKING:
     from mcp_server_langgraph.agents.alert_orchestrator import AlertOrchestrator
 
@@ -656,10 +653,7 @@ async def correlate_alerts(
             )
         )
 
-    logger.info(
-        f"Correlated {len(all_alerts)} alerts into {len(response_groups)} groups "
-        f"(type={request.correlation_type})"
-    )
+    logger.info(f"Correlated {len(all_alerts)} alerts into {len(response_groups)} groups (type={request.correlation_type})")
 
     return CorrelateAlertsResponse(
         groups=response_groups,

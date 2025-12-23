@@ -39,9 +39,7 @@ class TestConnectionHealthHandlerInit:
         mock_repo = MagicMock()
 
         with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
-            handler = ConnectionHealthHandler(
-                config=config, connection_repository=mock_repo, owner_id="owner-123"
-            )
+            handler = ConnectionHealthHandler(config=config, connection_repository=mock_repo, owner_id="owner-123")
 
         assert handler._connection_repository is mock_repo
         assert handler._owner_id == "owner-123"
@@ -68,9 +66,7 @@ class TestConnectionHealthHandlerLifecycle:
         mock_repo = MagicMock()
 
         with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
-            handler = ConnectionHealthHandler(
-                config=config, connection_repository=mock_repo, owner_id="owner-123"
-            )
+            handler = ConnectionHealthHandler(config=config, connection_repository=mock_repo, owner_id="owner-123")
 
         user = AuthUser(id="user-123", username="testuser")
 
@@ -89,9 +85,7 @@ class TestConnectionHealthHandlerLifecycle:
         mock_repo = MagicMock()
 
         with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
-            handler = ConnectionHealthHandler(
-                config=config, connection_repository=mock_repo, owner_id="owner-123"
-            )
+            handler = ConnectionHealthHandler(config=config, connection_repository=mock_repo, owner_id="owner-123")
 
         handler._subscriptions = {"conn-1", "conn-2"}
 
@@ -128,9 +122,7 @@ class TestConnectionHealthHandlerMessages:
         mock_repo.list.return_value = ([mock_conn], None)
 
         with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
-            handler = ConnectionHealthHandler(
-                config=config, connection_repository=mock_repo, owner_id="owner-123"
-            )
+            handler = ConnectionHealthHandler(config=config, connection_repository=mock_repo, owner_id="owner-123")
 
         message = MessageEnvelope(type="refresh", id="msg-1")
         response = await handler.handle_message(message)
@@ -153,9 +145,7 @@ class TestConnectionHealthHandlerMessages:
         mock_repo.list.side_effect = Exception("Database error")
 
         with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
-            handler = ConnectionHealthHandler(
-                config=config, connection_repository=mock_repo, owner_id="owner-123"
-            )
+            handler = ConnectionHealthHandler(config=config, connection_repository=mock_repo, owner_id="owner-123")
 
         message = MessageEnvelope(type="refresh", id="msg-1")
         response = await handler.handle_message(message)
@@ -176,9 +166,7 @@ class TestConnectionHealthHandlerMessages:
         mock_repo = AsyncMock()
 
         with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
-            handler = ConnectionHealthHandler(
-                config=config, connection_repository=mock_repo, owner_id="owner-123"
-            )
+            handler = ConnectionHealthHandler(config=config, connection_repository=mock_repo, owner_id="owner-123")
 
         message = MessageEnvelope(type="invalid", id="msg-2")
         response = await handler.handle_message(message)

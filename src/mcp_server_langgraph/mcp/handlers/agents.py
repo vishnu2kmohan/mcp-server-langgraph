@@ -153,22 +153,27 @@ class AgentsToolHandler(AbstractToolHandler):
 
         decomposition = self.orchestrator.decompose_task(task, num_subtasks)
 
-        return [TextContent(
-            type="text",
-            text=json.dumps({
-                "original_task": decomposition.original_task,
-                "subtasks": [
+        return [
+            TextContent(
+                type="text",
+                text=json.dumps(
                     {
-                        "task_id": st.task_id,
-                        "title": st.title,
-                        "instructions": st.instructions,
-                        "complexity": st.complexity,
-                    }
-                    for st in decomposition.subtasks
-                ],
-                "synthesis_instructions": decomposition.synthesis_instructions,
-            }, indent=2),
-        )]
+                        "original_task": decomposition.original_task,
+                        "subtasks": [
+                            {
+                                "task_id": st.task_id,
+                                "title": st.title,
+                                "instructions": st.instructions,
+                                "complexity": st.complexity,
+                            }
+                            for st in decomposition.subtasks
+                        ],
+                        "synthesis_instructions": decomposition.synthesis_instructions,
+                    },
+                    indent=2,
+                ),
+            )
+        ]
 
     async def handle_orchestrate(
         self,
@@ -188,10 +193,12 @@ class AgentsToolHandler(AbstractToolHandler):
         """
         # Check feature flag
         if not feature_flags.enable_multi_agent_orchestration:
-            return [TextContent(
-                type="text",
-                text="Multi-agent orchestration is disabled. Enable with FF_ENABLE_MULTI_AGENT_ORCHESTRATION=true",
-            )]
+            return [
+                TextContent(
+                    type="text",
+                    text="Multi-agent orchestration is disabled. Enable with FF_ENABLE_MULTI_AGENT_ORCHESTRATION=true",
+                )
+            ]
 
         task = arguments.get("task", "")
         strategy = arguments.get("strategy", "parallel")
@@ -226,29 +233,39 @@ class AgentsToolHandler(AbstractToolHandler):
             self._orchestrations[orchestration_id]["status"] = "completed"
             self._orchestrations[orchestration_id]["results"] = synthesis
 
-            return [TextContent(
-                type="text",
-                text=json.dumps({
-                    "orchestration_id": orchestration_id,
-                    "status": "completed",
-                    "subtask_count": len(results),
-                    "successful_count": sum(1 for r in results if r.success),
-                    "synthesis": synthesis,
-                }, indent=2),
-            )]
+            return [
+                TextContent(
+                    type="text",
+                    text=json.dumps(
+                        {
+                            "orchestration_id": orchestration_id,
+                            "status": "completed",
+                            "subtask_count": len(results),
+                            "successful_count": sum(1 for r in results if r.success),
+                            "synthesis": synthesis,
+                        },
+                        indent=2,
+                    ),
+                )
+            ]
 
         except Exception as e:
             self._orchestrations[orchestration_id]["status"] = "failed"
             self._orchestrations[orchestration_id]["error"] = str(e)
 
-            return [TextContent(
-                type="text",
-                text=json.dumps({
-                    "orchestration_id": orchestration_id,
-                    "status": "failed",
-                    "error": str(e),
-                }, indent=2),
-            )]
+            return [
+                TextContent(
+                    type="text",
+                    text=json.dumps(
+                        {
+                            "orchestration_id": orchestration_id,
+                            "status": "failed",
+                            "error": str(e),
+                        },
+                        indent=2,
+                    ),
+                )
+            ]
 
     async def handle_get_status(
         self,
@@ -269,22 +286,32 @@ class AgentsToolHandler(AbstractToolHandler):
         orchestration_id = arguments.get("orchestration_id", "")
 
         if orchestration_id not in self._orchestrations:
-            return [TextContent(
-                type="text",
-                text=json.dumps({
-                    "error": f"Orchestration not found: {orchestration_id}",
-                }, indent=2),
-            )]
+            return [
+                TextContent(
+                    type="text",
+                    text=json.dumps(
+                        {
+                            "error": f"Orchestration not found: {orchestration_id}",
+                        },
+                        indent=2,
+                    ),
+                )
+            ]
 
         orch = self._orchestrations[orchestration_id]
-        return [TextContent(
-            type="text",
-            text=json.dumps({
-                "orchestration_id": orch["id"],
-                "status": orch["status"],
-                "task": orch["task"],
-            }, indent=2),
-        )]
+        return [
+            TextContent(
+                type="text",
+                text=json.dumps(
+                    {
+                        "orchestration_id": orch["id"],
+                        "status": orch["status"],
+                        "task": orch["task"],
+                    },
+                    indent=2,
+                ),
+            )
+        ]
 
     async def handle_cancel(
         self,
@@ -305,12 +332,17 @@ class AgentsToolHandler(AbstractToolHandler):
         orchestration_id = arguments.get("orchestration_id", "")
 
         if orchestration_id not in self._orchestrations:
-            return [TextContent(
-                type="text",
-                text=json.dumps({
-                    "error": f"Orchestration not found: {orchestration_id}",
-                }, indent=2),
-            )]
+            return [
+                TextContent(
+                    type="text",
+                    text=json.dumps(
+                        {
+                            "error": f"Orchestration not found: {orchestration_id}",
+                        },
+                        indent=2,
+                    ),
+                )
+            ]
 
         orch = self._orchestrations[orchestration_id]
         if orch["status"] == "running":
@@ -318,14 +350,19 @@ class AgentsToolHandler(AbstractToolHandler):
             self.orchestrator.coordinator.cancel_all()
             orch["status"] = "cancelled"
 
-        return [TextContent(
-            type="text",
-            text=json.dumps({
-                "orchestration_id": orchestration_id,
-                "status": orch["status"],
-                "message": "Orchestration cancelled",
-            }, indent=2),
-        )]
+        return [
+            TextContent(
+                type="text",
+                text=json.dumps(
+                    {
+                        "orchestration_id": orchestration_id,
+                        "status": orch["status"],
+                        "message": "Orchestration cancelled",
+                    },
+                    indent=2,
+                ),
+            )
+        ]
 
     async def handle_select_model(
         self,
@@ -355,12 +392,17 @@ class AgentsToolHandler(AbstractToolHandler):
 
         verifier = self.model_selector.select_verifier("auto")
 
-        return [TextContent(
-            type="text",
-            text=json.dumps({
-                "model": model,
-                "verifier": verifier,
-                "primary_vendor": self.model_selector.primary_vendor,
-                "available_vendors": self.model_selector.available_vendors,
-            }, indent=2),
-        )]
+        return [
+            TextContent(
+                type="text",
+                text=json.dumps(
+                    {
+                        "model": model,
+                        "verifier": verifier,
+                        "primary_vendor": self.model_selector.primary_vendor,
+                        "available_vendors": self.model_selector.available_vendors,
+                    },
+                    indent=2,
+                ),
+            )
+        ]

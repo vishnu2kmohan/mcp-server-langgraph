@@ -54,6 +54,7 @@ SAMPLE_PERSONA_LLM_RESPONSE = """{
 def artifact_storage():
     """Create ArtifactStorage instance."""
     from mcp_server_langgraph.agents.artifacts import ArtifactStorage
+
     return ArtifactStorage()
 
 
@@ -86,9 +87,7 @@ class TestAIUXServiceArtifactStorageParam:
         """Force GC to prevent mock accumulation in xdist workers."""
         gc.collect()
 
-    def test_service_accepts_artifact_storage(
-        self, mock_llm_factory, mock_settings, artifact_storage
-    ):
+    def test_service_accepts_artifact_storage(self, mock_llm_factory, mock_settings, artifact_storage):
         """AIUXService can be initialized with optional ArtifactStorage."""
         from mcp_server_langgraph.api.v1.ai_ux_service import AIUXService
 
@@ -99,9 +98,7 @@ class TestAIUXServiceArtifactStorageParam:
         )
         assert service.artifact_storage is artifact_storage
 
-    def test_service_works_without_artifact_storage(
-        self, mock_llm_factory, mock_settings
-    ):
+    def test_service_works_without_artifact_storage(self, mock_llm_factory, mock_settings):
         """AIUXService works without ArtifactStorage (backward compatible)."""
         from mcp_server_langgraph.api.v1.ai_ux_service import AIUXService
 
@@ -121,16 +118,12 @@ class TestSessionContextStorage:
         gc.collect()
 
     @pytest.mark.asyncio
-    async def test_persona_analysis_stores_to_session(
-        self, mock_llm_factory, mock_settings, artifact_storage
-    ):
+    async def test_persona_analysis_stores_to_session(self, mock_llm_factory, mock_settings, artifact_storage):
         """Persona analysis stores results to session context."""
         from mcp_server_langgraph.api.v1.ai_ux_service import AIUXService
         from mcp_server_langgraph.api.v1.ai_ux import PersonaAnalyzeRequest
 
-        mock_llm_factory.ainvoke = AsyncMock(
-            return_value=AIMessage(content=SAMPLE_PERSONA_LLM_RESPONSE)
-        )
+        mock_llm_factory.ainvoke = AsyncMock(return_value=AIMessage(content=SAMPLE_PERSONA_LLM_RESPONSE))
 
         service = AIUXService(
             llm_factory=mock_llm_factory,
@@ -153,16 +146,12 @@ class TestSessionContextStorage:
         assert stored["detected_persona"] == "alice-builder"
 
     @pytest.mark.asyncio
-    async def test_error_analysis_stores_to_session(
-        self, mock_llm_factory, mock_settings, artifact_storage
-    ):
+    async def test_error_analysis_stores_to_session(self, mock_llm_factory, mock_settings, artifact_storage):
         """Error analysis stores results to session context."""
         from mcp_server_langgraph.api.v1.ai_ux_service import AIUXService
         from mcp_server_langgraph.api.v1.ai_ux import ErrorInfo, UserContext
 
-        mock_llm_factory.ainvoke = AsyncMock(
-            return_value=AIMessage(content=SAMPLE_ERROR_LLM_RESPONSE)
-        )
+        mock_llm_factory.ainvoke = AsyncMock(return_value=AIMessage(content=SAMPLE_ERROR_LLM_RESPONSE))
 
         service = AIUXService(
             llm_factory=mock_llm_factory,
@@ -189,9 +178,7 @@ class TestCrossServiceContextRetrieval:
         gc.collect()
 
     @pytest.mark.asyncio
-    async def test_nudge_uses_persona_context(
-        self, mock_llm_factory, mock_settings, artifact_storage
-    ):
+    async def test_nudge_uses_persona_context(self, mock_llm_factory, mock_settings, artifact_storage):
         """Nudge recommendation uses stored persona context."""
         from mcp_server_langgraph.api.v1.ai_ux_service import AIUXService
         from mcp_server_langgraph.api.v1.ai_ux import NudgeRecommendRequest
@@ -208,7 +195,8 @@ class TestCrossServiceContextRetrieval:
         )
 
         mock_llm_factory.ainvoke = AsyncMock(
-            return_value=AIMessage(content="""{
+            return_value=AIMessage(
+                content="""{
                 "should_show": true,
                 "nudge": {
                     "id": "advanced-features",
@@ -219,7 +207,8 @@ class TestCrossServiceContextRetrieval:
                     "show_after_ms": 2000
                 },
                 "confidence": 0.82
-            }""")
+            }"""
+            )
         )
 
         service = AIUXService(
@@ -240,9 +229,7 @@ class TestCrossServiceContextRetrieval:
         assert persona_context is not None
         assert persona_context["detected_persona"] == "alice-builder"
 
-    def test_get_session_context_returns_none_when_not_found(
-        self, mock_llm_factory, mock_settings, artifact_storage
-    ):
+    def test_get_session_context_returns_none_when_not_found(self, mock_llm_factory, mock_settings, artifact_storage):
         """get_session_context returns None when context not found."""
         from mcp_server_langgraph.api.v1.ai_ux_service import AIUXService
 
@@ -255,9 +242,7 @@ class TestCrossServiceContextRetrieval:
         result = service.get_session_context("unknown-session", "persona_analysis")
         assert result is None
 
-    def test_get_session_context_works_without_artifact_storage(
-        self, mock_llm_factory, mock_settings
-    ):
+    def test_get_session_context_works_without_artifact_storage(self, mock_llm_factory, mock_settings):
         """get_session_context returns None when ArtifactStorage not configured."""
         from mcp_server_langgraph.api.v1.ai_ux_service import AIUXService
 
@@ -280,15 +265,12 @@ class TestSessionContextAccumulation:
         gc.collect()
 
     @pytest.mark.asyncio
-    async def test_multiple_analyses_accumulate_in_session(
-        self, mock_llm_factory, mock_settings, artifact_storage
-    ):
+    async def test_multiple_analyses_accumulate_in_session(self, mock_llm_factory, mock_settings, artifact_storage):
         """Multiple analyses accumulate in session context."""
         from mcp_server_langgraph.api.v1.ai_ux_service import AIUXService
         from mcp_server_langgraph.api.v1.ai_ux import (
             ErrorInfo,
             PersonaAnalyzeRequest,
-            UserContext,
         )
 
         service = AIUXService(
@@ -298,9 +280,7 @@ class TestSessionContextAccumulation:
         )
 
         # First: persona analysis
-        mock_llm_factory.ainvoke = AsyncMock(
-            return_value=AIMessage(content=SAMPLE_PERSONA_LLM_RESPONSE)
-        )
+        mock_llm_factory.ainvoke = AsyncMock(return_value=AIMessage(content=SAMPLE_PERSONA_LLM_RESPONSE))
         persona_request = PersonaAnalyzeRequest(
             user_id="user-123",
             assigned_persona="bob",
@@ -308,9 +288,7 @@ class TestSessionContextAccumulation:
         await service.analyze_persona(persona_request, session_id="session-456")
 
         # Second: error analysis
-        mock_llm_factory.ainvoke = AsyncMock(
-            return_value=AIMessage(content=SAMPLE_ERROR_LLM_RESPONSE)
-        )
+        mock_llm_factory.ainvoke = AsyncMock(return_value=AIMessage(content=SAMPLE_ERROR_LLM_RESPONSE))
         error = ErrorInfo(name="TimeoutError", message="Request timed out")
         await service.analyze_error(error, None, session_id="session-456")
 
@@ -321,9 +299,7 @@ class TestSessionContextAccumulation:
         assert "persona_analysis" in artifact_names
         assert "error_analysis" in artifact_names
 
-    def test_get_all_session_context(
-        self, mock_llm_factory, mock_settings, artifact_storage
-    ):
+    def test_get_all_session_context(self, mock_llm_factory, mock_settings, artifact_storage):
         """Can retrieve all context for a session."""
         from mcp_server_langgraph.api.v1.ai_ux_service import AIUXService
 

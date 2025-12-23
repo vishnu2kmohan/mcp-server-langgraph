@@ -336,8 +336,7 @@ def approval_with_explanation_to_elicitation(
         if safer_alternatives:
             alt_values = ["original"] + [f"alt_{i}" for i in range(len(safer_alternatives))]
             alt_names = [action_description] + [
-                f"{alt.action} (confidence: {alt.confidence:.0%})"
-                for alt in safer_alternatives
+                f"{alt.action} (confidence: {alt.confidence:.0%})" for alt in safer_alternatives
             ]
 
             properties["selected_action"] = {

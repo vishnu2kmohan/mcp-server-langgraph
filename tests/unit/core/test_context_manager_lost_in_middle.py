@@ -32,8 +32,8 @@ if TYPE_CHECKING:
     pass
 
 
-
 pytestmark = pytest.mark.unit
+
 
 @pytest.mark.unit
 @pytest.mark.core
@@ -224,9 +224,7 @@ class TestCompactionWithReordering:
 
         # Mock the summarization model
         mock_llm = MagicMock()
-        mock_llm.ainvoke = AsyncMock(
-            return_value=AIMessage(content="Summary: Previous discussion about project setup.")
-        )
+        mock_llm.ainvoke = AsyncMock(return_value=AIMessage(content="Summary: Previous discussion about project setup."))
 
         with patch("mcp_server_langgraph.core.context_manager.create_summarization_model", return_value=mock_llm):
             with patch("mcp_server_langgraph.core.feature_flags.feature_flags") as mock_flags:
@@ -259,8 +257,7 @@ class TestCompactionWithReordering:
 
         # Find summary position
         summary_positions = [
-            i for i, msg in enumerate(compacted)
-            if isinstance(msg, SystemMessage) and "summary" in msg.content.lower()
+            i for i, msg in enumerate(compacted) if isinstance(msg, SystemMessage) and "summary" in msg.content.lower()
         ]
 
         # Summary should exist

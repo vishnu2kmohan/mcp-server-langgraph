@@ -18,7 +18,7 @@ from __future__ import annotations
 
 import gc
 from datetime import UTC, datetime
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock
 
 import pytest
 
@@ -62,9 +62,7 @@ class TestRemediationApprovalRouter:
         )
 
         routes = [r for r in remediation_approval_router.routes]
-        pending_routes = [
-            r for r in routes if hasattr(r, "path") and "pending" in r.path
-        ]
+        pending_routes = [r for r in routes if hasattr(r, "path") and "pending" in r.path]
         assert len(pending_routes) > 0, "Should have /remediations/pending route"
 
     def test_approve_endpoint_exists(self) -> None:
@@ -78,9 +76,7 @@ class TestRemediationApprovalRouter:
         )
 
         routes = [r for r in remediation_approval_router.routes]
-        approve_routes = [
-            r for r in routes if hasattr(r, "path") and "approve" in r.path
-        ]
+        approve_routes = [r for r in routes if hasattr(r, "path") and "approve" in r.path]
         assert len(approve_routes) > 0, "Should have approve route"
 
     def test_reject_endpoint_exists(self) -> None:
@@ -94,9 +90,7 @@ class TestRemediationApprovalRouter:
         )
 
         routes = [r for r in remediation_approval_router.routes]
-        reject_routes = [
-            r for r in routes if hasattr(r, "path") and "reject" in r.path
-        ]
+        reject_routes = [r for r in routes if hasattr(r, "path") and "reject" in r.path]
         assert len(reject_routes) > 0, "Should have reject route"
 
 
@@ -843,9 +837,7 @@ class TestRemediationFeedbackIntegration:
         sig = inspect.signature(reject_remediation)
         param_names = list(sig.parameters.keys())
 
-        assert "feedback_store" in param_names, (
-            "Endpoint should have feedback_store for AI learning"
-        )
+        assert "feedback_store" in param_names, "Endpoint should have feedback_store for AI learning"
 
     def test_approve_endpoint_has_feedback_store_parameter(self) -> None:
         """
@@ -861,9 +853,7 @@ class TestRemediationFeedbackIntegration:
         sig = inspect.signature(approve_remediation)
         param_names = list(sig.parameters.keys())
 
-        assert "feedback_store" in param_names, (
-            "Endpoint should have feedback_store for AI learning"
-        )
+        assert "feedback_store" in param_names, "Endpoint should have feedback_store for AI learning"
 
     @pytest.mark.asyncio
     async def test_rejection_saves_feedback(self) -> None:

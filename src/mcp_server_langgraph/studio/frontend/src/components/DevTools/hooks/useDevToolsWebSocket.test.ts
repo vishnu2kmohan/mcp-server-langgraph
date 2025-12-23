@@ -151,7 +151,9 @@ describe("useDevToolsWebSocket", () => {
 
       await waitFor(() => {
         expect(result.current.consoleEntries).toHaveLength(1);
-        expect(result.current.consoleEntries[0].message).toBe("Test log message");
+        expect(result.current.consoleEntries[0].message).toBe(
+          "Test log message",
+        );
       });
     });
 

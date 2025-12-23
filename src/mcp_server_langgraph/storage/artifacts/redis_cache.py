@@ -87,9 +87,7 @@ class RedisCachedArtifactsService:
         self._cache = cache
         self._ttl = ttl
 
-    async def get(
-        self, artifact_id: str, user_id: str
-    ) -> dict[str, Any] | None:
+    async def get(self, artifact_id: str, user_id: str) -> dict[str, Any] | None:
         """
         Get artifact with cache-aside pattern.
 
@@ -136,9 +134,7 @@ class RedisCachedArtifactsService:
 
         return artifact
 
-    async def create(
-        self, data: dict[str, Any], user_id: str
-    ) -> dict[str, Any]:
+    async def create(self, data: dict[str, Any], user_id: str) -> dict[str, Any]:
         """
         Create artifact (write-through).
 
@@ -159,9 +155,7 @@ class RedisCachedArtifactsService:
 
         return result
 
-    async def update(
-        self, artifact_id: str, data: dict[str, Any], user_id: str
-    ) -> dict[str, Any] | None:
+    async def update(self, artifact_id: str, data: dict[str, Any], user_id: str) -> dict[str, Any] | None:
         """
         Update artifact with cache invalidation.
 
@@ -259,9 +253,7 @@ class RedisCachedArtifactsService:
             cursor=cursor,
         )
 
-    async def get_versions(
-        self, artifact_id: str, user_id: str
-    ) -> list[dict[str, Any]] | None:  # type: ignore[valid-type]
+    async def get_versions(self, artifact_id: str, user_id: str) -> list[dict[str, Any]] | None:  # type: ignore[valid-type]
         """
         Get version history with caching.
 
@@ -304,9 +296,7 @@ class RedisCachedArtifactsService:
 
         return versions
 
-    async def fork(
-        self, artifact_id: str, new_name: str | None, user_id: str
-    ) -> dict[str, Any] | None:
+    async def fork(self, artifact_id: str, new_name: str | None, user_id: str) -> dict[str, Any] | None:
         """
         Fork artifact (no caching needed).
 

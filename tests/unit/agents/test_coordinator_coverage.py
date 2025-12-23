@@ -8,7 +8,7 @@ artifact storage, and error handling to achieve 75%+ coverage.
 from __future__ import annotations
 
 import gc
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
@@ -28,8 +28,7 @@ def create_mock_subagent(
     subagent.task_id = task_id
     subagent.status = status
     subagent.execute = AsyncMock(
-        return_value=execute_result
-        or SubagentResult(task_id=task_id, success=True, output="test output")
+        return_value=execute_result or SubagentResult(task_id=task_id, success=True, output="test output")
     )
     subagent.cancel = MagicMock()
     return subagent
@@ -230,9 +229,7 @@ class TestCoordinatorExecution:
     async def test_execute_subagent_found(self) -> None:
         """Test executing a specific subagent."""
         coordinator = Coordinator()
-        expected_result = SubagentResult(
-            task_id="task-1", success=True, output="specific output"
-        )
+        expected_result = SubagentResult(task_id="task-1", success=True, output="specific output")
         subagent = create_mock_subagent("task-1", execute_result=expected_result)
         coordinator.register_subagent(subagent)
 

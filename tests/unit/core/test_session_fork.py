@@ -16,9 +16,8 @@ Reference: Claude Agent SDK Session Fork pattern
 from __future__ import annotations
 
 import gc
-from datetime import datetime, UTC
-from typing import TYPE_CHECKING, Any
-from unittest.mock import AsyncMock, MagicMock, patch
+from typing import TYPE_CHECKING
+from unittest.mock import patch
 
 import pytest
 
@@ -116,9 +115,7 @@ class TestSessionForkOperations:
         """
         from mcp_server_langgraph.core.session_fork import SessionForkManager
 
-        with patch(
-            "mcp_server_langgraph.core.session_fork.feature_flags"
-        ) as mock_flags:
+        with patch("mcp_server_langgraph.core.session_fork.feature_flags") as mock_flags:
             mock_flags.enable_session_fork = True
 
             manager = SessionForkManager()
@@ -140,9 +137,7 @@ class TestSessionForkOperations:
         """
         from mcp_server_langgraph.core.session_fork import SessionForkManager
 
-        with patch(
-            "mcp_server_langgraph.core.session_fork.feature_flags"
-        ) as mock_flags:
+        with patch("mcp_server_langgraph.core.session_fork.feature_flags") as mock_flags:
             mock_flags.enable_session_fork = True
 
             manager = SessionForkManager()
@@ -163,9 +158,7 @@ class TestSessionForkOperations:
         """
         from mcp_server_langgraph.core.session_fork import SessionForkManager
 
-        with patch(
-            "mcp_server_langgraph.core.session_fork.feature_flags"
-        ) as mock_flags:
+        with patch("mcp_server_langgraph.core.session_fork.feature_flags") as mock_flags:
             mock_flags.enable_session_fork = True
 
             manager = SessionForkManager()
@@ -185,9 +178,7 @@ class TestSessionForkOperations:
         """
         from mcp_server_langgraph.core.session_fork import SessionForkManager
 
-        with patch(
-            "mcp_server_langgraph.core.session_fork.feature_flags"
-        ) as mock_flags:
+        with patch("mcp_server_langgraph.core.session_fork.feature_flags") as mock_flags:
             mock_flags.enable_session_fork = True
 
             manager = SessionForkManager()
@@ -222,9 +213,7 @@ class TestSessionForkRelationships:
         """
         from mcp_server_langgraph.core.session_fork import SessionForkManager
 
-        with patch(
-            "mcp_server_langgraph.core.session_fork.feature_flags"
-        ) as mock_flags:
+        with patch("mcp_server_langgraph.core.session_fork.feature_flags") as mock_flags:
             mock_flags.enable_session_fork = True
 
             manager = SessionForkManager()
@@ -244,9 +233,7 @@ class TestSessionForkRelationships:
         """
         from mcp_server_langgraph.core.session_fork import SessionForkManager
 
-        with patch(
-            "mcp_server_langgraph.core.session_fork.feature_flags"
-        ) as mock_flags:
+        with patch("mcp_server_langgraph.core.session_fork.feature_flags") as mock_flags:
             mock_flags.enable_session_fork = True
 
             manager = SessionForkManager()
@@ -268,9 +255,7 @@ class TestSessionForkRelationships:
         """
         from mcp_server_langgraph.core.session_fork import SessionForkManager
 
-        with patch(
-            "mcp_server_langgraph.core.session_fork.feature_flags"
-        ) as mock_flags:
+        with patch("mcp_server_langgraph.core.session_fork.feature_flags") as mock_flags:
             mock_flags.enable_session_fork = True
 
             manager = SessionForkManager()
@@ -309,9 +294,7 @@ class TestSessionForkIndependence:
         """
         from mcp_server_langgraph.core.session_fork import SessionForkManager
 
-        with patch(
-            "mcp_server_langgraph.core.session_fork.feature_flags"
-        ) as mock_flags:
+        with patch("mcp_server_langgraph.core.session_fork.feature_flags") as mock_flags:
             mock_flags.enable_session_fork = True
 
             manager = SessionForkManager()
@@ -329,9 +312,7 @@ class TestSessionForkIndependence:
         """
         from mcp_server_langgraph.core.session_fork import SessionForkManager
 
-        with patch(
-            "mcp_server_langgraph.core.session_fork.feature_flags"
-        ) as mock_flags:
+        with patch("mcp_server_langgraph.core.session_fork.feature_flags") as mock_flags:
             mock_flags.enable_session_fork = True
 
             manager = SessionForkManager()
@@ -369,9 +350,7 @@ class TestSessionForkValidation:
         from mcp_server_langgraph.core.exceptions import SessionNotFoundError
         from mcp_server_langgraph.core.session_fork import SessionForkManager
 
-        with patch(
-            "mcp_server_langgraph.core.session_fork.feature_flags"
-        ) as mock_flags:
+        with patch("mcp_server_langgraph.core.session_fork.feature_flags") as mock_flags:
             mock_flags.enable_session_fork = True
 
             manager = SessionForkManager()
@@ -388,9 +367,7 @@ class TestSessionForkValidation:
         from mcp_server_langgraph.core.exceptions import CheckpointNotFoundError
         from mcp_server_langgraph.core.session_fork import SessionForkManager
 
-        with patch(
-            "mcp_server_langgraph.core.session_fork.feature_flags"
-        ) as mock_flags:
+        with patch("mcp_server_langgraph.core.session_fork.feature_flags") as mock_flags:
             mock_flags.enable_session_fork = True
 
             manager = SessionForkManager()
@@ -410,9 +387,7 @@ class TestSessionForkValidation:
         from mcp_server_langgraph.core.exceptions import FeatureDisabledError
         from mcp_server_langgraph.core.session_fork import SessionForkManager
 
-        with patch(
-            "mcp_server_langgraph.core.session_fork.feature_flags"
-        ) as mock_flags:
+        with patch("mcp_server_langgraph.core.session_fork.feature_flags") as mock_flags:
             mock_flags.enable_session_fork = False
 
             manager = SessionForkManager()

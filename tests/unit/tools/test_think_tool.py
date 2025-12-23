@@ -321,10 +321,12 @@ class TestStructuredThinkTool:
         """
         from mcp_server_langgraph.tools.think_tool import think_structured
 
-        result = think_structured.invoke({
-            "thought": "Verifying policy compliance",
-            "category": "policy_verification",
-        })
+        result = think_structured.invoke(
+            {
+                "thought": "Verifying policy compliance",
+                "category": "policy_verification",
+            }
+        )
 
         assert isinstance(result, dict)
         assert "thought" in result
@@ -339,10 +341,12 @@ class TestStructuredThinkTool:
         from mcp_server_langgraph.tools.think_tool import think_structured
 
         # Should handle invalid category without crashing
-        result = think_structured.invoke({
-            "thought": "Test thought",
-            "category": "invalid_category",
-        })
+        result = think_structured.invoke(
+            {
+                "thought": "Test thought",
+                "category": "invalid_category",
+            }
+        )
 
         assert isinstance(result, dict)
 
@@ -364,10 +368,12 @@ class TestStructuredThinkTool:
         """
         from mcp_server_langgraph.tools.think_tool import think_structured
 
-        result = think_structured.invoke({
-            "thought": "Analyzing data pattern",
-            "category": "intermediate_reasoning",
-        })
+        result = think_structured.invoke(
+            {
+                "thought": "Analyzing data pattern",
+                "category": "intermediate_reasoning",
+            }
+        )
 
         confidence = result.get("confidence", 0.5)
         assert 0.0 <= confidence <= 1.0

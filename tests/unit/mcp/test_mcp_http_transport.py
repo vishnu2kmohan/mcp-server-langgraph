@@ -8,7 +8,6 @@ Reference: https://modelcontextprotocol.io/specification/2025-11-25/basic/transp
 """
 
 import gc
-import json
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -18,8 +17,8 @@ import pytest
 MCP_PROTOCOL_VERSION = "2025-11-25"
 
 
-
 pytestmark = pytest.mark.unit
+
 
 @pytest.mark.xdist_group(name="mcp_http_transport")
 class TestMCPHTTPTransportConnect:
@@ -48,15 +47,17 @@ class TestMCPHTTPTransportConnect:
         # Mock HTTP response (must be async context manager for aiohttp)
         mock_response = MagicMock()
         mock_response.status = 200
-        mock_response.json = AsyncMock(return_value={
-            "jsonrpc": "2.0",
-            "id": "init-id",
-            "result": {
-                "protocolVersion": MCP_PROTOCOL_VERSION,
-                "capabilities": {"tools": {}},
-                "serverInfo": {"name": "test-http", "version": "1.0"},
-            },
-        })
+        mock_response.json = AsyncMock(
+            return_value={
+                "jsonrpc": "2.0",
+                "id": "init-id",
+                "result": {
+                    "protocolVersion": MCP_PROTOCOL_VERSION,
+                    "capabilities": {"tools": {}},
+                    "serverInfo": {"name": "test-http", "version": "1.0"},
+                },
+            }
+        )
         mock_response.headers = {"MCP-Session-Id": "session-123"}
         # Make response an async context manager
         mock_response.__aenter__ = AsyncMock(return_value=mock_response)
@@ -94,15 +95,17 @@ class TestMCPHTTPTransportConnect:
         # Mock HTTP response (must be async context manager)
         mock_response = MagicMock()
         mock_response.status = 200
-        mock_response.json = AsyncMock(return_value={
-            "jsonrpc": "2.0",
-            "id": "init-id",
-            "result": {
-                "protocolVersion": MCP_PROTOCOL_VERSION,
-                "capabilities": {"tools": {}},
-                "serverInfo": {"name": "test-http", "version": "1.0"},
-            },
-        })
+        mock_response.json = AsyncMock(
+            return_value={
+                "jsonrpc": "2.0",
+                "id": "init-id",
+                "result": {
+                    "protocolVersion": MCP_PROTOCOL_VERSION,
+                    "capabilities": {"tools": {}},
+                    "serverInfo": {"name": "test-http", "version": "1.0"},
+                },
+            }
+        )
         mock_response.headers = {}
         mock_response.__aenter__ = AsyncMock(return_value=mock_response)
         mock_response.__aexit__ = AsyncMock(return_value=None)
@@ -140,15 +143,17 @@ class TestMCPHTTPTransportConnect:
         # Mock HTTP response with session ID (must be async context manager)
         mock_response = MagicMock()
         mock_response.status = 200
-        mock_response.json = AsyncMock(return_value={
-            "jsonrpc": "2.0",
-            "id": "init-id",
-            "result": {
-                "protocolVersion": MCP_PROTOCOL_VERSION,
-                "capabilities": {"tools": {}},
-                "serverInfo": {"name": "test-http", "version": "1.0"},
-            },
-        })
+        mock_response.json = AsyncMock(
+            return_value={
+                "jsonrpc": "2.0",
+                "id": "init-id",
+                "result": {
+                    "protocolVersion": MCP_PROTOCOL_VERSION,
+                    "capabilities": {"tools": {}},
+                    "serverInfo": {"name": "test-http", "version": "1.0"},
+                },
+            }
+        )
         mock_response.headers = {"MCP-Session-Id": "session-abc123"}
         mock_response.__aenter__ = AsyncMock(return_value=mock_response)
         mock_response.__aexit__ = AsyncMock(return_value=None)
@@ -180,18 +185,20 @@ class TestMCPHTTPTransportConnect:
 
         mock_response = MagicMock()
         mock_response.status = 200
-        mock_response.json = AsyncMock(return_value={
-            "jsonrpc": "2.0",
-            "id": "init-id",
-            "result": {
-                "protocolVersion": MCP_PROTOCOL_VERSION,
-                "capabilities": {
-                    "tools": {"listChanged": True},
-                    "resources": {"subscribe": False},
+        mock_response.json = AsyncMock(
+            return_value={
+                "jsonrpc": "2.0",
+                "id": "init-id",
+                "result": {
+                    "protocolVersion": MCP_PROTOCOL_VERSION,
+                    "capabilities": {
+                        "tools": {"listChanged": True},
+                        "resources": {"subscribe": False},
+                    },
+                    "serverInfo": {"name": "playwright-http", "version": "2.0"},
                 },
-                "serverInfo": {"name": "playwright-http", "version": "2.0"},
-            },
-        })
+            }
+        )
         mock_response.headers = {}
         mock_response.__aenter__ = AsyncMock(return_value=mock_response)
         mock_response.__aexit__ = AsyncMock(return_value=None)
@@ -370,14 +377,16 @@ class TestMCPHTTPTransportErrorHandling:
 
         mock_response = MagicMock()
         mock_response.status = 200
-        mock_response.json = AsyncMock(return_value={
-            "jsonrpc": "2.0",
-            "id": "init-id",
-            "error": {
-                "code": -32600,
-                "message": "Invalid Request",
-            },
-        })
+        mock_response.json = AsyncMock(
+            return_value={
+                "jsonrpc": "2.0",
+                "id": "init-id",
+                "error": {
+                    "code": -32600,
+                    "message": "Invalid Request",
+                },
+            }
+        )
         mock_response.headers = {}
         mock_response.__aenter__ = AsyncMock(return_value=mock_response)
         mock_response.__aexit__ = AsyncMock(return_value=None)
@@ -395,15 +404,17 @@ class TestMCPHTTPTransportErrorHandling:
 def _make_init_response():
     mock = MagicMock()
     mock.status = 200
-    mock.json = AsyncMock(return_value={
-        "jsonrpc": "2.0",
-        "id": "init-id",
-        "result": {
-            "protocolVersion": MCP_PROTOCOL_VERSION,
-            "capabilities": {"tools": {}},
-            "serverInfo": {"name": "test-http", "version": "1.0"},
-        },
-    })
+    mock.json = AsyncMock(
+        return_value={
+            "jsonrpc": "2.0",
+            "id": "init-id",
+            "result": {
+                "protocolVersion": MCP_PROTOCOL_VERSION,
+                "capabilities": {"tools": {}},
+                "serverInfo": {"name": "test-http", "version": "1.0"},
+            },
+        }
+    )
     mock.headers = {"MCP-Session-Id": "session-123"}
     mock.__aenter__ = AsyncMock(return_value=mock)
     mock.__aexit__ = AsyncMock(return_value=None)
@@ -413,15 +424,17 @@ def _make_init_response():
 def _make_tools_list_response():
     mock = MagicMock()
     mock.status = 200
-    mock.json = AsyncMock(return_value={
-        "jsonrpc": "2.0",
-        "id": "tools-id",
-        "result": {
-            "tools": [
-                {"name": "screenshot", "description": "Take screenshot", "inputSchema": {}},
-            ],
-        },
-    })
+    mock.json = AsyncMock(
+        return_value={
+            "jsonrpc": "2.0",
+            "id": "tools-id",
+            "result": {
+                "tools": [
+                    {"name": "screenshot", "description": "Take screenshot", "inputSchema": {}},
+                ],
+            },
+        }
+    )
     mock.headers = {}
     mock.__aenter__ = AsyncMock(return_value=mock)
     mock.__aexit__ = AsyncMock(return_value=None)
@@ -431,14 +444,16 @@ def _make_tools_list_response():
 def _make_tools_call_response():
     mock = MagicMock()
     mock.status = 200
-    mock.json = AsyncMock(return_value={
-        "jsonrpc": "2.0",
-        "id": "call-id",
-        "result": {
-            "content": [{"type": "text", "text": "Screenshot saved"}],
-            "isError": False,
-        },
-    })
+    mock.json = AsyncMock(
+        return_value={
+            "jsonrpc": "2.0",
+            "id": "call-id",
+            "result": {
+                "content": [{"type": "text", "text": "Screenshot saved"}],
+                "isError": False,
+            },
+        }
+    )
     mock.headers = {}
     mock.__aenter__ = AsyncMock(return_value=mock)
     mock.__aexit__ = AsyncMock(return_value=None)

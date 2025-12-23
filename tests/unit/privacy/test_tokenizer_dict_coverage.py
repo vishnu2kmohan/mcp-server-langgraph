@@ -71,9 +71,7 @@ class TestTokenizerDictBasic:
         from mcp_server_langgraph.privacy.tokenizer import PIITokenizer
 
         tokenizer = PIITokenizer()
-        data = {
-            "emails": ["a@example.com", "b@example.com", "c@example.com"]
-        }
+        data = {"emails": ["a@example.com", "b@example.com", "c@example.com"]}
 
         result, lookup = tokenizer.tokenize_dict(data)
 
@@ -216,9 +214,7 @@ class TestTokenizerUntokenizeDict:
         from mcp_server_langgraph.privacy.tokenizer import PIITokenizer
 
         tokenizer = PIITokenizer()
-        original = {
-            "emails": ["a@example.com", "b@example.com"]
-        }
+        original = {"emails": ["a@example.com", "b@example.com"]}
 
         tokenized, lookup = tokenizer.tokenize_dict(original)
         restored = tokenizer.untokenize_dict(tokenized, lookup)
@@ -367,17 +363,7 @@ class TestTokenizerDictRoundtrip:
         from mcp_server_langgraph.privacy.tokenizer import PIITokenizer
 
         tokenizer = PIITokenizer()
-        original = {
-            "l1": {
-                "l2": {
-                    "l3": {
-                        "l4": {
-                            "l5": {"email": "deep@example.com"}
-                        }
-                    }
-                }
-            }
-        }
+        original = {"l1": {"l2": {"l3": {"l4": {"l5": {"email": "deep@example.com"}}}}}}
 
         tokenized, lookup = tokenizer.tokenize_dict(original)
         assert "deep@example.com" not in str(tokenized)

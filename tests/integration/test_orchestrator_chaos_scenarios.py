@@ -14,7 +14,7 @@ TDD: Tests written FIRST before implementation.
 
 import asyncio
 import gc
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -67,9 +67,7 @@ class TestUXOrchestratorChaosScenarios:
                 result={"analysis": "completed"},
             )
 
-        with patch.object(
-            orchestrator, "_execute_task", side_effect=timeout_simulate_execute
-        ):
+        with patch.object(orchestrator, "_execute_task", side_effect=timeout_simulate_execute):
             result = await orchestrator.run_composite_analysis(
                 user_id="test-user",
                 session_id="test-session",
@@ -112,9 +110,7 @@ class TestUXOrchestratorChaosScenarios:
                 result={"analysis": f"{task.task_type} completed"},
             )
 
-        with patch.object(
-            orchestrator, "_execute_task", side_effect=partial_failure_execute
-        ):
+        with patch.object(orchestrator, "_execute_task", side_effect=partial_failure_execute):
             result = await orchestrator.run_composite_analysis(
                 user_id="test-user",
                 session_id="test-session",

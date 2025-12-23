@@ -10,7 +10,7 @@ Tests resilience patterns applied to the multi-agent orchestrator:
 """
 
 import gc
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 

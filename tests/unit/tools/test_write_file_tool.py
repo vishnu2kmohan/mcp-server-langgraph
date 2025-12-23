@@ -6,16 +6,14 @@ Written FIRST before implementation (RED phase).
 """
 
 import gc
-import os
-import tempfile
 from pathlib import Path
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import patch
 
 import pytest
 
 
-
 pytestmark = pytest.mark.unit
+
 
 @pytest.mark.xdist_group(name="write_file_tool")
 class TestWriteFileTool:
@@ -65,9 +63,7 @@ class TestWriteFileTool:
         assert "successfully" in result.lower() or "created" in result.lower()
 
     @pytest.mark.unit
-    def test_write_file_overwrites_existing_file(
-        self, temp_workspace: Path, existing_file: Path
-    ):
+    def test_write_file_overwrites_existing_file(self, temp_workspace: Path, existing_file: Path):
         """GIVEN an existing file path and new content
         WHEN write_file is called
         THEN the file is overwritten with new content"""
@@ -79,9 +75,7 @@ class TestWriteFileTool:
             "mcp_server_langgraph.tools.write_file_tools.get_workspace_root",
             return_value=temp_workspace,
         ):
-            result = write_file.invoke(
-                {"file_path": str(existing_file), "content": new_content}
-            )
+            result = write_file.invoke({"file_path": str(existing_file), "content": new_content})
 
         assert existing_file.read_text() == new_content
         assert "successfully" in result.lower() or "overwritten" in result.lower()
@@ -128,9 +122,7 @@ class TestWriteFileTool:
             "mcp_server_langgraph.tools.write_file_tools.get_workspace_root",
             return_value=temp_workspace,
         ):
-            result = write_file.invoke(
-                {"file_path": str(malicious_path), "content": "malicious"}
-            )
+            result = write_file.invoke({"file_path": str(malicious_path), "content": "malicious"})
 
         assert "error" in result.lower()
         assert "path" in result.lower() or "traversal" in result.lower()
@@ -138,9 +130,7 @@ class TestWriteFileTool:
         assert not Path("/etc/passwd_test").exists()
 
     @pytest.mark.unit
-    def test_write_file_rejects_absolute_paths_outside_workspace(
-        self, temp_workspace: Path
-    ):
+    def test_write_file_rejects_absolute_paths_outside_workspace(self, temp_workspace: Path):
         """GIVEN an absolute path outside the workspace
         WHEN write_file is called
         THEN it is rejected with an error"""
@@ -152,9 +142,7 @@ class TestWriteFileTool:
             "mcp_server_langgraph.tools.write_file_tools.get_workspace_root",
             return_value=temp_workspace,
         ):
-            result = write_file.invoke(
-                {"file_path": outside_path, "content": "should not be written"}
-            )
+            result = write_file.invoke({"file_path": outside_path, "content": "should not be written"})
 
         assert "error" in result.lower()
         assert not Path(outside_path).exists()
@@ -174,9 +162,7 @@ class TestWriteFileTool:
             "mcp_server_langgraph.tools.write_file_tools.get_workspace_root",
             return_value=temp_workspace,
         ):
-            result = write_file.invoke(
-                {"file_path": str(file_path), "content": large_content}
-            )
+            result = write_file.invoke({"file_path": str(file_path), "content": large_content})
 
         assert "error" in result.lower()
         assert "size" in result.lower() or "large" in result.lower()
@@ -200,9 +186,7 @@ class TestWriteFileTool:
                 "mcp_server_langgraph.tools.write_file_tools.get_workspace_root",
                 return_value=temp_workspace,
             ):
-                result = write_file.invoke(
-                    {"file_path": dangerous_path, "content": "malicious"}
-                )
+                result = write_file.invoke({"file_path": dangerous_path, "content": "malicious"})
 
             assert "error" in result.lower(), f"Should reject {dangerous_path}"
 
@@ -211,9 +195,7 @@ class TestWriteFileTool:
     # =========================================================================
 
     @pytest.mark.unit
-    def test_write_file_creates_backup_before_overwrite(
-        self, temp_workspace: Path, existing_file: Path
-    ):
+    def test_write_file_creates_backup_before_overwrite(self, temp_workspace: Path, existing_file: Path):
         """GIVEN an existing file and create_backup=True
         WHEN write_file overwrites the file
         THEN a backup is created"""
@@ -222,16 +204,17 @@ class TestWriteFileTool:
         original_content = existing_file.read_text()
         new_content = "replacement content"
 
-        with patch(
-            "mcp_server_langgraph.tools.write_file_tools.get_workspace_root",
-            return_value=temp_workspace,
-        ), patch(
-            "mcp_server_langgraph.tools.write_file_tools.WRITE_FILE_CREATE_BACKUP",
-            True,
+        with (
+            patch(
+                "mcp_server_langgraph.tools.write_file_tools.get_workspace_root",
+                return_value=temp_workspace,
+            ),
+            patch(
+                "mcp_server_langgraph.tools.write_file_tools.WRITE_FILE_CREATE_BACKUP",
+                True,
+            ),
         ):
-            result = write_file.invoke(
-                {"file_path": str(existing_file), "content": new_content}
-            )
+            result = write_file.invoke({"file_path": str(existing_file), "content": new_content})
 
         # Check backup exists (naming convention: file.txt.bak or file.txt.backup)
         backup_candidates = [
@@ -267,9 +250,7 @@ class TestWriteFileTool:
         ):
             for ext in safe_extensions:
                 file_path = temp_workspace / f"test_file{ext}"
-                result = write_file.invoke(
-                    {"file_path": str(file_path), "content": f"content for {ext}"}
-                )
+                result = write_file.invoke({"file_path": str(file_path), "content": f"content for {ext}"})
                 assert file_path.exists(), f"Should allow {ext}"
                 file_path.unlink()  # Cleanup
 
@@ -289,9 +270,7 @@ class TestWriteFileTool:
         ):
             for ext in dangerous_extensions:
                 file_path = temp_workspace / f"script{ext}"
-                result = write_file.invoke(
-                    {"file_path": str(file_path), "content": "malicious script"}
-                )
+                result = write_file.invoke({"file_path": str(file_path), "content": "malicious script"})
                 # May or may not reject based on implementation - check if extension allowlist is enforced
                 # If enforced, should have error and file should not exist
 
@@ -331,9 +310,7 @@ class TestWriteFileTool:
             "mcp_server_langgraph.tools.write_file_tools.get_workspace_root",
             return_value=temp_workspace,
         ):
-            result = write_file.invoke(
-                {"file_path": str(file_path), "content": unicode_content}
-            )
+            result = write_file.invoke({"file_path": str(file_path), "content": unicode_content})
 
         assert file_path.exists()
         assert file_path.read_text(encoding="utf-8") == unicode_content
@@ -352,9 +329,7 @@ class TestWriteFileTool:
             "mcp_server_langgraph.tools.write_file_tools.get_workspace_root",
             return_value=temp_workspace,
         ):
-            result = write_file.invoke(
-                {"file_path": str(file_path), "content": content}
-            )
+            result = write_file.invoke({"file_path": str(file_path), "content": content})
 
         assert file_path.exists()
 

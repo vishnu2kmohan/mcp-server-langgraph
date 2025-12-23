@@ -9,10 +9,9 @@ from __future__ import annotations
 import asyncio
 import gc
 from datetime import UTC, datetime
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock
 
 import pytest
-from starlette.websockets import WebSocketDisconnect
 
 pytestmark = [pytest.mark.unit, pytest.mark.websocket]
 
@@ -26,9 +25,7 @@ class TestHeartbeatManagerLifecycle:
         gc.collect()
 
     @pytest.mark.asyncio
-    async def test_heartbeat_manager_starts_background_task(
-        self, mock_websocket: MagicMock
-    ) -> None:
+    async def test_heartbeat_manager_starts_background_task(self, mock_websocket: MagicMock) -> None:
         """
         GIVEN a HeartbeatManager
         WHEN start() is called
@@ -48,9 +45,7 @@ class TestHeartbeatManagerLifecycle:
         await asyncio.sleep(0.01)  # Allow task to be cancelled
 
     @pytest.mark.asyncio
-    async def test_heartbeat_manager_stop_cancels_task(
-        self, mock_websocket: MagicMock
-    ) -> None:
+    async def test_heartbeat_manager_stop_cancels_task(self, mock_websocket: MagicMock) -> None:
         """
         GIVEN a running HeartbeatManager
         WHEN stop() is called
@@ -67,9 +62,7 @@ class TestHeartbeatManagerLifecycle:
         assert task.done() or task.cancelled()
 
     @pytest.mark.asyncio
-    async def test_heartbeat_manager_sends_heartbeat(
-        self, mock_websocket: MagicMock
-    ) -> None:
+    async def test_heartbeat_manager_sends_heartbeat(self, mock_websocket: MagicMock) -> None:
         """
         GIVEN a HeartbeatManager with short interval
         WHEN the manager is running
@@ -83,25 +76,26 @@ class TestHeartbeatManagerLifecycle:
         async def run_heartbeat() -> None:
             """Run heartbeat loop for a short time."""
             from datetime import UTC, datetime
+
             manager._websocket = mock_websocket
             manager._running = True
             manager._last_activity = datetime.now(UTC)  # Set last activity
             # Run one iteration manually
             await asyncio.sleep(manager.interval)
             if manager._running and manager.is_alive and manager._websocket:
-                await manager._websocket.send_json({
-                    "type": "heartbeat",
-                    "timestamp": "test",
-                })
+                await manager._websocket.send_json(
+                    {
+                        "type": "heartbeat",
+                        "timestamp": "test",
+                    }
+                )
 
         await run_heartbeat()
 
         # Verify heartbeat was sent
         assert mock_websocket.send_json.called, "send_json should have been called"
         calls = mock_websocket.send_json.call_args_list
-        heartbeat_sent = any(
-            call[0][0].get("type") == "heartbeat" for call in calls
-        )
+        heartbeat_sent = any(call[0][0].get("type") == "heartbeat" for call in calls)
         assert heartbeat_sent, "Heartbeat message should be sent"
 
 
@@ -114,9 +108,7 @@ class TestHeartbeatManagerPongHandling:
         gc.collect()
 
     @pytest.mark.asyncio
-    async def test_on_pong_updates_last_activity(
-        self, mock_websocket: MagicMock
-    ) -> None:
+    async def test_on_pong_updates_last_activity(self, mock_websocket: MagicMock) -> None:
         """
         GIVEN a HeartbeatManager
         WHEN on_pong() is called
@@ -135,9 +127,7 @@ class TestHeartbeatManagerPongHandling:
         assert manager.last_activity > initial_activity
 
     @pytest.mark.asyncio
-    async def test_heartbeat_manager_tracks_last_activity(
-        self, mock_websocket: MagicMock
-    ) -> None:
+    async def test_heartbeat_manager_tracks_last_activity(self, mock_websocket: MagicMock) -> None:
         """
         GIVEN a HeartbeatManager
         WHEN created
@@ -161,9 +151,7 @@ class TestHeartbeatManagerTimeout:
         gc.collect()
 
     @pytest.mark.asyncio
-    async def test_timeout_callback_called_on_dead_connection(
-        self, mock_websocket: MagicMock
-    ) -> None:
+    async def test_timeout_callback_called_on_dead_connection(self, mock_websocket: MagicMock) -> None:
         """
         GIVEN a HeartbeatManager with timeout callback
         WHEN no pong is received within timeout
@@ -178,9 +166,7 @@ class TestHeartbeatManagerTimeout:
             timeout_called = True
 
         # Very short timeout for testing
-        manager = HeartbeatManager(
-            interval=0.02, timeout=0.05, on_timeout=on_timeout
-        )
+        manager = HeartbeatManager(interval=0.02, timeout=0.05, on_timeout=on_timeout)
         await manager.start(mock_websocket)
 
         # Wait for timeout to occur (longer than timeout period)
@@ -205,9 +191,7 @@ class TestHeartbeatManagerTimeout:
             nonlocal timeout_called
             timeout_called = True
 
-        manager = HeartbeatManager(
-            interval=0.02, timeout=0.1, on_timeout=on_timeout
-        )
+        manager = HeartbeatManager(interval=0.02, timeout=0.1, on_timeout=on_timeout)
         await manager.start(mock_websocket)
 
         # Keep sending pongs to prevent timeout

@@ -7,14 +7,13 @@ from __future__ import annotations
 
 import gc
 import json
-import os
 import tempfile
 from pathlib import Path
-from typing import Any
 
 import pytest
 
 pytestmark = pytest.mark.unit
+
 
 @pytest.mark.unit
 @pytest.mark.desktop_extension

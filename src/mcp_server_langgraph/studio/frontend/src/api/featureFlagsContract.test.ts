@@ -20,7 +20,7 @@ import type { FeatureFlags } from "../types/api";
  */
 const _EXPECTED_API_RESPONSE_KEYS = [
   // Canvas/Studio v2 UI
-  "canvas_studio_shell",
+  "studio_canvas_shell",
   "canvas_editable",
   "canvas_agents",
   "canvas_ai_palette",
@@ -91,7 +91,7 @@ describe("Feature Flags API Contract", () => {
     it("should include all core feature flags with short names", () => {
       // These should be in the mock (API response format)
       const expectedShortNames = [
-        "canvas_studio_shell",
+        "studio_canvas_shell",
         "workflows",
         "sessions",
         "cost_dashboard",
@@ -110,7 +110,7 @@ describe("Feature Flags API Contract", () => {
 
     it("should include canvas phase flags", () => {
       const canvasPhaseFlags = [
-        "canvas_studio_shell", // Phase 1
+        "studio_canvas_shell", // Phase 1
         "canvas_editable", // Phase 2
         "canvas_agents", // Phase 4
         "canvas_ai_palette", // Phase 4
@@ -180,11 +180,11 @@ describe("Feature Flag Naming Convention", () => {
      *
      * Backend (Python):
      *   - Uses enable_* prefix: enable_workflows_feature, enable_sessions_feature
-     *   - Environment vars: FF_ENABLE_WORKFLOWS_FEATURE, FF_CANVAS_HYBRID_SHELL
+     *   - Environment vars: FF_ENABLE_WORKFLOWS_FEATURE, FF_STUDIO_CANVAS_SHELL
      *
      * API Response:
      *   - Uses short names: workflows, sessions, cost_dashboard
-     *   - Canvas flags keep names: canvas_studio_shell, canvas_editable
+     *   - Canvas flags keep names: studio_canvas_shell, canvas_editable
      *
      * Frontend (TypeScript):
      *   - Types should match API response format (short names)

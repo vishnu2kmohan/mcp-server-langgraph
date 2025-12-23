@@ -4,7 +4,13 @@
  * Tests for AI-generated interactive forms.
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { render, screen, fireEvent, waitFor, cleanup } from "@testing-library/react";
+import {
+  render,
+  screen,
+  fireEvent,
+  waitFor,
+  cleanup,
+} from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { axe, toHaveNoViolations } from "jest-axe";
 import { InteractiveForm, type FormConfig } from "./InteractiveForm";

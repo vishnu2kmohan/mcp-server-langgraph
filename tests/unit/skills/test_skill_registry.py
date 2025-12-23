@@ -273,9 +273,7 @@ class TestSkillRegistrySource:
         from mcp_server_langgraph.skills.registry import SkillRegistry
 
         registry = SkillRegistry()
-        registry.register(
-            Skill(name="local-1", description="Local", source="local")
-        )
+        registry.register(Skill(name="local-1", description="Local", source="local"))
         registry.register(
             Skill(
                 name="remote-1",

@@ -16,7 +16,7 @@ from __future__ import annotations
 
 import gc
 from datetime import UTC, datetime
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import AsyncMock
 
 import pytest
 
@@ -111,9 +111,7 @@ class TestBroadcastExecutionResult:
         assert call_args["payload"]["success"] is True
 
     @pytest.mark.asyncio
-    async def test_broadcast_execution_result_no_subscribers(
-        self, sample_execution_result
-    ) -> None:
+    async def test_broadcast_execution_result_no_subscribers(self, sample_execution_result) -> None:
         """
         GIVEN a broadcaster with no subscribers
         WHEN broadcasting an execution result
@@ -127,9 +125,7 @@ class TestBroadcastExecutionResult:
         await broadcaster.broadcast_execution_result(sample_execution_result)
 
     @pytest.mark.asyncio
-    async def test_broadcast_execution_result_failure(
-        self, mock_websocket: AsyncMock
-    ) -> None:
+    async def test_broadcast_execution_result_failure(self, mock_websocket: AsyncMock) -> None:
         """
         GIVEN a failed execution result
         WHEN broadcasting
@@ -159,9 +155,7 @@ class TestBroadcastExecutionResult:
         assert call_args["payload"]["error_message"] == "Command failed with exit code 1"
 
     @pytest.mark.asyncio
-    async def test_broadcast_execution_removes_failed_connections(
-        self, sample_execution_result
-    ) -> None:
+    async def test_broadcast_execution_removes_failed_connections(self, sample_execution_result) -> None:
         """
         GIVEN a broadcaster with a subscriber that fails to receive
         WHEN broadcasting an execution result

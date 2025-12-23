@@ -309,11 +309,7 @@ class SkillInstaller:
         if not self.install_path.exists():
             return []
 
-        return [
-            d.name
-            for d in self.install_path.iterdir()
-            if d.is_dir() and (d / "SKILL.md").exists()
-        ]
+        return [d.name for d in self.install_path.iterdir() if d.is_dir() and (d / "SKILL.md").exists()]
 
     def is_installed(self, skill_name: str) -> bool:
         """Check if a skill is installed.

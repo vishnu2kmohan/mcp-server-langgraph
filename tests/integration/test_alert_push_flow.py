@@ -16,7 +16,6 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from mcp_server_langgraph.alerts.broadcaster import AlertBroadcaster
 from mcp_server_langgraph.api.v1.alert_websocket import get_alert_broadcaster
 from mcp_server_langgraph.notifications.push_sender import (
     PushMessage,
@@ -123,9 +122,7 @@ class TestAlertToPushNotificationFlow:
         broadcaster._push_sender = push_sender
 
         # Mock the _send_webpush to avoid actual network calls
-        with patch.object(
-            push_sender, "_send_webpush", new_callable=AsyncMock
-        ) as mock_send:
+        with patch.object(push_sender, "_send_webpush", new_callable=AsyncMock) as mock_send:
             mock_send.return_value = True
 
             # Send critical alert notification
@@ -158,9 +155,7 @@ class TestAlertToPushNotificationFlow:
 
         message = PushMessage(title="Test", body="Test notification")
 
-        with patch.object(
-            push_sender, "_send_webpush", new_callable=AsyncMock
-        ) as mock_send:
+        with patch.object(push_sender, "_send_webpush", new_callable=AsyncMock) as mock_send:
             mock_send.return_value = True
             await push_sender.send_to_user(sample_subscription.user_id, message)
 
@@ -194,9 +189,7 @@ class TestAlertToPushNotificationFlow:
             await push_store.save_subscription(sub)
             subscriptions.append(sub)
 
-        with patch.object(
-            push_sender, "_send_webpush", new_callable=AsyncMock
-        ) as mock_send:
+        with patch.object(push_sender, "_send_webpush", new_callable=AsyncMock) as mock_send:
             mock_send.return_value = True
             result = await push_sender.send_critical_alert(sample_critical_alert)
 
@@ -286,9 +279,7 @@ class TestCircuitBreakerIntegration:
         message = PushMessage(title="Test", body="Test message")
 
         # Mock successful push
-        with patch.object(
-            push_sender, "_send_webpush", new_callable=AsyncMock
-        ) as mock_send:
+        with patch.object(push_sender, "_send_webpush", new_callable=AsyncMock) as mock_send:
             mock_send.return_value = True
             await push_sender.send_to_user(sample_subscription.user_id, message)
 
@@ -323,9 +314,7 @@ class TestPushSubscriptionLifecycle:
         message = PushMessage(title="Test", body="Test message")
 
         # Use the real _send_webpush method but mock the webpush import
-        with patch(
-            "mcp_server_langgraph.notifications.push_sender.get_circuit_breaker"
-        ) as mock_cb:
+        with patch("mcp_server_langgraph.notifications.push_sender.get_circuit_breaker") as mock_cb:
             # Setup circuit breaker mock to allow the call through
             mock_breaker = MagicMock()
             mock_breaker.current_state = "closed"
@@ -367,9 +356,7 @@ class TestPushSubscriptionLifecycle:
         assert len(subs) == 3
 
         # Delete one subscription
-        await push_store.delete_subscription(
-            "https://push.example.com/p/device-1"
-        )
+        await push_store.delete_subscription("https://push.example.com/p/device-1")
 
         # Verify only 2 remain
         subs = await push_store.get_subscriptions_for_user(user_id)
@@ -397,9 +384,7 @@ class TestAlertMessageFormatting:
 
         captured_message: PushMessage | None = None
 
-        async def capture_message(
-            subscription: PushSubscription, message: PushMessage
-        ) -> bool:
+        async def capture_message(subscription: PushSubscription, message: PushMessage) -> bool:
             nonlocal captured_message
             captured_message = message
             return True
@@ -442,9 +427,7 @@ class TestAlertMessageFormatting:
 
         captured_message: PushMessage | None = None
 
-        async def capture_message(
-            subscription: PushSubscription, message: PushMessage
-        ) -> bool:
+        async def capture_message(subscription: PushSubscription, message: PushMessage) -> bool:
             nonlocal captured_message
             captured_message = message
             return True

@@ -12,7 +12,6 @@ describe("Generative Module Exports", () => {
     vi.clearAllMocks();
   });
 
-
   describe("Components", () => {
     it("should export GenerativeWidget", () => {
       expect(generativeModule.GenerativeWidget).toBeDefined();

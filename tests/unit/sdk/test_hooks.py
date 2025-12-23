@@ -8,18 +8,14 @@ from __future__ import annotations
 
 import gc
 from typing import TYPE_CHECKING, Any
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 
 pytestmark = pytest.mark.unit
 
 if TYPE_CHECKING:
-    from mcp_server_langgraph.sdk.hooks import (
-        HookResult,
-        PreToolUseHook,
-        SecurityHookRegistry,
-    )
+    pass
 
 
 @pytest.mark.unit
@@ -110,7 +106,7 @@ class TestPreToolUseHook:
     @pytest.mark.asyncio
     async def test_command_allowlist_hook_allows_safe_command(self) -> None:
         """Test command allowlist hook allows safe commands."""
-        from mcp_server_langgraph.sdk.hooks import command_allowlist_hook, HookResult
+        from mcp_server_langgraph.sdk.hooks import command_allowlist_hook
 
         input_data = {
             "tool_name": "Bash",
@@ -593,9 +589,7 @@ class TestDefaultSecurityHooks:
             "tool_input": {"command": "rm -rf /"},
         }
 
-        result = await DEFAULT_SECURITY_HOOKS.execute_hooks(
-            "PreToolUse", "Bash", input_data, "id", {}
-        )
+        result = await DEFAULT_SECURITY_HOOKS.execute_hooks("PreToolUse", "Bash", input_data, "id", {})
 
         assert result.allowed is False
 

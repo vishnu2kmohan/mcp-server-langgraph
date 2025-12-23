@@ -92,11 +92,13 @@ class AgentStateManager:
         if "checkpoints" not in state:
             state["checkpoints"] = []
 
-        state["checkpoints"].append({
-            "phase": phase,
-            "summary": summary,
-            "timestamp": datetime.now(UTC).isoformat(),
-        })
+        state["checkpoints"].append(
+            {
+                "phase": phase,
+                "summary": summary,
+                "timestamp": datetime.now(UTC).isoformat(),
+            }
+        )
 
         await self.save_state(session_id, state)
 

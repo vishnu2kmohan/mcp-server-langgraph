@@ -8,17 +8,15 @@ Provides abstraction layer for agent orchestration.
 from __future__ import annotations
 
 import gc
-from typing import TYPE_CHECKING, Any
-from unittest.mock import AsyncMock, MagicMock, patch
+from typing import TYPE_CHECKING
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
 pytestmark = pytest.mark.unit
 
 if TYPE_CHECKING:
-    from mcp_server_langgraph.sdk.client import LangGraphAgentClient
-    from mcp_server_langgraph.sdk.tools import InProcessToolServer
-    from mcp_server_langgraph.sdk.state import AgentStateManager
+    pass
 
 
 @pytest.mark.unit
@@ -403,9 +401,7 @@ class TestLangGraphAgentClientLLMIntegration:
 
         # Create mock LLM factory with ainvoke
         mock_factory = MagicMock()
-        mock_factory.ainvoke = AsyncMock(
-            return_value=AIMessage(content="LLM response: The answer is 4")
-        )
+        mock_factory.ainvoke = AsyncMock(return_value=AIMessage(content="LLM response: The answer is 4"))
 
         client = LangGraphAgentClient(llm_factory=mock_factory)
 
@@ -438,9 +434,7 @@ class TestLangGraphAgentClientLLMIntegration:
         from mcp_server_langgraph.sdk.client import LangGraphAgentClient
 
         mock_factory = MagicMock()
-        mock_factory.ainvoke = AsyncMock(
-            return_value=AIMessage(content="Response")
-        )
+        mock_factory.ainvoke = AsyncMock(return_value=AIMessage(content="Response"))
 
         client = LangGraphAgentClient(llm_factory=mock_factory)
 

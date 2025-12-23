@@ -664,7 +664,6 @@ class TestAlertBroadcasterRouterIntegration:
         sample_critical_alert: Alert,
     ) -> None:
         """GIVEN broadcaster with router WHEN broadcasting THEN alert is routed."""
-        from mcp_server_langgraph.alerts.routing import Alert as RoutingAlert
         from mcp_server_langgraph.alerts.routing import AlertRouter, RoutingResult
 
         mock_router = AsyncMock(spec=AlertRouter)

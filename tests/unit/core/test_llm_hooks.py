@@ -10,8 +10,6 @@ Written FIRST before implementation (RED phase).
 
 import gc
 from datetime import UTC, datetime
-from typing import Any
-from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
@@ -19,8 +17,8 @@ import pytest
 MCP_PROTOCOL_VERSION = "2025-11-25"
 
 
-
 pytestmark = pytest.mark.unit
+
 
 @pytest.mark.xdist_group(name="llm_hooks")
 class TestLLMHookEvents:
@@ -209,9 +207,7 @@ class TestAfterModelInput:
         THEN tool calls are accessible"""
         from mcp_server_langgraph.core.hooks import AfterModelInput
 
-        tool_calls = [
-            {"id": "call_1", "name": "search", "arguments": {"query": "Python"}}
-        ]
+        tool_calls = [{"id": "call_1", "name": "search", "arguments": {"query": "Python"}}]
 
         input_data = AfterModelInput(
             content="",
@@ -489,6 +485,7 @@ class TestHookRegistryLLMSupport:
 
         async def my_hook(input_data, tool_use_id, context):
             from mcp_server_langgraph.core.hooks import HookResult
+
             return HookResult(behavior="allow")
 
         registry = HookRegistry()
@@ -513,6 +510,7 @@ class TestHookRegistryLLMSupport:
 
         async def my_hook(input_data, tool_use_id, context):
             from mcp_server_langgraph.core.hooks import HookResult
+
             return HookResult(behavior="allow")
 
         registry = HookRegistry()
@@ -536,10 +534,12 @@ class TestHookRegistryLLMSupport:
 
         async def start_hook(input_data, tool_use_id, context):
             from mcp_server_langgraph.core.hooks import HookResult
+
             return HookResult(behavior="allow")
 
         async def end_hook(input_data, tool_use_id, context):
             from mcp_server_langgraph.core.hooks import HookResult
+
             return HookResult(behavior="allow")
 
         registry = HookRegistry()

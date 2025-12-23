@@ -22,8 +22,7 @@ from __future__ import annotations
 import gc
 import inspect
 from datetime import UTC, datetime
-from typing import Any
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock
 
 import pytest
 
@@ -98,9 +97,7 @@ class TestAgentRequestEndpoints:
         )
 
         routes = [r for r in agent_request_router.routes]
-        pending_routes = [
-            r for r in routes if hasattr(r, "path") and "pending" in r.path
-        ]
+        pending_routes = [r for r in routes if hasattr(r, "path") and "pending" in r.path]
         assert len(pending_routes) > 0, "Should have /pending route"
 
     def test_get_request_endpoint_exists(self) -> None:
@@ -114,10 +111,7 @@ class TestAgentRequestEndpoints:
         )
 
         routes = [r for r in agent_request_router.routes]
-        detail_routes = [
-            r for r in routes
-            if hasattr(r, "path") and "{request_id}" in r.path and "GET" in (r.methods or [])
-        ]
+        detail_routes = [r for r in routes if hasattr(r, "path") and "{request_id}" in r.path and "GET" in (r.methods or [])]
         assert len(detail_routes) > 0, "Should have /{request_id} GET route"
 
     def test_approve_endpoint_exists(self) -> None:
@@ -131,9 +125,7 @@ class TestAgentRequestEndpoints:
         )
 
         routes = [r for r in agent_request_router.routes]
-        approve_routes = [
-            r for r in routes if hasattr(r, "path") and "approve" in r.path
-        ]
+        approve_routes = [r for r in routes if hasattr(r, "path") and "approve" in r.path]
         assert len(approve_routes) > 0, "Should have approve route"
 
     def test_reject_endpoint_exists(self) -> None:
@@ -147,9 +139,7 @@ class TestAgentRequestEndpoints:
         )
 
         routes = [r for r in agent_request_router.routes]
-        reject_routes = [
-            r for r in routes if hasattr(r, "path") and "reject" in r.path
-        ]
+        reject_routes = [r for r in routes if hasattr(r, "path") and "reject" in r.path]
         assert len(reject_routes) > 0, "Should have reject route"
 
     def test_respond_endpoint_exists(self) -> None:
@@ -163,9 +153,7 @@ class TestAgentRequestEndpoints:
         )
 
         routes = [r for r in agent_request_router.routes]
-        respond_routes = [
-            r for r in routes if hasattr(r, "path") and "respond" in r.path
-        ]
+        respond_routes = [r for r in routes if hasattr(r, "path") and "respond" in r.path]
         assert len(respond_routes) > 0, "Should have respond route"
 
 
@@ -1229,7 +1217,7 @@ class TestAgentRequestQueueBatchOperations:
 
         queue = AgentRequestQueue()
         assert hasattr(queue, "batch_approve")
-        assert callable(getattr(queue, "batch_approve"))
+        assert callable(queue.batch_approve)
 
     def test_queue_has_batch_reject_method(self) -> None:
         """
@@ -1241,7 +1229,7 @@ class TestAgentRequestQueueBatchOperations:
 
         queue = AgentRequestQueue()
         assert hasattr(queue, "batch_reject")
-        assert callable(getattr(queue, "batch_reject"))
+        assert callable(queue.batch_reject)
 
     def test_batch_approve_multiple_requests(self) -> None:
         """
@@ -1262,16 +1250,16 @@ class TestAgentRequestQueueBatchOperations:
         for i in range(3):
             queue.add_request(
                 AgentRequest(
-                    request_id=f"req-00{i+1}",
+                    request_id=f"req-00{i + 1}",
                     session_id="session-001",
-                    task_id=f"task-00{i+1}",
+                    task_id=f"task-00{i + 1}",
                     agent_name="Test Agent",
                     request_type=AgentRequestType.APPROVAL,
                     status=AgentRequestStatus.PENDING,
                     confidence=0.65,
                     threshold=0.7,
-                    question=f"Approve action {i+1}?",
-                    proposed_action=f"Action {i+1}",
+                    question=f"Approve action {i + 1}?",
+                    proposed_action=f"Action {i + 1}",
                     trigger_reason="low_confidence",
                     requested_at=datetime.now(UTC).isoformat(),
                 )
@@ -1354,16 +1342,16 @@ class TestAgentRequestQueueBatchOperations:
         for i in range(2):
             queue.add_request(
                 AgentRequest(
-                    request_id=f"req-00{i+1}",
+                    request_id=f"req-00{i + 1}",
                     session_id="session-001",
-                    task_id=f"task-00{i+1}",
+                    task_id=f"task-00{i + 1}",
                     agent_name="Test Agent",
                     request_type=AgentRequestType.APPROVAL,
                     status=AgentRequestStatus.PENDING,
                     confidence=0.45,
                     threshold=0.7,
-                    question=f"Approve risky action {i+1}?",
-                    proposed_action=f"Risky action {i+1}",
+                    question=f"Approve risky action {i + 1}?",
+                    proposed_action=f"Risky action {i + 1}",
                     trigger_reason="low_confidence",
                     requested_at=datetime.now(UTC).isoformat(),
                 )
@@ -1415,7 +1403,6 @@ class TestBatchApprovalAuditLogging:
         """
         from mcp_server_langgraph.api.v1.agent_requests import (
             AgentRequest,
-            AgentRequestQueue,
             AgentRequestStatus,
             AgentRequestType,
             BatchApproveRequest,
@@ -1428,16 +1415,16 @@ class TestBatchApprovalAuditLogging:
         for i in range(2):
             queue.add_request(
                 AgentRequest(
-                    request_id=f"audit-req-00{i+1}",
+                    request_id=f"audit-req-00{i + 1}",
                     session_id="session-001",
-                    task_id=f"task-00{i+1}",
+                    task_id=f"task-00{i + 1}",
                     agent_name="Test Agent",
                     request_type=AgentRequestType.APPROVAL,
                     status=AgentRequestStatus.PENDING,
                     confidence=0.65,
                     threshold=0.7,
-                    question=f"Approve action {i+1}?",
-                    proposed_action=f"Action {i+1}",
+                    question=f"Approve action {i + 1}?",
+                    proposed_action=f"Action {i + 1}",
                     trigger_reason="low_confidence",
                     requested_at=datetime.now(UTC).isoformat(),
                 )

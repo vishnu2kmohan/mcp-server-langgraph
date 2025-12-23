@@ -44,7 +44,9 @@ function generateMockEntries(count: number): NetworkEntry[] {
     statusText: i % statuses.length === 0 ? "OK" : undefined,
     startTime: Date.now() - i * 100,
     endTime:
-      i % statuses.length === 0 ? Date.now() - i * 100 + 50 + (i % 200) : undefined,
+      i % statuses.length === 0
+        ? Date.now() - i * 100 + 50 + (i % 200)
+        : undefined,
     duration: i % statuses.length === 0 ? 50 + (i % 200) : undefined,
     requestSize: i % 3 === 0 ? 100 + i * 10 : undefined,
     responseSize: i % statuses.length === 0 ? 1000 + i * 50 : undefined,
@@ -150,7 +152,8 @@ describe("NetworkTab Performance", () => {
       }
 
       // Average filter switch time should be fast (allows for occasional spikes in test env)
-      const avgFilterTime = filterTimes.reduce((a, b) => a + b, 0) / filterTimes.length;
+      const avgFilterTime =
+        filterTimes.reduce((a, b) => a + b, 0) / filterTimes.length;
       expect(avgFilterTime).toBeLessThan(150);
     });
   });
@@ -257,17 +260,19 @@ describe("NetworkTab Performance", () => {
       const mockClick = vi.fn();
       const originalCreateElement = document.createElement.bind(document);
 
-      vi.spyOn(document, "createElement").mockImplementation((tagName: string) => {
-        if (tagName === "a") {
-          return {
-            href: "",
-            download: "",
-            click: mockClick,
-            style: {},
-          } as unknown as HTMLAnchorElement;
-        }
-        return originalCreateElement(tagName);
-      });
+      vi.spyOn(document, "createElement").mockImplementation(
+        (tagName: string) => {
+          if (tagName === "a") {
+            return {
+              href: "",
+              download: "",
+              click: mockClick,
+              style: {},
+            } as unknown as HTMLAnchorElement;
+          }
+          return originalCreateElement(tagName);
+        },
+      );
       vi.spyOn(document.body, "appendChild").mockImplementation(
         (node) => node as Node,
       );
@@ -303,7 +308,10 @@ describe("NetworkTab Performance", () => {
       // Re-render multiple times
       for (let i = 0; i < 10; i++) {
         rerender(
-          <NetworkTab contextEntityId={`session-${i}`} showMCPCalls={i % 2 === 0} />,
+          <NetworkTab
+            contextEntityId={`session-${i}`}
+            showMCPCalls={i % 2 === 0}
+          />,
         );
       }
 

@@ -14,7 +14,6 @@ from __future__ import annotations
 import gc
 import uuid
 from typing import Any
-from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
@@ -418,7 +417,6 @@ class TestSDKAgentsE2E:
             InProcessToolServer,
             SecurityHookRegistry,
             AgentStateManager,
-            HookResult,
         )
         from mcp_server_langgraph.agents import ModelSelector, Orchestrator
 
@@ -465,10 +463,13 @@ class TestSDKAgentsE2E:
         session_id = f"lifecycle-test-{uuid.uuid4().hex[:8]}"
 
         # Save initial state
-        await state_manager.save_state(session_id, {
-            "step": 1,
-            "data": "initial",
-        })
+        await state_manager.save_state(
+            session_id,
+            {
+                "step": 1,
+                "data": "initial",
+            },
+        )
 
         # Resume and verify
         state = await state_manager.resume_session(session_id)

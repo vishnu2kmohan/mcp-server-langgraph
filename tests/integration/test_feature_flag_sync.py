@@ -361,9 +361,7 @@ class TestFeatureFlagNamingConvention:
         # These should NOT be in the UI flags (backend names with enable_ prefix)
         invalid_prefixes = ["enable_"]
 
-        invalid_flags = [
-            flag for flag in ui_flags if any(flag.startswith(prefix) for prefix in invalid_prefixes)
-        ]
+        invalid_flags = [flag for flag in ui_flags if any(flag.startswith(prefix) for prefix in invalid_prefixes)]
 
         # Exception: Some flags like enable_* that are intentionally exposed
         # (none currently, but this allows for future exceptions)

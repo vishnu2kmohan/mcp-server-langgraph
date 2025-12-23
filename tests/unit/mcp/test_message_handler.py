@@ -8,8 +8,6 @@ to ensure proper module structure and backward compatibility.
 from __future__ import annotations
 
 import gc
-from typing import Any
-from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
@@ -103,12 +101,7 @@ class TestMCPMessageHandlerBasicFunctionality:
         from mcp_server_langgraph.mcp.message_handler import MCPMessageHandler
 
         handler = MCPMessageHandler()
-        response = await handler.handle({
-            "jsonrpc": "2.0",
-            "id": 1,
-            "method": "initialize",
-            "params": {}
-        })
+        response = await handler.handle({"jsonrpc": "2.0", "id": 1, "method": "initialize", "params": {}})
 
         assert response["jsonrpc"] == "2.0"
         assert response["id"] == 1
@@ -122,12 +115,7 @@ class TestMCPMessageHandlerBasicFunctionality:
         from mcp_server_langgraph.mcp.message_handler import MCPMessageHandler
 
         handler = MCPMessageHandler()
-        response = await handler.handle({
-            "jsonrpc": "2.0",
-            "id": 2,
-            "method": "tools/list",
-            "params": {}
-        })
+        response = await handler.handle({"jsonrpc": "2.0", "id": 2, "method": "tools/list", "params": {}})
 
         assert response["id"] == 2
         assert "result" in response
@@ -139,12 +127,7 @@ class TestMCPMessageHandlerBasicFunctionality:
         from mcp_server_langgraph.mcp.message_handler import MCPMessageHandler
 
         handler = MCPMessageHandler()
-        response = await handler.handle({
-            "jsonrpc": "2.0",
-            "id": 3,
-            "method": "unknown/method",
-            "params": {}
-        })
+        response = await handler.handle({"jsonrpc": "2.0", "id": 3, "method": "unknown/method", "params": {}})
 
         assert response["id"] == 3
         assert "error" in response
@@ -199,12 +182,7 @@ class TestAuthenticatedMCPHandler:
         from mcp_server_langgraph.mcp.message_handler import AuthenticatedMCPHandler
 
         handler = AuthenticatedMCPHandler(user_id="test-user")
-        response = await handler.handle({
-            "jsonrpc": "2.0",
-            "id": 1,
-            "method": "initialize",
-            "params": {}
-        })
+        response = await handler.handle({"jsonrpc": "2.0", "id": 1, "method": "initialize", "params": {}})
 
         assert "result" in response
         assert "protocolVersion" in response["result"]
