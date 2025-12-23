@@ -336,7 +336,7 @@ export function useMCPWebSocket(
 
   // Compute WebSocket URL - recalculate when auth state changes
   // This ensures the token query param is included when user becomes authenticated
-   
+
   const wsUrl = useMemo(
     () => url ?? getDefaultMCPWebSocketUrl(authenticated),
     [url, authenticated],

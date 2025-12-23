@@ -69,7 +69,9 @@ export function StudioShellGuard() {
   }
 
   // On error, default to HybridShell (fail-open) for better UX
-  const isHybridShellEnabled = isError ? true : isEnabled("canvas_hybrid_shell");
+  const isHybridShellEnabled = isError
+    ? true
+    : isEnabled("canvas_hybrid_shell");
 
   // When hybrid shell is enabled, render HybridShellLayout
   // HybridShellLayout includes its own Outlet for child routes

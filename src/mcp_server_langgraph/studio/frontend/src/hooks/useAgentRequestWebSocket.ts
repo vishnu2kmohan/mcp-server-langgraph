@@ -300,7 +300,7 @@ export function useAgentRequestWebSocket(
 
   // Compute WebSocket URL - recalculate when auth state changes
   // This ensures the token query param is included when user becomes authenticated
-   
+
   const wsUrl = useMemo(
     () => url ?? getDefaultWebSocketUrl(sessionId),
     [url, sessionId],

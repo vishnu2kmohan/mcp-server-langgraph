@@ -115,11 +115,8 @@ export function useNotificationWebSocket(
 
   // Compute WebSocket URL - recalculate when auth state changes
   // This ensures the token query param is included when user becomes authenticated
-   
-  const wsUrl = useMemo(
-    () => url ?? getDefaultWebSocketUrl(),
-    [url],
-  );
+
+  const wsUrl = useMemo(() => url ?? getDefaultWebSocketUrl(), [url]);
 
   // Handle incoming messages
   const handleMessage = useCallback(

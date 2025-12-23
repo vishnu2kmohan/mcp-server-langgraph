@@ -1,23 +1,6 @@
-import {
-  useState,
-  useEffect,
-  useCallback,
-  lazy,
-  Suspense,
-  type ReactNode,
-} from "react";
+import { useState, useEffect, useCallback, lazy, Suspense } from "react";
 import { Outlet, useLocation, useNavigate } from "react-router";
 import { Toaster } from "sonner";
-import { LeftSidebar } from "./components/Layout/LeftSidebar";
-import { CommandPalette } from "./components/Layout/CommandPalette";
-import { AppShell } from "./components/Layout/AppShell";
-import { RightSidebar } from "./components/Layout/RightSidebar";
-import { BottomPanel } from "./components/Layout/BottomPanel";
-import { MainDock } from "./components/Layout/MainDock";
-import { ChatDocument } from "./components/Chat/ChatDocument";
-import { WorkflowDocument } from "./components/Workflow";
-import { ProjectDocument } from "./components/Project";
-import type { TabState } from "./store/slices/workspaceSlice";
 import { OfflineBanner } from "./components/UI";
 import { UpdatePrompt } from "./components/PWA";
 import type {
@@ -31,19 +14,6 @@ import type { SUSSurveyResult } from "./components/Feedback";
 
 // Lazy-loaded components for better bundle splitting
 // These are only loaded when needed (modal/conditional rendering)
-const SettingsDocument = lazy(() =>
-  import("./components/Settings").then((m) => ({
-    default: m.SettingsDocument,
-  })),
-);
-const CostDocument = lazy(() =>
-  import("./components/Insights").then((m) => ({ default: m.CostDocument })),
-);
-const ObservabilityDocument = lazy(() =>
-  import("./components/Insights").then((m) => ({
-    default: m.ObservabilityDocument,
-  })),
-);
 const OnboardingWizard = lazy(() =>
   import("./components/Onboarding").then((m) => ({
     default: m.OnboardingWizard,
@@ -56,34 +26,21 @@ const SUSSurvey = lazy(() =>
   import("./components/Feedback").then((m) => ({ default: m.SUSSurvey })),
 );
 
-// Loading fallback for lazy-loaded components (defined outside component to avoid recreating on each render)
-const LazyFallback = (
-  <div className="flex h-full items-center justify-center">
-    <div className="h-8 w-8 animate-spin rounded-full border-2 border-gray-300 border-t-blue-500" />
-  </div>
-);
-
 import { useAppDispatch } from "./store/hooks";
 import { setUserInfo, setPersonaLoading } from "./store/slices/personaSlice";
 import { initializeAuth } from "./store/slices/authSlice";
-import { loadWorkspaceFromStorage } from "./store/slices/workspaceSlice";
 import { useNotificationWebSocket } from "./hooks/useNotificationWebSocket";
 import { useAlertWebSocket } from "./hooks/useAlertWebSocket";
 import { useAlertSoundIntegration } from "./hooks/useAlertSoundIntegration";
 import { usePWAUpdate } from "./hooks/usePWAUpdate";
 import { useOnboarding } from "./hooks/useOnboarding";
 import { useTheme } from "./hooks/useTheme";
-import { useRouteTabSync } from "./hooks/useRouteTabSync";
-import { useTabNavigation } from "./hooks/useTabNavigation";
 import {
   useGetCurrentUserQuery,
   useGetWorkflowTemplatesQuery,
-  useCreateSessionMutation,
-  useCreateProjectMutation,
   useSubmitFeedbackMutation,
 } from "./api";
 import { useFeatureFlags } from "./contexts/FeatureFlagContext";
-import { addTab, setActiveTabId } from "./store/slices/workspaceSlice";
 import { storage, STORAGE_KEYS, getAuthToken } from "./utils/storage";
 
 /**
@@ -168,21 +125,10 @@ export function App() {
   const location = useLocation();
   const navigate = useNavigate();
 
-  // Feature flag to control which shell to use
-  const { isLoading: _isFeatureFlagsLoading, isEnabled } = useFeatureFlags();
-  const isHybridShellEnabled = isEnabled("canvas_hybrid_shell");
+  // Feature flags for UX enhancements
+  const { isEnabled } = useFeatureFlags();
 
-  // Check if this is a studio/admin route that should use AppShell (legacy)
-  // When canvas_hybrid_shell is enabled, /studio/* uses HybridShellLayout via router
-  // When disabled, /studio/* uses AppShell (this component renders it)
-  const isStudioPath =
-    location.pathname.startsWith("/studio") ||
-    location.pathname.startsWith("/admin");
-
-  // Legacy route: AppShell is used when feature flag is disabled
-  const isLegacyStudioRoute = isStudioPath && !isHybridShellEnabled;
-
-  // Broader check for any studio/admin route (for features like notifications)
+  // Check if on studio/admin route (for features like notifications, onboarding)
   const isStudioRoute =
     location.pathname.startsWith("/studio") ||
     location.pathname.startsWith("/admin");
@@ -193,12 +139,6 @@ export function App() {
   // This restores the user session from localStorage tokens
   useEffect(() => {
     dispatch(initializeAuth());
-  }, [dispatch]);
-
-  // Load workspace layout state from localStorage on startup
-  // This restores panel sizes, collapsed states, tabs, and focus mode
-  useEffect(() => {
-    dispatch(loadWorkspaceFromStorage());
   }, [dispatch]);
 
   // Connect to notification WebSocket for studio/admin routes
@@ -216,65 +156,10 @@ export function App() {
   // Apply theme to document (defaults to dark, respects user preference)
   useTheme();
 
-  // Sync routes with workspace tabs (only in studio routes)
-  // This creates/activates tabs when navigating to different sections
-  useRouteTabSync();
-
-  // Tab navigation for MainDock (bidirectional sync)
-  const handleTabNavigate = useTabNavigation();
-
-  // Feature flags for conditional rendering of chat features
-  // Note: isEnabled is already destructured from useFeatureFlags() above
-  const enableUrlContentFetch = isEnabled("url_content_fetch");
-  const enableSlashCommands = isEnabled("slash_commands");
-  const enableStylePresets = isEnabled("style_presets");
-
   // UX Enhancement Feature Flags
   const enableOnboardingWizard = isEnabled("onboarding_wizard");
   const enableGuidedTour = isEnabled("guided_tour");
   const enableSusSurvey = isEnabled("sus_survey");
-
-  // Tab content renderer - maps tab types to document components
-  const renderTabContent = useCallback(
-    (tab: TabState): ReactNode => {
-      switch (tab.type) {
-        case "chat":
-          return (
-            <ChatDocument
-              sessionId={tab.entityId || ""}
-              enableUrlFetch={enableUrlContentFetch}
-              enableSlashCommands={enableSlashCommands}
-              showStylePresets={enableStylePresets}
-            />
-          );
-        case "workflow":
-          return <WorkflowDocument workflowId={tab.entityId || ""} />;
-        case "project":
-          return <ProjectDocument projectId={tab.entityId || ""} />;
-        case "settings":
-          return (
-            <Suspense fallback={LazyFallback}>
-              <SettingsDocument />
-            </Suspense>
-          );
-        case "cost":
-          return (
-            <Suspense fallback={LazyFallback}>
-              <CostDocument />
-            </Suspense>
-          );
-        case "observability":
-          return (
-            <Suspense fallback={LazyFallback}>
-              <ObservabilityDocument />
-            </Suspense>
-          );
-        default:
-          return <div className="p-4 text-gray-500">Unknown tab type</div>;
-      }
-    },
-    [enableUrlContentFetch, enableSlashCommands, enableStylePresets],
-  );
 
   // PWA update management
   const { needsUpdate, isUpdating, updateApp, dismissUpdate } = usePWAUpdate();
@@ -397,8 +282,6 @@ export function App() {
   );
 
   // Mutations for creating new resources
-  const [createSession] = useCreateSessionMutation();
-  const [createProject] = useCreateProjectMutation();
   const [submitFeedback] = useSubmitFeedbackMutation();
 
   // Handle SUS survey submission - submits to backend analytics
@@ -428,48 +311,6 @@ export function App() {
     },
     [submitFeedback],
   );
-
-  // Handler for creating a new chat session
-  const handleNewChat = useCallback(async () => {
-    try {
-      const session = await createSession({ name: "New Chat" }).unwrap();
-      // Add new tab for the session
-      dispatch(
-        addTab({
-          id: `chat-${session.id}`,
-          type: "chat",
-          title: session.name || "New Chat",
-          entityId: session.id,
-        }),
-      );
-      // Set as active and navigate
-      dispatch(setActiveTabId(`chat-${session.id}`));
-      navigate(`/studio/chat/${session.id}`);
-    } catch (error) {
-      console.error("Failed to create chat session:", error);
-    }
-  }, [createSession, dispatch, navigate]);
-
-  // Handler for creating a new project
-  const handleNewProject = useCallback(async () => {
-    try {
-      const project = await createProject({ name: "New Project" }).unwrap();
-      // Add new tab for the project
-      dispatch(
-        addTab({
-          id: `project-${project.id}`,
-          type: "project",
-          title: project.name,
-          entityId: project.id,
-        }),
-      );
-      // Set as active and navigate
-      dispatch(setActiveTabId(`project-${project.id}`));
-      navigate(`/studio/projects/${project.id}`);
-    } catch (error) {
-      console.error("Failed to create project:", error);
-    }
-  }, [createProject, dispatch, navigate]);
 
   // Update persona state when user data is fetched
   useEffect(() => {
