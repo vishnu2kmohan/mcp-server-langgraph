@@ -1,6 +1,16 @@
 /**
  * ProblemsPanel Component
  *
+ * @deprecated This component is superseded by DevTools ProblemsTab.
+ * The ProblemsTab provides enhanced functionality including:
+ * - Aggregates more error sources (session, MCP, validation, API)
+ * - Severity-based filtering
+ * - Error details with stack traces
+ * - Copy error to clipboard
+ *
+ * Migration: Use DevTools panel (Cmd+Shift+I) Problems tab instead.
+ * See: components/DevTools/CONSOLIDATION.md for migration guide.
+ *
  * Displays aggregated errors and warnings from various sources.
  * Used in the BottomPanel's Problems tab.
  *

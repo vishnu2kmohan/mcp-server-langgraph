@@ -1,6 +1,16 @@
 /**
  * InspectorPanel Component
  *
+ * @deprecated This component functionality is available in DevTools StateTab.
+ * The StateTab provides enhanced functionality including:
+ * - Redux state tree inspection with search
+ * - Context-aware state filtering (session, workflow, global)
+ * - Expand/collapse tree navigation
+ * - Path display for state properties
+ *
+ * Migration: Use DevTools panel (Cmd+Shift+I) State tab instead.
+ * See: components/DevTools/CONSOLIDATION.md for migration guide.
+ *
  * Displays MCP server details and tool information.
  * Used in the BottomPanel's Inspector tab.
  *

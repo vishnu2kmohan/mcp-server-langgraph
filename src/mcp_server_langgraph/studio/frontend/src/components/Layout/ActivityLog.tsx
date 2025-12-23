@@ -1,6 +1,17 @@
 /**
  * ActivityLog Component
  *
+ * @deprecated This component is superseded by DevTools ConsoleTab.
+ * The ConsoleTab provides enhanced functionality including:
+ * - Level-based filtering (all, info, warning, error)
+ * - Source filtering (system, api, mcp, notification, execution, websocket)
+ * - Structured data view with expand/collapse
+ * - Copy to clipboard and clear console
+ * - Keyboard navigation and auto-scroll
+ *
+ * Migration: Use DevTools panel (Cmd+Shift+I) instead.
+ * See: components/DevTools/CONSOLIDATION.md for migration guide.
+ *
  * Displays a real-time activity feed of notifications and events.
  * Used in the BottomPanel's Activity tab.
  *

@@ -385,32 +385,8 @@ export function App() {
   return (
     <div className="min-h-screen bg-white dark:bg-gray-900">
       <OfflineBanner />
-      {isLegacyStudioRoute ? (
-        // Legacy studio routes: /studio/* (except /studio/v2/*) and /admin/*
-        // Uses AppShell with LeftSidebar, RightSidebar, MainDock
-        <>
-          <AppShell
-            leftSidebar={
-              <LeftSidebar
-                onNewChat={handleNewChat}
-                onNewProject={handleNewProject}
-              />
-            }
-            rightSidebar={<RightSidebar />}
-            bottomPanel={<BottomPanel />}
-          >
-            <MainDock
-              renderContent={renderTabContent}
-              onTabNavigate={handleTabNavigate}
-            />
-          </AppShell>
-          <CommandPalette />
-        </>
-      ) : (
-        // Non-legacy routes: /studio/v2/*, /login, /auth/callback, etc.
-        // These render their own layout via the router (e.g., HybridShellLayout)
-        <Outlet />
-      )}
+      {/* All routes render via router - HybridShellLayout for /studio/* */}
+      <Outlet />
       <Toaster
         position="bottom-right"
         richColors

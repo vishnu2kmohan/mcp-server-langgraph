@@ -1,10 +1,10 @@
-import { createBrowserRouter, Navigate, Outlet } from "react-router";
+import { createBrowserRouter, Navigate, Outlet, useLocation } from "react-router";
 import { App } from "../App";
 import { AuthGuard } from "./guards/AuthGuard";
 import { PersonaGuard } from "./guards/PersonaGuard";
 import { PermissionGuard } from "./guards/PermissionGuard";
 import { RootRedirect } from "./guards/RootRedirect";
-import { HybridShellGuard } from "./guards/HybridShellGuard";
+import { StudioShellGuard } from "./guards/StudioShellGuard";
 import { HybridShellLayout } from "../layout";
 import {
   chatLoader,
@@ -37,15 +37,20 @@ export const router = createBrowserRouter(
         { index: true, element: <RootRedirect /> },
 
         // Studio routes (lazy-loaded, authentication required)
+        // Uses StudioShellGuard which renders HybridShellLayout
         {
+          id: "studio",
           path: "studio",
           element: (
             <AuthGuard>
-              <Outlet />
+              <StudioShellGuard />
             </AuthGuard>
           ),
+          // Load sessions for SessionNav on shell mount
+          loader: sessionsLoader,
           children: [
-            { index: true, element: <Navigate to="projects" replace /> },
+            // Default redirect to chat (HybridShell default)
+            { index: true, element: <Navigate to="chat" replace /> },
             {
               path: "projects",
               lazy: async () => {
