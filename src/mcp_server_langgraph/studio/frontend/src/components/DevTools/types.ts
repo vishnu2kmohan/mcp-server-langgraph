@@ -251,6 +251,54 @@ export interface AIInsightsTabProps {
   context: "session" | "workflow" | "global";
   /** Context entity ID */
   contextEntityId: string;
+  /** Enable observability insights panel */
+  enableObservability?: boolean;
+  /** Enable natural language query interface */
+  enableNLQuery?: boolean;
+}
+
+// =============================================================================
+// Predictive Alert Types
+// =============================================================================
+
+/** Type of predictive alert */
+export type PredictiveAlertType =
+  | "memory_pressure"
+  | "disk_space"
+  | "cpu_spike"
+  | "latency_spike"
+  | "error_rate_increase";
+
+/** Predictive alert from ML analysis */
+export interface PredictiveAlert {
+  /** Unique identifier */
+  id: string;
+  /** Type of predicted issue */
+  type: PredictiveAlertType;
+  /** Probability of issue occurring (0-1) */
+  probability: number;
+  /** Estimated time until issue fires (ms) */
+  estimatedTimeToFire: number;
+  /** Human-readable message */
+  message: string;
+  /** Suggested preventive action */
+  suggestedAction: string;
+}
+
+/** Natural language query response */
+export interface NLQueryResponse {
+  /** The original query */
+  query: string;
+  /** The AI-generated response */
+  response: string;
+  /** Related trace IDs */
+  relatedTraceIds?: string[];
+  /** Related alert IDs */
+  relatedAlertIds?: string[];
+  /** Confidence score (0-1) */
+  confidence: number;
+  /** Timestamp of response */
+  timestamp: number;
 }
 
 // =============================================================================

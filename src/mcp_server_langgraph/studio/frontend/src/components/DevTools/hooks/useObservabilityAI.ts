@@ -57,11 +57,21 @@ export interface RootCauseAnalysis {
   suggestedActions: string[];
 }
 
+export interface PredictiveAlert {
+  id: string;
+  type: string;
+  probability: number;
+  estimatedTimeToFire: number;
+  message: string;
+  suggestedAction: string;
+}
+
 export interface ObservabilityInsights {
   traceAnomalies: TraceAnomalies | null;
   alertCorrelations: AlertCorrelation[];
   costPrediction: CostPrediction | null;
   rootCauseAnalysis: RootCauseAnalysis | null;
+  predictiveAlerts?: PredictiveAlert[];
 }
 
 export interface SuggestedAction {
