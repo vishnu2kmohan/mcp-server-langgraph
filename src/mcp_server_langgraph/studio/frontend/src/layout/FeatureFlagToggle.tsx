@@ -34,7 +34,7 @@ function getInitialState(): boolean {
   if (stored !== undefined) {
     return stored;
   }
-  // Default to hybrid shell enabled
+  // Default to studio shell enabled
   return true;
 }
 

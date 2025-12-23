@@ -347,7 +347,7 @@ describe("StudioShellLayout", () => {
   });
 
   describe("Core Layout", () => {
-    it("renders the hybrid shell with all panels", () => {
+    it("renders the studio shell with all panels", () => {
       renderWithProviders(createTestStore());
 
       expect(screen.getByTestId("studio-shell")).toBeInTheDocument();
@@ -704,7 +704,7 @@ describe("StudioShellLayout", () => {
       expect(screen.getByTestId("activity-bar")).toBeInTheDocument();
     });
 
-    it("has responsive CSS classes on hybrid shell", () => {
+    it("has responsive CSS classes on studio shell", () => {
       renderWithProviders(createTestStore());
 
       const shell = screen.getByTestId("studio-shell");

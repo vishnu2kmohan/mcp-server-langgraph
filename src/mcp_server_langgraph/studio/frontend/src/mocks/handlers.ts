@@ -182,8 +182,8 @@ export const mockFeatureFlags: FeatureFlags = {
   // Matches: src/mcp_server_langgraph/core/feature_flags.py - get_ui_features_for_role()
   // ==========================================================================
 
-  // Canvas Hybrid Shell Feature Flags (Phase 0+)
-  canvas_studio_shell: true, // Phase 1: Hybrid Canvas shell at /studio
+  // Canvas Studio Shell Feature Flags (Phase 0+)
+  canvas_studio_shell: true, // Phase 1: Studio Canvas shell at /studio
   canvas_editable: true, // Phase 2: Editable artifacts in Canvas panel
   canvas_agents: true, // Phase 4: Background agent panel
   canvas_ai_palette: true, // Phase 4: AI fallback in command palette
