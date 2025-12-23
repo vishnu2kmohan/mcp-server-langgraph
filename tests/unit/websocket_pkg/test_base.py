@@ -939,3 +939,379 @@ class TestGetAuthMiddlewareFromWebsocket:
 
         # Just verify the function exists and is callable
         assert callable(get_auth_middleware_from_websocket)
+
+
+@pytest.mark.xdist_group(name="websocket_base_run")
+class TestWebSocketBaseRun:
+    """Tests for WebSocketBase run method."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers."""
+        gc.collect()
+
+    @pytest.mark.asyncio
+    async def test_run_accepts_connection(self) -> None:
+        """GIVEN handler WHEN run called THEN accepts websocket connection."""
+        from mcp_server_langgraph.websocket.base import WebSocketBase
+        from mcp_server_langgraph.websocket.types import AuthUser, MessageEnvelope, WebSocketConfig
+
+        class TestHandler(WebSocketBase):
+            async def handle_message(self, message: MessageEnvelope) -> MessageEnvelope | None:
+                return None
+
+        config = WebSocketConfig(endpoint_name="test", require_auth=False)
+
+        with patch(
+            RATE_LIMITER_PATCH,
+            return_value=MagicMock(),
+        ):
+            handler = TestHandler(config)
+
+        mock_ws = AsyncMock()
+        mock_ws.client_state = None  # Prevent close attempt
+
+        # Simulate disconnect after accept
+        from starlette.websockets import WebSocketDisconnect
+
+        mock_ws.receive_json = AsyncMock(side_effect=WebSocketDisconnect())
+
+        await handler.run(mock_ws)
+
+        mock_ws.accept.assert_called_once()
+
+    @pytest.mark.asyncio
+    async def test_run_closes_on_auth_failure(self) -> None:
+        """GIVEN require_auth=True and no token WHEN run THEN closes connection."""
+        from mcp_server_langgraph.websocket.base import WebSocketBase
+        from mcp_server_langgraph.websocket.types import MessageEnvelope, WebSocketConfig
+
+        class TestHandler(WebSocketBase):
+            async def handle_message(self, message: MessageEnvelope) -> MessageEnvelope | None:
+                return None
+
+        config = WebSocketConfig(endpoint_name="test", require_auth=True)
+
+        with patch(
+            RATE_LIMITER_PATCH,
+            return_value=MagicMock(),
+        ):
+            handler = TestHandler(config)
+
+        mock_ws = AsyncMock()
+        mock_ws.query_params = {}
+        mock_ws.headers = {}
+        mock_ws.client_state = None
+
+        await handler.run(mock_ws)
+
+        mock_ws.close.assert_called_once()
+
+    @pytest.mark.asyncio
+    async def test_run_calls_on_connect_hook(self) -> None:
+        """GIVEN successful auth WHEN run THEN calls on_connect."""
+        from mcp_server_langgraph.websocket.base import WebSocketBase
+        from mcp_server_langgraph.websocket.types import MessageEnvelope, WebSocketConfig
+
+        on_connect_called = []
+
+        class TestHandler(WebSocketBase):
+            async def handle_message(self, message: MessageEnvelope) -> MessageEnvelope | None:
+                return None
+
+            async def on_connect(self, user) -> None:
+                on_connect_called.append(user)
+
+        config = WebSocketConfig(endpoint_name="test", require_auth=False)
+
+        with patch(
+            RATE_LIMITER_PATCH,
+            return_value=MagicMock(),
+        ):
+            handler = TestHandler(config)
+
+        mock_ws = AsyncMock()
+        mock_ws.client_state = None
+
+        from starlette.websockets import WebSocketDisconnect
+
+        mock_ws.receive_json = AsyncMock(side_effect=WebSocketDisconnect())
+
+        await handler.run(mock_ws)
+
+        assert len(on_connect_called) == 1
+        assert on_connect_called[0].id == "anonymous"
+
+    @pytest.mark.asyncio
+    async def test_run_calls_on_disconnect_hook(self) -> None:
+        """GIVEN connection WHEN disconnects THEN calls on_disconnect."""
+        from mcp_server_langgraph.websocket.base import WebSocketBase
+        from mcp_server_langgraph.websocket.types import MessageEnvelope, WebSocketConfig
+
+        on_disconnect_called = []
+
+        class TestHandler(WebSocketBase):
+            async def handle_message(self, message: MessageEnvelope) -> MessageEnvelope | None:
+                return None
+
+            async def on_disconnect(self) -> None:
+                on_disconnect_called.append(True)
+
+        config = WebSocketConfig(endpoint_name="test", require_auth=False)
+
+        with patch(
+            RATE_LIMITER_PATCH,
+            return_value=MagicMock(),
+        ):
+            handler = TestHandler(config)
+
+        mock_ws = AsyncMock()
+        mock_ws.client_state = None
+
+        from starlette.websockets import WebSocketDisconnect
+
+        mock_ws.receive_json = AsyncMock(side_effect=WebSocketDisconnect())
+
+        await handler.run(mock_ws)
+
+        assert len(on_disconnect_called) == 1
+
+    @pytest.mark.asyncio
+    async def test_run_starts_heartbeat(self) -> None:
+        """GIVEN heartbeat configured WHEN run THEN starts heartbeat."""
+        from mcp_server_langgraph.websocket.base import WebSocketBase
+        from mcp_server_langgraph.websocket.types import MessageEnvelope, WebSocketConfig
+
+        class TestHandler(WebSocketBase):
+            async def handle_message(self, message: MessageEnvelope) -> MessageEnvelope | None:
+                return None
+
+        config = WebSocketConfig(endpoint_name="test", require_auth=False, heartbeat_interval=30)
+
+        with patch(
+            RATE_LIMITER_PATCH,
+            return_value=MagicMock(),
+        ):
+            handler = TestHandler(config)
+
+        mock_ws = AsyncMock()
+        mock_ws.client_state = None
+
+        from starlette.websockets import WebSocketDisconnect
+
+        mock_ws.receive_json = AsyncMock(side_effect=WebSocketDisconnect())
+
+        # Mock the heartbeat manager
+        handler._heartbeat = AsyncMock()
+
+        await handler.run(mock_ws)
+
+        handler._heartbeat.start.assert_called_once()
+        handler._heartbeat.stop.assert_called_once()
+
+
+@pytest.mark.xdist_group(name="websocket_base_message_loop")
+class TestWebSocketBaseMessageLoop:
+    """Tests for WebSocketBase message loop."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers."""
+        gc.collect()
+
+    @pytest.mark.asyncio
+    async def test_message_loop_handles_ping(self) -> None:
+        """GIVEN ping message WHEN message loop THEN sends pong."""
+        from mcp_server_langgraph.websocket.base import WebSocketBase
+        from mcp_server_langgraph.websocket.types import MessageEnvelope, WebSocketConfig
+
+        class TestHandler(WebSocketBase):
+            async def handle_message(self, message: MessageEnvelope) -> MessageEnvelope | None:
+                return None
+
+        config = WebSocketConfig(endpoint_name="test", require_auth=False)
+
+        with patch(
+            RATE_LIMITER_PATCH,
+            return_value=MagicMock(),
+        ):
+            handler = TestHandler(config)
+
+        mock_ws = AsyncMock()
+        mock_ws.client_state = None
+
+        from starlette.websockets import WebSocketDisconnect
+
+        # First call returns ping, second raises disconnect
+        mock_ws.receive_json = AsyncMock(
+            side_effect=[
+                {"type": "ping", "id": "ping-1"},
+                WebSocketDisconnect(),
+            ]
+        )
+
+        with pytest.raises(WebSocketDisconnect):
+            await handler._message_loop(mock_ws)
+
+        # Verify pong was sent
+        assert mock_ws.send_json.call_count >= 1
+        pong_call = mock_ws.send_json.call_args_list[0]
+        assert pong_call[0][0]["type"] == "pong"
+        assert pong_call[0][0]["id"] == "ping-1"
+
+    @pytest.mark.asyncio
+    async def test_message_loop_handles_pong(self) -> None:
+        """GIVEN pong message WHEN message loop THEN notifies heartbeat."""
+        from mcp_server_langgraph.websocket.base import WebSocketBase
+        from mcp_server_langgraph.websocket.types import MessageEnvelope, WebSocketConfig
+
+        class TestHandler(WebSocketBase):
+            async def handle_message(self, message: MessageEnvelope) -> MessageEnvelope | None:
+                return None
+
+        config = WebSocketConfig(endpoint_name="test", require_auth=False)
+
+        with patch(
+            RATE_LIMITER_PATCH,
+            return_value=MagicMock(),
+        ):
+            handler = TestHandler(config)
+
+        mock_ws = AsyncMock()
+        mock_heartbeat = AsyncMock()
+        handler._heartbeat = mock_heartbeat
+
+        from starlette.websockets import WebSocketDisconnect
+
+        mock_ws.receive_json = AsyncMock(
+            side_effect=[
+                {"type": "pong", "id": "pong-1"},
+                WebSocketDisconnect(),
+            ]
+        )
+
+        with pytest.raises(WebSocketDisconnect):
+            await handler._message_loop(mock_ws)
+
+        mock_heartbeat.on_pong.assert_called_once()
+
+    @pytest.mark.asyncio
+    async def test_message_loop_calls_handler(self) -> None:
+        """GIVEN custom message WHEN message loop THEN calls handle_message."""
+        from mcp_server_langgraph.websocket.base import WebSocketBase
+        from mcp_server_langgraph.websocket.types import MessageEnvelope, WebSocketConfig
+
+        received_messages = []
+
+        class TestHandler(WebSocketBase):
+            async def handle_message(self, message: MessageEnvelope) -> MessageEnvelope | None:
+                received_messages.append(message)
+                return MessageEnvelope(type="response", payload={"ok": True})
+
+        config = WebSocketConfig(endpoint_name="test", require_auth=False)
+
+        mock_limiter = MagicMock()
+        mock_limiter.check_message.return_value = True
+
+        with patch(
+            RATE_LIMITER_PATCH,
+            return_value=mock_limiter,
+        ):
+            handler = TestHandler(config)
+            handler._user = MagicMock()
+            handler._user.id = "user-123"
+
+        mock_ws = AsyncMock()
+
+        from starlette.websockets import WebSocketDisconnect
+
+        mock_ws.receive_json = AsyncMock(
+            side_effect=[
+                {"type": "custom", "payload": {"data": "test"}},
+                WebSocketDisconnect(),
+            ]
+        )
+
+        with pytest.raises(WebSocketDisconnect):
+            await handler._message_loop(mock_ws)
+
+        assert len(received_messages) == 1
+        assert received_messages[0].type == "custom"
+
+    @pytest.mark.asyncio
+    async def test_message_loop_rate_limit_exceeded(self) -> None:
+        """GIVEN rate limit exceeded WHEN message loop THEN sends error."""
+        from mcp_server_langgraph.websocket.base import WebSocketBase
+        from mcp_server_langgraph.websocket.types import AuthUser, MessageEnvelope, WebSocketConfig
+
+        class TestHandler(WebSocketBase):
+            async def handle_message(self, message: MessageEnvelope) -> MessageEnvelope | None:
+                return None
+
+        config = WebSocketConfig(endpoint_name="test", require_auth=False)
+
+        mock_limiter = MagicMock()
+        mock_limiter.check_message.return_value = False
+        mock_limiter.get_status.return_value = MagicMock(limit=100, remaining=0, retry_after=30)
+
+        with patch(
+            RATE_LIMITER_PATCH,
+            return_value=mock_limiter,
+        ):
+            handler = TestHandler(config)
+            handler._user = AuthUser(id="user-123", username="testuser")
+
+        mock_ws = AsyncMock()
+
+        from starlette.websockets import WebSocketDisconnect
+
+        mock_ws.receive_json = AsyncMock(
+            side_effect=[
+                {"type": "custom", "payload": {}},
+                WebSocketDisconnect(),
+            ]
+        )
+
+        with pytest.raises(WebSocketDisconnect):
+            await handler._message_loop(mock_ws)
+
+        # Verify error was sent
+        assert mock_ws.send_json.call_count >= 1
+        error_call = mock_ws.send_json.call_args_list[0]
+        assert error_call[0][0]["type"] == "error"
+        assert error_call[0][0]["payload"]["code"] == "rate_limit_exceeded"
+
+    @pytest.mark.asyncio
+    async def test_message_loop_handles_invalid_json(self) -> None:
+        """GIVEN invalid JSON WHEN message loop THEN sends error and continues."""
+        from mcp_server_langgraph.websocket.base import WebSocketBase
+        from mcp_server_langgraph.websocket.types import MessageEnvelope, WebSocketConfig
+
+        class TestHandler(WebSocketBase):
+            async def handle_message(self, message: MessageEnvelope) -> MessageEnvelope | None:
+                return None
+
+        config = WebSocketConfig(endpoint_name="test", require_auth=False)
+
+        with patch(
+            RATE_LIMITER_PATCH,
+            return_value=MagicMock(),
+        ):
+            handler = TestHandler(config)
+
+        mock_ws = AsyncMock()
+
+        from starlette.websockets import WebSocketDisconnect
+
+        mock_ws.receive_json = AsyncMock(
+            side_effect=[
+                ValueError("Invalid JSON"),
+                WebSocketDisconnect(),
+            ]
+        )
+
+        with pytest.raises(WebSocketDisconnect):
+            await handler._message_loop(mock_ws)
+
+        # Verify error was sent
+        error_call = mock_ws.send_json.call_args_list[0]
+        assert error_call[0][0]["type"] == "error"
+        assert error_call[0][0]["payload"]["code"] == "invalid_json"

@@ -143,9 +143,7 @@ export interface RejectAgentRequestParams {
 /**
  * Parameters for respond to clarification mutation
  */
-export interface RespondAgentRequestParams extends ClarificationAPIResponse {
-  // request_id already in ClarificationAPIResponse
-}
+export type RespondAgentRequestParams = ClarificationAPIResponse;
 
 /**
  * Parameters for batch operations

@@ -13,15 +13,21 @@
 
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { renderHook, act, waitFor } from "@testing-library/react";
-import { useAICache, createCacheKey, type CacheEntry } from "./useAICache";
+import { useAICache, createCacheKey, clearAllAICache, type CacheEntry } from "./useAICache";
 
 describe("useAICache", () => {
   beforeEach(() => {
-    vi.useFakeTimers();
+    // shouldAdvanceTime allows promises to resolve while still controlling time
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    // Clear the global cache store between tests
+    clearAllAICache();
+    vi.clearAllMocks();
   });
 
   afterEach(() => {
     vi.useRealTimers();
+    clearAllAICache();
+    vi.clearAllMocks();
   });
 
   describe("createCacheKey", () => {

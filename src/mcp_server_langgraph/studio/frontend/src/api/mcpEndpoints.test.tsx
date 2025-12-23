@@ -13,7 +13,7 @@
  * Following TDD: RED phase - write failing tests first
  */
 
-import { describe, it, expect, beforeEach, afterEach } from "vitest";
+import { describe, it, expect, afterEach } from "vitest";
 import { http, HttpResponse } from "msw";
 import { renderHook, waitFor } from "@testing-library/react";
 import { Provider } from "react-redux";
@@ -36,7 +36,7 @@ import {
 // Mock Data
 // =============================================================================
 
-const MOCK_RESOURCES = {
+const _MOCK_RESOURCES = {
   resources: [
     {
       uri: "file:///project/README.md",
@@ -59,7 +59,7 @@ const MOCK_RESOURCES = {
   ],
 };
 
-const MOCK_RESOURCE_CONTENT = {
+const _MOCK_RESOURCE_CONTENT = {
   contents: [
     {
       uri: "file:///project/README.md",
@@ -69,7 +69,7 @@ const MOCK_RESOURCE_CONTENT = {
   ],
 };
 
-const MOCK_TOOL_RESULT = {
+const _MOCK_TOOL_RESULT = {
   content: [
     {
       type: "text",

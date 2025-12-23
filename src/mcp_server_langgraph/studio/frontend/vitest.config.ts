@@ -135,12 +135,10 @@ export default defineConfig({
     // Vitest 4 removed tinypool, eliminating the orphan process issue.
     pool: "forks",
 
-    // Vitest 4+ uses top-level forks config instead of poolOptions
-    forks: {
-      // Per-worker heap limits to prevent OOM in individual workers
-      // Each worker gets 1GB max heap, which is sufficient for jsdom tests
-      execArgv: ["--max-old-space-size=1024"],
-    },
+    // Vitest 4: execArgv is a top-level option that applies to all worker processes
+    // Per-worker heap limits to prevent OOM in individual workers
+    // Each worker gets 4GB max heap - some complex test files need more memory
+    execArgv: ["--max-old-space-size=4096"],
 
     // Each test file gets its own environment (better isolation)
     isolate: true,
