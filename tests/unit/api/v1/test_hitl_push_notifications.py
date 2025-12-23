@@ -4,8 +4,11 @@ Tests for HITL Push Notification Integration.
 Verifies that push notifications are sent when HITL approval requests are created.
 This enables users to be notified even when not actively viewing the application.
 
-TDD: RED phase - tests written FIRST before implementation.
-Currently SKIPPED pending implementation of push notification functions.
+TDD: GREEN phase - tests now pass with implemented functions:
+- send_hitl_approval_notification
+- send_hitl_clarification_notification
+- create_approval_push_message
+- create_clarification_push_message
 """
 
 from __future__ import annotations
@@ -20,15 +23,11 @@ import pytest
 if TYPE_CHECKING:
     pass
 
-# Skip all tests in this module - TDD RED phase tests waiting for implementation
-# Functions not yet implemented: send_hitl_approval_notification,
-# send_hitl_clarification_notification, create_approval_push_message,
-# create_clarification_push_message
+# TDD GREEN phase - functions have been implemented
 pytestmark = [
     pytest.mark.unit,
     pytest.mark.hitl,
     pytest.mark.push_notifications,
-    pytest.mark.skip(reason="TDD RED phase: Push notification functions not yet implemented"),
 ]
 
 

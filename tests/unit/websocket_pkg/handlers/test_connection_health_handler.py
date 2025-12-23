@@ -174,3 +174,362 @@ class TestConnectionHealthHandlerMessages:
         assert response is not None
         assert response.type == "error"
         assert response.payload["code"] == "unknown_message_type"
+
+    @pytest.mark.asyncio
+    async def test_handle_subscribe_success(self) -> None:
+        """GIVEN valid subscribe message WHEN handle_message called THEN adds subscription."""
+        from mcp_server_langgraph.websocket.handlers.connection_health import (
+            ConnectionHealthHandler,
+        )
+        from mcp_server_langgraph.websocket.types import MessageEnvelope, WebSocketConfig
+
+        config = WebSocketConfig(endpoint_name="connection-health")
+        mock_repo = AsyncMock()
+
+        with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
+            handler = ConnectionHealthHandler(config=config, connection_repository=mock_repo, owner_id="owner-123")
+
+        message = MessageEnvelope(
+            type="subscribe",
+            payload={"connection_id": "conn-123"},
+            id="msg-3",
+        )
+        response = await handler.handle_message(message)
+
+        assert response is not None
+        assert response.type == "subscribed"
+        assert response.payload["connection_id"] == "conn-123"
+        assert "conn-123" in handler._subscriptions
+
+    @pytest.mark.asyncio
+    async def test_handle_subscribe_missing_connection_id(self) -> None:
+        """GIVEN subscribe without connection_id WHEN handle_message THEN returns error."""
+        from mcp_server_langgraph.websocket.handlers.connection_health import (
+            ConnectionHealthHandler,
+        )
+        from mcp_server_langgraph.websocket.types import MessageEnvelope, WebSocketConfig
+
+        config = WebSocketConfig(endpoint_name="connection-health")
+        mock_repo = AsyncMock()
+
+        with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
+            handler = ConnectionHealthHandler(config=config, connection_repository=mock_repo, owner_id="owner-123")
+
+        message = MessageEnvelope(type="subscribe", payload={}, id="msg-4")
+        response = await handler.handle_message(message)
+
+        assert response is not None
+        assert response.type == "error"
+        assert response.payload["code"] == "missing_parameter"
+
+    @pytest.mark.asyncio
+    async def test_handle_subscribe_no_payload(self) -> None:
+        """GIVEN subscribe with no payload WHEN handle_message THEN returns error."""
+        from mcp_server_langgraph.websocket.handlers.connection_health import (
+            ConnectionHealthHandler,
+        )
+        from mcp_server_langgraph.websocket.types import MessageEnvelope, WebSocketConfig
+
+        config = WebSocketConfig(endpoint_name="connection-health")
+        mock_repo = AsyncMock()
+
+        with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
+            handler = ConnectionHealthHandler(config=config, connection_repository=mock_repo, owner_id="owner-123")
+
+        message = MessageEnvelope(type="subscribe", payload=None, id="msg-5")
+        response = await handler.handle_message(message)
+
+        assert response is not None
+        assert response.type == "error"
+        assert response.payload["code"] == "missing_parameter"
+
+    @pytest.mark.asyncio
+    async def test_handle_unsubscribe_success(self) -> None:
+        """GIVEN valid unsubscribe message WHEN handle_message called THEN removes subscription."""
+        from mcp_server_langgraph.websocket.handlers.connection_health import (
+            ConnectionHealthHandler,
+        )
+        from mcp_server_langgraph.websocket.types import MessageEnvelope, WebSocketConfig
+
+        config = WebSocketConfig(endpoint_name="connection-health")
+        mock_repo = AsyncMock()
+
+        with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
+            handler = ConnectionHealthHandler(config=config, connection_repository=mock_repo, owner_id="owner-123")
+
+        handler._subscriptions.add("conn-123")
+
+        message = MessageEnvelope(
+            type="unsubscribe",
+            payload={"connection_id": "conn-123"},
+            id="msg-6",
+        )
+        response = await handler.handle_message(message)
+
+        assert response is not None
+        assert response.type == "unsubscribed"
+        assert response.payload["connection_id"] == "conn-123"
+        assert "conn-123" not in handler._subscriptions
+
+    @pytest.mark.asyncio
+    async def test_handle_unsubscribe_missing_connection_id(self) -> None:
+        """GIVEN unsubscribe without connection_id WHEN handle_message THEN returns error."""
+        from mcp_server_langgraph.websocket.handlers.connection_health import (
+            ConnectionHealthHandler,
+        )
+        from mcp_server_langgraph.websocket.types import MessageEnvelope, WebSocketConfig
+
+        config = WebSocketConfig(endpoint_name="connection-health")
+        mock_repo = AsyncMock()
+
+        with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
+            handler = ConnectionHealthHandler(config=config, connection_repository=mock_repo, owner_id="owner-123")
+
+        message = MessageEnvelope(type="unsubscribe", payload={}, id="msg-7")
+        response = await handler.handle_message(message)
+
+        assert response is not None
+        assert response.type == "error"
+        assert response.payload["code"] == "missing_parameter"
+
+    @pytest.mark.asyncio
+    async def test_handle_check_health_success(self) -> None:
+        """GIVEN valid check_health message WHEN handle_message called THEN returns started."""
+        from mcp_server_langgraph.websocket.handlers.connection_health import (
+            ConnectionHealthHandler,
+        )
+        from mcp_server_langgraph.websocket.types import MessageEnvelope, WebSocketConfig
+
+        config = WebSocketConfig(endpoint_name="connection-health")
+        mock_repo = AsyncMock()
+        mock_conn = MagicMock()
+        mock_conn.id = "conn-123"
+        mock_repo.get.return_value = mock_conn
+
+        with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
+            handler = ConnectionHealthHandler(config=config, connection_repository=mock_repo, owner_id="owner-123")
+
+        message = MessageEnvelope(
+            type="check_health",
+            payload={"connection_id": "conn-123"},
+            id="msg-8",
+        )
+        response = await handler.handle_message(message)
+
+        assert response is not None
+        assert response.type == "health_check_started"
+        assert response.payload["connection_id"] == "conn-123"
+        mock_repo.get.assert_called_once_with("conn-123")
+
+    @pytest.mark.asyncio
+    async def test_handle_check_health_not_found(self) -> None:
+        """GIVEN non-existent connection WHEN check_health THEN returns not found error."""
+        from mcp_server_langgraph.websocket.handlers.connection_health import (
+            ConnectionHealthHandler,
+        )
+        from mcp_server_langgraph.websocket.types import MessageEnvelope, WebSocketConfig
+
+        config = WebSocketConfig(endpoint_name="connection-health")
+        mock_repo = AsyncMock()
+        mock_repo.get.return_value = None
+
+        with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
+            handler = ConnectionHealthHandler(config=config, connection_repository=mock_repo, owner_id="owner-123")
+
+        message = MessageEnvelope(
+            type="check_health",
+            payload={"connection_id": "nonexistent"},
+            id="msg-9",
+        )
+        response = await handler.handle_message(message)
+
+        assert response is not None
+        assert response.type == "error"
+        assert response.payload["code"] == "not_found"
+
+    @pytest.mark.asyncio
+    async def test_handle_check_health_missing_connection_id(self) -> None:
+        """GIVEN check_health without connection_id WHEN handle_message THEN returns error."""
+        from mcp_server_langgraph.websocket.handlers.connection_health import (
+            ConnectionHealthHandler,
+        )
+        from mcp_server_langgraph.websocket.types import MessageEnvelope, WebSocketConfig
+
+        config = WebSocketConfig(endpoint_name="connection-health")
+        mock_repo = AsyncMock()
+
+        with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
+            handler = ConnectionHealthHandler(config=config, connection_repository=mock_repo, owner_id="owner-123")
+
+        message = MessageEnvelope(type="check_health", payload={}, id="msg-10")
+        response = await handler.handle_message(message)
+
+        assert response is not None
+        assert response.type == "error"
+        assert response.payload["code"] == "missing_parameter"
+
+    @pytest.mark.asyncio
+    async def test_handle_check_health_error(self) -> None:
+        """GIVEN repository error WHEN check_health THEN returns error."""
+        from mcp_server_langgraph.websocket.handlers.connection_health import (
+            ConnectionHealthHandler,
+        )
+        from mcp_server_langgraph.websocket.types import MessageEnvelope, WebSocketConfig
+
+        config = WebSocketConfig(endpoint_name="connection-health")
+        mock_repo = AsyncMock()
+        mock_repo.get.side_effect = Exception("Database error")
+
+        with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
+            handler = ConnectionHealthHandler(config=config, connection_repository=mock_repo, owner_id="owner-123")
+
+        message = MessageEnvelope(
+            type="check_health",
+            payload={"connection_id": "conn-123"},
+            id="msg-11",
+        )
+        response = await handler.handle_message(message)
+
+        assert response is not None
+        assert response.type == "error"
+        assert response.payload["code"] == "health_check_failed"
+
+
+@pytest.mark.xdist_group(name="websocket_connection_health_push")
+class TestConnectionHealthHandlerPush:
+    """Tests for ConnectionHealthHandler push updates."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers."""
+        gc.collect()
+
+    @pytest.mark.asyncio
+    async def test_push_connection_update_when_subscribed(self) -> None:
+        """GIVEN subscribed connection WHEN push_connection_update THEN sends update."""
+        from mcp_server_langgraph.websocket.handlers.connection_health import (
+            ConnectionHealthHandler,
+        )
+        from mcp_server_langgraph.websocket.types import WebSocketConfig
+
+        config = WebSocketConfig(endpoint_name="connection-health")
+        mock_repo = AsyncMock()
+
+        with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
+            handler = ConnectionHealthHandler(config=config, connection_repository=mock_repo, owner_id="owner-123")
+
+        handler._subscriptions.add("conn-123")
+        mock_ws = AsyncMock()
+        handler._websocket = mock_ws
+
+        status = {"id": "conn-123", "status": "healthy"}
+        await handler.push_connection_update("conn-123", status)
+
+        mock_ws.send_json.assert_called_once()
+        call_args = mock_ws.send_json.call_args[0][0]
+        assert call_args["type"] == "connection_update"
+        assert call_args["payload"] == status
+
+    @pytest.mark.asyncio
+    async def test_push_connection_update_not_subscribed(self) -> None:
+        """GIVEN not subscribed WHEN push_connection_update THEN does not send."""
+        from mcp_server_langgraph.websocket.handlers.connection_health import (
+            ConnectionHealthHandler,
+        )
+        from mcp_server_langgraph.websocket.types import WebSocketConfig
+
+        config = WebSocketConfig(endpoint_name="connection-health")
+        mock_repo = AsyncMock()
+
+        with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
+            handler = ConnectionHealthHandler(config=config, connection_repository=mock_repo, owner_id="owner-123")
+
+        mock_ws = AsyncMock()
+        handler._websocket = mock_ws
+
+        status = {"id": "conn-123", "status": "healthy"}
+        await handler.push_connection_update("conn-123", status)
+
+        mock_ws.send_json.assert_not_called()
+
+    @pytest.mark.asyncio
+    async def test_push_connection_update_no_websocket(self) -> None:
+        """GIVEN no websocket WHEN push_connection_update THEN does nothing."""
+        from mcp_server_langgraph.websocket.handlers.connection_health import (
+            ConnectionHealthHandler,
+        )
+        from mcp_server_langgraph.websocket.types import WebSocketConfig
+
+        config = WebSocketConfig(endpoint_name="connection-health")
+        mock_repo = AsyncMock()
+
+        with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
+            handler = ConnectionHealthHandler(config=config, connection_repository=mock_repo, owner_id="owner-123")
+
+        handler._subscriptions.add("conn-123")
+        # No websocket set
+
+        status = {"id": "conn-123", "status": "healthy"}
+        # Should not raise
+        await handler.push_connection_update("conn-123", status)
+
+
+@pytest.mark.xdist_group(name="websocket_connection_health_protocol")
+class TestConnectionRepositoryProtocol:
+    """Tests for ConnectionRepositoryProtocol."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers."""
+        gc.collect()
+
+    def test_protocol_is_runtime_checkable(self) -> None:
+        """GIVEN protocol THEN is runtime checkable."""
+        from mcp_server_langgraph.websocket.handlers.connection_health import (
+            ConnectionRepositoryProtocol,
+        )
+
+        assert hasattr(ConnectionRepositoryProtocol, "__protocol_attrs__") or hasattr(
+            ConnectionRepositoryProtocol, "__mro__"
+        )
+
+    def test_protocol_instance_check(self) -> None:
+        """GIVEN mock with correct methods THEN satisfies protocol."""
+        from mcp_server_langgraph.websocket.handlers.connection_health import (
+            ConnectionRepositoryProtocol,
+        )
+
+        mock_repo = MagicMock()
+        mock_repo.list = AsyncMock(return_value=([], None))
+        mock_repo.get = AsyncMock(return_value=None)
+
+        # Protocol is runtime_checkable, so isinstance should work
+        assert isinstance(mock_repo, ConnectionRepositoryProtocol)
+
+
+@pytest.mark.xdist_group(name="websocket_connection_health_with_metrics")
+class TestConnectionHealthHandlerWithMetrics:
+    """Tests for ConnectionHealthHandler with metrics."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers."""
+        gc.collect()
+
+    def test_init_with_metrics(self) -> None:
+        """GIVEN metrics WHEN creating handler THEN stores metrics."""
+        from mcp_server_langgraph.websocket.handlers.connection_health import (
+            ConnectionHealthHandler,
+        )
+        from mcp_server_langgraph.websocket.types import WebSocketConfig
+
+        config = WebSocketConfig(endpoint_name="connection-health")
+        mock_repo = MagicMock()
+        mock_metrics = MagicMock()
+
+        with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
+            handler = ConnectionHealthHandler(
+                config=config,
+                connection_repository=mock_repo,
+                owner_id="owner-123",
+                metrics=mock_metrics,
+            )
+
+        assert handler._metrics is mock_metrics

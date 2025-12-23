@@ -320,16 +320,19 @@ class AlertBroadcaster:
                     logger.warning(f"Failed to send push notification for alert {alert.alert_id}: {e}")
                     span.record_exception(e)
 
-            if not self._subscribers:
-                span.set_attribute("alert.broadcast_count", 0)
-                return
-
             message = alert_to_message(alert)
 
             # Add routing metadata to message if available
             if routing_result and routing_result.tenant_id:
                 message["payload"]["tenant_id"] = routing_result.tenant_id
                 span.set_attribute("alert.tenant_id", routing_result.tenant_id)
+
+            # Store in recent alerts buffer (even if no subscribers)
+            self._store_recent_alert(message["payload"])
+
+            if not self._subscribers:
+                span.set_attribute("alert.broadcast_count", 0)
+                return
 
             failed_connections: list[WebSocketConnection] = []
 

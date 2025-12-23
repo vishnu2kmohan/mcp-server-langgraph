@@ -20,6 +20,10 @@ from typing import TYPE_CHECKING, Any
 
 from fastapi import APIRouter
 
+from mcp_server_langgraph.core.feature_flags import (
+    get_feature_flags as _core_get_feature_flags,
+)
+
 # Re-export from new locations
 from mcp_server_langgraph.hitl.broadcast import (
     AgentRequestBroadcaster,
@@ -37,6 +41,12 @@ from mcp_server_langgraph.websocket.registry import (
 
 if TYPE_CHECKING:
     from fastapi import WebSocket
+
+    from mcp_server_langgraph.api.v1.agent_requests import AgentRequest
+    from mcp_server_langgraph.notifications.push_sender import (
+        PushMessage,
+        PushNotificationSender,
+    )
 
 logger = logging.getLogger(__name__)
 
@@ -90,9 +100,9 @@ def is_hitl_enabled() -> bool:
     DEPRECATED: Check feature flags directly.
     """
     try:
-        from mcp_server_langgraph.core.feature_flags import get_feature_flag_service
+        from mcp_server_langgraph.core.feature_flags import get_feature_flags
 
-        ff = get_feature_flag_service()
+        ff = get_feature_flags()
         return ff.is_enabled("hitl_approvals")
     except Exception:
         return False
@@ -298,6 +308,167 @@ async def broadcast_execution_resumed(message: Any) -> None:
 
 
 # =============================================================================
+# Push Notification Helpers
+# =============================================================================
+
+
+# Global push sender instance (lazy loaded)
+_push_sender: PushNotificationSender | None = None
+
+
+def get_push_sender() -> PushNotificationSender | None:
+    """
+    Get the global push notification sender.
+
+    Returns:
+        PushNotificationSender instance if configured, None otherwise.
+    """
+    global _push_sender
+    return _push_sender
+
+
+def set_push_sender(sender: PushNotificationSender | None) -> None:
+    """
+    Set the global push notification sender.
+
+    Args:
+        sender: PushNotificationSender instance or None.
+    """
+    global _push_sender
+    _push_sender = sender
+
+
+def get_feature_flags() -> Any:
+    """
+    Get feature flag service instance.
+
+    Returns:
+        FeatureFlagService instance.
+    """
+    return _core_get_feature_flags()
+
+
+def create_approval_push_message(request: AgentRequest) -> PushMessage:
+    """
+    Create a push notification message for an approval request.
+
+    Args:
+        request: The agent approval request.
+
+    Returns:
+        PushMessage formatted for approval notifications.
+    """
+    from mcp_server_langgraph.notifications.push_sender import PushMessage
+
+    confidence_pct = int(request.confidence * 100) if request.confidence else 0
+
+    return PushMessage(
+        title=f"Agent needs approval ({confidence_pct}%)",
+        body=request.proposed_action or "Review required",
+        tag=f"hitl-{request.request_id}",
+        data={
+            "request_id": request.request_id,
+            "type": "approval",
+            "session_id": request.session_id,
+            "task_id": request.task_id,
+        },
+        actions=[
+            {"action": "approve", "title": "Approve"},
+            {"action": "reject", "title": "Reject"},
+        ],
+    )
+
+
+def create_clarification_push_message(request: AgentRequest) -> PushMessage:
+    """
+    Create a push notification message for a clarification request.
+
+    Args:
+        request: The agent clarification request.
+
+    Returns:
+        PushMessage formatted for clarification notifications.
+    """
+    from mcp_server_langgraph.notifications.push_sender import PushMessage
+
+    return PushMessage(
+        title="Agent has a question",
+        body=request.question or "Input needed",
+        tag=f"hitl-{request.request_id}",
+        data={
+            "request_id": request.request_id,
+            "type": "clarification",
+            "session_id": request.session_id,
+            "task_id": request.task_id,
+        },
+    )
+
+
+async def send_hitl_approval_notification(
+    request: AgentRequest,
+    user_id: str,
+) -> None:
+    """
+    Send a push notification for an HITL approval request.
+
+    Only sends if push notifications are enabled via feature flags.
+
+    Args:
+        request: The agent approval request.
+        user_id: The user ID to notify.
+    """
+    try:
+        flags = get_feature_flags()
+        if not flags.enable_agent_hitl_push_notifications:
+            logger.debug("HITL push notifications disabled")
+            return
+
+        sender = get_push_sender()
+        if sender is None:
+            logger.debug("Push sender not configured")
+            return
+
+        message = create_approval_push_message(request)
+        await sender.send_to_user(user_id, message)
+        logger.info(f"Sent HITL approval push notification to user {user_id}")
+
+    except Exception as e:
+        logger.warning(f"Failed to send HITL approval push notification: {e}")
+
+
+async def send_hitl_clarification_notification(
+    request: AgentRequest,
+    user_id: str,
+) -> None:
+    """
+    Send a push notification for an HITL clarification request.
+
+    Only sends if push notifications are enabled via feature flags.
+
+    Args:
+        request: The agent clarification request.
+        user_id: The user ID to notify.
+    """
+    try:
+        flags = get_feature_flags()
+        if not flags.enable_agent_hitl_push_notifications:
+            logger.debug("HITL push notifications disabled")
+            return
+
+        sender = get_push_sender()
+        if sender is None:
+            logger.debug("Push sender not configured")
+            return
+
+        message = create_clarification_push_message(request)
+        await sender.send_to_user(user_id, message)
+        logger.info(f"Sent HITL clarification push notification to user {user_id}")
+
+    except Exception as e:
+        logger.warning(f"Failed to send HITL clarification push notification: {e}")
+
+
+# =============================================================================
 # Exports
 # =============================================================================
 
@@ -317,6 +488,7 @@ __all__ = [
     "is_hitl_enabled",
     "check_hitl_enabled_for_ws",
     "check_reviewer_role",
+    "get_feature_flags",
     # Token validation
     "validate_websocket_token",
     # Ping/pong
@@ -326,6 +498,13 @@ __all__ = [
     "broadcast_approval_updated",
     "broadcast_clarification_required",
     "broadcast_execution_resumed",
+    # Push notification helpers
+    "get_push_sender",
+    "set_push_sender",
+    "create_approval_push_message",
+    "create_clarification_push_message",
+    "send_hitl_approval_notification",
+    "send_hitl_clarification_notification",
     # Router
     "router",
 ]
