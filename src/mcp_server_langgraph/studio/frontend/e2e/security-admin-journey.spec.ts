@@ -15,7 +15,7 @@
  * - Task Success: Security task completion rate
  *
  * Visible modules: chat, agents, flows, mcp, files, traces, costs, admin, help, audit, compliance
- * Default view: /studio/v2/compliance
+ * Default view: /studio/compliance
  */
 
 import { test, expect } from "./fixtures/auth";
@@ -125,14 +125,14 @@ test.describe("Security Admin User Journey", () => {
 
   test.describe("Accessible Pages", () => {
     test("should access compliance dashboard", async ({ adminPage }) => {
-      await adminPage.goto("/studio/v2/compliance");
+      await adminPage.goto("/studio/compliance");
       await expect(
         adminPage.locator("main, [role='main'], h1, h2").first()
       ).toBeVisible();
     });
 
     test("should access audit logs", async ({ adminPage }) => {
-      await adminPage.goto("/studio/v2/audit");
+      await adminPage.goto("/studio/audit");
       await expect(
         adminPage.locator("main, [role='main'], h1, h2").first()
       ).toBeVisible();
@@ -146,14 +146,14 @@ test.describe("Security Admin User Journey", () => {
     test("should access traces for security monitoring", async ({
       adminPage,
     }) => {
-      await adminPage.goto("/studio/v2/observability");
+      await adminPage.goto("/studio/observability");
       await expect(
         adminPage.locator("main, [role='main'], h1, h2").first()
       ).toBeVisible();
     });
 
     test("should access MCP server configuration", async ({ adminPage }) => {
-      await adminPage.goto("/studio/v2/mcp");
+      await adminPage.goto("/studio/mcp");
       await expect(
         adminPage.locator("main, [role='main'], h1, h2").first()
       ).toBeVisible();
@@ -174,7 +174,7 @@ test.describe("Security Admin User Journey", () => {
 
   test.describe("Primary Workflows", () => {
     test("should view FedRAMP compliance status", async ({ adminPage }) => {
-      await adminPage.goto("/studio/v2/compliance");
+      await adminPage.goto("/studio/compliance");
 
       // Look for FedRAMP section
       const fedrampSection = adminPage.locator(
@@ -186,7 +186,7 @@ test.describe("Security Admin User Journey", () => {
     });
 
     test("should view SOC-2 compliance status", async ({ adminPage }) => {
-      await adminPage.goto("/studio/v2/compliance");
+      await adminPage.goto("/studio/compliance");
 
       // Look for SOC-2 section
       const soc2Section = adminPage.locator(
@@ -198,7 +198,7 @@ test.describe("Security Admin User Journey", () => {
     });
 
     test("should view audit log entries", async ({ adminPage }) => {
-      await adminPage.goto("/studio/v2/audit");
+      await adminPage.goto("/studio/audit");
 
       // Look for audit log entries or table
       const auditContent = adminPage.locator(
@@ -228,7 +228,7 @@ test.describe("Security Admin User Journey", () => {
     }) => {
       const startTime = Date.now();
 
-      await adminPage.goto("/studio/v2/compliance");
+      await adminPage.goto("/studio/compliance");
       await expect(
         adminPage.locator("main, [role='main'], h1, h2").first()
       ).toBeVisible();
@@ -242,7 +242,7 @@ test.describe("Security Admin User Journey", () => {
     }) => {
       const startTime = Date.now();
 
-      await adminPage.goto("/studio/v2/audit");
+      await adminPage.goto("/studio/audit");
       await expect(
         adminPage.locator("main, [role='main'], h1, h2").first()
       ).toBeVisible();
@@ -254,7 +254,7 @@ test.describe("Security Admin User Journey", () => {
     test("should have proper accessibility structure", async ({
       adminPage,
     }) => {
-      await adminPage.goto("/studio/v2/compliance");
+      await adminPage.goto("/studio/compliance");
       await expect(
         adminPage.locator("main, [role='main'], h1").first()
       ).toBeVisible();
@@ -280,7 +280,7 @@ test.describe("Security Admin User Journey", () => {
     test("should support compliance report export if available", async ({
       adminPage,
     }) => {
-      await adminPage.goto("/studio/v2/compliance");
+      await adminPage.goto("/studio/compliance");
 
       // Look for export functionality
       const exportButton = adminPage.getByRole("button", { name: /export/i });

@@ -115,16 +115,16 @@ export function ChatPage() {
   const dispatch = useAppDispatch();
   const [deleteSession] = useDeleteSessionMutation();
 
-  // Check if running in v2 context with loader data
-  // Try both route IDs: "chat-session" (for /studio/v2/chat/:sessionId)
-  // and "chat-index" (for /studio/v2/chat)
+  // Check if running in studio context with loader data
+  // Try both route IDs: "chat-session" (for /studio/chat/:sessionId)
+  // and "chat-index" (for /studio/chat)
   // Use safe version that returns undefined when not in data router context
   const chatSessionData =
     useSafeRouteLoaderData<ChatLoaderData>("chat-session");
   const chatIndexData = useSafeRouteLoaderData<ChatLoaderData>("chat-index");
   const loaderData = chatSessionData || chatIndexData;
 
-  // Sync loader data to Redux for v2 routes
+  // Sync loader data to Redux for studio routes
   // For legacy routes, loaderData is undefined and hook does nothing
   useSessionSync(loaderData);
 

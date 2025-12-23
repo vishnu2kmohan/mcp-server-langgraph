@@ -108,12 +108,12 @@ export function UserMenuDropdown({
   }, [isOpen, onClose]);
 
   const handleProfileClick = useCallback(() => {
-    navigate("/studio/v2/settings");
+    navigate("/studio/settings");
     onClose();
   }, [navigate, onClose]);
 
   const handleSettingsClick = useCallback(() => {
-    navigate("/studio/v2/settings");
+    navigate("/studio/settings");
     onClose();
   }, [navigate, onClose]);
 
@@ -131,16 +131,16 @@ export function UserMenuDropdown({
       onClose();
       // Navigate to the new persona's default view
       const defaultViews: Record<SubPersona, string> = {
-        admin: "/studio/v2/admin",
-        "security-admin": "/studio/v2/compliance",
-        auditor: "/studio/v2/admin/audit-logs",
-        "alice-builder": "/studio/v2/chat",
-        "alice-analyst": "/studio/v2/observability",
-        "alice-devops": "/studio/v2/connections",
-        "compliance-officer": "/studio/v2/compliance",
-        bob: "/studio/v2/chat",
+        admin: "/studio/admin",
+        "security-admin": "/studio/compliance",
+        auditor: "/studio/admin/audit-logs",
+        "alice-builder": "/studio/chat",
+        "alice-analyst": "/studio/observability",
+        "alice-devops": "/studio/connections",
+        "compliance-officer": "/studio/compliance",
+        bob: "/studio/chat",
       };
-      navigate(defaultViews[subPersona] || "/studio/v2/chat");
+      navigate(defaultViews[subPersona] || "/studio/chat");
     },
     [dispatch, navigate, onClose],
   );

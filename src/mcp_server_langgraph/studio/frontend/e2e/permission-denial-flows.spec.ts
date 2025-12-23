@@ -41,7 +41,7 @@ const PERSONAS: Record<string, PersonaConfig> = {
     email: "admin@example.com",
     roles: ["admin"],
     persona: "admin",
-    defaultRoute: "/studio/v2/admin",
+    defaultRoute: "/studio/admin",
   },
   auditor: {
     id: "auditor-user",
@@ -49,7 +49,7 @@ const PERSONAS: Record<string, PersonaConfig> = {
     email: "auditor@example.com",
     roles: ["audit"],
     persona: "auditor",
-    defaultRoute: "/studio/v2/audit",
+    defaultRoute: "/studio/audit",
   },
   "compliance-officer": {
     id: "compliance-officer-user",
@@ -57,7 +57,7 @@ const PERSONAS: Record<string, PersonaConfig> = {
     email: "compliance@example.com",
     roles: ["compliance"],
     persona: "compliance-officer",
-    defaultRoute: "/studio/v2/compliance",
+    defaultRoute: "/studio/compliance",
   },
   "alice-builder": {
     id: "alice-builder-user",
@@ -65,7 +65,7 @@ const PERSONAS: Record<string, PersonaConfig> = {
     email: "alice-builder@example.com",
     roles: ["developer", "builder"],
     persona: "alice-builder",
-    defaultRoute: "/studio/v2/chat",
+    defaultRoute: "/studio/chat",
   },
   bob: {
     id: "bob-user",
@@ -73,7 +73,7 @@ const PERSONAS: Record<string, PersonaConfig> = {
     email: "bob@example.com",
     roles: ["user"],
     persona: "bob",
-    defaultRoute: "/studio/v2/chat",
+    defaultRoute: "/studio/chat",
   },
 };
 
@@ -92,70 +92,70 @@ const DENIAL_SCENARIOS: PermissionDenialScenario[] = [
   // Bob denied scenarios
   {
     persona: "bob",
-    route: "/studio/v2/admin",
+    route: "/studio/admin",
     expectedRedirect: /\/studio\/v2\/chat/,
     description: "bob should be redirected from admin to chat",
   },
   {
     persona: "bob",
-    route: "/studio/v2/compliance",
+    route: "/studio/compliance",
     expectedRedirect: /\/studio\/v2\/chat/,
     description: "bob should be redirected from compliance to chat",
   },
   {
     persona: "bob",
-    route: "/studio/v2/audit",
+    route: "/studio/audit",
     expectedRedirect: /\/studio\/v2\/chat/,
     description: "bob should be redirected from audit to chat",
   },
   // Auditor denied scenarios
   {
     persona: "auditor",
-    route: "/studio/v2/admin",
+    route: "/studio/admin",
     expectedRedirect: /\/studio\/v2\/(audit|chat)/,
     description: "auditor should be redirected from admin",
   },
   {
     persona: "auditor",
-    route: "/studio/v2/chat",
+    route: "/studio/chat",
     expectedRedirect: /\/studio\/v2\/(audit|compliance)/,
     description: "auditor should be redirected from chat",
   },
   {
     persona: "auditor",
-    route: "/studio/v2/workflows",
+    route: "/studio/workflows",
     expectedRedirect: /\/studio\/v2\/(audit|compliance)/,
     description: "auditor should be redirected from workflows",
   },
   // Compliance officer denied scenarios
   {
     persona: "compliance-officer",
-    route: "/studio/v2/admin",
+    route: "/studio/admin",
     expectedRedirect: /\/studio\/v2\/(compliance|chat)/,
     description: "compliance-officer should be redirected from admin",
   },
   {
     persona: "compliance-officer",
-    route: "/studio/v2/chat",
+    route: "/studio/chat",
     expectedRedirect: /\/studio\/v2\/(compliance|audit)/,
     description: "compliance-officer should be redirected from chat",
   },
   // Alice-builder denied scenarios
   {
     persona: "alice-builder",
-    route: "/studio/v2/admin",
+    route: "/studio/admin",
     expectedRedirect: /\/studio\/v2\/chat/,
     description: "alice-builder should be redirected from admin to chat",
   },
   {
     persona: "alice-builder",
-    route: "/studio/v2/compliance",
+    route: "/studio/compliance",
     expectedRedirect: /\/studio\/v2\/chat/,
     description: "alice-builder should be redirected from compliance to chat",
   },
   {
     persona: "alice-builder",
-    route: "/studio/v2/audit",
+    route: "/studio/audit",
     expectedRedirect: /\/studio\/v2\/chat/,
     description: "alice-builder should be redirected from audit to chat",
   },
@@ -330,7 +330,7 @@ test.describe("Permission Denial Flows", () => {
       const context = await browser.newContext();
       const page = await createPersonaPage(context, "bob");
 
-      await page.goto("/studio/v2/admin", { waitUntil: "networkidle" });
+      await page.goto("/studio/admin", { waitUntil: "networkidle" });
 
       // Should not be on admin page
       await expect(page).not.toHaveURL(/\/studio\/v2\/admin$/);
@@ -348,12 +348,12 @@ test.describe("Permission Denial Flows", () => {
       const context = await browser.newContext();
       const page = await createPersonaPage(context, "bob");
 
-      await page.goto("/studio/v2/compliance", { waitUntil: "networkidle" });
+      await page.goto("/studio/compliance", { waitUntil: "networkidle" });
 
       // Should redirect away or show access denied
       const hasRedirected = !(await page
         .url()
-        .includes("/studio/v2/compliance"));
+        .includes("/studio/compliance"));
       const hasAccessDenied = await page
         .locator("body")
         .textContent()
@@ -369,10 +369,10 @@ test.describe("Permission Denial Flows", () => {
       const context = await browser.newContext();
       const page = await createPersonaPage(context, "bob");
 
-      await page.goto("/studio/v2/audit", { waitUntil: "networkidle" });
+      await page.goto("/studio/audit", { waitUntil: "networkidle" });
 
       // Should redirect away or show access denied
-      const hasRedirected = !page.url().includes("/studio/v2/audit");
+      const hasRedirected = !page.url().includes("/studio/audit");
       const hasAccessDenied = await page
         .locator("body")
         .textContent()
@@ -390,7 +390,7 @@ test.describe("Permission Denial Flows", () => {
       const context = await browser.newContext();
       const page = await createPersonaPage(context, "auditor");
 
-      await page.goto("/studio/v2/admin", { waitUntil: "networkidle" });
+      await page.goto("/studio/admin", { waitUntil: "networkidle" });
 
       // Should not be on admin page
       await expect(page).not.toHaveURL(/\/studio\/v2\/admin$/);
@@ -402,12 +402,12 @@ test.describe("Permission Denial Flows", () => {
       const context = await browser.newContext();
       const page = await createPersonaPage(context, "auditor");
 
-      await page.goto("/studio/v2/chat", { waitUntil: "networkidle" });
+      await page.goto("/studio/chat", { waitUntil: "networkidle" });
 
       // Auditor should be redirected from chat to audit/compliance
       const currentUrl = page.url();
       // Either redirected away from chat or access denied
-      const hasRedirected = !currentUrl.includes("/studio/v2/chat");
+      const hasRedirected = !currentUrl.includes("/studio/chat");
       const hasAccessDenied = await page
         .locator("body")
         .textContent()
@@ -425,10 +425,10 @@ test.describe("Permission Denial Flows", () => {
       const context = await browser.newContext();
       const page = await createPersonaPage(context, "auditor");
 
-      await page.goto("/studio/v2/workflows", { waitUntil: "networkidle" });
+      await page.goto("/studio/workflows", { waitUntil: "networkidle" });
 
       // Auditor should not access workflow page
-      const hasRedirected = !page.url().includes("/studio/v2/workflows");
+      const hasRedirected = !page.url().includes("/studio/workflows");
       const hasAccessDenied = await page
         .locator("body")
         .textContent()
@@ -444,7 +444,7 @@ test.describe("Permission Denial Flows", () => {
       const context = await browser.newContext();
       const page = await createPersonaPage(context, "auditor");
 
-      await page.goto("/studio/v2/audit", { waitUntil: "networkidle" });
+      await page.goto("/studio/audit", { waitUntil: "networkidle" });
 
       // Should be on audit page
       await expect(page).toHaveURL(/\/studio\/v2\/audit/);
@@ -461,7 +461,7 @@ test.describe("Permission Denial Flows", () => {
       const context = await browser.newContext();
       const page = await createPersonaPage(context, "compliance-officer");
 
-      await page.goto("/studio/v2/admin", { waitUntil: "networkidle" });
+      await page.goto("/studio/admin", { waitUntil: "networkidle" });
 
       // Should not be on admin page
       await expect(page).not.toHaveURL(/\/studio\/v2\/admin$/);
@@ -473,10 +473,10 @@ test.describe("Permission Denial Flows", () => {
       const context = await browser.newContext();
       const page = await createPersonaPage(context, "compliance-officer");
 
-      await page.goto("/studio/v2/chat", { waitUntil: "networkidle" });
+      await page.goto("/studio/chat", { waitUntil: "networkidle" });
 
       // Compliance officer should be redirected from chat
-      const hasRedirected = !page.url().includes("/studio/v2/chat");
+      const hasRedirected = !page.url().includes("/studio/chat");
       const hasAccessDenied = await page
         .locator("body")
         .textContent()
@@ -494,7 +494,7 @@ test.describe("Permission Denial Flows", () => {
       const context = await browser.newContext();
       const page = await createPersonaPage(context, "compliance-officer");
 
-      await page.goto("/studio/v2/compliance", { waitUntil: "networkidle" });
+      await page.goto("/studio/compliance", { waitUntil: "networkidle" });
 
       // Should be on compliance page
       await expect(page).toHaveURL(/\/studio\/v2\/compliance/);
@@ -511,7 +511,7 @@ test.describe("Permission Denial Flows", () => {
       const context = await browser.newContext();
       const page = await createPersonaPage(context, "alice-builder");
 
-      await page.goto("/studio/v2/admin", { waitUntil: "networkidle" });
+      await page.goto("/studio/admin", { waitUntil: "networkidle" });
 
       // Should not be on admin page
       await expect(page).not.toHaveURL(/\/studio\/v2\/admin$/);
@@ -525,10 +525,10 @@ test.describe("Permission Denial Flows", () => {
       const context = await browser.newContext();
       const page = await createPersonaPage(context, "alice-builder");
 
-      await page.goto("/studio/v2/compliance", { waitUntil: "networkidle" });
+      await page.goto("/studio/compliance", { waitUntil: "networkidle" });
 
       // Should redirect away or show access denied
-      const hasRedirected = !page.url().includes("/studio/v2/compliance");
+      const hasRedirected = !page.url().includes("/studio/compliance");
       const hasAccessDenied = await page
         .locator("body")
         .textContent()
@@ -544,10 +544,10 @@ test.describe("Permission Denial Flows", () => {
       const context = await browser.newContext();
       const page = await createPersonaPage(context, "alice-builder");
 
-      await page.goto("/studio/v2/audit", { waitUntil: "networkidle" });
+      await page.goto("/studio/audit", { waitUntil: "networkidle" });
 
       // Should redirect away or show access denied
-      const hasRedirected = !page.url().includes("/studio/v2/audit");
+      const hasRedirected = !page.url().includes("/studio/audit");
       const hasAccessDenied = await page
         .locator("body")
         .textContent()
@@ -563,7 +563,7 @@ test.describe("Permission Denial Flows", () => {
       const context = await browser.newContext();
       const page = await createPersonaPage(context, "alice-builder");
 
-      await page.goto("/studio/v2/chat", { waitUntil: "networkidle" });
+      await page.goto("/studio/chat", { waitUntil: "networkidle" });
 
       // Should be on chat page
       await expect(page).toHaveURL(/\/studio\/v2\/chat/);
@@ -579,7 +579,7 @@ test.describe("Navigation Visibility for Denied Routes", () => {
     const context = await browser.newContext();
     const page = await createPersonaPage(context, "bob");
 
-    await page.goto("/studio/v2/chat", { waitUntil: "networkidle" });
+    await page.goto("/studio/chat", { waitUntil: "networkidle" });
 
     // Wait for activity bar to load
     await page.waitForTimeout(1000);
@@ -594,7 +594,7 @@ test.describe("Navigation Visibility for Denied Routes", () => {
     const context = await browser.newContext();
     const page = await createPersonaPage(context, "auditor");
 
-    await page.goto("/studio/v2/audit", { waitUntil: "networkidle" });
+    await page.goto("/studio/audit", { waitUntil: "networkidle" });
 
     // Wait for activity bar to load
     await page.waitForTimeout(1000);
@@ -611,7 +611,7 @@ test.describe("Navigation Visibility for Denied Routes", () => {
     const context = await browser.newContext();
     const page = await createPersonaPage(context, "compliance-officer");
 
-    await page.goto("/studio/v2/compliance", { waitUntil: "networkidle" });
+    await page.goto("/studio/compliance", { waitUntil: "networkidle" });
 
     // Wait for activity bar to load
     await page.waitForTimeout(1000);
@@ -630,7 +630,7 @@ test.describe("Graceful Denial - User Experience", () => {
     const context = await browser.newContext();
     const page = await createPersonaPage(context, "bob");
 
-    await page.goto("/studio/v2/admin", { waitUntil: "networkidle" });
+    await page.goto("/studio/admin", { waitUntil: "networkidle" });
 
     // Should not show error boundary crash
     await expect(page.locator("body")).not.toContainText(
@@ -647,7 +647,7 @@ test.describe("Graceful Denial - User Experience", () => {
     const context = await browser.newContext();
     const page = await createPersonaPage(context, "bob");
 
-    await page.goto("/studio/v2/admin", { waitUntil: "networkidle" });
+    await page.goto("/studio/admin", { waitUntil: "networkidle" });
 
     // Should be on an allowed route (not admin)
     const currentUrl = page.url();

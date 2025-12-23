@@ -15,7 +15,7 @@
  * - Task Success: Analysis task completion rate
  *
  * Visible modules: chat, traces, costs, metrics, help
- * Default view: /studio/v2/observability
+ * Default view: /studio/observability
  */
 
 import { test, expect } from "./fixtures/auth";
@@ -134,21 +134,21 @@ test.describe("Alice Analyst User Journey", () => {
 
   test.describe("Accessible Pages", () => {
     test("should access observability/traces page", async ({ alicePage }) => {
-      await alicePage.goto("/studio/v2/observability");
+      await alicePage.goto("/studio/observability");
       await expect(
         alicePage.locator("main, [role='main'], h1, h2").first()
       ).toBeVisible();
     });
 
     test("should access chat interface", async ({ alicePage }) => {
-      await alicePage.goto("/studio/v2/chat");
+      await alicePage.goto("/studio/chat");
       await expect(
         alicePage.locator("main, [role='main'], h1, h2").first()
       ).toBeVisible();
     });
 
     test("should access help section", async ({ alicePage }) => {
-      await alicePage.goto("/studio/v2/help");
+      await alicePage.goto("/studio/help");
       await expect(
         alicePage.locator("main, [role='main'], h1, h2").first()
       ).toBeVisible();
@@ -157,7 +157,7 @@ test.describe("Alice Analyst User Journey", () => {
 
   test.describe("Route Restrictions", () => {
     test("analyst should have focused navigation", async ({ alicePage }) => {
-      await alicePage.goto("/studio/v2/observability");
+      await alicePage.goto("/studio/observability");
 
       // Check navigation structure
       const navOrHeader = alicePage.locator(
@@ -169,7 +169,7 @@ test.describe("Alice Analyst User Journey", () => {
 
   test.describe("Primary Workflows", () => {
     test("should view trace list", async ({ alicePage }) => {
-      await alicePage.goto("/studio/v2/observability");
+      await alicePage.goto("/studio/observability");
 
       // Look for traces content
       const tracesContent = alicePage.locator(
@@ -183,7 +183,7 @@ test.describe("Alice Analyst User Journey", () => {
     test("should filter traces if functionality available", async ({
       alicePage,
     }) => {
-      await alicePage.goto("/studio/v2/observability");
+      await alicePage.goto("/studio/observability");
 
       // Look for filter/search controls
       const filterInput = alicePage.locator(
@@ -196,7 +196,7 @@ test.describe("Alice Analyst User Journey", () => {
     });
 
     test("should view cost breakdown if available", async ({ alicePage }) => {
-      await alicePage.goto("/studio/v2/observability");
+      await alicePage.goto("/studio/observability");
 
       // Look for cost/usage section
       const costContent = alicePage.locator(
@@ -208,7 +208,7 @@ test.describe("Alice Analyst User Journey", () => {
     });
 
     test("should view metrics dashboard if available", async ({ alicePage }) => {
-      await alicePage.goto("/studio/v2/observability");
+      await alicePage.goto("/studio/observability");
 
       // Look for metrics visualization
       const metricsContent = alicePage.locator(
@@ -222,7 +222,7 @@ test.describe("Alice Analyst User Journey", () => {
     test("should interact with chat for analysis questions", async ({
       alicePage,
     }) => {
-      await alicePage.goto("/studio/v2/chat");
+      await alicePage.goto("/studio/chat");
 
       // Look for chat input
       const chatInput = alicePage.locator(
@@ -240,7 +240,7 @@ test.describe("Alice Analyst User Journey", () => {
     }) => {
       const startTime = Date.now();
 
-      await alicePage.goto("/studio/v2/observability");
+      await alicePage.goto("/studio/observability");
       await expect(
         alicePage.locator("main, [role='main'], h1, h2").first()
       ).toBeVisible();
@@ -254,7 +254,7 @@ test.describe("Alice Analyst User Journey", () => {
     }) => {
       const startTime = Date.now();
 
-      await alicePage.goto("/studio/v2/chat");
+      await alicePage.goto("/studio/chat");
       await expect(
         alicePage.locator("main, [role='main'], h1, h2").first()
       ).toBeVisible();
@@ -264,7 +264,7 @@ test.describe("Alice Analyst User Journey", () => {
     });
 
     test("should have proper accessibility structure", async ({ alicePage }) => {
-      await alicePage.goto("/studio/v2/observability");
+      await alicePage.goto("/studio/observability");
       await expect(
         alicePage.locator("main, [role='main'], h1").first()
       ).toBeVisible();
@@ -278,7 +278,7 @@ test.describe("Alice Analyst User Journey", () => {
     test("should have data visualization capabilities", async ({
       alicePage,
     }) => {
-      await alicePage.goto("/studio/v2/observability");
+      await alicePage.goto("/studio/observability");
 
       // Look for any data visualization elements
       const vizElements = alicePage.locator(
@@ -295,7 +295,7 @@ test.describe("Alice Analyst User Journey", () => {
     test("should support time range selection if available", async ({
       alicePage,
     }) => {
-      await alicePage.goto("/studio/v2/observability");
+      await alicePage.goto("/studio/observability");
 
       // Look for time range selector
       const timeSelector = alicePage.locator(

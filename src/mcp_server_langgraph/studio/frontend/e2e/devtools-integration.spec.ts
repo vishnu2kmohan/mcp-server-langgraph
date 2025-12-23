@@ -56,7 +56,7 @@ test.describe('DevTools Integration', () => {
         });
       }
 
-      await alicePage.goto('/studio/v2/chat', { waitUntil: 'networkidle' });
+      await alicePage.goto('/studio/chat', { waitUntil: 'networkidle' });
 
       // DevTools panel should be visible (default open for developer persona)
       await expect(alicePage.getByTestId('devtools-panel')).toBeVisible({
@@ -75,7 +75,7 @@ test.describe('DevTools Integration', () => {
         });
       }
 
-      await alicePage.goto('/studio/v2/chat', { waitUntil: 'networkidle' });
+      await alicePage.goto('/studio/chat', { waitUntil: 'networkidle' });
 
       // DevTools panel should not be visible when disabled
       await expect(alicePage.getByTestId('devtools-panel')).not.toBeVisible();
@@ -92,7 +92,7 @@ test.describe('DevTools Integration', () => {
         });
       }
 
-      await alicePage.goto('/studio/v2/chat', { waitUntil: 'networkidle' });
+      await alicePage.goto('/studio/chat', { waitUntil: 'networkidle' });
 
       // Initial state: DevTools visible (for developer persona)
       await expect(alicePage.getByTestId('devtools-panel')).toBeVisible({
@@ -121,7 +121,7 @@ test.describe('DevTools Integration', () => {
         });
       }
 
-      await alicePage.goto('/studio/v2/chat', { waitUntil: 'networkidle' });
+      await alicePage.goto('/studio/chat', { waitUntil: 'networkidle' });
 
       // Wait for DevTools to be visible
       await expect(alicePage.getByTestId('devtools-panel')).toBeVisible({
@@ -145,7 +145,7 @@ test.describe('DevTools Integration', () => {
         });
       }
 
-      await alicePage.goto('/studio/v2/chat', { waitUntil: 'networkidle' });
+      await alicePage.goto('/studio/chat', { waitUntil: 'networkidle' });
 
       await expect(alicePage.getByTestId('devtools-panel')).toBeVisible({
         timeout: 10000,
@@ -175,7 +175,7 @@ test.describe('DevTools Integration', () => {
         });
       }
 
-      await alicePage.goto('/studio/v2/chat', { waitUntil: 'networkidle' });
+      await alicePage.goto('/studio/chat', { waitUntil: 'networkidle' });
 
       await expect(alicePage.getByTestId('devtools-panel')).toBeVisible({
         timeout: 10000,
@@ -204,7 +204,7 @@ test.describe('DevTools Integration', () => {
         });
       }
 
-      await alicePage.goto('/studio/v2/chat', { waitUntil: 'networkidle' });
+      await alicePage.goto('/studio/chat', { waitUntil: 'networkidle' });
 
       await expect(alicePage.getByTestId('devtools-panel')).toBeVisible({
         timeout: 10000,
@@ -228,7 +228,7 @@ test.describe('DevTools Integration', () => {
         });
       }
 
-      await alicePage.goto('/studio/v2/chat', { waitUntil: 'networkidle' });
+      await alicePage.goto('/studio/chat', { waitUntil: 'networkidle' });
 
       await expect(alicePage.getByTestId('devtools-panel')).toBeVisible({
         timeout: 10000,
@@ -255,7 +255,7 @@ test.describe('DevTools Integration', () => {
         });
       }
 
-      await alicePage.goto('/studio/v2/chat', { waitUntil: 'networkidle' });
+      await alicePage.goto('/studio/chat', { waitUntil: 'networkidle' });
 
       await expect(alicePage.getByTestId('devtools-panel')).toBeVisible({
         timeout: 10000,
@@ -286,7 +286,7 @@ test.describe('DevTools Integration', () => {
         });
       }
 
-      await alicePage.goto('/studio/v2/chat', { waitUntil: 'networkidle' });
+      await alicePage.goto('/studio/chat', { waitUntil: 'networkidle' });
 
       await expect(alicePage.getByTestId('devtools-panel')).toBeVisible({
         timeout: 10000,
@@ -310,7 +310,7 @@ test.describe('DevTools Integration', () => {
         });
       }
 
-      await alicePage.goto('/studio/v2/chat', { waitUntil: 'networkidle' });
+      await alicePage.goto('/studio/chat', { waitUntil: 'networkidle' });
 
       await expect(alicePage.getByTestId('devtools-panel')).toBeVisible({
         timeout: 10000,
@@ -344,7 +344,7 @@ test.describe('DevTools Integration', () => {
         });
       }
 
-      await alicePage.goto('/studio/v2/chat', { waitUntil: 'networkidle' });
+      await alicePage.goto('/studio/chat', { waitUntil: 'networkidle' });
 
       await expect(alicePage.getByTestId('devtools-panel')).toBeVisible({
         timeout: 10000,
@@ -374,7 +374,7 @@ test.describe('DevTools Integration', () => {
         });
       }
 
-      await alicePage.goto('/studio/v2/chat', { waitUntil: 'networkidle' });
+      await alicePage.goto('/studio/chat', { waitUntil: 'networkidle' });
 
       await expect(alicePage.getByTestId('devtools-panel')).toBeVisible({
         timeout: 10000,
@@ -401,7 +401,7 @@ test.describe('DevTools Integration', () => {
         });
       }
 
-      await alicePage.goto('/studio/v2/chat', { waitUntil: 'networkidle' });
+      await alicePage.goto('/studio/chat', { waitUntil: 'networkidle' });
 
       await expect(alicePage.getByTestId('devtools-panel')).toBeVisible({
         timeout: 10000,
@@ -431,7 +431,7 @@ test.describe('DevTools Integration', () => {
         });
       }
 
-      await alicePage.goto('/studio/v2/chat', { waitUntil: 'networkidle' });
+      await alicePage.goto('/studio/chat', { waitUntil: 'networkidle' });
 
       await expect(alicePage.getByTestId('devtools-panel')).toBeVisible({
         timeout: 10000,
@@ -472,7 +472,7 @@ test.describe('DevTools Integration', () => {
       }
 
       // Navigate to session context
-      await alicePage.goto('/studio/v2/chat/session-1', {
+      await alicePage.goto('/studio/chat/session-1', {
         waitUntil: 'networkidle',
       });
 
@@ -516,7 +516,7 @@ test.describe('DevTools Integration', () => {
       }
 
       // Navigate to workflow context
-      await alicePage.goto('/studio/v2/workflows/workflow-1', {
+      await alicePage.goto('/studio/workflows/workflow-1', {
         waitUntil: 'networkidle',
       });
 
@@ -546,7 +546,7 @@ test.describe('DevTools Integration', () => {
       }
 
       // Alice is a developer persona
-      await alicePage.goto('/studio/v2/chat', { waitUntil: 'networkidle' });
+      await alicePage.goto('/studio/chat', { waitUntil: 'networkidle' });
 
       // DevTools should be open by default for developers
       await expect(alicePage.getByTestId('devtools-panel')).toBeVisible({
@@ -568,7 +568,7 @@ test.describe('DevTools Integration', () => {
       }
 
       // Bob is a standard user persona
-      await bobPage.goto('/studio/v2/chat', { waitUntil: 'networkidle' });
+      await bobPage.goto('/studio/chat', { waitUntil: 'networkidle' });
 
       // DevTools should be collapsed by default for standard users
       await expect(bobPage.getByTestId('devtools-panel')).not.toBeVisible();
@@ -591,7 +591,7 @@ test.describe('DevTools Integration', () => {
         });
       }
 
-      await alicePage.goto('/studio/v2/chat', { waitUntil: 'networkidle' });
+      await alicePage.goto('/studio/chat', { waitUntil: 'networkidle' });
 
       await expect(alicePage.getByTestId('devtools-panel')).toBeVisible({
         timeout: 10000,
@@ -631,7 +631,7 @@ test.describe('DevTools Integration', () => {
         });
       }
 
-      await alicePage.goto('/studio/v2/chat', { waitUntil: 'networkidle' });
+      await alicePage.goto('/studio/chat', { waitUntil: 'networkidle' });
 
       // Status bar should have DevTools toggle
       await expect(alicePage.getByTestId('status-bar')).toBeVisible({
@@ -655,7 +655,7 @@ test.describe('DevTools Integration', () => {
         });
       }
 
-      await alicePage.goto('/studio/v2/chat', { waitUntil: 'networkidle' });
+      await alicePage.goto('/studio/chat', { waitUntil: 'networkidle' });
 
       // If there are problems, badge should be visible
       const statusBar = alicePage.getByTestId('status-bar');
@@ -681,7 +681,7 @@ test.describe('DevTools Integration', () => {
         });
       }
 
-      await alicePage.goto('/studio/v2/chat', { waitUntil: 'networkidle' });
+      await alicePage.goto('/studio/chat', { waitUntil: 'networkidle' });
 
       await expect(alicePage.getByTestId('devtools-panel')).toBeVisible({
         timeout: 10000,
@@ -712,7 +712,7 @@ test.describe('DevTools Integration', () => {
         });
       }
 
-      await alicePage.goto('/studio/v2/chat', { waitUntil: 'networkidle' });
+      await alicePage.goto('/studio/chat', { waitUntil: 'networkidle' });
 
       await expect(alicePage.getByTestId('devtools-panel')).toBeVisible({
         timeout: 10000,

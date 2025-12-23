@@ -45,8 +45,8 @@ interface PersonaConfig {
 
 const PERSONA_CONFIGS: Record<Persona, PersonaConfig> = {
   admin: {
-    // Default to v2 chat-first experience
-    defaultRoute: "/studio/v2/chat",
+    // Default to chat-first experience
+    defaultRoute: "/studio/chat",
     sidebarItems: [
       "projects",
       "chat",
@@ -63,12 +63,12 @@ const PERSONA_CONFIGS: Record<Persona, PersonaConfig> = {
       "audit-logs",
       "help",
     ],
-    // Admin has access to all routes (legacy and v2)
+    // Admin has access to all routes
     allowedRoutePatterns: ["/admin/", "/studio/"],
   },
   developer: {
-    // Default to v2 chat-first experience
-    defaultRoute: "/studio/v2/chat",
+    // Default to chat-first experience
+    defaultRoute: "/studio/chat",
     sidebarItems: [
       "projects",
       "chat",
@@ -83,29 +83,23 @@ const PERSONA_CONFIGS: Record<Persona, PersonaConfig> = {
       "settings",
       "help",
     ],
-    // Developer has access to all studio routes (legacy and v2)
+    // Developer has access to all studio routes
     allowedRoutePatterns: ["/studio/"],
   },
   user: {
-    // Default to v2 chat-first experience
-    defaultRoute: "/studio/v2/chat",
+    // Default to chat-first experience
+    defaultRoute: "/studio/chat",
     // Expanded access for standard users (AI-native UX improvement)
     // Improves Adoption (HEART) by giving Bob access to:
     // - workflows: Unified view of owned workflows + shared workflows (read-only)
     // - cost: Basic cost tracking for transparency
     sidebarItems: ["projects", "chat", "workflows", "cost", "help"],
-    // User has limited access (both legacy and v2 routes)
+    // User has limited access
     allowedRoutePatterns: [
-      // Legacy routes
       "/studio/projects",
       "/studio/chat",
       "/studio/workflows",
       "/studio/cost",
-      // StudioShell v2 routes
-      "/studio/v2/projects",
-      "/studio/v2/chat",
-      "/studio/v2/workflows",
-      "/studio/v2/cost",
     ],
   },
 };

@@ -158,21 +158,21 @@ test.describe('FilesPage - File Browser', () => {
   });
 
   test('should render files page with header', async ({ alicePage }) => {
-    await alicePage.goto('/studio/v2/files', { waitUntil: 'networkidle' });
+    await alicePage.goto('/studio/files', { waitUntil: 'networkidle' });
 
     await expect(alicePage.getByTestId('files-page')).toBeVisible({ timeout: 10000 });
     await expect(alicePage.getByText('Files')).toBeVisible();
   });
 
   test('should display file count in header', async ({ alicePage }) => {
-    await alicePage.goto('/studio/v2/files', { waitUntil: 'networkidle' });
+    await alicePage.goto('/studio/files', { waitUntil: 'networkidle' });
 
     // Should show count of files
     await expect(alicePage.getByText(/4 files/i)).toBeVisible({ timeout: 10000 });
   });
 
   test('should display files in grid view by default', async ({ alicePage }) => {
-    await alicePage.goto('/studio/v2/files', { waitUntil: 'networkidle' });
+    await alicePage.goto('/studio/files', { waitUntil: 'networkidle' });
 
     // Should show file cards
     await expect(alicePage.getByTestId('file-card-file-py-1')).toBeVisible({ timeout: 10000 });
@@ -182,7 +182,7 @@ test.describe('FilesPage - File Browser', () => {
   });
 
   test('should show file names with extensions', async ({ alicePage }) => {
-    await alicePage.goto('/studio/v2/files', { waitUntil: 'networkidle' });
+    await alicePage.goto('/studio/files', { waitUntil: 'networkidle' });
 
     await expect(alicePage.getByText('main.py')).toBeVisible({ timeout: 10000 });
     await expect(alicePage.getByText('README.md')).toBeVisible();
@@ -197,7 +197,7 @@ test.describe('FilesPage - View Mode Switching', () => {
   });
 
   test('should switch to list view', async ({ alicePage }) => {
-    await alicePage.goto('/studio/v2/files', { waitUntil: 'networkidle' });
+    await alicePage.goto('/studio/files', { waitUntil: 'networkidle' });
 
     // Click list view button
     await alicePage.getByTestId('view-list').click();
@@ -207,7 +207,7 @@ test.describe('FilesPage - View Mode Switching', () => {
   });
 
   test('should switch back to grid view', async ({ alicePage }) => {
-    await alicePage.goto('/studio/v2/files', { waitUntil: 'networkidle' });
+    await alicePage.goto('/studio/files', { waitUntil: 'networkidle' });
 
     // Switch to list then back to grid
     await alicePage.getByTestId('view-list').click();
@@ -224,7 +224,7 @@ test.describe('FilesPage - Search', () => {
   });
 
   test('should filter files by search query', async ({ alicePage }) => {
-    await alicePage.goto('/studio/v2/files', { waitUntil: 'networkidle' });
+    await alicePage.goto('/studio/files', { waitUntil: 'networkidle' });
 
     // Search for "main"
     await alicePage.getByTestId('file-search').fill('main');
@@ -236,7 +236,7 @@ test.describe('FilesPage - Search', () => {
   });
 
   test('should show no results message when search has no matches', async ({ alicePage }) => {
-    await alicePage.goto('/studio/v2/files', { waitUntil: 'networkidle' });
+    await alicePage.goto('/studio/files', { waitUntil: 'networkidle' });
 
     // Search for non-existent file
     await alicePage.getByTestId('file-search').fill('nonexistent');
@@ -246,7 +246,7 @@ test.describe('FilesPage - Search', () => {
   });
 
   test('should update file count based on search results', async ({ alicePage }) => {
-    await alicePage.goto('/studio/v2/files', { waitUntil: 'networkidle' });
+    await alicePage.goto('/studio/files', { waitUntil: 'networkidle' });
 
     // Search for ".json"
     await alicePage.getByTestId('file-search').fill('.json');
@@ -262,7 +262,7 @@ test.describe('FilesPage - Preview Modal', () => {
   });
 
   test('should open preview modal when clicking file card', async ({ alicePage }) => {
-    await alicePage.goto('/studio/v2/files', { waitUntil: 'networkidle' });
+    await alicePage.goto('/studio/files', { waitUntil: 'networkidle' });
 
     // Click on main.py card
     await alicePage.getByTestId('file-card-file-py-1').click();
@@ -272,7 +272,7 @@ test.describe('FilesPage - Preview Modal', () => {
   });
 
   test('should show file name in preview modal header', async ({ alicePage }) => {
-    await alicePage.goto('/studio/v2/files', { waitUntil: 'networkidle' });
+    await alicePage.goto('/studio/files', { waitUntil: 'networkidle' });
 
     await alicePage.getByTestId('file-card-file-py-1').click();
 
@@ -281,7 +281,7 @@ test.describe('FilesPage - Preview Modal', () => {
   });
 
   test('should show file content in preview modal', async ({ alicePage }) => {
-    await alicePage.goto('/studio/v2/files', { waitUntil: 'networkidle' });
+    await alicePage.goto('/studio/files', { waitUntil: 'networkidle' });
 
     await alicePage.getByTestId('file-card-file-py-1').click();
 
@@ -290,7 +290,7 @@ test.describe('FilesPage - Preview Modal', () => {
   });
 
   test('should close preview modal when clicking X button', async ({ alicePage }) => {
-    await alicePage.goto('/studio/v2/files', { waitUntil: 'networkidle' });
+    await alicePage.goto('/studio/files', { waitUntil: 'networkidle' });
 
     await alicePage.getByTestId('file-card-file-py-1').click();
     await expect(alicePage.getByTestId('preview-modal')).toBeVisible({ timeout: 5000 });
@@ -303,7 +303,7 @@ test.describe('FilesPage - Preview Modal', () => {
   });
 
   test('should close preview modal when clicking backdrop', async ({ alicePage }) => {
-    await alicePage.goto('/studio/v2/files', { waitUntil: 'networkidle' });
+    await alicePage.goto('/studio/files', { waitUntil: 'networkidle' });
 
     await alicePage.getByTestId('file-card-file-py-1').click();
     await expect(alicePage.getByTestId('preview-modal')).toBeVisible({ timeout: 5000 });
@@ -322,7 +322,7 @@ test.describe('FilesPage - Download', () => {
   });
 
   test('should trigger download when clicking download button', async ({ alicePage }) => {
-    await alicePage.goto('/studio/v2/files', { waitUntil: 'networkidle' });
+    await alicePage.goto('/studio/files', { waitUntil: 'networkidle' });
 
     // Listen for download
     const downloadPromise = alicePage.waitForEvent('download');
@@ -337,7 +337,7 @@ test.describe('FilesPage - Download', () => {
   });
 
   test('should allow download from preview modal', async ({ alicePage }) => {
-    await alicePage.goto('/studio/v2/files', { waitUntil: 'networkidle' });
+    await alicePage.goto('/studio/files', { waitUntil: 'networkidle' });
 
     // Open preview modal
     await alicePage.getByTestId('file-card-file-py-1').click();
@@ -362,7 +362,7 @@ test.describe('FilesPage - Delete', () => {
   });
 
   test('should show delete confirmation modal when clicking delete button', async ({ alicePage }) => {
-    await alicePage.goto('/studio/v2/files', { waitUntil: 'networkidle' });
+    await alicePage.goto('/studio/files', { waitUntil: 'networkidle' });
 
     // Click delete button on first file card
     const fileCard = alicePage.getByTestId('file-card-file-py-1');
@@ -374,7 +374,7 @@ test.describe('FilesPage - Delete', () => {
   });
 
   test('should show file name in delete confirmation', async ({ alicePage }) => {
-    await alicePage.goto('/studio/v2/files', { waitUntil: 'networkidle' });
+    await alicePage.goto('/studio/files', { waitUntil: 'networkidle' });
 
     const fileCard = alicePage.getByTestId('file-card-file-py-1');
     await fileCard.getByLabel('Delete').click();
@@ -384,7 +384,7 @@ test.describe('FilesPage - Delete', () => {
   });
 
   test('should close confirmation modal when clicking Cancel', async ({ alicePage }) => {
-    await alicePage.goto('/studio/v2/files', { waitUntil: 'networkidle' });
+    await alicePage.goto('/studio/files', { waitUntil: 'networkidle' });
 
     const fileCard = alicePage.getByTestId('file-card-file-py-1');
     await fileCard.getByLabel('Delete').click();
@@ -399,7 +399,7 @@ test.describe('FilesPage - Delete', () => {
   });
 
   test('should delete file when confirming', async ({ alicePage }) => {
-    await alicePage.goto('/studio/v2/files', { waitUntil: 'networkidle' });
+    await alicePage.goto('/studio/files', { waitUntil: 'networkidle' });
 
     const fileCard = alicePage.getByTestId('file-card-file-py-1');
     await fileCard.getByLabel('Delete').click();
@@ -429,7 +429,7 @@ test.describe('FilesPage - List View Actions', () => {
   });
 
   test('should show action buttons in list view', async ({ alicePage }) => {
-    await alicePage.goto('/studio/v2/files', { waitUntil: 'networkidle' });
+    await alicePage.goto('/studio/files', { waitUntil: 'networkidle' });
 
     // Switch to list view
     await alicePage.getByTestId('view-list').click();
@@ -442,7 +442,7 @@ test.describe('FilesPage - List View Actions', () => {
   });
 
   test('should open preview from list view', async ({ alicePage }) => {
-    await alicePage.goto('/studio/v2/files', { waitUntil: 'networkidle' });
+    await alicePage.goto('/studio/files', { waitUntil: 'networkidle' });
 
     // Switch to list view
     await alicePage.getByTestId('view-list').click();

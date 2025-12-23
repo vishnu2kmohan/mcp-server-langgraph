@@ -35,20 +35,20 @@ export interface PersonaRouterProps {
 // =============================================================================
 
 const ROUTE_TO_MODULE: Record<string, ModuleId> = {
-  "/studio/v2/chat": "chat",
-  "/studio/v2/admin": "admin",
-  "/studio/v2/compliance": "compliance",
-  "/studio/v2/audit": "audit",
-  "/studio/v2/flows": "flows",
-  "/studio/v2/agents": "agents",
-  "/studio/v2/mcp": "mcp",
-  "/studio/v2/files": "files",
-  "/studio/v2/traces": "traces",
-  "/studio/v2/costs": "costs",
-  "/studio/v2/observability": "metrics",
-  "/studio/v2/connections": "connections",
-  "/studio/v2/projects": "projects",
-  "/studio/v2/help": "help",
+  "/studio/chat": "chat",
+  "/studio/admin": "admin",
+  "/studio/compliance": "compliance",
+  "/studio/audit": "audit",
+  "/studio/flows": "flows",
+  "/studio/agents": "agents",
+  "/studio/mcp": "mcp",
+  "/studio/files": "files",
+  "/studio/traces": "traces",
+  "/studio/costs": "costs",
+  "/studio/observability": "metrics",
+  "/studio/connections": "connections",
+  "/studio/projects": "projects",
+  "/studio/help": "help",
 };
 
 /**
@@ -93,8 +93,8 @@ export function PersonaRouter({ children, className }: PersonaRouterProps) {
   const canAccess = useMemo(() => {
     // Allow access to exact index route (will redirect)
     if (
-      location.pathname === "/studio/v2" ||
-      location.pathname === "/studio/v2/"
+      location.pathname === "/studio" ||
+      location.pathname === "/studio/"
     ) {
       return true;
     }
@@ -119,8 +119,8 @@ export function PersonaRouter({ children, className }: PersonaRouterProps) {
 
     // Redirect index route to default view
     if (
-      location.pathname === "/studio/v2" ||
-      location.pathname === "/studio/v2/"
+      location.pathname === "/studio" ||
+      location.pathname === "/studio/"
     ) {
       navigate(defaultRoute, { replace: true });
     }

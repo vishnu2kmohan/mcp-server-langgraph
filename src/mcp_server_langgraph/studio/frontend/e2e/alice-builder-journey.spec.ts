@@ -15,7 +15,7 @@
  * - Task Success: Workflow task completion rate
  *
  * Visible modules: chat, flows, mcp, agents, help
- * Default view: /studio/v2/chat
+ * Default view: /studio/chat
  */
 
 import { test, expect } from "./fixtures/auth";
@@ -168,28 +168,28 @@ test.describe("Alice Builder User Journey", () => {
     test("should access chat interface as default view", async ({
       alicePage,
     }) => {
-      await alicePage.goto("/studio/v2/chat");
+      await alicePage.goto("/studio/chat");
       await expect(
         alicePage.locator("main, [role='main'], h1, h2").first()
       ).toBeVisible();
     });
 
     test("should access workflows page", async ({ alicePage }) => {
-      await alicePage.goto("/studio/v2/workflows");
+      await alicePage.goto("/studio/workflows");
       await expect(
         alicePage.locator("main, [role='main'], h1, h2").first()
       ).toBeVisible();
     });
 
     test("should access MCP configuration page", async ({ alicePage }) => {
-      await alicePage.goto("/studio/v2/mcp");
+      await alicePage.goto("/studio/mcp");
       await expect(
         alicePage.locator("main, [role='main'], h1, h2").first()
       ).toBeVisible();
     });
 
     test("should access help section", async ({ alicePage }) => {
-      await alicePage.goto("/studio/v2/help");
+      await alicePage.goto("/studio/help");
       await expect(
         alicePage.locator("main, [role='main'], h1, h2").first()
       ).toBeVisible();
@@ -200,7 +200,7 @@ test.describe("Alice Builder User Journey", () => {
     test("builder should have development-focused navigation", async ({
       alicePage,
     }) => {
-      await alicePage.goto("/studio/v2/chat");
+      await alicePage.goto("/studio/chat");
 
       // Check navigation structure
       const navOrHeader = alicePage.locator(
@@ -212,7 +212,7 @@ test.describe("Alice Builder User Journey", () => {
 
   test.describe("Primary Workflows", () => {
     test("should view workflow list", async ({ alicePage }) => {
-      await alicePage.goto("/studio/v2/workflows");
+      await alicePage.goto("/studio/workflows");
 
       // Look for workflows content
       const workflowsContent = alicePage.locator(
@@ -226,7 +226,7 @@ test.describe("Alice Builder User Journey", () => {
     test("should access workflow creation if available", async ({
       alicePage,
     }) => {
-      await alicePage.goto("/studio/v2/workflows");
+      await alicePage.goto("/studio/workflows");
 
       // Look for create/new workflow button
       const createButton = alicePage.getByRole("button", {
@@ -240,7 +240,7 @@ test.describe("Alice Builder User Journey", () => {
     test("should view MCP server list for tool integration", async ({
       alicePage,
     }) => {
-      await alicePage.goto("/studio/v2/mcp");
+      await alicePage.goto("/studio/mcp");
 
       // Look for MCP server content
       const mcpContent = alicePage.locator(
@@ -254,7 +254,7 @@ test.describe("Alice Builder User Journey", () => {
     test("should access chat for workflow development", async ({
       alicePage,
     }) => {
-      await alicePage.goto("/studio/v2/chat");
+      await alicePage.goto("/studio/chat");
 
       // Look for chat interface
       const chatContent = alicePage.locator(
@@ -268,7 +268,7 @@ test.describe("Alice Builder User Journey", () => {
     test("should have input area for chat interaction", async ({
       alicePage,
     }) => {
-      await alicePage.goto("/studio/v2/chat");
+      await alicePage.goto("/studio/chat");
 
       // Look for message input
       const messageInput = alicePage.locator(
@@ -286,7 +286,7 @@ test.describe("Alice Builder User Journey", () => {
     }) => {
       const startTime = Date.now();
 
-      await alicePage.goto("/studio/v2/chat");
+      await alicePage.goto("/studio/chat");
       await expect(
         alicePage.locator("main, [role='main'], h1, h2").first()
       ).toBeVisible();
@@ -300,7 +300,7 @@ test.describe("Alice Builder User Journey", () => {
     }) => {
       const startTime = Date.now();
 
-      await alicePage.goto("/studio/v2/workflows");
+      await alicePage.goto("/studio/workflows");
       await expect(
         alicePage.locator("main, [role='main'], h1, h2").first()
       ).toBeVisible();
@@ -310,7 +310,7 @@ test.describe("Alice Builder User Journey", () => {
     });
 
     test("should have proper accessibility structure", async ({ alicePage }) => {
-      await alicePage.goto("/studio/v2/chat");
+      await alicePage.goto("/studio/chat");
       await expect(
         alicePage.locator("main, [role='main'], h1").first()
       ).toBeVisible();
@@ -324,7 +324,7 @@ test.describe("Alice Builder User Journey", () => {
     test("should have workflow template selection if available", async ({
       alicePage,
     }) => {
-      await alicePage.goto("/studio/v2/workflows");
+      await alicePage.goto("/studio/workflows");
 
       // Look for template-related UI
       const templateUI = alicePage.locator(
@@ -338,7 +338,7 @@ test.describe("Alice Builder User Journey", () => {
     test("should support workflow save/export if available", async ({
       alicePage,
     }) => {
-      await alicePage.goto("/studio/v2/workflows");
+      await alicePage.goto("/studio/workflows");
 
       // Look for save/export button
       const saveButton = alicePage.getByRole("button", {
@@ -352,7 +352,7 @@ test.describe("Alice Builder User Journey", () => {
     test("should have agent configuration access if available", async ({
       alicePage,
     }) => {
-      await alicePage.goto("/studio/v2/mcp");
+      await alicePage.goto("/studio/mcp");
 
       // Look for agent configuration UI
       const agentConfig = alicePage.locator(
@@ -366,7 +366,7 @@ test.describe("Alice Builder User Journey", () => {
     test("should support keyboard shortcuts for development", async ({
       alicePage,
     }) => {
-      await alicePage.goto("/studio/v2/chat");
+      await alicePage.goto("/studio/chat");
 
       // Look for keyboard shortcut indicators or help
       const shortcutIndicators = alicePage.locator(

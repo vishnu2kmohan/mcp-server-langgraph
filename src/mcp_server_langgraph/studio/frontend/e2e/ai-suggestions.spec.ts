@@ -206,7 +206,7 @@ test.describe('AI Command Palette', () => {
 
   test('should close command palette with Escape', async ({ alicePage }) => {
     await setupMocks(alicePage);
-    await alicePage.goto('/studio/v2/chat', { waitUntil: 'networkidle' });
+    await alicePage.goto('/studio/chat', { waitUntil: 'networkidle' });
 
     await expect(alicePage.getByTestId('studio-shell')).toBeVisible({ timeout: 10000 });
 
@@ -222,7 +222,7 @@ test.describe('AI Command Palette', () => {
 
   test('should display command list grouped by category', async ({ alicePage }) => {
     await setupMocks(alicePage);
-    await alicePage.goto('/studio/v2/chat', { waitUntil: 'networkidle' });
+    await alicePage.goto('/studio/chat', { waitUntil: 'networkidle' });
 
     await expect(alicePage.getByTestId('studio-shell')).toBeVisible({ timeout: 10000 });
 
@@ -238,7 +238,7 @@ test.describe('AI Command Palette', () => {
 
   test('should filter commands when typing', async ({ alicePage }) => {
     await setupMocks(alicePage);
-    await alicePage.goto('/studio/v2/chat', { waitUntil: 'networkidle' });
+    await alicePage.goto('/studio/chat', { waitUntil: 'networkidle' });
 
     await expect(alicePage.getByTestId('studio-shell')).toBeVisible({ timeout: 10000 });
 
@@ -257,7 +257,7 @@ test.describe('AI Command Palette', () => {
 
   test('should execute command on Enter', async ({ alicePage }) => {
     await setupMocks(alicePage);
-    await alicePage.goto('/studio/v2/chat', { waitUntil: 'networkidle' });
+    await alicePage.goto('/studio/chat', { waitUntil: 'networkidle' });
 
     await expect(alicePage.getByTestId('studio-shell')).toBeVisible({ timeout: 10000 });
 
@@ -280,7 +280,7 @@ test.describe('AI Command Palette', () => {
 
   test('should show AI interpretation for natural language', async ({ alicePage }) => {
     await setupMocks(alicePage);
-    await alicePage.goto('/studio/v2/chat', { waitUntil: 'networkidle' });
+    await alicePage.goto('/studio/chat', { waitUntil: 'networkidle' });
 
     await expect(alicePage.getByTestId('studio-shell')).toBeVisible({ timeout: 10000 });
 
@@ -299,7 +299,7 @@ test.describe('AI Command Palette', () => {
 
   test('should execute AI-interpreted command on selection', async ({ alicePage }) => {
     await setupMocks(alicePage);
-    await alicePage.goto('/studio/v2/chat', { waitUntil: 'networkidle' });
+    await alicePage.goto('/studio/chat', { waitUntil: 'networkidle' });
 
     await expect(alicePage.getByTestId('studio-shell')).toBeVisible({ timeout: 10000 });
 
@@ -322,7 +322,7 @@ test.describe('AI Command Palette', () => {
 
   test('should navigate commands with arrow keys', async ({ alicePage }) => {
     await setupMocks(alicePage);
-    await alicePage.goto('/studio/v2/chat', { waitUntil: 'networkidle' });
+    await alicePage.goto('/studio/chat', { waitUntil: 'networkidle' });
 
     await expect(alicePage.getByTestId('studio-shell')).toBeVisible({ timeout: 10000 });
 
@@ -344,7 +344,7 @@ test.describe('AI Command Palette', () => {
 test.describe('Inline Suggestions', () => {
   test('should show inline suggestions in code editor', async ({ alicePage }) => {
     await setupMocks(alicePage);
-    await alicePage.goto('/studio/v2/chat/session-1', { waitUntil: 'networkidle' });
+    await alicePage.goto('/studio/chat/session-1', { waitUntil: 'networkidle' });
 
     const canvasPanel = alicePage.getByTestId('canvas-panel');
     await expect(canvasPanel).toBeVisible({ timeout: 10000 });
@@ -352,7 +352,7 @@ test.describe('Inline Suggestions', () => {
 
   test('should accept inline suggestion with Tab', async ({ alicePage }) => {
     await setupMocks(alicePage);
-    await alicePage.goto('/studio/v2/chat/session-1', { waitUntil: 'networkidle' });
+    await alicePage.goto('/studio/chat/session-1', { waitUntil: 'networkidle' });
 
     const canvasPanel = alicePage.getByTestId('canvas-panel');
     await expect(canvasPanel).toBeVisible({ timeout: 10000 });
@@ -360,7 +360,7 @@ test.describe('Inline Suggestions', () => {
 
   test('should dismiss inline suggestion with Escape', async ({ alicePage }) => {
     await setupMocks(alicePage);
-    await alicePage.goto('/studio/v2/chat/session-1', { waitUntil: 'networkidle' });
+    await alicePage.goto('/studio/chat/session-1', { waitUntil: 'networkidle' });
 
     const canvasPanel = alicePage.getByTestId('canvas-panel');
     await expect(canvasPanel).toBeVisible({ timeout: 10000 });
@@ -370,21 +370,21 @@ test.describe('Inline Suggestions', () => {
 test.describe('Suggestion Chips Component', () => {
   test('should render suggestion chips', async ({ alicePage }) => {
     await setupMocks(alicePage);
-    await alicePage.goto('/studio/v2/chat/session-1', { waitUntil: 'networkidle' });
+    await alicePage.goto('/studio/chat/session-1', { waitUntil: 'networkidle' });
 
     await expect(alicePage.getByTestId('studio-shell')).toBeVisible({ timeout: 10000 });
   });
 
   test('should show confidence indicator on chips', async ({ alicePage }) => {
     await setupMocks(alicePage);
-    await alicePage.goto('/studio/v2/chat/session-1', { waitUntil: 'networkidle' });
+    await alicePage.goto('/studio/chat/session-1', { waitUntil: 'networkidle' });
 
     await expect(alicePage.getByTestId('studio-shell')).toBeVisible({ timeout: 10000 });
   });
 
   test('should be keyboard navigable', async ({ alicePage }) => {
     await setupMocks(alicePage);
-    await alicePage.goto('/studio/v2/chat/session-1', { waitUntil: 'networkidle' });
+    await alicePage.goto('/studio/chat/session-1', { waitUntil: 'networkidle' });
 
     await expect(alicePage.getByTestId('studio-shell')).toBeVisible({ timeout: 10000 });
 
@@ -418,7 +418,7 @@ test.describe('AI Edit Overlay', () => {
       });
     });
 
-    await alicePage.goto('/studio/v2/chat/session-1', { waitUntil: 'networkidle' });
+    await alicePage.goto('/studio/chat/session-1', { waitUntil: 'networkidle' });
 
     const canvasPanel = alicePage.getByTestId('canvas-panel');
     await expect(canvasPanel).toBeVisible({ timeout: 10000 });
@@ -461,7 +461,7 @@ test.describe('AI Edit Overlay', () => {
       });
     });
 
-    await alicePage.goto('/studio/v2/chat/session-1', { waitUntil: 'networkidle' });
+    await alicePage.goto('/studio/chat/session-1', { waitUntil: 'networkidle' });
 
     const canvasPanel = alicePage.getByTestId('canvas-panel');
     await expect(canvasPanel).toBeVisible({ timeout: 10000 });
@@ -492,7 +492,7 @@ test.describe('AI Edit Overlay', () => {
       });
     });
 
-    await alicePage.goto('/studio/v2/chat/session-1', { waitUntil: 'networkidle' });
+    await alicePage.goto('/studio/chat/session-1', { waitUntil: 'networkidle' });
 
     // Open AI edit overlay
     await alicePage.keyboard.press('Meta+e');
@@ -535,7 +535,7 @@ test.describe('AI Edit Overlay', () => {
       });
     });
 
-    await alicePage.goto('/studio/v2/chat/session-1', { waitUntil: 'networkidle' });
+    await alicePage.goto('/studio/chat/session-1', { waitUntil: 'networkidle' });
 
     // Open AI edit overlay
     await alicePage.keyboard.press('Meta+e');
@@ -578,7 +578,7 @@ test.describe('AI Edit Overlay', () => {
       });
     });
 
-    await alicePage.goto('/studio/v2/chat/session-1', { waitUntil: 'networkidle' });
+    await alicePage.goto('/studio/chat/session-1', { waitUntil: 'networkidle' });
 
     // Open AI edit overlay and submit
     await alicePage.keyboard.press('Meta+e');
@@ -623,7 +623,7 @@ test.describe('AI Edit Overlay', () => {
       });
     });
 
-    await alicePage.goto('/studio/v2/chat/session-1', { waitUntil: 'networkidle' });
+    await alicePage.goto('/studio/chat/session-1', { waitUntil: 'networkidle' });
 
     await alicePage.keyboard.press('Meta+e');
     const editOverlay = alicePage.getByTestId('ai-edit-overlay');
@@ -646,7 +646,7 @@ test.describe('AI Edit Overlay', () => {
 test.describe('Background Agent Status', () => {
   test('should show background agent indicator in status bar', async ({ alicePage }) => {
     await setupMocks(alicePage);
-    await alicePage.goto('/studio/v2/chat', { waitUntil: 'networkidle' });
+    await alicePage.goto('/studio/chat', { waitUntil: 'networkidle' });
 
     const statusBar = alicePage.getByTestId('status-bar');
     await expect(statusBar).toBeVisible({ timeout: 10000 });
@@ -654,7 +654,7 @@ test.describe('Background Agent Status', () => {
 
   test('should expand agent panel on click', async ({ alicePage }) => {
     await setupMocks(alicePage);
-    await alicePage.goto('/studio/v2/chat', { waitUntil: 'networkidle' });
+    await alicePage.goto('/studio/chat', { waitUntil: 'networkidle' });
 
     const statusBar = alicePage.getByTestId('status-bar');
     await expect(statusBar).toBeVisible({ timeout: 10000 });
@@ -684,7 +684,7 @@ test.describe('AI Feature Flags', () => {
       });
     });
 
-    await alicePage.goto('/studio/v2/chat', { waitUntil: 'networkidle' });
+    await alicePage.goto('/studio/chat', { waitUntil: 'networkidle' });
     await expect(alicePage.getByTestId('studio-shell')).toBeVisible({ timeout: 10000 });
 
     // Try to open command palette with Cmd+K
@@ -732,7 +732,7 @@ test.describe('AI Feature Flags', () => {
       });
     });
 
-    await alicePage.goto('/studio/v2/chat/session-1', { waitUntil: 'networkidle' });
+    await alicePage.goto('/studio/chat/session-1', { waitUntil: 'networkidle' });
     await expect(alicePage.getByTestId('studio-shell')).toBeVisible({ timeout: 10000 });
 
     // Inline suggestions component should NOT be visible
@@ -761,7 +761,7 @@ test.describe('AI Feature Flags', () => {
       });
     });
 
-    await alicePage.goto('/studio/v2/chat', { waitUntil: 'networkidle' });
+    await alicePage.goto('/studio/chat', { waitUntil: 'networkidle' });
     await expect(alicePage.getByTestId('studio-shell')).toBeVisible({ timeout: 10000 });
 
     // Background agent panel should NOT be visible
@@ -771,7 +771,7 @@ test.describe('AI Feature Flags', () => {
 
   test('should show command palette when canvas_ai_palette flag is enabled', async ({ alicePage }) => {
     await setupMocks(alicePage);
-    await alicePage.goto('/studio/v2/chat', { waitUntil: 'networkidle' });
+    await alicePage.goto('/studio/chat', { waitUntil: 'networkidle' });
 
     await expect(alicePage.getByTestId('studio-shell')).toBeVisible({ timeout: 10000 });
 
@@ -798,7 +798,7 @@ test.describe('AI Feature Flags', () => {
       });
     });
 
-    await alicePage.goto('/studio/v2/chat/session-1', { waitUntil: 'networkidle' });
+    await alicePage.goto('/studio/chat/session-1', { waitUntil: 'networkidle' });
 
     await expect(alicePage.getByTestId('studio-shell')).toBeVisible({ timeout: 10000 });
 
@@ -825,7 +825,7 @@ test.describe('AI Feature Flags', () => {
       });
     });
 
-    await alicePage.goto('/studio/v2/chat', { waitUntil: 'networkidle' });
+    await alicePage.goto('/studio/chat', { waitUntil: 'networkidle' });
 
     // App should still render without crashing
     await expect(alicePage.getByTestId('studio-shell')).toBeVisible({ timeout: 10000 });
@@ -841,14 +841,14 @@ test.describe('AI Feature Flags', () => {
 test.describe('AI Accessibility', () => {
   test('should have accessible suggestion chips', async ({ alicePage }) => {
     await setupMocks(alicePage);
-    await alicePage.goto('/studio/v2/chat/session-1', { waitUntil: 'networkidle' });
+    await alicePage.goto('/studio/chat/session-1', { waitUntil: 'networkidle' });
 
     await expect(alicePage.getByTestId('studio-shell')).toBeVisible({ timeout: 10000 });
   });
 
   test('should announce AI suggestions to screen readers', async ({ alicePage }) => {
     await setupMocks(alicePage);
-    await alicePage.goto('/studio/v2/chat/session-1', { waitUntil: 'networkidle' });
+    await alicePage.goto('/studio/chat/session-1', { waitUntil: 'networkidle' });
 
     await expect(alicePage.getByTestId('studio-shell')).toBeVisible({ timeout: 10000 });
   });

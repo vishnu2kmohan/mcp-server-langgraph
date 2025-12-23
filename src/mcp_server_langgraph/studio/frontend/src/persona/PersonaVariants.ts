@@ -189,14 +189,14 @@ export const PERSONA_VISIBLE_MODULES: Record<string, ModuleId[]> = {
 // =============================================================================
 
 export const PERSONA_DEFAULT_VIEW: Record<string, string> = {
-  admin: "/studio/v2/admin",
-  "security-admin": "/studio/v2/compliance",
-  auditor: "/studio/v2/audit",
-  "alice-builder": "/studio/v2/chat",
-  "alice-analyst": "/studio/v2/observability",
-  "alice-devops": "/studio/v2/connections",
-  "compliance-officer": "/studio/v2/compliance",
-  bob: "/studio/v2/chat",
+  admin: "/studio/admin",
+  "security-admin": "/studio/compliance",
+  auditor: "/studio/audit",
+  "alice-builder": "/studio/chat",
+  "alice-analyst": "/studio/observability",
+  "alice-devops": "/studio/connections",
+  "compliance-officer": "/studio/compliance",
+  bob: "/studio/chat",
 };
 
 // =============================================================================
@@ -262,7 +262,7 @@ export function getVisibleModules(personaId: string): ModuleId[] {
 }
 
 export function getDefaultView(personaId: string): string {
-  return PERSONA_DEFAULT_VIEW[personaId] || "/studio/v2/chat";
+  return PERSONA_DEFAULT_VIEW[personaId] || "/studio/chat";
 }
 
 export function getDefaultPreset(personaId: string): WorkspacePreset {

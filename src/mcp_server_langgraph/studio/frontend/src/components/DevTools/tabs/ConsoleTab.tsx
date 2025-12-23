@@ -362,12 +362,12 @@ export function ConsoleTab({
           <option value="error">Errors</option>
         </select>
 
-        {/* Entry count */}
+        {/* Entry count - show total count, not batched count */}
         <span
           data-testid="entry-count"
           className="text-xs text-gray-500 dark:text-gray-400"
         >
-          {displayEntries.length}
+          {allEntries.length}
         </span>
 
         {/* Spacer */}

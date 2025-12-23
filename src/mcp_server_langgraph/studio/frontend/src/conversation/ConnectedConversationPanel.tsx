@@ -191,7 +191,7 @@ export function ConnectedConversationPanel({
           dispatch(createSession({ name: "New Chat" }))
             .unwrap()
             .then((session) => {
-              navigate(`/studio/v2/chat/${session.id}`);
+              navigate(`/studio/chat/${session.id}`);
               logger.debug("Created new session", { sessionId: session.id });
             })
             .catch((error) => {
@@ -212,7 +212,7 @@ export function ConnectedConversationPanel({
           break;
         case "help":
           // Navigate to help page
-          navigate("/studio/v2/help");
+          navigate("/studio/help");
           break;
       }
     },

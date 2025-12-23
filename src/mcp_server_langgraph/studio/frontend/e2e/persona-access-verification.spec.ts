@@ -69,7 +69,7 @@ const PERSONA_ACCESS_MATRIX: Record<string, PersonaConfig> = {
       "help",
     ],
     deniedModules: [], // Admin sees everything
-    defaultRoute: "/studio/v2/admin",
+    defaultRoute: "/studio/admin",
   },
   "security-admin": {
     id: "security-admin-user",
@@ -85,7 +85,7 @@ const PERSONA_ACCESS_MATRIX: Record<string, PersonaConfig> = {
       "traces",
     ],
     deniedModules: ["projects"],
-    defaultRoute: "/studio/v2/compliance",
+    defaultRoute: "/studio/compliance",
   },
   auditor: {
     id: "auditor-user",
@@ -103,7 +103,7 @@ const PERSONA_ACCESS_MATRIX: Record<string, PersonaConfig> = {
       "costs",
       "admin",
     ],
-    defaultRoute: "/studio/v2/audit",
+    defaultRoute: "/studio/audit",
   },
   "alice-builder": {
     id: "alice-builder-user",
@@ -112,7 +112,7 @@ const PERSONA_ACCESS_MATRIX: Record<string, PersonaConfig> = {
     roles: ["developer", "builder"],
     allowedModules: ["chat", "flows", "mcp", "agents", "help"],
     deniedModules: ["admin", "compliance", "audit", "costs", "traces"],
-    defaultRoute: "/studio/v2/chat",
+    defaultRoute: "/studio/chat",
   },
   "alice-analyst": {
     id: "alice-analyst-user",
@@ -121,7 +121,7 @@ const PERSONA_ACCESS_MATRIX: Record<string, PersonaConfig> = {
     roles: ["developer", "analyst"],
     allowedModules: ["chat", "traces", "costs", "help"],
     deniedModules: ["admin", "flows", "agents", "mcp", "compliance", "audit"],
-    defaultRoute: "/studio/v2/chat",
+    defaultRoute: "/studio/chat",
   },
   "alice-devops": {
     id: "alice-devops-user",
@@ -130,7 +130,7 @@ const PERSONA_ACCESS_MATRIX: Record<string, PersonaConfig> = {
     roles: ["developer", "devops"],
     allowedModules: ["chat", "mcp", "traces", "help"],
     deniedModules: ["admin", "compliance", "audit", "agents", "flows"],
-    defaultRoute: "/studio/v2/chat",
+    defaultRoute: "/studio/chat",
   },
   "compliance-officer": {
     id: "compliance-officer-user",
@@ -148,7 +148,7 @@ const PERSONA_ACCESS_MATRIX: Record<string, PersonaConfig> = {
       "costs",
       "admin",
     ],
-    defaultRoute: "/studio/v2/compliance",
+    defaultRoute: "/studio/compliance",
   },
   bob: {
     id: "bob-user",
@@ -165,24 +165,24 @@ const PERSONA_ACCESS_MATRIX: Record<string, PersonaConfig> = {
       "traces",
       "costs",
     ],
-    defaultRoute: "/studio/v2/chat",
+    defaultRoute: "/studio/chat",
   },
 };
 
 // Module to route mapping
 const MODULE_ROUTES: Record<string, string> = {
-  chat: "/studio/v2/chat",
-  admin: "/studio/v2/admin",
-  compliance: "/studio/v2/compliance",
-  audit: "/studio/v2/audit",
-  flows: "/studio/v2/workflows",
-  agents: "/studio/v2/mcp", // Agents visible on MCP page
-  mcp: "/studio/v2/mcp",
-  traces: "/studio/v2/observability",
-  costs: "/studio/v2/costs",
-  files: "/studio/v2/files",
-  projects: "/studio/v2/projects",
-  help: "/studio/v2/help",
+  chat: "/studio/chat",
+  admin: "/studio/admin",
+  compliance: "/studio/compliance",
+  audit: "/studio/audit",
+  flows: "/studio/workflows",
+  agents: "/studio/mcp", // Agents visible on MCP page
+  mcp: "/studio/mcp",
+  traces: "/studio/observability",
+  costs: "/studio/costs",
+  files: "/studio/files",
+  projects: "/studio/projects",
+  help: "/studio/help",
 };
 
 // Module to testid mapping for navigation
@@ -358,7 +358,7 @@ test.describe("Persona Access Matrix Verification", () => {
       const context = await browser.newContext();
       const page = await createPersonaPage(context, "admin");
 
-      await page.goto("/studio/v2/chat", { waitUntil: "networkidle" });
+      await page.goto("/studio/chat", { waitUntil: "networkidle" });
 
       const activityBar = page.getByTestId("activity-bar");
       await expect(activityBar).toBeVisible({ timeout: 10000 });
@@ -397,7 +397,7 @@ test.describe("Persona Access Matrix Verification", () => {
       const context = await browser.newContext();
       const page = await createPersonaPage(context, "auditor");
 
-      await page.goto("/studio/v2/audit", { waitUntil: "networkidle" });
+      await page.goto("/studio/audit", { waitUntil: "networkidle" });
 
       const activityBar = page.getByTestId("activity-bar");
       await expect(activityBar).toBeVisible({ timeout: 10000 });
@@ -415,7 +415,7 @@ test.describe("Persona Access Matrix Verification", () => {
       const context = await browser.newContext();
       const page = await createPersonaPage(context, "auditor");
 
-      await page.goto("/studio/v2/admin", { waitUntil: "networkidle" });
+      await page.goto("/studio/admin", { waitUntil: "networkidle" });
 
       // Should redirect away from admin
       await expect(page).not.toHaveURL(/\/studio\/v2\/admin$/);
@@ -427,7 +427,7 @@ test.describe("Persona Access Matrix Verification", () => {
       const context = await browser.newContext();
       const page = await createPersonaPage(context, "auditor");
 
-      await page.goto("/studio/v2/audit", { waitUntil: "networkidle" });
+      await page.goto("/studio/audit", { waitUntil: "networkidle" });
 
       // Should not redirect away
       await expect(page).toHaveURL(/\/studio\/v2\/audit/);
@@ -444,7 +444,7 @@ test.describe("Persona Access Matrix Verification", () => {
       const context = await browser.newContext();
       const page = await createPersonaPage(context, "alice-builder");
 
-      await page.goto("/studio/v2/chat", { waitUntil: "networkidle" });
+      await page.goto("/studio/chat", { waitUntil: "networkidle" });
 
       const activityBar = page.getByTestId("activity-bar");
       await expect(activityBar).toBeVisible({ timeout: 10000 });
@@ -464,11 +464,11 @@ test.describe("Persona Access Matrix Verification", () => {
       const context = await browser.newContext();
       const page = await createPersonaPage(context, "alice-builder");
 
-      await page.goto("/studio/v2/compliance", { waitUntil: "networkidle" });
+      await page.goto("/studio/compliance", { waitUntil: "networkidle" });
 
       // Should redirect away or show access denied
       const hasRedirected =
-        !(await page.url().includes("/studio/v2/compliance"));
+        !(await page.url().includes("/studio/compliance"));
       const hasAccessDenied = await page
         .locator("body")
         .textContent()
@@ -486,7 +486,7 @@ test.describe("Persona Access Matrix Verification", () => {
       const context = await browser.newContext();
       const page = await createPersonaPage(context, "bob");
 
-      await page.goto("/studio/v2/chat", { waitUntil: "networkidle" });
+      await page.goto("/studio/chat", { waitUntil: "networkidle" });
 
       const activityBar = page.getByTestId("activity-bar");
       await expect(activityBar).toBeVisible({ timeout: 10000 });
@@ -505,7 +505,7 @@ test.describe("Persona Access Matrix Verification", () => {
       const context = await browser.newContext();
       const page = await createPersonaPage(context, "bob");
 
-      await page.goto("/studio/v2/admin", { waitUntil: "networkidle" });
+      await page.goto("/studio/admin", { waitUntil: "networkidle" });
 
       // Should not be on admin page
       await expect(page).not.toHaveURL(/\/studio\/v2\/admin$/);
@@ -517,7 +517,7 @@ test.describe("Persona Access Matrix Verification", () => {
       const context = await browser.newContext();
       const page = await createPersonaPage(context, "bob");
 
-      await page.goto("/studio/v2/audit", { waitUntil: "networkidle" });
+      await page.goto("/studio/audit", { waitUntil: "networkidle" });
 
       // Should not be on audit page
       await expect(page).not.toHaveURL(/\/studio\/v2\/audit$/);
@@ -651,7 +651,7 @@ test.describe("Persona Access Matrix Verification", () => {
       for (const personaName of nonAdminPersonas) {
         const page = await createPersonaPage(context, personaName);
 
-        await page.goto("/studio/v2/admin", { waitUntil: "networkidle" });
+        await page.goto("/studio/admin", { waitUntil: "networkidle" });
 
         // Non-admin should not stay on admin route
         await expect(page).not.toHaveURL(/\/studio\/v2\/admin$/);
@@ -678,7 +678,7 @@ test.describe("Persona Access Matrix Verification", () => {
       for (const personaName of compliancePersonas) {
         const page = await createPersonaPage(context, personaName);
 
-        await page.goto("/studio/v2/compliance", { waitUntil: "networkidle" });
+        await page.goto("/studio/compliance", { waitUntil: "networkidle" });
 
         // Should stay on compliance page
         await expect(page.locator("body")).not.toContainText("Access Denied");
@@ -706,7 +706,7 @@ test.describe("Persona Access Matrix Verification", () => {
       for (const personaName of chatAccessPersonas) {
         const page = await createPersonaPage(context, personaName);
 
-        await page.goto("/studio/v2/chat", { waitUntil: "networkidle" });
+        await page.goto("/studio/chat", { waitUntil: "networkidle" });
 
         // Should access chat without issues
         await expect(page.locator("body")).not.toContainText("Access Denied");

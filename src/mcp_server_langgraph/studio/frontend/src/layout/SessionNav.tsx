@@ -127,7 +127,7 @@ export function SessionNav({
 
   const handleSessionClick = useCallback(
     (session: Session) => {
-      navigate(`/studio/v2/chat/${session.id}`);
+      navigate(`/studio/chat/${session.id}`);
     },
     [navigate],
   );
@@ -155,7 +155,7 @@ export function SessionNav({
             showSummary={showSummary}
             showTopics={showTopics}
             timestamp={new Date(session.created_at)}
-            onClick={(id) => navigate(`/studio/v2/chat/${id}`)}
+            onClick={(id) => navigate(`/studio/chat/${id}`)}
             isActive={session.id === currentSessionId}
             enableAI
           />

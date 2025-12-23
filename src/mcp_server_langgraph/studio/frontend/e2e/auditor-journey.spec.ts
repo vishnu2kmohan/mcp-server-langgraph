@@ -14,7 +14,7 @@
  * - Task Success: Audit task completion rate
  *
  * Visible modules: audit, compliance, help (read-only focus)
- * Default view: /studio/v2/audit
+ * Default view: /studio/audit
  */
 
 import { test, expect } from "./fixtures/auth";
@@ -114,21 +114,21 @@ test.describe("Auditor User Journey", () => {
 
   test.describe("Accessible Pages", () => {
     test("should access audit log page", async ({ adminPage }) => {
-      await adminPage.goto("/studio/v2/audit");
+      await adminPage.goto("/studio/audit");
       await expect(
         adminPage.locator("main, [role='main'], h1, h2").first()
       ).toBeVisible();
     });
 
     test("should access compliance dashboard", async ({ adminPage }) => {
-      await adminPage.goto("/studio/v2/compliance");
+      await adminPage.goto("/studio/compliance");
       await expect(
         adminPage.locator("main, [role='main'], h1, h2").first()
       ).toBeVisible();
     });
 
     test("should access help section", async ({ adminPage }) => {
-      await adminPage.goto("/studio/v2/help");
+      await adminPage.goto("/studio/help");
       await expect(
         adminPage.locator("main, [role='main'], h1, h2").first()
       ).toBeVisible();
@@ -139,7 +139,7 @@ test.describe("Auditor User Journey", () => {
     test("auditor should have limited navigation options", async ({
       adminPage,
     }) => {
-      await adminPage.goto("/studio/v2/audit");
+      await adminPage.goto("/studio/audit");
 
       // Check navigation structure exists
       const navOrHeader = adminPage.locator(
@@ -151,7 +151,7 @@ test.describe("Auditor User Journey", () => {
 
   test.describe("Primary Workflows", () => {
     test("should view audit log entries", async ({ adminPage }) => {
-      await adminPage.goto("/studio/v2/audit");
+      await adminPage.goto("/studio/audit");
 
       // Look for audit log content
       const auditContent = adminPage.locator(
@@ -165,7 +165,7 @@ test.describe("Auditor User Journey", () => {
     test("should filter audit logs if functionality available", async ({
       adminPage,
     }) => {
-      await adminPage.goto("/studio/v2/audit");
+      await adminPage.goto("/studio/audit");
 
       // Look for filter controls
       const filterInput = adminPage.locator(
@@ -178,7 +178,7 @@ test.describe("Auditor User Journey", () => {
     });
 
     test("should view compliance status", async ({ adminPage }) => {
-      await adminPage.goto("/studio/v2/compliance");
+      await adminPage.goto("/studio/compliance");
 
       // Look for compliance status indicators
       const complianceContent = adminPage.locator(
@@ -192,7 +192,7 @@ test.describe("Auditor User Journey", () => {
     test("should export audit data if functionality available", async ({
       adminPage,
     }) => {
-      await adminPage.goto("/studio/v2/audit");
+      await adminPage.goto("/studio/audit");
 
       // Look for export button
       const exportButton = adminPage.getByRole("button", { name: /export/i });
@@ -208,7 +208,7 @@ test.describe("Auditor User Journey", () => {
     }) => {
       const startTime = Date.now();
 
-      await adminPage.goto("/studio/v2/audit");
+      await adminPage.goto("/studio/audit");
       await expect(
         adminPage.locator("main, [role='main'], h1, h2").first()
       ).toBeVisible();
@@ -222,7 +222,7 @@ test.describe("Auditor User Journey", () => {
     }) => {
       const startTime = Date.now();
 
-      await adminPage.goto("/studio/v2/compliance");
+      await adminPage.goto("/studio/compliance");
       await expect(
         adminPage.locator("main, [role='main'], h1, h2").first()
       ).toBeVisible();
@@ -234,7 +234,7 @@ test.describe("Auditor User Journey", () => {
     test("should have proper accessibility structure", async ({
       adminPage,
     }) => {
-      await adminPage.goto("/studio/v2/audit");
+      await adminPage.goto("/studio/audit");
       await expect(
         adminPage.locator("main, [role='main'], h1").first()
       ).toBeVisible();
@@ -246,7 +246,7 @@ test.describe("Auditor User Journey", () => {
 
   test.describe("Auditor-specific Features", () => {
     test("should have read-only focused interface", async ({ adminPage }) => {
-      await adminPage.goto("/studio/v2/audit");
+      await adminPage.goto("/studio/audit");
 
       // Auditor should see data but limited editing controls
       const mainContent = adminPage.locator("main, [role='main']");

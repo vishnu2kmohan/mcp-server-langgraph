@@ -99,7 +99,7 @@ test.describe('Visual Regression - StudioShell Layout', () => {
   test('should match screenshot for desktop viewport', async ({ alicePage }) => {
     await setupMocks(alicePage);
     await alicePage.setViewportSize(viewports.desktop);
-    await alicePage.goto('/studio/v2/chat', { waitUntil: 'networkidle' });
+    await alicePage.goto('/studio/chat', { waitUntil: 'networkidle' });
 
     // Wait for layout to stabilize
     await alicePage.waitForSelector('[data-testid="studio-shell"]', { timeout: 10000 });
@@ -117,7 +117,7 @@ test.describe('Visual Regression - StudioShell Layout', () => {
   test('should match screenshot for laptop viewport', async ({ alicePage }) => {
     await setupMocks(alicePage);
     await alicePage.setViewportSize(viewports.laptop);
-    await alicePage.goto('/studio/v2/chat', { waitUntil: 'networkidle' });
+    await alicePage.goto('/studio/chat', { waitUntil: 'networkidle' });
 
     await alicePage.waitForSelector('[data-testid="studio-shell"]', { timeout: 10000 });
     await alicePage.waitForTimeout(500);
@@ -131,7 +131,7 @@ test.describe('Visual Regression - StudioShell Layout', () => {
   test('should match screenshot for tablet viewport', async ({ alicePage }) => {
     await setupMocks(alicePage);
     await alicePage.setViewportSize(viewports.tablet);
-    await alicePage.goto('/studio/v2/chat', { waitUntil: 'networkidle' });
+    await alicePage.goto('/studio/chat', { waitUntil: 'networkidle' });
 
     await alicePage.waitForSelector('[data-testid="studio-shell"]', { timeout: 10000 });
     await alicePage.waitForTimeout(500);
@@ -147,7 +147,7 @@ test.describe('Visual Regression - ActivityBar', () => {
   test('should match screenshot for ActivityBar component', async ({ alicePage }) => {
     await setupMocks(alicePage);
     await alicePage.setViewportSize(viewports.desktop);
-    await alicePage.goto('/studio/v2/chat', { waitUntil: 'networkidle' });
+    await alicePage.goto('/studio/chat', { waitUntil: 'networkidle' });
 
     const activityBar = alicePage.getByTestId('activity-bar');
     await expect(activityBar).toBeVisible({ timeout: 10000 });
@@ -161,7 +161,7 @@ test.describe('Visual Regression - ActivityBar', () => {
   test('should match screenshot for ActivityBar with admin persona', async ({ adminPage }) => {
     await setupMocks(adminPage);
     await adminPage.setViewportSize(viewports.desktop);
-    await adminPage.goto('/studio/v2/chat', { waitUntil: 'networkidle' });
+    await adminPage.goto('/studio/chat', { waitUntil: 'networkidle' });
 
     const activityBar = adminPage.getByTestId('activity-bar');
     await expect(activityBar).toBeVisible({ timeout: 10000 });
@@ -178,7 +178,7 @@ test.describe('Visual Regression - Canvas Panel', () => {
   test('should match screenshot for CanvasPanel empty state', async ({ alicePage }) => {
     await setupMocks(alicePage);
     await alicePage.setViewportSize(viewports.desktop);
-    await alicePage.goto('/studio/v2/chat', { waitUntil: 'networkidle' });
+    await alicePage.goto('/studio/chat', { waitUntil: 'networkidle' });
 
     const canvasPanel = alicePage.getByTestId('canvas-panel');
     await expect(canvasPanel).toBeVisible({ timeout: 10000 });
@@ -192,7 +192,7 @@ test.describe('Visual Regression - Canvas Panel', () => {
   test('should match screenshot for CanvasPanel with session', async ({ alicePage }) => {
     await setupMocks(alicePage);
     await alicePage.setViewportSize(viewports.desktop);
-    await alicePage.goto('/studio/v2/chat/session-1', { waitUntil: 'networkidle' });
+    await alicePage.goto('/studio/chat/session-1', { waitUntil: 'networkidle' });
 
     const canvasPanel = alicePage.getByTestId('canvas-panel');
     await expect(canvasPanel).toBeVisible({ timeout: 10000 });
@@ -208,7 +208,7 @@ test.describe('Visual Regression - Compliance Dashboard', () => {
   test('should match screenshot for Compliance Dashboard', async ({ adminPage }) => {
     await setupMocks(adminPage);
     await adminPage.setViewportSize(viewports.desktop);
-    await adminPage.goto('/studio/v2/compliance', { waitUntil: 'networkidle' });
+    await adminPage.goto('/studio/compliance', { waitUntil: 'networkidle' });
 
     // Wait for dashboard to render
     const complianceDashboard = adminPage.getByTestId('compliance-dashboard');
@@ -225,7 +225,7 @@ test.describe('Visual Regression - StatusBar', () => {
   test('should match screenshot for StatusBar', async ({ alicePage }) => {
     await setupMocks(alicePage);
     await alicePage.setViewportSize(viewports.desktop);
-    await alicePage.goto('/studio/v2/chat', { waitUntil: 'networkidle' });
+    await alicePage.goto('/studio/chat', { waitUntil: 'networkidle' });
 
     const statusBar = alicePage.getByTestId('status-bar');
     await expect(statusBar).toBeVisible({ timeout: 10000 });
@@ -247,7 +247,7 @@ test.describe('Visual Regression - Dark/Light Theme', () => {
       localStorage.setItem('theme', 'light');
     });
 
-    await alicePage.goto('/studio/v2/chat', { waitUntil: 'networkidle' });
+    await alicePage.goto('/studio/chat', { waitUntil: 'networkidle' });
     await alicePage.waitForSelector('[data-testid="studio-shell"]', { timeout: 10000 });
     await alicePage.waitForTimeout(500);
 
@@ -266,7 +266,7 @@ test.describe('Visual Regression - Dark/Light Theme', () => {
       localStorage.setItem('theme', 'dark');
     });
 
-    await alicePage.goto('/studio/v2/chat', { waitUntil: 'networkidle' });
+    await alicePage.goto('/studio/chat', { waitUntil: 'networkidle' });
     await alicePage.waitForSelector('[data-testid="studio-shell"]', { timeout: 10000 });
     await alicePage.waitForTimeout(500);
 
@@ -294,7 +294,7 @@ test.describe('Visual Regression - Loading States', () => {
       });
     }
 
-    await alicePage.goto('/studio/v2/chat', { waitUntil: 'domcontentloaded' });
+    await alicePage.goto('/studio/chat', { waitUntil: 'domcontentloaded' });
 
     // Capture loading state quickly
     await alicePage.waitForTimeout(100);
@@ -326,7 +326,7 @@ test.describe('Visual Regression - Error States', () => {
       });
     }
 
-    await alicePage.goto('/studio/v2/chat', { waitUntil: 'networkidle' });
+    await alicePage.goto('/studio/chat', { waitUntil: 'networkidle' });
     await alicePage.waitForTimeout(500);
 
     // Check for error boundary
@@ -345,7 +345,7 @@ test.describe('Visual Regression - Accessibility Focus States', () => {
   test('should show visible focus indicators on keyboard navigation', async ({ alicePage }) => {
     await setupMocks(alicePage);
     await alicePage.setViewportSize(viewports.desktop);
-    await alicePage.goto('/studio/v2/chat', { waitUntil: 'networkidle' });
+    await alicePage.goto('/studio/chat', { waitUntil: 'networkidle' });
 
     await alicePage.waitForSelector('[data-testid="studio-shell"]', { timeout: 10000 });
 

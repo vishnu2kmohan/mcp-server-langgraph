@@ -164,7 +164,7 @@ async function setupMocks(page: import('@playwright/test').Page) {
 test.describe('Canvas Artifact Display', () => {
   test('should render canvas panel', async ({ alicePage }) => {
     await setupMocks(alicePage);
-    await alicePage.goto('/studio/v2/chat', { waitUntil: 'networkidle' });
+    await alicePage.goto('/studio/chat', { waitUntil: 'networkidle' });
 
     const canvasPanel = alicePage.getByTestId('canvas-panel');
     await expect(canvasPanel).toBeVisible({ timeout: 10000 });
@@ -184,7 +184,7 @@ test.describe('Canvas Artifact Display', () => {
       });
     }
 
-    await alicePage.goto('/studio/v2/chat', { waitUntil: 'networkidle' });
+    await alicePage.goto('/studio/chat', { waitUntil: 'networkidle' });
 
     const canvasPanel = alicePage.getByTestId('canvas-panel');
     await expect(canvasPanel).toBeVisible({ timeout: 10000 });
@@ -192,7 +192,7 @@ test.describe('Canvas Artifact Display', () => {
 
   test('should render artifact tabs when artifacts exist', async ({ alicePage }) => {
     await setupMocks(alicePage);
-    await alicePage.goto('/studio/v2/chat/session-1', { waitUntil: 'networkidle' });
+    await alicePage.goto('/studio/chat/session-1', { waitUntil: 'networkidle' });
 
     const canvasPanel = alicePage.getByTestId('canvas-panel');
     await expect(canvasPanel).toBeVisible({ timeout: 10000 });
@@ -202,7 +202,7 @@ test.describe('Canvas Artifact Display', () => {
 test.describe('Artifact Viewing', () => {
   test('should display code artifact with syntax highlighting', async ({ alicePage }) => {
     await setupMocks(alicePage);
-    await alicePage.goto('/studio/v2/chat/session-1', { waitUntil: 'networkidle' });
+    await alicePage.goto('/studio/chat/session-1', { waitUntil: 'networkidle' });
 
     const canvasPanel = alicePage.getByTestId('canvas-panel');
     await expect(canvasPanel).toBeVisible({ timeout: 10000 });
@@ -210,7 +210,7 @@ test.describe('Artifact Viewing', () => {
 
   test('should display markdown artifact with preview', async ({ alicePage }) => {
     await setupMocks(alicePage);
-    await alicePage.goto('/studio/v2/chat/session-1', { waitUntil: 'networkidle' });
+    await alicePage.goto('/studio/chat/session-1', { waitUntil: 'networkidle' });
 
     const canvasPanel = alicePage.getByTestId('canvas-panel');
     await expect(canvasPanel).toBeVisible({ timeout: 10000 });
@@ -218,7 +218,7 @@ test.describe('Artifact Viewing', () => {
 
   test('should display JSON artifact with formatted view', async ({ alicePage }) => {
     await setupMocks(alicePage);
-    await alicePage.goto('/studio/v2/chat/session-1', { waitUntil: 'networkidle' });
+    await alicePage.goto('/studio/chat/session-1', { waitUntil: 'networkidle' });
 
     const canvasPanel = alicePage.getByTestId('canvas-panel');
     await expect(canvasPanel).toBeVisible({ timeout: 10000 });
@@ -228,7 +228,7 @@ test.describe('Artifact Viewing', () => {
 test.describe('Artifact Editing', () => {
   test('should allow editing artifact content', async ({ alicePage }) => {
     await setupMocks(alicePage);
-    await alicePage.goto('/studio/v2/chat/session-1', { waitUntil: 'networkidle' });
+    await alicePage.goto('/studio/chat/session-1', { waitUntil: 'networkidle' });
 
     const canvasPanel = alicePage.getByTestId('canvas-panel');
     await expect(canvasPanel).toBeVisible({ timeout: 10000 });
@@ -239,7 +239,7 @@ test.describe('Artifact Editing', () => {
 
   test('should show unsaved changes indicator', async ({ alicePage }) => {
     await setupMocks(alicePage);
-    await alicePage.goto('/studio/v2/chat/session-1', { waitUntil: 'networkidle' });
+    await alicePage.goto('/studio/chat/session-1', { waitUntil: 'networkidle' });
 
     const canvasPanel = alicePage.getByTestId('canvas-panel');
     await expect(canvasPanel).toBeVisible({ timeout: 10000 });
@@ -249,7 +249,7 @@ test.describe('Artifact Editing', () => {
 test.describe('Artifact Version Control', () => {
   test('should show version history', async ({ alicePage }) => {
     await setupMocks(alicePage);
-    await alicePage.goto('/studio/v2/chat/session-1', { waitUntil: 'networkidle' });
+    await alicePage.goto('/studio/chat/session-1', { waitUntil: 'networkidle' });
 
     const canvasPanel = alicePage.getByTestId('canvas-panel');
     await expect(canvasPanel).toBeVisible({ timeout: 10000 });
@@ -257,7 +257,7 @@ test.describe('Artifact Version Control', () => {
 
   test('should allow reverting to previous version', async ({ alicePage }) => {
     await setupMocks(alicePage);
-    await alicePage.goto('/studio/v2/chat/session-1', { waitUntil: 'networkidle' });
+    await alicePage.goto('/studio/chat/session-1', { waitUntil: 'networkidle' });
 
     const canvasPanel = alicePage.getByTestId('canvas-panel');
     await expect(canvasPanel).toBeVisible({ timeout: 10000 });
@@ -267,7 +267,7 @@ test.describe('Artifact Version Control', () => {
 test.describe('View Mode Switching', () => {
   test('should switch between code and preview views', async ({ alicePage }) => {
     await setupMocks(alicePage);
-    await alicePage.goto('/studio/v2/chat/session-1', { waitUntil: 'networkidle' });
+    await alicePage.goto('/studio/chat/session-1', { waitUntil: 'networkidle' });
 
     const canvasPanel = alicePage.getByTestId('canvas-panel');
     await expect(canvasPanel).toBeVisible({ timeout: 10000 });
@@ -275,7 +275,7 @@ test.describe('View Mode Switching', () => {
 
   test('should show split view by default', async ({ alicePage }) => {
     await setupMocks(alicePage);
-    await alicePage.goto('/studio/v2/chat/session-1', { waitUntil: 'networkidle' });
+    await alicePage.goto('/studio/chat/session-1', { waitUntil: 'networkidle' });
 
     const canvasPanel = alicePage.getByTestId('canvas-panel');
     await expect(canvasPanel).toBeVisible({ timeout: 10000 });
@@ -285,7 +285,7 @@ test.describe('View Mode Switching', () => {
 test.describe('Artifact Tab Management', () => {
   test('should allow switching between artifact tabs', async ({ alicePage }) => {
     await setupMocks(alicePage);
-    await alicePage.goto('/studio/v2/chat/session-1', { waitUntil: 'networkidle' });
+    await alicePage.goto('/studio/chat/session-1', { waitUntil: 'networkidle' });
 
     const canvasPanel = alicePage.getByTestId('canvas-panel');
     await expect(canvasPanel).toBeVisible({ timeout: 10000 });
@@ -293,7 +293,7 @@ test.describe('Artifact Tab Management', () => {
 
   test('should close artifact tab', async ({ alicePage }) => {
     await setupMocks(alicePage);
-    await alicePage.goto('/studio/v2/chat/session-1', { waitUntil: 'networkidle' });
+    await alicePage.goto('/studio/chat/session-1', { waitUntil: 'networkidle' });
 
     const canvasPanel = alicePage.getByTestId('canvas-panel');
     await expect(canvasPanel).toBeVisible({ timeout: 10000 });
@@ -303,7 +303,7 @@ test.describe('Artifact Tab Management', () => {
 test.describe('Artifact Actions', () => {
   test('should show artifact action buttons', async ({ alicePage }) => {
     await setupMocks(alicePage);
-    await alicePage.goto('/studio/v2/chat/session-1', { waitUntil: 'networkidle' });
+    await alicePage.goto('/studio/chat/session-1', { waitUntil: 'networkidle' });
 
     const canvasPanel = alicePage.getByTestId('canvas-panel');
     await expect(canvasPanel).toBeVisible({ timeout: 10000 });
@@ -311,7 +311,7 @@ test.describe('Artifact Actions', () => {
 
   test('should copy artifact content', async ({ alicePage }) => {
     await setupMocks(alicePage);
-    await alicePage.goto('/studio/v2/chat/session-1', { waitUntil: 'networkidle' });
+    await alicePage.goto('/studio/chat/session-1', { waitUntil: 'networkidle' });
 
     const canvasPanel = alicePage.getByTestId('canvas-panel');
     await expect(canvasPanel).toBeVisible({ timeout: 10000 });
@@ -319,7 +319,7 @@ test.describe('Artifact Actions', () => {
 
   test('should export artifact', async ({ alicePage }) => {
     await setupMocks(alicePage);
-    await alicePage.goto('/studio/v2/chat/session-1', { waitUntil: 'networkidle' });
+    await alicePage.goto('/studio/chat/session-1', { waitUntil: 'networkidle' });
 
     const canvasPanel = alicePage.getByTestId('canvas-panel');
     await expect(canvasPanel).toBeVisible({ timeout: 10000 });
@@ -329,7 +329,7 @@ test.describe('Artifact Actions', () => {
 test.describe('Canvas Accessibility', () => {
   test('should have keyboard navigable artifacts', async ({ alicePage }) => {
     await setupMocks(alicePage);
-    await alicePage.goto('/studio/v2/chat/session-1', { waitUntil: 'networkidle' });
+    await alicePage.goto('/studio/chat/session-1', { waitUntil: 'networkidle' });
 
     const canvasPanel = alicePage.getByTestId('canvas-panel');
     await expect(canvasPanel).toBeVisible({ timeout: 10000 });
@@ -340,7 +340,7 @@ test.describe('Canvas Accessibility', () => {
 
   test('should have proper ARIA labels on canvas elements', async ({ alicePage }) => {
     await setupMocks(alicePage);
-    await alicePage.goto('/studio/v2/chat/session-1', { waitUntil: 'networkidle' });
+    await alicePage.goto('/studio/chat/session-1', { waitUntil: 'networkidle' });
 
     const canvasPanel = alicePage.getByTestId('canvas-panel');
     await expect(canvasPanel).toBeVisible({ timeout: 10000 });

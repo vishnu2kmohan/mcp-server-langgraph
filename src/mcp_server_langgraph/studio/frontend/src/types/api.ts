@@ -208,7 +208,7 @@ export interface FeatureFlags {
   // ==========================================================================
   // Canvas Hybrid Shell Feature Flags (Phase 0+)
   // ==========================================================================
-  /** Enable Hybrid Canvas shell at /studio/v2 (Phase 1) */
+  /** Enable Hybrid Canvas shell at /studio (Phase 1) */
   canvas_studio_shell?: boolean;
   /** Enable editable artifacts in Canvas panel (Phase 2) */
   canvas_editable?: boolean;

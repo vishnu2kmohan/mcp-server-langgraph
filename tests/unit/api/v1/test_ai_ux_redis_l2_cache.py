@@ -515,22 +515,25 @@ class TestCacheInvalidation:
         """Can invalidate all cache entries for a specific method."""
         from mcp_server_langgraph.api.v1.ai_ux_service import AIUXService
 
-        mock_redis_client.scan = AsyncMock(
-            return_value=(0, [b"ai_ux:persona_analysis:1", b"ai_ux:persona_analysis:2"])
-        )
-        mock_redis_client.delete = AsyncMock(return_value=2)
-
         service = AIUXService(
             llm_factory=mock_llm_factory,
             settings=mock_settings_no_redis,
         )
-        # Manually inject Redis cache for testing
-        service.redis_cache = mock_redis_client
+
+        # Pre-populate L1 cache with method-specific entries
+        service._response_cache["persona_analysis:user-1"] = {"data": "test1"}
+        service._response_cache["persona_analysis:user-2"] = {"data": "test2"}
+        service._response_cache["disclosure:user-1"] = {"data": "other"}
 
         deleted_count = await service.invalidate_method_cache("persona_analysis")
 
-        # Scan should be called with correct pattern
-        mock_redis_client.scan.assert_called()
+        # Method-specific entries should be removed from L1
+        assert "persona_analysis:user-1" not in service._response_cache
+        assert "persona_analysis:user-2" not in service._response_cache
+        # Other method entries should remain
+        assert "disclosure:user-1" in service._response_cache
+        # Should return count of deleted entries (at least 2 from legacy cache)
+        assert deleted_count >= 2
 
 
 # =============================================================================

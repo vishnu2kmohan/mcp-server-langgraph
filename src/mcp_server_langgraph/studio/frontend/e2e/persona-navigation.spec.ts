@@ -77,7 +77,7 @@ test.describe('Persona Navigation Visibility', () => {
   test.describe('Admin Persona', () => {
     test('should show all navigation items for admin', async ({ adminPage }) => {
       await setupFeatureFlagMock(adminPage);
-      await adminPage.goto('/studio/v2/chat', { waitUntil: 'networkidle' });
+      await adminPage.goto('/studio/chat', { waitUntil: 'networkidle' });
 
       const activityBar = adminPage.getByTestId('activity-bar');
       await expect(activityBar).toBeVisible({ timeout: 10000 });
@@ -89,7 +89,7 @@ test.describe('Persona Navigation Visibility', () => {
 
     test('should have access to admin panel', async ({ adminPage }) => {
       await setupFeatureFlagMock(adminPage);
-      await adminPage.goto('/studio/v2/admin', { waitUntil: 'networkidle' });
+      await adminPage.goto('/studio/admin', { waitUntil: 'networkidle' });
 
       // Should not redirect away - admin has access
       await expect(adminPage).toHaveURL(/\/studio\/v2\/admin/);
@@ -97,7 +97,7 @@ test.describe('Persona Navigation Visibility', () => {
 
     test('should have access to compliance dashboard', async ({ adminPage }) => {
       await setupFeatureFlagMock(adminPage);
-      await adminPage.goto('/studio/v2/compliance', { waitUntil: 'networkidle' });
+      await adminPage.goto('/studio/compliance', { waitUntil: 'networkidle' });
 
       // Should not redirect away - admin has access
       await expect(adminPage.locator('body')).not.toContainText('Access Denied');
@@ -107,7 +107,7 @@ test.describe('Persona Navigation Visibility', () => {
   test.describe('Developer Persona (Alice)', () => {
     test('should show developer navigation items', async ({ alicePage }) => {
       await setupFeatureFlagMock(alicePage);
-      await alicePage.goto('/studio/v2/chat', { waitUntil: 'networkidle' });
+      await alicePage.goto('/studio/chat', { waitUntil: 'networkidle' });
 
       const activityBar = alicePage.getByTestId('activity-bar');
       await expect(activityBar).toBeVisible({ timeout: 10000 });
@@ -118,7 +118,7 @@ test.describe('Persona Navigation Visibility', () => {
 
     test('should not show admin-only items for developer', async ({ alicePage }) => {
       await setupFeatureFlagMock(alicePage);
-      await alicePage.goto('/studio/v2/chat', { waitUntil: 'networkidle' });
+      await alicePage.goto('/studio/chat', { waitUntil: 'networkidle' });
 
       const activityBar = alicePage.getByTestId('activity-bar');
       await expect(activityBar).toBeVisible({ timeout: 10000 });
@@ -129,7 +129,7 @@ test.describe('Persona Navigation Visibility', () => {
 
     test('should redirect from admin panel to default view', async ({ alicePage }) => {
       await setupFeatureFlagMock(alicePage);
-      await alicePage.goto('/studio/v2/admin', { waitUntil: 'networkidle' });
+      await alicePage.goto('/studio/admin', { waitUntil: 'networkidle' });
 
       // Should redirect away - alice doesn't have admin access
       await expect(alicePage).not.toHaveURL(/\/studio\/v2\/admin/);
@@ -139,7 +139,7 @@ test.describe('Persona Navigation Visibility', () => {
   test.describe('Standard User Persona (Bob)', () => {
     test('should show limited navigation for standard user', async ({ bobPage }) => {
       await setupFeatureFlagMock(bobPage);
-      await bobPage.goto('/studio/v2/chat', { waitUntil: 'networkidle' });
+      await bobPage.goto('/studio/chat', { waitUntil: 'networkidle' });
 
       const activityBar = bobPage.getByTestId('activity-bar');
       await expect(activityBar).toBeVisible({ timeout: 10000 });
@@ -150,7 +150,7 @@ test.describe('Persona Navigation Visibility', () => {
 
     test('should not show admin items for standard user', async ({ bobPage }) => {
       await setupFeatureFlagMock(bobPage);
-      await bobPage.goto('/studio/v2/chat', { waitUntil: 'networkidle' });
+      await bobPage.goto('/studio/chat', { waitUntil: 'networkidle' });
 
       // Bob should NOT see admin items
       await expect(bobPage.getByTestId('nav-admin')).not.toBeVisible();
@@ -158,7 +158,7 @@ test.describe('Persona Navigation Visibility', () => {
 
     test('should not show compliance items for standard user', async ({ bobPage }) => {
       await setupFeatureFlagMock(bobPage);
-      await bobPage.goto('/studio/v2/chat', { waitUntil: 'networkidle' });
+      await bobPage.goto('/studio/chat', { waitUntil: 'networkidle' });
 
       // Bob should NOT see compliance
       await expect(bobPage.getByTestId('nav-compliance')).not.toBeVisible();
@@ -166,7 +166,7 @@ test.describe('Persona Navigation Visibility', () => {
 
     test('should redirect from admin routes', async ({ bobPage }) => {
       await setupFeatureFlagMock(bobPage);
-      await bobPage.goto('/studio/v2/admin', { waitUntil: 'networkidle' });
+      await bobPage.goto('/studio/admin', { waitUntil: 'networkidle' });
 
       // Should redirect away - bob doesn't have admin access
       await expect(bobPage).not.toHaveURL(/\/studio\/v2\/admin/);
@@ -174,7 +174,7 @@ test.describe('Persona Navigation Visibility', () => {
 
     test('should redirect from compliance routes', async ({ bobPage }) => {
       await setupFeatureFlagMock(bobPage);
-      await bobPage.goto('/studio/v2/compliance', { waitUntil: 'networkidle' });
+      await bobPage.goto('/studio/compliance', { waitUntil: 'networkidle' });
 
       // Should redirect away - bob doesn't have compliance access
       await expect(bobPage).not.toHaveURL(/\/studio\/v2\/compliance/);
@@ -185,7 +185,7 @@ test.describe('Persona Navigation Visibility', () => {
     test('admin can access all routes', async ({ adminPage }) => {
       await setupFeatureFlagMock(adminPage);
 
-      const routes = ['/studio/v2/chat', '/studio/v2/admin', '/studio/v2/compliance'];
+      const routes = ['/studio/chat', '/studio/admin', '/studio/compliance'];
 
       for (const route of routes) {
         await adminPage.goto(route, { waitUntil: 'networkidle' });
@@ -198,7 +198,7 @@ test.describe('Persona Navigation Visibility', () => {
       await setupFeatureFlagMock(alicePage);
 
       // Developer should access chat
-      await alicePage.goto('/studio/v2/chat', { waitUntil: 'networkidle' });
+      await alicePage.goto('/studio/chat', { waitUntil: 'networkidle' });
       await expect(alicePage.locator('body')).not.toContainText('Access Denied');
     });
 
@@ -206,7 +206,7 @@ test.describe('Persona Navigation Visibility', () => {
       await setupFeatureFlagMock(bobPage);
 
       // Bob should access chat
-      await bobPage.goto('/studio/v2/chat', { waitUntil: 'networkidle' });
+      await bobPage.goto('/studio/chat', { waitUntil: 'networkidle' });
       await expect(bobPage.locator('body')).not.toContainText('Access Denied');
     });
   });
@@ -215,7 +215,7 @@ test.describe('Persona Navigation Visibility', () => {
 test.describe('Persona Switching', () => {
   test('should show persona switcher for admin', async ({ adminPage }) => {
     await setupFeatureFlagMock(adminPage);
-    await adminPage.goto('/studio/v2/chat', { waitUntil: 'networkidle' });
+    await adminPage.goto('/studio/chat', { waitUntil: 'networkidle' });
 
     // Look for persona indicator or switcher
     const statusBar = adminPage.getByTestId('status-bar');
@@ -224,7 +224,7 @@ test.describe('Persona Switching', () => {
 
   test('should update navigation when persona changes', async ({ adminPage }) => {
     await setupFeatureFlagMock(adminPage);
-    await adminPage.goto('/studio/v2/chat', { waitUntil: 'networkidle' });
+    await adminPage.goto('/studio/chat', { waitUntil: 'networkidle' });
 
     const activityBar = adminPage.getByTestId('activity-bar');
     await expect(activityBar).toBeVisible({ timeout: 10000 });
@@ -237,7 +237,7 @@ test.describe('Persona Switching', () => {
 test.describe('Workspace Presets', () => {
   test('should apply default layout preset', async ({ alicePage }) => {
     await setupFeatureFlagMock(alicePage);
-    await alicePage.goto('/studio/v2/chat', { waitUntil: 'networkidle' });
+    await alicePage.goto('/studio/chat', { waitUntil: 'networkidle' });
 
     // Verify the studio shell layout is rendered
     await expect(alicePage.getByTestId('studio-shell')).toBeVisible({ timeout: 10000 });
@@ -250,7 +250,7 @@ test.describe('Workspace Presets', () => {
 
   test('should persist layout changes', async ({ alicePage }) => {
     await setupFeatureFlagMock(alicePage);
-    await alicePage.goto('/studio/v2/chat', { waitUntil: 'networkidle' });
+    await alicePage.goto('/studio/chat', { waitUntil: 'networkidle' });
 
     // Verify the layout is stable after navigation
     await expect(alicePage.getByTestId('studio-shell')).toBeVisible({ timeout: 10000 });

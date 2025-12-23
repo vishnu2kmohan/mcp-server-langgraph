@@ -15,7 +15,7 @@
  * - Task Success: Configuration task completion rate
  *
  * Visible modules: chat, mcp, connections, traces, help
- * Default view: /studio/v2/connections
+ * Default view: /studio/connections
  */
 
 import { test, expect } from "./fixtures/auth";
@@ -151,35 +151,35 @@ test.describe("Alice DevOps User Journey", () => {
 
   test.describe("Accessible Pages", () => {
     test("should access connections page", async ({ alicePage }) => {
-      await alicePage.goto("/studio/v2/connections");
+      await alicePage.goto("/studio/connections");
       await expect(
         alicePage.locator("main, [role='main'], h1, h2").first()
       ).toBeVisible();
     });
 
     test("should access MCP configuration page", async ({ alicePage }) => {
-      await alicePage.goto("/studio/v2/mcp");
+      await alicePage.goto("/studio/mcp");
       await expect(
         alicePage.locator("main, [role='main'], h1, h2").first()
       ).toBeVisible();
     });
 
     test("should access traces/observability page", async ({ alicePage }) => {
-      await alicePage.goto("/studio/v2/observability");
+      await alicePage.goto("/studio/observability");
       await expect(
         alicePage.locator("main, [role='main'], h1, h2").first()
       ).toBeVisible();
     });
 
     test("should access chat interface", async ({ alicePage }) => {
-      await alicePage.goto("/studio/v2/chat");
+      await alicePage.goto("/studio/chat");
       await expect(
         alicePage.locator("main, [role='main'], h1, h2").first()
       ).toBeVisible();
     });
 
     test("should access help section", async ({ alicePage }) => {
-      await alicePage.goto("/studio/v2/help");
+      await alicePage.goto("/studio/help");
       await expect(
         alicePage.locator("main, [role='main'], h1, h2").first()
       ).toBeVisible();
@@ -190,7 +190,7 @@ test.describe("Alice DevOps User Journey", () => {
     test("devops should have infrastructure-focused navigation", async ({
       alicePage,
     }) => {
-      await alicePage.goto("/studio/v2/connections");
+      await alicePage.goto("/studio/connections");
 
       // Check navigation structure
       const navOrHeader = alicePage.locator(
@@ -202,7 +202,7 @@ test.describe("Alice DevOps User Journey", () => {
 
   test.describe("Primary Workflows", () => {
     test("should view connection list", async ({ alicePage }) => {
-      await alicePage.goto("/studio/v2/connections");
+      await alicePage.goto("/studio/connections");
 
       // Look for connections content
       const connectionsContent = alicePage.locator(
@@ -214,7 +214,7 @@ test.describe("Alice DevOps User Journey", () => {
     });
 
     test("should view connection status indicators", async ({ alicePage }) => {
-      await alicePage.goto("/studio/v2/connections");
+      await alicePage.goto("/studio/connections");
 
       // Look for status indicators
       const statusIndicators = alicePage.locator(
@@ -226,7 +226,7 @@ test.describe("Alice DevOps User Journey", () => {
     });
 
     test("should view MCP server list", async ({ alicePage }) => {
-      await alicePage.goto("/studio/v2/mcp");
+      await alicePage.goto("/studio/mcp");
 
       // Look for MCP server content
       const mcpContent = alicePage.locator(
@@ -240,7 +240,7 @@ test.describe("Alice DevOps User Journey", () => {
     test("should access MCP server configuration if available", async ({
       alicePage,
     }) => {
-      await alicePage.goto("/studio/v2/mcp");
+      await alicePage.goto("/studio/mcp");
 
       // Look for configuration/settings button
       const configButton = alicePage.getByRole("button", {
@@ -254,7 +254,7 @@ test.describe("Alice DevOps User Journey", () => {
     test("should monitor traces for deployment health", async ({
       alicePage,
     }) => {
-      await alicePage.goto("/studio/v2/observability");
+      await alicePage.goto("/studio/observability");
 
       // Look for traces content
       const tracesContent = alicePage.locator(
@@ -272,7 +272,7 @@ test.describe("Alice DevOps User Journey", () => {
     }) => {
       const startTime = Date.now();
 
-      await alicePage.goto("/studio/v2/connections");
+      await alicePage.goto("/studio/connections");
       await expect(
         alicePage.locator("main, [role='main'], h1, h2").first()
       ).toBeVisible();
@@ -286,7 +286,7 @@ test.describe("Alice DevOps User Journey", () => {
     }) => {
       const startTime = Date.now();
 
-      await alicePage.goto("/studio/v2/mcp");
+      await alicePage.goto("/studio/mcp");
       await expect(
         alicePage.locator("main, [role='main'], h1, h2").first()
       ).toBeVisible();
@@ -296,7 +296,7 @@ test.describe("Alice DevOps User Journey", () => {
     });
 
     test("should have proper accessibility structure", async ({ alicePage }) => {
-      await alicePage.goto("/studio/v2/connections");
+      await alicePage.goto("/studio/connections");
       await expect(
         alicePage.locator("main, [role='main'], h1").first()
       ).toBeVisible();
@@ -310,7 +310,7 @@ test.describe("Alice DevOps User Journey", () => {
     test("should have connection test functionality if available", async ({
       alicePage,
     }) => {
-      await alicePage.goto("/studio/v2/connections");
+      await alicePage.goto("/studio/connections");
 
       // Look for test/verify button
       const testButton = alicePage.getByRole("button", {
@@ -324,7 +324,7 @@ test.describe("Alice DevOps User Journey", () => {
     test("should support adding new connections if available", async ({
       alicePage,
     }) => {
-      await alicePage.goto("/studio/v2/connections");
+      await alicePage.goto("/studio/connections");
 
       // Look for add button
       const addButton = alicePage.getByRole("button", {

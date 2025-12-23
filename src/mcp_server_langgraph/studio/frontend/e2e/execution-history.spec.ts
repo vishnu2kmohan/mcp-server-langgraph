@@ -187,13 +187,13 @@ test.describe('Execution History Panel - Opening/Closing', () => {
   });
 
   test('should have History button in workflow toolbar', async ({ alicePage }) => {
-    await alicePage.goto('/studio/v2/workflows?id=wf-test-1', { waitUntil: 'networkidle' });
+    await alicePage.goto('/studio/workflows?id=wf-test-1', { waitUntil: 'networkidle' });
 
     await expect(alicePage.getByRole('button', { name: /history/i })).toBeVisible({ timeout: 10000 });
   });
 
   test('should open execution history panel when History button is clicked', async ({ alicePage }) => {
-    await alicePage.goto('/studio/v2/workflows?id=wf-test-1', { waitUntil: 'networkidle' });
+    await alicePage.goto('/studio/workflows?id=wf-test-1', { waitUntil: 'networkidle' });
 
     // Click History button
     await alicePage.getByRole('button', { name: /history/i }).click();
@@ -203,7 +203,7 @@ test.describe('Execution History Panel - Opening/Closing', () => {
   });
 
   test('should close execution history panel when toggled', async ({ alicePage }) => {
-    await alicePage.goto('/studio/v2/workflows?id=wf-test-1', { waitUntil: 'networkidle' });
+    await alicePage.goto('/studio/workflows?id=wf-test-1', { waitUntil: 'networkidle' });
 
     // Open history panel
     await alicePage.getByRole('button', { name: /history/i }).click();
@@ -223,7 +223,7 @@ test.describe('Execution History Panel - Execution List', () => {
   });
 
   test('should display total execution count', async ({ alicePage }) => {
-    await alicePage.goto('/studio/v2/workflows?id=wf-test-1', { waitUntil: 'networkidle' });
+    await alicePage.goto('/studio/workflows?id=wf-test-1', { waitUntil: 'networkidle' });
     await alicePage.getByRole('button', { name: /history/i }).click();
 
     // Should show total count
@@ -231,7 +231,7 @@ test.describe('Execution History Panel - Execution List', () => {
   });
 
   test('should display execution list items', async ({ alicePage }) => {
-    await alicePage.goto('/studio/v2/workflows?id=wf-test-1', { waitUntil: 'networkidle' });
+    await alicePage.goto('/studio/workflows?id=wf-test-1', { waitUntil: 'networkidle' });
     await alicePage.getByRole('button', { name: /history/i }).click();
 
     // Should show execution items
@@ -239,7 +239,7 @@ test.describe('Execution History Panel - Execution List', () => {
   });
 
   test('should show execution status with color coding', async ({ alicePage }) => {
-    await alicePage.goto('/studio/v2/workflows?id=wf-test-1', { waitUntil: 'networkidle' });
+    await alicePage.goto('/studio/workflows?id=wf-test-1', { waitUntil: 'networkidle' });
     await alicePage.getByRole('button', { name: /history/i }).click();
 
     // First execution should be completed (green)
@@ -248,7 +248,7 @@ test.describe('Execution History Panel - Execution List', () => {
   });
 
   test('should show execution timestamp', async ({ alicePage }) => {
-    await alicePage.goto('/studio/v2/workflows?id=wf-test-1', { waitUntil: 'networkidle' });
+    await alicePage.goto('/studio/workflows?id=wf-test-1', { waitUntil: 'networkidle' });
     await alicePage.getByRole('button', { name: /history/i }).click();
 
     // Should show timestamps
@@ -263,7 +263,7 @@ test.describe('Execution History Panel - Pagination', () => {
   });
 
   test('should show load more button when more pages exist', async ({ alicePage }) => {
-    await alicePage.goto('/studio/v2/workflows?id=wf-test-1', { waitUntil: 'networkidle' });
+    await alicePage.goto('/studio/workflows?id=wf-test-1', { waitUntil: 'networkidle' });
     await alicePage.getByRole('button', { name: /history/i }).click();
 
     // Wait for list to load
@@ -274,7 +274,7 @@ test.describe('Execution History Panel - Pagination', () => {
   });
 
   test('should load next page when clicking load more', async ({ alicePage }) => {
-    await alicePage.goto('/studio/v2/workflows?id=wf-test-1', { waitUntil: 'networkidle' });
+    await alicePage.goto('/studio/workflows?id=wf-test-1', { waitUntil: 'networkidle' });
     await alicePage.getByRole('button', { name: /history/i }).click();
 
     // Wait for initial list
@@ -288,7 +288,7 @@ test.describe('Execution History Panel - Pagination', () => {
   });
 
   test('should show cumulative count of loaded executions', async ({ alicePage }) => {
-    await alicePage.goto('/studio/v2/workflows?id=wf-test-1', { waitUntil: 'networkidle' });
+    await alicePage.goto('/studio/workflows?id=wf-test-1', { waitUntil: 'networkidle' });
     await alicePage.getByRole('button', { name: /history/i }).click();
 
     // Wait for initial list
@@ -305,7 +305,7 @@ test.describe('Execution History Panel - Pagination', () => {
   });
 
   test('should hide load more button on last page', async ({ alicePage }) => {
-    await alicePage.goto('/studio/v2/workflows?id=wf-test-1', { waitUntil: 'networkidle' });
+    await alicePage.goto('/studio/workflows?id=wf-test-1', { waitUntil: 'networkidle' });
     await alicePage.getByRole('button', { name: /history/i }).click();
 
     // Load all pages (35 items = 4 pages)
@@ -331,7 +331,7 @@ test.describe('Execution History Panel - Execution Details', () => {
   });
 
   test('should show execution details when clicking an execution', async ({ alicePage }) => {
-    await alicePage.goto('/studio/v2/workflows?id=wf-test-1', { waitUntil: 'networkidle' });
+    await alicePage.goto('/studio/workflows?id=wf-test-1', { waitUntil: 'networkidle' });
     await alicePage.getByRole('button', { name: /history/i }).click();
 
     // Click on first execution
@@ -342,7 +342,7 @@ test.describe('Execution History Panel - Execution Details', () => {
   });
 
   test('should show input data in execution details', async ({ alicePage }) => {
-    await alicePage.goto('/studio/v2/workflows?id=wf-test-1', { waitUntil: 'networkidle' });
+    await alicePage.goto('/studio/workflows?id=wf-test-1', { waitUntil: 'networkidle' });
     await alicePage.getByRole('button', { name: /history/i }).click();
     await alicePage.getByTestId('execution-item-exec-1').click();
 
@@ -352,7 +352,7 @@ test.describe('Execution History Panel - Execution Details', () => {
   });
 
   test('should show output data in execution details', async ({ alicePage }) => {
-    await alicePage.goto('/studio/v2/workflows?id=wf-test-1', { waitUntil: 'networkidle' });
+    await alicePage.goto('/studio/workflows?id=wf-test-1', { waitUntil: 'networkidle' });
     await alicePage.getByRole('button', { name: /history/i }).click();
     await alicePage.getByTestId('execution-item-exec-1').click();
 
@@ -362,7 +362,7 @@ test.describe('Execution History Panel - Execution Details', () => {
   });
 
   test('should show execution logs', async ({ alicePage }) => {
-    await alicePage.goto('/studio/v2/workflows?id=wf-test-1', { waitUntil: 'networkidle' });
+    await alicePage.goto('/studio/workflows?id=wf-test-1', { waitUntil: 'networkidle' });
     await alicePage.getByRole('button', { name: /history/i }).click();
     await alicePage.getByTestId('execution-item-exec-1').click();
 
@@ -379,7 +379,7 @@ test.describe('Execution History Panel - Re-run Execution', () => {
   });
 
   test('should have re-run button in execution details', async ({ alicePage }) => {
-    await alicePage.goto('/studio/v2/workflows?id=wf-test-1', { waitUntil: 'networkidle' });
+    await alicePage.goto('/studio/workflows?id=wf-test-1', { waitUntil: 'networkidle' });
     await alicePage.getByRole('button', { name: /history/i }).click();
     await alicePage.getByTestId('execution-item-exec-1').click();
 
@@ -394,7 +394,7 @@ test.describe('Execution History Panel - Status Filtering', () => {
   });
 
   test('should have status filter dropdown', async ({ alicePage }) => {
-    await alicePage.goto('/studio/v2/workflows?id=wf-test-1', { waitUntil: 'networkidle' });
+    await alicePage.goto('/studio/workflows?id=wf-test-1', { waitUntil: 'networkidle' });
     await alicePage.getByRole('button', { name: /history/i }).click();
 
     // Should have filter options

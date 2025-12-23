@@ -15,7 +15,7 @@
  * - Task Success: Task completion rate
  *
  * Visible modules: chat, projects, shared flows
- * Default view: /studio/v2/chat
+ * Default view: /studio/chat
  * Role: Standard user with read-focused access
  */
 
@@ -141,21 +141,21 @@ test.describe("Bob User Journey", () => {
 
   test.describe("Accessible Pages", () => {
     test("should access chat interface as default view", async ({ bobPage }) => {
-      await bobPage.goto("/studio/v2/chat");
+      await bobPage.goto("/studio/chat");
       await expect(
         bobPage.locator("main, [role='main'], h1, h2").first()
       ).toBeVisible();
     });
 
     test("should access projects page", async ({ bobPage }) => {
-      await bobPage.goto("/studio/v2/projects");
+      await bobPage.goto("/studio/projects");
       await expect(
         bobPage.locator("main, [role='main'], h1, h2").first()
       ).toBeVisible();
     });
 
     test("should access help section", async ({ bobPage }) => {
-      await bobPage.goto("/studio/v2/help");
+      await bobPage.goto("/studio/help");
       await expect(
         bobPage.locator("main, [role='main'], h1, h2").first()
       ).toBeVisible();
@@ -164,7 +164,7 @@ test.describe("Bob User Journey", () => {
 
   test.describe("Route Restrictions", () => {
     test("standard user should have limited navigation", async ({ bobPage }) => {
-      await bobPage.goto("/studio/v2/chat");
+      await bobPage.goto("/studio/chat");
 
       // Check navigation structure
       const navOrHeader = bobPage.locator(
@@ -174,7 +174,7 @@ test.describe("Bob User Journey", () => {
     });
 
     test("should not have admin links visible", async ({ bobPage }) => {
-      await bobPage.goto("/studio/v2/chat");
+      await bobPage.goto("/studio/chat");
 
       // Admin-specific links should not be visible for standard users
       const adminLinks = bobPage.locator(
@@ -187,7 +187,7 @@ test.describe("Bob User Journey", () => {
 
   test.describe("Primary Workflows", () => {
     test("should access chat for conversations", async ({ bobPage }) => {
-      await bobPage.goto("/studio/v2/chat");
+      await bobPage.goto("/studio/chat");
 
       // Look for chat interface
       const chatContent = bobPage.locator(
@@ -199,7 +199,7 @@ test.describe("Bob User Journey", () => {
     });
 
     test("should have message input for chat", async ({ bobPage }) => {
-      await bobPage.goto("/studio/v2/chat");
+      await bobPage.goto("/studio/chat");
 
       // Look for message input
       const messageInput = bobPage.locator(
@@ -211,7 +211,7 @@ test.describe("Bob User Journey", () => {
     });
 
     test("should view project list", async ({ bobPage }) => {
-      await bobPage.goto("/studio/v2/projects");
+      await bobPage.goto("/studio/projects");
 
       // Look for projects content
       const projectsContent = bobPage.locator(
@@ -223,7 +223,7 @@ test.describe("Bob User Journey", () => {
     });
 
     test("should view session history", async ({ bobPage }) => {
-      await bobPage.goto("/studio/v2/chat");
+      await bobPage.goto("/studio/chat");
 
       // Look for session list or history
       const sessionList = bobPage.locator(
@@ -239,7 +239,7 @@ test.describe("Bob User Journey", () => {
     test("chat page should load within acceptable time", async ({ bobPage }) => {
       const startTime = Date.now();
 
-      await bobPage.goto("/studio/v2/chat");
+      await bobPage.goto("/studio/chat");
       await expect(
         bobPage.locator("main, [role='main'], h1, h2").first()
       ).toBeVisible();
@@ -253,7 +253,7 @@ test.describe("Bob User Journey", () => {
     }) => {
       const startTime = Date.now();
 
-      await bobPage.goto("/studio/v2/projects");
+      await bobPage.goto("/studio/projects");
       await expect(
         bobPage.locator("main, [role='main'], h1, h2").first()
       ).toBeVisible();
@@ -263,7 +263,7 @@ test.describe("Bob User Journey", () => {
     });
 
     test("should have proper accessibility structure", async ({ bobPage }) => {
-      await bobPage.goto("/studio/v2/chat");
+      await bobPage.goto("/studio/chat");
       await expect(
         bobPage.locator("main, [role='main'], h1").first()
       ).toBeVisible();
@@ -275,7 +275,7 @@ test.describe("Bob User Journey", () => {
 
   test.describe("User-specific Features", () => {
     test("should be able to start new chat session", async ({ bobPage }) => {
-      await bobPage.goto("/studio/v2/chat");
+      await bobPage.goto("/studio/chat");
 
       // Look for new chat button
       const newChatButton = bobPage.getByRole("button", {
@@ -287,7 +287,7 @@ test.describe("Bob User Journey", () => {
     });
 
     test("should have access to help resources", async ({ bobPage }) => {
-      await bobPage.goto("/studio/v2/help");
+      await bobPage.goto("/studio/help");
 
       // Look for help content
       const helpContent = bobPage.locator(
@@ -299,7 +299,7 @@ test.describe("Bob User Journey", () => {
     });
 
     test("should be able to view shared content", async ({ bobPage }) => {
-      await bobPage.goto("/studio/v2/projects");
+      await bobPage.goto("/studio/projects");
 
       // Look for shared indicators
       const sharedContent = bobPage.locator(
@@ -312,7 +312,7 @@ test.describe("Bob User Journey", () => {
     });
 
     test("should have user settings access", async ({ bobPage }) => {
-      await bobPage.goto("/studio/v2/chat");
+      await bobPage.goto("/studio/chat");
 
       // Look for user menu or settings
       const userMenu = bobPage.locator(

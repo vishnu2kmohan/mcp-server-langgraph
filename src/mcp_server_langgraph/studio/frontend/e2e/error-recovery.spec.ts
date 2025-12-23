@@ -84,7 +84,7 @@ test.describe('Error Recovery UX', () => {
       });
 
       // Navigate to chat page
-      await alicePage.goto('/studio/v2/chat', { waitUntil: 'networkidle' });
+      await alicePage.goto('/studio/chat', { waitUntil: 'networkidle' });
 
       // Wait for the page to load
       await expect(alicePage.getByTestId('studio-shell')).toBeVisible({ timeout: 10000 });
@@ -121,7 +121,7 @@ test.describe('Error Recovery UX', () => {
         });
       });
 
-      await alicePage.goto('/studio/v2/chat', { waitUntil: 'networkidle' });
+      await alicePage.goto('/studio/chat', { waitUntil: 'networkidle' });
 
       // The error recovery panel would show retry buttons
       // This test validates the route setup for the feature
@@ -141,7 +141,7 @@ test.describe('Error Recovery UX', () => {
         });
       }
 
-      await alicePage.goto('/studio/v2/chat', { waitUntil: 'networkidle' });
+      await alicePage.goto('/studio/chat', { waitUntil: 'networkidle' });
       await expect(alicePage.getByTestId('studio-shell')).toBeVisible({ timeout: 10000 });
 
       // Simulate going offline
@@ -167,7 +167,7 @@ test.describe('Error Recovery UX', () => {
         });
       }
 
-      await alicePage.goto('/studio/v2/chat', { waitUntil: 'networkidle' });
+      await alicePage.goto('/studio/chat', { waitUntil: 'networkidle' });
       await expect(alicePage.getByTestId('studio-shell')).toBeVisible({ timeout: 10000 });
 
       // This test validates offline queue functionality
@@ -212,7 +212,7 @@ test.describe('Error Recovery UX', () => {
         });
       });
 
-      await alicePage.goto('/studio/v2/chat', { waitUntil: 'networkidle' });
+      await alicePage.goto('/studio/chat', { waitUntil: 'networkidle' });
 
       // Auth errors should be classified and show appropriate recovery options
     });
@@ -254,7 +254,7 @@ test.describe('Error Recovery UX', () => {
         });
       });
 
-      await alicePage.goto('/studio/v2/chat', { waitUntil: 'networkidle' });
+      await alicePage.goto('/studio/chat', { waitUntil: 'networkidle' });
 
       // Rate limit errors should show wait suggestion with countdown
     });
@@ -273,7 +273,7 @@ test.describe('Error Recovery UX', () => {
         });
       }
 
-      await alicePage.goto('/studio/v2/chat', { waitUntil: 'networkidle' });
+      await alicePage.goto('/studio/chat', { waitUntil: 'networkidle' });
       await expect(alicePage.getByTestId('studio-shell')).toBeVisible({ timeout: 10000 });
 
       // When user clicks "Sign in again" from an auth error recovery panel,
@@ -293,7 +293,7 @@ test.describe('Error Recovery UX', () => {
         });
       }
 
-      await alicePage.goto('/studio/v2/chat', { waitUntil: 'networkidle' });
+      await alicePage.goto('/studio/chat', { waitUntil: 'networkidle' });
       await expect(alicePage.getByTestId('studio-shell')).toBeVisible({ timeout: 10000 });
 
       // When user clicks "Try again" from error recovery panel,

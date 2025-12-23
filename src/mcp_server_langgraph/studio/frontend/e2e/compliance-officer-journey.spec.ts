@@ -15,7 +15,7 @@
  * - Task Success: Compliance review completion rate
  *
  * Visible modules: audit, compliance, help
- * Default view: /studio/v2/compliance
+ * Default view: /studio/compliance
  */
 
 import { test, expect } from "./fixtures/auth";
@@ -166,21 +166,21 @@ test.describe("Compliance Officer User Journey", () => {
 
   test.describe("Accessible Pages", () => {
     test("should access compliance dashboard", async ({ alicePage }) => {
-      await alicePage.goto("/studio/v2/compliance");
+      await alicePage.goto("/studio/compliance");
       await expect(
         alicePage.locator("main, [role='main'], h1, h2").first()
       ).toBeVisible();
     });
 
     test("should access audit logs", async ({ alicePage }) => {
-      await alicePage.goto("/studio/v2/audit");
+      await alicePage.goto("/studio/audit");
       await expect(
         alicePage.locator("main, [role='main'], h1, h2").first()
       ).toBeVisible();
     });
 
     test("should access help section", async ({ alicePage }) => {
-      await alicePage.goto("/studio/v2/help");
+      await alicePage.goto("/studio/help");
       await expect(
         alicePage.locator("main, [role='main'], h1, h2").first()
       ).toBeVisible();
@@ -191,7 +191,7 @@ test.describe("Compliance Officer User Journey", () => {
     test("compliance officer should have compliance-focused navigation", async ({
       alicePage,
     }) => {
-      await alicePage.goto("/studio/v2/compliance");
+      await alicePage.goto("/studio/compliance");
 
       // Check navigation structure
       const navOrHeader = alicePage.locator(
@@ -203,7 +203,7 @@ test.describe("Compliance Officer User Journey", () => {
 
   test.describe("Primary Workflows", () => {
     test("should view HIPAA compliance status", async ({ alicePage }) => {
-      await alicePage.goto("/studio/v2/compliance");
+      await alicePage.goto("/studio/compliance");
 
       // Look for HIPAA section
       const hipaaContent = alicePage.locator(
@@ -215,7 +215,7 @@ test.describe("Compliance Officer User Journey", () => {
     });
 
     test("should view GDPR compliance status", async ({ alicePage }) => {
-      await alicePage.goto("/studio/v2/compliance");
+      await alicePage.goto("/studio/compliance");
 
       // Look for GDPR section
       const gdprContent = alicePage.locator(
@@ -227,7 +227,7 @@ test.describe("Compliance Officer User Journey", () => {
     });
 
     test("should view SOC-2 compliance status", async ({ alicePage }) => {
-      await alicePage.goto("/studio/v2/compliance");
+      await alicePage.goto("/studio/compliance");
 
       // Look for SOC-2 section
       const soc2Content = alicePage.locator(
@@ -239,7 +239,7 @@ test.describe("Compliance Officer User Journey", () => {
     });
 
     test("should view compliance-related audit logs", async ({ alicePage }) => {
-      await alicePage.goto("/studio/v2/audit");
+      await alicePage.goto("/studio/audit");
 
       // Look for audit log content
       const auditContent = alicePage.locator(
@@ -257,7 +257,7 @@ test.describe("Compliance Officer User Journey", () => {
     }) => {
       const startTime = Date.now();
 
-      await alicePage.goto("/studio/v2/compliance");
+      await alicePage.goto("/studio/compliance");
       await expect(
         alicePage.locator("main, [role='main'], h1, h2").first()
       ).toBeVisible();
@@ -271,7 +271,7 @@ test.describe("Compliance Officer User Journey", () => {
     }) => {
       const startTime = Date.now();
 
-      await alicePage.goto("/studio/v2/audit");
+      await alicePage.goto("/studio/audit");
       await expect(
         alicePage.locator("main, [role='main'], h1, h2").first()
       ).toBeVisible();
@@ -281,7 +281,7 @@ test.describe("Compliance Officer User Journey", () => {
     });
 
     test("should have proper accessibility structure", async ({ alicePage }) => {
-      await alicePage.goto("/studio/v2/compliance");
+      await alicePage.goto("/studio/compliance");
       await expect(
         alicePage.locator("main, [role='main'], h1").first()
       ).toBeVisible();
@@ -295,7 +295,7 @@ test.describe("Compliance Officer User Journey", () => {
     test("should support compliance report generation if available", async ({
       alicePage,
     }) => {
-      await alicePage.goto("/studio/v2/compliance");
+      await alicePage.goto("/studio/compliance");
 
       // Look for report/export functionality
       const reportButton = alicePage.getByRole("button", {
@@ -307,7 +307,7 @@ test.describe("Compliance Officer User Journey", () => {
     });
 
     test("should show compliance status overview", async ({ alicePage }) => {
-      await alicePage.goto("/studio/v2/compliance");
+      await alicePage.goto("/studio/compliance");
 
       // Look for status overview
       const statusOverview = alicePage.locator(

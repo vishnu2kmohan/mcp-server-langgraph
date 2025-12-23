@@ -333,7 +333,7 @@ test.describe("Cross-Persona Workflow Sharing", () => {
       const context = await browser.newContext();
       const page = await createPersonaPage(context, "alice-builder");
 
-      await page.goto("/studio/v2/workflows", { waitUntil: "networkidle" });
+      await page.goto("/studio/workflows", { waitUntil: "networkidle" });
 
       // Wait for page to load
       await page.waitForTimeout(1000);
@@ -353,7 +353,7 @@ test.describe("Cross-Persona Workflow Sharing", () => {
       const context = await browser.newContext();
       const page = await createPersonaPage(context, "bob");
 
-      await page.goto("/studio/v2/workflows", { waitUntil: "networkidle" });
+      await page.goto("/studio/workflows", { waitUntil: "networkidle" });
 
       // Wait for page to load
       await page.waitForTimeout(1000);
@@ -375,7 +375,7 @@ test.describe("Cross-Persona Workflow Sharing", () => {
       const context = await browser.newContext();
       const page = await createPersonaPage(context, "bob");
 
-      await page.goto("/studio/v2/workflows", { waitUntil: "networkidle" });
+      await page.goto("/studio/workflows", { waitUntil: "networkidle" });
 
       // Wait for page to load
       await page.waitForTimeout(1000);
@@ -401,7 +401,7 @@ test.describe("Cross-Persona Workflow Sharing", () => {
       const context = await browser.newContext();
       const page = await createPersonaPage(context, "admin");
 
-      await page.goto("/studio/v2/admin", { waitUntil: "networkidle" });
+      await page.goto("/studio/admin", { waitUntil: "networkidle" });
 
       // Wait for page to load
       await page.waitForTimeout(1000);
@@ -416,7 +416,7 @@ test.describe("Cross-Persona Workflow Sharing", () => {
       const context = await browser.newContext();
       const page = await createPersonaPage(context, "alice-devops");
 
-      await page.goto("/studio/v2/mcp", { waitUntil: "networkidle" });
+      await page.goto("/studio/mcp", { waitUntil: "networkidle" });
 
       // Wait for page to load
       await page.waitForTimeout(1000);
@@ -431,7 +431,7 @@ test.describe("Cross-Persona Workflow Sharing", () => {
       const context = await browser.newContext();
       const page = await createPersonaPage(context, "alice-devops");
 
-      await page.goto("/studio/v2/admin", { waitUntil: "networkidle" });
+      await page.goto("/studio/admin", { waitUntil: "networkidle" });
 
       // Should redirect away from admin
       await expect(page).not.toHaveURL(/\/studio\/v2\/admin$/);
@@ -445,7 +445,7 @@ test.describe("Cross-Persona Workflow Sharing", () => {
       const context = await browser.newContext();
       const page = await createPersonaPage(context, "alice-analyst");
 
-      await page.goto("/studio/v2/observability", { waitUntil: "networkidle" });
+      await page.goto("/studio/observability", { waitUntil: "networkidle" });
 
       // Wait for page to load
       await page.waitForTimeout(1000);
@@ -462,12 +462,12 @@ test.describe("Cross-Persona Workflow Sharing", () => {
       const context = await browser.newContext();
       const page = await createPersonaPage(context, "alice-analyst");
 
-      await page.goto("/studio/v2/workflows", { waitUntil: "networkidle" });
+      await page.goto("/studio/workflows", { waitUntil: "networkidle" });
 
       // Should redirect away or show access denied
       const hasRedirected = !(await page
         .url()
-        .includes("/studio/v2/workflows"));
+        .includes("/studio/workflows"));
       const hasAccessDenied = await page
         .locator("body")
         .textContent()
@@ -486,7 +486,7 @@ test.describe("Cross-Persona Workflow Sharing", () => {
       const page = await createPersonaPage(context, "alice-builder");
 
       // alice-builder should access observability via chat context
-      await page.goto("/studio/v2/chat", { waitUntil: "networkidle" });
+      await page.goto("/studio/chat", { waitUntil: "networkidle" });
 
       // Wait for page to load
       await page.waitForTimeout(1000);
@@ -504,7 +504,7 @@ test.describe("Cross-Persona Security Boundaries", () => {
     const context = await browser.newContext();
     const page = await createPersonaPage(context, "bob");
 
-    await page.goto("/studio/v2/admin", { waitUntil: "networkidle" });
+    await page.goto("/studio/admin", { waitUntil: "networkidle" });
 
     // Should not be on admin page
     await expect(page).not.toHaveURL(/\/studio\/v2\/admin$/);
@@ -518,12 +518,12 @@ test.describe("Cross-Persona Security Boundaries", () => {
     const context = await browser.newContext();
     const page = await createPersonaPage(context, "alice-builder");
 
-    await page.goto("/studio/v2/compliance", { waitUntil: "networkidle" });
+    await page.goto("/studio/compliance", { waitUntil: "networkidle" });
 
     // Should redirect or show access denied
     const hasRedirected = !(await page
       .url()
-      .includes("/studio/v2/compliance"));
+      .includes("/studio/compliance"));
     const hasAccessDenied = await page
       .locator("body")
       .textContent()
@@ -540,19 +540,19 @@ test.describe("Cross-Persona Security Boundaries", () => {
     const page = await createPersonaPage(context, "admin");
 
     // Admin should access chat
-    await page.goto("/studio/v2/chat", { waitUntil: "networkidle" });
+    await page.goto("/studio/chat", { waitUntil: "networkidle" });
     await expect(page).toHaveURL(/\/studio\/v2\/chat/);
 
     // Admin should access admin dashboard
-    await page.goto("/studio/v2/admin", { waitUntil: "networkidle" });
+    await page.goto("/studio/admin", { waitUntil: "networkidle" });
     await expect(page).toHaveURL(/\/studio\/v2\/admin/);
 
     // Admin should access compliance
-    await page.goto("/studio/v2/compliance", { waitUntil: "networkidle" });
+    await page.goto("/studio/compliance", { waitUntil: "networkidle" });
     await expect(page).toHaveURL(/\/studio\/v2\/compliance/);
 
     // Admin should access audit
-    await page.goto("/studio/v2/audit", { waitUntil: "networkidle" });
+    await page.goto("/studio/audit", { waitUntil: "networkidle" });
     await expect(page).toHaveURL(/\/studio\/v2\/audit/);
 
     await context.close();

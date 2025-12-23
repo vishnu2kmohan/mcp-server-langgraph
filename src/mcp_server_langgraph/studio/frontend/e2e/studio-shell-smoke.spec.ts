@@ -59,7 +59,7 @@ test.describe('Studio Shell Smoke Tests', () => {
       }
 
       // Navigate to the studio v2 route
-      await alicePage.goto('/studio/v2/chat', { waitUntil: 'networkidle' });
+      await alicePage.goto('/studio/chat', { waitUntil: 'networkidle' });
 
       // Verify StudioShell layout components are rendered
       await expect(alicePage.getByTestId('studio-shell')).toBeVisible({ timeout: 10000 });
@@ -80,7 +80,7 @@ test.describe('Studio Shell Smoke Tests', () => {
         });
       }
 
-      await alicePage.goto('/studio/v2/chat', { waitUntil: 'networkidle' });
+      await alicePage.goto('/studio/chat', { waitUntil: 'networkidle' });
 
       // Verify navigation items are present
       const activityBar = alicePage.getByTestId('activity-bar');
@@ -101,7 +101,7 @@ test.describe('Studio Shell Smoke Tests', () => {
         });
       }
 
-      await alicePage.goto('/studio/v2/chat', { waitUntil: 'networkidle' });
+      await alicePage.goto('/studio/chat', { waitUntil: 'networkidle' });
 
       // Verify status bar is rendered
       await expect(alicePage.getByTestId('status-bar')).toBeVisible({ timeout: 10000 });
@@ -135,7 +135,7 @@ test.describe('Studio Shell Smoke Tests', () => {
       await expect(alicePage.locator('body')).toBeVisible({ timeout: 10000 });
 
       // Navigate to studio route
-      await alicePage.goto('/studio/v2/chat', { waitUntil: 'networkidle' });
+      await alicePage.goto('/studio/chat', { waitUntil: 'networkidle' });
       // Should not crash or show error page
       await expect(alicePage.locator('body')).not.toContainText('Error');
     });
@@ -178,7 +178,7 @@ test.describe('Studio Shell Smoke Tests', () => {
         });
       }
 
-      await alicePage.goto('/studio/v2/chat', { waitUntil: 'networkidle' });
+      await alicePage.goto('/studio/chat', { waitUntil: 'networkidle' });
 
       // Verify session nav is visible
       const sessionNav = alicePage.getByTestId('session-nav');
@@ -220,7 +220,7 @@ test.describe('Studio Shell Smoke Tests', () => {
         });
       }
 
-      await alicePage.goto('/studio/v2/chat', { waitUntil: 'networkidle' });
+      await alicePage.goto('/studio/chat', { waitUntil: 'networkidle' });
 
       const newChatButton = alicePage.getByTestId('new-chat-button');
       await expect(newChatButton).toBeVisible({ timeout: 10000 });
@@ -243,7 +243,7 @@ test.describe('Studio Shell Smoke Tests', () => {
         });
       }
 
-      await alicePage.goto('/studio/v2/chat', { waitUntil: 'networkidle' });
+      await alicePage.goto('/studio/chat', { waitUntil: 'networkidle' });
 
       const canvasPanel = alicePage.getByTestId('canvas-panel');
       await expect(canvasPanel).toBeVisible({ timeout: 10000 });
@@ -279,7 +279,7 @@ test.describe('Studio Shell Smoke Tests', () => {
         });
       }
 
-      await alicePage.goto('/studio/v2/chat/session-1', { waitUntil: 'networkidle' });
+      await alicePage.goto('/studio/chat/session-1', { waitUntil: 'networkidle' });
 
       // Canvas should render - specific behavior depends on implementation
       const canvasPanel = alicePage.getByTestId('canvas-panel');
@@ -299,7 +299,7 @@ test.describe('Studio Shell Smoke Tests', () => {
         });
       }
 
-      await adminPage.goto('/studio/v2/chat', { waitUntil: 'networkidle' });
+      await adminPage.goto('/studio/chat', { waitUntil: 'networkidle' });
 
       const activityBar = adminPage.getByTestId('activity-bar');
       await expect(activityBar).toBeVisible({ timeout: 10000 });
@@ -319,7 +319,7 @@ test.describe('Studio Shell Smoke Tests', () => {
         });
       }
 
-      await bobPage.goto('/studio/v2/chat', { waitUntil: 'networkidle' });
+      await bobPage.goto('/studio/chat', { waitUntil: 'networkidle' });
 
       // Bob should have limited navigation
       const activityBar = bobPage.getByTestId('activity-bar');
@@ -342,7 +342,7 @@ test.describe('Studio Shell Smoke Tests', () => {
         });
       }
 
-      await alicePage.goto('/studio/v2/chat', { waitUntil: 'networkidle' });
+      await alicePage.goto('/studio/chat', { waitUntil: 'networkidle' });
 
       const conversationPanel = alicePage.getByTestId('conversation-panel');
       await expect(conversationPanel).toBeVisible({ timeout: 10000 });
@@ -388,7 +388,7 @@ test.describe('Studio Shell Smoke Tests', () => {
         });
       }
 
-      await alicePage.goto('/studio/v2/chat/session-1', { waitUntil: 'networkidle' });
+      await alicePage.goto('/studio/chat/session-1', { waitUntil: 'networkidle' });
 
       // Message list should render
       const conversationPanel = alicePage.getByTestId('conversation-panel');
@@ -408,7 +408,7 @@ test.describe('Studio Shell Smoke Tests', () => {
         });
       }
 
-      await alicePage.goto('/studio/v2/chat', { waitUntil: 'networkidle' });
+      await alicePage.goto('/studio/chat', { waitUntil: 'networkidle' });
 
       // Check that the panel group exists (from react-resizable-panels)
       const studioShell = alicePage.getByTestId('studio-shell');
@@ -440,7 +440,7 @@ test.describe('Studio Shell Smoke Tests', () => {
         });
       }
 
-      await alicePage.goto('/studio/v2/chat', { waitUntil: 'networkidle' });
+      await alicePage.goto('/studio/chat', { waitUntil: 'networkidle' });
 
       // Should not show unhandled error page
       await expect(alicePage.locator('body')).not.toContainText('Unhandled Runtime Error');
@@ -463,7 +463,7 @@ test.describe('Studio Shell Smoke Tests', () => {
         });
       }
 
-      await alicePage.goto('/studio/v2/chat', { waitUntil: 'domcontentloaded', timeout: 5000 });
+      await alicePage.goto('/studio/chat', { waitUntil: 'domcontentloaded', timeout: 5000 });
 
       // Page should still be interactive even if API fails
       await expect(alicePage.locator('body')).toBeVisible();

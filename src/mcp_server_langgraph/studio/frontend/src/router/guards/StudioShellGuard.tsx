@@ -10,8 +10,7 @@
  * When canvas_studio_shell is disabled:
  * - Renders Outlet directly (App.tsx wraps with AppShell)
  *
- * This allows /studio/* to use either shell based on feature flag,
- * eliminating the need for a separate /studio/v2/* route.
+ * This allows /studio/* to use either shell based on feature flag.
  */
 
 import { Outlet } from "react-router";

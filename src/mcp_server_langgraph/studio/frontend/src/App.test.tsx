@@ -958,16 +958,16 @@ describe("App", () => {
   });
 
   describe("Route Type Detection Edge Cases", () => {
-    it("should detect /studio/v2/* as non-legacy route (StudioShell)", async () => {
+    it("should detect /studio/* as non-legacy route (StudioShell)", async () => {
       renderWithStore(
         <MemoryRouter
-          initialEntries={["/studio/v2/chat"]}
+          initialEntries={["/studio/chat"]}
           future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
         >
           <Routes>
             <Route element={<App />}>
               <Route
-                path="studio/v2/chat"
+                path="studio/chat"
                 element={<div data-testid="hybrid-content">Hybrid Chat</div>}
               />
             </Route>
@@ -1303,16 +1303,16 @@ describe("App", () => {
       });
     });
 
-    it("should not render command palette for hybrid shell routes", async () => {
+    it("should not render command palette for studio shell routes", async () => {
       renderWithStore(
         <MemoryRouter
-          initialEntries={["/studio/v2/chat"]}
+          initialEntries={["/studio/chat"]}
           future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
         >
           <Routes>
             <Route element={<App />}>
               <Route
-                path="studio/v2/chat"
+                path="studio/chat"
                 element={<div data-testid="hybrid-content">Hybrid Chat</div>}
               />
             </Route>
