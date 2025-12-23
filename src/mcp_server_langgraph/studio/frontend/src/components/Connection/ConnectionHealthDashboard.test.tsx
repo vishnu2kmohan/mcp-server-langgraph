@@ -5,8 +5,8 @@
  * Uses WebSocket for live updates.
  */
 
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { render, screen, fireEvent, cleanup } from "@testing-library/react";
 import { ConnectionHealthDashboard } from "./ConnectionHealthDashboard";
 
 // Mock the useConnectionHealth hook
@@ -75,6 +75,11 @@ const mockedUseConnectionHealth = vi.mocked(useConnectionHealth);
 
 describe("ConnectionHealthDashboard", () => {
   beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  afterEach(() => {
+    cleanup();
     vi.clearAllMocks();
   });
 

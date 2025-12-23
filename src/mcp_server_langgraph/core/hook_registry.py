@@ -161,6 +161,9 @@ class HookDispatcher:
         if not feature_flags.enable_sdk_hooks:
             return HookResult()
 
+        # Provide default context if None
+        effective_context = context if context is not None else HookContext(session_id="default")
+
         matchers = self.registry.get_matchers(event)
 
         # Determine tool name for matching - explicit parameter takes precedence
@@ -179,7 +182,7 @@ class HookDispatcher:
             # Execute all hooks in this matcher
             for hook in matcher.hooks:
                 result = await asyncio.wait_for(
-                    hook(current_input, tool_use_id, context),
+                    hook(current_input, tool_use_id, effective_context),
                     timeout=matcher.timeout,
                 )
 

@@ -9,8 +9,8 @@
  * - Handles (connection points)
  */
 
-import { describe, it, expect } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { describe, it, expect, afterEach, vi } from "vitest";
+import { render, screen, cleanup } from "@testing-library/react";
 import { ReactFlowProvider } from "reactflow";
 import { StartNode } from "./StartNode";
 import type { NodeProps } from "reactflow";
@@ -22,6 +22,11 @@ const renderNode = (node: JSX.Element) => {
 };
 
 describe("StartNode", () => {
+  afterEach(() => {
+    cleanup();
+    vi.clearAllMocks();
+  });
+
   const createNodeProps = (
     data: Partial<WorkflowNodeData> = {},
     selected = false,

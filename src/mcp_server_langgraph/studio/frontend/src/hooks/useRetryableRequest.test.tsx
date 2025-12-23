@@ -5,11 +5,12 @@
  */
 
 import { describe, it, expect, afterEach, vi } from "vitest";
-import { renderHook, act, waitFor } from "@testing-library/react";
+import { renderHook, act, waitFor, cleanup } from "@testing-library/react";
 import { useRetryableRequest } from "./useRetryableRequest";
 
 describe("useRetryableRequest", () => {
   afterEach(() => {
+    cleanup();
     vi.restoreAllMocks();
   });
 

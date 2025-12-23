@@ -11,8 +11,8 @@
  * Phase 6.5: AI-Powered Onboarding Personalization integration
  */
 
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { render, screen, fireEvent, cleanup } from "@testing-library/react";
 import { OnboardingWizard, OnboardingWizardProps } from "./OnboardingWizard";
 
 // Mock useAIOnboarding hook to avoid Redux dependency in tests
@@ -55,6 +55,11 @@ describe("OnboardingWizard", () => {
   };
 
   beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  afterEach(() => {
+    cleanup();
     vi.clearAllMocks();
   });
 

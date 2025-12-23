@@ -24,7 +24,9 @@
     "format": "prettier --write \"src/**/*.{ts,tsx,css}\"",
     "generate-types": "openapi-typescript ../../../../api/openapi.json -o src/types/generated-api.ts",
     "generate-types:check": "openapi-typescript ../../../../api/openapi.json --dry-run",
-    "validate:test-cleanup": "tsx scripts/validate-test-cleanup.ts"
+    "validate:test-cleanup": "tsx scripts/validate-test-cleanup.ts",
+    "test:sharded": "bash scripts/run-tests-sharded.sh",
+    "test:shard": "VITEST_MAX_FORKS=2 NODE_OPTIONS='--max-old-space-size=8192 --expose-gc' vitest run"
   },
   "dependencies": {
     "@codesandbox/sandpack-react": "^2.20.0",

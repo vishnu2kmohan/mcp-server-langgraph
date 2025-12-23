@@ -10,13 +10,14 @@
  * - Empty state
  */
 
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import {
   render,
   screen,
   fireEvent,
   act,
   waitFor,
+  cleanup,
 } from "@testing-library/react";
 import { SessionPanel } from "./SessionPanel";
 
@@ -50,6 +51,11 @@ describe("SessionPanel", () => {
   const mockOnNewSession = vi.fn();
 
   beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  afterEach(() => {
+    cleanup();
     vi.clearAllMocks();
   });
 

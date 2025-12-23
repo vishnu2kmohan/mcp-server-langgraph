@@ -19,6 +19,7 @@ import {
   waitFor,
   fireEvent,
   act,
+  cleanup,
 } from "@testing-library/react";
 import { http, HttpResponse, delay } from "msw";
 import { AdminDashboardPage } from "./AdminDashboardPage";
@@ -182,6 +183,7 @@ describe("AdminDashboardPage", () => {
     });
 
     afterEach(() => {
+      cleanup();
       consoleSpy.mockRestore();
     });
 

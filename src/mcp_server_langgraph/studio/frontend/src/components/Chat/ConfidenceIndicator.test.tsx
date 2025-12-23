@@ -9,11 +9,15 @@
  * - Accessibility
  */
 
-import { describe, it, expect } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { describe, it, expect, afterEach, vi } from "vitest";
+import { render, screen, cleanup } from "@testing-library/react";
 import { ConfidenceIndicator } from "./ConfidenceIndicator";
 
 describe("ConfidenceIndicator", () => {
+  afterEach(() => {
+    cleanup();
+    vi.clearAllMocks();
+  });
   describe("Score Display", () => {
     it("should render confidence score as percentage", () => {
       render(<ConfidenceIndicator score={0.92} />);

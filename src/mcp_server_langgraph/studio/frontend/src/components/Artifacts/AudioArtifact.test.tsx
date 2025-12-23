@@ -4,11 +4,16 @@
  * TDD tests for audio artifact rendering component.
  */
 
-import { describe, it, expect } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { describe, it, expect, vi, afterEach } from "vitest";
+import { render, screen, cleanup } from "@testing-library/react";
 import { AudioArtifact } from "./AudioArtifact";
 
 describe("AudioArtifact", () => {
+  afterEach(() => {
+    cleanup();
+    vi.clearAllMocks();
+  });
+
   const testAudioUrl = "https://example.com/audio.mp3";
   const testBase64Audio = "data:audio/mpeg;base64,SGVsbG8gV29ybGQ=";
 

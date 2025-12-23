@@ -41,11 +41,12 @@ class LoopTask(BaseTask):
 
 
 @dataclass
-class LoopIterationResult:
+class LoopIterationResult(BaseResult):
     """Result from a single loop iteration."""
 
-    iteration: int
-    success: bool
+    task_type: str = field(default="loop_iteration")
+    iteration: int = 0
+    success: bool = False
     result: dict[str, Any] | None = None
     error: str | None = None
     duration_ms: float = 0.0

@@ -4,13 +4,14 @@
  * Phase 5: Compliance Dashboards
  * Tests for SOC-2 compliance controls panel.
  */
-import { describe, it, expect, afterEach } from "vitest";
+import { describe, it, expect, afterEach, vi } from "vitest";
 import { render, screen, cleanup } from "@testing-library/react";
 import { SOC2Panel, type SOC2Control } from "./SOC2Panel";
 
 describe("SOC2Panel", () => {
   afterEach(() => {
     cleanup();
+    vi.clearAllMocks();
   });
   const mockControls: SOC2Control[] = [
     {

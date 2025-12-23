@@ -14,8 +14,8 @@
  * Reference: Plan - Confidence-Based Human-in-the-Loop (HITL) for Multi-Agent Orchestrator
  */
 
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { render, screen, fireEvent, waitFor, cleanup } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { ReactNode } from "react";
 import { Provider } from "react-redux";
@@ -189,6 +189,11 @@ const defaultProps: AgentApprovalDialogProps = {
 // =============================================================================
 
 describe("AgentApprovalDialog", () => {
+  afterEach(() => {
+    cleanup();
+    vi.clearAllMocks();
+  });
+
   describe("Basic Rendering", () => {
     it("should render when isOpen is true", () => {
       render(<AgentApprovalDialog {...defaultProps} />);

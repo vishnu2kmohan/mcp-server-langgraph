@@ -14,6 +14,45 @@ Usage:
                 self._service.get(id),
                 fallback={"error": "Service unavailable"},
             )
+
+Known Issues
+------------
+
+**pybreaker call_async Bug (as of pybreaker 1.2.0)**
+
+The pybreaker library's ``call_async`` method has a bug where it references
+``gen`` (tornado.gen) without importing it, causing a ``NameError``:
+
+    NameError: name 'gen' is not defined
+
+This affects the ``with_circuit_breaker`` function in this module.
+
+**Workaround Options:**
+
+1. **Use synchronous calls with asyncio.to_thread** (Recommended for I/O-bound):
+
+   .. code-block:: python
+
+       from mcp_server_langgraph.resilience.circuit_breaker import get_circuit_breaker
+
+       breaker = get_circuit_breaker("my_service")
+       result = await asyncio.to_thread(breaker.call, sync_operation)
+
+2. **Use synchronous calls directly** (for quick operations):
+
+   .. code-block:: python
+
+       breaker = get_circuit_breaker("my_service")
+       result = breaker.call(sync_operation)
+
+3. **Install tornado** (adds dependency but fixes the bug):
+
+   .. code-block:: bash
+
+       pip install tornado
+
+**Status:** Issue tracked at https://github.com/danielfm/pybreaker/issues
+Consider migrating to ``aiobreaker`` for a pure async implementation.
 """
 
 from __future__ import annotations

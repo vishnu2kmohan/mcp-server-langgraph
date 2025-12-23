@@ -4,9 +4,14 @@
  * TDD tests for status filter component with multi-select capability.
  */
 
-import { describe, it, expect, vi } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { describe, it, expect, vi, afterEach } from "vitest";
+import { render, screen, fireEvent, cleanup } from "@testing-library/react";
 import { StatusFilter } from "./StatusFilter";
+
+afterEach(() => {
+  cleanup();
+  vi.clearAllMocks();
+});
 
 const mockOptions = [
   { value: "active", label: "Active" },

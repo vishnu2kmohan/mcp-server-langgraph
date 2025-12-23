@@ -4,10 +4,14 @@
  * Verifies that all expected exports are accessible from the module's index.
  * This ensures module organization and prevents accidental breaking changes.
  */
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi, afterEach } from "vitest";
 import * as mcpModule from "./index";
 
 describe("MCP Module Exports", () => {
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
   describe("Synchronous Components", () => {
     it("should export AddConnectionDialog", () => {
       expect(mcpModule.AddConnectionDialog).toBeDefined();

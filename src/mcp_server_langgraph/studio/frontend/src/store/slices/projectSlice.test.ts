@@ -71,6 +71,7 @@ describe("projectSlice", () => {
 
   afterEach(() => {
     vi.unstubAllGlobals();
+    vi.clearAllMocks();
   });
 
   describe("Initial State", () => {

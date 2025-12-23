@@ -9,7 +9,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { renderHook, act } from "@testing-library/react";
+import { renderHook, act, cleanup } from "@testing-library/react";
 
 import { useMediaQuery, useBreakpoint } from "./useMediaQuery";
 
@@ -35,7 +35,9 @@ describe("useMediaQuery", () => {
   });
 
   afterEach(() => {
+    cleanup();
     window.matchMedia = originalMatchMedia;
+    vi.clearAllMocks();
   });
 
   describe("basic functionality", () => {

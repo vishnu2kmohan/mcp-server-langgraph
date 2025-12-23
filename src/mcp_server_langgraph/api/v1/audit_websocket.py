@@ -1,6 +1,15 @@
 """
 Audit Event WebSocket Streaming Endpoint.
 
+.. deprecated:: 3.0
+    This module is deprecated. Use the new standardized WebSocket infrastructure:
+
+    - Handler: :mod:`mcp_server_langgraph.websocket.handlers.audit`
+    - Base class: :mod:`mcp_server_langgraph.websocket.base.WebSocketBase`
+    - New URL: ``/api/v1/ws/audit``
+
+    This module will be removed in v4.0.
+
 Provides real-time streaming of audit events for compliance monitoring
 and security operations center (SOC) integration.
 
@@ -11,11 +20,20 @@ Features:
 - Admin/compliance_officer role required
 
 Usage:
-    Connect to: wss://host/api/v1/audit/stream
+    Connect to: wss://host/api/v1/ws/audit
     Send filter: {"categories": ["security"], "regulations": ["HIPAA"]}
 """
 
 import logging
+import warnings
+
+warnings.warn(
+    "mcp_server_langgraph.api.v1.audit_websocket is deprecated. "
+    "Use mcp_server_langgraph.websocket.handlers.audit instead. "
+    "This module will be removed in v4.0.",
+    DeprecationWarning,
+    stacklevel=2,
+)
 from typing import Any
 
 from fastapi import APIRouter, Depends, WebSocket, WebSocketDisconnect, status

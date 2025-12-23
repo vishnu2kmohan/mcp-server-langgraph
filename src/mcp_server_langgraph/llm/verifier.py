@@ -11,9 +11,12 @@ References:
 """
 
 from enum import Enum
-from typing import Any, Literal
+from typing import TYPE_CHECKING, Any, Literal
 
 from langchain_core.messages import BaseMessage, HumanMessage
+
+if TYPE_CHECKING:
+    from mcp_server_langgraph.core.cache import CacheService
 from pydantic import BaseModel, Field
 
 from mcp_server_langgraph.core.constants import MESSAGE_PREVIEW_LENGTH
@@ -159,7 +162,7 @@ def generate_screenshot_cache_key(url: str) -> str:
     return f"{SCREENSHOT_CACHE_PREFIX}:{url_hash}"
 
 
-def get_screenshot_cache():
+def get_screenshot_cache() -> "CacheService":
     """
     Get the screenshot cache service.
 
@@ -209,10 +212,7 @@ def _is_retryable_exception(exception: Exception) -> bool:
         return True
 
     # Check for LLM overload (529 status code)
-    if hasattr(exception, "status_code") and exception.status_code == 529:
-        return True
-
-    return False
+    return hasattr(exception, "status_code") and exception.status_code == 529
 
 
 def _calculate_backoff_delay(attempt: int) -> float:
@@ -693,7 +693,6 @@ FEEDBACK:
                     if cached_screenshot is not None:
                         # Cache hit - use cached screenshot
                         screenshot_result = cached_screenshot
-                        used_cache = True
                         record_screenshot_cache_hit()
                         logger.debug(
                             "Screenshot cache hit",
@@ -832,6 +831,19 @@ FEEDBACK:
                     visual_observations=[],
                 )
 
+            # Guard against None screenshot_result (shouldn't happen due to earlier checks)
+            if screenshot_result is None:
+                return VisualVerificationResult(
+                    passed=False,
+                    overall_score=0.0,
+                    feedback="Screenshot result was None unexpectedly",
+                    requires_refinement=True,
+                    critical_issues=["Screenshot result was None"],
+                    url=url,
+                    screenshot_captured=False,
+                    visual_observations=[],
+                )
+
             # Build visual verification prompt with image
             prompt_messages = self._build_visual_verification_prompt(
                 expected_state=expected_state,
@@ -847,7 +859,9 @@ FEEDBACK:
 
             for llm_attempt in range(1, VISUAL_VERIFICATION_MAX_ATTEMPTS + 1):
                 try:
-                    llm_response = await self.llm.ainvoke(prompt_messages)
+                    # Cast to expected type (HumanMessage is a subtype of BaseMessage)
+                    messages: list[BaseMessage | dict[str, Any]] = list(prompt_messages)
+                    llm_response = await self.llm.ainvoke(messages)
                     # Success - break out of retry loop
                     break
 
@@ -907,6 +921,9 @@ FEEDBACK:
                     screenshot_captured=True,  # Screenshot was successful
                     visual_observations=[],
                 )
+
+            # At this point llm_response cannot be None (handled by return at line 900)
+            assert llm_response is not None, "llm_response should not be None here"
 
             # Get content and ensure it's a string
             content = llm_response.content if hasattr(llm_response, "content") else str(llm_response)
@@ -1068,11 +1085,11 @@ FEEDBACK:
         Returns:
             Structured VisualVerificationResult
         """
-        criterion_scores = {}
-        overall_score = None
-        visual_observations = []
-        critical_issues = []
-        suggestions = []
+        criterion_scores: dict[str, float] = {}
+        overall_score: float | None = None
+        visual_observations: list[str] = []
+        critical_issues: list[str] = []
+        suggestions: list[str] = []
         requires_refinement = False
         feedback = ""
 
@@ -1101,10 +1118,10 @@ FEEDBACK:
                 current_section = "feedback"
             elif current_section == "scores" and ":" in line:
                 with contextlib.suppress(ValueError, IndexError):
-                    criterion, score = line.split(":", 1)
+                    criterion, score_str = line.split(":", 1)
                     criterion = criterion.strip(" -")
-                    score = float(score.strip())
-                    criterion_scores[criterion] = score
+                    score_value = float(score_str.strip())
+                    criterion_scores[criterion] = score_value
             elif current_section == "observations" and line.startswith("-"):
                 obs = line[1:].strip()
                 if obs and obs.lower() not in ["none", "n/a", "na"]:

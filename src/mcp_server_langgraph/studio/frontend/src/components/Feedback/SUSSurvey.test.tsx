@@ -9,8 +9,8 @@
  * - Submission handling
  */
 
-import { describe, it, expect, vi } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { describe, it, expect, vi, afterEach } from "vitest";
+import { render, screen, fireEvent, cleanup } from "@testing-library/react";
 import { SUSSurvey } from "./SUSSurvey";
 
 describe("SUSSurvey", () => {
@@ -18,6 +18,11 @@ describe("SUSSurvey", () => {
     onSubmit: vi.fn(),
     onDismiss: vi.fn(),
   };
+
+  afterEach(() => {
+    cleanup();
+    vi.clearAllMocks();
+  });
 
   describe("Rendering", () => {
     it("should render survey title", () => {

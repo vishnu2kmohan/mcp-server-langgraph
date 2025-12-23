@@ -391,8 +391,8 @@ class LLMFactory:
         messages: list[BaseMessage | dict[str, Any]],
         *,
         hook_context: HookContext | None = None,
-        **kwargs,
-    ) -> AIMessage:  # type: ignore[no-untyped-def]
+        **kwargs: Any,
+    ) -> AIMessage:
         """
         Asynchronous LLM invocation with full resilience protection.
 
@@ -465,8 +465,9 @@ class LLMFactory:
                     return AIMessage(content=str(before_result.early_return))
 
                 # Handle updated input (modified messages)
-                if before_result.updated_input is not None and isinstance(before_result.updated_input, list):
-                    formatted_messages = before_result.updated_input
+                # Note: updated_input can contain list of messages despite dict type hint
+                if before_result.updated_input is not None and isinstance(before_result.updated_input, list):  # type: ignore[unreachable]
+                    formatted_messages = before_result.updated_input  # type: ignore[unreachable]
 
             # Acquire rate limit token before calling API (pre-emptive rate limiting)
             # This prevents hitting provider rate limits by queuing requests locally
@@ -534,12 +535,13 @@ class LLMFactory:
                     ctx = hook_context or HookContext(session_id="default")
 
                     # Build token usage for hook
+                    # Note: litellm ModelResponse has usage attr but type stubs don't reflect it
                     hook_usage = None
-                    if response.usage:
+                    if response.usage:  # type: ignore[attr-defined]
                         hook_usage = HookTokenUsage(
-                            prompt_tokens=response.usage.prompt_tokens or 0,
-                            completion_tokens=response.usage.completion_tokens or 0,
-                            total_tokens=response.usage.total_tokens or 0,
+                            prompt_tokens=response.usage.prompt_tokens or 0,  # type: ignore[attr-defined]
+                            completion_tokens=response.usage.completion_tokens or 0,  # type: ignore[attr-defined]
+                            total_tokens=response.usage.total_tokens or 0,  # type: ignore[attr-defined]
                         )
 
                     after_result = await self.hook_dispatcher.dispatch_after_model(

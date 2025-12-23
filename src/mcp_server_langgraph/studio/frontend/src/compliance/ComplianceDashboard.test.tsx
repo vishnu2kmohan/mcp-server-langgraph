@@ -4,7 +4,7 @@
  * Phase 5: Compliance Dashboards
  * Tests for unified compliance dashboard view.
  */
-import { describe, it, expect, afterEach } from "vitest";
+import { describe, it, expect, afterEach, vi } from "vitest";
 import { render, screen, cleanup } from "@testing-library/react";
 import { axe, toHaveNoViolations } from "jest-axe";
 
@@ -17,6 +17,7 @@ import {
 describe("ComplianceDashboard", () => {
   afterEach(() => {
     cleanup();
+    vi.clearAllMocks();
   });
   const mockSummary: ComplianceSummary = {
     soc2: {

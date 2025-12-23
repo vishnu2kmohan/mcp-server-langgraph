@@ -20,6 +20,7 @@ import { cn } from "../../../utils/cn";
 import { useNetworkEntries } from "../hooks/useNetworkEntries";
 import { exportNetworkToJSON, exportNetworkToCSV } from "../utils/export";
 import { useDebouncedValue, useStableCallback } from "../utils/performance";
+import { useTimelineContext } from "../context/DevToolsTimelineProvider";
 import type { NetworkTabProps, NetworkEntry } from "../types";
 
 // =============================================================================
@@ -315,6 +316,9 @@ export function NetworkTab({
   const { entries, isRecording, toggleRecording, clearEntries } =
     useNetworkEntries({ contextEntityId, includeMCP: showMCPCalls });
 
+  // Timeline integration for time-travel debugging
+  const timeline = useTimelineContext();
+
   // Debounce search term to prevent excessive re-renders during typing
   const debouncedSearchTerm = useDebouncedValue(searchTerm, SEARCH_DEBOUNCE_MS);
 
@@ -324,6 +328,17 @@ export function NetworkTab({
   // Filter entries
   const filteredEntries = useMemo(() => {
     let result = entries;
+
+    // Filter by timeline window for time-travel debugging
+    if (timeline.timeWindow) {
+      result = result.filter((e) => {
+        const entryEnd = e.endTime ?? e.startTime;
+        return (
+          e.startTime <= timeline.timeWindow!.end &&
+          entryEnd >= timeline.timeWindow!.start
+        );
+      });
+    }
 
     // Filter by type
     if (filter === "api") {
@@ -355,7 +370,7 @@ export function NetworkTab({
     }
 
     return result;
-  }, [entries, filter, showMCPCalls, debouncedSearchTerm]);
+  }, [entries, filter, showMCPCalls, debouncedSearchTerm, timeline.timeWindow]);
 
   const handleSearchChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {

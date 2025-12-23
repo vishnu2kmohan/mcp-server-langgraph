@@ -4,8 +4,8 @@
  * Tests for code display component with syntax highlighting and copy functionality.
  */
 
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, waitFor } from "@testing-library/react";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { render, screen, waitFor, cleanup } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { CodeArtifact } from "./CodeArtifact";
 import type { CodeArtifact as CodeArtifactType } from "../../types/artifacts";
@@ -29,6 +29,11 @@ describe("CodeArtifact", () => {
       writable: true,
       configurable: true,
     });
+  });
+
+  afterEach(() => {
+    cleanup();
+    vi.clearAllMocks();
   });
 
   describe("Rendering", () => {

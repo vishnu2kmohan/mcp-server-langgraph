@@ -13,8 +13,8 @@
  * - OpenAI o1/o3 (reasoning_effort)
  */
 
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { render, screen, fireEvent, cleanup } from "@testing-library/react";
 import {
   ReasoningEffortSelector,
   type ReasoningEffortLevel,
@@ -23,6 +23,11 @@ import {
 
 describe("ReasoningEffortSelector", () => {
   beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  afterEach(() => {
+    cleanup();
     vi.clearAllMocks();
   });
 

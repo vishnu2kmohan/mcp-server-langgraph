@@ -10,13 +10,14 @@
  * - Empty state
  */
 
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import {
   render,
   screen,
   waitFor,
   fireEvent,
   act,
+  cleanup,
 } from "@testing-library/react";
 import { BrowserRouter } from "react-router";
 import { SharedWorkflowsList } from "./SharedWorkflowsList";
@@ -36,6 +37,11 @@ describe("SharedWorkflowsList", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.resetAllMocks();
+  });
+
+  afterEach(() => {
+    cleanup();
+    vi.clearAllMocks();
   });
 
   describe("Header", () => {

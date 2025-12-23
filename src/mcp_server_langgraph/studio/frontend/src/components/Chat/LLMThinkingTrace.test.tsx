@@ -13,8 +13,8 @@
  * - Expandable/collapsible sections
  */
 
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { render, screen, fireEvent, waitFor, cleanup } from "@testing-library/react";
 import {
   LLMThinkingTrace,
   type LLMThinkingTraceProps,
@@ -28,6 +28,11 @@ Object.assign(navigator, { clipboard: mockClipboard });
 
 describe("LLMThinkingTrace", () => {
   beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  afterEach(() => {
+    cleanup();
     vi.clearAllMocks();
   });
 

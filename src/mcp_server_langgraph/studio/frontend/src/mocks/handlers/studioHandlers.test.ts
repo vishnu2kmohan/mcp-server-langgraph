@@ -9,7 +9,7 @@
  * - POST /api/v1/studio/suggestions - Studio suggestions
  */
 
-import { describe, it, expect, beforeAll, afterAll, afterEach } from "vitest";
+import { describe, it, expect, beforeAll, afterAll, afterEach, vi } from "vitest";
 import { setupServer } from "msw/node";
 import { studioHandlers, createStudioAnalyzeResponse } from "./studioHandlers";
 
@@ -20,7 +20,10 @@ import { studioHandlers, createStudioAnalyzeResponse } from "./studioHandlers";
 const server = setupServer(...studioHandlers);
 
 beforeAll(() => server.listen({ onUnhandledRequest: "error" }));
-afterEach(() => server.resetHandlers());
+afterEach(() => {
+  server.resetHandlers();
+  vi.clearAllMocks();
+});
 afterAll(() => server.close());
 
 // =============================================================================

@@ -7,8 +7,8 @@
  * TDD RED Phase: Write failing tests first.
  */
 
-import { render, screen, fireEvent } from "@testing-library/react";
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { render, screen, fireEvent, cleanup } from "@testing-library/react";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { StylePresets, type StylePresetsProps } from "./StylePresets";
 
 describe("StylePresets", () => {
@@ -19,6 +19,11 @@ describe("StylePresets", () => {
   };
 
   beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  afterEach(() => {
+    cleanup();
     vi.clearAllMocks();
   });
 

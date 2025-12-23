@@ -3,7 +3,7 @@
  *
  * Phase 7: Integration - State Management
  */
-import { describe, it, expect, beforeEach } from "vitest";
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import helpReducer, {
   toggleHelpPane,
   setHelpPaneOpen,
@@ -42,6 +42,10 @@ describe("helpSlice", () => {
       dismissedTipIds: [],
       visibleTips: [],
     };
+  });
+
+  afterEach(() => {
+    vi.clearAllMocks();
   });
 
   describe("toggleHelpPane", () => {

@@ -36,6 +36,7 @@ import { cn } from "../../../utils/cn";
 import { useConsoleEntries } from "../hooks/useConsoleEntries";
 import { exportConsoleToJSON, exportConsoleToCSV } from "../utils/export";
 import { useBatchedUpdates, useStableCallback } from "../utils/performance";
+import { useTimelineContext } from "../context/DevToolsTimelineProvider";
 import type {
   ConsoleTabProps,
   ConsoleEntry,
@@ -235,6 +236,9 @@ export function ConsoleTab({
     contextEntityId,
   });
 
+  // Timeline integration for time-travel debugging
+  const timeline = useTimelineContext();
+
   const [expandedEntries, setExpandedEntries] = useState<Set<string>>(
     new Set(),
   );
@@ -306,12 +310,29 @@ export function ConsoleTab({
   );
 
   /**
-   * Get display entries.
+   * Filter entries by timeline window for time-travel debugging.
+   */
+  const timelineFilteredEntries = useMemo(() => {
+    const baseEntries = filteredEntries.length > 0 ? filteredEntries : entries;
+
+    // If no time window is set, return all entries
+    if (!timeline.timeWindow) return baseEntries;
+
+    // Filter entries within the timeline window
+    return baseEntries.filter((entry) => {
+      return (
+        entry.timestamp >= timeline.timeWindow!.start &&
+        entry.timestamp <= timeline.timeWindow!.end
+      );
+    });
+  }, [filteredEntries, entries, timeline.timeWindow]);
+
+  /**
+   * Get display entries (with timeline filtering applied).
    */
   const allEntries = useMemo(() => {
-    // Use filtered entries if filter is applied, otherwise use all entries
-    return filteredEntries.length > 0 ? filteredEntries : entries;
-  }, [filteredEntries, entries]);
+    return timelineFilteredEntries;
+  }, [timelineFilteredEntries]);
 
   /**
    * Use batched updates for large lists to improve initial render performance.

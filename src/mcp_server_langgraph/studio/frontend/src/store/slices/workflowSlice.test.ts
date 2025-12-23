@@ -84,6 +84,7 @@ describe("workflowSlice", () => {
 
   afterEach(() => {
     vi.unstubAllGlobals();
+    vi.clearAllMocks();
   });
 
   describe("Initial State", () => {

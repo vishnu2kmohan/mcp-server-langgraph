@@ -5,7 +5,7 @@
  * Feature: Real-time AI suggestions via WebSocket
  */
 
-import { renderHook, act, waitFor } from "@testing-library/react";
+import { renderHook, act, waitFor, cleanup } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { Provider } from "react-redux";
 import { configureStore } from "@reduxjs/toolkit";
@@ -79,6 +79,7 @@ describe("useAIRealTimeSuggestions", () => {
   });
 
   afterEach(() => {
+    cleanup();
     vi.resetAllMocks();
   });
 

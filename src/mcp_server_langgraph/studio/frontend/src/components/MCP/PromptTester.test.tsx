@@ -9,8 +9,8 @@
  * Following TDD: RED phase - write failing tests first
  */
 
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, waitFor } from "@testing-library/react";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { render, screen, waitFor, cleanup } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { Provider } from "react-redux";
 import { configureStore } from "@reduxjs/toolkit";
@@ -117,6 +117,11 @@ describe("PromptTester", () => {
       mockGetPrompt,
       { isLoading: false, error: null },
     ]);
+  });
+
+  afterEach(() => {
+    cleanup();
+    vi.clearAllMocks();
   });
 
   describe("rendering", () => {

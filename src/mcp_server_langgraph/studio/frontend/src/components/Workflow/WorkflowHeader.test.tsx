@@ -4,8 +4,8 @@
  * Tests for the workflow header component with title, actions, and theme toggle.
  */
 
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { render, screen, fireEvent, cleanup } from "@testing-library/react";
 import { WorkflowHeader } from "./WorkflowHeader";
 
 describe("WorkflowHeader", () => {
@@ -19,6 +19,11 @@ describe("WorkflowHeader", () => {
   };
 
   beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  afterEach(() => {
+    cleanup();
     vi.clearAllMocks();
   });
 

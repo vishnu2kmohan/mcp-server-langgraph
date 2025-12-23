@@ -23,6 +23,14 @@ export type {
 } from "./AIIntelligenceContext";
 
 // =============================================================================
+// Connected AI Intelligence Provider (Bridges Feature Flags to AI Config)
+// ADR-0068: WebSocket Standardization - Auto-configures from FeatureFlagContext
+// =============================================================================
+
+export { ConnectedAIIntelligenceProvider } from "./ConnectedAIIntelligenceProvider";
+export type { ConnectedAIIntelligenceProviderProps } from "./ConnectedAIIntelligenceProvider";
+
+// =============================================================================
 // Preferences Context
 // =============================================================================
 

@@ -9,13 +9,14 @@
  * - Expandable view
  */
 
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import {
   render,
   screen,
   fireEvent,
   act,
   waitFor,
+  cleanup,
 } from "@testing-library/react";
 import { MermaidArtifact } from "./MermaidArtifact";
 
@@ -28,6 +29,11 @@ describe("MermaidArtifact", () => {
     D --> E`;
 
   beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  afterEach(() => {
+    cleanup();
     vi.clearAllMocks();
   });
 

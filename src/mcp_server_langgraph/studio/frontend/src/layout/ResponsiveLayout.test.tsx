@@ -5,7 +5,7 @@
  * Tests breakpoint detection and layout adaptation.
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { render, screen, cleanup } from "@testing-library/react";
 import { axe, toHaveNoViolations } from "jest-axe";
 
 expect.extend(toHaveNoViolations);
@@ -43,6 +43,7 @@ describe("ResponsiveLayout", () => {
   });
 
   afterEach(() => {
+    cleanup();
     window.matchMedia = originalMatchMedia;
     Object.defineProperty(window, "innerWidth", {
       writable: true,
@@ -275,6 +276,7 @@ describe("useBreakpoint hook", () => {
   const originalMatchMedia = window.matchMedia;
 
   afterEach(() => {
+    cleanup();
     window.matchMedia = originalMatchMedia;
   });
 

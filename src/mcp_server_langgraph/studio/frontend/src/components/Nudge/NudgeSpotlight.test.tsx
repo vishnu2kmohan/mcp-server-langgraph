@@ -53,6 +53,7 @@ describe("NudgeSpotlight", () => {
     if (target) {
       document.body.removeChild(target);
     }
+    vi.clearAllMocks();
   });
 
   describe("Rendering", () => {

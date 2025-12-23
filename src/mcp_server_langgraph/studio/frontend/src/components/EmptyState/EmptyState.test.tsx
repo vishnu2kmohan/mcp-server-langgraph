@@ -9,11 +9,16 @@
  * - Trigger: CTA button/action
  */
 
-import { describe, it, expect } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { describe, it, expect, afterEach, vi } from "vitest";
+import { render, screen, cleanup } from "@testing-library/react";
 import { EmptyState, type EmptyStateContext } from "./EmptyState";
 
 describe("EmptyState", () => {
+  afterEach(() => {
+    cleanup();
+    vi.clearAllMocks();
+  });
+
   describe("rendering", () => {
     it("renders with required props", () => {
       render(

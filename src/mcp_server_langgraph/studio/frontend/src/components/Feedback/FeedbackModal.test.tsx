@@ -11,8 +11,8 @@
  * - Loading and success states
  */
 
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { render, screen, fireEvent, waitFor, cleanup } from "@testing-library/react";
 import { Provider } from "react-redux";
 import { configureStore } from "@reduxjs/toolkit";
 import { FeedbackModal } from "./FeedbackModal";
@@ -65,6 +65,11 @@ describe("FeedbackModal", () => {
       mockSubmitFeedback,
       { isLoading: false, isSuccess: false },
     ]);
+  });
+
+  afterEach(() => {
+    cleanup();
+    vi.clearAllMocks();
   });
 
   describe("Visibility", () => {

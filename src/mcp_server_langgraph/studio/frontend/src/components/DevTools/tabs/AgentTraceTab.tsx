@@ -4,7 +4,7 @@
  * Displays LangGraph agent execution traces in DevTools.
  * Provides node visualization, token usage, and timeline view.
  */
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import {
   RefreshCw,
   List,
@@ -20,6 +20,7 @@ import {
 
 import { cn } from "../../../utils/cn";
 import { useAgentTrace } from "../hooks/useAgentTrace";
+import { useTimelineContext } from "../context/DevToolsTimelineProvider";
 import type { AgentTraceTabProps } from "../types";
 
 // =============================================================================
@@ -232,6 +233,9 @@ export function AgentTraceTab({
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
   const [expandedNodes, setExpandedNodes] = useState<Set<string>>(new Set());
 
+  // Timeline integration for time-travel debugging
+  const timeline = useTimelineContext();
+
   const { trace, isLoading, error, refetch } = useAgentTrace({ sessionId });
 
   // Handle node selection
@@ -261,9 +265,19 @@ export function AgentTraceTab({
     });
   }, []);
 
-  // Calculate total duration for timeline
+  // Filter nodes by timeline window for time-travel debugging
+  // Note: LangGraphNode doesn't have startTime, so we display all nodes
+  // Timeline filtering is available for tabs with timestamped entries
+  const filteredNodes = useMemo(() => {
+    if (!trace?.nodes) return [];
+    // LangGraphNode type doesn't include startTime, so we show all nodes
+    // The timeline context is still available for future enhanced node timing
+    return trace.nodes;
+  }, [trace?.nodes]);
+
+  // Calculate total duration for timeline (using filtered nodes)
   const totalDuration =
-    trace?.nodes?.reduce((sum, node) => sum + (node.duration ?? 0), 0) ?? 0;
+    filteredNodes.reduce((sum, node) => sum + (node.duration ?? 0), 0);
 
   // Calculate start offsets for timeline
   const getStartOffset = (index: number): number => {

@@ -6,9 +6,13 @@
  * Following TDD: RED phase - write failing tests first
  */
 
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi, afterEach } from "vitest";
 
 describe("Lazy MCP Components", () => {
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
   it("exports LazyAddConnectionDialog", async () => {
     const lazyModule = await import("./lazy");
     expect(lazyModule.LazyAddConnectionDialog).toBeDefined();

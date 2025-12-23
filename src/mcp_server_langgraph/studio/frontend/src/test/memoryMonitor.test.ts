@@ -61,6 +61,7 @@ describe("memoryMonitor", () => {
 
     afterEach(() => {
       consoleSpy.mockRestore();
+      vi.clearAllMocks();
     });
 
     describe("snapshot", () => {

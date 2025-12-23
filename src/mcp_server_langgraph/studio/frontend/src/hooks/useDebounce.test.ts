@@ -16,6 +16,7 @@ describe("useDebounce", () => {
 
   afterEach(() => {
     vi.useRealTimers();
+    vi.clearAllMocks();
   });
 
   describe("value debouncing", () => {
@@ -157,6 +158,7 @@ describe("useDebouncedCallback", () => {
 
   afterEach(() => {
     vi.useRealTimers();
+    vi.clearAllMocks();
   });
 
   it("should not call callback immediately", () => {

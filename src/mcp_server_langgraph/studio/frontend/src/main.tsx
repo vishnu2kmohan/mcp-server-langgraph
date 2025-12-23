@@ -7,6 +7,7 @@ import { router } from "./router";
 import { PreferencesProvider } from "./contexts/PreferencesContext";
 import { FeatureFlagProvider } from "./contexts/FeatureFlagContext";
 import { TelemetryProvider } from "./contexts/TelemetryContext";
+import { ConnectedAIIntelligenceProvider } from "./contexts";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { registerServiceWorker } from "./utils/serviceWorker";
 import { sessionTelemetry } from "./utils/sessionTelemetry";
@@ -41,13 +42,15 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
       <TelemetryProvider autoStartWebVitals>
         <Provider store={store}>
           <FeatureFlagProvider>
-            <ErrorBoundary
-              name="GlobalErrorBoundary"
-              onError={handleGlobalError}
-              showDetails={import.meta.env.DEV}
-            >
-              <RouterProvider router={router} />
-            </ErrorBoundary>
+            <ConnectedAIIntelligenceProvider>
+              <ErrorBoundary
+                name="GlobalErrorBoundary"
+                onError={handleGlobalError}
+                showDetails={import.meta.env.DEV}
+              >
+                <RouterProvider router={router} />
+              </ErrorBoundary>
+            </ConnectedAIIntelligenceProvider>
           </FeatureFlagProvider>
         </Provider>
       </TelemetryProvider>

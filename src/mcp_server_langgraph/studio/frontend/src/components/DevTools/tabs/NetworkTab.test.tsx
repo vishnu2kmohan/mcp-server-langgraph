@@ -5,7 +5,7 @@
  * Displays API requests, WebSocket messages, and MCP tool calls.
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { render, screen, within, waitFor } from "@testing-library/react";
+import { render, screen, within, waitFor, cleanup } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { axe, toHaveNoViolations } from "jest-axe";
 
@@ -98,6 +98,17 @@ vi.mock("../hooks/useNetworkEntries", () => ({
   useNetworkEntries: () => mockUseNetworkEntries(),
 }));
 
+// Mock timeline context to avoid provider requirement
+vi.mock("../context/DevToolsTimelineProvider", () => ({
+  useTimelineContext: () => ({
+    timeWindow: null,
+    isLiveMode: true,
+    currentTime: Date.now(),
+    events: [],
+    bookmarks: [],
+  }),
+}));
+
 // =============================================================================
 // Tests
 // =============================================================================
@@ -114,6 +125,7 @@ describe("NetworkTab", () => {
   });
 
   afterEach(() => {
+    cleanup();
     vi.restoreAllMocks();
   });
 

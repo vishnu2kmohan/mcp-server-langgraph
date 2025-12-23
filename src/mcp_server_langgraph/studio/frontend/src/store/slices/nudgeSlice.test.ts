@@ -79,6 +79,10 @@ function createRootState(nudgeState: NudgeState): { nudge: NudgeState } {
 // =============================================================================
 
 describe("nudgeSlice", () => {
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
   describe("Initial State", () => {
     it("has correct initial state", () => {
       expect(initialState.activeNudge).toBeNull();

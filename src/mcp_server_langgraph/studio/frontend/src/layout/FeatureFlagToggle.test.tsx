@@ -5,7 +5,7 @@
  * Allows switching between StudioShell and AppShell.
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render, screen, fireEvent, cleanup } from "@testing-library/react";
 import { FeatureFlagToggle } from "./FeatureFlagToggle";
 
 // Storage key used by the component
@@ -18,6 +18,7 @@ describe("FeatureFlagToggle", () => {
   });
 
   afterEach(() => {
+    cleanup();
     vi.unstubAllGlobals();
   });
 

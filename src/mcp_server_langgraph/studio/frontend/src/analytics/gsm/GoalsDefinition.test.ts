@@ -6,7 +6,7 @@
  * Tests the HEART goals definition for Goals-Signals-Metrics framework.
  */
 
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, afterEach, vi } from "vitest";
 import {
   HEART_GOALS,
   getGoalsForDimension,
@@ -14,6 +14,10 @@ import {
   getGoalById,
   type HeartDimension,
 } from "./GoalsDefinition";
+
+afterEach(() => {
+  vi.clearAllMocks();
+});
 
 describe("GoalsDefinition", () => {
   describe("HEART_GOALS", () => {

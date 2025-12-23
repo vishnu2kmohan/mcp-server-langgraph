@@ -252,3 +252,68 @@ export interface AIInsightsTabProps {
   /** Context entity ID */
   contextEntityId: string;
 }
+
+// =============================================================================
+// OTEL Observability Tab Types
+// =============================================================================
+
+/** OTEL trace span status */
+export type TraceSpanStatus = "ok" | "error" | "unset";
+
+/** OTEL span kind */
+export type SpanKind = "internal" | "server" | "client" | "producer" | "consumer";
+
+/** Alert state */
+export type AlertState = "firing" | "pending" | "resolved" | "silenced";
+
+/** Alert severity */
+export type AlertSeverity = "critical" | "warning" | "info";
+
+/** Log level for OTEL logs */
+export type OTELLogLevel = "trace" | "debug" | "info" | "warn" | "error" | "fatal";
+
+/** Props for TracesTab */
+export interface TracesTabProps {
+  /** Optional trace ID to highlight/filter */
+  traceId?: string;
+  /** Optional service filter */
+  serviceFilter?: string;
+  /** Optional status filter */
+  statusFilter?: TraceSpanStatus;
+  /** Callback when span is selected */
+  onSpanSelect?: (spanId: string) => void;
+}
+
+/** Props for MetricsTab */
+export interface MetricsTabProps {
+  /** Time range for metrics display */
+  timeRange?: "15m" | "1h" | "24h" | "7d";
+  /** Auto-refresh interval in seconds */
+  refreshInterval?: number;
+  /** Specific metrics to display */
+  metricFilter?: string[];
+}
+
+/** Props for AlertsTab */
+export interface AlertsTabProps {
+  /** Filter by alert state */
+  stateFilter?: AlertState;
+  /** Filter by severity */
+  severityFilter?: AlertSeverity;
+  /** Filter by service */
+  serviceFilter?: string;
+  /** Callback when alert is selected */
+  onAlertSelect?: (alertId: string) => void;
+}
+
+/** Props for LogsTab */
+export interface LogsTabProps {
+  /** Filter by log level */
+  levelFilter?: OTELLogLevel;
+  /** Filter by service */
+  serviceFilter?: string;
+  /** Optional trace ID to correlate logs */
+  traceId?: string;
+  /** Callback when log entry with trace is clicked */
+  onJumpToTrace?: (traceId: string) => void;
+}

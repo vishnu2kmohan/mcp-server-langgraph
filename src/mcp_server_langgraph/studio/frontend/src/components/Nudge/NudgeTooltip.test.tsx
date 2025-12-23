@@ -4,8 +4,8 @@
  * Sprint 3 - Phase 1.3: Nudge System
  */
 
-import { describe, it, expect, vi } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { describe, it, expect, vi, afterEach } from "vitest";
+import { render, screen, fireEvent, cleanup } from "@testing-library/react";
 import { NudgeTooltip } from "./NudgeTooltip";
 import type { Nudge } from "../../hooks/useNudges";
 
@@ -19,6 +19,11 @@ const mockNudge: Nudge = {
 };
 
 describe("NudgeTooltip", () => {
+  afterEach(() => {
+    cleanup();
+    vi.clearAllMocks();
+  });
+
   it("renders nudge message", () => {
     render(<NudgeTooltip nudge={mockNudge} onDismiss={() => {}} />);
 

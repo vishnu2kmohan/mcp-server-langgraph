@@ -154,7 +154,8 @@ class EncryptedSessionStore(SessionStore):
 
             encrypted = base64.b64decode(metadata["data"].encode("ascii"))
             decrypted = self._encryptor.decrypt(encrypted)
-            return json.loads(decrypted.decode("utf-8"))
+            result: dict[str, Any] = json.loads(decrypted.decode("utf-8"))
+            return result
         except DecryptionError as e:
             logger.error(f"Failed to decrypt metadata: {e}")
             raise

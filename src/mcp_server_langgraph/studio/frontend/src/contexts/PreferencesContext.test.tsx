@@ -15,7 +15,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { renderHook, act, waitFor } from "@testing-library/react";
+import { renderHook, act, waitFor, cleanup } from "@testing-library/react";
 import React from "react";
 import {
   PreferencesProvider,
@@ -54,6 +54,7 @@ describe("PreferencesContext", () => {
   });
 
   afterEach(() => {
+    cleanup();
     localStorage.clear();
   });
 

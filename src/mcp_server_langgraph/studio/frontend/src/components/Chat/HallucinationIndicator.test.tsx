@@ -5,8 +5,8 @@
  * Allows users to flag potential AI inaccuracies.
  */
 
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { render, screen, fireEvent, cleanup } from "@testing-library/react";
 import {
   HallucinationIndicator,
   HallucinationIndicatorProps,
@@ -19,6 +19,11 @@ describe("HallucinationIndicator", () => {
   };
 
   beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  afterEach(() => {
+    cleanup();
     vi.clearAllMocks();
   });
 

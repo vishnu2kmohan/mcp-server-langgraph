@@ -4,8 +4,8 @@
  * Tests for the right sidebar context panel showing tools, activity, and cost.
  */
 
-import { describe, it, expect, vi } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { describe, it, expect, vi, afterEach } from "vitest";
+import { render, screen, fireEvent, cleanup } from "@testing-library/react";
 import { ContextPanel, ContextPanelProps } from "./ContextPanel";
 
 const defaultProps: ContextPanelProps = {
@@ -35,6 +35,11 @@ const defaultProps: ContextPanelProps = {
 };
 
 describe("ContextPanel", () => {
+  afterEach(() => {
+    cleanup();
+    vi.clearAllMocks();
+  });
+
   describe("Tools Section", () => {
     it("should render tools section header", () => {
       render(<ContextPanel {...defaultProps} />);

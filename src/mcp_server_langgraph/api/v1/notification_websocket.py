@@ -1,6 +1,15 @@
 """
 Notification WebSocket Streaming Endpoint.
 
+.. deprecated:: 3.0
+    This module is deprecated. Use the new standardized WebSocket infrastructure:
+
+    - Handler: :mod:`mcp_server_langgraph.websocket.handlers.notifications`
+    - Base class: :mod:`mcp_server_langgraph.websocket.base.WebSocketBase`
+    - New URL: ``/api/v1/ws/notifications``
+
+    This module will be removed in v4.0.
+
 Provides real-time streaming of notifications to connected clients.
 
 Features:
@@ -10,7 +19,7 @@ Features:
 - Graceful connection lifecycle management
 
 Usage:
-    Connect to: wss://host/ws/notifications?token=<jwt>
+    Connect to: wss://host/api/v1/ws/notifications?token=<jwt>
     Or with header: Authorization: Bearer <jwt>
 
 Message Format:
@@ -27,6 +36,15 @@ Message Format:
 """
 
 import logging
+import warnings
+
+warnings.warn(
+    "mcp_server_langgraph.api.v1.notification_websocket is deprecated. "
+    "Use mcp_server_langgraph.websocket.handlers.notifications instead. "
+    "This module will be removed in v4.0.",
+    DeprecationWarning,
+    stacklevel=2,
+)
 from typing import Any
 
 from fastapi import APIRouter, Depends, WebSocket, WebSocketDisconnect, status

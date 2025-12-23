@@ -8,12 +8,17 @@
  * - Fallback for unknown types
  */
 
-import { describe, it, expect } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { describe, it, expect, vi, afterEach } from "vitest";
+import { render, screen, cleanup } from "@testing-library/react";
 import { ArtifactRenderer, detectArtifactType } from "./ArtifactRenderer";
 import type { Artifact } from "../../types/artifacts";
 
 describe("ArtifactRenderer", () => {
+  afterEach(() => {
+    cleanup();
+    vi.clearAllMocks();
+  });
+
   describe("detectArtifactType", () => {
     it("should detect JSON from object data", () => {
       const result = detectArtifactType({ foo: "bar", nested: { value: 1 } });

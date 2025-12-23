@@ -4,7 +4,7 @@
  * Phase 7: Integration - State Management
  * Tests for AI context and suggestions state.
  */
-import { describe, it, expect, beforeEach } from "vitest";
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import aiContextReducer, {
   setSuggestions,
   acceptSuggestion,
@@ -38,6 +38,10 @@ describe("aiContextSlice", () => {
       context: null,
       isLoading: false,
     };
+  });
+
+  afterEach(() => {
+    vi.clearAllMocks();
   });
 
   describe("setSuggestions", () => {

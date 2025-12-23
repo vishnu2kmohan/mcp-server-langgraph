@@ -6,11 +6,16 @@
  * the agent execution trace panel.
  */
 
-import { render, screen, fireEvent } from "@testing-library/react";
-import { describe, it, expect, vi } from "vitest";
+import { render, screen, fireEvent, cleanup } from "@testing-library/react";
+import { describe, it, expect, vi, afterEach } from "vitest";
 import { AgentTraceToggleButton } from "./AgentTraceToggleButton";
 
 describe("AgentTraceToggleButton", () => {
+  afterEach(() => {
+    cleanup();
+    vi.clearAllMocks();
+  });
+
   describe("rendering", () => {
     it("renders button with correct aria-label", () => {
       render(<AgentTraceToggleButton isExpanded={false} onToggle={() => {}} />);

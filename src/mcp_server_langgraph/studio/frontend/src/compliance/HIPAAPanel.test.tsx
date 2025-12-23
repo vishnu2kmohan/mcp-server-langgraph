@@ -4,13 +4,14 @@
  * Phase 5: Compliance Dashboards
  * Tests for HIPAA compliance panel.
  */
-import { describe, it, expect, afterEach } from "vitest";
+import { describe, it, expect, afterEach, vi } from "vitest";
 import { render, screen, cleanup } from "@testing-library/react";
 import { HIPAAPanel, type HIPAAControl } from "./HIPAAPanel";
 
 describe("HIPAAPanel", () => {
   afterEach(() => {
     cleanup();
+    vi.clearAllMocks();
   });
   const mockControls: HIPAAControl[] = [
     {

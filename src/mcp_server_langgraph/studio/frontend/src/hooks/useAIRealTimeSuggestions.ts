@@ -85,7 +85,7 @@ function buildWebSocketUrl(userId: string): string {
     typeof window !== "undefined" && window.location?.host
       ? window.location.host
       : "localhost:8000";
-  return `${protocol}//${host}/ws/suggestions?user_id=${encodeURIComponent(userId)}`;
+  return `${protocol}//${host}/api/v1/ws/ai/suggestions?user_id=${encodeURIComponent(userId)}`;
 }
 
 /**

@@ -14,7 +14,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { renderHook, act } from "@testing-library/react";
+import { renderHook, act, cleanup } from "@testing-library/react";
 import { useMCPKeyboardShortcuts } from "./useMCPKeyboardShortcuts";
 
 // =============================================================================
@@ -57,6 +57,7 @@ describe("useMCPKeyboardShortcuts", () => {
   });
 
   afterEach(() => {
+    cleanup();
     vi.clearAllMocks();
   });
 

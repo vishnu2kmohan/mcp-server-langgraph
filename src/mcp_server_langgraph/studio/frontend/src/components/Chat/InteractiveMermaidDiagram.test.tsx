@@ -5,8 +5,8 @@
  * fullscreen, and pan controls.
  */
 
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { render, screen, fireEvent, waitFor, cleanup } from "@testing-library/react";
 import { InteractiveMermaidDiagram } from "./InteractiveMermaidDiagram";
 
 // Mock mermaid
@@ -24,6 +24,11 @@ describe("InteractiveMermaidDiagram", () => {
     A[Start] --> B[End]`;
 
   beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  afterEach(() => {
+    cleanup();
     vi.clearAllMocks();
   });
 

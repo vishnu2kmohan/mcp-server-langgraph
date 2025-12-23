@@ -8,7 +8,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen, waitFor, cleanup } from "@testing-library/react";
 import { Provider } from "react-redux";
 import { MemoryRouter, Routes, Route } from "react-router";
 import { configureStore } from "@reduxjs/toolkit";
@@ -131,6 +131,7 @@ describe("LoginPage", () => {
   });
 
   afterEach(() => {
+    cleanup();
     localStorage.clear();
   });
 

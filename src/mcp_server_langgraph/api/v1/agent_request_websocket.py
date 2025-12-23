@@ -100,10 +100,9 @@ def is_hitl_enabled() -> bool:
     DEPRECATED: Check feature flags directly.
     """
     try:
-        from mcp_server_langgraph.core.feature_flags import get_feature_flags
+        from mcp_server_langgraph.core.feature_flags import is_enabled
 
-        ff = get_feature_flags()
-        return ff.is_enabled("hitl_approvals")
+        return is_enabled("hitl_approvals")
     except Exception:
         return False
 
@@ -168,9 +167,10 @@ async def validate_websocket_token(token: str | None) -> dict[str, Any] | None:
         result = await auth.verify_token(token)
 
         # Handle both dict and VerificationResult return types
-        if isinstance(result, dict):
+        # Note: mypy sees dict branch as unreachable but it's needed for test mocks
+        if isinstance(result, dict):  # type: ignore[unreachable]
             # Direct dict return from mocked auth
-            return result
+            return result  # type: ignore[unreachable]
         elif hasattr(result, "valid") and hasattr(result, "payload"):
             # VerificationResult object
             if result.valid and result.payload:
@@ -212,7 +212,7 @@ async def handle_ping(websocket: WebSocket, correlation_id: str | None = None) -
 
 async def broadcast_approval_required(message: Any) -> None:
     """
-    Broadcast approval required message to all clients.
+    Broadcast approval required message to all clients and send push notification.
 
     DEPRECATED: Use broadcaster.broadcast() directly.
 
@@ -234,10 +234,18 @@ async def broadcast_approval_required(message: Any) -> None:
         },
     )
 
+    # Also send push notification if user_id is available in context
+    user_id: str | None = None
+    if hasattr(message, "context") and isinstance(message.context, dict):
+        user_id = message.context.get("user_id")
+
+    if user_id:
+        await send_hitl_approval_notification(message, user_id)
+
 
 async def broadcast_clarification_required(message: Any) -> None:
     """
-    Broadcast clarification required message to all clients.
+    Broadcast clarification required message to all clients and send push notification.
 
     DEPRECATED: Use broadcaster.broadcast() directly.
 
@@ -258,10 +266,18 @@ async def broadcast_clarification_required(message: Any) -> None:
         },
     )
 
+    # Also send push notification if user_id is available in context
+    user_id: str | None = None
+    if hasattr(message, "context") and isinstance(message.context, dict):
+        user_id = message.context.get("user_id")
+
+    if user_id:
+        await send_hitl_clarification_notification(message, user_id)
+
 
 async def broadcast_approval_updated(message: Any) -> None:
     """
-    Broadcast approval updated message to all clients.
+    Broadcast approval updated message to all clients and send push notification.
 
     DEPRECATED: Use broadcaster.broadcast() directly.
 
@@ -282,10 +298,18 @@ async def broadcast_approval_updated(message: Any) -> None:
         },
     )
 
+    # Also send push notification if user_id is available in context
+    user_id: str | None = None
+    if hasattr(message, "context") and isinstance(message.context, dict):
+        user_id = message.context.get("user_id")
+
+    if user_id:
+        await send_hitl_approval_updated_notification(message, user_id)
+
 
 async def broadcast_execution_resumed(message: Any) -> None:
     """
-    Broadcast execution resumed message to all clients.
+    Broadcast execution resumed message to all clients and send push notification.
 
     DEPRECATED: Use broadcaster.broadcast() directly.
 
@@ -305,6 +329,14 @@ async def broadcast_execution_resumed(message: Any) -> None:
             "timestamp": datetime.now(UTC).isoformat(),
         },
     )
+
+    # Also send push notification if user_id is available in context
+    user_id: str | None = None
+    if hasattr(message, "context") and isinstance(message.context, dict):
+        user_id = message.context.get("user_id")
+
+    if user_id:
+        await send_hitl_execution_resumed_notification(message, user_id)
 
 
 # =============================================================================
@@ -404,6 +436,67 @@ def create_clarification_push_message(request: AgentRequest) -> PushMessage:
     )
 
 
+def create_approval_updated_push_message(message: Any) -> PushMessage:
+    """
+    Create a push notification message for an approval update.
+
+    Args:
+        message: The approval update message (ApprovalUpdatedMessage or similar).
+
+    Returns:
+        PushMessage formatted for approval update notifications.
+    """
+    from mcp_server_langgraph.notifications.push_sender import PushMessage
+
+    status = getattr(message, "status", "updated")
+    if status == "approved":
+        title = "Request approved"
+        body = "Your agent request has been approved"
+    elif status == "rejected":
+        title = "Request rejected"
+        body = "Your agent request has been rejected"
+    else:
+        title = "Request updated"
+        body = f"Your agent request status: {status}"
+
+    return PushMessage(
+        title=title,
+        body=body,
+        tag=f"hitl-{message.request_id}",
+        data={
+            "request_id": message.request_id,
+            "type": "approval_updated",
+            "session_id": getattr(message, "session_id", None),
+            "status": status,
+        },
+    )
+
+
+def create_execution_resumed_push_message(message: Any) -> PushMessage:
+    """
+    Create a push notification message for execution resumed.
+
+    Args:
+        message: The execution resumed message.
+
+    Returns:
+        PushMessage formatted for execution resumed notifications.
+    """
+    from mcp_server_langgraph.notifications.push_sender import PushMessage
+
+    return PushMessage(
+        title="Agent execution resumed",
+        body="Your approved task is now continuing",
+        tag=f"hitl-{message.request_id}",
+        data={
+            "request_id": message.request_id,
+            "type": "execution_resumed",
+            "session_id": getattr(message, "session_id", None),
+            "task_id": getattr(message, "task_id", None),
+        },
+    )
+
+
 async def send_hitl_approval_notification(
     request: AgentRequest,
     user_id: str,
@@ -468,6 +561,70 @@ async def send_hitl_clarification_notification(
         logger.warning(f"Failed to send HITL clarification push notification: {e}")
 
 
+async def send_hitl_approval_updated_notification(
+    message: Any,
+    user_id: str,
+) -> None:
+    """
+    Send a push notification for an HITL approval update.
+
+    Only sends if push notifications are enabled via feature flags.
+
+    Args:
+        message: The approval update message.
+        user_id: The user ID to notify.
+    """
+    try:
+        flags = get_feature_flags()
+        if not flags.enable_agent_hitl_push_notifications:
+            logger.debug("HITL push notifications disabled")
+            return
+
+        sender = get_push_sender()
+        if sender is None:
+            logger.debug("Push sender not configured")
+            return
+
+        push_message = create_approval_updated_push_message(message)
+        await sender.send_to_user(user_id, push_message)
+        logger.info(f"Sent HITL approval update push notification to user {user_id}")
+
+    except Exception as e:
+        logger.warning(f"Failed to send HITL approval update push notification: {e}")
+
+
+async def send_hitl_execution_resumed_notification(
+    message: Any,
+    user_id: str,
+) -> None:
+    """
+    Send a push notification for HITL execution resumed.
+
+    Only sends if push notifications are enabled via feature flags.
+
+    Args:
+        message: The execution resumed message.
+        user_id: The user ID to notify.
+    """
+    try:
+        flags = get_feature_flags()
+        if not flags.enable_agent_hitl_push_notifications:
+            logger.debug("HITL push notifications disabled")
+            return
+
+        sender = get_push_sender()
+        if sender is None:
+            logger.debug("Push sender not configured")
+            return
+
+        push_message = create_execution_resumed_push_message(message)
+        await sender.send_to_user(user_id, push_message)
+        logger.info(f"Sent HITL execution resumed push notification to user {user_id}")
+
+    except Exception as e:
+        logger.warning(f"Failed to send HITL execution resumed push notification: {e}")
+
+
 # =============================================================================
 # Exports
 # =============================================================================
@@ -503,8 +660,12 @@ __all__ = [
     "set_push_sender",
     "create_approval_push_message",
     "create_clarification_push_message",
+    "create_approval_updated_push_message",
+    "create_execution_resumed_push_message",
     "send_hitl_approval_notification",
     "send_hitl_clarification_notification",
+    "send_hitl_approval_updated_notification",
+    "send_hitl_execution_resumed_notification",
     # Router
     "router",
 ]

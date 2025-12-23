@@ -4,8 +4,8 @@
  * TDD tests for the chat properties panel including model selection.
  */
 
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
-import { describe, it, expect, vi } from "vitest";
+import { render, screen, fireEvent, waitFor, cleanup } from "@testing-library/react";
+import { describe, it, expect, vi, afterEach, beforeEach } from "vitest";
 import { Provider } from "react-redux";
 import { configureStore } from "@reduxjs/toolkit";
 import { ChatProperties } from "./ChatProperties";
@@ -69,6 +69,10 @@ function createMockStore() {
 describe("ChatProperties", () => {
   const mockIsSectionExpanded = vi.fn(() => true);
   const mockOnToggleSection = vi.fn();
+
+  afterEach(() => {
+    cleanup();
+  });
 
   beforeEach(() => {
     vi.clearAllMocks();

@@ -4,7 +4,7 @@
  * TDD tests for persistent observability filter state.
  */
 
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, afterEach, vi } from "vitest";
 import observabilityReducer, {
   setStatusFilter,
   setSessionIdFilter,
@@ -27,6 +27,10 @@ import observabilityReducer, {
 } from "./observabilitySlice";
 
 describe("observabilitySlice", () => {
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
   const initialState: ObservabilityState = {
     statusFilter: "",
     sessionIdFilter: "",

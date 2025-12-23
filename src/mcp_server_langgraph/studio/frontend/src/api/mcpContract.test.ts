@@ -7,7 +7,7 @@
  * These tests document the MCP protocol API contract and catch handler inconsistencies.
  */
 
-import { describe, it, expect, beforeEach, afterEach } from "vitest";
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { server } from "../mocks/server";
 
 describe("MCP API Contract Tests", () => {
@@ -17,6 +17,7 @@ describe("MCP API Contract Tests", () => {
 
   afterEach(() => {
     server.resetHandlers();
+    vi.clearAllMocks();
   });
 
   describe("GET /api/v1/mcp/resources", () => {

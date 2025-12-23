@@ -4,7 +4,7 @@
  * Phase 7: Integration - State Management
  * Tests for background agent state management.
  */
-import { describe, it, expect, beforeEach } from "vitest";
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import backgroundAgentReducer, {
   addAgent,
   updateAgentStatus,
@@ -49,6 +49,10 @@ describe("backgroundAgentSlice", () => {
       agents: {},
       agentIds: [],
     };
+  });
+
+  afterEach(() => {
+    vi.clearAllMocks();
   });
 
   describe("addAgent", () => {

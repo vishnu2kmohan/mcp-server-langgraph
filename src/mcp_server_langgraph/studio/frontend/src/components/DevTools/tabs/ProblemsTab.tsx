@@ -18,6 +18,7 @@ import { cn } from "../../../utils/cn";
 import { useAppSelector } from "../../../store/hooks";
 import { selectSessionError } from "../../../store/slices/sessionSlice";
 import { selectMCPError } from "../../../store/slices/mcpSlice";
+import { useTimelineContext } from "../context/DevToolsTimelineProvider";
 import type { ProblemsTabProps } from "../types";
 
 // =============================================================================
@@ -124,6 +125,9 @@ export function ProblemsTab({
   const [filter, setFilter] = useState<FilterType>("all");
   const [dismissedIds, setDismissedIds] = useState<Set<string>>(new Set());
 
+  // Timeline integration for time-travel debugging
+  const timeline = useTimelineContext();
+
   // Get errors from Redux
   const sessionError = useAppSelector(selectSessionError);
   const mcpError = useAppSelector(selectMCPError);
@@ -155,16 +159,29 @@ export function ProblemsTab({
     return result.filter((p) => !dismissedIds.has(p.id));
   }, [sessionError, mcpError, dismissedIds]);
 
-  // Apply filter
+  // Apply filter (including timeline filter)
   const filteredProblems = useMemo(() => {
+    let result = problems;
+
+    // Filter by timeline window for time-travel debugging
+    if (timeline.timeWindow) {
+      result = result.filter((p) => {
+        return (
+          p.timestamp >= timeline.timeWindow!.start &&
+          p.timestamp <= timeline.timeWindow!.end
+        );
+      });
+    }
+
+    // Apply severity filter
     if (filter === "errors") {
-      return problems.filter((p) => p.severity === "error");
+      return result.filter((p) => p.severity === "error");
     }
     if (filter === "warnings") {
-      return problems.filter((p) => p.severity === "warning");
+      return result.filter((p) => p.severity === "warning");
     }
-    return problems;
-  }, [problems, filter]);
+    return result;
+  }, [problems, filter, timeline.timeWindow]);
 
   // Calculate counts
   const errorCount = problems.filter((p) => p.severity === "error").length;

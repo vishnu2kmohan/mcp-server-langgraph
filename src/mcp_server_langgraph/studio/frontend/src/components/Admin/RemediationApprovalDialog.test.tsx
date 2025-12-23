@@ -13,8 +13,8 @@
  * Reference: ADR-0026 - Comprehensive Client Resilience Patterns
  */
 
-import { describe, it, expect, vi } from "vitest";
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { describe, it, expect, vi, afterEach } from "vitest";
+import { render, screen, fireEvent, waitFor, cleanup } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
 import {
@@ -83,6 +83,11 @@ const defaultProps: RemediationApprovalDialogProps = {
 // =============================================================================
 
 describe("RemediationApprovalDialog", () => {
+  afterEach(() => {
+    cleanup();
+    vi.clearAllMocks();
+  });
+
   describe("Basic Rendering", () => {
     it("should render when isOpen is true", () => {
       render(<RemediationApprovalDialog {...defaultProps} />);

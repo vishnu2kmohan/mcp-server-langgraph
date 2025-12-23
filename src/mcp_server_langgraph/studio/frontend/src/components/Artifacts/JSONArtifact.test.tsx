@@ -4,8 +4,8 @@
  * Tests for JSON tree view component with collapsible nodes.
  */
 
-import { describe, it, expect, beforeEach, vi } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { describe, it, expect, beforeEach, vi, afterEach } from "vitest";
+import { render, screen, cleanup } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { JSONArtifact } from "./JSONArtifact";
 import type { JSONArtifact as JSONArtifactType } from "../../types/artifacts";
@@ -61,6 +61,11 @@ describe("JSONArtifact", () => {
       writable: true,
       configurable: true,
     });
+  });
+
+  afterEach(() => {
+    cleanup();
+    vi.clearAllMocks();
   });
 
   describe("Rendering", () => {

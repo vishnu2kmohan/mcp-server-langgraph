@@ -4,11 +4,16 @@
  * TDD tests for executable code artifact component with sandbox execution.
  */
 
-import { describe, it, expect, vi } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { describe, it, expect, vi, afterEach } from "vitest";
+import { render, screen, fireEvent, cleanup } from "@testing-library/react";
 import { ExecutableArtifact } from "./ExecutableArtifact";
 
 describe("ExecutableArtifact", () => {
+  afterEach(() => {
+    cleanup();
+    vi.clearAllMocks();
+  });
+
   const pythonCode = `print("Hello, World!")`;
   const defaultConfig = { language: "python" };
 

@@ -10,9 +10,14 @@
  * - Unlimited tier handling
  */
 
-import { describe, it, expect } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { describe, it, expect, afterEach, vi } from "vitest";
+import { render, screen, cleanup } from "@testing-library/react";
 import { TierUsageBar } from "./TierUsageBar";
+
+afterEach(() => {
+  cleanup();
+  vi.clearAllMocks();
+});
 
 describe("TierUsageBar", () => {
   describe("Basic Display", () => {

@@ -87,6 +87,7 @@ describe("testIsolation", () => {
   describe("clearTimers", () => {
     afterEach(() => {
       vi.useRealTimers();
+      vi.clearAllMocks();
     });
 
     it("should clear all pending timers", () => {

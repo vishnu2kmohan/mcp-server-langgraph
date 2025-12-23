@@ -37,6 +37,7 @@ describe("HeartAggregator", () => {
     }
     vi.useRealTimers();
     vi.unstubAllGlobals();
+    vi.clearAllMocks();
   });
 
   // ===========================================================================

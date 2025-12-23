@@ -9,7 +9,7 @@
  * - POST /api/v1/ai/suggestions/dismiss - Dismiss a suggestion
  */
 
-import { describe, it, expect, beforeEach, afterEach } from "vitest";
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { server } from "../server";
 
 import {
@@ -32,6 +32,7 @@ beforeEach(() => {
 afterEach(() => {
   server.resetHandlers();
   resetMockSuggestions();
+  vi.clearAllMocks();
 });
 
 // =============================================================================

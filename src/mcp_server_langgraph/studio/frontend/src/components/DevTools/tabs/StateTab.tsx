@@ -24,6 +24,7 @@ import {
 import { cn } from "../../../utils/cn";
 import { useAppSelector } from "../../../store/hooks";
 import { useStateHistory } from "../hooks/useStateHistory";
+import { useTimelineContext } from "../context/DevToolsTimelineProvider";
 import type { StateTabProps } from "../types";
 
 // =============================================================================
@@ -484,6 +485,9 @@ export function StateTab({ context, contextEntityId }: StateTabProps) {
   const [refreshKey, setRefreshKey] = useState(0);
   const [timeTravelEnabled, setTimeTravelEnabled] = useState(true);
 
+  // Timeline integration for synchronized time-travel debugging
+  const timeline = useTimelineContext();
+
   // Get state from Redux
   const reduxState = useAppSelector((state) => state);
 
@@ -535,13 +539,31 @@ export function StateTab({ context, contextEntityId }: StateTabProps) {
     }
   }, [displayState, timeTravelEnabled, recordSnapshot]);
 
-  // Use historical state if not at latest
+  // Use historical state if not at latest, or sync with timeline
   const stateToDisplay = useMemo(() => {
+    // If timeline has a time window, find the snapshot closest to the current time
+    if (timeline.timeWindow && snapshots.length > 0) {
+      const targetTime = timeline.timeWindow.end;
+      // Find the snapshot closest to but not after the target time
+      let closestSnapshot = snapshots[0];
+      for (const snapshot of snapshots) {
+        if (snapshot.timestamp <= targetTime) {
+          closestSnapshot = snapshot;
+        } else {
+          break;
+        }
+      }
+      if (closestSnapshot) {
+        return closestSnapshot.state;
+      }
+    }
+
+    // Fallback to local time-travel state
     if (!isAtLatest && currentSnapshot) {
       return currentSnapshot.state;
     }
     return displayState;
-  }, [isAtLatest, currentSnapshot, displayState]);
+  }, [isAtLatest, currentSnapshot, displayState, timeline.timeWindow, snapshots]);
 
   const handleRefresh = useCallback(() => {
     setRefreshKey((prev) => prev + 1);

@@ -4,8 +4,8 @@
  * TDD tests for the workflow document component used in MainDock tabs.
  */
 
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { render, screen, cleanup } from "@testing-library/react";
 import { Provider } from "react-redux";
 import { MemoryRouter } from "react-router";
 import { configureStore } from "@reduxjs/toolkit";
@@ -103,6 +103,11 @@ const renderWithProviders = (ui: React.ReactElement, workflowName?: string) => {
 
 describe("WorkflowDocument", () => {
   beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  afterEach(() => {
+    cleanup();
     vi.clearAllMocks();
   });
 

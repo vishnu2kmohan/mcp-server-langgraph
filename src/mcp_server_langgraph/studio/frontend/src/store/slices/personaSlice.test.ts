@@ -4,7 +4,7 @@
  * Tests for Redux persona state management.
  */
 
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, afterEach, vi } from "vitest";
 import personaReducer, {
   setPersona,
   setUserInfo,
@@ -29,6 +29,10 @@ import personaReducer, {
 } from "./personaSlice";
 
 describe("personaSlice", () => {
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
   describe("reducers", () => {
     it("should return the initial state", () => {
       expect(personaReducer(undefined, { type: "unknown" })).toEqual(

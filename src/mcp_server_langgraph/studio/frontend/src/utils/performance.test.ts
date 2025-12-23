@@ -26,6 +26,7 @@ describe("Performance Utilities", () => {
 
   afterEach(() => {
     vi.useRealTimers();
+    vi.clearAllMocks();
   });
 
   describe("debounce", () => {

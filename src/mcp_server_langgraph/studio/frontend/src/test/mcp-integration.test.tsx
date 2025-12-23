@@ -15,6 +15,7 @@ import {
   waitFor,
   act,
   fireEvent,
+  cleanup,
 } from "@testing-library/react";
 import { Provider } from "react-redux";
 import React, { Suspense } from "react";
@@ -72,7 +73,11 @@ function MockShortcutHandler({
 // Tests
 // =============================================================================
 
-afterEach(() => server.resetHandlers());
+afterEach(() => {
+  cleanup();
+  server.resetHandlers();
+  vi.clearAllMocks();
+});
 
 describe("MCP Full Flow Integration", () => {
   describe("RTK Query Data Flow", () => {

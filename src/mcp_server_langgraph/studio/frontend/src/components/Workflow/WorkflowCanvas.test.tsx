@@ -11,8 +11,8 @@
  * - Empty state
  */
 
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, act } from "@testing-library/react";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { render, screen, act, cleanup } from "@testing-library/react";
 import { Provider } from "react-redux";
 import { configureStore } from "@reduxjs/toolkit";
 import type {
@@ -195,6 +195,11 @@ describe("WorkflowCanvas", () => {
     capturedOnNodeDragStop = undefined;
     capturedOnSelectionChange = undefined;
     capturedNodeColorFn = undefined;
+  });
+
+  afterEach(() => {
+    cleanup();
+    vi.clearAllMocks();
   });
 
   describe("Rendering", () => {

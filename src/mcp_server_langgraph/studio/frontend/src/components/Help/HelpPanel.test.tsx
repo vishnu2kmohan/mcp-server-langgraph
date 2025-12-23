@@ -5,8 +5,8 @@
  * Provides context-sensitive tips and documentation links.
  */
 
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { render, screen, fireEvent, cleanup } from "@testing-library/react";
 import { HelpPanel, HelpPanelProps, HelpArticle, HelpTip } from "./HelpPanel";
 
 const mockTips: HelpTip[] = [
@@ -52,6 +52,11 @@ describe("HelpPanel", () => {
   };
 
   beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  afterEach(() => {
+    cleanup();
     vi.clearAllMocks();
   });
 

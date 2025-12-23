@@ -4,7 +4,7 @@
  * Displays workflow node execution traces in DevTools.
  * Shows step-by-step execution with input/output data.
  */
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import {
   RefreshCw,
   ChevronRight,
@@ -23,6 +23,7 @@ import {
   useWorkflowExecution,
   type ExecutionStep,
 } from "../hooks/useWorkflowExecution";
+import { useTimelineContext } from "../context/DevToolsTimelineProvider";
 import type { ExecutionTraceTabProps } from "../types";
 
 // =============================================================================
@@ -198,8 +199,25 @@ export function ExecutionTraceTab({
   const [selectedStepId, setSelectedStepId] = useState<string | null>(null);
   const [expandedSteps, setExpandedSteps] = useState<Set<string>>(new Set());
 
+  // Timeline integration for time-travel debugging
+  const timeline = useTimelineContext();
+
   const { steps, isLoading, error, refetch, currentStepId } =
     useWorkflowExecution({ workflowId });
+
+  // Filter steps by timeline window for time-travel debugging
+  const filteredSteps = useMemo(() => {
+    if (!steps) return [];
+    if (!timeline.timeWindow) return steps;
+
+    return steps.filter((step) => {
+      const stepEnd = (step.startTime ?? 0) + (step.duration ?? 0);
+      return (
+        (step.startTime ?? 0) <= timeline.timeWindow!.end &&
+        stepEnd >= timeline.timeWindow!.start
+      );
+    });
+  }, [steps, timeline.timeWindow]);
 
   // Handle step selection
   const handleStepSelect = useCallback(

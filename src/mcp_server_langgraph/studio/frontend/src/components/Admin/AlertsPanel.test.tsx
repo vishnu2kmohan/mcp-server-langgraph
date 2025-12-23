@@ -13,8 +13,8 @@
  * Reference: ADR-0026 - Comprehensive Client Resilience Patterns
  */
 
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { render, screen, fireEvent, cleanup } from "@testing-library/react";
 import { Provider } from "react-redux";
 import { configureStore } from "@reduxjs/toolkit";
 import type { ReactNode } from "react";
@@ -109,6 +109,11 @@ describe("AlertsPanel", () => {
   // Clear localStorage before each test to avoid view mode persistence issues
   beforeEach(() => {
     localStorage.clear();
+  });
+
+  afterEach(() => {
+    cleanup();
+    vi.clearAllMocks();
   });
 
   describe("Basic Rendering", () => {
@@ -366,6 +371,7 @@ describe("AlertsPanel", () => {
     });
 
     afterEach(() => {
+      cleanup();
       // Cleanup after each test
       localStorage.removeItem("alert-view-mode");
     });

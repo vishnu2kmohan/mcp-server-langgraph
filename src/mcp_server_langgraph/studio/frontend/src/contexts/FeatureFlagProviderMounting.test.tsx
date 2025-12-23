@@ -13,11 +13,13 @@
  */
 
 import { describe, it, expect, afterEach, vi } from "vitest";
+import { cleanup } from "@testing-library/react";
 import * as fs from "fs";
 import * as path from "path";
 
 describe("FeatureFlagProvider Mounting", () => {
   afterEach(() => {
+    cleanup();
     vi.clearAllMocks();
   });
 

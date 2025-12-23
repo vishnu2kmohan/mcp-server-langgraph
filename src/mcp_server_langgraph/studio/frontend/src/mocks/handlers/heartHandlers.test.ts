@@ -5,7 +5,7 @@
  * These handlers prevent "unhandled request" warnings during tests.
  */
 
-import { describe, it, expect, beforeEach, afterEach } from "vitest";
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { server } from "../server";
 import {
   heartHandlers,
@@ -21,6 +21,7 @@ describe("heartHandlers", () => {
 
   afterEach(() => {
     server.resetHandlers();
+    vi.clearAllMocks();
   });
 
   describe("handler exports", () => {

@@ -5,8 +5,8 @@
  * with sorting and filtering capabilities.
  */
 
-import { describe, it, expect, vi } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { describe, it, expect, vi, afterEach } from "vitest";
+import { render, screen, fireEvent, cleanup } from "@testing-library/react";
 import { TableArtifact, TableArtifactProps } from "./TableArtifact";
 
 const sampleData: TableArtifactProps = {
@@ -25,6 +25,11 @@ const sampleData: TableArtifactProps = {
 };
 
 describe("TableArtifact", () => {
+  afterEach(() => {
+    cleanup();
+    vi.clearAllMocks();
+  });
+
   describe("Rendering", () => {
     it("should render table title", () => {
       render(<TableArtifact {...sampleData} />);

@@ -5,15 +5,20 @@
  * the expected imperative handle methods.
  */
 
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect, vi, afterEach } from "vitest";
 import React from "react";
-import { render, screen } from "@testing-library/react";
+import { render, screen, cleanup } from "@testing-library/react";
 import {
   mockReactResizablePanels,
   createMockPanelHandle,
 } from "./react-resizable-panels";
 
 const { PanelGroup, Panel, PanelResizeHandle } = mockReactResizablePanels;
+
+afterEach(() => {
+  cleanup();
+  vi.clearAllMocks();
+});
 
 describe("react-resizable-panels mock", () => {
   describe("PanelGroup", () => {

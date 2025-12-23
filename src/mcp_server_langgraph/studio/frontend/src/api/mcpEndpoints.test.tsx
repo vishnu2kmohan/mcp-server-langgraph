@@ -13,9 +13,9 @@
  * Following TDD: RED phase - write failing tests first
  */
 
-import { describe, it, expect, afterEach } from "vitest";
+import { describe, it, expect, afterEach, vi } from "vitest";
 import { http, HttpResponse } from "msw";
-import { renderHook, waitFor } from "@testing-library/react";
+import { renderHook, waitFor, cleanup } from "@testing-library/react";
 import { Provider } from "react-redux";
 import { configureStore } from "@reduxjs/toolkit";
 import React from "react";
@@ -150,7 +150,11 @@ const wrapper = ({ children }: { children: React.ReactNode }) => (
 
 // The global server is started/stopped in test/setup.ts
 // We only need to reset handlers after each test
-afterEach(() => server.resetHandlers());
+afterEach(() => {
+  cleanup();
+  server.resetHandlers();
+  vi.clearAllMocks();
+});
 
 // =============================================================================
 // Tests

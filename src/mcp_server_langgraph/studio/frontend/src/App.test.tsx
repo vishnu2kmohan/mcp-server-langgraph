@@ -10,7 +10,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen, waitFor, cleanup } from "@testing-library/react";
 import { MemoryRouter, Route, Routes } from "react-router";
 import { Provider } from "react-redux";
 import { configureStore } from "@reduxjs/toolkit";
@@ -262,6 +262,7 @@ describe("App", () => {
   });
 
   afterEach(() => {
+    cleanup();
     vi.restoreAllMocks();
   });
 
@@ -1920,6 +1921,7 @@ describe("App", () => {
 
   describe("JWT Fallback - Role Extraction Branches", () => {
     afterEach(() => {
+      cleanup();
       vi.restoreAllMocks();
       mockUserQueryError = null;
     });

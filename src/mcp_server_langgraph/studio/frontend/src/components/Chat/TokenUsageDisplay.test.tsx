@@ -7,8 +7,8 @@
  * TDD RED Phase: Write failing tests first.
  */
 
-import { render, screen } from "@testing-library/react";
-import { describe, it, expect } from "vitest";
+import { render, screen, cleanup } from "@testing-library/react";
+import { describe, it, expect, afterEach, vi } from "vitest";
 import {
   TokenUsageDisplay,
   type TokenUsageDisplayProps,
@@ -19,6 +19,11 @@ describe("TokenUsageDisplay", () => {
     promptTokens: 150,
     completionTokens: 250,
   };
+
+  afterEach(() => {
+    cleanup();
+    vi.clearAllMocks();
+  });
 
   describe("rendering", () => {
     it("should render token counts", () => {

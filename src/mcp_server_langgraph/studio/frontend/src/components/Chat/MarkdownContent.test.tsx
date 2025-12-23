@@ -5,8 +5,8 @@
  * Extracted from ChatMessages.tsx for reusability.
  */
 
-import { describe, it, expect, vi } from "vitest";
-import { render, screen, waitFor } from "@testing-library/react";
+import { describe, it, expect, vi, afterEach } from "vitest";
+import { render, screen, waitFor, cleanup } from "@testing-library/react";
 import { MarkdownContent } from "./MarkdownContent";
 
 // Mock heavy dependencies to speed up tests
@@ -39,6 +39,11 @@ vi.mock("../Artifacts/SandpackExecutor", () => ({
 }));
 
 describe("MarkdownContent", () => {
+  afterEach(() => {
+    cleanup();
+    vi.clearAllMocks();
+  });
+
   describe("basic markdown rendering", () => {
     it("should render plain text", () => {
       render(<MarkdownContent content="Hello, world!" />);

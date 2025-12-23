@@ -13,6 +13,7 @@ Reference: https://modelcontextprotocol.io/specification/2025-11-25/server/tools
 from __future__ import annotations
 
 import logging
+import uuid
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
@@ -108,14 +109,20 @@ class OrchestrationToolHandler:
             return {"error": "Orchestrator not configured"}
 
         try:
-            max_subtasks = arguments.get("max_subtasks", 5)
-            decomposition = await self._orchestrator.decompose_task(task, max_subtasks=max_subtasks)
+            num_subtasks = arguments.get("max_subtasks", 5)
+            decomposition = self._orchestrator.decompose_task(task, num_subtasks=num_subtasks)
+
+            # Generate task_id for storage
+            task_id = str(uuid.uuid4())
 
             # Store in resource provider if available
             if self._resource_provider is not None:
-                self._resource_provider.store_task(decomposition.task_id, decomposition)
+                self._resource_provider.store_task(task_id, decomposition)
 
-            return decomposition.model_dump()
+            # Include task_id in response
+            result = decomposition.model_dump()
+            result["task_id"] = task_id
+            return dict(result)
 
         except Exception as e:
             logger.exception(f"Error decomposing task: {e}")

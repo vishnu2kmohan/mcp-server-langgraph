@@ -5,7 +5,7 @@
  * Displays workflow node execution traces.
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render, screen, fireEvent, cleanup } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { axe, toHaveNoViolations } from "jest-axe";
 
@@ -67,6 +67,17 @@ vi.mock("../hooks/useWorkflowExecution", () => ({
   useWorkflowExecution: () => mockUseWorkflowExecution(),
 }));
 
+// Mock timeline context to avoid provider requirement
+vi.mock("../context/DevToolsTimelineProvider", () => ({
+  useTimelineContext: () => ({
+    timeWindow: null,
+    isLiveMode: true,
+    currentTime: Date.now(),
+    events: [],
+    bookmarks: [],
+  }),
+}));
+
 // =============================================================================
 // Tests
 // =============================================================================
@@ -84,6 +95,7 @@ describe("ExecutionTraceTab", () => {
   });
 
   afterEach(() => {
+    cleanup();
     vi.restoreAllMocks();
   });
 

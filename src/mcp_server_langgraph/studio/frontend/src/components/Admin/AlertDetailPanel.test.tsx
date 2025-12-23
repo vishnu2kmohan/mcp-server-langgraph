@@ -13,8 +13,8 @@
  * Reference: ADR-0026 - Comprehensive Client Resilience Patterns
  */
 
-import { describe, it, expect, vi } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { describe, it, expect, vi, afterEach } from "vitest";
+import { render, screen, fireEvent, cleanup } from "@testing-library/react";
 import { Provider } from "react-redux";
 import { configureStore } from "@reduxjs/toolkit";
 import type { ReactNode } from "react";
@@ -137,6 +137,11 @@ const renderWithStore = (ui: ReactNode, store = createTestStore("alert-001")) =>
 // =============================================================================
 
 describe("AlertDetailPanel", () => {
+  afterEach(() => {
+    cleanup();
+    vi.clearAllMocks();
+  });
+
   describe("Alert Metadata", () => {
     it("should render alert name", () => {
       renderWithStore(<AlertDetailPanel {...defaultProps} />);

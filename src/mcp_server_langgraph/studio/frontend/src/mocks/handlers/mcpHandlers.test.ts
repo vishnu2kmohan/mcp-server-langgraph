@@ -19,7 +19,7 @@
  * Following TDD: RED phase - write failing tests first
  */
 
-import { describe, it, expect, afterEach } from "vitest";
+import { describe, it, expect, afterEach, vi } from "vitest";
 import { http as _http, HttpResponse as _HttpResponse } from "msw";
 import { server } from "../server";
 import {
@@ -42,7 +42,10 @@ import {
 
 // Use the global server from ../server (started in test/setup.ts)
 // The global server includes mcpHandlers, so we just need to reset after each test
-afterEach(() => server.resetHandlers());
+afterEach(() => {
+  server.resetHandlers();
+  vi.clearAllMocks();
+});
 
 // =============================================================================
 // Tests

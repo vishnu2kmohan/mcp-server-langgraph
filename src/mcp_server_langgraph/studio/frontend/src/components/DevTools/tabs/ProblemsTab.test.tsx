@@ -11,6 +11,7 @@ import {
   within,
   waitFor,
   fireEvent,
+  cleanup,
 } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { axe, toHaveNoViolations } from "jest-axe";
@@ -49,6 +50,17 @@ const renderWithStore = (
   return render(<Provider store={store}>{ui}</Provider>);
 };
 
+// Mock timeline context to avoid provider requirement
+vi.mock("../context/DevToolsTimelineProvider", () => ({
+  useTimelineContext: () => ({
+    timeWindow: null,
+    isLiveMode: true,
+    currentTime: Date.now(),
+    events: [],
+    bookmarks: [],
+  }),
+}));
+
 // =============================================================================
 // Tests
 // =============================================================================
@@ -59,6 +71,7 @@ describe("ProblemsTab", () => {
   });
 
   afterEach(() => {
+    cleanup();
     vi.restoreAllMocks();
   });
 

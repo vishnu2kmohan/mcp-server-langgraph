@@ -5,8 +5,8 @@
  * Extracted from ChatMessages.tsx for reusability.
  */
 
-import { describe, it, expect } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { describe, it, expect, afterEach, vi } from "vitest";
+import { render, screen, cleanup } from "@testing-library/react";
 import {
   LangGraphNodeVisualization,
   getNodeTypeIcon,
@@ -16,6 +16,10 @@ import {
 import type { LangGraphNode, LangGraphEdge } from "../../types/chat";
 
 describe("LangGraphNodeVisualization", () => {
+  afterEach(() => {
+    cleanup();
+    vi.clearAllMocks();
+  });
   describe("component rendering", () => {
     it("should render the visualization container", () => {
       const nodes: LangGraphNode[] = [

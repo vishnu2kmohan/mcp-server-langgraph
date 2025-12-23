@@ -4,8 +4,8 @@
  * Tests for the Admin dashboard component with system health metrics.
  */
 
-import { describe, it, expect, vi } from "vitest";
-import { render, screen, act } from "@testing-library/react";
+import { describe, it, expect, vi, afterEach } from "vitest";
+import { render, screen, act, cleanup } from "@testing-library/react";
 import { Provider } from "react-redux";
 import { configureStore } from "@reduxjs/toolkit";
 import type { ReactNode } from "react";
@@ -48,6 +48,11 @@ const renderWithStore = (ui: ReactNode, store = createTestStore()) =>
   render(<Provider store={store}>{ui}</Provider>);
 
 describe("AdminDashboard", () => {
+  afterEach(() => {
+    cleanup();
+    vi.clearAllMocks();
+  });
+
   const defaultProps = {
     systemHealth: {
       status: "healthy" as const,

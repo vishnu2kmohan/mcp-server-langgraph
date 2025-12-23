@@ -17,6 +17,7 @@ import {
   fireEvent,
   waitFor,
   within,
+  cleanup,
 } from "@testing-library/react";
 import { MemoryRouter } from "react-router";
 import { WorkflowsTab } from "./WorkflowsTab";
@@ -56,6 +57,7 @@ describe("WorkflowsTab", () => {
   });
 
   afterEach(() => {
+    cleanup();
     vi.restoreAllMocks();
   });
 

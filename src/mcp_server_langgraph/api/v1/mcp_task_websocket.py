@@ -1,10 +1,19 @@
 """
 MCP Task Status WebSocket.
 
+.. deprecated:: 3.0
+    This module is deprecated. Use the new standardized WebSocket infrastructure:
+
+    - Handler: :mod:`mcp_server_langgraph.websocket.handlers.mcp_task`
+    - Base class: :mod:`mcp_server_langgraph.websocket.base.WebSocketBase`
+    - New URL: ``/api/v1/ws/mcp/tasks``
+
+    This module will be removed in v4.0.
+
 Provides real-time task status updates via WebSocket connection.
 
 Endpoints:
-- WS /mcp/tasks/ws - Subscribe to task status updates
+- WS /api/v1/ws/mcp/tasks - Subscribe to task status updates
 
 Message Types (Client → Server):
 - ping: Heartbeat
@@ -21,11 +30,20 @@ Response Types (Server → Client):
 - error: Error message
 
 Example:
-    from mcp_server_langgraph.api.v1.mcp_task_websocket import mcp_task_ws_router
-    app.include_router(mcp_task_ws_router, prefix="/api/v1")
+    from mcp_server_langgraph.websocket.handlers.mcp_task import MCPTaskHandler
 """
 
 from __future__ import annotations
+
+import warnings
+
+warnings.warn(
+    "mcp_server_langgraph.api.v1.mcp_task_websocket is deprecated. "
+    "Use mcp_server_langgraph.websocket.handlers.mcp_task instead. "
+    "This module will be removed in v4.0.",
+    DeprecationWarning,
+    stacklevel=2,
+)
 
 import json
 from typing import Any

@@ -10,8 +10,8 @@
  * - Connection handles (1 target, 2 source for true/false)
  */
 
-import { describe, it, expect } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { describe, it, expect, afterEach, vi } from "vitest";
+import { render, screen, cleanup } from "@testing-library/react";
 import { ReactFlowProvider } from "reactflow";
 import { ConditionNode } from "./ConditionNode";
 import type { NodeProps } from "reactflow";
@@ -23,6 +23,11 @@ const renderNode = (node: JSX.Element) => {
 };
 
 describe("ConditionNode", () => {
+  afterEach(() => {
+    cleanup();
+    vi.clearAllMocks();
+  });
+
   const createNodeProps = (
     data: Partial<WorkflowNodeData> = {},
     selected = false,

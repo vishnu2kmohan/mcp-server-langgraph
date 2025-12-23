@@ -65,16 +65,16 @@ function getOptimalWorkerCount(): number {
     process.env.CI === "true" || process.env.GITHUB_ACTIONS === "true";
   const ciLimit = isCI ? Math.min(4, cpuCount) : Infinity;
 
-  // Take the minimum of all limits, with a floor of 1 and ceiling of 8
-  // Reduced from 16 to 8 to prevent heap OOM (8GB max heap / ~500MB per worker = ~16 max)
-  // Using half that for safety margin since workers share heap with main process
+  // Take the minimum of all limits, with a floor of 1 and ceiling of 2
+  // Reduced from 4 to 2 to prevent heap OOM during test execution
+  // Some test files create many mocks which accumulate and cause OOM
   const optimal = Math.max(
     1,
     Math.min(
       cpuBasedLimit,
       memoryBasedLimit,
       ciLimit,
-      8, // Never use more than 8 workers regardless of resources (OOM prevention)
+      2, // Never use more than 2 workers regardless of resources (OOM prevention)
     ),
   );
 
@@ -137,8 +137,9 @@ export default defineConfig({
 
     // Vitest 4: execArgv is a top-level option that applies to all worker processes
     // Per-worker heap limits to prevent OOM in individual workers
-    // Each worker gets 4GB max heap - some complex test files need more memory
-    execArgv: ["--max-old-space-size=4096"],
+    // Each worker gets 8GB max heap - complex test files with many mocks need more memory
+    // With 2 max workers, max total usage is ~16GB which fits within 32GB system memory
+    execArgv: ["--max-old-space-size=8192"],
 
     // Each test file gets its own environment (better isolation)
     isolate: true,
@@ -150,6 +151,11 @@ export default defineConfig({
 
     // Limit concurrent tests within a single file to reduce memory pressure
     maxConcurrency: 5,
+
+    // Restart workers after running this many tests to prevent memory accumulation
+    // This helps prevent OOM by recycling workers with fresh heap
+    restartWorkers: true,
+    restartWorkersAfter: 2, // Restart after every 2 test files to clear accumulated memory
 
     // Teardown timeout - give workers time to clean up gracefully
     teardownTimeout: 10000, // Increased from 5s to 10s for GC time

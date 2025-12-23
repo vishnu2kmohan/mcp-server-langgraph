@@ -11,7 +11,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { waitFor } from "@testing-library/react";
+import { waitFor, cleanup } from "@testing-library/react";
 import { renderHook, act } from "@testing-library/react";
 import { useHeartDashboard } from "../hooks/useHeartDashboard";
 import { HeartAggregator } from "../analytics";
@@ -36,6 +36,7 @@ describe("HEART Analytics Integration", () => {
   });
 
   afterEach(() => {
+    cleanup();
     vi.unstubAllGlobals();
     vi.clearAllMocks();
   });

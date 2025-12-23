@@ -1,6 +1,15 @@
 """
 Connection Health WebSocket Endpoint
 
+.. deprecated:: 3.0
+    This module is deprecated. Use the new standardized WebSocket infrastructure:
+
+    - Handler: :mod:`mcp_server_langgraph.websocket.handlers.connection_health`
+    - Base class: :mod:`mcp_server_langgraph.websocket.base.WebSocketBase`
+    - New URL: ``/api/v1/ws/connections/health``
+
+    This module will be removed in v4.0.
+
 Real-time connection health monitoring via WebSocket.
 Provides:
 - Initial status of all connections on connect
@@ -13,6 +22,15 @@ MCP Spec: 2025-03-26 compatible
 """
 
 import json
+import warnings
+
+warnings.warn(
+    "mcp_server_langgraph.api.v1.connection_health_ws is deprecated. "
+    "Use mcp_server_langgraph.websocket.handlers.connection_health instead. "
+    "This module will be removed in v4.0.",
+    DeprecationWarning,
+    stacklevel=2,
+)
 import logging
 from datetime import UTC, datetime
 from typing import Any

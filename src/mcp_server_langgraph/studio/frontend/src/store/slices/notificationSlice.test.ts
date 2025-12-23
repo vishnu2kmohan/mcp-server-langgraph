@@ -10,7 +10,7 @@
  * - Unread count selector
  */
 
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, afterEach, vi } from "vitest";
 import { configureStore } from "@reduxjs/toolkit";
 import notificationReducer, {
   addNotification,
@@ -39,6 +39,10 @@ const createTestStore = (initialNotifications: Notification[] = []) => {
 };
 
 describe("notificationSlice", () => {
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
   describe("addNotification", () => {
     it("should add a notification with generated id and timestamp", () => {
       const store = createTestStore();

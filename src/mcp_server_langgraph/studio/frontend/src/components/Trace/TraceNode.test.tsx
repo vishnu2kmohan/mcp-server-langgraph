@@ -9,8 +9,8 @@
  * - Accessibility
  */
 
-import { describe, it, expect } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { describe, it, expect, afterEach, vi } from "vitest";
+import { render, screen, cleanup } from "@testing-library/react";
 import TraceNode from "./TraceNode";
 import { ReactFlowProvider } from "reactflow";
 
@@ -18,6 +18,11 @@ import { ReactFlowProvider } from "reactflow";
 const renderWithReactFlow = (component: React.ReactNode) => {
   return render(<ReactFlowProvider>{component}</ReactFlowProvider>);
 };
+
+afterEach(() => {
+  cleanup();
+  vi.clearAllMocks();
+});
 
 describe("TraceNode", () => {
   const defaultProps = {

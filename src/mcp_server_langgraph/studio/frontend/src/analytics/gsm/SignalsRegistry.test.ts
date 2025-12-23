@@ -6,7 +6,7 @@
  * Tests the signals registry for tracking HEART metric signals.
  */
 
-import { describe, it, expect, beforeEach } from "vitest";
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import {
   getSignalById,
   getSignalsForGoal,
@@ -19,6 +19,10 @@ import {
 describe("SignalsRegistry", () => {
   beforeEach(() => {
     clearSignals();
+  });
+
+  afterEach(() => {
+    vi.clearAllMocks();
   });
 
   describe("SIGNALS", () => {

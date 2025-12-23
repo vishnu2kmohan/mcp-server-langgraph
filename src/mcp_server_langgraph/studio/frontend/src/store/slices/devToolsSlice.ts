@@ -27,7 +27,12 @@ export type DevToolsTabId =
   | "network"
   | "state"
   | "problems"
-  | "ai-insights";
+  | "ai-insights"
+  // OTEL Observability tabs
+  | "traces"
+  | "metrics"
+  | "alerts"
+  | "logs";
 
 export type DevToolsContext = "session" | "workflow" | "global";
 
@@ -67,9 +72,9 @@ const DEFAULT_HEIGHT = 250;
 
 /** Tabs available in each context */
 const TABS_BY_CONTEXT: Record<DevToolsContext, DevToolsTabId[]> = {
-  global: ["console", "network", "state", "problems"],
-  session: ["console", "agent-trace", "network", "state", "problems"],
-  workflow: ["console", "execution-trace", "network", "state", "problems"],
+  global: ["console", "network", "state", "problems", "traces", "metrics", "alerts", "logs"],
+  session: ["console", "agent-trace", "network", "state", "problems", "traces", "metrics", "alerts", "logs"],
+  workflow: ["console", "execution-trace", "network", "state", "problems", "traces", "metrics", "alerts", "logs"],
 };
 
 // =============================================================================

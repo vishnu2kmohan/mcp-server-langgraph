@@ -400,10 +400,7 @@ class MarketplaceClient:
             data = response.json()
 
             # Support both array response and {skills: [...]} wrapper
-            if isinstance(data, list):
-                skills = data
-            else:
-                skills = data.get("skills", [])
+            skills = data if isinstance(data, list) else data.get("skills", [])
 
             # Ensure each skill has type marker
             for skill in skills:
@@ -545,7 +542,7 @@ class MarketplaceClient:
             if config_response.status_code != 200:
                 return {"name": skill_name}
 
-            config = config_response.json()
+            config: dict[str, Any] = config_response.json()
             config["name"] = skill_name
             return config
 
@@ -578,7 +575,7 @@ class MarketplaceClient:
             if response.status_code != 200:
                 return None
 
-            skill = response.json()
+            skill: dict[str, Any] = response.json()
 
             # Ensure name is set
             if "name" not in skill:

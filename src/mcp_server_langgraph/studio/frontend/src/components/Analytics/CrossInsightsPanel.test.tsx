@@ -15,8 +15,8 @@
  * - Admin-only visibility
  */
 
-import { describe, it, expect, vi } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { describe, it, expect, vi, afterEach } from "vitest";
+import { render, screen, fireEvent, cleanup } from "@testing-library/react";
 import { Provider } from "react-redux";
 import { configureStore } from "@reduxjs/toolkit";
 import { CrossInsightsPanel } from "./CrossInsightsPanel";
@@ -45,6 +45,11 @@ const renderWithProviders = (component: React.ReactNode) => {
 };
 
 describe("CrossInsightsPanel", () => {
+  afterEach(() => {
+    cleanup();
+    vi.clearAllMocks();
+  });
+
   const mockPersonaResult: PersonaAnalysisResult = {
     assigned_persona: "bob",
     detected_persona: "alice-builder",

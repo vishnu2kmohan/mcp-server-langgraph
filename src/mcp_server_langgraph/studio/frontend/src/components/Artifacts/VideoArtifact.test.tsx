@@ -4,11 +4,16 @@
  * TDD tests for video artifact rendering component.
  */
 
-import { describe, it, expect } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { describe, it, expect, vi, afterEach } from "vitest";
+import { render, screen, cleanup } from "@testing-library/react";
 import { VideoArtifact } from "./VideoArtifact";
 
 describe("VideoArtifact", () => {
+  afterEach(() => {
+    cleanup();
+    vi.clearAllMocks();
+  });
+
   const testVideoUrl = "https://example.com/video.mp4";
   const testBase64Video = "data:video/mp4;base64,SGVsbG8gV29ybGQ=";
 

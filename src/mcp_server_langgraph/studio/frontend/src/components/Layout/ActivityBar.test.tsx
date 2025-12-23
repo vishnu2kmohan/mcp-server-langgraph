@@ -5,8 +5,8 @@
  * Provides quick navigation between sidebar views.
  */
 
-import { describe, it, expect, vi } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { describe, it, expect, vi, afterEach } from "vitest";
+import { render, screen, fireEvent, cleanup } from "@testing-library/react";
 import { ActivityBar, ActivityBarItem, type ActivityItem } from "./ActivityBar";
 import { MessageSquare, Settings, FileText, Activity } from "lucide-react";
 
@@ -29,6 +29,11 @@ const mockItems: ActivityItem[] = [
     label: "Settings",
   },
 ];
+
+afterEach(() => {
+  cleanup();
+  vi.clearAllMocks();
+});
 
 describe("ActivityBar", () => {
   describe("rendering", () => {

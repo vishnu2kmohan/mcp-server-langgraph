@@ -9,7 +9,7 @@
  * - GET /api/v1/ai/suggestions - AI suggestions for artifact
  * - POST /api/v1/ai/fetch-url - Fetch and extract content from URL
  */
-import { describe, it, expect, beforeAll, afterAll, afterEach } from "vitest";
+import { describe, it, expect, beforeAll, afterAll, afterEach, vi } from "vitest";
 import { setupServer } from "msw/node";
 import { aiHandlers } from "../mocks/handlers/aiHandlers";
 import type { AIInterpretation, Suggestion } from "../ai";
@@ -18,7 +18,10 @@ import type { AIInterpretation, Suggestion } from "../ai";
 const server = setupServer(...aiHandlers);
 
 beforeAll(() => server.listen({ onUnhandledRequest: "error" }));
-afterEach(() => server.resetHandlers());
+afterEach(() => {
+  server.resetHandlers();
+  vi.clearAllMocks();
+});
 afterAll(() => server.close());
 
 describe("AI API Contract", () => {

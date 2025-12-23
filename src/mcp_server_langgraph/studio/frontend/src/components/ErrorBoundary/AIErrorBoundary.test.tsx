@@ -13,7 +13,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render, screen, fireEvent, cleanup } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { Provider } from "react-redux";
 import { configureStore } from "@reduxjs/toolkit";
@@ -61,7 +61,9 @@ describe("AIErrorBoundary", () => {
     console.error = vi.fn();
   });
   afterEach(() => {
+    cleanup();
     console.error = originalError;
+    vi.clearAllMocks();
   });
 
   describe("normal rendering", () => {

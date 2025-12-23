@@ -4,9 +4,14 @@
  * Tests for the Card primitive component and its subcomponents.
  */
 
-import { describe, it, expect, vi } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { describe, it, expect, vi, afterEach } from "vitest";
+import { render, screen, fireEvent, cleanup } from "@testing-library/react";
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "./Card";
+
+afterEach(() => {
+  cleanup();
+  vi.clearAllMocks();
+});
 
 describe("Card", () => {
   describe("rendering", () => {

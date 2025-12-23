@@ -4,9 +4,14 @@
  * TDD tests for the Skeleton loading placeholder component.
  */
 
-import { describe, it, expect } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { describe, it, expect, afterEach, vi } from "vitest";
+import { render, screen, cleanup } from "@testing-library/react";
 import { Skeleton, SkeletonCard, SkeletonText, SkeletonList } from "./Skeleton";
+
+afterEach(() => {
+  cleanup();
+  vi.clearAllMocks();
+});
 
 describe("Skeleton", () => {
   describe("Base Skeleton", () => {

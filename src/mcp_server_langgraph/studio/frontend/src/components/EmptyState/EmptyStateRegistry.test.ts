@@ -4,7 +4,7 @@
  * Tests the persona-specific empty state configuration registry
  */
 
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, afterEach, vi } from "vitest";
 import {
   getEmptyStateConfig,
   getSupportedContexts,
@@ -15,6 +15,10 @@ import {
 import type { EmptyStateContext } from "./EmptyState";
 
 describe("EmptyStateRegistry", () => {
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
   describe("getEmptyStateConfig", () => {
     it("returns default config when persona is not specified", () => {
       const config = getEmptyStateConfig("sessions");

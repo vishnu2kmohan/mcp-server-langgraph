@@ -24,6 +24,7 @@ describe("SessionTelemetry", () => {
 
   afterEach(() => {
     consoleSpy.mockRestore();
+    vi.clearAllMocks();
   });
 
   describe("Session Creation Tracking", () => {

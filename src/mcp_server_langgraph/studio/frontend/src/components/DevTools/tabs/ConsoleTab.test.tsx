@@ -5,7 +5,7 @@
  * Tests log display, filtering, expanding entries, and accessibility.
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { render, screen, within } from "@testing-library/react";
+import { render, screen, within, cleanup } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { axe, toHaveNoViolations } from "jest-axe";
 
@@ -77,6 +77,17 @@ vi.mock("../hooks/useConsoleEntries", () => ({
   useConsoleEntries: () => mockReturnValue,
 }));
 
+// Mock timeline context to avoid provider requirement
+vi.mock("../context/DevToolsTimelineProvider", () => ({
+  useTimelineContext: () => ({
+    timeWindow: null,
+    isLiveMode: true,
+    currentTime: Date.now(),
+    events: [],
+    bookmarks: [],
+  }),
+}));
+
 // =============================================================================
 // Tests
 // =============================================================================
@@ -95,6 +106,7 @@ describe("ConsoleTab", () => {
   });
 
   afterEach(() => {
+    cleanup();
     vi.restoreAllMocks();
   });
 

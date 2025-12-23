@@ -14,8 +14,8 @@
  * Reference: Plan - Confidence-Based Human-in-the-Loop (HITL) for Multi-Agent Orchestrator
  */
 
-import { describe, it, expect, vi } from "vitest";
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { describe, it, expect, vi, afterEach } from "vitest";
+import { render, screen, fireEvent, waitFor, cleanup } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
 import {
@@ -117,6 +117,11 @@ const defaultConfirmationProps: ClarificationDialogProps = {
 // =============================================================================
 
 describe("ClarificationDialog", () => {
+  afterEach(() => {
+    cleanup();
+    vi.clearAllMocks();
+  });
+
   describe("Basic Rendering", () => {
     it("should render when isOpen is true", () => {
       render(<ClarificationDialog {...defaultTextProps} />);

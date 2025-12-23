@@ -6,7 +6,7 @@
  * Tests the metrics calculator that computes HEART metrics from signals.
  */
 
-import { describe, it, expect, beforeEach } from "vitest";
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import {
   calculateMetric,
   calculateGoalProgress,
@@ -18,6 +18,10 @@ import { recordSignal, clearSignals } from "./SignalsRegistry";
 describe("MetricsCalculator", () => {
   beforeEach(() => {
     clearSignals();
+  });
+
+  afterEach(() => {
+    vi.clearAllMocks();
   });
 
   describe("calculateMetric", () => {

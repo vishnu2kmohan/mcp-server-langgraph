@@ -9,8 +9,8 @@
  * - Handle configuration (only target, no source)
  */
 
-import { describe, it, expect } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { describe, it, expect, afterEach, vi } from "vitest";
+import { render, screen, cleanup } from "@testing-library/react";
 import { ReactFlowProvider } from "reactflow";
 import { EndNode } from "./EndNode";
 import type { NodeProps } from "reactflow";
@@ -45,6 +45,11 @@ const renderWithProvider = (
 };
 
 describe("EndNode", () => {
+  afterEach(() => {
+    cleanup();
+    vi.clearAllMocks();
+  });
+
   describe("Rendering", () => {
     it("should render the node label", () => {
       renderWithProvider({

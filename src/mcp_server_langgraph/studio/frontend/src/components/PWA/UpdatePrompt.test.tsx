@@ -5,8 +5,8 @@
  * when a new service worker version is available.
  */
 
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { render, screen, fireEvent, cleanup } from "@testing-library/react";
 import { UpdatePrompt } from "./UpdatePrompt";
 
 describe("UpdatePrompt", () => {
@@ -18,6 +18,11 @@ describe("UpdatePrompt", () => {
   };
 
   beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  afterEach(() => {
+    cleanup();
     vi.clearAllMocks();
   });
 

@@ -3,7 +3,7 @@
  *
  * TDD tests for runtime validation of loader data.
  */
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, afterEach, vi } from "vitest";
 import {
   validateSession,
   validateMessage,
@@ -13,6 +13,9 @@ import {
 } from "./validation";
 
 describe("Loader Validation", () => {
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
   describe("validateSession", () => {
     it("should validate a valid session", () => {
       const session = {

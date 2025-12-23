@@ -9,8 +9,8 @@
  * - TimeRangeSelector: Time period picker
  */
 
-import { describe, it, expect, vi } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { describe, it, expect, vi, afterEach } from "vitest";
+import { render, screen, fireEvent, cleanup } from "@testing-library/react";
 import React from "react";
 
 import {
@@ -24,6 +24,10 @@ import {
 // =============================================================================
 
 describe("DimensionCard", () => {
+  afterEach(() => {
+    cleanup();
+    vi.clearAllMocks();
+  });
   it("renders dimension with label and icon", () => {
     render(<DimensionCard dimension="happiness" score={85} hasData />);
 
@@ -84,6 +88,10 @@ describe("DimensionCard", () => {
 // =============================================================================
 
 describe("OverallHealthScore", () => {
+  afterEach(() => {
+    cleanup();
+    vi.clearAllMocks();
+  });
   it("renders overall health score", () => {
     render(<OverallHealthScore score={78} />);
 
@@ -139,6 +147,10 @@ describe("OverallHealthScore", () => {
 // =============================================================================
 
 describe("TimeRangeSelector", () => {
+  afterEach(() => {
+    cleanup();
+    vi.clearAllMocks();
+  });
   it("renders with initial value", () => {
     render(<TimeRangeSelector value="30d" onChange={vi.fn()} />);
 

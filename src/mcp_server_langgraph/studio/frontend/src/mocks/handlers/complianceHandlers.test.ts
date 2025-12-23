@@ -4,7 +4,7 @@
  * TDD tests for compliance API MSW handlers.
  * Validates that handlers return proper data structures.
  */
-import { describe, it, expect, beforeAll, afterAll, afterEach } from "vitest";
+import { describe, it, expect, beforeAll, afterAll, afterEach, vi } from "vitest";
 import { setupServer } from "msw/node";
 import {
   complianceHandlers,
@@ -15,7 +15,10 @@ const server = setupServer(...complianceHandlers);
 
 describe("complianceHandlers", () => {
   beforeAll(() => server.listen({ onUnhandledRequest: "bypass" }));
-  afterEach(() => server.resetHandlers());
+  afterEach(() => {
+    server.resetHandlers();
+    vi.clearAllMocks();
+  });
   afterAll(() => server.close());
 
   describe("GET /api/v1/compliance/reports/summary", () => {

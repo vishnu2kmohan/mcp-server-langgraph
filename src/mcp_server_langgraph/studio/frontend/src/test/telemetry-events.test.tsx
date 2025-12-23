@@ -15,6 +15,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { cleanup } from "@testing-library/react";
 
 // Mock fetch for telemetry endpoints
 const mockFetch = vi.fn();
@@ -31,6 +32,7 @@ describe("AI Suggestion Telemetry", () => {
   });
 
   afterEach(() => {
+    cleanup();
     vi.restoreAllMocks();
   });
 
@@ -555,6 +557,7 @@ describe("HEART Metrics Integration", () => {
   });
 
   afterEach(() => {
+    cleanup();
     vi.restoreAllMocks();
   });
 

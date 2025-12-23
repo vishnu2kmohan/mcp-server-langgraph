@@ -9,9 +9,14 @@
  * - Dismissal behavior
  */
 
-import { describe, it, expect, vi } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { describe, it, expect, vi, afterEach } from "vitest";
+import { render, screen, fireEvent, cleanup } from "@testing-library/react";
 import { UpgradePrompt } from "./UpgradePrompt";
+
+afterEach(() => {
+  cleanup();
+  vi.clearAllMocks();
+});
 
 describe("UpgradePrompt", () => {
   describe("Visibility", () => {

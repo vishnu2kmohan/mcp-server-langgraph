@@ -9,8 +9,8 @@
  * - Search and filtering
  */
 
-import { describe, it, expect } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { describe, it, expect, vi, afterEach } from "vitest";
+import { render, screen, fireEvent, cleanup } from "@testing-library/react";
 import { TraceViewer } from "./TraceViewer";
 import type { Trace, Span } from "./types";
 
@@ -57,6 +57,11 @@ const mockTrace: Trace = {
 };
 
 describe("TraceViewer", () => {
+  afterEach(() => {
+    cleanup();
+    vi.clearAllMocks();
+  });
+
   describe("Basic Rendering", () => {
     it("should render trace ID", () => {
       render(<TraceViewer trace={mockTrace} />);

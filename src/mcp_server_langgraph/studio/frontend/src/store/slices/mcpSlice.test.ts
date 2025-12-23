@@ -73,6 +73,7 @@ describe("mcpSlice", () => {
 
   afterEach(() => {
     vi.unstubAllGlobals();
+    vi.clearAllMocks();
   });
 
   describe("Initial State", () => {

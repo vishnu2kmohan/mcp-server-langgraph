@@ -4,8 +4,8 @@
  * Tests for the ChartArtifact component that renders interactive charts.
  */
 
-import { describe, it, expect, vi } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { describe, it, expect, vi, afterEach } from "vitest";
+import { render, screen, fireEvent, cleanup } from "@testing-library/react";
 import { ChartArtifact, ChartArtifactProps } from "./ChartArtifact";
 
 const barChartData: ChartArtifactProps = {
@@ -41,6 +41,11 @@ const pieChartData: ChartArtifactProps = {
 };
 
 describe("ChartArtifact", () => {
+  afterEach(() => {
+    cleanup();
+    vi.clearAllMocks();
+  });
+
   describe("Rendering", () => {
     it("should render chart title", () => {
       render(<ChartArtifact {...barChartData} />);

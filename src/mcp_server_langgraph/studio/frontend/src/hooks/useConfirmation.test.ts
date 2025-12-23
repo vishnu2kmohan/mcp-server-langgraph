@@ -4,7 +4,7 @@
  * Tests for the confirmation dialog management hook.
  */
 
-import { describe, it, expect, afterEach } from "vitest";
+import { describe, it, expect, afterEach, vi } from "vitest";
 import { renderHook, act, cleanup } from "@testing-library/react";
 
 import { useConfirmation } from "./useConfirmation";
@@ -17,6 +17,7 @@ import type { ConfirmationConfig } from "./useConfirmation";
 describe("useConfirmation", () => {
   afterEach(() => {
     cleanup();
+    vi.clearAllMocks();
   });
 
   describe("Initial State", () => {

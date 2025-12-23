@@ -8,7 +8,7 @@
  * - Provides nested route outlet
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { render, screen, waitFor, act } from "@testing-library/react";
+import { render, screen, waitFor, act, cleanup } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { Provider } from "react-redux";
 import { configureStore } from "@reduxjs/toolkit";
@@ -155,6 +155,7 @@ describe("ConnectedCanvasPanel", () => {
 
   // Global afterEach to flush pending promises and prevent test bleed
   afterEach(async () => {
+    cleanup();
     await act(async () => {
       await flushPromises();
     });
@@ -735,6 +736,7 @@ describe("ConnectedCanvasPanel", () => {
     });
 
     afterEach(() => {
+      cleanup();
       vi.restoreAllMocks();
     });
 
@@ -966,6 +968,7 @@ describe("ConnectedCanvasPanel", () => {
     });
 
     afterEach(() => {
+      cleanup();
       vi.restoreAllMocks();
     });
 

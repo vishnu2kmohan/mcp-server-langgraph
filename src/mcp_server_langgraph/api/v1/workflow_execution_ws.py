@@ -1,6 +1,15 @@
 """
 Workflow Execution WebSocket Endpoint
 
+.. deprecated:: 3.0
+    This module is deprecated. Use the new standardized WebSocket infrastructure:
+
+    - Handler: :mod:`mcp_server_langgraph.websocket.handlers.workflow`
+    - Base class: :mod:`mcp_server_langgraph.websocket.base.WebSocketBase`
+    - New URL: ``/api/v1/ws/workflows``
+
+    This module will be removed in v4.0.
+
 Real-time workflow execution via WebSocket.
 Provides:
 - Start/stop execution commands
@@ -12,6 +21,15 @@ Contract: docs-internal/frontend/WORKFLOW_WEBSOCKET_CONTRACT.md
 """
 
 import json
+import warnings
+
+warnings.warn(
+    "mcp_server_langgraph.api.v1.workflow_execution_ws is deprecated. "
+    "Use mcp_server_langgraph.websocket.handlers.workflow instead. "
+    "This module will be removed in v4.0.",
+    DeprecationWarning,
+    stacklevel=2,
+)
 import logging
 from datetime import UTC, datetime
 from typing import Any

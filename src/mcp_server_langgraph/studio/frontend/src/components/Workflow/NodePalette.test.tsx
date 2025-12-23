@@ -4,8 +4,8 @@
  * Tests for the node palette sidebar component with drag-and-drop functionality.
  */
 
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { render, screen, fireEvent, cleanup } from "@testing-library/react";
 import { NodePalette } from "./NodePalette";
 
 describe("NodePalette", () => {
@@ -14,6 +14,11 @@ describe("NodePalette", () => {
   };
 
   beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  afterEach(() => {
+    cleanup();
     vi.clearAllMocks();
   });
 

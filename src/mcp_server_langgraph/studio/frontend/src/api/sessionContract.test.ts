@@ -7,7 +7,7 @@
  * Uses raw fetch() to validate API contract without RTK Query transformation.
  */
 
-import { describe, it, expect, beforeEach, afterEach } from "vitest";
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { http, HttpResponse } from "msw";
 import { server } from "../mocks/server";
 
@@ -279,6 +279,7 @@ beforeEach(() => {
 
 afterEach(() => {
   server.resetHandlers();
+  vi.clearAllMocks();
 });
 
 // =============================================================================

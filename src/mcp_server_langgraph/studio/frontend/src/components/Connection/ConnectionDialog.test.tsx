@@ -11,8 +11,8 @@
  * - Create and update operations
  */
 
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { render, screen, fireEvent, waitFor, cleanup } from "@testing-library/react";
 import { ConnectionDialog } from "./ConnectionDialog";
 import type { MCPConnection } from "../../types/connection";
 
@@ -65,6 +65,11 @@ describe("ConnectionDialog", () => {
   };
 
   beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  afterEach(() => {
+    cleanup();
     vi.clearAllMocks();
   });
 

@@ -7,8 +7,8 @@
  * TDD RED Phase: Write failing tests first.
  */
 
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { render, screen, fireEvent, waitFor, cleanup } from "@testing-library/react";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { ArtifactExporter } from "./ArtifactExporter";
 
 // Mock the download functionality
@@ -19,6 +19,11 @@ beforeEach(() => {
   vi.clearAllMocks();
   global.URL.createObjectURL = mockCreateObjectURL;
   global.URL.revokeObjectURL = mockRevokeObjectURL;
+});
+
+afterEach(() => {
+  cleanup();
+  vi.clearAllMocks();
 });
 
 describe("ArtifactExporter", () => {

@@ -4,8 +4,8 @@
  * Tests for MDX content rendering with interactive components.
  */
 
-import { describe, it, expect } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { describe, it, expect, vi, afterEach } from "vitest";
+import { render, screen, fireEvent, cleanup } from "@testing-library/react";
 import {
   MDXArtifact,
   Accordion,
@@ -23,6 +23,11 @@ import {
 } from "./MDXArtifact";
 
 describe("MDXArtifact", () => {
+  afterEach(() => {
+    cleanup();
+    vi.clearAllMocks();
+  });
+
   describe("Main Component", () => {
     it("should render MDX content", () => {
       render(<MDXArtifact data="# Hello World" />);

@@ -9,8 +9,8 @@
  * - Connection handles (target and source)
  */
 
-import { describe, it, expect } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { describe, it, expect, afterEach, vi } from "vitest";
+import { render, screen, cleanup } from "@testing-library/react";
 import { ReactFlowProvider } from "reactflow";
 import { ToolNode } from "./ToolNode";
 import type { NodeProps } from "reactflow";
@@ -22,6 +22,11 @@ const renderNode = (node: JSX.Element) => {
 };
 
 describe("ToolNode", () => {
+  afterEach(() => {
+    cleanup();
+    vi.clearAllMocks();
+  });
+
   const createNodeProps = (
     data: Partial<WorkflowNodeData> = {},
     selected = false,

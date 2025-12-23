@@ -5,8 +5,8 @@
  * session IDs to query parameter-based session IDs.
  */
 
-import { describe, it, expect } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { describe, it, expect, afterEach, vi } from "vitest";
+import { render, screen, cleanup } from "@testing-library/react";
 import { MemoryRouter, Routes, Route } from "react-router";
 
 import { ChatSessionRedirect } from "./ChatSessionRedirect";
@@ -16,6 +16,11 @@ import { ChatSessionRedirect } from "./ChatSessionRedirect";
 // =============================================================================
 
 describe("ChatSessionRedirect", () => {
+  afterEach(() => {
+    cleanup();
+    vi.clearAllMocks();
+  });
+
   describe("With sessionId param", () => {
     it("should redirect to chat page with session query param", () => {
       // Render component in a route that captures the sessionId

@@ -7,8 +7,8 @@
  * TDD RED Phase: Write failing tests first.
  */
 
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { render, screen, fireEvent, waitFor, cleanup } from "@testing-library/react";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { MessageActions, type MessageActionsProps } from "./MessageActions";
 
 // Mock clipboard API
@@ -28,6 +28,11 @@ describe("MessageActions", () => {
   };
 
   beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  afterEach(() => {
+    cleanup();
     vi.clearAllMocks();
   });
 

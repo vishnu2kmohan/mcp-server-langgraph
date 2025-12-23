@@ -5,7 +5,7 @@
  * Displays Redux/session/workflow state inspection.
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { render, screen, within, fireEvent } from "@testing-library/react";
+import { render, screen, within, fireEvent, cleanup } from "@testing-library/react";
 import { axe, toHaveNoViolations } from "jest-axe";
 import { Provider } from "react-redux";
 import { configureStore } from "@reduxjs/toolkit";
@@ -48,6 +48,17 @@ const renderWithStore = (ui: React.ReactNode) => {
   return render(<Provider store={store}>{ui}</Provider>);
 };
 
+// Mock timeline context to avoid provider requirement
+vi.mock("../context/DevToolsTimelineProvider", () => ({
+  useTimelineContext: () => ({
+    timeWindow: null,
+    isLiveMode: true,
+    currentTime: Date.now(),
+    events: [],
+    bookmarks: [],
+  }),
+}));
+
 // =============================================================================
 // Tests
 // =============================================================================
@@ -58,6 +69,7 @@ describe("StateTab", () => {
   });
 
   afterEach(() => {
+    cleanup();
     vi.restoreAllMocks();
   });
 

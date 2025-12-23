@@ -7,7 +7,7 @@
 
 import React from "react";
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { renderHook, act } from "@testing-library/react";
+import { renderHook, act, cleanup } from "@testing-library/react";
 import { Provider } from "react-redux";
 import { configureStore } from "@reduxjs/toolkit";
 import { useTheme } from "./useTheme";
@@ -58,7 +58,9 @@ describe("useTheme", () => {
   });
 
   afterEach(() => {
+    cleanup();
     document.documentElement.classList.remove("dark", "light");
+    vi.clearAllMocks();
   });
 
   describe("dark theme", () => {

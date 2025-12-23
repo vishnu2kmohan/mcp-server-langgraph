@@ -3,7 +3,7 @@
  *
  * Phase 7: Integration - State Management
  */
-import { describe, it, expect, beforeEach } from "vitest";
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import complianceReducer, {
   setComplianceLoading,
   setFrameworkStatus,
@@ -71,6 +71,10 @@ describe("complianceSlice", () => {
       isLoading: false,
       lastRefresh: null,
     };
+  });
+
+  afterEach(() => {
+    vi.clearAllMocks();
   });
 
   describe("setComplianceLoading", () => {

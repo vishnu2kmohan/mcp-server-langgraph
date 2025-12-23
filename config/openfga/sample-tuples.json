@@ -342,6 +342,120 @@
       "user": "user:admin",
       "relation": "admin",
       "object": "identity:keycloak"
+    },
+    {
+      "_comment": "=== WebSocket Authorization Tuples (ADR-0068) ===",
+      "_section": "WebSocket endpoints require specific authorization via OpenFGA ReBAC"
+    },
+    {
+      "_comment": "Alert WebSocket (/api/v1/ws/alerts) - admin only for infrastructure alerts",
+      "user": "user:admin",
+      "relation": "admin",
+      "object": "dashboard:alerts"
+    },
+    {
+      "_comment": "Audit WebSocket (/api/v1/ws/audit) - admin has full access",
+      "user": "user:admin",
+      "relation": "admin",
+      "object": "logs:audit"
+    },
+    {
+      "_comment": "Audit WebSocket - alice has viewer access for compliance monitoring",
+      "user": "user:alice",
+      "relation": "viewer",
+      "object": "logs:audit"
+    },
+    {
+      "_comment": "Notification WebSocket (/api/v1/ws/notifications) - all authenticated users",
+      "user": "user:admin",
+      "relation": "viewer",
+      "object": "chat:notifications"
+    },
+    {
+      "user": "user:alice",
+      "relation": "viewer",
+      "object": "chat:notifications"
+    },
+    {
+      "user": "user:bob",
+      "relation": "viewer",
+      "object": "chat:notifications"
+    },
+    {
+      "_comment": "HITL Agent Request WebSocket (/api/v1/ws/agents/requests) - editors can receive approval requests",
+      "user": "user:admin",
+      "relation": "editor",
+      "object": "workflow:hitl"
+    },
+    {
+      "_comment": "HITL WebSocket - alice as editor can receive and respond to approval requests",
+      "user": "user:alice",
+      "relation": "editor",
+      "object": "workflow:hitl"
+    },
+    {
+      "_comment": "MCP WebSocket (/api/v1/ws/mcp/auth) - authenticated users with mcp:user relation",
+      "user": "user:admin",
+      "relation": "user",
+      "object": "mcp:websocket"
+    },
+    {
+      "user": "user:alice",
+      "relation": "user",
+      "object": "mcp:websocket"
+    },
+    {
+      "user": "user:bob",
+      "relation": "user",
+      "object": "mcp:websocket"
+    },
+    {
+      "_comment": "Connection Health WebSocket (/api/v1/ws/connections/health) - viewers can monitor",
+      "user": "user:admin",
+      "relation": "viewer",
+      "object": "mcp_connection:health"
+    },
+    {
+      "user": "user:alice",
+      "relation": "viewer",
+      "object": "mcp_connection:health"
+    },
+    {
+      "user": "user:bob",
+      "relation": "viewer",
+      "object": "mcp_connection:health"
+    },
+    {
+      "_comment": "HEART Metrics WebSocket (/api/v1/ws/metrics/heart) - viewers can access metrics",
+      "user": "user:admin",
+      "relation": "viewer",
+      "object": "observability:heart"
+    },
+    {
+      "user": "user:alice",
+      "relation": "viewer",
+      "object": "observability:heart"
+    },
+    {
+      "user": "user:bob",
+      "relation": "viewer",
+      "object": "observability:heart"
+    },
+    {
+      "_comment": "Cost Tracking WebSocket (/api/v1/ws/usage/cost) - viewers can monitor usage",
+      "user": "user:admin",
+      "relation": "viewer",
+      "object": "cost:usage"
+    },
+    {
+      "user": "user:alice",
+      "relation": "viewer",
+      "object": "cost:usage"
+    },
+    {
+      "user": "user:bob",
+      "relation": "viewer",
+      "object": "cost:usage"
     }
   ]
 }

@@ -8,7 +8,7 @@
  * - Accessibility
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render, screen, fireEvent, cleanup } from "@testing-library/react";
 import { axe, toHaveNoViolations } from "jest-axe";
 import { ErrorBoundary, type ErrorInfo } from "./ErrorBoundary";
 
@@ -31,6 +31,7 @@ describe("ErrorBoundary", () => {
   });
 
   afterEach(() => {
+    cleanup();
     console.error = originalConsoleError;
     vi.clearAllMocks();
   });

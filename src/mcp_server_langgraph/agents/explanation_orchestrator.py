@@ -230,6 +230,8 @@ class ExplanationOrchestrator(BaseOrchestrator[ExplanationTask, ExplanationResul
         context = task.context
         prompt = self._build_uncertainty_prompt(context)
 
+        if self._llm_factory is None:
+            raise RuntimeError("LLM factory not initialized")
         response = await self._llm_factory.ainvoke([{"role": "user", "content": prompt}])
 
         # Extract content from response
@@ -249,6 +251,8 @@ class ExplanationOrchestrator(BaseOrchestrator[ExplanationTask, ExplanationResul
         context = task.context
         prompt = self._build_risk_prompt(context)
 
+        if self._llm_factory is None:
+            raise RuntimeError("LLM factory not initialized")
         response = await self._llm_factory.ainvoke([{"role": "user", "content": prompt}])
 
         content = self._extract_content(response)
@@ -267,6 +271,8 @@ class ExplanationOrchestrator(BaseOrchestrator[ExplanationTask, ExplanationResul
         context = task.context
         prompt = self._build_alternatives_prompt(context)
 
+        if self._llm_factory is None:
+            raise RuntimeError("LLM factory not initialized")
         response = await self._llm_factory.ainvoke([{"role": "user", "content": prompt}])
 
         content = self._extract_content(response)
@@ -418,9 +424,9 @@ Respond with just the alternatives, one per line."""
             Extracted content string
         """
         if hasattr(response, "content"):
-            return response.content
+            return str(response.content)
         if isinstance(response, dict) and "content" in response:
-            return response["content"]
+            return str(response["content"])
         if isinstance(response, str):
             return response
         return str(response)
@@ -764,7 +770,6 @@ class CachedExplanationOrchestrator(ExplanationOrchestrator):
                     # Cache hit
                     explanation = AIExplanation.model_validate_json(cached_value)
                     explanation.cached = True
-                    cached = True
 
                     duration_ms = (time.monotonic() - start_time) * 1000
                     record_explanation_generation(

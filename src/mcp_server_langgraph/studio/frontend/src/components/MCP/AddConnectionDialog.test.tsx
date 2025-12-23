@@ -11,9 +11,9 @@
  * - Submit behavior
  */
 
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 // biome-ignore lint/correctness/noUnusedImports: waitFor is used in async form submission tests
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen, waitFor, cleanup } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { AddConnectionDialog } from "./AddConnectionDialog";
 
@@ -29,6 +29,11 @@ describe("AddConnectionDialog", () => {
   };
 
   beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  afterEach(() => {
+    cleanup();
     vi.clearAllMocks();
   });
 

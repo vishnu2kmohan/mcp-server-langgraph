@@ -7,8 +7,8 @@
  * Uses MSW for realistic API mocking at the network level.
  */
 
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { render, screen, fireEvent, waitFor, cleanup } from "@testing-library/react";
 import { http, HttpResponse, delay } from "msw";
 import { server } from "../../mocks/server";
 import { ConnectionBulkActions } from "./ConnectionBulkActions";
@@ -31,6 +31,11 @@ describe("ConnectionBulkActions", () => {
         return HttpResponse.json({ results: [], not_found: [] });
       }),
     );
+  });
+
+  afterEach(() => {
+    cleanup();
+    vi.clearAllMocks();
   });
 
   describe("Component Visibility", () => {

@@ -11,7 +11,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render, screen, fireEvent, cleanup } from "@testing-library/react";
 import { TraceCanvas } from "./TraceCanvas";
 import { Provider } from "react-redux";
 import { configureStore } from "@reduxjs/toolkit";
@@ -75,6 +75,7 @@ describe("TraceCanvas", () => {
   });
 
   afterEach(() => {
+    cleanup();
     vi.clearAllMocks();
   });
 

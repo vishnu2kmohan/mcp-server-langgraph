@@ -7,7 +7,7 @@
  * Reference: ADR-0026 - Comprehensive Client Resilience Patterns
  */
 
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, afterEach, vi } from "vitest";
 import alertReducer, {
   Alert,
   AlertSeverity,
@@ -114,6 +114,10 @@ function createState(alerts: Alert[]) {
 // =============================================================================
 
 describe("Alert Grouping Selector Performance", () => {
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
   describe("selectAlertGroups", () => {
     it("should handle 100 alerts in under 10ms", () => {
       const alerts = generateAlerts(100);

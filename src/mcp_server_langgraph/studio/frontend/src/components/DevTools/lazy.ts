@@ -62,6 +62,38 @@ export const LazyAIInsightsTab = lazy(() =>
 );
 
 // =============================================================================
+// OTEL Observability Tabs
+// =============================================================================
+
+/**
+ * Traces tab - OTEL distributed traces with waterfall view
+ */
+export const LazyTracesTab = lazy(() =>
+  import("./tabs/TracesTab").then((m) => ({ default: m.TracesTab })),
+);
+
+/**
+ * Metrics tab - OTEL/HEART metrics panels with sparklines
+ */
+export const LazyMetricsTab = lazy(() =>
+  import("./tabs/MetricsTab").then((m) => ({ default: m.MetricsTab })),
+);
+
+/**
+ * Alerts tab - Grafana alerts integration
+ */
+export const LazyAlertsTab = lazy(() =>
+  import("./tabs/AlertsTab").then((m) => ({ default: m.AlertsTab })),
+);
+
+/**
+ * Logs tab - OTEL structured logs with trace correlation
+ */
+export const LazyLogsTab = lazy(() =>
+  import("./tabs/LogsTab").then((m) => ({ default: m.LogsTab })),
+);
+
+// =============================================================================
 // Lazy-loaded Main Panel (for StudioShellLayout)
 // =============================================================================
 
@@ -96,6 +128,11 @@ export function preloadAllTabs(): void {
   import("./tabs/ExecutionTraceTab");
   import("./tabs/NetworkTab");
   import("./tabs/AIInsightsTab");
+  // OTEL tabs
+  import("./tabs/TracesTab");
+  import("./tabs/MetricsTab");
+  import("./tabs/AlertsTab");
+  import("./tabs/LogsTab");
 }
 
 /**
@@ -114,8 +151,34 @@ export function preloadContextTabs(
   if (context === "session") {
     import("./tabs/AgentTraceTab");
     import("./tabs/AIInsightsTab");
+    // OTEL tabs for session observability
+    import("./tabs/TracesTab");
+    import("./tabs/MetricsTab");
+    import("./tabs/AlertsTab");
+    import("./tabs/LogsTab");
   } else if (context === "workflow") {
     import("./tabs/ExecutionTraceTab");
     import("./tabs/AIInsightsTab");
+    // OTEL tabs for workflow observability
+    import("./tabs/TracesTab");
+    import("./tabs/MetricsTab");
+    import("./tabs/AlertsTab");
+    import("./tabs/LogsTab");
+  } else {
+    // Global context - all OTEL tabs
+    import("./tabs/TracesTab");
+    import("./tabs/MetricsTab");
+    import("./tabs/AlertsTab");
+    import("./tabs/LogsTab");
   }
+}
+
+/**
+ * Preload OTEL observability tabs only
+ */
+export function preloadOTELTabs(): void {
+  import("./tabs/TracesTab");
+  import("./tabs/MetricsTab");
+  import("./tabs/AlertsTab");
+  import("./tabs/LogsTab");
 }

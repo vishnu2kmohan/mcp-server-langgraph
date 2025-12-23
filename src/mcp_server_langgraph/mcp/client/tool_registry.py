@@ -31,7 +31,7 @@ class MCPToolDefinition:
     qualified_name: str = field(init=False)
     """Fully qualified name in format 'server_name:tool_name'."""
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         """Set qualified_name after initialization."""
         self.qualified_name = f"{self.server_name}:{self.name}"
 
@@ -115,7 +115,7 @@ class MCPToolRegistry:
         await registry.unregister_server("playwright")
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize an empty registry."""
         self._servers: dict[str, MCPClientSessionProtocol] = {}
         self._server_configs: dict[str, MCPServerConfig] = {}

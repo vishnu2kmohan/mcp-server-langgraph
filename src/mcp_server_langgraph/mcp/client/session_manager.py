@@ -199,6 +199,8 @@ class MCPClientSession:
             raise ConnectionError(f"Initialize failed: {error_msg}")
 
         # Parse server info
+        if response.result is None:
+            raise ConnectionError("Initialize succeeded but returned no result")
         self.server_info = parse_initialize_result(response.result)
 
         logger.info(
@@ -303,6 +305,8 @@ class MCPClientSession:
                     self._session_id = resp.headers["MCP-Session-Id"]
 
                 # Parse server info
+                if response.result is None:
+                    raise ConnectionError("Initialize succeeded but returned no result")
                 self.server_info = parse_initialize_result(response.result)
 
             logger.info(
@@ -409,6 +413,8 @@ class MCPClientSession:
             error_msg = response.error.get("message", "Unknown error") if response.error else "Unknown error"
             raise ConnectionError(f"tools/list failed: {error_msg}")
 
+        if response.result is None:
+            raise ConnectionError("tools/list succeeded but returned no result")
         tools, _next_cursor = parse_tools_list_result(response.result)
         self._tools = tools
         return tools
@@ -437,6 +443,8 @@ class MCPClientSession:
                 error_msg = response.error.get("message", "Unknown error") if response.error else "Unknown error"
                 raise ConnectionError(f"tools/list failed: {error_msg}")
 
+            if response.result is None:
+                raise ConnectionError("tools/list succeeded but returned no result")
             tools, _next_cursor = parse_tools_list_result(response.result)
             self._tools = tools
             return tools
@@ -490,6 +498,8 @@ class MCPClientSession:
             error_msg = response.error.get("message", "Unknown error") if response.error else "Unknown error"
             raise ConnectionError(f"tools/call failed: {error_msg}")
 
+        if response.result is None:
+            raise ConnectionError("tools/call succeeded but returned no result")
         content, is_error = parse_tools_call_result(response.result)
         return {"content": content, "isError": is_error}
 
@@ -517,6 +527,8 @@ class MCPClientSession:
                 error_msg = response.error.get("message", "Unknown error") if response.error else "Unknown error"
                 raise ConnectionError(f"tools/call failed: {error_msg}")
 
+            if response.result is None:
+                raise ConnectionError("tools/call succeeded but returned no result")
             content, is_error = parse_tools_call_result(response.result)
             return {"content": content, "isError": is_error}
 

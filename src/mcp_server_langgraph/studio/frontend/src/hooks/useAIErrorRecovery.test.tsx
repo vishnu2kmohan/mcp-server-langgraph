@@ -9,7 +9,7 @@
 
 import React from "react";
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
-import { renderHook, waitFor, act } from "@testing-library/react";
+import { renderHook, waitFor, act, cleanup } from "@testing-library/react";
 import { http, HttpResponse, delay } from "msw";
 import { Provider } from "react-redux";
 import { configureStore } from "@reduxjs/toolkit";
@@ -131,6 +131,7 @@ describe("useAIErrorRecovery", () => {
   });
 
   afterEach(() => {
+    cleanup();
     server.resetHandlers();
   });
 

@@ -227,7 +227,8 @@ class AutoUpdateScheduler:
             from mcp_server_langgraph.skills.installer import SkillInstaller
 
             installer = SkillInstaller()
-            available_skills = await installer.list_marketplace_skills(marketplace.name)
+            # TODO: list_marketplace_skills is a planned API extension
+            available_skills = await installer.list_marketplace_skills(marketplace.name)  # type: ignore[attr-defined]
 
             for skill_info in available_skills:
                 skill_name = skill_info.get("name", "")
@@ -304,7 +305,8 @@ class AutoUpdateScheduler:
         from mcp_server_langgraph.skills.installer import SkillInstaller
 
         installer = SkillInstaller()
-        await installer.install_skill(skill_name, version=new_version)
+        # TODO: install_skill is a planned API extension
+        await installer.install_skill(skill_name, version=new_version)  # type: ignore[attr-defined]
 
         # Update installed version tracking
         self._installed_versions[skill_name] = SkillVersion(

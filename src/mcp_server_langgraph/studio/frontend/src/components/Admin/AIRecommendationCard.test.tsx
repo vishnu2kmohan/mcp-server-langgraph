@@ -14,8 +14,8 @@
  * Reference: ADR-0026 - Comprehensive Client Resilience Patterns
  */
 
-import { describe, it, expect, vi } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { describe, it, expect, vi, afterEach } from "vitest";
+import { render, screen, fireEvent, cleanup } from "@testing-library/react";
 
 import {
   AIRecommendationCard,
@@ -79,6 +79,11 @@ const defaultProps: AIRecommendationCardProps = {
 // =============================================================================
 
 describe("AIRecommendationCard", () => {
+  afterEach(() => {
+    cleanup();
+    vi.clearAllMocks();
+  });
+
   describe("Basic Rendering", () => {
     it("should render the card", () => {
       render(<AIRecommendationCard {...defaultProps} />);

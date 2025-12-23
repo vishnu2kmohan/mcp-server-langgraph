@@ -28,6 +28,7 @@ describe("devLogger", () => {
     consoleSpies.log.mockRestore();
     consoleSpies.warn.mockRestore();
     consoleSpies.error.mockRestore();
+    vi.clearAllMocks();
   });
 
   describe("isDevMode", () => {

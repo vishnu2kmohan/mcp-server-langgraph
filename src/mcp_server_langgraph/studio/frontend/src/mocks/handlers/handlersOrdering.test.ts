@@ -8,7 +8,7 @@
  * would cause /connections/templates to match :id handler with id="templates"
  */
 
-import { describe, it, expect, beforeEach, afterEach } from "vitest";
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { server } from "../server";
 
 // These tests use the default handlers from handlers.ts via the server
@@ -20,6 +20,7 @@ describe("handlers.ts Ordering Validation", () => {
 
   afterEach(() => {
     server.resetHandlers();
+    vi.clearAllMocks();
   });
 
   describe("Connection Handlers Ordering", () => {

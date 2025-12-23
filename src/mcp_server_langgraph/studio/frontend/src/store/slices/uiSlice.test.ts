@@ -51,6 +51,10 @@ describe("uiSlice", () => {
     localStorage.clear();
   });
 
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
   describe("initial state", () => {
     it("should return initial state when called with undefined", () => {
       const result = uiReducer(undefined, { type: "unknown" });

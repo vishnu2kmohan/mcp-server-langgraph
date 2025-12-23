@@ -4,7 +4,7 @@
  * TDD tests for artifact Redux slice.
  */
 
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, afterEach, vi } from "vitest";
 import { configureStore } from "@reduxjs/toolkit";
 import artifactReducer, {
   initialArtifactState,
@@ -38,6 +38,10 @@ const createTestStore = (preloadedState?: Partial<ArtifactSliceState>) => {
 };
 
 describe("artifactSlice", () => {
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
   describe("Initial State", () => {
     it("should have empty artifacts array", () => {
       const store = createTestStore();

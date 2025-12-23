@@ -10,8 +10,8 @@
  * - Sprint 5: AI-powered trace intelligence
  */
 
-import { render, screen } from "@testing-library/react";
-import { describe, it, expect, vi } from "vitest";
+import { render, screen, cleanup } from "@testing-library/react";
+import { describe, it, expect, vi, afterEach } from "vitest";
 import { Provider } from "react-redux";
 import { configureStore } from "@reduxjs/toolkit";
 import { AgentExecutionTracePanel } from "./AgentExecutionTracePanel";
@@ -111,6 +111,11 @@ vi.mock("./LangGraphNodeVisualization", () => ({
 }));
 
 describe("AgentExecutionTracePanel", () => {
+  afterEach(() => {
+    cleanup();
+    vi.clearAllMocks();
+  });
+
   describe("rendering", () => {
     it("renders container with correct test ID when trace is provided", () => {
       const trace: AgentExecutionTrace = {

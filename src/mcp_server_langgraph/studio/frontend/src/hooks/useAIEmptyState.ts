@@ -127,7 +127,7 @@ export function useAIEmptyState(
   const subPersona = useSelector(selectSubPersona);
   const persona = useSelector(selectPersona);
   const currentSession = useSelector(selectCurrentSession);
-  const _sessionId = currentSession?.id;
+  const sessionId = currentSession?.id;
 
   // Effective persona (subPersona takes precedence)
   const effectivePersona = (subPersona || persona || "default") as Persona;
@@ -164,7 +164,7 @@ export function useAIEmptyState(
         const data = await fetchSuggestions({
           context: forContext,
           persona: effectivePersona,
-          // session_id is passed via context if needed
+          ...(sessionId && { session_id: sessionId }),
         } as Parameters<typeof fetchSuggestions>[0]).unwrap();
 
         if (!isMounted.current) return;
@@ -197,7 +197,7 @@ export function useAIEmptyState(
         }
       }
     },
-    [effectivePersona, fetchSuggestions],
+    [effectivePersona, fetchSuggestions, sessionId],
   );
 
   /**

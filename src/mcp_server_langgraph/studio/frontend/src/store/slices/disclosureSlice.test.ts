@@ -7,7 +7,7 @@
  * Implements 4 disclosure levels: beginner, intermediate, advanced, expert
  */
 
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, afterEach, vi } from "vitest";
 import disclosureReducer, {
   initialState,
   setDisclosureLevel,
@@ -25,6 +25,10 @@ import disclosureReducer, {
 } from "./disclosureSlice";
 
 describe("disclosureSlice", () => {
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
   describe("initial state", () => {
     it("should have beginner as default level", () => {
       expect(initialState.level).toBe("beginner");

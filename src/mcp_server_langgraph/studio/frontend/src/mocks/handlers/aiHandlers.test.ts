@@ -4,7 +4,7 @@
  * Tests for AI API mock handlers.
  * Validates the contract between frontend and backend for AI endpoints.
  */
-import { describe, it, expect, beforeAll, afterAll, afterEach } from "vitest";
+import { describe, it, expect, beforeAll, afterAll, afterEach, vi } from "vitest";
 import { setupServer } from "msw/node";
 import {
   aiHandlers,
@@ -16,7 +16,10 @@ import {
 const server = setupServer(...aiHandlers);
 
 beforeAll(() => server.listen({ onUnhandledRequest: "error" }));
-afterEach(() => server.resetHandlers());
+afterEach(() => {
+  server.resetHandlers();
+  vi.clearAllMocks();
+});
 afterAll(() => server.close());
 
 describe("aiHandlers", () => {

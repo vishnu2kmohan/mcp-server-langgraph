@@ -4,8 +4,8 @@
  * TDD tests for the audit event streaming panel.
  */
 
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { render, screen, fireEvent, waitFor, cleanup } from "@testing-library/react";
 
 // Mock the useAuditWebSocket hook
 const mockUseAuditWebSocket = vi.fn();
@@ -62,6 +62,11 @@ describe("AuditEventPanel", () => {
       disconnect: vi.fn(),
       reconnect: vi.fn(),
     });
+  });
+
+  afterEach(() => {
+    cleanup();
+    vi.clearAllMocks();
   });
 
   describe("basic rendering", () => {

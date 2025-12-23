@@ -5,7 +5,7 @@
  * cases where the component is not within a data router context.
  */
 
-import { describe, it, expect, afterEach } from "vitest";
+import { describe, it, expect, afterEach, vi } from "vitest";
 import { renderHook, cleanup } from "@testing-library/react";
 import { createElement } from "react";
 import { UNSAFE_DataRouterContext } from "react-router";
@@ -27,6 +27,7 @@ const createWrapper = (contextValue: unknown) => {
 describe("useSafeRouteLoaderData", () => {
   afterEach(() => {
     cleanup();
+    vi.clearAllMocks();
   });
 
   describe("useIsDataRouter", () => {

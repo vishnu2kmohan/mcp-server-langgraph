@@ -532,3 +532,20 @@ export type {
   AIMetricsTracker,
   CreateAIMetricsTrackerOptions,
 } from "./useAIMetrics";
+
+// =============================================================================
+// AI Intelligence Configuration (ADR-0068: WebSocket Standardization)
+// =============================================================================
+
+export { useAIIntelligenceConfig } from "./useAIIntelligenceConfig";
+export type { UseAIIntelligenceConfigReturn } from "./useAIIntelligenceConfig";
+
+// =============================================================================
+// Persona Cache Invalidation (ADR-0068: WebSocket Standardization)
+// =============================================================================
+
+export { usePersonaCacheInvalidation } from "./usePersonaCacheInvalidation";
+export type {
+  UsePersonaCacheInvalidationOptions,
+  UsePersonaCacheInvalidationResult,
+} from "./usePersonaCacheInvalidation";

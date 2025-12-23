@@ -19,7 +19,7 @@ import {
   afterEach,
   type Mock,
 } from "vitest";
-import { renderHook, act } from "@testing-library/react";
+import { renderHook, act, cleanup } from "@testing-library/react";
 import { useMCPTaskWebSocket, type MCPTask } from "./useMCPTaskWebSocket";
 
 // =============================================================================
@@ -108,6 +108,7 @@ beforeEach(() => {
 });
 
 afterEach(() => {
+  cleanup();
   vi.clearAllMocks();
 });
 

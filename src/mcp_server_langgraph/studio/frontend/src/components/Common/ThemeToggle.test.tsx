@@ -9,8 +9,8 @@
  * - WCAG 2.1 AA accessibility
  */
 
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, waitFor } from "@testing-library/react";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { render, screen, waitFor, cleanup } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { axe, toHaveNoViolations } from "jest-axe";
 import React from "react";
@@ -40,6 +40,11 @@ describe("ThemeToggle", () => {
     vi.clearAllMocks();
     mockMatchMedia(false); // Default to light mode system preference
     document.documentElement.classList.remove("dark");
+  });
+
+  afterEach(() => {
+    cleanup();
+    vi.clearAllMocks();
   });
 
   // ===========================================================================

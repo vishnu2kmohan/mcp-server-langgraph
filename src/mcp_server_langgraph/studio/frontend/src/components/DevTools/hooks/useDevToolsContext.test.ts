@@ -10,7 +10,7 @@
  * - Updating Redux state on context changes
  */
 
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { renderHook } from "@testing-library/react";
 import { Provider } from "react-redux";
 import { configureStore } from "@reduxjs/toolkit";
@@ -77,6 +77,10 @@ describe("useDevToolsContext", () => {
       key: "default",
     });
     mockUseSearchParams.mockReturnValue([new URLSearchParams(), vi.fn()]);
+  });
+
+  afterEach(() => {
+    vi.clearAllMocks();
   });
 
   // ===========================================================================

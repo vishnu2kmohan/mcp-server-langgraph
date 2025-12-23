@@ -7,8 +7,8 @@
  * TDD RED Phase: Write failing tests first.
  */
 
-import { render, screen, fireEvent } from "@testing-library/react";
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { render, screen, fireEvent, cleanup } from "@testing-library/react";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import {
   AIFollowUpSuggestions,
   type AIFollowUpSuggestionsProps,
@@ -30,6 +30,11 @@ describe("AIFollowUpSuggestions", () => {
   };
 
   beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  afterEach(() => {
+    cleanup();
     vi.clearAllMocks();
   });
 

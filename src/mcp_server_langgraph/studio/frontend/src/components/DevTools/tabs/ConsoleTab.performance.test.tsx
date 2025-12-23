@@ -10,6 +10,7 @@ import {
   fireEvent,
   waitFor,
   act,
+  cleanup,
 } from "@testing-library/react";
 
 import { ConsoleTab } from "./ConsoleTab";
@@ -29,6 +30,17 @@ vi.mock("../hooks/useConsoleEntries", () => ({
     filteredEntries: mockEntries,
     clearConsole: mockClearConsole,
   })),
+}));
+
+// Mock timeline context to avoid provider requirement
+vi.mock("../context/DevToolsTimelineProvider", () => ({
+  useTimelineContext: () => ({
+    timeWindow: null,
+    isLiveMode: true,
+    currentTime: Date.now(),
+    events: [],
+    bookmarks: [],
+  }),
 }));
 
 // =============================================================================
@@ -61,6 +73,7 @@ describe("ConsoleTab Performance", () => {
   });
 
   afterEach(() => {
+    cleanup();
     vi.restoreAllMocks();
   });
 

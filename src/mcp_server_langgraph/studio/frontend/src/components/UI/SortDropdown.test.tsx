@@ -4,9 +4,14 @@
  * TDD tests for sort dropdown component with field and order selection.
  */
 
-import { describe, it, expect, vi } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { describe, it, expect, vi, afterEach } from "vitest";
+import { render, screen, fireEvent, cleanup } from "@testing-library/react";
 import { SortDropdown } from "./SortDropdown";
+
+afterEach(() => {
+  cleanup();
+  vi.clearAllMocks();
+});
 
 const mockOptions = [
   { value: "name", label: "Name" },

@@ -4,11 +4,15 @@
  * Tests for the DevTools-style dockable panel workspace.
  */
 
-import { describe, it, expect, vi } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { describe, it, expect, vi, afterEach } from "vitest";
+import { render, screen, cleanup } from "@testing-library/react";
 import { ChatWorkspace } from "./ChatWorkspace";
 
 describe("ChatWorkspace", () => {
+  afterEach(() => {
+    cleanup();
+    vi.clearAllMocks();
+  });
   const defaultProps = {
     sessionPanel: <div data-testid="session-panel">Sessions</div>,
     chatArea: <div data-testid="chat-area">Chat</div>,

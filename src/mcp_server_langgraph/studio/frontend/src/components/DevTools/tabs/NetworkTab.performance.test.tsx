@@ -4,7 +4,7 @@
  * TDD tests for performance optimizations in NetworkTab.
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { render, screen, fireEvent, waitFor, cleanup } from "@testing-library/react";
 
 import { NetworkTab } from "./NetworkTab";
 import type { NetworkEntry } from "../types";
@@ -24,6 +24,17 @@ vi.mock("../hooks/useNetworkEntries", () => ({
     toggleRecording: mockToggleRecording,
     clearEntries: mockClearEntries,
   })),
+}));
+
+// Mock timeline context to avoid provider requirement
+vi.mock("../context/DevToolsTimelineProvider", () => ({
+  useTimelineContext: () => ({
+    timeWindow: null,
+    isLiveMode: true,
+    currentTime: Date.now(),
+    events: [],
+    bookmarks: [],
+  }),
 }));
 
 // =============================================================================
@@ -67,6 +78,7 @@ describe("NetworkTab Performance", () => {
   });
 
   afterEach(() => {
+    cleanup();
     vi.restoreAllMocks();
   });
 

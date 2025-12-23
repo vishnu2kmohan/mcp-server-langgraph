@@ -5,8 +5,8 @@
  * file uploads, and drag-drop support.
  */
 
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { render, screen, fireEvent, cleanup } from "@testing-library/react";
 import { axe } from "jest-axe";
 import { ChatInputForm, UploadFile } from "./ChatInputForm";
 
@@ -31,6 +31,11 @@ describe("ChatInputForm", () => {
   };
 
   beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  afterEach(() => {
+    cleanup();
     vi.clearAllMocks();
   });
 

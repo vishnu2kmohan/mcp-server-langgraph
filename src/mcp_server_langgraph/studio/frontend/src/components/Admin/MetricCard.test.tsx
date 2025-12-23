@@ -9,11 +9,16 @@
  * - Trend percentage display
  */
 
-import { describe, it, expect } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { describe, it, expect, afterEach, vi } from "vitest";
+import { render, screen, cleanup } from "@testing-library/react";
 import { MetricCard } from "./MetricCard";
 
 describe("MetricCard", () => {
+  afterEach(() => {
+    cleanup();
+    vi.clearAllMocks();
+  });
+
   describe("Basic Rendering", () => {
     it("should render label", () => {
       render(<MetricCard label="Happiness" value={85} />);

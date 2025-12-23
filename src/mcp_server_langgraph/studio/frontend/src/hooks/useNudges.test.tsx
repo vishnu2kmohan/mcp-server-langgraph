@@ -7,7 +7,7 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
-import { renderHook, waitFor, act } from "@testing-library/react";
+import { renderHook, waitFor, act, cleanup } from "@testing-library/react";
 import { http, HttpResponse, delay } from "msw";
 import { server } from "../mocks/server";
 import { useNudges, type Nudge } from "./useNudges";
@@ -36,6 +36,7 @@ describe("useNudges", () => {
   });
 
   afterEach(() => {
+    cleanup();
     server.resetHandlers();
   });
 

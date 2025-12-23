@@ -18,6 +18,7 @@ import {
   fireEvent,
   waitFor,
   within,
+  cleanup,
 } from "@testing-library/react";
 import { MemoryRouter } from "react-router";
 import { FilesPage } from "./FilesPage";
@@ -114,6 +115,7 @@ describe("FilesPage", () => {
   });
 
   afterEach(() => {
+    cleanup();
     vi.restoreAllMocks();
   });
 

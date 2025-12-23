@@ -1,6 +1,15 @@
 """
 Alert WebSocket Streaming Endpoint.
 
+.. deprecated:: 3.0
+    This module is deprecated. Use the new standardized WebSocket infrastructure:
+
+    - Handler: :mod:`mcp_server_langgraph.websocket.handlers.alerts`
+    - Base class: :mod:`mcp_server_langgraph.websocket.base.WebSocketBase`
+    - New URL: ``/api/v1/ws/alerts``
+
+    This module will be removed in v4.0.
+
 Provides real-time streaming of infrastructure alerts to Admin users.
 
 Features:
@@ -12,7 +21,7 @@ Features:
 - Ping/pong keepalive support
 
 Usage:
-    Connect to: wss://host/ws/alerts?token=<jwt>
+    Connect to: wss://host/api/v1/ws/alerts?token=<jwt>
     Or with header: Authorization: Bearer <jwt>
 
 Message Format:
@@ -38,6 +47,15 @@ Reference: ADR-0026 - Comprehensive Client Resilience Patterns
 """
 
 import logging
+import warnings
+
+warnings.warn(
+    "mcp_server_langgraph.api.v1.alert_websocket is deprecated. "
+    "Use mcp_server_langgraph.websocket.handlers.alerts instead. "
+    "This module will be removed in v4.0.",
+    DeprecationWarning,
+    stacklevel=2,
+)
 from typing import Any
 
 from fastapi import APIRouter, Depends, WebSocket, WebSocketDisconnect, status

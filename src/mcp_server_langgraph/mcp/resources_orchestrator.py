@@ -148,6 +148,9 @@ class OrchestratorResourceProvider:
         if not artifact_name:
             raise ValueError(f"Artifact name required in URI: {uri}")
 
+        if task_id is None:
+            raise ValueError(f"Task ID required in URI: {uri}")
+
         artifact = self._artifact_storage.get_artifact(task_id, artifact_name)
         if artifact is None:
             raise ValueError(f"Artifact not found: {uri}")
@@ -178,6 +181,9 @@ class OrchestratorResourceProvider:
         """
         parsed = parse_orchestrator_uri(uri)
         task_id = parsed["task_id"]
+
+        if task_id is None:
+            raise ValueError(f"Task ID required in URI: {uri}")
 
         results = self._subagent_results.get(task_id, [])
 
@@ -228,7 +234,10 @@ async def task_provider(
     if orchestrator is None:
         raise ValueError("Orchestrator not provided")
 
-    task_data = orchestrator.get_task(task_id)
+    if task_id is None:
+        raise ValueError(f"Task ID required in URI: {uri}")
+
+    task_data = orchestrator.get_task(task_id)  # type: ignore[attr-defined]
     if task_data is None:
         raise ValueError(f"Task not found: {task_id}")
 
@@ -266,6 +275,9 @@ async def artifact_provider(
 
     if not artifact_name:
         raise ValueError(f"Artifact name required in URI: {uri}")
+
+    if task_id is None:
+        raise ValueError(f"Task ID required in URI: {uri}")
 
     artifact = artifact_storage.retrieve(task_id, artifact_name)
     if artifact is None:
@@ -312,7 +324,7 @@ async def subagents_provider(
             text=json.dumps({"subagents": []}, default=str),
         )
 
-    subagents = coordinator.get_subagents(task_id)
+    subagents = coordinator.get_subagents(task_id)  # type: ignore[attr-defined]
 
     return ResourceContent(
         uri=uri,

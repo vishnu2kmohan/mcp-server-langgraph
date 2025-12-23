@@ -21,7 +21,7 @@ import type { AIIntelligenceConfig } from "../contexts/AIIntelligenceContext";
 // Types
 // =============================================================================
 
-interface UseAIIntelligenceConfigReturn extends AIIntelligenceConfig {
+export interface UseAIIntelligenceConfigReturn extends AIIntelligenceConfig {
   isLoading: boolean;
   isError: boolean;
 }
@@ -115,7 +115,7 @@ export function useAIIntelligenceConfig(): UseAIIntelligenceConfigReturn {
       },
       webSocket: {
         enabled: isEnabled("enable_ai_ux_websocket"),
-        endpoint: "/ws/ai/suggestions",
+        endpoint: "/api/v1/ws/ai/suggestions",
       },
       isLoading,
       isError,

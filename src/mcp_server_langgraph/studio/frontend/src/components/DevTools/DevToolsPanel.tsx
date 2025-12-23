@@ -27,6 +27,11 @@ import {
   AlertTriangle,
   Sparkles,
   Loader2,
+  // OTEL tab icons
+  GitMerge,
+  BarChart3,
+  Bell,
+  FileText,
 } from "lucide-react";
 import { useAppDispatch, useAppSelector } from "../../store/hooks";
 import {
@@ -43,6 +48,8 @@ import {
   type ConsoleFilterLevel,
 } from "../../store/slices/devToolsSlice";
 import { useDevToolsContext } from "./hooks/useDevToolsContext";
+import { TimelineBar } from "./TimelineBar";
+import { DevToolsTimelineProvider } from "./context/DevToolsTimelineProvider";
 import type { DevToolsPanelProps } from "./types";
 
 // =============================================================================
@@ -65,6 +72,11 @@ const TAB_ICONS: Record<DevToolsTabId, typeof Terminal> = {
   state: Database,
   problems: AlertTriangle,
   "ai-insights": Sparkles,
+  // OTEL Observability tabs
+  traces: GitMerge,
+  metrics: BarChart3,
+  alerts: Bell,
+  logs: FileText,
 };
 
 const TAB_LABELS: Record<DevToolsTabId, string> = {
@@ -75,6 +87,11 @@ const TAB_LABELS: Record<DevToolsTabId, string> = {
   state: "State",
   problems: "Problems",
   "ai-insights": "AI Insights",
+  // OTEL Observability tabs
+  traces: "Traces",
+  metrics: "Metrics",
+  alerts: "Alerts",
+  logs: "Logs",
 };
 
 // =============================================================================
@@ -103,6 +120,20 @@ const ExecutionTraceTabContent = lazy(() =>
 );
 const AIInsightsTabContent = lazy(() =>
   import("./tabs/AIInsightsTab").then((m) => ({ default: m.AIInsightsTab })),
+);
+
+// OTEL Observability tabs
+const TracesTabContent = lazy(() =>
+  import("./tabs/TracesTab").then((m) => ({ default: m.TracesTab })),
+);
+const MetricsTabContent = lazy(() =>
+  import("./tabs/MetricsTab").then((m) => ({ default: m.MetricsTab })),
+);
+const AlertsTabContent = lazy(() =>
+  import("./tabs/AlertsTab").then((m) => ({ default: m.AlertsTab })),
+);
+const LogsTabContent = lazy(() =>
+  import("./tabs/LogsTab").then((m) => ({ default: m.LogsTab })),
 );
 
 // =============================================================================
@@ -269,30 +300,64 @@ export function DevToolsPanel({ className }: DevToolsPanelProps) {
             </Suspense>
           </div>
         );
+      // OTEL Observability tabs
+      case "traces":
+        return (
+          <div data-testid="devtools-tab-content-traces">
+            <Suspense fallback={<TabContentLoader />}>
+              <TracesTabContent />
+            </Suspense>
+          </div>
+        );
+      case "metrics":
+        return (
+          <div data-testid="devtools-tab-content-metrics">
+            <Suspense fallback={<TabContentLoader />}>
+              <MetricsTabContent />
+            </Suspense>
+          </div>
+        );
+      case "alerts":
+        return (
+          <div data-testid="devtools-tab-content-alerts">
+            <Suspense fallback={<TabContentLoader />}>
+              <AlertsTabContent />
+            </Suspense>
+          </div>
+        );
+      case "logs":
+        return (
+          <div data-testid="devtools-tab-content-logs">
+            <Suspense fallback={<TabContentLoader />}>
+              <LogsTabContent />
+            </Suspense>
+          </div>
+        );
       default:
         return null;
     }
   };
 
   return (
-    <div
-      data-testid="devtools-panel"
-      className={cn(
-        "flex flex-col h-full",
-        "bg-white dark:bg-gray-900",
-        "border-t border-gray-200 dark:border-gray-700",
-        className,
-      )}
-    >
-      {/* Header */}
+    <DevToolsTimelineProvider>
       <div
-        data-testid="devtools-header"
+        data-testid="devtools-panel"
         className={cn(
-          "flex items-center justify-between px-3 py-1.5",
-          "bg-gray-50 dark:bg-gray-800",
-          "border-b border-gray-200 dark:border-gray-700",
+          "flex flex-col h-full",
+          "bg-white dark:bg-gray-900",
+          "border-t border-gray-200 dark:border-gray-700",
+          className,
         )}
       >
+        {/* Header */}
+        <div
+          data-testid="devtools-header"
+          className={cn(
+            "flex items-center justify-between px-3 py-1.5",
+            "bg-gray-50 dark:bg-gray-800",
+            "border-b border-gray-200 dark:border-gray-700",
+          )}
+        >
         {/* Context Indicator */}
         <div className="flex items-center gap-2">
           <span className="text-xs font-medium text-gray-600 dark:text-gray-300">
@@ -354,6 +419,9 @@ export function DevToolsPanel({ className }: DevToolsPanelProps) {
         </div>
       </div>
 
+      {/* Timeline Bar - Unified time-travel scrubber */}
+      <TimelineBar />
+
       {/* Tabs */}
       <div
         data-testid="devtools-tabs"
@@ -390,16 +458,17 @@ export function DevToolsPanel({ className }: DevToolsPanelProps) {
         })}
       </div>
 
-      {/* Tab Content */}
-      <div
-        role="tabpanel"
-        id={`tabpanel-${activeTab}`}
-        aria-labelledby={`tab-${activeTab}`}
-        className="flex-1 overflow-auto"
-      >
-        {renderTabContent()}
+        {/* Tab Content */}
+        <div
+          role="tabpanel"
+          id={`tabpanel-${activeTab}`}
+          aria-labelledby={`tab-${activeTab}`}
+          className="flex-1 overflow-auto"
+        >
+          {renderTabContent()}
+        </div>
       </div>
-    </div>
+    </DevToolsTimelineProvider>
   );
 }
 

@@ -371,7 +371,6 @@ class TestHITLPushBroadcastIntegration:
         gc.collect()
 
     @pytest.mark.asyncio
-    @pytest.mark.skip(reason="Future enhancement: broadcast-push integration pending")
     async def test_broadcast_approval_required_sends_push(self) -> None:
         """GIVEN broadcast_approval_required is called
         WHEN push notifications are enabled
@@ -412,3 +411,227 @@ class TestHITLPushBroadcastIntegration:
             mock_send_push.assert_called_once()
             call_args = mock_send_push.call_args
             assert call_args[0][0] == request  # The request object
+
+    @pytest.mark.asyncio
+    async def test_broadcast_approval_updated_sends_push(self) -> None:
+        """GIVEN broadcast_approval_updated is called
+        WHEN push notifications are enabled and user_id in context
+        THEN a push notification should also be sent.
+        """
+        from mcp_server_langgraph.api.v1.agent_request_websocket import (
+            broadcast_approval_updated,
+        )
+
+        # Create a mock update message with user context
+        message = MagicMock()
+        message.request_id = "update-push-001"
+        message.session_id = "session-update"
+        message.status = "approved"
+        message.resolved_by = "reviewer-001"
+        message.resolved_at = datetime.now(UTC)
+        message.context = {"user_id": "user-update"}
+        message.model_dump = MagicMock(return_value={"request_id": "update-push-001"})
+
+        # Patch broadcaster and push notification function
+        with (
+            patch("mcp_server_langgraph.api.v1.agent_request_websocket.get_broadcaster") as mock_get_broadcaster,
+            patch(
+                "mcp_server_langgraph.api.v1.agent_request_websocket.send_hitl_approval_updated_notification"
+            ) as mock_send_push,
+        ):
+            mock_broadcaster = AsyncMock()
+            mock_get_broadcaster.return_value = mock_broadcaster
+            mock_send_push.return_value = None
+
+            await broadcast_approval_updated(message)
+
+            # Verify WebSocket broadcast happened
+            mock_broadcaster.broadcast.assert_called_once()
+
+            # Verify push notification was triggered
+            mock_send_push.assert_called_once()
+            call_args = mock_send_push.call_args
+            assert call_args[0][0] == message  # The message object
+
+    @pytest.mark.asyncio
+    async def test_broadcast_execution_resumed_sends_push(self) -> None:
+        """GIVEN broadcast_execution_resumed is called
+        WHEN push notifications are enabled and user_id in context
+        THEN a push notification should also be sent.
+        """
+        from mcp_server_langgraph.api.v1.agent_request_websocket import (
+            broadcast_execution_resumed,
+        )
+
+        # Create a mock resume message with user context
+        message = MagicMock()
+        message.request_id = "resume-push-001"
+        message.session_id = "session-resume"
+        message.task_id = "task-resume"
+        message.context = {"user_id": "user-resume"}
+        message.model_dump = MagicMock(return_value={"request_id": "resume-push-001"})
+
+        # Patch broadcaster and push notification function
+        with (
+            patch("mcp_server_langgraph.api.v1.agent_request_websocket.get_broadcaster") as mock_get_broadcaster,
+            patch(
+                "mcp_server_langgraph.api.v1.agent_request_websocket.send_hitl_execution_resumed_notification"
+            ) as mock_send_push,
+        ):
+            mock_broadcaster = AsyncMock()
+            mock_get_broadcaster.return_value = mock_broadcaster
+            mock_send_push.return_value = None
+
+            await broadcast_execution_resumed(message)
+
+            # Verify WebSocket broadcast happened
+            mock_broadcaster.broadcast.assert_called_once()
+
+            # Verify push notification was triggered
+            mock_send_push.assert_called_once()
+            call_args = mock_send_push.call_args
+            assert call_args[0][0] == message  # The message object
+
+
+@pytest.mark.unit
+@pytest.mark.xdist_group(name="hitl_push_update_messages")
+class TestHITLPushUpdateMessages:
+    """Test suite for HITL push notification message creation for updates."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers."""
+        gc.collect()
+
+    @pytest.mark.asyncio
+    async def test_create_approval_updated_push_message_exists(self) -> None:
+        """GIVEN the agent_request_websocket module
+        WHEN importing create_approval_updated_push_message
+        THEN the function should exist.
+        """
+        from mcp_server_langgraph.api.v1.agent_request_websocket import (
+            create_approval_updated_push_message,
+        )
+
+        assert callable(create_approval_updated_push_message)
+
+    @pytest.mark.asyncio
+    async def test_create_approval_updated_push_message_approved(self) -> None:
+        """GIVEN an approval update with approved status
+        WHEN creating a push message
+        THEN it should have correct title indicating approval.
+        """
+        from mcp_server_langgraph.api.v1.agent_request_websocket import (
+            create_approval_updated_push_message,
+        )
+
+        message = MagicMock()
+        message.request_id = "approved-msg-001"
+        message.session_id = "session-approved"
+        message.status = "approved"
+
+        push_msg = create_approval_updated_push_message(message)
+
+        # Check title indicates approval
+        assert "approved" in push_msg.title.lower()
+
+        # Check tag for notification grouping
+        assert push_msg.tag == f"hitl-{message.request_id}"
+
+        # Check data payload
+        assert push_msg.data is not None
+        assert push_msg.data["request_id"] == message.request_id
+        assert push_msg.data["type"] == "approval_updated"
+
+    @pytest.mark.asyncio
+    async def test_create_approval_updated_push_message_rejected(self) -> None:
+        """GIVEN an approval update with rejected status
+        WHEN creating a push message
+        THEN it should have correct title indicating rejection.
+        """
+        from mcp_server_langgraph.api.v1.agent_request_websocket import (
+            create_approval_updated_push_message,
+        )
+
+        message = MagicMock()
+        message.request_id = "rejected-msg-001"
+        message.session_id = "session-rejected"
+        message.status = "rejected"
+
+        push_msg = create_approval_updated_push_message(message)
+
+        # Check title indicates rejection
+        assert "rejected" in push_msg.title.lower()
+
+    @pytest.mark.asyncio
+    async def test_create_execution_resumed_push_message_exists(self) -> None:
+        """GIVEN the agent_request_websocket module
+        WHEN importing create_execution_resumed_push_message
+        THEN the function should exist.
+        """
+        from mcp_server_langgraph.api.v1.agent_request_websocket import (
+            create_execution_resumed_push_message,
+        )
+
+        assert callable(create_execution_resumed_push_message)
+
+    @pytest.mark.asyncio
+    async def test_create_execution_resumed_push_message_format(self) -> None:
+        """GIVEN an execution resumed message
+        WHEN creating a push message
+        THEN it should have correct title and data.
+        """
+        from mcp_server_langgraph.api.v1.agent_request_websocket import (
+            create_execution_resumed_push_message,
+        )
+
+        message = MagicMock()
+        message.request_id = "resumed-msg-001"
+        message.session_id = "session-resumed"
+        message.task_id = "task-resumed"
+
+        push_msg = create_execution_resumed_push_message(message)
+
+        # Check title indicates execution resumed
+        assert "resumed" in push_msg.title.lower() or "continue" in push_msg.title.lower()
+
+        # Check tag for notification grouping
+        assert push_msg.tag == f"hitl-{message.request_id}"
+
+        # Check data payload
+        assert push_msg.data is not None
+        assert push_msg.data["request_id"] == message.request_id
+        assert push_msg.data["type"] == "execution_resumed"
+
+
+@pytest.mark.unit
+@pytest.mark.xdist_group(name="hitl_push_notification_send")
+class TestHITLPushNotificationSend:
+    """Test suite for HITL push notification send functions."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers."""
+        gc.collect()
+
+    @pytest.mark.asyncio
+    async def test_send_hitl_approval_updated_notification_exists(self) -> None:
+        """GIVEN the agent_request_websocket module
+        WHEN importing send_hitl_approval_updated_notification
+        THEN the function should exist.
+        """
+        from mcp_server_langgraph.api.v1.agent_request_websocket import (
+            send_hitl_approval_updated_notification,
+        )
+
+        assert callable(send_hitl_approval_updated_notification)
+
+    @pytest.mark.asyncio
+    async def test_send_hitl_execution_resumed_notification_exists(self) -> None:
+        """GIVEN the agent_request_websocket module
+        WHEN importing send_hitl_execution_resumed_notification
+        THEN the function should exist.
+        """
+        from mcp_server_langgraph.api.v1.agent_request_websocket import (
+            send_hitl_execution_resumed_notification,
+        )
+
+        assert callable(send_hitl_execution_resumed_notification)

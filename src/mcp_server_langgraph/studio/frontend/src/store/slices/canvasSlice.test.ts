@@ -3,7 +3,7 @@
  *
  * Tests for the Studio Canvas state management.
  */
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, afterEach, vi } from "vitest";
 import canvasReducer, {
   setPanelSizes,
   toggleSessionNav,
@@ -24,6 +24,10 @@ import canvasReducer, {
 } from "./canvasSlice";
 
 describe("canvasSlice", () => {
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
   const initialState: CanvasState = {
     panelSizes: {
       sessionNav: 20,

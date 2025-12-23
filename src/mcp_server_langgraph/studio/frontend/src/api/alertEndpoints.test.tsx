@@ -8,6 +8,7 @@
  */
 
 import { describe, it, expect, afterEach, vi } from "vitest";
+import { cleanup } from "@testing-library/react";
 import {
   api,
   useGetAlertRecommendationQuery,
@@ -34,6 +35,7 @@ import type {
 
 describe("Alert API Types", () => {
   afterEach(() => {
+    cleanup();
     vi.clearAllMocks();
   });
 

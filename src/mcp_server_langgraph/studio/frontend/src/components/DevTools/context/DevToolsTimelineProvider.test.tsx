@@ -4,7 +4,7 @@
  * TDD tests for the unified timeline context provider.
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { render, screen, act } from "@testing-library/react";
+import { render, screen, act, cleanup } from "@testing-library/react";
 import React from "react";
 
 import {
@@ -76,6 +76,7 @@ describe("DevToolsTimelineProvider", () => {
   });
 
   afterEach(() => {
+    cleanup();
     vi.restoreAllMocks();
     vi.useRealTimers();
   });

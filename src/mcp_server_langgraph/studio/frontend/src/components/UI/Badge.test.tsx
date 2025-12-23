@@ -4,9 +4,14 @@
  * Tests for the Badge primitive component variants, sizes, and accessibility.
  */
 
-import { describe, it, expect } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { describe, it, expect, afterEach, vi } from "vitest";
+import { render, screen, cleanup } from "@testing-library/react";
 import { Badge } from "./Badge";
+
+afterEach(() => {
+  cleanup();
+  vi.clearAllMocks();
+});
 
 describe("Badge", () => {
   describe("rendering", () => {
