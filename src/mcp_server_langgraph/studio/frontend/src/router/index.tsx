@@ -1,11 +1,11 @@
-import { createBrowserRouter, Navigate, Outlet, useLocation } from "react-router";
+import { createBrowserRouter, Navigate, Outlet } from "react-router";
 import { App } from "../App";
 import { AuthGuard } from "./guards/AuthGuard";
 import { PersonaGuard } from "./guards/PersonaGuard";
 import { PermissionGuard } from "./guards/PermissionGuard";
 import { RootRedirect } from "./guards/RootRedirect";
 import { StudioShellGuard } from "./guards/StudioShellGuard";
-import { HybridShellLayout } from "../layout";
+import { StudioV2Redirect } from "./guards/StudioV2Redirect";
 import {
   chatLoader,
   sessionsLoader,

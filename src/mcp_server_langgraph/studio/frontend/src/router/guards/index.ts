@@ -14,3 +14,4 @@ export {
 export { PermissionGuard, type PermissionGuardProps } from "./PermissionGuard";
 export { RootRedirect } from "./RootRedirect";
 export { StudioShellGuard } from "./StudioShellGuard";
+export { StudioV2Redirect } from "./StudioV2Redirect";
