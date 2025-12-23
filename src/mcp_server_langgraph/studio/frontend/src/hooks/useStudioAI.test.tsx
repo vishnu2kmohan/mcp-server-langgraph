@@ -27,7 +27,7 @@ import authReducer from "../store/slices/authSlice";
 // Types for Testing
 // =============================================================================
 
-interface StudioTask {
+interface _StudioTask {
   category: string;
   type: string;
   data?: Record<string, unknown>;
@@ -41,7 +41,7 @@ interface StudioAnalysisResult {
   error?: string;
 }
 
-interface UseStudioAIResult {
+interface _UseStudioAIResult {
   results: StudioAnalysisResult[] | null;
   analyses: Record<string, unknown>;
   crossInsights: string[];

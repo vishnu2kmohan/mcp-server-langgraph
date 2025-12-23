@@ -144,7 +144,7 @@ export function HybridShellLayout() {
   const sessionNavCollapsed = useAppSelector(selectSessionNavCollapsed);
   const canvasCollapsed = useAppSelector(selectCanvasCollapsed);
   const devToolsCollapsed = useAppSelector(selectDevToolsCollapsed);
-  const devToolsHeight = useAppSelector(selectDevToolsHeight);
+  const _devToolsHeight = useAppSelector(selectDevToolsHeight);
 
   // AI component state
   const [showCommandPalette, setShowCommandPalette] = useState(false);

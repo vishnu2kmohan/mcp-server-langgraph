@@ -130,7 +130,7 @@ export function useAIEmptyState(
   const subPersona = useSelector(selectSubPersona);
   const persona = useSelector(selectPersona);
   const currentSession = useSelector(selectCurrentSession);
-  const sessionId = currentSession?.id;
+  const _sessionId = currentSession?.id;
 
   // Effective persona (subPersona takes precedence)
   const effectivePersona = (subPersona || persona || "default") as Persona;
@@ -200,7 +200,7 @@ export function useAIEmptyState(
         }
       }
     },
-    [effectivePersona, sessionId, fetchSuggestions]
+    [effectivePersona, fetchSuggestions]
   );
 
   /**

@@ -132,7 +132,7 @@ export const agentRequestHandlers = [
 
     const url = new URL(request.url);
     const sessionId = url.searchParams.get("session_id");
-    const status = url.searchParams.get("status") as AgentRequestStatus | null;
+    const _status = url.searchParams.get("status") as AgentRequestStatus | null;
     const requestType = url.searchParams.get("request_type");
 
     let approvals = [...mockPendingApprovals];
