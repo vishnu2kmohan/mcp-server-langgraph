@@ -4,7 +4,7 @@
  * Synchronizes React Router loader data to Redux session state.
  *
  * Purpose:
- * - StudioShell uses React Router loaders (fetch-before-render)
+ * - Studio uses React Router loaders (fetch-before-render)
  * - Legacy components (sendMessage) expect currentSession in Redux
  * - This hook bridges the gap by syncing loader data to Redux
  *
@@ -43,13 +43,13 @@ const logger = devLogger.withPrefix("[useSessionSync]");
  *
  * Important: This hook only syncs when loaderData is defined.
  * It does NOT clear sessions when loaderData is undefined, to support
- * components that work in both v2 (with loaders) and legacy (without loaders) contexts.
+ * components that work in both studio (with loaders) and legacy (without loaders) contexts.
  *
  * Race condition guard: If there are pending mutations (optimistic updates),
  * the hook skips syncing to prevent stale loader data from overwriting
  * the optimistic updates.
  *
- * For v2 routes:
+ * For studio routes:
  * - When navigating TO a session: loaderData has session, sync to Redux
  * - When navigating AWAY: component unmounts, no action needed
  *
@@ -70,7 +70,7 @@ export function useSessionSync(loaderData: ChatLoaderData | undefined): void {
   useEffect(() => {
     syncStartTime.current = Date.now();
 
-    // Only sync when we have loader data (v2 context)
+    // Only sync when we have loader data (studio context)
     // If undefined (legacy context or no data router), do nothing
     if (!loaderData) {
       return;
@@ -89,7 +89,7 @@ export function useSessionSync(loaderData: ChatLoaderData | undefined): void {
       return;
     }
 
-    // No sessionId means index route (/studio/v2/chat without session param)
+    // No sessionId means index route (/studio/chat without session param)
     if (!loaderData.sessionId) {
       dispatch(setCurrentSession(null));
       sessionTelemetry.trackSync({

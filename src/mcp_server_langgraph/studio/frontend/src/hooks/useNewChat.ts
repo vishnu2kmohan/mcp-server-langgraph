@@ -27,7 +27,7 @@ import { useSessionTelemetry } from "../contexts/TelemetryContext";
 // =============================================================================
 
 interface UseNewChatOptions {
-  /** Base path for navigation (default: "/studio/v2/chat") */
+  /** Base path for navigation (default: "/studio/chat") */
   basePath?: string;
 }
 
@@ -76,7 +76,7 @@ function getAuthHeaders(): Record<string, string> {
  * @returns Object with createNewChat function, isCreating, and error states
  */
 export function useNewChat(options: UseNewChatOptions = {}): UseNewChatResult {
-  const { basePath = "/studio/v2/chat" } = options;
+  const { basePath = "/studio/chat" } = options;
   const navigate = useNavigate();
 
   const [isCreating, setIsCreating] = useState(false);

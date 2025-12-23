@@ -101,7 +101,7 @@ const createTestStore = (
 // Test routes that match the StudioShell structure
 const createTestRoutes = () => [
   {
-    path: "/studio/v2",
+    path: "/studio",
     element: (
       <Suspense fallback={<div>Loading...</div>}>
         <div data-testid="studio-shell-wrapper">
@@ -166,10 +166,10 @@ describe("Routing Integration", () => {
   });
 
   describe("StudioShell Routes", () => {
-    it("should render StudioShell layout at /studio/v2", async () => {
+    it("should render StudioShell layout at /studio", async () => {
       const store = createTestStore();
       const router = createMemoryRouter(createTestRoutes(), {
-        initialEntries: ["/studio/v2/chat"],
+        initialEntries: ["/studio/chat"],
       });
 
       render(
@@ -183,10 +183,10 @@ describe("Routing Integration", () => {
       });
     });
 
-    it("should render chat page at /studio/v2/chat", async () => {
+    it("should render chat page at /studio/chat", async () => {
       const store = createTestStore();
       const router = createMemoryRouter(createTestRoutes(), {
-        initialEntries: ["/studio/v2/chat"],
+        initialEntries: ["/studio/chat"],
       });
 
       render(
@@ -203,7 +203,7 @@ describe("Routing Integration", () => {
     it("should render chat session page with session ID", async () => {
       const store = createTestStore();
       const router = createMemoryRouter(createTestRoutes(), {
-        initialEntries: ["/studio/v2/chat/session-123"],
+        initialEntries: ["/studio/chat/session-123"],
       });
 
       render(
@@ -217,10 +217,10 @@ describe("Routing Integration", () => {
       });
     });
 
-    it("should render compliance dashboard at /studio/v2/compliance", async () => {
+    it("should render compliance dashboard at /studio/compliance", async () => {
       const store = createTestStore("admin");
       const router = createMemoryRouter(createTestRoutes(), {
-        initialEntries: ["/studio/v2/compliance"],
+        initialEntries: ["/studio/compliance"],
       });
 
       render(
@@ -234,10 +234,10 @@ describe("Routing Integration", () => {
       });
     });
 
-    it("should render analytics dashboard at /studio/v2/analytics", async () => {
+    it("should render analytics dashboard at /studio/analytics", async () => {
       const store = createTestStore("admin");
       const router = createMemoryRouter(createTestRoutes(), {
-        initialEntries: ["/studio/v2/analytics"],
+        initialEntries: ["/studio/analytics"],
       });
 
       render(
@@ -256,7 +256,7 @@ describe("Routing Integration", () => {
     it("should render admin dashboard for admin persona", async () => {
       const store = createTestStore("admin");
       const router = createMemoryRouter(createTestRoutes(), {
-        initialEntries: ["/studio/v2/admin"],
+        initialEntries: ["/studio/admin"],
       });
 
       render(
@@ -273,7 +273,7 @@ describe("Routing Integration", () => {
     it("should render admin dashboard for developer (route exists, guard handles access)", async () => {
       const store = createTestStore("developer");
       const router = createMemoryRouter(createTestRoutes(), {
-        initialEntries: ["/studio/v2/admin"],
+        initialEntries: ["/studio/admin"],
       });
 
       render(

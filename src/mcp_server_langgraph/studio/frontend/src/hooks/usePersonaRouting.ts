@@ -65,7 +65,7 @@ export function usePersonaRouting(): PersonaRoutingResult {
     const currentPath = location.pathname;
 
     // Only redirect legacy root paths to persona's default route
-    // /studio/v2 and /studio/v2/ are handled by the router's index redirect
+    // /studio and /studio/ are handled by the router's index redirect
     // (Navigate to="chat" in router config)
     if (currentPath === "/" || currentPath === "") {
       navigate(defaultRoute, { replace: true });
