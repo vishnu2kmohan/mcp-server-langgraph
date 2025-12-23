@@ -11,6 +11,9 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
+# Module-level marker for test discovery
+pytestmark = pytest.mark.unit
+
 
 @pytest.mark.unit
 @pytest.mark.xdist_group(name="websocket_services_cost_tracking")
@@ -22,6 +25,7 @@ class TestCostTrackingServiceAdapter:
         from mcp_server_langgraph.websocket.services.cost_tracking import (
             reset_websocket_cost_service,
         )
+
         reset_websocket_cost_service()
         gc.collect()
 
@@ -57,9 +61,7 @@ class TestCostTrackingServiceAdapter:
         adapter = CostTrackingServiceAdapter()
 
         # Patch at the source location where get_cost_service is defined
-        with patch(
-            "mcp_server_langgraph.api.v1.cost.get_cost_service"
-        ) as mock_get:
+        with patch("mcp_server_langgraph.api.v1.cost.get_cost_service") as mock_get:
             mock_service = MagicMock()
             mock_get.return_value = mock_service
 
@@ -112,9 +114,7 @@ class TestCostTrackingServiceAdapter:
 
         adapter = CostTrackingServiceAdapter()
 
-        with patch(
-            "mcp_server_langgraph.websocket.services.cost_tracking.get_feature_flags"
-        ) as mock_flags:
+        with patch("mcp_server_langgraph.websocket.services.cost_tracking.get_feature_flags") as mock_flags:
             mock_ff = MagicMock()
             mock_ff.enable_websocket_enhanced_metrics = True
             mock_flags.return_value = mock_ff
@@ -134,9 +134,7 @@ class TestCostTrackingServiceAdapter:
 
         adapter = CostTrackingServiceAdapter()
 
-        with patch(
-            "mcp_server_langgraph.websocket.services.cost_tracking.get_feature_flags"
-        ) as mock_flags:
+        with patch("mcp_server_langgraph.websocket.services.cost_tracking.get_feature_flags") as mock_flags:
             mock_ff = MagicMock()
             mock_ff.enable_websocket_enhanced_metrics = False
             mock_flags.return_value = mock_ff
@@ -243,6 +241,7 @@ class TestCostTrackingSingleton:
         from mcp_server_langgraph.websocket.services.cost_tracking import (
             reset_websocket_cost_service,
         )
+
         reset_websocket_cost_service()
         gc.collect()
 

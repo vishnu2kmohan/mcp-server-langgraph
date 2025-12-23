@@ -11,6 +11,9 @@ from unittest.mock import MagicMock
 
 import pytest
 
+# Module-level marker for test discovery
+pytestmark = pytest.mark.unit
+
 
 @pytest.mark.unit
 @pytest.mark.websocket
@@ -347,9 +350,7 @@ class TestWebSocketMetricsOTel:
 
         metrics.record_latency(latency_ms=25.5, message_type="data")
 
-        metrics._otel_latency.record.assert_called_once_with(
-            25.5, {"endpoint": "test", "type": "data"}
-        )
+        metrics._otel_latency.record.assert_called_once_with(25.5, {"endpoint": "test", "type": "data"})
 
 
 @pytest.mark.unit

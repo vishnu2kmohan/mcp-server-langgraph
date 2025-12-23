@@ -11,6 +11,9 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
+# Module-level marker for test discovery
+pytestmark = pytest.mark.unit
+
 
 @pytest.mark.unit
 @pytest.mark.xdist_group(name="websocket_services_connections")
@@ -253,6 +256,7 @@ class TestConnectionsServiceSingleton:
         from mcp_server_langgraph.websocket.services.connections import (
             reset_websocket_connections_service,
         )
+
         reset_websocket_connections_service()
         gc.collect()
 

@@ -37,21 +37,25 @@ if TYPE_CHECKING:
 _global_auth_middleware: "AuthMiddleware | None" = None
 
 
-def set_global_auth_middleware(auth: "AuthMiddleware") -> None:
+def set_global_auth_middleware(auth: "AuthMiddleware | None") -> None:
     """
     Set global auth middleware instance for FastAPI dependencies.
 
-    This should be called during application startup.
+    This should be called during application startup, or with None during test teardown.
 
     Args:
         auth: AuthMiddleware instance configured with user provider, OpenFGA, etc.
+              Pass None to clear the global middleware (e.g., in test teardown).
     """
     global _global_auth_middleware
     _global_auth_middleware = auth
-    logger.info(
-        "Global auth middleware set",
-        extra={"provider_type": type(auth.user_provider).__name__},
-    )
+    if auth is not None:
+        logger.info(
+            "Global auth middleware set",
+            extra={"provider_type": type(auth.user_provider).__name__},
+        )
+    else:
+        logger.debug("Global auth middleware cleared")
 
 
 def get_auth_middleware() -> "AuthMiddleware":

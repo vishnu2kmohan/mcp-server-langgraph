@@ -850,6 +850,7 @@ markers = [
     "docker: Docker image and Dockerfile tests",
     "playground: Interactive playground tests (API, WebSocket, sessions)",
     "websocket: WebSocket endpoint tests (streaming, real-time)",
+    "lifecycle: WebSocket connection lifecycle tests (connect, disconnect, teardown)",
     "notifications: Notification system tests (push, preferences, broadcast)",
     "alerts: Alert infrastructure tests (WebSocket streaming, Alertmanager webhook, AI recommendations)",
     "builder: Visual workflow builder tests",

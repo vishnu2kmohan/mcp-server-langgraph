@@ -14,6 +14,9 @@ import pytest
 
 from mcp_server_langgraph.resilience.circuit_breaker import CircuitBreakerState
 
+# Module-level marker for test discovery
+pytestmark = pytest.mark.unit
+
 
 @pytest.mark.unit
 @pytest.mark.websocket
@@ -162,13 +165,9 @@ class TestWithCircuitBreaker:
             "mcp_server_langgraph.websocket.resilience.get_circuit_breaker",
             return_value=mock_breaker,
         ):
-            with patch(
-                "mcp_server_langgraph.websocket.resilience.logger"
-            ) as mock_logger:
+            with patch("mcp_server_langgraph.websocket.resilience.logger") as mock_logger:
                 async_op = AsyncMock()()
-                await with_circuit_breaker(
-                    "my_service", async_op, fallback="default"
-                )
+                await with_circuit_breaker("my_service", async_op, fallback="default")
 
                 mock_logger.warning.assert_called_once()
                 call_args = mock_logger.warning.call_args

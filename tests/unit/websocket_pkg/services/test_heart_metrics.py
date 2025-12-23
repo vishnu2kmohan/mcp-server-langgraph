@@ -18,6 +18,9 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
+# Module-level marker for test discovery
+pytestmark = pytest.mark.unit
+
 
 @pytest.mark.unit
 @pytest.mark.xdist_group(name="websocket_services_heart_metrics")
@@ -29,6 +32,7 @@ class TestHeartMetricsServiceAdapter:
         from mcp_server_langgraph.websocket.services.heart_metrics import (
             reset_websocket_heart_metrics_service,
         )
+
         reset_websocket_heart_metrics_service()
         gc.collect()
 
@@ -52,9 +56,7 @@ class TestHeartMetricsServiceAdapter:
 
         adapter = HeartMetricsServiceAdapter()
 
-        with patch(
-            "mcp_server_langgraph.websocket.services.heart_metrics.get_feature_flags"
-        ) as mock_flags:
+        with patch("mcp_server_langgraph.websocket.services.heart_metrics.get_feature_flags") as mock_flags:
             mock_ff = MagicMock()
             mock_ff.enable_websocket_enhanced_metrics = True
             mock_flags.return_value = mock_ff
@@ -84,9 +86,7 @@ class TestHeartMetricsServiceAdapter:
 
         adapter = HeartMetricsServiceAdapter()
 
-        with patch(
-            "mcp_server_langgraph.websocket.services.heart_metrics.get_feature_flags"
-        ) as mock_flags:
+        with patch("mcp_server_langgraph.websocket.services.heart_metrics.get_feature_flags") as mock_flags:
             mock_ff = MagicMock()
             mock_ff.enable_websocket_enhanced_metrics = True
             mock_flags.return_value = mock_ff
@@ -104,9 +104,7 @@ class TestHeartMetricsServiceAdapter:
 
         adapter = HeartMetricsServiceAdapter()
 
-        with patch(
-            "mcp_server_langgraph.websocket.services.heart_metrics.get_feature_flags"
-        ) as mock_flags:
+        with patch("mcp_server_langgraph.websocket.services.heart_metrics.get_feature_flags") as mock_flags:
             mock_ff = MagicMock()
             mock_ff.enable_websocket_enhanced_metrics = False
             mock_flags.return_value = mock_ff
@@ -263,6 +261,7 @@ class TestHeartMetricsSingleton:
         from mcp_server_langgraph.websocket.services.heart_metrics import (
             reset_websocket_heart_metrics_service,
         )
+
         reset_websocket_heart_metrics_service()
         gc.collect()
 
@@ -312,13 +311,16 @@ class TestHeartDimensionValidation:
         gc.collect()
 
     @pytest.mark.asyncio
-    @pytest.mark.parametrize("dimension", [
-        "happiness",
-        "engagement",
-        "adoption",
-        "retention",
-        "task_success",
-    ])
+    @pytest.mark.parametrize(
+        "dimension",
+        [
+            "happiness",
+            "engagement",
+            "adoption",
+            "retention",
+            "task_success",
+        ],
+    )
     async def test_all_valid_dimensions(self, dimension: str) -> None:
         """Test all valid HEART dimensions return data without error."""
         from mcp_server_langgraph.websocket.services.heart_metrics import (
@@ -333,14 +335,17 @@ class TestHeartDimensionValidation:
         assert "score" in result
 
     @pytest.mark.asyncio
-    @pytest.mark.parametrize("invalid_dimension", [
-        "invalid",
-        "performance",
-        "latency",
-        "happy",  # Close but not exact
-        "HAPPINESS",  # Case sensitive
-        "",
-    ])
+    @pytest.mark.parametrize(
+        "invalid_dimension",
+        [
+            "invalid",
+            "performance",
+            "latency",
+            "happy",  # Close but not exact
+            "HAPPINESS",  # Case sensitive
+            "",
+        ],
+    )
     async def test_invalid_dimensions_return_error(self, invalid_dimension: str) -> None:
         """Test invalid HEART dimensions return error."""
         from mcp_server_langgraph.websocket.services.heart_metrics import (

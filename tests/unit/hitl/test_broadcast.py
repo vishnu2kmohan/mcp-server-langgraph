@@ -27,6 +27,9 @@ from mcp_server_langgraph.hitl.broadcast import (
 )
 
 
+# Module-level marker for test discovery
+pytestmark = pytest.mark.unit
+
 # =============================================================================
 # Message Type Enum Tests
 # =============================================================================
@@ -392,9 +395,7 @@ class TestAgentRequestBroadcaster:
         """Test disconnecting a WebSocket."""
         broadcaster = AgentRequestBroadcaster()
         mock_ws = MagicMock()
-        broadcaster._connections[mock_ws] = WebSocketConnection(
-            websocket=mock_ws, session_id="sess-123", user_id="user-456"
-        )
+        broadcaster._connections[mock_ws] = WebSocketConnection(websocket=mock_ws, session_id="sess-123", user_id="user-456")
 
         assert broadcaster.connection_count == 1
         broadcaster.disconnect(mock_ws)
@@ -416,12 +417,8 @@ class TestAgentRequestBroadcaster:
         mock_ws1 = AsyncMock()
         mock_ws2 = AsyncMock()
 
-        broadcaster._connections[mock_ws1] = WebSocketConnection(
-            websocket=mock_ws1, session_id="sess-1", user_id="user-1"
-        )
-        broadcaster._connections[mock_ws2] = WebSocketConnection(
-            websocket=mock_ws2, session_id="sess-2", user_id="user-2"
-        )
+        broadcaster._connections[mock_ws1] = WebSocketConnection(websocket=mock_ws1, session_id="sess-1", user_id="user-1")
+        broadcaster._connections[mock_ws2] = WebSocketConnection(websocket=mock_ws2, session_id="sess-2", user_id="user-2")
 
         message = {"type": "test", "data": "hello"}
         await broadcaster.broadcast(message)
@@ -437,12 +434,8 @@ class TestAgentRequestBroadcaster:
         mock_ws2 = AsyncMock()
         mock_ws2.send_json.side_effect = Exception("Connection closed")
 
-        broadcaster._connections[mock_ws1] = WebSocketConnection(
-            websocket=mock_ws1, session_id="sess-1", user_id="user-1"
-        )
-        broadcaster._connections[mock_ws2] = WebSocketConnection(
-            websocket=mock_ws2, session_id="sess-2", user_id="user-2"
-        )
+        broadcaster._connections[mock_ws1] = WebSocketConnection(websocket=mock_ws1, session_id="sess-1", user_id="user-1")
+        broadcaster._connections[mock_ws2] = WebSocketConnection(websocket=mock_ws2, session_id="sess-2", user_id="user-2")
 
         await broadcaster.broadcast({"type": "test"})
 
@@ -459,15 +452,9 @@ class TestAgentRequestBroadcaster:
         mock_ws2 = AsyncMock()
         mock_ws3 = AsyncMock()
 
-        broadcaster._connections[mock_ws1] = WebSocketConnection(
-            websocket=mock_ws1, session_id="sess-A", user_id="user-1"
-        )
-        broadcaster._connections[mock_ws2] = WebSocketConnection(
-            websocket=mock_ws2, session_id="sess-B", user_id="user-2"
-        )
-        broadcaster._connections[mock_ws3] = WebSocketConnection(
-            websocket=mock_ws3, session_id="sess-A", user_id="user-3"
-        )
+        broadcaster._connections[mock_ws1] = WebSocketConnection(websocket=mock_ws1, session_id="sess-A", user_id="user-1")
+        broadcaster._connections[mock_ws2] = WebSocketConnection(websocket=mock_ws2, session_id="sess-B", user_id="user-2")
+        broadcaster._connections[mock_ws3] = WebSocketConnection(websocket=mock_ws3, session_id="sess-A", user_id="user-3")
 
         message = {"type": "session-specific"}
         await broadcaster.send_to_session("sess-A", message)
@@ -484,9 +471,7 @@ class TestAgentRequestBroadcaster:
         mock_ws1 = AsyncMock()
         mock_ws1.send_json.side_effect = Exception("Closed")
 
-        broadcaster._connections[mock_ws1] = WebSocketConnection(
-            websocket=mock_ws1, session_id="sess-A", user_id="user-1"
-        )
+        broadcaster._connections[mock_ws1] = WebSocketConnection(websocket=mock_ws1, session_id="sess-A", user_id="user-1")
 
         await broadcaster.send_to_session("sess-A", {"type": "test"})
 
@@ -527,7 +512,5 @@ class TestAgentRequestBroadcaster:
         assert broadcaster.connection_count == 0
 
         mock_ws = MagicMock()
-        broadcaster._connections[mock_ws] = WebSocketConnection(
-            websocket=mock_ws, session_id="sess", user_id="user"
-        )
+        broadcaster._connections[mock_ws] = WebSocketConnection(websocket=mock_ws, session_id="sess", user_id="user")
         assert broadcaster.connection_count == 1

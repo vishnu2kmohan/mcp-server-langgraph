@@ -12,6 +12,9 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
+# Module-level marker for test discovery
+pytestmark = pytest.mark.unit
+
 
 @dataclass
 class MockVerifyResult:
@@ -410,9 +413,7 @@ class TestValidateWebSocketAuth:
         from mcp_server_langgraph.websocket.middleware import validate_websocket_auth
 
         mock_auth_middleware = AsyncMock()
-        mock_auth_middleware.verify_token = AsyncMock(
-            side_effect=Exception("Connection error")
-        )
+        mock_auth_middleware.verify_token = AsyncMock(side_effect=Exception("Connection error"))
 
         mock_app_state = MagicMock()
         mock_app_state.auth_middleware = mock_auth_middleware
@@ -515,9 +516,7 @@ class TestValidateWebSocketToken:
         from mcp_server_langgraph.websocket.middleware import validate_websocket_token
 
         mock_auth_middleware = AsyncMock()
-        mock_auth_middleware.verify_token = AsyncMock(
-            side_effect=Exception("Auth service down")
-        )
+        mock_auth_middleware.verify_token = AsyncMock(side_effect=Exception("Auth service down"))
 
         with patch(
             "mcp_server_langgraph.auth.middleware.get_auth_middleware",

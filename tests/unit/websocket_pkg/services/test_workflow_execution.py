@@ -11,6 +11,9 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
+# Module-level marker for test discovery
+pytestmark = pytest.mark.unit
+
 
 @pytest.mark.unit
 @pytest.mark.xdist_group(name="websocket_services_workflow_execution")
@@ -22,6 +25,7 @@ class TestWorkflowExecutionServiceAdapter:
         from mcp_server_langgraph.websocket.services.workflow_execution import (
             reset_websocket_execution_service,
         )
+
         reset_websocket_execution_service()
         gc.collect()
 
@@ -76,12 +80,14 @@ class TestWorkflowExecutionServiceAdapter:
         )
 
         mock_manager = AsyncMock()
-        mock_manager.get_workflow = AsyncMock(return_value={
-            "id": "wf-123",
-            "name": "Test Workflow",
-            "nodes": ["node1", "node2"],
-            "status": "active",
-        })
+        mock_manager.get_workflow = AsyncMock(
+            return_value={
+                "id": "wf-123",
+                "name": "Test Workflow",
+                "nodes": ["node1", "node2"],
+                "status": "active",
+            }
+        )
 
         adapter = WorkflowExecutionServiceAdapter(execution_manager=mock_manager)
         result = await adapter.get_workflow("wf-123")
@@ -266,9 +272,11 @@ class TestWorkflowExecutionServiceAdapter:
         )
 
         mock_manager = AsyncMock()
-        mock_manager.list_executions = AsyncMock(return_value=[
-            {"id": "exec-1", "workflow_id": "wf-1", "status": "running"},
-        ])
+        mock_manager.list_executions = AsyncMock(
+            return_value=[
+                {"id": "exec-1", "workflow_id": "wf-1", "status": "running"},
+            ]
+        )
 
         adapter = WorkflowExecutionServiceAdapter(execution_manager=mock_manager)
         result = await adapter.get_execution_status("wf-1")
@@ -360,6 +368,7 @@ class TestWorkflowExecutionSingleton:
         from mcp_server_langgraph.websocket.services.workflow_execution import (
             reset_websocket_execution_service,
         )
+
         reset_websocket_execution_service()
         gc.collect()
 
@@ -370,9 +379,7 @@ class TestWorkflowExecutionSingleton:
             WorkflowExecutionServiceAdapter,
         )
 
-        with patch(
-            "mcp_server_langgraph.websocket.services.workflow_execution.get_feature_flags"
-        ) as mock_flags:
+        with patch("mcp_server_langgraph.websocket.services.workflow_execution.get_feature_flags") as mock_flags:
             mock_ff = MagicMock()
             mock_ff.enable_websocket_enhanced_metrics = False
             mock_flags.return_value = mock_ff
@@ -387,9 +394,7 @@ class TestWorkflowExecutionSingleton:
             get_websocket_execution_service,
         )
 
-        with patch(
-            "mcp_server_langgraph.websocket.services.workflow_execution.get_feature_flags"
-        ) as mock_flags:
+        with patch("mcp_server_langgraph.websocket.services.workflow_execution.get_feature_flags") as mock_flags:
             mock_ff = MagicMock()
             mock_ff.enable_websocket_enhanced_metrics = False
             mock_flags.return_value = mock_ff
@@ -406,9 +411,7 @@ class TestWorkflowExecutionSingleton:
             reset_websocket_execution_service,
         )
 
-        with patch(
-            "mcp_server_langgraph.websocket.services.workflow_execution.get_feature_flags"
-        ) as mock_flags:
+        with patch("mcp_server_langgraph.websocket.services.workflow_execution.get_feature_flags") as mock_flags:
             mock_ff = MagicMock()
             mock_ff.enable_websocket_enhanced_metrics = False
             mock_flags.return_value = mock_ff
@@ -427,11 +430,12 @@ class TestWorkflowExecutionSingleton:
 
         mock_manager = MagicMock()
 
-        with patch(
-            "mcp_server_langgraph.websocket.services.workflow_execution.get_feature_flags"
-        ) as mock_flags, patch(
-            "mcp_server_langgraph.storage.workflow.postgres_execution_manager.get_execution_manager"
-        ) as mock_get_manager:
+        with (
+            patch("mcp_server_langgraph.websocket.services.workflow_execution.get_feature_flags") as mock_flags,
+            patch(
+                "mcp_server_langgraph.storage.workflow.postgres_execution_manager.get_execution_manager"
+            ) as mock_get_manager,
+        ):
             mock_ff = MagicMock()
             mock_ff.enable_websocket_enhanced_metrics = True
             mock_flags.return_value = mock_ff
@@ -447,9 +451,7 @@ class TestWorkflowExecutionSingleton:
             get_websocket_execution_service,
         )
 
-        with patch(
-            "mcp_server_langgraph.websocket.services.workflow_execution.get_feature_flags"
-        ) as mock_flags:
+        with patch("mcp_server_langgraph.websocket.services.workflow_execution.get_feature_flags") as mock_flags:
             mock_ff = MagicMock()
             mock_ff.enable_websocket_enhanced_metrics = True
             mock_flags.return_value = mock_ff
