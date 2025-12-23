@@ -5,7 +5,13 @@
  * Aggregates errors and warnings from Redux state.
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { render, screen, within, waitFor, fireEvent } from "@testing-library/react";
+import {
+  render,
+  screen,
+  within,
+  waitFor,
+  fireEvent,
+} from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { axe, toHaveNoViolations } from "jest-axe";
 import { Provider } from "react-redux";
@@ -37,7 +43,7 @@ const createMockStore = (state: {
 
 const renderWithStore = (
   ui: React.ReactNode,
-  options: { sessionError?: string | null; mcpError?: string | null } = {}
+  options: { sessionError?: string | null; mcpError?: string | null } = {},
 ) => {
   const store = createMockStore(options);
   return render(<Provider store={store}>{ui}</Provider>);
@@ -69,7 +75,7 @@ describe("ProblemsTab", () => {
       });
 
       expect(
-        screen.getByText("Failed to connect to session")
+        screen.getByText("Failed to connect to session"),
       ).toBeInTheDocument();
     });
 

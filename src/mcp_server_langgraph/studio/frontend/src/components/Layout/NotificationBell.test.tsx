@@ -452,7 +452,7 @@ describe("NotificationBell", () => {
       });
     });
 
-    it('should show minutes ago for notifications less than an hour old', async () => {
+    it("should show minutes ago for notifications less than an hour old", async () => {
       const minutesAgo = new Date(Date.now() - 5 * 60 * 1000); // 5 minutes ago
       const notification = {
         id: "mins",
@@ -472,7 +472,7 @@ describe("NotificationBell", () => {
       });
     });
 
-    it('should show hours ago for notifications less than a day old', async () => {
+    it("should show hours ago for notifications less than a day old", async () => {
       const hoursAgo = new Date(Date.now() - 3 * 60 * 60 * 1000); // 3 hours ago
       const notification = {
         id: "hours",
@@ -492,7 +492,7 @@ describe("NotificationBell", () => {
       });
     });
 
-    it('should show days ago for notifications less than a week old', async () => {
+    it("should show days ago for notifications less than a week old", async () => {
       const daysAgo = new Date(Date.now() - 4 * 24 * 60 * 60 * 1000); // 4 days ago
       const notification = {
         id: "days",
@@ -512,7 +512,7 @@ describe("NotificationBell", () => {
       });
     });
 
-    it('should show formatted date for notifications older than a week', async () => {
+    it("should show formatted date for notifications older than a week", async () => {
       const weeksAgo = new Date(Date.now() - 14 * 24 * 60 * 60 * 1000); // 14 days ago
       const notification = {
         id: "old",

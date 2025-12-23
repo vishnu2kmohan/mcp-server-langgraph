@@ -11,8 +11,8 @@
  * - Integrate with Redux persona state
  */
 
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { renderHook } from "@testing-library/react";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { renderHook, cleanup } from "@testing-library/react";
 import { Provider } from "react-redux";
 import { configureStore } from "@reduxjs/toolkit";
 import React from "react";
@@ -77,6 +77,11 @@ const wrapper = ({ children }: { children: React.ReactNode }) => (
 
 describe("useAIOnboarding", () => {
   beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  afterEach(() => {
+    cleanup();
     vi.clearAllMocks();
   });
 
@@ -185,9 +190,7 @@ describe("useAIOnboarding", () => {
         error: null,
         detectedIntent: "general_exploration",
         confidence: 0.65,
-        recommendedPath: [
-          { step: "welcome_tour", duration: "short" },
-        ],
+        recommendedPath: [{ step: "welcome_tour", duration: "short" }],
         skipSteps: [],
         personaPrediction: "bob",
         refresh: vi.fn(),
@@ -266,9 +269,7 @@ describe("useAIOnboarding", () => {
         error: null,
         detectedIntent: "documentation_seeker",
         confidence: 0.85,
-        recommendedPath: [
-          { step: "docs_highlight", focus: "api" },
-        ],
+        recommendedPath: [{ step: "docs_highlight", focus: "api" }],
         skipSteps: ["basic_intro"],
         personaPrediction: "alice-analyst",
         refresh: vi.fn(),

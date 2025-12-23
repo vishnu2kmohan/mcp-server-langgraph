@@ -5,7 +5,13 @@
  * the artifact display area with resizable panels.
  */
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, fireEvent, waitFor, act } from "@testing-library/react";
+import {
+  render,
+  screen,
+  fireEvent,
+  waitFor,
+  act,
+} from "@testing-library/react";
 import { axe, toHaveNoViolations } from "jest-axe";
 
 expect.extend(toHaveNoViolations);
@@ -349,7 +355,6 @@ describe("CanvasWorkspace", () => {
         expect(onSave).toHaveBeenCalledWith("artifact-1", "updated content");
       });
     });
-
   });
 
   describe("Accessibility (WCAG 2.1 AA)", () => {
@@ -659,14 +664,21 @@ describe("CanvasWorkspace", () => {
       renderWithProviders(
         <CanvasWorkspace artifacts={[]} className="custom-class" />,
       );
-      expect(screen.getByTestId("canvas-workspace")).toHaveClass("custom-class");
+      expect(screen.getByTestId("canvas-workspace")).toHaveClass(
+        "custom-class",
+      );
     });
 
     it("should apply custom className to workspace with artifacts", () => {
       renderWithProviders(
-        <CanvasWorkspace artifacts={mockArtifacts} className="my-custom-style" />,
+        <CanvasWorkspace
+          artifacts={mockArtifacts}
+          className="my-custom-style"
+        />,
       );
-      expect(screen.getByTestId("canvas-workspace")).toHaveClass("my-custom-style");
+      expect(screen.getByTestId("canvas-workspace")).toHaveClass(
+        "my-custom-style",
+      );
     });
   });
 
@@ -925,7 +937,9 @@ describe("CanvasWorkspace", () => {
       expect(
         screen.getByPlaceholderText(/describe|instruction|edit/i),
       ).toBeInTheDocument();
-      expect(screen.getByRole("button", { name: /cancel/i })).toBeInTheDocument();
+      expect(
+        screen.getByRole("button", { name: /cancel/i }),
+      ).toBeInTheDocument();
     });
 
     it("should close AI Edit Overlay when Escape key is pressed on overlay", async () => {

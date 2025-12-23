@@ -15,7 +15,10 @@ import { AlertsPanel } from "./AlertsPanel";
 import { AlertDetailPanel } from "./AlertDetailPanel";
 import { RemediationApprovalDialog } from "./RemediationApprovalDialog";
 import { BatchApprovalPanel } from "./BatchApprovalPanel";
-import { AgentApprovalAuditLog, type AuditEntry } from "./AgentApprovalAuditLog";
+import {
+  AgentApprovalAuditLog,
+  type AuditEntry,
+} from "./AgentApprovalAuditLog";
 import type {
   RemediationRequest,
   ApproveRemediationRequest,
@@ -93,7 +96,8 @@ export function AdminDashboard({
   alertConnectionStatus = "connected",
 }: AdminDashboardProps) {
   const [activeTab, setActiveTab] = useState<TabId>("overview");
-  const [selectedRemediationForDialog, setSelectedRemediationForDialog] = useState<string | null>(null);
+  const [selectedRemediationForDialog, setSelectedRemediationForDialog] =
+    useState<string | null>(null);
   const [dialogError, setDialogError] = useState<string | null>(null);
   const dispatch = useAppDispatch();
 
@@ -109,7 +113,10 @@ export function AdminDashboard({
   const goToOverview = useCallback(() => setActiveTab("overview"), []);
   const goToUsers = useCallback(() => setActiveTab("users"), []);
   const goToAlerts = useCallback(() => setActiveTab("alerts"), []);
-  const goToAgentRequests = useCallback(() => setActiveTab("agent-requests"), []);
+  const goToAgentRequests = useCallback(
+    () => setActiveTab("agent-requests"),
+    [],
+  );
 
   useKeyboardShortcuts({
     "shift+o": goToOverview,
@@ -119,24 +126,31 @@ export function AdminDashboard({
   });
 
   // Alert API hooks
-  const { data: recommendation, isLoading: recommendationLoading } = useGetAlertRecommendationQuery(
-    selectedAlert?.alert_id ?? "",
-    { skip: !selectedAlert }
-  );
-  const [approveRemediation, { isLoading: isApproving }] = useApproveRemediationMutation();
-  const [rejectRemediation, { isLoading: isRejecting }] = useRejectRemediationMutation();
-  const [regenerateRecommendation, { isLoading: isRegenerating }] = useRegenerateAlertRecommendationMutation();
+  const { data: recommendation, isLoading: recommendationLoading } =
+    useGetAlertRecommendationQuery(selectedAlert?.alert_id ?? "", {
+      skip: !selectedAlert,
+    });
+  const [approveRemediation, { isLoading: isApproving }] =
+    useApproveRemediationMutation();
+  const [rejectRemediation, { isLoading: isRejecting }] =
+    useRejectRemediationMutation();
+  const [regenerateRecommendation, { isLoading: isRegenerating }] =
+    useRegenerateAlertRecommendationMutation();
 
   // Agent HITL API hooks
-  const { data: pendingAgentRequests, isLoading: agentRequestsLoading } = useListPendingAgentRequestsQuery();
-  const [batchApproveRequests, { isLoading: isBatchApproving }] = useBatchApproveAgentRequestsMutation();
-  const [batchRejectRequests, { isLoading: isBatchRejecting }] = useBatchRejectAgentRequestsMutation();
+  const { data: pendingAgentRequests, isLoading: agentRequestsLoading } =
+    useListPendingAgentRequestsQuery();
+  const [batchApproveRequests, { isLoading: isBatchApproving }] =
+    useBatchApproveAgentRequestsMutation();
+  const [batchRejectRequests, { isLoading: isBatchRejecting }] =
+    useBatchRejectAgentRequestsMutation();
 
   // Build pending remediations from recommendation steps
   const pendingRemediations = useMemo((): RemediationRequest[] => {
     if (!recommendation || !selectedAlert) return [];
     // Only critical and warning alerts can have remediations
-    const remediationSeverity = selectedAlert.severity === "info" ? "warning" : selectedAlert.severity;
+    const remediationSeverity =
+      selectedAlert.severity === "info" ? "warning" : selectedAlert.severity;
     return recommendation.remediation_steps.map((step) => ({
       remediation_id: `${recommendation.recommendation_id}-step-${step.step_number}`,
       alert_id: selectedAlert.alert_id,
@@ -158,7 +172,7 @@ export function AdminDashboard({
 
   // Find remediation for dialog
   const selectedRemediation = pendingRemediations.find(
-    (r) => r.remediation_id === selectedRemediationForDialog
+    (r) => r.remediation_id === selectedRemediationForDialog,
   );
 
   // Alert handlers
@@ -194,7 +208,9 @@ export function AdminDashboard({
       await approveRemediation(data).unwrap();
       handleCloseDialog();
     } catch (err) {
-      setDialogError(err instanceof Error ? err.message : "Failed to approve remediation");
+      setDialogError(
+        err instanceof Error ? err.message : "Failed to approve remediation",
+      );
     }
   };
 
@@ -204,7 +220,9 @@ export function AdminDashboard({
       await rejectRemediation(data).unwrap();
       handleCloseDialog();
     } catch (err) {
-      setDialogError(err instanceof Error ? err.message : "Failed to reject remediation");
+      setDialogError(
+        err instanceof Error ? err.message : "Failed to reject remediation",
+      );
     }
   };
 
@@ -227,7 +245,7 @@ export function AdminDashboard({
         reason,
       }).unwrap();
     },
-    [batchApproveRequests, currentUsername]
+    [batchApproveRequests, currentUsername],
   );
 
   const handleBatchRejectAgents = useCallback(
@@ -238,13 +256,23 @@ export function AdminDashboard({
         reason,
       }).unwrap();
     },
-    [batchRejectRequests, currentUsername]
+    [batchRejectRequests, currentUsername],
   );
 
   // Handle audit log export
   const handleExportAuditLog = useCallback((entries: AuditEntry[]) => {
     const csv = [
-      ["ID", "Request ID", "Agent", "Decision", "Confidence", "Threshold", "Decided By", "Date", "Reason"].join(","),
+      [
+        "ID",
+        "Request ID",
+        "Agent",
+        "Decision",
+        "Confidence",
+        "Threshold",
+        "Decided By",
+        "Date",
+        "Reason",
+      ].join(","),
       ...entries.map((e) =>
         [
           e.id,
@@ -256,7 +284,7 @@ export function AdminDashboard({
           e.decided_by,
           e.decided_at,
           e.reason ?? "",
-        ].join(",")
+        ].join(","),
       ),
     ].join("\n");
 
@@ -273,7 +301,8 @@ export function AdminDashboard({
   const mockAuditEntries: AuditEntry[] = useMemo(() => [], []);
 
   // Use prop or Redux count
-  const effectiveAlertCount = alertCount > 0 ? alertCount : criticalCount + warningCount;
+  const effectiveAlertCount =
+    alertCount > 0 ? alertCount : criticalCount + warningCount;
 
   if (isLoading) {
     return (
@@ -300,11 +329,26 @@ export function AdminDashboard({
   // Count pending agent requests
   const pendingAgentRequestCount = pendingAgentRequests?.total_count ?? 0;
 
-  const tabs: { id: TabId; label: string; badge?: number; icon?: "alert" | "agent" }[] = [
+  const tabs: {
+    id: TabId;
+    label: string;
+    badge?: number;
+    icon?: "alert" | "agent";
+  }[] = [
     { id: "overview", label: "Overview" },
     { id: "users", label: "Users" },
-    { id: "alerts", label: "Alerts", badge: effectiveAlertCount, icon: "alert" },
-    { id: "agent-requests", label: "Agent Requests", badge: pendingAgentRequestCount, icon: "agent" },
+    {
+      id: "alerts",
+      label: "Alerts",
+      badge: effectiveAlertCount,
+      icon: "alert",
+    },
+    {
+      id: "agent-requests",
+      label: "Agent Requests",
+      badge: pendingAgentRequestCount,
+      icon: "agent",
+    },
   ];
 
   return (
@@ -446,7 +490,10 @@ export function AdminDashboard({
       )}
 
       {activeTab === "alerts" && (
-        <div data-testid="alerts-container" className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div
+          data-testid="alerts-container"
+          className="grid grid-cols-1 lg:grid-cols-2 gap-6"
+        >
           {/* Alerts Panel */}
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden">
             <AlertsPanel

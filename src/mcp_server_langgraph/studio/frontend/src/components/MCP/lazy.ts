@@ -29,7 +29,7 @@ import { lazy } from "react";
 export const LazyAddConnectionDialog = lazy(() =>
   import("./AddConnectionDialog").then((module) => ({
     default: module.AddConnectionDialog,
-  }))
+  })),
 );
 
 /**
@@ -39,7 +39,7 @@ export const LazyAddConnectionDialog = lazy(() =>
 export const LazyToolInvocationDialog = lazy(() =>
   import("./ToolInvocationDialog").then((module) => ({
     default: module.ToolInvocationDialog,
-  }))
+  })),
 );
 
 /**
@@ -49,7 +49,7 @@ export const LazyToolInvocationDialog = lazy(() =>
 export const LazyResourceViewer = lazy(() =>
   import("./ResourceViewer").then((module) => ({
     default: module.ResourceViewer,
-  }))
+  })),
 );
 
 /**
@@ -59,7 +59,7 @@ export const LazyResourceViewer = lazy(() =>
 export const LazyPromptTester = lazy(() =>
   import("./PromptTester").then((module) => ({
     default: module.PromptTester,
-  }))
+  })),
 );
 
 /**
@@ -69,7 +69,7 @@ export const LazyPromptTester = lazy(() =>
 export const LazyElicitationDialog = lazy(() =>
   import("./ElicitationDialog").then((module) => ({
     default: module.ElicitationDialog,
-  }))
+  })),
 );
 
 // Re-export types that consumers need (types don't affect bundle size)

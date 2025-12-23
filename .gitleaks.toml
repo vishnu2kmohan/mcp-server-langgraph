@@ -41,6 +41,10 @@ title = "MCP Server LangGraph - Gitleaks Configuration"
     '''tests/testdata/''',
     '''test_.*\.tmp''',
 
+    # E2E test fixtures (test-only credentials for Playwright tests)
+    '''e2e/fixtures/''',
+    '''.*e2e/fixtures/auth\.ts''',
+
     # Build artifacts
     '''dist/''',
     '''build/''',

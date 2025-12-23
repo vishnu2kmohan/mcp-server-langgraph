@@ -183,7 +183,9 @@ export function formatMemoryForCI(bytes: number): number {
 /**
  * Parse existing trends JSON, returning empty structure if invalid
  */
-export function parseExistingTrends(json: string | null | undefined): MemoryTrendsFile {
+export function parseExistingTrends(
+  json: string | null | undefined,
+): MemoryTrendsFile {
   const emptyResult: MemoryTrendsFile = {
     runs: [],
     metadata: {
@@ -212,7 +214,7 @@ export function parseExistingTrends(json: string | null | undefined): MemoryTren
  */
 export function mergeTrendData(
   existing: MemoryTrendsFile,
-  newRun: MemoryTrendRunEntry
+  newRun: MemoryTrendRunEntry,
 ): MemoryTrendsFile {
   const runs = [...existing.runs, newRun];
 
@@ -236,7 +238,7 @@ export function mergeTrendData(
  */
 export function calculateRollingAverage(
   runs: MemoryTrendRunEntry[],
-  windowSize?: number
+  windowSize?: number,
 ): number {
   if (runs.length === 0) {
     return 0;
@@ -259,7 +261,7 @@ export function calculateRollingAverage(
 export function detectMemoryRegression(
   currentRun: MemoryTrendRunEntry,
   previousRuns: MemoryTrendRunEntry[],
-  thresholds: MemoryRegressionThresholds = DEFAULT_REGRESSION_THRESHOLDS
+  thresholds: MemoryRegressionThresholds = DEFAULT_REGRESSION_THRESHOLDS,
 ): MemoryRegressionResult {
   const currentPeakMB = currentRun.peakHeapMB;
 
@@ -283,18 +285,22 @@ export function detectMemoryRegression(
   // Calculate rolling average
   const rollingAverageMB = calculateRollingAverage(
     previousRuns,
-    thresholds.rollingAverageWindow
+    thresholds.rollingAverageWindow,
   );
 
   // Calculate percent changes (handle division by zero)
   const percentChangeFromLast =
     previousPeakMB > 0
-      ? Math.round(((currentPeakMB - previousPeakMB) / previousPeakMB) * 100 * 100) / 100
+      ? Math.round(
+          ((currentPeakMB - previousPeakMB) / previousPeakMB) * 100 * 100,
+        ) / 100
       : 0;
 
   const percentChangeFromAverage =
     rollingAverageMB > 0
-      ? Math.round(((currentPeakMB - rollingAverageMB) / rollingAverageMB) * 100 * 100) / 100
+      ? Math.round(
+          ((currentPeakMB - rollingAverageMB) / rollingAverageMB) * 100 * 100,
+        ) / 100
       : 0;
 
   // Determine status based on percent change from last run
@@ -449,7 +455,8 @@ export class MemoryTrendReporter {
     const peakHeapUsedMB = Math.max(...this.entries.map((e) => e.heapUsedMB));
     const finalHeapUsedMB = this.entries[this.entries.length - 1].heapUsedMB;
     const firstHeapUsedMB = this.entries[0].heapUsedMB;
-    const totalDeltaMB = Math.round((finalHeapUsedMB - firstHeapUsedMB) * 100) / 100;
+    const totalDeltaMB =
+      Math.round((finalHeapUsedMB - firstHeapUsedMB) * 100) / 100;
 
     return {
       peakHeapUsedMB,

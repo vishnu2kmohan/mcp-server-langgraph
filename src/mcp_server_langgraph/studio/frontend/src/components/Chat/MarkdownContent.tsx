@@ -38,7 +38,7 @@ import { InteractiveChart, type ChartData } from "./InteractiveChart";
 
 // Lazy loaded components for bundle optimization
 const InteractiveMermaidDiagram = lazy(
-  () => import("./InteractiveMermaidDiagram")
+  () => import("./InteractiveMermaidDiagram"),
 );
 const CodeBlock = lazy(() => import("./CodeBlock"));
 const SandpackExecutor = lazy(() => import("../Artifacts/SandpackExecutor"));
@@ -127,7 +127,7 @@ function ChartCodeBlock({ code }: { code: string }) {
       setError(null);
     } catch (err) {
       setError(
-        err instanceof Error ? err.message : "Failed to parse chart data"
+        err instanceof Error ? err.message : "Failed to parse chart data",
       );
     }
   }, [code]);
@@ -396,7 +396,7 @@ export function MarkdownContent({
         <hr className="my-4 border-gray-300 dark:border-gray-600" {...props} />
       ),
     }),
-    [enableInteractiveArtifacts]
+    [enableInteractiveArtifacts],
   );
 
   return (

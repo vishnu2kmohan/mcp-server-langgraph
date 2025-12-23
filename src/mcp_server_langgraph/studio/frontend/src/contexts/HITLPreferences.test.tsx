@@ -16,10 +16,7 @@ import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { render, screen, waitFor, act } from "@testing-library/react";
 import { Provider } from "react-redux";
 import { configureStore } from "@reduxjs/toolkit";
-import {
-  PreferencesProvider,
-  usePreferences,
-} from "./PreferencesContext";
+import { PreferencesProvider, usePreferences } from "./PreferencesContext";
 import type { HITLPreferences } from "../types/preferences";
 import { DEFAULT_USER_PREFERENCES } from "../types/preferences";
 import { storage } from "../utils/storage";
@@ -84,8 +81,12 @@ describe("HITL Preferences Types", () => {
     expect(DEFAULT_USER_PREFERENCES).toHaveProperty("hitl");
     expect(DEFAULT_USER_PREFERENCES.hitl).toHaveProperty("enabled");
     expect(DEFAULT_USER_PREFERENCES.hitl).toHaveProperty("confidenceThreshold");
-    expect(DEFAULT_USER_PREFERENCES.hitl).toHaveProperty("autoApproveThreshold");
-    expect(DEFAULT_USER_PREFERENCES.hitl).toHaveProperty("pushNotificationsEnabled");
+    expect(DEFAULT_USER_PREFERENCES.hitl).toHaveProperty(
+      "autoApproveThreshold",
+    );
+    expect(DEFAULT_USER_PREFERENCES.hitl).toHaveProperty(
+      "pushNotificationsEnabled",
+    );
   });
 
   it("should have correct default values for HITL preferences", () => {
@@ -124,7 +125,7 @@ describe("PreferencesContext HITL Support", () => {
             }}
           />
         </PreferencesProvider>
-      </Provider>
+      </Provider>,
     );
   };
 
@@ -149,7 +150,9 @@ describe("PreferencesContext HITL Support", () => {
 
     expect(capturedPrefs?.preferences).toHaveProperty("hitl");
     expect(capturedPrefs?.preferences.hitl).toHaveProperty("enabled");
-    expect(capturedPrefs?.preferences.hitl).toHaveProperty("confidenceThreshold");
+    expect(capturedPrefs?.preferences.hitl).toHaveProperty(
+      "confidenceThreshold",
+    );
   });
 
   it("should update HITL preferences when updateHITLPreferences is called", async () => {
@@ -199,11 +202,33 @@ describe("PreferencesContext HITL Support", () => {
 
   it("should load HITL preferences from storage on mount", async () => {
     const storedPrefs = {
-      general: { theme: "dark", language: "en", autoScroll: true, notificationsEnabled: true },
-      accessibility: { reducedMotion: false, highContrast: false, screenReaderMode: false, fontSize: "medium" },
-      modelDefaults: { defaultModel: null, defaultTemperature: 0.7, defaultMaxTokens: 4096 },
-      session: { pinnedSessions: [], recentSessions: [], maxRecentSessions: 10 },
-      privacy: { analyticsEnabled: true, errorReportingEnabled: true, storeHistoryLocally: true },
+      general: {
+        theme: "dark",
+        language: "en",
+        autoScroll: true,
+        notificationsEnabled: true,
+      },
+      accessibility: {
+        reducedMotion: false,
+        highContrast: false,
+        screenReaderMode: false,
+        fontSize: "medium",
+      },
+      modelDefaults: {
+        defaultModel: null,
+        defaultTemperature: 0.7,
+        defaultMaxTokens: 4096,
+      },
+      session: {
+        pinnedSessions: [],
+        recentSessions: [],
+        maxRecentSessions: 10,
+      },
+      privacy: {
+        analyticsEnabled: true,
+        errorReportingEnabled: true,
+        storeHistoryLocally: true,
+      },
       hitl: {
         enabled: false,
         confidenceThreshold: 0.6,
@@ -262,7 +287,7 @@ describe("useHITLPreferences Hook", () => {
         <PreferencesProvider>
           <TestHook />
         </PreferencesProvider>
-      </Provider>
+      </Provider>,
     );
 
     await waitFor(() => {

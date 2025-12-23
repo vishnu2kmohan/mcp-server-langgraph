@@ -11,7 +11,10 @@
 
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { renderHook, act } from "@testing-library/react";
-import { useAISuggestionsCache, type CachedSuggestion } from "./useAISuggestionsCache";
+import {
+  useAISuggestionsCache,
+  type CachedSuggestion,
+} from "./useAISuggestionsCache";
 import { storage, sessionStore, STORAGE_KEYS } from "../utils/storage";
 
 describe("useAISuggestionsCache", () => {
@@ -43,7 +46,11 @@ describe("useAISuggestionsCache", () => {
 
       // Pre-populate cache with valid TTL
       const TTL_5_MIN = 5 * 60 * 1000;
-      storage.setWithTTL(STORAGE_KEYS.AI_SUGGESTIONS_CACHE, cachedSuggestions, TTL_5_MIN);
+      storage.setWithTTL(
+        STORAGE_KEYS.AI_SUGGESTIONS_CACHE,
+        cachedSuggestions,
+        TTL_5_MIN,
+      );
 
       const { result } = renderHook(() => useAISuggestionsCache());
 
@@ -54,7 +61,11 @@ describe("useAISuggestionsCache", () => {
       const cachedSuggestions = [{ id: "1", content: "test" }];
       const TTL_5_MIN = 5 * 60 * 1000;
 
-      storage.setWithTTL(STORAGE_KEYS.AI_SUGGESTIONS_CACHE, cachedSuggestions, TTL_5_MIN);
+      storage.setWithTTL(
+        STORAGE_KEYS.AI_SUGGESTIONS_CACHE,
+        cachedSuggestions,
+        TTL_5_MIN,
+      );
 
       // Advance past TTL
       vi.advanceTimersByTime(TTL_5_MIN + 1000);
@@ -73,7 +84,12 @@ describe("useAISuggestionsCache", () => {
       const { result } = renderHook(() => useAISuggestionsCache());
 
       const suggestions: CachedSuggestion[] = [
-        { id: "1", type: "completion", content: "suggestion 1", confidence: 0.85 },
+        {
+          id: "1",
+          type: "completion",
+          content: "suggestion 1",
+          confidence: 0.85,
+        },
         { id: "2", type: "fix", content: "suggestion 2", confidence: 0.75 },
       ];
 
@@ -84,13 +100,15 @@ describe("useAISuggestionsCache", () => {
       expect(result.current.suggestions).toEqual(suggestions);
 
       // Verify stored in localStorage with TTL
-      const cached = storage.getWithTTL<CachedSuggestion[]>(STORAGE_KEYS.AI_SUGGESTIONS_CACHE);
+      const cached = storage.getWithTTL<CachedSuggestion[]>(
+        STORAGE_KEYS.AI_SUGGESTIONS_CACHE,
+      );
       expect(cached).toEqual(suggestions);
     });
 
     it("allows custom TTL", () => {
-      const { result } = renderHook(() =>
-        useAISuggestionsCache({ ttlMs: 10 * 60 * 1000 }) // 10 min
+      const { result } = renderHook(
+        () => useAISuggestionsCache({ ttlMs: 10 * 60 * 1000 }), // 10 min
       );
 
       const suggestions: CachedSuggestion[] = [
@@ -104,7 +122,9 @@ describe("useAISuggestionsCache", () => {
       // Should still be valid after 8 minutes
       vi.advanceTimersByTime(8 * 60 * 1000);
 
-      const cached = storage.getWithTTL<CachedSuggestion[]>(STORAGE_KEYS.AI_SUGGESTIONS_CACHE);
+      const cached = storage.getWithTTL<CachedSuggestion[]>(
+        STORAGE_KEYS.AI_SUGGESTIONS_CACHE,
+      );
       expect(cached).toEqual(suggestions);
 
       // Should be expired after 11 minutes
@@ -165,7 +185,9 @@ describe("useAISuggestionsCache", () => {
 
       expect(result.current.context).toEqual(context);
 
-      const stored = sessionStore.get<typeof context>(STORAGE_KEYS.AI_CONTEXT_HISTORY);
+      const stored = sessionStore.get<typeof context>(
+        STORAGE_KEYS.AI_CONTEXT_HISTORY,
+      );
       expect(stored).toEqual(context);
     });
 

@@ -161,7 +161,7 @@ export function clearDocumentBody(): void {
 
   // Reset body attributes
   const attributeNames = Array.from(document.body.attributes).map(
-    (attr) => attr.name
+    (attr) => attr.name,
   );
   attributeNames.forEach((name) => {
     document.body.removeAttribute(name);
@@ -266,7 +266,7 @@ export interface LogIsolationWarningOptions {
  * @param options.force - Force logging even outside CI
  */
 export function logIsolationWarningIfDirty(
-  options?: LogIsolationWarningOptions
+  options?: LogIsolationWarningOptions,
 ): void {
   const isCI = process.env.CI === "true";
   const shouldLog = isCI || options?.force;
@@ -286,13 +286,13 @@ export function logIsolationWarningIfDirty(
 
   if (report.localStorageCount > 0) {
     details.push(
-      `localStorage: ${report.localStorageCount} items [${report.localStorageKeys.join(", ")}]`
+      `localStorage: ${report.localStorageCount} items [${report.localStorageKeys.join(", ")}]`,
     );
   }
 
   if (report.sessionStorageCount > 0) {
     details.push(
-      `sessionStorage: ${report.sessionStorageCount} items [${report.sessionStorageKeys.join(", ")}]`
+      `sessionStorage: ${report.sessionStorageCount} items [${report.sessionStorageKeys.join(", ")}]`,
     );
   }
 

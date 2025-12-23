@@ -10,8 +10,8 @@
  * - Search functionality
  */
 
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { render, screen, fireEvent, cleanup } from "@testing-library/react";
 import { Provider } from "react-redux";
 import { configureStore } from "@reduxjs/toolkit";
 import { MCPPage } from "./MCPPage";
@@ -67,6 +67,11 @@ const mockServer: ServerEntry = {
 
 describe("MCPPage", () => {
   beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  afterEach(() => {
+    cleanup();
     vi.clearAllMocks();
   });
 
@@ -362,7 +367,9 @@ describe("MCPPage", () => {
 
       // Find the server entry container and verify it contains the Connected status
       // There will be a header "Connected" text and a status "Connected" text in server row
-      const serverRow = screen.getByText("http://localhost:3000").closest('[class*="rounded-lg"]');
+      const serverRow = screen
+        .getByText("http://localhost:3000")
+        .closest('[class*="rounded-lg"]');
       expect(serverRow).toHaveTextContent("Connected");
     });
 
@@ -419,7 +426,9 @@ describe("MCPPage", () => {
 
       fireEvent.click(screen.getByText("Servers"));
 
-      expect(screen.getByText("Connection timeout exceeded")).toBeInTheDocument();
+      expect(
+        screen.getByText("Connection timeout exceeded"),
+      ).toBeInTheDocument();
     });
   });
 
@@ -429,7 +438,10 @@ describe("MCPPage", () => {
         {
           name: "expand-test",
           description: "Test expansion",
-          inputSchema: { type: "object", properties: { test: { type: "string" } } },
+          inputSchema: {
+            type: "object",
+            properties: { test: { type: "string" } },
+          },
         },
       ];
       const serverWithTools: ServerEntry = { ...mockServer, tools };
@@ -583,13 +595,17 @@ describe("MCPPage", () => {
       it("should show invoke tool button in header actions", () => {
         renderWithStore();
 
-        expect(screen.getByRole("button", { name: /invoke tool/i })).toBeInTheDocument();
+        expect(
+          screen.getByRole("button", { name: /invoke tool/i }),
+        ).toBeInTheDocument();
       });
 
       it("should open tool invocation dialog when button clicked", async () => {
         renderWithStore();
 
-        const invokeButton = screen.getByRole("button", { name: /invoke tool/i });
+        const invokeButton = screen.getByRole("button", {
+          name: /invoke tool/i,
+        });
         fireEvent.click(invokeButton);
 
         const dialog = await screen.findByRole("dialog");
@@ -601,13 +617,17 @@ describe("MCPPage", () => {
       it("should show view resources button in header actions", () => {
         renderWithStore();
 
-        expect(screen.getByRole("button", { name: /view resources/i })).toBeInTheDocument();
+        expect(
+          screen.getByRole("button", { name: /view resources/i }),
+        ).toBeInTheDocument();
       });
 
       it("should open resource viewer dialog when button clicked", async () => {
         renderWithStore();
 
-        const viewButton = screen.getByRole("button", { name: /view resources/i });
+        const viewButton = screen.getByRole("button", {
+          name: /view resources/i,
+        });
         fireEvent.click(viewButton);
 
         const dialog = await screen.findByRole("dialog");
@@ -619,7 +639,9 @@ describe("MCPPage", () => {
       it("should show test prompt button in header actions", () => {
         renderWithStore();
 
-        expect(screen.getByRole("button", { name: /test prompt/i })).toBeInTheDocument();
+        expect(
+          screen.getByRole("button", { name: /test prompt/i }),
+        ).toBeInTheDocument();
       });
 
       it("should open prompt tester dialog when button clicked", async () => {
@@ -637,13 +659,17 @@ describe("MCPPage", () => {
       it("should show elicitation button in header actions", () => {
         renderWithStore();
 
-        expect(screen.getByRole("button", { name: /request input/i })).toBeInTheDocument();
+        expect(
+          screen.getByRole("button", { name: /request input/i }),
+        ).toBeInTheDocument();
       });
 
       it("should open elicitation dialog when button clicked", async () => {
         renderWithStore();
 
-        const elicitButton = screen.getByRole("button", { name: /request input/i });
+        const elicitButton = screen.getByRole("button", {
+          name: /request input/i,
+        });
         fireEvent.click(elicitButton);
 
         const dialog = await screen.findByRole("dialog");
@@ -653,7 +679,10 @@ describe("MCPPage", () => {
   });
 
   describe("Keyboard Shortcuts", () => {
-    const createKeyboardEvent = (key: string, options: Partial<KeyboardEventInit> = {}) => {
+    const createKeyboardEvent = (
+      key: string,
+      options: Partial<KeyboardEventInit> = {},
+    ) => {
       return new KeyboardEvent("keydown", {
         key,
         bubbles: true,
@@ -666,7 +695,7 @@ describe("MCPPage", () => {
       renderWithStore();
 
       document.dispatchEvent(
-        createKeyboardEvent("t", { metaKey: true, shiftKey: true })
+        createKeyboardEvent("t", { metaKey: true, shiftKey: true }),
       );
 
       const dialog = await screen.findByRole("dialog");
@@ -677,7 +706,7 @@ describe("MCPPage", () => {
       renderWithStore();
 
       document.dispatchEvent(
-        createKeyboardEvent("r", { metaKey: true, shiftKey: true })
+        createKeyboardEvent("r", { metaKey: true, shiftKey: true }),
       );
 
       const dialog = await screen.findByRole("dialog");
@@ -688,7 +717,7 @@ describe("MCPPage", () => {
       renderWithStore();
 
       document.dispatchEvent(
-        createKeyboardEvent("p", { metaKey: true, shiftKey: true })
+        createKeyboardEvent("p", { metaKey: true, shiftKey: true }),
       );
 
       const dialog = await screen.findByRole("dialog");
@@ -700,7 +729,7 @@ describe("MCPPage", () => {
 
       // First open a dialog
       document.dispatchEvent(
-        createKeyboardEvent("t", { metaKey: true, shiftKey: true })
+        createKeyboardEvent("t", { metaKey: true, shiftKey: true }),
       );
 
       const dialog = await screen.findByRole("dialog");

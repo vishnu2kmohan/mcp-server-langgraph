@@ -131,9 +131,7 @@ const generateArtifactTypeSuggestion = (content?: string) => ({
 const generateCodeAnalysis = () => ({
   quality_score: 85,
   complexity: "medium",
-  issues: [
-    { type: "style", message: "Consider using const instead of let" },
-  ],
+  issues: [{ type: "style", message: "Consider using const instead of let" }],
   suggestions: ["Add error handling", "Extract repeated logic"],
 });
 
@@ -176,9 +174,7 @@ const generateTraceSummary = () => ({
 });
 
 const generateTraceAnomaly = () => ({
-  anomalies: [
-    { type: "slow_step", step_id: "step-3", severity: "warning" },
-  ],
+  anomalies: [{ type: "slow_step", step_id: "step-3", severity: "warning" }],
   bottlenecks: ["step-3"],
   health_score: 0.85,
 });
@@ -201,7 +197,8 @@ const generateTokenPrediction = () => ({
 });
 
 const generateRiskAssessment = (actionType?: string) => {
-  const isHighRisk = actionType === "file_delete" || actionType === "system_command";
+  const isHighRisk =
+    actionType === "file_delete" || actionType === "system_command";
   return {
     risk_score: isHighRisk ? 0.85 : 0.25,
     risk_level: isHighRisk ? "high" : "low",
@@ -214,8 +211,16 @@ const generateRiskAssessment = (actionType?: string) => {
 
 const generateDecisionHistory = () => ({
   similar_decisions: [
-    { action: "file_write", decision: "approved", timestamp: new Date().toISOString() },
-    { action: "file_write", decision: "approved", timestamp: new Date().toISOString() },
+    {
+      action: "file_write",
+      decision: "approved",
+      timestamp: new Date().toISOString(),
+    },
+    {
+      action: "file_write",
+      decision: "approved",
+      timestamp: new Date().toISOString(),
+    },
   ],
   approval_rate: 0.95,
   suggested_action: "approve",
@@ -461,7 +466,10 @@ export const studioHandlers = [
   http.post("/api/v1/studio/suggestions", async ({ request }) => {
     await delay(50);
 
-    const body = (await request.json()) as { context?: string; user_id?: string };
+    const body = (await request.json()) as {
+      context?: string;
+      user_id?: string;
+    };
 
     const suggestions = [
       {

@@ -6,8 +6,8 @@
  *
  * Uses MSW for realistic API mocking.
  */
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { renderHook, act } from "@testing-library/react";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { renderHook, act, cleanup } from "@testing-library/react";
 import { Provider } from "react-redux";
 import { configureStore, type Middleware } from "@reduxjs/toolkit";
 import { http, HttpResponse } from "msw";
@@ -64,6 +64,11 @@ const createWrapper = (store: ReturnType<typeof createTestStore>) => {
 
 describe("useNewChat", () => {
   beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  afterEach(() => {
+    cleanup();
     vi.clearAllMocks();
   });
 

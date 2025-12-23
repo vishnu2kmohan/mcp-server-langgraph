@@ -11,8 +11,8 @@
  * - Handle loading and error states
  */
 
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { renderHook } from "@testing-library/react";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { renderHook, cleanup } from "@testing-library/react";
 import { Provider } from "react-redux";
 import { configureStore } from "@reduxjs/toolkit";
 import React from "react";
@@ -80,6 +80,11 @@ describe("useAIPersonaAnalysis", () => {
     vi.clearAllMocks();
   });
 
+  afterEach(() => {
+    cleanup();
+    vi.clearAllMocks();
+  });
+
   describe("Initial State", () => {
     it("should start with loading state when enabled", () => {
       mockUseAIPersonaAnalysis.mockReturnValue({
@@ -131,7 +136,10 @@ describe("useAIPersonaAnalysis", () => {
         assignedPersona: "bob",
         detectedPersona: "bob",
         confidence: 0.95,
-        behaviorSignals: ["Chat-focused usage", "Standard interaction patterns"],
+        behaviorSignals: [
+          "Chat-focused usage",
+          "Standard interaction patterns",
+        ],
         recommendation: null,
         uiAdaptations: [],
         isPersonaMismatch: false,
@@ -159,9 +167,7 @@ describe("useAIPersonaAnalysis", () => {
           "Advanced trace analysis",
         ],
         recommendation: "Consider upgrading to developer role",
-        uiAdaptations: [
-          { feature: "workflow_builder", action: "unlock" },
-        ],
+        uiAdaptations: [{ feature: "workflow_builder", action: "unlock" }],
         isPersonaMismatch: true,
         refresh: vi.fn(),
       });
@@ -225,7 +231,7 @@ describe("useAIPersonaAnalysis", () => {
 
       expect(result.current.behaviorSignals).toHaveLength(3);
       expect(result.current.behaviorSignals).toContain(
-        "Frequent workflow editing"
+        "Frequent workflow editing",
       );
     });
   });
@@ -290,7 +296,8 @@ describe("useAIPersonaAnalysis", () => {
         detectedPersona: "alice-builder",
         confidence: 0.88,
         behaviorSignals: [],
-        recommendation: "Consider upgrading to developer role for enhanced features",
+        recommendation:
+          "Consider upgrading to developer role for enhanced features",
         uiAdaptations: [],
         isPersonaMismatch: true,
         refresh: vi.fn(),

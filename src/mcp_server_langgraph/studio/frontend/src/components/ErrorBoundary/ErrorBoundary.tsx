@@ -108,7 +108,11 @@ export class ErrorBoundary extends Component<
     prevState: ErrorBoundaryState,
   ): void {
     // Focus the retry button when error state changes to true
-    if (!prevState.hasError && this.state.hasError && this.retryButtonRef.current) {
+    if (
+      !prevState.hasError &&
+      this.state.hasError &&
+      this.retryButtonRef.current
+    ) {
       this.retryButtonRef.current.focus();
     }
   }

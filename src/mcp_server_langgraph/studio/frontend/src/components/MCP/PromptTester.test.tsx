@@ -253,7 +253,7 @@ describe("PromptTester", () => {
       mockGetPrompt.mockReturnValue({
         unwrap: () =>
           new Promise((resolve) =>
-            setTimeout(() => resolve(MOCK_PROMPT_RESULT), 1000)
+            setTimeout(() => resolve(MOCK_PROMPT_RESULT), 1000),
           ),
       });
 
@@ -362,7 +362,7 @@ describe("PromptTester", () => {
 
     it("resets form when dialog is reopened", async () => {
       const { rerender } = renderWithProvider(
-        <PromptTester open={true} onClose={mockOnClose} />
+        <PromptTester open={true} onClose={mockOnClose} />,
       );
 
       // Select prompt
@@ -376,18 +376,18 @@ describe("PromptTester", () => {
       rerender(
         <Provider store={createTestStore()}>
           <PromptTester open={false} onClose={mockOnClose} />
-        </Provider>
+        </Provider>,
       );
 
       rerender(
         <Provider store={createTestStore()}>
           <PromptTester open={true} onClose={mockOnClose} />
-        </Provider>
+        </Provider>,
       );
 
       // Form should be reset
       expect(
-        screen.queryByText("Summarize the given text")
+        screen.queryByText("Summarize the given text"),
       ).not.toBeInTheDocument();
     });
   });

@@ -88,7 +88,9 @@ export function RetryIndicator({
   testId = "retry-indicator",
 }: RetryIndicatorProps): React.ReactElement {
   // Countdown state (in seconds)
-  const [secondsRemaining, setSecondsRemaining] = useState(Math.ceil(delayMs / 1000));
+  const [secondsRemaining, setSecondsRemaining] = useState(
+    Math.ceil(delayMs / 1000),
+  );
   const [progressPercent, setProgressPercent] = useState(100);
   const [isStopped, setIsStopped] = useState(false);
 
@@ -174,7 +176,9 @@ export function RetryIndicator({
     onForceRetry();
   }, [onForceRetry]);
 
-  const categoryIcon = errorCategory ? CATEGORY_ICONS[errorCategory] || CATEGORY_ICONS.unknown : null;
+  const categoryIcon = errorCategory
+    ? CATEGORY_ICONS[errorCategory] || CATEGORY_ICONS.unknown
+    : null;
 
   return (
     <div
@@ -186,7 +190,11 @@ export function RetryIndicator({
       {/* Header with retry count */}
       <div className="retry-indicator-header">
         {categoryIcon && (
-          <span className="error-category-icon" data-testid="error-category-icon" aria-hidden="true">
+          <span
+            className="error-category-icon"
+            data-testid="error-category-icon"
+            aria-hidden="true"
+          >
             {categoryIcon}
           </span>
         )}

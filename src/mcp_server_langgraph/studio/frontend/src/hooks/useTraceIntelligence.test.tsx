@@ -24,12 +24,17 @@ vi.mock("../api", () => ({
         Promise.resolve({
           analyses: {
             trace_summarize: {
-              summary: "Agent completed 5-step workflow in 2.3s with 2 tool calls",
+              summary:
+                "Agent completed 5-step workflow in 2.3s with 2 tool calls",
               total_duration_ms: 2300,
               step_count: 5,
               tool_call_count: 2,
               success: true,
-              key_actions: ["Retrieved data", "Processed request", "Generated response"],
+              key_actions: [
+                "Retrieved data",
+                "Processed request",
+                "Generated response",
+              ],
             },
             trace_anomaly: {
               anomalies: [
@@ -49,7 +54,9 @@ vi.mock("../api", () => ({
                 },
               ],
               health_score: 0.72,
-              optimization_suggestions: ["Consider parallel execution for independent steps"],
+              optimization_suggestions: [
+                "Consider parallel execution for independent steps",
+              ],
             },
             cost_project: {
               current_cost: 0.0023,

@@ -108,7 +108,11 @@ function computeDiff(baseContent: string, comparedContent: string): DiffLine[] {
       let foundMatch = false;
 
       // Check if base line appears later in compared
-      for (let i = 1; i <= lookAheadLimit && comparedIndex + i < comparedLines.length; i++) {
+      for (
+        let i = 1;
+        i <= lookAheadLimit && comparedIndex + i < comparedLines.length;
+        i++
+      ) {
         if (baseLine === comparedLines[comparedIndex + i]) {
           // Added lines before the match
           for (let j = 0; j < i; j++) {
@@ -129,7 +133,11 @@ function computeDiff(baseContent: string, comparedContent: string): DiffLine[] {
 
       if (!foundMatch) {
         // Check if compared line appears later in base
-        for (let i = 1; i <= lookAheadLimit && baseIndex + i < baseLines.length; i++) {
+        for (
+          let i = 1;
+          i <= lookAheadLimit && baseIndex + i < baseLines.length;
+          i++
+        ) {
           if (baseLines[baseIndex + i] === comparedLine) {
             // Removed lines before the match
             for (let j = 0; j < i; j++) {
@@ -226,7 +234,8 @@ export function VersionDiff({
       <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200 dark:border-gray-700">
         <div className="flex items-center gap-4">
           <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-            Comparing <span className="text-primary-600">v{baseVersion.version}</span>
+            Comparing{" "}
+            <span className="text-primary-600">v{baseVersion.version}</span>
             {" → "}
             <span className="text-primary-600">v{comparedVersion.version}</span>
           </span>
@@ -329,7 +338,9 @@ export function VersionDiff({
 
               {breakingChanges && (
                 <div className="flex items-center gap-1 text-xs text-red-600 dark:text-red-400">
-                  <span className="font-medium">⚠ Breaking changes detected</span>
+                  <span className="font-medium">
+                    ⚠ Breaking changes detected
+                  </span>
                 </div>
               )}
 
@@ -378,7 +389,8 @@ export function VersionDiff({
                 <span
                   className={cn(
                     "w-12 text-right pr-3 text-gray-400 select-none border-r border-gray-200 dark:border-gray-700",
-                    line.type === "added" && "text-green-600 dark:text-green-400",
+                    line.type === "added" &&
+                      "text-green-600 dark:text-green-400",
                     line.type === "removed" && "text-red-600 dark:text-red-400",
                   )}
                 >
@@ -389,9 +401,11 @@ export function VersionDiff({
                 <span
                   className={cn(
                     "flex-1 pl-3 whitespace-pre",
-                    line.type === "added" && "text-green-700 dark:text-green-300",
+                    line.type === "added" &&
+                      "text-green-700 dark:text-green-300",
                     line.type === "removed" && "text-red-700 dark:text-red-300",
-                    line.type === "unchanged" && "text-gray-700 dark:text-gray-300",
+                    line.type === "unchanged" &&
+                      "text-gray-700 dark:text-gray-300",
                   )}
                 >
                   {line.content}
@@ -403,7 +417,9 @@ export function VersionDiff({
           // Split view
           <>
             <div className="border-r border-gray-200 dark:border-gray-700 pr-4">
-              <div className="text-xs text-gray-500 mb-2">v{baseVersion.version}</div>
+              <div className="text-xs text-gray-500 mb-2">
+                v{baseVersion.version}
+              </div>
               {diffLines
                 .filter((line) => line.type !== "added")
                 .map((line, index) => (
@@ -411,8 +427,10 @@ export function VersionDiff({
                     key={index}
                     className={cn(
                       "whitespace-pre",
-                      line.type === "removed" && "bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-300",
-                      line.type === "unchanged" && "text-gray-700 dark:text-gray-300",
+                      line.type === "removed" &&
+                        "bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-300",
+                      line.type === "unchanged" &&
+                        "text-gray-700 dark:text-gray-300",
                     )}
                   >
                     {line.content}
@@ -420,7 +438,9 @@ export function VersionDiff({
                 ))}
             </div>
             <div className="pl-4">
-              <div className="text-xs text-gray-500 mb-2">v{comparedVersion.version}</div>
+              <div className="text-xs text-gray-500 mb-2">
+                v{comparedVersion.version}
+              </div>
               {diffLines
                 .filter((line) => line.type !== "removed")
                 .map((line, index) => (
@@ -428,8 +448,10 @@ export function VersionDiff({
                     key={index}
                     className={cn(
                       "whitespace-pre",
-                      line.type === "added" && "bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-300",
-                      line.type === "unchanged" && "text-gray-700 dark:text-gray-300",
+                      line.type === "added" &&
+                        "bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-300",
+                      line.type === "unchanged" &&
+                        "text-gray-700 dark:text-gray-300",
                     )}
                   >
                     {line.content}

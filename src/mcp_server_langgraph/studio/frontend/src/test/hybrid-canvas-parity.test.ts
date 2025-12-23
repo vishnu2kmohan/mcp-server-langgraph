@@ -197,11 +197,11 @@ describe("Phase 7: HybridShell = AppShell Feature Parity", () => {
     it("HybridShell has all main navigation categories", async () => {
       // Both shells should support these navigation categories
       const expectedNavCategories = [
-        "chat",        // Chat/Conversations
-        "flows",       // Workflows/Build
+        "chat", // Chat/Conversations
+        "flows", // Workflows/Build
         "connections", // MCP Connections
         "observability", // Traces/Logs/Metrics
-        "admin",       // Admin settings
+        "admin", // Admin settings
       ];
 
       // HybridShellLayout defines these internally

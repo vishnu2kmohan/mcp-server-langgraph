@@ -152,7 +152,7 @@ describe("useAIErrorRecovery", () => {
         http.post("/api/v1/ai/errors/analyze", () => {
           apiCalled = true;
           return HttpResponse.json(mockNetworkErrorResponse);
-        })
+        }),
       );
 
       renderHook(() => useAIErrorRecovery(), {
@@ -171,7 +171,7 @@ describe("useAIErrorRecovery", () => {
         http.post("/api/v1/ai/errors/analyze", async () => {
           await delay(50);
           return HttpResponse.json(mockNetworkErrorResponse);
-        })
+        }),
       );
 
       const { result } = renderHook(() => useAIErrorRecovery(), {
@@ -204,7 +204,7 @@ describe("useAIErrorRecovery", () => {
         http.post("/api/v1/ai/errors/analyze", async () => {
           await delay(50);
           return HttpResponse.json(mockAuthErrorResponse);
-        })
+        }),
       );
 
       const { result } = renderHook(() => useAIErrorRecovery(), {
@@ -230,7 +230,7 @@ describe("useAIErrorRecovery", () => {
         http.post("/api/v1/ai/errors/analyze", async () => {
           await delay(50);
           return HttpResponse.json(mockValidationErrorResponse);
-        })
+        }),
       );
 
       const { result } = renderHook(() => useAIErrorRecovery(), {
@@ -257,7 +257,7 @@ describe("useAIErrorRecovery", () => {
         http.post("/api/v1/ai/errors/analyze", async () => {
           await delay(200);
           return HttpResponse.json(mockNetworkErrorResponse);
-        })
+        }),
       );
 
       const { result } = renderHook(() => useAIErrorRecovery(), {
@@ -287,7 +287,7 @@ describe("useAIErrorRecovery", () => {
         http.post("/api/v1/ai/errors/analyze", async () => {
           await delay(50);
           return HttpResponse.json(mockNetworkErrorResponse);
-        })
+        }),
       );
 
       const { result } = renderHook(() => useAIErrorRecovery(), {
@@ -302,7 +302,7 @@ describe("useAIErrorRecovery", () => {
 
       expect(result.current.lastAnalysis).not.toBeNull();
       expect(result.current.lastAnalysis?.classification.category).toBe(
-        "network"
+        "network",
       );
     });
 
@@ -313,7 +313,7 @@ describe("useAIErrorRecovery", () => {
         http.post("/api/v1/ai/errors/analyze", async ({ request }) => {
           capturedBody = (await request.json()) as Record<string, unknown>;
           return HttpResponse.json(mockNetworkErrorResponse);
-        })
+        }),
       );
 
       const { result } = renderHook(() => useAIErrorRecovery(), {
@@ -347,7 +347,7 @@ describe("useAIErrorRecovery", () => {
         http.post("/api/v1/ai/errors/analyze", async () => {
           await delay(50);
           return new HttpResponse(null, { status: 500 });
-        })
+        }),
       );
 
       const { result } = renderHook(() => useAIErrorRecovery(), {
@@ -370,7 +370,7 @@ describe("useAIErrorRecovery", () => {
       server.use(
         http.post("/api/v1/ai/errors/analyze", () => {
           return HttpResponse.error();
-        })
+        }),
       );
 
       const { result } = renderHook(() => useAIErrorRecovery(), {
@@ -394,7 +394,7 @@ describe("useAIErrorRecovery", () => {
       server.use(
         http.post("/api/v1/ai/errors/analyze", () => {
           return new HttpResponse(null, { status: 500 });
-        })
+        }),
       );
 
       const { result } = renderHook(() => useAIErrorRecovery(), {
@@ -411,7 +411,7 @@ describe("useAIErrorRecovery", () => {
       server.use(
         http.post("/api/v1/ai/errors/analyze", () => {
           return HttpResponse.json(mockNetworkErrorResponse);
-        })
+        }),
       );
 
       await act(async () => {
@@ -432,7 +432,7 @@ describe("useAIErrorRecovery", () => {
         http.post("/api/v1/ai/errors/analyze", async () => {
           await delay(6000);
           return HttpResponse.json(mockNetworkErrorResponse);
-        })
+        }),
       );
 
       const { result } = renderHook(() => useAIErrorRecovery(), {
@@ -454,7 +454,7 @@ describe("useAIErrorRecovery", () => {
         http.post("/api/v1/ai/errors/analyze", async () => {
           await delay(2000);
           return HttpResponse.json(mockNetworkErrorResponse);
-        })
+        }),
       );
 
       const options: UseAIErrorRecoveryOptions = {
@@ -480,7 +480,7 @@ describe("useAIErrorRecovery", () => {
         http.post("/api/v1/ai/errors/analyze", async () => {
           await delay(100);
           return HttpResponse.json(mockNetworkErrorResponse);
-        })
+        }),
       );
 
       const options: UseAIErrorRecoveryOptions = {
@@ -510,12 +510,12 @@ describe("useAIErrorRecovery", () => {
         http.post("/api/v1/ai/errors/analyze", () => {
           apiCalled = true;
           return HttpResponse.json(mockNetworkErrorResponse);
-        })
+        }),
       );
 
       const { result } = renderHook(
         () => useAIErrorRecovery({ enabled: false }),
-        { wrapper: createWrapper(store) }
+        { wrapper: createWrapper(store) },
       );
 
       const error = new Error("Test error");
@@ -532,7 +532,7 @@ describe("useAIErrorRecovery", () => {
     it("should return null immediately when disabled", async () => {
       const { result } = renderHook(
         () => useAIErrorRecovery({ enabled: false }),
-        { wrapper: createWrapper(store) }
+        { wrapper: createWrapper(store) },
       );
 
       const startTime = Date.now();
@@ -557,7 +557,7 @@ describe("useAIErrorRecovery", () => {
           requestCount++;
           await delay(100);
           return HttpResponse.json(mockNetworkErrorResponse);
-        })
+        }),
       );
 
       const { result } = renderHook(() => useAIErrorRecovery(), {
@@ -587,7 +587,7 @@ describe("useAIErrorRecovery", () => {
             ...mockNetworkErrorResponse,
             suggested_action: `Error ${currentNum} root cause`,
           });
-        })
+        }),
       );
 
       const { result } = renderHook(() => useAIErrorRecovery(), {
@@ -604,9 +604,7 @@ describe("useAIErrorRecovery", () => {
       });
 
       // Last analysis should be from the most recent request
-      expect(result.current.lastAnalysis?.rootCause).toBe(
-        "Error 2 root cause"
-      );
+      expect(result.current.lastAnalysis?.rootCause).toBe("Error 2 root cause");
     });
   });
 
@@ -617,7 +615,7 @@ describe("useAIErrorRecovery", () => {
       server.use(
         http.post("/api/v1/ai/errors/analyze", async () => {
           return HttpResponse.json(mockNetworkErrorResponse);
-        })
+        }),
       );
 
       const { result } = renderHook(() => useAIErrorRecovery(), {
@@ -638,7 +636,7 @@ describe("useAIErrorRecovery", () => {
       server.use(
         http.post("/api/v1/ai/errors/analyze", async () => {
           return HttpResponse.json(mockValidationErrorResponse);
-        })
+        }),
       );
 
       const { result } = renderHook(() => useAIErrorRecovery(), {
@@ -689,7 +687,7 @@ describe("useAIErrorRecovery", () => {
       server.use(
         http.post("/api/v1/ai/errors/analyze", async () => {
           return HttpResponse.json(allActionsResponse);
-        })
+        }),
       );
 
       const { result } = renderHook(() => useAIErrorRecovery(), {

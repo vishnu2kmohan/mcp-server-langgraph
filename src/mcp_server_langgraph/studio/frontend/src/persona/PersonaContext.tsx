@@ -10,12 +10,7 @@
  * - Helper functions for access control
  */
 /* eslint-disable react-refresh/only-export-components -- Context files export both providers and hooks by design */
-import {
-  createContext,
-  useContext,
-  useMemo,
-  type ReactNode,
-} from "react";
+import { createContext, useContext, useMemo, type ReactNode } from "react";
 import { useAppSelector } from "../store/hooks";
 import {
   selectPersona,
@@ -87,9 +82,7 @@ export function PersonaProvider({ children }: PersonaProviderProps) {
   );
 
   return (
-    <PersonaContext.Provider value={value}>
-      {children}
-    </PersonaContext.Provider>
+    <PersonaContext.Provider value={value}>{children}</PersonaContext.Provider>
   );
 }
 
@@ -103,9 +96,7 @@ export function PersonaProvider({ children }: PersonaProviderProps) {
 export function usePersonaContext(): PersonaContextValue {
   const context = useContext(PersonaContext);
   if (!context) {
-    throw new Error(
-      "usePersonaContext must be used within a PersonaProvider",
-    );
+    throw new Error("usePersonaContext must be used within a PersonaProvider");
   }
   return context;
 }

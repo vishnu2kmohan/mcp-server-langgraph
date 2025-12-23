@@ -91,11 +91,17 @@ export function useAIIntelligenceConfig(): UseAIIntelligenceConfigReturn {
         decisionHistory: isEnabled("enable_agent_hitl"),
 
         // Granular Intelligence features - map from specific flags with fallback
-        sessionIntelligence: isIntelligenceEnabled("enable_session_intelligence"),
-        conversationIntelligence: isIntelligenceEnabled("enable_conversation_intelligence"),
+        sessionIntelligence: isIntelligenceEnabled(
+          "enable_session_intelligence",
+        ),
+        conversationIntelligence: isIntelligenceEnabled(
+          "enable_conversation_intelligence",
+        ),
         canvasIntelligence: isIntelligenceEnabled("enable_canvas_intelligence"),
         traceIntelligence: isIntelligenceEnabled("enable_trace_intelligence"),
-        diagramIntelligence: isIntelligenceEnabled("enable_diagram_intelligence"),
+        diagramIntelligence: isIntelligenceEnabled(
+          "enable_diagram_intelligence",
+        ),
         hitlIntelligence: isEnabled("enable_hitl_ai"),
         genuiComponents: isEnabled("enable_genui"),
       },

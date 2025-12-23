@@ -129,7 +129,7 @@ describe("RemediationApprovalDialog", () => {
       render(<RemediationApprovalDialog {...defaultProps} />);
 
       expect(
-        screen.getByText("Scale up replicas to handle current load")
+        screen.getByText("Scale up replicas to handle current load"),
       ).toBeInTheDocument();
     });
 
@@ -137,12 +137,12 @@ describe("RemediationApprovalDialog", () => {
       render(<RemediationApprovalDialog {...defaultProps} />);
 
       // Use getAllByText since both remediation command and rollback plan contain similar text
-      const commands = screen.getAllByText(/kubectl scale deployment api-server/);
+      const commands = screen.getAllByText(
+        /kubectl scale deployment api-server/,
+      );
       expect(commands.length).toBeGreaterThanOrEqual(1);
       // Check that the specific remediation command is present
-      expect(
-        screen.getByText(/--replicas=5/)
-      ).toBeInTheDocument();
+      expect(screen.getByText(/--replicas=5/)).toBeInTheDocument();
     });
 
     it("should display step number", () => {
@@ -160,7 +160,9 @@ describe("RemediationApprovalDialog", () => {
     it("should display severity badge", () => {
       render(<RemediationApprovalDialog {...defaultProps} />);
 
-      expect(screen.getByTestId("severity-badge")).toHaveTextContent(/critical/i);
+      expect(screen.getByTestId("severity-badge")).toHaveTextContent(
+        /critical/i,
+      );
     });
   });
 
@@ -174,7 +176,7 @@ describe("RemediationApprovalDialog", () => {
         <RemediationApprovalDialog
           {...defaultProps}
           remediation={highRiskRemediation}
-        />
+        />,
       );
 
       expect(screen.getByTestId("high-risk-warning")).toBeInTheDocument();
@@ -190,7 +192,7 @@ describe("RemediationApprovalDialog", () => {
       render(<RemediationApprovalDialog {...defaultProps} />);
 
       expect(
-        screen.getByText(/minimal impact, additional pods added/i)
+        screen.getByText(/minimal impact, additional pods added/i),
       ).toBeInTheDocument();
     });
 
@@ -198,7 +200,7 @@ describe("RemediationApprovalDialog", () => {
       render(<RemediationApprovalDialog {...defaultProps} />);
 
       expect(
-        screen.getByText(/kubectl scale deployment api-server --replicas=3/i)
+        screen.getByText(/kubectl scale deployment api-server --replicas=3/i),
       ).toBeInTheDocument();
     });
   });
@@ -213,7 +215,7 @@ describe("RemediationApprovalDialog", () => {
     it("should call onApprove with remediation id when clicked", async () => {
       const onApprove = vi.fn();
       render(
-        <RemediationApprovalDialog {...defaultProps} onApprove={onApprove} />
+        <RemediationApprovalDialog {...defaultProps} onApprove={onApprove} />,
       );
 
       fireEvent.click(screen.getByTestId("approve-button"));
@@ -231,10 +233,13 @@ describe("RemediationApprovalDialog", () => {
       const onApprove = vi.fn();
       const user = userEvent.setup();
       render(
-        <RemediationApprovalDialog {...defaultProps} onApprove={onApprove} />
+        <RemediationApprovalDialog {...defaultProps} onApprove={onApprove} />,
       );
 
-      await user.type(screen.getByTestId("reason-input"), "Approved after review");
+      await user.type(
+        screen.getByTestId("reason-input"),
+        "Approved after review",
+      );
       await user.click(screen.getByTestId("approve-button"));
 
       await waitFor(() => {
@@ -269,7 +274,7 @@ describe("RemediationApprovalDialog", () => {
     it("should require reason for rejection", async () => {
       const onReject = vi.fn();
       render(
-        <RemediationApprovalDialog {...defaultProps} onReject={onReject} />
+        <RemediationApprovalDialog {...defaultProps} onReject={onReject} />,
       );
 
       // Click reject without selecting a structured rejection reason
@@ -277,7 +282,9 @@ describe("RemediationApprovalDialog", () => {
 
       // Should show validation error (component now requires structured rejection reason)
       await waitFor(() => {
-        expect(screen.getByText(/select a rejection reason/i)).toBeInTheDocument();
+        expect(
+          screen.getByText(/select a rejection reason/i),
+        ).toBeInTheDocument();
       });
 
       // onReject should not be called
@@ -288,7 +295,7 @@ describe("RemediationApprovalDialog", () => {
       const onReject = vi.fn();
       const user = userEvent.setup();
       render(
-        <RemediationApprovalDialog {...defaultProps} onReject={onReject} />
+        <RemediationApprovalDialog {...defaultProps} onReject={onReject} />,
       );
 
       // First select a structured rejection reason (now required)
@@ -337,7 +344,7 @@ describe("RemediationApprovalDialog", () => {
         <RemediationApprovalDialog
           {...defaultProps}
           error="Failed to approve remediation"
-        />
+        />,
       );
 
       expect(screen.getByText(/failed to approve/i)).toBeInTheDocument();
@@ -367,7 +374,7 @@ describe("RemediationApprovalDialog", () => {
       const onReject = vi.fn();
       const user = userEvent.setup();
       render(
-        <RemediationApprovalDialog {...defaultProps} onReject={onReject} />
+        <RemediationApprovalDialog {...defaultProps} onReject={onReject} />,
       );
 
       // Type text reason but don't select structured reason
@@ -377,7 +384,7 @@ describe("RemediationApprovalDialog", () => {
       // Should show validation error for structured reason
       await waitFor(() => {
         expect(
-          screen.getByText(/select a rejection reason/i)
+          screen.getByText(/select a rejection reason/i),
         ).toBeInTheDocument();
       });
 
@@ -388,7 +395,7 @@ describe("RemediationApprovalDialog", () => {
       const onReject = vi.fn();
       const user = userEvent.setup();
       render(
-        <RemediationApprovalDialog {...defaultProps} onReject={onReject} />
+        <RemediationApprovalDialog {...defaultProps} onReject={onReject} />,
       );
 
       // Select structured reason
@@ -402,7 +409,7 @@ describe("RemediationApprovalDialog", () => {
           expect.objectContaining({
             remediation_id: "rem-001",
             reason: "too_risky",
-          })
+          }),
         );
       });
     });
@@ -422,7 +429,7 @@ describe("RemediationApprovalDialog", () => {
       const onReject = vi.fn();
       const user = userEvent.setup();
       render(
-        <RemediationApprovalDialog {...defaultProps} onReject={onReject} />
+        <RemediationApprovalDialog {...defaultProps} onReject={onReject} />,
       );
 
       // Select 'other' reason without providing detail
@@ -432,7 +439,7 @@ describe("RemediationApprovalDialog", () => {
       // Should show validation error (use more specific match to avoid matching label)
       await waitFor(() => {
         expect(
-          screen.getByText(/please provide details for your reason/i)
+          screen.getByText(/please provide details for your reason/i),
         ).toBeInTheDocument();
       });
 
@@ -443,14 +450,14 @@ describe("RemediationApprovalDialog", () => {
       const onReject = vi.fn();
       const user = userEvent.setup();
       render(
-        <RemediationApprovalDialog {...defaultProps} onReject={onReject} />
+        <RemediationApprovalDialog {...defaultProps} onReject={onReject} />,
       );
 
       // Select 'other' and provide detail
       await user.click(screen.getByTestId("rejection-reason-other"));
       await user.type(
         screen.getByTestId("rejection-detail-input"),
-        "Custom reason here"
+        "Custom reason here",
       );
       await user.click(screen.getByTestId("reject-button"));
 
@@ -459,7 +466,7 @@ describe("RemediationApprovalDialog", () => {
           expect.objectContaining({
             reason: "other",
             reason_detail: "Custom reason here",
-          })
+          }),
         );
       });
     });

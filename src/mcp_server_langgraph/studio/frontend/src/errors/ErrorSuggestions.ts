@@ -120,7 +120,8 @@ const USER_MESSAGES: Record<ErrorCategory, string> = {
   client: "Something went wrong. Please try again.",
   timeout: "The request took too long. Please try again.",
   quota: "You've made too many requests. Please wait a moment and try again.",
-  unknown: "Something unexpected happened. Please try again or contact support.",
+  unknown:
+    "Something unexpected happened. Please try again or contact support.",
 };
 
 /**
@@ -140,7 +141,7 @@ function formatDuration(ms: number): string {
  */
 export function getSuggestions(
   error: ClassifiedError,
-  context: SuggestionContext = {}
+  context: SuggestionContext = {},
 ): string[] {
   const suggestions: string[] = [];
   const base = BASE_SUGGESTIONS[error.category] ?? BASE_SUGGESTIONS.unknown;
@@ -209,7 +210,7 @@ export function getSuggestions(
       (s) =>
         !s.toLowerCase().includes("trace") &&
         !s.toLowerCase().includes("debug") &&
-        !s.toLowerCase().includes("logs")
+        !s.toLowerCase().includes("logs"),
     );
   }
 

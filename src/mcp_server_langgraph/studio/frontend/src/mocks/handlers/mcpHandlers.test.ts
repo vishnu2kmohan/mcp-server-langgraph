@@ -208,7 +208,9 @@ describe("MCP Handlers", () => {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          messages: [{ role: "user", content: { type: "text", text: "Hello" } }],
+          messages: [
+            { role: "user", content: { type: "text", text: "Hello" } },
+          ],
           maxTokens: 100,
         }),
       });
@@ -364,9 +366,12 @@ describe("MCP Handlers", () => {
     });
 
     it("returns 404 for unknown task", async () => {
-      const response = await fetch("/api/v1/mcp/tasks/nonexistent-task/cancel", {
-        method: "POST",
-      });
+      const response = await fetch(
+        "/api/v1/mcp/tasks/nonexistent-task/cancel",
+        {
+          method: "POST",
+        },
+      );
 
       expect(response.status).toBe(404);
     });
@@ -400,7 +405,7 @@ describe("MCP Handlers", () => {
           "get",
           "/api/v1/mcp/resources",
           500,
-          "Internal server error"
+          "Internal server error",
         );
         server.use(errorHandler);
 
@@ -416,7 +421,7 @@ describe("MCP Handlers", () => {
           "post",
           "/api/v1/mcp/tools/call",
           503,
-          "Service unavailable"
+          "Service unavailable",
         );
         server.use(errorHandler);
 
@@ -437,7 +442,7 @@ describe("MCP Handlers", () => {
           "/api/v1/mcp/tasks",
           400,
           "Validation error",
-          { field: "session_id", issue: "required" }
+          { field: "session_id", issue: "required" },
         );
         server.use(errorHandler);
 
@@ -446,7 +451,10 @@ describe("MCP Handlers", () => {
 
         expect(response.status).toBe(400);
         expect(data.error).toBe("Validation error");
-        expect(data.details).toEqual({ field: "session_id", issue: "required" });
+        expect(data.details).toEqual({
+          field: "session_id",
+          issue: "required",
+        });
       });
     });
 
@@ -454,7 +462,7 @@ describe("MCP Handlers", () => {
       it("creates handler that simulates network failure", async () => {
         const networkErrorHandler = createNetworkErrorHandler(
           "get",
-          "/api/v1/mcp/resources"
+          "/api/v1/mcp/resources",
         );
         server.use(networkErrorHandler);
 
@@ -464,7 +472,7 @@ describe("MCP Handlers", () => {
       it("works for POST requests", async () => {
         const networkErrorHandler = createNetworkErrorHandler(
           "post",
-          "/api/v1/mcp/sampling"
+          "/api/v1/mcp/sampling",
         );
         server.use(networkErrorHandler);
 
@@ -473,7 +481,7 @@ describe("MCP Handlers", () => {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ messages: [], maxTokens: 100 }),
-          })
+          }),
         ).rejects.toThrow();
       });
     });
@@ -484,7 +492,7 @@ describe("MCP Handlers", () => {
           "get",
           "/api/v1/mcp/resources",
           50, // 50ms delay
-          { resources: [] }
+          { resources: [] },
         );
         server.use(delayedHandler);
 
@@ -503,7 +511,10 @@ describe("MCP Handlers", () => {
           "post",
           "/api/v1/mcp/tools/call",
           30,
-          { content: [{ type: "text", text: "Delayed result" }], isError: false }
+          {
+            content: [{ type: "text", text: "Delayed result" }],
+            isError: false,
+          },
         );
         server.use(delayedHandler);
 

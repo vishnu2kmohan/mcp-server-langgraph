@@ -1341,8 +1341,20 @@ describe("sessionSlice", () => {
         json: () =>
           Promise.resolve({
             data: [
-              { id: "s1", name: "S1", createdAt: Date.now(), updatedAt: Date.now(), messageCount: 0 },
-              { id: "s2", name: "S2", createdAt: Date.now(), updatedAt: Date.now(), messageCount: 0 },
+              {
+                id: "s1",
+                name: "S1",
+                createdAt: Date.now(),
+                updatedAt: Date.now(),
+                messageCount: 0,
+              },
+              {
+                id: "s2",
+                name: "S2",
+                createdAt: Date.now(),
+                updatedAt: Date.now(),
+                messageCount: 0,
+              },
             ],
             pagination: {
               next_cursor: null,
@@ -1363,7 +1375,13 @@ describe("sessionSlice", () => {
         json: () =>
           Promise.resolve({
             items: [
-              { id: "s1", name: "Legacy Items", createdAt: Date.now(), updatedAt: Date.now(), messageCount: 0 },
+              {
+                id: "s1",
+                name: "Legacy Items",
+                createdAt: Date.now(),
+                updatedAt: Date.now(),
+                messageCount: 0,
+              },
             ],
             total: 10,
             next_cursor: "legacy-cursor",
@@ -1384,7 +1402,13 @@ describe("sessionSlice", () => {
         json: () =>
           Promise.resolve({
             data: [
-              { id: "s1", name: "Data Format", createdAt: Date.now(), updatedAt: Date.now(), messageCount: 0 },
+              {
+                id: "s1",
+                name: "Data Format",
+                createdAt: Date.now(),
+                updatedAt: Date.now(),
+                messageCount: 0,
+              },
             ],
           }),
       });
@@ -1402,7 +1426,9 @@ describe("sessionSlice", () => {
       const store = createTestStore();
       await store.dispatch(fetchSessions());
 
-      expect(selectSessionError(store.getState())).toBe("Failed to fetch sessions");
+      expect(selectSessionError(store.getState())).toBe(
+        "Failed to fetch sessions",
+      );
       expect(selectIsLoadingSessions(store.getState())).toBe(false);
     });
 
@@ -1427,7 +1453,13 @@ describe("sessionSlice", () => {
         json: () =>
           Promise.resolve({
             data: [
-              { id: "s3", name: "More Session", createdAt: Date.now(), updatedAt: Date.now(), messageCount: 0 },
+              {
+                id: "s3",
+                name: "More Session",
+                createdAt: Date.now(),
+                updatedAt: Date.now(),
+                messageCount: 0,
+              },
             ],
             pagination: {
               count: 50,
@@ -1437,7 +1469,15 @@ describe("sessionSlice", () => {
       });
 
       const store = createTestStore({
-        sessions: [{ id: "s1", name: "Existing", createdAt: Date.now(), updatedAt: Date.now(), messageCount: 0 }],
+        sessions: [
+          {
+            id: "s1",
+            name: "Existing",
+            createdAt: Date.now(),
+            updatedAt: Date.now(),
+            messageCount: 0,
+          },
+        ],
         cursor: "initial-cursor",
       });
 
@@ -1454,7 +1494,9 @@ describe("sessionSlice", () => {
       const store = createTestStore({ cursor: "some-cursor" });
       await store.dispatch(fetchMoreSessions());
 
-      expect(selectSessionError(store.getState())).toBe("Failed to fetch more sessions");
+      expect(selectSessionError(store.getState())).toBe(
+        "Failed to fetch more sessions",
+      );
       expect(selectIsLoadingMore(store.getState())).toBe(false);
     });
 
@@ -1480,7 +1522,9 @@ describe("sessionSlice", () => {
       const store = createTestStore({ cursor: "some-cursor" });
       await store.dispatch(fetchMoreSessions());
 
-      expect(selectSessionError(store.getState())).toBe("Failed to fetch more sessions");
+      expect(selectSessionError(store.getState())).toBe(
+        "Failed to fetch more sessions",
+      );
       expect(selectIsLoadingMore(store.getState())).toBe(false);
     });
 
@@ -1490,8 +1534,20 @@ describe("sessionSlice", () => {
         json: () =>
           Promise.resolve({
             items: [
-              { id: "s1", name: "Duplicate", createdAt: Date.now(), updatedAt: Date.now(), messageCount: 0 },
-              { id: "s2", name: "New Session", createdAt: Date.now(), updatedAt: Date.now(), messageCount: 0 },
+              {
+                id: "s1",
+                name: "Duplicate",
+                createdAt: Date.now(),
+                updatedAt: Date.now(),
+                messageCount: 0,
+              },
+              {
+                id: "s2",
+                name: "New Session",
+                createdAt: Date.now(),
+                updatedAt: Date.now(),
+                messageCount: 0,
+              },
             ],
             total: 3,
             next_cursor: null,
@@ -1499,7 +1555,15 @@ describe("sessionSlice", () => {
       });
 
       const store = createTestStore({
-        sessions: [{ id: "s1", name: "Existing", createdAt: Date.now(), updatedAt: Date.now(), messageCount: 0 }],
+        sessions: [
+          {
+            id: "s1",
+            name: "Existing",
+            createdAt: Date.now(),
+            updatedAt: Date.now(),
+            messageCount: 0,
+          },
+        ],
         cursor: "cursor",
       });
 
@@ -1507,7 +1571,10 @@ describe("sessionSlice", () => {
 
       // Should only have 2 sessions (s1 deduplicated)
       expect(selectSessions(store.getState())).toHaveLength(2);
-      expect(selectSessions(store.getState()).map(s => s.id)).toEqual(["s1", "s2"]);
+      expect(selectSessions(store.getState()).map((s) => s.id)).toEqual([
+        "s1",
+        "s2",
+      ]);
     });
 
     it("should fetch without cursor when none exists", async () => {
@@ -1633,13 +1700,25 @@ describe("sessionSlice", () => {
               temperature: 0.7,
               maxTokens: 4096,
             },
-            messages: [{ id: "m1", role: "user", content: "Hello", timestamp: Date.now() }],
+            messages: [
+              {
+                id: "m1",
+                role: "user",
+                content: "Hello",
+                timestamp: Date.now(),
+              },
+            ],
             createdAt: Date.now(),
             updatedAt: Date.now(),
           },
         });
 
-        store.dispatch(updateMessage({ messageId: "non-existent", updates: { content: "Updated" } }));
+        store.dispatch(
+          updateMessage({
+            messageId: "non-existent",
+            updates: { content: "Updated" },
+          }),
+        );
 
         // Original message should be unchanged
         expect(selectMessages(store.getState())[0].content).toBe("Hello");
@@ -1649,7 +1728,9 @@ describe("sessionSlice", () => {
         const store = createTestStore();
 
         // Should not throw
-        store.dispatch(updateMessage({ messageId: "m1", updates: { content: "Updated" } }));
+        store.dispatch(
+          updateMessage({ messageId: "m1", updates: { content: "Updated" } }),
+        );
 
         expect(selectCurrentSession(store.getState())).toBeNull();
       });
@@ -1672,7 +1753,9 @@ describe("sessionSlice", () => {
       const store = createTestStore();
       await store.dispatch(createSession({ name: "Test" }));
 
-      expect(selectSessionError(store.getState())).toBe("Failed to create session");
+      expect(selectSessionError(store.getState())).toBe(
+        "Failed to create session",
+      );
     });
 
     it("should handle loadSession network error", async () => {
@@ -1689,7 +1772,15 @@ describe("sessionSlice", () => {
       mockFetch.mockRejectedValueOnce(new Error("Connection lost"));
 
       const store = createTestStore({
-        sessions: [{ id: "s1", name: "Session 1", createdAt: Date.now(), updatedAt: Date.now(), messageCount: 0 }],
+        sessions: [
+          {
+            id: "s1",
+            name: "Session 1",
+            createdAt: Date.now(),
+            updatedAt: Date.now(),
+            messageCount: 0,
+          },
+        ],
       });
       await store.dispatch(deleteSession("s1"));
 
@@ -1702,9 +1793,19 @@ describe("sessionSlice", () => {
       mockFetch.mockRejectedValueOnce(new Error("Server unreachable"));
 
       const store = createTestStore({
-        sessions: [{ id: "s1", name: "Old Name", createdAt: Date.now(), updatedAt: Date.now(), messageCount: 0 }],
+        sessions: [
+          {
+            id: "s1",
+            name: "Old Name",
+            createdAt: Date.now(),
+            updatedAt: Date.now(),
+            messageCount: 0,
+          },
+        ],
       });
-      await store.dispatch(renameSession({ sessionId: "s1", name: "New Name" }));
+      await store.dispatch(
+        renameSession({ sessionId: "s1", name: "New Name" }),
+      );
 
       expect(selectSessionError(store.getState())).toBe("Server unreachable");
       expect(selectSessions(store.getState())[0].name).toBe("Old Name");
@@ -1717,7 +1818,12 @@ describe("sessionSlice", () => {
         currentSession: {
           id: "s1",
           name: "Test",
-          config: { modelProvider: "openai", modelName: "gpt-4", temperature: 0.7, maxTokens: 4096 },
+          config: {
+            modelProvider: "openai",
+            modelName: "gpt-4",
+            temperature: 0.7,
+            maxTokens: 4096,
+          },
           messages: [],
           createdAt: Date.now(),
           updatedAt: Date.now(),
@@ -1739,7 +1845,12 @@ describe("sessionSlice", () => {
         currentSession: {
           id: "s1",
           name: "Test",
-          config: { modelProvider: "openai", modelName: "gpt-4", temperature: 0.7, maxTokens: 4096 },
+          config: {
+            modelProvider: "openai",
+            modelName: "gpt-4",
+            temperature: 0.7,
+            maxTokens: 4096,
+          },
           messages: [],
           createdAt: Date.now(),
           updatedAt: Date.now(),
@@ -1761,7 +1872,12 @@ describe("sessionSlice", () => {
         currentSession: {
           id: "s1",
           name: "Test",
-          config: { modelProvider: "openai", modelName: "gpt-4", temperature: 0.7, maxTokens: 4096 },
+          config: {
+            modelProvider: "openai",
+            modelName: "gpt-4",
+            temperature: 0.7,
+            maxTokens: 4096,
+          },
           messages: [],
           createdAt: Date.now(),
           updatedAt: Date.now(),
@@ -1769,7 +1885,9 @@ describe("sessionSlice", () => {
       });
       await store.dispatch(sendMessage("Hello"));
 
-      expect(selectSessionError(store.getState())).toBe("Failed to send message");
+      expect(selectSessionError(store.getState())).toBe(
+        "Failed to send message",
+      );
       expect(selectIsSending(store.getState())).toBe(false);
     });
 
@@ -1780,8 +1898,15 @@ describe("sessionSlice", () => {
         currentSession: {
           id: "s1",
           name: "Test",
-          config: { modelProvider: "openai", modelName: "gpt-4", temperature: 0.7, maxTokens: 4096 },
-          messages: [{ id: "m1", role: "user", content: "Hello", timestamp: Date.now() }],
+          config: {
+            modelProvider: "openai",
+            modelName: "gpt-4",
+            temperature: 0.7,
+            maxTokens: 4096,
+          },
+          messages: [
+            { id: "m1", role: "user", content: "Hello", timestamp: Date.now() },
+          ],
           createdAt: Date.now(),
           updatedAt: Date.now(),
         },
@@ -1831,22 +1956,43 @@ describe("sessionSlice", () => {
 
       const store = createTestStore({
         sessions: [
-          { id: "s1", name: "Session 1", createdAt: Date.now(), updatedAt: Date.now(), messageCount: 0 },
-          { id: "s2", name: "Session 2", createdAt: Date.now(), updatedAt: Date.now(), messageCount: 0 },
+          {
+            id: "s1",
+            name: "Session 1",
+            createdAt: Date.now(),
+            updatedAt: Date.now(),
+            messageCount: 0,
+          },
+          {
+            id: "s2",
+            name: "Session 2",
+            createdAt: Date.now(),
+            updatedAt: Date.now(),
+            messageCount: 0,
+          },
         ],
         currentSession: {
           id: "s2",
           name: "Session 2",
-          config: { modelProvider: "openai", modelName: "gpt-4", temperature: 0.7, maxTokens: 4096 },
+          config: {
+            modelProvider: "openai",
+            modelName: "gpt-4",
+            temperature: 0.7,
+            maxTokens: 4096,
+          },
           messages: [],
           createdAt: Date.now(),
           updatedAt: Date.now(),
         },
       });
 
-      await store.dispatch(renameSession({ sessionId: "s1", name: "Renamed Session 1" }));
+      await store.dispatch(
+        renameSession({ sessionId: "s1", name: "Renamed Session 1" }),
+      );
 
-      expect(selectSessions(store.getState())[0].name).toBe("Renamed Session 1");
+      expect(selectSessions(store.getState())[0].name).toBe(
+        "Renamed Session 1",
+      );
       expect(selectCurrentSession(store.getState())?.name).toBe("Session 2"); // unchanged
     });
 
@@ -1857,10 +2003,20 @@ describe("sessionSlice", () => {
       });
 
       const store = createTestStore({
-        sessions: [{ id: "s1", name: "Session 1", createdAt: Date.now(), updatedAt: Date.now(), messageCount: 0 }],
+        sessions: [
+          {
+            id: "s1",
+            name: "Session 1",
+            createdAt: Date.now(),
+            updatedAt: Date.now(),
+            messageCount: 0,
+          },
+        ],
       });
 
-      await store.dispatch(renameSession({ sessionId: "non-existent", name: "New Name" }));
+      await store.dispatch(
+        renameSession({ sessionId: "non-existent", name: "New Name" }),
+      );
 
       // Should not throw, session list unchanged
       expect(selectSessions(store.getState())).toHaveLength(1);
@@ -1877,13 +2033,30 @@ describe("sessionSlice", () => {
 
       const store = createTestStore({
         sessions: [
-          { id: "s1", name: "Session 1", createdAt: Date.now(), updatedAt: Date.now(), messageCount: 0 },
-          { id: "s2", name: "Session 2", createdAt: Date.now(), updatedAt: Date.now(), messageCount: 0 },
+          {
+            id: "s1",
+            name: "Session 1",
+            createdAt: Date.now(),
+            updatedAt: Date.now(),
+            messageCount: 0,
+          },
+          {
+            id: "s2",
+            name: "Session 2",
+            createdAt: Date.now(),
+            updatedAt: Date.now(),
+            messageCount: 0,
+          },
         ],
         currentSession: {
           id: "s2",
           name: "Session 2",
-          config: { modelProvider: "openai", modelName: "gpt-4", temperature: 0.7, maxTokens: 4096 },
+          config: {
+            modelProvider: "openai",
+            modelName: "gpt-4",
+            temperature: 0.7,
+            maxTokens: 4096,
+          },
           messages: [],
           createdAt: Date.now(),
           updatedAt: Date.now(),
@@ -1908,7 +2081,12 @@ describe("sessionSlice", () => {
         currentSession: {
           id: "s1",
           name: "Test",
-          config: { modelProvider: "openai", modelName: "gpt-4", temperature: 0.7, maxTokens: 4096 },
+          config: {
+            modelProvider: "openai",
+            modelName: "gpt-4",
+            temperature: 0.7,
+            maxTokens: 4096,
+          },
           messages: [],
           createdAt: Date.now(),
           updatedAt: Date.now(),

@@ -64,8 +64,12 @@ describe("RetryIndicator", () => {
     it("shows cancel and force retry buttons", () => {
       renderRetryIndicator();
 
-      expect(screen.getByRole("button", { name: /cancel/i })).toBeInTheDocument();
-      expect(screen.getByRole("button", { name: /retry now/i })).toBeInTheDocument();
+      expect(
+        screen.getByRole("button", { name: /cancel/i }),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByRole("button", { name: /retry now/i }),
+      ).toBeInTheDocument();
     });
 
     it("shows progress bar", () => {
@@ -213,7 +217,7 @@ describe("RetryIndicator", () => {
   describe("Paused State", () => {
     it("pauses countdown when paused prop is true", async () => {
       const { rerender } = render(
-        <RetryIndicator {...defaultProps} delayMs={5000} paused={false} />
+        <RetryIndicator {...defaultProps} delayMs={5000} paused={false} />,
       );
 
       const countdown = screen.getByTestId("retry-countdown");
@@ -226,7 +230,9 @@ describe("RetryIndicator", () => {
       expect(countdown).toHaveTextContent("4");
 
       // Pause the countdown
-      rerender(<RetryIndicator {...defaultProps} delayMs={5000} paused={true} />);
+      rerender(
+        <RetryIndicator {...defaultProps} delayMs={5000} paused={true} />,
+      );
 
       await act(async () => {
         await vi.advanceTimersByTimeAsync(2000);
@@ -247,7 +253,9 @@ describe("RetryIndicator", () => {
     it("renders in compact mode when specified", () => {
       renderRetryIndicator({ compact: true });
 
-      expect(screen.getByTestId("retry-indicator")).toHaveClass("retry-indicator-compact");
+      expect(screen.getByTestId("retry-indicator")).toHaveClass(
+        "retry-indicator-compact",
+      );
     });
 
     it("hides progress bar in compact mode", () => {
@@ -276,8 +284,12 @@ describe("RetryIndicator", () => {
     it("buttons have accessible names", () => {
       renderRetryIndicator();
 
-      expect(screen.getByRole("button", { name: /cancel/i })).toHaveAccessibleName();
-      expect(screen.getByRole("button", { name: /retry now/i })).toHaveAccessibleName();
+      expect(
+        screen.getByRole("button", { name: /cancel/i }),
+      ).toHaveAccessibleName();
+      expect(
+        screen.getByRole("button", { name: /retry now/i }),
+      ).toHaveAccessibleName();
     });
   });
 });

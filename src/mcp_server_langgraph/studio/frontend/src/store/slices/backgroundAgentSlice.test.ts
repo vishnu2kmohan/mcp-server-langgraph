@@ -76,7 +76,10 @@ describe("backgroundAgentSlice", () => {
     it("does not duplicate agentId when adding same agent twice", () => {
       let state = backgroundAgentReducer(initialState, addAgent(mockAgent));
       // Add agent with same ID again
-      state = backgroundAgentReducer(state, addAgent({ ...mockAgent, name: "Updated Name" }));
+      state = backgroundAgentReducer(
+        state,
+        addAgent({ ...mockAgent, name: "Updated Name" }),
+      );
 
       // Should not duplicate the ID in agentIds
       expect(state.agentIds).toHaveLength(1);
@@ -110,7 +113,11 @@ describe("backgroundAgentSlice", () => {
       let state = backgroundAgentReducer(initialState, addAgent(mockAgent));
       state = backgroundAgentReducer(
         state,
-        updateAgentStatus({ id: "agent-1", status: "failed", error: "Connection timeout" }),
+        updateAgentStatus({
+          id: "agent-1",
+          status: "failed",
+          error: "Connection timeout",
+        }),
       );
 
       expect(state.agents["agent-1"].status).toBe("failed");
@@ -136,8 +143,12 @@ describe("backgroundAgentSlice", () => {
       );
       const afterUpdate = Date.now();
 
-      expect(state.agents["agent-1"].completedAt).toBeGreaterThanOrEqual(beforeUpdate);
-      expect(state.agents["agent-1"].completedAt).toBeLessThanOrEqual(afterUpdate);
+      expect(state.agents["agent-1"].completedAt).toBeGreaterThanOrEqual(
+        beforeUpdate,
+      );
+      expect(state.agents["agent-1"].completedAt).toBeLessThanOrEqual(
+        afterUpdate,
+      );
     });
 
     it("sets completedAt when status is failed", () => {
@@ -211,7 +222,10 @@ describe("backgroundAgentSlice", () => {
 
     it("does not add duplicate artifacts", () => {
       const agentWithArtifact = { ...mockAgent, artifacts: ["artifact-1"] };
-      let state = backgroundAgentReducer(initialState, addAgent(agentWithArtifact));
+      let state = backgroundAgentReducer(
+        initialState,
+        addAgent(agentWithArtifact),
+      );
       state = backgroundAgentReducer(
         state,
         addAgentArtifact({ id: "agent-1", artifactId: "artifact-1" }),
@@ -389,7 +403,10 @@ describe("backgroundAgentSlice", () => {
           ...mockAgent,
           status: "awaiting_approval",
         };
-        const state = backgroundAgentReducer(initialState, addAgent(agentWithApproval));
+        const state = backgroundAgentReducer(
+          initialState,
+          addAgent(agentWithApproval),
+        );
         expect(state.agents["agent-1"].status).toBe("awaiting_approval");
       });
 
@@ -398,7 +415,10 @@ describe("backgroundAgentSlice", () => {
           ...mockAgent,
           status: "awaiting_clarification",
         };
-        const state = backgroundAgentReducer(initialState, addAgent(agentWithClarification));
+        const state = backgroundAgentReducer(
+          initialState,
+          addAgent(agentWithClarification),
+        );
         expect(state.agents["agent-1"].status).toBe("awaiting_clarification");
       });
     });
@@ -409,7 +429,10 @@ describe("backgroundAgentSlice", () => {
           ...mockAgent,
           confidence: 0.65,
         };
-        const state = backgroundAgentReducer(initialState, addAgent(agentWithConfidence));
+        const state = backgroundAgentReducer(
+          initialState,
+          addAgent(agentWithConfidence),
+        );
         expect(state.agents["agent-1"].confidence).toBe(0.65);
       });
 
@@ -419,7 +442,10 @@ describe("backgroundAgentSlice", () => {
           status: "awaiting_approval",
           approvalId: "approval_123",
         };
-        const state = backgroundAgentReducer(initialState, addAgent(agentWithApproval));
+        const state = backgroundAgentReducer(
+          initialState,
+          addAgent(agentWithApproval),
+        );
         expect(state.agents["agent-1"].approvalId).toBe("approval_123");
       });
 
@@ -429,7 +455,10 @@ describe("backgroundAgentSlice", () => {
           status: "awaiting_approval",
           approvalReason: "low_confidence",
         };
-        const state = backgroundAgentReducer(initialState, addAgent(agentWithApproval));
+        const state = backgroundAgentReducer(
+          initialState,
+          addAgent(agentWithApproval),
+        );
         expect(state.agents["agent-1"].approvalReason).toBe("low_confidence");
       });
 
@@ -438,7 +467,10 @@ describe("backgroundAgentSlice", () => {
           ...mockAgent,
           threshold: 0.7,
         };
-        const state = backgroundAgentReducer(initialState, addAgent(agentWithThreshold));
+        const state = backgroundAgentReducer(
+          initialState,
+          addAgent(agentWithThreshold),
+        );
         expect(state.agents["agent-1"].threshold).toBe(0.7);
       });
     });
@@ -490,8 +522,12 @@ describe("backgroundAgentSlice", () => {
         );
 
         expect(state.agents["agent-1"].status).toBe("awaiting_clarification");
-        expect(state.agents["agent-1"].clarificationRequestId).toBe("clarify_123");
-        expect(state.agents["agent-1"].clarificationQuestion).toBe("Which format?");
+        expect(state.agents["agent-1"].clarificationRequestId).toBe(
+          "clarify_123",
+        );
+        expect(state.agents["agent-1"].clarificationQuestion).toBe(
+          "Which format?",
+        );
       });
 
       it("does nothing for non-existent agent", () => {
@@ -517,7 +553,10 @@ describe("backgroundAgentSlice", () => {
           confidence: 0.65,
           approvalReason: "low_confidence",
         };
-        let state = backgroundAgentReducer(initialState, addAgent(agentWithHitl));
+        let state = backgroundAgentReducer(
+          initialState,
+          addAgent(agentWithHitl),
+        );
         state = backgroundAgentReducer(state, clearAgentHitlStatus("agent-1"));
 
         expect(state.agents["agent-1"].status).toBe("running");

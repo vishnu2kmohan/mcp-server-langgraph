@@ -60,7 +60,9 @@ describe("apiTransforms", () => {
     });
 
     it("should return false for missing id", () => {
-      expect(isApiSession({ created_at: "2025-01-15", updated_at: "2025-01-15" })).toBe(false);
+      expect(
+        isApiSession({ created_at: "2025-01-15", updated_at: "2025-01-15" }),
+      ).toBe(false);
     });
 
     it("should return false for missing created_at", () => {
@@ -84,7 +86,7 @@ describe("apiTransforms", () => {
           created_at: "2025-01-15",
           updated_at: "2025-01-15",
           organization_id: 12345, // number instead of string
-        })
+        }),
       ).toBe(false);
     });
 
@@ -95,7 +97,7 @@ describe("apiTransforms", () => {
           created_at: "2025-01-15",
           updated_at: "2025-01-15",
           status: { invalid: "object" }, // object instead of string
-        })
+        }),
       ).toBe(false);
     });
   });
@@ -134,7 +136,10 @@ describe("apiTransforms", () => {
     });
 
     it("should return error for missing id field", () => {
-      const result = validateApiSession({ created_at: "2025-01-15", updated_at: "2025-01-15" });
+      const result = validateApiSession({
+        created_at: "2025-01-15",
+        updated_at: "2025-01-15",
+      });
       expect(result.success).toBe(false);
       if (!result.success) {
         expect(result.error).toBe("Missing or invalid 'id' field");
@@ -142,7 +147,10 @@ describe("apiTransforms", () => {
     });
 
     it("should return error for missing created_at field", () => {
-      const result = validateApiSession({ id: "test-id", updated_at: "2025-01-15" });
+      const result = validateApiSession({
+        id: "test-id",
+        updated_at: "2025-01-15",
+      });
       expect(result.success).toBe(false);
       if (!result.success) {
         expect(result.error).toBe("Missing or invalid 'created_at' field");
@@ -150,7 +158,10 @@ describe("apiTransforms", () => {
     });
 
     it("should return error for missing updated_at field", () => {
-      const result = validateApiSession({ id: "test-id", created_at: "2025-01-15" });
+      const result = validateApiSession({
+        id: "test-id",
+        created_at: "2025-01-15",
+      });
       expect(result.success).toBe(false);
       if (!result.success) {
         expect(result.error).toBe("Missing or invalid 'updated_at' field");
@@ -189,7 +200,12 @@ describe("apiTransforms", () => {
 
     it("should include messages in result", () => {
       const messages = [
-        { id: "msg-1", role: "user" as const, content: "Hello", timestamp: Date.now() },
+        {
+          id: "msg-1",
+          role: "user" as const,
+          content: "Hello",
+          timestamp: Date.now(),
+        },
       ];
       const result = transformApiSessionToClient(validApiSession, messages);
 

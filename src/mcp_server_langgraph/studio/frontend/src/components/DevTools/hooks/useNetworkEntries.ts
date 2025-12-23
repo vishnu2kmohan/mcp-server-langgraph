@@ -42,7 +42,7 @@ const DEFAULT_MAX_ENTRIES = 500;
 // =============================================================================
 
 export function useNetworkEntries(
-  options: UseNetworkEntriesOptions = {}
+  options: UseNetworkEntriesOptions = {},
 ): UseNetworkEntriesReturn {
   const { maxEntries = DEFAULT_MAX_ENTRIES } = options;
 
@@ -64,7 +64,7 @@ export function useNetworkEntries(
         return newEntries;
       });
     },
-    [isRecording, maxEntries]
+    [isRecording, maxEntries],
   );
 
   /**
@@ -74,11 +74,11 @@ export function useNetworkEntries(
     (id: string, updates: Partial<NetworkEntry>) => {
       setEntries((prev) =>
         prev.map((entry) =>
-          entry.id === id ? { ...entry, ...updates } : entry
-        )
+          entry.id === id ? { ...entry, ...updates } : entry,
+        ),
       );
     },
-    []
+    [],
   );
 
   /**

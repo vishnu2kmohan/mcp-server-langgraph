@@ -22,14 +22,16 @@ describe("EmptyState", () => {
           title="No sessions yet"
           motivation="Start a conversation to see your sessions here"
           trigger={<button>Start Chat</button>}
-        />
+        />,
       );
 
       expect(screen.getByText("No sessions yet")).toBeInTheDocument();
       expect(
-        screen.getByText("Start a conversation to see your sessions here")
+        screen.getByText("Start a conversation to see your sessions here"),
       ).toBeInTheDocument();
-      expect(screen.getByRole("button", { name: "Start Chat" })).toBeInTheDocument();
+      expect(
+        screen.getByRole("button", { name: "Start Chat" }),
+      ).toBeInTheDocument();
     });
 
     it("renders with optional ability text", () => {
@@ -40,7 +42,7 @@ describe("EmptyState", () => {
           motivation="Build automated workflows"
           ability="Takes about 2 minutes"
           trigger={<button>Create Workflow</button>}
-        />
+        />,
       );
 
       expect(screen.getByText("Takes about 2 minutes")).toBeInTheDocument();
@@ -54,13 +56,13 @@ describe("EmptyState", () => {
           motivation="Organize your work"
           description="Projects help you group related sessions and workflows together."
           trigger={<button>New Project</button>}
-        />
+        />,
       );
 
       expect(
         screen.getByText(
-          "Projects help you group related sessions and workflows together."
-        )
+          "Projects help you group related sessions and workflows together.",
+        ),
       ).toBeInTheDocument();
     });
 
@@ -71,11 +73,13 @@ describe("EmptyState", () => {
           title="No sessions"
           motivation="Start chatting"
           trigger={<button>Start</button>}
-        />
+        />,
       );
 
       // Should have an icon element
-      expect(container.querySelector("[data-testid='empty-state-icon']")).toBeInTheDocument();
+      expect(
+        container.querySelector("[data-testid='empty-state-icon']"),
+      ).toBeInTheDocument();
     });
 
     it("renders custom icon when provided", () => {
@@ -88,7 +92,7 @@ describe("EmptyState", () => {
           motivation="Start chatting"
           trigger={<button>Start</button>}
           icon={<CustomIcon />}
-        />
+        />,
       );
 
       expect(screen.getByTestId("custom-icon")).toBeInTheDocument();
@@ -115,10 +119,12 @@ describe("EmptyState", () => {
             title={`No ${context}`}
             motivation="Take action"
             trigger={<button>Action</button>}
-          />
+          />,
         );
 
-        expect(container.querySelector(`[data-context="${context}"]`)).toBeInTheDocument();
+        expect(
+          container.querySelector(`[data-context="${context}"]`),
+        ).toBeInTheDocument();
       });
     });
   });
@@ -131,11 +137,14 @@ describe("EmptyState", () => {
           title="No sessions"
           motivation="Start chatting"
           trigger={<button>Start</button>}
-        />
+        />,
       );
 
       const emptyState = screen.getByRole("region");
-      expect(emptyState).toHaveAttribute("aria-label", "Empty state: No sessions");
+      expect(emptyState).toHaveAttribute(
+        "aria-label",
+        "Empty state: No sessions",
+      );
     });
 
     it("icon is hidden from screen readers", () => {
@@ -145,10 +154,12 @@ describe("EmptyState", () => {
           title="No sessions"
           motivation="Start chatting"
           trigger={<button>Start</button>}
-        />
+        />,
       );
 
-      const iconContainer = container.querySelector("[data-testid='empty-state-icon']");
+      const iconContainer = container.querySelector(
+        "[data-testid='empty-state-icon']",
+      );
       expect(iconContainer).toHaveAttribute("aria-hidden", "true");
     });
   });
@@ -161,10 +172,12 @@ describe("EmptyState", () => {
           title="No sessions"
           motivation="Start chatting"
           trigger={<button>Start</button>}
-        />
+        />,
       );
 
-      expect(container.querySelector("[data-variant='default']")).toBeInTheDocument();
+      expect(
+        container.querySelector("[data-variant='default']"),
+      ).toBeInTheDocument();
     });
 
     it("renders compact variant with smaller spacing", () => {
@@ -175,10 +188,12 @@ describe("EmptyState", () => {
           motivation="Start chatting"
           trigger={<button>Start</button>}
           variant="compact"
-        />
+        />,
       );
 
-      expect(container.querySelector("[data-variant='compact']")).toBeInTheDocument();
+      expect(
+        container.querySelector("[data-variant='compact']"),
+      ).toBeInTheDocument();
     });
 
     it("renders inline variant", () => {
@@ -189,10 +204,12 @@ describe("EmptyState", () => {
           motivation="Start chatting"
           trigger={<button>Start</button>}
           variant="inline"
-        />
+        />,
       );
 
-      expect(container.querySelector("[data-variant='inline']")).toBeInTheDocument();
+      expect(
+        container.querySelector("[data-variant='inline']"),
+      ).toBeInTheDocument();
     });
   });
 
@@ -205,11 +222,15 @@ describe("EmptyState", () => {
           motivation="Build automated workflows"
           trigger={<button>Create Workflow</button>}
           secondaryTrigger={<button>Import Workflow</button>}
-        />
+        />,
       );
 
-      expect(screen.getByRole("button", { name: "Create Workflow" })).toBeInTheDocument();
-      expect(screen.getByRole("button", { name: "Import Workflow" })).toBeInTheDocument();
+      expect(
+        screen.getByRole("button", { name: "Create Workflow" }),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByRole("button", { name: "Import Workflow" }),
+      ).toBeInTheDocument();
     });
   });
 
@@ -222,7 +243,7 @@ describe("EmptyState", () => {
           motivation="Start chatting"
           trigger={<button>Start</button>}
           isLoading={true}
-        />
+        />,
       );
 
       expect(screen.getByTestId("empty-state-loading")).toBeInTheDocument();
@@ -236,10 +257,12 @@ describe("EmptyState", () => {
           motivation="Start chatting"
           trigger={<button>Start</button>}
           isLoading={true}
-        />
+        />,
       );
 
-      expect(screen.queryByRole("button", { name: "Start" })).not.toBeInTheDocument();
+      expect(
+        screen.queryByRole("button", { name: "Start" }),
+      ).not.toBeInTheDocument();
     });
   });
 
@@ -251,7 +274,7 @@ describe("EmptyState", () => {
           title="No sessions"
           motivation="Start chatting"
           trigger={<button>Start</button>}
-        />
+        />,
       );
 
       expect(screen.getByTestId("empty-state-sessions")).toBeInTheDocument();
@@ -265,7 +288,7 @@ describe("EmptyState", () => {
           motivation="Start chatting"
           trigger={<button>Start</button>}
           testId="custom-empty-state"
-        />
+        />,
       );
 
       expect(screen.getByTestId("custom-empty-state")).toBeInTheDocument();
@@ -281,7 +304,7 @@ describe("EmptyState", () => {
           motivation="Start chatting"
           trigger={<button>Start</button>}
           className="custom-class"
-        />
+        />,
       );
 
       expect(container.firstChild).toHaveClass("custom-class");

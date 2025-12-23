@@ -107,7 +107,7 @@ export interface LearningPathResult {
  * @returns Predicted navigation with scores and reasons
  */
 export function useNavPrediction(
-  options: NavPredictionOptions
+  options: NavPredictionOptions,
 ): NavPredictionResult {
   const { userId, currentPage, recentPages, enabled = true } = options;
 
@@ -189,7 +189,7 @@ export function useNavPrediction(
       error: result.error,
       refetch: fetchPrediction,
     }),
-    [result, isLoading, fetchPrediction]
+    [result, isLoading, fetchPrediction],
   );
 }
 
@@ -207,7 +207,7 @@ export function useNavPrediction(
  * @returns Contextual help with topics and actions
  */
 export function useContextualHelp(
-  options: ContextualHelpOptions
+  options: ContextualHelpOptions,
 ): ContextualHelpResult {
   const { userId, currentPage, activeFeature, enabled = true } = options;
 
@@ -289,7 +289,7 @@ export function useContextualHelp(
       error: result.error,
       refetch: fetchHelp,
     }),
-    [result, isLoading, fetchHelp]
+    [result, isLoading, fetchHelp],
   );
 }
 
@@ -307,7 +307,7 @@ export function useContextualHelp(
  * @returns Learning path with progress and next steps
  */
 export function useLearningPath(
-  options: LearningPathOptions
+  options: LearningPathOptions,
 ): LearningPathResult {
   const { userId, persona, enabled = true } = options;
 
@@ -400,6 +400,6 @@ export function useLearningPath(
       error: result.error,
       refetch: fetchLearningPath,
     }),
-    [result, isLoading, fetchLearningPath]
+    [result, isLoading, fetchLearningPath],
   );
 }

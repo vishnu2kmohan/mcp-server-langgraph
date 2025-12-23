@@ -6,7 +6,11 @@
  *
  * WebSocket events from /ws/v1/agents update this slice.
  */
-import { createSlice, createSelector, type PayloadAction } from "@reduxjs/toolkit";
+import {
+  createSlice,
+  createSelector,
+  type PayloadAction,
+} from "@reduxjs/toolkit";
 
 // =============================================================================
 // Types
@@ -262,7 +266,9 @@ export const selectAllAgents = createSelector(
 export const selectRunningAgents = createSelector(
   [selectAllAgents],
   (agents): BackgroundAgent[] =>
-    agents.filter((agent) => agent.status === "running" || agent.status === "queued"),
+    agents.filter(
+      (agent) => agent.status === "running" || agent.status === "queued",
+    ),
 );
 
 /**

@@ -43,7 +43,7 @@ describe("useErrorReporting", () => {
     server.use(
       http.post("/api/v1/errors/report", async () => {
         return HttpResponse.json({ success: true, reportId: "report-123" });
-      })
+      }),
     );
   });
 
@@ -85,7 +85,7 @@ describe("useErrorReporting", () => {
         http.post("/api/v1/errors/report", async ({ request }) => {
           capturedBody = (await request.json()) as Record<string, unknown>;
           return HttpResponse.json({ success: true, reportId: "report-456" });
-        })
+        }),
       );
 
       const { result } = renderHook(() => useErrorReporting(), {
@@ -106,7 +106,7 @@ describe("useErrorReporting", () => {
         http.post("/api/v1/errors/report", async ({ request }) => {
           capturedBody = (await request.json()) as Record<string, unknown>;
           return HttpResponse.json({ success: true });
-        })
+        }),
       );
 
       const { result } = renderHook(() => useErrorReporting(), {
@@ -119,7 +119,9 @@ describe("useErrorReporting", () => {
         });
       });
 
-      expect((capturedBody?.customContext as Record<string, unknown>)?.component).toBe("ChatPage");
+      expect(
+        (capturedBody?.customContext as Record<string, unknown>)?.component,
+      ).toBe("ChatPage");
     });
 
     it("tracks last error", async () => {
@@ -159,7 +161,7 @@ describe("useErrorReporting", () => {
             enabled: false,
             maxReportsPerMinute: 5,
           }),
-        { wrapper: createWrapper() }
+        { wrapper: createWrapper() },
       );
 
       expect(result.current.isEnabled).toBe(false);
@@ -168,7 +170,7 @@ describe("useErrorReporting", () => {
     it("enable/disable works", () => {
       const { result } = renderHook(
         () => useErrorReporting({ enabled: true }),
-        { wrapper: createWrapper() }
+        { wrapper: createWrapper() },
       );
 
       expect(result.current.isEnabled).toBe(true);
@@ -193,7 +195,7 @@ describe("useErrorReporting", () => {
       // Actually testing window.onerror in jsdom is tricky
       const { result } = renderHook(
         () => useErrorReporting({ captureWindowErrors: true }),
-        { wrapper: createWrapper() }
+        { wrapper: createWrapper() },
       );
 
       expect(result.current.isEnabled).toBe(true);

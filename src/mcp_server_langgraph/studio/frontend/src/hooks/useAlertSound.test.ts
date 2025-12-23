@@ -160,7 +160,7 @@ describe("useAlertSound", () => {
 
     it("should play sound for warning when warningSound is enabled", async () => {
       const { result } = renderHook(() =>
-        useAlertSound({ enabled: true, warningSound: true })
+        useAlertSound({ enabled: true, warningSound: true }),
       );
 
       // Advance timers to trigger canplaythrough event
@@ -179,7 +179,7 @@ describe("useAlertSound", () => {
   describe("Debouncing", () => {
     it("should debounce rapid sound plays", async () => {
       const { result } = renderHook(() =>
-        useAlertSound({ enabled: true, debounceMs: 1000 })
+        useAlertSound({ enabled: true, debounceMs: 1000 }),
       );
 
       // Advance timers to trigger canplaythrough event
@@ -203,7 +203,7 @@ describe("useAlertSound", () => {
 
     it("should allow playing after debounce period", async () => {
       const { result } = renderHook(() =>
-        useAlertSound({ enabled: true, debounceMs: 1000 })
+        useAlertSound({ enabled: true, debounceMs: 1000 }),
       );
 
       // Advance timers to trigger canplaythrough event

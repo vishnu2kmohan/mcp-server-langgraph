@@ -127,7 +127,7 @@ export function getNodeStatusIndicator(status: LangGraphNodeStatus) {
 // eslint-disable-next-line react-refresh/only-export-components
 export function getNodeColor(
   type: LangGraphNodeType,
-  status: LangGraphNodeStatus
+  status: LangGraphNodeStatus,
 ): string {
   if (status === "error")
     return "bg-red-50 dark:bg-red-900/20 border-red-300 dark:border-red-700";

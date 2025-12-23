@@ -4,8 +4,8 @@
  * TDD tests for the session sync hook that synchronizes
  * React Router loader data with Redux session state.
  */
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { renderHook, act } from "@testing-library/react";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { renderHook, act, cleanup } from "@testing-library/react";
 import { Provider } from "react-redux";
 import { configureStore } from "@reduxjs/toolkit";
 import React from "react";
@@ -77,6 +77,11 @@ describe("useSessionSync", () => {
     vi.clearAllMocks();
   });
 
+  afterEach(() => {
+    cleanup();
+    vi.clearAllMocks();
+  });
+
   describe("Session Synchronization", () => {
     it("should sync session to Redux when loader data is available", () => {
       const store = createTestStore();
@@ -131,13 +136,10 @@ describe("useSessionSync", () => {
       const store = createTestStore();
       const initialData = createMockLoaderData();
 
-      const { rerender } = renderHook(
-        ({ data }) => useSessionSync(data),
-        {
-          wrapper: createWrapper(store),
-          initialProps: { data: initialData },
-        },
-      );
+      const { rerender } = renderHook(({ data }) => useSessionSync(data), {
+        wrapper: createWrapper(store),
+        initialProps: { data: initialData },
+      });
 
       // Verify initial sync
       expect(store.getState().session.currentSession?.id).toBe("session-123");
@@ -158,13 +160,10 @@ describe("useSessionSync", () => {
       const store = createTestStore();
       const loaderData = createMockLoaderData();
 
-      const { rerender } = renderHook(
-        ({ data }) => useSessionSync(data),
-        {
-          wrapper: createWrapper(store),
-          initialProps: { data: loaderData as ChatLoaderData | undefined },
-        },
-      );
+      const { rerender } = renderHook(({ data }) => useSessionSync(data), {
+        wrapper: createWrapper(store),
+        initialProps: { data: loaderData as ChatLoaderData | undefined },
+      });
 
       // Verify session is set
       expect(store.getState().session.currentSession).not.toBeNull();
@@ -181,13 +180,10 @@ describe("useSessionSync", () => {
       const store = createTestStore();
       const loaderData = createMockLoaderData();
 
-      const { rerender } = renderHook(
-        ({ data }) => useSessionSync(data),
-        {
-          wrapper: createWrapper(store),
-          initialProps: { data: loaderData as ChatLoaderData | undefined },
-        },
-      );
+      const { rerender } = renderHook(({ data }) => useSessionSync(data), {
+        wrapper: createWrapper(store),
+        initialProps: { data: loaderData as ChatLoaderData | undefined },
+      });
 
       // Verify session is set
       expect(store.getState().session.currentSession).not.toBeNull();
@@ -290,17 +286,19 @@ describe("useSessionSync", () => {
       const initialLoaderData = createMockLoaderData({
         session: createMockSession({ id: "session-123" }),
         messages: [
-          { id: "msg-1", role: "user", content: "Hello", timestamp: Date.now() },
+          {
+            id: "msg-1",
+            role: "user",
+            content: "Hello",
+            timestamp: Date.now(),
+          },
         ],
       });
 
-      const { rerender } = renderHook(
-        ({ data }) => useSessionSync(data),
-        {
-          wrapper: createWrapper(store),
-          initialProps: { data: initialLoaderData },
-        },
-      );
+      const { rerender } = renderHook(({ data }) => useSessionSync(data), {
+        wrapper: createWrapper(store),
+        initialProps: { data: initialLoaderData },
+      });
 
       expect(store.getState().session.currentSession?.messages).toHaveLength(1);
 
@@ -329,7 +327,12 @@ describe("useSessionSync", () => {
       const staleLoaderData = createMockLoaderData({
         session: createMockSession({ id: "session-123" }),
         messages: [
-          { id: "msg-1", role: "user", content: "Hello", timestamp: Date.now() },
+          {
+            id: "msg-1",
+            role: "user",
+            content: "Hello",
+            timestamp: Date.now(),
+          },
         ],
       });
 
@@ -346,17 +349,19 @@ describe("useSessionSync", () => {
       const loaderData = createMockLoaderData({
         session: createMockSession({ id: "session-123" }),
         messages: [
-          { id: "msg-1", role: "user", content: "Hello", timestamp: Date.now() },
+          {
+            id: "msg-1",
+            role: "user",
+            content: "Hello",
+            timestamp: Date.now(),
+          },
         ],
       });
 
-      const { rerender } = renderHook(
-        ({ data }) => useSessionSync(data),
-        {
-          wrapper: createWrapper(store),
-          initialProps: { data: loaderData },
-        },
-      );
+      const { rerender } = renderHook(({ data }) => useSessionSync(data), {
+        wrapper: createWrapper(store),
+        initialProps: { data: loaderData },
+      });
 
       // Mark mutation as pending - block syncs
       act(() => {
@@ -367,8 +372,18 @@ describe("useSessionSync", () => {
       const newLoaderData = createMockLoaderData({
         session: createMockSession({ id: "session-123" }),
         messages: [
-          { id: "msg-1", role: "user", content: "Hello", timestamp: Date.now() },
-          { id: "msg-2", role: "assistant", content: "Hi!", timestamp: Date.now() },
+          {
+            id: "msg-1",
+            role: "user",
+            content: "Hello",
+            timestamp: Date.now(),
+          },
+          {
+            id: "msg-2",
+            role: "assistant",
+            content: "Hi!",
+            timestamp: Date.now(),
+          },
         ],
       });
 

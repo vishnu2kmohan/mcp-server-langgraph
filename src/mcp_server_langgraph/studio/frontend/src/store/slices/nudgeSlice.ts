@@ -169,7 +169,7 @@ export const nudgeSlice = createSlice({
 
       // Sort by priority (high first)
       state.queue.sort(
-        (a, b) => PRIORITY_ORDER[a.priority] - PRIORITY_ORDER[b.priority]
+        (a, b) => PRIORITY_ORDER[a.priority] - PRIORITY_ORDER[b.priority],
       );
     },
 
@@ -322,7 +322,7 @@ export const selectNudgeStats = createSelector(
       sessionNudgeCount,
       canShowMore,
     };
-  }
+  },
 );
 
 export default nudgeSlice.reducer;

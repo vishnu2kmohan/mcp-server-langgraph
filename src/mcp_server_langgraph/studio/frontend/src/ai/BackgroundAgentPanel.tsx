@@ -27,7 +27,10 @@ import {
   HelpCircle,
 } from "lucide-react";
 import { cn } from "../utils/cn";
-import type { BackgroundAgent, AgentStatus } from "../store/slices/backgroundAgentSlice";
+import type {
+  BackgroundAgent,
+  AgentStatus,
+} from "../store/slices/backgroundAgentSlice";
 
 // =============================================================================
 // Types

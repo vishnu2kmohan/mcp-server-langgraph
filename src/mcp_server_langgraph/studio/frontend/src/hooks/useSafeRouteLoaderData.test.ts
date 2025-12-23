@@ -5,11 +5,14 @@
  * cases where the component is not within a data router context.
  */
 
-import { describe, it, expect } from "vitest";
-import { renderHook } from "@testing-library/react";
+import { describe, it, expect, afterEach } from "vitest";
+import { renderHook, cleanup } from "@testing-library/react";
 import { createElement } from "react";
 import { UNSAFE_DataRouterContext } from "react-router";
-import { useIsDataRouter, useSafeRouteLoaderData } from "./useSafeRouteLoaderData";
+import {
+  useIsDataRouter,
+  useSafeRouteLoaderData,
+} from "./useSafeRouteLoaderData";
 
 // Helper to wrap hook in DataRouterContext
 const createWrapper = (contextValue: unknown) => {
@@ -17,11 +20,15 @@ const createWrapper = (contextValue: unknown) => {
     createElement(
       UNSAFE_DataRouterContext.Provider,
       { value: contextValue },
-      children
+      children,
     );
 };
 
 describe("useSafeRouteLoaderData", () => {
+  afterEach(() => {
+    cleanup();
+  });
+
   describe("useIsDataRouter", () => {
     it("should return false when not in a data router context", () => {
       // GIVEN: No data router context (null)
@@ -73,7 +80,7 @@ describe("useSafeRouteLoaderData", () => {
       // WHEN: Calling useSafeRouteLoaderData
       const { result } = renderHook(
         () => useSafeRouteLoaderData<{ data: string }>("test-route"),
-        { wrapper }
+        { wrapper },
       );
 
       // THEN: Should return undefined
@@ -90,7 +97,7 @@ describe("useSafeRouteLoaderData", () => {
       // WHEN: Calling useSafeRouteLoaderData
       const { result } = renderHook(
         () => useSafeRouteLoaderData<{ data: string }>("test-route"),
-        { wrapper }
+        { wrapper },
       );
 
       // THEN: Should return undefined
@@ -105,7 +112,7 @@ describe("useSafeRouteLoaderData", () => {
       // WHEN: Calling useSafeRouteLoaderData
       const { result } = renderHook(
         () => useSafeRouteLoaderData<{ data: string }>("test-route"),
-        { wrapper }
+        { wrapper },
       );
 
       // THEN: Should return undefined
@@ -129,7 +136,7 @@ describe("useSafeRouteLoaderData", () => {
       // WHEN: Calling useSafeRouteLoaderData with matching route ID
       const { result } = renderHook(
         () => useSafeRouteLoaderData<typeof mockLoaderData>("studio-v2"),
-        { wrapper }
+        { wrapper },
       );
 
       // THEN: Should return the loader data
@@ -153,7 +160,7 @@ describe("useSafeRouteLoaderData", () => {
       // WHEN: Calling useSafeRouteLoaderData with non-matching route ID
       const { result } = renderHook(
         () => useSafeRouteLoaderData<{ data: string }>("studio-v2"),
-        { wrapper }
+        { wrapper },
       );
 
       // THEN: Should return undefined
@@ -174,7 +181,7 @@ describe("useSafeRouteLoaderData", () => {
       // WHEN: Calling useSafeRouteLoaderData
       const { result } = renderHook(
         () => useSafeRouteLoaderData<{ data: string }>("studio-v2"),
-        { wrapper }
+        { wrapper },
       );
 
       // THEN: Should return undefined
@@ -195,7 +202,7 @@ describe("useSafeRouteLoaderData", () => {
       // WHEN: Calling useSafeRouteLoaderData
       const { result } = renderHook(
         () => useSafeRouteLoaderData<{ data: string }>("studio-v2"),
-        { wrapper }
+        { wrapper },
       );
 
       // THEN: Should return undefined
@@ -225,7 +232,7 @@ describe("useSafeRouteLoaderData", () => {
       // WHEN: Calling useSafeRouteLoaderData
       const { result } = renderHook(
         () => useSafeRouteLoaderData<typeof mockLoaderData>("chat-session"),
-        { wrapper }
+        { wrapper },
       );
 
       // THEN: Should return the complete nested data
@@ -251,7 +258,7 @@ describe("useSafeRouteLoaderData", () => {
       // WHEN: Calling useSafeRouteLoaderData multiple times
       const { result, rerender } = renderHook(
         () => useSafeRouteLoaderData<typeof mockLoaderData>("test-route"),
-        { wrapper }
+        { wrapper },
       );
 
       const firstResult = result.current;

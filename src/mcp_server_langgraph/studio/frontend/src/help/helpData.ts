@@ -75,7 +75,15 @@ export const DEFAULT_HELP_TOPICS: HelpTopic[] = [
     category: "advanced",
     content:
       "Connect to external tools and resources via Model Context Protocol (MCP). MCP servers expose tools, resources, and prompts that extend AI capabilities. Use Cmd+M to toggle the MCP panel.",
-    keywords: ["mcp", "model context protocol", "tools", "resources", "prompts", "connections", "servers"],
+    keywords: [
+      "mcp",
+      "model context protocol",
+      "tools",
+      "resources",
+      "prompts",
+      "connections",
+      "servers",
+    ],
   },
   {
     id: "mcp-tools",

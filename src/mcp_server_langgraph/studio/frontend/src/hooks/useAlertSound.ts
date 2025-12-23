@@ -155,7 +155,11 @@ const DEFAULT_SOUND_URL = "/sounds/critical-alert.wav";
  */
 function playBeepFallback(volume: number): void {
   try {
-    const audioContext = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
+    const audioContext = new (
+      window.AudioContext ||
+      (window as unknown as { webkitAudioContext: typeof AudioContext })
+        .webkitAudioContext
+    )();
     const oscillator = audioContext.createOscillator();
     const gainNode = audioContext.createGain();
 
@@ -173,7 +177,10 @@ function playBeepFallback(volume: number): void {
     oscillator.start();
 
     // Fade out after 200ms
-    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.2);
+    gainNode.gain.exponentialRampToValueAtTime(
+      0.01,
+      audioContext.currentTime + 0.2,
+    );
     oscillator.stop(audioContext.currentTime + 0.25);
 
     // Second beep after short pause
@@ -187,7 +194,10 @@ function playBeepFallback(volume: number): void {
         osc2.type = "sine";
         gain2.gain.value = volume;
         osc2.start();
-        gain2.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.2);
+        gain2.gain.exponentialRampToValueAtTime(
+          0.01,
+          audioContext.currentTime + 0.2,
+        );
         osc2.stop(audioContext.currentTime + 0.25);
       } catch {
         // Ignore errors in second beep
@@ -206,7 +216,7 @@ function playBeepFallback(volume: number): void {
  * Create an alert sound player using the Audio API with Web Audio fallback
  */
 export function createAlertSoundPlayer(
-  options: AlertSoundPlayerOptions = {}
+  options: AlertSoundPlayerOptions = {},
 ): AlertSoundPlayer {
   const { soundUrl = DEFAULT_SOUND_URL, volume = 0.5 } = options;
 
@@ -285,7 +295,7 @@ function getSoundUrl(preset: AlertSoundPreset, customUrl?: string): string {
  * ```
  */
 export function useAlertSound(
-  options: UseAlertSoundOptions = {}
+  options: UseAlertSoundOptions = {},
 ): UseAlertSoundReturn {
   const {
     enabled = true,
@@ -359,7 +369,7 @@ export function useAlertSound(
           setIsPlaying(false);
         });
     },
-    [enabled, warningSound, debounceMs]
+    [enabled, warningSound, debounceMs],
   );
 
   /**

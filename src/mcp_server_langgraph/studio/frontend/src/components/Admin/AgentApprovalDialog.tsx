@@ -107,7 +107,11 @@ function getConfidenceColor(confidence: number): string {
 /**
  * Get trigger reason explanation
  */
-function getTriggerExplanation(triggerReason: string, confidence: number, threshold: number): string {
+function getTriggerExplanation(
+  triggerReason: string,
+  confidence: number,
+  threshold: number,
+): string {
   switch (triggerReason) {
     case "low_confidence":
       return `The agent's confidence (${Math.round(confidence * 100)}%) is below your threshold (${Math.round(threshold * 100)}%). This may indicate uncertainty in the result.`;
@@ -211,7 +215,7 @@ export function AgentApprovalDialog({
         onClose();
       }
     },
-    [isOpen, onClose]
+    [isOpen, onClose],
   );
 
   useEffect(() => {
@@ -330,7 +334,7 @@ export function AgentApprovalDialog({
                   {getTriggerExplanation(
                     request.trigger_reason,
                     request.confidence,
-                    request.threshold
+                    request.threshold,
                   )}
                 </p>
               </div>
@@ -389,7 +393,7 @@ export function AgentApprovalDialog({
                                 Trade-off: {alt.trade_off}
                               </span>
                             </li>
-                          )
+                          ),
                         )}
                       </ul>
                     </div>
@@ -423,7 +427,7 @@ export function AgentApprovalDialog({
                               <span className="mx-1">—</span>
                               {factor.evidence}
                             </li>
-                          )
+                          ),
                         )}
                       </ul>
                     </div>
@@ -452,8 +456,13 @@ export function AgentApprovalDialog({
                 <>
                   <div className="flex items-center gap-4">
                     <div>
-                      <span className="text-sm text-purple-600 dark:text-purple-400">Risk Score</span>
-                      <p data-testid="risk-score" className="text-lg font-bold text-purple-900 dark:text-purple-100">
+                      <span className="text-sm text-purple-600 dark:text-purple-400">
+                        Risk Score
+                      </span>
+                      <p
+                        data-testid="risk-score"
+                        className="text-lg font-bold text-purple-900 dark:text-purple-100"
+                      >
                         {Math.round((riskScore || 0) * 100)}%
                       </p>
                     </div>
@@ -468,7 +477,9 @@ export function AgentApprovalDialog({
                   {/* Risk Factors */}
                   {riskFactors && riskFactors.length > 0 && (
                     <div className="space-y-1">
-                      <p className="text-sm font-medium text-purple-800 dark:text-purple-200">Risk Factors:</p>
+                      <p className="text-sm font-medium text-purple-800 dark:text-purple-200">
+                        Risk Factors:
+                      </p>
                       <ul className="space-y-1">
                         {riskFactors.map((factor, index) => (
                           <li
@@ -488,10 +499,15 @@ export function AgentApprovalDialog({
                   {/* Mitigations */}
                   {mitigations && mitigations.length > 0 && (
                     <div className="space-y-1">
-                      <p className="text-sm font-medium text-purple-800 dark:text-purple-200">Suggested Mitigations:</p>
+                      <p className="text-sm font-medium text-purple-800 dark:text-purple-200">
+                        Suggested Mitigations:
+                      </p>
                       <ul className="space-y-1">
                         {mitigations.map((mitigation, index) => (
-                          <li key={index} className="text-xs text-purple-700 dark:text-purple-300 pl-3">
+                          <li
+                            key={index}
+                            className="text-xs text-purple-700 dark:text-purple-300 pl-3"
+                          >
                             • {mitigation}
                           </li>
                         ))}
@@ -548,8 +564,13 @@ export function AgentApprovalDialog({
                       </span>
                     </div>
                     <div>
-                      <span className="text-sm text-indigo-600 dark:text-indigo-400">Approval Rate</span>
-                      <p data-testid="approval-rate" className="text-lg font-bold text-indigo-900 dark:text-indigo-100">
+                      <span className="text-sm text-indigo-600 dark:text-indigo-400">
+                        Approval Rate
+                      </span>
+                      <p
+                        data-testid="approval-rate"
+                        className="text-lg font-bold text-indigo-900 dark:text-indigo-100"
+                      >
                         {Math.round((approvalRate || 0) * 100)}%
                       </p>
                     </div>
@@ -568,8 +589,12 @@ export function AgentApprovalDialog({
                           ) : (
                             <ThumbsDown className="w-3 h-3 text-red-500" />
                           )}
-                          <span className="capitalize">{decision.decision}</span>
-                          <span className="text-indigo-500">by {decision.decided_by}</span>
+                          <span className="capitalize">
+                            {decision.decision}
+                          </span>
+                          <span className="text-indigo-500">
+                            by {decision.decided_by}
+                          </span>
                           {decision.reasoning && (
                             <span className="truncate text-indigo-600 dark:text-indigo-400">
                               — {decision.reasoning}
@@ -633,7 +658,9 @@ export function AgentApprovalDialog({
               {request.context.time_elapsed_seconds && (
                 <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
                   <Clock className="w-4 h-4" />
-                  <span>Time elapsed: {request.context.time_elapsed_seconds}s</span>
+                  <span>
+                    Time elapsed: {request.context.time_elapsed_seconds}s
+                  </span>
                 </div>
               )}
               {request.context.artifacts &&

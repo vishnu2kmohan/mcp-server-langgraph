@@ -243,7 +243,9 @@ describe("useConnectionsRealtimeWebSocket", () => {
 
     it("should handle health_check_result message", async () => {
       const onHealthCheckResult = vi.fn();
-      renderHook(() => useConnectionsRealtimeWebSocket({ onHealthCheckResult }));
+      renderHook(() =>
+        useConnectionsRealtimeWebSocket({ onHealthCheckResult }),
+      );
       const handlers = testWsHandlers;
 
       act(() => {

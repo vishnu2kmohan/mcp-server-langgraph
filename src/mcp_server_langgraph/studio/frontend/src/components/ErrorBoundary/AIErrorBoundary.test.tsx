@@ -72,7 +72,7 @@ describe("AIErrorBoundary", () => {
           <AIErrorBoundary featureName="test-feature">
             <ThrowingComponent shouldThrow={false} />
           </AIErrorBoundary>
-        </Wrapper>
+        </Wrapper>,
       );
 
       expect(screen.getByTestId("child-content")).toBeInTheDocument();
@@ -88,7 +88,7 @@ describe("AIErrorBoundary", () => {
           <AIErrorBoundary featureName="test-feature">
             <ThrowingComponent shouldThrow={true} />
           </AIErrorBoundary>
-        </Wrapper>
+        </Wrapper>,
       );
 
       expect(screen.queryByTestId("child-content")).not.toBeInTheDocument();
@@ -102,7 +102,7 @@ describe("AIErrorBoundary", () => {
           <AIErrorBoundary featureName="Navigation Predictions">
             <ThrowingComponent shouldThrow={true} />
           </AIErrorBoundary>
-        </Wrapper>
+        </Wrapper>,
       );
 
       expect(screen.getByText(/Navigation Predictions/i)).toBeInTheDocument();
@@ -115,11 +115,11 @@ describe("AIErrorBoundary", () => {
           <AIErrorBoundary featureName="test-feature">
             <ThrowingComponent shouldThrow={true} />
           </AIErrorBoundary>
-        </Wrapper>
+        </Wrapper>,
       );
 
       expect(
-        screen.getByText(/Test error from AI component/i)
+        screen.getByText(/Test error from AI component/i),
       ).toBeInTheDocument();
     });
   });
@@ -132,10 +132,12 @@ describe("AIErrorBoundary", () => {
           <AIErrorBoundary featureName="test-feature">
             <ThrowingComponent shouldThrow={true} />
           </AIErrorBoundary>
-        </Wrapper>
+        </Wrapper>,
       );
 
-      expect(screen.getByRole("button", { name: /retry/i })).toBeInTheDocument();
+      expect(
+        screen.getByRole("button", { name: /retry/i }),
+      ).toBeInTheDocument();
     });
 
     it("should reset error state when retry is clicked", () => {
@@ -147,7 +149,7 @@ describe("AIErrorBoundary", () => {
           <AIErrorBoundary featureName="test-feature">
             <ThrowingComponent shouldThrow={shouldThrow} />
           </AIErrorBoundary>
-        </Wrapper>
+        </Wrapper>,
       );
 
       // Error should be shown
@@ -165,7 +167,7 @@ describe("AIErrorBoundary", () => {
           <AIErrorBoundary featureName="test-feature">
             <ThrowingComponent shouldThrow={shouldThrow} />
           </AIErrorBoundary>
-        </Wrapper>
+        </Wrapper>,
       );
 
       // After retry with fixed component, should show content
@@ -186,7 +188,7 @@ describe("AIErrorBoundary", () => {
           <AIErrorBoundary featureName="test-feature" fallback={customFallback}>
             <ThrowingComponent shouldThrow={true} />
           </AIErrorBoundary>
-        </Wrapper>
+        </Wrapper>,
       );
 
       expect(screen.getByTestId("custom-fallback")).toBeInTheDocument();
@@ -207,7 +209,7 @@ describe("AIErrorBoundary", () => {
           <AIErrorBoundary featureName="test-feature" fallback={fallbackFn}>
             <ThrowingComponent shouldThrow={true} />
           </AIErrorBoundary>
-        </Wrapper>
+        </Wrapper>,
       );
 
       expect(screen.getByTestId("fallback-fn")).toBeInTheDocument();
@@ -215,7 +217,7 @@ describe("AIErrorBoundary", () => {
         expect.objectContaining({
           error: expect.any(Error),
           resetError: expect.any(Function),
-        })
+        }),
       );
     });
   });
@@ -228,7 +230,7 @@ describe("AIErrorBoundary", () => {
           <AIErrorBoundary featureName="test-feature" silent>
             <ThrowingComponent shouldThrow={true} />
           </AIErrorBoundary>
-        </Wrapper>
+        </Wrapper>,
       );
 
       // Should not show error fallback
@@ -242,7 +244,7 @@ describe("AIErrorBoundary", () => {
           <AIErrorBoundary featureName="test-feature" silent>
             <ThrowingComponent shouldThrow={true} />
           </AIErrorBoundary>
-        </Wrapper>
+        </Wrapper>,
       );
 
       // Container should be empty (error boundary renders null)
@@ -260,14 +262,14 @@ describe("AIErrorBoundary", () => {
           <AIErrorBoundary featureName="test-feature" onError={onError}>
             <ThrowingComponent shouldThrow={true} />
           </AIErrorBoundary>
-        </Wrapper>
+        </Wrapper>,
       );
 
       expect(onError).toHaveBeenCalledWith(
         expect.any(Error),
         expect.objectContaining({
           componentStack: expect.any(String),
-        })
+        }),
       );
     });
 
@@ -280,7 +282,7 @@ describe("AIErrorBoundary", () => {
           <AIErrorBoundary featureName="test-feature" onReset={onReset}>
             <ThrowingComponent shouldThrow={true} />
           </AIErrorBoundary>
-        </Wrapper>
+        </Wrapper>,
       );
 
       fireEvent.click(screen.getByRole("button", { name: /retry/i }));
@@ -301,7 +303,7 @@ describe("AIErrorBoundary", () => {
           <AIErrorBoundary featureName="test-feature" disabled>
             <div data-testid="normal-content">Normal content</div>
           </AIErrorBoundary>
-        </Wrapper>
+        </Wrapper>,
       );
 
       expect(screen.getByTestId("normal-content")).toBeInTheDocument();

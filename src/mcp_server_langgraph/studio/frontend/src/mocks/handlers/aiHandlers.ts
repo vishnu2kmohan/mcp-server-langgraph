@@ -49,8 +49,15 @@ interface BatchCompositeRequest {
   include_persona?: boolean;
   include_disclosure?: boolean;
   include_error?: boolean;
-  persona_data?: { assigned_persona?: string; recent_actions?: string[]; feature_usage?: Record<string, number> };
-  disclosure_data?: { current_level?: DisclosureLevel; feature_usage?: Record<string, number> };
+  persona_data?: {
+    assigned_persona?: string;
+    recent_actions?: string[];
+    feature_usage?: Record<string, number>;
+  };
+  disclosure_data?: {
+    current_level?: DisclosureLevel;
+    feature_usage?: Record<string, number>;
+  };
   error_data?: { error_code?: string; error_message: string };
 }
 
@@ -316,7 +323,7 @@ const mockEmptyStateSuggestions: Record<string, EmptyStateSuggestion[]> = {
  */
 function getEmptyStateSuggestions(
   context: string,
-  _persona?: string
+  _persona?: string,
 ): EmptyStateSuggestion[] {
   // Return context-specific suggestions, fallback to generic
   const contextSuggestions = mockEmptyStateSuggestions[context];
@@ -348,7 +355,8 @@ const errorPatterns: ErrorPattern[] = [
       {
         step_number: 1,
         title: "Wait briefly",
-        description: "The server is experiencing high load. Wait a few seconds before retrying.",
+        description:
+          "The server is experiencing high load. Wait a few seconds before retrying.",
         action_type: "manual",
       },
       {
@@ -399,7 +407,8 @@ const errorPatterns: ErrorPattern[] = [
       {
         step_number: 1,
         title: "Session expired",
-        description: "Your session has expired. You need to log in again to continue.",
+        description:
+          "Your session has expired. You need to log in again to continue.",
         action_type: "manual",
         action_target: "/login",
       },
@@ -448,7 +457,8 @@ const errorPatterns: ErrorPattern[] = [
       {
         step_number: 2,
         title: "Contact administrator",
-        description: "Request the necessary permissions from your administrator.",
+        description:
+          "Request the necessary permissions from your administrator.",
         action_type: "contact_support",
       },
     ],
@@ -464,7 +474,8 @@ const errorPatterns: ErrorPattern[] = [
       {
         step_number: 1,
         title: "Rate limit exceeded",
-        description: "You've made too many requests. Please wait before trying again.",
+        description:
+          "You've made too many requests. Please wait before trying again.",
         action_type: "manual",
       },
       {
@@ -509,13 +520,15 @@ function analyzeError(request: ErrorAnalysisRequest): ErrorAnalysisResponse {
       {
         step_number: 1,
         title: "Unexpected error",
-        description: "An unexpected error occurred. Try again or contact support if the issue persists.",
+        description:
+          "An unexpected error occurred. Try again or contact support if the issue persists.",
         action_type: "manual",
       },
       {
         step_number: 2,
         title: "Contact support",
-        description: "If the problem continues, please contact our support team.",
+        description:
+          "If the problem continues, please contact our support team.",
         action_type: "contact_support",
       },
     ],
@@ -658,7 +671,11 @@ function interpretQuery(query: string): AIInterpretation {
   }
 
   // Check for toggle intent
-  if (lowerQuery.includes("toggle") || lowerQuery.includes("hide") || lowerQuery.includes("show")) {
+  if (
+    lowerQuery.includes("toggle") ||
+    lowerQuery.includes("hide") ||
+    lowerQuery.includes("show")
+  ) {
     if (lowerQuery.includes("canvas")) {
       return {
         action: "toggle-panel",
@@ -724,7 +741,7 @@ export const aiHandlers = [
     if (!body.query) {
       return HttpResponse.json(
         { error: "Missing required field: query" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -744,7 +761,7 @@ export const aiHandlers = [
     if (!artifactId) {
       return HttpResponse.json(
         { error: "Missing required query parameter: artifactId" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -767,14 +784,14 @@ export const aiHandlers = [
     if (!body.url) {
       return HttpResponse.json(
         { error: "Missing required field: url" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     if (!isValidUrl(body.url)) {
       return HttpResponse.json(
         { error: "Invalid URL format" },
-        { status: 422 }
+        { status: 422 },
       );
     }
 
@@ -818,7 +835,7 @@ export const aiHandlers = [
     if (!body.error_message) {
       return HttpResponse.json(
         { error: "Missing required field: error_message" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -869,8 +886,8 @@ export const aiHandlers = [
     const context = body.context || "chat";
 
     // Find a nudge matching the current context
-    const matchingNudge = nudgeCatalog.find(
-      (nudge) => nudge.context_match.includes(context)
+    const matchingNudge = nudgeCatalog.find((nudge) =>
+      nudge.context_match.includes(context),
     );
 
     // Use the matching nudge or default to first one
@@ -957,10 +974,12 @@ export const aiHandlers = [
       ],
       skip_steps: [],
       estimated_duration_minutes: 15,
-      personalization_applied: experienceLevel !== "beginner" || detectedPersona !== "general",
-      reasoning: experienceLevel === "beginner"
-        ? "Standard onboarding for new users"
-        : "Personalized based on detected experience level",
+      personalization_applied:
+        experienceLevel !== "beginner" || detectedPersona !== "general",
+      reasoning:
+        experienceLevel === "beginner"
+          ? "Standard onboarding for new users"
+          : "Personalized based on detected experience level",
     };
     return HttpResponse.json(response);
   }),
@@ -1051,7 +1070,7 @@ export const aiHandlers = [
     // Analyze behavior patterns
     const hasDevActions = recentActions.some(
       (a) =>
-        a.includes("workflow") || a.includes("trace") || a.includes("debug")
+        a.includes("workflow") || a.includes("trace") || a.includes("debug"),
     );
     const highWorkflowUsage = (featureUsage.workflow_builder || 0) > 20;
     const highTraceUsage = (featureUsage.traces || 0) > 15;
@@ -1115,14 +1134,14 @@ export const aiHandlers = [
     if (!body.user_id) {
       return HttpResponse.json(
         { error: "Missing required field: user_id" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     if (!body.session_id) {
       return HttpResponse.json(
         { error: "Missing required field: session_id" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -1140,7 +1159,8 @@ export const aiHandlers = [
       const featureUsage = personaData.feature_usage || {};
 
       const hasDevActions = recentActions.some(
-        (a) => a.includes("workflow") || a.includes("trace") || a.includes("debug")
+        (a) =>
+          a.includes("workflow") || a.includes("trace") || a.includes("debug"),
       );
       const highWorkflowUsage = (featureUsage.workflow_builder || 0) > 20;
 
@@ -1149,7 +1169,10 @@ export const aiHandlers = [
           assigned_persona: assignedPersona,
           detected_persona: "alice-builder",
           confidence: 0.88,
-          behavior_signals: ["Frequent workflow editing", "Advanced trace analysis"],
+          behavior_signals: [
+            "Frequent workflow editing",
+            "Advanced trace analysis",
+          ],
           recommendation: "Consider upgrading to developer role",
           ui_adaptations: [{ feature: "workflow_builder", action: "unlock" }],
         };
@@ -1168,7 +1191,8 @@ export const aiHandlers = [
     // Run disclosure analysis if requested
     if (body.include_disclosure) {
       const disclosureData = body.disclosure_data || {};
-      const currentLevel: DisclosureLevel = disclosureData.current_level || "beginner";
+      const currentLevel: DisclosureLevel =
+        disclosureData.current_level || "beginner";
       const recommendation = disclosureRecommendations[currentLevel];
 
       disclosureResult = {
@@ -1195,7 +1219,7 @@ export const aiHandlers = [
         disclosureResult.current_level !== disclosureResult.recommended_level
       ) {
         crossInsights.push(
-          `Potential mismatch: detected persona "${personaResult.detected_persona}" suggests upgrade to "${disclosureResult.recommended_level}" level`
+          `Potential mismatch: detected persona "${personaResult.detected_persona}" suggests upgrade to "${disclosureResult.recommended_level}" level`,
         );
       }
       crossInsights.push("Combined persona and disclosure analysis complete");
@@ -1238,14 +1262,14 @@ export const aiHandlers = [
     if (!body.user_id) {
       return HttpResponse.json(
         { error: "Missing required field: user_id" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     if (!body.session_id) {
       return HttpResponse.json(
         { error: "Missing required field: session_id" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -1263,7 +1287,8 @@ export const aiHandlers = [
       const featureUsage = personaData.feature_usage || {};
 
       const hasDevActions = recentActions.some(
-        (a) => a.includes("workflow") || a.includes("trace") || a.includes("debug")
+        (a) =>
+          a.includes("workflow") || a.includes("trace") || a.includes("debug"),
       );
       const highWorkflowUsage = (featureUsage.workflow_builder || 0) > 20;
 
@@ -1272,7 +1297,10 @@ export const aiHandlers = [
           assigned_persona: assignedPersona,
           detected_persona: "alice-builder",
           confidence: 0.88,
-          behavior_signals: ["Frequent workflow editing", "Advanced trace analysis"],
+          behavior_signals: [
+            "Frequent workflow editing",
+            "Advanced trace analysis",
+          ],
           recommendation: "Consider upgrading to developer role",
           ui_adaptations: [{ feature: "workflow_builder", action: "unlock" }],
         };
@@ -1291,7 +1319,8 @@ export const aiHandlers = [
     // Run disclosure analysis if requested
     if (body.include_disclosure) {
       const disclosureData = body.disclosure_data || {};
-      const currentLevel: DisclosureLevel = disclosureData.current_level || "beginner";
+      const currentLevel: DisclosureLevel =
+        disclosureData.current_level || "beginner";
       const recommendation = disclosureRecommendations[currentLevel];
 
       disclosureResult = {
@@ -1319,7 +1348,7 @@ export const aiHandlers = [
         disclosureResult.current_level !== disclosureResult.recommended_level
       ) {
         crossInsights.push(
-          `Potential mismatch: detected persona "${personaResult.detected_persona}" suggests upgrade to "${disclosureResult.recommended_level}" level`
+          `Potential mismatch: detected persona "${personaResult.detected_persona}" suggests upgrade to "${disclosureResult.recommended_level}" level`,
         );
       }
       crossInsights.push("Combined persona and disclosure analysis complete");

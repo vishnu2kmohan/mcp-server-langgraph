@@ -25,7 +25,7 @@ describe("LangGraphNodeVisualization", () => {
       render(<LangGraphNodeVisualization nodes={nodes} />);
 
       expect(
-        screen.getByTestId("langgraph-node-visualization")
+        screen.getByTestId("langgraph-node-visualization"),
       ).toBeInTheDocument();
     });
 
@@ -111,7 +111,7 @@ describe("LangGraphNodeVisualization", () => {
       render(<LangGraphNodeVisualization nodes={[]} />);
 
       expect(
-        screen.getByTestId("langgraph-node-visualization")
+        screen.getByTestId("langgraph-node-visualization"),
       ).toBeInTheDocument();
     });
   });
@@ -119,32 +119,44 @@ describe("LangGraphNodeVisualization", () => {
   describe("getNodeTypeIcon", () => {
     it("should return correct icon for start type", () => {
       const { container } = render(<>{getNodeTypeIcon("start")}</>);
-      expect(container.querySelector('[data-testid="node-type-start"]')).toBeInTheDocument();
+      expect(
+        container.querySelector('[data-testid="node-type-start"]'),
+      ).toBeInTheDocument();
     });
 
     it("should return correct icon for end type", () => {
       const { container } = render(<>{getNodeTypeIcon("end")}</>);
-      expect(container.querySelector('[data-testid="node-type-end"]')).toBeInTheDocument();
+      expect(
+        container.querySelector('[data-testid="node-type-end"]'),
+      ).toBeInTheDocument();
     });
 
     it("should return correct icon for tool type", () => {
       const { container } = render(<>{getNodeTypeIcon("tool")}</>);
-      expect(container.querySelector('[data-testid="node-type-tool"]')).toBeInTheDocument();
+      expect(
+        container.querySelector('[data-testid="node-type-tool"]'),
+      ).toBeInTheDocument();
     });
 
     it("should return correct icon for conditional type", () => {
       const { container } = render(<>{getNodeTypeIcon("conditional")}</>);
-      expect(container.querySelector('[data-testid="node-type-conditional"]')).toBeInTheDocument();
+      expect(
+        container.querySelector('[data-testid="node-type-conditional"]'),
+      ).toBeInTheDocument();
     });
 
     it("should return correct icon for agent type", () => {
       const { container } = render(<>{getNodeTypeIcon("agent")}</>);
-      expect(container.querySelector('[data-testid="node-type-agent"]')).toBeInTheDocument();
+      expect(
+        container.querySelector('[data-testid="node-type-agent"]'),
+      ).toBeInTheDocument();
     });
 
     it("should return default icon for unknown type", () => {
       const { container } = render(<>{getNodeTypeIcon("default")}</>);
-      expect(container.querySelector('[data-testid="node-type-default"]')).toBeInTheDocument();
+      expect(
+        container.querySelector('[data-testid="node-type-default"]'),
+      ).toBeInTheDocument();
     });
 
     it("should respect custom size parameter", () => {
@@ -158,12 +170,16 @@ describe("LangGraphNodeVisualization", () => {
   describe("getNodeStatusIndicator", () => {
     it("should return completed indicator", () => {
       const { container } = render(<>{getNodeStatusIndicator("completed")}</>);
-      expect(container.querySelector('[data-testid="node-status-completed"]')).toBeInTheDocument();
+      expect(
+        container.querySelector('[data-testid="node-status-completed"]'),
+      ).toBeInTheDocument();
     });
 
     it("should return running indicator with animation", () => {
       const { container } = render(<>{getNodeStatusIndicator("running")}</>);
-      const indicator = container.querySelector('[data-testid="node-status-running"]');
+      const indicator = container.querySelector(
+        '[data-testid="node-status-running"]',
+      );
       expect(indicator).toBeInTheDocument();
       // SVG elements use classList in jsdom
       expect(indicator).toHaveClass("animate-spin");
@@ -171,17 +187,23 @@ describe("LangGraphNodeVisualization", () => {
 
     it("should return error indicator", () => {
       const { container } = render(<>{getNodeStatusIndicator("error")}</>);
-      expect(container.querySelector('[data-testid="node-status-error"]')).toBeInTheDocument();
+      expect(
+        container.querySelector('[data-testid="node-status-error"]'),
+      ).toBeInTheDocument();
     });
 
     it("should return pending indicator", () => {
       const { container } = render(<>{getNodeStatusIndicator("pending")}</>);
-      expect(container.querySelector('[data-testid="node-status-pending"]')).toBeInTheDocument();
+      expect(
+        container.querySelector('[data-testid="node-status-pending"]'),
+      ).toBeInTheDocument();
     });
 
     it("should return skipped indicator", () => {
       const { container } = render(<>{getNodeStatusIndicator("skipped")}</>);
-      expect(container.querySelector('[data-testid="node-status-skipped"]')).toBeInTheDocument();
+      expect(
+        container.querySelector('[data-testid="node-status-skipped"]'),
+      ).toBeInTheDocument();
     });
   });
 

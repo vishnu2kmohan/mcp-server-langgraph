@@ -204,7 +204,11 @@ export function AICommandPalette({
         </div>
 
         {/* Command List */}
-        <div id="command-listbox" role="listbox" className="max-h-80 overflow-y-auto">
+        <div
+          id="command-listbox"
+          role="listbox"
+          className="max-h-80 overflow-y-auto"
+        >
           {filteredCommands.length === 0 && !aiSuggestion && !isLoadingAI && (
             <div
               data-testid="no-results"

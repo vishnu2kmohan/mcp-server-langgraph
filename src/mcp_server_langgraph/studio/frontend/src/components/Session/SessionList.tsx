@@ -159,7 +159,10 @@ export function SessionList({
           );
           const targetIndex = nextIndex === -1 ? 0 : nextIndex;
           const targetSession = filteredSessions[targetIndex];
-          if (targetSession && (nextIndex !== currentIndex || currentIndex === -1)) {
+          if (
+            targetSession &&
+            (nextIndex !== currentIndex || currentIndex === -1)
+          ) {
             onSelect(targetSession.id);
           }
           break;

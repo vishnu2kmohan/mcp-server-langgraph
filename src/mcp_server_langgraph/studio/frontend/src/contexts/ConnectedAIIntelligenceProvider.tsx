@@ -51,8 +51,6 @@ export function ConnectedAIIntelligenceProvider({
   usePersonaCacheInvalidation({ enabled: config.enabled });
 
   return (
-    <AIIntelligenceProvider config={config}>
-      {children}
-    </AIIntelligenceProvider>
+    <AIIntelligenceProvider config={config}>{children}</AIIntelligenceProvider>
   );
 }

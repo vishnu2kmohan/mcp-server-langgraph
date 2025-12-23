@@ -251,7 +251,7 @@ export interface ClarificationRequiredPayload {
  * @returns Response formatted for the API
  */
 export function convertUIResponseToAPIResponse(
-  uiResponse: ClarificationUIResponse
+  uiResponse: ClarificationUIResponse,
 ): ClarificationAPIResponse {
   // Determine response type based on which fields are set
   // Priority: confirmed > choice > text
@@ -290,7 +290,7 @@ export function convertUIResponseToAPIResponse(
  */
 export function convertAPIResponseToUIResponse(
   apiResponse: ClarificationAPIResponse,
-  respondedBy: string
+  respondedBy: string,
 ): ClarificationUIResponse {
   const base: ClarificationUIResponse = {
     request_id: apiResponse.request_id,
@@ -317,7 +317,7 @@ export function convertAPIResponseToUIResponse(
  * Convert WebSocket approval payload to dialog request format
  */
 export function convertApprovalPayloadToRequest(
-  payload: ApprovalRequiredPayload
+  payload: ApprovalRequiredPayload,
 ): AgentApprovalRequest {
   return {
     request_id: payload.request_id,
@@ -338,7 +338,7 @@ export function convertApprovalPayloadToRequest(
  * Convert WebSocket clarification payload to dialog request format
  */
 export function convertClarificationPayloadToRequest(
-  payload: ClarificationRequiredPayload
+  payload: ClarificationRequiredPayload,
 ): AgentClarificationRequest {
   return {
     request_id: payload.request_id,

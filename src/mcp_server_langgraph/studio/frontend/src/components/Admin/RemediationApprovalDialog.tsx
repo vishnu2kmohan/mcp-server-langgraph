@@ -178,7 +178,7 @@ export function RemediationApprovalDialog({
         onClose();
       }
     },
-    [isOpen, onClose]
+    [isOpen, onClose],
   );
 
   useEffect(() => {
@@ -275,7 +275,7 @@ export function RemediationApprovalDialog({
             <span
               data-testid="severity-badge"
               className={`text-xs px-2 py-0.5 rounded-full ${getSeverityColor(
-                remediation.severity
+                remediation.severity,
               )}`}
             >
               {remediation.severity}
@@ -298,7 +298,7 @@ export function RemediationApprovalDialog({
               <span
                 data-testid="risk-level"
                 className={`text-xs px-2 py-0.5 rounded-full ${getRiskColor(
-                  remediation.risk_level
+                  remediation.risk_level,
                 )}`}
               >
                 {remediation.risk_level}
@@ -435,8 +435,7 @@ export function RemediationApprovalDialog({
               htmlFor="reason-input"
               className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
             >
-              Additional Notes{" "}
-              <span className="text-gray-500">(optional)</span>
+              Additional Notes <span className="text-gray-500">(optional)</span>
             </label>
             <textarea
               id="reason-input"

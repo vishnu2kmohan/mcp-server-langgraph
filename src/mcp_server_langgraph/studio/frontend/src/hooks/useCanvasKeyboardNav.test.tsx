@@ -38,7 +38,10 @@ function createWrapper() {
 }
 
 // Helper to simulate keyboard event
-function simulateKeyboard(key: string, modifiers: { meta?: boolean; ctrl?: boolean } = {}) {
+function simulateKeyboard(
+  key: string,
+  modifiers: { meta?: boolean; ctrl?: boolean } = {},
+) {
   const event = new KeyboardEvent("keydown", {
     key,
     code: `Key${key.toUpperCase()}`,

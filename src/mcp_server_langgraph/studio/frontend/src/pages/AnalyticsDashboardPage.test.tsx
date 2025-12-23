@@ -25,14 +25,30 @@ vi.mock("../hooks/useAIMetricsInsights", () => ({
     isLoading: false,
     error: null,
     insights: [
-      { type: "trend", dimension: "user_activity", message: "AI trend insight", sentiment: "positive" },
+      {
+        type: "trend",
+        dimension: "user_activity",
+        message: "AI trend insight",
+        sentiment: "positive",
+      },
     ],
     predictions: [
-      { metric: "weekly_active_users", current: 450, predicted: 520, confidence: 0.85, drivers: ["feature_release"] },
+      {
+        metric: "weekly_active_users",
+        current: 450,
+        predicted: 520,
+        confidence: 0.85,
+        drivers: ["feature_release"],
+      },
     ],
     anomalies: [],
     trends: [
-      { type: "trend", dimension: "user_activity", message: "AI trend insight", sentiment: "positive" },
+      {
+        type: "trend",
+        dimension: "user_activity",
+        message: "AI trend insight",
+        sentiment: "positive",
+      },
     ],
     patterns: [],
     lastUpdated: new Date(),
@@ -74,11 +90,36 @@ const TestWrapper = ({
 const mockHeartAggregate = () =>
   HttpResponse.json({
     dimensions: [
-      { dimension: "happiness", overallScore: 75, hasData: true, goalProgresses: [] },
-      { dimension: "engagement", overallScore: 80, hasData: true, goalProgresses: [] },
-      { dimension: "adoption", overallScore: 65, hasData: true, goalProgresses: [] },
-      { dimension: "retention", overallScore: 70, hasData: true, goalProgresses: [] },
-      { dimension: "task_success", overallScore: 85, hasData: true, goalProgresses: [] },
+      {
+        dimension: "happiness",
+        overallScore: 75,
+        hasData: true,
+        goalProgresses: [],
+      },
+      {
+        dimension: "engagement",
+        overallScore: 80,
+        hasData: true,
+        goalProgresses: [],
+      },
+      {
+        dimension: "adoption",
+        overallScore: 65,
+        hasData: true,
+        goalProgresses: [],
+      },
+      {
+        dimension: "retention",
+        overallScore: 70,
+        hasData: true,
+        goalProgresses: [],
+      },
+      {
+        dimension: "task_success",
+        overallScore: 85,
+        hasData: true,
+        goalProgresses: [],
+      },
     ],
     overallHealthScore: 75,
     timestamp: Date.now(),
@@ -103,22 +144,26 @@ describe("AnalyticsDashboardPage", () => {
       render(
         <TestWrapper>
           <AnalyticsDashboardPage />
-        </TestWrapper>
+        </TestWrapper>,
       );
 
-      expect(screen.getByRole("heading", { name: /analytics/i })).toBeInTheDocument();
+      expect(
+        screen.getByRole("heading", { name: /analytics/i }),
+      ).toBeInTheDocument();
     });
 
     it("renders all 5 HEART dimension cards", async () => {
       render(
         <TestWrapper>
           <AnalyticsDashboardPage />
-        </TestWrapper>
+        </TestWrapper>,
       );
 
       // Wait for loading to complete
       await waitFor(() => {
-        expect(screen.queryByTestId("analytics-loading")).not.toBeInTheDocument();
+        expect(
+          screen.queryByTestId("analytics-loading"),
+        ).not.toBeInTheDocument();
       });
 
       expect(screen.getByText(/happiness/i)).toBeInTheDocument();
@@ -132,12 +177,14 @@ describe("AnalyticsDashboardPage", () => {
       render(
         <TestWrapper>
           <AnalyticsDashboardPage />
-        </TestWrapper>
+        </TestWrapper>,
       );
 
       // Wait for loading to complete
       await waitFor(() => {
-        expect(screen.queryByTestId("analytics-loading")).not.toBeInTheDocument();
+        expect(
+          screen.queryByTestId("analytics-loading"),
+        ).not.toBeInTheDocument();
       });
 
       expect(screen.getByTestId("overall-health-score")).toBeInTheDocument();
@@ -147,12 +194,14 @@ describe("AnalyticsDashboardPage", () => {
       render(
         <TestWrapper>
           <AnalyticsDashboardPage />
-        </TestWrapper>
+        </TestWrapper>,
       );
 
       // Wait for loading to complete
       await waitFor(() => {
-        expect(screen.queryByTestId("analytics-loading")).not.toBeInTheDocument();
+        expect(
+          screen.queryByTestId("analytics-loading"),
+        ).not.toBeInTheDocument();
       });
 
       // AI Insights section should be rendered
@@ -168,7 +217,7 @@ describe("AnalyticsDashboardPage", () => {
       render(
         <TestWrapper>
           <AnalyticsDashboardPage />
-        </TestWrapper>
+        </TestWrapper>,
       );
 
       // Initially shows loading
@@ -193,22 +242,26 @@ describe("AnalyticsDashboardPage", () => {
             oldestDataPoint: null,
             newestDataPoint: null,
           });
-        })
+        }),
       );
 
       render(
         <TestWrapper>
           <AnalyticsDashboardPage />
-        </TestWrapper>
+        </TestWrapper>,
       );
 
       // Wait for loading to complete
       await waitFor(() => {
-        expect(screen.queryByTestId("analytics-loading")).not.toBeInTheDocument();
+        expect(
+          screen.queryByTestId("analytics-loading"),
+        ).not.toBeInTheDocument();
       });
 
       // Check for score in overall health (score appears there)
-      expect(screen.getByTestId("overall-health-score")).toHaveTextContent("85");
+      expect(screen.getByTestId("overall-health-score")).toHaveTextContent(
+        "85",
+      );
     });
   });
 
@@ -217,13 +270,13 @@ describe("AnalyticsDashboardPage", () => {
       server.use(
         http.get("/api/v1/metrics/heart/aggregate", () => {
           return HttpResponse.json({ error: "Server error" }, { status: 500 });
-        })
+        }),
       );
 
       render(
         <TestWrapper>
           <AnalyticsDashboardPage />
-        </TestWrapper>
+        </TestWrapper>,
       );
 
       await waitFor(() => {
@@ -237,10 +290,12 @@ describe("AnalyticsDashboardPage", () => {
       render(
         <TestWrapper>
           <AnalyticsDashboardPage />
-        </TestWrapper>
+        </TestWrapper>,
       );
 
-      expect(screen.getByRole("combobox", { name: /time range/i })).toBeInTheDocument();
+      expect(
+        screen.getByRole("combobox", { name: /time range/i }),
+      ).toBeInTheDocument();
     });
   });
 
@@ -249,7 +304,7 @@ describe("AnalyticsDashboardPage", () => {
       render(
         <TestWrapper>
           <AnalyticsDashboardPage />
-        </TestWrapper>
+        </TestWrapper>,
       );
 
       expect(screen.getByRole("main")).toBeInTheDocument();
@@ -260,7 +315,12 @@ describe("AnalyticsDashboardPage", () => {
         http.get("/api/v1/metrics/heart/aggregate", () => {
           return HttpResponse.json({
             dimensions: [
-              { dimension: "happiness", overallScore: 80, hasData: true, goalProgresses: [] },
+              {
+                dimension: "happiness",
+                overallScore: 80,
+                hasData: true,
+                goalProgresses: [],
+              },
             ],
             overallHealthScore: 80,
             timestamp: Date.now(),
@@ -268,18 +328,20 @@ describe("AnalyticsDashboardPage", () => {
             oldestDataPoint: null,
             newestDataPoint: null,
           });
-        })
+        }),
       );
 
       render(
         <TestWrapper>
           <AnalyticsDashboardPage />
-        </TestWrapper>
+        </TestWrapper>,
       );
 
       // Wait for loading to complete
       await waitFor(() => {
-        expect(screen.queryByTestId("analytics-loading")).not.toBeInTheDocument();
+        expect(
+          screen.queryByTestId("analytics-loading"),
+        ).not.toBeInTheDocument();
       });
 
       // Check for region landmarks (dimension cards)

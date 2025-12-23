@@ -76,10 +76,7 @@ describe("useDevToolsContext", () => {
       state: null,
       key: "default",
     });
-    mockUseSearchParams.mockReturnValue([
-      new URLSearchParams(),
-      vi.fn(),
-    ]);
+    mockUseSearchParams.mockReturnValue([new URLSearchParams(), vi.fn()]);
   });
 
   // ===========================================================================
@@ -263,10 +260,7 @@ describe("useDevToolsContext", () => {
         state: null,
         key: "chat",
       });
-      mockUseSearchParams.mockReturnValue([
-        new URLSearchParams(),
-        vi.fn(),
-      ]);
+      mockUseSearchParams.mockReturnValue([new URLSearchParams(), vi.fn()]);
 
       const { result } = renderHook(() => useDevToolsContext(), {
         wrapper: createWrapper(store),
@@ -284,10 +278,7 @@ describe("useDevToolsContext", () => {
         state: null,
         key: "chat-id",
       });
-      mockUseSearchParams.mockReturnValue([
-        new URLSearchParams(),
-        vi.fn(),
-      ]);
+      mockUseSearchParams.mockReturnValue([new URLSearchParams(), vi.fn()]);
 
       const { result } = renderHook(() => useDevToolsContext(), {
         wrapper: createWrapper(store),
@@ -305,10 +296,7 @@ describe("useDevToolsContext", () => {
         state: null,
         key: "workflow-id",
       });
-      mockUseSearchParams.mockReturnValue([
-        new URLSearchParams(),
-        vi.fn(),
-      ]);
+      mockUseSearchParams.mockReturnValue([new URLSearchParams(), vi.fn()]);
 
       const { result } = renderHook(() => useDevToolsContext(), {
         wrapper: createWrapper(store),
@@ -362,7 +350,9 @@ describe("useDevToolsContext", () => {
         wrapper: createWrapper(store),
       });
 
-      expect(dispatchSpy).toHaveBeenCalledWith(setContextEntityId("new-session"));
+      expect(dispatchSpy).toHaveBeenCalledWith(
+        setContextEntityId("new-session"),
+      );
     });
 
     it("should not dispatch if context is the same", () => {
@@ -383,7 +373,7 @@ describe("useDevToolsContext", () => {
 
       // Should not dispatch setDetectedContext since it's already "session"
       const contextDispatchCalls = dispatchSpy.mock.calls.filter(
-        (call) => call[0]?.type === "devTools/setDetectedContext"
+        (call) => call[0]?.type === "devTools/setDetectedContext",
       );
       expect(contextDispatchCalls.length).toBe(0);
     });

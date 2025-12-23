@@ -135,7 +135,12 @@ describe("Session Hooks Integration", () => {
       // Step 1: Initial sync with loader data
       const initialLoaderData = createMockLoaderData({
         messages: [
-          { id: "msg-1", role: "user", content: "Hello", timestamp: Date.now() },
+          {
+            id: "msg-1",
+            role: "user",
+            content: "Hello",
+            timestamp: Date.now(),
+          },
         ],
       });
 
@@ -186,9 +191,24 @@ describe("Session Hooks Integration", () => {
       // Step 5: Simulate loader data coming back with new message
       const updatedLoaderData = createMockLoaderData({
         messages: [
-          { id: "msg-1", role: "user", content: "Hello", timestamp: Date.now() },
-          { id: "msg-2", role: "user", content: "New message", timestamp: Date.now() },
-          { id: "msg-3", role: "assistant", content: "Hi there!", timestamp: Date.now() },
+          {
+            id: "msg-1",
+            role: "user",
+            content: "Hello",
+            timestamp: Date.now(),
+          },
+          {
+            id: "msg-2",
+            role: "user",
+            content: "New message",
+            timestamp: Date.now(),
+          },
+          {
+            id: "msg-3",
+            role: "assistant",
+            content: "Hi there!",
+            timestamp: Date.now(),
+          },
         ],
       });
 
@@ -204,7 +224,12 @@ describe("Session Hooks Integration", () => {
       // Initial sync
       const initialLoaderData = createMockLoaderData({
         messages: [
-          { id: "msg-1", role: "user", content: "Hello", timestamp: Date.now() },
+          {
+            id: "msg-1",
+            role: "user",
+            content: "Hello",
+            timestamp: Date.now(),
+          },
         ],
       });
 
@@ -241,7 +266,12 @@ describe("Session Hooks Integration", () => {
       // Stale loader data arrives (doesn't include the new message yet)
       const staleLoaderData = createMockLoaderData({
         messages: [
-          { id: "msg-1", role: "user", content: "Hello", timestamp: Date.now() },
+          {
+            id: "msg-1",
+            role: "user",
+            content: "Hello",
+            timestamp: Date.now(),
+          },
         ],
       });
 
@@ -249,9 +279,9 @@ describe("Session Hooks Integration", () => {
 
       // Optimistic update should be preserved
       expect(store.getState().session.currentSession?.messages).toHaveLength(2);
-      expect(
-        store.getState().session.currentSession?.messages[1].content,
-      ).toBe("Optimistic message");
+      expect(store.getState().session.currentSession?.messages[1].content).toBe(
+        "Optimistic message",
+      );
 
       // Clear pending mutation
       act(() => {
@@ -261,8 +291,18 @@ describe("Session Hooks Integration", () => {
       // Fresh loader data arrives
       const freshLoaderData = createMockLoaderData({
         messages: [
-          { id: "msg-1", role: "user", content: "Hello", timestamp: Date.now() },
-          { id: "msg-2", role: "user", content: "Optimistic message", timestamp: Date.now() },
+          {
+            id: "msg-1",
+            role: "user",
+            content: "Hello",
+            timestamp: Date.now(),
+          },
+          {
+            id: "msg-2",
+            role: "user",
+            content: "Optimistic message",
+            timestamp: Date.now(),
+          },
         ],
       });
 
@@ -295,10 +335,7 @@ describe("Session Hooks Integration", () => {
       // Override handler to return error
       server.use(
         http.post("/api/v1/sessions", () => {
-          return HttpResponse.json(
-            { detail: "Server error" },
-            { status: 500 },
-          );
+          return HttpResponse.json({ detail: "Server error" }, { status: 500 });
         }),
       );
 

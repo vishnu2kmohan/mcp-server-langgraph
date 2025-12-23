@@ -661,7 +661,10 @@ export function useDiagramToCode(
           {
             category: "diagram",
             type: "diagram_to_code",
-            data: { diagram_code: diagramCode, target_language: targetLanguage },
+            data: {
+              diagram_code: diagramCode,
+              target_language: targetLanguage,
+            },
           },
         ],
       }).unwrap();
@@ -690,7 +693,14 @@ export function useDiagramToCode(
         error: err instanceof Error ? err : new Error(String(err)),
       }));
     }
-  }, [analyzeMutation, userId, sessionId, diagramCode, targetLanguage, enabled]);
+  }, [
+    analyzeMutation,
+    userId,
+    sessionId,
+    diagramCode,
+    targetLanguage,
+    enabled,
+  ]);
 
   useEffect(() => {
     fetchCode();

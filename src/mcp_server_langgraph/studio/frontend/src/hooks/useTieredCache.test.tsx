@@ -10,7 +10,7 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
-import { renderHook, waitFor, act , cleanup} from "@testing-library/react";
+import { renderHook, waitFor, act, cleanup } from "@testing-library/react";
 import { useTieredCache } from "./useTieredCache";
 
 // =============================================================================
@@ -43,15 +43,15 @@ describe("useTieredCache", () => {
 
   afterEach(() => {
     sessionStorage.clear();
-      cleanup();
-      vi.restoreAllMocks();
+    cleanup();
+    vi.restoreAllMocks();
   });
 
   describe("initialization", () => {
     it("should return undefined data initially and isLoading=true", () => {
       const fetcher = createMockFetcher(TEST_DATA);
       const { result } = renderHook(() =>
-        useTieredCache(TEST_CACHE_KEY, fetcher)
+        useTieredCache(TEST_CACHE_KEY, fetcher),
       );
 
       // Initial state before fetch completes
@@ -63,7 +63,7 @@ describe("useTieredCache", () => {
       const fetcher = createMockFetcher(TEST_DATA);
 
       const { result } = renderHook(() =>
-        useTieredCache(TEST_CACHE_KEY + "-fetch", fetcher)
+        useTieredCache(TEST_CACHE_KEY + "-fetch", fetcher),
       );
 
       // Wait for fetch to complete
@@ -107,7 +107,7 @@ describe("useTieredCache", () => {
       };
       sessionStorage.setItem(
         `tiered_cache:${key}`,
-        JSON.stringify(cachedEntry)
+        JSON.stringify(cachedEntry),
       );
 
       const { result } = renderHook(() => useTieredCache(key, fetcher));
@@ -128,7 +128,7 @@ describe("useTieredCache", () => {
       };
       sessionStorage.setItem(
         `tiered_cache:${key}`,
-        JSON.stringify(cachedEntry)
+        JSON.stringify(cachedEntry),
       );
 
       const { result } = renderHook(() => useTieredCache(key, fetcher));
@@ -150,13 +150,13 @@ describe("useTieredCache", () => {
       };
       sessionStorage.setItem(
         `tiered_cache:${key}`,
-        JSON.stringify(cachedEntry)
+        JSON.stringify(cachedEntry),
       );
 
       const { result } = renderHook(() =>
         useTieredCache(key, fetcher, {
           staleThresholdMs: 60 * 1000, // 60s threshold
-        })
+        }),
       );
 
       // Should return stale data with isStale=true
@@ -175,13 +175,13 @@ describe("useTieredCache", () => {
       };
       sessionStorage.setItem(
         `tiered_cache:${key}`,
-        JSON.stringify(cachedEntry)
+        JSON.stringify(cachedEntry),
       );
 
       const { result } = renderHook(() =>
         useTieredCache(key, fetcher, {
           staleThresholdMs: 60 * 1000, // 60s threshold
-        })
+        }),
       );
 
       // Fresh data (10s old, threshold is 60s from end of 5min TTL)
@@ -225,7 +225,7 @@ describe("useTieredCache", () => {
       };
       sessionStorage.setItem(
         `tiered_cache:${key}`,
-        JSON.stringify(cachedEntry)
+        JSON.stringify(cachedEntry),
       );
 
       renderHook(() => useTieredCache(key, fetcher, { ttlMs: DEFAULT_TTL_MS }));
@@ -274,7 +274,7 @@ describe("useTieredCache", () => {
       const key = TEST_CACHE_KEY + "-disabled";
 
       const { result } = renderHook(() =>
-        useTieredCache(key, fetcher, { enabled: false })
+        useTieredCache(key, fetcher, { enabled: false }),
       );
 
       // Should not fetch
@@ -297,12 +297,10 @@ describe("useTieredCache", () => {
       };
       sessionStorage.setItem(
         `tiered_cache:${key}`,
-        JSON.stringify(cachedEntry)
+        JSON.stringify(cachedEntry),
       );
 
-      renderHook(() =>
-        useTieredCache(key, fetcher, { onCacheEvent })
-      );
+      renderHook(() => useTieredCache(key, fetcher, { onCacheEvent }));
 
       expect(onCacheEvent).toHaveBeenCalledWith("l2Hit", key);
     });
@@ -313,7 +311,7 @@ describe("useTieredCache", () => {
       const onCacheEvent = vi.fn();
 
       const { result } = renderHook(() =>
-        useTieredCache(key, fetcher, { onCacheEvent })
+        useTieredCache(key, fetcher, { onCacheEvent }),
       );
 
       await waitFor(() => {
@@ -346,7 +344,7 @@ describe("useTieredCache", () => {
       };
       sessionStorage.setItem(
         `tiered_cache:${key}`,
-        JSON.stringify(cachedEntry)
+        JSON.stringify(cachedEntry),
       );
 
       // Simulating integration - callback receives event and can dispatch to metrics
@@ -371,9 +369,9 @@ describe("useTieredCache", () => {
 
     afterEach(() => {
       global.fetch = originalFetch;
-        cleanup();
-        vi.clearAllMocks();
-        vi.restoreAllMocks();
+      cleanup();
+      vi.clearAllMocks();
+      vi.restoreAllMocks();
     });
 
     it("should use Redis L2 when useRedisL2 is true", async () => {
@@ -387,7 +385,7 @@ describe("useTieredCache", () => {
       });
 
       const { result } = renderHook(() =>
-        useTieredCache(key, fetcher, { useRedisL2: true })
+        useTieredCache(key, fetcher, { useRedisL2: true }),
       );
 
       await waitFor(() => {
@@ -404,7 +402,7 @@ describe("useTieredCache", () => {
 
       // Mock Redis L2 API failure
       (global.fetch as ReturnType<typeof vi.fn>).mockRejectedValue(
-        new Error("Network error")
+        new Error("Network error"),
       );
 
       // Pre-populate sessionStorage as fallback
@@ -414,16 +412,19 @@ describe("useTieredCache", () => {
       };
       sessionStorage.setItem(
         `tiered_cache:${key}`,
-        JSON.stringify(cachedEntry)
+        JSON.stringify(cachedEntry),
       );
 
       const { result } = renderHook(() =>
-        useTieredCache(key, fetcher, { useRedisL2: true })
+        useTieredCache(key, fetcher, { useRedisL2: true }),
       );
 
       // Should fall back to sessionStorage data
       await waitFor(() => {
-        expect(result.current.data).toEqual({ ...TEST_DATA, source: "session" });
+        expect(result.current.data).toEqual({
+          ...TEST_DATA,
+          source: "session",
+        });
       });
     });
 
@@ -432,7 +433,7 @@ describe("useTieredCache", () => {
       const key = TEST_CACHE_KEY + "-no-redis";
 
       const { result } = renderHook(() =>
-        useTieredCache(key, fetcher, { useRedisL2: false })
+        useTieredCache(key, fetcher, { useRedisL2: false }),
       );
 
       await waitFor(() => {

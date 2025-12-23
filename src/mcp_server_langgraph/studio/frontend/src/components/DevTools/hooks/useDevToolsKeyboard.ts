@@ -90,7 +90,7 @@ const SHORTCUTS: KeyboardShortcut[] = [
 // =============================================================================
 
 export function useDevToolsKeyboard(
-  options: UseDevToolsKeyboardOptions
+  options: UseDevToolsKeyboardOptions,
 ): UseDevToolsKeyboardReturn {
   const { enabled, onClearConsole } = options;
 
@@ -160,7 +160,7 @@ export function useDevToolsKeyboard(
         return;
       }
     },
-    [dispatch, onClearConsole, goToNextTab, goToPrevTab]
+    [dispatch, onClearConsole, goToNextTab, goToPrevTab],
   );
 
   /**

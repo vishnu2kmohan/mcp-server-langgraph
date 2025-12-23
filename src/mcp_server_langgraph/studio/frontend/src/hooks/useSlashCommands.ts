@@ -133,7 +133,8 @@ function getCategoryIcon(category: string): CommandIcon {
     default: "message",
   };
 
-  const icon = categoryIconMap[category.toLowerCase()] ?? categoryIconMap["default"];
+  const icon =
+    categoryIconMap[category.toLowerCase()] ?? categoryIconMap["default"];
   return icon ?? "message";
 }
 

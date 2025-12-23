@@ -59,7 +59,7 @@ export interface UseWorkflowExecutionReturn {
 // =============================================================================
 
 export function useWorkflowExecution(
-  options: UseWorkflowExecutionOptions
+  options: UseWorkflowExecutionOptions,
 ): UseWorkflowExecutionReturn {
   const { workflowId, autoRefresh = false, refreshInterval = 2000 } = options;
 
@@ -75,9 +75,7 @@ export function useWorkflowExecution(
     setError(null);
 
     try {
-      const response = await fetch(
-        `/api/v1/workflows/${workflowId}/execution`
-      );
+      const response = await fetch(`/api/v1/workflows/${workflowId}/execution`);
 
       if (!response.ok) {
         throw new Error(`Failed to fetch execution: ${response.statusText}`);

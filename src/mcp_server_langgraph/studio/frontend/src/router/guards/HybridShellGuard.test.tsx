@@ -409,7 +409,9 @@ describe("HybridShellGuard", () => {
             <Route
               path="/studio/admin/settings/security"
               element={
-                <div data-testid="legacy-security">Legacy Security Settings</div>
+                <div data-testid="legacy-security">
+                  Legacy Security Settings
+                </div>
               }
             />
           </Routes>

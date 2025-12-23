@@ -63,13 +63,21 @@ export interface UseHITLDialogsReturn {
   // Dialog control functions
   openApprovalDialog: (approval: ApprovalRequiredPayload) => void;
   closeApprovalDialog: () => void;
-  openClarificationDialog: (clarification: ClarificationRequiredPayload) => void;
+  openClarificationDialog: (
+    clarification: ClarificationRequiredPayload,
+  ) => void;
   closeClarificationDialog: () => void;
 
   // Action handlers
-  handleApprove: (requestId: string, reason?: string, modifications?: Record<string, unknown>) => Promise<void>;
+  handleApprove: (
+    requestId: string,
+    reason?: string,
+    modifications?: Record<string, unknown>,
+  ) => Promise<void>;
   handleReject: (requestId: string, reason?: string) => Promise<void>;
-  handleClarificationRespond: (response: ClarificationResponse) => Promise<void>;
+  handleClarificationRespond: (
+    response: ClarificationResponse,
+  ) => Promise<void>;
 
   // Dismissed tracking
   isDismissed: (requestId: string) => boolean;
@@ -115,18 +123,25 @@ export function useHITLDialogs(): UseHITLDialogsReturn {
   const enabled = useFeatureFlag("agent_hitl");
 
   // RTK Query mutations for Agent HITL requests
-  const [approveRequest, { isLoading: isApproving }] = useApproveAgentRequestMutation();
-  const [rejectRequest, { isLoading: isRejecting }] = useRejectAgentRequestMutation();
-  const [respondRequest, { isLoading: isClarificationSubmitting }] = useRespondToAgentRequestMutation();
+  const [approveRequest, { isLoading: isApproving }] =
+    useApproveAgentRequestMutation();
+  const [rejectRequest, { isLoading: isRejecting }] =
+    useRejectAgentRequestMutation();
+  const [respondRequest, { isLoading: isClarificationSubmitting }] =
+    useRespondToAgentRequestMutation();
 
   // Dialog state
-  const [activeApproval, setActiveApproval] = useState<ApprovalRequiredPayload | null>(null);
-  const [activeClarification, setActiveClarification] = useState<ClarificationRequiredPayload | null>(null);
+  const [activeApproval, setActiveApproval] =
+    useState<ApprovalRequiredPayload | null>(null);
+  const [activeClarification, setActiveClarification] =
+    useState<ClarificationRequiredPayload | null>(null);
   const [showApprovalDialog, setShowApprovalDialog] = useState(false);
   const [showClarificationDialog, setShowClarificationDialog] = useState(false);
 
   // Track dismissed request IDs to prevent auto-reopening after user closes dialog
-  const [dismissedRequestIds, setDismissedRequestIds] = useState<Set<string>>(new Set());
+  const [dismissedRequestIds, setDismissedRequestIds] = useState<Set<string>>(
+    new Set(),
+  );
 
   // Handle approval required messages from WebSocket
   const handleApprovalRequired = useCallback(
@@ -182,7 +197,11 @@ export function useHITLDialogs(): UseHITLDialogsReturn {
       (c) => !dismissedRequestIds.has(c.request_id),
     );
 
-    if (undismissedApprovals.length > 0 && !showApprovalDialog && !activeApproval) {
+    if (
+      undismissedApprovals.length > 0 &&
+      !showApprovalDialog &&
+      !activeApproval
+    ) {
       const firstApproval = undismissedApprovals[0];
       if (firstApproval) {
         setActiveApproval(firstApproval);
@@ -212,30 +231,40 @@ export function useHITLDialogs(): UseHITLDialogsReturn {
   ]);
 
   // Open approval dialog with specific request
-  const openApprovalDialog = useCallback((approval: ApprovalRequiredPayload) => {
-    setActiveApproval(approval);
-    setShowApprovalDialog(true);
-  }, []);
+  const openApprovalDialog = useCallback(
+    (approval: ApprovalRequiredPayload) => {
+      setActiveApproval(approval);
+      setShowApprovalDialog(true);
+    },
+    [],
+  );
 
   // Close approval dialog and track as dismissed
   const closeApprovalDialog = useCallback(() => {
     if (activeApproval) {
-      setDismissedRequestIds((prev) => new Set(prev).add(activeApproval.request_id));
+      setDismissedRequestIds((prev) =>
+        new Set(prev).add(activeApproval.request_id),
+      );
     }
     setShowApprovalDialog(false);
     setActiveApproval(null);
   }, [activeApproval]);
 
   // Open clarification dialog with specific request
-  const openClarificationDialog = useCallback((clarification: ClarificationRequiredPayload) => {
-    setActiveClarification(clarification);
-    setShowClarificationDialog(true);
-  }, []);
+  const openClarificationDialog = useCallback(
+    (clarification: ClarificationRequiredPayload) => {
+      setActiveClarification(clarification);
+      setShowClarificationDialog(true);
+    },
+    [],
+  );
 
   // Close clarification dialog and track as dismissed
   const closeClarificationDialog = useCallback(() => {
     if (activeClarification) {
-      setDismissedRequestIds((prev) => new Set(prev).add(activeClarification.request_id));
+      setDismissedRequestIds((prev) =>
+        new Set(prev).add(activeClarification.request_id),
+      );
     }
     setShowClarificationDialog(false);
     setActiveClarification(null);
@@ -243,7 +272,11 @@ export function useHITLDialogs(): UseHITLDialogsReturn {
 
   // Handle approval action using RTK Query mutation
   const handleApprove = useCallback(
-    async (requestId: string, reason?: string, modifications?: Record<string, unknown>) => {
+    async (
+      requestId: string,
+      reason?: string,
+      modifications?: Record<string, unknown>,
+    ) => {
       if (!activeApproval) return;
 
       try {

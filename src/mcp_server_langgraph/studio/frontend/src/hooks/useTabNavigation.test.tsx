@@ -4,8 +4,8 @@
  * Tests for the tab navigation hook that handles bidirectional sync.
  */
 
-import { describe, it, expect, vi } from "vitest";
-import { renderHook, act } from "@testing-library/react";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { renderHook, act, cleanup } from "@testing-library/react";
 import { MemoryRouter } from "react-router";
 import { useTabNavigation } from "./useTabNavigation";
 import type { TabState } from "../store/slices/workspaceSlice";
@@ -30,6 +30,11 @@ function renderHookWithRouter() {
 describe("useTabNavigation", () => {
   beforeEach(() => {
     mockNavigate.mockClear();
+  });
+
+  afterEach(() => {
+    cleanup();
+    vi.clearAllMocks();
   });
 
   it("should return a function", () => {

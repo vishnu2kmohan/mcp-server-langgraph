@@ -163,7 +163,9 @@ describe("CanvasArtifact", () => {
     });
 
     it("should show line numbers when enabled", () => {
-      renderWithProvider(<CanvasArtifact artifact={mockCodeArtifact} showLineNumbers />);
+      renderWithProvider(
+        <CanvasArtifact artifact={mockCodeArtifact} showLineNumbers />,
+      );
       expect(screen.getByTestId("line-numbers")).toBeInTheDocument();
     });
   });
@@ -195,12 +197,16 @@ describe("CanvasArtifact", () => {
 
   describe("Editing", () => {
     it("should show edit button when editable", () => {
-      renderWithProvider(<CanvasArtifact artifact={mockCodeArtifact} editable />);
+      renderWithProvider(
+        <CanvasArtifact artifact={mockCodeArtifact} editable />,
+      );
       expect(screen.getByTestId("edit-button")).toBeInTheDocument();
     });
 
     it("should enter edit mode when edit button clicked", () => {
-      renderWithProvider(<CanvasArtifact artifact={mockCodeArtifact} editable />);
+      renderWithProvider(
+        <CanvasArtifact artifact={mockCodeArtifact} editable />,
+      );
       fireEvent.click(screen.getByTestId("edit-button"));
       expect(screen.getByTestId("content-editor")).toBeInTheDocument();
     });
@@ -223,7 +229,9 @@ describe("CanvasArtifact", () => {
     });
 
     it("should show save and cancel buttons in edit mode", () => {
-      renderWithProvider(<CanvasArtifact artifact={mockCodeArtifact} editable isEditing />);
+      renderWithProvider(
+        <CanvasArtifact artifact={mockCodeArtifact} editable isEditing />,
+      );
       expect(screen.getByTestId("save-button")).toBeInTheDocument();
       expect(screen.getByTestId("cancel-button")).toBeInTheDocument();
     });
@@ -296,7 +304,9 @@ describe("CanvasArtifact", () => {
     });
 
     it("should have accessible edit button", () => {
-      renderWithProvider(<CanvasArtifact artifact={mockCodeArtifact} editable />);
+      renderWithProvider(
+        <CanvasArtifact artifact={mockCodeArtifact} editable />,
+      );
       expect(screen.getByRole("button", { name: /edit/i })).toBeInTheDocument();
     });
   });
@@ -330,10 +340,7 @@ describe("CanvasArtifact", () => {
 
     it("should not show AI analysis panel without userId", () => {
       renderWithProvider(
-        <CanvasArtifact
-          artifact={mockCodeArtifact}
-          enableAI={true}
-        />,
+        <CanvasArtifact artifact={mockCodeArtifact} enableAI={true} />,
       );
 
       expect(screen.queryByTestId("ai-code-analysis")).not.toBeInTheDocument();

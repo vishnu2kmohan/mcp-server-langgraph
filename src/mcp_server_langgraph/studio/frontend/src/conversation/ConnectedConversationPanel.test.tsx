@@ -32,9 +32,8 @@ const mockSessionLoaderData: ChatLoaderData = {
 };
 
 vi.mock("react-router", async () => {
-  const actual = await vi.importActual<typeof import("react-router")>(
-    "react-router",
-  );
+  const actual =
+    await vi.importActual<typeof import("react-router")>("react-router");
   return {
     ...actual,
     useRouteLoaderData: vi.fn((routeId: string) => {
@@ -372,7 +371,11 @@ describe("ConnectedConversationPanel", () => {
     it("should render user messages with correct role", () => {
       const store = createTestStore();
       mockSessionLoaderData.messages = [
-        createMockMessage({ id: "user-msg", role: "user", content: "User message" }),
+        createMockMessage({
+          id: "user-msg",
+          role: "user",
+          content: "User message",
+        }),
       ];
 
       render(<ConnectedConversationPanel />, { wrapper: createWrapper(store) });
@@ -398,9 +401,21 @@ describe("ConnectedConversationPanel", () => {
     it("should render multiple messages in order", () => {
       const store = createTestStore();
       mockSessionLoaderData.messages = [
-        createMockMessage({ id: "msg-1", content: "First message", timestamp: 1000 }),
-        createMockMessage({ id: "msg-2", content: "Second message", timestamp: 2000 }),
-        createMockMessage({ id: "msg-3", content: "Third message", timestamp: 3000 }),
+        createMockMessage({
+          id: "msg-1",
+          content: "First message",
+          timestamp: 1000,
+        }),
+        createMockMessage({
+          id: "msg-2",
+          content: "Second message",
+          timestamp: 2000,
+        }),
+        createMockMessage({
+          id: "msg-3",
+          content: "Third message",
+          timestamp: 3000,
+        }),
       ];
 
       render(<ConnectedConversationPanel />, { wrapper: createWrapper(store) });
@@ -488,7 +503,9 @@ describe("ConnectedConversationPanel", () => {
         const input = screen.getByRole("textbox");
         await user.type(input, "test query");
 
-        expect(screen.queryByTestId("intent-indicator")).not.toBeInTheDocument();
+        expect(
+          screen.queryByTestId("intent-indicator"),
+        ).not.toBeInTheDocument();
       });
 
       it("should not display intent indicator with fewer than 3 characters", async () => {
@@ -504,7 +521,9 @@ describe("ConnectedConversationPanel", () => {
         await user.type(input, "ab");
 
         // Intent indicator should NOT be rendered (need 3+ chars)
-        expect(screen.queryByTestId("intent-indicator")).not.toBeInTheDocument();
+        expect(
+          screen.queryByTestId("intent-indicator"),
+        ).not.toBeInTheDocument();
       });
     });
 
@@ -560,9 +579,12 @@ describe("ConnectedConversationPanel", () => {
       it("should not display goal tracker when disabled", () => {
         const store = createTestStore();
 
-        render(<ConnectedConversationPanel enableAI={false} showGoals={false} />, {
-          wrapper: createWrapper(store),
-        });
+        render(
+          <ConnectedConversationPanel enableAI={false} showGoals={false} />,
+          {
+            wrapper: createWrapper(store),
+          },
+        );
 
         expect(screen.queryByTestId("goal-tracker")).not.toBeInTheDocument();
       });

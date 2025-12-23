@@ -58,7 +58,8 @@ vi.mock("../api", async (importOriginal) => {
   };
 });
 
-const mockUseGetComplianceSummaryQuery = api.useGetComplianceSummaryQuery as ReturnType<typeof vi.fn>;
+const mockUseGetComplianceSummaryQuery =
+  api.useGetComplianceSummaryQuery as ReturnType<typeof vi.fn>;
 
 // =============================================================================
 // Test Setup
@@ -185,7 +186,10 @@ describe("ConnectedComplianceDashboard", () => {
       const endTime = "2024-12-31T23:59:59Z";
 
       render(
-        <ConnectedComplianceDashboard startTime={startTime} endTime={endTime} />,
+        <ConnectedComplianceDashboard
+          startTime={startTime}
+          endTime={endTime}
+        />,
       );
 
       expect(screen.getByText("Compliance Overview")).toBeInTheDocument();

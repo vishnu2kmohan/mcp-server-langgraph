@@ -88,7 +88,10 @@ export function useCrossInsightsPanel(): UseCrossInsightsPanelReturn {
     }
     // Read from localStorage for persistence across sessions
     // Validate that we get a boolean, handling invalid JSON/values gracefully
-    const storedValue = storage.get<boolean>(STORAGE_KEYS.CROSS_INSIGHTS_DISMISSED, false);
+    const storedValue = storage.get<boolean>(
+      STORAGE_KEYS.CROSS_INSIGHTS_DISMISSED,
+      false,
+    );
     // Ensure the result is actually a boolean (storage might return raw string on parse error)
     if (typeof storedValue === "boolean") {
       return storedValue;
@@ -125,7 +128,7 @@ export function useCrossInsightsPanel(): UseCrossInsightsPanelReturn {
     (value: boolean | ((prev: boolean) => boolean)) => {
       setDismissedState(value);
     },
-    []
+    [],
   );
 
   // Toggle function for convenience

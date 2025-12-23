@@ -35,7 +35,9 @@ describe("testIsolation", () => {
     it("should clear sessionStorage store", () => {
       // Setup: add items to sessionStorage
       window.sessionStorage.setItem("session-key", "session-value");
-      expect(window.sessionStorage.getItem("session-key")).toBe("session-value");
+      expect(window.sessionStorage.getItem("session-key")).toBe(
+        "session-value",
+      );
 
       // Act
       clearStorageMocks();

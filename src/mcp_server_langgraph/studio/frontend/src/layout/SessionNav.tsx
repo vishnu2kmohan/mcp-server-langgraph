@@ -250,8 +250,14 @@ export function SessionNav({
         ) : (
           <>
             {groupedSessions.today.length > 0 && (
-              <section className="mb-3" aria-labelledby="today-sessions-heading">
-                <h3 id="today-sessions-heading" className="text-xs text-gray-400 uppercase tracking-wider mb-2">
+              <section
+                className="mb-3"
+                aria-labelledby="today-sessions-heading"
+              >
+                <h3
+                  id="today-sessions-heading"
+                  className="text-xs text-gray-400 uppercase tracking-wider mb-2"
+                >
                   Today
                 </h3>
                 <ul className="space-y-1" role="list">
@@ -260,8 +266,14 @@ export function SessionNav({
               </section>
             )}
             {groupedSessions.yesterday.length > 0 && (
-              <section className="mb-3" aria-labelledby="yesterday-sessions-heading">
-                <h3 id="yesterday-sessions-heading" className="text-xs text-gray-400 uppercase tracking-wider mb-2">
+              <section
+                className="mb-3"
+                aria-labelledby="yesterday-sessions-heading"
+              >
+                <h3
+                  id="yesterday-sessions-heading"
+                  className="text-xs text-gray-400 uppercase tracking-wider mb-2"
+                >
                   Yesterday
                 </h3>
                 <ul className="space-y-1" role="list">
@@ -270,8 +282,14 @@ export function SessionNav({
               </section>
             )}
             {groupedSessions.older.length > 0 && (
-              <section className="mb-3" aria-labelledby="older-sessions-heading">
-                <h3 id="older-sessions-heading" className="text-xs text-gray-400 uppercase tracking-wider mb-2">
+              <section
+                className="mb-3"
+                aria-labelledby="older-sessions-heading"
+              >
+                <h3
+                  id="older-sessions-heading"
+                  className="text-xs text-gray-400 uppercase tracking-wider mb-2"
+                >
                   Older
                 </h3>
                 <ul className="space-y-1" role="list">

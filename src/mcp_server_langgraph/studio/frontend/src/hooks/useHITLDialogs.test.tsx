@@ -321,11 +321,14 @@ describe("useHITLDialogs", () => {
       let apiCalled = false;
       let requestBody: Record<string, unknown> | null = null;
       server.use(
-        http.post("/api/v1/agents/requests/:requestId/approve", async ({ request }) => {
-          apiCalled = true;
-          requestBody = await request.json() as Record<string, unknown>;
-          return HttpResponse.json({ success: true });
-        }),
+        http.post(
+          "/api/v1/agents/requests/:requestId/approve",
+          async ({ request }) => {
+            apiCalled = true;
+            requestBody = (await request.json()) as Record<string, unknown>;
+            return HttpResponse.json({ success: true });
+          },
+        ),
       );
 
       const store = createTestStore();

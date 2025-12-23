@@ -415,7 +415,7 @@ export const storage = {
   migrate(
     fromKey: string,
     toKey: string,
-    options?: { force?: boolean }
+    options?: { force?: boolean },
   ): boolean {
     if (!isLocalStorageAvailable()) return false;
 
@@ -552,7 +552,9 @@ export const storage = {
     }
 
     if (removedCount > 0) {
-      logger.debug(`Cleaned up ${removedCount} expired entries, freed ${freedBytes} bytes`);
+      logger.debug(
+        `Cleaned up ${removedCount} expired entries, freed ${freedBytes} bytes`,
+      );
     }
 
     return { removedCount, freedBytes };

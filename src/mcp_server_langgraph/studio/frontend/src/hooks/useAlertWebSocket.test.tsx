@@ -17,8 +17,15 @@ import { Provider } from "react-redux";
 import { configureStore } from "@reduxjs/toolkit";
 import { ReactNode } from "react";
 
-import { useAlertWebSocket, parseAlertMessage, type AlertMessage } from "./useAlertWebSocket";
-import alertReducer, { selectAlerts, type Alert } from "../store/slices/alertSlice";
+import {
+  useAlertWebSocket,
+  parseAlertMessage,
+  type AlertMessage,
+} from "./useAlertWebSocket";
+import alertReducer, {
+  selectAlerts,
+  type Alert,
+} from "../store/slices/alertSlice";
 
 // =============================================================================
 // Mocks
@@ -56,8 +63,10 @@ const mockToastWarning = vi.fn();
 
 vi.mock("sonner", () => ({
   toast: {
-    error: (message: string, options?: unknown) => mockToastError(message, options),
-    warning: (message: string, options?: unknown) => mockToastWarning(message, options),
+    error: (message: string, options?: unknown) =>
+      mockToastError(message, options),
+    warning: (message: string, options?: unknown) =>
+      mockToastWarning(message, options),
   },
 }));
 
@@ -79,7 +88,9 @@ function createWrapper(store: ReturnType<typeof createTestStore>) {
   };
 }
 
-const createMockAlertMessage = (overrides: Partial<Alert> = {}): AlertMessage => ({
+const createMockAlertMessage = (
+  overrides: Partial<Alert> = {},
+): AlertMessage => ({
   type: "alert",
   payload: {
     alert_id: `alert-${Math.random().toString(36).slice(2, 9)}`,
@@ -142,7 +153,7 @@ describe("useAlertWebSocket", () => {
       mockStatus = "disconnected";
       const { result } = renderHook(
         () => useAlertWebSocket({ enabled: false }),
-        { wrapper: createWrapper(store) }
+        { wrapper: createWrapper(store) },
       );
 
       expect(result.current.status).toBe("disconnected");
@@ -297,7 +308,7 @@ describe("useAlertWebSocket", () => {
       await waitFor(() => {
         expect(mockToastError).toHaveBeenCalledWith(
           expect.stringContaining("CPUHigh"),
-          expect.anything()
+          expect.anything(),
         );
       });
     });

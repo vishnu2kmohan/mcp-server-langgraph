@@ -49,7 +49,11 @@ import { useAnalyzeCompositeMutation } from "../api";
 /**
  * Disclosure level type
  */
-export type DisclosureLevel = "beginner" | "intermediate" | "advanced" | "expert";
+export type DisclosureLevel =
+  | "beginner"
+  | "intermediate"
+  | "advanced"
+  | "expert";
 
 /**
  * Persona analysis result
@@ -95,7 +99,11 @@ export interface ErrorAnalysisResult {
   };
   rootCause: string;
   suggestions: ErrorAnalysisSuggestion[];
-  similarIssues?: Array<{ id: string; resolution: string; successRate: number }>;
+  similarIssues?: Array<{
+    id: string;
+    resolution: string;
+    successRate: number;
+  }>;
 }
 
 /**
@@ -169,7 +177,7 @@ const DEFAULT_TIMEOUT_MS = 10000;
  * @returns Batch composite analysis results
  */
 export function useBatchCompositeAnalysis(
-  options: UseBatchCompositeAnalysisOptions
+  options: UseBatchCompositeAnalysisOptions,
 ): UseBatchCompositeAnalysisResult {
   const {
     userId,
@@ -189,9 +197,13 @@ export function useBatchCompositeAnalysis(
     useAnalyzeCompositeMutation();
 
   // State
-  const [personaResult, setPersonaResult] = useState<PersonaAnalysisResult | null>(null);
-  const [disclosureResult, setDisclosureResult] = useState<DisclosureAnalysisResult | null>(null);
-  const [errorResult, setErrorResult] = useState<ErrorAnalysisResult | null>(null);
+  const [personaResult, setPersonaResult] =
+    useState<PersonaAnalysisResult | null>(null);
+  const [disclosureResult, setDisclosureResult] =
+    useState<DisclosureAnalysisResult | null>(null);
+  const [errorResult, setErrorResult] = useState<ErrorAnalysisResult | null>(
+    null,
+  );
   const [crossInsights, setCrossInsights] = useState<string[]>([]);
   const [confidence, setConfidence] = useState<number>(0);
   const [isLoading, setIsLoading] = useState(enabled);
@@ -257,8 +269,10 @@ export function useBatchCompositeAnalysis(
       // Transform disclosure result
       if (data.disclosure) {
         setDisclosureResult({
-          current_level: (disclosureData?.currentLevel || "intermediate") as DisclosureLevel,
-          recommended_level: data.disclosure.recommended_level as DisclosureLevel,
+          current_level: (disclosureData?.currentLevel ||
+            "intermediate") as DisclosureLevel,
+          recommended_level: data.disclosure
+            .recommended_level as DisclosureLevel,
           confidence: data.disclosure.confidence,
           unlock_features: [], // Not provided by RTK Query
           personalized_message: "",
@@ -288,7 +302,7 @@ export function useBatchCompositeAnalysis(
       const insights: string[] = [];
       if (data.persona && data.disclosure) {
         insights.push(
-          `Persona ${data.persona.detected_persona} aligns with ${data.disclosure.recommended_level} disclosure level`
+          `Persona ${data.persona.detected_persona} aligns with ${data.disclosure.recommended_level} disclosure level`,
         );
       }
       setCrossInsights(insights);
@@ -296,7 +310,9 @@ export function useBatchCompositeAnalysis(
       setConfidence(data.overall_confidence);
     } catch (err) {
       const errorToSet =
-        err instanceof Error ? err : new Error("Batch composite analysis failed");
+        err instanceof Error
+          ? err
+          : new Error("Batch composite analysis failed");
 
       setError(errorToSet);
 

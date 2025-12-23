@@ -202,7 +202,8 @@ export class WebVitalsTracker {
 
     return {
       ttfb: (timing.responseStart || 0) - navigationStart,
-      dnsLookup: (timing.domainLookupEnd || 0) - (timing.domainLookupStart || 0),
+      dnsLookup:
+        (timing.domainLookupEnd || 0) - (timing.domainLookupStart || 0),
       tcpConnect: (timing.connectEnd || 0) - (timing.connectStart || 0),
       domContentLoaded: timing.domContentLoadedEventEnd || 0,
       loadComplete: timing.loadEventEnd || 0,

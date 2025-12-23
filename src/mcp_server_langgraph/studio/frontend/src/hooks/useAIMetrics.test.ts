@@ -12,8 +12,8 @@
  * - Integrate with observability systems
  */
 
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { renderHook, act } from "@testing-library/react";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { renderHook, act, cleanup } from "@testing-library/react";
 import {
   useAIMetrics,
   createAIMetricsTracker,
@@ -23,6 +23,11 @@ import {
 
 describe("useAIMetrics", () => {
   beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  afterEach(() => {
+    cleanup();
     vi.clearAllMocks();
   });
 
@@ -169,7 +174,7 @@ describe("useAIMetrics", () => {
           type: "request",
           feature: "nav_prediction",
           latency: 100,
-        })
+        }),
       );
     });
   });
@@ -195,7 +200,7 @@ describe("createAIMetricsTracker", () => {
       expect.objectContaining({
         type: "error",
         feature: "nav_prediction",
-      })
+      }),
     );
   });
 });

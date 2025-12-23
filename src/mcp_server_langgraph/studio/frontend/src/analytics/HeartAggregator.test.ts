@@ -12,7 +12,10 @@
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { HeartAggregator, type HeartAggregatorConfig as _HeartAggregatorConfig } from "./HeartAggregator";
+import {
+  HeartAggregator,
+  type HeartAggregatorConfig as _HeartAggregatorConfig,
+} from "./HeartAggregator";
 
 // =============================================================================
 // Test Setup
@@ -125,7 +128,10 @@ describe("HeartAggregator", () => {
     });
 
     it("auto-flushes when max batch size reached", async () => {
-      aggregator = new HeartAggregator({ maxBatchSize: 3, flushIntervalMs: 60000 });
+      aggregator = new HeartAggregator({
+        maxBatchSize: 3,
+        flushIntervalMs: 60000,
+      });
 
       aggregator.queueEvent("event1", { n: 1 });
       aggregator.queueEvent("event2", { n: 2 });
@@ -179,7 +185,7 @@ describe("HeartAggregator", () => {
         expect.objectContaining({
           method: "POST",
           headers: { "Content-Type": "application/json" },
-        })
+        }),
       );
     });
 

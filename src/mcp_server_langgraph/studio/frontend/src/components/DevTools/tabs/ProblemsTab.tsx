@@ -48,7 +48,8 @@ interface ProblemRowProps {
 function ProblemRow({ problem, onDismiss }: ProblemRowProps) {
   const [isHovered, setIsHovered] = useState(false);
 
-  const SeverityIcon = problem.severity === "error" ? AlertCircle : AlertTriangle;
+  const SeverityIcon =
+    problem.severity === "error" ? AlertCircle : AlertTriangle;
   const severityColor =
     problem.severity === "error"
       ? "text-red-500 dark:text-red-400"
@@ -60,7 +61,7 @@ function ProblemRow({ problem, onDismiss }: ProblemRowProps) {
       className={cn(
         "flex items-start gap-2 px-3 py-2",
         "border-b border-gray-100 dark:border-gray-800",
-        "hover:bg-gray-50 dark:hover:bg-gray-800/50"
+        "hover:bg-gray-50 dark:hover:bg-gray-800/50",
       )}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
@@ -182,7 +183,7 @@ export function ProblemsTab({
       data-testid="problems-tab"
       className={cn(
         "flex flex-col h-full bg-white dark:bg-gray-900",
-        compact && "compact"
+        compact && "compact",
       )}
     >
       {/* Toolbar */}
@@ -197,7 +198,7 @@ export function ProblemsTab({
               "px-2 py-1 text-xs rounded",
               filter === "all"
                 ? "bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300"
-                : "hover:bg-gray-200 dark:hover:bg-gray-700"
+                : "hover:bg-gray-200 dark:hover:bg-gray-700",
             )}
           >
             All
@@ -210,7 +211,7 @@ export function ProblemsTab({
               "px-2 py-1 text-xs rounded flex items-center gap-1",
               filter === "errors"
                 ? "bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300"
-                : "hover:bg-gray-200 dark:hover:bg-gray-700"
+                : "hover:bg-gray-200 dark:hover:bg-gray-700",
             )}
           >
             <AlertCircle size={12} />
@@ -224,7 +225,7 @@ export function ProblemsTab({
               "px-2 py-1 text-xs rounded flex items-center gap-1",
               filter === "warnings"
                 ? "bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300"
-                : "hover:bg-gray-200 dark:hover:bg-gray-700"
+                : "hover:bg-gray-200 dark:hover:bg-gray-700",
             )}
           >
             <AlertTriangle size={12} />

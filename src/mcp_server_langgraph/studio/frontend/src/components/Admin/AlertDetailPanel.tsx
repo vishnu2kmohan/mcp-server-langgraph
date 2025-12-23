@@ -26,7 +26,11 @@ import {
   Ban,
 } from "lucide-react";
 import type { Alert } from "../../store/slices/alertSlice";
-import type { AIRecommendation, RemediationRequest, RiskLevel } from "../../types/api";
+import type {
+  AIRecommendation,
+  RemediationRequest,
+  RiskLevel,
+} from "../../types/api";
 
 // =============================================================================
 // Types
@@ -102,7 +106,6 @@ function getRiskColor(risk: RiskLevel): string {
       return "bg-gray-500";
   }
 }
-
 
 /**
  * Get status icon for remediation
@@ -187,7 +190,8 @@ function RemediationStepCard({
             className="flex items-center gap-1 text-xs text-gray-500"
           >
             {getStatusIcon(remediation.status)}
-            {remediation.status.charAt(0).toUpperCase() + remediation.status.slice(1)}
+            {remediation.status.charAt(0).toUpperCase() +
+              remediation.status.slice(1)}
           </span>
         )}
       </div>
@@ -272,7 +276,7 @@ export function AlertDetailPanel({
             <span
               data-testid="alert-severity"
               className={`text-xs px-2 py-0.5 rounded-full ${getSeverityStyle(
-                alert.severity
+                alert.severity,
               )}`}
             >
               {alert.severity}
@@ -280,7 +284,7 @@ export function AlertDetailPanel({
             <span
               data-testid="alert-state"
               className={`text-xs px-2 py-0.5 rounded-full ${getStateStyle(
-                alert.state
+                alert.state,
               )}`}
             >
               {alert.state.charAt(0).toUpperCase() + alert.state.slice(1)}
@@ -376,7 +380,7 @@ export function AlertDetailPanel({
                   <span
                     data-testid="overall-risk"
                     className={`text-xs px-2 py-0.5 rounded-full text-white ${getRiskColor(
-                      recommendation.risk_assessment.overall_risk
+                      recommendation.risk_assessment.overall_risk,
                     )}`}
                   >
                     {recommendation.risk_assessment.overall_risk}

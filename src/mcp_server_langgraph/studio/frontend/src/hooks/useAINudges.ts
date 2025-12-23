@@ -141,7 +141,9 @@ const DEFAULT_DEBOUNCE_MS = 500;
 // Helper Functions
 // =============================================================================
 
-function _transformResponse(response: NudgeRecommendationResponse): NudgeRecommendation {
+function _transformResponse(
+  response: NudgeRecommendationResponse,
+): NudgeRecommendation {
   return {
     nudge: response.nudge
       ? {
@@ -182,7 +184,9 @@ function toStoredNudge(nudge: Nudge): StoredNudge {
 // Hook Implementation
 // =============================================================================
 
-export function useAINudges(options: UseAINudgesOptions = {}): UseAINudgesResult {
+export function useAINudges(
+  options: UseAINudgesOptions = {},
+): UseAINudgesResult {
   const {
     enabled = false,
     pageContext,
@@ -202,7 +206,8 @@ export function useAINudges(options: UseAINudgesOptions = {}): UseAINudgesResult
   const canShowMore = useAppSelector(selectCanShowMoreNudges);
   const stats = useAppSelector(selectNudgeStats);
 
-  const [recommendation, setRecommendation] = useState<NudgeRecommendation | null>(null);
+  const [recommendation, setRecommendation] =
+    useState<NudgeRecommendation | null>(null);
   const [error, setError] = useState<Error | null>(null);
 
   const mountedRef = useRef(true);
@@ -264,7 +269,12 @@ export function useAINudges(options: UseAINudgesOptions = {}): UseAINudgesResult
         timing: data.trigger_delay_ms
           ? {
               optimalDelayMs: data.trigger_delay_ms,
-              urgency: data.confidence >= 0.8 ? "high" : data.confidence >= 0.6 ? "medium" : "low",
+              urgency:
+                data.confidence >= 0.8
+                  ? "high"
+                  : data.confidence >= 0.6
+                    ? "medium"
+                    : "low",
             }
           : undefined,
       };
@@ -273,7 +283,10 @@ export function useAINudges(options: UseAINudgesOptions = {}): UseAINudgesResult
 
       // Schedule nudge display if should show
       if (transformed.shouldShow && transformed.nudge && canShowMore) {
-        const showDelay = transformed.nudge.showAfterMs ?? transformed.timing?.optimalDelayMs ?? 0;
+        const showDelay =
+          transformed.nudge.showAfterMs ??
+          transformed.timing?.optimalDelayMs ??
+          0;
 
         if (showTimeoutRef.current) {
           clearTimeout(showTimeoutRef.current);
@@ -291,10 +304,17 @@ export function useAINudges(options: UseAINudgesOptions = {}): UseAINudgesResult
       }
     } catch (err) {
       if (!mountedRef.current) return;
-      const fetchError = err instanceof Error ? err : new Error("Unknown error");
+      const fetchError =
+        err instanceof Error ? err : new Error("Unknown error");
       setError(fetchError);
     }
-  }, [pageContext, userAbility, canShowMore, dispatch, fetchNudgeRecommendation]);
+  }, [
+    pageContext,
+    userAbility,
+    canShowMore,
+    dispatch,
+    fetchNudgeRecommendation,
+  ]);
 
   /**
    * Manually trigger a fetch (public API)
@@ -310,7 +330,7 @@ export function useAINudges(options: UseAINudgesOptions = {}): UseAINudgesResult
     (nudgeId: string) => {
       dispatch(acceptNudgeAction(nudgeId));
     },
-    [dispatch]
+    [dispatch],
   );
 
   /**
@@ -320,19 +340,16 @@ export function useAINudges(options: UseAINudgesOptions = {}): UseAINudgesResult
     (nudgeId: string) => {
       dispatch(dismissNudgeAction(nudgeId));
     },
-    [dispatch]
+    [dispatch],
   );
 
   /**
    * Track any interaction for learning
    */
-  const trackInteraction = useCallback(
-    (_nudgeId: string, _action: string) => {
-      // Could send to analytics endpoint for learning
-      // For now, just log
-    },
-    []
-  );
+  const trackInteraction = useCallback((_nudgeId: string, _action: string) => {
+    // Could send to analytics endpoint for learning
+    // For now, just log
+  }, []);
 
   /**
    * Check if a nudge has been shown
@@ -341,7 +358,7 @@ export function useAINudges(options: UseAINudgesOptions = {}): UseAINudgesResult
     (nudgeId: string): boolean => {
       return history.some((h) => h.id === nudgeId);
     },
-    [history]
+    [history],
   );
 
   /**

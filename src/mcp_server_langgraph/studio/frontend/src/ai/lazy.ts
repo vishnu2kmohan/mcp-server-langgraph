@@ -29,7 +29,7 @@ import { lazy } from "react";
 export const LazyAICommandPalette = lazy(() =>
   import("./AICommandPalette").then((module) => ({
     default: module.AICommandPalette,
-  }))
+  })),
 );
 
 /**
@@ -39,7 +39,7 @@ export const LazyAICommandPalette = lazy(() =>
 export const LazyBackgroundAgentPanel = lazy(() =>
   import("./BackgroundAgentPanel").then((module) => ({
     default: module.BackgroundAgentPanel,
-  }))
+  })),
 );
 
 /**
@@ -49,7 +49,7 @@ export const LazyBackgroundAgentPanel = lazy(() =>
 export const LazyAgentTaskQueue = lazy(() =>
   import("./AgentTaskQueue").then((module) => ({
     default: module.AgentTaskQueue,
-  }))
+  })),
 );
 
 /**
@@ -59,7 +59,7 @@ export const LazyAgentTaskQueue = lazy(() =>
 export const LazyAIEditOverlay = lazy(() =>
   import("./AIEditOverlay").then((module) => ({
     default: module.AIEditOverlay,
-  }))
+  })),
 );
 
 /**
@@ -69,12 +69,26 @@ export const LazyAIEditOverlay = lazy(() =>
 export const LazyInlineSuggestions = lazy(() =>
   import("./InlineSuggestions").then((module) => ({
     default: module.InlineSuggestions,
-  }))
+  })),
 );
 
 // Re-export types that consumers need (types don't affect bundle size)
-export type { Command, AIInterpretation, AICommandPaletteProps } from "./AICommandPalette";
-export type { BackgroundAgent, AgentStatus, BackgroundAgentPanelProps } from "./BackgroundAgentPanel";
+export type {
+  Command,
+  AIInterpretation,
+  AICommandPaletteProps,
+} from "./AICommandPalette";
+export type {
+  BackgroundAgent,
+  AgentStatus,
+  BackgroundAgentPanelProps,
+} from "./BackgroundAgentPanel";
 export type { AgentTaskQueueProps } from "./AgentTaskQueue";
-export type { Selection, DiffLine, EditResult, EditRequest, AIEditOverlayProps } from "./AIEditOverlay";
+export type {
+  Selection,
+  DiffLine,
+  EditResult,
+  EditRequest,
+  AIEditOverlayProps,
+} from "./AIEditOverlay";
 export type { Suggestion, SuggestionType } from "./InlineSuggestions";

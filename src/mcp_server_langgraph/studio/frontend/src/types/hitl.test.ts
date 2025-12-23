@@ -123,7 +123,10 @@ describe("HITL Types", () => {
         text_response: "My answer",
       };
 
-      const uiResponse = convertAPIResponseToUIResponse(apiResponse, "user@test.com");
+      const uiResponse = convertAPIResponseToUIResponse(
+        apiResponse,
+        "user@test.com",
+      );
 
       expect(uiResponse).toEqual({
         request_id: "req-123",
@@ -139,7 +142,10 @@ describe("HITL Types", () => {
         selected_option: "opt-3",
       };
 
-      const uiResponse = convertAPIResponseToUIResponse(apiResponse, "admin@test.com");
+      const uiResponse = convertAPIResponseToUIResponse(
+        apiResponse,
+        "admin@test.com",
+      );
 
       expect(uiResponse).toEqual({
         request_id: "req-456",
@@ -155,7 +161,10 @@ describe("HITL Types", () => {
         confirmed: false,
       };
 
-      const uiResponse = convertAPIResponseToUIResponse(apiResponse, "user@test.com");
+      const uiResponse = convertAPIResponseToUIResponse(
+        apiResponse,
+        "user@test.com",
+      );
 
       expect(uiResponse).toEqual({
         request_id: "req-789",
@@ -279,9 +288,13 @@ describe("HITL Types", () => {
       };
 
       expect(explanation.safer_alternatives).toHaveLength(1);
-      expect(explanation.safer_alternatives?.[0].action).toBe("Preview files first");
+      expect(explanation.safer_alternatives?.[0].action).toBe(
+        "Preview files first",
+      );
       expect(explanation.confidence_factors).toHaveLength(1);
-      expect(explanation.confidence_factors?.[0].factor).toBe("ambiguous_threshold");
+      expect(explanation.confidence_factors?.[0].factor).toBe(
+        "ambiguous_threshold",
+      );
       expect(explanation.reasoning_trace).toHaveLength(2);
       expect(explanation.model_used).toBe("gpt-4o-mini");
       expect(explanation.generated_at).toBe("2024-01-15T10:30:00Z");
@@ -349,7 +362,7 @@ describe("HITL Types", () => {
 
       expect(request.ai_explanation).toBeDefined();
       expect(request.ai_explanation?.why_uncertain).toBe(
-        "The input contains ambiguous terms."
+        "The input contains ambiguous terms.",
       );
       expect(request.ai_explanation?.safer_alternatives).toHaveLength(1);
     });
@@ -392,7 +405,9 @@ describe("HITL Types", () => {
       };
 
       expect(payload.ai_explanation).toBeDefined();
-      expect(payload.ai_explanation?.why_uncertain).toBe("Ambiguous input detected");
+      expect(payload.ai_explanation?.why_uncertain).toBe(
+        "Ambiguous input detected",
+      );
     });
 
     it("should convert payload with ai_explanation to request", () => {
@@ -424,7 +439,9 @@ describe("HITL Types", () => {
 
       expect(request.request_id).toBe("req-convert-123");
       expect(request.ai_explanation).toBeDefined();
-      expect(request.ai_explanation?.why_uncertain).toBe("Production database operation");
+      expect(request.ai_explanation?.why_uncertain).toBe(
+        "Production database operation",
+      );
       expect(request.ai_explanation?.safer_alternatives).toHaveLength(1);
     });
   });

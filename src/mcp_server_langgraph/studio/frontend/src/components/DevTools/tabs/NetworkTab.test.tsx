@@ -207,7 +207,7 @@ describe("NetworkTab", () => {
 
       // MCP entry should be hidden
       expect(
-        screen.queryByTestId("network-entry-req-3")
+        screen.queryByTestId("network-entry-req-3"),
       ).not.toBeInTheDocument();
     });
 
@@ -220,7 +220,7 @@ describe("NetworkTab", () => {
 
       // API entries should be hidden
       expect(
-        screen.queryByTestId("network-entry-req-1")
+        screen.queryByTestId("network-entry-req-1"),
       ).not.toBeInTheDocument();
       expect(screen.getByTestId("network-entry-req-3")).toBeInTheDocument();
     });
@@ -229,7 +229,7 @@ describe("NetworkTab", () => {
       render(<NetworkTab showMCPCalls={false} />);
 
       expect(
-        screen.queryByTestId("network-entry-req-3")
+        screen.queryByTestId("network-entry-req-3"),
       ).not.toBeInTheDocument();
     });
   });
@@ -344,7 +344,7 @@ describe("NetworkTab", () => {
       // Only message entry should be visible
       expect(screen.getByTestId("network-entry-req-2")).toBeInTheDocument();
       expect(
-        screen.queryByTestId("network-entry-req-1")
+        screen.queryByTestId("network-entry-req-1"),
       ).not.toBeInTheDocument();
     });
   });

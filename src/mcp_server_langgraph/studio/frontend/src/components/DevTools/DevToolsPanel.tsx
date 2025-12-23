@@ -82,25 +82,27 @@ const TAB_LABELS: Record<DevToolsTabId, string> = {
 // =============================================================================
 
 const ConsoleTabContent = lazy(() =>
-  import("./tabs/ConsoleTab").then((m) => ({ default: m.ConsoleTab }))
+  import("./tabs/ConsoleTab").then((m) => ({ default: m.ConsoleTab })),
 );
 const NetworkTabContent = lazy(() =>
-  import("./tabs/NetworkTab").then((m) => ({ default: m.NetworkTab }))
+  import("./tabs/NetworkTab").then((m) => ({ default: m.NetworkTab })),
 );
 const StateTabContent = lazy(() =>
-  import("./tabs/StateTab").then((m) => ({ default: m.StateTab }))
+  import("./tabs/StateTab").then((m) => ({ default: m.StateTab })),
 );
 const ProblemsTabContent = lazy(() =>
-  import("./tabs/ProblemsTab").then((m) => ({ default: m.ProblemsTab }))
+  import("./tabs/ProblemsTab").then((m) => ({ default: m.ProblemsTab })),
 );
 const AgentTraceTabContent = lazy(() =>
-  import("./tabs/AgentTraceTab").then((m) => ({ default: m.AgentTraceTab }))
+  import("./tabs/AgentTraceTab").then((m) => ({ default: m.AgentTraceTab })),
 );
 const ExecutionTraceTabContent = lazy(() =>
-  import("./tabs/ExecutionTraceTab").then((m) => ({ default: m.ExecutionTraceTab }))
+  import("./tabs/ExecutionTraceTab").then((m) => ({
+    default: m.ExecutionTraceTab,
+  })),
 );
 const AIInsightsTabContent = lazy(() =>
-  import("./tabs/AIInsightsTab").then((m) => ({ default: m.AIInsightsTab }))
+  import("./tabs/AIInsightsTab").then((m) => ({ default: m.AIInsightsTab })),
 );
 
 // =============================================================================
@@ -135,7 +137,7 @@ function ConsoleFilter({ value, onChange }: ConsoleFilterProps) {
           "bg-gray-100 dark:bg-gray-700",
           "text-gray-700 dark:text-gray-200",
           "border border-gray-200 dark:border-gray-600",
-          "focus:outline-none focus:ring-1 focus:ring-primary-500"
+          "focus:outline-none focus:ring-1 focus:ring-primary-500",
         )}
       >
         <option value="all">All</option>
@@ -181,14 +183,14 @@ export function DevToolsPanel({ className }: DevToolsPanelProps) {
     (tabId: DevToolsTabId) => {
       dispatch(setActiveTab(tabId));
     },
-    [dispatch]
+    [dispatch],
   );
 
   const handleFilterChange = useCallback(
     (filter: ConsoleFilterLevel) => {
       dispatch(setConsoleFilter(filter));
     },
-    [dispatch]
+    [dispatch],
   );
 
   const handleClearConsole = useCallback(() => {
@@ -260,7 +262,10 @@ export function DevToolsPanel({ className }: DevToolsPanelProps) {
         return (
           <div data-testid="devtools-tab-content-ai-insights">
             <Suspense fallback={<TabContentLoader />}>
-              <AIInsightsTabContent context={context} contextEntityId={entityId ?? ""} />
+              <AIInsightsTabContent
+                context={context}
+                contextEntityId={entityId ?? ""}
+              />
             </Suspense>
           </div>
         );
@@ -276,7 +281,7 @@ export function DevToolsPanel({ className }: DevToolsPanelProps) {
         "flex flex-col h-full",
         "bg-white dark:bg-gray-900",
         "border-t border-gray-200 dark:border-gray-700",
-        className
+        className,
       )}
     >
       {/* Header */}
@@ -285,7 +290,7 @@ export function DevToolsPanel({ className }: DevToolsPanelProps) {
         className={cn(
           "flex items-center justify-between px-3 py-1.5",
           "bg-gray-50 dark:bg-gray-800",
-          "border-b border-gray-200 dark:border-gray-700"
+          "border-b border-gray-200 dark:border-gray-700",
         )}
       >
         {/* Context Indicator */}
@@ -299,7 +304,10 @@ export function DevToolsPanel({ className }: DevToolsPanelProps) {
         <div className="flex items-center gap-1">
           {/* Console Filter (only show when Console tab active) */}
           {activeTab === "console" && (
-            <ConsoleFilter value={consoleFilter} onChange={handleFilterChange} />
+            <ConsoleFilter
+              value={consoleFilter}
+              onChange={handleFilterChange}
+            />
           )}
 
           {/* Clear Console */}
@@ -308,7 +316,7 @@ export function DevToolsPanel({ className }: DevToolsPanelProps) {
             className={cn(
               "p-1.5 rounded",
               "text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200",
-              "hover:bg-gray-100 dark:hover:bg-gray-700"
+              "hover:bg-gray-100 dark:hover:bg-gray-700",
             )}
             title="Clear Console"
             aria-label="Clear"
@@ -322,7 +330,7 @@ export function DevToolsPanel({ className }: DevToolsPanelProps) {
             className={cn(
               "p-1.5 rounded",
               "text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200",
-              "hover:bg-gray-100 dark:hover:bg-gray-700"
+              "hover:bg-gray-100 dark:hover:bg-gray-700",
             )}
             title={maximized ? "Minimize" : "Maximize"}
             aria-label={maximized ? "Minimize" : "Maximize"}
@@ -336,7 +344,7 @@ export function DevToolsPanel({ className }: DevToolsPanelProps) {
             className={cn(
               "p-1.5 rounded",
               "text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200",
-              "hover:bg-gray-100 dark:hover:bg-gray-700"
+              "hover:bg-gray-100 dark:hover:bg-gray-700",
             )}
             title="Collapse"
             aria-label="Collapse"
@@ -353,7 +361,7 @@ export function DevToolsPanel({ className }: DevToolsPanelProps) {
         className={cn(
           "flex items-center gap-0.5 px-2 py-1",
           "bg-gray-100 dark:bg-gray-800",
-          "border-b border-gray-200 dark:border-gray-700"
+          "border-b border-gray-200 dark:border-gray-700",
         )}
       >
         {availableTabs.map((tabId) => {
@@ -371,7 +379,7 @@ export function DevToolsPanel({ className }: DevToolsPanelProps) {
                 "flex items-center gap-1.5 px-2.5 py-1.5 text-xs rounded",
                 isActive
                   ? "bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 shadow-sm"
-                  : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700"
+                  : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700",
               )}
             >
               <Icon size={14} />

@@ -9,8 +9,8 @@
  * These hooks integrate with the StudioOrchestrator via RTK Query.
  */
 
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { renderHook, waitFor } from "@testing-library/react";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { renderHook, waitFor, cleanup } from "@testing-library/react";
 import { Provider } from "react-redux";
 import { configureStore } from "@reduxjs/toolkit";
 import type { ReactNode } from "react";
@@ -45,7 +45,8 @@ vi.mock("../api", () => ({
                 "Verify file paths are correct",
               ],
               recommendation: "approve_with_caution",
-              explanation: "This action has moderate risk due to file deletion in production.",
+              explanation:
+                "This action has moderate risk due to file deletion in production.",
             },
             decision_history: {
               similar_decisions: [
@@ -107,6 +108,11 @@ describe("useRiskAssessment", () => {
     vi.clearAllMocks();
   });
 
+  afterEach(() => {
+    cleanup();
+    vi.clearAllMocks();
+  });
+
   describe("basic functionality", () => {
     it("returns risk assessment data when enabled", async () => {
       const { result } = renderHook(
@@ -118,7 +124,7 @@ describe("useRiskAssessment", () => {
             parameters: { path: "/data/temp" },
             enabled: true,
           }),
-        { wrapper: Wrapper }
+        { wrapper: Wrapper },
       );
 
       await waitFor(() => {
@@ -139,7 +145,7 @@ describe("useRiskAssessment", () => {
             parameters: { path: "/data/temp" },
             enabled: true,
           }),
-        { wrapper: Wrapper }
+        { wrapper: Wrapper },
       );
 
       await waitFor(() => {
@@ -164,14 +170,16 @@ describe("useRiskAssessment", () => {
             parameters: { path: "/data/temp" },
             enabled: true,
           }),
-        { wrapper: Wrapper }
+        { wrapper: Wrapper },
       );
 
       await waitFor(() => {
         expect(result.current.isLoading).toBe(false);
       });
 
-      expect(result.current.mitigations).toContain("Create backup before deletion");
+      expect(result.current.mitigations).toContain(
+        "Create backup before deletion",
+      );
       expect(result.current.recommendation).toBe("approve_with_caution");
       expect(result.current.explanation).toContain("moderate risk");
     });
@@ -188,7 +196,7 @@ describe("useRiskAssessment", () => {
             parameters: {},
             enabled: false,
           }),
-        { wrapper: Wrapper }
+        { wrapper: Wrapper },
       );
 
       expect(result.current.riskScore).toBeNull();
@@ -208,7 +216,7 @@ describe("useRiskAssessment", () => {
             parameters: {},
             enabled: true,
           }),
-        { wrapper: Wrapper }
+        { wrapper: Wrapper },
       );
 
       expect(result.current.refetch).toBeDefined();
@@ -227,7 +235,7 @@ describe("useRiskAssessment", () => {
             parameters: {},
             enabled: true,
           }),
-        { wrapper: Wrapper }
+        { wrapper: Wrapper },
       );
 
       await waitFor(() => {
@@ -249,6 +257,11 @@ describe("useDecisionHistory", () => {
     vi.clearAllMocks();
   });
 
+  afterEach(() => {
+    cleanup();
+    vi.clearAllMocks();
+  });
+
   describe("basic functionality", () => {
     it("returns similar decisions when enabled", async () => {
       const { result } = renderHook(
@@ -258,7 +271,7 @@ describe("useDecisionHistory", () => {
             actionType: "file_delete",
             enabled: true,
           }),
-        { wrapper: Wrapper }
+        { wrapper: Wrapper },
       );
 
       await waitFor(() => {
@@ -284,7 +297,7 @@ describe("useDecisionHistory", () => {
             actionType: "file_delete",
             enabled: true,
           }),
-        { wrapper: Wrapper }
+        { wrapper: Wrapper },
       );
 
       await waitFor(() => {
@@ -304,7 +317,7 @@ describe("useDecisionHistory", () => {
             actionType: "file_delete",
             enabled: true,
           }),
-        { wrapper: Wrapper }
+        { wrapper: Wrapper },
       );
 
       await waitFor(() => {
@@ -324,7 +337,7 @@ describe("useDecisionHistory", () => {
             actionType: "file_delete",
             enabled: false,
           }),
-        { wrapper: Wrapper }
+        { wrapper: Wrapper },
       );
 
       expect(result.current.similarDecisions).toEqual([]);
@@ -343,7 +356,7 @@ describe("useDecisionHistory", () => {
             persona: "admin",
             enabled: true,
           }),
-        { wrapper: Wrapper }
+        { wrapper: Wrapper },
       );
 
       await waitFor(() => {
@@ -363,7 +376,7 @@ describe("useDecisionHistory", () => {
             timeRangeDays: 30,
             enabled: true,
           }),
-        { wrapper: Wrapper }
+        { wrapper: Wrapper },
       );
 
       await waitFor(() => {
@@ -383,7 +396,7 @@ describe("useDecisionHistory", () => {
             actionType: "file_delete",
             enabled: true,
           }),
-        { wrapper: Wrapper }
+        { wrapper: Wrapper },
       );
 
       expect(result.current.refetch).toBeDefined();

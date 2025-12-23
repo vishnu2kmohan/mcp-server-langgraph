@@ -65,7 +65,8 @@ export function AlertBadge({ onClick, className }: AlertBadgeProps) {
   }, [hasCritical, lastCriticalAlertTime]);
 
   // Format display count
-  const displayCount = totalCount > MAX_DISPLAY_COUNT ? "99+" : String(totalCount);
+  const displayCount =
+    totalCount > MAX_DISPLAY_COUNT ? "99+" : String(totalCount);
 
   // Aria label
   const ariaLabel = useMemo(() => {
@@ -99,7 +100,7 @@ export function AlertBadge({ onClick, className }: AlertBadgeProps) {
         onClick();
       }
     },
-    [onClick]
+    [onClick],
   );
 
   // Don't render if no alerts
@@ -124,7 +125,7 @@ export function AlertBadge({ onClick, className }: AlertBadgeProps) {
           ? "bg-red-500 hover:bg-red-600 focus:ring-red-500"
           : "bg-yellow-500 hover:bg-yellow-600 focus:ring-yellow-500",
         shouldPulse && "animate-pulse",
-        className
+        className,
       )}
     >
       <AlertTriangle data-testid="alert-icon" className="w-3.5 h-3.5" />

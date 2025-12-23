@@ -25,7 +25,11 @@ import { getAuthToken } from "../utils/storage";
 // Types
 // =============================================================================
 
-export type ConnectionStatus = "connecting" | "connected" | "disconnected" | "error";
+export type ConnectionStatus =
+  | "connecting"
+  | "connected"
+  | "disconnected"
+  | "error";
 
 export interface ApprovalRequiredPayload {
   request_id: string;
@@ -119,7 +123,9 @@ export interface UseAgentRequestWebSocketReturn {
 // Message Parsing
 // =============================================================================
 
-function isApprovalRequiredPayload(data: unknown): data is ApprovalRequiredPayload {
+function isApprovalRequiredPayload(
+  data: unknown,
+): data is ApprovalRequiredPayload {
   if (typeof data !== "object" || data === null) return false;
   const p = data as Record<string, unknown>;
   return (
@@ -131,7 +137,9 @@ function isApprovalRequiredPayload(data: unknown): data is ApprovalRequiredPaylo
   );
 }
 
-function isClarificationRequiredPayload(data: unknown): data is ClarificationRequiredPayload {
+function isClarificationRequiredPayload(
+  data: unknown,
+): data is ClarificationRequiredPayload {
   if (typeof data !== "object" || data === null) return false;
   const p = data as Record<string, unknown>;
   return (
@@ -143,7 +151,9 @@ function isClarificationRequiredPayload(data: unknown): data is ClarificationReq
   );
 }
 
-function isApprovalUpdatedPayload(data: unknown): data is ApprovalUpdatedPayload {
+function isApprovalUpdatedPayload(
+  data: unknown,
+): data is ApprovalUpdatedPayload {
   if (typeof data !== "object" || data === null) return false;
   const p = data as Record<string, unknown>;
   return (
@@ -153,7 +163,9 @@ function isApprovalUpdatedPayload(data: unknown): data is ApprovalUpdatedPayload
   );
 }
 
-function isExecutionResumedPayload(data: unknown): data is ExecutionResumedPayload {
+function isExecutionResumedPayload(
+  data: unknown,
+): data is ExecutionResumedPayload {
   if (typeof data !== "object" || data === null) return false;
   const p = data as Record<string, unknown>;
   return (
@@ -164,26 +176,44 @@ function isExecutionResumedPayload(data: unknown): data is ExecutionResumedPaylo
   );
 }
 
-export function parseAgentRequestMessage(data: unknown): AgentRequestMessage | null {
+export function parseAgentRequestMessage(
+  data: unknown,
+): AgentRequestMessage | null {
   if (typeof data !== "object" || data === null) return null;
   const msg = data as Record<string, unknown>;
 
-  if (msg.type === "approval_required" && isApprovalRequiredPayload(msg.payload)) {
+  if (
+    msg.type === "approval_required" &&
+    isApprovalRequiredPayload(msg.payload)
+  ) {
     return { type: "approval_required", payload: msg.payload };
   }
-  if (msg.type === "clarification_required" && isClarificationRequiredPayload(msg.payload)) {
+  if (
+    msg.type === "clarification_required" &&
+    isClarificationRequiredPayload(msg.payload)
+  ) {
     return { type: "clarification_required", payload: msg.payload };
   }
-  if (msg.type === "approval_updated" && isApprovalUpdatedPayload(msg.payload)) {
+  if (
+    msg.type === "approval_updated" &&
+    isApprovalUpdatedPayload(msg.payload)
+  ) {
     return { type: "approval_updated", payload: msg.payload };
   }
-  if (msg.type === "execution_resumed" && isExecutionResumedPayload(msg.payload)) {
+  if (
+    msg.type === "execution_resumed" &&
+    isExecutionResumedPayload(msg.payload)
+  ) {
     return { type: "execution_resumed", payload: msg.payload };
   }
   if (msg.type === "pong") {
     return { type: "pong" };
   }
-  if (msg.type === "error" && typeof msg.payload === "object" && msg.payload !== null) {
+  if (
+    msg.type === "error" &&
+    typeof msg.payload === "object" &&
+    msg.payload !== null
+  ) {
     return { type: "error", payload: msg.payload as { message: string } };
   }
 
@@ -222,7 +252,7 @@ function getDefaultWebSocketUrl(sessionId?: string): string {
 // =============================================================================
 
 export function useAgentRequestWebSocket(
-  options: UseAgentRequestWebSocketOptions = {}
+  options: UseAgentRequestWebSocketOptions = {},
 ): UseAgentRequestWebSocketReturn {
   const {
     url,
@@ -237,12 +267,18 @@ export function useAgentRequestWebSocket(
 
   const isAuthenticated = useAppSelector(selectIsAuthenticated);
   const [status, setStatus] = useState<ConnectionStatus>("disconnected");
-  const [pendingApprovals, setPendingApprovals] = useState<ApprovalRequiredPayload[]>([]);
-  const [pendingClarifications, setPendingClarifications] = useState<ClarificationRequiredPayload[]>([]);
+  const [pendingApprovals, setPendingApprovals] = useState<
+    ApprovalRequiredPayload[]
+  >([]);
+  const [pendingClarifications, setPendingClarifications] = useState<
+    ClarificationRequiredPayload[]
+  >([]);
 
   const wsRef = useRef<WebSocket | null>(null);
   const pingIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const reconnectTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const reconnectTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
+    null,
+  );
   const isReconnectRef = useRef(false);
   const manualCloseRef = useRef(false);
   const sessionIdRef = useRef(sessionId);
@@ -264,8 +300,11 @@ export function useAgentRequestWebSocket(
 
   // Compute WebSocket URL - recalculate when auth state changes
   // This ensures the token query param is included when user becomes authenticated
-  // eslint-disable-next-line react-hooks/exhaustive-deps -- isAuthenticated triggers recalculation
-  const wsUrl = useMemo(() => url ?? getDefaultWebSocketUrl(sessionId), [url, sessionId, isAuthenticated]);
+   
+  const wsUrl = useMemo(
+    () => url ?? getDefaultWebSocketUrl(sessionId),
+    [url, sessionId],
+  );
 
   // Track effective enabled state - only connect when authenticated
   // WebSocket requires valid auth token, so we only connect when authenticated
@@ -299,7 +338,7 @@ export function useAgentRequestWebSocket(
         case "approval_updated":
           // Remove from pending
           setPendingApprovals((prev) =>
-            prev.filter((a) => a.request_id !== message.payload.request_id)
+            prev.filter((a) => a.request_id !== message.payload.request_id),
           );
           callbacksRef.current.onApprovalUpdated?.(message.payload);
           break;
@@ -366,7 +405,12 @@ export function useAgentRequestWebSocket(
 
         // Send subscribe message if sessionId is provided
         if (sessionIdRef.current) {
-          ws.send(JSON.stringify({ type: "subscribe", session_id: sessionIdRef.current }));
+          ws.send(
+            JSON.stringify({
+              type: "subscribe",
+              session_id: sessionIdRef.current,
+            }),
+          );
         }
 
         // On reconnect, request pending items to sync state

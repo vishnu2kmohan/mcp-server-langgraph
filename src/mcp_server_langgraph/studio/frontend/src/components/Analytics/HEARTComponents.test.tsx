@@ -45,7 +45,7 @@ describe("DimensionCard", () => {
 
   it("applies correct color based on dimension", () => {
     const { container } = render(
-      <DimensionCard dimension="retention" score={80} hasData />
+      <DimensionCard dimension="retention" score={80} hasData />,
     );
 
     const card = container.querySelector(".dimension-card");
@@ -55,7 +55,9 @@ describe("DimensionCard", () => {
   it("has correct ARIA role and label", () => {
     render(<DimensionCard dimension="task_success" score={90} hasData />);
 
-    expect(screen.getByRole("region", { name: "Task Success" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("region", { name: "Task Success" }),
+    ).toBeInTheDocument();
   });
 
   it("renders all five HEART dimensions correctly", () => {
@@ -69,7 +71,7 @@ describe("DimensionCard", () => {
 
     dimensions.forEach(({ dimension, icon }) => {
       const { unmount } = render(
-        <DimensionCard dimension={dimension} score={75} hasData />
+        <DimensionCard dimension={dimension} score={75} hasData />,
       );
       expect(screen.getByText(icon)).toBeInTheDocument();
       unmount();
@@ -127,7 +129,7 @@ describe("OverallHealthScore", () => {
     render(<OverallHealthScore score={70} />);
 
     expect(
-      screen.getByRole("region", { name: "Overall Health Score" })
+      screen.getByRole("region", { name: "Overall Health Score" }),
     ).toBeInTheDocument();
   });
 });
@@ -147,9 +149,15 @@ describe("TimeRangeSelector", () => {
   it("shows all time range options", () => {
     render(<TimeRangeSelector value="7d" onChange={vi.fn()} />);
 
-    expect(screen.getByRole("option", { name: "Last 7 days" })).toBeInTheDocument();
-    expect(screen.getByRole("option", { name: "Last 30 days" })).toBeInTheDocument();
-    expect(screen.getByRole("option", { name: "Last 90 days" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("option", { name: "Last 7 days" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("option", { name: "Last 30 days" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("option", { name: "Last 90 days" }),
+    ).toBeInTheDocument();
   });
 
   it("calls onChange when selection changes", () => {
@@ -164,7 +172,7 @@ describe("TimeRangeSelector", () => {
 
   it("updates displayed value when prop changes", () => {
     const { rerender } = render(
-      <TimeRangeSelector value="7d" onChange={vi.fn()} />
+      <TimeRangeSelector value="7d" onChange={vi.fn()} />,
     );
 
     expect(screen.getByLabelText("Time range")).toHaveValue("7d");

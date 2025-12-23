@@ -31,7 +31,9 @@ vi.mock("../../hooks/usePermissionCache", async () => {
 // Test Setup
 // =============================================================================
 
-const createTestStore = (persona: "admin" | "developer" | "user" = "developer") =>
+const createTestStore = (
+  persona: "admin" | "developer" | "user" = "developer",
+) =>
   configureStore({
     reducer: {
       persona: personaReducer,
@@ -40,7 +42,12 @@ const createTestStore = (persona: "admin" | "developer" | "user" = "developer") 
     preloadedState: {
       persona: {
         persona,
-        username: persona === "admin" ? "admin" : persona === "developer" ? "alice" : "bob",
+        username:
+          persona === "admin"
+            ? "admin"
+            : persona === "developer"
+              ? "alice"
+              : "bob",
         email: `${persona}@example.com`,
         permissions: [],
         isPersonaLoading: false,
@@ -48,7 +55,12 @@ const createTestStore = (persona: "admin" | "developer" | "user" = "developer") 
       auth: {
         user: {
           id: `user-${persona}`,
-          username: persona === "admin" ? "admin" : persona === "developer" ? "alice" : "bob",
+          username:
+            persona === "admin"
+              ? "admin"
+              : persona === "developer"
+                ? "alice"
+                : "bob",
           email: `${persona}@example.com`,
           roles: [persona],
           persona,
@@ -82,8 +94,14 @@ const TestWrapper = ({
       <MemoryRouter initialEntries={[initialPath]}>
         <Routes>
           <Route path="/protected" element={children} />
-          <Route path="/unauthorized" element={<div data-testid="unauthorized-page">Unauthorized</div>} />
-          <Route path="/login" element={<div data-testid="login-page">Login</div>} />
+          <Route
+            path="/unauthorized"
+            element={<div data-testid="unauthorized-page">Unauthorized</div>}
+          />
+          <Route
+            path="/login"
+            element={<div data-testid="login-page">Login</div>}
+          />
         </Routes>
       </MemoryRouter>
     </PermissionCacheProvider>
@@ -253,8 +271,12 @@ describe("PermissionGuard", () => {
     it("should show loading indicator while checking permissions", async () => {
       const mockUsePermissionCache = vi.mocked(usePermissionCache);
       mockUsePermissionCache.mockReturnValue({
-        checkPermission: vi.fn().mockImplementation(() => new Promise(() => {})), // Never resolves
-        checkPermissions: vi.fn().mockImplementation(() => new Promise(() => {})),
+        checkPermission: vi
+          .fn()
+          .mockImplementation(() => new Promise(() => {})), // Never resolves
+        checkPermissions: vi
+          .fn()
+          .mockImplementation(() => new Promise(() => {})),
         invalidateOnError: vi.fn(),
         invalidateCache: vi.fn(),
         onTokenRefresh: vi.fn(),
@@ -281,8 +303,12 @@ describe("PermissionGuard", () => {
     it("should render null by default during loading", async () => {
       const mockUsePermissionCache = vi.mocked(usePermissionCache);
       mockUsePermissionCache.mockReturnValue({
-        checkPermission: vi.fn().mockImplementation(() => new Promise(() => {})),
-        checkPermissions: vi.fn().mockImplementation(() => new Promise(() => {})),
+        checkPermission: vi
+          .fn()
+          .mockImplementation(() => new Promise(() => {})),
+        checkPermissions: vi
+          .fn()
+          .mockImplementation(() => new Promise(() => {})),
         invalidateOnError: vi.fn(),
         invalidateCache: vi.fn(),
         onTokenRefresh: vi.fn(),
@@ -300,7 +326,9 @@ describe("PermissionGuard", () => {
         </TestWrapper>,
       );
 
-      expect(container.querySelector('[data-testid="protected-content"]')).toBeNull();
+      expect(
+        container.querySelector('[data-testid="protected-content"]'),
+      ).toBeNull();
     });
   });
 
@@ -358,7 +386,9 @@ describe("PermissionGuard", () => {
               <Routes>
                 <Route
                   path="/protected"
-                  element={<PermissionGuard requiredPermissions={["read:sessions"]} />}
+                  element={
+                    <PermissionGuard requiredPermissions={["read:sessions"]} />
+                  }
                 >
                   <Route
                     path="child"

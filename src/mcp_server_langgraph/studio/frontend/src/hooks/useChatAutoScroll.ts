@@ -39,7 +39,7 @@ export interface UseChatAutoScrollReturn {
  */
 export function useChatAutoScroll<T>(
   messages: T[],
-  streamingContent?: string
+  streamingContent?: string,
 ): UseChatAutoScrollReturn {
   const messagesEndRef = useRef<HTMLDivElement>(null);
 

@@ -56,7 +56,7 @@ describe("errorReporter", () => {
     server.use(
       http.post("/api/v1/errors/report", async () => {
         return HttpResponse.json({ success: true, reportId: "report-123" });
-      })
+      }),
     );
   });
 
@@ -84,7 +84,9 @@ describe("errorReporter", () => {
     });
 
     it("includes user context when provided", () => {
-      const report = createErrorReport(mockError, { userContext: mockUserContext });
+      const report = createErrorReport(mockError, {
+        userContext: mockUserContext,
+      });
 
       expect(report.userContext?.userId).toBe("user-123");
       expect(report.userContext?.persona).toBe("alice-builder");
@@ -137,7 +139,7 @@ describe("errorReporter", () => {
           http.post("/api/v1/errors/report", async ({ request }) => {
             capturedBody = (await request.json()) as ErrorReport;
             return HttpResponse.json({ success: true, reportId: "report-123" });
-          })
+          }),
         );
 
         const reporter = new ErrorReporter();
@@ -154,7 +156,7 @@ describe("errorReporter", () => {
           http.post("/api/v1/errors/report", async ({ request }) => {
             capturedBody = (await request.json()) as ErrorReport;
             return HttpResponse.json({ success: true, reportId: "report-456" });
-          })
+          }),
         );
 
         const reporter = new ErrorReporter();
@@ -168,7 +170,7 @@ describe("errorReporter", () => {
         server.use(
           http.post("/api/v1/errors/report", async () => {
             return new HttpResponse(null, { status: 500 });
-          })
+          }),
         );
 
         const reporter = new ErrorReporter();
@@ -182,7 +184,7 @@ describe("errorReporter", () => {
         server.use(
           http.post("/api/v1/errors/report", async () => {
             return new HttpResponse(null, { status: 500 });
-          })
+          }),
         );
 
         const reporter = new ErrorReporter();
@@ -238,7 +240,7 @@ describe("errorReporter", () => {
           http.post("/api/v1/errors/report", async () => {
             called = true;
             return HttpResponse.json({ success: true });
-          })
+          }),
         );
 
         const reporter = new ErrorReporter({ enabled: false });
@@ -318,7 +320,10 @@ describe("errorReporter", () => {
 
     describe("Batch Mode", () => {
       it("queues reports in batch mode", async () => {
-        const reporter = new ErrorReporter({ batchMode: true, batchInterval: 1000 });
+        const reporter = new ErrorReporter({
+          batchMode: true,
+          batchInterval: 1000,
+        });
 
         // Queue reports
         reporter.report(mockError);
@@ -334,7 +339,7 @@ describe("errorReporter", () => {
           http.post("/api/v1/errors/report/batch", async () => {
             callCount++;
             return HttpResponse.json({ success: true });
-          })
+          }),
         );
 
         const reporter = new ErrorReporter({
@@ -361,7 +366,7 @@ describe("errorReporter", () => {
           http.post("/api/v1/errors/report/batch", async ({ request }) => {
             capturedBody = (await request.json()) as { reports: ErrorReport[] };
             return HttpResponse.json({ success: true });
-          })
+          }),
         );
 
         const reporter = new ErrorReporter({
@@ -406,7 +411,7 @@ describe("errorReporter", () => {
         server.use(
           http.post("/api/v1/errors/report", async () => {
             return new HttpResponse(null, { status: 500 });
-          })
+          }),
         );
 
         const reporter = new ErrorReporter();

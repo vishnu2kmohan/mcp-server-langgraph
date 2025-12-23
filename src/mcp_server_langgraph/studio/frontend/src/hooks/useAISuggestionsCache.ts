@@ -82,7 +82,7 @@ const DEFAULT_TTL_MS = 5 * 60 * 1000; // 5 minutes
 // =============================================================================
 
 export function useAISuggestionsCache(
-  options: UseAISuggestionsCacheOptions = {}
+  options: UseAISuggestionsCacheOptions = {},
 ): UseAISuggestionsCacheResult {
   const { ttlMs = DEFAULT_TTL_MS, invalidateOnContextChange = true } = options;
 
@@ -92,13 +92,17 @@ export function useAISuggestionsCache(
 
   // Initialize suggestions from cache
   const [suggestions, setSuggestions] = useState<CachedSuggestion[]>(() => {
-    const cached = storage.getWithTTL<CachedSuggestion[]>(STORAGE_KEYS.AI_SUGGESTIONS_CACHE);
+    const cached = storage.getWithTTL<CachedSuggestion[]>(
+      STORAGE_KEYS.AI_SUGGESTIONS_CACHE,
+    );
     return cached ?? [];
   });
 
   // Initialize context from sessionStore
   const [context, setContextState] = useState<AIContextRef | null>(() => {
-    const stored = sessionStore.get<AIContextRef>(STORAGE_KEYS.AI_CONTEXT_HISTORY);
+    const stored = sessionStore.get<AIContextRef>(
+      STORAGE_KEYS.AI_CONTEXT_HISTORY,
+    );
     return stored ?? null;
   });
 
@@ -110,12 +114,16 @@ export function useAISuggestionsCache(
    */
   const cacheSuggestions = useCallback(
     (newSuggestions: CachedSuggestion[]) => {
-      storage.setWithTTL(STORAGE_KEYS.AI_SUGGESTIONS_CACHE, newSuggestions, ttlMs);
+      storage.setWithTTL(
+        STORAGE_KEYS.AI_SUGGESTIONS_CACHE,
+        newSuggestions,
+        ttlMs,
+      );
       setSuggestions(newSuggestions);
       cacheCreatedAt.current = Date.now();
       setIsStale(false);
     },
-    [ttlMs]
+    [ttlMs],
   );
 
   /**
@@ -137,8 +145,9 @@ export function useAISuggestionsCache(
 
       // Check if context actually changed
       const newContextKey = `${newContext.sessionId}:${newContext.artifactId ?? "null"}`;
-      const contextChanged = previousContextRef.current !== null &&
-                            previousContextRef.current !== newContextKey;
+      const contextChanged =
+        previousContextRef.current !== null &&
+        previousContextRef.current !== newContextKey;
 
       previousContextRef.current = newContextKey;
       setContextState(newContext);
@@ -148,7 +157,7 @@ export function useAISuggestionsCache(
         invalidateCache();
       }
     },
-    [invalidateOnContextChange, invalidateCache]
+    [invalidateOnContextChange, invalidateCache],
   );
 
   /**

@@ -167,7 +167,10 @@ describe("EmptyStateRegistry", () => {
 
     describe("alice-analyst persona", () => {
       it("has analytics-focused CTAs", () => {
-        const workflowsConfig = getEmptyStateConfig("workflows", "alice-analyst");
+        const workflowsConfig = getEmptyStateConfig(
+          "workflows",
+          "alice-analyst",
+        );
 
         expect(workflowsConfig.action).toContain("Analytics");
         expect(workflowsConfig.target).toContain("observability");
@@ -176,7 +179,10 @@ describe("EmptyStateRegistry", () => {
 
     describe("compliance-officer persona", () => {
       it("has compliance-focused alerts", () => {
-        const alertsConfig = getEmptyStateConfig("alerts", "compliance-officer");
+        const alertsConfig = getEmptyStateConfig(
+          "alerts",
+          "compliance-officer",
+        );
 
         expect(alertsConfig.action).toContain("Compliance");
         expect(alertsConfig.target).toContain("compliance");

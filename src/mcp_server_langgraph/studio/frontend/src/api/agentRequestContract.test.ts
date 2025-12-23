@@ -97,24 +97,30 @@ function setupAgentRequestHandlers() {
     }),
 
     // POST /api/v1/agents/requests/:id/approve
-    http.post("/api/v1/agents/requests/:id/approve", async ({ request, params }) => {
-      const body = await request.json();
-      return HttpResponse.json({
-        request_id: params.id as string,
-        status: "approved",
-        message: `Request approved by ${(body as { approved_by: string }).approved_by}`,
-      });
-    }),
+    http.post(
+      "/api/v1/agents/requests/:id/approve",
+      async ({ request, params }) => {
+        const body = await request.json();
+        return HttpResponse.json({
+          request_id: params.id as string,
+          status: "approved",
+          message: `Request approved by ${(body as { approved_by: string }).approved_by}`,
+        });
+      },
+    ),
 
     // POST /api/v1/agents/requests/:id/reject
-    http.post("/api/v1/agents/requests/:id/reject", async ({ request, params }) => {
-      const body = await request.json();
-      return HttpResponse.json({
-        request_id: params.id as string,
-        status: "rejected",
-        message: `Request rejected: ${(body as { reason: string }).reason}`,
-      });
-    }),
+    http.post(
+      "/api/v1/agents/requests/:id/reject",
+      async ({ request, params }) => {
+        const body = await request.json();
+        return HttpResponse.json({
+          request_id: params.id as string,
+          status: "rejected",
+          message: `Request rejected: ${(body as { reason: string }).reason}`,
+        });
+      },
+    ),
 
     // POST /api/v1/agents/requests/:id/respond
     http.post("/api/v1/agents/requests/:id/respond", async ({ params }) => {
@@ -123,7 +129,7 @@ function setupAgentRequestHandlers() {
         status: "responded",
         message: "Clarification received",
       });
-    })
+    }),
   );
 }
 
@@ -221,9 +227,13 @@ describe("Agent Request API Contract", () => {
       expect(typeof request.agent_name).toBe("string");
       expect(["approval", "clarification"]).toContain(request.request_type);
       expect(typeof request.question).toBe("string");
-      expect(
-        ["pending", "approved", "rejected", "responded", "timeout"]
-      ).toContain(request.status);
+      expect([
+        "pending",
+        "approved",
+        "rejected",
+        "responded",
+        "timeout",
+      ]).toContain(request.status);
       expect(typeof request.requested_at).toBe("string");
       expect(typeof request.context).toBe("object");
     });
@@ -276,7 +286,7 @@ describe("Agent Request API Contract", () => {
             ],
             count: 1,
           });
-        })
+        }),
       );
 
       const response = await fetch("/api/v1/agents/requests/pending");
@@ -284,9 +294,13 @@ describe("Agent Request API Contract", () => {
 
       const request = data.requests[0];
       expect(request.ai_explanation).toBeDefined();
-      expect(request.ai_explanation?.what_agent_wants).toContain("Execute Python");
+      expect(request.ai_explanation?.what_agent_wants).toContain(
+        "Execute Python",
+      );
       expect(request.ai_explanation?.risk_factors).toContain("code_execution");
-      expect(request.ai_explanation?.recommendation).toBe("approve_with_caution");
+      expect(request.ai_explanation?.recommendation).toBe(
+        "approve_with_caution",
+      );
     });
   });
 
@@ -323,7 +337,7 @@ describe("Agent Request API Contract", () => {
             ],
             count: 1,
           });
-        })
+        }),
       );
 
       const response = await fetch("/api/v1/agents/requests/pending");

@@ -16,10 +16,7 @@
 import { useState, useCallback, useRef } from "react";
 import { UserCheck } from "lucide-react";
 import { useAppSelector } from "../store/hooks";
-import {
-  selectPersona,
-  selectUsername,
-} from "../store/slices/personaSlice";
+import { selectPersona, selectUsername } from "../store/slices/personaSlice";
 import { cn } from "../utils/cn";
 import { UserMenuDropdown } from "./UserMenuDropdown";
 import { AlertBadge } from "./AlertBadge";

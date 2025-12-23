@@ -81,9 +81,8 @@ interface UsePermissionCacheResult {
 // Context
 // =============================================================================
 
-const PermissionCacheContext = createContext<PermissionCacheContextValue | null>(
-  null,
-);
+const PermissionCacheContext =
+  createContext<PermissionCacheContextValue | null>(null);
 
 /**
  * Provider for permission cache context.

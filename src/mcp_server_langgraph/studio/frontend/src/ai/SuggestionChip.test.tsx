@@ -227,7 +227,9 @@ describe("SuggestionChip", () => {
       render(<SuggestionChip {...defaultProps} variant="outline" />);
 
       expect(screen.getByTestId("suggestion-chip")).toHaveClass("border");
-      expect(screen.getByTestId("suggestion-chip")).toHaveClass("bg-transparent");
+      expect(screen.getByTestId("suggestion-chip")).toHaveClass(
+        "bg-transparent",
+      );
     });
 
     it("should render subtle variant", () => {
@@ -294,7 +296,9 @@ describe("SuggestionChip", () => {
     });
 
     it("should have accessible name from text", () => {
-      render(<SuggestionChip {...defaultProps} text="Accept this suggestion" />);
+      render(
+        <SuggestionChip {...defaultProps} text="Accept this suggestion" />,
+      );
 
       expect(screen.getByRole("button")).toHaveAccessibleName(
         "Accept this suggestion",

@@ -11,16 +11,16 @@
  * - Request suggestions with context
  */
 
-import { useState, useCallback, useRef, useEffect } from 'react';
-import { useAppSelector } from '../store/hooks';
-import { useRealtimeSync } from './useRealtimeSync';
+import { useState, useCallback, useRef, useEffect } from "react";
+import { useAppSelector } from "../store/hooks";
+import { useRealtimeSync } from "./useRealtimeSync";
 
 /** Suggestion type from the AI UX backend */
 export interface Suggestion {
   id: string;
-  type: 'tooltip' | 'spotlight' | 'banner' | 'modal';
+  type: "tooltip" | "spotlight" | "banner" | "modal";
   message: string;
-  priority: 'low' | 'medium' | 'high';
+  priority: "low" | "medium" | "high";
   targetElement?: string;
   showAfterMs?: number;
 }
@@ -77,8 +77,14 @@ interface WebSocketMessage {
  * Build WebSocket URL for AI suggestions
  */
 function buildWebSocketUrl(userId: string): string {
-  const protocol = typeof window !== 'undefined' && window.location?.protocol === 'https:' ? 'wss:' : 'ws:';
-  const host = typeof window !== 'undefined' && window.location?.host ? window.location.host : 'localhost:8000';
+  const protocol =
+    typeof window !== "undefined" && window.location?.protocol === "https:"
+      ? "wss:"
+      : "ws:";
+  const host =
+    typeof window !== "undefined" && window.location?.host
+      ? window.location.host
+      : "localhost:8000";
   return `${protocol}//${host}/ws/suggestions?user_id=${encodeURIComponent(userId)}`;
 }
 
@@ -105,7 +111,7 @@ function buildWebSocketUrl(userId: string): string {
  * ```
  */
 export function useAIRealTimeSuggestions(
-  options: UseAIRealTimeSuggestionsOptions
+  options: UseAIRealTimeSuggestionsOptions,
 ): UseAIRealTimeSuggestionsReturn {
   const {
     enabled,
@@ -115,7 +121,7 @@ export function useAIRealTimeSuggestions(
   } = options;
 
   // Get user ID from Redux store
-  const userId = useAppSelector((state) => state.auth?.user?.id ?? 'anonymous');
+  const userId = useAppSelector((state) => state.auth?.user?.id ?? "anonymous");
 
   // State
   const [error, setError] = useState<Error | null>(null);
@@ -138,21 +144,21 @@ export function useAIRealTimeSuggestions(
       const message = data as WebSocketMessage;
 
       switch (message.type) {
-        case 'suggestions':
+        case "suggestions":
           if (Array.isArray(message.data)) {
             // Filter out dismissed suggestions
             const newSuggestions = message.data.filter(
-              (s) => !dismissedIdsRef.current.includes(s.id)
+              (s) => !dismissedIdsRef.current.includes(s.id),
             );
             setSuggestions((prev) => [...prev, ...newSuggestions]);
           }
           break;
 
-        case 'pong':
+        case "pong":
           setLastHeartbeat(message.timestamp ?? Date.now());
           break;
 
-        case 'error':
+        case "error":
           setError(new Error(String(message.data)));
           break;
 
@@ -180,14 +186,10 @@ export function useAIRealTimeSuggestions(
   }, []);
 
   // Build WebSocket URL
-  const wsUrl = enabled ? buildWebSocketUrl(userId) : '';
+  const wsUrl = enabled ? buildWebSocketUrl(userId) : "";
 
   // Use the realtime sync hook
-  const {
-    status,
-    reconnectAttempts,
-    send,
-  } = useRealtimeSync({
+  const { status, reconnectAttempts, send } = useRealtimeSync({
     url: wsUrl,
     reconnectInterval,
     maxReconnectAttempts,
@@ -197,7 +199,7 @@ export function useAIRealTimeSuggestions(
   });
 
   // Determine if connected
-  const isConnected = status === 'connected';
+  const isConnected = status === "connected";
 
   /**
    * Start heartbeat interval
@@ -212,7 +214,7 @@ export function useAIRealTimeSuggestions(
     }
 
     heartbeatTimerRef.current = setInterval(() => {
-      send({ type: 'ping', timestamp: Date.now() });
+      send({ type: "ping", timestamp: Date.now() });
     }, heartbeatInterval);
 
     return () => {
@@ -229,12 +231,12 @@ export function useAIRealTimeSuggestions(
   const requestSuggestions = useCallback(
     (context: SuggestionRequestContext) => {
       send({
-        type: 'request_suggestions',
+        type: "request_suggestions",
         context,
         timestamp: Date.now(),
       });
     },
-    [send]
+    [send],
   );
 
   /**

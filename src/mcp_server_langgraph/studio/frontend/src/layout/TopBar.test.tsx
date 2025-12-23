@@ -4,8 +4,8 @@
  * TDD tests for the TopBar component.
  * Tests branding, user info, and persona display.
  */
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { render, screen, cleanup } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { axe, toHaveNoViolations } from "jest-axe";
 
@@ -29,7 +29,10 @@ function createTestStore(overrides?: {
     },
     preloadedState: {
       persona: {
-        persona: (overrides?.persona ?? "admin") as "admin" | "developer" | "user",
+        persona: (overrides?.persona ?? "admin") as
+          | "admin"
+          | "developer"
+          | "user",
         subPersona: null,
         username: overrides?.username ?? "testuser",
         email: overrides?.email ?? "test@example.com",
@@ -53,6 +56,11 @@ function createWrapper(store: ReturnType<typeof createTestStore>) {
 
 describe("TopBar", () => {
   beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  afterEach(() => {
+    cleanup();
     vi.clearAllMocks();
   });
 
@@ -80,7 +88,9 @@ describe("TopBar", () => {
 
     it("should display custom title when provided", () => {
       const store = createTestStore();
-      render(<TopBar title="Custom Title" />, { wrapper: createWrapper(store) });
+      render(<TopBar title="Custom Title" />, {
+        wrapper: createWrapper(store),
+      });
 
       expect(screen.getByText("Custom Title")).toBeInTheDocument();
     });
@@ -213,9 +223,12 @@ describe("TopBar", () => {
       const user = userEvent.setup();
       const handleClick = vi.fn();
       const store = createTestStore();
-      render(<TopBar pendingApprovals={2} onPendingApprovalsClick={handleClick} />, {
-        wrapper: createWrapper(store),
-      });
+      render(
+        <TopBar pendingApprovals={2} onPendingApprovalsClick={handleClick} />,
+        {
+          wrapper: createWrapper(store),
+        },
+      );
 
       await user.click(screen.getByTestId("pending-approvals-badge"));
       expect(handleClick).toHaveBeenCalledTimes(1);
@@ -240,10 +253,7 @@ describe("TopBar", () => {
       );
 
       const badge = screen.getByTestId("pending-approvals-badge");
-      expect(badge).toHaveAttribute(
-        "aria-label",
-        "3 pending agent approvals",
-      );
+      expect(badge).toHaveAttribute("aria-label", "3 pending agent approvals");
     });
 
     it("should display approvals badge for all personas", () => {

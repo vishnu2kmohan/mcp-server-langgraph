@@ -63,7 +63,7 @@ const DEFAULT_HEIGHT = 200;
 // =============================================================================
 
 export function useDevToolsResize(
-  options: UseDevToolsResizeOptions = {}
+  options: UseDevToolsResizeOptions = {},
 ): UseDevToolsResizeReturn {
   const {
     minHeight = DEFAULT_MIN_HEIGHT,
@@ -84,7 +84,7 @@ export function useDevToolsResize(
     (value: number): number => {
       return Math.min(Math.max(value, minHeight), maxHeight);
     },
-    [minHeight, maxHeight]
+    [minHeight, maxHeight],
   );
 
   /**
@@ -106,7 +106,7 @@ export function useDevToolsResize(
       dispatch(setHeight(clampedHeight));
       storage.set(storageKey, clampedHeight);
     },
-    [clamp, dispatch, storageKey]
+    [clamp, dispatch, storageKey],
   );
 
   /**
@@ -135,7 +135,8 @@ export function useDevToolsResize(
    * Calculate height as percentage of window
    */
   const heightPercent = useMemo(() => {
-    const windowHeight = typeof window !== "undefined" ? window.innerHeight : 800;
+    const windowHeight =
+      typeof window !== "undefined" ? window.innerHeight : 800;
     return Math.round((height / windowHeight) * 100);
   }, [height]);
 

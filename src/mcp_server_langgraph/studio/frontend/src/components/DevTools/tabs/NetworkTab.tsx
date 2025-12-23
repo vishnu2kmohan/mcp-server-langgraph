@@ -38,9 +38,12 @@ function formatSize(bytes: number | undefined): string {
 
 function getStatusColor(statusCode: number | undefined): string {
   if (!statusCode) return "text-gray-400";
-  if (statusCode >= 200 && statusCode < 300) return "text-green-600 dark:text-green-400";
-  if (statusCode >= 300 && statusCode < 400) return "text-blue-600 dark:text-blue-400";
-  if (statusCode >= 400 && statusCode < 500) return "text-amber-600 dark:text-amber-400";
+  if (statusCode >= 200 && statusCode < 300)
+    return "text-green-600 dark:text-green-400";
+  if (statusCode >= 300 && statusCode < 400)
+    return "text-blue-600 dark:text-blue-400";
+  if (statusCode >= 400 && statusCode < 500)
+    return "text-amber-600 dark:text-amber-400";
   if (statusCode >= 500) return "text-red-600 dark:text-red-400";
   return "text-gray-600";
 }
@@ -72,9 +75,15 @@ interface NetworkEntryRowProps {
   onSelect: () => void;
 }
 
-function NetworkEntryRow({ entry, isSelected, onSelect }: NetworkEntryRowProps) {
+function NetworkEntryRow({
+  entry,
+  isSelected,
+  onSelect,
+}: NetworkEntryRowProps) {
   const isPending = entry.status === "pending";
-  const isError = entry.status === "error" || (entry.statusCode !== undefined && entry.statusCode >= 400);
+  const isError =
+    entry.status === "error" ||
+    (entry.statusCode !== undefined && entry.statusCode >= 400);
 
   // Extract path from URL
   const urlPath = entry.url.startsWith("http")
@@ -88,7 +97,7 @@ function NetworkEntryRow({ entry, isSelected, onSelect }: NetworkEntryRowProps) 
         "cursor-pointer border-b border-gray-100 dark:border-gray-800",
         "hover:bg-gray-50 dark:hover:bg-gray-800/50",
         isSelected && "bg-blue-50 dark:bg-blue-900/20",
-        isError === true && "bg-red-50 dark:bg-red-900/10"
+        isError === true && "bg-red-50 dark:bg-red-900/10",
       )}
       onClick={onSelect}
     >
@@ -111,7 +120,10 @@ function NetworkEntryRow({ entry, isSelected, onSelect }: NetworkEntryRowProps) 
         ) : (
           <span
             data-testid={`status-${entry.id}`}
-            className={cn("text-xs font-medium", getStatusColor(entry.statusCode))}
+            className={cn(
+              "text-xs font-medium",
+              getStatusColor(entry.statusCode),
+            )}
           >
             {entry.statusCode}
           </span>
@@ -164,9 +176,9 @@ interface RequestDetailsProps {
 }
 
 function RequestDetails({ entry }: RequestDetailsProps) {
-  const [activeTab, setActiveTab] = useState<"headers" | "payload" | "response">(
-    "headers"
-  );
+  const [activeTab, setActiveTab] = useState<
+    "headers" | "payload" | "response"
+  >("headers");
 
   return (
     <div
@@ -184,7 +196,7 @@ function RequestDetails({ entry }: RequestDetailsProps) {
               "px-3 py-1.5 text-xs font-medium capitalize",
               activeTab === tab
                 ? "border-b-2 border-primary-500 text-primary-600"
-                : "text-gray-500 hover:text-gray-700"
+                : "text-gray-500 hover:text-gray-700",
             )}
           >
             {tab}
@@ -197,38 +209,48 @@ function RequestDetails({ entry }: RequestDetailsProps) {
         {activeTab === "headers" && (
           <div className="space-y-4">
             {/* Request Headers */}
-            {entry.requestHeaders && Object.keys(entry.requestHeaders).length > 0 && (
-              <div>
-                <h4 className="font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Request Headers
-                </h4>
-                <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1">
-                  {Object.entries(entry.requestHeaders).map(([key, value]) => (
-                    <div key={key} className="contents">
-                      <dt className="text-gray-500">{key}:</dt>
-                      <dd className="text-gray-700 dark:text-gray-300">{value}</dd>
-                    </div>
-                  ))}
-                </dl>
-              </div>
-            )}
+            {entry.requestHeaders &&
+              Object.keys(entry.requestHeaders).length > 0 && (
+                <div>
+                  <h4 className="font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Request Headers
+                  </h4>
+                  <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1">
+                    {Object.entries(entry.requestHeaders).map(
+                      ([key, value]) => (
+                        <div key={key} className="contents">
+                          <dt className="text-gray-500">{key}:</dt>
+                          <dd className="text-gray-700 dark:text-gray-300">
+                            {value}
+                          </dd>
+                        </div>
+                      ),
+                    )}
+                  </dl>
+                </div>
+              )}
 
             {/* Response Headers */}
-            {entry.responseHeaders && Object.keys(entry.responseHeaders).length > 0 && (
-              <div>
-                <h4 className="font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Response Headers
-                </h4>
-                <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1">
-                  {Object.entries(entry.responseHeaders).map(([key, value]) => (
-                    <div key={key} className="contents">
-                      <dt className="text-gray-500">{key}:</dt>
-                      <dd className="text-gray-700 dark:text-gray-300">{value}</dd>
-                    </div>
-                  ))}
-                </dl>
-              </div>
-            )}
+            {entry.responseHeaders &&
+              Object.keys(entry.responseHeaders).length > 0 && (
+                <div>
+                  <h4 className="font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Response Headers
+                  </h4>
+                  <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1">
+                    {Object.entries(entry.responseHeaders).map(
+                      ([key, value]) => (
+                        <div key={key} className="contents">
+                          <dt className="text-gray-500">{key}:</dt>
+                          <dd className="text-gray-700 dark:text-gray-300">
+                            {value}
+                          </dd>
+                        </div>
+                      ),
+                    )}
+                  </dl>
+                </div>
+              )}
 
             {!entry.requestHeaders && !entry.responseHeaders && (
               <p className="text-gray-400">No headers available</p>
@@ -290,18 +312,18 @@ export function NetworkTab({
     // Filter by type
     if (filter === "api") {
       result = result.filter(
-        (e) => !e.source?.startsWith("mcp") && !e.url.startsWith("mcp://")
+        (e) => !e.source?.startsWith("mcp") && !e.url.startsWith("mcp://"),
       );
     } else if (filter === "mcp") {
       result = result.filter(
-        (e) => e.source?.startsWith("mcp") || e.url.startsWith("mcp://")
+        (e) => e.source?.startsWith("mcp") || e.url.startsWith("mcp://"),
       );
     }
 
     // Filter by showMCPCalls prop
     if (!showMCPCalls) {
       result = result.filter(
-        (e) => !e.source?.startsWith("mcp") && !e.url.startsWith("mcp://")
+        (e) => !e.source?.startsWith("mcp") && !e.url.startsWith("mcp://"),
       );
     }
 
@@ -312,7 +334,7 @@ export function NetworkTab({
         (e) =>
           e.url.toLowerCase().includes(lowerSearch) ||
           e.method.toLowerCase().includes(lowerSearch) ||
-          e.source?.toLowerCase().includes(lowerSearch)
+          e.source?.toLowerCase().includes(lowerSearch),
       );
     }
 
@@ -323,7 +345,7 @@ export function NetworkTab({
     (e: React.ChangeEvent<HTMLInputElement>) => {
       setSearchTerm(e.target.value);
     },
-    []
+    [],
   );
 
   // Empty state
@@ -367,7 +389,7 @@ export function NetworkTab({
             className={cn(
               isRecording
                 ? "fill-red-500 text-red-500"
-                : "fill-gray-400 text-gray-400"
+                : "fill-gray-400 text-gray-400",
             )}
           />
         </button>
@@ -393,7 +415,7 @@ export function NetworkTab({
               "px-2 py-1 text-xs rounded",
               filter === "all"
                 ? "bg-primary-100 dark:bg-primary-900/30 text-primary-600"
-                : "hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-500"
+                : "hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-500",
             )}
           >
             All
@@ -406,7 +428,7 @@ export function NetworkTab({
               "px-2 py-1 text-xs rounded",
               filter === "api"
                 ? "bg-primary-100 dark:bg-primary-900/30 text-primary-600"
-                : "hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-500"
+                : "hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-500",
             )}
           >
             API
@@ -420,7 +442,7 @@ export function NetworkTab({
                 "px-2 py-1 text-xs rounded",
                 filter === "mcp"
                   ? "bg-primary-100 dark:bg-primary-900/30 text-primary-600"
-                  : "hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-500"
+                  : "hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-500",
               )}
             >
               MCP
@@ -449,7 +471,7 @@ export function NetworkTab({
               "bg-white dark:bg-gray-900",
               "border border-gray-200 dark:border-gray-700 rounded",
               "focus:outline-none focus:ring-1 focus:ring-primary-500",
-              "w-32"
+              "w-32",
             )}
             aria-label="Filter network requests"
           />
@@ -482,7 +504,7 @@ export function NetworkTab({
                 isSelected={selectedEntryId === entry.id}
                 onSelect={() =>
                   setSelectedEntryId(
-                    selectedEntryId === entry.id ? null : entry.id
+                    selectedEntryId === entry.id ? null : entry.id,
                   )
                 }
               />

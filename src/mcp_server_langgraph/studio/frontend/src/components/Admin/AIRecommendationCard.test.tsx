@@ -133,10 +133,10 @@ describe("AIRecommendationCard", () => {
       render(<AIRecommendationCard {...defaultProps} />);
 
       expect(
-        screen.getByText("Scale up replicas to handle current load")
+        screen.getByText("Scale up replicas to handle current load"),
       ).toBeInTheDocument();
       expect(
-        screen.getByText("Rolling restart to clear memory")
+        screen.getByText("Rolling restart to clear memory"),
       ).toBeInTheDocument();
     });
 
@@ -144,7 +144,7 @@ describe("AIRecommendationCard", () => {
       render(<AIRecommendationCard {...defaultProps} />);
 
       expect(
-        screen.getByText(/kubectl scale deployment api-server/)
+        screen.getByText(/kubectl scale deployment api-server/),
       ).toBeInTheDocument();
     });
 
@@ -181,7 +181,7 @@ describe("AIRecommendationCard", () => {
       render(<AIRecommendationCard {...defaultProps} />);
 
       expect(screen.getByTestId("overall-risk-badge")).toHaveTextContent(
-        /medium/i
+        /medium/i,
       );
     });
 
@@ -189,7 +189,7 @@ describe("AIRecommendationCard", () => {
       render(<AIRecommendationCard {...defaultProps} />);
 
       expect(screen.getByTestId("overall-risk-badge")).toHaveClass(
-        "bg-yellow-500"
+        "bg-yellow-500",
       );
     });
 
@@ -197,7 +197,7 @@ describe("AIRecommendationCard", () => {
       render(<AIRecommendationCard {...defaultProps} />);
 
       expect(
-        screen.getByText(/brief service interruption/i)
+        screen.getByText(/brief service interruption/i),
       ).toBeInTheDocument();
     });
 
@@ -219,11 +219,11 @@ describe("AIRecommendationCard", () => {
         <AIRecommendationCard
           {...defaultProps}
           recommendation={highRiskRecommendation}
-        />
+        />,
       );
 
       expect(screen.getByTestId("overall-risk-badge")).toHaveClass(
-        "bg-red-500"
+        "bg-red-500",
       );
     });
 
@@ -239,11 +239,11 @@ describe("AIRecommendationCard", () => {
         <AIRecommendationCard
           {...defaultProps}
           recommendation={lowRiskRecommendation}
-        />
+        />,
       );
 
       expect(screen.getByTestId("overall-risk-badge")).toHaveClass(
-        "bg-green-500"
+        "bg-green-500",
       );
     });
   });
@@ -258,7 +258,7 @@ describe("AIRecommendationCard", () => {
     it("should call onRegenerate when clicked", () => {
       const onRegenerate = vi.fn();
       render(
-        <AIRecommendationCard {...defaultProps} onRegenerate={onRegenerate} />
+        <AIRecommendationCard {...defaultProps} onRegenerate={onRegenerate} />,
       );
 
       fireEvent.click(screen.getByTestId("regenerate-button"));
@@ -296,7 +296,7 @@ describe("AIRecommendationCard", () => {
         <AIRecommendationCard
           {...defaultProps}
           recommendation={oldRecommendation}
-        />
+        />,
       );
 
       expect(screen.getByTestId("stale-indicator")).toBeInTheDocument();
@@ -311,7 +311,7 @@ describe("AIRecommendationCard", () => {
         <AIRecommendationCard
           {...defaultProps}
           recommendation={freshRecommendation}
-        />
+        />,
       );
 
       expect(screen.queryByTestId("stale-indicator")).not.toBeInTheDocument();
@@ -330,7 +330,7 @@ describe("AIRecommendationCard", () => {
 
       expect(screen.getByTestId("runbook-link")).toHaveAttribute(
         "href",
-        "https://runbooks.example.com/high-cpu"
+        "https://runbooks.example.com/high-cpu",
       );
     });
 
@@ -339,7 +339,7 @@ describe("AIRecommendationCard", () => {
 
       expect(screen.getByTestId("runbook-link")).toHaveAttribute(
         "target",
-        "_blank"
+        "_blank",
       );
     });
 
@@ -352,7 +352,7 @@ describe("AIRecommendationCard", () => {
         <AIRecommendationCard
           {...defaultProps}
           recommendation={noRunbookRecommendation}
-        />
+        />,
       );
 
       expect(screen.queryByTestId("runbook-link")).not.toBeInTheDocument();
@@ -380,7 +380,7 @@ describe("AIRecommendationCard", () => {
           {...defaultProps}
           recommendation={null}
           error="Failed to generate recommendation"
-        />
+        />,
       );
 
       expect(screen.getByText(/failed to generate/i)).toBeInTheDocument();
@@ -392,7 +392,7 @@ describe("AIRecommendationCard", () => {
           {...defaultProps}
           recommendation={null}
           error="Failed to generate recommendation"
-        />
+        />,
       );
 
       expect(screen.getByTestId("retry-button")).toBeInTheDocument();
@@ -406,7 +406,7 @@ describe("AIRecommendationCard", () => {
           recommendation={null}
           error="Failed to generate recommendation"
           onRegenerate={onRegenerate}
-        />
+        />,
       );
 
       fireEvent.click(screen.getByTestId("retry-button"));
@@ -422,7 +422,7 @@ describe("AIRecommendationCard", () => {
           {...defaultProps}
           recommendation={null}
           isLoading={false}
-        />
+        />,
       );
 
       expect(screen.getByText(/no recommendation/i)).toBeInTheDocument();

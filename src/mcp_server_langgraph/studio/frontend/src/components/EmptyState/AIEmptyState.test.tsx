@@ -83,7 +83,7 @@ describe("AIEmptyState", () => {
             },
           ],
         });
-      })
+      }),
     );
   });
 
@@ -97,7 +97,7 @@ describe("AIEmptyState", () => {
       render(
         <Wrapper>
           <AIEmptyState context="workflows" />
-        </Wrapper>
+        </Wrapper>,
       );
 
       // Should render empty state
@@ -109,14 +109,14 @@ describe("AIEmptyState", () => {
         http.post(AI_ENDPOINT, async () => {
           await delay("infinite");
           return HttpResponse.json({ suggestions: [] });
-        })
+        }),
       );
 
       const Wrapper = createWrapper();
       render(
         <Wrapper>
           <AIEmptyState context="sessions" />
-        </Wrapper>
+        </Wrapper>,
       );
 
       // Should show loading indicator
@@ -128,7 +128,7 @@ describe("AIEmptyState", () => {
       render(
         <Wrapper>
           <AIEmptyState context="workflows" />
-        </Wrapper>
+        </Wrapper>,
       );
 
       await waitFor(() => {
@@ -142,14 +142,14 @@ describe("AIEmptyState", () => {
       server.use(
         http.post(AI_ENDPOINT, () => {
           return HttpResponse.error();
-        })
+        }),
       );
 
       const Wrapper = createWrapper();
       render(
         <Wrapper>
           <AIEmptyState context="sessions" />
-        </Wrapper>
+        </Wrapper>,
       );
 
       await waitFor(() => {
@@ -162,14 +162,14 @@ describe("AIEmptyState", () => {
       server.use(
         http.post(AI_ENDPOINT, () => {
           return new HttpResponse(null, { status: 503 });
-        })
+        }),
       );
 
       const Wrapper = createWrapper();
       render(
         <Wrapper>
           <AIEmptyState context="workflows" />
-        </Wrapper>
+        </Wrapper>,
       );
 
       await waitFor(() => {
@@ -185,7 +185,7 @@ describe("AIEmptyState", () => {
       render(
         <Wrapper>
           <AIEmptyState context="workflows" />
-        </Wrapper>
+        </Wrapper>,
       );
 
       await waitFor(() => {
@@ -201,7 +201,7 @@ describe("AIEmptyState", () => {
       render(
         <Wrapper>
           <AIEmptyState context="workflows" onNavigate={mockNavigate} />
-        </Wrapper>
+        </Wrapper>,
       );
 
       await waitFor(() => {
@@ -230,19 +230,21 @@ describe("AIEmptyState", () => {
               },
             ],
           });
-        })
+        }),
       );
 
       const Wrapper = createWrapper();
       render(
         <Wrapper>
           <AIEmptyState context="workflows" showConfidence />
-        </Wrapper>
+        </Wrapper>,
       );
 
       await waitFor(() => {
         // Should show sparkle/AI indicator for high confidence
-        expect(screen.getByTestId("ai-suggestion-indicator")).toBeInTheDocument();
+        expect(
+          screen.getByTestId("ai-suggestion-indicator"),
+        ).toBeInTheDocument();
       });
     });
   });
@@ -253,13 +255,13 @@ describe("AIEmptyState", () => {
       render(
         <Wrapper>
           <AIEmptyState context="projects" variant="compact" />
-        </Wrapper>
+        </Wrapper>,
       );
 
       await waitFor(() => {
         expect(screen.getByTestId("empty-state-projects")).toHaveAttribute(
           "data-variant",
-          "compact"
+          "compact",
         );
       });
     });
@@ -269,7 +271,7 @@ describe("AIEmptyState", () => {
       render(
         <Wrapper>
           <AIEmptyState context="traces" className="custom-class" />
-        </Wrapper>
+        </Wrapper>,
       );
 
       await waitFor(() => {
@@ -283,7 +285,7 @@ describe("AIEmptyState", () => {
       render(
         <Wrapper>
           <AIEmptyState context="files" testId="my-custom-empty-state" />
-        </Wrapper>
+        </Wrapper>,
       );
 
       await waitFor(() => {
@@ -298,11 +300,13 @@ describe("AIEmptyState", () => {
       render(
         <Wrapper>
           <AIEmptyState context="workflows" enableAI={false} />
-        </Wrapper>
+        </Wrapper>,
       );
 
       // Should immediately show fallback, not loading
-      expect(screen.queryByTestId("empty-state-loading")).not.toBeInTheDocument();
+      expect(
+        screen.queryByTestId("empty-state-loading"),
+      ).not.toBeInTheDocument();
       expect(screen.getByTestId("empty-state-workflows")).toBeInTheDocument();
     });
   });

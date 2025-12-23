@@ -127,7 +127,7 @@ describe("useConsoleEntries", () => {
   describe("filtering by level", () => {
     it("should filter entries by level when filter provided", () => {
       const { result } = renderHook(() =>
-        useConsoleEntries({ filter: "error" })
+        useConsoleEntries({ filter: "error" }),
       );
 
       act(() => {
@@ -168,7 +168,7 @@ describe("useConsoleEntries", () => {
   describe("filtering by contextEntityId", () => {
     it("should filter entries by contextEntityId when provided", () => {
       const { result } = renderHook(() =>
-        useConsoleEntries({ contextEntityId: "session-123" })
+        useConsoleEntries({ contextEntityId: "session-123" }),
       );
 
       act(() => {
@@ -196,9 +196,7 @@ describe("useConsoleEntries", () => {
 
   describe("max entries limit", () => {
     it("should limit entries to maxEntries", () => {
-      const { result } = renderHook(() =>
-        useConsoleEntries({ maxEntries: 3 })
-      );
+      const { result } = renderHook(() => useConsoleEntries({ maxEntries: 3 }));
 
       act(() => {
         for (let i = 0; i < 10; i++) {
@@ -210,14 +208,24 @@ describe("useConsoleEntries", () => {
     });
 
     it("should keep newest entries when limit exceeded", () => {
-      const { result } = renderHook(() =>
-        useConsoleEntries({ maxEntries: 2 })
-      );
+      const { result } = renderHook(() => useConsoleEntries({ maxEntries: 2 }));
 
       act(() => {
-        result.current.addEntry({ ...mockEntry, id: "entry-1", timestamp: 1000 });
-        result.current.addEntry({ ...mockEntry, id: "entry-2", timestamp: 2000 });
-        result.current.addEntry({ ...mockEntry, id: "entry-3", timestamp: 3000 });
+        result.current.addEntry({
+          ...mockEntry,
+          id: "entry-1",
+          timestamp: 1000,
+        });
+        result.current.addEntry({
+          ...mockEntry,
+          id: "entry-2",
+          timestamp: 2000,
+        });
+        result.current.addEntry({
+          ...mockEntry,
+          id: "entry-3",
+          timestamp: 3000,
+        });
       });
 
       expect(result.current.entries).toHaveLength(2);

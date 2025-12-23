@@ -172,11 +172,17 @@ export interface LevelProgress {
  */
 function calculateLevelProgress(
   level: DisclosureLevel,
-  featureUsageCount: number
+  featureUsageCount: number,
 ): LevelProgress {
-  const levels: DisclosureLevel[] = ["beginner", "intermediate", "advanced", "expert"];
+  const levels: DisclosureLevel[] = [
+    "beginner",
+    "intermediate",
+    "advanced",
+    "expert",
+  ];
   const currentIndex = levels.indexOf(level);
-  const nextLevel = currentIndex < levels.length - 1 ? levels[currentIndex + 1] : null;
+  const nextLevel =
+    currentIndex < levels.length - 1 ? levels[currentIndex + 1] : null;
 
   if (!nextLevel) {
     return {
@@ -210,7 +216,9 @@ let cachedUsageCount: number | null = null;
 /**
  * Get progress toward next level (memoized)
  */
-export const selectLevelProgress = (state: DisclosureRootState): LevelProgress => {
+export const selectLevelProgress = (
+  state: DisclosureRootState,
+): LevelProgress => {
   const { level, featureUsageCount } = state.disclosure;
 
   // Return cached result if inputs haven't changed

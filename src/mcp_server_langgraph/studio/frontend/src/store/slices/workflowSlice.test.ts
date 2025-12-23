@@ -827,7 +827,9 @@ describe("workflowSlice", () => {
         });
         await store.dispatch(saveWorkflow());
 
-        expect(selectWorkflowError(store.getState())).toBe("Failed to save workflow");
+        expect(selectWorkflowError(store.getState())).toBe(
+          "Failed to save workflow",
+        );
       });
 
       it("should use fallback error when payload is undefined", () => {
@@ -1013,7 +1015,9 @@ describe("workflowSlice", () => {
   describe("Additional Selectors", () => {
     describe("selectSelectedEdgeIds", () => {
       it("should return selected edge ids", () => {
-        const store = createTestStore({ selectedEdgeIds: ["edge-1", "edge-2"] });
+        const store = createTestStore({
+          selectedEdgeIds: ["edge-1", "edge-2"],
+        });
         expect(selectSelectedEdgeIds(store.getState())).toEqual([
           "edge-1",
           "edge-2",
@@ -1034,7 +1038,9 @@ describe("workflowSlice", () => {
 
       it("should return undefined when node not found", () => {
         const store = createTestStore({ nodes: [mockNode] });
-        expect(selectNodeById("non-existent")(store.getState())).toBeUndefined();
+        expect(
+          selectNodeById("non-existent")(store.getState()),
+        ).toBeUndefined();
       });
     });
   });

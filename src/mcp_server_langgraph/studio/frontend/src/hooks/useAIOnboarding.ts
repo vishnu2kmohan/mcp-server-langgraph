@@ -120,7 +120,7 @@ export interface UseAIOnboardingResult {
  * Map experience level from signup context to RTK Query format
  */
 function inferExperienceLevel(
-  initialActions: string[]
+  initialActions: string[],
 ): "beginner" | "intermediate" | "expert" {
   // Advanced users typically have more targeted initial actions
   if (initialActions.length > 3) {
@@ -138,7 +138,7 @@ function inferExperienceLevel(
  * @returns Personalized onboarding recommendations
  */
 export function useAIOnboarding(
-  options: UseAIOnboardingOptions
+  options: UseAIOnboardingOptions,
 ): UseAIOnboardingResult {
   const {
     userId,
@@ -161,7 +161,7 @@ export function useAIOnboarding(
   const [recommendedPath, setRecommendedPath] = useState<OnboardingStep[]>([]);
   const [skipSteps, setSkipSteps] = useState<string[]>([]);
   const [personaPrediction, setPersonaPrediction] = useState<string | null>(
-    null
+    null,
   );
   const [isLoading, setIsLoading] = useState(enabled);
   const [error, setError] = useState<Error | null>(null);
@@ -206,14 +206,14 @@ export function useAIOnboarding(
         (data.recommended_steps || []).map((step) => ({
           step,
           guided: true,
-        }))
+        })),
       );
       setSkipSteps(data.skip_steps || []);
       // Infer persona from experience level or first step
       setPersonaPrediction(
         inferExperienceLevel(initialActions) === "expert"
           ? "alice-builder"
-          : "bob"
+          : "bob",
       );
     } catch (err) {
       const errorToSet =

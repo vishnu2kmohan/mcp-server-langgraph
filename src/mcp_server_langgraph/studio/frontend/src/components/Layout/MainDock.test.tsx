@@ -402,9 +402,7 @@ describe("MainDock", () => {
 
   describe("tab rename functionality", () => {
     it("should enter edit mode on double-click", () => {
-      const tabs: TabState[] = [
-        { id: "tab-1", type: "chat", title: "Chat 1" },
-      ];
+      const tabs: TabState[] = [{ id: "tab-1", type: "chat", title: "Chat 1" }];
       renderWithProviders(<MainDock />, {
         workspaceOverrides: {
           tabs,
@@ -603,9 +601,7 @@ describe("MainDock", () => {
     });
 
     it("should not be draggable while editing", () => {
-      const tabs: TabState[] = [
-        { id: "tab-1", type: "chat", title: "Chat 1" },
-      ];
+      const tabs: TabState[] = [{ id: "tab-1", type: "chat", title: "Chat 1" }];
       renderWithProviders(<MainDock />, {
         workspaceOverrides: {
           tabs,
@@ -665,9 +661,7 @@ describe("MainDock", () => {
     });
 
     it("should not select tab via keyboard when editing", () => {
-      const tabs: TabState[] = [
-        { id: "tab-1", type: "chat", title: "Chat 1" },
-      ];
+      const tabs: TabState[] = [{ id: "tab-1", type: "chat", title: "Chat 1" }];
       const store = createTestStore({
         tabs,
         activeTabId: "tab-1",
@@ -865,9 +859,7 @@ describe("MainDock", () => {
 
   describe("content without renderContent", () => {
     it("should show default content when no renderContent provided", () => {
-      const tabs: TabState[] = [
-        { id: "tab-1", type: "chat", title: "My Tab" },
-      ];
+      const tabs: TabState[] = [{ id: "tab-1", type: "chat", title: "My Tab" }];
       renderWithProviders(<MainDock />, {
         workspaceOverrides: {
           tabs,

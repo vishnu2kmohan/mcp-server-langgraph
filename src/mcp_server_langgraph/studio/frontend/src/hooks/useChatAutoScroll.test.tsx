@@ -5,12 +5,17 @@
  * Extracted from ChatMessages.tsx for reusability.
  */
 
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { renderHook } from "@testing-library/react";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { renderHook, cleanup } from "@testing-library/react";
 import { useChatAutoScroll } from "./useChatAutoScroll";
 
 describe("useChatAutoScroll", () => {
   beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  afterEach(() => {
+    cleanup();
     vi.clearAllMocks();
   });
 
@@ -31,7 +36,7 @@ describe("useChatAutoScroll", () => {
 
       const { result, rerender } = renderHook(
         ({ messages }) => useChatAutoScroll(messages),
-        { initialProps: { messages: [] } }
+        { initialProps: { messages: [] } },
       );
 
       // Simulate ref being attached
@@ -55,7 +60,7 @@ describe("useChatAutoScroll", () => {
       const { result, rerender } = renderHook(
         ({ messages, streamingContent }) =>
           useChatAutoScroll(messages, streamingContent),
-        { initialProps: { messages: [], streamingContent: "" } }
+        { initialProps: { messages: [], streamingContent: "" } },
       );
 
       // Simulate ref being attached
@@ -75,7 +80,7 @@ describe("useChatAutoScroll", () => {
 
       const { result, rerender } = renderHook(
         ({ messages }) => useChatAutoScroll(messages),
-        { initialProps: { messages: [] } }
+        { initialProps: { messages: [] } },
       );
 
       // Simulate ref being attached without scrollIntoView
@@ -93,7 +98,7 @@ describe("useChatAutoScroll", () => {
     it("should not throw if ref is null", () => {
       const { rerender } = renderHook(
         ({ messages }) => useChatAutoScroll(messages),
-        { initialProps: { messages: [] } }
+        { initialProps: { messages: [] } },
       );
 
       // Ref is null by default, should not throw
@@ -109,7 +114,7 @@ describe("useChatAutoScroll", () => {
       // the case where the ref gets attached after the effect runs
       const { result, rerender } = renderHook(
         ({ messages }) => useChatAutoScroll(messages),
-        { initialProps: { messages: [] } }
+        { initialProps: { messages: [] } },
       );
 
       // Ref is null initially

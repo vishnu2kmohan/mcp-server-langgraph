@@ -9,7 +9,11 @@
  * - Counts
  */
 
-import { type HeartDimension, getAllGoals, getGoalById } from "./GoalsDefinition";
+import {
+  type HeartDimension,
+  getAllGoals,
+  getGoalById,
+} from "./GoalsDefinition";
 import { getSignalValues, getAllSignals } from "./SignalsRegistry";
 
 /**
@@ -77,8 +81,14 @@ export interface MetricsSummary {
 /**
  * Metric calculation types
  */
-type MetricType = "nps" | "satisfaction" | "session_duration" | "actions_per_session" |
-  "onboarding_completion_rate" | "task_success_rate" | "error_rate";
+type MetricType =
+  | "nps"
+  | "satisfaction"
+  | "session_duration"
+  | "actions_per_session"
+  | "onboarding_completion_rate"
+  | "task_success_rate"
+  | "error_rate";
 
 /**
  * Calculate confidence based on sample size
@@ -115,7 +125,10 @@ function calculateAverage(values: number[]): number | null {
 /**
  * Calculate rate from boolean values
  */
-function calculateRate(values: boolean[], countTrue: boolean = true): number | null {
+function calculateRate(
+  values: boolean[],
+  countTrue: boolean = true,
+): number | null {
   if (values.length === 0) return null;
   const count = values.filter((v) => v === countTrue).length;
   return count / values.length;
@@ -259,10 +272,16 @@ export function calculateGoalProgress(goalId: string): GoalProgress {
   if (currentValue !== null) {
     // For error rate, lower is better
     if (goalId === "task_success_error_rate") {
-      progressPercent = Math.max(0, Math.min(100, (1 - currentValue / goal.targetValue) * 100));
+      progressPercent = Math.max(
+        0,
+        Math.min(100, (1 - currentValue / goal.targetValue) * 100),
+      );
       isAchieved = currentValue <= goal.targetValue;
     } else {
-      progressPercent = Math.max(0, Math.min(100, (currentValue / goal.targetValue) * 100));
+      progressPercent = Math.max(
+        0,
+        Math.min(100, (currentValue / goal.targetValue) * 100),
+      );
       isAchieved = currentValue >= goal.targetValue;
     }
   }
@@ -279,7 +298,9 @@ export function calculateGoalProgress(goalId: string): GoalProgress {
 /**
  * Calculate score for a dimension
  */
-export function calculateDimensionScore(dimension: HeartDimension): DimensionScore {
+export function calculateDimensionScore(
+  dimension: HeartDimension,
+): DimensionScore {
   const goals = getAllGoals().filter((g) => g.dimension === dimension);
   const goalProgresses = goals.map((g) => calculateGoalProgress(g.id));
 
@@ -287,7 +308,9 @@ export function calculateDimensionScore(dimension: HeartDimension): DimensionSco
   const hasData = goalProgresses.some((p) => p.currentValue !== null);
 
   // Calculate overall score as average of goal progress
-  const progressesWithData = goalProgresses.filter((p) => p.currentValue !== null);
+  const progressesWithData = goalProgresses.filter(
+    (p) => p.currentValue !== null,
+  );
   const overallScore =
     progressesWithData.length > 0
       ? progressesWithData.reduce((sum, p) => sum + p.progressPercent, 0) /

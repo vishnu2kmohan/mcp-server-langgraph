@@ -206,19 +206,19 @@ describe("MetricsCalculator", () => {
 
       expect(summary.dimensions).toHaveLength(5);
       expect(summary.dimensions.some((d) => d.dimension === "happiness")).toBe(
-        true
+        true,
       );
       expect(summary.dimensions.some((d) => d.dimension === "engagement")).toBe(
-        true
+        true,
       );
       expect(summary.dimensions.some((d) => d.dimension === "adoption")).toBe(
-        true
+        true,
       );
       expect(summary.dimensions.some((d) => d.dimension === "retention")).toBe(
-        true
+        true,
       );
       expect(
-        summary.dimensions.some((d) => d.dimension === "task_success")
+        summary.dimensions.some((d) => d.dimension === "task_success"),
       ).toBe(true);
     });
 

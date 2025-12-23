@@ -34,12 +34,7 @@ export interface CanvasKeyboardNavRefs {
  * @param refs - Object containing refs to focusable panel elements
  */
 export function useCanvasKeyboardNav(refs: CanvasKeyboardNavRefs): void {
-  const {
-    activityBarRef,
-    sessionNavRef,
-    conversationRef,
-    canvasRef,
-  } = refs;
+  const { activityBarRef, sessionNavRef, conversationRef, canvasRef } = refs;
 
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {

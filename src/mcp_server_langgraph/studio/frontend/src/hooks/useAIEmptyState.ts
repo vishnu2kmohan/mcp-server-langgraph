@@ -33,10 +33,7 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useSelector } from "react-redux";
-import {
-  selectSubPersona,
-  selectPersona,
-} from "../store/slices/personaSlice";
+import { selectSubPersona, selectPersona } from "../store/slices/personaSlice";
 import { selectCurrentSession } from "../store/slices/sessionSlice";
 import {
   getEmptyStateConfig,
@@ -96,7 +93,7 @@ export interface UseAIEmptyStateResult {
 
 // Map API action types to hook action types
 const mapActionType = (
-  actionType: "navigate" | "create" | "learn" | "import"
+  actionType: "navigate" | "create" | "learn" | "import",
 ): "navigate" | "modal" | "focus" => {
   switch (actionType) {
     case "navigate":
@@ -118,7 +115,7 @@ const mapActionType = (
  * @returns AI suggestions and fallback configuration
  */
 export function useAIEmptyState(
-  options: UseAIEmptyStateOptions
+  options: UseAIEmptyStateOptions,
 ): UseAIEmptyStateResult {
   const { context, enabled = true } = options;
 
@@ -140,7 +137,7 @@ export function useAIEmptyState(
   const [error, setError] = useState<Error | null>(null);
   const [isAIAvailable, setIsAIAvailable] = useState(false);
   const [lastFetchedContext, setLastFetchedContext] = useState<string | null>(
-    null
+    null,
   );
   const [isInitialLoad, setIsInitialLoad] = useState(enabled);
   const isMounted = useRef(true);
@@ -200,7 +197,7 @@ export function useAIEmptyState(
         }
       }
     },
-    [effectivePersona, fetchSuggestions]
+    [effectivePersona, fetchSuggestions],
   );
 
   /**
@@ -232,7 +229,7 @@ export function useAIEmptyState(
   const primarySuggestion =
     suggestions.length > 0
       ? suggestions.reduce((best, current) =>
-          current.confidence > best.confidence ? current : best
+          current.confidence > best.confidence ? current : best,
         )
       : null;
 

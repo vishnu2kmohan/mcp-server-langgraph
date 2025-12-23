@@ -41,7 +41,7 @@ export interface UseProblemsReturn {
 // =============================================================================
 
 export function useProblems(
-  options: UseProblemsOptions = {}
+  options: UseProblemsOptions = {},
 ): UseProblemsReturn {
   const { filter = "all" } = options;
 
@@ -65,7 +65,7 @@ export function useProblems(
    */
   const dismissProblem = useCallback((id: string) => {
     setProblems((prev) =>
-      prev.map((p) => (p.id === id ? { ...p, dismissed: true } : p))
+      prev.map((p) => (p.id === id ? { ...p, dismissed: true } : p)),
     );
   }, []);
 

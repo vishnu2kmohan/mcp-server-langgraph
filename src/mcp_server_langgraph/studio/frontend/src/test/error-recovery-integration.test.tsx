@@ -91,16 +91,18 @@ describe("Error Recovery Integration", () => {
           )}
         >
           <BuggyComponent shouldThrow={true} />
-        </ErrorBoundary>
+        </ErrorBoundary>,
       );
 
       // Wait for error panel and loading to complete
       await waitFor(
         () => {
           expect(screen.getByTestId("error-recovery")).toBeInTheDocument();
-          expect(screen.queryByText(/analyzing error/i)).not.toBeInTheDocument();
+          expect(
+            screen.queryByText(/analyzing error/i),
+          ).not.toBeInTheDocument();
         },
-        { timeout: 3000 }
+        { timeout: 3000 },
       );
 
       // Should show the error message
@@ -119,15 +121,17 @@ describe("Error Recovery Integration", () => {
           )}
         >
           <BuggyComponent shouldThrow={true} />
-        </ErrorBoundary>
+        </ErrorBoundary>,
       );
 
       // Wait for loading to complete (no longer showing "Analyzing error...")
       await waitFor(
         () => {
-          expect(screen.queryByText(/analyzing error/i)).not.toBeInTheDocument();
+          expect(
+            screen.queryByText(/analyzing error/i),
+          ).not.toBeInTheDocument();
         },
-        { timeout: 3000 }
+        { timeout: 3000 },
       );
 
       // Verify there's at least one button for suggestions
@@ -139,7 +143,7 @@ describe("Error Recovery Integration", () => {
       const suggestionButton = buttons.find(
         (btn) =>
           btn.getAttribute("aria-label") === "Unexpected error" ||
-          btn.getAttribute("aria-label") === "Contact support"
+          btn.getAttribute("aria-label") === "Contact support",
       );
       expect(suggestionButton).toBeInTheDocument();
     });
@@ -162,7 +166,7 @@ describe("Error Recovery Integration", () => {
             suggested_action: "retry",
             confidence: 0.92,
           });
-        })
+        }),
       );
 
       // Use the RecoverableComponent which handles state properly
@@ -171,15 +175,17 @@ describe("Error Recovery Integration", () => {
       // Wait for loading to complete (no longer showing "Analyzing error...")
       await waitFor(
         () => {
-          expect(screen.queryByText(/analyzing error/i)).not.toBeInTheDocument();
+          expect(
+            screen.queryByText(/analyzing error/i),
+          ).not.toBeInTheDocument();
         },
-        { timeout: 3000 }
+        { timeout: 3000 },
       );
 
       // Find and click the retry button
-      const retryButton = screen.getAllByRole("button").find(
-        (btn) => btn.getAttribute("aria-label") === "Retry the request"
-      );
+      const retryButton = screen
+        .getAllByRole("button")
+        .find((btn) => btn.getAttribute("aria-label") === "Retry the request");
       expect(retryButton).toBeInTheDocument();
 
       // Click retry - this triggers state change and ErrorBoundary remount
@@ -204,12 +210,12 @@ describe("Error Recovery Integration", () => {
         () => {
           expect(screen.queryByText(/analyzing/i)).not.toBeInTheDocument();
         },
-        { timeout: 2000 }
+        { timeout: 2000 },
       );
 
       // Should show the error in the title
       expect(
-        screen.getByRole("heading", { name: /session expired/i })
+        screen.getByRole("heading", { name: /session expired/i }),
       ).toBeInTheDocument();
     });
   });

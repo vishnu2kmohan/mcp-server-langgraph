@@ -49,7 +49,9 @@ vi.mock("../pages/AdminDashboardPage", () => ({
 }));
 
 // Create store with persona state
-const createTestStore = (persona: "admin" | "developer" | "user" = "developer") =>
+const createTestStore = (
+  persona: "admin" | "developer" | "user" = "developer",
+) =>
   configureStore({
     reducer: {
       persona: personaReducer,
@@ -58,7 +60,12 @@ const createTestStore = (persona: "admin" | "developer" | "user" = "developer") 
     preloadedState: {
       persona: {
         persona,
-        username: persona === "admin" ? "admin" : persona === "developer" ? "alice" : "bob",
+        username:
+          persona === "admin"
+            ? "admin"
+            : persona === "developer"
+              ? "alice"
+              : "bob",
         email: `${persona}@example.com`,
         permissions: [],
         isPersonaLoading: false,
@@ -66,7 +73,12 @@ const createTestStore = (persona: "admin" | "developer" | "user" = "developer") 
       auth: {
         user: {
           id: `user-${persona}`,
-          username: persona === "admin" ? "admin" : persona === "developer" ? "alice" : "bob",
+          username:
+            persona === "admin"
+              ? "admin"
+              : persona === "developer"
+                ? "alice"
+                : "bob",
           email: `${persona}@example.com`,
           roles: [persona],
           persona,
@@ -112,7 +124,9 @@ const createTestRoutes = () => [
       },
       {
         path: "compliance",
-        element: <div data-testid="compliance-dashboard">Compliance Dashboard</div>,
+        element: (
+          <div data-testid="compliance-dashboard">Compliance Dashboard</div>
+        ),
       },
       {
         path: "admin",
@@ -120,7 +134,9 @@ const createTestRoutes = () => [
       },
       {
         path: "analytics",
-        element: <div data-testid="analytics-dashboard">Analytics Dashboard</div>,
+        element: (
+          <div data-testid="analytics-dashboard">Analytics Dashboard</div>
+        ),
       },
     ],
   },
@@ -446,9 +462,18 @@ describe("Routing Integration", () => {
     it("should allow admin to access all routes", async () => {
       const store = createTestStore("admin");
       const routes = [
-        { path: "/studio/v2/admin", element: <div data-testid="admin-page">Admin</div> },
-        { path: "/studio/v2/compliance", element: <div data-testid="compliance-page">Compliance</div> },
-        { path: "/studio/v2/chat", element: <div data-testid="chat-page">Chat</div> },
+        {
+          path: "/studio/v2/admin",
+          element: <div data-testid="admin-page">Admin</div>,
+        },
+        {
+          path: "/studio/v2/compliance",
+          element: <div data-testid="compliance-page">Compliance</div>,
+        },
+        {
+          path: "/studio/v2/chat",
+          element: <div data-testid="chat-page">Chat</div>,
+        },
       ];
 
       // Test admin route
@@ -487,7 +512,10 @@ describe("Routing Integration", () => {
     it("should allow developer to access chat routes", async () => {
       const store = createTestStore("developer");
       const routes = [
-        { path: "/studio/v2/chat", element: <div data-testid="chat-page">Chat</div> },
+        {
+          path: "/studio/v2/chat",
+          element: <div data-testid="chat-page">Chat</div>,
+        },
       ];
 
       const router = createMemoryRouter(routes, {
@@ -508,7 +536,10 @@ describe("Routing Integration", () => {
     it("should allow user (bob) to access chat routes", async () => {
       const store = createTestStore("user");
       const routes = [
-        { path: "/studio/v2/chat", element: <div data-testid="chat-page">Chat</div> },
+        {
+          path: "/studio/v2/chat",
+          element: <div data-testid="chat-page">Chat</div>,
+        },
       ];
 
       const router = createMemoryRouter(routes, {

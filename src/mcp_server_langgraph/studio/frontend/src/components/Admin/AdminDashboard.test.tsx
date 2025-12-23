@@ -189,7 +189,9 @@ describe("AdminDashboard", () => {
 
     it("should call onRefresh when refresh button is clicked", async () => {
       const onRefresh = vi.fn();
-      renderWithStore(<AdminDashboard {...defaultProps} onRefresh={onRefresh} />);
+      renderWithStore(
+        <AdminDashboard {...defaultProps} onRefresh={onRefresh} />,
+      );
 
       const refreshButton = screen.getByRole("button", { name: /refresh/i });
       refreshButton.click();
@@ -283,7 +285,9 @@ describe("AdminDashboard", () => {
     });
 
     it("should show loading state for users when usersLoading is true", async () => {
-      renderWithStore(<AdminDashboard {...userManagementProps} usersLoading={true} />);
+      renderWithStore(
+        <AdminDashboard {...userManagementProps} usersLoading={true} />,
+      );
 
       const usersTab = screen.getByRole("tab", { name: /users/i });
       await act(async () => {
@@ -379,7 +383,7 @@ describe("AdminDashboard", () => {
       const store = createTestStore();
       const { container } = renderWithStore(
         <AdminDashboard {...defaultProps} />,
-        store
+        store,
       );
 
       // Component should render without errors
@@ -392,7 +396,7 @@ describe("AdminDashboard", () => {
       const store = createTestStore();
       const { container } = renderWithStore(
         <AdminDashboard {...defaultProps} />,
-        store
+        store,
       );
 
       expect(container).toBeInTheDocument();
@@ -512,7 +516,7 @@ describe("AdminDashboard", () => {
       // Initially on Overview tab
       expect(screen.getByRole("tab", { name: /overview/i })).toHaveAttribute(
         "aria-selected",
-        "true"
+        "true",
       );
 
       // Press Shift+A
@@ -522,14 +526,14 @@ describe("AdminDashboard", () => {
             key: "a",
             shiftKey: true,
             bubbles: true,
-          })
+          }),
         );
       });
 
       // Should be on Alerts tab
       expect(screen.getByRole("tab", { name: /alerts/i })).toHaveAttribute(
         "aria-selected",
-        "true"
+        "true",
       );
     });
 
@@ -552,14 +556,14 @@ describe("AdminDashboard", () => {
             key: "o",
             shiftKey: true,
             bubbles: true,
-          })
+          }),
         );
       });
 
       // Should be on Overview tab
       expect(screen.getByRole("tab", { name: /overview/i })).toHaveAttribute(
         "aria-selected",
-        "true"
+        "true",
       );
     });
 
@@ -573,14 +577,14 @@ describe("AdminDashboard", () => {
             key: "u",
             shiftKey: true,
             bubbles: true,
-          })
+          }),
         );
       });
 
       // Should be on Users tab
       expect(screen.getByRole("tab", { name: /users/i })).toHaveAttribute(
         "aria-selected",
-        "true"
+        "true",
       );
     });
 
@@ -590,7 +594,7 @@ describe("AdminDashboard", () => {
       // Initially on Overview tab
       expect(screen.getByRole("tab", { name: /overview/i })).toHaveAttribute(
         "aria-selected",
-        "true"
+        "true",
       );
 
       // Simulate input focus by setting activeElement
@@ -605,14 +609,14 @@ describe("AdminDashboard", () => {
             key: "a",
             shiftKey: true,
             bubbles: true,
-          })
+          }),
         );
       });
 
       // Should still be on Overview tab (shortcut not triggered)
       expect(screen.getByRole("tab", { name: /overview/i })).toHaveAttribute(
         "aria-selected",
-        "true"
+        "true",
       );
 
       // Cleanup
@@ -625,7 +629,7 @@ describe("AdminDashboard", () => {
       renderWithStore(<AdminDashboard {...defaultProps} />);
 
       expect(
-        screen.getByRole("tab", { name: /agent requests/i })
+        screen.getByRole("tab", { name: /agent requests/i }),
       ).toBeInTheDocument();
     });
 
@@ -652,7 +656,9 @@ describe("AdminDashboard", () => {
         agentRequestsTab.click();
       });
 
-      expect(screen.getByTestId("agent-requests-container")).toBeInTheDocument();
+      expect(
+        screen.getByTestId("agent-requests-container"),
+      ).toBeInTheDocument();
     });
 
     it("should hide System Health when Agent Requests tab is active", async () => {
@@ -690,7 +696,7 @@ describe("AdminDashboard", () => {
       // Initially on Overview tab
       expect(screen.getByRole("tab", { name: /overview/i })).toHaveAttribute(
         "aria-selected",
-        "true"
+        "true",
       );
 
       // Press Shift+R
@@ -700,13 +706,13 @@ describe("AdminDashboard", () => {
             key: "r",
             shiftKey: true,
             bubbles: true,
-          })
+          }),
         );
       });
 
       // Should be on Agent Requests tab
       expect(
-        screen.getByRole("tab", { name: /agent requests/i })
+        screen.getByRole("tab", { name: /agent requests/i }),
       ).toHaveAttribute("aria-selected", "true");
     });
   });

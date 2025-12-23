@@ -10,8 +10,8 @@
  * - Template persistence
  */
 
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { renderHook, act } from "@testing-library/react";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { renderHook, act, cleanup } from "@testing-library/react";
 import { usePromptTemplates } from "./usePromptTemplates";
 
 describe("usePromptTemplates", () => {
@@ -19,6 +19,11 @@ describe("usePromptTemplates", () => {
     vi.clearAllMocks();
     // Clear localStorage before each test
     localStorage.clear();
+  });
+
+  afterEach(() => {
+    cleanup();
+    vi.clearAllMocks();
   });
 
   describe("initialization", () => {

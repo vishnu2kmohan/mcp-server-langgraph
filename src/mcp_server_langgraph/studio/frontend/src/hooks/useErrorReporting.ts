@@ -55,7 +55,7 @@ export interface UseErrorReportingResult {
   /** Report an error */
   reportError: (
     error: Error | ClassifiedError,
-    options?: CreateReportOptions
+    options?: CreateReportOptions,
   ) => Promise<ReportResult>;
   /** Last reported error */
   lastError: Error | ClassifiedError | null;
@@ -78,7 +78,7 @@ export interface UseErrorReportingResult {
 // =============================================================================
 
 export function useErrorReporting(
-  options: UseErrorReportingOptions = {}
+  options: UseErrorReportingOptions = {},
 ): UseErrorReportingResult {
   const {
     captureWindowErrors = false,
@@ -88,7 +88,9 @@ export function useErrorReporting(
   } = options;
 
   // State
-  const [lastError, setLastError] = useState<Error | ClassifiedError | null>(null);
+  const [lastError, setLastError] = useState<Error | ClassifiedError | null>(
+    null,
+  );
   const [isReporting, setIsReporting] = useState(false);
   const [isEnabled, setIsEnabled] = useState(enabled);
 
@@ -109,7 +111,7 @@ export function useErrorReporting(
   const reportError = useCallback(
     async (
       error: Error | ClassifiedError,
-      reportOptions: CreateReportOptions = {}
+      reportOptions: CreateReportOptions = {},
     ): Promise<ReportResult> => {
       setLastError(error);
       setIsReporting(true);
@@ -121,7 +123,7 @@ export function useErrorReporting(
         setIsReporting(false);
       }
     },
-    []
+    [],
   );
 
   /**
@@ -144,12 +146,14 @@ export function useErrorReporting(
    * Get statistics
    */
   const getStats = useCallback((): ReporterStats => {
-    return reporterRef.current?.getStats() ?? {
-      totalReported: 0,
-      rateLimited: 0,
-      failed: 0,
-      queued: 0,
-    };
+    return (
+      reporterRef.current?.getStats() ?? {
+        totalReported: 0,
+        rateLimited: 0,
+        failed: 0,
+        queued: 0,
+      }
+    );
   }, []);
 
   /**
@@ -196,7 +200,8 @@ export function useErrorReporting(
     };
 
     window.addEventListener("unhandledrejection", handleRejection);
-    return () => window.removeEventListener("unhandledrejection", handleRejection);
+    return () =>
+      window.removeEventListener("unhandledrejection", handleRejection);
   }, [captureUnhandledRejections, reportError]);
 
   // Cleanup on unmount

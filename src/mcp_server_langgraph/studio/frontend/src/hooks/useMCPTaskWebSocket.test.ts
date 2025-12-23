@@ -5,8 +5,8 @@
  * GREEN phase: Tests should now pass with implementation.
  */
 
-import { renderHook, act } from "@testing-library/react";
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { renderHook, act, cleanup } from "@testing-library/react";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { useMCPTaskWebSocket, type MCPTask } from "./useMCPTaskWebSocket";
 
 // Mock useRealtimeSync
@@ -39,6 +39,11 @@ describe("useMCPTaskWebSocket", () => {
     mockOnMessage = undefined;
     mockOnConnect = undefined;
     mockOnDisconnect = undefined;
+  });
+
+  afterEach(() => {
+    cleanup();
+    vi.clearAllMocks();
   });
 
   describe("connection management", () => {

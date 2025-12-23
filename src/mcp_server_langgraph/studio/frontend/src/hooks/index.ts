@@ -104,7 +104,10 @@ export { useMCPConnection } from "./useMCPConnection";
 
 export { useConnectionHealth } from "./useConnectionHealth";
 
-export { useMCPKeyboardShortcuts, MCP_SHORTCUTS } from "./useMCPKeyboardShortcuts";
+export {
+  useMCPKeyboardShortcuts,
+  MCP_SHORTCUTS,
+} from "./useMCPKeyboardShortcuts";
 
 // =============================================================================
 // Chat Hooks
@@ -421,10 +424,7 @@ export type {
 } from "./useTraceIntelligence";
 
 // HITL Intelligence (Sprint 6)
-export {
-  useRiskAssessment,
-  useDecisionHistory,
-} from "./useHITLIntelligence";
+export { useRiskAssessment, useDecisionHistory } from "./useHITLIntelligence";
 export type {
   RiskFactor,
   RiskLevel,
@@ -521,10 +521,7 @@ export type {
 // AI Metrics Hook (Architecture: Observability)
 // =============================================================================
 
-export {
-  useAIMetrics,
-  createAIMetricsTracker,
-} from "./useAIMetrics";
+export { useAIMetrics, createAIMetricsTracker } from "./useAIMetrics";
 export type {
   AIMetricsEventType,
   AIMetricsEvent,

@@ -151,9 +151,12 @@ describe("usePermissionCache", () => {
       const store = createTestStore();
       const fetchPermissions = vi.fn().mockResolvedValue(["read"]);
 
-      const { result } = renderHook(() => usePermissionCache({ fetchPermissions }), {
-        wrapper: createWrapper(store),
-      });
+      const { result } = renderHook(
+        () => usePermissionCache({ fetchPermissions }),
+        {
+          wrapper: createWrapper(store),
+        },
+      );
 
       // Wait for any initial effects to complete
       await act(async () => {

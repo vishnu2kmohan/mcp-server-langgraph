@@ -175,11 +175,9 @@ describe("AIInsightsPanel", () => {
       mockUseAIMetricsInsights.mockReturnValue(mockInsights);
       renderWithProviders(<AIInsightsPanel />);
 
+      expect(screen.getByText(/D7 retention dropped 12%/i)).toBeInTheDocument();
       expect(
-        screen.getByText(/D7 retention dropped 12%/i)
-      ).toBeInTheDocument();
-      expect(
-        screen.getByText(/AI suggestions adoption up 25%/i)
+        screen.getByText(/AI suggestions adoption up 25%/i),
       ).toBeInTheDocument();
     });
 
@@ -271,7 +269,7 @@ describe("AIInsightsPanel", () => {
       renderWithProviders(<AIInsightsPanel />);
 
       expect(
-        screen.getByText(/Power users show 3x higher/i)
+        screen.getByText(/Power users show 3x higher/i),
       ).toBeInTheDocument();
     });
   });
@@ -308,7 +306,7 @@ describe("AIInsightsPanel", () => {
       renderWithProviders(<AIInsightsPanel />);
 
       expect(
-        screen.getByRole("button", { name: /refresh/i })
+        screen.getByRole("button", { name: /refresh/i }),
       ).toBeInTheDocument();
     });
 
@@ -360,7 +358,7 @@ describe("AIInsightsPanel", () => {
       renderWithProviders(<AIInsightsPanel />);
 
       expect(
-        screen.getByText(/Check workflow builder UX/i)
+        screen.getByText(/Check workflow builder UX/i),
       ).toBeInTheDocument();
     });
   });

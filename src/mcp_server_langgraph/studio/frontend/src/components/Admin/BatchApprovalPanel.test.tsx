@@ -99,7 +99,7 @@ describe("BatchApprovalPanel", () => {
           approvals={mockApprovals}
           onBatchApprove={vi.fn()}
           onBatchReject={vi.fn()}
-        />
+        />,
       );
 
       expect(screen.getByText("Research Assistant")).toBeInTheDocument();
@@ -113,7 +113,7 @@ describe("BatchApprovalPanel", () => {
           approvals={mockApprovals}
           onBatchApprove={vi.fn()}
           onBatchReject={vi.fn()}
-        />
+        />,
       );
 
       const checkboxes = screen.getAllByRole("checkbox");
@@ -127,11 +127,11 @@ describe("BatchApprovalPanel", () => {
           approvals={mockApprovals}
           onBatchApprove={vi.fn()}
           onBatchReject={vi.fn()}
-        />
+        />,
       );
 
       expect(
-        screen.getByRole("checkbox", { name: /select all/i })
+        screen.getByRole("checkbox", { name: /select all/i }),
       ).toBeInTheDocument();
     });
 
@@ -141,14 +141,14 @@ describe("BatchApprovalPanel", () => {
           approvals={mockApprovals}
           onBatchApprove={vi.fn()}
           onBatchReject={vi.fn()}
-        />
+        />,
       );
 
       expect(
-        screen.getByRole("button", { name: /approve selected/i })
+        screen.getByRole("button", { name: /approve selected/i }),
       ).toBeInTheDocument();
       expect(
-        screen.getByRole("button", { name: /reject selected/i })
+        screen.getByRole("button", { name: /reject selected/i }),
       ).toBeInTheDocument();
     });
 
@@ -158,7 +158,7 @@ describe("BatchApprovalPanel", () => {
           approvals={mockApprovals}
           onBatchApprove={vi.fn()}
           onBatchReject={vi.fn()}
-        />
+        />,
       );
 
       expect(screen.getByText("65%")).toBeInTheDocument();
@@ -172,7 +172,7 @@ describe("BatchApprovalPanel", () => {
           approvals={[]}
           onBatchApprove={vi.fn()}
           onBatchReject={vi.fn()}
-        />
+        />,
       );
 
       expect(screen.getByText(/no pending approvals/i)).toBeInTheDocument();
@@ -188,7 +188,7 @@ describe("BatchApprovalPanel", () => {
           approvals={mockApprovals}
           onBatchApprove={vi.fn()}
           onBatchReject={vi.fn()}
-        />
+        />,
       );
 
       const checkboxes = screen.getAllByRole("checkbox");
@@ -207,7 +207,7 @@ describe("BatchApprovalPanel", () => {
           approvals={mockApprovals}
           onBatchApprove={vi.fn()}
           onBatchReject={vi.fn()}
-        />
+        />,
       );
 
       const selectAllCheckbox = screen.getByRole("checkbox", {
@@ -230,7 +230,7 @@ describe("BatchApprovalPanel", () => {
           approvals={mockApprovals}
           onBatchApprove={vi.fn()}
           onBatchReject={vi.fn()}
-        />
+        />,
       );
 
       const selectAllCheckbox = screen.getByRole("checkbox", {
@@ -256,7 +256,7 @@ describe("BatchApprovalPanel", () => {
           approvals={mockApprovals}
           onBatchApprove={vi.fn()}
           onBatchReject={vi.fn()}
-        />
+        />,
       );
 
       const checkboxes = screen.getAllByRole("checkbox");
@@ -274,7 +274,7 @@ describe("BatchApprovalPanel", () => {
           approvals={mockApprovals}
           onBatchApprove={vi.fn()}
           onBatchReject={vi.fn()}
-        />
+        />,
       );
 
       const approveButton = screen.getByRole("button", {
@@ -296,7 +296,7 @@ describe("BatchApprovalPanel", () => {
           approvals={mockApprovals}
           onBatchApprove={vi.fn()}
           onBatchReject={vi.fn()}
-        />
+        />,
       );
 
       const checkboxes = screen.getAllByRole("checkbox");
@@ -322,7 +322,7 @@ describe("BatchApprovalPanel", () => {
           approvals={mockApprovals}
           onBatchApprove={onBatchApprove}
           onBatchReject={vi.fn()}
-        />
+        />,
       );
 
       const checkboxes = screen.getAllByRole("checkbox");
@@ -336,7 +336,7 @@ describe("BatchApprovalPanel", () => {
 
       expect(onBatchApprove).toHaveBeenCalledWith(
         expect.arrayContaining(["req-001", "req-003"]),
-        undefined
+        undefined,
       );
     });
 
@@ -349,7 +349,7 @@ describe("BatchApprovalPanel", () => {
           approvals={mockApprovals}
           onBatchApprove={vi.fn()}
           onBatchReject={onBatchReject}
-        />
+        />,
       );
 
       const checkboxes = screen.getAllByRole("checkbox");
@@ -371,7 +371,7 @@ describe("BatchApprovalPanel", () => {
           approvals={mockApprovals}
           onBatchApprove={vi.fn()}
           onBatchReject={vi.fn()}
-        />
+        />,
       );
 
       expect(screen.getByPlaceholderText(/reason/i)).toBeInTheDocument();
@@ -386,7 +386,7 @@ describe("BatchApprovalPanel", () => {
           approvals={mockApprovals}
           onBatchApprove={onBatchApprove}
           onBatchReject={vi.fn()}
-        />
+        />,
       );
 
       // Select an approval
@@ -405,7 +405,7 @@ describe("BatchApprovalPanel", () => {
 
       expect(onBatchApprove).toHaveBeenCalledWith(
         expect.any(Array),
-        "Batch verified by admin"
+        "Batch verified by admin",
       );
     });
   });
@@ -418,7 +418,7 @@ describe("BatchApprovalPanel", () => {
           onBatchApprove={vi.fn()}
           onBatchReject={vi.fn()}
           isApproving={true}
-        />
+        />,
       );
 
       expect(screen.getByTestId("batch-approve-loading")).toBeInTheDocument();
@@ -431,7 +431,7 @@ describe("BatchApprovalPanel", () => {
           onBatchApprove={vi.fn()}
           onBatchReject={vi.fn()}
           isRejecting={true}
-        />
+        />,
       );
 
       expect(screen.getByTestId("batch-reject-loading")).toBeInTheDocument();
@@ -444,7 +444,7 @@ describe("BatchApprovalPanel", () => {
           onBatchApprove={vi.fn()}
           onBatchReject={vi.fn()}
           isApproving={true}
-        />
+        />,
       );
 
       const checkboxes = screen.getAllByRole("checkbox");
@@ -461,7 +461,7 @@ describe("BatchApprovalPanel", () => {
           approvals={mockApprovals}
           onBatchApprove={vi.fn()}
           onBatchReject={vi.fn()}
-        />
+        />,
       );
 
       // Each approval checkbox should have an accessible name
@@ -469,7 +469,7 @@ describe("BatchApprovalPanel", () => {
         expect(
           screen.getByRole("checkbox", {
             name: new RegExp(approval.agent_name, "i"),
-          })
+          }),
         ).toBeInTheDocument();
       });
     });
@@ -482,7 +482,7 @@ describe("BatchApprovalPanel", () => {
           approvals={mockApprovals}
           onBatchApprove={vi.fn()}
           onBatchReject={vi.fn()}
-        />
+        />,
       );
 
       const selectAllCheckbox = screen.getByRole("checkbox", {

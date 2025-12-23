@@ -4,8 +4,8 @@
  * TDD tests for the extracted SessionNav component.
  * Tests session grouping, search, and navigation.
  */
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { render, screen, cleanup } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { axe, toHaveNoViolations } from "jest-axe";
 
@@ -108,6 +108,11 @@ function createWrapper(store: ReturnType<typeof createTestStore>) {
 
 describe("SessionNav", () => {
   beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  afterEach(() => {
+    cleanup();
     vi.clearAllMocks();
   });
 
@@ -238,6 +243,11 @@ describe("SessionNav", () => {
 
 describe("SessionNav AI Intelligence", () => {
   beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  afterEach(() => {
+    cleanup();
     vi.clearAllMocks();
   });
 

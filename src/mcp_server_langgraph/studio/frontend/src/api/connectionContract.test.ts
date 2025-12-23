@@ -113,7 +113,11 @@ function setupConnectionHandlers() {
             connection_id: "conn-001",
             action: "update",
             actor: "admin@example.com",
-            details: { field: "name", old_value: "Old Name", new_value: "New Name" },
+            details: {
+              field: "name",
+              old_value: "Old Name",
+              new_value: "New Name",
+            },
             created_at: "2024-01-15T09:00:00Z",
           },
         ].slice(0, limit),
@@ -153,9 +157,21 @@ audit-002,conn-001,update,admin@example.com,2024-01-15T09:00:00Z`;
     http.get("/api/v1/connection-templates/categories", () => {
       return HttpResponse.json({
         categories: [
-          { id: "ai", name: "AI & ML", description: "AI and machine learning tools" },
-          { id: "data", name: "Data", description: "Data sources and databases" },
-          { id: "productivity", name: "Productivity", description: "Productivity tools" },
+          {
+            id: "ai",
+            name: "AI & ML",
+            description: "AI and machine learning tools",
+          },
+          {
+            id: "data",
+            name: "Data",
+            description: "Data sources and databases",
+          },
+          {
+            id: "productivity",
+            name: "Productivity",
+            description: "Productivity tools",
+          },
         ],
       });
     }),
@@ -214,20 +230,23 @@ audit-002,conn-001,update,admin@example.com,2024-01-15T09:00:00Z`;
     }),
 
     // POST /api/v1/connection-templates/:id/apply - Apply template
-    http.post("/api/v1/connection-templates/:id/apply", async ({ params, request }) => {
-      const templateId = params.id as string;
-      const body = (await request.json()) as {
-        name?: string;
-        env_vars?: Record<string, string>;
-      };
-      return HttpResponse.json({
-        connection: {
-          name: body.name || `Connection from ${templateId}`,
-          description: "Created from template",
-          status: "disconnected",
-        },
-      });
-    }),
+    http.post(
+      "/api/v1/connection-templates/:id/apply",
+      async ({ params, request }) => {
+        const templateId = params.id as string;
+        const body = (await request.json()) as {
+          name?: string;
+          env_vars?: Record<string, string>;
+        };
+        return HttpResponse.json({
+          connection: {
+            name: body.name || `Connection from ${templateId}`,
+            description: "Created from template",
+            status: "disconnected",
+          },
+        });
+      },
+    ),
 
     // ===========================================================================
     // Connection CRUD (parameterized paths last)
@@ -293,7 +312,7 @@ audit-002,conn-001,update,admin@example.com,2024-01-15T09:00:00Z`;
       // Filter by search
       if (search) {
         connections = connections.filter((c) =>
-          c.name.toLowerCase().includes(search.toLowerCase())
+          c.name.toLowerCase().includes(search.toLowerCase()),
         );
       }
 
@@ -302,7 +321,8 @@ audit-002,conn-001,update,admin@example.com,2024-01-15T09:00:00Z`;
       return HttpResponse.json({
         items,
         total: connections.length,
-        cursor: items.length < connections.length ? items[items.length - 1].id : null,
+        cursor:
+          items.length < connections.length ? items[items.length - 1].id : null,
       });
     }),
 
@@ -477,7 +497,7 @@ audit-002,conn-001,update,admin@example.com,2024-01-15T09:00:00Z`;
         total: 1,
         offset: 0,
       });
-    })
+    }),
   );
 }
 
@@ -496,7 +516,12 @@ afterEach(() => {
 
 type TransportProtocol = "streamable_http" | "stdio";
 type AuthType = "none" | "api_key" | "oauth2";
-type ConnectionStatus = "disconnected" | "connecting" | "connected" | "error" | "auth_required";
+type ConnectionStatus =
+  | "disconnected"
+  | "connecting"
+  | "connected"
+  | "error"
+  | "auth_required";
 
 interface MCPConnectionSummary {
   id: string;
@@ -586,9 +611,13 @@ describe("Connection API Contract", () => {
       expect(typeof conn.url).toBe("string");
       expect(["streamable_http", "stdio"]).toContain(conn.transport);
       expect(["none", "api_key", "oauth2"]).toContain(conn.auth_type);
-      expect(
-        ["disconnected", "connecting", "connected", "error", "auth_required"]
-      ).toContain(conn.status);
+      expect([
+        "disconnected",
+        "connecting",
+        "connected",
+        "error",
+        "auth_required",
+      ]).toContain(conn.status);
       expect(typeof conn.tool_count).toBe("number");
       expect(typeof conn.resource_count).toBe("number");
       expect(typeof conn.prompt_count).toBe("number");
@@ -866,15 +895,23 @@ describe("Connection API Contract", () => {
 
         expect(Array.isArray(data.logs)).toBe(true);
         // All logs should be for the requested connection
-        expect(data.logs.every((log: { connection_id: string }) => log.connection_id === "conn-001")).toBe(true);
+        expect(
+          data.logs.every(
+            (log: { connection_id: string }) =>
+              log.connection_id === "conn-001",
+          ),
+        ).toBe(true);
       });
     });
 
     describe("DELETE /api/v1/connections/audit/retention", () => {
       it("should delete old audit logs", async () => {
-        const response = await fetch("/api/v1/connections/audit/retention?days=90", {
-          method: "DELETE",
-        });
+        const response = await fetch(
+          "/api/v1/connections/audit/retention?days=90",
+          {
+            method: "DELETE",
+          },
+        );
 
         expect(response.ok).toBe(true);
         const data = await response.json();
@@ -924,17 +961,25 @@ describe("Connection API Contract", () => {
       });
 
       it("should filter templates by category", async () => {
-        const response = await fetch("/api/v1/connection-templates?category=ai");
+        const response = await fetch(
+          "/api/v1/connection-templates?category=ai",
+        );
         expect(response.ok).toBe(true);
 
         const data = await response.json();
-        expect(data.templates.every((t: { category: string }) => t.category === "ai")).toBe(true);
+        expect(
+          data.templates.every(
+            (t: { category: string }) => t.category === "ai",
+          ),
+        ).toBe(true);
       });
     });
 
     describe("GET /api/v1/connection-templates/:id", () => {
       it("should return template details", async () => {
-        const response = await fetch("/api/v1/connection-templates/tmpl-openai");
+        const response = await fetch(
+          "/api/v1/connection-templates/tmpl-openai",
+        );
         expect(response.ok).toBe(true);
 
         const data = await response.json();
@@ -953,14 +998,17 @@ describe("Connection API Contract", () => {
 
     describe("POST /api/v1/connection-templates/:id/apply", () => {
       it("should create connection from template", async () => {
-        const response = await fetch("/api/v1/connection-templates/tmpl-openai/apply", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            name: "My OpenAI Connection",
-            env_vars: { OPENAI_API_KEY: "sk-xxx" },
-          }),
-        });
+        const response = await fetch(
+          "/api/v1/connection-templates/tmpl-openai/apply",
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              name: "My OpenAI Connection",
+              env_vars: { OPENAI_API_KEY: "sk-xxx" },
+            }),
+          },
+        );
 
         expect(response.ok).toBe(true);
         const data = await response.json();

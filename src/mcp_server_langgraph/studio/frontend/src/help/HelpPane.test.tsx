@@ -335,9 +335,7 @@ describe("HelpPane", () => {
         <HelpPane topics={mockTopics} onTopicSelect={mockOnTopicSelect} />,
       );
 
-      expect(
-        screen.getByText(/welcome to the platform/i),
-      ).toBeInTheDocument();
+      expect(screen.getByText(/welcome to the platform/i)).toBeInTheDocument();
     });
 
     it("displays all keywords matching topics when multiple match", () => {
@@ -381,7 +379,7 @@ describe("HelpPane", () => {
           onTopicSelect={mockOnTopicSelect}
           enableAI={true}
           currentPage="chat"
-        />
+        />,
       );
       expect(screen.getByTestId("help-pane")).toBeInTheDocument();
     });
@@ -393,7 +391,7 @@ describe("HelpPane", () => {
           onTopicSelect={mockOnTopicSelect}
           enableAI={true}
           currentPage="chat"
-        />
+        />,
       );
       // The component should render with AI section
       expect(screen.getByTestId("help-pane")).toBeInTheDocument();
@@ -405,9 +403,11 @@ describe("HelpPane", () => {
           topics={mockTopics}
           onTopicSelect={mockOnTopicSelect}
           enableAI={false}
-        />
+        />,
       );
-      expect(screen.queryByTestId("ai-contextual-help-section")).not.toBeInTheDocument();
+      expect(
+        screen.queryByTestId("ai-contextual-help-section"),
+      ).not.toBeInTheDocument();
     });
 
     it("should show quick actions when provided by AI", () => {
@@ -417,7 +417,7 @@ describe("HelpPane", () => {
           onTopicSelect={mockOnTopicSelect}
           enableAI={true}
           currentPage="admin"
-        />
+        />,
       );
       // Quick actions section should be available when AI provides them
       expect(screen.getByTestId("help-pane")).toBeInTheDocument();
@@ -431,7 +431,7 @@ describe("HelpPane", () => {
           onTopicSelect={mockOnTopicSelect}
           enableAI={true}
           currentPage="chat"
-        />
+        />,
       );
       // Should still show regular topics
       expect(screen.getByText("Getting Started")).toBeInTheDocument();

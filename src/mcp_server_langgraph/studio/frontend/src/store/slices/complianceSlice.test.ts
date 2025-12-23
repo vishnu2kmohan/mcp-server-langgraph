@@ -116,13 +116,20 @@ describe("complianceSlice", () => {
 
     it("skips undefined statuses in partial update", () => {
       // Test the branch where status is undefined/falsy
-      const statuses: Partial<Record<"SOC2" | "HIPAA" | "GDPR" | "FEDRAMP", FrameworkStatus | undefined>> = {
+      const statuses: Partial<
+        Record<
+          "SOC2" | "HIPAA" | "GDPR" | "FEDRAMP",
+          FrameworkStatus | undefined
+        >
+      > = {
         SOC2: mockSOC2Status,
         HIPAA: undefined, // This should be skipped
       };
       const state = complianceReducer(
         initialState,
-        setAllFrameworkStatuses(statuses as Parameters<typeof setAllFrameworkStatuses>[0]),
+        setAllFrameworkStatuses(
+          statuses as Parameters<typeof setAllFrameworkStatuses>[0],
+        ),
       );
       expect(state.frameworks.SOC2.score).toBe(94);
       // HIPAA should remain unchanged (original loading state)
@@ -139,7 +146,9 @@ describe("complianceSlice", () => {
         setAllFrameworkStatuses(statuses),
       );
       expect(state.lastRefresh).not.toBeNull();
-      expect(new Date(state.lastRefresh!).getTime()).toBeLessThanOrEqual(Date.now());
+      expect(new Date(state.lastRefresh!).getTime()).toBeLessThanOrEqual(
+        Date.now(),
+      );
     });
   });
 

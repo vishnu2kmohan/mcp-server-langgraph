@@ -24,60 +24,60 @@ describe("SignalsRegistry", () => {
   describe("SIGNALS", () => {
     it("defines signals for happiness metrics", () => {
       const happinessSignals = getAllSignals().filter((s) =>
-        s.id.startsWith("happiness_")
+        s.id.startsWith("happiness_"),
       );
 
       expect(happinessSignals.length).toBeGreaterThan(0);
       expect(happinessSignals.some((s) => s.id === "happiness_nps_score")).toBe(
-        true
+        true,
       );
       expect(
-        happinessSignals.some((s) => s.id === "happiness_satisfaction_rating")
+        happinessSignals.some((s) => s.id === "happiness_satisfaction_rating"),
       ).toBe(true);
     });
 
     it("defines signals for engagement metrics", () => {
       const engagementSignals = getAllSignals().filter((s) =>
-        s.id.startsWith("engagement_")
+        s.id.startsWith("engagement_"),
       );
 
       expect(engagementSignals.length).toBeGreaterThan(0);
       expect(
-        engagementSignals.some((s) => s.id === "engagement_feature_click")
+        engagementSignals.some((s) => s.id === "engagement_feature_click"),
       ).toBe(true);
       expect(
-        engagementSignals.some((s) => s.id === "engagement_session_duration")
+        engagementSignals.some((s) => s.id === "engagement_session_duration"),
       ).toBe(true);
     });
 
     it("defines signals for adoption metrics", () => {
       const adoptionSignals = getAllSignals().filter((s) =>
-        s.id.startsWith("adoption_")
+        s.id.startsWith("adoption_"),
       );
 
       expect(adoptionSignals.length).toBeGreaterThan(0);
       expect(
-        adoptionSignals.some((s) => s.id === "adoption_onboarding_complete")
+        adoptionSignals.some((s) => s.id === "adoption_onboarding_complete"),
       ).toBe(true);
       expect(
-        adoptionSignals.some((s) => s.id === "adoption_feature_first_use")
+        adoptionSignals.some((s) => s.id === "adoption_feature_first_use"),
       ).toBe(true);
     });
 
     it("defines signals for retention metrics", () => {
       const retentionSignals = getAllSignals().filter((s) =>
-        s.id.startsWith("retention_")
+        s.id.startsWith("retention_"),
       );
 
       expect(retentionSignals.length).toBeGreaterThan(0);
       expect(
-        retentionSignals.some((s) => s.id === "retention_return_visit")
+        retentionSignals.some((s) => s.id === "retention_return_visit"),
       ).toBe(true);
     });
 
     it("defines signals for task success metrics", () => {
       const taskSignals = getAllSignals().filter((s) =>
-        s.id.startsWith("task_")
+        s.id.startsWith("task_"),
       );
 
       expect(taskSignals.length).toBeGreaterThan(0);
@@ -96,7 +96,7 @@ describe("SignalsRegistry", () => {
         expect(signal.description).toBeDefined();
         expect(signal.valueType).toBeDefined();
         expect(["number", "boolean", "string", "counter"]).toContain(
-          signal.valueType
+          signal.valueType,
         );
       });
     });

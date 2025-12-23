@@ -239,7 +239,7 @@ describe("useCrossInsightsPanel", () => {
 
       expect(addEventListenerSpy).toHaveBeenCalledWith(
         "keydown",
-        expect.any(Function)
+        expect.any(Function),
       );
     });
 
@@ -255,7 +255,7 @@ describe("useCrossInsightsPanel", () => {
 
       expect(removeEventListenerSpy).toHaveBeenCalledWith(
         "keydown",
-        expect.any(Function)
+        expect.any(Function),
       );
     });
 

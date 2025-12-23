@@ -209,18 +209,18 @@ export function useConnectionsRealtimeWebSocket(
       case "connection_status":
         // Track as subscribed
         setSubscribedConnections((prev) =>
-          new Set(prev).add(message.payload.connection.id)
+          new Set(prev).add(message.payload.connection.id),
         );
         // Update connection in list if present
         setConnections((prev) => {
           const existing = prev.find(
-            (c) => c.id === message.payload.connection.id
+            (c) => c.id === message.payload.connection.id,
           );
           if (existing) {
             return prev.map((c) =>
               c.id === message.payload.connection.id
                 ? message.payload.connection
-                : c
+                : c,
             );
           }
           return [...prev, message.payload.connection];
@@ -233,8 +233,8 @@ export function useConnectionsRealtimeWebSocket(
           prev.map((c) =>
             c.id === message.payload.connection.id
               ? message.payload.connection
-              : c
-          )
+              : c,
+          ),
         );
         callbacksRef.current.onConnectionUpdate?.(message.payload.connection);
         break;

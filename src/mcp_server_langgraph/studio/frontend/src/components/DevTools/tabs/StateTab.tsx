@@ -148,7 +148,7 @@ function StateNodeRow({
     <div
       className={cn(
         "flex items-center py-0.5 hover:bg-gray-50 dark:hover:bg-gray-800/50",
-        isMatch && "bg-yellow-50 dark:bg-yellow-900/20"
+        isMatch && "bg-yellow-50 dark:bg-yellow-900/20",
       )}
       style={{ paddingLeft: `${depth * 16 + 8}px` }}
     >
@@ -160,7 +160,9 @@ function StateNodeRow({
           onClick={onToggle}
           className="p-0.5 hover:bg-gray-200 dark:hover:bg-gray-700 rounded"
           aria-expanded={isExpanded}
-          aria-label={isExpanded ? `Collapse ${node.key}` : `Expand ${node.key}`}
+          aria-label={
+            isExpanded ? `Collapse ${node.key}` : `Expand ${node.key}`
+          }
         >
           {isExpanded ? (
             <ChevronDown size={12} className="text-gray-500" />
@@ -228,7 +230,7 @@ function StateTree({ state, searchTerm }: StateTreeProps) {
       // Check if any children match
       const allChildren = getChildNodes(node.value, node.path);
       const hasMatchingChildren = allChildren.some((child) =>
-        matchesSearch(child, searchTerm)
+        matchesSearch(child, searchTerm),
       );
       if (!hasMatchingChildren) {
         return null;
@@ -244,8 +246,7 @@ function StateTree({ state, searchTerm }: StateTreeProps) {
           onToggle={() => togglePath(node.path)}
           searchTerm={searchTerm}
         />
-        {isExpanded &&
-          children.map((child) => renderNode(child, depth + 1))}
+        {isExpanded && children.map((child) => renderNode(child, depth + 1))}
       </div>
     );
   };
@@ -295,7 +296,7 @@ export function StateTab({ context, contextEntityId }: StateTabProps) {
     (e: React.ChangeEvent<HTMLInputElement>) => {
       setSearchTerm(e.target.value);
     },
-    []
+    [],
   );
 
   return (
@@ -339,7 +340,7 @@ export function StateTab({ context, contextEntityId }: StateTabProps) {
               "bg-white dark:bg-gray-900",
               "border border-gray-200 dark:border-gray-700 rounded",
               "focus:outline-none focus:ring-1 focus:ring-primary-500",
-              "w-40"
+              "w-40",
             )}
             aria-label="Search state"
           />
@@ -359,10 +360,7 @@ export function StateTab({ context, contextEntityId }: StateTabProps) {
 
       {/* State tree */}
       <div className="flex-1 overflow-y-auto p-2" key={refreshKey}>
-        <StateTree
-          state={displayState}
-          searchTerm={searchTerm}
-        />
+        <StateTree state={displayState} searchTerm={searchTerm} />
       </div>
     </div>
   );

@@ -138,10 +138,11 @@ describe("ErrorTypes", () => {
 
     it("auto-detects recoverability based on category", () => {
       expect(
-        createClassifiedError(new Error("timeout"), "timeout").recoverable
+        createClassifiedError(new Error("timeout"), "timeout").recoverable,
       ).toBe(true);
       expect(
-        createClassifiedError(new Error("forbidden"), "authorization").recoverable
+        createClassifiedError(new Error("forbidden"), "authorization")
+          .recoverable,
       ).toBe(false);
     });
 
@@ -155,9 +156,18 @@ describe("ErrorTypes", () => {
 
   describe("type guard functions", () => {
     const networkError = createClassifiedError(new Error("offline"), "network");
-    const authError = createClassifiedError(new Error("expired"), "authentication");
-    const authzError = createClassifiedError(new Error("denied"), "authorization");
-    const validationError = createClassifiedError(new Error("invalid"), "validation");
+    const authError = createClassifiedError(
+      new Error("expired"),
+      "authentication",
+    );
+    const authzError = createClassifiedError(
+      new Error("denied"),
+      "authorization",
+    );
+    const validationError = createClassifiedError(
+      new Error("invalid"),
+      "validation",
+    );
     const serverError = createClassifiedError(new Error("crash"), "server");
     const quotaError = createClassifiedError(new Error("limited"), "quota");
 
@@ -255,7 +265,7 @@ describe("ErrorTypes", () => {
       expect(classified.context).toEqual({ action: "api_call" });
       expect(classified.retryAfter).toBe(5000);
       expect(classified.userMessage).toBe(
-        "Your session has expired. Please log in again."
+        "Your session has expired. Please log in again.",
       );
     });
   });

@@ -82,9 +82,9 @@ describe("POST /api/v1/studio/analyze", () => {
       expect(response.status).toBe(200);
       const result = await response.json();
       expect(result.analyses.session_similarity).toBeDefined();
-      expect(result.analyses.session_similarity.similar_sessions).toBeInstanceOf(
-        Array,
-      );
+      expect(
+        result.analyses.session_similarity.similar_sessions,
+      ).toBeInstanceOf(Array);
     });
   });
 
@@ -153,7 +153,9 @@ describe("POST /api/v1/studio/analyze", () => {
       expect(response.status).toBe(200);
       const result = await response.json();
       expect(result.analyses.artifact_suggest_type).toBeDefined();
-      expect(result.analyses.artifact_suggest_type.suggested_type).toBeDefined();
+      expect(
+        result.analyses.artifact_suggest_type.suggested_type,
+      ).toBeDefined();
     });
 
     it("should return code analysis for code_analyze task", async () => {
@@ -237,7 +239,11 @@ describe("POST /api/v1/studio/analyze", () => {
       const response = await fetchStudioAnalyze({
         user_id: "user-123",
         tasks: [
-          { category: "trace", type: "trace_summarize", data: { trace_id: "t1" } },
+          {
+            category: "trace",
+            type: "trace_summarize",
+            data: { trace_id: "t1" },
+          },
         ],
       });
 
@@ -251,7 +257,11 @@ describe("POST /api/v1/studio/analyze", () => {
       const response = await fetchStudioAnalyze({
         user_id: "user-123",
         tasks: [
-          { category: "trace", type: "trace_anomaly", data: { trace_id: "t1" } },
+          {
+            category: "trace",
+            type: "trace_anomaly",
+            data: { trace_id: "t1" },
+          },
         ],
       });
 
@@ -337,7 +347,9 @@ describe("POST /api/v1/studio/analyze", () => {
       expect(response.status).toBe(200);
       const result = await response.json();
       expect(result.analyses.command_interpret).toBeDefined();
-      expect(result.analyses.command_interpret.interpreted_command).toBeDefined();
+      expect(
+        result.analyses.command_interpret.interpreted_command,
+      ).toBeDefined();
     });
 
     it("should return inline suggestions for inline_suggest task", async () => {
@@ -399,7 +411,11 @@ describe("POST /api/v1/studio/analyze", () => {
       const response = await fetchStudioAnalyze({
         user_id: "user-123",
         tasks: [
-          { category: "ux", type: "contextual_help", data: { context: "chat" } },
+          {
+            category: "ux",
+            type: "contextual_help",
+            data: { context: "chat" },
+          },
         ],
       });
 
@@ -429,7 +445,11 @@ describe("POST /api/v1/studio/analyze", () => {
         session_id: "session-456",
         tasks: [
           { category: "session", type: "session_summarize", data: {} },
-          { category: "conversation", type: "intent_detect", data: { query: "help" } },
+          {
+            category: "conversation",
+            type: "intent_detect",
+            data: { query: "help" },
+          },
           { category: "ux", type: "nav_prediction", data: {} },
         ],
       });

@@ -211,7 +211,9 @@ export function useStudioAI(options: UseStudioAIOptions): UseStudioAIResult {
           task_type: taskType,
           success: !isFailed,
           data: analysisData as Record<string, unknown>,
-          confidence: (analysisData as Record<string, unknown>)?.confidence as number | undefined,
+          confidence: (analysisData as Record<string, unknown>)?.confidence as
+            | number
+            | undefined,
           error: isFailed ? `Analysis failed for ${taskType}` : undefined,
         });
       }
@@ -274,7 +276,7 @@ export function useStudioAI(options: UseStudioAIOptions): UseStudioAIResult {
     (taskType: string): StudioAnalysisResult | undefined => {
       return results?.find((r) => r.task_type === taskType);
     },
-    [results]
+    [results],
   );
 
   // Serialize tasks for dependency comparison

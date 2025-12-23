@@ -19,7 +19,10 @@ import { Provider } from "react-redux";
 import { configureStore } from "@reduxjs/toolkit";
 import type { ReactNode } from "react";
 
-import { AlertDetailPanel, type AlertDetailPanelProps } from "./AlertDetailPanel";
+import {
+  AlertDetailPanel,
+  type AlertDetailPanelProps,
+} from "./AlertDetailPanel";
 import alertReducer, { type Alert } from "../../store/slices/alertSlice";
 import type { AIRecommendation, RemediationRequest } from "../../types/api";
 
@@ -34,7 +37,10 @@ const mockAlert: Alert = {
   state: "firing",
   message: "CPU usage above 90% for 5 minutes",
   labels: { service: "api-server", pod: "api-123", namespace: "production" },
-  annotations: { summary: "High CPU usage detected", runbook_url: "https://runbooks.example.com/high-cpu" },
+  annotations: {
+    summary: "High CPU usage detected",
+    runbook_url: "https://runbooks.example.com/high-cpu",
+  },
   started_at: "2024-01-15T10:30:00Z",
   ended_at: null,
   fingerprint: "fp-001",
@@ -43,7 +49,8 @@ const mockAlert: Alert = {
 const mockRecommendation: AIRecommendation = {
   recommendation_id: "rec-001",
   alert_id: "alert-001",
-  root_cause_analysis: "The API server is experiencing memory leak in the request handler, causing increased CPU usage due to garbage collection pressure.",
+  root_cause_analysis:
+    "The API server is experiencing memory leak in the request handler, causing increased CPU usage due to garbage collection pressure.",
   remediation_steps: [
     {
       step_number: 1,
@@ -64,7 +71,8 @@ const mockRecommendation: AIRecommendation = {
   ],
   risk_assessment: {
     overall_risk: "medium",
-    impact_analysis: "Brief service interruption during restart, mitigated by scaling first",
+    impact_analysis:
+      "Brief service interruption during restart, mitigated by scaling first",
     rollback_plan: "kubectl rollout undo deployment api-server",
   },
   runbook_reference: "https://runbooks.example.com/high-cpu",
@@ -121,10 +129,8 @@ const defaultProps: AlertDetailPanelProps = {
   onClose: vi.fn(),
 };
 
-const renderWithStore = (
-  ui: ReactNode,
-  store = createTestStore("alert-001")
-) => render(<Provider store={store}>{ui}</Provider>);
+const renderWithStore = (ui: ReactNode, store = createTestStore("alert-001")) =>
+  render(<Provider store={store}>{ui}</Provider>);
 
 // =============================================================================
 // Tests
@@ -141,7 +147,9 @@ describe("AlertDetailPanel", () => {
     it("should render severity badge", () => {
       renderWithStore(<AlertDetailPanel {...defaultProps} />);
 
-      expect(screen.getByTestId("alert-severity")).toHaveTextContent("critical");
+      expect(screen.getByTestId("alert-severity")).toHaveTextContent(
+        "critical",
+      );
     });
 
     it("should render state badge", () => {
@@ -154,7 +162,7 @@ describe("AlertDetailPanel", () => {
       renderWithStore(<AlertDetailPanel {...defaultProps} />);
 
       expect(
-        screen.getByText("CPU usage above 90% for 5 minutes")
+        screen.getByText("CPU usage above 90% for 5 minutes"),
       ).toBeInTheDocument();
     });
 
@@ -198,8 +206,12 @@ describe("AlertDetailPanel", () => {
     it("should render remediation steps", () => {
       renderWithStore(<AlertDetailPanel {...defaultProps} />);
 
-      expect(screen.getByText("Scale up replicas to handle current load")).toBeInTheDocument();
-      expect(screen.getByText("Rolling restart to clear memory")).toBeInTheDocument();
+      expect(
+        screen.getByText("Scale up replicas to handle current load"),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByText("Rolling restart to clear memory"),
+      ).toBeInTheDocument();
     });
 
     it("should render step numbers", () => {
@@ -213,7 +225,7 @@ describe("AlertDetailPanel", () => {
       renderWithStore(<AlertDetailPanel {...defaultProps} />);
 
       expect(
-        screen.getByText(/kubectl scale deployment api-server/)
+        screen.getByText(/kubectl scale deployment api-server/),
       ).toBeInTheDocument();
     });
 
@@ -236,7 +248,7 @@ describe("AlertDetailPanel", () => {
           {...defaultProps}
           recommendation={null}
           isLoadingRecommendation
-        />
+        />,
       );
 
       expect(screen.getByTestId("recommendation-loading")).toBeInTheDocument();
@@ -248,7 +260,7 @@ describe("AlertDetailPanel", () => {
           {...defaultProps}
           recommendation={null}
           recommendationError="Failed to generate recommendation"
-        />
+        />,
       );
 
       expect(screen.getByText(/failed to generate/i)).toBeInTheDocument();
@@ -265,7 +277,9 @@ describe("AlertDetailPanel", () => {
     it("should render impact analysis", () => {
       renderWithStore(<AlertDetailPanel {...defaultProps} />);
 
-      expect(screen.getByText(/brief service interruption/i)).toBeInTheDocument();
+      expect(
+        screen.getByText(/brief service interruption/i),
+      ).toBeInTheDocument();
     });
 
     it("should render rollback plan", () => {
@@ -297,7 +311,9 @@ describe("AlertDetailPanel", () => {
 
     it("should call onApprove when approve button clicked", () => {
       const onApprove = vi.fn();
-      renderWithStore(<AlertDetailPanel {...defaultProps} onApprove={onApprove} />);
+      renderWithStore(
+        <AlertDetailPanel {...defaultProps} onApprove={onApprove} />,
+      );
 
       fireEvent.click(screen.getByTestId("approve-step-1"));
 
@@ -306,7 +322,9 @@ describe("AlertDetailPanel", () => {
 
     it("should call onReject when reject button clicked", () => {
       const onReject = vi.fn();
-      renderWithStore(<AlertDetailPanel {...defaultProps} onReject={onReject} />);
+      renderWithStore(
+        <AlertDetailPanel {...defaultProps} onReject={onReject} />,
+      );
 
       fireEvent.click(screen.getByTestId("reject-step-1"));
 
@@ -324,10 +342,12 @@ describe("AlertDetailPanel", () => {
         <AlertDetailPanel
           {...defaultProps}
           pendingRemediations={[approvedRemediation]}
-        />
+        />,
       );
 
-      expect(screen.getByTestId("step-status-1")).toHaveTextContent(/approved/i);
+      expect(screen.getByTestId("step-status-1")).toHaveTextContent(
+        /approved/i,
+      );
     });
 
     it("should show executing status for executing steps", () => {
@@ -339,10 +359,12 @@ describe("AlertDetailPanel", () => {
         <AlertDetailPanel
           {...defaultProps}
           pendingRemediations={[executingRemediation]}
-        />
+        />,
       );
 
-      expect(screen.getByTestId("step-status-1")).toHaveTextContent(/executing/i);
+      expect(screen.getByTestId("step-status-1")).toHaveTextContent(
+        /executing/i,
+      );
     });
   });
 
@@ -350,13 +372,15 @@ describe("AlertDetailPanel", () => {
     it("should render regenerate button", () => {
       renderWithStore(<AlertDetailPanel {...defaultProps} />);
 
-      expect(screen.getByTestId("regenerate-recommendation")).toBeInTheDocument();
+      expect(
+        screen.getByTestId("regenerate-recommendation"),
+      ).toBeInTheDocument();
     });
 
     it("should call onRegenerate when clicked", () => {
       const onRegenerate = vi.fn();
       renderWithStore(
-        <AlertDetailPanel {...defaultProps} onRegenerate={onRegenerate} />
+        <AlertDetailPanel {...defaultProps} onRegenerate={onRegenerate} />,
       );
 
       fireEvent.click(screen.getByTestId("regenerate-recommendation"));
@@ -365,9 +389,7 @@ describe("AlertDetailPanel", () => {
     });
 
     it("should disable regenerate button when loading", () => {
-      renderWithStore(
-        <AlertDetailPanel {...defaultProps} isRegenerating />
-      );
+      renderWithStore(<AlertDetailPanel {...defaultProps} isRegenerating />);
 
       expect(screen.getByTestId("regenerate-recommendation")).toBeDisabled();
     });
@@ -378,7 +400,10 @@ describe("AlertDetailPanel", () => {
       renderWithStore(<AlertDetailPanel {...defaultProps} />);
 
       const runbookLink = screen.getByTestId("runbook-link");
-      expect(runbookLink).toHaveAttribute("href", "https://runbooks.example.com/high-cpu");
+      expect(runbookLink).toHaveAttribute(
+        "href",
+        "https://runbooks.example.com/high-cpu",
+      );
     });
 
     it("should not render runbook link when not available", () => {
@@ -390,7 +415,7 @@ describe("AlertDetailPanel", () => {
         <AlertDetailPanel
           {...defaultProps}
           recommendation={noRunbookRecommendation}
-        />
+        />,
       );
 
       expect(screen.queryByTestId("runbook-link")).not.toBeInTheDocument();
@@ -399,9 +424,7 @@ describe("AlertDetailPanel", () => {
 
   describe("Empty State", () => {
     it("should show empty state when no alert selected", () => {
-      renderWithStore(
-        <AlertDetailPanel {...defaultProps} alert={null} />
-      );
+      renderWithStore(<AlertDetailPanel {...defaultProps} alert={null} />);
 
       expect(screen.getByText(/select an alert/i)).toBeInTheDocument();
     });

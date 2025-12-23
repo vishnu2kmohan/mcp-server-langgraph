@@ -50,8 +50,18 @@ describe("HEART Analytics Integration", () => {
         overallHealthScore: 75,
         dataPointCount: 1000,
         dimensions: [
-          { dimension: "happiness", overallScore: 80, hasData: true, goalProgresses: [] },
-          { dimension: "engagement", overallScore: 70, hasData: true, goalProgresses: [] },
+          {
+            dimension: "happiness",
+            overallScore: 80,
+            hasData: true,
+            goalProgresses: [],
+          },
+          {
+            dimension: "engagement",
+            overallScore: 70,
+            hasData: true,
+            goalProgresses: [],
+          },
         ],
       };
 
@@ -92,7 +102,7 @@ describe("HEART Analytics Integration", () => {
       await waitFor(() => {
         expect(fetchSpy).toHaveBeenCalledWith(
           expect.stringContaining("range=7d"),
-          expect.any(Object)
+          expect.any(Object),
         );
       });
     });
@@ -221,7 +231,10 @@ describe("HEART Analytics Integration", () => {
     it("clears session context", () => {
       const aggregator = new HeartAggregator();
 
-      aggregator.setSessionContext({ sessionId: "session-1", persona: "admin" });
+      aggregator.setSessionContext({
+        sessionId: "session-1",
+        persona: "admin",
+      });
       aggregator.clearSessionContext();
 
       expect(aggregator.getSessionContext()).toEqual({});
@@ -258,11 +271,36 @@ describe("HEART Analytics Integration", () => {
         overallHealthScore: 82,
         dataPointCount: 5000,
         dimensions: [
-          { dimension: "happiness", overallScore: 85, hasData: true, goalProgresses: [] },
-          { dimension: "engagement", overallScore: 78, hasData: true, goalProgresses: [] },
-          { dimension: "adoption", overallScore: 72, hasData: true, goalProgresses: [] },
-          { dimension: "retention", overallScore: 88, hasData: true, goalProgresses: [] },
-          { dimension: "task_success", overallScore: 90, hasData: true, goalProgresses: [] },
+          {
+            dimension: "happiness",
+            overallScore: 85,
+            hasData: true,
+            goalProgresses: [],
+          },
+          {
+            dimension: "engagement",
+            overallScore: 78,
+            hasData: true,
+            goalProgresses: [],
+          },
+          {
+            dimension: "adoption",
+            overallScore: 72,
+            hasData: true,
+            goalProgresses: [],
+          },
+          {
+            dimension: "retention",
+            overallScore: 88,
+            hasData: true,
+            goalProgresses: [],
+          },
+          {
+            dimension: "task_success",
+            overallScore: 90,
+            hasData: true,
+            goalProgresses: [],
+          },
         ],
       };
 

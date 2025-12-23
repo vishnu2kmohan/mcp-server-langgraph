@@ -4,8 +4,8 @@
  * TDD tests for persona-based routing hook that integrates with HybridShellLayout.
  * Handles default route redirects and route access validation.
  */
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { renderHook, waitFor } from "@testing-library/react";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { renderHook, waitFor, cleanup } from "@testing-library/react";
 import { MemoryRouter, Routes, Route } from "react-router";
 import { Provider } from "react-redux";
 import { configureStore } from "@reduxjs/toolkit";
@@ -91,6 +91,11 @@ function createWrapper(
 
 describe("usePersonaRouting", () => {
   beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  afterEach(() => {
+    cleanup();
     vi.clearAllMocks();
   });
 

@@ -22,13 +22,16 @@ describe("ChatSessionRedirect", () => {
       render(
         <MemoryRouter initialEntries={["/studio/chat/abc123"]}>
           <Routes>
-            <Route path="/studio/chat/:sessionId" element={<ChatSessionRedirect />} />
+            <Route
+              path="/studio/chat/:sessionId"
+              element={<ChatSessionRedirect />}
+            />
             <Route
               path="/studio/chat"
               element={<div data-testid="chat-page">Chat Page</div>}
             />
           </Routes>
-        </MemoryRouter>
+        </MemoryRouter>,
       );
 
       // Should redirect to the chat page (Navigate renders nothing visible)
@@ -48,10 +51,13 @@ describe("ChatSessionRedirect", () => {
       render(
         <MemoryRouter initialEntries={["/studio/chat/session-xyz-789"]}>
           <Routes>
-            <Route path="/studio/chat/:sessionId" element={<ChatSessionRedirect />} />
+            <Route
+              path="/studio/chat/:sessionId"
+              element={<ChatSessionRedirect />}
+            />
             <Route path="/studio/chat" element={<LocationCapture />} />
           </Routes>
-        </MemoryRouter>
+        </MemoryRouter>,
       );
 
       expect(screen.getByTestId("destination")).toBeInTheDocument();
@@ -70,10 +76,14 @@ describe("ChatSessionRedirect", () => {
             <Route path="/redirect-test" element={<ChatSessionRedirect />} />
             <Route
               path="/studio/chat"
-              element={<div data-testid="chat-page-no-session">Chat Page Without Session</div>}
+              element={
+                <div data-testid="chat-page-no-session">
+                  Chat Page Without Session
+                </div>
+              }
             />
           </Routes>
-        </MemoryRouter>
+        </MemoryRouter>,
       );
 
       // Should redirect to /studio/chat (without session param)

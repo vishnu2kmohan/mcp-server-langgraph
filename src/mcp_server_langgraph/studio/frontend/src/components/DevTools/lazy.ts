@@ -13,50 +13,52 @@ import { lazy } from "react";
 /**
  * Console tab - logs, notifications, errors
  */
-export const LazyConsoleTab = lazy(
-  () => import("./tabs/ConsoleTab").then((m) => ({ default: m.ConsoleTab }))
+export const LazyConsoleTab = lazy(() =>
+  import("./tabs/ConsoleTab").then((m) => ({ default: m.ConsoleTab })),
 );
 
 /**
  * Problems tab - aggregated errors/warnings
  */
-export const LazyProblemsTab = lazy(
-  () => import("./tabs/ProblemsTab").then((m) => ({ default: m.ProblemsTab }))
+export const LazyProblemsTab = lazy(() =>
+  import("./tabs/ProblemsTab").then((m) => ({ default: m.ProblemsTab })),
 );
 
 /**
  * State tab - Redux/session/workflow state inspection
  */
-export const LazyStateTab = lazy(
-  () => import("./tabs/StateTab").then((m) => ({ default: m.StateTab }))
+export const LazyStateTab = lazy(() =>
+  import("./tabs/StateTab").then((m) => ({ default: m.StateTab })),
 );
 
 /**
  * Agent Trace tab - LangGraph node visualization (session context)
  */
-export const LazyAgentTraceTab = lazy(
-  () => import("./tabs/AgentTraceTab").then((m) => ({ default: m.AgentTraceTab }))
+export const LazyAgentTraceTab = lazy(() =>
+  import("./tabs/AgentTraceTab").then((m) => ({ default: m.AgentTraceTab })),
 );
 
 /**
  * Execution Trace tab - Workflow node execution (workflow context)
  */
-export const LazyExecutionTraceTab = lazy(
-  () => import("./tabs/ExecutionTraceTab").then((m) => ({ default: m.ExecutionTraceTab }))
+export const LazyExecutionTraceTab = lazy(() =>
+  import("./tabs/ExecutionTraceTab").then((m) => ({
+    default: m.ExecutionTraceTab,
+  })),
 );
 
 /**
  * Network tab - API/WebSocket/MCP calls
  */
-export const LazyNetworkTab = lazy(
-  () => import("./tabs/NetworkTab").then((m) => ({ default: m.NetworkTab }))
+export const LazyNetworkTab = lazy(() =>
+  import("./tabs/NetworkTab").then((m) => ({ default: m.NetworkTab })),
 );
 
 /**
  * AI Insights tab - AI-generated insights, anomalies, suggestions
  */
-export const LazyAIInsightsTab = lazy(
-  () => import("./tabs/AIInsightsTab").then((m) => ({ default: m.AIInsightsTab }))
+export const LazyAIInsightsTab = lazy(() =>
+  import("./tabs/AIInsightsTab").then((m) => ({ default: m.AIInsightsTab })),
 );
 
 // =============================================================================
@@ -66,8 +68,8 @@ export const LazyAIInsightsTab = lazy(
 /**
  * DevTools Panel - main container with header and tabs
  */
-export const LazyDevToolsPanel = lazy(
-  () => import("./DevToolsPanel").then((m) => ({ default: m.DevToolsPanel }))
+export const LazyDevToolsPanel = lazy(() =>
+  import("./DevToolsPanel").then((m) => ({ default: m.DevToolsPanel })),
 );
 
 // =============================================================================
@@ -99,7 +101,9 @@ export function preloadAllTabs(): void {
 /**
  * Preload context-specific tabs
  */
-export function preloadContextTabs(context: "session" | "workflow" | "global"): void {
+export function preloadContextTabs(
+  context: "session" | "workflow" | "global",
+): void {
   // Always preload common tabs
   import("./tabs/ConsoleTab");
   import("./tabs/ProblemsTab");

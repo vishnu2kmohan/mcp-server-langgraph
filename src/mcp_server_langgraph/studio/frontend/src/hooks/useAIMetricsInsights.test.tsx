@@ -11,8 +11,8 @@
  * - Support polling for real-time updates
  */
 
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { renderHook } from "@testing-library/react";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { renderHook, cleanup } from "@testing-library/react";
 import { Provider } from "react-redux";
 import { configureStore } from "@reduxjs/toolkit";
 import React from "react";
@@ -77,6 +77,11 @@ const wrapper = ({ children }: { children: React.ReactNode }) => (
 
 describe("useAIMetricsInsights", () => {
   beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  afterEach(() => {
+    cleanup();
     vi.clearAllMocks();
   });
 
@@ -233,7 +238,7 @@ describe("useAIMetricsInsights", () => {
       expect(result.current.predictions).toHaveLength(1);
       expect(result.current.predictions[0].confidence).toBe(0.78);
       expect(result.current.predictions[0].drivers).toContain(
-        "improved_onboarding"
+        "improved_onboarding",
       );
     });
 

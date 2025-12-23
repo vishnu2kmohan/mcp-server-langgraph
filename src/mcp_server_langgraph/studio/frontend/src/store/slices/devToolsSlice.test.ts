@@ -112,12 +112,18 @@ describe("devToolsSlice", () => {
 
   describe("initializeFromPersona", () => {
     it("should set collapsed=false for admin persona", () => {
-      const result = devToolsReducer(initialState, initializeFromPersona("admin"));
+      const result = devToolsReducer(
+        initialState,
+        initializeFromPersona("admin"),
+      );
       expect(result.collapsed).toBe(false);
     });
 
     it("should set collapsed=false for developer persona", () => {
-      const result = devToolsReducer(initialState, initializeFromPersona("developer"));
+      const result = devToolsReducer(
+        initialState,
+        initializeFromPersona("developer"),
+      );
       expect(result.collapsed).toBe(false);
     });
 
@@ -131,7 +137,10 @@ describe("devToolsSlice", () => {
       // Set user preference in localStorage
       localStorage.setItem("studio-devtools-collapsed", "false");
 
-      const result = devToolsReducer(initialState, initializeFromPersona("user"));
+      const result = devToolsReducer(
+        initialState,
+        initializeFromPersona("user"),
+      );
       // User explicitly opened DevTools, so it should stay open
       expect(result.collapsed).toBe(false);
     });
@@ -232,7 +241,10 @@ describe("devToolsSlice", () => {
     });
 
     it("should set active tab to execution-trace", () => {
-      const result = devToolsReducer(initialState, setActiveTab("execution-trace"));
+      const result = devToolsReducer(
+        initialState,
+        setActiveTab("execution-trace"),
+      );
       expect(result.activeTab).toBe("execution-trace");
     });
 
@@ -269,17 +281,26 @@ describe("devToolsSlice", () => {
 
   describe("setDetectedContext", () => {
     it("should set context to session", () => {
-      const result = devToolsReducer(initialState, setDetectedContext("session"));
+      const result = devToolsReducer(
+        initialState,
+        setDetectedContext("session"),
+      );
       expect(result.detectedContext).toBe("session");
     });
 
     it("should set context to workflow", () => {
-      const result = devToolsReducer(initialState, setDetectedContext("workflow"));
+      const result = devToolsReducer(
+        initialState,
+        setDetectedContext("workflow"),
+      );
       expect(result.detectedContext).toBe("workflow");
     });
 
     it("should set context to global", () => {
-      const state = { ...initialState, detectedContext: "session" as DevToolsContext };
+      const state = {
+        ...initialState,
+        detectedContext: "session" as DevToolsContext,
+      };
       const result = devToolsReducer(state, setDetectedContext("global"));
       expect(result.detectedContext).toBe("global");
     });
@@ -289,7 +310,7 @@ describe("devToolsSlice", () => {
       const state = {
         ...initialState,
         activeTab: "agent-trace" as DevToolsTabId,
-        detectedContext: "session" as DevToolsContext
+        detectedContext: "session" as DevToolsContext,
       };
       const result = devToolsReducer(state, setDetectedContext("workflow"));
       expect(result.activeTab).toBe("console");
@@ -300,7 +321,7 @@ describe("devToolsSlice", () => {
       const state = {
         ...initialState,
         activeTab: "console" as DevToolsTabId,
-        detectedContext: "session" as DevToolsContext
+        detectedContext: "session" as DevToolsContext,
       };
       const result = devToolsReducer(state, setDetectedContext("workflow"));
       expect(result.activeTab).toBe("console");
@@ -309,7 +330,10 @@ describe("devToolsSlice", () => {
 
   describe("setContextEntityId", () => {
     it("should set context entity ID", () => {
-      const result = devToolsReducer(initialState, setContextEntityId("session-123"));
+      const result = devToolsReducer(
+        initialState,
+        setContextEntityId("session-123"),
+      );
       expect(result.contextEntityId).toBe("session-123");
     });
 
@@ -366,15 +390,22 @@ describe("devToolsSlice", () => {
 
   describe("applyAILayout", () => {
     it("should set AI suggested layout", () => {
-      const suggestedLayout: DevToolsTabId[] = ["problems", "console", "network"];
-      const result = devToolsReducer(initialState, applyAILayout(suggestedLayout));
+      const suggestedLayout: DevToolsTabId[] = [
+        "problems",
+        "console",
+        "network",
+      ];
+      const result = devToolsReducer(
+        initialState,
+        applyAILayout(suggestedLayout),
+      );
       expect(result.aiSuggestedLayout).toEqual(suggestedLayout);
     });
 
     it("should replace existing layout", () => {
       const state = {
         ...initialState,
-        aiSuggestedLayout: ["console", "state"] as DevToolsTabId[]
+        aiSuggestedLayout: ["console", "state"] as DevToolsTabId[],
       };
       const newLayout: DevToolsTabId[] = ["problems", "ai-insights"];
       const result = devToolsReducer(state, applyAILayout(newLayout));
@@ -386,7 +417,7 @@ describe("devToolsSlice", () => {
     it("should clear AI suggested layout", () => {
       const state = {
         ...initialState,
-        aiSuggestedLayout: ["problems", "console"] as DevToolsTabId[]
+        aiSuggestedLayout: ["problems", "console"] as DevToolsTabId[],
       };
       const result = devToolsReducer(state, clearAILayout());
       expect(result.aiSuggestedLayout).toBe(null);
@@ -450,7 +481,10 @@ describe("devToolsSlice", () => {
     });
 
     it("selectAISuggestedLayout should return AI suggested layout", () => {
-      expect(selectAISuggestedLayout(mockState)).toEqual(["problems", "console"]);
+      expect(selectAISuggestedLayout(mockState)).toEqual([
+        "problems",
+        "console",
+      ]);
     });
   });
 
@@ -461,7 +495,10 @@ describe("devToolsSlice", () => {
   describe("selectAvailableTabs", () => {
     it("should return all global tabs for global context", () => {
       const state = {
-        devTools: { ...initialState, detectedContext: "global" as DevToolsContext },
+        devTools: {
+          ...initialState,
+          detectedContext: "global" as DevToolsContext,
+        },
       };
       const tabs = selectAvailableTabs(state);
       expect(tabs).toContain("console");
@@ -475,7 +512,10 @@ describe("devToolsSlice", () => {
 
     it("should include agent-trace for session context", () => {
       const state = {
-        devTools: { ...initialState, detectedContext: "session" as DevToolsContext },
+        devTools: {
+          ...initialState,
+          detectedContext: "session" as DevToolsContext,
+        },
       };
       const tabs = selectAvailableTabs(state);
       expect(tabs).toContain("console");
@@ -485,7 +525,10 @@ describe("devToolsSlice", () => {
 
     it("should include execution-trace for workflow context", () => {
       const state = {
-        devTools: { ...initialState, detectedContext: "workflow" as DevToolsContext },
+        devTools: {
+          ...initialState,
+          detectedContext: "workflow" as DevToolsContext,
+        },
       };
       const tabs = selectAvailableTabs(state);
       expect(tabs).toContain("console");

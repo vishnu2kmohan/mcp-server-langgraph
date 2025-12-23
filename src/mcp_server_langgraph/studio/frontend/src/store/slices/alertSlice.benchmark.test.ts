@@ -126,7 +126,9 @@ describe("Alert Grouping Selector Performance", () => {
       expect(groups.length).toBeGreaterThan(0);
       expect(elapsed).toBeLessThan(10);
 
-      console.log(`  100 alerts: ${elapsed.toFixed(2)}ms, ${groups.length} groups`);
+      console.log(
+        `  100 alerts: ${elapsed.toFixed(2)}ms, ${groups.length} groups`,
+      );
     });
 
     it("should handle 500 alerts in under 50ms", () => {
@@ -140,7 +142,9 @@ describe("Alert Grouping Selector Performance", () => {
       expect(groups.length).toBeGreaterThan(0);
       expect(elapsed).toBeLessThan(50);
 
-      console.log(`  500 alerts: ${elapsed.toFixed(2)}ms, ${groups.length} groups`);
+      console.log(
+        `  500 alerts: ${elapsed.toFixed(2)}ms, ${groups.length} groups`,
+      );
     });
 
     it("should handle 1000 alerts in under 100ms", () => {
@@ -154,7 +158,9 @@ describe("Alert Grouping Selector Performance", () => {
       expect(groups.length).toBeGreaterThan(0);
       expect(elapsed).toBeLessThan(100);
 
-      console.log(`  1000 alerts: ${elapsed.toFixed(2)}ms, ${groups.length} groups`);
+      console.log(
+        `  1000 alerts: ${elapsed.toFixed(2)}ms, ${groups.length} groups`,
+      );
     });
 
     it("should handle 5000 alerts in under 500ms", () => {
@@ -168,7 +174,9 @@ describe("Alert Grouping Selector Performance", () => {
       expect(groups.length).toBeGreaterThan(0);
       expect(elapsed).toBeLessThan(500);
 
-      console.log(`  5000 alerts: ${elapsed.toFixed(2)}ms, ${groups.length} groups`);
+      console.log(
+        `  5000 alerts: ${elapsed.toFixed(2)}ms, ${groups.length} groups`,
+      );
     });
   });
 
@@ -183,7 +191,9 @@ describe("Alert Grouping Selector Performance", () => {
 
       expect(elapsed).toBeLessThan(100);
 
-      console.log(`  Filtered 1000 alerts: ${elapsed.toFixed(2)}ms, ${filtered.length} groups`);
+      console.log(
+        `  Filtered 1000 alerts: ${elapsed.toFixed(2)}ms, ${filtered.length} groups`,
+      );
     });
   });
 
@@ -199,7 +209,9 @@ describe("Alert Grouping Selector Performance", () => {
       expect(typeof count).toBe("number");
       expect(elapsed).toBeLessThan(10);
 
-      console.log(`  Critical count for 5000 alerts: ${elapsed.toFixed(2)}ms, count=${count}`);
+      console.log(
+        `  Critical count for 5000 alerts: ${elapsed.toFixed(2)}ms, count=${count}`,
+      );
     });
   });
 
@@ -215,7 +227,9 @@ describe("Alert Grouping Selector Performance", () => {
       expect(typeof count).toBe("number");
       expect(elapsed).toBeLessThan(10);
 
-      console.log(`  Warning count for 5000 alerts: ${elapsed.toFixed(2)}ms, count=${count}`);
+      console.log(
+        `  Warning count for 5000 alerts: ${elapsed.toFixed(2)}ms, count=${count}`,
+      );
     });
   });
 
@@ -231,7 +245,9 @@ describe("Alert Grouping Selector Performance", () => {
       expect(filtered.length).toBeLessThanOrEqual(alerts.length);
       expect(elapsed).toBeLessThan(50);
 
-      console.log(`  Filtered 5000 alerts: ${elapsed.toFixed(2)}ms, ${filtered.length} results`);
+      console.log(
+        `  Filtered 5000 alerts: ${elapsed.toFixed(2)}ms, ${filtered.length} results`,
+      );
     });
   });
 });
@@ -296,12 +312,12 @@ describe("Alert Reducer Performance", () => {
     const initialAlerts = generateAlerts(100);
     let state = initialAlerts.reduce(
       (s, alert) => alertReducer(s, addAlert(alert)),
-      alertReducer(undefined, { type: "@@INIT" })
+      alertReducer(undefined, { type: "@@INIT" }),
     );
 
     // Add 50 more alerts and measure time (realistic batch)
     const newAlerts = Array.from({ length: 50 }, (_, i) =>
-      generateAlert(100 + i)
+      generateAlert(100 + i),
     );
 
     const start = performance.now();
@@ -338,7 +354,9 @@ describe("Alert Reducer Performance", () => {
     const avgTime = timings.reduce((a, b) => a + b, 0) / timings.length;
     const maxTime = Math.max(...timings);
 
-    console.log(`  Avg add time: ${avgTime.toFixed(3)}ms, Max: ${maxTime.toFixed(3)}ms`);
+    console.log(
+      `  Avg add time: ${avgTime.toFixed(3)}ms, Max: ${maxTime.toFixed(3)}ms`,
+    );
 
     // Individual adds should be under 25ms each (allowing for GC pauses and system variance)
     // Average should still be very fast, but max can spike due to GC or parallel test execution
@@ -422,6 +440,8 @@ describe("Alert Grouping Scalability", () => {
     expect(groups.length).toBe(1000);
     expect(elapsed).toBeLessThan(200);
 
-    console.log(`  1000 unique groups from 1000 alerts: ${elapsed.toFixed(2)}ms`);
+    console.log(
+      `  1000 unique groups from 1000 alerts: ${elapsed.toFixed(2)}ms`,
+    );
   });
 });

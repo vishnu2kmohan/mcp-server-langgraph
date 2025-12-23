@@ -68,7 +68,7 @@ function setupWorkflowHandlers() {
       // Filter by search if provided
       const filtered = search
         ? items.filter((w) =>
-            w.name.toLowerCase().includes(search.toLowerCase())
+            w.name.toLowerCase().includes(search.toLowerCase()),
           )
         : items;
 
@@ -86,7 +86,7 @@ function setupWorkflowHandlers() {
       if (id === "wf-not-found") {
         return HttpResponse.json(
           { detail: "Workflow not found" },
-          { status: 404 }
+          { status: 404 },
         );
       }
 
@@ -125,7 +125,7 @@ function setupWorkflowHandlers() {
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
         },
-        { status: 201 }
+        { status: 201 },
       );
     }),
 
@@ -193,11 +193,9 @@ function setupWorkflowHandlers() {
 
       return HttpResponse.json({
         is_public: body.is_public,
-        share_link: body.is_public
-          ? "https://example.com/share/wf-001"
-          : null,
+        share_link: body.is_public ? "https://example.com/share/wf-001" : null,
       });
-    })
+    }),
   );
 }
 

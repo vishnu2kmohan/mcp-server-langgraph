@@ -156,7 +156,7 @@ export function EmptyState({
       className={cn(
         "flex flex-col items-center justify-center text-center",
         VARIANT_STYLES[variant],
-        className
+        className,
       )}
     >
       {/* Icon */}
@@ -172,7 +172,7 @@ export function EmptyState({
       <h3
         className={cn(
           "text-gray-900 dark:text-gray-100",
-          TITLE_STYLES[variant]
+          TITLE_STYLES[variant],
         )}
       >
         {title}
@@ -183,7 +183,7 @@ export function EmptyState({
         <p
           className={cn(
             "text-gray-600 dark:text-gray-400 max-w-md",
-            TEXT_STYLES[variant]
+            TEXT_STYLES[variant],
           )}
         >
           {description}
@@ -192,10 +192,7 @@ export function EmptyState({
 
       {/* Motivation (Fogg Model) */}
       <p
-        className={cn(
-          "text-gray-500 dark:text-gray-400",
-          TEXT_STYLES[variant]
-        )}
+        className={cn("text-gray-500 dark:text-gray-400", TEXT_STYLES[variant])}
       >
         {motivation}
       </p>
@@ -205,7 +202,7 @@ export function EmptyState({
         <p
           className={cn(
             "text-gray-400 dark:text-gray-500 italic",
-            TEXT_STYLES[variant]
+            TEXT_STYLES[variant],
           )}
         >
           {ability}

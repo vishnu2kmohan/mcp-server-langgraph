@@ -68,7 +68,9 @@ const hasModifierKey = (event: KeyboardEvent): boolean => {
 // Hook
 // =============================================================================
 
-export function useMCPKeyboardShortcuts(options: MCPKeyboardShortcutsOptions): void {
+export function useMCPKeyboardShortcuts(
+  options: MCPKeyboardShortcutsOptions,
+): void {
   const {
     onToggleMCPPanel,
     onOpenToolDialog,
@@ -131,7 +133,7 @@ export function useMCPKeyboardShortcuts(options: MCPKeyboardShortcutsOptions): v
       onOpenResourceViewer,
       onOpenPromptTester,
       onCloseActiveDialog,
-    ]
+    ],
   );
 
   useEffect(() => {

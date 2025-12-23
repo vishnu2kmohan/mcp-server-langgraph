@@ -77,7 +77,7 @@ describe("ErrorRecoveryPanel", () => {
       http.post("/api/v1/ai/errors/analyze", async () => {
         await delay(50);
         return HttpResponse.json(mockBackendResponse);
-      })
+      }),
     );
   });
 
@@ -96,7 +96,7 @@ describe("ErrorRecoveryPanel", () => {
 
       await waitFor(() => {
         expect(
-          screen.getByText(/server took too long to respond/i)
+          screen.getByText(/server took too long to respond/i),
         ).toBeInTheDocument();
       });
     });
@@ -106,10 +106,14 @@ describe("ErrorRecoveryPanel", () => {
       renderWithStore(<ErrorRecoveryPanel error={error} />);
 
       await waitFor(() => {
-        expect(screen.getByRole("button", { name: /try again/i })).toBeInTheDocument();
+        expect(
+          screen.getByRole("button", { name: /try again/i }),
+        ).toBeInTheDocument();
       });
 
-      expect(screen.getByRole("button", { name: /wait and retry/i })).toBeInTheDocument();
+      expect(
+        screen.getByRole("button", { name: /wait and retry/i }),
+      ).toBeInTheDocument();
     });
 
     it("displays loading state while analyzing", async () => {
@@ -117,7 +121,7 @@ describe("ErrorRecoveryPanel", () => {
         http.post("/api/v1/ai/errors/analyze", async () => {
           await delay(500);
           return HttpResponse.json(mockBackendResponse);
-        })
+        }),
       );
 
       const error = new Error("Test error");
@@ -143,7 +147,9 @@ describe("ErrorRecoveryPanel", () => {
       renderWithStore(<ErrorRecoveryPanel error={error} onRetry={onRetry} />);
 
       await waitFor(() => {
-        expect(screen.getByRole("button", { name: /try again/i })).toBeInTheDocument();
+        expect(
+          screen.getByRole("button", { name: /try again/i }),
+        ).toBeInTheDocument();
       });
 
       fireEvent.click(screen.getByRole("button", { name: /try again/i }));
@@ -153,10 +159,14 @@ describe("ErrorRecoveryPanel", () => {
     it("calls onDismiss when dismiss button is clicked", async () => {
       const onDismiss = vi.fn();
       const error = new Error("Request timeout");
-      renderWithStore(<ErrorRecoveryPanel error={error} onDismiss={onDismiss} />);
+      renderWithStore(
+        <ErrorRecoveryPanel error={error} onDismiss={onDismiss} />,
+      );
 
       await waitFor(() => {
-        expect(screen.getByRole("button", { name: /dismiss/i })).toBeInTheDocument();
+        expect(
+          screen.getByRole("button", { name: /dismiss/i }),
+        ).toBeInTheDocument();
       });
 
       fireEvent.click(screen.getByRole("button", { name: /dismiss/i }));
@@ -183,15 +193,19 @@ describe("ErrorRecoveryPanel", () => {
       server.use(
         http.post("/api/v1/ai/errors/analyze", async () => {
           return HttpResponse.json(contactBackendResponse);
-        })
+        }),
       );
 
       const onContact = vi.fn();
       const error = new Error("Server error");
-      renderWithStore(<ErrorRecoveryPanel error={error} onContact={onContact} />);
+      renderWithStore(
+        <ErrorRecoveryPanel error={error} onContact={onContact} />,
+      );
 
       await waitFor(() => {
-        expect(screen.getByRole("button", { name: /contact support/i })).toBeInTheDocument();
+        expect(
+          screen.getByRole("button", { name: /contact support/i }),
+        ).toBeInTheDocument();
       });
 
       fireEvent.click(screen.getByRole("button", { name: /contact support/i }));
@@ -217,7 +231,9 @@ describe("ErrorRecoveryPanel", () => {
       renderWithStore(<ErrorRecoveryPanel error={error} />);
 
       await waitFor(() => {
-        expect(screen.getByRole("button", { name: /try again/i })).toBeInTheDocument();
+        expect(
+          screen.getByRole("button", { name: /try again/i }),
+        ).toBeInTheDocument();
       });
 
       expect(screen.queryByText(/92%/)).not.toBeInTheDocument();
@@ -241,7 +257,9 @@ describe("ErrorRecoveryPanel", () => {
 
     it("hides similar issues section when showSimilarIssues is false", async () => {
       const error = new Error("Request timeout");
-      renderWithStore(<ErrorRecoveryPanel error={error} showSimilarIssues={false} />);
+      renderWithStore(
+        <ErrorRecoveryPanel error={error} showSimilarIssues={false} />,
+      );
 
       await waitFor(() => {
         expect(screen.getByText(/try again/i)).toBeInTheDocument();
@@ -256,7 +274,7 @@ describe("ErrorRecoveryPanel", () => {
       server.use(
         http.post("/api/v1/ai/errors/analyze", async () => {
           return new HttpResponse(null, { status: 500 });
-        })
+        }),
       );
 
       const error = new Error("Test error");
@@ -267,7 +285,9 @@ describe("ErrorRecoveryPanel", () => {
       });
 
       // Should show generic retry button as fallback
-      expect(screen.getByRole("button", { name: /try again/i })).toBeInTheDocument();
+      expect(
+        screen.getByRole("button", { name: /try again/i }),
+      ).toBeInTheDocument();
     });
   });
 

@@ -10,8 +10,8 @@
  * These hooks integrate with the StudioOrchestrator via RTK Query.
  */
 
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { renderHook, waitFor } from "@testing-library/react";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { renderHook, waitFor, cleanup } from "@testing-library/react";
 import { Provider } from "react-redux";
 import { configureStore } from "@reduxjs/toolkit";
 import type { ReactNode } from "react";
@@ -33,8 +33,16 @@ vi.mock("../api", () => ({
             nav_prediction: {
               predicted_items: [
                 { id: "chat", score: 0.95, reason: "Most recently used" },
-                { id: "agents", score: 0.75, reason: "Frequently accessed after chat" },
-                { id: "observability", score: 0.60, reason: "Matches current workflow" },
+                {
+                  id: "agents",
+                  score: 0.75,
+                  reason: "Frequently accessed after chat",
+                },
+                {
+                  id: "observability",
+                  score: 0.6,
+                  reason: "Matches current workflow",
+                },
               ],
               current_context: "debugging_session",
               confidence: 0.85,
@@ -118,6 +126,11 @@ describe("useNavPrediction", () => {
     vi.clearAllMocks();
   });
 
+  afterEach(() => {
+    cleanup();
+    vi.clearAllMocks();
+  });
+
   describe("basic functionality", () => {
     it("returns predicted navigation items when enabled", async () => {
       const { result } = renderHook(
@@ -128,7 +141,7 @@ describe("useNavPrediction", () => {
             recentPages: ["chat", "agents"],
             enabled: true,
           }),
-        { wrapper: Wrapper }
+        { wrapper: Wrapper },
       );
 
       await waitFor(() => {
@@ -152,7 +165,7 @@ describe("useNavPrediction", () => {
             recentPages: [],
             enabled: true,
           }),
-        { wrapper: Wrapper }
+        { wrapper: Wrapper },
       );
 
       await waitFor(() => {
@@ -174,7 +187,7 @@ describe("useNavPrediction", () => {
             recentPages: [],
             enabled: false,
           }),
-        { wrapper: Wrapper }
+        { wrapper: Wrapper },
       );
 
       expect(result.current.predictedItems).toEqual([]);
@@ -192,6 +205,11 @@ describe("useContextualHelp", () => {
     vi.clearAllMocks();
   });
 
+  afterEach(() => {
+    cleanup();
+    vi.clearAllMocks();
+  });
+
   describe("basic functionality", () => {
     it("returns help topics when enabled", async () => {
       const { result } = renderHook(
@@ -202,7 +220,7 @@ describe("useContextualHelp", () => {
             activeFeature: "agent-approvals",
             enabled: true,
           }),
-        { wrapper: Wrapper }
+        { wrapper: Wrapper },
       );
 
       await waitFor(() => {
@@ -227,7 +245,7 @@ describe("useContextualHelp", () => {
             activeFeature: "agent-approvals",
             enabled: true,
           }),
-        { wrapper: Wrapper }
+        { wrapper: Wrapper },
       );
 
       await waitFor(() => {
@@ -235,7 +253,9 @@ describe("useContextualHelp", () => {
       });
 
       expect(result.current.quickActions).toHaveLength(2);
-      expect(result.current.quickActions[0].label).toBe("View pending approvals");
+      expect(result.current.quickActions[0].label).toBe(
+        "View pending approvals",
+      );
     });
 
     it("returns suggested reading", async () => {
@@ -247,14 +267,16 @@ describe("useContextualHelp", () => {
             activeFeature: "agent-approvals",
             enabled: true,
           }),
-        { wrapper: Wrapper }
+        { wrapper: Wrapper },
       );
 
       await waitFor(() => {
         expect(result.current.isLoading).toBe(false);
       });
 
-      expect(result.current.suggestedReading).toContain("docs/hitl-workflow.md");
+      expect(result.current.suggestedReading).toContain(
+        "docs/hitl-workflow.md",
+      );
     });
   });
 
@@ -268,7 +290,7 @@ describe("useContextualHelp", () => {
             activeFeature: "",
             enabled: false,
           }),
-        { wrapper: Wrapper }
+        { wrapper: Wrapper },
       );
 
       expect(result.current.helpTopics).toEqual([]);
@@ -286,6 +308,11 @@ describe("useLearningPath", () => {
     vi.clearAllMocks();
   });
 
+  afterEach(() => {
+    cleanup();
+    vi.clearAllMocks();
+  });
+
   describe("basic functionality", () => {
     it("returns learning path when enabled", async () => {
       const { result } = renderHook(
@@ -295,7 +322,7 @@ describe("useLearningPath", () => {
             persona: "alice-builder",
             enabled: true,
           }),
-        { wrapper: Wrapper }
+        { wrapper: Wrapper },
       );
 
       await waitFor(() => {
@@ -314,7 +341,7 @@ describe("useLearningPath", () => {
             persona: "alice-builder",
             enabled: true,
           }),
-        { wrapper: Wrapper }
+        { wrapper: Wrapper },
       );
 
       await waitFor(() => {
@@ -339,7 +366,7 @@ describe("useLearningPath", () => {
             persona: "alice-builder",
             enabled: true,
           }),
-        { wrapper: Wrapper }
+        { wrapper: Wrapper },
       );
 
       await waitFor(() => {
@@ -360,7 +387,7 @@ describe("useLearningPath", () => {
             persona: "alice-builder",
             enabled: false,
           }),
-        { wrapper: Wrapper }
+        { wrapper: Wrapper },
       );
 
       expect(result.current.currentLevel).toBeNull();
@@ -377,7 +404,7 @@ describe("useLearningPath", () => {
             persona: "alice-builder",
             enabled: true,
           }),
-        { wrapper: Wrapper }
+        { wrapper: Wrapper },
       );
 
       expect(result.current.refetch).toBeDefined();

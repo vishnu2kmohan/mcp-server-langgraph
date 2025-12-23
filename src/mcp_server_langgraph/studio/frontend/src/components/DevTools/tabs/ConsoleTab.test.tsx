@@ -224,7 +224,7 @@ describe("ConsoleTab", () => {
 
       const entry1 = screen.getByTestId("console-entry-entry-1");
       expect(
-        within(entry1).queryByTestId("expand-button")
+        within(entry1).queryByTestId("expand-button"),
       ).not.toBeInTheDocument();
     });
 
@@ -258,7 +258,7 @@ describe("ConsoleTab", () => {
       // Collapse
       await user.click(expandButton);
       expect(
-        screen.queryByTestId("expanded-data-entry-3")
+        screen.queryByTestId("expanded-data-entry-3"),
       ).not.toBeInTheDocument();
     });
   });
@@ -342,7 +342,7 @@ describe("ConsoleTab", () => {
           filter="all"
           onFilterChange={() => {}}
           contextEntityId="session-123"
-        />
+        />,
       );
 
       expect(screen.getByTestId("console-tab")).toBeInTheDocument();
@@ -361,14 +361,14 @@ describe("ConsoleTab", () => {
       // After click, focusedIndex is 0, so entry-1 should be focused
       expect(screen.getByTestId("console-entry-entry-1")).toHaveAttribute(
         "data-focused",
-        "true"
+        "true",
       );
 
       // ArrowDown moves to next entry
       await user.keyboard("{ArrowDown}");
       expect(screen.getByTestId("console-entry-entry-2")).toHaveAttribute(
         "data-focused",
-        "true"
+        "true",
       );
     });
   });
@@ -397,7 +397,7 @@ describe("ConsoleTab", () => {
 
     it("should have no accessibility violations", async () => {
       const { container } = render(
-        <ConsoleTab filter="all" onFilterChange={() => {}} />
+        <ConsoleTab filter="all" onFilterChange={() => {}} />,
       );
       const results = await axe(container);
       expect(results).toHaveNoViolations();

@@ -272,5 +272,11 @@ export function getDefaultPreset(personaId: string): WorkspacePreset {
   const fallback = DEFAULT_PRESETS[0];
   if (fallback) return fallback;
   // Fallback to a minimal preset if array is somehow empty
-  return { id: "default", name: "Default", description: "", layout: { sessionNav: 20, conversation: 50, canvas: 30 }, icon: "layout" };
+  return {
+    id: "default",
+    name: "Default",
+    description: "",
+    layout: { sessionNav: 20, conversation: 50, canvas: 30 },
+    icon: "layout",
+  };
 }

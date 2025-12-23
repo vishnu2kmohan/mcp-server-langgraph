@@ -527,7 +527,9 @@ describe("SettingsPanel", () => {
       await user.click(screen.getByRole("tab", { name: /agent approval/i }));
 
       await waitFor(() => {
-        expect(screen.getByLabelText(/enable agent approval/i)).toBeInTheDocument();
+        expect(
+          screen.getByLabelText(/enable agent approval/i),
+        ).toBeInTheDocument();
       });
     });
 
@@ -538,7 +540,9 @@ describe("SettingsPanel", () => {
       await user.click(screen.getByRole("tab", { name: /agent approval/i }));
 
       await waitFor(() => {
-        expect(screen.getByLabelText(/enable agent approval/i)).toBeInTheDocument();
+        expect(
+          screen.getByLabelText(/enable agent approval/i),
+        ).toBeInTheDocument();
       });
 
       const toggle = screen.getByLabelText(/enable agent approval/i);
@@ -560,7 +564,9 @@ describe("SettingsPanel", () => {
       await user.click(screen.getByRole("tab", { name: /agent approval/i }));
 
       await waitFor(() => {
-        expect(screen.getByLabelText(/confidence threshold/i)).toBeInTheDocument();
+        expect(
+          screen.getByLabelText(/confidence threshold/i),
+        ).toBeInTheDocument();
       });
     });
 
@@ -583,7 +589,9 @@ describe("SettingsPanel", () => {
       await user.click(screen.getByRole("tab", { name: /agent approval/i }));
 
       await waitFor(() => {
-        expect(screen.getByLabelText(/auto-approve threshold/i)).toBeInTheDocument();
+        expect(
+          screen.getByLabelText(/auto-approve threshold/i),
+        ).toBeInTheDocument();
       });
     });
 
@@ -606,7 +614,9 @@ describe("SettingsPanel", () => {
       await user.click(screen.getByRole("tab", { name: /agent approval/i }));
 
       await waitFor(() => {
-        expect(screen.getByLabelText(/push notifications/i)).toBeInTheDocument();
+        expect(
+          screen.getByLabelText(/push notifications/i),
+        ).toBeInTheDocument();
       });
     });
 
@@ -628,7 +638,9 @@ describe("SettingsPanel", () => {
       await user.click(screen.getByRole("tab", { name: /agent approval/i }));
 
       await waitFor(() => {
-        expect(screen.getByLabelText(/enable agent approval/i)).toBeInTheDocument();
+        expect(
+          screen.getByLabelText(/enable agent approval/i),
+        ).toBeInTheDocument();
       });
 
       // Turn off HITL
@@ -645,7 +657,9 @@ describe("SettingsPanel", () => {
       const confidenceSlider = screen.getByLabelText(/confidence threshold/i);
       expect(confidenceSlider).toBeDisabled();
 
-      const autoApproveSlider = screen.getByLabelText(/auto-approve threshold/i);
+      const autoApproveSlider = screen.getByLabelText(
+        /auto-approve threshold/i,
+      );
       expect(autoApproveSlider).toBeDisabled();
 
       const pushToggle = screen.getByLabelText(/push notifications/i);
@@ -662,7 +676,9 @@ describe("SettingsPanel", () => {
       await user.click(screen.getByRole("tab", { name: /agent approval/i }));
 
       await waitFor(() => {
-        expect(screen.getByLabelText(/enable agent approval/i)).toBeInTheDocument();
+        expect(
+          screen.getByLabelText(/enable agent approval/i),
+        ).toBeInTheDocument();
       });
 
       // Ensure HITL is on
@@ -679,7 +695,9 @@ describe("SettingsPanel", () => {
       const confidenceSlider = screen.getByLabelText(/confidence threshold/i);
       expect(confidenceSlider).not.toBeDisabled();
 
-      const autoApproveSlider = screen.getByLabelText(/auto-approve threshold/i);
+      const autoApproveSlider = screen.getByLabelText(
+        /auto-approve threshold/i,
+      );
       expect(autoApproveSlider).not.toBeDisabled();
 
       const pushToggle = screen.getByLabelText(/push notifications/i);
@@ -696,7 +714,9 @@ describe("SettingsPanel", () => {
       await user.click(screen.getByRole("tab", { name: /agent approval/i }));
 
       await waitFor(() => {
-        expect(screen.getByLabelText(/enable agent approval/i)).toBeInTheDocument();
+        expect(
+          screen.getByLabelText(/enable agent approval/i),
+        ).toBeInTheDocument();
       });
 
       // Toggle HITL off
@@ -725,7 +745,9 @@ describe("SettingsPanel", () => {
       await user.click(screen.getByRole("tab", { name: /agent approval/i }));
 
       await waitFor(() => {
-        expect(screen.getByLabelText(/enable agent approval/i)).toBeInTheDocument();
+        expect(
+          screen.getByLabelText(/enable agent approval/i),
+        ).toBeInTheDocument();
       });
 
       const results = await axe(container);
@@ -740,7 +762,9 @@ describe("SettingsPanel", () => {
       await user.click(screen.getByRole("tab", { name: /agent approval/i }));
 
       await waitFor(() => {
-        expect(screen.getByText(/threshold recommendation/i)).toBeInTheDocument();
+        expect(
+          screen.getByText(/threshold recommendation/i),
+        ).toBeInTheDocument();
       });
     });
 
@@ -753,7 +777,7 @@ describe("SettingsPanel", () => {
       await waitFor(() => {
         // Should show fetch recommendation button
         expect(
-          screen.getByRole("button", { name: /get recommendation/i })
+          screen.getByRole("button", { name: /get recommendation/i }),
         ).toBeInTheDocument();
       });
     });
@@ -782,7 +806,7 @@ describe("SettingsPanel", () => {
 
       await waitFor(() => {
         expect(
-          screen.getByLabelText(/auto-adjust thresholds/i)
+          screen.getByLabelText(/auto-adjust thresholds/i),
         ).toBeInTheDocument();
       });
     });

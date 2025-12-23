@@ -17,8 +17,15 @@
 
 import React, { useCallback } from "react";
 import { Sparkles, ArrowRight } from "lucide-react";
-import { EmptyState, type EmptyStateContext, type EmptyStateVariant } from "./EmptyState";
-import { useAIEmptyState, type AISuggestion } from "../../hooks/useAIEmptyState";
+import {
+  EmptyState,
+  type EmptyStateContext,
+  type EmptyStateVariant,
+} from "./EmptyState";
+import {
+  useAIEmptyState,
+  type AISuggestion,
+} from "../../hooks/useAIEmptyState";
 import { cn } from "../../utils/cn";
 
 /**
@@ -65,7 +72,7 @@ function AISuggestionTrigger({
         "inline-flex items-center gap-2 px-4 py-2 rounded-lg",
         "bg-indigo-600 hover:bg-indigo-700 text-white",
         "transition-colors duration-150",
-        "focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+        "focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2",
       )}
     >
       {showConfidence && suggestion.confidence >= 0.85 && (
@@ -101,7 +108,7 @@ function FallbackTrigger({
         "inline-flex items-center gap-2 px-4 py-2 rounded-lg",
         "bg-gray-600 hover:bg-gray-700 text-white",
         "transition-colors duration-150",
-        "focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
+        "focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2",
       )}
       data-target={target}
     >
@@ -158,7 +165,7 @@ export function AIEmptyState({
           break;
       }
     },
-    [onNavigate, onModal, onFocus]
+    [onNavigate, onModal, onFocus],
   );
 
   // Handle fallback trigger click
@@ -171,19 +178,20 @@ export function AIEmptyState({
   }, [registryConfig.target, onNavigate, onModal]);
 
   // Determine trigger content
-  const trigger = isAIAvailable && primarySuggestion ? (
-    <AISuggestionTrigger
-      suggestion={primarySuggestion}
-      showConfidence={showConfidence}
-      onClick={() => handleSuggestionClick(primarySuggestion)}
-    />
-  ) : (
-    <FallbackTrigger
-      action={registryConfig.action}
-      target={registryConfig.target}
-      onClick={handleFallbackClick}
-    />
-  );
+  const trigger =
+    isAIAvailable && primarySuggestion ? (
+      <AISuggestionTrigger
+        suggestion={primarySuggestion}
+        showConfidence={showConfidence}
+        onClick={() => handleSuggestionClick(primarySuggestion)}
+      />
+    ) : (
+      <FallbackTrigger
+        action={registryConfig.action}
+        target={registryConfig.target}
+        onClick={handleFallbackClick}
+      />
+    );
 
   // Secondary suggestions as additional triggers
   const secondSuggestion = suggestions[1];
@@ -197,7 +205,7 @@ export function AIEmptyState({
           "border border-gray-300 dark:border-gray-600",
           "text-gray-700 dark:text-gray-300",
           "hover:bg-gray-50 dark:hover:bg-gray-800",
-          "transition-colors duration-150"
+          "transition-colors duration-150",
         )}
       >
         <span>{secondSuggestion.text}</span>
@@ -205,9 +213,10 @@ export function AIEmptyState({
     ) : undefined;
 
   // Use AI or fallback content
-  const title = isAIAvailable && primarySuggestion
-    ? registryConfig.title // Keep registry title even with AI
-    : registryConfig.title;
+  const title =
+    isAIAvailable && primarySuggestion
+      ? registryConfig.title // Keep registry title even with AI
+      : registryConfig.title;
 
   const motivation = registryConfig.motivation;
   const ability = registryConfig.ability;

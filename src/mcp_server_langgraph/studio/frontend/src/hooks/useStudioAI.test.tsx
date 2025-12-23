@@ -14,8 +14,8 @@
  * Reference: HybridShell AI Enhancement Analysis Plan
  */
 
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { renderHook } from "@testing-library/react";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { renderHook, cleanup } from "@testing-library/react";
 import { Provider } from "react-redux";
 import { configureStore } from "@reduxjs/toolkit";
 import React from "react";
@@ -119,6 +119,11 @@ describe("useStudioAI", () => {
     vi.clearAllMocks();
   });
 
+  afterEach(() => {
+    cleanup();
+    vi.clearAllMocks();
+  });
+
   describe("hook structure", () => {
     it("returns expected result shape", () => {
       mockUseStudioAI.mockReturnValue({
@@ -140,7 +145,7 @@ describe("useStudioAI", () => {
             sessionId: "session-456",
             tasks: [],
           }),
-        { wrapper }
+        { wrapper },
       );
 
       expect(result.current).toHaveProperty("results");
@@ -204,7 +209,7 @@ describe("useStudioAI", () => {
       renderHook(() => mockUseStudioAI(options), { wrapper });
 
       expect(mockUseStudioAI).toHaveBeenCalledWith(
-        expect.objectContaining({ persona: "alice-builder" })
+        expect.objectContaining({ persona: "alice-builder" }),
       );
     });
   });
@@ -245,7 +250,7 @@ describe("useStudioAI", () => {
             sessionId: "session-456",
             tasks: [{ category: "ux", type: "persona_analysis", data: {} }],
           }),
-        { wrapper }
+        { wrapper },
       );
 
       expect(result.current.results).toHaveLength(1);
@@ -285,9 +290,11 @@ describe("useStudioAI", () => {
           mockUseStudioAI({
             userId: "user-123",
             sessionId: "session-456",
-            tasks: [{ category: "session", type: "session_summarize", data: {} }],
+            tasks: [
+              { category: "session", type: "session_summarize", data: {} },
+            ],
           }),
-        { wrapper }
+        { wrapper },
       );
 
       expect(result.current.results?.[0].task_type).toBe("session_summarize");
@@ -330,7 +337,7 @@ describe("useStudioAI", () => {
               },
             ],
           }),
-        { wrapper }
+        { wrapper },
       );
 
       expect(result.current.results?.[0].task_type).toBe("intent_detect");
@@ -373,10 +380,12 @@ describe("useStudioAI", () => {
               },
             ],
           }),
-        { wrapper }
+        { wrapper },
       );
 
-      expect(result.current.results?.[0].task_type).toBe("artifact_suggest_type");
+      expect(result.current.results?.[0].task_type).toBe(
+        "artifact_suggest_type",
+      );
     });
 
     it("supports multiple tasks in parallel", () => {
@@ -429,7 +438,7 @@ describe("useStudioAI", () => {
               { category: "conversation", type: "intent_detect", data: {} },
             ],
           }),
-        { wrapper }
+        { wrapper },
       );
 
       expect(result.current.results).toHaveLength(3);
@@ -477,7 +486,7 @@ describe("useStudioAI", () => {
             sessionId: "session-456",
             tasks: [{ category: "ux", type: "persona_analysis", data: {} }],
           }),
-        { wrapper }
+        { wrapper },
       );
 
       const personaResult = result.current.getResult("persona_analysis");
@@ -508,7 +517,7 @@ describe("useStudioAI", () => {
             sessionId: "session-456",
             tasks: [],
           }),
-        { wrapper }
+        { wrapper },
       );
 
       const missingResult = result.current.getResult("nonexistent_task");
@@ -554,7 +563,7 @@ describe("useStudioAI", () => {
               { category: "ux", type: "disclosure_analysis", data: {} },
             ],
           }),
-        { wrapper }
+        { wrapper },
       );
 
       expect(result.current.crossInsights).toHaveLength(2);
@@ -600,7 +609,7 @@ describe("useStudioAI", () => {
               { category: "diagram", type: "diagram_to_code", data: {} },
             ],
           }),
-        { wrapper }
+        { wrapper },
       );
 
       expect(result.current.failedAnalyses).toContain("diagram_to_code");
@@ -629,7 +638,7 @@ describe("useStudioAI", () => {
             sessionId: "session-456",
             tasks: [],
           }),
-        { wrapper }
+        { wrapper },
       );
 
       expect(typeof result.current.totalCost).toBe("string");
@@ -658,7 +667,7 @@ describe("useStudioAI", () => {
             sessionId: "session-456",
             tasks: [{ category: "ux", type: "persona_analysis", data: {} }],
           }),
-        { wrapper }
+        { wrapper },
       );
 
       expect(result.current.isLoading).toBe(true);
@@ -685,7 +694,7 @@ describe("useStudioAI", () => {
             sessionId: "session-456",
             tasks: [],
           }),
-        { wrapper }
+        { wrapper },
       );
 
       expect(result.current.isLoading).toBe(false);
@@ -713,7 +722,7 @@ describe("useStudioAI", () => {
             sessionId: "session-456",
             tasks: [{ category: "ux", type: "persona_analysis", data: {} }],
           }),
-        { wrapper }
+        { wrapper },
       );
 
       expect(result.current.error).not.toBeNull();
@@ -747,7 +756,7 @@ describe("useStudioAI", () => {
             sessionId: "session-456",
             tasks: [{ category: "ux", type: "persona_analysis", data: {} }],
           }),
-        { wrapper }
+        { wrapper },
       );
 
       expect(result.current.error).toBeNull();
@@ -777,7 +786,7 @@ describe("useStudioAI", () => {
             sessionId: "session-456",
             tasks: [],
           }),
-        { wrapper }
+        { wrapper },
       );
 
       expect(typeof result.current.refetch).toBe("function");
@@ -808,7 +817,7 @@ describe("useStudioAI", () => {
             tasks: [{ category: "ux", type: "persona_analysis", data: {} }],
             enabled: false,
           }),
-        { wrapper }
+        { wrapper },
       );
 
       expect(result.current.isLoading).toBe(false);
@@ -836,7 +845,7 @@ describe("useStudioAI", () => {
             tasks: [{ category: "ux", type: "persona_analysis", data: {} }],
             enabled: true,
           }),
-        { wrapper }
+        { wrapper },
       );
 
       expect(result.current.isLoading).toBe(true);
@@ -864,7 +873,7 @@ describe("useStudioAI", () => {
             sessionId: "session-456",
             tasks: [],
           }),
-        { wrapper }
+        { wrapper },
       );
 
       expect(result.current.results).toEqual([]);
@@ -913,7 +922,7 @@ describe("useStudioAI", () => {
               },
             ],
           }),
-        { wrapper }
+        { wrapper },
       );
 
       expect(result.current.results?.[0].task_type).toBe("risk_assess");
@@ -960,7 +969,7 @@ describe("useStudioAI", () => {
               },
             ],
           }),
-        { wrapper }
+        { wrapper },
       );
 
       expect(result.current.results?.[0].task_type).toBe("command_interpret");
@@ -1006,7 +1015,7 @@ describe("useStudioAI", () => {
               },
             ],
           }),
-        { wrapper }
+        { wrapper },
       );
 
       expect(result.current.results?.[0].task_type).toBe("trace_summarize");
@@ -1052,7 +1061,7 @@ describe("useStudioAI", () => {
               },
             ],
           }),
-        { wrapper }
+        { wrapper },
       );
 
       expect(result.current.results?.[0].task_type).toBe("diagram_to_code");

@@ -633,7 +633,9 @@ describe("baseQueryWithReauth", () => {
   describe("baseQueryWithReauth flow logic", () => {
     it("should handle 401 response flow without refresh token", () => {
       // GIVEN: A 401 error result and no refresh token
-      const result = { error: { status: 401, data: { detail: "Unauthorized" } } };
+      const result = {
+        error: { status: 401, data: { detail: "Unauthorized" } },
+      };
       const refreshToken: string | null = null;
 
       // WHEN: Checking if refresh should be attempted
@@ -648,7 +650,9 @@ describe("baseQueryWithReauth", () => {
 
     it("should handle 401 response flow with refresh token", () => {
       // GIVEN: A 401 error result with refresh token available
-      const result = { error: { status: 401, data: { detail: "Token expired" } } };
+      const result = {
+        error: { status: 401, data: { detail: "Token expired" } },
+      };
       const refreshToken = "valid-refresh-token";
 
       // WHEN: Checking if refresh should be attempted

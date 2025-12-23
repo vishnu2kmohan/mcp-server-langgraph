@@ -57,7 +57,8 @@ export function NudgeSpotlight({
   totalSteps,
   className = "",
 }: NudgeSpotlightProps): React.ReactElement {
-  const [targetPosition, setTargetPosition] = useState<SpotlightPosition | null>(null);
+  const [targetPosition, setTargetPosition] =
+    useState<SpotlightPosition | null>(null);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
   const cardRef = useRef<HTMLDivElement>(null);
 
@@ -101,7 +102,7 @@ export function NudgeSpotlight({
         onDismiss();
       }
     },
-    [onDismiss]
+    [onDismiss],
   );
 
   // Prevent card click from bubbling to overlay

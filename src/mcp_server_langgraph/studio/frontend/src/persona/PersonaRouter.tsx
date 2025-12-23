@@ -74,10 +74,7 @@ function getModuleFromRoute(pathname: string): ModuleId | null {
 // Component
 // =============================================================================
 
-export function PersonaRouter({
-  children,
-  className,
-}: PersonaRouterProps) {
+export function PersonaRouter({ children, className }: PersonaRouterProps) {
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -95,7 +92,10 @@ export function PersonaRouter({
 
   const canAccess = useMemo(() => {
     // Allow access to exact index route (will redirect)
-    if (location.pathname === "/studio/v2" || location.pathname === "/studio/v2/") {
+    if (
+      location.pathname === "/studio/v2" ||
+      location.pathname === "/studio/v2/"
+    ) {
       return true;
     }
 
@@ -118,7 +118,10 @@ export function PersonaRouter({
     if (isLoading) return;
 
     // Redirect index route to default view
-    if (location.pathname === "/studio/v2" || location.pathname === "/studio/v2/") {
+    if (
+      location.pathname === "/studio/v2" ||
+      location.pathname === "/studio/v2/"
+    ) {
       navigate(defaultRoute, { replace: true });
     }
   }, [isLoading, location.pathname, defaultRoute, navigate]);
@@ -160,8 +163,8 @@ export function PersonaRouter({
           Access Denied
         </h2>
         <p className="text-sm text-center max-w-md">
-          You don&apos;t have permission to access this page.
-          Your current role ({subPersona || persona}) doesn&apos;t include access to this module.
+          You don&apos;t have permission to access this page. Your current role
+          ({subPersona || persona}) doesn&apos;t include access to this module.
         </p>
         <div className="flex gap-4 mt-4">
           <button

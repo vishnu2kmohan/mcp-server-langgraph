@@ -169,9 +169,7 @@ export function ActivityBar({
     // Optionally reorder based on predictions
     if (enableAI && reorderByPrediction && predictedItems.length > 0) {
       // Create a score map from predictions
-      const scoreMap = new Map(
-        predictedItems.map((p) => [p.id, p.score])
-      );
+      const scoreMap = new Map(predictedItems.map((p) => [p.id, p.score]));
 
       // Sort by prediction score (higher first), then original order
       return [...filtered].sort((a, b) => {
@@ -224,7 +222,11 @@ export function ActivityBar({
       )}
     >
       {/* Main navigation icons - RBAC filtered */}
-      <div className="flex flex-col gap-1" role="group" aria-label="Primary navigation">
+      <div
+        className="flex flex-col gap-1"
+        role="group"
+        aria-label="Primary navigation"
+      >
         {visibleNavItems.map((item) => {
           const isPredicted = predictedItemIds.has(item.id);
           return (
@@ -252,7 +254,7 @@ export function ActivityBar({
                   className={cn(
                     "absolute -top-0.5 -right-0.5 w-2 h-2",
                     "bg-amber-400 dark:bg-amber-500 rounded-full",
-                    "animate-pulse"
+                    "animate-pulse",
                   )}
                   aria-label="AI suggested"
                 />
@@ -266,7 +268,11 @@ export function ActivityBar({
       <div className="flex-1" aria-hidden="true" />
 
       {/* Bottom icons - RBAC filtered */}
-      <div className="flex flex-col gap-1" role="group" aria-label="Secondary navigation">
+      <div
+        className="flex flex-col gap-1"
+        role="group"
+        aria-label="Secondary navigation"
+      >
         <button
           type="button"
           data-testid="command-palette-button"

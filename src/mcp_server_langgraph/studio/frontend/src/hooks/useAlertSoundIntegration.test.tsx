@@ -31,7 +31,10 @@ vi.mock("./useAlertSound", () => ({
 }));
 
 // Create test store
-const createTestStore = (soundEnabled = true, lastCriticalAlertTime: number | null = null) =>
+const createTestStore = (
+  soundEnabled = true,
+  lastCriticalAlertTime: number | null = null,
+) =>
   configureStore({
     reducer: {
       alerts: alertReducer,
@@ -157,10 +160,12 @@ describe("useAlertSoundIntegration", () => {
 
     // Dispatch a warning alert
     act(() => {
-      store.dispatch(addAlert({
-        ...createCriticalAlert("alert-1"),
-        severity: "warning",
-      }));
+      store.dispatch(
+        addAlert({
+          ...createCriticalAlert("alert-1"),
+          severity: "warning",
+        }),
+      );
     });
 
     expect(mockPlayAlertSound).not.toHaveBeenCalled();

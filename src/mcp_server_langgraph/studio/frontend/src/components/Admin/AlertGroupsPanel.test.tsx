@@ -63,8 +63,16 @@ describe("AlertGroupsPanel", () => {
   describe("rendering", () => {
     it("should render alert groups", () => {
       const groups = [
-        createMockGroup({ groupKey: "api:CPUHigh", alertName: "CPUHigh", service: "api" }),
-        createMockGroup({ groupKey: "worker:MemoryHigh", alertName: "MemoryHigh", service: "worker" }),
+        createMockGroup({
+          groupKey: "api:CPUHigh",
+          alertName: "CPUHigh",
+          service: "api",
+        }),
+        createMockGroup({
+          groupKey: "worker:MemoryHigh",
+          alertName: "MemoryHigh",
+          service: "worker",
+        }),
       ];
 
       render(
@@ -74,11 +82,13 @@ describe("AlertGroupsPanel", () => {
           onSelectAlert={vi.fn()}
           expandedGroups={new Set()}
           onToggleGroup={vi.fn()}
-        />
+        />,
       );
 
       expect(screen.getByTestId("alert-group-api:CPUHigh")).toBeInTheDocument();
-      expect(screen.getByTestId("alert-group-worker:MemoryHigh")).toBeInTheDocument();
+      expect(
+        screen.getByTestId("alert-group-worker:MemoryHigh"),
+      ).toBeInTheDocument();
     });
 
     it("should display group header with service name and alert count", () => {
@@ -98,7 +108,7 @@ describe("AlertGroupsPanel", () => {
           onSelectAlert={vi.fn()}
           expandedGroups={new Set()}
           onToggleGroup={vi.fn()}
-        />
+        />,
       );
 
       expect(screen.getByText("CPUHigh")).toBeInTheDocument();
@@ -123,7 +133,7 @@ describe("AlertGroupsPanel", () => {
           onSelectAlert={vi.fn()}
           expandedGroups={new Set()}
           onToggleGroup={vi.fn()}
-        />
+        />,
       );
 
       const criticalBadge = screen.getByTestId("severity-badge-api:Critical");
@@ -141,7 +151,7 @@ describe("AlertGroupsPanel", () => {
           onSelectAlert={vi.fn()}
           expandedGroups={new Set()}
           onToggleGroup={vi.fn()}
-        />
+        />,
       );
 
       expect(screen.getByText(/no alert groups/i)).toBeInTheDocument();
@@ -161,7 +171,7 @@ describe("AlertGroupsPanel", () => {
           onSelectAlert={vi.fn()}
           expandedGroups={new Set()}
           onToggleGroup={onToggleGroup}
-        />
+        />,
       );
 
       await user.click(screen.getByTestId("group-header-api:CPUHigh"));
@@ -170,8 +180,14 @@ describe("AlertGroupsPanel", () => {
     });
 
     it("should show individual alerts when group is expanded", () => {
-      const alert1 = createMockAlert({ alert_id: "a1", message: "First alert" });
-      const alert2 = createMockAlert({ alert_id: "a2", message: "Second alert" });
+      const alert1 = createMockAlert({
+        alert_id: "a1",
+        message: "First alert",
+      });
+      const alert2 = createMockAlert({
+        alert_id: "a2",
+        message: "Second alert",
+      });
       const groups = [
         createMockGroup({
           groupKey: "api:CPUHigh",
@@ -187,7 +203,7 @@ describe("AlertGroupsPanel", () => {
           onSelectAlert={vi.fn()}
           expandedGroups={new Set(["api:CPUHigh"])}
           onToggleGroup={vi.fn()}
-        />
+        />,
       );
 
       expect(screen.getByText("First alert")).toBeInTheDocument();
@@ -195,8 +211,14 @@ describe("AlertGroupsPanel", () => {
     });
 
     it("should hide individual alerts when group is collapsed", () => {
-      const alert1 = createMockAlert({ alert_id: "a1", message: "First alert" });
-      const alert2 = createMockAlert({ alert_id: "a2", message: "Second alert" });
+      const alert1 = createMockAlert({
+        alert_id: "a1",
+        message: "First alert",
+      });
+      const alert2 = createMockAlert({
+        alert_id: "a2",
+        message: "Second alert",
+      });
       const groups = [
         createMockGroup({
           groupKey: "api:CPUHigh",
@@ -212,7 +234,7 @@ describe("AlertGroupsPanel", () => {
           onSelectAlert={vi.fn()}
           expandedGroups={new Set()}
           onToggleGroup={vi.fn()}
-        />
+        />,
       );
 
       expect(screen.queryByText("First alert")).not.toBeInTheDocument();
@@ -232,11 +254,15 @@ describe("AlertGroupsPanel", () => {
           onSelectAlert={vi.fn()}
           expandedGroups={new Set(["api:Expanded"])}
           onToggleGroup={vi.fn()}
-        />
+        />,
       );
 
-      expect(screen.getByTestId("expand-icon-api:Collapsed")).toBeInTheDocument();
-      expect(screen.getByTestId("collapse-icon-api:Expanded")).toBeInTheDocument();
+      expect(
+        screen.getByTestId("expand-icon-api:Collapsed"),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByTestId("collapse-icon-api:Expanded"),
+      ).toBeInTheDocument();
     });
   });
 
@@ -260,7 +286,7 @@ describe("AlertGroupsPanel", () => {
           onSelectAlert={onSelectAlert}
           expandedGroups={new Set(["api:CPUHigh"])}
           onToggleGroup={vi.fn()}
-        />
+        />,
       );
 
       await user.click(screen.getByTestId("alert-item-a1"));
@@ -286,7 +312,7 @@ describe("AlertGroupsPanel", () => {
           onSelectAlert={vi.fn()}
           expandedGroups={new Set(["api:CPUHigh"])}
           onToggleGroup={vi.fn()}
-        />
+        />,
       );
 
       const selectedItem = screen.getByTestId("alert-item-a1");
@@ -310,7 +336,7 @@ describe("AlertGroupsPanel", () => {
           onSelectAlert={vi.fn()}
           expandedGroups={new Set()}
           onToggleGroup={onToggleGroup}
-        />
+        />,
       );
 
       const header = screen.getByTestId("group-header-api:CPUHigh");
@@ -332,7 +358,7 @@ describe("AlertGroupsPanel", () => {
           onSelectAlert={vi.fn()}
           expandedGroups={new Set()}
           onToggleGroup={onToggleGroup}
-        />
+        />,
       );
 
       const header = screen.getByTestId("group-header-api:CPUHigh");
@@ -359,10 +385,12 @@ describe("AlertGroupsPanel", () => {
           onSelectAlert={vi.fn()}
           expandedGroups={new Set()}
           onToggleGroup={vi.fn()}
-        />
+        />,
       );
 
-      expect(screen.getByTestId("state-badge-api:Firing")).toHaveTextContent("Firing");
+      expect(screen.getByTestId("state-badge-api:Firing")).toHaveTextContent(
+        "Firing",
+      );
     });
 
     it("should show resolved state badge", () => {
@@ -380,16 +408,24 @@ describe("AlertGroupsPanel", () => {
           onSelectAlert={vi.fn()}
           expandedGroups={new Set()}
           onToggleGroup={vi.fn()}
-        />
+        />,
       );
 
-      expect(screen.getByTestId("state-badge-api:Resolved")).toHaveTextContent("Resolved");
+      expect(screen.getByTestId("state-badge-api:Resolved")).toHaveTextContent(
+        "Resolved",
+      );
     });
   });
 
   describe("accessibility", () => {
     it("should have accessible group headers", () => {
-      const groups = [createMockGroup({ groupKey: "api:CPUHigh", alertName: "CPUHigh", count: 3 })];
+      const groups = [
+        createMockGroup({
+          groupKey: "api:CPUHigh",
+          alertName: "CPUHigh",
+          count: 3,
+        }),
+      ];
 
       render(
         <AlertGroupsPanel
@@ -398,7 +434,7 @@ describe("AlertGroupsPanel", () => {
           onSelectAlert={vi.fn()}
           expandedGroups={new Set()}
           onToggleGroup={vi.fn()}
-        />
+        />,
       );
 
       const header = screen.getByTestId("group-header-api:CPUHigh");
@@ -416,7 +452,7 @@ describe("AlertGroupsPanel", () => {
           onSelectAlert={vi.fn()}
           expandedGroups={new Set(["api:CPUHigh"])}
           onToggleGroup={vi.fn()}
-        />
+        />,
       );
 
       const header = screen.getByTestId("group-header-api:CPUHigh");

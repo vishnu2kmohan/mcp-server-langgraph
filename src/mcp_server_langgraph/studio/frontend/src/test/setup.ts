@@ -15,7 +15,11 @@ import { cleanup } from "@testing-library/react";
 import { server } from "../mocks/server";
 import { toHaveNoViolations } from "jest-axe";
 import { memoryMonitor } from "./memoryMonitor";
-import { clearStorageMocks, clearAllMocks, logIsolationWarningIfDirty } from "./testIsolation";
+import {
+  clearStorageMocks,
+  clearAllMocks,
+  logIsolationWarningIfDirty,
+} from "./testIsolation";
 import { MemoryTrendReporter } from "./memoryTrendReporter";
 
 // Memory trend reporter for CI integration
@@ -64,7 +68,10 @@ afterAll(() => {
     memoryTrendReporter.recordEntry("suite-end", process.memoryUsage());
 
     // Output memory trend data for CI to capture
-    if (process.env.CI === "true" || process.env.VITEST_MEMORY_TREND === "true") {
+    if (
+      process.env.CI === "true" ||
+      process.env.VITEST_MEMORY_TREND === "true"
+    ) {
       const report = memoryTrendReporter.generateReport();
       // Output as a special marker that CI can grep for
       console.log("::memory-trend-start::");

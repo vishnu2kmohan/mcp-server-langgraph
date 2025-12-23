@@ -32,7 +32,9 @@ describe("AI API Contract", () => {
         });
 
         expect(response.ok).toBe(true);
-        expect(response.headers.get("Content-Type")).toContain("application/json");
+        expect(response.headers.get("Content-Type")).toContain(
+          "application/json",
+        );
       });
 
       it("returns 400 when query field is missing", async () => {
@@ -113,10 +115,14 @@ describe("AI API Contract", () => {
   describe("GET /api/v1/ai/suggestions", () => {
     describe("Request Contract", () => {
       it("requires artifactId query parameter", async () => {
-        const response = await fetch("/api/v1/ai/suggestions?artifactId=test-123");
+        const response = await fetch(
+          "/api/v1/ai/suggestions?artifactId=test-123",
+        );
 
         expect(response.ok).toBe(true);
-        expect(response.headers.get("Content-Type")).toContain("application/json");
+        expect(response.headers.get("Content-Type")).toContain(
+          "application/json",
+        );
       });
 
       it("returns 400 when artifactId is missing", async () => {
@@ -130,7 +136,9 @@ describe("AI API Contract", () => {
 
     describe("Response Contract - Suggestion[]", () => {
       it("returns suggestions array", async () => {
-        const response = await fetch("/api/v1/ai/suggestions?artifactId=test-123");
+        const response = await fetch(
+          "/api/v1/ai/suggestions?artifactId=test-123",
+        );
 
         const data = await response.json();
         expect(data).toHaveProperty("suggestions");
@@ -138,7 +146,9 @@ describe("AI API Contract", () => {
       });
 
       it("each suggestion has required fields", async () => {
-        const response = await fetch("/api/v1/ai/suggestions?artifactId=test-123");
+        const response = await fetch(
+          "/api/v1/ai/suggestions?artifactId=test-123",
+        );
 
         const data = await response.json();
         const suggestions: Suggestion[] = data.suggestions;
@@ -152,7 +162,7 @@ describe("AI API Contract", () => {
 
           // Type must be one of the valid types
           expect(["completion", "refactor", "fix", "explain"]).toContain(
-            suggestion.type
+            suggestion.type,
           );
 
           // Confidence must be between 0 and 1
@@ -162,7 +172,9 @@ describe("AI API Contract", () => {
       });
 
       it("suggestion.position is optional object", async () => {
-        const response = await fetch("/api/v1/ai/suggestions?artifactId=test-123");
+        const response = await fetch(
+          "/api/v1/ai/suggestions?artifactId=test-123",
+        );
 
         const data = await response.json();
         const suggestions: Suggestion[] = data.suggestions;
@@ -187,7 +199,9 @@ describe("AI API Contract", () => {
         });
 
         expect(response.ok).toBe(true);
-        expect(response.headers.get("Content-Type")).toContain("application/json");
+        expect(response.headers.get("Content-Type")).toContain(
+          "application/json",
+        );
       });
 
       it("returns 400 when url field is missing", async () => {

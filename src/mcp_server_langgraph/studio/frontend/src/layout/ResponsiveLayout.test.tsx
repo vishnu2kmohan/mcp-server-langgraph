@@ -56,7 +56,7 @@ describe("ResponsiveLayout", () => {
       render(
         <ResponsiveLayout>
           <div>Content</div>
-        </ResponsiveLayout>
+        </ResponsiveLayout>,
       );
 
       expect(screen.getByTestId("responsive-layout")).toBeInTheDocument();
@@ -67,7 +67,7 @@ describe("ResponsiveLayout", () => {
       render(
         <ResponsiveLayout>
           <div data-testid="child">Child Content</div>
-        </ResponsiveLayout>
+        </ResponsiveLayout>,
       );
 
       expect(screen.getByTestId("child")).toBeInTheDocument();
@@ -85,12 +85,12 @@ describe("ResponsiveLayout", () => {
       render(
         <ResponsiveLayout>
           <div>Content</div>
-        </ResponsiveLayout>
+        </ResponsiveLayout>,
       );
 
       expect(screen.getByTestId("responsive-layout")).toHaveAttribute(
         "data-breakpoint",
-        "xl"
+        "xl",
       );
     });
 
@@ -104,12 +104,12 @@ describe("ResponsiveLayout", () => {
       render(
         <ResponsiveLayout>
           <div>Content</div>
-        </ResponsiveLayout>
+        </ResponsiveLayout>,
       );
 
       expect(screen.getByTestId("responsive-layout")).toHaveAttribute(
         "data-breakpoint",
-        "lg"
+        "lg",
       );
     });
 
@@ -123,12 +123,12 @@ describe("ResponsiveLayout", () => {
       render(
         <ResponsiveLayout>
           <div>Content</div>
-        </ResponsiveLayout>
+        </ResponsiveLayout>,
       );
 
       expect(screen.getByTestId("responsive-layout")).toHaveAttribute(
         "data-breakpoint",
-        "md"
+        "md",
       );
     });
 
@@ -142,12 +142,12 @@ describe("ResponsiveLayout", () => {
       render(
         <ResponsiveLayout>
           <div>Content</div>
-        </ResponsiveLayout>
+        </ResponsiveLayout>,
       );
 
       expect(screen.getByTestId("responsive-layout")).toHaveAttribute(
         "data-breakpoint",
-        "sm"
+        "sm",
       );
     });
   });
@@ -163,7 +163,7 @@ describe("ResponsiveLayout", () => {
       render(
         <ResponsiveLayout>
           <div>Content</div>
-        </ResponsiveLayout>
+        </ResponsiveLayout>,
       );
 
       const layout = screen.getByTestId("responsive-layout");
@@ -180,7 +180,7 @@ describe("ResponsiveLayout", () => {
       render(
         <ResponsiveLayout>
           <div>Content</div>
-        </ResponsiveLayout>
+        </ResponsiveLayout>,
       );
 
       const layout = screen.getByTestId("responsive-layout");
@@ -197,7 +197,7 @@ describe("ResponsiveLayout", () => {
       render(
         <ResponsiveLayout>
           <div>Content</div>
-        </ResponsiveLayout>
+        </ResponsiveLayout>,
       );
 
       const layout = screen.getByTestId("responsive-layout");
@@ -214,7 +214,7 @@ describe("ResponsiveLayout", () => {
       render(
         <ResponsiveLayout>
           <div>Content</div>
-        </ResponsiveLayout>
+        </ResponsiveLayout>,
       );
 
       const layout = screen.getByTestId("responsive-layout");
@@ -234,7 +234,7 @@ describe("ResponsiveLayout", () => {
       render(
         <ResponsiveLayout onBreakpointChange={onBreakpointChange}>
           <div>Content</div>
-        </ResponsiveLayout>
+        </ResponsiveLayout>,
       );
 
       // Initial call
@@ -248,11 +248,11 @@ describe("ResponsiveLayout", () => {
       render(
         <ResponsiveLayout className="custom-class">
           <div>Content</div>
-        </ResponsiveLayout>
+        </ResponsiveLayout>,
       );
 
       expect(screen.getByTestId("responsive-layout")).toHaveClass(
-        "custom-class"
+        "custom-class",
       );
     });
   });
@@ -263,7 +263,7 @@ describe("ResponsiveLayout", () => {
       const { container } = render(
         <ResponsiveLayout>
           <div>Content</div>
-        </ResponsiveLayout>
+        </ResponsiveLayout>,
       );
       const results = await axe(container);
       expect(results).toHaveNoViolations();

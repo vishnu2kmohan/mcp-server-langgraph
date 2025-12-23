@@ -246,7 +246,7 @@ export function useNudges(options: UseNudgesOptions = {}): UseNudgesResult {
     (nudgeId: string): boolean => {
       return shownIds.has(nudgeId) || history.some((h) => h.id === nudgeId);
     },
-    [shownIds, history]
+    [shownIds, history],
   );
 
   /**

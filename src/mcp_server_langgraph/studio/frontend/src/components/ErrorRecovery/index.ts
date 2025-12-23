@@ -7,5 +7,8 @@
  * and recovery suggestions.
  */
 
-export { ErrorRecoveryPanel, type ErrorRecoveryPanelProps } from "./ErrorRecoveryPanel";
+export {
+  ErrorRecoveryPanel,
+  type ErrorRecoveryPanelProps,
+} from "./ErrorRecoveryPanel";
 export { RetryIndicator, type RetryIndicatorProps } from "./RetryIndicator";

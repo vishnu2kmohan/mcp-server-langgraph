@@ -51,10 +51,20 @@ export interface ConsoleEntry {
 // =============================================================================
 
 /** HTTP method for network requests */
-export type HttpMethod = "GET" | "POST" | "PUT" | "DELETE" | "PATCH" | "OPTIONS";
+export type HttpMethod =
+  | "GET"
+  | "POST"
+  | "PUT"
+  | "DELETE"
+  | "PATCH"
+  | "OPTIONS";
 
 /** Status of a network request */
-export type NetworkRequestStatus = "pending" | "completed" | "error" | "cancelled";
+export type NetworkRequestStatus =
+  | "pending"
+  | "completed"
+  | "error"
+  | "cancelled";
 
 /** Single network request entry */
 export interface NetworkEntry {

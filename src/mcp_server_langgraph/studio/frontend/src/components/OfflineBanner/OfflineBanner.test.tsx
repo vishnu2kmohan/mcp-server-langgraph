@@ -41,13 +41,17 @@ describe("OfflineBanner", () => {
   describe("sync button", () => {
     it("shows sync button when onSync is provided", () => {
       const onSync = vi.fn();
-      render(<OfflineBanner isOffline={true} pendingCount={3} onSync={onSync} />);
+      render(
+        <OfflineBanner isOffline={true} pendingCount={3} onSync={onSync} />,
+      );
       expect(screen.getByRole("button", { name: /sync/i })).toBeInTheDocument();
     });
 
     it("calls onSync when sync button clicked", () => {
       const onSync = vi.fn();
-      render(<OfflineBanner isOffline={true} pendingCount={3} onSync={onSync} />);
+      render(
+        <OfflineBanner isOffline={true} pendingCount={3} onSync={onSync} />,
+      );
 
       fireEvent.click(screen.getByRole("button", { name: /sync/i }));
       expect(onSync).toHaveBeenCalledTimes(1);
@@ -61,7 +65,7 @@ describe("OfflineBanner", () => {
           pendingCount={3}
           onSync={onSync}
           isSyncing={true}
-        />
+        />,
       );
 
       const button = screen.getByRole("button", { name: /syncing/i });
@@ -70,7 +74,9 @@ describe("OfflineBanner", () => {
 
     it("hides sync button when online and no pending", () => {
       const onSync = vi.fn();
-      render(<OfflineBanner isOffline={false} pendingCount={0} onSync={onSync} />);
+      render(
+        <OfflineBanner isOffline={false} pendingCount={0} onSync={onSync} />,
+      );
       expect(screen.queryByRole("button")).not.toBeInTheDocument();
     });
   });
@@ -79,7 +85,9 @@ describe("OfflineBanner", () => {
     it("shows dismiss button when onDismiss provided", () => {
       const onDismiss = vi.fn();
       render(<OfflineBanner isOffline={true} onDismiss={onDismiss} />);
-      expect(screen.getByRole("button", { name: /dismiss/i })).toBeInTheDocument();
+      expect(
+        screen.getByRole("button", { name: /dismiss/i }),
+      ).toBeInTheDocument();
     });
 
     it("calls onDismiss when dismiss clicked", () => {

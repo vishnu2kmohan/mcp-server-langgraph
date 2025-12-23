@@ -5,8 +5,8 @@
  * This page is accessible to all personas (admin, developer, user).
  */
 
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { render, screen, fireEvent, cleanup } from "@testing-library/react";
 import { Provider } from "react-redux";
 import { MemoryRouter } from "react-router";
 import { configureStore } from "@reduxjs/toolkit";
@@ -83,6 +83,11 @@ describe("SharedWorkflowsPage", () => {
       error: null,
       refetch: vi.fn(),
     });
+  });
+
+  afterEach(() => {
+    cleanup();
+    vi.clearAllMocks();
   });
 
   it("should render the page title", () => {

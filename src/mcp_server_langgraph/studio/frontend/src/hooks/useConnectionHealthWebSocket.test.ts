@@ -5,8 +5,8 @@
  * RED phase: Write failing tests first.
  */
 
-import { renderHook, act } from "@testing-library/react";
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { renderHook, act, cleanup } from "@testing-library/react";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import {
   useConnectionHealthWebSocket,
   type ConnectionHealth,
@@ -42,6 +42,11 @@ describe("useConnectionHealthWebSocket", () => {
     mockOnMessage = undefined;
     mockOnConnect = undefined;
     mockOnDisconnect = undefined;
+  });
+
+  afterEach(() => {
+    cleanup();
+    vi.clearAllMocks();
   });
 
   describe("connection management", () => {

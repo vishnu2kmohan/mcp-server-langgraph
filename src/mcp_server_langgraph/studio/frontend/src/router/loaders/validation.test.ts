@@ -43,7 +43,7 @@ describe("Loader Validation", () => {
       expect(result.success).toBe(false);
       if (!result.success) {
         expect(result.errors).toContainEqual(
-          expect.objectContaining({ field: "id" })
+          expect.objectContaining({ field: "id" }),
         );
       }
     });
@@ -97,7 +97,7 @@ describe("Loader Validation", () => {
       expect(result.success).toBe(false);
       if (!result.success) {
         expect(result.errors).toContainEqual(
-          expect.objectContaining({ field: "name" })
+          expect.objectContaining({ field: "name" }),
         );
       }
     });
@@ -115,7 +115,7 @@ describe("Loader Validation", () => {
       expect(result.success).toBe(false);
       if (!result.success) {
         expect(result.errors).toContainEqual(
-          expect.objectContaining({ field: "status" })
+          expect.objectContaining({ field: "status" }),
         );
       }
     });
@@ -152,7 +152,7 @@ describe("Loader Validation", () => {
       expect(result.success).toBe(false);
       if (!result.success) {
         expect(result.errors).toContainEqual(
-          expect.objectContaining({ field: "role" })
+          expect.objectContaining({ field: "role" }),
         );
       }
     });
@@ -202,7 +202,7 @@ describe("Loader Validation", () => {
       expect(result.success).toBe(false);
       if (!result.success) {
         expect(result.errors).toContainEqual(
-          expect.objectContaining({ field: "created_at" })
+          expect.objectContaining({ field: "created_at" }),
         );
       }
     });
@@ -211,8 +211,18 @@ describe("Loader Validation", () => {
   describe("validateMessages", () => {
     it("should validate array of messages", () => {
       const messages = [
-        { id: "msg-1", role: "user", content: "Hi", created_at: "2025-01-15T10:00:00Z" },
-        { id: "msg-2", role: "assistant", content: "Hello", created_at: "2025-01-15T10:01:00Z" },
+        {
+          id: "msg-1",
+          role: "user",
+          content: "Hi",
+          created_at: "2025-01-15T10:00:00Z",
+        },
+        {
+          id: "msg-2",
+          role: "assistant",
+          content: "Hello",
+          created_at: "2025-01-15T10:01:00Z",
+        },
       ];
 
       const result = validateMessages(messages);
@@ -225,9 +235,19 @@ describe("Loader Validation", () => {
 
     it("should return partial result with valid messages only", () => {
       const messages = [
-        { id: "msg-1", role: "user", content: "Hi", created_at: "2025-01-15T10:00:00Z" },
+        {
+          id: "msg-1",
+          role: "user",
+          content: "Hi",
+          created_at: "2025-01-15T10:00:00Z",
+        },
         { id: "msg-2", role: "invalid", content: "Bad" }, // Invalid
-        { id: "msg-3", role: "assistant", content: "Hello", created_at: "2025-01-15T10:01:00Z" },
+        {
+          id: "msg-3",
+          role: "assistant",
+          content: "Hello",
+          created_at: "2025-01-15T10:01:00Z",
+        },
       ];
 
       const result = validateMessages(messages);
@@ -250,8 +270,18 @@ describe("Loader Validation", () => {
     it("should validate API response with items array", () => {
       const response = {
         items: [
-          { id: "s-1", name: "Session 1", created_at: "2025-01-15", updated_at: "2025-01-15" },
-          { id: "s-2", name: "Session 2", created_at: "2025-01-15", updated_at: "2025-01-15" },
+          {
+            id: "s-1",
+            name: "Session 1",
+            created_at: "2025-01-15",
+            updated_at: "2025-01-15",
+          },
+          {
+            id: "s-2",
+            name: "Session 2",
+            created_at: "2025-01-15",
+            updated_at: "2025-01-15",
+          },
         ],
       };
 
@@ -375,8 +405,18 @@ describe("Loader Validation", () => {
     it("should validate API response with items array", () => {
       const response = {
         items: [
-          { id: "s-1", name: "Session 1", created_at: "2025-01-15", updated_at: "2025-01-15" },
-          { id: "s-2", name: "Session 2", created_at: "2025-01-15", updated_at: "2025-01-15" },
+          {
+            id: "s-1",
+            name: "Session 1",
+            created_at: "2025-01-15",
+            updated_at: "2025-01-15",
+          },
+          {
+            id: "s-2",
+            name: "Session 2",
+            created_at: "2025-01-15",
+            updated_at: "2025-01-15",
+          },
         ],
       };
 
@@ -436,7 +476,12 @@ describe("Loader Validation", () => {
     it("should filter invalid sessions and return warnings", () => {
       const response = {
         items: [
-          { id: "s-1", name: "Session 1", created_at: "2025-01-15", updated_at: "2025-01-15" },
+          {
+            id: "s-1",
+            name: "Session 1",
+            created_at: "2025-01-15",
+            updated_at: "2025-01-15",
+          },
           { name: "Invalid", created_at: "2025-01-15" }, // Missing id and updated_at
         ],
       };

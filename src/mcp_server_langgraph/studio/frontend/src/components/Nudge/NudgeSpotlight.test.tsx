@@ -59,7 +59,9 @@ describe("NudgeSpotlight", () => {
     it("renders spotlight message", () => {
       render(<NudgeSpotlight nudge={mockNudge} onDismiss={() => {}} />);
 
-      expect(screen.getByText(/check out this new feature/i)).toBeInTheDocument();
+      expect(
+        screen.getByText(/check out this new feature/i),
+      ).toBeInTheDocument();
     });
 
     it("renders spotlight overlay", () => {
@@ -102,7 +104,11 @@ describe("NudgeSpotlight", () => {
     it("calls onAccept when action button clicked", () => {
       const onAccept = vi.fn();
       render(
-        <NudgeSpotlight nudge={mockNudge} onDismiss={() => {}} onAccept={onAccept} />
+        <NudgeSpotlight
+          nudge={mockNudge}
+          onDismiss={() => {}}
+          onAccept={onAccept}
+        />,
       );
 
       fireEvent.click(screen.getByRole("button", { name: /got it/i }));
@@ -129,7 +135,9 @@ describe("NudgeSpotlight", () => {
 
     it("handles missing target element gracefully", () => {
       // Remove the target element
-      const target = document.querySelector("[data-testid='new-feature-button']");
+      const target = document.querySelector(
+        "[data-testid='new-feature-button']",
+      );
       if (target) {
         document.body.removeChild(target);
       }
@@ -137,7 +145,9 @@ describe("NudgeSpotlight", () => {
       // Should still render without crashing
       render(<NudgeSpotlight nudge={mockNudge} onDismiss={() => {}} />);
 
-      expect(screen.getByText(/check out this new feature/i)).toBeInTheDocument();
+      expect(
+        screen.getByText(/check out this new feature/i),
+      ).toBeInTheDocument();
     });
 
     it("renders centered when no target element specified", () => {
@@ -181,10 +191,12 @@ describe("NudgeSpotlight", () => {
           onDismiss={() => {}}
           onAccept={() => {}}
           actionText="Learn More"
-        />
+        />,
       );
 
-      expect(screen.getByRole("button", { name: /learn more/i })).toBeInTheDocument();
+      expect(
+        screen.getByRole("button", { name: /learn more/i }),
+      ).toBeInTheDocument();
     });
 
     it("renders secondary action when provided", () => {
@@ -195,10 +207,12 @@ describe("NudgeSpotlight", () => {
           onAccept={() => {}}
           secondaryActionText="Skip Tour"
           onSecondaryAction={() => {}}
-        />
+        />,
       );
 
-      expect(screen.getByRole("button", { name: /skip tour/i })).toBeInTheDocument();
+      expect(
+        screen.getByRole("button", { name: /skip tour/i }),
+      ).toBeInTheDocument();
     });
 
     it("calls onSecondaryAction when secondary button clicked", () => {
@@ -209,7 +223,7 @@ describe("NudgeSpotlight", () => {
           onDismiss={() => {}}
           secondaryActionText="Skip"
           onSecondaryAction={onSecondary}
-        />
+        />,
       );
 
       fireEvent.click(screen.getByRole("button", { name: /skip/i }));
@@ -225,7 +239,7 @@ describe("NudgeSpotlight", () => {
           onDismiss={() => {}}
           currentStep={1}
           totalSteps={5}
-        />
+        />,
       );
 
       expect(screen.getByText(/step 1 of 5/i)).toBeInTheDocument();
@@ -254,7 +268,11 @@ describe("NudgeSpotlight", () => {
 
     it("traps focus within spotlight", () => {
       render(
-        <NudgeSpotlight nudge={mockNudge} onDismiss={() => {}} onAccept={() => {}} />
+        <NudgeSpotlight
+          nudge={mockNudge}
+          onDismiss={() => {}}
+          onAccept={() => {}}
+        />,
       );
 
       // First focusable element should be the close button
@@ -274,7 +292,11 @@ describe("NudgeSpotlight", () => {
   describe("Custom Styling", () => {
     it("applies custom className", () => {
       render(
-        <NudgeSpotlight nudge={mockNudge} onDismiss={() => {}} className="custom-class" />
+        <NudgeSpotlight
+          nudge={mockNudge}
+          onDismiss={() => {}}
+          className="custom-class"
+        />,
       );
 
       const spotlight = screen.getByTestId(`nudge-spotlight-${mockNudge.id}`);

@@ -78,7 +78,7 @@ describe("StateTab", () => {
 
     it("should display entity ID when provided", () => {
       renderWithStore(
-        <StateTab context="session" contextEntityId="session-123" />
+        <StateTab context="session" contextEntityId="session-123" />,
       );
 
       expect(screen.getByText("session-123")).toBeInTheDocument();

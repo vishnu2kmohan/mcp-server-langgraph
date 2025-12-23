@@ -291,7 +291,11 @@ describe("projectSlice", () => {
       it("should use fallback error message when payload is undefined", () => {
         // Directly test reducer with undefined payload
         const state = projectReducer(
-          { ...initialProjectState, isLoadingDetail: true, currentProject: mockProject },
+          {
+            ...initialProjectState,
+            isLoadingDetail: true,
+            currentProject: mockProject,
+          },
           { type: loadProject.rejected.type, payload: undefined },
         );
         expect(state.error).toBe("Failed to load project");
@@ -478,7 +482,12 @@ describe("projectSlice", () => {
       it("should use fallback error message when payload is undefined", () => {
         // Directly test reducer with undefined payload
         const state = projectReducer(
-          { ...initialProjectState, isLoading: true, projects: [mockProject], total: 1 },
+          {
+            ...initialProjectState,
+            isLoading: true,
+            projects: [mockProject],
+            total: 1,
+          },
           { type: deleteProject.rejected.type, payload: undefined },
         );
         expect(state.error).toBe("Failed to delete project");
@@ -599,7 +608,11 @@ describe("projectSlice", () => {
       });
 
       it("should not update projects array if project not found", async () => {
-        const updatedProject = { ...mockProject, id: "nonexistent", name: "Updated Name" };
+        const updatedProject = {
+          ...mockProject,
+          id: "nonexistent",
+          name: "Updated Name",
+        };
         mockFetch.mockResolvedValueOnce({
           ok: true,
           json: () => Promise.resolve(updatedProject),
@@ -658,7 +671,9 @@ describe("projectSlice", () => {
         );
 
         // currentProject should remain unchanged (different id)
-        expect(selectCurrentProject(store.getState())?.name).toBe("Other Project");
+        expect(selectCurrentProject(store.getState())?.name).toBe(
+          "Other Project",
+        );
         // But projects array should be updated
         expect(selectProjects(store.getState())[0].name).toBe("Updated Name");
       });

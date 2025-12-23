@@ -34,7 +34,7 @@ import type {
  * Create a mock approval request
  */
 export const createMockApprovalRequest = (
-  overrides: Partial<ApprovalRequiredPayload> = {}
+  overrides: Partial<ApprovalRequiredPayload> = {},
 ): ApprovalRequiredPayload => ({
   request_id: `req-${crypto.randomUUID().slice(0, 8)}`,
   session_id: "session-1",
@@ -56,7 +56,7 @@ export const createMockApprovalRequest = (
  * Create a mock clarification request
  */
 export const createMockClarificationRequest = (
-  overrides: Partial<ClarificationRequiredPayload> = {}
+  overrides: Partial<ClarificationRequiredPayload> = {},
 ): ClarificationRequiredPayload => ({
   request_id: `req-${crypto.randomUUID().slice(0, 8)}`,
   session_id: "session-1",
@@ -178,7 +178,9 @@ export const agentRequestHandlers = [
     }> = [];
 
     for (const requestId of body.request_ids) {
-      const found = mockPendingApprovals.find((a) => a.request_id === requestId);
+      const found = mockPendingApprovals.find(
+        (a) => a.request_id === requestId,
+      );
       if (found) {
         results.push({ request_id: requestId, success: true });
       } else {
@@ -221,7 +223,9 @@ export const agentRequestHandlers = [
     }> = [];
 
     for (const requestId of body.request_ids) {
-      const found = mockPendingApprovals.find((a) => a.request_id === requestId);
+      const found = mockPendingApprovals.find(
+        (a) => a.request_id === requestId,
+      );
       if (found) {
         results.push({ request_id: requestId, success: true });
       } else {
@@ -253,7 +257,9 @@ export const agentRequestHandlers = [
     const { requestId } = params;
 
     // Check approvals first
-    const approval = mockPendingApprovals.find((a) => a.request_id === requestId);
+    const approval = mockPendingApprovals.find(
+      (a) => a.request_id === requestId,
+    );
     if (approval) {
       return HttpResponse.json({
         ...approval,
@@ -264,7 +270,7 @@ export const agentRequestHandlers = [
 
     // Check clarifications
     const clarification = mockPendingClarifications.find(
-      (c) => c.request_id === requestId
+      (c) => c.request_id === requestId,
     );
     if (clarification) {
       return HttpResponse.json({
@@ -277,102 +283,115 @@ export const agentRequestHandlers = [
     // Not found
     return HttpResponse.json(
       { error: "Request not found", request_id: requestId },
-      { status: 404 }
+      { status: 404 },
     );
   }),
 
   /**
    * POST /api/v1/agents/requests/:id/approve - Approve request
    */
-  http.post("/api/v1/agents/requests/:requestId/approve", async ({ params, request }) => {
-    await delay(50);
+  http.post(
+    "/api/v1/agents/requests/:requestId/approve",
+    async ({ params, request }) => {
+      await delay(50);
 
-    const { requestId } = params;
-    const body = (await request.json()) as {
-      approved_by: string;
-      reason?: string;
-      modifications?: Record<string, unknown>;
-    };
+      const { requestId } = params;
+      const body = (await request.json()) as {
+        approved_by: string;
+        reason?: string;
+        modifications?: Record<string, unknown>;
+      };
 
-    // Find the request
-    const approval = mockPendingApprovals.find((a) => a.request_id === requestId);
-    if (!approval) {
-      return HttpResponse.json(
-        { error: "Request not found", request_id: requestId },
-        { status: 404 }
+      // Find the request
+      const approval = mockPendingApprovals.find(
+        (a) => a.request_id === requestId,
       );
-    }
+      if (!approval) {
+        return HttpResponse.json(
+          { error: "Request not found", request_id: requestId },
+          { status: 404 },
+        );
+      }
 
-    // Return success response
-    return HttpResponse.json({
-      success: true,
-      request_id: requestId as string,
-      status: "approved",
-      message: body.reason ?? `Approved by ${body.approved_by}`,
-    } satisfies AgentRequestActionResponse);
-  }),
+      // Return success response
+      return HttpResponse.json({
+        success: true,
+        request_id: requestId as string,
+        status: "approved",
+        message: body.reason ?? `Approved by ${body.approved_by}`,
+      } satisfies AgentRequestActionResponse);
+    },
+  ),
 
   /**
    * POST /api/v1/agents/requests/:id/reject - Reject request
    */
-  http.post("/api/v1/agents/requests/:requestId/reject", async ({ params, request }) => {
-    await delay(50);
+  http.post(
+    "/api/v1/agents/requests/:requestId/reject",
+    async ({ params, request }) => {
+      await delay(50);
 
-    const { requestId } = params;
-    const body = (await request.json()) as {
-      rejected_by: string;
-      reason?: string;
-    };
+      const { requestId } = params;
+      const body = (await request.json()) as {
+        rejected_by: string;
+        reason?: string;
+      };
 
-    // Find the request
-    const approval = mockPendingApprovals.find((a) => a.request_id === requestId);
-    if (!approval) {
-      return HttpResponse.json(
-        { error: "Request not found", request_id: requestId },
-        { status: 404 }
+      // Find the request
+      const approval = mockPendingApprovals.find(
+        (a) => a.request_id === requestId,
       );
-    }
+      if (!approval) {
+        return HttpResponse.json(
+          { error: "Request not found", request_id: requestId },
+          { status: 404 },
+        );
+      }
 
-    return HttpResponse.json({
-      success: true,
-      request_id: requestId as string,
-      status: "rejected",
-      message: body.reason ?? `Rejected by ${body.rejected_by}`,
-    } satisfies AgentRequestActionResponse);
-  }),
+      return HttpResponse.json({
+        success: true,
+        request_id: requestId as string,
+        status: "rejected",
+        message: body.reason ?? `Rejected by ${body.rejected_by}`,
+      } satisfies AgentRequestActionResponse);
+    },
+  ),
 
   /**
    * POST /api/v1/agents/requests/:id/respond - Respond to clarification
    */
-  http.post("/api/v1/agents/requests/:requestId/respond", async ({ params, request }) => {
-    await delay(50);
+  http.post(
+    "/api/v1/agents/requests/:requestId/respond",
+    async ({ params, request }) => {
+      await delay(50);
 
-    const { requestId } = params;
-    const body = (await request.json()) as {
-      response_type: "choice" | "text" | "confirm";
-      selected_option?: string;
-      text_response?: string;
-      confirmed?: boolean;
-    };
+      const { requestId } = params;
+      const body = (await request.json()) as {
+        response_type: "choice" | "text" | "confirm";
+        selected_option?: string;
+        text_response?: string;
+        confirmed?: boolean;
+      };
 
-    // Find the clarification request
-    const clarification = mockPendingClarifications.find(
-      (c) => c.request_id === requestId
-    );
-    if (!clarification) {
-      return HttpResponse.json(
-        { error: "Request not found", request_id: requestId },
-        { status: 404 }
+      // Find the clarification request
+      const clarification = mockPendingClarifications.find(
+        (c) => c.request_id === requestId,
       );
-    }
+      if (!clarification) {
+        return HttpResponse.json(
+          { error: "Request not found", request_id: requestId },
+          { status: 404 },
+        );
+      }
 
-    return HttpResponse.json({
-      success: true,
-      request_id: requestId as string,
-      status: "responded",
-      message: `Responded with ${body.response_type}: ${body.selected_option ?? body.text_response ?? String(body.confirmed)}`,
-    } satisfies AgentRequestActionResponse);
-  }),
+      return HttpResponse.json({
+        success: true,
+        request_id: requestId as string,
+        status: "responded",
+        message: `Responded with ${body.response_type}: ${body.selected_option ?? body.text_response ?? String(body.confirmed)}`,
+      } satisfies AgentRequestActionResponse);
+    },
+  ),
 ];
 
 export default agentRequestHandlers;

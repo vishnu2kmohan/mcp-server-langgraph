@@ -8,8 +8,8 @@
  * - Syncing tab state with URL
  */
 
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { renderHook } from "@testing-library/react";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { renderHook, cleanup } from "@testing-library/react";
 import { Provider } from "react-redux";
 import { MemoryRouter } from "react-router";
 import { configureStore } from "@reduxjs/toolkit";
@@ -82,6 +82,11 @@ function renderHookWithProviders(
 
 describe("useRouteTabSync", () => {
   beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  afterEach(() => {
+    cleanup();
     vi.clearAllMocks();
   });
 

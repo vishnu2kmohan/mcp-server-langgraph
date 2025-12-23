@@ -24,11 +24,36 @@ const mockMetricsData: MetricsSummary = {
   overallHealthScore: 78,
   dataPointCount: 15000,
   dimensions: [
-    { dimension: "happiness", overallScore: 82, hasData: true, goalProgresses: [] },
-    { dimension: "engagement", overallScore: 75, hasData: true, goalProgresses: [] },
-    { dimension: "adoption", overallScore: 68, hasData: true, goalProgresses: [] },
-    { dimension: "retention", overallScore: 80, hasData: true, goalProgresses: [] },
-    { dimension: "task_success", overallScore: 85, hasData: true, goalProgresses: [] },
+    {
+      dimension: "happiness",
+      overallScore: 82,
+      hasData: true,
+      goalProgresses: [],
+    },
+    {
+      dimension: "engagement",
+      overallScore: 75,
+      hasData: true,
+      goalProgresses: [],
+    },
+    {
+      dimension: "adoption",
+      overallScore: 68,
+      hasData: true,
+      goalProgresses: [],
+    },
+    {
+      dimension: "retention",
+      overallScore: 80,
+      hasData: true,
+      goalProgresses: [],
+    },
+    {
+      dimension: "task_success",
+      overallScore: 85,
+      hasData: true,
+      goalProgresses: [],
+    },
   ],
 };
 
@@ -89,7 +114,7 @@ describe("useHeartDashboard", () => {
         "/api/v1/metrics/heart/aggregate?range=30d",
         expect.objectContaining({
           credentials: "include",
-        })
+        }),
       );
     });
   });
@@ -121,7 +146,7 @@ describe("useHeartDashboard", () => {
           headers: expect.objectContaining({
             Authorization: "Bearer test-token",
           }),
-        })
+        }),
       );
     });
 
@@ -186,7 +211,7 @@ describe("useHeartDashboard", () => {
       await waitFor(() => {
         expect(fetchSpy).toHaveBeenCalledWith(
           "/api/v1/metrics/heart/aggregate?range=90d",
-          expect.any(Object)
+          expect.any(Object),
         );
       });
     });
@@ -315,7 +340,7 @@ describe("useHeartDashboard", () => {
     it("accepts autoRefreshMs option", async () => {
       // Verify the hook accepts the option without error
       const { result } = renderHook(() =>
-        useHeartDashboard({ autoRefreshMs: 60000 })
+        useHeartDashboard({ autoRefreshMs: 60000 }),
       );
 
       await waitFor(() => expect(result.current.loading).toBe(false));
@@ -349,7 +374,7 @@ describe("useHeartDashboard", () => {
   describe("options", () => {
     it("accepts initial time range", async () => {
       const { result } = renderHook(() =>
-        useHeartDashboard({ initialTimeRange: "7d" })
+        useHeartDashboard({ initialTimeRange: "7d" }),
       );
 
       expect(result.current.timeRange).toBe("7d");
@@ -358,7 +383,7 @@ describe("useHeartDashboard", () => {
 
       expect(fetchSpy).toHaveBeenCalledWith(
         "/api/v1/metrics/heart/aggregate?range=7d",
-        expect.any(Object)
+        expect.any(Object),
       );
     });
   });

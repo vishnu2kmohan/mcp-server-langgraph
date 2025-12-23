@@ -72,9 +72,17 @@ function getConfidenceLevel(confidence: number): {
   testId: string;
 } {
   if (confidence >= 0.8) {
-    return { level: "high", color: "text-green-600", testId: "confidence-high" };
+    return {
+      level: "high",
+      color: "text-green-600",
+      testId: "confidence-high",
+    };
   } else if (confidence >= 0.6) {
-    return { level: "medium", color: "text-yellow-600", testId: "confidence-medium" };
+    return {
+      level: "medium",
+      color: "text-yellow-600",
+      testId: "confidence-medium",
+    };
   }
   return { level: "low", color: "text-red-600", testId: "confidence-low" };
 }
@@ -166,134 +174,152 @@ export function CrossInsightsPanel({
       {/* Content */}
       {!isCollapsed && (
         <div className="transition-all duration-200">
-        {/* Loading state */}
-        {isLoading && (
-          <div
-            className="flex items-center justify-center py-8"
-            data-testid="insights-loading"
-          >
-            <Loader2 className="w-6 h-6 animate-spin text-blue-500" />
-            <span className="ml-2 text-sm text-gray-500">
-              Analyzing patterns...
-            </span>
-          </div>
-        )}
+          {/* Loading state */}
+          {isLoading && (
+            <div
+              className="flex items-center justify-center py-8"
+              data-testid="insights-loading"
+            >
+              <Loader2 className="w-6 h-6 animate-spin text-blue-500" />
+              <span className="ml-2 text-sm text-gray-500">
+                Analyzing patterns...
+              </span>
+            </div>
+          )}
 
-        {/* Empty state */}
-        {!isLoading && !hasContent && (
-          <div className="py-6 text-center text-gray-500 text-sm">
-            No insights available
-          </div>
-        )}
+          {/* Empty state */}
+          {!isLoading && !hasContent && (
+            <div className="py-6 text-center text-gray-500 text-sm">
+              No insights available
+            </div>
+          )}
 
-        {/* Content when not loading */}
-        {!isLoading && hasContent && (
-          <div className="p-4 space-y-4">
-            {/* Persona mismatch warning */}
-            {hasPersonaMismatch && personaResult && (
-              <div className="flex items-start gap-3 p-3 bg-amber-50 dark:bg-amber-900/20 rounded-lg border border-amber-200 dark:border-amber-800">
-                <AlertTriangle className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" />
-                <div>
-                  <p className="text-sm font-medium text-amber-800 dark:text-amber-200">
-                    Persona mismatch detected
-                  </p>
-                  <p className="text-xs text-amber-700 dark:text-amber-300 mt-1">
-                    Assigned: <span className="font-medium">{personaResult.assigned_persona}</span>
-                    {" → "}
-                    Detected: <span className="font-medium">{personaResult.detected_persona}</span>
-                  </p>
-                  {personaResult.recommendation && (
-                    <p className="text-xs text-amber-600 dark:text-amber-400 mt-1">
-                      {personaResult.recommendation}
+          {/* Content when not loading */}
+          {!isLoading && hasContent && (
+            <div className="p-4 space-y-4">
+              {/* Persona mismatch warning */}
+              {hasPersonaMismatch && personaResult && (
+                <div className="flex items-start gap-3 p-3 bg-amber-50 dark:bg-amber-900/20 rounded-lg border border-amber-200 dark:border-amber-800">
+                  <AlertTriangle className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" />
+                  <div>
+                    <p className="text-sm font-medium text-amber-800 dark:text-amber-200">
+                      Persona mismatch detected
                     </p>
-                  )}
-                </div>
-              </div>
-            )}
-
-            {/* Disclosure level upgrade */}
-            {hasDisclosureUpgrade && disclosureResult && (
-              <div className="flex items-start gap-3 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
-                <ArrowUpCircle className="w-5 h-5 text-blue-500 flex-shrink-0 mt-0.5" />
-                <div>
-                  <p className="text-sm font-medium text-blue-800 dark:text-blue-200">
-                    Level upgrade recommended
-                  </p>
-                  <p className="text-xs text-blue-700 dark:text-blue-300 mt-1">
-                    Current: <span className="font-medium">{disclosureResult.current_level}</span>
-                    {" → "}
-                    Recommended: <span className="font-medium">{disclosureResult.recommended_level}</span>
-                  </p>
-                  {disclosureResult.personalized_message && (
-                    <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">
-                      {disclosureResult.personalized_message}
+                    <p className="text-xs text-amber-700 dark:text-amber-300 mt-1">
+                      Assigned:{" "}
+                      <span className="font-medium">
+                        {personaResult.assigned_persona}
+                      </span>
+                      {" → "}
+                      Detected:{" "}
+                      <span className="font-medium">
+                        {personaResult.detected_persona}
+                      </span>
                     </p>
-                  )}
+                    {personaResult.recommendation && (
+                      <p className="text-xs text-amber-600 dark:text-amber-400 mt-1">
+                        {personaResult.recommendation}
+                      </p>
+                    )}
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
 
-            {/* Cross insights list */}
-            {hasInsights && (
-              <div>
-                <h4 className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">
-                  Cross-Service Insights
-                </h4>
-                <ul role="list" className="space-y-2">
-                  {crossInsights.map((insight, index) => (
-                    <li
-                      key={index}
-                      className="flex items-start gap-2 text-sm text-gray-700 dark:text-gray-300"
-                    >
-                      <Sparkles className="w-4 h-4 text-purple-500 flex-shrink-0 mt-0.5" />
-                      <span>{insight}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-
-            {/* UI Adaptations from persona */}
-            {personaResult?.ui_adaptations && personaResult.ui_adaptations.length > 0 && (
-              <div>
-                <h4 className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">
-                  Recommended Adaptations
-                </h4>
-                <div className="flex flex-wrap gap-2">
-                  {personaResult.ui_adaptations.map((adaptation, index) => (
-                    <span
-                      key={index}
-                      className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200"
-                    >
-                      <span className="font-medium">{adaptation.feature}</span>
-                      <span className="mx-1">→</span>
-                      <span>{adaptation.action}</span>
-                    </span>
-                  ))}
+              {/* Disclosure level upgrade */}
+              {hasDisclosureUpgrade && disclosureResult && (
+                <div className="flex items-start gap-3 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+                  <ArrowUpCircle className="w-5 h-5 text-blue-500 flex-shrink-0 mt-0.5" />
+                  <div>
+                    <p className="text-sm font-medium text-blue-800 dark:text-blue-200">
+                      Level upgrade recommended
+                    </p>
+                    <p className="text-xs text-blue-700 dark:text-blue-300 mt-1">
+                      Current:{" "}
+                      <span className="font-medium">
+                        {disclosureResult.current_level}
+                      </span>
+                      {" → "}
+                      Recommended:{" "}
+                      <span className="font-medium">
+                        {disclosureResult.recommended_level}
+                      </span>
+                    </p>
+                    {disclosureResult.personalized_message && (
+                      <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">
+                        {disclosureResult.personalized_message}
+                      </p>
+                    )}
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
 
-            {/* Features to unlock from disclosure */}
-            {disclosureResult?.unlock_features && disclosureResult.unlock_features.length > 0 && (
-              <div>
-                <h4 className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">
-                  Features to Unlock
-                </h4>
-                <div className="flex flex-wrap gap-2">
-                  {disclosureResult.unlock_features.map((feature, index) => (
-                    <span
-                      key={index}
-                      className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-200"
-                    >
-                      {feature}
-                    </span>
-                  ))}
+              {/* Cross insights list */}
+              {hasInsights && (
+                <div>
+                  <h4 className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">
+                    Cross-Service Insights
+                  </h4>
+                  <ul role="list" className="space-y-2">
+                    {crossInsights.map((insight, index) => (
+                      <li
+                        key={index}
+                        className="flex items-start gap-2 text-sm text-gray-700 dark:text-gray-300"
+                      >
+                        <Sparkles className="w-4 h-4 text-purple-500 flex-shrink-0 mt-0.5" />
+                        <span>{insight}</span>
+                      </li>
+                    ))}
+                  </ul>
                 </div>
-              </div>
-            )}
-          </div>
-        )}
+              )}
+
+              {/* UI Adaptations from persona */}
+              {personaResult?.ui_adaptations &&
+                personaResult.ui_adaptations.length > 0 && (
+                  <div>
+                    <h4 className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">
+                      Recommended Adaptations
+                    </h4>
+                    <div className="flex flex-wrap gap-2">
+                      {personaResult.ui_adaptations.map((adaptation, index) => (
+                        <span
+                          key={index}
+                          className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200"
+                        >
+                          <span className="font-medium">
+                            {adaptation.feature}
+                          </span>
+                          <span className="mx-1">→</span>
+                          <span>{adaptation.action}</span>
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+              {/* Features to unlock from disclosure */}
+              {disclosureResult?.unlock_features &&
+                disclosureResult.unlock_features.length > 0 && (
+                  <div>
+                    <h4 className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">
+                      Features to Unlock
+                    </h4>
+                    <div className="flex flex-wrap gap-2">
+                      {disclosureResult.unlock_features.map(
+                        (feature, index) => (
+                          <span
+                            key={index}
+                            className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-200"
+                          >
+                            {feature}
+                          </span>
+                        ),
+                      )}
+                    </div>
+                  </div>
+                )}
+            </div>
+          )}
         </div>
       )}
     </div>

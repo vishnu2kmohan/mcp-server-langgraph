@@ -40,7 +40,12 @@ import { useGetMetricsInsightsQuery } from "../api";
  * RTK Query response format from backend
  */
 interface RTKMetricsInsight {
-  category: "happiness" | "engagement" | "adoption" | "retention" | "task_success";
+  category:
+    | "happiness"
+    | "engagement"
+    | "adoption"
+    | "retention"
+    | "task_success";
   title: string;
   description: string;
   trend: "improving" | "stable" | "declining";
@@ -55,7 +60,12 @@ export interface BaseInsight {
   /** Insight type: anomaly, trend, or pattern */
   type: "anomaly" | "trend" | "pattern";
   /** HEART dimension this relates to */
-  dimension: "happiness" | "engagement" | "adoption" | "retention" | "task_success";
+  dimension:
+    | "happiness"
+    | "engagement"
+    | "adoption"
+    | "retention"
+    | "task_success";
   /** Human-readable insight message */
   message: string;
 }
@@ -151,7 +161,6 @@ export interface UseAIMetricsInsightsResult {
   refresh: () => void;
 }
 
-
 /**
  * Transform RTK Query insight to hook's expected format.
  * Maps from backend format (category, title, description, trend, priority)
@@ -171,7 +180,9 @@ function transformRTKInsight(raw: RTKMetricsInsight): Insight {
       dimension,
       message,
       severity: "critical",
-      suggestedActions: raw.suggested_action ? [raw.suggested_action] : undefined,
+      suggestedActions: raw.suggested_action
+        ? [raw.suggested_action]
+        : undefined,
       detectedAt: new Date().toISOString(),
     };
   }
@@ -182,7 +193,9 @@ function transformRTKInsight(raw: RTKMetricsInsight): Insight {
       dimension,
       message,
       severity: "warning",
-      suggestedActions: raw.suggested_action ? [raw.suggested_action] : undefined,
+      suggestedActions: raw.suggested_action
+        ? [raw.suggested_action]
+        : undefined,
     };
   }
 
@@ -210,7 +223,7 @@ function transformRTKInsight(raw: RTKMetricsInsight): Insight {
  * @returns Insights, predictions, and categorized data
  */
 export function useAIMetricsInsights(
-  options: UseAIMetricsInsightsOptions = {}
+  options: UseAIMetricsInsightsOptions = {},
 ): UseAIMetricsInsightsResult {
   const {
     enabled = true,
@@ -233,7 +246,7 @@ export function useAIMetricsInsights(
     {
       skip: !enabled,
       pollingInterval: pollingIntervalMs,
-    }
+    },
   );
 
   // Update lastUpdated when data changes
@@ -256,17 +269,17 @@ export function useAIMetricsInsights(
   // Categorize insights by type
   const anomalies = useMemo(
     () => insights.filter((i): i is AnomalyInsight => i.type === "anomaly"),
-    [insights]
+    [insights],
   );
 
   const trends = useMemo(
     () => insights.filter((i): i is TrendInsight => i.type === "trend"),
-    [insights]
+    [insights],
   );
 
   const patterns = useMemo(
     () => insights.filter((i): i is PatternInsight => i.type === "pattern"),
-    [insights]
+    [insights],
   );
 
   // Transform RTK Query error to Error object

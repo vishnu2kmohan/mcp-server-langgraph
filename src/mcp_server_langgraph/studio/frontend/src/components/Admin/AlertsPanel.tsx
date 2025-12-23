@@ -105,11 +105,20 @@ function getSeverityColor(severity: Alert["severity"]): string {
 function getStateStyle(state: Alert["state"]): { bg: string; text: string } {
   switch (state) {
     case "firing":
-      return { bg: "bg-red-100 dark:bg-red-900/30", text: "text-red-700 dark:text-red-400" };
+      return {
+        bg: "bg-red-100 dark:bg-red-900/30",
+        text: "text-red-700 dark:text-red-400",
+      };
     case "resolved":
-      return { bg: "bg-green-100 dark:bg-green-900/30", text: "text-green-700 dark:text-green-400" };
+      return {
+        bg: "bg-green-100 dark:bg-green-900/30",
+        text: "text-green-700 dark:text-green-400",
+      };
     default:
-      return { bg: "bg-gray-100 dark:bg-gray-800", text: "text-gray-700 dark:text-gray-400" };
+      return {
+        bg: "bg-gray-100 dark:bg-gray-800",
+        text: "text-gray-700 dark:text-gray-400",
+      };
   }
 }
 
@@ -160,7 +169,7 @@ function AlertItem({ alert, isSelected, onClick }: AlertItemProps) {
         <div
           data-testid={`severity-badge-${alert.alert_id}`}
           className={`w-2 h-2 mt-2 rounded-full flex-shrink-0 ${getSeverityColor(
-            alert.severity
+            alert.severity,
           )}`}
         />
 
@@ -447,25 +456,23 @@ export function AlertsPanel({
               onToggleGroup={handleToggleGroup}
             />
           )
+        ) : // Flat View
+        filteredAlerts.length === 0 ? (
+          <div className="flex flex-col items-center justify-center h-32 text-gray-500 dark:text-gray-400">
+            <AlertCircle className="w-8 h-8 mb-2 opacity-50" />
+            <p>No alerts matching current filters</p>
+          </div>
         ) : (
-          // Flat View
-          filteredAlerts.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-32 text-gray-500 dark:text-gray-400">
-              <AlertCircle className="w-8 h-8 mb-2 opacity-50" />
-              <p>No alerts matching current filters</p>
-            </div>
-          ) : (
-            <div className="space-y-2">
-              {filteredAlerts.map((alert) => (
-                <AlertItem
-                  key={alert.alert_id}
-                  alert={alert}
-                  isSelected={selectedAlertId === alert.alert_id}
-                  onClick={() => onSelectAlert(alert.alert_id)}
-                />
-              ))}
-            </div>
-          )
+          <div className="space-y-2">
+            {filteredAlerts.map((alert) => (
+              <AlertItem
+                key={alert.alert_id}
+                alert={alert}
+                isSelected={selectedAlertId === alert.alert_id}
+                onClick={() => onSelectAlert(alert.alert_id)}
+              />
+            ))}
+          </div>
         )}
       </div>
     </div>

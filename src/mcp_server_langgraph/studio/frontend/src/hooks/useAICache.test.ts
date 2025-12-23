@@ -13,7 +13,12 @@
 
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { renderHook, act, waitFor } from "@testing-library/react";
-import { useAICache, createCacheKey, clearAllAICache, type CacheEntry } from "./useAICache";
+import {
+  useAICache,
+  createCacheKey,
+  clearAllAICache,
+  type CacheEntry,
+} from "./useAICache";
 
 describe("useAICache", () => {
   beforeEach(() => {
@@ -32,14 +37,26 @@ describe("useAICache", () => {
 
   describe("createCacheKey", () => {
     it("should generate consistent cache keys for same inputs", () => {
-      const key1 = createCacheKey("nav_prediction", { userId: "user-1", page: "admin" });
-      const key2 = createCacheKey("nav_prediction", { userId: "user-1", page: "admin" });
+      const key1 = createCacheKey("nav_prediction", {
+        userId: "user-1",
+        page: "admin",
+      });
+      const key2 = createCacheKey("nav_prediction", {
+        userId: "user-1",
+        page: "admin",
+      });
       expect(key1).toBe(key2);
     });
 
     it("should generate different keys for different inputs", () => {
-      const key1 = createCacheKey("nav_prediction", { userId: "user-1", page: "admin" });
-      const key2 = createCacheKey("nav_prediction", { userId: "user-1", page: "chat" });
+      const key1 = createCacheKey("nav_prediction", {
+        userId: "user-1",
+        page: "admin",
+      });
+      const key2 = createCacheKey("nav_prediction", {
+        userId: "user-1",
+        page: "chat",
+      });
       expect(key1).not.toBe(key2);
     });
 
@@ -59,7 +76,7 @@ describe("useAICache", () => {
           cacheKey: "test-key",
           fetchFn,
           staleTime: 5 * 60 * 1000, // 5 minutes
-        })
+        }),
       );
 
       // First call - should fetch
@@ -89,7 +106,7 @@ describe("useAICache", () => {
           cacheKey: "test-key-stale",
           fetchFn,
           staleTime: 1000, // 1 second
-        })
+        }),
       );
 
       // First call
@@ -121,7 +138,7 @@ describe("useAICache", () => {
           cacheKey: "test-key-force",
           fetchFn,
           staleTime: 5 * 60 * 1000,
-        })
+        }),
       );
 
       await waitFor(() => {
@@ -142,16 +159,21 @@ describe("useAICache", () => {
 
   describe("loading states", () => {
     it("should show loading state on initial fetch", async () => {
-      const fetchFn = vi.fn().mockImplementation(
-        () => new Promise((resolve) => setTimeout(() => resolve({ data: "test" }), 100))
-      );
+      const fetchFn = vi
+        .fn()
+        .mockImplementation(
+          () =>
+            new Promise((resolve) =>
+              setTimeout(() => resolve({ data: "test" }), 100),
+            ),
+        );
 
       const { result } = renderHook(() =>
         useAICache({
           cacheKey: "test-loading",
           fetchFn,
           staleTime: 5000,
-        })
+        }),
       );
 
       expect(result.current.isLoading).toBe(true);
@@ -173,7 +195,7 @@ describe("useAICache", () => {
           cacheKey: "test-no-loading",
           fetchFn,
           staleTime: 5 * 60 * 1000,
-        })
+        }),
       );
 
       await waitFor(() => {
@@ -200,7 +222,7 @@ describe("useAICache", () => {
           cacheKey: "test-error",
           fetchFn,
           staleTime: 5000,
-        })
+        }),
       );
 
       await waitFor(() => {
@@ -225,7 +247,7 @@ describe("useAICache", () => {
           fetchFn,
           staleTime: 100,
           returnStaleOnError: true,
-        })
+        }),
       );
 
       // First call succeeds
@@ -260,7 +282,7 @@ describe("useAICache", () => {
           cacheKey: "test-invalidate",
           fetchFn,
           staleTime: 5 * 60 * 1000,
-        })
+        }),
       );
 
       await waitFor(() => {
@@ -295,7 +317,7 @@ describe("useAICache", () => {
           fetchFn,
           staleTime: 5000,
           enabled: false,
-        })
+        }),
       );
 
       // Should not call fetch
@@ -314,7 +336,7 @@ describe("useAICache", () => {
           cacheKey: "test-metadata",
           fetchFn,
           staleTime: 5000,
-        })
+        }),
       );
 
       await waitFor(() => {

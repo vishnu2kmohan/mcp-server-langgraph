@@ -82,7 +82,9 @@ describe("ErrorBoundary", () => {
         </ErrorBoundary>,
       );
 
-      expect(screen.getByText(/custom error message for testing/i)).toBeInTheDocument();
+      expect(
+        screen.getByText(/custom error message for testing/i),
+      ).toBeInTheDocument();
     });
 
     it("should display generic message for errors without message", () => {
@@ -94,7 +96,9 @@ describe("ErrorBoundary", () => {
         </ErrorBoundary>,
       );
 
-      expect(screen.getByText(/an unexpected error occurred/i)).toBeInTheDocument();
+      expect(
+        screen.getByText(/an unexpected error occurred/i),
+      ).toBeInTheDocument();
     });
   });
 
@@ -162,7 +166,9 @@ describe("ErrorBoundary", () => {
         </ErrorBoundary>,
       );
 
-      expect(screen.getByRole("button", { name: /try again/i })).toBeInTheDocument();
+      expect(
+        screen.getByRole("button", { name: /try again/i }),
+      ).toBeInTheDocument();
     });
 
     it("should call onReset when retry button is clicked", () => {
@@ -232,9 +238,11 @@ describe("ErrorBoundary", () => {
     });
 
     it("should render fallback render prop with error details", () => {
-      const fallbackRender = vi.fn().mockReturnValue(
-        <div data-testid="render-fallback">Render Fallback</div>,
-      );
+      const fallbackRender = vi
+        .fn()
+        .mockReturnValue(
+          <div data-testid="render-fallback">Render Fallback</div>,
+        );
       const testError = new Error("Render prop test");
 
       render(

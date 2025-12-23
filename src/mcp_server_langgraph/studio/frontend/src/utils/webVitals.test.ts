@@ -85,7 +85,7 @@ describe("WebVitalsTracker", () => {
     it("should register PerformanceObserver for FCP", () => {
       const tracker = new WebVitalsTracker();
       tracker.start();
-      
+
       expect(mockObserve).toHaveBeenCalledWith(
         expect.objectContaining({ type: "paint" }),
       );
@@ -94,7 +94,7 @@ describe("WebVitalsTracker", () => {
     it("should register PerformanceObserver for LCP", () => {
       const tracker = new WebVitalsTracker();
       tracker.start();
-      
+
       expect(mockObserve).toHaveBeenCalledWith(
         expect.objectContaining({ type: "largest-contentful-paint" }),
       );
@@ -130,9 +130,7 @@ describe("WebVitalsTracker", () => {
 
       const paintCallback = observerCallbacks.get("paint");
       paintCallback?.({
-        getEntries: () => [
-          { name: "first-contentful-paint", startTime: 1234 },
-        ],
+        getEntries: () => [{ name: "first-contentful-paint", startTime: 1234 }],
       });
 
       const metrics = tracker.getMetrics();
@@ -146,9 +144,7 @@ describe("WebVitalsTracker", () => {
 
       const paintCallback = observerCallbacks.get("paint");
       paintCallback?.({
-        getEntries: () => [
-          { name: "first-contentful-paint", startTime: 500 },
-        ],
+        getEntries: () => [{ name: "first-contentful-paint", startTime: 500 }],
       });
 
       expect(callback).toHaveBeenCalledWith("fcp", 500);
@@ -160,9 +156,7 @@ describe("WebVitalsTracker", () => {
 
       const paintCallback = observerCallbacks.get("paint");
       paintCallback?.({
-        getEntries: () => [
-          { name: "first-paint", startTime: 100 },
-        ],
+        getEntries: () => [{ name: "first-paint", startTime: 100 }],
       });
 
       const metrics = tracker.getMetrics();
@@ -177,9 +171,7 @@ describe("WebVitalsTracker", () => {
 
       const lcpCallback = observerCallbacks.get("largest-contentful-paint");
       lcpCallback?.({
-        getEntries: () => [
-          { startTime: 2500, size: 1000 },
-        ],
+        getEntries: () => [{ startTime: 2500, size: 1000 }],
       });
 
       const metrics = tracker.getMetrics();
@@ -228,9 +220,7 @@ describe("WebVitalsTracker", () => {
 
       const clsCallback = observerCallbacks.get("layout-shift");
       clsCallback?.({
-        getEntries: () => [
-          { value: 0.1, hadRecentInput: false },
-        ],
+        getEntries: () => [{ value: 0.1, hadRecentInput: false }],
       });
 
       const metrics = tracker.getMetrics();
@@ -243,9 +233,7 @@ describe("WebVitalsTracker", () => {
 
       const clsCallback = observerCallbacks.get("layout-shift");
       clsCallback?.({
-        getEntries: () => [
-          { value: 0.5, hadRecentInput: true },
-        ],
+        getEntries: () => [{ value: 0.5, hadRecentInput: true }],
       });
 
       const metrics = tracker.getMetrics();
@@ -257,11 +245,11 @@ describe("WebVitalsTracker", () => {
       tracker.start();
 
       const clsCallback = observerCallbacks.get("layout-shift");
-      
+
       clsCallback?.({
         getEntries: () => [{ value: 0.1, hadRecentInput: false }],
       });
-      
+
       clsCallback?.({
         getEntries: () => [{ value: 0.05, hadRecentInput: false }],
       });
@@ -289,9 +277,7 @@ describe("WebVitalsTracker", () => {
       // Capture some metrics
       const paintCallback = observerCallbacks.get("paint");
       paintCallback?.({
-        getEntries: () => [
-          { name: "first-contentful-paint", startTime: 500 },
-        ],
+        getEntries: () => [{ name: "first-contentful-paint", startTime: 500 }],
       });
 
       // Reset
@@ -332,7 +318,11 @@ describe("WebVitalsTracker", () => {
 
         disconnect() {}
 
-        static supportedEntryTypes = ["paint", "largest-contentful-paint", "first-input"];
+        static supportedEntryTypes = [
+          "paint",
+          "largest-contentful-paint",
+          "first-input",
+        ];
       }
 
       vi.stubGlobal("PerformanceObserver", ThrowingObserver);
@@ -360,7 +350,11 @@ describe("WebVitalsTracker", () => {
 
         disconnect() {}
 
-        static supportedEntryTypes = ["paint", "largest-contentful-paint", "layout-shift"];
+        static supportedEntryTypes = [
+          "paint",
+          "largest-contentful-paint",
+          "layout-shift",
+        ];
       }
 
       vi.stubGlobal("PerformanceObserver", ThrowingObserver);
@@ -388,7 +382,11 @@ describe("WebVitalsTracker", () => {
 
         disconnect() {}
 
-        static supportedEntryTypes = ["largest-contentful-paint", "layout-shift", "first-input"];
+        static supportedEntryTypes = [
+          "largest-contentful-paint",
+          "layout-shift",
+          "first-input",
+        ];
       }
 
       vi.stubGlobal("PerformanceObserver", ThrowingObserver);
@@ -434,9 +432,7 @@ describe("WebVitalsTracker", () => {
 
       const paintCallback = observerCallbacks.get("paint");
       paintCallback?.({
-        getEntries: () => [
-          { name: "first-contentful-paint", startTime: 800 },
-        ],
+        getEntries: () => [{ name: "first-contentful-paint", startTime: 800 }],
       });
 
       const json = tracker.toJSON();

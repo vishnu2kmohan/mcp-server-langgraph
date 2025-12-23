@@ -507,7 +507,9 @@ describe("usePushNotifications", () => {
       const mockSub = result.current.subscription as PushSubscription & {
         unsubscribe: ReturnType<typeof vi.fn>;
       };
-      mockSub.unsubscribe = vi.fn().mockRejectedValue("string unsubscribe error");
+      mockSub.unsubscribe = vi
+        .fn()
+        .mockRejectedValue("string unsubscribe error");
 
       await act(async () => {
         await result.current.unsubscribe();
@@ -590,7 +592,9 @@ describe("usePushNotifications", () => {
         .mockImplementation(() => {});
 
       // Make getSubscription reject with a non-Error value
-      mockPushManager.getSubscription.mockRejectedValue("string error on mount");
+      mockPushManager.getSubscription.mockRejectedValue(
+        "string error on mount",
+      );
 
       const { result } = renderHook(() => usePushNotifications());
 

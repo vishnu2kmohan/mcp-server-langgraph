@@ -101,7 +101,10 @@ export function useMessageRevalidation(
   );
 
   // Debounced version using the shared hook (handles cleanup automatically)
-  const debouncedRevalidate = useDebouncedCallback(executeRevalidation, debounceMs);
+  const debouncedRevalidate = useDebouncedCallback(
+    executeRevalidation,
+    debounceMs,
+  );
 
   // Wrapper that tracks debounced events
   const revalidateMessages = useCallback(

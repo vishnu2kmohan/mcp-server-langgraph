@@ -11,7 +11,7 @@
  * - GET /api/v1/ai/suggestions/health - Health check for fallback mode
  */
 
-import { http, HttpResponse } from 'msw';
+import { http, HttpResponse } from "msw";
 
 // =============================================================================
 // Types
@@ -19,9 +19,9 @@ import { http, HttpResponse } from 'msw';
 
 export interface MockSuggestion {
   id: string;
-  type: 'tooltip' | 'spotlight' | 'banner' | 'modal';
+  type: "tooltip" | "spotlight" | "banner" | "modal";
   message: string;
-  priority: 'low' | 'medium' | 'high';
+  priority: "low" | "medium" | "high";
   target_element?: string;
   show_after_ms?: number;
 }
@@ -77,59 +77,61 @@ export function addMockSuggestion(suggestion: MockSuggestion): void {
 /**
  * Generate suggestions based on page context
  */
-function generateContextSuggestions(context: SuggestionRequestContext): MockSuggestion[] {
-  const page = context.page || 'default';
+function generateContextSuggestions(
+  context: SuggestionRequestContext,
+): MockSuggestion[] {
+  const page = context.page || "default";
   const generated: MockSuggestion[] = [];
 
   switch (page) {
-    case 'chat':
+    case "chat":
       generated.push({
         id: `suggestion-chat-${++suggestionCounter}`,
-        type: 'tooltip',
-        message: 'Use keyboard shortcuts for faster navigation',
-        priority: 'medium',
-        target_element: '#chat-input',
+        type: "tooltip",
+        message: "Use keyboard shortcuts for faster navigation",
+        priority: "medium",
+        target_element: "#chat-input",
         show_after_ms: 3000,
       });
       break;
 
-    case 'workflows':
+    case "workflows":
       generated.push({
         id: `suggestion-workflow-${++suggestionCounter}`,
-        type: 'spotlight',
-        message: 'Create your first workflow from a template',
-        priority: 'high',
-        target_element: '#new-workflow-button',
+        type: "spotlight",
+        message: "Create your first workflow from a template",
+        priority: "high",
+        target_element: "#new-workflow-button",
         show_after_ms: 5000,
       });
       break;
 
-    case 'observability':
+    case "observability":
       generated.push({
         id: `suggestion-obs-${++suggestionCounter}`,
-        type: 'banner',
-        message: 'Set up alerts for critical metrics',
-        priority: 'medium',
+        type: "banner",
+        message: "Set up alerts for critical metrics",
+        priority: "medium",
       });
       break;
 
-    case 'connections':
+    case "connections":
       generated.push({
         id: `suggestion-conn-${++suggestionCounter}`,
-        type: 'tooltip',
-        message: 'Connect your first MCP server to get started',
-        priority: 'high',
-        target_element: '#add-connection-button',
+        type: "tooltip",
+        message: "Connect your first MCP server to get started",
+        priority: "high",
+        target_element: "#add-connection-button",
       });
       break;
 
     default:
       generated.push({
         id: `suggestion-default-${++suggestionCounter}`,
-        type: 'tooltip',
-        message: 'Explore the help section for tips and tutorials',
-        priority: 'low',
-        target_element: '#help-button',
+        type: "tooltip",
+        message: "Explore the help section for tips and tutorials",
+        priority: "low",
+        target_element: "#help-button",
         show_after_ms: 10000,
       });
   }
@@ -148,9 +150,9 @@ export const aiSuggestionsHandlers = [
    * GET /api/v1/ai/suggestions/health
    * Health check for suggestions service
    */
-  http.get('/api/v1/ai/suggestions/health', () => {
+  http.get("/api/v1/ai/suggestions/health", () => {
     return HttpResponse.json({
-      status: 'healthy',
+      status: "healthy",
       websocket_available: false,
       fallback_active: true,
       timestamp: Date.now(),
@@ -161,16 +163,16 @@ export const aiSuggestionsHandlers = [
    * POST /api/v1/ai/suggestions/request
    * Request new suggestions with context
    */
-  http.post('/api/v1/ai/suggestions/request', async ({ request }) => {
+  http.post("/api/v1/ai/suggestions/request", async ({ request }) => {
     const body = (await request.json()) as SuggestionRequestBody;
 
     if (!body.context) {
       return HttpResponse.json(
         {
-          type: 'error',
-          message: 'Missing context in request body',
+          type: "error",
+          message: "Missing context in request body",
         },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -185,7 +187,7 @@ export const aiSuggestionsHandlers = [
     }
 
     return HttpResponse.json({
-      type: 'suggestions',
+      type: "suggestions",
       data: newSuggestions,
       timestamp: Date.now(),
     });
@@ -195,16 +197,16 @@ export const aiSuggestionsHandlers = [
    * POST /api/v1/ai/suggestions/dismiss
    * Dismiss a specific suggestion
    */
-  http.post('/api/v1/ai/suggestions/dismiss', async ({ request }) => {
+  http.post("/api/v1/ai/suggestions/dismiss", async ({ request }) => {
     const body = (await request.json()) as DismissRequestBody;
 
     if (!body.id) {
       return HttpResponse.json(
         {
-          type: 'error',
-          message: 'Missing suggestion ID',
+          type: "error",
+          message: "Missing suggestion ID",
         },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -213,17 +215,17 @@ export const aiSuggestionsHandlers = [
     if (index === -1) {
       return HttpResponse.json(
         {
-          type: 'error',
+          type: "error",
           message: `Suggestion not found: ${body.id}`,
         },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
     suggestions.splice(index, 1);
 
     return HttpResponse.json({
-      type: 'dismissed',
+      type: "dismissed",
       id: body.id,
       timestamp: Date.now(),
     });
@@ -234,9 +236,9 @@ export const aiSuggestionsHandlers = [
    * Returns current suggestions (polling endpoint)
    * NOTE: Must be LAST to not match sub-paths
    */
-  http.get('/api/v1/ai/suggestions', () => {
+  http.get("/api/v1/ai/suggestions", () => {
     return HttpResponse.json({
-      type: 'suggestions',
+      type: "suggestions",
       data: suggestions,
       timestamp: Date.now(),
     });

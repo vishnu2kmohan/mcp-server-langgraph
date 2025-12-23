@@ -29,6 +29,16 @@ const TEST_USERS = {
     password: 'bob123',
     persona: 'user',
   },
+  auditor: {
+    username: 'auditor',
+    password: 'auditor123',
+    persona: 'auditor',
+  },
+  complianceOfficer: {
+    username: 'compliance',
+    password: 'compliance123',
+    persona: 'compliance-officer',
+  },
 } as const;
 
 type TestUser = keyof typeof TEST_USERS;
@@ -41,6 +51,8 @@ interface AuthFixtures {
   adminPage: Page;
   alicePage: Page;
   bobPage: Page;
+  auditorPage: Page;
+  complianceOfficerPage: Page;
 }
 
 /**
@@ -241,6 +253,22 @@ export const test = base.extend<AuthFixtures & { page: Page }>({
   bobPage: async ({ browser }, use) => {
     const context = await browser.newContext();
     const page = await setupAuthenticatedPage(context, 'bob');
+    await use(page);
+    await context.close();
+  },
+
+  // Auditor authenticated page
+  auditorPage: async ({ browser }, use) => {
+    const context = await browser.newContext();
+    const page = await setupAuthenticatedPage(context, 'auditor');
+    await use(page);
+    await context.close();
+  },
+
+  // Compliance Officer authenticated page
+  complianceOfficerPage: async ({ browser }, use) => {
+    const context = await browser.newContext();
+    const page = await setupAuthenticatedPage(context, 'complianceOfficer');
     await use(page);
     await context.close();
   },

@@ -10,13 +10,14 @@
  * - Error handling
  */
 
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import {
   render,
   screen,
   fireEvent,
   waitFor,
   act,
+  cleanup,
 } from "@testing-library/react";
 import { MemoryRouter, useNavigate } from "react-router";
 import { Provider } from "react-redux";
@@ -220,6 +221,11 @@ describe("ChatPage", () => {
       nextTier: "hybrid",
       isLoading: false,
     });
+  });
+
+  afterEach(() => {
+    cleanup();
+    vi.clearAllMocks();
   });
 
   describe("Loading State", () => {
@@ -1859,7 +1865,9 @@ describe("ChatPage", () => {
         sessionState: { isLoadingSessions: true },
       });
 
-      expect(screen.queryByTestId("session-goal-tracker")).not.toBeInTheDocument();
+      expect(
+        screen.queryByTestId("session-goal-tracker"),
+      ).not.toBeInTheDocument();
     });
   });
 
@@ -1875,7 +1883,12 @@ describe("ChatPage", () => {
       },
       messages: [
         { id: "msg-1", role: "user", content: "Hello", timestamp: Date.now() },
-        { id: "msg-2", role: "assistant", content: "Hi!", timestamp: Date.now() },
+        {
+          id: "msg-2",
+          role: "assistant",
+          content: "Hi!",
+          timestamp: Date.now(),
+        },
       ],
       createdAt: Date.now(),
       updatedAt: Date.now(),
@@ -1890,7 +1903,9 @@ describe("ChatPage", () => {
       fireEvent.click(clearButton);
 
       await waitFor(() => {
-        expect(screen.getByText(/are you sure you want to clear/i)).toBeInTheDocument();
+        expect(
+          screen.getByText(/are you sure you want to clear/i),
+        ).toBeInTheDocument();
       });
     });
 
@@ -1938,7 +1953,9 @@ describe("ChatPage", () => {
       fireEvent.click(confirmButton);
 
       await waitFor(() => {
-        expect(store.getState().session.currentSession?.messages).toHaveLength(0);
+        expect(store.getState().session.currentSession?.messages).toHaveLength(
+          0,
+        );
       });
     });
   });
@@ -1994,9 +2011,7 @@ describe("ChatPage", () => {
       mockUseMCPConnection.mockReturnValue({
         isConnected: true,
         connectionMode: "websocket",
-        tools: [
-          { name: "calculator", description: "Perform calculations" },
-        ],
+        tools: [{ name: "calculator", description: "Perform calculations" }],
         error: null,
         connect: mockConnect,
         disconnect: mockDisconnect,
@@ -2028,7 +2043,9 @@ describe("ChatPage", () => {
       // The empty state shows "No Active Session" with a "New Session" button
       expect(screen.getByText("No Active Session")).toBeInTheDocument();
       // Multiple "New Session" buttons exist - one in SessionPanel header and one in empty state
-      const newSessionButtons = screen.getAllByRole("button", { name: /new session/i });
+      const newSessionButtons = screen.getAllByRole("button", {
+        name: /new session/i,
+      });
       expect(newSessionButtons.length).toBeGreaterThanOrEqual(1);
     });
 
@@ -2037,7 +2054,9 @@ describe("ChatPage", () => {
         sessionState: { isLoadingSessions: true },
       });
 
-      expect(screen.queryByPlaceholderText("Type your message...")).not.toBeInTheDocument();
+      expect(
+        screen.queryByPlaceholderText("Type your message..."),
+      ).not.toBeInTheDocument();
     });
   });
 
@@ -2114,7 +2133,9 @@ describe("ChatPage", () => {
       const viewCurrentTraceButton = screen.getByText("View current trace →");
       fireEvent.click(viewCurrentTraceButton);
 
-      expect(mockNavigate).toHaveBeenCalledWith("/studio/observability?trace_id=trace-abc123");
+      expect(mockNavigate).toHaveBeenCalledWith(
+        "/studio/observability?trace_id=trace-abc123",
+      );
     });
 
     it("should navigate to billing settings when upgrade is clicked", async () => {
@@ -2192,7 +2213,9 @@ describe("ChatPage", () => {
 
       // Find the goal input
       const goalInput = screen.getByLabelText("Session goal input");
-      fireEvent.change(goalInput, { target: { value: "Complete project setup" } });
+      fireEvent.change(goalInput, {
+        target: { value: "Complete project setup" },
+      });
 
       // Click Set Goal button
       const setGoalButton = screen.getByRole("button", { name: /set goal/i });
@@ -2211,12 +2234,16 @@ describe("ChatPage", () => {
 
       // Find the goal input
       const goalInput = screen.getByLabelText("Session goal input");
-      fireEvent.change(goalInput, { target: { value: "Complete API integration" } });
+      fireEvent.change(goalInput, {
+        target: { value: "Complete API integration" },
+      });
       fireEvent.keyDown(goalInput, { key: "Enter" });
 
       // The goal should now be displayed
       await waitFor(() => {
-        expect(screen.getByText("Complete API integration")).toBeInTheDocument();
+        expect(
+          screen.getByText("Complete API integration"),
+        ).toBeInTheDocument();
       });
     });
 
@@ -2251,7 +2278,9 @@ describe("ChatPage", () => {
 
       // First set a goal
       const goalInput = screen.getByLabelText("Session goal input");
-      fireEvent.change(goalInput, { target: { value: "Finish implementation" } });
+      fireEvent.change(goalInput, {
+        target: { value: "Finish implementation" },
+      });
       fireEvent.click(screen.getByRole("button", { name: /set goal/i }));
 
       await waitFor(() => {
@@ -2417,7 +2446,8 @@ describe("ChatPage", () => {
       // API should be called with status param
       await waitFor(() => {
         expect(mockFetch).toHaveBeenCalled();
-        const callUrl = mockFetch.mock.calls[mockFetch.mock.calls.length - 1][0];
+        const callUrl =
+          mockFetch.mock.calls[mockFetch.mock.calls.length - 1][0];
         expect(callUrl).toContain("status=archived");
       });
     });
@@ -2425,11 +2455,20 @@ describe("ChatPage", () => {
     it("should fetch more sessions when handleLoadMore is called", async () => {
       const mockFetch = vi.fn().mockResolvedValue({
         ok: true,
-        json: () => Promise.resolve({
-          items: [{ id: "session-3", name: "Third Session", createdAt: Date.now(), updatedAt: Date.now(), messageCount: 0 }],
-          total: 3,
-          next_cursor: null,
-        }),
+        json: () =>
+          Promise.resolve({
+            items: [
+              {
+                id: "session-3",
+                name: "Third Session",
+                createdAt: Date.now(),
+                updatedAt: Date.now(),
+                messageCount: 0,
+              },
+            ],
+            total: 3,
+            next_cursor: null,
+          }),
       });
       global.fetch = mockFetch;
 

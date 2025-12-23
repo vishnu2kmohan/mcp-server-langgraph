@@ -10,7 +10,15 @@
  * - Error handling
  */
 
-import { describe, it, expect, vi, beforeEach, afterEach, type Mock } from "vitest";
+import {
+  describe,
+  it,
+  expect,
+  vi,
+  beforeEach,
+  afterEach,
+  type Mock,
+} from "vitest";
 import { renderHook, act } from "@testing-library/react";
 import { useMCPTaskWebSocket, type MCPTask } from "./useMCPTaskWebSocket";
 
@@ -57,7 +65,12 @@ let mockReconnect: Mock;
 let mockOnMessage: ((data: unknown) => void) | undefined;
 let mockOnConnect: (() => void) | undefined;
 let mockOnDisconnect: (() => void) | undefined;
-let mockStatus: "connecting" | "connected" | "disconnected" | "reconnecting" | "error";
+let mockStatus:
+  | "connecting"
+  | "connected"
+  | "disconnected"
+  | "reconnecting"
+  | "error";
 
 vi.mock("./useRealtimeSync", () => ({
   useRealtimeSync: (options: {
@@ -124,7 +137,7 @@ describe("useMCPTaskWebSocket", () => {
     it("uses custom WebSocket URL when provided", () => {
       const customUrl = "wss://custom.example.com/ws";
       const { result } = renderHook(() =>
-        useMCPTaskWebSocket({ url: customUrl })
+        useMCPTaskWebSocket({ url: customUrl }),
       );
 
       expect(result.current.status).toBe("connected");
@@ -135,7 +148,7 @@ describe("useMCPTaskWebSocket", () => {
     it("updates tasks when task_list message received", async () => {
       const onTasksLoaded = vi.fn();
       const { result } = renderHook(() =>
-        useMCPTaskWebSocket({ onTasksLoaded })
+        useMCPTaskWebSocket({ onTasksLoaded }),
       );
 
       // Simulate receiving task list
@@ -182,7 +195,7 @@ describe("useMCPTaskWebSocket", () => {
     it("updates existing task when task_update message received", async () => {
       const onTaskUpdate = vi.fn();
       const { result } = renderHook(() =>
-        useMCPTaskWebSocket({ onTaskUpdate })
+        useMCPTaskWebSocket({ onTaskUpdate }),
       );
 
       // Initialize with tasks
@@ -470,7 +483,7 @@ describe("useMCPTaskWebSocket", () => {
         task_id: "task-2",
       });
       expect(mockSend).not.toHaveBeenCalledWith(
-        expect.objectContaining({ task_id: "task-1" })
+        expect.objectContaining({ task_id: "task-1" }),
       );
     });
   });

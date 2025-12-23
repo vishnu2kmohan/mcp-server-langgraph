@@ -79,7 +79,9 @@ describe("PersonaContext", () => {
 
     it("should throw error when usePersonaContext is used outside provider", () => {
       // Suppress console.error for this test
-      const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+      const consoleSpy = vi
+        .spyOn(console, "error")
+        .mockImplementation(() => {});
 
       const TestComponent = () => {
         usePersonaContext();

@@ -72,7 +72,10 @@ const mockAlerts: Alert[] = [
 const createTestStore = (
   initialAlerts: Alert[] = [],
   soundEnabled = true,
-  filters = { severity: ["critical", "warning"] as ("critical" | "warning")[], state: ["firing"] as ("firing" | "resolved")[] }
+  filters = {
+    severity: ["critical", "warning"] as ("critical" | "warning")[],
+    state: ["firing"] as ("firing" | "resolved")[],
+  },
 ) =>
   configureStore({
     reducer: {
@@ -95,10 +98,8 @@ const defaultProps: AlertsPanelProps = {
   onSoundToggle: vi.fn(),
 };
 
-const renderWithStore = (
-  ui: ReactNode,
-  store = createTestStore(mockAlerts)
-) => render(<Provider store={store}>{ui}</Provider>);
+const renderWithStore = (ui: ReactNode, store = createTestStore(mockAlerts)) =>
+  render(<Provider store={store}>{ui}</Provider>);
 
 // =============================================================================
 // Tests
@@ -149,7 +150,7 @@ describe("AlertsPanel", () => {
       renderWithStore(<AlertsPanel {...defaultProps} />);
 
       expect(
-        screen.getByText("CPU usage above 90% for 5 minutes")
+        screen.getByText("CPU usage above 90% for 5 minutes"),
       ).toBeInTheDocument();
     });
 
@@ -175,7 +176,7 @@ describe("AlertsPanel", () => {
       renderWithStore(<AlertsPanel {...defaultProps} />);
 
       expect(screen.getByTestId("state-badge-alert-001")).toHaveTextContent(
-        "Firing"
+        "Firing",
       );
     });
   });
@@ -183,7 +184,9 @@ describe("AlertsPanel", () => {
   describe("Alert Selection", () => {
     it("should call onSelectAlert when alert is clicked", () => {
       const onSelectAlert = vi.fn();
-      renderWithStore(<AlertsPanel {...defaultProps} onSelectAlert={onSelectAlert} />);
+      renderWithStore(
+        <AlertsPanel {...defaultProps} onSelectAlert={onSelectAlert} />,
+      );
 
       fireEvent.click(screen.getByTestId("alert-item-alert-001"));
 
@@ -216,8 +219,12 @@ describe("AlertsPanel", () => {
     it("should render severity filter buttons", () => {
       renderWithStore(<AlertsPanel {...defaultProps} />);
 
-      expect(screen.getByRole("button", { name: /critical/i })).toBeInTheDocument();
-      expect(screen.getByRole("button", { name: /warning/i })).toBeInTheDocument();
+      expect(
+        screen.getByRole("button", { name: /critical/i }),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByRole("button", { name: /warning/i }),
+      ).toBeInTheDocument();
     });
 
     it("should render state filter buttons", () => {
@@ -225,7 +232,9 @@ describe("AlertsPanel", () => {
 
       // Use getAllByRole since alert items also contain state badges with "Firing" text
       const firingButtons = screen.getAllByRole("button", { name: /firing/i });
-      const resolvedButtons = screen.getAllByRole("button", { name: /resolved/i });
+      const resolvedButtons = screen.getAllByRole("button", {
+        name: /resolved/i,
+      });
 
       // At least one should be the filter button
       expect(firingButtons.length).toBeGreaterThan(0);
@@ -269,7 +278,7 @@ describe("AlertsPanel", () => {
     it("should call onSoundToggle when clicked", () => {
       const onSoundToggle = vi.fn();
       renderWithStore(
-        <AlertsPanel {...defaultProps} onSoundToggle={onSoundToggle} />
+        <AlertsPanel {...defaultProps} onSoundToggle={onSoundToggle} />,
       );
 
       fireEvent.click(screen.getByTestId("sound-toggle"));
@@ -322,14 +331,18 @@ describe("AlertsPanel", () => {
 
   describe("Connection Status", () => {
     it("should show connected status indicator", () => {
-      renderWithStore(<AlertsPanel {...defaultProps} connectionStatus="connected" />);
+      renderWithStore(
+        <AlertsPanel {...defaultProps} connectionStatus="connected" />,
+      );
 
-      expect(screen.getByTestId("connection-status")).toHaveClass("bg-green-500");
+      expect(screen.getByTestId("connection-status")).toHaveClass(
+        "bg-green-500",
+      );
     });
 
     it("should show disconnected status indicator", () => {
       renderWithStore(
-        <AlertsPanel {...defaultProps} connectionStatus="disconnected" />
+        <AlertsPanel {...defaultProps} connectionStatus="disconnected" />,
       );
 
       expect(screen.getByTestId("connection-status")).toHaveClass("bg-red-500");
@@ -337,10 +350,12 @@ describe("AlertsPanel", () => {
 
     it("should show connecting status indicator", () => {
       renderWithStore(
-        <AlertsPanel {...defaultProps} connectionStatus="connecting" />
+        <AlertsPanel {...defaultProps} connectionStatus="connecting" />,
       );
 
-      expect(screen.getByTestId("connection-status")).toHaveClass("bg-yellow-500");
+      expect(screen.getByTestId("connection-status")).toHaveClass(
+        "bg-yellow-500",
+      );
     });
   });
 
@@ -359,7 +374,9 @@ describe("AlertsPanel", () => {
       renderWithStore(<AlertsPanel {...defaultProps} />);
 
       // Flat view is default, so should show flat list
-      expect(screen.queryByTestId("alert-groups-panel")).not.toBeInTheDocument();
+      expect(
+        screen.queryByTestId("alert-groups-panel"),
+      ).not.toBeInTheDocument();
       expect(screen.getByTestId("alert-item-alert-001")).toBeInTheDocument();
     });
 
@@ -372,8 +389,14 @@ describe("AlertsPanel", () => {
     it("should default to flat view", () => {
       renderWithStore(<AlertsPanel {...defaultProps} />);
 
-      expect(screen.getByTestId("view-mode-flat")).toHaveAttribute("aria-pressed", "true");
-      expect(screen.getByTestId("view-mode-grouped")).toHaveAttribute("aria-pressed", "false");
+      expect(screen.getByTestId("view-mode-flat")).toHaveAttribute(
+        "aria-pressed",
+        "true",
+      );
+      expect(screen.getByTestId("view-mode-grouped")).toHaveAttribute(
+        "aria-pressed",
+        "false",
+      );
     });
 
     it("should switch to grouped view when clicked", () => {
@@ -381,8 +404,14 @@ describe("AlertsPanel", () => {
 
       fireEvent.click(screen.getByTestId("view-mode-grouped"));
 
-      expect(screen.getByTestId("view-mode-grouped")).toHaveAttribute("aria-pressed", "true");
-      expect(screen.getByTestId("view-mode-flat")).toHaveAttribute("aria-pressed", "false");
+      expect(screen.getByTestId("view-mode-grouped")).toHaveAttribute(
+        "aria-pressed",
+        "true",
+      );
+      expect(screen.getByTestId("view-mode-flat")).toHaveAttribute(
+        "aria-pressed",
+        "false",
+      );
     });
 
     it("should show AlertGroupsPanel when grouped view is selected", () => {
@@ -402,9 +431,9 @@ describe("AlertsPanel", () => {
       fireEvent.click(screen.getByTestId("view-mode-grouped"));
 
       // Find a group header and click it
-      const groupHeader = screen.getAllByRole("button").find(
-        (btn) => btn.getAttribute("aria-expanded") !== null
-      );
+      const groupHeader = screen
+        .getAllByRole("button")
+        .find((btn) => btn.getAttribute("aria-expanded") !== null);
       expect(groupHeader).toBeInTheDocument();
 
       if (groupHeader) {
@@ -431,22 +460,27 @@ describe("AlertsPanel", () => {
       renderWithStore(<AlertsPanel {...defaultProps} />);
 
       // Should remember grouped view
-      expect(screen.getByTestId("view-mode-grouped")).toHaveAttribute("aria-pressed", "true");
+      expect(screen.getByTestId("view-mode-grouped")).toHaveAttribute(
+        "aria-pressed",
+        "true",
+      );
     });
   });
 
   describe("Edge Cases", () => {
     it("should handle reconnecting connection status", () => {
       renderWithStore(
-        <AlertsPanel {...defaultProps} connectionStatus="reconnecting" />
+        <AlertsPanel {...defaultProps} connectionStatus="reconnecting" />,
       );
 
-      expect(screen.getByTestId("connection-status")).toHaveClass("bg-yellow-500");
+      expect(screen.getByTestId("connection-status")).toHaveClass(
+        "bg-yellow-500",
+      );
     });
 
     it("should handle error connection status", () => {
       renderWithStore(
-        <AlertsPanel {...defaultProps} connectionStatus="error" />
+        <AlertsPanel {...defaultProps} connectionStatus="error" />,
       );
 
       expect(screen.getByTestId("connection-status")).toHaveClass("bg-red-500");
@@ -455,11 +489,13 @@ describe("AlertsPanel", () => {
     it("should handle undefined connection status (defaults to connected)", () => {
       // When connectionStatus is undefined, component defaults to "connected"
       renderWithStore(
-        <AlertsPanel {...defaultProps} connectionStatus={undefined} />
+        <AlertsPanel {...defaultProps} connectionStatus={undefined} />,
       );
 
       // Default value is "connected" which shows green
-      expect(screen.getByTestId("connection-status")).toHaveClass("bg-green-500");
+      expect(screen.getByTestId("connection-status")).toHaveClass(
+        "bg-green-500",
+      );
     });
 
     it("should display pod label when service label is missing", () => {
@@ -531,25 +567,26 @@ describe("AlertsPanel", () => {
       renderWithStore(<AlertsPanel {...defaultProps} />, resolvedStore);
 
       // The resolved state should show "Resolved" text (capitalized)
-      expect(screen.getByTestId("state-badge-alert-resolved")).toHaveTextContent(
-        "Resolved"
-      );
+      expect(
+        screen.getByTestId("state-badge-alert-resolved"),
+      ).toHaveTextContent("Resolved");
     });
 
     it("should not call onFilterChange when it is undefined", () => {
       // Render without onFilterChange prop
       renderWithStore(
-        <AlertsPanel
-          onSelectAlert={vi.fn()}
-          onSoundToggle={vi.fn()}
-        />
+        <AlertsPanel onSelectAlert={vi.fn()} onSoundToggle={vi.fn()} />,
       );
 
       // Find filter buttons in the filter section - they have specific text content
       const allButtons = screen.getAllByRole("button");
       // Filter buttons have text "Critical" and "Warning" exactly (not "Critical:" or containing count)
-      const criticalFilter = allButtons.find(btn => btn.textContent === "Critical");
-      const warningFilter = allButtons.find(btn => btn.textContent === "Warning");
+      const criticalFilter = allButtons.find(
+        (btn) => btn.textContent === "Critical",
+      );
+      const warningFilter = allButtons.find(
+        (btn) => btn.textContent === "Warning",
+      );
 
       // Click filter buttons - should not crash
       if (criticalFilter) fireEvent.click(criticalFilter);
@@ -562,7 +599,7 @@ describe("AlertsPanel", () => {
     it("should toggle state filter when clicked", () => {
       const onFilterChange = vi.fn();
       renderWithStore(
-        <AlertsPanel {...defaultProps} onFilterChange={onFilterChange} />
+        <AlertsPanel {...defaultProps} onFilterChange={onFilterChange} />,
       );
 
       // Click firing filter button to toggle it off
@@ -582,7 +619,7 @@ describe("AlertsPanel", () => {
       const onFilterChange = vi.fn();
       renderWithStore(
         <AlertsPanel {...defaultProps} onFilterChange={onFilterChange} />,
-        store
+        store,
       );
 
       // Click warning filter to add it
@@ -601,11 +638,13 @@ describe("AlertsPanel", () => {
       const onFilterChange = vi.fn();
       renderWithStore(
         <AlertsPanel {...defaultProps} onFilterChange={onFilterChange} />,
-        store
+        store,
       );
 
       // Click resolved filter to add it
-      const resolvedButtons = screen.getAllByRole("button", { name: /resolved/i });
+      const resolvedButtons = screen.getAllByRole("button", {
+        name: /resolved/i,
+      });
       const filterButton = resolvedButtons[0];
       fireEvent.click(filterButton);
 

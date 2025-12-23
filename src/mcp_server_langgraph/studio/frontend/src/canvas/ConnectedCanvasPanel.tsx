@@ -9,10 +9,20 @@
  *
  * Use this in HybridShellLayout instead of inline CanvasPanel.
  */
-import { useCallback, useMemo, useState, useEffect, useRef, Suspense } from "react";
+import {
+  useCallback,
+  useMemo,
+  useState,
+  useEffect,
+  useRef,
+  Suspense,
+} from "react";
 import { Outlet, useRouteLoaderData, useRevalidator } from "react-router";
 import { useAppDispatch, useAppSelector } from "../store/hooks";
-import { setSelectedArtifactId, selectSelectedArtifactId } from "../store/slices/canvasSlice";
+import {
+  setSelectedArtifactId,
+  selectSelectedArtifactId,
+} from "../store/slices/canvasSlice";
 import { selectCurrentSession } from "../store/slices/sessionSlice";
 import { CanvasWorkspace } from "./CanvasWorkspace";
 import type { ChatLoaderData } from "../router/loaders";
@@ -59,7 +69,9 @@ export function ConnectedCanvasPanel({ className }: ConnectedCanvasPanelProps) {
   const selectedArtifactId = useAppSelector(selectSelectedArtifactId);
   // Use optional chaining for session state (may not exist in tests)
   const currentSession = useAppSelector((state) =>
-    state.session ? selectCurrentSession(state as { session: typeof state.session }) : null
+    state.session
+      ? selectCurrentSession(state as { session: typeof state.session })
+      : null,
   );
   const sessionId = currentSession?.id ?? "default-session";
 
@@ -337,18 +349,20 @@ export function ConnectedCanvasPanel({ className }: ConnectedCanvasPanelProps) {
 
       {/* AI Inline Suggestions (Phase 4) - gated by ai_suggestions feature flag */}
       {/* Lazy-loaded to reduce initial bundle size */}
-      {aiSuggestionsEnabled && selectedArtifactId && (suggestions.length > 0 || suggestionsLoading) && (
-        <div className="absolute top-12 right-2 z-10 w-80">
-          <Suspense fallback={null}>
-            <LazyInlineSuggestions
-              suggestions={suggestions}
-              onAccept={handleAcceptSuggestion}
-              onDismiss={handleDismissSuggestion}
-              isLoading={suggestionsLoading}
-            />
-          </Suspense>
-        </div>
-      )}
+      {aiSuggestionsEnabled &&
+        selectedArtifactId &&
+        (suggestions.length > 0 || suggestionsLoading) && (
+          <div className="absolute top-12 right-2 z-10 w-80">
+            <Suspense fallback={null}>
+              <LazyInlineSuggestions
+                suggestions={suggestions}
+                onAccept={handleAcceptSuggestion}
+                onDismiss={handleDismissSuggestion}
+                isLoading={suggestionsLoading}
+              />
+            </Suspense>
+          </div>
+        )}
 
       <CanvasWorkspace
         artifacts={artifacts}

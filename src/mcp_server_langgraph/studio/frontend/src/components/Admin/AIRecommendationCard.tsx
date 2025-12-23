@@ -71,7 +71,6 @@ function getRiskBgColor(risk: RiskLevel): string {
   }
 }
 
-
 /**
  * Format relative time from ISO date string
  */
@@ -144,7 +143,7 @@ function StepCard({ step }: StepCardProps) {
         <span
           data-testid={`step-${step.step_number}-risk`}
           className={`text-xs px-1.5 py-0.5 rounded ${getRiskBgColor(
-            step.risk_level
+            step.risk_level,
           )} text-white`}
         >
           {step.risk_level}
@@ -327,7 +326,7 @@ export function AIRecommendationCard({
               <span
                 data-testid="overall-risk-badge"
                 className={`text-xs px-2 py-0.5 rounded-full text-white ${getRiskBgColor(
-                  recommendation.risk_assessment.overall_risk
+                  recommendation.risk_assessment.overall_risk,
                 )}`}
               >
                 {recommendation.risk_assessment.overall_risk}

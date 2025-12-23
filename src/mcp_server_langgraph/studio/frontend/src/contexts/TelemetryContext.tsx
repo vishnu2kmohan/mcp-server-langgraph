@@ -23,9 +23,21 @@
  * ```
  */
 /* eslint-disable react-refresh/only-export-components -- Context files export both providers and hooks by design */
-import { createContext, useContext, useMemo, useEffect, type ReactNode } from "react";
-import { SessionTelemetry, sessionTelemetry as defaultSessionTelemetry } from "../utils/sessionTelemetry";
-import { WebVitalsTracker, webVitals as defaultWebVitals } from "../utils/webVitals";
+import {
+  createContext,
+  useContext,
+  useMemo,
+  useEffect,
+  type ReactNode,
+} from "react";
+import {
+  SessionTelemetry,
+  sessionTelemetry as defaultSessionTelemetry,
+} from "../utils/sessionTelemetry";
+import {
+  WebVitalsTracker,
+  webVitals as defaultWebVitals,
+} from "../utils/webVitals";
 
 // =============================================================================
 // Types

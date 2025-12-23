@@ -102,7 +102,11 @@ function getStoredCollapsed(): boolean | null {
  */
 function getStoredHeight(): number {
   const stored = storage.get<number>(STORAGE_KEY_HEIGHT);
-  if (typeof stored === "number" && stored >= MIN_HEIGHT && stored <= MAX_HEIGHT) {
+  if (
+    typeof stored === "number" &&
+    stored >= MIN_HEIGHT &&
+    stored <= MAX_HEIGHT
+  ) {
     return stored;
   }
   return DEFAULT_HEIGHT;
@@ -111,7 +115,10 @@ function getStoredHeight(): number {
 /**
  * Get available tabs for a context, optionally including AI insights.
  */
-function getAvailableTabs(context: DevToolsContext, aiInsightsEnabled: boolean): DevToolsTabId[] {
+function getAvailableTabs(
+  context: DevToolsContext,
+  aiInsightsEnabled: boolean,
+): DevToolsTabId[] {
   const baseTabs = TABS_BY_CONTEXT[context];
   // AI insights only available in session/workflow context, not global
   if (aiInsightsEnabled && context !== "global") {
@@ -126,7 +133,7 @@ function getAvailableTabs(context: DevToolsContext, aiInsightsEnabled: boolean):
 function isTabAvailable(
   tab: DevToolsTabId,
   context: DevToolsContext,
-  aiInsightsEnabled: boolean
+  aiInsightsEnabled: boolean,
 ): boolean {
   return getAvailableTabs(context, aiInsightsEnabled).includes(tab);
 }
@@ -190,7 +197,9 @@ export const devToolsSlice = createSlice({
       state.detectedContext = newContext;
 
       // Reset tab if not available in new context
-      if (!isTabAvailable(state.activeTab, newContext, state.aiInsightsEnabled)) {
+      if (
+        !isTabAvailable(state.activeTab, newContext, state.aiInsightsEnabled)
+      ) {
         state.activeTab = "console";
       }
     },
@@ -338,7 +347,7 @@ export const selectAvailableTabs = createSelector(
   [selectDetectedContext, selectAiInsightsEnabled],
   (context, aiInsightsEnabled): DevToolsTabId[] => {
     return getAvailableTabs(context, aiInsightsEnabled);
-  }
+  },
 );
 
 export default devToolsSlice.reducer;

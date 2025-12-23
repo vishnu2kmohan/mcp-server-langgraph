@@ -18,7 +18,10 @@ if (import.meta.env.PROD) {
 }
 
 // Global error handler for ErrorBoundary - integrates with telemetry
-const handleGlobalError = (error: Error, errorInfo: { componentStack?: string }) => {
+const handleGlobalError = (
+  error: Error,
+  errorInfo: { componentStack?: string },
+) => {
   // Track error in session telemetry
   sessionTelemetry.trackSessionCreation({
     success: false,

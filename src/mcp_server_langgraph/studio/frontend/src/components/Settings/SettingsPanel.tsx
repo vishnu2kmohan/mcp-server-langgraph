@@ -871,7 +871,8 @@ export function SettingsPanel({ className = "", onClose }: SettingsPanelProps) {
           Threshold Recommendation
         </h4>
         <p className="text-xs text-gray-500 dark:text-gray-400 mb-4">
-          Get AI-powered recommendations based on your approval history patterns.
+          Get AI-powered recommendations based on your approval history
+          patterns.
         </p>
 
         {/* Auto-adjust toggle */}
@@ -916,21 +917,26 @@ export function SettingsPanel({ className = "", onClose }: SettingsPanelProps) {
               <div className="flex items-center gap-2 mb-2">
                 <Sparkles size={16} className="text-blue-500" />
                 <span className="text-sm font-medium text-blue-800 dark:text-blue-200">
-                  Recommended: {Math.round(recommendation.recommended_threshold * 100)}%
+                  Recommended:{" "}
+                  {Math.round(recommendation.recommended_threshold * 100)}%
                 </span>
               </div>
               <p className="text-xs text-blue-700 dark:text-blue-300 mb-2">
                 {recommendation.reason}
               </p>
               <p className="text-xs text-gray-500">
-                Based on {recommendation.sample_size} approval decisions (confidence: {Math.round(recommendation.confidence_level * 100)}%)
+                Based on {recommendation.sample_size} approval decisions
+                (confidence: {Math.round(recommendation.confidence_level * 100)}
+                %)
               </p>
             </div>
           )}
 
           {thresholdError && (
             <div className="bg-red-50 dark:bg-red-900/20 p-3 rounded-lg border border-red-200 dark:border-red-700">
-              <p className="text-xs text-red-600 dark:text-red-400">{thresholdError}</p>
+              <p className="text-xs text-red-600 dark:text-red-400">
+                {thresholdError}
+              </p>
             </div>
           )}
 
@@ -957,7 +963,9 @@ export function SettingsPanel({ className = "", onClose }: SettingsPanelProps) {
                   });
                 }
               }}
-              disabled={!preferences.hitl.enabled || !recommendation || thresholdLoading}
+              disabled={
+                !preferences.hitl.enabled || !recommendation || thresholdLoading
+              }
               className="flex items-center gap-2 px-3 py-2 text-sm bg-blue-600 hover:bg-blue-700 text-white rounded-md disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <Sparkles size={14} />

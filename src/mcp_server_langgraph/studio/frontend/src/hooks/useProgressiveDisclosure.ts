@@ -49,7 +49,10 @@ export interface DisclosureConfig {
 /**
  * Component visibility configurations by ID
  */
-const COMPONENT_CONFIGS: Record<string, { minimumLevel: DisclosureLevel; hintable: boolean }> = {
+const COMPONENT_CONFIGS: Record<
+  string,
+  { minimumLevel: DisclosureLevel; hintable: boolean }
+> = {
   // Beginner features - always visible
   chat: { minimumLevel: "beginner", hintable: false },
   help: { minimumLevel: "beginner", hintable: false },
@@ -140,10 +143,14 @@ export function useProgressiveDisclosure(): ProgressiveDisclosureResult {
    * Debounced localStorage save to prevent excessive writes
    */
   const debouncedSave = useDebouncedCallback(
-    (state: { level: DisclosureLevel; autoDetect: boolean; featureUsageCount: number }) => {
+    (state: {
+      level: DisclosureLevel;
+      autoDetect: boolean;
+      featureUsageCount: number;
+    }) => {
       storage.set(STORAGE_KEY, state);
     },
-    STORAGE_SYNC_DEBOUNCE_MS
+    STORAGE_SYNC_DEBOUNCE_MS,
   );
 
   /**
@@ -186,7 +193,7 @@ export function useProgressiveDisclosure(): ProgressiveDisclosureResult {
     (newLevel: DisclosureLevel) => {
       dispatch(setDisclosureLevel(newLevel));
     },
-    [dispatch]
+    [dispatch],
   );
 
   /**
@@ -196,7 +203,7 @@ export function useProgressiveDisclosure(): ProgressiveDisclosureResult {
     (enabled: boolean) => {
       dispatch(setAutoDetect(enabled));
     },
-    [dispatch]
+    [dispatch],
   );
 
   /**
@@ -213,7 +220,7 @@ export function useProgressiveDisclosure(): ProgressiveDisclosureResult {
     (requiredLevel: DisclosureLevel): boolean => {
       return LEVEL_ORDER[level] >= LEVEL_ORDER[requiredLevel];
     },
-    [level]
+    [level],
   );
 
   /**
@@ -253,7 +260,7 @@ export function useProgressiveDisclosure(): ProgressiveDisclosureResult {
         showHint,
       };
     },
-    [level]
+    [level],
   );
 
   return {

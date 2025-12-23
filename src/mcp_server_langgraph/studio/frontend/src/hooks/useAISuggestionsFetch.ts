@@ -85,7 +85,7 @@ const logger = devLogger.withPrefix("[useAISuggestionsFetch]");
 // =============================================================================
 
 export function useAISuggestionsFetch(
-  options: UseAISuggestionsFetchOptions
+  options: UseAISuggestionsFetchOptions,
 ): UseAISuggestionsFetchResult {
   const {
     artifactId,
@@ -108,7 +108,7 @@ export function useAISuggestionsFetch(
 
   // Local state for suggestions (allows immediate updates for accept/dismiss)
   const [localSuggestions, setLocalSuggestions] = useState<CachedSuggestion[]>(
-    []
+    [],
   );
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
@@ -124,7 +124,7 @@ export function useAISuggestionsFetch(
   // Generate stable context key for cache hit detection
   const currentContextKey = useMemo(
     () => (artifactId ? `${sessionId}:${artifactId}` : null),
-    [sessionId, artifactId]
+    [sessionId, artifactId],
   );
 
   // Check if we have a cache hit for current context
@@ -148,7 +148,7 @@ export function useAISuggestionsFetch(
       });
       logger.debug("Accepted suggestion:", id);
     },
-    [cacheSuggestions]
+    [cacheSuggestions],
   );
 
   /**
@@ -163,7 +163,7 @@ export function useAISuggestionsFetch(
       });
       logger.debug("Dismissed suggestion:", id);
     },
-    [cacheSuggestions]
+    [cacheSuggestions],
   );
 
   /**
@@ -206,7 +206,7 @@ export function useAISuggestionsFetch(
           },
           credentials: "include",
           signal: abortController.signal,
-        }
+        },
       );
 
       if (abortController.signal.aborted || !mountedRef.current) {
@@ -238,7 +238,8 @@ export function useAISuggestionsFetch(
       }
 
       if (!abortController.signal.aborted && mountedRef.current) {
-        const fetchError = err instanceof Error ? err : new Error("Unknown error");
+        const fetchError =
+          err instanceof Error ? err : new Error("Unknown error");
         setError(fetchError);
         setLocalSuggestions([]);
         logger.error("Failed to fetch suggestions:", fetchError.message);

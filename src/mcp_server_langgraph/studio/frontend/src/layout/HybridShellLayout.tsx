@@ -28,7 +28,10 @@ import {
   toggleSessionNav,
   type CanvasPanelSizes,
 } from "../store/slices/canvasSlice";
-import { selectCurrentSession, createSession } from "../store/slices/sessionSlice";
+import {
+  selectCurrentSession,
+  createSession,
+} from "../store/slices/sessionSlice";
 import { selectUsername } from "../store/slices/personaSlice";
 import {
   selectAllAgents,
@@ -296,7 +299,11 @@ export function HybridShellLayout() {
         const sessionNavSize = sizes[0];
         const conversationSize = sizes[1];
         const canvasSize = sizes[2];
-        if (sessionNavSize !== undefined && conversationSize !== undefined && canvasSize !== undefined) {
+        if (
+          sessionNavSize !== undefined &&
+          conversationSize !== undefined &&
+          canvasSize !== undefined
+        ) {
           const newSizes: CanvasPanelSizes = {
             sessionNav: sessionNavSize,
             conversation: conversationSize,
@@ -377,7 +384,11 @@ export function HybridShellLayout() {
       } else {
         // AIInterpretation - handle natural language commands
         const interpretation = commandOrInterpretation;
-        logger.debug("AI interpretation executed:", interpretation.action, interpretation.params);
+        logger.debug(
+          "AI interpretation executed:",
+          interpretation.action,
+          interpretation.params,
+        );
 
         // Handle AI interpretations based on action type
         switch (interpretation.action) {
@@ -414,7 +425,13 @@ export function HybridShellLayout() {
   const handleAgentCancel = useCallback(
     (agentId: string) => {
       logger.debug("Cancelling agent:", agentId);
-      dispatch(updateAgentStatus({ id: agentId, status: "failed", error: "Cancelled by user" }));
+      dispatch(
+        updateAgentStatus({
+          id: agentId,
+          status: "failed",
+          error: "Cancelled by user",
+        }),
+      );
     },
     [dispatch],
   );
@@ -500,8 +517,12 @@ export function HybridShellLayout() {
       {/* TopBar - persona-aware header */}
       <TopBar
         onUserMenuClick={handleUserMenuClick}
-        pendingApprovals={agentHitlEnabled ? pendingApprovals.length : undefined}
-        onPendingApprovalsClick={agentHitlEnabled ? handlePendingApprovalsClick : undefined}
+        pendingApprovals={
+          agentHitlEnabled ? pendingApprovals.length : undefined
+        }
+        onPendingApprovalsClick={
+          agentHitlEnabled ? handlePendingApprovalsClick : undefined
+        }
       />
 
       {/* Main content area with DevTools */}
@@ -582,7 +603,9 @@ export function HybridShellLayout() {
               <Suspense
                 fallback={
                   <div className="flex items-center justify-center h-full bg-white dark:bg-gray-900">
-                    <span className="text-sm text-gray-400">Loading DevTools...</span>
+                    <span className="text-sm text-gray-400">
+                      Loading DevTools...
+                    </span>
                   </div>
                 }
               >
@@ -602,8 +625,12 @@ export function HybridShellLayout() {
         agentCount={backgroundAgents.length}
         onAgentQueueToggle={handleAgentQueueToggle}
         agentQueueOpen={showAgentPanel}
-        pendingApprovals={agentHitlEnabled ? pendingApprovals.length : undefined}
-        onPendingApprovalsClick={agentHitlEnabled ? handlePendingApprovalsClick : undefined}
+        pendingApprovals={
+          agentHitlEnabled ? pendingApprovals.length : undefined
+        }
+        onPendingApprovalsClick={
+          agentHitlEnabled ? handlePendingApprovalsClick : undefined
+        }
         devToolsCollapsed={devToolsCollapsed}
         onDevToolsToggle={() => dispatch(toggleDevTools())}
       />
@@ -681,8 +708,18 @@ export function HybridShellLayout() {
                   className="flex-shrink-0 p-1 text-purple-400 hover:text-purple-600 dark:hover:text-purple-200"
                   aria-label="Dismiss persona suggestion"
                 >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  <svg
+                    className="w-4 h-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M6 18L18 6M6 6l12 12"
+                    />
                   </svg>
                 </button>
               </div>
@@ -695,7 +732,9 @@ export function HybridShellLayout() {
       {batchAnalysisEnabled &&
         !crossInsightsDismissed &&
         !isBatchLoading &&
-        (crossInsights.length > 0 || batchPersonaResult || batchDisclosureResult) && (
+        (crossInsights.length > 0 ||
+          batchPersonaResult ||
+          batchDisclosureResult) && (
           <div
             className="fixed bottom-16 left-16 z-40 w-80"
             data-testid="cross-insights-panel-container"
@@ -758,9 +797,7 @@ export function HybridShellLayout() {
             request={convertApprovalPayloadToRequest(activeApproval)}
             isOpen={showApprovalDialog}
             onClose={closeApprovalDialog}
-            onApprove={(data) =>
-              handleApprove(data.request_id, data.reason)
-            }
+            onApprove={(data) => handleApprove(data.request_id, data.reason)}
             onReject={(data) => handleReject(data.request_id, data.reason)}
             isApproving={isApproving}
             isRejecting={isRejecting}
@@ -777,7 +814,9 @@ export function HybridShellLayout() {
             isOpen={showClarificationDialog}
             onClose={closeClarificationDialog}
             onRespond={(response) =>
-              handleClarificationRespond(convertUIResponseToAPIResponse(response))
+              handleClarificationRespond(
+                convertUIResponseToAPIResponse(response),
+              )
             }
             isSubmitting={isClarificationSubmitting}
             currentUser={username ?? undefined}

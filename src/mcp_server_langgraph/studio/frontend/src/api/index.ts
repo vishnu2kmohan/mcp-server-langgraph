@@ -2217,7 +2217,10 @@ export const api = createApi({
     /**
      * Create a new artifact
      */
-    createArtifact: builder.mutation<CreateArtifactResponse, CreateArtifactRequest>({
+    createArtifact: builder.mutation<
+      CreateArtifactResponse,
+      CreateArtifactRequest
+    >({
       query: (body) => ({
         url: "/artifacts",
         method: "POST",
@@ -2287,7 +2290,13 @@ export const api = createApi({
      * Semantic search across artifacts using vector embeddings
      */
     semanticSearchArtifacts: builder.mutation<
-      { results: Array<{ artifact_id: string; score: number; title: string | null }> },
+      {
+        results: Array<{
+          artifact_id: string;
+          score: number;
+          title: string | null;
+        }>;
+      },
       { query: string; limit?: number; session_id?: string }
     >({
       query: (body) => ({
@@ -2301,7 +2310,13 @@ export const api = createApi({
      * Find similar artifacts to a given artifact
      */
     findSimilarArtifacts: builder.query<
-      { results: Array<{ artifact_id: string; score: number; title: string | null }> },
+      {
+        results: Array<{
+          artifact_id: string;
+          score: number;
+          title: string | null;
+        }>;
+      },
       { id: string; limit?: number }
     >({
       query: ({ id, limit }) => ({
@@ -2326,7 +2341,9 @@ export const api = createApi({
     >({
       query: (params) => ({
         url: "/agents/requests/pending",
-        params: params ? filterParams(params as Record<string, unknown>) : undefined,
+        params: params
+          ? filterParams(params as Record<string, unknown>)
+          : undefined,
       }),
       providesTags: (result) =>
         result
@@ -2586,7 +2603,12 @@ export const api = createApi({
       {
         happiness_score: number;
         insights: Array<{
-          category: "happiness" | "engagement" | "adoption" | "retention" | "task_success";
+          category:
+            | "happiness"
+            | "engagement"
+            | "adoption"
+            | "retention"
+            | "task_success";
           title: string;
           description: string;
           trend: "improving" | "stable" | "declining";
@@ -2825,16 +2847,17 @@ export const api = createApi({
      *
      * May create background tasks for long-running completions.
      */
-    requestMcpSampling: builder.mutation<McpSamplingResponse, McpSamplingRequest>(
-      {
-        query: (body) => ({
-          url: "/mcp/sampling",
-          method: "POST",
-          body,
-        }),
-        invalidatesTags: [{ type: "Mcp", id: "TASKS" }],
-      }
-    ),
+    requestMcpSampling: builder.mutation<
+      McpSamplingResponse,
+      McpSamplingRequest
+    >({
+      query: (body) => ({
+        url: "/mcp/sampling",
+        method: "POST",
+        body,
+      }),
+      invalidatesTags: [{ type: "Mcp", id: "TASKS" }],
+    }),
 
     /**
      * Request user input via MCP elicitation

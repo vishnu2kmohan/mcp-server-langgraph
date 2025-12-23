@@ -114,7 +114,7 @@ function createInitialStore(): MetricsStore {
 
 function getOrCreateFeatureMetrics(
   store: MetricsStore,
-  feature: string
+  feature: string,
 ): FeatureMetrics {
   let metrics = store.features.get(feature);
   if (!metrics) {
@@ -151,7 +151,7 @@ function computeSnapshot(store: MetricsStore): AIMetricsSnapshot {
 // =============================================================================
 
 export function useAICacheMetrics(
-  options: UseAICacheMetricsOptions = {}
+  options: UseAICacheMetricsOptions = {},
 ): UseAICacheMetricsResult {
   const { onMetricsUpdate } = options;
 
@@ -180,7 +180,7 @@ export function useAICacheMetrics(
       getOrCreateFeatureMetrics(storeRef.current, feature);
       triggerUpdate();
     },
-    [triggerUpdate]
+    [triggerUpdate],
   );
 
   // Track cache miss
@@ -190,7 +190,7 @@ export function useAICacheMetrics(
       getOrCreateFeatureMetrics(storeRef.current, feature);
       triggerUpdate();
     },
-    [triggerUpdate]
+    [triggerUpdate],
   );
 
   // Track L1 (in-memory) cache hit
@@ -205,7 +205,7 @@ export function useAICacheMetrics(
       getOrCreateFeatureMetrics(store, feature);
       triggerUpdate();
     },
-    [triggerUpdate]
+    [triggerUpdate],
   );
 
   // Track L2 (sessionStorage) cache hit
@@ -220,7 +220,7 @@ export function useAICacheMetrics(
       getOrCreateFeatureMetrics(store, feature);
       triggerUpdate();
     },
-    [triggerUpdate]
+    [triggerUpdate],
   );
 
   // Track tiered cache miss
@@ -235,7 +235,7 @@ export function useAICacheMetrics(
       getOrCreateFeatureMetrics(store, feature);
       triggerUpdate();
     },
-    [triggerUpdate]
+    [triggerUpdate],
   );
 
   // Track request with latency
@@ -253,7 +253,7 @@ export function useAICacheMetrics(
 
       triggerUpdate();
     },
-    [triggerUpdate]
+    [triggerUpdate],
   );
 
   // Track error
@@ -267,7 +267,7 @@ export function useAICacheMetrics(
 
       triggerUpdate();
     },
-    [triggerUpdate]
+    [triggerUpdate],
   );
 
   // Reset all metrics
@@ -280,7 +280,7 @@ export function useAICacheMetrics(
   const snapshot = useMemo(
     () => computeSnapshot(storeRef.current),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [updateCount]
+    [updateCount],
   );
 
   // Convert feature map to record
@@ -296,9 +296,10 @@ export function useAICacheMetrics(
   // Compute tiered cache stats
   const tieredCacheStats = useMemo((): TieredCacheStats => {
     const store = storeRef.current;
-    const age = store.firstOperationTime !== null
-      ? Date.now() - store.firstOperationTime
-      : 0;
+    const age =
+      store.firstOperationTime !== null
+        ? Date.now() - store.firstOperationTime
+        : 0;
     return {
       l1Hits: store.l1Hits,
       l2Hits: store.l2Hits,

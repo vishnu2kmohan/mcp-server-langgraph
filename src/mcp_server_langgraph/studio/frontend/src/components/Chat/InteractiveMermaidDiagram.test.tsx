@@ -531,7 +531,9 @@ describe("InteractiveMermaidDiagram", () => {
 
       await waitFor(() => {
         expect(screen.getByText(/diagram error/i)).toBeInTheDocument();
-        expect(screen.getByText("Failed to render diagram")).toBeInTheDocument();
+        expect(
+          screen.getByText("Failed to render diagram"),
+        ).toBeInTheDocument();
       });
     });
 
@@ -544,9 +546,7 @@ describe("InteractiveMermaidDiagram", () => {
       render(<InteractiveMermaidDiagram code="bad" />);
 
       await waitFor(() => {
-        expect(
-          screen.getByText("Syntax error at line 1"),
-        ).toBeInTheDocument();
+        expect(screen.getByText("Syntax error at line 1")).toBeInTheDocument();
       });
     });
   });
@@ -625,7 +625,10 @@ describe("InteractiveMermaidDiagram", () => {
   describe("Custom className", () => {
     it("should apply custom className to container", async () => {
       render(
-        <InteractiveMermaidDiagram code={sampleCode} className="custom-class" />,
+        <InteractiveMermaidDiagram
+          code={sampleCode}
+          className="custom-class"
+        />,
       );
 
       await waitFor(() => {

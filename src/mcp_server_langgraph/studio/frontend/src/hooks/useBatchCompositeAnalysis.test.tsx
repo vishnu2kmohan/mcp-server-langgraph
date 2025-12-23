@@ -10,8 +10,8 @@
  * - Partial analysis flags are respected
  */
 
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { renderHook } from "@testing-library/react";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { renderHook, cleanup } from "@testing-library/react";
 import { Provider } from "react-redux";
 import { configureStore } from "@reduxjs/toolkit";
 import React from "react";
@@ -81,6 +81,11 @@ describe("useBatchCompositeAnalysis", () => {
     vi.clearAllMocks();
   });
 
+  afterEach(() => {
+    cleanup();
+    vi.clearAllMocks();
+  });
+
   describe("hook structure", () => {
     it("returns expected result shape", () => {
       mockUseBatchCompositeAnalysis.mockReturnValue({
@@ -134,7 +139,9 @@ describe("useBatchCompositeAnalysis", () => {
       });
 
       expect(result.current.personaResult).not.toBeNull();
-      expect(result.current.personaResult?.detected_persona).toBe("alice-builder");
+      expect(result.current.personaResult?.detected_persona).toBe(
+        "alice-builder",
+      );
       expect(result.current.personaResult?.confidence).toBe(0.85);
     });
 
@@ -190,7 +197,9 @@ describe("useBatchCompositeAnalysis", () => {
 
       expect(result.current.disclosureResult).not.toBeNull();
       expect(result.current.disclosureResult?.current_level).toBe("beginner");
-      expect(result.current.disclosureResult?.recommended_level).toBe("intermediate");
+      expect(result.current.disclosureResult?.recommended_level).toBe(
+        "intermediate",
+      );
     });
   });
 
@@ -223,7 +232,9 @@ describe("useBatchCompositeAnalysis", () => {
       });
 
       expect(result.current.errorResult).not.toBeNull();
-      expect(result.current.errorResult?.classification.category).toBe("network");
+      expect(result.current.errorResult?.classification.category).toBe(
+        "network",
+      );
       expect(result.current.errorResult?.suggestions).toHaveLength(1);
     });
   });
@@ -375,7 +386,9 @@ describe("useBatchCompositeAnalysis", () => {
       });
 
       expect(result.current.error).not.toBeNull();
-      expect(result.current.error?.message).toBe("Batch composite analysis failed");
+      expect(result.current.error?.message).toBe(
+        "Batch composite analysis failed",
+      );
       expect(result.current.personaResult).toBeNull();
     });
   });

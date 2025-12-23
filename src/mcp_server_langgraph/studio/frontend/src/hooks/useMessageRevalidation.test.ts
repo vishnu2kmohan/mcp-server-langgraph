@@ -8,8 +8,8 @@
  * 2. The API is called
  * 3. Loader data needs revalidation to sync from server
  */
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { renderHook, act } from "@testing-library/react";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { renderHook, act, cleanup } from "@testing-library/react";
 import { Provider } from "react-redux";
 import { configureStore, type Middleware } from "@reduxjs/toolkit";
 import React from "react";
@@ -85,6 +85,11 @@ const createWrapper = (
 
 describe("useMessageRevalidation", () => {
   beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  afterEach(() => {
+    cleanup();
     vi.clearAllMocks();
   });
 
@@ -231,7 +236,12 @@ describe("useMessageRevalidation", () => {
           id: "test-session",
           name: "Test Session",
           messages: [],
-          config: { modelName: "gpt-4", modelProvider: "openai", temperature: 0.7, maxTokens: 4096 },
+          config: {
+            modelName: "gpt-4",
+            modelProvider: "openai",
+            temperature: 0.7,
+            maxTokens: 4096,
+          },
           createdAt: Date.now(),
           updatedAt: Date.now(),
         },
@@ -273,7 +283,12 @@ describe("useMessageRevalidation", () => {
           id: "test-session",
           name: "Test Session",
           messages: [],
-          config: { modelName: "gpt-4", modelProvider: "openai", temperature: 0.7, maxTokens: 4096 },
+          config: {
+            modelName: "gpt-4",
+            modelProvider: "openai",
+            temperature: 0.7,
+            maxTokens: 4096,
+          },
           createdAt: Date.now(),
           updatedAt: Date.now(),
         },

@@ -65,8 +65,12 @@ describe("Project API Contract Tests", () => {
       expect(typeof project.updated_at).toBe("string");
 
       // Validate ISO date format
-      expect(new Date(project.created_at).toISOString()).toBe(project.created_at);
-      expect(new Date(project.updated_at).toISOString()).toBe(project.updated_at);
+      expect(new Date(project.created_at).toISOString()).toBe(
+        project.created_at,
+      );
+      expect(new Date(project.updated_at).toISOString()).toBe(
+        project.updated_at,
+      );
     });
 
     it("should return multiple projects", async () => {

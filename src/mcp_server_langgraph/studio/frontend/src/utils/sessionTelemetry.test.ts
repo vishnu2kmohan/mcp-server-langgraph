@@ -62,7 +62,11 @@ describe("SessionTelemetry", () => {
       telemetry.trackSessionCreation({ success: true, durationMs: 100 });
       telemetry.trackSessionCreation({ success: true, durationMs: 100 });
       telemetry.trackSessionCreation({ success: true, durationMs: 100 });
-      telemetry.trackSessionCreation({ success: false, durationMs: 50, error: "Error" });
+      telemetry.trackSessionCreation({
+        success: false,
+        durationMs: 50,
+        error: "Error",
+      });
 
       const metrics = telemetry.getMetrics();
       expect(metrics.sessionCreations.successRate).toBeCloseTo(0.75, 2);
@@ -95,9 +99,21 @@ describe("SessionTelemetry", () => {
     });
 
     it("should track debounced vs executed revalidations", () => {
-      telemetry.trackRevalidation({ trigger: "message_sent", durationMs: 100, debounced: false });
-      telemetry.trackRevalidation({ trigger: "message_sent", durationMs: 0, debounced: true });
-      telemetry.trackRevalidation({ trigger: "message_sent", durationMs: 0, debounced: true });
+      telemetry.trackRevalidation({
+        trigger: "message_sent",
+        durationMs: 100,
+        debounced: false,
+      });
+      telemetry.trackRevalidation({
+        trigger: "message_sent",
+        durationMs: 0,
+        debounced: true,
+      });
+      telemetry.trackRevalidation({
+        trigger: "message_sent",
+        durationMs: 0,
+        debounced: true,
+      });
 
       const metrics = telemetry.getMetrics();
       expect(metrics.revalidations.executed).toBe(1);
@@ -120,8 +136,19 @@ describe("SessionTelemetry", () => {
     });
 
     it("should track skipped syncs (race condition guard)", () => {
-      telemetry.trackSync({ sessionId: "session-123", messageCount: 5, durationMs: 0, skipped: true, skipReason: "pending_mutation" });
-      telemetry.trackSync({ sessionId: "session-123", messageCount: 5, durationMs: 15, skipped: false });
+      telemetry.trackSync({
+        sessionId: "session-123",
+        messageCount: 5,
+        durationMs: 0,
+        skipped: true,
+        skipReason: "pending_mutation",
+      });
+      telemetry.trackSync({
+        sessionId: "session-123",
+        messageCount: 5,
+        durationMs: 15,
+        skipped: false,
+      });
 
       const metrics = telemetry.getMetrics();
       expect(metrics.syncs.total).toBe(2);
@@ -130,9 +157,24 @@ describe("SessionTelemetry", () => {
     });
 
     it("should track message count changes", () => {
-      telemetry.trackSync({ sessionId: "session-123", messageCount: 0, durationMs: 10, skipped: false });
-      telemetry.trackSync({ sessionId: "session-123", messageCount: 2, durationMs: 10, skipped: false });
-      telemetry.trackSync({ sessionId: "session-123", messageCount: 5, durationMs: 10, skipped: false });
+      telemetry.trackSync({
+        sessionId: "session-123",
+        messageCount: 0,
+        durationMs: 10,
+        skipped: false,
+      });
+      telemetry.trackSync({
+        sessionId: "session-123",
+        messageCount: 2,
+        durationMs: 10,
+        skipped: false,
+      });
+      telemetry.trackSync({
+        sessionId: "session-123",
+        messageCount: 5,
+        durationMs: 10,
+        skipped: false,
+      });
 
       const metrics = telemetry.getMetrics();
       expect(metrics.syncs.avgMessageCount).toBeCloseTo(2.33, 1);
@@ -152,8 +194,14 @@ describe("SessionTelemetry", () => {
       expect(metrics.artifactOperations.saves.total).toBe(1);
       expect(metrics.artifactOperations.saves.successful).toBe(1);
       expect(metrics.artifactOperations.saves.failed).toBe(0);
-      expect(metrics.artifactOperations.saves.avgDurationMs).toBeCloseTo(200, 0);
-      expect(metrics.artifactOperations.saves.avgContentLength).toBeCloseTo(1500, 0);
+      expect(metrics.artifactOperations.saves.avgDurationMs).toBeCloseTo(
+        200,
+        0,
+      );
+      expect(metrics.artifactOperations.saves.avgContentLength).toBeCloseTo(
+        1500,
+        0,
+      );
     });
 
     it("should track failed artifact save", () => {
@@ -168,18 +216,43 @@ describe("SessionTelemetry", () => {
       expect(metrics.artifactOperations.saves.total).toBe(1);
       expect(metrics.artifactOperations.saves.successful).toBe(0);
       expect(metrics.artifactOperations.saves.failed).toBe(1);
-      expect(metrics.artifactOperations.saves.lastError).toBe("Save failed: network error");
+      expect(metrics.artifactOperations.saves.lastError).toBe(
+        "Save failed: network error",
+      );
     });
 
     it("should calculate save success rate", () => {
-      telemetry.trackArtifactSave({ artifactId: "a1", success: true, durationMs: 100, contentLength: 100 });
-      telemetry.trackArtifactSave({ artifactId: "a2", success: true, durationMs: 100, contentLength: 200 });
-      telemetry.trackArtifactSave({ artifactId: "a3", success: true, durationMs: 100, contentLength: 300 });
-      telemetry.trackArtifactSave({ artifactId: "a4", success: false, durationMs: 50, error: "Error" });
+      telemetry.trackArtifactSave({
+        artifactId: "a1",
+        success: true,
+        durationMs: 100,
+        contentLength: 100,
+      });
+      telemetry.trackArtifactSave({
+        artifactId: "a2",
+        success: true,
+        durationMs: 100,
+        contentLength: 200,
+      });
+      telemetry.trackArtifactSave({
+        artifactId: "a3",
+        success: true,
+        durationMs: 100,
+        contentLength: 300,
+      });
+      telemetry.trackArtifactSave({
+        artifactId: "a4",
+        success: false,
+        durationMs: 50,
+        error: "Error",
+      });
 
       const metrics = telemetry.getMetrics();
       expect(metrics.artifactOperations.saves.successRate).toBeCloseTo(0.75, 2);
-      expect(metrics.artifactOperations.saves.avgContentLength).toBeCloseTo(200, 0);
+      expect(metrics.artifactOperations.saves.avgContentLength).toBeCloseTo(
+        200,
+        0,
+      );
     });
 
     it("should add artifact save to event history", () => {
@@ -208,7 +281,10 @@ describe("SessionTelemetry", () => {
       expect(metrics.artifactOperations.deletes.total).toBe(1);
       expect(metrics.artifactOperations.deletes.successful).toBe(1);
       expect(metrics.artifactOperations.deletes.failed).toBe(0);
-      expect(metrics.artifactOperations.deletes.avgDurationMs).toBeCloseTo(100, 0);
+      expect(metrics.artifactOperations.deletes.avgDurationMs).toBeCloseTo(
+        100,
+        0,
+      );
     });
 
     it("should track failed artifact delete", () => {
@@ -223,17 +299,40 @@ describe("SessionTelemetry", () => {
       expect(metrics.artifactOperations.deletes.total).toBe(1);
       expect(metrics.artifactOperations.deletes.successful).toBe(0);
       expect(metrics.artifactOperations.deletes.failed).toBe(1);
-      expect(metrics.artifactOperations.deletes.lastError).toBe("Delete failed: permission denied");
+      expect(metrics.artifactOperations.deletes.lastError).toBe(
+        "Delete failed: permission denied",
+      );
     });
 
     it("should calculate delete success rate", () => {
-      telemetry.trackArtifactDelete({ artifactId: "a1", success: true, durationMs: 100 });
-      telemetry.trackArtifactDelete({ artifactId: "a2", success: true, durationMs: 80 });
-      telemetry.trackArtifactDelete({ artifactId: "a3", success: false, durationMs: 20, error: "Error" });
-      telemetry.trackArtifactDelete({ artifactId: "a4", success: false, durationMs: 20, error: "Error" });
+      telemetry.trackArtifactDelete({
+        artifactId: "a1",
+        success: true,
+        durationMs: 100,
+      });
+      telemetry.trackArtifactDelete({
+        artifactId: "a2",
+        success: true,
+        durationMs: 80,
+      });
+      telemetry.trackArtifactDelete({
+        artifactId: "a3",
+        success: false,
+        durationMs: 20,
+        error: "Error",
+      });
+      telemetry.trackArtifactDelete({
+        artifactId: "a4",
+        success: false,
+        durationMs: 20,
+        error: "Error",
+      });
 
       const metrics = telemetry.getMetrics();
-      expect(metrics.artifactOperations.deletes.successRate).toBeCloseTo(0.5, 2);
+      expect(metrics.artifactOperations.deletes.successRate).toBeCloseTo(
+        0.5,
+        2,
+      );
     });
 
     it("should add artifact delete to event history", () => {
@@ -253,10 +352,28 @@ describe("SessionTelemetry", () => {
     it("should reset all metrics", () => {
       telemetry.trackSessionCreation({ success: true, durationMs: 100 });
       telemetry.trackRevalidation({ trigger: "message_sent", durationMs: 100 });
-      telemetry.trackSync({ sessionId: "s", messageCount: 1, durationMs: 10, skipped: false });
-      telemetry.trackArtifactSave({ artifactId: "a1", success: true, durationMs: 150, contentLength: 1000 });
-      telemetry.trackArtifactDelete({ artifactId: "a2", success: true, durationMs: 50 });
-      telemetry.trackSuggestionAction({ suggestionId: "s1", action: "accept", suggestionType: "completion" });
+      telemetry.trackSync({
+        sessionId: "s",
+        messageCount: 1,
+        durationMs: 10,
+        skipped: false,
+      });
+      telemetry.trackArtifactSave({
+        artifactId: "a1",
+        success: true,
+        durationMs: 150,
+        contentLength: 1000,
+      });
+      telemetry.trackArtifactDelete({
+        artifactId: "a2",
+        success: true,
+        durationMs: 50,
+      });
+      telemetry.trackSuggestionAction({
+        suggestionId: "s1",
+        action: "accept",
+        suggestionType: "completion",
+      });
 
       telemetry.reset();
 
@@ -331,10 +448,26 @@ describe("SessionTelemetry", () => {
     });
 
     it("should track suggestions by type", () => {
-      telemetry.trackSuggestionAction({ suggestionId: "s1", action: "accept", suggestionType: "completion" });
-      telemetry.trackSuggestionAction({ suggestionId: "s2", action: "accept", suggestionType: "completion" });
-      telemetry.trackSuggestionAction({ suggestionId: "s3", action: "dismiss", suggestionType: "fix" });
-      telemetry.trackSuggestionAction({ suggestionId: "s4", action: "accept", suggestionType: "refactor" });
+      telemetry.trackSuggestionAction({
+        suggestionId: "s1",
+        action: "accept",
+        suggestionType: "completion",
+      });
+      telemetry.trackSuggestionAction({
+        suggestionId: "s2",
+        action: "accept",
+        suggestionType: "completion",
+      });
+      telemetry.trackSuggestionAction({
+        suggestionId: "s3",
+        action: "dismiss",
+        suggestionType: "fix",
+      });
+      telemetry.trackSuggestionAction({
+        suggestionId: "s4",
+        action: "accept",
+        suggestionType: "refactor",
+      });
 
       const metrics = telemetry.getMetrics();
       expect(metrics.suggestions.total).toBe(4);
@@ -346,10 +479,26 @@ describe("SessionTelemetry", () => {
     });
 
     it("should calculate acceptance rate", () => {
-      telemetry.trackSuggestionAction({ suggestionId: "s1", action: "accept", suggestionType: "completion" });
-      telemetry.trackSuggestionAction({ suggestionId: "s2", action: "accept", suggestionType: "completion" });
-      telemetry.trackSuggestionAction({ suggestionId: "s3", action: "accept", suggestionType: "completion" });
-      telemetry.trackSuggestionAction({ suggestionId: "s4", action: "dismiss", suggestionType: "completion" });
+      telemetry.trackSuggestionAction({
+        suggestionId: "s1",
+        action: "accept",
+        suggestionType: "completion",
+      });
+      telemetry.trackSuggestionAction({
+        suggestionId: "s2",
+        action: "accept",
+        suggestionType: "completion",
+      });
+      telemetry.trackSuggestionAction({
+        suggestionId: "s3",
+        action: "accept",
+        suggestionType: "completion",
+      });
+      telemetry.trackSuggestionAction({
+        suggestionId: "s4",
+        action: "dismiss",
+        suggestionType: "completion",
+      });
 
       const metrics = telemetry.getMetrics();
       expect(metrics.suggestions.acceptanceRate).toBeCloseTo(0.75, 2);
@@ -377,7 +526,9 @@ describe("SessionTelemetry", () => {
 
       const history = telemetry.getEventHistory();
       expect(history).toHaveLength(1);
-      expect((history[0].data as { artifactId?: string }).artifactId).toBeUndefined();
+      expect(
+        (history[0].data as { artifactId?: string }).artifactId,
+      ).toBeUndefined();
     });
   });
 
@@ -388,8 +539,14 @@ describe("SessionTelemetry", () => {
         exporter: mockExporter,
       });
 
-      exportableTelemetry.trackSessionCreation({ success: true, durationMs: 100 });
-      exportableTelemetry.trackRevalidation({ trigger: "message_sent", durationMs: 50 });
+      exportableTelemetry.trackSessionCreation({
+        success: true,
+        durationMs: 100,
+      });
+      exportableTelemetry.trackRevalidation({
+        trigger: "message_sent",
+        durationMs: 50,
+      });
 
       await exportableTelemetry.flush();
 
@@ -405,7 +562,10 @@ describe("SessionTelemetry", () => {
         exporter: mockExporter,
       });
 
-      exportableTelemetry.trackSessionCreation({ success: true, durationMs: 100 });
+      exportableTelemetry.trackSessionCreation({
+        success: true,
+        durationMs: 100,
+      });
       await exportableTelemetry.flush();
 
       const history = exportableTelemetry.getEventHistory();
@@ -413,14 +573,21 @@ describe("SessionTelemetry", () => {
     });
 
     it("should not clear events on failed flush", async () => {
-      const mockExporter = vi.fn().mockRejectedValue(new Error("Network error"));
+      const mockExporter = vi
+        .fn()
+        .mockRejectedValue(new Error("Network error"));
       const exportableTelemetry = new SessionTelemetry({
         exporter: mockExporter,
       });
 
-      exportableTelemetry.trackSessionCreation({ success: true, durationMs: 100 });
+      exportableTelemetry.trackSessionCreation({
+        success: true,
+        durationMs: 100,
+      });
 
-      await expect(exportableTelemetry.flush()).rejects.toThrow("Network error");
+      await expect(exportableTelemetry.flush()).rejects.toThrow(
+        "Network error",
+      );
 
       const history = exportableTelemetry.getEventHistory();
       expect(history).toHaveLength(1);
@@ -444,12 +611,21 @@ describe("SessionTelemetry", () => {
         autoFlushThreshold: 3,
       });
 
-      autoFlushTelemetry.trackSessionCreation({ success: true, durationMs: 100 });
-      autoFlushTelemetry.trackSessionCreation({ success: true, durationMs: 100 });
+      autoFlushTelemetry.trackSessionCreation({
+        success: true,
+        durationMs: 100,
+      });
+      autoFlushTelemetry.trackSessionCreation({
+        success: true,
+        durationMs: 100,
+      });
       expect(mockExporter).not.toHaveBeenCalled();
 
       // This should trigger auto-flush
-      autoFlushTelemetry.trackSessionCreation({ success: true, durationMs: 100 });
+      autoFlushTelemetry.trackSessionCreation({
+        success: true,
+        durationMs: 100,
+      });
 
       // Allow async flush to complete
       await vi.waitFor(() => {
@@ -465,7 +641,10 @@ describe("SessionTelemetry", () => {
         clientVersion: "1.0.0",
       });
 
-      exportableTelemetry.trackSessionCreation({ success: true, durationMs: 100 });
+      exportableTelemetry.trackSessionCreation({
+        success: true,
+        durationMs: 100,
+      });
       await exportableTelemetry.flush();
 
       const exportedData = mockExporter.mock.calls[0][0];
@@ -488,7 +667,12 @@ describe("SessionTelemetry", () => {
 
     it("should create exportable payload with getExportPayload", () => {
       telemetry.trackSessionCreation({ success: true, durationMs: 100 });
-      telemetry.trackSync({ sessionId: "s", messageCount: 5, durationMs: 10, skipped: false });
+      telemetry.trackSync({
+        sessionId: "s",
+        messageCount: 5,
+        durationMs: 10,
+        skipped: false,
+      });
 
       const payload = telemetry.getExportPayload();
 

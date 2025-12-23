@@ -10,7 +10,12 @@
  * - Selectors for unread count and filtered lists
  */
 
-import { createSlice, createSelector, PayloadAction, nanoid } from "@reduxjs/toolkit";
+import {
+  createSlice,
+  createSelector,
+  PayloadAction,
+  nanoid,
+} from "@reduxjs/toolkit";
 
 /**
  * Notification types

@@ -182,7 +182,13 @@ export function useIntentDetection(
 export function useContextOptimization(
   options: ContextOptimizationOptions,
 ): ContextOptimizationResult {
-  const { userId, sessionId, currentTokens, maxTokens, enabled = true } = options;
+  const {
+    userId,
+    sessionId,
+    currentTokens,
+    maxTokens,
+    enabled = true,
+  } = options;
 
   const [analyzeContext, { isLoading }] = useStudioAnalyzeMutation();
 
@@ -222,7 +228,11 @@ export function useContextOptimization(
 
       const contextResult = response.analyses?.context_optimize as
         | {
-            suggestions?: { type: string; description: string; tokens_saved: number }[];
+            suggestions?: {
+              type: string;
+              description: string;
+              tokens_saved: number;
+            }[];
             usage_percent?: number;
             current_tokens?: number;
             max_tokens?: number;

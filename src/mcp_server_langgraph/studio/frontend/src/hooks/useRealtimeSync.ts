@@ -83,7 +83,7 @@ function calculateReconnectDelay(
     exponentialBackoff?: boolean;
     maxDelayMs?: number;
     backoffMultiplier?: number;
-  }
+  },
 ): number {
   if (!options.exponentialBackoff) {
     return baseDelay;
@@ -219,11 +219,15 @@ export function useRealtimeSync(
         reconnectAttemptsRef.current = nextAttempts;
 
         // Calculate delay with optional exponential backoff
-        const delay = calculateReconnectDelay(currentAttempts, reconnectInterval, {
-          exponentialBackoff,
-          maxDelayMs,
-          backoffMultiplier,
-        });
+        const delay = calculateReconnectDelay(
+          currentAttempts,
+          reconnectInterval,
+          {
+            exponentialBackoff,
+            maxDelayMs,
+            backoffMultiplier,
+          },
+        );
 
         reconnectTimeoutRef.current = setTimeout(() => {
           createConnection();
@@ -233,7 +237,15 @@ export function useRealtimeSync(
         callbacksRef.current.onDisconnect?.();
       }
     };
-  }, [url, reconnectInterval, maxReconnectAttempts, exponentialBackoff, maxDelayMs, backoffMultiplier, flushMessageQueue]);
+  }, [
+    url,
+    reconnectInterval,
+    maxReconnectAttempts,
+    exponentialBackoff,
+    maxDelayMs,
+    backoffMultiplier,
+    flushMessageQueue,
+  ]);
 
   /**
    * Send a message through the WebSocket

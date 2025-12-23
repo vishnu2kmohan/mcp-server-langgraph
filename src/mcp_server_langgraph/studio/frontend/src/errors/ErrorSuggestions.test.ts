@@ -29,42 +29,58 @@ describe("ErrorSuggestions", () => {
       });
 
       it("includes VPN suggestion for corporate networks", () => {
-        const error = createClassifiedError(new Error("CORS blocked"), "network");
+        const error = createClassifiedError(
+          new Error("CORS blocked"),
+          "network",
+        );
         const suggestions = getSuggestions(error, { isCorporateNetwork: true });
 
-        expect(suggestions.some((s) => s.toLowerCase().includes("vpn"))).toBe(true);
+        expect(suggestions.some((s) => s.toLowerCase().includes("vpn"))).toBe(
+          true,
+        );
       });
     });
 
     describe("for authentication errors", () => {
       it("returns auth-specific suggestions", () => {
-        const error = createClassifiedError(new Error("expired"), "authentication");
+        const error = createClassifiedError(
+          new Error("expired"),
+          "authentication",
+        );
         const suggestions = getSuggestions(error);
 
         expect(suggestions).toContain("Log in again");
-        expect(suggestions.some((s) => s.toLowerCase().includes("session"))).toBe(
-          true
-        );
+        expect(
+          suggestions.some((s) => s.toLowerCase().includes("session")),
+        ).toBe(true);
       });
 
       it("includes SSO suggestion when applicable", () => {
-        const error = createClassifiedError(new Error("sso failed"), "authentication");
+        const error = createClassifiedError(
+          new Error("sso failed"),
+          "authentication",
+        );
         const suggestions = getSuggestions(error, { hasSSOEnabled: true });
 
-        expect(suggestions.some((s) => s.toLowerCase().includes("sso"))).toBe(true);
+        expect(suggestions.some((s) => s.toLowerCase().includes("sso"))).toBe(
+          true,
+        );
       });
     });
 
     describe("for authorization errors", () => {
       it("returns permission-related suggestions", () => {
-        const error = createClassifiedError(new Error("forbidden"), "authorization");
+        const error = createClassifiedError(
+          new Error("forbidden"),
+          "authorization",
+        );
         const suggestions = getSuggestions(error);
 
         expect(
-          suggestions.some((s) => s.toLowerCase().includes("permission"))
+          suggestions.some((s) => s.toLowerCase().includes("permission")),
         ).toBe(true);
         expect(
-          suggestions.some((s) => s.toLowerCase().includes("administrator"))
+          suggestions.some((s) => s.toLowerCase().includes("administrator")),
         ).toBe(true);
       });
     });
@@ -75,18 +91,22 @@ describe("ErrorSuggestions", () => {
         const suggestions = getSuggestions(error);
 
         expect(suggestions.some((s) => s.toLowerCase().includes("input"))).toBe(
-          true
+          true,
         );
       });
 
       it("includes specific field guidance when available", () => {
-        const error = createClassifiedError(new Error("invalid email"), "validation", {
-          context: { field: "email", constraint: "must be valid email" },
-        });
+        const error = createClassifiedError(
+          new Error("invalid email"),
+          "validation",
+          {
+            context: { field: "email", constraint: "must be valid email" },
+          },
+        );
         const suggestions = getSuggestions(error);
 
         expect(suggestions.some((s) => s.toLowerCase().includes("email"))).toBe(
-          true
+          true,
         );
       });
     });
@@ -96,11 +116,11 @@ describe("ErrorSuggestions", () => {
         const error = createClassifiedError(new Error("500"), "server");
         const suggestions = getSuggestions(error);
 
-        expect(suggestions.some((s) => s.toLowerCase().includes("try again"))).toBe(
-          true
-        );
         expect(
-          suggestions.some((s) => s.toLowerCase().includes("few minutes"))
+          suggestions.some((s) => s.toLowerCase().includes("try again")),
+        ).toBe(true);
+        expect(
+          suggestions.some((s) => s.toLowerCase().includes("few minutes")),
         ).toBe(true);
       });
 
@@ -108,9 +128,9 @@ describe("ErrorSuggestions", () => {
         const error = createClassifiedError(new Error("503"), "server");
         const suggestions = getSuggestions(error, { hasStatusPage: true });
 
-        expect(suggestions.some((s) => s.toLowerCase().includes("status"))).toBe(
-          true
-        );
+        expect(
+          suggestions.some((s) => s.toLowerCase().includes("status")),
+        ).toBe(true);
       });
     });
 
@@ -120,7 +140,7 @@ describe("ErrorSuggestions", () => {
         const suggestions = getSuggestions(error);
 
         expect(suggestions.some((s) => s.toLowerCase().includes("retry"))).toBe(
-          true
+          true,
         );
       });
 
@@ -130,9 +150,9 @@ describe("ErrorSuggestions", () => {
         });
         const suggestions = getSuggestions(error);
 
-        expect(suggestions.some((s) => s.toLowerCase().includes("smaller"))).toBe(
-          true
-        );
+        expect(
+          suggestions.some((s) => s.toLowerCase().includes("smaller")),
+        ).toBe(true);
       });
     });
 
@@ -142,14 +162,18 @@ describe("ErrorSuggestions", () => {
         const suggestions = getSuggestions(error);
 
         expect(suggestions.some((s) => s.toLowerCase().includes("wait"))).toBe(
-          true
+          true,
         );
       });
 
       it("includes specific wait time when retryAfter is provided", () => {
-        const error = createClassifiedError(new Error("rate limited"), "quota", {
-          retryAfter: 60000,
-        });
+        const error = createClassifiedError(
+          new Error("rate limited"),
+          "quota",
+          {
+            retryAfter: 60000,
+          },
+        );
         const suggestions = getSuggestions(error);
 
         expect(suggestions.some((s) => s.includes("60 seconds"))).toBe(true);
@@ -159,9 +183,9 @@ describe("ErrorSuggestions", () => {
         const error = createClassifiedError(new Error("limited"), "quota");
         const suggestions = getSuggestions(error, { frequentRateLimits: true });
 
-        expect(suggestions.some((s) => s.toLowerCase().includes("upgrading"))).toBe(
-          true
-        );
+        expect(
+          suggestions.some((s) => s.toLowerCase().includes("upgrading")),
+        ).toBe(true);
       });
     });
 
@@ -172,7 +196,7 @@ describe("ErrorSuggestions", () => {
 
         expect(suggestions).toContain("Try refreshing the page");
         expect(
-          suggestions.some((s) => s.toLowerCase().includes("support"))
+          suggestions.some((s) => s.toLowerCase().includes("support")),
         ).toBe(true);
       });
     });
@@ -215,13 +239,15 @@ describe("ErrorSuggestions", () => {
       });
       const message = getUserMessage(error);
 
-      expect(message).toBe("The workflow could not be saved. Please try again.");
+      expect(message).toBe(
+        "The workflow could not be saved. Please try again.",
+      );
     });
 
     it("never exposes technical details to users", () => {
       const error = createClassifiedError(
         new Error("SQL syntax error near 'SELECT'"),
-        "server"
+        "server",
       );
       const message = getUserMessage(error);
 
@@ -241,7 +267,10 @@ describe("ErrorSuggestions", () => {
     });
 
     it("returns login action for authentication errors", () => {
-      const error = createClassifiedError(new Error("expired"), "authentication");
+      const error = createClassifiedError(
+        new Error("expired"),
+        "authentication",
+      );
       const actions = getRecoveryActions(error);
 
       const loginAction = actions.find((a) => a.type === "login");
@@ -327,9 +356,9 @@ describe("ErrorSuggestions", () => {
       };
       const suggestions = getSuggestions(error, context);
 
-      expect(suggestions.some((s) => s.toLowerCase().includes("workflow"))).toBe(
-        true
-      );
+      expect(
+        suggestions.some((s) => s.toLowerCase().includes("workflow")),
+      ).toBe(true);
     });
 
     it("provides persona-specific language for admin", () => {
@@ -339,7 +368,11 @@ describe("ErrorSuggestions", () => {
 
       // Admin should get more technical suggestions
       expect(
-        suggestions.some((s) => s.toLowerCase().includes("logs") || s.toLowerCase().includes("trace"))
+        suggestions.some(
+          (s) =>
+            s.toLowerCase().includes("logs") ||
+            s.toLowerCase().includes("trace"),
+        ),
       ).toBe(true);
     });
 

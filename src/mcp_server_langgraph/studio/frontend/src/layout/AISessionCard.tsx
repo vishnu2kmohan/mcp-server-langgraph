@@ -134,15 +134,22 @@ export function AISessionCard({
       )}
 
       {/* Key Topics */}
-      {showTopics && enableAI && !isLoading && !error && keyTopics.length > 0 && (
-        <div className="session-card-topics">
-          {keyTopics.map((topic, index) => (
-            <span key={`${topic}-${index}`} className="session-card-topic-tag">
-              {topic}
-            </span>
-          ))}
-        </div>
-      )}
+      {showTopics &&
+        enableAI &&
+        !isLoading &&
+        !error &&
+        keyTopics.length > 0 && (
+          <div className="session-card-topics">
+            {keyTopics.map((topic, index) => (
+              <span
+                key={`${topic}-${index}`}
+                className="session-card-topic-tag"
+              >
+                {topic}
+              </span>
+            ))}
+          </div>
+        )}
 
       {/* Error State - show gracefully without breaking the card */}
       {error && enableAI && (

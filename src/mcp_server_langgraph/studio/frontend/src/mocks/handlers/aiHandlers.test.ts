@@ -6,7 +6,11 @@
  */
 import { describe, it, expect, beforeAll, afterAll, afterEach } from "vitest";
 import { setupServer } from "msw/node";
-import { aiHandlers, mockAIInterpretation, mockSuggestions } from "./aiHandlers";
+import {
+  aiHandlers,
+  mockAIInterpretation,
+  mockSuggestions,
+} from "./aiHandlers";
 
 // Setup MSW server with AI handlers
 const server = setupServer(...aiHandlers);
@@ -73,7 +77,7 @@ describe("aiHandlers", () => {
   describe("GET /api/v1/ai/suggestions", () => {
     it("returns suggestions for artifact", async () => {
       const response = await fetch(
-        "/api/v1/ai/suggestions?artifactId=artifact-1"
+        "/api/v1/ai/suggestions?artifactId=artifact-1",
       );
 
       expect(response.ok).toBe(true);
@@ -85,7 +89,7 @@ describe("aiHandlers", () => {
 
     it("returns suggestions with required fields", async () => {
       const response = await fetch(
-        "/api/v1/ai/suggestions?artifactId=artifact-1"
+        "/api/v1/ai/suggestions?artifactId=artifact-1",
       );
 
       const data = await response.json();
@@ -97,7 +101,7 @@ describe("aiHandlers", () => {
         expect(suggestion).toHaveProperty("content");
         expect(suggestion).toHaveProperty("confidence");
         expect(["completion", "refactor", "fix", "explain"]).toContain(
-          suggestion.type
+          suggestion.type,
         );
       }
     });
@@ -181,7 +185,9 @@ describe("aiHandlers", () => {
         expect(suggestion).toHaveProperty("action_type");
         expect(suggestion).toHaveProperty("action_target");
         expect(suggestion).toHaveProperty("priority");
-        expect(["navigate", "create", "learn", "import"]).toContain(suggestion.action_type);
+        expect(["navigate", "create", "learn", "import"]).toContain(
+          suggestion.action_type,
+        );
       }
     });
 
@@ -200,24 +206,30 @@ describe("aiHandlers", () => {
     });
 
     it("returns context-specific suggestions", async () => {
-      const workflowsResponse = await fetch("/api/v1/ai/empty-state/suggestions", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ context: "workflows" }),
-      });
+      const workflowsResponse = await fetch(
+        "/api/v1/ai/empty-state/suggestions",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ context: "workflows" }),
+        },
+      );
 
-      const sessionsResponse = await fetch("/api/v1/ai/empty-state/suggestions", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ context: "sessions" }),
-      });
+      const sessionsResponse = await fetch(
+        "/api/v1/ai/empty-state/suggestions",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ context: "sessions" }),
+        },
+      );
 
       const workflowsData = await workflowsResponse.json();
       const sessionsData = await sessionsResponse.json();
 
       // Suggestions should be different for different contexts
       expect(workflowsData.suggestions[0].title).not.toBe(
-        sessionsData.suggestions[0].title
+        sessionsData.suggestions[0].title,
       );
     });
 
@@ -273,7 +285,11 @@ describe("aiHandlers", () => {
       const data = await response.json();
 
       expect(data.error_type).toBe("authentication");
-      expect(data.recovery_steps.some((s: { action_type: string }) => s.action_type === "manual")).toBe(true);
+      expect(
+        data.recovery_steps.some(
+          (s: { action_type: string }) => s.action_type === "manual",
+        ),
+      ).toBe(true);
     });
 
     it("returns analysis for validation errors", async () => {
@@ -289,7 +305,11 @@ describe("aiHandlers", () => {
       const data = await response.json();
 
       expect(data.error_type).toBe("validation");
-      expect(data.recovery_steps.some((s: { action_type: string }) => s.action_type === "manual")).toBe(true);
+      expect(
+        data.recovery_steps.some(
+          (s: { action_type: string }) => s.action_type === "manual",
+        ),
+      ).toBe(true);
     });
 
     it("returns recovery_steps with required fields", async () => {
@@ -316,7 +336,7 @@ describe("aiHandlers", () => {
         expect(step).toHaveProperty("description");
         expect(step).toHaveProperty("action_type");
         expect(["automatic", "manual", "contact_support"]).toContain(
-          step.action_type
+          step.action_type,
         );
       }
     });
@@ -417,7 +437,7 @@ describe("aiHandlers", () => {
 
       expect(data.current_level).toBe("beginner");
       expect(["intermediate", "advanced", "expert"]).toContain(
-        data.recommended_level
+        data.recommended_level,
       );
     });
 

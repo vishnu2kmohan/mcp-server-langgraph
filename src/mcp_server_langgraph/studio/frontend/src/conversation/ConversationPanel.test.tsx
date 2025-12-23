@@ -412,9 +412,7 @@ describe("ConversationPanel", () => {
     });
 
     it("should accept custom className", () => {
-      render(
-        <ConversationPanel {...defaultProps} className="custom-class" />,
-      );
+      render(<ConversationPanel {...defaultProps} className="custom-class" />);
 
       const panel = screen.getByTestId("conversation-panel");
       expect(panel).toHaveClass("custom-class");

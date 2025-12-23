@@ -5,7 +5,12 @@
  * for consistent UX across the application.
  */
 
-export { EmptyState, type EmptyStateProps, type EmptyStateContext, type EmptyStateVariant } from "./EmptyState";
+export {
+  EmptyState,
+  type EmptyStateProps,
+  type EmptyStateContext,
+  type EmptyStateVariant,
+} from "./EmptyState";
 export { default } from "./EmptyState";
 
 // AI-Enhanced Empty State (Phase 6.2)

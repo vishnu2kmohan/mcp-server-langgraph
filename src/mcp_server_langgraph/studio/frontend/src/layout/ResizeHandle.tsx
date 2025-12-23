@@ -17,8 +17,10 @@ import { cn } from "../utils/cn";
 // Types
 // =============================================================================
 
-export interface ResizeHandleProps
-  extends Omit<ComponentProps<typeof PanelResizeHandle>, "className"> {
+export interface ResizeHandleProps extends Omit<
+  ComponentProps<typeof PanelResizeHandle>,
+  "className"
+> {
   /** Additional CSS classes */
   className?: string;
   /** Whether this is a vertical resize handle (horizontal divider) */
@@ -29,7 +31,11 @@ export interface ResizeHandleProps
 // Component
 // =============================================================================
 
-export function ResizeHandle({ className, vertical, ...props }: ResizeHandleProps) {
+export function ResizeHandle({
+  className,
+  vertical,
+  ...props
+}: ResizeHandleProps) {
   return (
     <PanelResizeHandle
       className={cn(

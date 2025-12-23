@@ -91,7 +91,10 @@ function artifactToFileItem(artifact: CanvasArtifact): FileItem {
     createdAt: artifact.createdAt,
     updatedAt: artifact.updatedAt,
     sessionId: artifact.sessionId,
-    mimeType: getMimeType(artifact.contentType, artifact.editMetadata?.language),
+    mimeType: getMimeType(
+      artifact.contentType,
+      artifact.editMetadata?.language,
+    ),
   };
 }
 
@@ -355,31 +358,34 @@ export function FilesPage() {
   }, []);
 
   // Download file as blob
-  const handleDownload = useCallback((file: FileItem) => {
-    const artifact = artifactsMap.get(file.id);
-    if (!artifact?.content) {
-      logger.warn("Cannot download file: no content", file.id);
-      return;
-    }
+  const handleDownload = useCallback(
+    (file: FileItem) => {
+      const artifact = artifactsMap.get(file.id);
+      if (!artifact?.content) {
+        logger.warn("Cannot download file: no content", file.id);
+        return;
+      }
 
-    // Create a blob from the artifact content
-    const blob = new Blob([artifact.content], {
-      type: file.mimeType ?? "text/plain",
-    });
-    const url = URL.createObjectURL(blob);
+      // Create a blob from the artifact content
+      const blob = new Blob([artifact.content], {
+        type: file.mimeType ?? "text/plain",
+      });
+      const url = URL.createObjectURL(blob);
 
-    // Create a temporary link and trigger download
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = file.name;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+      // Create a temporary link and trigger download
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = file.name;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
 
-    // Clean up the blob URL
-    URL.revokeObjectURL(url);
-    logger.debug("Downloaded file:", file.name);
-  }, [artifactsMap]);
+      // Clean up the blob URL
+      URL.revokeObjectURL(url);
+      logger.debug("Downloaded file:", file.name);
+    },
+    [artifactsMap],
+  );
 
   // Show delete confirmation
   const handleDeleteClick = useCallback((file: FileItem) => {
@@ -460,8 +466,7 @@ export function FilesPage() {
         }, 5000);
       }
     } catch (error) {
-      const errorMsg =
-        error instanceof Error ? error.message : "Unknown error";
+      const errorMsg = error instanceof Error ? error.message : "Unknown error";
       logger.error("Delete request failed:", error);
       sessionTelemetry.trackArtifactDelete({
         artifactId: fileToDelete.id,
@@ -711,8 +716,8 @@ export function FilesPage() {
             </h3>
             <p className="text-sm text-gray-600 dark:text-gray-400 mb-6">
               Are you sure you want to delete{" "}
-              <span className="font-medium">{deleteConfirmFile.name}</span>? This
-              action cannot be undone.
+              <span className="font-medium">{deleteConfirmFile.name}</span>?
+              This action cannot be undone.
             </p>
             <div className="flex justify-end gap-3">
               <button

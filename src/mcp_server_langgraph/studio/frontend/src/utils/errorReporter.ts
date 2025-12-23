@@ -188,7 +188,7 @@ function isClassifiedError(error: unknown): error is ClassifiedError {
  */
 export function createErrorReport(
   error: Error | ClassifiedError,
-  options: CreateReportOptions = {}
+  options: CreateReportOptions = {},
 ): ErrorReport {
   const { userContext, customContext } = options;
 
@@ -254,7 +254,8 @@ export class ErrorReporter {
     this.config = {
       endpoint: config.endpoint ?? DEFAULT_ENDPOINT,
       batchEndpoint: config.batchEndpoint ?? DEFAULT_BATCH_ENDPOINT,
-      maxReportsPerMinute: config.maxReportsPerMinute ?? DEFAULT_MAX_REPORTS_PER_MINUTE,
+      maxReportsPerMinute:
+        config.maxReportsPerMinute ?? DEFAULT_MAX_REPORTS_PER_MINUTE,
       enabled: config.enabled ?? true,
       batchMode: config.batchMode ?? false,
       batchInterval: config.batchInterval ?? DEFAULT_BATCH_INTERVAL,
@@ -272,7 +273,7 @@ export class ErrorReporter {
    */
   async report(
     error: Error | ClassifiedError,
-    options: CreateReportOptions = {}
+    options: CreateReportOptions = {},
   ): Promise<ReportResult> {
     // Check if disabled
     if (!this.config.enabled) {
@@ -374,7 +375,9 @@ export class ErrorReporter {
     const oneMinuteAgo = now - 60000;
 
     // Remove timestamps older than 1 minute
-    this.reportTimestamps = this.reportTimestamps.filter((ts) => ts > oneMinuteAgo);
+    this.reportTimestamps = this.reportTimestamps.filter(
+      (ts) => ts > oneMinuteAgo,
+    );
 
     return this.reportTimestamps.length >= this.config.maxReportsPerMinute;
   }

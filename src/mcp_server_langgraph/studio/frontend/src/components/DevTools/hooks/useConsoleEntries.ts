@@ -6,7 +6,11 @@
  */
 import { useState, useCallback, useMemo } from "react";
 
-import type { ConsoleEntry, ConsoleLogLevel, ConsoleFilterLevel } from "../types";
+import type {
+  ConsoleEntry,
+  ConsoleLogLevel,
+  ConsoleFilterLevel,
+} from "../types";
 
 // =============================================================================
 // Types
@@ -55,7 +59,7 @@ const DEFAULT_MAX_ENTRIES = 1000;
 // =============================================================================
 
 export function useConsoleEntries(
-  options: UseConsoleEntriesOptions = {}
+  options: UseConsoleEntriesOptions = {},
 ): UseConsoleEntriesReturn {
   const {
     maxEntries = DEFAULT_MAX_ENTRIES,
@@ -80,7 +84,7 @@ export function useConsoleEntries(
         return newEntries;
       });
     },
-    [maxEntries]
+    [maxEntries],
   );
 
   /**
@@ -108,7 +112,7 @@ export function useConsoleEntries(
         const entrySessionId = entry.data?.sessionId as string | undefined;
         const entryWorkflowId = entry.data?.workflowId as string | undefined;
         return (
-          !entrySessionId && !entryWorkflowId || // Global entry
+          (!entrySessionId && !entryWorkflowId) || // Global entry
           entrySessionId === contextEntityId ||
           entryWorkflowId === contextEntityId
         );

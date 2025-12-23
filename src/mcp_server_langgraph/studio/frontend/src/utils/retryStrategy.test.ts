@@ -31,27 +31,42 @@ describe("retryStrategy", () => {
 
   describe("calculateBackoff", () => {
     it("should calculate delay for first retry (attempt 0)", () => {
-      const delay = calculateBackoff(0, { ...DEFAULT_RETRY_CONFIG, jitterFactor: 0 });
+      const delay = calculateBackoff(0, {
+        ...DEFAULT_RETRY_CONFIG,
+        jitterFactor: 0,
+      });
       expect(delay).toBe(1000); // 1000 * 2^0 = 1000
     });
 
     it("should calculate delay for second retry (attempt 1)", () => {
-      const delay = calculateBackoff(1, { ...DEFAULT_RETRY_CONFIG, jitterFactor: 0 });
+      const delay = calculateBackoff(1, {
+        ...DEFAULT_RETRY_CONFIG,
+        jitterFactor: 0,
+      });
       expect(delay).toBe(2000); // 1000 * 2^1 = 2000
     });
 
     it("should calculate delay for third retry (attempt 2)", () => {
-      const delay = calculateBackoff(2, { ...DEFAULT_RETRY_CONFIG, jitterFactor: 0 });
+      const delay = calculateBackoff(2, {
+        ...DEFAULT_RETRY_CONFIG,
+        jitterFactor: 0,
+      });
       expect(delay).toBe(4000); // 1000 * 2^2 = 4000
     });
 
     it("should calculate delay for fourth retry (attempt 3)", () => {
-      const delay = calculateBackoff(3, { ...DEFAULT_RETRY_CONFIG, jitterFactor: 0 });
+      const delay = calculateBackoff(3, {
+        ...DEFAULT_RETRY_CONFIG,
+        jitterFactor: 0,
+      });
       expect(delay).toBe(8000); // 1000 * 2^3 = 8000
     });
 
     it("should cap delay at maxDelayMs", () => {
-      const delay = calculateBackoff(10, { ...DEFAULT_RETRY_CONFIG, jitterFactor: 0 });
+      const delay = calculateBackoff(10, {
+        ...DEFAULT_RETRY_CONFIG,
+        jitterFactor: 0,
+      });
       expect(delay).toBe(16000); // capped at maxDelayMs
     });
 
@@ -59,7 +74,9 @@ describe("retryStrategy", () => {
       // Run multiple times to check jitter variance
       const delays = new Set<number>();
       for (let i = 0; i < 10; i++) {
-        delays.add(calculateBackoff(1, { ...DEFAULT_RETRY_CONFIG, jitterFactor: 0.2 }));
+        delays.add(
+          calculateBackoff(1, { ...DEFAULT_RETRY_CONFIG, jitterFactor: 0.2 }),
+        );
       }
       // With jitter, we should get varying delays
       // Jitter range: 2000 * (1 - 0.2) to 2000 * (1 + 0.2) = 1600 to 2400
@@ -94,7 +111,7 @@ describe("retryStrategy", () => {
   describe("shouldRetry", () => {
     const createMockError = (
       category: string,
-      recoverable: boolean | "maybe"
+      recoverable: boolean | "maybe",
     ): ClassifiedError => ({
       category: category as ClassifiedError["category"],
       message: "Test error",
@@ -105,70 +122,103 @@ describe("retryStrategy", () => {
 
     it("should retry network errors", () => {
       const error = createMockError("network", true);
-      const context: RetryContext = { attemptNumber: 0, config: DEFAULT_RETRY_CONFIG };
+      const context: RetryContext = {
+        attemptNumber: 0,
+        config: DEFAULT_RETRY_CONFIG,
+      };
       expect(shouldRetry(error, context)).toBe(true);
     });
 
     it("should retry timeout errors", () => {
       const error = createMockError("timeout", true);
-      const context: RetryContext = { attemptNumber: 0, config: DEFAULT_RETRY_CONFIG };
+      const context: RetryContext = {
+        attemptNumber: 0,
+        config: DEFAULT_RETRY_CONFIG,
+      };
       expect(shouldRetry(error, context)).toBe(true);
     });
 
     it("should retry server errors (5xx)", () => {
       const error = createMockError("server", true);
-      const context: RetryContext = { attemptNumber: 0, config: DEFAULT_RETRY_CONFIG };
+      const context: RetryContext = {
+        attemptNumber: 0,
+        config: DEFAULT_RETRY_CONFIG,
+      };
       expect(shouldRetry(error, context)).toBe(true);
     });
 
     it("should not retry authentication errors", () => {
       const error = createMockError("authentication", true);
-      const context: RetryContext = { attemptNumber: 0, config: DEFAULT_RETRY_CONFIG };
+      const context: RetryContext = {
+        attemptNumber: 0,
+        config: DEFAULT_RETRY_CONFIG,
+      };
       expect(shouldRetry(error, context)).toBe(false);
     });
 
     it("should not retry authorization errors", () => {
       const error = createMockError("authorization", false);
-      const context: RetryContext = { attemptNumber: 0, config: DEFAULT_RETRY_CONFIG };
+      const context: RetryContext = {
+        attemptNumber: 0,
+        config: DEFAULT_RETRY_CONFIG,
+      };
       expect(shouldRetry(error, context)).toBe(false);
     });
 
     it("should not retry authorization errors even when marked recoverable", () => {
       // Authorization errors should never be retried regardless of recoverable flag
       const error = createMockError("authorization", true);
-      const context: RetryContext = { attemptNumber: 0, config: DEFAULT_RETRY_CONFIG };
+      const context: RetryContext = {
+        attemptNumber: 0,
+        config: DEFAULT_RETRY_CONFIG,
+      };
       expect(shouldRetry(error, context)).toBe(false);
     });
 
     it("should not retry validation errors", () => {
       const error = createMockError("validation", false);
-      const context: RetryContext = { attemptNumber: 0, config: DEFAULT_RETRY_CONFIG };
+      const context: RetryContext = {
+        attemptNumber: 0,
+        config: DEFAULT_RETRY_CONFIG,
+      };
       expect(shouldRetry(error, context)).toBe(false);
     });
 
     it("should not retry validation errors even when marked recoverable", () => {
       // Validation errors should never be retried regardless of recoverable flag
       const error = createMockError("validation", true);
-      const context: RetryContext = { attemptNumber: 0, config: DEFAULT_RETRY_CONFIG };
+      const context: RetryContext = {
+        attemptNumber: 0,
+        config: DEFAULT_RETRY_CONFIG,
+      };
       expect(shouldRetry(error, context)).toBe(false);
     });
 
     it("should not retry client errors", () => {
       const error = createMockError("client", false);
-      const context: RetryContext = { attemptNumber: 0, config: DEFAULT_RETRY_CONFIG };
+      const context: RetryContext = {
+        attemptNumber: 0,
+        config: DEFAULT_RETRY_CONFIG,
+      };
       expect(shouldRetry(error, context)).toBe(false);
     });
 
     it("should not retry client errors even when marked recoverable", () => {
       // Client errors (4xx) should never be retried regardless of recoverable flag
       const error = createMockError("client", true);
-      const context: RetryContext = { attemptNumber: 0, config: DEFAULT_RETRY_CONFIG };
+      const context: RetryContext = {
+        attemptNumber: 0,
+        config: DEFAULT_RETRY_CONFIG,
+      };
       expect(shouldRetry(error, context)).toBe(false);
     });
 
     it("should respect maxRetries limit", () => {
       const error = createMockError("network", true);
-      const context: RetryContext = { attemptNumber: 3, config: DEFAULT_RETRY_CONFIG };
+      const context: RetryContext = {
+        attemptNumber: 3,
+        config: DEFAULT_RETRY_CONFIG,
+      };
       expect(shouldRetry(error, context)).toBe(false); // 3 >= maxRetries (3)
     });
 
@@ -177,26 +227,38 @@ describe("retryStrategy", () => {
         ...createMockError("quota", true),
         retryAfter: 5000,
       };
-      const context: RetryContext = { attemptNumber: 0, config: DEFAULT_RETRY_CONFIG };
+      const context: RetryContext = {
+        attemptNumber: 0,
+        config: DEFAULT_RETRY_CONFIG,
+      };
       expect(shouldRetry(error, context)).toBe(true);
     });
 
     it("should handle maybe recoverable errors", () => {
       const error = createMockError("unknown", "maybe");
-      const context: RetryContext = { attemptNumber: 0, config: DEFAULT_RETRY_CONFIG };
+      const context: RetryContext = {
+        attemptNumber: 0,
+        config: DEFAULT_RETRY_CONFIG,
+      };
       // Maybe recoverable - should try once
       expect(shouldRetry(error, context)).toBe(true);
     });
 
     it("should not retry maybe errors after first attempt", () => {
       const error = createMockError("unknown", "maybe");
-      const context: RetryContext = { attemptNumber: 1, config: DEFAULT_RETRY_CONFIG };
+      const context: RetryContext = {
+        attemptNumber: 1,
+        config: DEFAULT_RETRY_CONFIG,
+      };
       expect(shouldRetry(error, context)).toBe(false);
     });
 
     it("should not retry non-recoverable errors even for retryable categories", () => {
       const error = createMockError("network", false);
-      const context: RetryContext = { attemptNumber: 0, config: DEFAULT_RETRY_CONFIG };
+      const context: RetryContext = {
+        attemptNumber: 0,
+        config: DEFAULT_RETRY_CONFIG,
+      };
       expect(shouldRetry(error, context)).toBe(false);
     });
 
@@ -206,14 +268,20 @@ describe("retryStrategy", () => {
         ...DEFAULT_RETRY_CONFIG,
         retryableCategories: undefined,
       };
-      const context: RetryContext = { attemptNumber: 0, config: configWithoutCategories };
+      const context: RetryContext = {
+        attemptNumber: 0,
+        config: configWithoutCategories,
+      };
       // Falls back to DEFAULT_RETRY_CONFIG.retryableCategories
       expect(shouldRetry(error, context)).toBe(true);
     });
 
     it("should not retry unknown category not in retryableCategories", () => {
       const error = createMockError("unknown", true);
-      const context: RetryContext = { attemptNumber: 0, config: DEFAULT_RETRY_CONFIG };
+      const context: RetryContext = {
+        attemptNumber: 0,
+        config: DEFAULT_RETRY_CONFIG,
+      };
       // "unknown" is not in the retryableCategories list
       expect(shouldRetry(error, context)).toBe(false);
     });

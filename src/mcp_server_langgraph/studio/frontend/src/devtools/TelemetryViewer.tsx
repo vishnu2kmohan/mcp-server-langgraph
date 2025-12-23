@@ -56,9 +56,7 @@ function CollapsibleSection({
         <span style={{ marginRight: "8px" }}>{isOpen ? "▼" : "▶"}</span>
         {title}
       </button>
-      {isOpen && (
-        <div style={{ padding: "8px 8px 8px 24px" }}>{children}</div>
-      )}
+      {isOpen && <div style={{ padding: "8px 8px 8px 24px" }}>{children}</div>}
     </div>
   );
 }
@@ -67,7 +65,13 @@ function CollapsibleSection({
 // Metric Row Component
 // =============================================================================
 
-function MetricRow({ label, value }: { label: string; value: string | number }) {
+function MetricRow({
+  label,
+  value,
+}: {
+  label: string;
+  value: string | number;
+}) {
   return (
     <div
       style={{
@@ -213,14 +217,19 @@ export function TelemetryViewer() {
         <CollapsibleSection title="Revalidations">
           <MetricRow label="Total" value={metrics.revalidations.total} />
           <MetricRow label="Executed" value={metrics.revalidations.executed} />
-          <MetricRow label="Debounced" value={metrics.revalidations.debounced} />
+          <MetricRow
+            label="Debounced"
+            value={metrics.revalidations.debounced}
+          />
           <MetricRow
             label="Avg Duration"
             value={`${metrics.revalidations.avgDurationMs.toFixed(0)}ms`}
           />
-          {Object.entries(metrics.revalidations.byTrigger).map(([trigger, count]) => (
-            <MetricRow key={trigger} label={`By ${trigger}`} value={count} />
-          ))}
+          {Object.entries(metrics.revalidations.byTrigger).map(
+            ([trigger, count]) => (
+              <MetricRow key={trigger} label={`By ${trigger}`} value={count} />
+            ),
+          )}
         </CollapsibleSection>
 
         {/* Syncs */}

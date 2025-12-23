@@ -184,18 +184,22 @@ function HistoryChart({ history }: HistoryChartProps) {
       </div>
       <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400">
         <span>
-          {history[0] ? new Date(history[0].timestamp).toLocaleTimeString([], {
-            hour: "2-digit",
-            minute: "2-digit",
-          }) : ""}
+          {history[0]
+            ? new Date(history[0].timestamp).toLocaleTimeString([], {
+                hour: "2-digit",
+                minute: "2-digit",
+              })
+            : ""}
         </span>
         <span>
           {(() => {
             const lastEntry = history[history.length - 1];
-            return lastEntry ? new Date(lastEntry.timestamp).toLocaleTimeString(
-              [],
-              { hour: "2-digit", minute: "2-digit" },
-            ) : "";
+            return lastEntry
+              ? new Date(lastEntry.timestamp).toLocaleTimeString([], {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })
+              : "";
           })()}
         </span>
       </div>

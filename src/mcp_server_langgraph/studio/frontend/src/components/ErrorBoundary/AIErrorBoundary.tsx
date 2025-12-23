@@ -187,7 +187,7 @@ export class AIErrorBoundary extends Component<
     console.error(
       `[AIErrorBoundary] ${this.props.featureName} error:`,
       error,
-      errorInfo
+      errorInfo,
     );
   }
 

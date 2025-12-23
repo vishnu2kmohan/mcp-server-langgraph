@@ -1664,7 +1664,9 @@ describe("ProjectsPage", () => {
       });
 
       // Find and click the Delete button in the table row
-      const deleteButton = screen.getByRole("button", { name: /delete project/i });
+      const deleteButton = screen.getByRole("button", {
+        name: /delete project/i,
+      });
       fireEvent.click(deleteButton);
 
       // Delete confirmation dialog should appear
@@ -1675,7 +1677,9 @@ describe("ProjectsPage", () => {
       });
 
       // The project name should appear in the delete confirmation message
-      const confirmationText = screen.getByText(/are you sure you want to delete/i);
+      const confirmationText = screen.getByText(
+        /are you sure you want to delete/i,
+      );
       expect(confirmationText.textContent).toContain("Table Test Project");
     });
   });

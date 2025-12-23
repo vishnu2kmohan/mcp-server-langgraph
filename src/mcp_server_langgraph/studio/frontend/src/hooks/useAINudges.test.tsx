@@ -76,13 +76,18 @@ function createWrapper(store: ReturnType<typeof createTestStore>) {
 // MSW Handler Helpers
 // =============================================================================
 
-function createNudgeHandler(response: typeof mockNudgeRecommendation | typeof mockNoNudgeRecommendation) {
+function createNudgeHandler(
+  response: typeof mockNudgeRecommendation | typeof mockNoNudgeRecommendation,
+) {
   return http.post("/api/v1/ai/nudges/recommend", async () => {
     return HttpResponse.json(response);
   });
 }
 
-function _createDelayedHandler(response: typeof mockNudgeRecommendation, delayMs: number) {
+function _createDelayedHandler(
+  response: typeof mockNudgeRecommendation,
+  delayMs: number,
+) {
   return http.post("/api/v1/ai/nudges/recommend", async () => {
     await delay(delayMs);
     return HttpResponse.json(response);
@@ -120,20 +125,18 @@ describe("useAINudges", () => {
 
   describe("Initialization", () => {
     it("initializes with no active nudge when disabled", () => {
-      const { result } = renderHook(
-        () => useAINudges({ enabled: false }),
-        { wrapper: createWrapper(store) }
-      );
+      const { result } = renderHook(() => useAINudges({ enabled: false }), {
+        wrapper: createWrapper(store),
+      });
 
       expect(result.current.activeNudge).toBeNull();
       expect(result.current.isLoading).toBe(false);
     });
 
     it("provides all expected interface methods", () => {
-      const { result } = renderHook(
-        () => useAINudges({ enabled: false }),
-        { wrapper: createWrapper(store) }
-      );
+      const { result } = renderHook(() => useAINudges({ enabled: false }), {
+        wrapper: createWrapper(store),
+      });
 
       expect(typeof result.current.fetchRecommendation).toBe("function");
       expect(typeof result.current.acceptNudge).toBe("function");
@@ -147,7 +150,7 @@ describe("useAINudges", () => {
     it("fetches nudge recommendation when enabled", async () => {
       const { result } = renderHook(
         () => useAINudges({ enabled: true, pageContext: "chat" }),
-        { wrapper: createWrapper(store) }
+        { wrapper: createWrapper(store) },
       );
 
       await act(async () => {
@@ -166,7 +169,7 @@ describe("useAINudges", () => {
     it("shows nudge after specified delay", async () => {
       const { result } = renderHook(
         () => useAINudges({ enabled: true, pageContext: "chat" }),
-        { wrapper: createWrapper(store) }
+        { wrapper: createWrapper(store) },
       );
 
       await act(async () => {
@@ -193,7 +196,7 @@ describe("useAINudges", () => {
 
       const { result } = renderHook(
         () => useAINudges({ enabled: true, pageContext: "chat" }),
-        { wrapper: createWrapper(store) }
+        { wrapper: createWrapper(store) },
       );
 
       await act(async () => {
@@ -211,8 +214,9 @@ describe("useAINudges", () => {
       server.use(createErrorHandler(500));
 
       const { result } = renderHook(
-        () => useAINudges({ enabled: true, pageContext: "chat", debounceMs: 50 }),
-        { wrapper: createWrapper(store) }
+        () =>
+          useAINudges({ enabled: true, pageContext: "chat", debounceMs: 50 }),
+        { wrapper: createWrapper(store) },
       );
 
       // Advance past debounce
@@ -233,7 +237,7 @@ describe("useAINudges", () => {
     it("acceptNudge clears active nudge and records history", async () => {
       const { result } = renderHook(
         () => useAINudges({ enabled: true, pageContext: "chat" }),
-        { wrapper: createWrapper(store) }
+        { wrapper: createWrapper(store) },
       );
 
       await act(async () => {
@@ -257,7 +261,7 @@ describe("useAINudges", () => {
     it("dismissNudge clears active nudge and records history", async () => {
       const { result } = renderHook(
         () => useAINudges({ enabled: true, pageContext: "chat" }),
-        { wrapper: createWrapper(store) }
+        { wrapper: createWrapper(store) },
       );
 
       await act(async () => {
@@ -286,7 +290,7 @@ describe("useAINudges", () => {
         http.post("/api/v1/ai/nudges/recommend", async () => {
           fetchCount++;
           return HttpResponse.json(mockNudgeRecommendation);
-        })
+        }),
       );
 
       const { rerender } = renderHook(
@@ -294,7 +298,7 @@ describe("useAINudges", () => {
         {
           wrapper: createWrapper(store),
           initialProps: { pageContext: "chat" },
-        }
+        },
       );
 
       await act(async () => {
@@ -320,8 +324,9 @@ describe("useAINudges", () => {
   describe("Session Limits", () => {
     it("respects maxPerSession limit", async () => {
       const { result } = renderHook(
-        () => useAINudges({ enabled: true, pageContext: "chat", maxPerSession: 1 }),
-        { wrapper: createWrapper(store) }
+        () =>
+          useAINudges({ enabled: true, pageContext: "chat", maxPerSession: 1 }),
+        { wrapper: createWrapper(store) },
       );
 
       // Wait for sessionLimit effect to propagate
@@ -352,7 +357,7 @@ describe("useAINudges", () => {
     it("tracks acceptance rate", async () => {
       const { result } = renderHook(
         () => useAINudges({ enabled: true, pageContext: "chat" }),
-        { wrapper: createWrapper(store) }
+        { wrapper: createWrapper(store) },
       );
 
       await act(async () => {
@@ -378,7 +383,7 @@ describe("useAINudges", () => {
     it("fetchRecommendation manually triggers fetch", async () => {
       const { result } = renderHook(
         () => useAINudges({ enabled: false, pageContext: "chat" }),
-        { wrapper: createWrapper(store) }
+        { wrapper: createWrapper(store) },
       );
 
       expect(result.current.recommendation).toBeNull();
@@ -403,7 +408,7 @@ describe("useAINudges", () => {
         http.post("/api/v1/ai/nudges/recommend", async ({ request }) => {
           capturedBody = (await request.json()) as Record<string, unknown>;
           return HttpResponse.json(mockNudgeRecommendation);
-        })
+        }),
       );
 
       renderHook(
@@ -414,7 +419,7 @@ describe("useAINudges", () => {
             userMotivation: "high",
             userAbility: "intermediate",
           }),
-        { wrapper: createWrapper(store) }
+        { wrapper: createWrapper(store) },
       );
 
       await act(async () => {

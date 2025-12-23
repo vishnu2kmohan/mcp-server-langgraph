@@ -5,7 +5,12 @@
  */
 import { describe, it, expect, vi } from "vitest";
 import { renderHook, act } from "@testing-library/react";
-import { TelemetryProvider, useTelemetry, useSessionTelemetry, useWebVitals } from "./TelemetryContext";
+import {
+  TelemetryProvider,
+  useTelemetry,
+  useSessionTelemetry,
+  useWebVitals,
+} from "./TelemetryContext";
 import { SessionTelemetry } from "../utils/sessionTelemetry";
 import { WebVitalsTracker } from "../utils/webVitals";
 import type { ReactNode } from "react";
@@ -92,7 +97,11 @@ describe("TelemetryContext", () => {
 
       // Track some events
       result.current.trackSessionCreation({ success: true, durationMs: 50 });
-      result.current.trackSessionCreation({ success: false, durationMs: 10, error: "Test error" });
+      result.current.trackSessionCreation({
+        success: false,
+        durationMs: 10,
+        error: "Test error",
+      });
 
       // Verify metrics
       const metrics = testTelemetry.getMetrics();

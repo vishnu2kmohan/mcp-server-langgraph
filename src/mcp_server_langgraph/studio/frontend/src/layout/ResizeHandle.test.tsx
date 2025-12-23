@@ -4,8 +4,8 @@
  * TDD tests for the ResizeHandle component.
  * Tests styling, accessibility, and interaction.
  */
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render } from "@testing-library/react";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { render, cleanup } from "@testing-library/react";
 import { axe, toHaveNoViolations } from "jest-axe";
 import { PanelGroup, Panel } from "react-resizable-panels";
 
@@ -35,6 +35,11 @@ function TestWrapper({
 
 describe("ResizeHandle", () => {
   beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  afterEach(() => {
+    cleanup();
     vi.clearAllMocks();
   });
 

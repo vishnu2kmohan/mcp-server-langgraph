@@ -4,7 +4,11 @@
  * State management for AI context and inline suggestions.
  * Tracks current context for AI features and manages suggestions.
  */
-import { createSlice, createSelector, type PayloadAction } from "@reduxjs/toolkit";
+import {
+  createSlice,
+  createSelector,
+  type PayloadAction,
+} from "@reduxjs/toolkit";
 
 // =============================================================================
 // Types

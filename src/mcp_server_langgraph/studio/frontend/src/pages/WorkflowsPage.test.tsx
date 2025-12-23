@@ -13,8 +13,8 @@
  */
 
 import React from "react";
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { render, screen, fireEvent, cleanup } from "@testing-library/react";
 import { MemoryRouter } from "react-router";
 
 // =============================================================================
@@ -42,9 +42,7 @@ vi.mock("reactflow", () => ({
   Background: () => null,
   Controls: () => null,
   MiniMap: () => null,
-  Panel: ({ children }: { children: React.ReactNode }) => (
-    <div>{children}</div>
-  ),
+  Panel: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
   Handle: () => null,
   Position: { Top: "top", Bottom: "bottom", Left: "left", Right: "right" },
   MarkerType: { Arrow: "arrow", ArrowClosed: "arrowclosed" },
@@ -133,7 +131,7 @@ const createDefaultWorkflowState = (overrides = {}) => ({
 
 // Mock selector values based on workflow state
 const setupMockSelectors = (
-  workflowState: ReturnType<typeof createDefaultWorkflowState>
+  workflowState: ReturnType<typeof createDefaultWorkflowState>,
 ) => {
   mockUseAppSelector.mockImplementation(
     (selector: (state: unknown) => unknown) => {
@@ -156,7 +154,7 @@ const setupMockSelectors = (
 
       // Default return for unmatched selectors
       return undefined;
-    }
+    },
   );
 };
 
@@ -165,7 +163,7 @@ const renderWorkflowsPage = () => {
   return render(
     <MemoryRouter>
       <WorkflowsPage />
-    </MemoryRouter>
+    </MemoryRouter>,
   );
 };
 
@@ -201,6 +199,11 @@ describe("WorkflowsPage", () => {
     setupMockSelectors(createDefaultWorkflowState());
   });
 
+  afterEach(() => {
+    cleanup();
+    vi.clearAllMocks();
+  });
+
   describe("Rendering", () => {
     it("should render the workflow page container", () => {
       renderWorkflowsPage();
@@ -233,7 +236,7 @@ describe("WorkflowsPage", () => {
 
     it("should render history button when workflow has id", () => {
       setupMockSelectors(
-        createDefaultWorkflowState({ metadata: { id: "wf-1", name: "Test" } })
+        createDefaultWorkflowState({ metadata: { id: "wf-1", name: "Test" } }),
       );
       renderWorkflowsPage();
 
@@ -241,9 +244,7 @@ describe("WorkflowsPage", () => {
     });
 
     it("should not render history button when workflow has no id", () => {
-      setupMockSelectors(
-        createDefaultWorkflowState({ metadata: null })
-      );
+      setupMockSelectors(createDefaultWorkflowState({ metadata: null }));
       renderWorkflowsPage();
 
       expect(screen.queryByTitle("Execution History")).not.toBeInTheDocument();
@@ -314,7 +315,7 @@ describe("WorkflowsPage", () => {
       setupMockSelectors(
         createDefaultWorkflowState({
           validation: { isValid: false, errors: [{ message: "Error" }] },
-        })
+        }),
       );
 
       renderWorkflowsPage();
@@ -327,7 +328,7 @@ describe("WorkflowsPage", () => {
       setupMockSelectors(
         createDefaultWorkflowState({
           validation: { isValid: true, errors: [] },
-        })
+        }),
       );
 
       renderWorkflowsPage();
@@ -386,7 +387,7 @@ describe("WorkflowsPage", () => {
       setupMockSelectors(
         createDefaultWorkflowState({
           validation: { isValid: true, errors: [] },
-        })
+        }),
       );
 
       renderWorkflowsPage();
@@ -402,7 +403,7 @@ describe("WorkflowsPage", () => {
       setupMockSelectors(
         createDefaultWorkflowState({
           metadata: { id: "wf-1", name: "Test" },
-        })
+        }),
       );
 
       renderWorkflowsPage();
@@ -434,7 +435,7 @@ describe("WorkflowsPage", () => {
 
     it("should disable undo button in read-only mode", () => {
       setupMockSelectors(
-        createDefaultWorkflowState({ isReadOnly: true, canUndo: true })
+        createDefaultWorkflowState({ isReadOnly: true, canUndo: true }),
       );
 
       renderWorkflowsPage();
@@ -445,7 +446,7 @@ describe("WorkflowsPage", () => {
 
     it("should disable save button in read-only mode", () => {
       setupMockSelectors(
-        createDefaultWorkflowState({ isReadOnly: true, isDirty: true })
+        createDefaultWorkflowState({ isReadOnly: true, isDirty: true }),
       );
 
       renderWorkflowsPage();
@@ -463,7 +464,7 @@ describe("WorkflowsPage", () => {
             isValid: false,
             errors: [{ message: "Error 1" }, { message: "Error 2" }],
           },
-        })
+        }),
       );
 
       renderWorkflowsPage();
@@ -483,7 +484,7 @@ describe("WorkflowsPage", () => {
       setupMockSelectors(
         createDefaultWorkflowState({
           validation: { isValid: true, errors: [] },
-        })
+        }),
       );
 
       renderWorkflowsPage();
@@ -505,7 +506,7 @@ describe("WorkflowsPage", () => {
       setupMockSelectors(
         createDefaultWorkflowState({
           validation: { isValid: true, errors: [] },
-        })
+        }),
       );
 
       renderWorkflowsPage();
@@ -524,7 +525,7 @@ describe("WorkflowsPage", () => {
         createDefaultWorkflowState({
           executionState: "running",
           validation: { isValid: true, errors: [] },
-        })
+        }),
       );
 
       renderWorkflowsPage();
@@ -540,7 +541,7 @@ describe("WorkflowsPage", () => {
         createDefaultWorkflowState({
           executionState: "running",
           validation: { isValid: true, errors: [] },
-        })
+        }),
       );
 
       renderWorkflowsPage();
@@ -553,7 +554,7 @@ describe("WorkflowsPage", () => {
       setupMockSelectors(
         createDefaultWorkflowState({
           executionState: "completed",
-        })
+        }),
       );
 
       renderWorkflowsPage();
@@ -567,7 +568,7 @@ describe("WorkflowsPage", () => {
       setupMockSelectors(
         createDefaultWorkflowState({
           metadata: { id: "wf-1", name: "My Custom Workflow" },
-        })
+        }),
       );
 
       renderWorkflowsPage();
@@ -580,7 +581,7 @@ describe("WorkflowsPage", () => {
         createDefaultWorkflowState({
           metadata: { id: "wf-1", name: "Test" },
           isDirty: true,
-        })
+        }),
       );
 
       renderWorkflowsPage();
@@ -589,9 +590,7 @@ describe("WorkflowsPage", () => {
     });
 
     it("should show 'New Workflow' when metadata is null", () => {
-      setupMockSelectors(
-        createDefaultWorkflowState({ metadata: null })
-      );
+      setupMockSelectors(createDefaultWorkflowState({ metadata: null }));
 
       renderWorkflowsPage();
 
@@ -677,7 +676,7 @@ describe("WorkflowsPage", () => {
       setupMockSelectors(
         createDefaultWorkflowState({
           validation: { isValid: true, errors: [] },
-        })
+        }),
       );
 
       renderWorkflowsPage();
@@ -700,7 +699,7 @@ describe("WorkflowsPage", () => {
       setupMockSelectors(
         createDefaultWorkflowState({
           validation: { isValid: true, errors: [] },
-        })
+        }),
       );
 
       renderWorkflowsPage();
@@ -722,7 +721,7 @@ describe("WorkflowsPage", () => {
       setupMockSelectors(
         createDefaultWorkflowState({
           validation: { isValid: true, errors: [] },
-        })
+        }),
       );
 
       renderWorkflowsPage();
@@ -745,7 +744,7 @@ describe("WorkflowsPage", () => {
       setupMockSelectors(
         createDefaultWorkflowState({
           validation: { isValid: true, errors: [] },
-        })
+        }),
       );
 
       renderWorkflowsPage();
@@ -767,7 +766,7 @@ describe("WorkflowsPage", () => {
       setupMockSelectors(
         createDefaultWorkflowState({
           validation: { isValid: false, errors: [{ message: "Error" }] },
-        })
+        }),
       );
 
       renderWorkflowsPage();
@@ -783,7 +782,7 @@ describe("WorkflowsPage", () => {
       setupMockSelectors(
         createDefaultWorkflowState({
           executionState: "running",
-        })
+        }),
       );
 
       renderWorkflowsPage();
@@ -795,7 +794,7 @@ describe("WorkflowsPage", () => {
       setupMockSelectors(
         createDefaultWorkflowState({
           executionState: "error",
-        })
+        }),
       );
 
       renderWorkflowsPage();
@@ -807,7 +806,7 @@ describe("WorkflowsPage", () => {
       setupMockSelectors(
         createDefaultWorkflowState({
           executionState: "idle",
-        })
+        }),
       );
 
       renderWorkflowsPage();
@@ -833,7 +832,9 @@ describe("WorkflowsPage", () => {
     it("should create new workflow when saving without metadata", async () => {
       const dispatchFn = vi.fn();
       mockDispatch.mockReturnValue(dispatchFn);
-      setupMockSelectors(createDefaultWorkflowState({ metadata: null, isDirty: true }));
+      setupMockSelectors(
+        createDefaultWorkflowState({ metadata: null, isDirty: true }),
+      );
 
       renderWorkflowsPage();
 
@@ -848,7 +849,8 @@ describe("WorkflowsPage", () => {
     it("should call API when Generate Code button clicked with valid workflow", async () => {
       const mockFetch = vi.fn().mockResolvedValue({
         ok: true,
-        json: () => Promise.resolve({ code: "print('hello')", filename: "workflow.py" }),
+        json: () =>
+          Promise.resolve({ code: "print('hello')", filename: "workflow.py" }),
       });
       global.fetch = mockFetch;
       const mockCreateObjectURL = vi.fn(() => "blob:test");
@@ -862,7 +864,7 @@ describe("WorkflowsPage", () => {
         createDefaultWorkflowState({
           validation: { isValid: true, errors: [] },
           nodes: [{ id: "node-1" }],
-        })
+        }),
       );
 
       renderWorkflowsPage();
@@ -876,7 +878,7 @@ describe("WorkflowsPage", () => {
           "/api/v1/workflows/generate",
           expect.objectContaining({
             method: "POST",
-          })
+          }),
         );
       });
     });
@@ -887,7 +889,7 @@ describe("WorkflowsPage", () => {
       setupMockSelectors(
         createDefaultWorkflowState({
           validation: { isValid: false, errors: [{ message: "Error" }] },
-        })
+        }),
       );
 
       renderWorkflowsPage();
@@ -906,7 +908,7 @@ describe("WorkflowsPage", () => {
       setupMockSelectors(
         createDefaultWorkflowState({
           validation: { isValid: false, errors: [{ message: "Error" }] },
-        })
+        }),
       );
 
       renderWorkflowsPage();
@@ -927,7 +929,7 @@ describe("WorkflowsPage", () => {
       setupMockSelectors(
         createDefaultWorkflowState({
           metadata: { id: "wf-1", name: "Test" },
-        })
+        }),
       );
 
       renderWorkflowsPage();
@@ -947,7 +949,7 @@ describe("WorkflowsPage", () => {
       setupMockSelectors(
         createDefaultWorkflowState({
           metadata: { id: "wf-1", name: "Test" },
-        })
+        }),
       );
 
       renderWorkflowsPage();
@@ -960,7 +962,9 @@ describe("WorkflowsPage", () => {
 
       // Toggle off
       fireEvent.click(historyButton);
-      expect(screen.queryByTestId("execution-history-panel")).not.toBeInTheDocument();
+      expect(
+        screen.queryByTestId("execution-history-panel"),
+      ).not.toBeInTheDocument();
     });
   });
 
@@ -971,7 +975,7 @@ describe("WorkflowsPage", () => {
       setupMockSelectors(
         createDefaultWorkflowState({
           validation: { isValid: false, errors: [{ message: "Error" }] },
-        })
+        }),
       );
 
       renderWorkflowsPage();
@@ -992,7 +996,7 @@ describe("WorkflowsPage", () => {
       setupMockSelectors(
         createDefaultWorkflowState({
           validation: { isValid: false, errors: [{ message: "Error" }] },
-        })
+        }),
       );
 
       renderWorkflowsPage();
@@ -1017,7 +1021,9 @@ describe("WorkflowsPage", () => {
 
   describe("AI Suggestions State", () => {
     it("should show suggestions error when there are no nodes", async () => {
-      mockGetSuggestions.mockReturnValue(vi.fn().mockResolvedValue({ data: { suggestions: [] } }));
+      mockGetSuggestions.mockReturnValue(
+        vi.fn().mockResolvedValue({ data: { suggestions: [] } }),
+      );
       setupMockSelectors(createDefaultWorkflowState({ nodes: [] }));
 
       renderWorkflowsPage();
@@ -1034,12 +1040,14 @@ describe("WorkflowsPage", () => {
     it("should load workflow when id is in URL params", async () => {
       const dispatchFn = vi.fn();
       mockDispatch.mockReturnValue(dispatchFn);
-      setupMockSelectors(createDefaultWorkflowState({ metadata: null, isLoading: false }));
+      setupMockSelectors(
+        createDefaultWorkflowState({ metadata: null, isLoading: false }),
+      );
 
       render(
         <MemoryRouter initialEntries={["/workflows?id=wf-123"]}>
           <WorkflowsPage />
-        </MemoryRouter>
+        </MemoryRouter>,
       );
 
       // Dispatch should have been called with loadWorkflow action
@@ -1054,14 +1062,14 @@ describe("WorkflowsPage", () => {
       setupMockSelectors(
         createDefaultWorkflowState({
           metadata: { id: "wf-123", name: "Test" },
-          isLoading: false
-        })
+          isLoading: false,
+        }),
       );
 
       render(
         <MemoryRouter initialEntries={["/workflows?id=wf-123"]}>
           <WorkflowsPage />
-        </MemoryRouter>
+        </MemoryRouter>,
       );
 
       // Should not dispatch loadWorkflow when already loaded
@@ -1074,7 +1082,7 @@ describe("WorkflowsPage", () => {
       render(
         <MemoryRouter initialEntries={["/workflows?suggestions=true"]}>
           <WorkflowsPage />
-        </MemoryRouter>
+        </MemoryRouter>,
       );
 
       // Suggestions panel should be visible due to URL param
@@ -1086,14 +1094,16 @@ describe("WorkflowsPage", () => {
     it("should handle fetch error gracefully", async () => {
       const mockFetch = vi.fn().mockRejectedValue(new Error("Network error"));
       global.fetch = mockFetch;
-      const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+      const consoleSpy = vi
+        .spyOn(console, "error")
+        .mockImplementation(() => {});
 
       const dispatchFn = vi.fn();
       mockDispatch.mockReturnValue(dispatchFn);
       setupMockSelectors(
         createDefaultWorkflowState({
           validation: { isValid: true, errors: [] },
-        })
+        }),
       );
 
       renderWorkflowsPage();
@@ -1104,7 +1114,7 @@ describe("WorkflowsPage", () => {
       await vi.waitFor(() => {
         expect(consoleSpy).toHaveBeenCalledWith(
           "Failed to generate code:",
-          expect.any(Error)
+          expect.any(Error),
         );
       });
 
@@ -1125,7 +1135,7 @@ describe("WorkflowsPage", () => {
       setupMockSelectors(
         createDefaultWorkflowState({
           validation: { isValid: true, errors: [] },
-        })
+        }),
       );
 
       renderWorkflowsPage();
@@ -1149,7 +1159,7 @@ describe("WorkflowsPage", () => {
           isReadOnly: true,
           canExecute: true,
           validation: { isValid: true, errors: [] },
-        })
+        }),
       );
 
       renderWorkflowsPage();
@@ -1164,7 +1174,7 @@ describe("WorkflowsPage", () => {
           isReadOnly: true,
           canExecute: false,
           validation: { isValid: true, errors: [] },
-        })
+        }),
       );
 
       renderWorkflowsPage();
@@ -1176,18 +1186,26 @@ describe("WorkflowsPage", () => {
 
   describe("Generate Code Button State", () => {
     it("should show spinner when generating code", async () => {
-      const mockFetch = vi.fn().mockImplementation(() =>
-        new Promise((resolve) => {
-          // Never resolve to keep isGeneratingCode true
-          setTimeout(() => resolve({ ok: true, json: () => Promise.resolve({ code: "test" }) }), 5000);
-        })
+      const mockFetch = vi.fn().mockImplementation(
+        () =>
+          new Promise((resolve) => {
+            // Never resolve to keep isGeneratingCode true
+            setTimeout(
+              () =>
+                resolve({
+                  ok: true,
+                  json: () => Promise.resolve({ code: "test" }),
+                }),
+              5000,
+            );
+          }),
       );
       global.fetch = mockFetch;
 
       setupMockSelectors(
         createDefaultWorkflowState({
           validation: { isValid: true, errors: [] },
-        })
+        }),
       );
 
       renderWorkflowsPage();
@@ -1213,29 +1231,33 @@ describe("WorkflowsPage", () => {
       let capturedDownload = "";
       let capturedClick = false;
       const originalCreateElement = document.createElement.bind(document);
-      vi.spyOn(document, "createElement").mockImplementation((tagName: string) => {
-        if (tagName === "a") {
-          const anchor = originalCreateElement("a");
-          const originalSetAttribute = anchor.setAttribute.bind(anchor);
-          Object.defineProperty(anchor, "download", {
-            set: (value: string) => {
-              capturedDownload = value;
-              originalSetAttribute("download", value);
-            },
-            get: () => capturedDownload,
-          });
-          anchor.click = () => { capturedClick = true; };
-          return anchor;
-        }
-        return originalCreateElement(tagName);
-      });
+      vi.spyOn(document, "createElement").mockImplementation(
+        (tagName: string) => {
+          if (tagName === "a") {
+            const anchor = originalCreateElement("a");
+            const originalSetAttribute = anchor.setAttribute.bind(anchor);
+            Object.defineProperty(anchor, "download", {
+              set: (value: string) => {
+                capturedDownload = value;
+                originalSetAttribute("download", value);
+              },
+              get: () => capturedDownload,
+            });
+            anchor.click = () => {
+              capturedClick = true;
+            };
+            return anchor;
+          }
+          return originalCreateElement(tagName);
+        },
+      );
 
       setupMockSelectors(
         createDefaultWorkflowState({
           metadata: { id: "wf-1", name: "My Workflow" },
           nodes: [{ id: "node-1" }],
           edges: [],
-        })
+        }),
       );
 
       renderWorkflowsPage();
@@ -1257,22 +1279,24 @@ describe("WorkflowsPage", () => {
 
       let capturedDownload = "";
       const originalCreateElement = document.createElement.bind(document);
-      vi.spyOn(document, "createElement").mockImplementation((tagName: string) => {
-        if (tagName === "a") {
-          const anchor = originalCreateElement("a");
-          const originalSetAttribute = anchor.setAttribute.bind(anchor);
-          Object.defineProperty(anchor, "download", {
-            set: (value: string) => {
-              capturedDownload = value;
-              originalSetAttribute("download", value);
-            },
-            get: () => capturedDownload,
-          });
-          anchor.click = vi.fn();
-          return anchor;
-        }
-        return originalCreateElement(tagName);
-      });
+      vi.spyOn(document, "createElement").mockImplementation(
+        (tagName: string) => {
+          if (tagName === "a") {
+            const anchor = originalCreateElement("a");
+            const originalSetAttribute = anchor.setAttribute.bind(anchor);
+            Object.defineProperty(anchor, "download", {
+              set: (value: string) => {
+                capturedDownload = value;
+                originalSetAttribute("download", value);
+              },
+              get: () => capturedDownload,
+            });
+            anchor.click = vi.fn();
+            return anchor;
+          }
+          return originalCreateElement(tagName);
+        },
+      );
 
       setupMockSelectors(createDefaultWorkflowState({ metadata: null }));
 
@@ -1304,7 +1328,7 @@ describe("WorkflowsPage", () => {
         createDefaultWorkflowState({
           executionState: "idle",
           validation: { isValid: true, errors: [] },
-        })
+        }),
       );
 
       renderWorkflowsPage();
@@ -1320,7 +1344,7 @@ describe("WorkflowsPage", () => {
         createDefaultWorkflowState({
           executionState: "running",
           validation: { isValid: true, errors: [] },
-        })
+        }),
       );
 
       renderWorkflowsPage();
@@ -1336,7 +1360,7 @@ describe("WorkflowsPage", () => {
         createDefaultWorkflowState({
           isSaving: false,
           isDirty: true,
-        })
+        }),
       );
 
       renderWorkflowsPage();
@@ -1351,7 +1375,7 @@ describe("WorkflowsPage", () => {
         createDefaultWorkflowState({
           isSaving: true,
           isDirty: true,
-        })
+        }),
       );
 
       renderWorkflowsPage();
@@ -1385,7 +1409,7 @@ describe("WorkflowsPage", () => {
       setupMockSelectors(
         createDefaultWorkflowState({
           metadata: { id: "wf-1", name: "Test" },
-        })
+        }),
       );
 
       renderWorkflowsPage();

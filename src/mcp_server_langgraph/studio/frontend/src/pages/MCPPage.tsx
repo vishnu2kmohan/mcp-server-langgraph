@@ -76,7 +76,13 @@ export function MCPPage() {
     else if (isPromptTesterOpen) setIsPromptTesterOpen(false);
     else if (isElicitationOpen) setIsElicitationOpen(false);
     else if (isAddDialogOpen) setIsAddDialogOpen(false);
-  }, [isToolInvocationOpen, isResourceViewerOpen, isPromptTesterOpen, isElicitationOpen, isAddDialogOpen]);
+  }, [
+    isToolInvocationOpen,
+    isResourceViewerOpen,
+    isPromptTesterOpen,
+    isElicitationOpen,
+    isAddDialogOpen,
+  ]);
 
   // Wire up keyboard shortcuts for MCP dialogs
   useMCPKeyboardShortcuts({
@@ -545,7 +551,9 @@ export function MCPPage() {
           <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-50">
             <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-xl flex items-center gap-3">
               <Loader2 className="w-5 h-5 animate-spin text-blue-500" />
-              <span className="text-gray-700 dark:text-gray-300">Loading...</span>
+              <span className="text-gray-700 dark:text-gray-300">
+                Loading...
+              </span>
             </div>
           </div>
         }

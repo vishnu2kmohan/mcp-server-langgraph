@@ -36,7 +36,11 @@ describe("NudgeTooltip", () => {
   it("calls onAccept when action button clicked", () => {
     const onAccept = vi.fn();
     render(
-      <NudgeTooltip nudge={mockNudge} onDismiss={() => {}} onAccept={onAccept} />
+      <NudgeTooltip
+        nudge={mockNudge}
+        onDismiss={() => {}}
+        onAccept={onAccept}
+      />,
     );
 
     fireEvent.click(screen.getByRole("button", { name: /got it/i }));

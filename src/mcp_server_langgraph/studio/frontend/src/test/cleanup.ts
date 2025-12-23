@@ -100,11 +100,13 @@ export function setupWithTimers(): void {
  * });
  * ```
  */
-export function createTestLifecycle(options: {
-  useFakeTimers?: boolean;
-  customBeforeEach?: () => void;
-  customAfterEach?: () => void;
-} = {}): {
+export function createTestLifecycle(
+  options: {
+    useFakeTimers?: boolean;
+    customBeforeEach?: () => void;
+    customAfterEach?: () => void;
+  } = {},
+): {
   beforeEach: () => void;
   afterEach: () => void;
 } {

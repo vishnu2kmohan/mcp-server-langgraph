@@ -187,7 +187,9 @@ export interface ListPendingAgentRequestsParams {
 // Type Guards for Runtime Validation
 // ============================================================================
 
-function isApprovalRequiredPayload(obj: unknown): obj is ApprovalRequiredPayload {
+function isApprovalRequiredPayload(
+  obj: unknown,
+): obj is ApprovalRequiredPayload {
   if (typeof obj !== "object" || obj === null) return false;
   const o = obj as Record<string, unknown>;
   return (
@@ -205,7 +207,7 @@ function isApprovalRequiredPayload(obj: unknown): obj is ApprovalRequiredPayload
 }
 
 function isClarificationRequiredPayload(
-  obj: unknown
+  obj: unknown,
 ): obj is ClarificationRequiredPayload {
   if (typeof obj !== "object" || obj === null) return false;
   const o = obj as Record<string, unknown>;
@@ -214,7 +216,9 @@ function isClarificationRequiredPayload(
     typeof o.session_id === "string" &&
     typeof o.task_id === "string" &&
     typeof o.agent_name === "string" &&
-    ["text", "choice", "confirmation"].includes(o.clarification_type as string) &&
+    ["text", "choice", "confirmation"].includes(
+      o.clarification_type as string,
+    ) &&
     typeof o.question === "string" &&
     Array.isArray(o.options) &&
     typeof o.required === "boolean" &&
@@ -223,7 +227,7 @@ function isClarificationRequiredPayload(
 }
 
 function isPendingAgentRequestsResponse(
-  obj: unknown
+  obj: unknown,
 ): obj is PendingAgentRequestsResponse {
   if (typeof obj !== "object" || obj === null) return false;
   const o = obj as Record<string, unknown>;
@@ -235,7 +239,7 @@ function isPendingAgentRequestsResponse(
 }
 
 function isAgentRequestActionResponse(
-  obj: unknown
+  obj: unknown,
 ): obj is AgentRequestActionResponse {
   if (typeof obj !== "object" || obj === null) return false;
   const o = obj as Record<string, unknown>;
@@ -312,23 +316,23 @@ describe("Agent Request API Contract Tests", () => {
 
       expect(isPendingAgentRequestsResponse(validResponse)).toBe(true);
       expect(validResponse.clarifications[0]).toBeDefined();
-      expect(isClarificationRequiredPayload(validResponse.clarifications[0])).toBe(
-        true
-      );
+      expect(
+        isClarificationRequiredPayload(validResponse.clarifications[0]),
+      ).toBe(true);
     });
 
     it("should reject invalid response structure", () => {
       expect(isPendingAgentRequestsResponse(null)).toBe(false);
       expect(isPendingAgentRequestsResponse({})).toBe(false);
       expect(
-        isPendingAgentRequestsResponse({ approvals: [], clarifications: [] })
+        isPendingAgentRequestsResponse({ approvals: [], clarifications: [] }),
       ).toBe(false); // missing total_count
       expect(
         isPendingAgentRequestsResponse({
           approvals: "invalid",
           clarifications: [],
           total_count: 0,
-        })
+        }),
       ).toBe(false);
     });
   });
@@ -373,7 +377,7 @@ describe("Agent Request API Contract Tests", () => {
           success: true,
           request_id: 123, // wrong type
           status: "approved",
-        })
+        }),
       ).toBe(false);
     });
   });
@@ -418,7 +422,7 @@ describe("Agent Request API Contract Tests", () => {
           processed: "3", // wrong type
           failed: 0,
           results: [],
-        })
+        }),
       ).toBe(false);
     });
   });
@@ -450,7 +454,7 @@ describe("Agent Request API Contract Tests", () => {
         isApprovalRequiredPayload({
           request_id: "req-123",
           // missing other fields
-        })
+        }),
       ).toBe(false);
     });
   });
@@ -710,7 +714,10 @@ describe("Agent Request API Integration Patterns", () => {
         { type: "AgentRequest" as const, id: "req-123" },
       ];
 
-      expect(tagsToInvalidate).toContainEqual({ type: "AgentRequest", id: "LIST" });
+      expect(tagsToInvalidate).toContainEqual({
+        type: "AgentRequest",
+        id: "LIST",
+      });
     });
 
     it("should invalidate list on reject", () => {
@@ -719,7 +726,10 @@ describe("Agent Request API Integration Patterns", () => {
         { type: "AgentRequest" as const, id: "req-456" },
       ];
 
-      expect(tagsToInvalidate).toContainEqual({ type: "AgentRequest", id: "LIST" });
+      expect(tagsToInvalidate).toContainEqual({
+        type: "AgentRequest",
+        id: "LIST",
+      });
     });
 
     it("should invalidate list on respond", () => {
@@ -728,7 +738,10 @@ describe("Agent Request API Integration Patterns", () => {
         { type: "AgentRequest" as const, id: "req-789" },
       ];
 
-      expect(tagsToInvalidate).toContainEqual({ type: "AgentRequest", id: "LIST" });
+      expect(tagsToInvalidate).toContainEqual({
+        type: "AgentRequest",
+        id: "LIST",
+      });
     });
   });
 

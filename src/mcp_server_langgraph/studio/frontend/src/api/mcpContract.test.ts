@@ -335,7 +335,13 @@ describe("MCP API Contract Tests", () => {
       expect(typeof task.createdAt).toBe("string");
 
       // Status should be one of valid values
-      expect(["pending", "running", "completed", "cancelled", "failed"]).toContain(task.status);
+      expect([
+        "pending",
+        "running",
+        "completed",
+        "cancelled",
+        "failed",
+      ]).toContain(task.status);
     });
   });
 
@@ -378,9 +384,12 @@ describe("MCP API Contract Tests", () => {
     });
 
     it("should return 404 for unknown task", async () => {
-      const response = await fetch("/api/v1/mcp/tasks/nonexistent-task/cancel", {
-        method: "POST",
-      });
+      const response = await fetch(
+        "/api/v1/mcp/tasks/nonexistent-task/cancel",
+        {
+          method: "POST",
+        },
+      );
       expect(response.status).toBe(404);
 
       const data = await response.json();

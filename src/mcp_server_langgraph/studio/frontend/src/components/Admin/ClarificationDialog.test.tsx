@@ -161,7 +161,7 @@ describe("ClarificationDialog", () => {
       render(<ClarificationDialog {...defaultTextProps} />);
 
       expect(
-        screen.getByText("Which date range should I use for the analysis?")
+        screen.getByText("Which date range should I use for the analysis?"),
       ).toBeInTheDocument();
     });
   });
@@ -178,8 +178,8 @@ describe("ClarificationDialog", () => {
 
       expect(
         screen.getByPlaceholderText(
-          "Enter date range (e.g., 2024-01-01 to 2024-12-31)"
-        )
+          "Enter date range (e.g., 2024-01-01 to 2024-12-31)",
+        ),
       ).toBeInTheDocument();
     });
 
@@ -187,12 +187,12 @@ describe("ClarificationDialog", () => {
       const onRespond = vi.fn();
       const user = userEvent.setup();
       render(
-        <ClarificationDialog {...defaultTextProps} onRespond={onRespond} />
+        <ClarificationDialog {...defaultTextProps} onRespond={onRespond} />,
       );
 
       await user.type(
         screen.getByTestId("text-input"),
-        "2024-01-01 to 2024-06-30"
+        "2024-01-01 to 2024-06-30",
       );
       await user.click(screen.getByTestId("submit-button"));
 
@@ -232,9 +232,7 @@ describe("ClarificationDialog", () => {
     it("should display option descriptions", () => {
       render(<ClarificationDialog {...defaultChoiceProps} />);
 
-      expect(
-        screen.getByText("~30 seconds, 85% accuracy")
-      ).toBeInTheDocument();
+      expect(screen.getByText("~30 seconds, 85% accuracy")).toBeInTheDocument();
       expect(screen.getByText("~5 minutes, 98% accuracy")).toBeInTheDocument();
     });
 
@@ -248,7 +246,7 @@ describe("ClarificationDialog", () => {
       const onRespond = vi.fn();
       const user = userEvent.setup();
       render(
-        <ClarificationDialog {...defaultChoiceProps} onRespond={onRespond} />
+        <ClarificationDialog {...defaultChoiceProps} onRespond={onRespond} />,
       );
 
       await user.click(screen.getByTestId("option-fast"));
@@ -300,7 +298,7 @@ describe("ClarificationDialog", () => {
         <ClarificationDialog
           {...defaultConfirmationProps}
           onRespond={onRespond}
-        />
+        />,
       );
 
       await user.click(screen.getByTestId("confirm-yes"));
@@ -321,7 +319,7 @@ describe("ClarificationDialog", () => {
         <ClarificationDialog
           {...defaultConfirmationProps}
           onRespond={onRespond}
-        />
+        />,
       );
 
       await user.click(screen.getByTestId("confirm-no"));
@@ -357,7 +355,7 @@ describe("ClarificationDialog", () => {
 
     it("should disable yes/no buttons when submitting confirmation", () => {
       render(
-        <ClarificationDialog {...defaultConfirmationProps} isSubmitting />
+        <ClarificationDialog {...defaultConfirmationProps} isSubmitting />,
       );
 
       expect(screen.getByTestId("confirm-yes")).toBeDisabled();
@@ -383,7 +381,7 @@ describe("ClarificationDialog", () => {
         <ClarificationDialog
           {...defaultTextProps}
           error="Failed to submit response"
-        />
+        />,
       );
 
       expect(screen.getByText(/failed to submit/i)).toBeInTheDocument();

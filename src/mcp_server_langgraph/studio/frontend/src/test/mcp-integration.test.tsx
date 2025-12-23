@@ -9,7 +9,13 @@
  * - WebSocket updates integrate with RTK Query
  */
 import { describe, it, expect, afterEach, vi } from "vitest";
-import { render, screen, waitFor, act, fireEvent } from "@testing-library/react";
+import {
+  render,
+  screen,
+  waitFor,
+  act,
+  fireEvent,
+} from "@testing-library/react";
 import { Provider } from "react-redux";
 import React, { Suspense } from "react";
 import { server } from "../mocks/server";
@@ -81,15 +87,14 @@ describe("MCP Full Flow Integration", () => {
       // Fetch all three in parallel
       const { result: resourcesResult } = renderHook(
         () => useListMcpResourcesQuery(),
-        { wrapper }
+        { wrapper },
       );
-      const { result: toolsResult } = renderHook(
-        () => useListMcpToolsQuery(),
-        { wrapper }
-      );
+      const { result: toolsResult } = renderHook(() => useListMcpToolsQuery(), {
+        wrapper,
+      });
       const { result: promptsResult } = renderHook(
         () => useListMcpPromptsQuery(),
-        { wrapper }
+        { wrapper },
       );
 
       // Wait for all to complete
@@ -114,19 +119,17 @@ describe("MCP Full Flow Integration", () => {
       );
 
       // First component fetches
-      const { result: first } = renderHook(
-        () => useListMcpResourcesQuery(),
-        { wrapper }
-      );
+      const { result: first } = renderHook(() => useListMcpResourcesQuery(), {
+        wrapper,
+      });
 
       await waitFor(() => expect(first.current.isSuccess).toBe(true));
       const firstData = first.current.data;
 
       // Second component uses same store - should get cached data
-      const { result: second } = renderHook(
-        () => useListMcpResourcesQuery(),
-        { wrapper }
-      );
+      const { result: second } = renderHook(() => useListMcpResourcesQuery(), {
+        wrapper,
+      });
 
       // Should immediately have data from cache
       expect(second.current.data).toEqual(firstData);
@@ -146,7 +149,7 @@ describe("MCP Full Flow Integration", () => {
       // First, fetch tasks
       const { result: tasksResult } = renderHook(
         () => api.endpoints.listMcpTasks.useQuery(),
-        { wrapper }
+        { wrapper },
       );
 
       await waitFor(() => expect(tasksResult.current.isSuccess).toBe(true));
@@ -157,7 +160,7 @@ describe("MCP Full Flow Integration", () => {
       // Invoke a tool (should invalidate TASKS)
       const { result: toolResult } = renderHook(
         () => useInvokeMcpToolMutation(),
-        { wrapper }
+        { wrapper },
       );
 
       await act(async () => {
@@ -186,7 +189,7 @@ describe("MCP Full Flow Integration", () => {
           onToolInvoke={onToolInvoke}
           onResourceView={onResourceView}
           onPromptTest={onPromptTest}
-        />
+        />,
       );
 
       // Simulate Cmd+Shift+T for tool invocation
@@ -222,9 +225,9 @@ describe("MCP Full Flow Integration", () => {
         http.get("/api/v1/mcp/resources", () => {
           return HttpResponse.json(
             { error: "Server unavailable" },
-            { status: 503 }
+            { status: 503 },
           );
-        })
+        }),
       );
 
       const store = createTestStore();
@@ -234,10 +237,9 @@ describe("MCP Full Flow Integration", () => {
         </Provider>
       );
 
-      const { result } = renderHook(
-        () => useListMcpResourcesQuery(),
-        { wrapper }
-      );
+      const { result } = renderHook(() => useListMcpResourcesQuery(), {
+        wrapper,
+      });
 
       await waitFor(() => expect(result.current.isError).toBe(true));
       expect(result.current.error).toBeDefined();
@@ -248,9 +250,9 @@ describe("MCP Full Flow Integration", () => {
         http.post("/api/v1/mcp/tools/call", () => {
           return HttpResponse.json(
             { error: "Tool not found" },
-            { status: 404 }
+            { status: 404 },
           );
-        })
+        }),
       );
 
       const store = createTestStore();
@@ -260,10 +262,9 @@ describe("MCP Full Flow Integration", () => {
         </Provider>
       );
 
-      const { result } = renderHook(
-        () => useInvokeMcpToolMutation(),
-        { wrapper }
-      );
+      const { result } = renderHook(() => useInvokeMcpToolMutation(), {
+        wrapper,
+      });
 
       // Wrap in act() to handle state updates from mutation
       await act(async () => {
@@ -271,7 +272,7 @@ describe("MCP Full Flow Integration", () => {
           result.current[0]({
             name: "nonexistent",
             arguments: {},
-          }).unwrap()
+          }).unwrap(),
         ).rejects.toThrow();
       });
     });
@@ -288,10 +289,7 @@ describe("MCP Full Flow Integration", () => {
         <Provider store={store}>
           <TestRouter>
             <Suspense fallback={<div data-testid="loading">Loading...</div>}>
-              <LazyResourceViewer
-                isOpen={true}
-                onClose={() => {}}
-              />
+              <LazyResourceViewer isOpen={true} onClose={() => {}} />
             </Suspense>
           </TestRouter>
         </Provider>
@@ -303,7 +301,8 @@ describe("MCP Full Flow Integration", () => {
       await waitFor(() => {
         // Either loading is shown initially or component loads
         const hasLoading = screen.queryByTestId("loading");
-        const hasComponent = screen.queryByTestId("resource-viewer") ||
+        const hasComponent =
+          screen.queryByTestId("resource-viewer") ||
           screen.queryByRole("dialog");
         expect(hasLoading || hasComponent).toBeTruthy();
       });
@@ -319,10 +318,9 @@ describe("MCP Full Flow Integration", () => {
         </Provider>
       );
 
-      const { result } = renderHook(
-        () => useListMcpResourcesQuery(),
-        { wrapper }
-      );
+      const { result } = renderHook(() => useListMcpResourcesQuery(), {
+        wrapper,
+      });
 
       await waitFor(() => expect(result.current.isSuccess).toBe(true));
       const originalData = result.current.data;

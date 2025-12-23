@@ -104,7 +104,7 @@ export interface HeartMetricsTrackerResult {
   recordSignal: (
     signalId: string,
     value: number | boolean | string,
-    metadata?: Record<string, unknown>
+    metadata?: Record<string, unknown>,
   ) => void;
   /** Batch configuration */
   batchConfig: BatchConfig;
@@ -174,7 +174,7 @@ export function useHeartMetricsTracker(): HeartMetricsTrackerResult {
         flushIntervalMs: DEFAULT_BATCH_CONFIG.flushIntervalMs,
         maxBatchSize: DEFAULT_BATCH_CONFIG.maxBatchSize,
       }),
-    []
+    [],
   );
 
   // Track pending events count from aggregator
@@ -239,7 +239,7 @@ export function useHeartMetricsTracker(): HeartMetricsTrackerResult {
   const sendEvent = useCallback(
     async (
       eventType: string,
-      payload: Record<string, unknown>
+      payload: Record<string, unknown>,
     ): Promise<void> => {
       try {
         const context = buildContext();
@@ -260,7 +260,7 @@ export function useHeartMetricsTracker(): HeartMetricsTrackerResult {
         logger.warn(`Failed to send HEART metric: ${eventType}`);
       }
     },
-    [buildContext]
+    [buildContext],
   );
 
   /**
@@ -271,7 +271,7 @@ export function useHeartMetricsTracker(): HeartMetricsTrackerResult {
       aggregator.queueEvent(eventType, payload);
       setPendingEventsCount(aggregator.getPendingCount());
     },
-    [aggregator]
+    [aggregator],
   );
 
   /**
@@ -281,7 +281,7 @@ export function useHeartMetricsTracker(): HeartMetricsTrackerResult {
     (
       signalId: string,
       value: number | boolean | string,
-      metadata?: Record<string, unknown>
+      metadata?: Record<string, unknown>,
     ) => {
       // Record to GSM registry
       const context = buildContext();
@@ -294,7 +294,7 @@ export function useHeartMetricsTracker(): HeartMetricsTrackerResult {
         ...metadata,
       });
     },
-    [buildContext, queueEvent]
+    [buildContext, queueEvent],
   );
 
   /**
@@ -306,17 +306,21 @@ export function useHeartMetricsTracker(): HeartMetricsTrackerResult {
 
       // Also record to GSM
       if (payload.npsScore !== undefined) {
-        gsmRecordSignal("happiness_nps_score", payload.npsScore, buildContext());
+        gsmRecordSignal(
+          "happiness_nps_score",
+          payload.npsScore,
+          buildContext(),
+        );
       }
       if (payload.satisfactionRating !== undefined) {
         gsmRecordSignal(
           "happiness_satisfaction_rating",
           payload.satisfactionRating,
-          buildContext()
+          buildContext(),
         );
       }
     },
-    [sendEvent, buildContext]
+    [sendEvent, buildContext],
   );
 
   /**
@@ -334,7 +338,7 @@ export function useHeartMetricsTracker(): HeartMetricsTrackerResult {
         action: payload.action,
       });
     },
-    [queueEvent, buildContext]
+    [queueEvent, buildContext],
   );
 
   /**
@@ -355,7 +359,7 @@ export function useHeartMetricsTracker(): HeartMetricsTrackerResult {
         });
       }
     },
-    [sendEvent, buildContext]
+    [sendEvent, buildContext],
   );
 
   /**
@@ -371,7 +375,7 @@ export function useHeartMetricsTracker(): HeartMetricsTrackerResult {
     gsmRecordSignal(
       "retention_days_since_last_visit",
       daysSinceLastVisit,
-      buildContext()
+      buildContext(),
     );
   }, [sendEvent, daysSinceLastVisit, buildContext]);
 
@@ -413,7 +417,7 @@ export function useHeartMetricsTracker(): HeartMetricsTrackerResult {
       setCurrentTaskId(null);
       taskStartTimeRef.current = null;
     },
-    [sendEvent, currentTaskId, buildContext]
+    [sendEvent, currentTaskId, buildContext],
   );
 
   /**
@@ -469,7 +473,7 @@ export function useHeartMetricsTracker(): HeartMetricsTrackerResult {
             session_duration: duration,
             ...context,
             timestamp: Date.now(),
-          })
+          }),
         );
       } else {
         // Fallback to fetch (may not complete on unload)

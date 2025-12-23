@@ -77,7 +77,7 @@ describe("agentRequestHandlers", () => {
 
     it("should filter by request_type=approval", async () => {
       const response = await fetch(
-        "/api/v1/agents/requests/pending?request_type=approval"
+        "/api/v1/agents/requests/pending?request_type=approval",
       );
       const data = await response.json();
 
@@ -87,7 +87,7 @@ describe("agentRequestHandlers", () => {
 
     it("should filter by request_type=clarification", async () => {
       const response = await fetch(
-        "/api/v1/agents/requests/pending?request_type=clarification"
+        "/api/v1/agents/requests/pending?request_type=clarification",
       );
       const data = await response.json();
 
@@ -122,9 +122,7 @@ describe("agentRequestHandlers", () => {
     });
 
     it("should return 404 for unknown request ID", async () => {
-      const response = await fetch(
-        "/api/v1/agents/requests/unknown-id-123"
-      );
+      const response = await fetch("/api/v1/agents/requests/unknown-id-123");
 
       expect(response.status).toBe(404);
       const data = await response.json();
@@ -144,7 +142,7 @@ describe("agentRequestHandlers", () => {
             approved_by: "admin",
             reason: "Looks good",
           }),
-        }
+        },
       );
 
       expect(response.ok).toBe(true);
@@ -171,7 +169,7 @@ describe("agentRequestHandlers", () => {
             approved_by: "admin",
             modifications,
           }),
-        }
+        },
       );
 
       const data = await response.json();
@@ -185,7 +183,7 @@ describe("agentRequestHandlers", () => {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ approved_by: "admin" }),
-        }
+        },
       );
 
       expect(response.status).toBe(404);
@@ -204,7 +202,7 @@ describe("agentRequestHandlers", () => {
             rejected_by: "admin",
             reason: "Not appropriate",
           }),
-        }
+        },
       );
 
       expect(response.ok).toBe(true);
@@ -224,7 +222,7 @@ describe("agentRequestHandlers", () => {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ rejected_by: "admin" }),
-        }
+        },
       );
 
       expect(response.status).toBe(404);
@@ -243,7 +241,7 @@ describe("agentRequestHandlers", () => {
             response_type: "choice",
             selected_option: "PDF",
           }),
-        }
+        },
       );
 
       expect(response.ok).toBe(true);
@@ -267,7 +265,7 @@ describe("agentRequestHandlers", () => {
             response_type: "text",
             text_response: "Use custom format XYZ",
           }),
-        }
+        },
       );
 
       const data = await response.json();
@@ -286,7 +284,7 @@ describe("agentRequestHandlers", () => {
             response_type: "confirm",
             confirmed: true,
           }),
-        }
+        },
       );
 
       const data = await response.json();
@@ -304,7 +302,7 @@ describe("agentRequestHandlers", () => {
             response_type: "choice",
             selected_option: "PDF",
           }),
-        }
+        },
       );
 
       expect(response.status).toBe(404);
@@ -314,18 +312,15 @@ describe("agentRequestHandlers", () => {
   describe("POST /api/v1/agents/requests/batch/approve", () => {
     it("should batch approve multiple requests", async () => {
       const requestIds = mockPendingApprovals.map((a) => a.request_id);
-      const response = await fetch(
-        "/api/v1/agents/requests/batch/approve",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            request_ids: requestIds,
-            approved_by: "admin",
-            reason: "Batch approved",
-          }),
-        }
-      );
+      const response = await fetch("/api/v1/agents/requests/batch/approve", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          request_ids: requestIds,
+          approved_by: "admin",
+          reason: "Batch approved",
+        }),
+      });
 
       expect(response.ok).toBe(true);
       const data = await response.json();
@@ -334,47 +329,45 @@ describe("agentRequestHandlers", () => {
       expect(data.processed).toBe(requestIds.length);
       expect(data.failed).toBe(0);
       expect(data.results).toHaveLength(requestIds.length);
-      expect(data.results.every((r: { success: boolean }) => r.success)).toBe(true);
+      expect(data.results.every((r: { success: boolean }) => r.success)).toBe(
+        true,
+      );
     });
 
     it("should handle mixed valid/invalid request IDs", async () => {
       const requestIds = [mockPendingApprovals[0].request_id, "invalid-id"];
-      const response = await fetch(
-        "/api/v1/agents/requests/batch/approve",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            request_ids: requestIds,
-            approved_by: "admin",
-          }),
-        }
-      );
+      const response = await fetch("/api/v1/agents/requests/batch/approve", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          request_ids: requestIds,
+          approved_by: "admin",
+        }),
+      });
 
       const data = await response.json();
 
       expect(data.success).toBe(false); // Not all succeeded
       expect(data.processed).toBe(1);
       expect(data.failed).toBe(1);
-      expect(data.results.some((r: { success: boolean }) => !r.success)).toBe(true);
+      expect(data.results.some((r: { success: boolean }) => !r.success)).toBe(
+        true,
+      );
     });
   });
 
   describe("POST /api/v1/agents/requests/batch/reject", () => {
     it("should batch reject multiple requests", async () => {
       const requestIds = mockPendingApprovals.map((a) => a.request_id);
-      const response = await fetch(
-        "/api/v1/agents/requests/batch/reject",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            request_ids: requestIds,
-            rejected_by: "admin",
-            reason: "Batch rejected for safety",
-          }),
-        }
-      );
+      const response = await fetch("/api/v1/agents/requests/batch/reject", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          request_ids: requestIds,
+          rejected_by: "admin",
+          reason: "Batch rejected for safety",
+        }),
+      });
 
       expect(response.ok).toBe(true);
       const data = await response.json();

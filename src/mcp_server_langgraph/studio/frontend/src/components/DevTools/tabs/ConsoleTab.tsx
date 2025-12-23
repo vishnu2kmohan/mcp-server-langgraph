@@ -33,7 +33,11 @@ import {
 
 import { cn } from "../../../utils/cn";
 import { useConsoleEntries } from "../hooks/useConsoleEntries";
-import type { ConsoleTabProps, ConsoleEntry, ConsoleEntrySource } from "../types";
+import type {
+  ConsoleTabProps,
+  ConsoleEntry,
+  ConsoleEntrySource,
+} from "../types";
 
 // =============================================================================
 // Constants
@@ -113,7 +117,7 @@ function ConsoleEntryRow({
         "group flex flex-col border-b border-gray-100 dark:border-gray-800",
         "hover:bg-gray-50 dark:hover:bg-gray-800/50",
         levelStyles[entry.level],
-        isFocused && "bg-primary-50 dark:bg-primary-900/20"
+        isFocused && "bg-primary-50 dark:bg-primary-900/20",
       )}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
@@ -140,7 +144,11 @@ function ConsoleEntryRow({
         )}
 
         {/* Level icon */}
-        <LevelIcon size={14} className="mt-0.5 flex-shrink-0" aria-hidden="true" />
+        <LevelIcon
+          size={14}
+          className="mt-0.5 flex-shrink-0"
+          aria-hidden="true"
+        />
 
         {/* Timestamp */}
         <span className="text-xs text-gray-400 dark:text-gray-500 font-mono flex-shrink-0">
@@ -153,7 +161,9 @@ function ConsoleEntryRow({
           className="flex items-center gap-1 text-xs text-gray-400 dark:text-gray-500 flex-shrink-0"
         >
           <SourceIcon size={12} aria-hidden="true" />
-          <span className="hidden sm:inline">{SOURCE_LABELS[entry.source]}</span>
+          <span className="hidden sm:inline">
+            {SOURCE_LABELS[entry.source]}
+          </span>
         </span>
 
         {/* Message */}
@@ -213,7 +223,7 @@ export function ConsoleTab({
   });
 
   const [expandedEntries, setExpandedEntries] = useState<Set<string>>(
-    new Set()
+    new Set(),
   );
   const [focusedIndex, setFocusedIndex] = useState<number>(-1);
   const listRef = useRef<HTMLDivElement>(null);
@@ -267,7 +277,7 @@ export function ConsoleTab({
       if (e.key === "ArrowDown") {
         e.preventDefault();
         setFocusedIndex((prev) =>
-          Math.min(prev + 1, filteredEntries.length - 1)
+          Math.min(prev + 1, filteredEntries.length - 1),
         );
       } else if (e.key === "ArrowUp") {
         e.preventDefault();
@@ -279,7 +289,7 @@ export function ConsoleTab({
         }
       }
     },
-    [filteredEntries, focusedIndex, toggleExpand]
+    [filteredEntries, focusedIndex, toggleExpand],
   );
 
   /**
@@ -301,9 +311,7 @@ export function ConsoleTab({
         <select
           data-testid="console-filter-select"
           value={filter}
-          onChange={(e) =>
-            onFilterChange(e.target.value as typeof filter)
-          }
+          onChange={(e) => onFilterChange(e.target.value as typeof filter)}
           aria-label="Filter console entries by level"
           className="text-xs px-2 py-1 rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300"
         >

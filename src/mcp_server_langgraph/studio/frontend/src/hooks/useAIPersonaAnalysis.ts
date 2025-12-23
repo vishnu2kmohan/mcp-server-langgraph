@@ -101,7 +101,6 @@ export interface UseAIPersonaAnalysisResult {
 }
 
 // Note: DEFAULT_TIMEOUT_MS kept for API compatibility but not used with RTK Query
- 
 
 /**
  * Hook for AI-powered persona behavior analysis.
@@ -110,7 +109,7 @@ export interface UseAIPersonaAnalysisResult {
  * @returns Persona analysis results and UI adaptations
  */
 export function useAIPersonaAnalysis(
-  options: UseAIPersonaAnalysisOptions
+  options: UseAIPersonaAnalysisOptions,
 ): UseAIPersonaAnalysisResult {
   const {
     userId,
@@ -165,7 +164,7 @@ export function useAIPersonaAnalysis(
       // Extract behavior signals from behavior_indicators keys
       const signals = data.behavior_indicators
         ? Object.keys(data.behavior_indicators).map((key) =>
-            key.replace(/_/g, " ")
+            key.replace(/_/g, " "),
           )
         : [];
       setBehaviorSignals(signals);

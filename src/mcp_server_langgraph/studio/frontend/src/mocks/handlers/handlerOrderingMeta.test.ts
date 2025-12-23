@@ -11,7 +11,7 @@
  * This test reads handler files and validates the ordering programmatically.
  */
 
-import { describe, it, expect , afterEach} from "vitest";
+import { describe, it, expect, afterEach } from "vitest";
 import * as fs from "fs";
 import * as path from "path";
 
@@ -36,7 +36,8 @@ function extractHandlers(filePath: string): HandlerInfo[] {
   const handlers: HandlerInfo[] = [];
 
   // Pattern to match http.get/post/etc calls
-  const handlerPattern = /http\.(get|post|put|patch|delete)\s*\(\s*["'`]([^"'`]+)["'`]/gi;
+  const handlerPattern =
+    /http\.(get|post|put|patch|delete)\s*\(\s*["'`]([^"'`]+)["'`]/gi;
 
   lines.forEach((line, index) => {
     let match;
@@ -53,7 +54,10 @@ function extractHandlers(filePath: string): HandlerInfo[] {
       const paramIndex = handlerPath.indexOf(":");
       const basePrefix =
         paramIndex > 0
-          ? handlerPath.substring(0, handlerPath.lastIndexOf("/", paramIndex) + 1)
+          ? handlerPath.substring(
+              0,
+              handlerPath.lastIndexOf("/", paramIndex) + 1,
+            )
           : handlerPath;
 
       handlers.push({
@@ -118,9 +122,10 @@ function wouldConflict(paramPath: string, staticPath: string): boolean {
  * Now checks all handlers regardless of grouping
  */
 function findOrderingViolations(
-  handlers: HandlerInfo[]
+  handlers: HandlerInfo[],
 ): Array<{ static: HandlerInfo; parameterized: HandlerInfo }> {
-  const violations: Array<{ static: HandlerInfo; parameterized: HandlerInfo }> = [];
+  const violations: Array<{ static: HandlerInfo; parameterized: HandlerInfo }> =
+    [];
 
   for (let i = 0; i < handlers.length; i++) {
     const current = handlers[i];
@@ -149,9 +154,10 @@ function findOrderingViolations(
 /**
  * Validate handler ordering in a file
  */
-function validateHandlerOrdering(
-  filePath: string
-): { valid: boolean; violations: string[] } {
+function validateHandlerOrdering(filePath: string): {
+  valid: boolean;
+  violations: string[];
+} {
   const handlers = extractHandlers(filePath);
   const foundViolations = findOrderingViolations(handlers);
   const violations: string[] = [];
@@ -160,7 +166,7 @@ function validateHandlerOrdering(
     violations.push(
       `Line ${violation.parameterized.line}: ${violation.parameterized.method.toUpperCase()} "${violation.parameterized.path}" ` +
         `is defined BEFORE static path "${violation.static.path}" (line ${violation.static.line}). ` +
-        `The static path will never match!`
+        `The static path will never match!`,
     );
   }
 
@@ -168,7 +174,6 @@ function validateHandlerOrdering(
 }
 
 describe("Handler Ordering Meta-Tests", () => {
-
   afterEach(() => {
     vi.clearAllMocks();
     vi.restoreAllMocks();
@@ -191,12 +196,12 @@ describe("Handler Ordering Meta-Tests", () => {
 
       // Find connection handlers
       const connectionHandlers = handlers.filter((h) =>
-        h.path.includes("/connections")
+        h.path.includes("/connections"),
       );
 
       // Find the :id handler (GET method, exactly 4 segments: api/v1/connections/:id)
       const idHandler = connectionHandlers.find(
-        (h) => h.path === "/api/v1/connections/:id" && h.method === "get"
+        (h) => h.path === "/api/v1/connections/:id" && h.method === "get",
       );
 
       // Find static handlers at the same depth that should come before
@@ -225,17 +230,17 @@ describe("Handler Ordering Meta-Tests", () => {
 
       // Find workflow handlers
       const workflowHandlers = handlers.filter((h) =>
-        h.path.includes("/workflows")
+        h.path.includes("/workflows"),
       );
 
       // Find the :id handler
       const idHandler = workflowHandlers.find(
-        (h) => h.path === "/api/v1/workflows/:id"
+        (h) => h.path === "/api/v1/workflows/:id",
       );
 
       // Find shared-with-me handler
       const sharedHandler = workflowHandlers.find(
-        (h) => h.path === "/api/v1/workflows/shared-with-me"
+        (h) => h.path === "/api/v1/workflows/shared-with-me",
       );
 
       if (idHandler && sharedHandler) {
@@ -248,17 +253,17 @@ describe("Handler Ordering Meta-Tests", () => {
 
       // Find session handlers
       const sessionHandlers = handlers.filter((h) =>
-        h.path.includes("/sessions")
+        h.path.includes("/sessions"),
       );
 
       // Find the :sessionId handler
       const idHandler = sessionHandlers.find(
-        (h) => h.path === "/api/v1/sessions/:sessionId"
+        (h) => h.path === "/api/v1/sessions/:sessionId",
       );
 
       // Find generate-title handler
       const generateTitleHandler = sessionHandlers.find(
-        (h) => h.path === "/api/v1/sessions/generate-title"
+        (h) => h.path === "/api/v1/sessions/generate-title",
       );
 
       if (idHandler && generateTitleHandler) {
@@ -319,13 +324,19 @@ describe("Handler Ordering Meta-Tests", () => {
     it("should detect ordering violations", () => {
       // Test the wouldConflict function directly
       // /api/v1/items/:id would match /api/v1/items/special (same depth, param matches static)
-      expect(wouldConflict("/api/v1/items/:id", "/api/v1/items/special")).toBe(true);
+      expect(wouldConflict("/api/v1/items/:id", "/api/v1/items/special")).toBe(
+        true,
+      );
 
       // /api/v1/items/:id would NOT match /api/v1/items/:id/test (different depth)
-      expect(wouldConflict("/api/v1/items/:id", "/api/v1/items/:id/test")).toBe(false);
+      expect(wouldConflict("/api/v1/items/:id", "/api/v1/items/:id/test")).toBe(
+        false,
+      );
 
       // /api/v1/items/:id would NOT match /api/v1/other/special (different prefix)
-      expect(wouldConflict("/api/v1/items/:id", "/api/v1/other/special")).toBe(false);
+      expect(wouldConflict("/api/v1/items/:id", "/api/v1/other/special")).toBe(
+        false,
+      );
 
       // Now test the full validation with a file
       const testContent = [

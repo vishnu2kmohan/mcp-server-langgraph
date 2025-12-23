@@ -168,12 +168,19 @@ export function App() {
   const location = useLocation();
   const navigate = useNavigate();
 
-  // Check if this is a legacy studio route (uses AppShell)
-  // /studio/v2/* routes use HybridShellLayout and should render via Outlet
-  const isLegacyStudioRoute =
-    (location.pathname.startsWith("/studio") &&
-      !location.pathname.startsWith("/studio/v2")) ||
+  // Feature flag to control which shell to use
+  const { isLoading: _isFeatureFlagsLoading, isEnabled } = useFeatureFlags();
+  const isHybridShellEnabled = isEnabled("canvas_hybrid_shell");
+
+  // Check if this is a studio/admin route that should use AppShell (legacy)
+  // When canvas_hybrid_shell is enabled, /studio/* uses HybridShellLayout via router
+  // When disabled, /studio/* uses AppShell (this component renders it)
+  const isStudioPath =
+    location.pathname.startsWith("/studio") ||
     location.pathname.startsWith("/admin");
+
+  // Legacy route: AppShell is used when feature flag is disabled
+  const isLegacyStudioRoute = isStudioPath && !isHybridShellEnabled;
 
   // Broader check for any studio/admin route (for features like notifications)
   const isStudioRoute =
@@ -217,7 +224,7 @@ export function App() {
   const handleTabNavigate = useTabNavigation();
 
   // Feature flags for conditional rendering of chat features
-  const { isEnabled } = useFeatureFlags();
+  // Note: isEnabled is already destructured from useFeatureFlags() above
   const enableUrlContentFetch = isEnabled("url_content_fetch");
   const enableSlashCommands = isEnabled("slash_commands");
   const enableStylePresets = isEnabled("style_presets");

@@ -67,7 +67,7 @@ const DEFAULT_TTL_SECONDS = 300; // 5 minutes
  * Create a custom cache GET handler with callback
  */
 export function createCacheGetHandler(
-  callback?: (key: string) => { hit: boolean; value: unknown | null }
+  callback?: (key: string) => { hit: boolean; value: unknown | null },
 ) {
   return http.get("/api/v1/cache/:key", async ({ params }) => {
     const key = decodeURIComponent(params.key as string);
@@ -106,8 +106,8 @@ export function createCacheSetHandler(
   callback?: (
     key: string,
     value: unknown,
-    ttl: number
-  ) => Record<string, unknown>
+    ttl: number,
+  ) => Record<string, unknown>,
 ) {
   return http.put("/api/v1/cache/:key", async ({ params, request }) => {
     const key = decodeURIComponent(params.key as string);
@@ -117,10 +117,7 @@ export function createCacheSetHandler(
       body = (await request.json()) as CacheSetRequest;
     } catch {
       // Handle malformed JSON gracefully
-      return HttpResponse.json(
-        { error: "Invalid JSON body" },
-        { status: 400 }
-      );
+      return HttpResponse.json({ error: "Invalid JSON body" }, { status: 400 });
     }
 
     const ttl = body.ttl_seconds ?? DEFAULT_TTL_SECONDS;
@@ -150,7 +147,7 @@ export function createCacheSetHandler(
  * Create a custom cache DELETE handler with callback
  */
 export function createCacheDeleteHandler(
-  callback?: (key: string) => Record<string, unknown>
+  callback?: (key: string) => Record<string, unknown>,
 ) {
   return http.delete("/api/v1/cache/:key", async ({ params }) => {
     const key = decodeURIComponent(params.key as string);
@@ -178,7 +175,7 @@ export function createCacheDeleteHandler(
  * Create a custom cache prefix DELETE handler with callback
  */
 export function createCachePrefixDeleteHandler(
-  callback?: (prefix: string) => { deleted_count: number }
+  callback?: (prefix: string) => { deleted_count: number },
 ) {
   return http.delete("/api/v1/cache/prefix/:prefix", async ({ params }) => {
     const prefix = decodeURIComponent(params.prefix as string);

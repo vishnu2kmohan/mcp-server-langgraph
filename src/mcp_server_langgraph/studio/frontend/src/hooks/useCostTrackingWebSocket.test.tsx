@@ -180,7 +180,7 @@ describe("useCostTrackingWebSocket", () => {
     it("should handle budget_warning message", async () => {
       const onBudgetWarning = vi.fn();
       const { result } = renderHook(() =>
-        useCostTrackingWebSocket({ onBudgetWarning })
+        useCostTrackingWebSocket({ onBudgetWarning }),
       );
       const handlers = testWsHandlers;
 

@@ -31,9 +31,19 @@ import type { CachedSuggestion } from "./useAISuggestionsCache";
 // =============================================================================
 
 const mockSuggestions: CachedSuggestion[] = [
-  { id: "sug-1", type: "completion", content: "Complete this code", confidence: 0.95 },
+  {
+    id: "sug-1",
+    type: "completion",
+    content: "Complete this code",
+    confidence: 0.95,
+  },
   { id: "sug-2", type: "fix", content: "Fix this bug", confidence: 0.85 },
-  { id: "sug-3", type: "refactor", content: "Refactor for readability", confidence: 0.75 },
+  {
+    id: "sug-3",
+    type: "refactor",
+    content: "Refactor for readability",
+    confidence: 0.75,
+  },
 ];
 
 // =============================================================================
@@ -87,7 +97,10 @@ function createErrorHandler(status: number, statusText: string) {
 /**
  * Create an MSW handler with delay
  */
-function _createDelayedHandler(suggestions: CachedSuggestion[], delayMs: number) {
+function _createDelayedHandler(
+  suggestions: CachedSuggestion[],
+  delayMs: number,
+) {
   return http.get("/api/v1/ai/suggestions", async () => {
     await delay(delayMs);
     return HttpResponse.json({ suggestions });
@@ -138,7 +151,7 @@ describe("useAISuggestionsFetch", () => {
           artifactId: "artifact-1",
           sessionId: "session-1",
           enabled: false,
-        })
+        }),
       );
 
       expect(result.current.suggestions).toEqual([]);
@@ -152,7 +165,7 @@ describe("useAISuggestionsFetch", () => {
           artifactId: null,
           sessionId: "session-1",
           enabled: true,
-        })
+        }),
       );
 
       expect(result.current.suggestions).toEqual([]);
@@ -165,7 +178,7 @@ describe("useAISuggestionsFetch", () => {
           artifactId: "artifact-1",
           sessionId: "session-1",
           enabled: true,
-        })
+        }),
       );
 
       expect(typeof result.current.acceptSuggestion).toBe("function");
@@ -181,7 +194,7 @@ describe("useAISuggestionsFetch", () => {
           artifactId: "artifact-1",
           sessionId: "session-1",
           enabled: true,
-        })
+        }),
       );
 
       expect(typeof result.current.isStale).toBe("boolean");
@@ -196,7 +209,7 @@ describe("useAISuggestionsFetch", () => {
         http.get("/api/v1/ai/suggestions", async () => {
           handlerCalled = true;
           return HttpResponse.json({ suggestions: mockSuggestions });
-        })
+        }),
       );
 
       renderHook(() =>
@@ -205,7 +218,7 @@ describe("useAISuggestionsFetch", () => {
           sessionId: "session-1",
           enabled: true,
           debounceMs: 500,
-        })
+        }),
       );
 
       // Should not have fetched yet
@@ -229,7 +242,7 @@ describe("useAISuggestionsFetch", () => {
           sessionId: "session-1",
           enabled: true,
           debounceMs: 100,
-        })
+        }),
       );
 
       await act(async () => {
@@ -253,7 +266,7 @@ describe("useAISuggestionsFetch", () => {
           sessionId: "session-1",
           enabled: true,
           debounceMs: 100,
-        })
+        }),
       );
 
       await act(async () => {
@@ -276,7 +289,7 @@ describe("useAISuggestionsFetch", () => {
         http.get("/api/v1/ai/suggestions", async () => {
           fetchCount++;
           return HttpResponse.json({ suggestions: mockSuggestions });
-        })
+        }),
       );
 
       renderHook(() =>
@@ -284,7 +297,7 @@ describe("useAISuggestionsFetch", () => {
           artifactId: "artifact-1",
           sessionId: "session-1",
           enabled: true,
-        })
+        }),
       );
 
       // At 400ms, should not have fetched
@@ -309,7 +322,7 @@ describe("useAISuggestionsFetch", () => {
         http.get("/api/v1/ai/suggestions", async () => {
           fetchCount++;
           return HttpResponse.json({ suggestions: mockSuggestions });
-        })
+        }),
       );
 
       renderHook(() =>
@@ -318,7 +331,7 @@ describe("useAISuggestionsFetch", () => {
           sessionId: "session-1",
           enabled: true,
           debounceMs: 1000,
-        })
+        }),
       );
 
       // At 900ms, should not have fetched
@@ -345,7 +358,7 @@ describe("useAISuggestionsFetch", () => {
         http.get("/api/v1/ai/suggestions", async () => {
           fetchCount++;
           return HttpResponse.json({ suggestions: mockSuggestions });
-        })
+        }),
       );
 
       const { result } = renderHook(() =>
@@ -354,7 +367,7 @@ describe("useAISuggestionsFetch", () => {
           sessionId: "session-1",
           enabled: true,
           debounceMs: 100,
-        })
+        }),
       );
 
       await act(async () => {
@@ -380,7 +393,7 @@ describe("useAISuggestionsFetch", () => {
           sessionId: "session-1",
           enabled: true,
           debounceMs: 100,
-        })
+        }),
       );
 
       await act(async () => {
@@ -408,7 +421,7 @@ describe("useAISuggestionsFetch", () => {
           sessionId: "session-1",
           enabled: true,
           debounceMs: 100,
-        })
+        }),
       );
 
       await act(async () => {
@@ -424,7 +437,9 @@ describe("useAISuggestionsFetch", () => {
       });
 
       expect(result.current.suggestions).toHaveLength(2);
-      expect(result.current.suggestions.find((s) => s.id === "sug-1")).toBeUndefined();
+      expect(
+        result.current.suggestions.find((s) => s.id === "sug-1"),
+      ).toBeUndefined();
     });
 
     it("dismissSuggestion removes suggestion from list", async () => {
@@ -434,7 +449,7 @@ describe("useAISuggestionsFetch", () => {
           sessionId: "session-1",
           enabled: true,
           debounceMs: 100,
-        })
+        }),
       );
 
       await act(async () => {
@@ -459,7 +474,7 @@ describe("useAISuggestionsFetch", () => {
           sessionId: "session-1",
           enabled: true,
           debounceMs: 100,
-        })
+        }),
       );
 
       await act(async () => {
@@ -482,7 +497,12 @@ describe("useAISuggestionsFetch", () => {
     it("refresh bypasses cache and fetches new suggestions", async () => {
       let fetchCount = 0;
       const newSuggestions: CachedSuggestion[] = [
-        { id: "new-1", type: "explain", content: "New suggestion", confidence: 0.99 },
+        {
+          id: "new-1",
+          type: "explain",
+          content: "New suggestion",
+          confidence: 0.99,
+        },
       ];
 
       // Handler that returns different data on second call
@@ -492,7 +512,7 @@ describe("useAISuggestionsFetch", () => {
           // Return mock data on first call, new data on subsequent calls
           const data = fetchCount === 1 ? mockSuggestions : newSuggestions;
           return HttpResponse.json({ suggestions: data });
-        })
+        }),
       );
 
       const { result } = renderHook(() =>
@@ -501,7 +521,7 @@ describe("useAISuggestionsFetch", () => {
           sessionId: "session-1",
           enabled: true,
           debounceMs: 100,
-        })
+        }),
       );
 
       await act(async () => {
@@ -538,7 +558,7 @@ describe("useAISuggestionsFetch", () => {
           const url = new URL(request.url);
           lastArtifactId = url.searchParams.get("artifactId") ?? "";
           return HttpResponse.json({ suggestions: mockSuggestions });
-        })
+        }),
       );
 
       const { result, rerender } = renderHook(
@@ -549,7 +569,7 @@ describe("useAISuggestionsFetch", () => {
             enabled: true,
             debounceMs: 100,
           }),
-        { initialProps: { artifactId: "artifact-1" } }
+        { initialProps: { artifactId: "artifact-1" } },
       );
 
       await act(async () => {
@@ -586,7 +606,7 @@ describe("useAISuggestionsFetch", () => {
             enabled,
             debounceMs: 100,
           }),
-        { initialProps: { enabled: true } }
+        { initialProps: { enabled: true } },
       );
 
       await act(async () => {
@@ -615,7 +635,7 @@ describe("useAISuggestionsFetch", () => {
           // Add delay to allow abort to happen
           await delay(50);
           return HttpResponse.json({ suggestions: mockSuggestions });
-        })
+        }),
       );
 
       const { result, rerender } = renderHook(
@@ -626,7 +646,7 @@ describe("useAISuggestionsFetch", () => {
             enabled: true,
             debounceMs: 50,
           }),
-        { initialProps: { artifactId: "artifact-1" } }
+        { initialProps: { artifactId: "artifact-1" } },
       );
 
       // Trigger first fetch
@@ -658,7 +678,7 @@ describe("useAISuggestionsFetch", () => {
         http.get("/api/v1/ai/suggestions", async () => {
           fetchCount++;
           return HttpResponse.json({ suggestions: mockSuggestions });
-        })
+        }),
       );
 
       const { unmount } = renderHook(() =>
@@ -667,7 +687,7 @@ describe("useAISuggestionsFetch", () => {
           sessionId: "session-1",
           enabled: true,
           debounceMs: 100,
-        })
+        }),
       );
 
       // Unmount before debounce completes
@@ -690,7 +710,7 @@ describe("useAISuggestionsFetch", () => {
         http.get("/api/v1/ai/suggestions", async () => {
           fetchCalled = true;
           return HttpResponse.json({ suggestions: [] });
-        })
+        }),
       );
 
       const { result } = renderHook(() =>
@@ -699,7 +719,7 @@ describe("useAISuggestionsFetch", () => {
           sessionId: "session-1",
           enabled: true,
           debounceMs: 100,
-        })
+        }),
       );
 
       await act(async () => {

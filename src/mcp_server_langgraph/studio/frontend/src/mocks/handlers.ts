@@ -27,7 +27,9 @@ import { mcpHandlers } from "./handlers/mcpHandlers";
  * WebSocket link for connection health monitoring.
  * Used by useConnectionHealthWebSocket hook.
  */
-export const connectionHealthWs = ws.link("ws://*/api/v1/connections/health/ws");
+export const connectionHealthWs = ws.link(
+  "ws://*/api/v1/connections/health/ws",
+);
 
 /**
  * WebSocket link for MCP task progress monitoring.
@@ -410,8 +412,7 @@ export const handlers = [
         {
           id: `msg-3-${params.sessionId}`,
           role: "user",
-          content:
-            "I need to create a React component for a dashboard.",
+          content: "I need to create a React component for a dashboard.",
           created_at: new Date(Date.now() - 180000).toISOString(),
         },
         {

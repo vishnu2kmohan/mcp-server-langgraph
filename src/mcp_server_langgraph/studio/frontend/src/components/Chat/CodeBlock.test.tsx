@@ -63,7 +63,7 @@ describe("CodeBlock", () => {
 
       expect(screen.getByRole("toolbar")).toHaveAttribute(
         "aria-label",
-        "Code block actions"
+        "Code block actions",
       );
     });
   });
@@ -114,40 +114,44 @@ describe("CodeBlock", () => {
       render(<CodeBlock language="javascript">const x = 1;</CodeBlock>);
 
       expect(
-        screen.getByRole("button", { name: "Enable word wrap" })
+        screen.getByRole("button", { name: "Enable word wrap" }),
       ).toBeInTheDocument();
     });
 
     it("should toggle word wrap when button is clicked", () => {
       render(<CodeBlock language="javascript">const x = 1;</CodeBlock>);
 
-      const wrapButton = screen.getByRole("button", { name: "Enable word wrap" });
+      const wrapButton = screen.getByRole("button", {
+        name: "Enable word wrap",
+      });
       expect(wrapButton).toHaveAttribute("aria-pressed", "false");
 
       fireEvent.click(wrapButton);
 
       expect(
-        screen.getByRole("button", { name: "Disable word wrap" })
+        screen.getByRole("button", { name: "Disable word wrap" }),
       ).toHaveAttribute("aria-pressed", "true");
     });
 
     it("should toggle word wrap off when clicked again", () => {
       render(<CodeBlock language="javascript">const x = 1;</CodeBlock>);
 
-      const wrapButton = screen.getByRole("button", { name: "Enable word wrap" });
+      const wrapButton = screen.getByRole("button", {
+        name: "Enable word wrap",
+      });
 
       // Click to enable
       fireEvent.click(wrapButton);
       expect(
-        screen.getByRole("button", { name: "Disable word wrap" })
+        screen.getByRole("button", { name: "Disable word wrap" }),
       ).toHaveAttribute("aria-pressed", "true");
 
       // Click to disable
       fireEvent.click(
-        screen.getByRole("button", { name: "Disable word wrap" })
+        screen.getByRole("button", { name: "Disable word wrap" }),
       );
       expect(
-        screen.getByRole("button", { name: "Enable word wrap" })
+        screen.getByRole("button", { name: "Enable word wrap" }),
       ).toHaveAttribute("aria-pressed", "false");
     });
   });
@@ -167,7 +171,7 @@ describe("CodeBlock", () => {
       render(<CodeBlock language="javascript">const x = 1;</CodeBlock>);
 
       expect(
-        screen.getByRole("button", { name: "Download code as file" })
+        screen.getByRole("button", { name: "Download code as file" }),
       ).toBeInTheDocument();
     });
 
@@ -181,7 +185,7 @@ describe("CodeBlock", () => {
           Object.defineProperty(link, "click", { value: mockClick });
           const _originalDescriptor = Object.getOwnPropertyDescriptor(
             HTMLAnchorElement.prototype,
-            "download"
+            "download",
           );
           Object.defineProperty(link, "download", {
             get: () => capturedDownload,
@@ -298,13 +302,13 @@ describe("CodeBlock", () => {
       render(<CodeBlock language="javascript">const x = 1;</CodeBlock>);
 
       expect(
-        screen.getByRole("button", { name: "Enable word wrap" })
+        screen.getByRole("button", { name: "Enable word wrap" }),
       ).toBeInTheDocument();
       expect(
-        screen.getByRole("button", { name: "Download code as file" })
+        screen.getByRole("button", { name: "Download code as file" }),
       ).toBeInTheDocument();
       expect(
-        screen.getByRole("button", { name: "Copy code to clipboard" })
+        screen.getByRole("button", { name: "Copy code to clipboard" }),
       ).toBeInTheDocument();
     });
 
@@ -313,7 +317,7 @@ describe("CodeBlock", () => {
 
       expect(screen.getByRole("toolbar")).toHaveAttribute(
         "aria-label",
-        "Code block actions"
+        "Code block actions",
       );
     });
   });

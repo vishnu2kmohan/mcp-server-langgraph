@@ -90,7 +90,7 @@ export interface UseRetryableRequestOptions extends Partial<RetryConfig> {
  * ```
  */
 export function useRetryableRequest<T = unknown>(
-  options: UseRetryableRequestOptions = {}
+  options: UseRetryableRequestOptions = {},
 ): RetryableRequestResult<T> {
   const config = getRetryConfig(options);
 
@@ -176,7 +176,8 @@ export function useRetryableRequest<T = unknown>(
 
         if (shouldRetry(classifiedError, context)) {
           // Calculate backoff delay (use retryAfter if available)
-          const delay = classifiedError.retryAfter ?? calculateBackoff(attempt, config);
+          const delay =
+            classifiedError.retryAfter ?? calculateBackoff(attempt, config);
 
           setRetryCount(attempt + 1);
           setIsRetrying(true);
@@ -205,7 +206,7 @@ export function useRetryableRequest<T = unknown>(
         return null;
       }
     },
-    [config, options]
+    [config, options],
   );
 
   /**
@@ -217,7 +218,7 @@ export function useRetryableRequest<T = unknown>(
       currentRequestFnRef.current = requestFn;
       return executeAttempt(requestFn, 0);
     },
-    [resetState, executeAttempt]
+    [resetState, executeAttempt],
   );
 
   /**

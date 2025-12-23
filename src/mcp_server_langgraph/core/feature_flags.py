@@ -223,6 +223,29 @@ class FeatureFlags(BaseSettings):
     )
 
     # =========================================================================
+    # DevTools Feature Flags (Chrome DevTools-like debugging panel)
+    # =========================================================================
+    devtools_panel: bool = Field(
+        default=True,
+        description="Enable DevTools panel for debugging (master toggle)",
+    )
+
+    devtools_ai_insights: bool = Field(
+        default=False,
+        description="Enable AI Insights tab in DevTools for anomaly detection and suggestions",
+    )
+
+    devtools_ai_layout: bool = Field(
+        default=False,
+        description="Enable AI-powered layout suggestions in DevTools based on context",
+    )
+
+    devtools_network_tab: bool = Field(
+        default=True,
+        description="Enable Network tab in DevTools for API/WebSocket monitoring",
+    )
+
+    # =========================================================================
     # Core UI Features
     # =========================================================================
     enable_workflows_feature: bool = Field(
@@ -1095,6 +1118,11 @@ class FeatureFlags(BaseSettings):
             "canvas_ai_palette": self.canvas_ai_palette,
             "canvas_compliance": self.canvas_compliance,
             "canvas_help": self.canvas_help,
+            # DevTools feature flags
+            "devtools_panel": self.devtools_panel,
+            "devtools_ai_insights": self.devtools_ai_insights,
+            "devtools_ai_layout": self.devtools_ai_layout,
+            "devtools_network_tab": self.devtools_network_tab,
             # Core features
             "workflows": self.enable_workflows_feature,
             "sessions": self.enable_sessions_feature,

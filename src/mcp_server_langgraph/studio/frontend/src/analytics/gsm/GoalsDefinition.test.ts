@@ -77,7 +77,9 @@ describe("GoalsDefinition", () => {
 
     it("includes session duration goal", () => {
       const goals = getGoalsForDimension("engagement");
-      const sessionGoal = goals.find((g) => g.id === "engagement_session_duration");
+      const sessionGoal = goals.find(
+        (g) => g.id === "engagement_session_duration",
+      );
 
       expect(sessionGoal).toBeDefined();
       expect(sessionGoal?.targetValue).toBeGreaterThan(0);
@@ -85,7 +87,9 @@ describe("GoalsDefinition", () => {
 
     it("includes actions per session goal", () => {
       const goals = getGoalsForDimension("engagement");
-      const actionsGoal = goals.find((g) => g.id === "engagement_actions_per_session");
+      const actionsGoal = goals.find(
+        (g) => g.id === "engagement_actions_per_session",
+      );
 
       expect(actionsGoal).toBeDefined();
     });
@@ -135,7 +139,9 @@ describe("GoalsDefinition", () => {
   describe("Task Success goals", () => {
     it("includes task completion rate goal", () => {
       const goals = getGoalsForDimension("task_success");
-      const completionGoal = goals.find((g) => g.id === "task_success_completion");
+      const completionGoal = goals.find(
+        (g) => g.id === "task_success_completion",
+      );
 
       expect(completionGoal).toBeDefined();
       expect(completionGoal?.targetValue).toBeGreaterThan(0.8);

@@ -177,7 +177,7 @@ export interface CreateClassifiedErrorOptions {
 export function createClassifiedError(
   error: Error | unknown,
   category: ErrorCategory,
-  options: CreateClassifiedErrorOptions = {}
+  options: CreateClassifiedErrorOptions = {},
 ): ClassifiedError {
   const message =
     error instanceof Error
@@ -216,7 +216,9 @@ export function isNetworkError(error: ClassifiedError): boolean {
  * Type guard: Check if error is an auth error (authentication or authorization)
  */
 export function isAuthError(error: ClassifiedError): boolean {
-  return error.category === "authentication" || error.category === "authorization";
+  return (
+    error.category === "authentication" || error.category === "authorization"
+  );
 }
 
 /**

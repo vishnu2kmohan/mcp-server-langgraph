@@ -99,10 +99,7 @@ export function BatchApprovalPanel({
   const allSelected = hasApprovals && selectedCount === approvals.length;
 
   // Memoized selected IDs array
-  const selectedArray = useMemo(
-    () => Array.from(selectedIds),
-    [selectedIds]
-  );
+  const selectedArray = useMemo(() => Array.from(selectedIds), [selectedIds]);
 
   // Toggle individual selection
   const handleToggleSelect = useCallback((requestId: string) => {
@@ -149,7 +146,7 @@ export function BatchApprovalPanel({
         className={cn(
           "flex flex-col items-center justify-center p-8 text-center",
           "border border-dashed border-gray-300 dark:border-gray-600 rounded-lg",
-          className
+          className,
         )}
       >
         <CheckCircle
@@ -165,7 +162,7 @@ export function BatchApprovalPanel({
     <div
       className={cn(
         "flex flex-col border border-gray-200 dark:border-gray-700 rounded-lg",
-        className
+        className,
       )}
       role="region"
       aria-label="Batch approval panel"
@@ -205,7 +202,7 @@ export function BatchApprovalPanel({
               "flex items-center gap-1.5 px-3 py-1.5 rounded text-sm font-medium",
               "bg-green-600 text-white hover:bg-green-700",
               "disabled:opacity-50 disabled:cursor-not-allowed",
-              "transition-colors"
+              "transition-colors",
             )}
           >
             {isApproving ? (
@@ -227,7 +224,7 @@ export function BatchApprovalPanel({
               "flex items-center gap-1.5 px-3 py-1.5 rounded text-sm font-medium",
               "bg-red-600 text-white hover:bg-red-700",
               "disabled:opacity-50 disabled:cursor-not-allowed",
-              "transition-colors"
+              "transition-colors",
             )}
           >
             {isRejecting ? (
@@ -258,7 +255,7 @@ export function BatchApprovalPanel({
             "text-gray-900 dark:text-gray-100",
             "placeholder-gray-400 dark:placeholder-gray-500",
             "focus:ring-2 focus:ring-primary-500 focus:border-primary-500",
-            "disabled:opacity-50"
+            "disabled:opacity-50",
           )}
         />
       </div>
@@ -275,7 +272,7 @@ export function BatchApprovalPanel({
               className={cn(
                 "flex items-center gap-4 p-4",
                 "hover:bg-gray-50 dark:hover:bg-gray-800/50",
-                isSelected && "bg-primary-50 dark:bg-primary-900/20"
+                isSelected && "bg-primary-50 dark:bg-primary-900/20",
               )}
             >
               {/* Checkbox */}
@@ -295,7 +292,7 @@ export function BatchApprovalPanel({
                 <span
                   className={cn(
                     "text-sm font-bold",
-                    getConfidenceColor(approval.confidence)
+                    getConfidenceColor(approval.confidence),
                   )}
                 >
                   {confidencePercent}%
@@ -304,7 +301,7 @@ export function BatchApprovalPanel({
                   <div
                     className={cn(
                       "h-full rounded-full",
-                      getConfidenceBgColor(approval.confidence)
+                      getConfidenceBgColor(approval.confidence),
                     )}
                     style={{ width: `${confidencePercent}%` }}
                   />
@@ -333,7 +330,7 @@ export function BatchApprovalPanel({
               <span
                 className={cn(
                   "px-2 py-0.5 text-xs font-medium rounded",
-                  "bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300"
+                  "bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300",
                 )}
               >
                 {approval.trigger_reason.replace(/_/g, " ")}

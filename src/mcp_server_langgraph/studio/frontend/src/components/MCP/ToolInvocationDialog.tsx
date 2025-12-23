@@ -12,10 +12,7 @@
  */
 
 import React, { useState, useCallback, useEffect, useMemo } from "react";
-import {
-  useListMcpToolsQuery,
-  useInvokeMcpToolMutation,
-} from "../../api";
+import { useListMcpToolsQuery, useInvokeMcpToolMutation } from "../../api";
 
 export interface ToolInvocationDialogProps {
   open: boolean;
@@ -30,7 +27,12 @@ interface ToolArgument {
 }
 
 interface ToolResult {
-  content: Array<{ type: string; text?: string; data?: string; mimeType?: string }>;
+  content: Array<{
+    type: string;
+    text?: string;
+    data?: string;
+    mimeType?: string;
+  }>;
   isError: boolean;
 }
 
@@ -38,11 +40,17 @@ export function ToolInvocationDialog({
   open,
   onClose,
 }: ToolInvocationDialogProps) {
-  const { data: toolsData, isLoading: isLoadingTools, error: toolsError } = useListMcpToolsQuery();
+  const {
+    data: toolsData,
+    isLoading: isLoadingTools,
+    error: toolsError,
+  } = useListMcpToolsQuery();
   const [invokeTool, { isLoading: isInvoking }] = useInvokeMcpToolMutation();
 
   const [selectedToolName, setSelectedToolName] = useState<string>("");
-  const [argumentValues, setArgumentValues] = useState<Record<string, string>>({});
+  const [argumentValues, setArgumentValues] = useState<Record<string, string>>(
+    {},
+  );
   const [result, setResult] = useState<ToolResult | null>(null);
 
   // Reset form when dialog closes
@@ -87,7 +95,8 @@ export function ToolInvocationDialog({
 
     const requiredArgs = toolArguments.filter((arg) => arg.required);
     return requiredArgs.every(
-      (arg) => argumentValues[arg.name] && argumentValues[arg.name].trim() !== ""
+      (arg) =>
+        argumentValues[arg.name] && argumentValues[arg.name].trim() !== "",
     );
   }, [selectedTool, toolArguments, argumentValues]);
 
@@ -98,16 +107,13 @@ export function ToolInvocationDialog({
       setArgumentValues({});
       setResult(null);
     },
-    []
+    [],
   );
 
   // Handle argument value change
-  const handleArgumentChange = useCallback(
-    (name: string, value: string) => {
-      setArgumentValues((prev) => ({ ...prev, [name]: value }));
-    },
-    []
-  );
+  const handleArgumentChange = useCallback((name: string, value: string) => {
+    setArgumentValues((prev) => ({ ...prev, [name]: value }));
+  }, []);
 
   // Handle tool invocation
   const handleInvoke = useCallback(async () => {

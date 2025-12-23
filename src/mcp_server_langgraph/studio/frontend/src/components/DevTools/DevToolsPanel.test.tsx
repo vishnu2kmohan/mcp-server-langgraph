@@ -21,7 +21,10 @@ import { MemoryRouter } from "react-router";
 import React from "react";
 import { DevToolsPanel } from "./DevToolsPanel";
 import devToolsReducer from "../../store/slices/devToolsSlice";
-import type { DevToolsContext, DevToolsTabId } from "../../store/slices/devToolsSlice";
+import type {
+  DevToolsContext,
+  DevToolsTabId,
+} from "../../store/slices/devToolsSlice";
 
 // Mock the useDevToolsContext hook
 vi.mock("./hooks/useDevToolsContext", () => ({
@@ -34,17 +37,19 @@ vi.mock("./hooks/useDevToolsContext", () => ({
 
 describe("DevToolsPanel", () => {
   // Create a test store
-  function createTestStore(overrides?: Partial<{
-    collapsed: boolean;
-    height: number;
-    maximized: boolean;
-    activeTab: DevToolsTabId;
-    detectedContext: DevToolsContext;
-    contextEntityId: string | null;
-    consoleFilter: "all" | "info" | "warning" | "error";
-    aiInsightsEnabled: boolean;
-    aiSuggestedLayout: DevToolsTabId[] | null;
-  }>) {
+  function createTestStore(
+    overrides?: Partial<{
+      collapsed: boolean;
+      height: number;
+      maximized: boolean;
+      activeTab: DevToolsTabId;
+      detectedContext: DevToolsContext;
+      contextEntityId: string | null;
+      consoleFilter: "all" | "info" | "warning" | "error";
+      aiInsightsEnabled: boolean;
+      aiSuggestedLayout: DevToolsTabId[] | null;
+    }>,
+  ) {
     return configureStore({
       reducer: {
         devTools: devToolsReducer,
@@ -69,13 +74,13 @@ describe("DevToolsPanel", () => {
   // Wrapper component with providers
   function renderWithProviders(
     ui: React.ReactElement,
-    store = createTestStore()
+    store = createTestStore(),
   ) {
     return {
       ...render(
         <Provider store={store}>
           <MemoryRouter>{ui}</MemoryRouter>
-        </Provider>
+        </Provider>,
       ),
       store,
     };
@@ -114,21 +119,29 @@ describe("DevToolsPanel", () => {
     it("should render available tabs for session context", () => {
       renderWithProviders(<DevToolsPanel />);
       expect(screen.getByRole("tab", { name: /Console/i })).toBeInTheDocument();
-      expect(screen.getByRole("tab", { name: /Agent Trace/i })).toBeInTheDocument();
+      expect(
+        screen.getByRole("tab", { name: /Agent Trace/i }),
+      ).toBeInTheDocument();
       expect(screen.getByRole("tab", { name: /Network/i })).toBeInTheDocument();
       expect(screen.getByRole("tab", { name: /State/i })).toBeInTheDocument();
-      expect(screen.getByRole("tab", { name: /Problems/i })).toBeInTheDocument();
+      expect(
+        screen.getByRole("tab", { name: /Problems/i }),
+      ).toBeInTheDocument();
     });
 
     it("should not render AI Insights tab when disabled", () => {
       renderWithProviders(<DevToolsPanel />);
-      expect(screen.queryByRole("tab", { name: /AI Insights/i })).not.toBeInTheDocument();
+      expect(
+        screen.queryByRole("tab", { name: /AI Insights/i }),
+      ).not.toBeInTheDocument();
     });
 
     it("should render AI Insights tab when enabled", () => {
       const store = createTestStore({ aiInsightsEnabled: true });
       renderWithProviders(<DevToolsPanel />, store);
-      expect(screen.getByRole("tab", { name: /AI Insights/i })).toBeInTheDocument();
+      expect(
+        screen.getByRole("tab", { name: /AI Insights/i }),
+      ).toBeInTheDocument();
     });
   });
 
@@ -156,13 +169,17 @@ describe("DevToolsPanel", () => {
 
     it("should render correct tab content for Console", () => {
       renderWithProviders(<DevToolsPanel />);
-      expect(screen.getByTestId("devtools-tab-content-console")).toBeInTheDocument();
+      expect(
+        screen.getByTestId("devtools-tab-content-console"),
+      ).toBeInTheDocument();
     });
 
     it("should render correct tab content for Network", () => {
       const store = createTestStore({ activeTab: "network" });
       renderWithProviders(<DevToolsPanel />, store);
-      expect(screen.getByTestId("devtools-tab-content-network")).toBeInTheDocument();
+      expect(
+        screen.getByTestId("devtools-tab-content-network"),
+      ).toBeInTheDocument();
     });
   });
 
@@ -173,12 +190,16 @@ describe("DevToolsPanel", () => {
   describe("header actions", () => {
     it("should render collapse button", () => {
       renderWithProviders(<DevToolsPanel />);
-      expect(screen.getByRole("button", { name: /Collapse/i })).toBeInTheDocument();
+      expect(
+        screen.getByRole("button", { name: /Collapse/i }),
+      ).toBeInTheDocument();
     });
 
     it("should render maximize button", () => {
       renderWithProviders(<DevToolsPanel />);
-      expect(screen.getByRole("button", { name: /Maximize/i })).toBeInTheDocument();
+      expect(
+        screen.getByRole("button", { name: /Maximize/i }),
+      ).toBeInTheDocument();
     });
 
     it("should render clear console button", () => {
@@ -274,8 +295,12 @@ describe("DevToolsPanel", () => {
 
     it("should have accessible button labels", () => {
       renderWithProviders(<DevToolsPanel />);
-      expect(screen.getByRole("button", { name: /Collapse/i })).toHaveAccessibleName();
-      expect(screen.getByRole("button", { name: /Maximize/i })).toHaveAccessibleName();
+      expect(
+        screen.getByRole("button", { name: /Collapse/i }),
+      ).toHaveAccessibleName();
+      expect(
+        screen.getByRole("button", { name: /Maximize/i }),
+      ).toHaveAccessibleName();
       // Multiple clear buttons may exist (header + tab), check all have accessible names
       const clearButtons = screen.getAllByRole("button", { name: /Clear/i });
       clearButtons.forEach((button) => {

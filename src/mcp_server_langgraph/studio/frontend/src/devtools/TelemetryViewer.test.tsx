@@ -32,7 +32,11 @@ describe("TelemetryViewer", () => {
 
     it("should display session creation metrics", () => {
       testTelemetry.trackSessionCreation({ success: true, durationMs: 100 });
-      testTelemetry.trackSessionCreation({ success: false, durationMs: 50, error: "Test" });
+      testTelemetry.trackSessionCreation({
+        success: false,
+        durationMs: 50,
+        error: "Test",
+      });
 
       render(<TelemetryViewer />, { wrapper });
 
@@ -41,7 +45,10 @@ describe("TelemetryViewer", () => {
     });
 
     it("should display revalidation metrics", () => {
-      testTelemetry.trackRevalidation({ trigger: "message_sent", durationMs: 100 });
+      testTelemetry.trackRevalidation({
+        trigger: "message_sent",
+        durationMs: 100,
+      });
       testTelemetry.trackRevalidation({ trigger: "auto", durationMs: 50 });
 
       render(<TelemetryViewer />, { wrapper });
@@ -67,7 +74,9 @@ describe("TelemetryViewer", () => {
     it("should have a reset button", () => {
       render(<TelemetryViewer />, { wrapper });
 
-      expect(screen.getByRole("button", { name: /reset/i })).toBeInTheDocument();
+      expect(
+        screen.getByRole("button", { name: /reset/i }),
+      ).toBeInTheDocument();
     });
 
     it("should reset metrics when clicking reset button", () => {
@@ -85,7 +94,9 @@ describe("TelemetryViewer", () => {
     it("should have an export button", () => {
       render(<TelemetryViewer />, { wrapper });
 
-      expect(screen.getByRole("button", { name: /export/i })).toBeInTheDocument();
+      expect(
+        screen.getByRole("button", { name: /export/i }),
+      ).toBeInTheDocument();
     });
   });
 

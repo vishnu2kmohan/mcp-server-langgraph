@@ -16,7 +16,7 @@ describe("AgentTraceToggleButton", () => {
       render(<AgentTraceToggleButton isExpanded={false} onToggle={() => {}} />);
 
       expect(
-        screen.getByRole("button", { name: /toggle agent execution trace/i })
+        screen.getByRole("button", { name: /toggle agent execution trace/i }),
       ).toBeInTheDocument();
     });
 
@@ -79,7 +79,7 @@ describe("AgentTraceToggleButton", () => {
     it("calls onToggle when clicked", () => {
       const handleToggle = vi.fn();
       render(
-        <AgentTraceToggleButton isExpanded={false} onToggle={handleToggle} />
+        <AgentTraceToggleButton isExpanded={false} onToggle={handleToggle} />,
       );
 
       const button = screen.getByRole("button");
@@ -91,7 +91,7 @@ describe("AgentTraceToggleButton", () => {
     it("calls onToggle on each click", () => {
       const handleToggle = vi.fn();
       render(
-        <AgentTraceToggleButton isExpanded={false} onToggle={handleToggle} />
+        <AgentTraceToggleButton isExpanded={false} onToggle={handleToggle} />,
       );
 
       const button = screen.getByRole("button");

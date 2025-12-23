@@ -222,7 +222,10 @@ export function ConversationPanel({
   return (
     <div
       data-testid="conversation-panel"
-      className={cn("flex flex-col h-full bg-white dark:bg-gray-900", className)}
+      className={cn(
+        "flex flex-col h-full bg-white dark:bg-gray-900",
+        className,
+      )}
     >
       {/* Session Header */}
       {sessionTitle && (

@@ -135,9 +135,7 @@ describe("AgentApprovalAuditLog", () => {
 
       render(<AgentApprovalAuditLog entries={[]} />);
 
-      expect(
-        screen.getByText(/No approval history/i)
-      ).toBeInTheDocument();
+      expect(screen.getByText(/No approval history/i)).toBeInTheDocument();
     });
   });
 
@@ -175,7 +173,7 @@ describe("AgentApprovalAuditLog", () => {
       render(<AgentApprovalAuditLog entries={mockAuditEntries} />);
 
       expect(
-        screen.getByRole("button", { name: /export/i })
+        screen.getByRole("button", { name: /export/i }),
       ).toBeInTheDocument();
     });
 
@@ -184,7 +182,10 @@ describe("AgentApprovalAuditLog", () => {
 
       const onExport = vi.fn();
       render(
-        <AgentApprovalAuditLog entries={mockAuditEntries} onExport={onExport} />
+        <AgentApprovalAuditLog
+          entries={mockAuditEntries}
+          onExport={onExport}
+        />,
       );
 
       const exportButton = screen.getByRole("button", { name: /export/i });
@@ -217,9 +218,7 @@ describe("AgentApprovalAuditLog", () => {
       }
 
       await waitFor(() => {
-        expect(
-          screen.getByText("Verified output quality")
-        ).toBeInTheDocument();
+        expect(screen.getByText("Verified output quality")).toBeInTheDocument();
       });
     });
   });

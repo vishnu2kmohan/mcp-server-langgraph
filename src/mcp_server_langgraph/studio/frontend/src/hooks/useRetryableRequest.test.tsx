@@ -65,7 +65,7 @@ describe("useRetryableRequest", () => {
       const mockFetch = vi.fn().mockRejectedValue(new Error("Network error"));
 
       const { result } = renderHook(() =>
-        useRetryableRequest({ baseDelayMs: 100, maxRetries: 3 })
+        useRetryableRequest({ baseDelayMs: 100, maxRetries: 3 }),
       );
 
       // Start a request that will fail and schedule retry
@@ -99,7 +99,7 @@ describe("useRetryableRequest", () => {
         () =>
           new Promise((resolve) => {
             resolvePromise = resolve;
-          })
+          }),
       );
 
       const { result } = renderHook(() => useRetryableRequest());
@@ -185,7 +185,7 @@ describe("useRetryableRequest", () => {
         () =>
           new Promise((resolve) => {
             _resolvePromise = resolve;
-          })
+          }),
       );
 
       const { result } = renderHook(() => useRetryableRequest());
@@ -209,7 +209,7 @@ describe("useRetryableRequest", () => {
         () =>
           new Promise((resolve) => {
             resolvePromise = resolve;
-          })
+          }),
       );
 
       const { result } = renderHook(() => useRetryableRequest());
@@ -243,7 +243,7 @@ describe("useRetryableRequest", () => {
       const mockFetch = vi.fn().mockRejectedValue(networkError);
 
       const { result } = renderHook(() =>
-        useRetryableRequest({ baseDelayMs: 100, maxRetries: 3 })
+        useRetryableRequest({ baseDelayMs: 100, maxRetries: 3 }),
       );
 
       act(() => {
@@ -276,7 +276,7 @@ describe("useRetryableRequest", () => {
   describe("config options", () => {
     it("should accept custom maxRetries option", () => {
       const { result } = renderHook(() =>
-        useRetryableRequest({ maxRetries: 5 })
+        useRetryableRequest({ maxRetries: 5 }),
       );
 
       expect(result.current.status).toBe("idle");
@@ -284,7 +284,7 @@ describe("useRetryableRequest", () => {
 
     it("should accept custom baseDelayMs option", () => {
       const { result } = renderHook(() =>
-        useRetryableRequest({ baseDelayMs: 500 })
+        useRetryableRequest({ baseDelayMs: 500 }),
       );
 
       expect(result.current.status).toBe("idle");
@@ -294,9 +294,7 @@ describe("useRetryableRequest", () => {
       const onSuccess = vi.fn();
       const mockFetch = vi.fn().mockResolvedValue({ data: "success" });
 
-      const { result } = renderHook(() =>
-        useRetryableRequest({ onSuccess })
-      );
+      const { result } = renderHook(() => useRetryableRequest({ onSuccess }));
 
       await act(async () => {
         await result.current.execute(mockFetch);
@@ -310,7 +308,7 @@ describe("useRetryableRequest", () => {
       const mockFetch = vi.fn().mockRejectedValue(new Error("Failed"));
 
       const { result } = renderHook(() =>
-        useRetryableRequest({ onError, maxRetries: 0 })
+        useRetryableRequest({ onError, maxRetries: 0 }),
       );
 
       await act(async () => {
@@ -330,7 +328,7 @@ describe("useRetryableRequest", () => {
         .mockResolvedValue({ data: "success" });
 
       const { result } = renderHook(() =>
-        useRetryableRequest({ baseDelayMs: 10, maxRetries: 2 })
+        useRetryableRequest({ baseDelayMs: 10, maxRetries: 2 }),
       );
 
       await act(async () => {
@@ -342,7 +340,7 @@ describe("useRetryableRequest", () => {
         () => {
           expect(result.current.status).toBe("success");
         },
-        { timeout: 5000 }
+        { timeout: 5000 },
       );
 
       expect(result.current.data).toEqual({ data: "success" });
@@ -357,7 +355,7 @@ describe("useRetryableRequest", () => {
 
       const onRetry = vi.fn();
       const { result } = renderHook(() =>
-        useRetryableRequest({ baseDelayMs: 10, maxRetries: 2, onRetry })
+        useRetryableRequest({ baseDelayMs: 10, maxRetries: 2, onRetry }),
       );
 
       await act(async () => {
@@ -368,7 +366,7 @@ describe("useRetryableRequest", () => {
         () => {
           expect(result.current.status).toBe("success");
         },
-        { timeout: 5000 }
+        { timeout: 5000 },
       );
 
       // onRetry should have been called once (for the retry)

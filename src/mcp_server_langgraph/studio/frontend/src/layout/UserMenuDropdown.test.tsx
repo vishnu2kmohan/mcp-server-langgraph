@@ -5,8 +5,14 @@
  * access to profile, settings, persona switching, and logout.
  */
 import React from "react";
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import {
+  render,
+  screen,
+  fireEvent,
+  waitFor,
+  cleanup,
+} from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { UserMenuDropdown } from "./UserMenuDropdown";
 import { TestProvider } from "../test-utils";
@@ -38,6 +44,11 @@ beforeEach(() => {
   vi.clearAllMocks();
 });
 
+afterEach(() => {
+  cleanup();
+  vi.clearAllMocks();
+});
+
 // =============================================================================
 // Tests
 // =============================================================================
@@ -51,7 +62,9 @@ describe("UserMenuDropdown", () => {
         </TestProvider>,
       );
 
-      expect(screen.queryByTestId("user-menu-dropdown")).not.toBeInTheDocument();
+      expect(
+        screen.queryByTestId("user-menu-dropdown"),
+      ).not.toBeInTheDocument();
     });
 
     it("should render when open", () => {
@@ -162,7 +175,9 @@ describe("UserMenuDropdown", () => {
       );
 
       // Initially, persona options should not be visible
-      expect(screen.queryByTestId("persona-option-admin")).not.toBeInTheDocument();
+      expect(
+        screen.queryByTestId("persona-option-admin"),
+      ).not.toBeInTheDocument();
 
       // Click to show options
       await user.click(screen.getByTestId("persona-switcher-button"));
@@ -170,7 +185,9 @@ describe("UserMenuDropdown", () => {
       // Now options should be visible
       expect(screen.getByTestId("persona-option-admin")).toBeInTheDocument();
       expect(screen.getByTestId("persona-option-auditor")).toBeInTheDocument();
-      expect(screen.getByTestId("persona-option-alice-builder")).toBeInTheDocument();
+      expect(
+        screen.getByTestId("persona-option-alice-builder"),
+      ).toBeInTheDocument();
     });
 
     it("should navigate to persona-specific route when persona is selected", async () => {

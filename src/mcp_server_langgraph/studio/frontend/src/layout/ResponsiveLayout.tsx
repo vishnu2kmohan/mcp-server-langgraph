@@ -62,7 +62,7 @@ const LAYOUT_CLASSES: Record<Breakpoint, string> = {
  */
 export function useBreakpoint(): Breakpoint {
   const [breakpoint, setBreakpoint] = useState<Breakpoint>(() =>
-    getBreakpoint(typeof window !== "undefined" ? window.innerWidth : 1440)
+    getBreakpoint(typeof window !== "undefined" ? window.innerWidth : 1440),
   );
 
   useEffect(() => {

@@ -43,7 +43,10 @@ export function AnalyticsDashboardPage(): React.ReactElement {
   } = useHeartDashboard();
 
   return (
-    <main className="analytics-dashboard-page" aria-labelledby="analytics-title">
+    <main
+      className="analytics-dashboard-page"
+      aria-labelledby="analytics-title"
+    >
       {/* Header */}
       <header className="analytics-header">
         <h1 id="analytics-title">Analytics Dashboard</h1>
@@ -58,7 +61,9 @@ export function AnalyticsDashboardPage(): React.ReactElement {
           role="status"
           aria-live="polite"
         >
-          <span className="loading-spinner" aria-hidden="true">⏳</span>
+          <span className="loading-spinner" aria-hidden="true">
+            ⏳
+          </span>
           <span>Loading analytics...</span>
         </div>
       )}
@@ -70,7 +75,9 @@ export function AnalyticsDashboardPage(): React.ReactElement {
           data-testid="analytics-error"
           role="alert"
         >
-          <span className="error-icon" aria-hidden="true">⚠️</span>
+          <span className="error-icon" aria-hidden="true">
+            ⚠️
+          </span>
           <span>Failed to load analytics: {error}</span>
         </div>
       )}
@@ -84,7 +91,10 @@ export function AnalyticsDashboardPage(): React.ReactElement {
           </section>
 
           {/* HEART Dimension Cards */}
-          <section className="analytics-dimensions" aria-label="HEART Dimensions">
+          <section
+            className="analytics-dimensions"
+            aria-label="HEART Dimensions"
+          >
             {dimensions.map((dim) => (
               <DimensionCard
                 key={dim.dimension}

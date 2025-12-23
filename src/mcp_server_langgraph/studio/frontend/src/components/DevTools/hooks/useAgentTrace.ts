@@ -36,7 +36,7 @@ export interface UseAgentTraceReturn {
 // =============================================================================
 
 export function useAgentTrace(
-  options: UseAgentTraceOptions
+  options: UseAgentTraceOptions,
 ): UseAgentTraceReturn {
   const { sessionId, autoRefresh = false, refreshInterval = 5000 } = options;
 

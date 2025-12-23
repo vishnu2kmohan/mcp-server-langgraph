@@ -160,15 +160,15 @@ describe("AIInsightsTab", () => {
 
       expect(screen.getByTestId("severity-insight-1")).toHaveAttribute(
         "data-severity",
-        "high"
+        "high",
       );
       expect(screen.getByTestId("severity-insight-2")).toHaveAttribute(
         "data-severity",
-        "medium"
+        "medium",
       );
       expect(screen.getByTestId("severity-insight-3")).toHaveAttribute(
         "data-severity",
-        "low"
+        "low",
       );
     });
 
@@ -186,17 +186,19 @@ describe("AIInsightsTab", () => {
       render(<AIInsightsTab context="session" contextEntityId="session-123" />);
 
       expect(screen.getByTestId("confidence-insight-1")).toHaveTextContent(
-        "90%"
+        "90%",
       );
       expect(screen.getByTestId("confidence-insight-2")).toHaveTextContent(
-        "85%"
+        "85%",
       );
     });
 
     it("should show suggested actions when available", () => {
       render(<AIInsightsTab context="session" contextEntityId="session-123" />);
 
-      expect(screen.getByText("Check network connectivity")).toBeInTheDocument();
+      expect(
+        screen.getByText("Check network connectivity"),
+      ).toBeInTheDocument();
       expect(screen.getByText("Enable prompt caching")).toBeInTheDocument();
     });
   });
@@ -220,10 +222,10 @@ describe("AIInsightsTab", () => {
       // Only anomaly should be visible
       expect(screen.getByTestId("ai-insight-insight-1")).toBeInTheDocument();
       expect(
-        screen.queryByTestId("ai-insight-insight-2")
+        screen.queryByTestId("ai-insight-insight-2"),
       ).not.toBeInTheDocument();
       expect(
-        screen.queryByTestId("ai-insight-insight-3")
+        screen.queryByTestId("ai-insight-insight-3"),
       ).not.toBeInTheDocument();
     });
   });
@@ -236,7 +238,7 @@ describe("AIInsightsTab", () => {
       fireEvent.mouseEnter(insight);
 
       expect(
-        within(insight).getByTestId("dismiss-insight-button")
+        within(insight).getByTestId("dismiss-insight-button"),
       ).toBeInTheDocument();
     });
 
@@ -362,13 +364,13 @@ describe("AIInsightsTab", () => {
       render(<AIInsightsTab context="session" contextEntityId="session-123" />);
 
       expect(
-        screen.getByRole("heading", { name: /insights/i })
+        screen.getByRole("heading", { name: /insights/i }),
       ).toBeInTheDocument();
     });
 
     it("should have no accessibility violations", async () => {
       const { container } = render(
-        <AIInsightsTab context="session" contextEntityId="session-123" />
+        <AIInsightsTab context="session" contextEntityId="session-123" />,
       );
       const results = await axe(container);
       expect(results).toHaveNoViolations();

@@ -18,14 +18,18 @@ const mockGetState = vi.fn();
 
 vi.mock("../../../store/hooks", () => ({
   useAppDispatch: () => mockDispatch,
-  useAppSelector: (selector: (state: unknown) => unknown) => selector(mockGetState()),
+  useAppSelector: (selector: (state: unknown) => unknown) =>
+    selector(mockGetState()),
 }));
 
 vi.mock("../../../store/slices/devToolsSlice", () => ({
-  setHeight: vi.fn((height: number) => ({ type: "devTools/setHeight", payload: height })),
-  selectHeight: (state: { devTools: { height: number } }) => state.devTools.height,
+  setHeight: vi.fn((height: number) => ({
+    type: "devTools/setHeight",
+    payload: height,
+  })),
+  selectHeight: (state: { devTools: { height: number } }) =>
+    state.devTools.height,
 }));
-
 
 // =============================================================================
 // Tests
@@ -68,7 +72,7 @@ describe("useDevToolsResize", () => {
 
     it("should support custom storage key option", () => {
       const { result } = renderHook(() =>
-        useDevToolsResize({ storageKey: "custom-key" })
+        useDevToolsResize({ storageKey: "custom-key" }),
       );
 
       // Hook should work with custom storage key
@@ -89,7 +93,7 @@ describe("useDevToolsResize", () => {
 
     it("should enforce minimum height", () => {
       const { result } = renderHook(() =>
-        useDevToolsResize({ minHeight: 150 })
+        useDevToolsResize({ minHeight: 150 }),
       );
 
       act(() => {
@@ -102,7 +106,7 @@ describe("useDevToolsResize", () => {
 
     it("should enforce maximum height", () => {
       const { result } = renderHook(() =>
-        useDevToolsResize({ maxHeight: 400 })
+        useDevToolsResize({ maxHeight: 400 }),
       );
 
       act(() => {
@@ -115,7 +119,7 @@ describe("useDevToolsResize", () => {
 
     it("should clamp height to constraints when setting", () => {
       const { result } = renderHook(() =>
-        useDevToolsResize({ minHeight: 150, maxHeight: 400 })
+        useDevToolsResize({ minHeight: 150, maxHeight: 400 }),
       );
 
       // The setHeight function should dispatch (clamped value)
@@ -164,7 +168,7 @@ describe("useDevToolsResize", () => {
   describe("reset height", () => {
     it("should reset to default height", () => {
       const { result } = renderHook(() =>
-        useDevToolsResize({ defaultHeight: 200 })
+        useDevToolsResize({ defaultHeight: 200 }),
       );
 
       act(() => {
@@ -180,7 +184,7 @@ describe("useDevToolsResize", () => {
 
     it("should dispatch with default height when reset", () => {
       const { result } = renderHook(() =>
-        useDevToolsResize({ defaultHeight: 200 })
+        useDevToolsResize({ defaultHeight: 200 }),
       );
 
       act(() => {
@@ -195,7 +199,7 @@ describe("useDevToolsResize", () => {
   describe("constraints", () => {
     it("should return minHeight", () => {
       const { result } = renderHook(() =>
-        useDevToolsResize({ minHeight: 150 })
+        useDevToolsResize({ minHeight: 150 }),
       );
 
       expect(result.current.minHeight).toBe(150);
@@ -203,7 +207,7 @@ describe("useDevToolsResize", () => {
 
     it("should return maxHeight", () => {
       const { result } = renderHook(() =>
-        useDevToolsResize({ maxHeight: 400 })
+        useDevToolsResize({ maxHeight: 400 }),
       );
 
       expect(result.current.maxHeight).toBe(400);
@@ -220,7 +224,10 @@ describe("useDevToolsResize", () => {
   describe("height percentage", () => {
     it("should calculate height as percentage of window", () => {
       // Mock window.innerHeight
-      Object.defineProperty(window, "innerHeight", { value: 800, writable: true });
+      Object.defineProperty(window, "innerHeight", {
+        value: 800,
+        writable: true,
+      });
 
       mockGetState.mockReturnValue({
         devTools: { height: 200 },

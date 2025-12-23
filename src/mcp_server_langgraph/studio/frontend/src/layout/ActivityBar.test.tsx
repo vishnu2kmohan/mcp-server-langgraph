@@ -4,8 +4,8 @@
  * TDD tests for the extracted ActivityBar component.
  * Tests RBAC filtering, navigation, and accessibility.
  */
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { render, screen, cleanup } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { axe, toHaveNoViolations } from "jest-axe";
 
@@ -40,7 +40,16 @@ vi.mock("../hooks/useUXIntelligence", () => ({
 }));
 
 // Create test store with customizable persona
-function createTestStore(_sidebarItems: string[] = ["chat", "workflows", "agents", "observability", "admin", "settings"]) {
+function createTestStore(
+  _sidebarItems: string[] = [
+    "chat",
+    "workflows",
+    "agents",
+    "observability",
+    "admin",
+    "settings",
+  ],
+) {
   return configureStore({
     reducer: {
       canvas: canvasReducer,
@@ -72,6 +81,11 @@ function createWrapper(store: ReturnType<typeof createTestStore>) {
 
 describe("ActivityBar", () => {
   beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  afterEach(() => {
+    cleanup();
     vi.clearAllMocks();
   });
 
@@ -176,7 +190,7 @@ describe("ActivityBar", () => {
           type: "keydown",
           key: "k",
           metaKey: true,
-        })
+        }),
       );
     });
   });
@@ -243,22 +257,30 @@ describe("ActivityBar", () => {
     it("should accept enableAI prop", () => {
       const store = createTestStore();
       // Should render without error when enableAI is passed
-      render(<ActivityBar enableAI={true} />, { wrapper: createWrapper(store) });
+      render(<ActivityBar enableAI={true} />, {
+        wrapper: createWrapper(store),
+      });
       expect(screen.getByTestId("activity-bar")).toBeInTheDocument();
     });
 
     it("should render without AI predictions when enableAI is false", () => {
       const store = createTestStore();
-      render(<ActivityBar enableAI={false} />, { wrapper: createWrapper(store) });
+      render(<ActivityBar enableAI={false} />, {
+        wrapper: createWrapper(store),
+      });
       // Should not show prediction indicators
-      expect(screen.queryByTestId("nav-prediction-indicator")).not.toBeInTheDocument();
+      expect(
+        screen.queryByTestId("nav-prediction-indicator"),
+      ).not.toBeInTheDocument();
     });
 
     it("should show prediction indicator for predicted items when AI is enabled", () => {
       const store = createTestStore();
       // Note: This test validates the structure is in place.
       // Actual prediction logic is mocked in the hook.
-      render(<ActivityBar enableAI={true} />, { wrapper: createWrapper(store) });
+      render(<ActivityBar enableAI={true} />, {
+        wrapper: createWrapper(store),
+      });
       // The component should render, prediction indicators shown based on hook data
       expect(screen.getByTestId("activity-bar")).toBeInTheDocument();
     });
@@ -275,7 +297,9 @@ describe("ActivityBar", () => {
     it("should gracefully handle AI errors without breaking navigation", () => {
       const store = createTestStore();
       // When AI fails, navigation should still work
-      render(<ActivityBar enableAI={true} />, { wrapper: createWrapper(store) });
+      render(<ActivityBar enableAI={true} />, {
+        wrapper: createWrapper(store),
+      });
       expect(screen.getByTestId("nav-chat")).toBeInTheDocument();
     });
   });

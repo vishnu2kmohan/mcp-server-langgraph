@@ -90,10 +90,13 @@ export function calculateBackoff(attempt: number, config: RetryConfig): number {
  */
 export function shouldRetry(
   error: ClassifiedError,
-  context: RetryContext
+  context: RetryContext,
 ): boolean {
   const { attemptNumber, config } = context;
-  const { maxRetries, retryableCategories = DEFAULT_RETRY_CONFIG.retryableCategories } = config;
+  const {
+    maxRetries,
+    retryableCategories = DEFAULT_RETRY_CONFIG.retryableCategories,
+  } = config;
 
   // Check if we've exceeded max retries
   if (attemptNumber >= maxRetries) {
@@ -137,7 +140,8 @@ export function shouldRetry(
   }
 
   // Check if category is in retryable list
-  const isRetryableCategory = retryableCategories?.includes(error.category) ?? false;
+  const isRetryableCategory =
+    retryableCategories?.includes(error.category) ?? false;
 
   return isRetryableCategory;
 }

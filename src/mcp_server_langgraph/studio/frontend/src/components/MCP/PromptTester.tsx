@@ -11,10 +11,7 @@
  */
 
 import React, { useState, useCallback, useEffect, useMemo } from "react";
-import {
-  useListMcpPromptsQuery,
-  useGetMcpPromptMutation,
-} from "../../api";
+import { useListMcpPromptsQuery, useGetMcpPromptMutation } from "../../api";
 
 export interface PromptTesterProps {
   open: boolean;
@@ -46,7 +43,7 @@ export function PromptTester({ open, onClose }: PromptTesterProps) {
 
   const [selectedPromptName, setSelectedPromptName] = useState<string>("");
   const [argumentValues, setArgumentValues] = useState<Record<string, string>>(
-    {}
+    {},
   );
   const [result, setResult] = useState<PromptResult | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -86,7 +83,7 @@ export function PromptTester({ open, onClose }: PromptTesterProps) {
     const requiredArgs = promptArguments.filter((arg) => arg.required);
     return requiredArgs.every(
       (arg) =>
-        argumentValues[arg.name] && argumentValues[arg.name].trim() !== ""
+        argumentValues[arg.name] && argumentValues[arg.name].trim() !== "",
     );
   }, [selectedPrompt, promptArguments, argumentValues]);
 
@@ -98,16 +95,13 @@ export function PromptTester({ open, onClose }: PromptTesterProps) {
       setResult(null);
       setError(null);
     },
-    []
+    [],
   );
 
   // Handle argument value change
-  const handleArgumentChange = useCallback(
-    (name: string, value: string) => {
-      setArgumentValues((prev) => ({ ...prev, [name]: value }));
-    },
-    []
-  );
+  const handleArgumentChange = useCallback((name: string, value: string) => {
+    setArgumentValues((prev) => ({ ...prev, [name]: value }));
+  }, []);
 
   // Handle prompt execution
   const handleExecute = useCallback(async () => {

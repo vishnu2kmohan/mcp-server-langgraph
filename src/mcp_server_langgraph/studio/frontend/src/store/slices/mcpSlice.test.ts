@@ -142,8 +142,13 @@ describe("mcpSlice", () => {
     });
 
     it("should set lastConnected when status is connected", () => {
-      const disconnectedServer = { ...mockServer, status: "disconnected" as const };
-      const store = createTestStore({ servers: { "server-1": disconnectedServer } });
+      const disconnectedServer = {
+        ...mockServer,
+        status: "disconnected" as const,
+      };
+      const store = createTestStore({
+        servers: { "server-1": disconnectedServer },
+      });
 
       const beforeTime = Date.now();
       store.dispatch(
@@ -456,7 +461,9 @@ describe("mcpSlice", () => {
           requestId: "req-1",
         };
         const store = createTestStore({ pendingElicitations: [elicitation] });
-        expect(selectPendingElicitations(store.getState())).toEqual([elicitation]);
+        expect(selectPendingElicitations(store.getState())).toEqual([
+          elicitation,
+        ]);
       });
     });
 
@@ -469,7 +476,9 @@ describe("mcpSlice", () => {
           requestId: "req-1",
         };
         const store = createTestStore({ pendingSamplingRequests: [sampling] });
-        expect(selectPendingSamplingRequests(store.getState())).toEqual([sampling]);
+        expect(selectPendingSamplingRequests(store.getState())).toEqual([
+          sampling,
+        ]);
       });
     });
 
@@ -478,12 +487,16 @@ describe("mcpSlice", () => {
         const store = createTestStore({
           servers: { "server-1": mockServer },
         });
-        expect(selectServerById("server-1")(store.getState())).toEqual(mockServer);
+        expect(selectServerById("server-1")(store.getState())).toEqual(
+          mockServer,
+        );
       });
 
       it("should return undefined for non-existent server", () => {
         const store = createTestStore();
-        expect(selectServerById("non-existent")(store.getState())).toBeUndefined();
+        expect(
+          selectServerById("non-existent")(store.getState()),
+        ).toBeUndefined();
       });
     });
   });

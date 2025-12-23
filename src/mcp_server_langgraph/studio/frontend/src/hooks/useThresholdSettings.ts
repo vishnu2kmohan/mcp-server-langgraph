@@ -58,7 +58,7 @@ export interface UseThresholdSettingsReturn {
   fetchSettings: () => Promise<UserThresholdSettings | null>;
   /** Update user threshold settings */
   updateSettings: (
-    updates: UpdateThresholdSettingsRequest
+    updates: UpdateThresholdSettingsRequest,
   ) => Promise<UserThresholdSettings | null>;
   /** Apply the current recommendation to settings */
   applyRecommendation: () => Promise<UserThresholdSettings | null>;
@@ -82,7 +82,7 @@ export function useThresholdSettings(): UseThresholdSettingsReturn {
     ThresholdRecommendation | undefined
   >(undefined);
   const [settings, setSettings] = useState<UserThresholdSettings | undefined>(
-    undefined
+    undefined,
   );
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -115,7 +115,7 @@ export function useThresholdSettings(): UseThresholdSettingsReturn {
           {
             method: "GET",
             headers: getHeaders(),
-          }
+          },
         );
 
         if (!response.ok) {
@@ -129,9 +129,7 @@ export function useThresholdSettings(): UseThresholdSettingsReturn {
         return data as ThresholdRecommendation;
       } catch (err) {
         const errorMessage =
-          err instanceof Error
-            ? err.message
-            : "Failed to fetch recommendation";
+          err instanceof Error ? err.message : "Failed to fetch recommendation";
         setError(errorMessage);
         return null;
       } finally {
@@ -153,7 +151,7 @@ export function useThresholdSettings(): UseThresholdSettingsReturn {
           {
             method: "GET",
             headers: getHeaders(),
-          }
+          },
         );
 
         if (!response.ok) {
@@ -180,7 +178,7 @@ export function useThresholdSettings(): UseThresholdSettingsReturn {
    */
   const updateSettings = useCallback(
     async (
-      updates: UpdateThresholdSettingsRequest
+      updates: UpdateThresholdSettingsRequest,
     ): Promise<UserThresholdSettings | null> => {
       setIsLoading(true);
       setError(null);
@@ -192,7 +190,7 @@ export function useThresholdSettings(): UseThresholdSettingsReturn {
             method: "PUT",
             headers: getHeaders(),
             body: JSON.stringify(updates),
-          }
+          },
         );
 
         if (!response.ok) {
@@ -213,7 +211,7 @@ export function useThresholdSettings(): UseThresholdSettingsReturn {
         setIsLoading(false);
       }
     },
-    [getHeaders]
+    [getHeaders],
   );
 
   /**

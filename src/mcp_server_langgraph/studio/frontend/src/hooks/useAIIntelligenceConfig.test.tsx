@@ -374,7 +374,8 @@ describe("useAIIntelligenceConfig", () => {
         flags: { enable_conversation_intelligence: true },
         isLoading: false,
         isError: false,
-        isEnabled: (name: string) => name === "enable_conversation_intelligence",
+        isEnabled: (name: string) =>
+          name === "enable_conversation_intelligence",
       });
 
       const store = createTestStore();

@@ -9,7 +9,10 @@
  */
 
 import React, { useEffect } from "react";
-import { useAIErrorRecovery, type AIRecoverySuggestion } from "../../hooks/useAIErrorRecovery";
+import {
+  useAIErrorRecovery,
+  type AIRecoverySuggestion,
+} from "../../hooks/useAIErrorRecovery";
 
 // =============================================================================
 // Types
@@ -150,11 +153,10 @@ export function ErrorRecoveryPanel({
         className={`error-recovery-panel loading ${className}`}
         data-testid={testId}
       >
-        <div
-          className="loading-indicator"
-          data-testid="error-recovery-loading"
-        >
-          <span className="spinner" aria-hidden="true">⏳</span>
+        <div className="loading-indicator" data-testid="error-recovery-loading">
+          <span className="spinner" aria-hidden="true">
+            ⏳
+          </span>
           <span>Analyzing error...</span>
         </div>
       </div>
@@ -173,14 +175,18 @@ export function ErrorRecoveryPanel({
     >
       {/* Error Header */}
       <div className="error-header">
-        <span className="error-icon" aria-hidden="true">⚠️</span>
+        <span className="error-icon" aria-hidden="true">
+          ⚠️
+        </span>
         <div className="error-info">
           <h3 className="error-title">{error.message}</h3>
           {analysis && (
             <span
               className="error-category"
               style={{
-                backgroundColor: getCategoryColor(analysis.classification.category),
+                backgroundColor: getCategoryColor(
+                  analysis.classification.category,
+                ),
               }}
             >
               {analysis.classification.category}
@@ -190,9 +196,7 @@ export function ErrorRecoveryPanel({
       </div>
 
       {/* Root Cause */}
-      {analysis && (
-        <p className="root-cause">{analysis.rootCause}</p>
-      )}
+      {analysis && <p className="root-cause">{analysis.rootCause}</p>}
 
       {/* Suggestions */}
       <div className="suggestions">
@@ -210,13 +214,17 @@ export function ErrorRecoveryPanel({
               <span className="suggestion-content">
                 <span className="suggestion-label">{suggestion.label}</span>
                 {suggestion.guidance && (
-                  <span className="suggestion-guidance">{suggestion.guidance}</span>
-                )}
-                {showConfidence && suggestion.estimatedSuccess !== undefined && (
-                  <span className="suggestion-confidence">
-                    {Math.round(suggestion.estimatedSuccess * 100)}% success rate
+                  <span className="suggestion-guidance">
+                    {suggestion.guidance}
                   </span>
                 )}
+                {showConfidence &&
+                  suggestion.estimatedSuccess !== undefined && (
+                    <span className="suggestion-confidence">
+                      {Math.round(suggestion.estimatedSuccess * 100)}% success
+                      rate
+                    </span>
+                  )}
               </span>
             </button>
           ))
@@ -227,7 +235,9 @@ export function ErrorRecoveryPanel({
             onClick={() => onRetry?.()}
             aria-label="Try again"
           >
-            <span className="suggestion-icon" aria-hidden="true">🔄</span>
+            <span className="suggestion-icon" aria-hidden="true">
+              🔄
+            </span>
             <span className="suggestion-content">
               <span className="suggestion-label">Try again</span>
             </span>
@@ -236,21 +246,23 @@ export function ErrorRecoveryPanel({
       </div>
 
       {/* Similar Issues */}
-      {showSimilarIssues && analysis?.similarIssues && analysis.similarIssues.length > 0 && (
-        <div className="similar-issues">
-          <h4>Similar Issues</h4>
-          <ul>
-            {analysis.similarIssues.map((issue) => (
-              <li key={issue.id}>
-                <span className="issue-resolution">{issue.resolution}</span>
-                <span className="issue-success-rate">
-                  {Math.round(issue.successRate * 100)}% success rate
-                </span>
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
+      {showSimilarIssues &&
+        analysis?.similarIssues &&
+        analysis.similarIssues.length > 0 && (
+          <div className="similar-issues">
+            <h4>Similar Issues</h4>
+            <ul>
+              {analysis.similarIssues.map((issue) => (
+                <li key={issue.id}>
+                  <span className="issue-resolution">{issue.resolution}</span>
+                  <span className="issue-success-rate">
+                    {Math.round(issue.successRate * 100)}% success rate
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
 
       {/* Dismiss Button */}
       <button

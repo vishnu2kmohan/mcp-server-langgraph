@@ -49,7 +49,7 @@ export interface UsePersonaCacheInvalidationResult {
  * ```
  */
 export function usePersonaCacheInvalidation(
-  options: UsePersonaCacheInvalidationOptions = {}
+  options: UsePersonaCacheInvalidationOptions = {},
 ): UsePersonaCacheInvalidationResult {
   const { enabled = true, invalidateBackend = false } = options;
 
@@ -82,7 +82,10 @@ export function usePersonaCacheInvalidation(
           // TODO: Add API call when endpoint is available
           // await invalidateUserCache({ userId });
         } catch (error) {
-          console.warn("[PersonaCacheInvalidation] Backend invalidation failed:", error);
+          console.warn(
+            "[PersonaCacheInvalidation] Backend invalidation failed:",
+            error,
+          );
         }
       }
 

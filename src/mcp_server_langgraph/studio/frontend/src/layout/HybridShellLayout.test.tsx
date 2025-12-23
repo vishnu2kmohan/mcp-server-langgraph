@@ -471,7 +471,6 @@ describe("HybridShellLayout", () => {
     });
   });
 
-
   describe("Keyboard Navigation", () => {
     it("supports keyboard shortcuts hint in status bar", () => {
       renderWithProviders(createTestStore());
@@ -540,7 +539,9 @@ describe("HybridShellLayout", () => {
 
   describe("ConversationPanel with Chat Integration (Phase 3)", () => {
     it("renders conversation panel with chat functionality", () => {
-      renderWithProviders(createStoreWithPersona("user"), ["/studio/v2/chat/session-1"]);
+      renderWithProviders(createStoreWithPersona("user"), [
+        "/studio/v2/chat/session-1",
+      ]);
 
       const conversationPanel = screen.getByTestId("conversation-panel");
       expect(conversationPanel).toBeInTheDocument();
@@ -561,7 +562,9 @@ describe("HybridShellLayout", () => {
 
   describe("Accessibility (WCAG 2.1 AA)", () => {
     it("should have no axe-core accessibility violations", async () => {
-      const { container } = renderWithProviders(createStoreWithPersona("admin"));
+      const { container } = renderWithProviders(
+        createStoreWithPersona("admin"),
+      );
 
       // Run axe-core accessibility analysis
       const results = await axe(container, {
@@ -647,10 +650,9 @@ describe("HybridShellLayout", () => {
       Object.defineProperty(window, "matchMedia", {
         writable: true,
         value: vi.fn().mockImplementation((query: string) => ({
-          matches:
-            query.includes("min-width")
-              ? width >= parseInt(query.match(/\d+/)?.[0] || "0", 10)
-              : width <= parseInt(query.match(/\d+/)?.[0] || "9999", 10),
+          matches: query.includes("min-width")
+            ? width >= parseInt(query.match(/\d+/)?.[0] || "0", 10)
+            : width <= parseInt(query.match(/\d+/)?.[0] || "9999", 10),
           media: query,
           onchange: null,
           addListener: vi.fn(),
@@ -1094,14 +1096,22 @@ describe("HybridShellLayout", () => {
                   role: "user" as const,
                   content: "Hello",
                   timestamp: new Date().toISOString(),
-                  usage: { totalTokens: 100, promptTokens: 50, completionTokens: 50 },
+                  usage: {
+                    totalTokens: 100,
+                    promptTokens: 50,
+                    completionTokens: 50,
+                  },
                 },
                 {
                   id: "msg-2",
                   role: "assistant" as const,
                   content: "Hi there!",
                   timestamp: new Date().toISOString(),
-                  usage: { totalTokens: 200, promptTokens: 100, completionTokens: 100 },
+                  usage: {
+                    totalTokens: 200,
+                    promptTokens: 100,
+                    completionTokens: 100,
+                  },
                 },
               ],
               config: { modelName: "gpt-4" },
@@ -1160,7 +1170,11 @@ describe("HybridShellLayout", () => {
                   content: "Let me think...",
                   timestamp: new Date().toISOString(),
                   thinkingTokens: 500,
-                  usage: { totalTokens: 100, promptTokens: 50, completionTokens: 50 },
+                  usage: {
+                    totalTokens: 100,
+                    promptTokens: 50,
+                    completionTokens: 50,
+                  },
                 },
               ],
               config: { modelName: "claude-3" },
@@ -1365,7 +1379,9 @@ describe("HybridShellLayout", () => {
       renderWithProviders(createTestStore());
 
       // Initially command palette should not be visible
-      expect(screen.queryByTestId("ai-command-palette")).not.toBeInTheDocument();
+      expect(
+        screen.queryByTestId("ai-command-palette"),
+      ).not.toBeInTheDocument();
 
       // Simulate Cmd+K keydown using act to handle React state updates
       await act(async () => {
@@ -1415,7 +1431,9 @@ describe("HybridShellLayout", () => {
       });
 
       // Command palette should NOT be visible
-      expect(screen.queryByTestId("ai-command-palette")).not.toBeInTheDocument();
+      expect(
+        screen.queryByTestId("ai-command-palette"),
+      ).not.toBeInTheDocument();
     });
   });
 
@@ -1486,14 +1504,18 @@ describe("HybridShellLayout", () => {
       );
 
       // Background agent panel should be visible - wait for lazy-loaded component
-      expect(await screen.findByTestId("background-agent-panel")).toBeInTheDocument();
+      expect(
+        await screen.findByTestId("background-agent-panel"),
+      ).toBeInTheDocument();
     });
 
     it("does not render background agent panel when no agents", () => {
       renderWithProviders(createTestStore());
 
       // No agents = no panel
-      expect(screen.queryByTestId("background-agent-panel")).not.toBeInTheDocument();
+      expect(
+        screen.queryByTestId("background-agent-panel"),
+      ).not.toBeInTheDocument();
     });
 
     it("handles agent cancel action", async () => {
@@ -1536,7 +1558,9 @@ describe("HybridShellLayout", () => {
       );
 
       // Find and click cancel button - wait for lazy-loaded component
-      const cancelButton = await screen.findByRole("button", { name: /cancel/i });
+      const cancelButton = await screen.findByRole("button", {
+        name: /cancel/i,
+      });
       await user.click(cancelButton);
 
       // Agent status should be updated to failed
@@ -1684,8 +1708,12 @@ describe("HybridShellLayout", () => {
 
       // Find and click the New Chat command within the command palette
       const commandPalette = screen.getByTestId("ai-command-palette");
-      const commandItems = commandPalette.querySelectorAll("button, [role='option'], [class*='command']");
-      const newChatItem = Array.from(commandItems).find(el => el.textContent?.includes("New Chat"));
+      const commandItems = commandPalette.querySelectorAll(
+        "button, [role='option'], [class*='command']",
+      );
+      const newChatItem = Array.from(commandItems).find((el) =>
+        el.textContent?.includes("New Chat"),
+      );
 
       if (newChatItem) {
         await user.click(newChatItem);
@@ -1728,8 +1756,12 @@ describe("HybridShellLayout", () => {
 
       // Find and click the Toggle Canvas command within the palette
       const commandPalette = screen.getByTestId("ai-command-palette");
-      const commandItems = commandPalette.querySelectorAll("button, [role='option'], [class*='command']");
-      const toggleCanvasItem = Array.from(commandItems).find(el => el.textContent?.includes("Toggle Canvas"));
+      const commandItems = commandPalette.querySelectorAll(
+        "button, [role='option'], [class*='command']",
+      );
+      const toggleCanvasItem = Array.from(commandItems).find((el) =>
+        el.textContent?.includes("Toggle Canvas"),
+      );
 
       if (toggleCanvasItem) {
         await user.click(toggleCanvasItem);
@@ -1772,8 +1804,12 @@ describe("HybridShellLayout", () => {
 
       // Find and click the Toggle Sidebar command within the palette
       const commandPalette = screen.getByTestId("ai-command-palette");
-      const commandItems = commandPalette.querySelectorAll("button, [role='option'], [class*='command']");
-      const toggleSidebarItem = Array.from(commandItems).find(el => el.textContent?.includes("Toggle Sidebar"));
+      const commandItems = commandPalette.querySelectorAll(
+        "button, [role='option'], [class*='command']",
+      );
+      const toggleSidebarItem = Array.from(commandItems).find((el) =>
+        el.textContent?.includes("Toggle Sidebar"),
+      );
 
       if (toggleSidebarItem) {
         await user.click(toggleSidebarItem);
@@ -1804,8 +1840,12 @@ describe("HybridShellLayout", () => {
 
       // Find and click the Open Settings command within the palette
       const commandPalette = screen.getByTestId("ai-command-palette");
-      const commandItems = commandPalette.querySelectorAll("button, [role='option'], [class*='command']");
-      const settingsItem = Array.from(commandItems).find(el => el.textContent?.includes("Open Settings"));
+      const commandItems = commandPalette.querySelectorAll(
+        "button, [role='option'], [class*='command']",
+      );
+      const settingsItem = Array.from(commandItems).find((el) =>
+        el.textContent?.includes("Open Settings"),
+      );
 
       if (settingsItem) {
         await user.click(settingsItem);
@@ -1835,8 +1875,12 @@ describe("HybridShellLayout", () => {
 
       // Find and click the Help command within the palette
       const commandPalette = screen.getByTestId("ai-command-palette");
-      const commandItems = commandPalette.querySelectorAll("button, [role='option'], [class*='command']");
-      const helpItem = Array.from(commandItems).find(el => el.textContent?.match(/^Help/));
+      const commandItems = commandPalette.querySelectorAll(
+        "button, [role='option'], [class*='command']",
+      );
+      const helpItem = Array.from(commandItems).find((el) =>
+        el.textContent?.match(/^Help/),
+      );
 
       if (helpItem) {
         await user.click(helpItem);
@@ -1866,8 +1910,12 @@ describe("HybridShellLayout", () => {
 
       // Find and click the Observability command within the palette
       const commandPalette = screen.getByTestId("ai-command-palette");
-      const commandItems = commandPalette.querySelectorAll("button, [role='option'], [class*='command']");
-      const observabilityItem = Array.from(commandItems).find(el => el.textContent?.includes("Observability"));
+      const commandItems = commandPalette.querySelectorAll(
+        "button, [role='option'], [class*='command']",
+      );
+      const observabilityItem = Array.from(commandItems).find((el) =>
+        el.textContent?.includes("Observability"),
+      );
 
       if (observabilityItem) {
         await user.click(observabilityItem);
@@ -1897,8 +1945,12 @@ describe("HybridShellLayout", () => {
 
       // Find and click the Compliance Dashboard command within the palette
       const commandPalette = screen.getByTestId("ai-command-palette");
-      const commandItems = commandPalette.querySelectorAll("button, [role='option'], [class*='command']");
-      const complianceItem = Array.from(commandItems).find(el => el.textContent?.includes("Compliance"));
+      const commandItems = commandPalette.querySelectorAll(
+        "button, [role='option'], [class*='command']",
+      );
+      const complianceItem = Array.from(commandItems).find((el) =>
+        el.textContent?.includes("Compliance"),
+      );
 
       if (complianceItem) {
         await user.click(complianceItem);
@@ -1931,7 +1983,9 @@ describe("HybridShellLayout", () => {
 
       // Command palette should be closed
       await waitFor(() => {
-        expect(screen.queryByTestId("ai-command-palette")).not.toBeInTheDocument();
+        expect(
+          screen.queryByTestId("ai-command-palette"),
+        ).not.toBeInTheDocument();
       });
     });
   });
@@ -2006,7 +2060,8 @@ describe("HybridShellLayout", () => {
 
       // Find the agent count button in status bar
       const statusBar = screen.getByTestId("status-bar");
-      const agentButton = statusBar.querySelector("[aria-label*='agent']") ||
+      const agentButton =
+        statusBar.querySelector("[aria-label*='agent']") ||
         statusBar.querySelector("button");
 
       if (agentButton) {
@@ -2103,11 +2158,12 @@ describe("HybridShellLayout", () => {
       // Mock fetch for AI interpretation
       global.fetch = vi.fn().mockResolvedValue({
         ok: true,
-        json: () => Promise.resolve({
-          action: "navigate",
-          params: { path: "/studio/v2/compliance" },
-          confidence: 0.9,
-        }),
+        json: () =>
+          Promise.resolve({
+            action: "navigate",
+            params: { path: "/studio/v2/compliance" },
+            confidence: 0.9,
+          }),
       });
 
       renderWithProviders(createTestStore());
@@ -2131,13 +2187,16 @@ describe("HybridShellLayout", () => {
       await user.type(searchInput, "show me the compliance dashboard please");
 
       // Wait for debounce and AI interpretation
-      await waitFor(() => {
-        // AI suggestion should appear after debounce
-        const aiSuggestion = screen.queryByTestId("ai-suggestion");
-        if (aiSuggestion) {
-          expect(aiSuggestion).toBeInTheDocument();
-        }
-      }, { timeout: 2000 });
+      await waitFor(
+        () => {
+          // AI suggestion should appear after debounce
+          const aiSuggestion = screen.queryByTestId("ai-suggestion");
+          if (aiSuggestion) {
+            expect(aiSuggestion).toBeInTheDocument();
+          }
+        },
+        { timeout: 2000 },
+      );
 
       // Cleanup
       window.location = originalLocation;
@@ -2150,11 +2209,12 @@ describe("HybridShellLayout", () => {
       // Mock fetch for AI interpretation
       global.fetch = vi.fn().mockResolvedValue({
         ok: true,
-        json: () => Promise.resolve({
-          action: "toggle-panel",
-          params: { panel: "canvas" },
-          confidence: 0.85,
-        }),
+        json: () =>
+          Promise.resolve({
+            action: "toggle-panel",
+            params: { panel: "canvas" },
+            confidence: 0.85,
+          }),
       });
 
       render(
@@ -2194,11 +2254,12 @@ describe("HybridShellLayout", () => {
       // Mock fetch for AI interpretation
       global.fetch = vi.fn().mockResolvedValue({
         ok: true,
-        json: () => Promise.resolve({
-          action: "new-chat",
-          params: {},
-          confidence: 0.95,
-        }),
+        json: () =>
+          Promise.resolve({
+            action: "new-chat",
+            params: {},
+            confidence: 0.95,
+          }),
       });
 
       render(
@@ -2235,11 +2296,12 @@ describe("HybridShellLayout", () => {
       // Mock fetch for AI interpretation
       global.fetch = vi.fn().mockResolvedValue({
         ok: true,
-        json: () => Promise.resolve({
-          action: "search",
-          params: { query: "test search" },
-          confidence: 0.8,
-        }),
+        json: () =>
+          Promise.resolve({
+            action: "search",
+            params: { query: "test search" },
+            confidence: 0.8,
+          }),
       });
 
       renderWithProviders(createTestStore());
@@ -2268,11 +2330,12 @@ describe("HybridShellLayout", () => {
       // Mock fetch for AI interpretation with unknown action
       global.fetch = vi.fn().mockResolvedValue({
         ok: true,
-        json: () => Promise.resolve({
-          action: "unknown-action",
-          params: {},
-          confidence: 0.5,
-        }),
+        json: () =>
+          Promise.resolve({
+            action: "unknown-action",
+            params: {},
+            confidence: 0.5,
+          }),
       });
 
       renderWithProviders(createTestStore());
@@ -2490,7 +2553,8 @@ describe("HybridShellLayout", () => {
     afterEach(() => {
       // Reset mocks to default state
       mockUseFeatureFlag.mockImplementation((flag: string) => {
-        if (flag === "canvas_ai_palette" || flag === "ai_suggestions") return true;
+        if (flag === "canvas_ai_palette" || flag === "ai_suggestions")
+          return true;
         return false;
       });
       mockPersonaAnalysisReturn.isPersonaMismatch = false;
@@ -2504,7 +2568,8 @@ describe("HybridShellLayout", () => {
       // Enable persona_analysis feature flag
       mockUseFeatureFlag.mockImplementation((flag: string) => {
         if (flag === "persona_analysis") return true;
-        if (flag === "canvas_ai_palette" || flag === "ai_suggestions") return true;
+        if (flag === "canvas_ai_palette" || flag === "ai_suggestions")
+          return true;
         return false;
       });
 
@@ -2512,20 +2577,31 @@ describe("HybridShellLayout", () => {
       mockPersonaAnalysisReturn.isPersonaMismatch = true;
       mockPersonaAnalysisReturn.confidence = 0.85;
       mockPersonaAnalysisReturn.detectedPersona = "alice-builder";
-      mockPersonaAnalysisReturn.behaviorSignals = ["workflow-creation", "api-testing", "mcp-connections"];
-      mockPersonaAnalysisReturn.recommendation = "Consider switching to Developer mode for enhanced features";
+      mockPersonaAnalysisReturn.behaviorSignals = [
+        "workflow-creation",
+        "api-testing",
+        "mcp-connections",
+      ];
+      mockPersonaAnalysisReturn.recommendation =
+        "Consider switching to Developer mode for enhanced features";
 
       renderWithProviders(createTestStore());
 
       // Should render persona mismatch banner
       await waitFor(() => {
-        expect(screen.getByTestId("persona-mismatch-banner")).toBeInTheDocument();
+        expect(
+          screen.getByTestId("persona-mismatch-banner"),
+        ).toBeInTheDocument();
       });
 
       // Check for banner content
-      expect(screen.getByText(/We noticed you're using advanced features/i)).toBeInTheDocument();
+      expect(
+        screen.getByText(/We noticed you're using advanced features/i),
+      ).toBeInTheDocument();
       expect(screen.getByText(/alice builder/i)).toBeInTheDocument();
-      expect(screen.getByText(/Consider switching to Developer mode/i)).toBeInTheDocument();
+      expect(
+        screen.getByText(/Consider switching to Developer mode/i),
+      ).toBeInTheDocument();
 
       // Check behavior signals
       expect(screen.getByText("workflow-creation")).toBeInTheDocument();
@@ -2536,7 +2612,8 @@ describe("HybridShellLayout", () => {
     it("does not render banner when confidence is below threshold", async () => {
       mockUseFeatureFlag.mockImplementation((flag: string) => {
         if (flag === "persona_analysis") return true;
-        if (flag === "canvas_ai_palette" || flag === "ai_suggestions") return true;
+        if (flag === "canvas_ai_palette" || flag === "ai_suggestions")
+          return true;
         return false;
       });
 
@@ -2547,7 +2624,9 @@ describe("HybridShellLayout", () => {
       renderWithProviders(createTestStore());
 
       // Banner should NOT render due to low confidence
-      expect(screen.queryByTestId("persona-mismatch-banner")).not.toBeInTheDocument();
+      expect(
+        screen.queryByTestId("persona-mismatch-banner"),
+      ).not.toBeInTheDocument();
     });
 
     it("hides banner when dismiss button is clicked", async () => {
@@ -2555,21 +2634,27 @@ describe("HybridShellLayout", () => {
 
       mockUseFeatureFlag.mockImplementation((flag: string) => {
         if (flag === "persona_analysis") return true;
-        if (flag === "canvas_ai_palette" || flag === "ai_suggestions") return true;
+        if (flag === "canvas_ai_palette" || flag === "ai_suggestions")
+          return true;
         return false;
       });
 
       mockPersonaAnalysisReturn.isPersonaMismatch = true;
       mockPersonaAnalysisReturn.confidence = 0.9;
       mockPersonaAnalysisReturn.detectedPersona = "alice-analyst";
-      mockPersonaAnalysisReturn.behaviorSignals = ["trace-viewing", "metric-analysis"];
+      mockPersonaAnalysisReturn.behaviorSignals = [
+        "trace-viewing",
+        "metric-analysis",
+      ];
       mockPersonaAnalysisReturn.recommendation = "Try analyst mode";
 
       renderWithProviders(createTestStore());
 
       // Banner should be visible
       await waitFor(() => {
-        expect(screen.getByTestId("persona-mismatch-banner")).toBeInTheDocument();
+        expect(
+          screen.getByTestId("persona-mismatch-banner"),
+        ).toBeInTheDocument();
       });
 
       // Click dismiss button
@@ -2578,7 +2663,9 @@ describe("HybridShellLayout", () => {
 
       // Banner should be hidden
       await waitFor(() => {
-        expect(screen.queryByTestId("persona-mismatch-banner")).not.toBeInTheDocument();
+        expect(
+          screen.queryByTestId("persona-mismatch-banner"),
+        ).not.toBeInTheDocument();
       });
     });
   });
@@ -2587,7 +2674,8 @@ describe("HybridShellLayout", () => {
     afterEach(() => {
       // Reset mocks to default state
       mockUseFeatureFlag.mockImplementation((flag: string) => {
-        if (flag === "canvas_ai_palette" || flag === "ai_suggestions") return true;
+        if (flag === "canvas_ai_palette" || flag === "ai_suggestions")
+          return true;
         return false;
       });
       mockNudgesReturn.activeNudge = null;
@@ -2599,7 +2687,8 @@ describe("HybridShellLayout", () => {
       // Enable nudges feature flag
       mockUseFeatureFlag.mockImplementation((flag: string) => {
         if (flag === "nudges") return true;
-        if (flag === "canvas_ai_palette" || flag === "ai_suggestions") return true;
+        if (flag === "canvas_ai_palette" || flag === "ai_suggestions")
+          return true;
         return false;
       });
 
@@ -2622,7 +2711,9 @@ describe("HybridShellLayout", () => {
       });
 
       // Check nudge content
-      expect(screen.getByText(/You can use Cmd\+K to access AI-powered commands/i)).toBeInTheDocument();
+      expect(
+        screen.getByText(/You can use Cmd\+K to access AI-powered commands/i),
+      ).toBeInTheDocument();
     });
 
     it("calls dismiss when nudge is dismissed", async () => {
@@ -2630,7 +2721,8 @@ describe("HybridShellLayout", () => {
 
       mockUseFeatureFlag.mockImplementation((flag: string) => {
         if (flag === "nudges") return true;
-        if (flag === "canvas_ai_palette" || flag === "ai_suggestions") return true;
+        if (flag === "canvas_ai_palette" || flag === "ai_suggestions")
+          return true;
         return false;
       });
 
@@ -2675,7 +2767,8 @@ describe("HybridShellLayout", () => {
       // Enable agent_hitl feature flag
       mockUseFeatureFlag.mockImplementation((flag: string) => {
         if (flag === "agent_hitl") return true;
-        if (flag === "canvas_ai_palette" || flag === "ai_suggestions") return true;
+        if (flag === "canvas_ai_palette" || flag === "ai_suggestions")
+          return true;
         return false;
       });
 
@@ -2704,14 +2797,17 @@ describe("HybridShellLayout", () => {
 
       // Check dialog content
       expect(screen.getByText(/Research Assistant/)).toBeInTheDocument();
-      expect(screen.getByText(/Send analysis report to external API/)).toBeInTheDocument();
+      expect(
+        screen.getByText(/Send analysis report to external API/),
+      ).toBeInTheDocument();
     });
 
     it("should render ClarificationDialog when clarification request is received", async () => {
       // Enable agent_hitl feature flag
       mockUseFeatureFlag.mockImplementation((flag: string) => {
         if (flag === "agent_hitl") return true;
-        if (flag === "canvas_ai_palette" || flag === "ai_suggestions") return true;
+        if (flag === "canvas_ai_palette" || flag === "ai_suggestions")
+          return true;
         return false;
       });
 
@@ -2725,8 +2821,17 @@ describe("HybridShellLayout", () => {
           clarification_type: "choice" as const,
           question: "Which analysis approach should I use?",
           options: [
-            { id: "fast", label: "Fast Analysis", description: "~30 seconds, 85% accuracy" },
-            { id: "thorough", label: "Thorough Analysis", description: "~5 minutes, 98% accuracy", is_recommended: true },
+            {
+              id: "fast",
+              label: "Fast Analysis",
+              description: "~30 seconds, 85% accuracy",
+            },
+            {
+              id: "thorough",
+              label: "Thorough Analysis",
+              description: "~5 minutes, 98% accuracy",
+              is_recommended: true,
+            },
           ],
           placeholder: null,
           required: true,
@@ -2744,14 +2849,17 @@ describe("HybridShellLayout", () => {
 
       // Check dialog content
       expect(screen.getByText(/Data Analyst/)).toBeInTheDocument();
-      expect(screen.getByText(/Which analysis approach should I use/)).toBeInTheDocument();
+      expect(
+        screen.getByText(/Which analysis approach should I use/),
+      ).toBeInTheDocument();
     });
 
     it("should not render HITL dialogs when agent_hitl flag is disabled", () => {
       // Disable agent_hitl feature flag
       mockUseFeatureFlag.mockImplementation((flag: string) => {
         if (flag === "agent_hitl") return false;
-        if (flag === "canvas_ai_palette" || flag === "ai_suggestions") return true;
+        if (flag === "canvas_ai_palette" || flag === "ai_suggestions")
+          return true;
         return false;
       });
 
@@ -2774,7 +2882,9 @@ describe("HybridShellLayout", () => {
       renderWithProviders(createTestStore());
 
       // Dialog should NOT be rendered
-      expect(screen.queryByTestId("agent-approval-dialog")).not.toBeInTheDocument();
+      expect(
+        screen.queryByTestId("agent-approval-dialog"),
+      ).not.toBeInTheDocument();
     });
 
     it("should handle approval action", async () => {
@@ -2782,7 +2892,8 @@ describe("HybridShellLayout", () => {
 
       mockUseFeatureFlag.mockImplementation((flag: string) => {
         if (flag === "agent_hitl") return true;
-        if (flag === "canvas_ai_palette" || flag === "ai_suggestions") return true;
+        if (flag === "canvas_ai_palette" || flag === "ai_suggestions")
+          return true;
         return false;
       });
 
@@ -2829,7 +2940,8 @@ describe("HybridShellLayout", () => {
 
       mockUseFeatureFlag.mockImplementation((flag: string) => {
         if (flag === "agent_hitl") return true;
-        if (flag === "canvas_ai_palette" || flag === "ai_suggestions") return true;
+        if (flag === "canvas_ai_palette" || flag === "ai_suggestions")
+          return true;
         return false;
       });
 
@@ -2876,7 +2988,8 @@ describe("HybridShellLayout", () => {
 
       mockUseFeatureFlag.mockImplementation((flag: string) => {
         if (flag === "agent_hitl") return true;
-        if (flag === "canvas_ai_palette" || flag === "ai_suggestions") return true;
+        if (flag === "canvas_ai_palette" || flag === "ai_suggestions")
+          return true;
         return false;
       });
 
@@ -2932,7 +3045,8 @@ describe("HybridShellLayout", () => {
 
       mockUseFeatureFlag.mockImplementation((flag: string) => {
         if (flag === "agent_hitl") return true;
-        if (flag === "canvas_ai_palette" || flag === "ai_suggestions") return true;
+        if (flag === "canvas_ai_palette" || flag === "ai_suggestions")
+          return true;
         return false;
       });
 
@@ -2963,14 +3077,17 @@ describe("HybridShellLayout", () => {
 
       // Dialog should be dismissed
       await waitFor(() => {
-        expect(screen.queryByTestId("agent-approval-dialog")).not.toBeInTheDocument();
+        expect(
+          screen.queryByTestId("agent-approval-dialog"),
+        ).not.toBeInTheDocument();
       });
     });
 
     it("should prioritize approvals over clarifications when both are pending", async () => {
       mockUseFeatureFlag.mockImplementation((flag: string) => {
         if (flag === "agent_hitl") return true;
-        if (flag === "canvas_ai_palette" || flag === "ai_suggestions") return true;
+        if (flag === "canvas_ai_palette" || flag === "ai_suggestions")
+          return true;
         return false;
       });
 
@@ -3011,13 +3128,16 @@ describe("HybridShellLayout", () => {
       await waitFor(() => {
         expect(screen.getByTestId("agent-approval-dialog")).toBeInTheDocument();
       });
-      expect(screen.queryByTestId("clarification-dialog")).not.toBeInTheDocument();
+      expect(
+        screen.queryByTestId("clarification-dialog"),
+      ).not.toBeInTheDocument();
     });
 
     it("should update agent status to awaiting_approval when approval is pending", async () => {
       mockUseFeatureFlag.mockImplementation((flag: string) => {
         if (flag === "agent_hitl") return true;
-        if (flag === "canvas_ai_palette" || flag === "ai_suggestions") return true;
+        if (flag === "canvas_ai_palette" || flag === "ai_suggestions")
+          return true;
         return false;
       });
 
@@ -3087,7 +3207,8 @@ describe("HybridShellLayout", () => {
       // Enable agent_hitl feature flag
       mockUseFeatureFlag.mockImplementation((flag: string) => {
         if (flag === "agent_hitl") return true;
-        if (flag === "canvas_ai_palette" || flag === "ai_suggestions") return true;
+        if (flag === "canvas_ai_palette" || flag === "ai_suggestions")
+          return true;
         return false;
       });
 
@@ -3123,7 +3244,9 @@ describe("HybridShellLayout", () => {
 
       // StatusBar should show pending approvals indicator
       await waitFor(() => {
-        expect(screen.getByTestId("pending-approvals-indicator")).toBeInTheDocument();
+        expect(
+          screen.getByTestId("pending-approvals-indicator"),
+        ).toBeInTheDocument();
       });
 
       // Should show count of 2
@@ -3134,7 +3257,8 @@ describe("HybridShellLayout", () => {
       // Enable agent_hitl feature flag
       mockUseFeatureFlag.mockImplementation((flag: string) => {
         if (flag === "agent_hitl") return true;
-        if (flag === "canvas_ai_palette" || flag === "ai_suggestions") return true;
+        if (flag === "canvas_ai_palette" || flag === "ai_suggestions")
+          return true;
         return false;
       });
 
@@ -3158,7 +3282,9 @@ describe("HybridShellLayout", () => {
 
       // TopBar should show pending approvals badge
       await waitFor(() => {
-        expect(screen.getByTestId("pending-approvals-badge")).toBeInTheDocument();
+        expect(
+          screen.getByTestId("pending-approvals-badge"),
+        ).toBeInTheDocument();
       });
     });
 
@@ -3166,7 +3292,8 @@ describe("HybridShellLayout", () => {
       // Enable agent_hitl feature flag
       mockUseFeatureFlag.mockImplementation((flag: string) => {
         if (flag === "agent_hitl") return true;
-        if (flag === "canvas_ai_palette" || flag === "ai_suggestions") return true;
+        if (flag === "canvas_ai_palette" || flag === "ai_suggestions")
+          return true;
         return false;
       });
 
@@ -3180,14 +3307,17 @@ describe("HybridShellLayout", () => {
       });
 
       // StatusBar should NOT show pending approvals indicator
-      expect(screen.queryByTestId("pending-approvals-indicator")).not.toBeInTheDocument();
+      expect(
+        screen.queryByTestId("pending-approvals-indicator"),
+      ).not.toBeInTheDocument();
     });
 
     it("should not show TopBar badge when agent_hitl flag is disabled", async () => {
       // Disable agent_hitl feature flag
       mockUseFeatureFlag.mockImplementation((flag: string) => {
         if (flag === "agent_hitl") return false;
-        if (flag === "canvas_ai_palette" || flag === "ai_suggestions") return true;
+        if (flag === "canvas_ai_palette" || flag === "ai_suggestions")
+          return true;
         return false;
       });
 
@@ -3214,7 +3344,9 @@ describe("HybridShellLayout", () => {
       });
 
       // TopBar should NOT show pending approvals badge when feature disabled
-      expect(screen.queryByTestId("pending-approvals-badge")).not.toBeInTheDocument();
+      expect(
+        screen.queryByTestId("pending-approvals-badge"),
+      ).not.toBeInTheDocument();
     });
   });
 
@@ -3468,7 +3600,8 @@ describe("HybridShellLayout", () => {
       // Enable batch_composite_analysis feature flag for these tests
       mockUseFeatureFlag.mockImplementation((flag: string) => {
         if (flag === "batch_composite_analysis") return true;
-        if (flag === "canvas_ai_palette" || flag === "ai_suggestions") return true;
+        if (flag === "canvas_ai_palette" || flag === "ai_suggestions")
+          return true;
         return false;
       });
     });
@@ -3567,7 +3700,8 @@ describe("HybridShellLayout", () => {
       // Enable batch_composite_analysis feature flag for these tests
       mockUseFeatureFlag.mockImplementation((flag: string) => {
         if (flag === "batch_composite_analysis") return true;
-        if (flag === "canvas_ai_palette" || flag === "ai_suggestions") return true;
+        if (flag === "canvas_ai_palette" || flag === "ai_suggestions")
+          return true;
         return false;
       });
     });
@@ -3689,7 +3823,8 @@ describe("HybridShellLayout", () => {
       mockUseFeatureFlag.mockImplementation((flag: string) => {
         if (flag === "insights_session_dismissal") return true;
         if (flag === "batch_composite_analysis") return true;
-        if (flag === "canvas_ai_palette" || flag === "ai_suggestions") return true;
+        if (flag === "canvas_ai_palette" || flag === "ai_suggestions")
+          return true;
         return false;
       });
 
@@ -3706,7 +3841,8 @@ describe("HybridShellLayout", () => {
       mockUseFeatureFlag.mockImplementation((flag: string) => {
         if (flag === "insights_session_dismissal") return true;
         if (flag === "batch_composite_analysis") return true;
-        if (flag === "canvas_ai_palette" || flag === "ai_suggestions") return true;
+        if (flag === "canvas_ai_palette" || flag === "ai_suggestions")
+          return true;
         return false;
       });
 
@@ -3731,7 +3867,8 @@ describe("HybridShellLayout", () => {
       mockUseFeatureFlag.mockImplementation((flag: string) => {
         if (flag === "insights_session_dismissal") return false;
         if (flag === "batch_composite_analysis") return true;
-        if (flag === "canvas_ai_palette" || flag === "ai_suggestions") return true;
+        if (flag === "canvas_ai_palette" || flag === "ai_suggestions")
+          return true;
         return false;
       });
 
@@ -3751,7 +3888,8 @@ describe("HybridShellLayout", () => {
       mockUseFeatureFlag.mockImplementation((flag: string) => {
         if (flag === "insights_session_dismissal") return true;
         if (flag === "batch_composite_analysis") return true;
-        if (flag === "canvas_ai_palette" || flag === "ai_suggestions") return true;
+        if (flag === "canvas_ai_palette" || flag === "ai_suggestions")
+          return true;
         return false;
       });
 

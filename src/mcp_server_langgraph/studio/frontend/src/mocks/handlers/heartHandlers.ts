@@ -46,7 +46,7 @@ function generateId(): string {
  * Create a custom HEART event handler with callback
  */
 export function createHeartEventHandler(
-  callback?: (body: HeartEventRequest) => Record<string, unknown>
+  callback?: (body: HeartEventRequest) => Record<string, unknown>,
 ) {
   return http.post("/api/v1/metrics/heart/event", async ({ request }) => {
     const body = (await request.json()) as HeartEventRequest;
@@ -76,8 +76,8 @@ export function createHeartEventHandler(
 export function createHeartBatchHandler(
   callback?: (
     events: HeartBatchRequest["events"],
-    sessionDuration: number
-  ) => Record<string, unknown>
+    sessionDuration: number,
+  ) => Record<string, unknown>,
 ) {
   return http.post("/api/v1/metrics/heart/batch", async ({ request }) => {
     const body = (await request.json()) as HeartBatchRequest;

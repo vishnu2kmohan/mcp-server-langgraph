@@ -254,7 +254,7 @@ export interface BatchCompositeResponse {
 // ============================================================================
 
 function isDisclosureAnalyzeResponse(
-  obj: unknown
+  obj: unknown,
 ): obj is DisclosureAnalyzeResponse {
   if (typeof obj !== "object" || obj === null) return false;
   const o = obj as Record<string, unknown>;
@@ -268,7 +268,7 @@ function isDisclosureAnalyzeResponse(
 }
 
 function isEmptyStateSuggestionsResponse(
-  obj: unknown
+  obj: unknown,
 ): obj is EmptyStateSuggestionsResponse {
   if (typeof obj !== "object" || obj === null) return false;
   const o = obj as Record<string, unknown>;
@@ -279,9 +279,7 @@ function isEmptyStateSuggestionsResponse(
   );
 }
 
-function isNudgeRecommendResponse(
-  obj: unknown
-): obj is NudgeRecommendResponse {
+function isNudgeRecommendResponse(obj: unknown): obj is NudgeRecommendResponse {
   if (typeof obj !== "object" || obj === null) return false;
   const o = obj as Record<string, unknown>;
   return (
@@ -306,7 +304,7 @@ function isErrorAnalyzeResponse(obj: unknown): obj is ErrorAnalyzeResponse {
 }
 
 function isOnboardingPersonalizeResponse(
-  obj: unknown
+  obj: unknown,
 ): obj is OnboardingPersonalizeResponse {
   if (typeof obj !== "object" || obj === null) return false;
   const o = obj as Record<string, unknown>;
@@ -320,7 +318,7 @@ function isOnboardingPersonalizeResponse(
 }
 
 function isMetricsInsightsResponse(
-  obj: unknown
+  obj: unknown,
 ): obj is MetricsInsightsResponse {
   if (typeof obj !== "object" || obj === null) return false;
   const o = obj as Record<string, unknown>;
@@ -333,9 +331,7 @@ function isMetricsInsightsResponse(
   );
 }
 
-function isPersonaAnalyzeResponse(
-  obj: unknown
-): obj is PersonaAnalyzeResponse {
+function isPersonaAnalyzeResponse(obj: unknown): obj is PersonaAnalyzeResponse {
   if (typeof obj !== "object" || obj === null) return false;
   const o = obj as Record<string, unknown>;
   return (
@@ -347,16 +343,14 @@ function isPersonaAnalyzeResponse(
 }
 
 function isCompositeAnalyzeResponse(
-  obj: unknown
+  obj: unknown,
 ): obj is CompositeAnalyzeResponse {
   if (typeof obj !== "object" || obj === null) return false;
   const o = obj as Record<string, unknown>;
   return typeof o.analysis_id === "string" && typeof o.timestamp === "string";
 }
 
-function isBatchCompositeResponse(
-  obj: unknown
-): obj is BatchCompositeResponse {
+function isBatchCompositeResponse(obj: unknown): obj is BatchCompositeResponse {
   if (typeof obj !== "object" || obj === null) return false;
   const o = obj as Record<string, unknown>;
   return (
@@ -439,7 +433,7 @@ describe("AI UX API Type Guards", () => {
       expect(isDisclosureAnalyzeResponse(null)).toBe(false);
       expect(isDisclosureAnalyzeResponse({})).toBe(false);
       expect(isDisclosureAnalyzeResponse({ current_level: "beginner" })).toBe(
-        false
+        false,
       );
     });
   });
@@ -512,7 +506,7 @@ describe("AI UX API Type Guards", () => {
     it("should return false for invalid onboarding response", () => {
       expect(isOnboardingPersonalizeResponse(null)).toBe(false);
       expect(isOnboardingPersonalizeResponse({ recommended_steps: [] })).toBe(
-        false
+        false,
       );
     });
   });
@@ -552,7 +546,7 @@ describe("AI UX API Type Guards", () => {
     it("should return false for invalid persona analysis response", () => {
       expect(isPersonaAnalyzeResponse(null)).toBe(false);
       expect(isPersonaAnalyzeResponse({ detected_persona: "admin" })).toBe(
-        false
+        false,
       );
     });
   });

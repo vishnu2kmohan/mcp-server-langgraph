@@ -77,7 +77,7 @@ describe("useAIDisclosure", () => {
         http.post("/api/v1/ai/disclosure/analyze", async () => {
           await delay(50);
           return HttpResponse.json(mockAnalysis);
-        })
+        }),
       );
 
       const { result } = renderHook(() => useAIDisclosure({ enabled: true }), {
@@ -100,7 +100,7 @@ describe("useAIDisclosure", () => {
       server.use(
         http.post("/api/v1/ai/disclosure/analyze", async () => {
           return HttpResponse.json(mockAnalysis);
-        })
+        }),
       );
 
       const { result } = renderHook(() => useAIDisclosure({ enabled: true }), {
@@ -112,7 +112,7 @@ describe("useAIDisclosure", () => {
       });
 
       expect(result.current.personalizedMessage).toBe(
-        "You've mastered chat! Ready to build workflows?"
+        "You've mastered chat! Ready to build workflows?",
       );
     });
 
@@ -121,7 +121,7 @@ describe("useAIDisclosure", () => {
         http.post("/api/v1/ai/disclosure/analyze", async () => {
           await delay(200);
           return HttpResponse.json(mockAnalysis);
-        })
+        }),
       );
 
       const { result } = renderHook(() => useAIDisclosure({ enabled: true }), {
@@ -147,7 +147,7 @@ describe("useAIDisclosure", () => {
       server.use(
         http.post("/api/v1/ai/disclosure/analyze", async () => {
           return HttpResponse.json(mockAnalysis);
-        })
+        }),
       );
 
       const { result } = renderHook(() => useAIDisclosure({ enabled: true }), {
@@ -172,7 +172,7 @@ describe("useAIDisclosure", () => {
       server.use(
         http.post("/api/v1/ai/disclosure/analyze", async () => {
           return HttpResponse.json(mockAnalysis);
-        })
+        }),
       );
 
       const { result } = renderHook(() => useAIDisclosure({ enabled: true }), {
@@ -200,7 +200,7 @@ describe("useAIDisclosure", () => {
         http.post("/api/v1/ai/disclosure/analyze", () => {
           apiCalled = true;
           return HttpResponse.json(mockAnalysis);
-        })
+        }),
       );
 
       const { result } = renderHook(() => useAIDisclosure({ enabled: false }), {
@@ -223,12 +223,12 @@ describe("useAIDisclosure", () => {
             ...mockAnalysis,
             confidence: 0.5,
           });
-        })
+        }),
       );
 
       const { result } = renderHook(
         () => useAIDisclosure({ enabled: true, minConfidence: 0.7 }),
-        { wrapper: createWrapper(store) }
+        { wrapper: createWrapper(store) },
       );
 
       await act(async () => {
@@ -246,12 +246,12 @@ describe("useAIDisclosure", () => {
             ...mockAnalysis,
             confidence: 0.9,
           });
-        })
+        }),
       );
 
       const { result } = renderHook(
         () => useAIDisclosure({ enabled: true, minConfidence: 0.7 }),
-        { wrapper: createWrapper(store) }
+        { wrapper: createWrapper(store) },
       );
 
       await act(async () => {
@@ -264,10 +264,9 @@ describe("useAIDisclosure", () => {
 
   describe("Redux integration", () => {
     it("should read initial level from Redux store", () => {
-      const { result } = renderHook(
-        () => useAIDisclosure({ useRedux: true }),
-        { wrapper: createWrapper(store) }
-      );
+      const { result } = renderHook(() => useAIDisclosure({ useRedux: true }), {
+        wrapper: createWrapper(store),
+      });
 
       expect(result.current.level).toBe("beginner");
     });
@@ -276,12 +275,12 @@ describe("useAIDisclosure", () => {
       server.use(
         http.post("/api/v1/ai/disclosure/analyze", async () => {
           return HttpResponse.json(mockAnalysis);
-        })
+        }),
       );
 
       const { result } = renderHook(
         () => useAIDisclosure({ enabled: true, useRedux: true }),
-        { wrapper: createWrapper(store) }
+        { wrapper: createWrapper(store) },
       );
 
       await act(async () => {
@@ -300,16 +299,18 @@ describe("useAIDisclosure", () => {
     });
 
     it("should sync with Redux level changes", () => {
-      const { result } = renderHook(
-        () => useAIDisclosure({ useRedux: true }),
-        { wrapper: createWrapper(store) }
-      );
+      const { result } = renderHook(() => useAIDisclosure({ useRedux: true }), {
+        wrapper: createWrapper(store),
+      });
 
       expect(result.current.level).toBe("beginner");
 
       // Dispatch action to change level
       act(() => {
-        store.dispatch({ type: "disclosure/setDisclosureLevel", payload: "intermediate" });
+        store.dispatch({
+          type: "disclosure/setDisclosureLevel",
+          payload: "intermediate",
+        });
       });
 
       expect(result.current.level).toBe("intermediate");

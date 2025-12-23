@@ -96,7 +96,9 @@ export function HybridShellGuard({ children }: HybridShellGuardProps) {
   // On error, default to enabling hybrid shell (fail-open)
   // This allows users to access v2 even if feature flag API fails
   // Alternative: fail-closed by redirecting to legacy
-  const isHybridShellEnabled = isError ? true : isEnabled("canvas_hybrid_shell");
+  const isHybridShellEnabled = isError
+    ? true
+    : isEnabled("canvas_hybrid_shell");
 
   // If feature flag is enabled, render children (Hybrid Shell)
   if (isHybridShellEnabled) {

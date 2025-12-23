@@ -7,7 +7,11 @@
 
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import { server } from "../server";
-import { heartHandlers, createHeartEventHandler, createHeartBatchHandler } from "./heartHandlers";
+import {
+  heartHandlers,
+  createHeartEventHandler,
+  createHeartBatchHandler,
+} from "./heartHandlers";
 
 describe("heartHandlers", () => {
   beforeEach(() => {
@@ -180,9 +184,21 @@ describe("heartHandlers", () => {
   describe("POST /api/v1/metrics/heart/batch", () => {
     it("should accept batch of events", async () => {
       const events = [
-        { event_type: "engagement", payload: { feature: "chat", action: "send" }, timestamp: Date.now() },
-        { event_type: "engagement", payload: { feature: "chat", action: "receive" }, timestamp: Date.now() },
-        { event_type: "engagement", payload: { feature: "workflow", action: "view" }, timestamp: Date.now() },
+        {
+          event_type: "engagement",
+          payload: { feature: "chat", action: "send" },
+          timestamp: Date.now(),
+        },
+        {
+          event_type: "engagement",
+          payload: { feature: "chat", action: "receive" },
+          timestamp: Date.now(),
+        },
+        {
+          event_type: "engagement",
+          payload: { feature: "workflow", action: "view" },
+          timestamp: Date.now(),
+        },
       ];
 
       const response = await fetch("/api/v1/metrics/heart/batch", {
@@ -224,7 +240,13 @@ describe("heartHandlers", () => {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          events: [{ event_type: "signal", payload: { signal_id: "test" }, timestamp: Date.now() }],
+          events: [
+            {
+              event_type: "signal",
+              payload: { signal_id: "test" },
+              timestamp: Date.now(),
+            },
+          ],
           session_duration: 120000,
         }),
       });
@@ -279,10 +301,12 @@ describe("heartHandlers", () => {
     it("should allow custom batch handler with callback", async () => {
       let capturedEvents: unknown[] = [];
 
-      const customHandler = createHeartBatchHandler((events, sessionDuration) => {
-        capturedEvents = events;
-        return { processed: events.length, duration: sessionDuration };
-      });
+      const customHandler = createHeartBatchHandler(
+        (events, sessionDuration) => {
+          capturedEvents = events;
+          return { processed: events.length, duration: sessionDuration };
+        },
+      );
 
       server.use(customHandler);
 

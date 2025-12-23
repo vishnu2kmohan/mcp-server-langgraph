@@ -99,12 +99,12 @@ describe("useAIEmptyState", () => {
         http.post(AI_ENDPOINT, async () => {
           await delay("infinite");
           return HttpResponse.json({ suggestions: [] });
-        })
+        }),
       );
 
       const { result } = renderHook(
         () => useAIEmptyState({ context: "workflows" }),
-        { wrapper: createWrapper() }
+        { wrapper: createWrapper() },
       );
 
       expect(result.current.isLoading).toBe(true);
@@ -117,12 +117,12 @@ describe("useAIEmptyState", () => {
         http.post(AI_ENDPOINT, async () => {
           await delay("infinite");
           return HttpResponse.json({ suggestions: [] });
-        })
+        }),
       );
 
       const { result } = renderHook(
         () => useAIEmptyState({ context: "workflows" }),
-        { wrapper: createWrapper() }
+        { wrapper: createWrapper() },
       );
 
       expect(typeof result.current.refresh).toBe("function");
@@ -133,16 +133,18 @@ describe("useAIEmptyState", () => {
         http.post(AI_ENDPOINT, async () => {
           await delay("infinite");
           return HttpResponse.json({ suggestions: [] });
-        })
+        }),
       );
 
       const { result } = renderHook(
         () => useAIEmptyState({ context: "sessions" }),
-        { wrapper: createWrapper() }
+        { wrapper: createWrapper() },
       );
 
       expect(result.current.fallbackConfig).toBeDefined();
-      expect(result.current.fallbackConfig.title).toBe("Default sessions title");
+      expect(result.current.fallbackConfig.title).toBe(
+        "Default sessions title",
+      );
     });
   });
 
@@ -174,12 +176,12 @@ describe("useAIEmptyState", () => {
       server.use(
         http.post(AI_ENDPOINT, () => {
           return HttpResponse.json({ suggestions: apiSuggestions });
-        })
+        }),
       );
 
       const { result } = renderHook(
         () => useAIEmptyState({ context: "workflows" }),
-        { wrapper: createWrapper() }
+        { wrapper: createWrapper() },
       );
 
       await waitFor(() => {
@@ -195,7 +197,7 @@ describe("useAIEmptyState", () => {
         http.post(AI_ENDPOINT, async ({ request }) => {
           lastRequestBody = (await request.json()) as Record<string, unknown>;
           return HttpResponse.json({ suggestions: [] });
-        })
+        }),
       );
 
       renderHook(() => useAIEmptyState({ context: "projects" }), {
@@ -214,7 +216,7 @@ describe("useAIEmptyState", () => {
         http.post(AI_ENDPOINT, async ({ request }) => {
           lastRequestBody = (await request.json()) as Record<string, unknown>;
           return HttpResponse.json({ suggestions: [] });
-        })
+        }),
       );
 
       renderHook(() => useAIEmptyState({ context: "workflows" }), {
@@ -233,13 +235,13 @@ describe("useAIEmptyState", () => {
         http.post(AI_ENDPOINT, async ({ request }) => {
           lastRequestBody = (await request.json()) as Record<string, unknown>;
           return HttpResponse.json({ suggestions: [] });
-        })
+        }),
       );
 
       renderHook(() => useAIEmptyState({ context: "workflows" }), {
         wrapper: createWrapper(
           {},
-          { currentSession: { id: "session-abc-123", messages: [] } }
+          { currentSession: { id: "session-abc-123", messages: [] } },
         ),
       });
 
@@ -256,12 +258,12 @@ describe("useAIEmptyState", () => {
       server.use(
         http.post(AI_ENDPOINT, () => {
           return HttpResponse.error();
-        })
+        }),
       );
 
       const { result } = renderHook(
         () => useAIEmptyState({ context: "workflows" }),
-        { wrapper: createWrapper() }
+        { wrapper: createWrapper() },
       );
 
       await waitFor(() => {
@@ -276,12 +278,12 @@ describe("useAIEmptyState", () => {
       server.use(
         http.post(AI_ENDPOINT, () => {
           return new HttpResponse(null, { status: 500 });
-        })
+        }),
       );
 
       const { result } = renderHook(
         () => useAIEmptyState({ context: "workflows" }),
-        { wrapper: createWrapper() }
+        { wrapper: createWrapper() },
       );
 
       await waitFor(() => {
@@ -296,12 +298,12 @@ describe("useAIEmptyState", () => {
       server.use(
         http.post(AI_ENDPOINT, () => {
           return new HttpResponse(null, { status: 503 });
-        })
+        }),
       );
 
       const { result } = renderHook(
         () => useAIEmptyState({ context: "sessions" }),
-        { wrapper: createWrapper() }
+        { wrapper: createWrapper() },
       );
 
       await waitFor(() => {
@@ -332,12 +334,12 @@ describe("useAIEmptyState", () => {
               },
             ],
           });
-        })
+        }),
       );
 
       const { result } = renderHook(
         () => useAIEmptyState({ context: "workflows" }),
-        { wrapper: createWrapper() }
+        { wrapper: createWrapper() },
       );
 
       await waitFor(() => {
@@ -365,12 +367,12 @@ describe("useAIEmptyState", () => {
         http.post(AI_ENDPOINT, async () => {
           await delayPromise;
           return HttpResponse.json({ suggestions: [] });
-        })
+        }),
       );
 
       const { result } = renderHook(
         () => useAIEmptyState({ context: "workflows" }),
-        { wrapper: createWrapper() }
+        { wrapper: createWrapper() },
       );
 
       expect(result.current.isLoading).toBe(true);
@@ -421,12 +423,12 @@ describe("useAIEmptyState", () => {
       server.use(
         http.post(AI_ENDPOINT, () => {
           return HttpResponse.json({ suggestions: apiSuggestions });
-        })
+        }),
       );
 
       const { result } = renderHook(
         () => useAIEmptyState({ context: "workflows" }),
-        { wrapper: createWrapper() }
+        { wrapper: createWrapper() },
       );
 
       await waitFor(() => {
@@ -442,12 +444,12 @@ describe("useAIEmptyState", () => {
       server.use(
         http.post(AI_ENDPOINT, () => {
           return HttpResponse.json({ suggestions: [] });
-        })
+        }),
       );
 
       const { result } = renderHook(
         () => useAIEmptyState({ context: "workflows" }),
-        { wrapper: createWrapper() }
+        { wrapper: createWrapper() },
       );
 
       await waitFor(() => {
@@ -463,12 +465,12 @@ describe("useAIEmptyState", () => {
       server.use(
         http.post(AI_ENDPOINT, () => {
           return HttpResponse.json({ suggestions: [] });
-        })
+        }),
       );
 
       const { result } = renderHook(
         () => useAIEmptyState({ context: "workflows" }),
-        { wrapper: createWrapper() }
+        { wrapper: createWrapper() },
       );
 
       await waitFor(() => {
@@ -482,12 +484,12 @@ describe("useAIEmptyState", () => {
       server.use(
         http.post(AI_ENDPOINT, () => {
           return HttpResponse.error();
-        })
+        }),
       );
 
       const { result } = renderHook(
         () => useAIEmptyState({ context: "workflows" }),
-        { wrapper: createWrapper() }
+        { wrapper: createWrapper() },
       );
 
       await waitFor(() => {
@@ -505,12 +507,12 @@ describe("useAIEmptyState", () => {
         http.post(AI_ENDPOINT, () => {
           callCount++;
           return HttpResponse.json({ suggestions: [] });
-        })
+        }),
       );
 
       const { result, rerender } = renderHook(
         () => useAIEmptyState({ context: "workflows" }),
-        { wrapper: createWrapper() }
+        { wrapper: createWrapper() },
       );
 
       await waitFor(() => {
@@ -532,7 +534,7 @@ describe("useAIEmptyState", () => {
         http.post(AI_ENDPOINT, () => {
           callCount++;
           return HttpResponse.json({ suggestions: [] });
-        })
+        }),
       );
 
       const { result, rerender } = renderHook(
@@ -540,7 +542,7 @@ describe("useAIEmptyState", () => {
         {
           wrapper: createWrapper(),
           initialProps: { context: "workflows" as const },
-        }
+        },
       );
 
       await waitFor(() => {
@@ -563,12 +565,12 @@ describe("useAIEmptyState", () => {
         http.post(AI_ENDPOINT, () => {
           callCount++;
           return HttpResponse.json({ suggestions: [] });
-        })
+        }),
       );
 
       const { result } = renderHook(
         () => useAIEmptyState({ context: "workflows", enabled: false }),
-        { wrapper: createWrapper() }
+        { wrapper: createWrapper() },
       );
 
       // Wait a bit to ensure no fetch was triggered
@@ -582,11 +584,13 @@ describe("useAIEmptyState", () => {
     it("should still provide fallback config when disabled", () => {
       const { result } = renderHook(
         () => useAIEmptyState({ context: "sessions", enabled: false }),
-        { wrapper: createWrapper() }
+        { wrapper: createWrapper() },
       );
 
       expect(result.current.fallbackConfig).toBeDefined();
-      expect(result.current.fallbackConfig.title).toBe("Default sessions title");
+      expect(result.current.fallbackConfig.title).toBe(
+        "Default sessions title",
+      );
     });
   });
 
@@ -633,12 +637,12 @@ describe("useAIEmptyState", () => {
         http.post(AI_ENDPOINT, async () => {
           await delay(50); // Fast response
           return HttpResponse.json({ suggestions: apiSuggestions });
-        })
+        }),
       );
 
       const { result } = renderHook(
         () => useAIEmptyState({ context: "workflows", timeoutMs: 1000 }),
-        { wrapper: createWrapper() }
+        { wrapper: createWrapper() },
       );
 
       await waitFor(() => {
@@ -656,12 +660,12 @@ describe("useAIEmptyState", () => {
       server.use(
         http.post(AI_ENDPOINT, () => {
           return HttpResponse.json({ suggestions: [] });
-        })
+        }),
       );
 
       const { result } = renderHook(
         () => useAIEmptyState({ context: "workflows" }),
-        { wrapper: createWrapper() }
+        { wrapper: createWrapper() },
       );
 
       await waitFor(() => {

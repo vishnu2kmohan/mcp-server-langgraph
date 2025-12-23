@@ -4,14 +4,19 @@
  * Sprint 3 - Phase 2.3: Offline Resilience Enhancement
  */
 
-import { describe, it, expect, beforeEach, vi } from "vitest";
-import { renderHook, act } from "@testing-library/react";
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
+import { renderHook, act, cleanup } from "@testing-library/react";
 import { useOfflineQueue } from "./useOfflineQueue";
 
 describe("useOfflineQueue", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     localStorage.clear();
+  });
+
+  afterEach(() => {
+    cleanup();
+    vi.clearAllMocks();
   });
 
   describe("initial state", () => {
@@ -169,7 +174,7 @@ describe("useOfflineQueue", () => {
   describe("persistence", () => {
     it("should persist queue to localStorage", () => {
       const { result } = renderHook(() =>
-        useOfflineQueue({ storageKey: "test_queue" })
+        useOfflineQueue({ storageKey: "test_queue" }),
       );
 
       act(() => {
@@ -200,7 +205,10 @@ describe("useOfflineQueue", () => {
           retries: 0,
         },
       ];
-      localStorage.setItem("studio-offline_queue", JSON.stringify(preloadedQueue));
+      localStorage.setItem(
+        "studio-offline_queue",
+        JSON.stringify(preloadedQueue),
+      );
 
       const { result } = renderHook(() => useOfflineQueue());
 
@@ -209,7 +217,10 @@ describe("useOfflineQueue", () => {
 
     it("should handle non-array value in localStorage", () => {
       // Store a non-array value
-      localStorage.setItem("studio-offline_queue", JSON.stringify({ invalid: true }));
+      localStorage.setItem(
+        "studio-offline_queue",
+        JSON.stringify({ invalid: true }),
+      );
 
       const { result } = renderHook(() => useOfflineQueue());
 
@@ -270,7 +281,7 @@ describe("useOfflineQueue", () => {
           ok: false,
           status: 409,
           json: () => Promise.resolve({ serverData: "conflict" }),
-        })
+        }),
       );
 
       const { result } = renderHook(() => useOfflineQueue());
@@ -291,7 +302,9 @@ describe("useOfflineQueue", () => {
 
       expect(syncResult?.conflicts).toHaveLength(1);
       expect(result.current.conflicts).toHaveLength(1);
-      expect(result.current.conflicts[0].suggestedResolution).toBe("keep-server");
+      expect(result.current.conflicts[0].suggestedResolution).toBe(
+        "keep-server",
+      );
 
       vi.unstubAllGlobals();
     });
@@ -303,7 +316,7 @@ describe("useOfflineQueue", () => {
         vi.fn().mockResolvedValue({
           ok: false,
           status: 500,
-        })
+        }),
       );
 
       const { result } = renderHook(() => useOfflineQueue());
@@ -334,7 +347,10 @@ describe("useOfflineQueue", () => {
 
     it("should handle fetch throwing exception", async () => {
       // Mock fetch throwing
-      vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new Error("Network error")));
+      vi.stubGlobal(
+        "fetch",
+        vi.fn().mockRejectedValue(new Error("Network error")),
+      );
 
       const { result } = renderHook(() => useOfflineQueue());
 
@@ -378,7 +394,7 @@ describe("useOfflineQueue", () => {
 
       expect(mockFetch).toHaveBeenCalledWith(
         "/api/v1/test/123",
-        expect.objectContaining({ method: "DELETE" })
+        expect.objectContaining({ method: "DELETE" }),
       );
 
       vi.unstubAllGlobals();
@@ -394,7 +410,7 @@ describe("useOfflineQueue", () => {
           ok: false,
           status: 409,
           json: () => Promise.resolve({ serverData: "conflict" }),
-        })
+        }),
       );
 
       const { result } = renderHook(() => useOfflineQueue());

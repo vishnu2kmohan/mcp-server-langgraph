@@ -9,8 +9,8 @@
  * - POST /api/v1/ai/suggestions/dismiss - Dismiss a suggestion
  */
 
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { server } from '../server';
+import { describe, it, expect, beforeEach, afterEach } from "vitest";
+import { server } from "../server";
 
 import {
   aiSuggestionsHandlers,
@@ -18,7 +18,7 @@ import {
   resetMockSuggestions,
   addMockSuggestion,
   type MockSuggestion,
-} from './aiSuggestionsHandlers';
+} from "./aiSuggestionsHandlers";
 
 // =============================================================================
 // Test Setup
@@ -38,82 +38,86 @@ afterEach(() => {
 // Tests
 // =============================================================================
 
-describe('AI Suggestions MSW Handlers', () => {
-  describe('GET /api/v1/ai/suggestions', () => {
-    it('should return empty array when no suggestions', async () => {
-      const response = await fetch('/api/v1/ai/suggestions');
+describe("AI Suggestions MSW Handlers", () => {
+  describe("GET /api/v1/ai/suggestions", () => {
+    it("should return empty array when no suggestions", async () => {
+      const response = await fetch("/api/v1/ai/suggestions");
       const data = await response.json();
 
       expect(response.status).toBe(200);
       expect(data).toEqual({
-        type: 'suggestions',
+        type: "suggestions",
         data: [],
         timestamp: expect.any(Number),
       });
     });
 
-    it('should return current suggestions', async () => {
+    it("should return current suggestions", async () => {
       // Add a suggestion
       addMockSuggestion({
-        id: 'test-1',
-        type: 'tooltip',
-        message: 'Test suggestion',
-        priority: 'medium',
+        id: "test-1",
+        type: "tooltip",
+        message: "Test suggestion",
+        priority: "medium",
       });
 
-      const response = await fetch('/api/v1/ai/suggestions');
+      const response = await fetch("/api/v1/ai/suggestions");
       const data = await response.json();
 
       expect(response.status).toBe(200);
       expect(data.data).toHaveLength(1);
       expect(data.data[0]).toEqual(
         expect.objectContaining({
-          id: 'test-1',
-          type: 'tooltip',
-          message: 'Test suggestion',
-          priority: 'medium',
-        })
+          id: "test-1",
+          type: "tooltip",
+          message: "Test suggestion",
+          priority: "medium",
+        }),
       );
     });
 
-    it('should return multiple suggestions', async () => {
+    it("should return multiple suggestions", async () => {
       addMockSuggestion({
-        id: 's1',
-        type: 'tooltip',
-        message: 'Tip 1',
-        priority: 'low',
+        id: "s1",
+        type: "tooltip",
+        message: "Tip 1",
+        priority: "low",
       });
       addMockSuggestion({
-        id: 's2',
-        type: 'spotlight',
-        message: 'Tip 2',
-        priority: 'high',
+        id: "s2",
+        type: "spotlight",
+        message: "Tip 2",
+        priority: "high",
       });
       addMockSuggestion({
-        id: 's3',
-        type: 'banner',
-        message: 'Tip 3',
-        priority: 'medium',
+        id: "s3",
+        type: "banner",
+        message: "Tip 3",
+        priority: "medium",
       });
 
-      const response = await fetch('/api/v1/ai/suggestions');
+      const response = await fetch("/api/v1/ai/suggestions");
       const data = await response.json();
 
       expect(data.data).toHaveLength(3);
-      expect(data.data.map((s: MockSuggestion) => s.id)).toEqual(['s1', 's2', 's3']);
+      expect(data.data.map((s: MockSuggestion) => s.id)).toEqual([
+        "s1",
+        "s2",
+        "s3",
+      ]);
     });
   });
 
-  describe('POST /api/v1/ai/suggestions/request', () => {
-    it('should accept context and return suggestions', async () => {
-      const response = await fetch('/api/v1/ai/suggestions/request', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+  describe("POST /api/v1/ai/suggestions/request", () => {
+    it("should accept context and return suggestions", async () => {
+      const response = await fetch("/api/v1/ai/suggestions/request", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           context: {
-            page: 'chat',
-            action: 'typing',
-            sessionId: 'test-session',
+            page: "chat",
+            action: "typing",
+            sessionId: "test-session",
           },
         }),
       });
@@ -122,18 +126,18 @@ describe('AI Suggestions MSW Handlers', () => {
 
       expect(response.status).toBe(200);
       expect(data).toEqual({
-        type: 'suggestions',
+        type: "suggestions",
         data: expect.any(Array),
         timestamp: expect.any(Number),
       });
     });
 
-    it('should generate context-aware suggestions for chat page', async () => {
-      const response = await fetch('/api/v1/ai/suggestions/request', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+    it("should generate context-aware suggestions for chat page", async () => {
+      const response = await fetch("/api/v1/ai/suggestions/request", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          context: { page: 'chat' },
+          context: { page: "chat" },
         }),
       });
 
@@ -144,12 +148,12 @@ describe('AI Suggestions MSW Handlers', () => {
       expect(data.data.length).toBeGreaterThanOrEqual(1);
     });
 
-    it('should generate context-aware suggestions for workflows page', async () => {
-      const response = await fetch('/api/v1/ai/suggestions/request', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+    it("should generate context-aware suggestions for workflows page", async () => {
+      const response = await fetch("/api/v1/ai/suggestions/request", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          context: { page: 'workflows' },
+          context: { page: "workflows" },
         }),
       });
 
@@ -159,10 +163,10 @@ describe('AI Suggestions MSW Handlers', () => {
       expect(data.data.length).toBeGreaterThanOrEqual(1);
     });
 
-    it('should return 400 for missing context', async () => {
-      const response = await fetch('/api/v1/ai/suggestions/request', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+    it("should return 400 for missing context", async () => {
+      const response = await fetch("/api/v1/ai/suggestions/request", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({}),
       });
 
@@ -170,65 +174,65 @@ describe('AI Suggestions MSW Handlers', () => {
     });
   });
 
-  describe('POST /api/v1/ai/suggestions/dismiss', () => {
-    it('should dismiss a suggestion by ID', async () => {
+  describe("POST /api/v1/ai/suggestions/dismiss", () => {
+    it("should dismiss a suggestion by ID", async () => {
       // Add a suggestion first
       addMockSuggestion({
-        id: 'dismiss-me',
-        type: 'tooltip',
-        message: 'This will be dismissed',
-        priority: 'low',
+        id: "dismiss-me",
+        type: "tooltip",
+        message: "This will be dismissed",
+        priority: "low",
       });
 
       // Verify it exists
-      let response = await fetch('/api/v1/ai/suggestions');
+      let response = await fetch("/api/v1/ai/suggestions");
       let data = await response.json();
       expect(data.data).toHaveLength(1);
 
       // Dismiss it
-      response = await fetch('/api/v1/ai/suggestions/dismiss', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: 'dismiss-me' }),
+      response = await fetch("/api/v1/ai/suggestions/dismiss", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: "dismiss-me" }),
       });
 
       expect(response.status).toBe(200);
 
       // Verify it's gone
-      response = await fetch('/api/v1/ai/suggestions');
+      response = await fetch("/api/v1/ai/suggestions");
       data = await response.json();
       expect(data.data).toHaveLength(0);
     });
 
-    it('should return 400 for missing suggestion ID', async () => {
-      const response = await fetch('/api/v1/ai/suggestions/dismiss', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+    it("should return 400 for missing suggestion ID", async () => {
+      const response = await fetch("/api/v1/ai/suggestions/dismiss", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({}),
       });
 
       expect(response.status).toBe(400);
     });
 
-    it('should return 404 for non-existent suggestion', async () => {
-      const response = await fetch('/api/v1/ai/suggestions/dismiss', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: 'does-not-exist' }),
+    it("should return 404 for non-existent suggestion", async () => {
+      const response = await fetch("/api/v1/ai/suggestions/dismiss", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: "does-not-exist" }),
       });
 
       expect(response.status).toBe(404);
     });
   });
 
-  describe('GET /api/v1/ai/suggestions/health', () => {
-    it('should return health status', async () => {
-      const response = await fetch('/api/v1/ai/suggestions/health');
+  describe("GET /api/v1/ai/suggestions/health", () => {
+    it("should return health status", async () => {
+      const response = await fetch("/api/v1/ai/suggestions/health");
       const data = await response.json();
 
       expect(response.status).toBe(200);
       expect(data).toEqual({
-        status: 'healthy',
+        status: "healthy",
         websocket_available: false,
         fallback_active: true,
         timestamp: expect.any(Number),
@@ -236,13 +240,13 @@ describe('AI Suggestions MSW Handlers', () => {
     });
   });
 
-  describe('Handler State Management', () => {
-    it('should reset suggestions between tests', () => {
+  describe("Handler State Management", () => {
+    it("should reset suggestions between tests", () => {
       addMockSuggestion({
-        id: 'temp',
-        type: 'tooltip',
-        message: 'Temp',
-        priority: 'low',
+        id: "temp",
+        type: "tooltip",
+        message: "Temp",
+        priority: "low",
       });
 
       expect(mockSuggestions()).toHaveLength(1);
@@ -252,21 +256,21 @@ describe('AI Suggestions MSW Handlers', () => {
       expect(mockSuggestions()).toHaveLength(0);
     });
 
-    it('should generate unique IDs for context-based suggestions', async () => {
+    it("should generate unique IDs for context-based suggestions", async () => {
       // Request suggestions twice
-      await fetch('/api/v1/ai/suggestions/request', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ context: { page: 'chat' } }),
+      await fetch("/api/v1/ai/suggestions/request", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ context: { page: "chat" } }),
       });
 
-      await fetch('/api/v1/ai/suggestions/request', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ context: { page: 'workflows' } }),
+      await fetch("/api/v1/ai/suggestions/request", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ context: { page: "workflows" } }),
       });
 
-      const response = await fetch('/api/v1/ai/suggestions');
+      const response = await fetch("/api/v1/ai/suggestions");
       const data = await response.json();
 
       // All IDs should be unique

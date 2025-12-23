@@ -107,7 +107,7 @@ describe("AI UX API Schema Contract Tests", () => {
 
         expect(suggestion).toHaveProperty("action_type");
         expect(["navigate", "create", "learn", "import"]).toContain(
-          suggestion.action_type
+          suggestion.action_type,
         );
 
         expect(suggestion).toHaveProperty("action_target");
@@ -251,7 +251,7 @@ describe("AI UX API Schema Contract Tests", () => {
 
         expect(step).toHaveProperty("action_type");
         expect(["automatic", "manual", "contact_support"]).toContain(
-          step.action_type
+          step.action_type,
         );
 
         if (step.action_target !== undefined) {

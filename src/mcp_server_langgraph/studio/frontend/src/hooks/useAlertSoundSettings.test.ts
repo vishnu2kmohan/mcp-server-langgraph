@@ -150,9 +150,7 @@ describe("useAlertSoundSettings", () => {
       // Wait for the useEffect to run and persist
       // The storage utility prefixes keys with "studio-"
       await waitFor(() => {
-        expect(
-          mockStorage["studio-mcp:alert-sound-settings"],
-        ).toBeDefined();
+        expect(mockStorage["studio-mcp:alert-sound-settings"]).toBeDefined();
       });
 
       const savedValue = JSON.parse(
@@ -254,7 +252,7 @@ describe("useAlertSoundSettings", () => {
       const { result } = renderHook(() => useAlertSoundSettings());
 
       const defaultPreset = result.current.availablePresets.find(
-        (p) => p.id === "default"
+        (p) => p.id === "default",
       );
       expect(defaultPreset).toBeDefined();
       expect(defaultPreset?.name).toBe("Default");

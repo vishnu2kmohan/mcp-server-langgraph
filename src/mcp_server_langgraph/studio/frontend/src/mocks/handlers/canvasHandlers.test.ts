@@ -315,12 +315,10 @@ describe("canvasHandlers", () => {
       const response = await fetch("/api/v1/artifacts/art-1/similar");
 
       const data = await response.json();
-      data.results.forEach(
-        (result: { artifact_id: string; score: number }) => {
-          expect(result.artifact_id).toBeDefined();
-          expect(typeof result.score).toBe("number");
-        },
-      );
+      data.results.forEach((result: { artifact_id: string; score: number }) => {
+        expect(result.artifact_id).toBeDefined();
+        expect(typeof result.score).toBe("number");
+      });
     });
 
     it("respects the limit query parameter", async () => {

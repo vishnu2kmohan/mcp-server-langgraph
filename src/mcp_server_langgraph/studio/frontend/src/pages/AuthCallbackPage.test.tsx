@@ -51,7 +51,7 @@ const createMockJWT = (payload: Record<string, unknown>): string => {
     .replace(/\+/g, "-")
     .replace(/\//g, "_")
     .replace(/=+$/, "");
-  const signature = btoa("mock-signature-x")  // "x" ensures no padding needed
+  const signature = btoa("mock-signature-x") // "x" ensures no padding needed
     .replace(/\+/g, "-")
     .replace(/\//g, "_")
     .replace(/=+$/, "");
@@ -96,10 +96,7 @@ const createTestStore = () => {
 };
 
 // Helper to render with providers
-const renderWithProviders = (
-  hash: string = "",
-  store = createTestStore(),
-) => {
+const renderWithProviders = (hash: string = "", store = createTestStore()) => {
   // Set window.location.hash
   Object.defineProperty(window, "location", {
     writable: true,
@@ -170,7 +167,9 @@ describe("AuthCallbackPage", () => {
         expect(screen.getByText(/Sign in successful/i)).toBeInTheDocument();
       });
 
-      expect(screen.getByText(/Redirecting to Agent Studio/i)).toBeInTheDocument();
+      expect(
+        screen.getByText(/Redirecting to Agent Studio/i),
+      ).toBeInTheDocument();
 
       // Verify tokens were stored
       expect(setAuthTokens).toHaveBeenCalledWith(mockToken, "mock-refresh");
@@ -288,7 +287,8 @@ describe("AuthCallbackPage", () => {
     });
 
     it("shows error when fragment contains error parameter", async () => {
-      const hash = "#error=access_denied&error_description=User%20denied%20access";
+      const hash =
+        "#error=access_denied&error_description=User%20denied%20access";
 
       renderWithProviders(hash);
 
@@ -320,7 +320,9 @@ describe("AuthCallbackPage", () => {
         expect(screen.getByText(/Sign in failed/i)).toBeInTheDocument();
       });
 
-      expect(screen.getByText(/Invalid access token format/i)).toBeInTheDocument();
+      expect(
+        screen.getByText(/Invalid access token format/i),
+      ).toBeInTheDocument();
     });
 
     it("shows error for malformed JWT payload", async () => {
@@ -437,7 +439,10 @@ describe("AuthCallbackPage", () => {
         expect(screen.getByText(/Sign in successful/i)).toBeInTheDocument();
       });
 
-      expect(store.getState().auth.user?.roles).toEqual(["custom-role-1", "custom-role-2"]);
+      expect(store.getState().auth.user?.roles).toEqual([
+        "custom-role-1",
+        "custom-role-2",
+      ]);
     });
 
     it("extracts roles from top-level roles array", async () => {

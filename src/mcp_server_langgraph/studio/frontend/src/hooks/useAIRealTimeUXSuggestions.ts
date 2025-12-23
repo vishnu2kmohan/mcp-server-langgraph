@@ -87,7 +87,7 @@ export interface UseAIRealTimeUXSuggestionsResult {
  * ```
  */
 export function useAIRealTimeUXSuggestions(
-  options: UseAIRealTimeUXSuggestionsOptions = {}
+  options: UseAIRealTimeUXSuggestionsOptions = {},
 ): UseAIRealTimeUXSuggestionsResult {
   const { reconnectInterval, maxReconnectAttempts, heartbeatInterval } =
     options;
@@ -149,7 +149,7 @@ export function useAIRealTimeUXSuggestions(
       requestSuggestions,
       clearSuggestions,
       dismissSuggestion,
-    ]
+    ],
   );
 }
 

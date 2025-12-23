@@ -58,7 +58,7 @@ describe("useDevToolsAI", () => {
           entityId: "session-123",
           userId: "user-1",
           enabled: true,
-        })
+        }),
       );
 
       expect(result.current.suggestedLayout).toBeNull();
@@ -74,7 +74,7 @@ describe("useDevToolsAI", () => {
           entityId: "session-123",
           userId: "user-1",
           enabled: false,
-        })
+        }),
       );
 
       expect(result.current.suggestedLayout).toBeNull();
@@ -88,7 +88,11 @@ describe("useDevToolsAI", () => {
       mockGetResult.mockReturnValue({
         success: true,
         data: {
-          suggestedLayout: ["problems", "console", "network"] as DevToolsTabId[],
+          suggestedLayout: [
+            "problems",
+            "console",
+            "network",
+          ] as DevToolsTabId[],
           insights: [],
           confidence: 0.9,
         },
@@ -112,7 +116,7 @@ describe("useDevToolsAI", () => {
           entityId: "session-123",
           userId: "user-1",
           enabled: true,
-        })
+        }),
       );
 
       await waitFor(() => {
@@ -152,7 +156,7 @@ describe("useDevToolsAI", () => {
           entityId: "session-123",
           userId: "user-1",
           enabled: true,
-        })
+        }),
       );
 
       await waitFor(() => {
@@ -188,7 +192,7 @@ describe("useDevToolsAI", () => {
           entityId: "session-123",
           userId: "user-1",
           enabled: true,
-        })
+        }),
       );
 
       await waitFor(() => {
@@ -238,7 +242,7 @@ describe("useDevToolsAI", () => {
           entityId: "session-123",
           userId: "user-1",
           enabled: true,
-        })
+        }),
       );
 
       await waitFor(() => {
@@ -270,7 +274,7 @@ describe("useDevToolsAI", () => {
           entityId: "session-123",
           userId: "user-1",
           enabled: true,
-        })
+        }),
       );
 
       await waitFor(() => {
@@ -297,7 +301,7 @@ describe("useDevToolsAI", () => {
           entityId: "session-123",
           userId: "user-1",
           enabled: true,
-        })
+        }),
       );
 
       expect(result.current.isLoading).toBe(true);
@@ -312,7 +316,7 @@ describe("useDevToolsAI", () => {
           entityId: "session-123",
           userId: "user-1",
           enabled: true,
-        })
+        }),
       );
 
       act(() => {
@@ -329,7 +333,7 @@ describe("useDevToolsAI", () => {
           entityId: "session-123",
           userId: "user-1",
           enabled: false,
-        })
+        }),
       );
 
       act(() => {
@@ -372,7 +376,7 @@ describe("useDevToolsAI", () => {
           userId: "user-1",
           enabled: true,
           onApplyLayout,
-        })
+        }),
       );
 
       // Wait for layout to be processed
@@ -397,7 +401,7 @@ describe("useDevToolsAI", () => {
           userId: "user-1",
           enabled: true,
           onApplyLayout,
-        })
+        }),
       );
 
       act(() => {
@@ -458,7 +462,7 @@ describe("useDevToolsAI", () => {
           entityId: "session-123",
           userId: "user-1",
           enabled: true,
-        })
+        }),
       );
 
       await waitFor(() => {

@@ -9,8 +9,14 @@
  * - Metrics display
  */
 
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import {
+  render,
+  screen,
+  fireEvent,
+  waitFor,
+  cleanup,
+} from "@testing-library/react";
 import { MemoryRouter, Route, Routes } from "react-router";
 import { Provider } from "react-redux";
 import { configureStore } from "@reduxjs/toolkit";
@@ -165,6 +171,11 @@ describe("ObservabilityPage", () => {
       isLoading: false,
       error: null,
     });
+  });
+
+  afterEach(() => {
+    cleanup();
+    vi.clearAllMocks();
   });
 
   describe("Header", () => {
@@ -874,7 +885,10 @@ describe("ObservabilityPage", () => {
                 path="/observability/traces"
                 element={<ObservabilityPage />}
               />
-              <Route path="/observability/logs" element={<ObservabilityPage />} />
+              <Route
+                path="/observability/logs"
+                element={<ObservabilityPage />}
+              />
               <Route
                 path="/observability/metrics"
                 element={<ObservabilityPage />}
@@ -947,7 +961,9 @@ describe("ObservabilityPage", () => {
         expect(screen.getByText("chat/completion")).toBeInTheDocument();
       });
 
-      const timeRangeSelect = screen.getByRole("combobox", { name: /time range/i });
+      const timeRangeSelect = screen.getByRole("combobox", {
+        name: /time range/i,
+      });
       // Default is "1h" from Redux observabilitySlice initial state
       expect(timeRangeSelect).toHaveValue("1h");
     });
@@ -963,7 +979,9 @@ describe("ObservabilityPage", () => {
         expect(screen.getByText("chat/completion")).toBeInTheDocument();
       });
 
-      const timeRangeSelect = screen.getByRole("combobox", { name: /time range/i });
+      const timeRangeSelect = screen.getByRole("combobox", {
+        name: /time range/i,
+      });
       fireEvent.change(timeRangeSelect, { target: { value: "15m" } });
 
       await waitFor(() => {
@@ -984,7 +1002,9 @@ describe("ObservabilityPage", () => {
         expect(screen.getByText("chat/completion")).toBeInTheDocument();
       });
 
-      const timeRangeSelect = screen.getByRole("combobox", { name: /time range/i });
+      const timeRangeSelect = screen.getByRole("combobox", {
+        name: /time range/i,
+      });
       fireEvent.change(timeRangeSelect, { target: { value: "1h" } });
 
       await waitFor(() => {
@@ -1005,7 +1025,9 @@ describe("ObservabilityPage", () => {
         expect(screen.getByText("chat/completion")).toBeInTheDocument();
       });
 
-      const timeRangeSelect = screen.getByRole("combobox", { name: /time range/i });
+      const timeRangeSelect = screen.getByRole("combobox", {
+        name: /time range/i,
+      });
       fireEvent.change(timeRangeSelect, { target: { value: "24h" } });
 
       await waitFor(() => {
@@ -1026,7 +1048,9 @@ describe("ObservabilityPage", () => {
         expect(screen.getByText("chat/completion")).toBeInTheDocument();
       });
 
-      const timeRangeSelect = screen.getByRole("combobox", { name: /time range/i });
+      const timeRangeSelect = screen.getByRole("combobox", {
+        name: /time range/i,
+      });
       fireEvent.change(timeRangeSelect, { target: { value: "7d" } });
 
       await waitFor(() => {
@@ -1047,7 +1071,9 @@ describe("ObservabilityPage", () => {
         expect(screen.getByText("chat/completion")).toBeInTheDocument();
       });
 
-      const timeRangeSelect = screen.getByRole("combobox", { name: /time range/i });
+      const timeRangeSelect = screen.getByRole("combobox", {
+        name: /time range/i,
+      });
       fireEvent.change(timeRangeSelect, { target: { value: "all" } });
 
       await waitFor(() => {
@@ -1296,7 +1322,9 @@ describe("ObservabilityPage", () => {
       await waitFor(() => {
         // The error severity badge (not the state)
         const severityBadges = screen.getAllByText("error");
-        const severityBadge = severityBadges.find(el => el.classList.contains("bg-orange-100"));
+        const severityBadge = severityBadges.find((el) =>
+          el.classList.contains("bg-orange-100"),
+        );
         expect(severityBadge).toBeInTheDocument();
       });
     });
@@ -1375,7 +1403,9 @@ describe("ObservabilityPage", () => {
       await waitFor(() => {
         // State badge (not the filter button)
         const stateBadges = screen.getAllByText("pending");
-        const stateBadge = stateBadges.find(el => el.classList.contains("rounded-full"));
+        const stateBadge = stateBadges.find((el) =>
+          el.classList.contains("rounded-full"),
+        );
         expect(stateBadge).toBeInTheDocument();
         expect(stateBadge).toHaveClass("bg-yellow-100");
       });
@@ -1415,7 +1445,9 @@ describe("ObservabilityPage", () => {
       await waitFor(() => {
         // State badge (not the filter button)
         const stateBadges = screen.getAllByText("resolved");
-        const stateBadge = stateBadges.find(el => el.classList.contains("rounded-full"));
+        const stateBadge = stateBadges.find((el) =>
+          el.classList.contains("rounded-full"),
+        );
         expect(stateBadge).toBeInTheDocument();
         expect(stateBadge).toHaveClass("bg-green-100");
       });
@@ -1493,7 +1525,9 @@ describe("ObservabilityPage", () => {
       fireEvent.click(screen.getByRole("button", { name: /alerts/i }));
 
       await waitFor(() => {
-        expect(screen.getByText("This is the summary annotation")).toBeInTheDocument();
+        expect(
+          screen.getByText("This is the summary annotation"),
+        ).toBeInTheDocument();
       });
     });
 
@@ -1565,7 +1599,9 @@ describe("ObservabilityPage", () => {
       fireEvent.click(screen.getByRole("button", { name: /alerts/i }));
 
       await waitFor(() => {
-        expect(screen.getByText("Alert Without Start Time")).toBeInTheDocument();
+        expect(
+          screen.getByText("Alert Without Start Time"),
+        ).toBeInTheDocument();
         // Should NOT show "Started" text when started_at is null
         expect(screen.queryByText(/Started/)).not.toBeInTheDocument();
       });
@@ -1587,7 +1623,10 @@ describe("ObservabilityPage", () => {
       // First alert has generator_url
       const externalLinks = screen.getAllByTitle("View in Grafana");
       expect(externalLinks.length).toBeGreaterThan(0);
-      expect(externalLinks[0]).toHaveAttribute("href", "http://grafana/alerting/1");
+      expect(externalLinks[0]).toHaveAttribute(
+        "href",
+        "http://grafana/alerting/1",
+      );
     });
 
     it("should not display external link when generator_url is null", async () => {
@@ -1622,7 +1661,9 @@ describe("ObservabilityPage", () => {
       fireEvent.click(screen.getByRole("button", { name: /alerts/i }));
 
       await waitFor(() => {
-        expect(screen.getByText("Alert Without Generator URL")).toBeInTheDocument();
+        expect(
+          screen.getByText("Alert Without Generator URL"),
+        ).toBeInTheDocument();
       });
 
       expect(screen.queryByTitle("View in Grafana")).not.toBeInTheDocument();
@@ -1955,7 +1996,9 @@ describe("ObservabilityPage", () => {
 
       // The trace should be selected (highlighted)
       await waitFor(() => {
-        const traceCard = screen.getByText("chat/completion").closest("[class*='cursor-pointer']");
+        const traceCard = screen
+          .getByText("chat/completion")
+          .closest("[class*='cursor-pointer']");
         expect(traceCard).toHaveClass("border-blue-500");
       });
     });
@@ -2146,7 +2189,9 @@ describe("ObservabilityPage", () => {
       fireEvent.click(screen.getByText("Metrics"));
 
       await waitFor(() => {
-        expect(screen.getByText("No metrics data available")).toBeInTheDocument();
+        expect(
+          screen.getByText("No metrics data available"),
+        ).toBeInTheDocument();
       });
     });
   });

@@ -40,7 +40,9 @@ describe("devLogger", () => {
   describe("logging methods", () => {
     it("should log debug messages in development", () => {
       devLogger.debug("Test debug message", { data: 123 });
-      expect(consoleSpies.debug).toHaveBeenCalledWith("Test debug message", { data: 123 });
+      expect(consoleSpies.debug).toHaveBeenCalledWith("Test debug message", {
+        data: 123,
+      });
     });
 
     it("should log info messages in development", () => {
@@ -50,7 +52,9 @@ describe("devLogger", () => {
 
     it("should log warning messages in development", () => {
       devLogger.warn("Test warning", { error: "something" });
-      expect(consoleSpies.warn).toHaveBeenCalledWith("Test warning", { error: "something" });
+      expect(consoleSpies.warn).toHaveBeenCalledWith("Test warning", {
+        error: "something",
+      });
     });
 
     it("should log error messages in development", () => {
@@ -63,13 +67,17 @@ describe("devLogger", () => {
     it("should create a logger with a prefix", () => {
       const logger = devLogger.withPrefix("[SessionSync]");
       logger.warn("Something happened");
-      expect(consoleSpies.warn).toHaveBeenCalledWith("[SessionSync] Something happened");
+      expect(consoleSpies.warn).toHaveBeenCalledWith(
+        "[SessionSync] Something happened",
+      );
     });
 
     it("should pass additional arguments with prefix", () => {
       const logger = devLogger.withPrefix("[API]");
       logger.debug("Request", { url: "/test" });
-      expect(consoleSpies.debug).toHaveBeenCalledWith("[API] Request", { url: "/test" });
+      expect(consoleSpies.debug).toHaveBeenCalledWith("[API] Request", {
+        url: "/test",
+      });
     });
   });
 
@@ -104,7 +112,7 @@ describe("devLogger", () => {
       const logOnlyLogger = devLogger.withMinLevel(DevLogLevel.LOG);
 
       logOnlyLogger.debug("Debug"); // Below LOG
-      logOnlyLogger.log("Log");     // Exactly LOG
+      logOnlyLogger.log("Log"); // Exactly LOG
 
       expect(consoleSpies.debug).not.toHaveBeenCalled();
       expect(consoleSpies.log).toHaveBeenCalledWith("Log");
@@ -118,11 +126,15 @@ describe("devLogger", () => {
 
       logger2.warn("Nested message");
 
-      expect(consoleSpies.warn).toHaveBeenCalledWith("[Module] [SubModule] Nested message");
+      expect(consoleSpies.warn).toHaveBeenCalledWith(
+        "[Module] [SubModule] Nested message",
+      );
     });
 
     it("should handle withMinLevel after withPrefix", () => {
-      const logger = devLogger.withPrefix("[Test]").withMinLevel(DevLogLevel.WARN);
+      const logger = devLogger
+        .withPrefix("[Test]")
+        .withMinLevel(DevLogLevel.WARN);
 
       logger.debug("Debug");
       logger.warn("Warning");

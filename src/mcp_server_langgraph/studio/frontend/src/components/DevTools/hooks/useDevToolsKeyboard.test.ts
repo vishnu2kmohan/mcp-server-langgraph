@@ -18,13 +18,18 @@ const mockGetState = vi.fn();
 
 vi.mock("../../../store/hooks", () => ({
   useAppDispatch: () => mockDispatch,
-  useAppSelector: (selector: (state: unknown) => unknown) => selector(mockGetState()),
+  useAppSelector: (selector: (state: unknown) => unknown) =>
+    selector(mockGetState()),
 }));
 
 vi.mock("../../../store/slices/devToolsSlice", () => ({
   toggleDevTools: vi.fn(() => ({ type: "devTools/toggleDevTools" })),
-  setActiveTab: vi.fn((tab: string) => ({ type: "devTools/setActiveTab", payload: tab })),
-  selectActiveTab: (state: { devTools: { activeTab: string } }) => state.devTools.activeTab,
+  setActiveTab: vi.fn((tab: string) => ({
+    type: "devTools/setActiveTab",
+    payload: tab,
+  })),
+  selectActiveTab: (state: { devTools: { activeTab: string } }) =>
+    state.devTools.activeTab,
   selectAvailableTabs: () => ["console", "problems", "network", "state"],
 }));
 
@@ -39,7 +44,7 @@ function createKeyboardEvent(
     ctrlKey?: boolean;
     shiftKey?: boolean;
     altKey?: boolean;
-  } = {}
+  } = {},
 ): KeyboardEvent {
   return new KeyboardEvent("keydown", {
     key,
@@ -79,19 +84,21 @@ describe("useDevToolsKeyboard", () => {
 
       expect(addEventListenerSpy).toHaveBeenCalledWith(
         "keydown",
-        expect.any(Function)
+        expect.any(Function),
       );
     });
 
     it("should cleanup listeners on unmount", () => {
       const removeEventListenerSpy = vi.spyOn(document, "removeEventListener");
 
-      const { unmount } = renderHook(() => useDevToolsKeyboard({ enabled: true }));
+      const { unmount } = renderHook(() =>
+        useDevToolsKeyboard({ enabled: true }),
+      );
       unmount();
 
       expect(removeEventListenerSpy).toHaveBeenCalledWith(
         "keydown",
-        expect.any(Function)
+        expect.any(Function),
       );
     });
 
@@ -102,7 +109,7 @@ describe("useDevToolsKeyboard", () => {
 
       expect(addEventListenerSpy).not.toHaveBeenCalledWith(
         "keydown",
-        expect.any(Function)
+        expect.any(Function),
       );
     });
   });
@@ -113,7 +120,7 @@ describe("useDevToolsKeyboard", () => {
 
       act(() => {
         document.dispatchEvent(
-          createKeyboardEvent("i", { metaKey: true, shiftKey: true })
+          createKeyboardEvent("i", { metaKey: true, shiftKey: true }),
         );
       });
 
@@ -125,7 +132,7 @@ describe("useDevToolsKeyboard", () => {
 
       act(() => {
         document.dispatchEvent(
-          createKeyboardEvent("i", { ctrlKey: true, shiftKey: true })
+          createKeyboardEvent("i", { ctrlKey: true, shiftKey: true }),
         );
       });
 
@@ -146,9 +153,7 @@ describe("useDevToolsKeyboard", () => {
   describe("clear console (Cmd+K)", () => {
     it("should call onClearConsole on Cmd+K", () => {
       const onClearConsole = vi.fn();
-      renderHook(() =>
-        useDevToolsKeyboard({ enabled: true, onClearConsole })
-      );
+      renderHook(() => useDevToolsKeyboard({ enabled: true, onClearConsole }));
 
       act(() => {
         document.dispatchEvent(createKeyboardEvent("k", { metaKey: true }));
@@ -159,9 +164,7 @@ describe("useDevToolsKeyboard", () => {
 
     it("should call onClearConsole on Ctrl+K (Windows/Linux)", () => {
       const onClearConsole = vi.fn();
-      renderHook(() =>
-        useDevToolsKeyboard({ enabled: true, onClearConsole })
-      );
+      renderHook(() => useDevToolsKeyboard({ enabled: true, onClearConsole }));
 
       act(() => {
         document.dispatchEvent(createKeyboardEvent("k", { ctrlKey: true }));
@@ -172,9 +175,7 @@ describe("useDevToolsKeyboard", () => {
 
     it("should not clear without modifier", () => {
       const onClearConsole = vi.fn();
-      renderHook(() =>
-        useDevToolsKeyboard({ enabled: true, onClearConsole })
-      );
+      renderHook(() => useDevToolsKeyboard({ enabled: true, onClearConsole }));
 
       act(() => {
         document.dispatchEvent(createKeyboardEvent("k"));
@@ -260,7 +261,7 @@ describe("useDevToolsKeyboard", () => {
 
       act(() => {
         document.dispatchEvent(
-          createKeyboardEvent("c", { metaKey: true, shiftKey: true })
+          createKeyboardEvent("c", { metaKey: true, shiftKey: true }),
         );
       });
 
@@ -271,7 +272,7 @@ describe("useDevToolsKeyboard", () => {
   describe("return value", () => {
     it("should return keyboard shortcuts map", () => {
       const { result } = renderHook(() =>
-        useDevToolsKeyboard({ enabled: true })
+        useDevToolsKeyboard({ enabled: true }),
       );
 
       expect(result.current.shortcuts).toBeDefined();
@@ -279,13 +280,13 @@ describe("useDevToolsKeyboard", () => {
         expect.objectContaining({
           key: "i",
           description: expect.stringMatching(/toggle/i),
-        })
+        }),
       );
     });
 
     it("should return isEnabled status", () => {
       const { result } = renderHook(() =>
-        useDevToolsKeyboard({ enabled: true })
+        useDevToolsKeyboard({ enabled: true }),
       );
 
       expect(result.current.isEnabled).toBe(true);

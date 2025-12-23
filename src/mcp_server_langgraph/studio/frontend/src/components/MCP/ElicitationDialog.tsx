@@ -73,7 +73,7 @@ export function ElicitationDialog({ open, onClose }: ElicitationDialogProps) {
     (e: React.ChangeEvent<HTMLTextAreaElement>) => {
       setMessage(e.target.value);
     },
-    []
+    [],
   );
 
   // Handle schema change
@@ -81,7 +81,7 @@ export function ElicitationDialog({ open, onClose }: ElicitationDialogProps) {
     (e: React.ChangeEvent<HTMLTextAreaElement>) => {
       setSchemaText(e.target.value);
     },
-    []
+    [],
   );
 
   // Handle send request

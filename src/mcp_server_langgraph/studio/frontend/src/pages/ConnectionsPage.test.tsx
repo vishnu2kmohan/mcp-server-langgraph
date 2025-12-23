@@ -11,8 +11,14 @@
  * - Connection testing
  */
 
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import {
+  render,
+  screen,
+  fireEvent,
+  waitFor,
+  cleanup,
+} from "@testing-library/react";
 import { Provider } from "react-redux";
 import { configureStore } from "@reduxjs/toolkit";
 import { ConnectionsPage } from "./ConnectionsPage";
@@ -179,6 +185,11 @@ const renderWithProviders = (component: React.ReactElement) => {
 
 describe("ConnectionsPage", () => {
   beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  afterEach(() => {
+    cleanup();
     vi.clearAllMocks();
   });
 
@@ -640,9 +651,12 @@ describe("ConnectionsPage", () => {
       });
 
       // Find the delete button in the modal (within the confirmation dialog)
-      const modalDeleteButtons = screen.getAllByRole("button", { name: /delete/i });
+      const modalDeleteButtons = screen.getAllByRole("button", {
+        name: /delete/i,
+      });
       // The last delete button is the one in the modal (confirm button)
-      const confirmDeleteButton = modalDeleteButtons[modalDeleteButtons.length - 1];
+      const confirmDeleteButton =
+        modalDeleteButtons[modalDeleteButtons.length - 1];
       fireEvent.click(confirmDeleteButton);
 
       await waitFor(() => {
@@ -662,9 +676,12 @@ describe("ConnectionsPage", () => {
       });
 
       // Find the delete button in the modal (within the confirmation dialog)
-      const modalDeleteButtons = screen.getAllByRole("button", { name: /delete/i });
+      const modalDeleteButtons = screen.getAllByRole("button", {
+        name: /delete/i,
+      });
       // The last delete button is the one in the modal (confirm button)
-      const confirmDeleteButton = modalDeleteButtons[modalDeleteButtons.length - 1];
+      const confirmDeleteButton =
+        modalDeleteButtons[modalDeleteButtons.length - 1];
       fireEvent.click(confirmDeleteButton);
 
       await waitFor(() => {
@@ -703,7 +720,9 @@ describe("ConnectionsPage", () => {
 
       await waitFor(() => {
         // Template selector should close and connection dialog should open
-        expect(screen.queryByTestId("template-selector")).not.toBeInTheDocument();
+        expect(
+          screen.queryByTestId("template-selector"),
+        ).not.toBeInTheDocument();
         expect(screen.getByRole("dialog")).toBeInTheDocument();
       });
     });
@@ -723,7 +742,9 @@ describe("ConnectionsPage", () => {
 
       await waitFor(() => {
         // Template selector should close and connection dialog should open
-        expect(screen.queryByTestId("template-selector")).not.toBeInTheDocument();
+        expect(
+          screen.queryByTestId("template-selector"),
+        ).not.toBeInTheDocument();
         expect(screen.getByRole("dialog")).toBeInTheDocument();
       });
     });
@@ -743,7 +764,9 @@ describe("ConnectionsPage", () => {
       fireEvent.click(closeButton);
 
       await waitFor(() => {
-        expect(screen.queryByTestId("template-selector")).not.toBeInTheDocument();
+        expect(
+          screen.queryByTestId("template-selector"),
+        ).not.toBeInTheDocument();
       });
     });
 
@@ -764,7 +787,9 @@ describe("ConnectionsPage", () => {
       }
 
       await waitFor(() => {
-        expect(screen.queryByTestId("template-selector")).not.toBeInTheDocument();
+        expect(
+          screen.queryByTestId("template-selector"),
+        ).not.toBeInTheDocument();
       });
     });
   });
@@ -773,7 +798,9 @@ describe("ConnectionsPage", () => {
     it("should toggle sort order when button clicked", async () => {
       renderWithProviders(<ConnectionsPage />);
 
-      const sortOrderButton = screen.getByRole("button", { name: /sort order/i });
+      const sortOrderButton = screen.getByRole("button", {
+        name: /sort order/i,
+      });
 
       // Initial state - desc (ArrowDown is visible)
       // Click to toggle to asc
@@ -793,7 +820,9 @@ describe("ConnectionsPage", () => {
       renderWithProviders(<ConnectionsPage />);
 
       // Select by the specific connection name checkbox
-      const prodServerCheckbox = screen.getByRole("checkbox", { name: /select production server/i });
+      const prodServerCheckbox = screen.getByRole("checkbox", {
+        name: /select production server/i,
+      });
 
       // Select
       fireEvent.click(prodServerCheckbox);
@@ -813,7 +842,9 @@ describe("ConnectionsPage", () => {
     it("should select all connections when select all clicked", async () => {
       renderWithProviders(<ConnectionsPage />);
 
-      const selectAllCheckbox = screen.getByRole("checkbox", { name: /select all/i });
+      const selectAllCheckbox = screen.getByRole("checkbox", {
+        name: /select all/i,
+      });
       fireEvent.click(selectAllCheckbox);
 
       await waitFor(() => {
@@ -824,7 +855,9 @@ describe("ConnectionsPage", () => {
     it("should deselect all when select all clicked again", async () => {
       renderWithProviders(<ConnectionsPage />);
 
-      const selectAllCheckbox = screen.getByRole("checkbox", { name: /select all/i });
+      const selectAllCheckbox = screen.getByRole("checkbox", {
+        name: /select all/i,
+      });
 
       // Select all
       fireEvent.click(selectAllCheckbox);
@@ -845,7 +878,9 @@ describe("ConnectionsPage", () => {
       renderWithProviders(<ConnectionsPage />);
 
       // Select a connection by specific name
-      const prodServerCheckbox = screen.getByRole("checkbox", { name: /select production server/i });
+      const prodServerCheckbox = screen.getByRole("checkbox", {
+        name: /select production server/i,
+      });
       fireEvent.click(prodServerCheckbox);
 
       await waitFor(() => {
@@ -865,7 +900,9 @@ describe("ConnectionsPage", () => {
       renderWithProviders(<ConnectionsPage />);
 
       // Select a connection by specific name
-      const prodServerCheckbox = screen.getByRole("checkbox", { name: /select production server/i });
+      const prodServerCheckbox = screen.getByRole("checkbox", {
+        name: /select production server/i,
+      });
       fireEvent.click(prodServerCheckbox);
 
       await waitFor(() => {
@@ -915,7 +952,9 @@ describe("ConnectionsPage", () => {
 
       // Click the add button in the empty state (there are two - one in header, one in empty state)
       // The empty state button doesn't have the keyboard shortcut badge
-      const addButtons = screen.getAllByRole("button", { name: /add connection/i });
+      const addButtons = screen.getAllByRole("button", {
+        name: /add connection/i,
+      });
       // Click the last one (the one in empty state)
       fireEvent.click(addButtons[addButtons.length - 1]);
 
@@ -1006,8 +1045,12 @@ describe("ConnectionsPage", () => {
       renderWithProviders(<ConnectionsPage />);
 
       // Select two specific connections
-      const prodServerCheckbox = screen.getByRole("checkbox", { name: /select production server/i });
-      const devServerCheckbox = screen.getByRole("checkbox", { name: /select development server/i });
+      const prodServerCheckbox = screen.getByRole("checkbox", {
+        name: /select production server/i,
+      });
+      const devServerCheckbox = screen.getByRole("checkbox", {
+        name: /select development server/i,
+      });
 
       fireEvent.click(prodServerCheckbox);
       fireEvent.click(devServerCheckbox);

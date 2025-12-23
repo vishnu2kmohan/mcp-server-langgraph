@@ -39,12 +39,24 @@ vi.mock("../../api", () => ({
               risk_score: 0.72,
               risk_level: "medium",
               risk_factors: [
-                { factor: "external_api_access", weight: 0.3, description: "Sends data to external service" },
-                { factor: "data_sensitivity", weight: 0.25, description: "Contains user data" },
+                {
+                  factor: "external_api_access",
+                  weight: 0.3,
+                  description: "Sends data to external service",
+                },
+                {
+                  factor: "data_sensitivity",
+                  weight: 0.25,
+                  description: "Contains user data",
+                },
               ],
-              mitigations: ["Review data before sending", "Use staging API first"],
+              mitigations: [
+                "Review data before sending",
+                "Use staging API first",
+              ],
               recommendation: "review",
-              explanation: "This action involves sending data to an external API with moderate risk.",
+              explanation:
+                "This action involves sending data to an external API with moderate risk.",
             },
             decision_history: {
               similar_decisions: [
@@ -119,8 +131,10 @@ const mockApprovalRequest: AgentApprovalRequest = {
 };
 
 const mockAIExplanation: AIExplanation = {
-  why_uncertain: "The input query contains ambiguous terms that could refer to multiple entities.",
-  what_could_go_wrong: "May send data to the wrong external service if the target is misidentified.",
+  why_uncertain:
+    "The input query contains ambiguous terms that could refer to multiple entities.",
+  what_could_go_wrong:
+    "May send data to the wrong external service if the target is misidentified.",
   safer_alternatives: [
     {
       action: "Preview data before sending",
@@ -221,7 +235,7 @@ describe("AgentApprovalDialog", () => {
       render(<AgentApprovalDialog {...defaultProps} />);
 
       expect(
-        screen.getByText("Send analysis report to external API")
+        screen.getByText("Send analysis report to external API"),
       ).toBeInTheDocument();
     });
 
@@ -235,7 +249,7 @@ describe("AgentApprovalDialog", () => {
       render(<AgentApprovalDialog {...defaultProps} />);
 
       expect(screen.getByTestId("confidence-threshold")).toHaveTextContent(
-        "70%"
+        "70%",
       );
     });
 
@@ -244,7 +258,7 @@ describe("AgentApprovalDialog", () => {
 
       // Should explain why approval is needed
       expect(
-        screen.getByText(/confidence.*below.*threshold/i)
+        screen.getByText(/confidence.*below.*threshold/i),
       ).toBeInTheDocument();
     });
   });
@@ -270,7 +284,10 @@ describe("AgentApprovalDialog", () => {
         confidence: 0.45,
       };
       render(
-        <AgentApprovalDialog {...defaultProps} request={lowConfidenceRequest} />
+        <AgentApprovalDialog
+          {...defaultProps}
+          request={lowConfidenceRequest}
+        />,
       );
 
       const gauge = screen.getByTestId("confidence-gauge");
@@ -286,7 +303,7 @@ describe("AgentApprovalDialog", () => {
         <AgentApprovalDialog
           {...defaultProps}
           request={mediumConfidenceRequest}
-        />
+        />,
       );
 
       const gauge = screen.getByTestId("confidence-gauge");
@@ -311,11 +328,11 @@ describe("AgentApprovalDialog", () => {
         <AgentApprovalDialog
           {...defaultProps}
           request={highConfidenceRequest}
-        />
+        />,
       );
 
       expect(
-        screen.queryByTestId("low-confidence-warning")
+        screen.queryByTestId("low-confidence-warning"),
       ).not.toBeInTheDocument();
     });
   });
@@ -350,9 +367,7 @@ describe("AgentApprovalDialog", () => {
 
     it("should call onApprove with request id when clicked", async () => {
       const onApprove = vi.fn();
-      render(
-        <AgentApprovalDialog {...defaultProps} onApprove={onApprove} />
-      );
+      render(<AgentApprovalDialog {...defaultProps} onApprove={onApprove} />);
 
       fireEvent.click(screen.getByTestId("approve-button"));
 
@@ -368,13 +383,11 @@ describe("AgentApprovalDialog", () => {
     it("should include optional reason if provided", async () => {
       const onApprove = vi.fn();
       const user = userEvent.setup();
-      render(
-        <AgentApprovalDialog {...defaultProps} onApprove={onApprove} />
-      );
+      render(<AgentApprovalDialog {...defaultProps} onApprove={onApprove} />);
 
       await user.type(
         screen.getByTestId("reason-input"),
-        "Approved after review"
+        "Approved after review",
       );
       await user.click(screen.getByTestId("approve-button"));
 
@@ -470,7 +483,7 @@ describe("AgentApprovalDialog", () => {
         <AgentApprovalDialog
           {...defaultProps}
           error="Failed to approve request"
-        />
+        />,
       );
 
       expect(screen.getByText(/failed to approve/i)).toBeInTheDocument();
@@ -482,7 +495,7 @@ describe("AgentApprovalDialog", () => {
       render(<AgentApprovalDialog {...defaultProps} />);
 
       expect(
-        screen.getByText(/confidence.*below.*threshold/i)
+        screen.getByText(/confidence.*below.*threshold/i),
       ).toBeInTheDocument();
     });
 
@@ -492,7 +505,7 @@ describe("AgentApprovalDialog", () => {
         trigger_reason: "destructive_action",
       };
       render(
-        <AgentApprovalDialog {...defaultProps} request={destructiveRequest} />
+        <AgentApprovalDialog {...defaultProps} request={destructiveRequest} />,
       );
 
       expect(screen.getByText(/modify or delete/i)).toBeInTheDocument();
@@ -504,7 +517,7 @@ describe("AgentApprovalDialog", () => {
         trigger_reason: "external_api",
       };
       render(
-        <AgentApprovalDialog {...defaultProps} request={externalApiRequest} />
+        <AgentApprovalDialog {...defaultProps} request={externalApiRequest} />,
       );
 
       expect(screen.getByText(/external service/i)).toBeInTheDocument();
@@ -520,7 +533,7 @@ describe("AgentApprovalDialog", () => {
       render(<AgentApprovalDialog {...defaultProps} />);
 
       expect(
-        screen.queryByTestId("ai-explanation-section")
+        screen.queryByTestId("ai-explanation-section"),
       ).not.toBeInTheDocument();
     });
 
@@ -529,7 +542,7 @@ describe("AgentApprovalDialog", () => {
         <AgentApprovalDialog
           {...defaultProps}
           request={mockApprovalRequestWithExplanation}
-        />
+        />,
       );
 
       expect(screen.getByTestId("ai-explanation-section")).toBeInTheDocument();
@@ -540,10 +553,12 @@ describe("AgentApprovalDialog", () => {
         <AgentApprovalDialog
           {...defaultProps}
           request={mockApprovalRequestWithExplanation}
-        />
+        />,
       );
 
-      expect(screen.getByText(/why is the agent uncertain/i)).toBeInTheDocument();
+      expect(
+        screen.getByText(/why is the agent uncertain/i),
+      ).toBeInTheDocument();
     });
 
     it("should display why_uncertain explanation", () => {
@@ -551,11 +566,13 @@ describe("AgentApprovalDialog", () => {
         <AgentApprovalDialog
           {...defaultProps}
           request={mockApprovalRequestWithExplanation}
-        />
+        />,
       );
 
       expect(
-        screen.getByText(/ambiguous terms that could refer to multiple entities/i)
+        screen.getByText(
+          /ambiguous terms that could refer to multiple entities/i,
+        ),
       ).toBeInTheDocument();
     });
 
@@ -564,12 +581,10 @@ describe("AgentApprovalDialog", () => {
         <AgentApprovalDialog
           {...defaultProps}
           request={mockApprovalRequestWithExplanation}
-        />
+        />,
       );
 
-      expect(
-        screen.getByText(/wrong external service/i)
-      ).toBeInTheDocument();
+      expect(screen.getByText(/wrong external service/i)).toBeInTheDocument();
     });
 
     it("should display 'What could go wrong' label", () => {
@@ -577,7 +592,7 @@ describe("AgentApprovalDialog", () => {
         <AgentApprovalDialog
           {...defaultProps}
           request={mockApprovalRequestWithExplanation}
-        />
+        />,
       );
 
       expect(screen.getByText(/what could go wrong/i)).toBeInTheDocument();
@@ -589,7 +604,7 @@ describe("AgentApprovalDialog", () => {
           <AgentApprovalDialog
             {...defaultProps}
             request={mockApprovalRequestWithExplanation}
-          />
+          />,
         );
 
         expect(screen.getByText(/safer alternatives/i)).toBeInTheDocument();
@@ -600,11 +615,15 @@ describe("AgentApprovalDialog", () => {
           <AgentApprovalDialog
             {...defaultProps}
             request={mockApprovalRequestWithExplanation}
-          />
+          />,
         );
 
-        expect(screen.getByText(/Preview data before sending/)).toBeInTheDocument();
-        expect(screen.getByText(/Send to staging API first/)).toBeInTheDocument();
+        expect(
+          screen.getByText(/Preview data before sending/),
+        ).toBeInTheDocument();
+        expect(
+          screen.getByText(/Send to staging API first/),
+        ).toBeInTheDocument();
       });
 
       it("should display alternative confidence percentages", () => {
@@ -612,7 +631,7 @@ describe("AgentApprovalDialog", () => {
           <AgentApprovalDialog
             {...defaultProps}
             request={mockApprovalRequestWithExplanation}
-          />
+          />,
         );
 
         expect(screen.getByText(/92%/)).toBeInTheDocument();
@@ -624,11 +643,15 @@ describe("AgentApprovalDialog", () => {
           <AgentApprovalDialog
             {...defaultProps}
             request={mockApprovalRequestWithExplanation}
-          />
+          />,
         );
 
-        expect(screen.getByText(/extra confirmation step/i)).toBeInTheDocument();
-        expect(screen.getByText(/Delays production deployment/i)).toBeInTheDocument();
+        expect(
+          screen.getByText(/extra confirmation step/i),
+        ).toBeInTheDocument();
+        expect(
+          screen.getByText(/Delays production deployment/i),
+        ).toBeInTheDocument();
       });
 
       it("should not display safer alternatives section when empty", () => {
@@ -644,11 +667,11 @@ describe("AgentApprovalDialog", () => {
           <AgentApprovalDialog
             {...defaultProps}
             request={requestWithoutAlternatives}
-          />
+          />,
         );
 
         expect(
-          screen.queryByText(/safer alternatives/i)
+          screen.queryByText(/safer alternatives/i),
         ).not.toBeInTheDocument();
       });
     });
@@ -659,7 +682,7 @@ describe("AgentApprovalDialog", () => {
           <AgentApprovalDialog
             {...defaultProps}
             request={mockApprovalRequestWithExplanation}
-          />
+          />,
         );
 
         expect(screen.getByText(/confidence factors/i)).toBeInTheDocument();
@@ -670,11 +693,15 @@ describe("AgentApprovalDialog", () => {
           <AgentApprovalDialog
             {...defaultProps}
             request={mockApprovalRequestWithExplanation}
-          />
+          />,
         );
 
-        expect(screen.getByText(/vague terms like 'the report'/i)).toBeInTheDocument();
-        expect(screen.getByText(/Multiple external APIs match/i)).toBeInTheDocument();
+        expect(
+          screen.getByText(/vague terms like 'the report'/i),
+        ).toBeInTheDocument();
+        expect(
+          screen.getByText(/Multiple external APIs match/i),
+        ).toBeInTheDocument();
       });
 
       it("should not display confidence factors section when empty", () => {
@@ -690,11 +717,11 @@ describe("AgentApprovalDialog", () => {
           <AgentApprovalDialog
             {...defaultProps}
             request={requestWithoutFactors}
-          />
+          />,
         );
 
         expect(
-          screen.queryByText(/confidence factors/i)
+          screen.queryByText(/confidence factors/i),
         ).not.toBeInTheDocument();
       });
     });
@@ -705,7 +732,7 @@ describe("AgentApprovalDialog", () => {
           <AgentApprovalDialog
             {...defaultProps}
             request={mockApprovalRequestWithExplanation}
-          />
+          />,
         );
 
         const details = screen.getByTestId("ai-explanation-section");
@@ -717,7 +744,7 @@ describe("AgentApprovalDialog", () => {
           <AgentApprovalDialog
             {...defaultProps}
             request={mockApprovalRequestWithExplanation}
-          />
+          />,
         );
 
         const summary = screen.getByText(/why is the agent uncertain/i);
@@ -738,25 +765,19 @@ describe("AgentApprovalDialog", () => {
     describe("Risk Assessment Panel", () => {
       it("should display risk assessment panel when enableAI is true", async () => {
         renderWithProvider(
-          <AgentApprovalDialog
-            {...defaultProps}
-            enableAI
-            userId="user-123"
-          />
+          <AgentApprovalDialog {...defaultProps} enableAI userId="user-123" />,
         );
 
         await waitFor(() => {
-          expect(screen.getByTestId("risk-assessment-panel")).toBeInTheDocument();
+          expect(
+            screen.getByTestId("risk-assessment-panel"),
+          ).toBeInTheDocument();
         });
       });
 
       it("should show risk score indicator", async () => {
         renderWithProvider(
-          <AgentApprovalDialog
-            {...defaultProps}
-            enableAI
-            userId="user-123"
-          />
+          <AgentApprovalDialog {...defaultProps} enableAI userId="user-123" />,
         );
 
         await waitFor(() => {
@@ -767,11 +788,7 @@ describe("AgentApprovalDialog", () => {
 
       it("should show risk level badge", async () => {
         renderWithProvider(
-          <AgentApprovalDialog
-            {...defaultProps}
-            enableAI
-            userId="user-123"
-          />
+          <AgentApprovalDialog {...defaultProps} enableAI userId="user-123" />,
         );
 
         await waitFor(() => {
@@ -782,40 +799,32 @@ describe("AgentApprovalDialog", () => {
 
       it("should display risk factors when available", async () => {
         renderWithProvider(
-          <AgentApprovalDialog
-            {...defaultProps}
-            enableAI
-            userId="user-123"
-          />
+          <AgentApprovalDialog {...defaultProps} enableAI userId="user-123" />,
         );
 
         await waitFor(() => {
-          expect(screen.getByText(/external.*api.*access/i)).toBeInTheDocument();
+          expect(
+            screen.getByText(/external.*api.*access/i),
+          ).toBeInTheDocument();
           expect(screen.getByText(/data.*sensitivity/i)).toBeInTheDocument();
         });
       });
 
       it("should display risk mitigations", async () => {
         renderWithProvider(
-          <AgentApprovalDialog
-            {...defaultProps}
-            enableAI
-            userId="user-123"
-          />
+          <AgentApprovalDialog {...defaultProps} enableAI userId="user-123" />,
         );
 
         await waitFor(() => {
-          expect(screen.getByText(/review data before sending/i)).toBeInTheDocument();
+          expect(
+            screen.getByText(/review data before sending/i),
+          ).toBeInTheDocument();
         });
       });
 
       it("should show AI recommendation", async () => {
         renderWithProvider(
-          <AgentApprovalDialog
-            {...defaultProps}
-            enableAI
-            userId="user-123"
-          />
+          <AgentApprovalDialog {...defaultProps} enableAI userId="user-123" />,
         );
 
         await waitFor(() => {
@@ -826,32 +835,28 @@ describe("AgentApprovalDialog", () => {
       it("should not show risk assessment when enableAI is false", () => {
         render(<AgentApprovalDialog {...defaultProps} />);
 
-        expect(screen.queryByTestId("risk-assessment-panel")).not.toBeInTheDocument();
+        expect(
+          screen.queryByTestId("risk-assessment-panel"),
+        ).not.toBeInTheDocument();
       });
     });
 
     describe("Decision History Panel", () => {
       it("should display decision history when enableAI is true", async () => {
         renderWithProvider(
-          <AgentApprovalDialog
-            {...defaultProps}
-            enableAI
-            userId="user-123"
-          />
+          <AgentApprovalDialog {...defaultProps} enableAI userId="user-123" />,
         );
 
         await waitFor(() => {
-          expect(screen.getByTestId("decision-history-panel")).toBeInTheDocument();
+          expect(
+            screen.getByTestId("decision-history-panel"),
+          ).toBeInTheDocument();
         });
       });
 
       it("should show similar past decisions", async () => {
         renderWithProvider(
-          <AgentApprovalDialog
-            {...defaultProps}
-            enableAI
-            userId="user-123"
-          />
+          <AgentApprovalDialog {...defaultProps} enableAI userId="user-123" />,
         );
 
         await waitFor(() => {
@@ -861,11 +866,7 @@ describe("AgentApprovalDialog", () => {
 
       it("should display approval rate", async () => {
         renderWithProvider(
-          <AgentApprovalDialog
-            {...defaultProps}
-            enableAI
-            userId="user-123"
-          />
+          <AgentApprovalDialog {...defaultProps} enableAI userId="user-123" />,
         );
 
         await waitFor(() => {
@@ -876,11 +877,7 @@ describe("AgentApprovalDialog", () => {
 
       it("should show total similar decisions count", async () => {
         renderWithProvider(
-          <AgentApprovalDialog
-            {...defaultProps}
-            enableAI
-            userId="user-123"
-          />
+          <AgentApprovalDialog {...defaultProps} enableAI userId="user-123" />,
         );
 
         await waitFor(() => {
@@ -890,11 +887,7 @@ describe("AgentApprovalDialog", () => {
 
       it("should display suggested action based on history", async () => {
         renderWithProvider(
-          <AgentApprovalDialog
-            {...defaultProps}
-            enableAI
-            userId="user-123"
-          />
+          <AgentApprovalDialog {...defaultProps} enableAI userId="user-123" />,
         );
 
         await waitFor(() => {
@@ -905,7 +898,9 @@ describe("AgentApprovalDialog", () => {
       it("should not show decision history when enableAI is false", () => {
         render(<AgentApprovalDialog {...defaultProps} />);
 
-        expect(screen.queryByTestId("decision-history-panel")).not.toBeInTheDocument();
+        expect(
+          screen.queryByTestId("decision-history-panel"),
+        ).not.toBeInTheDocument();
       });
     });
 
@@ -913,11 +908,7 @@ describe("AgentApprovalDialog", () => {
       it("should show loading indicator while fetching risk assessment", async () => {
         // This test would need a modified mock to show loading state
         renderWithProvider(
-          <AgentApprovalDialog
-            {...defaultProps}
-            enableAI
-            userId="user-123"
-          />
+          <AgentApprovalDialog {...defaultProps} enableAI userId="user-123" />,
         );
 
         // The component should handle loading gracefully
@@ -931,8 +922,12 @@ describe("AgentApprovalDialog", () => {
         render(<AgentApprovalDialog {...defaultProps} />);
 
         // Should render without AI panels
-        expect(screen.queryByTestId("risk-assessment-panel")).not.toBeInTheDocument();
-        expect(screen.queryByTestId("decision-history-panel")).not.toBeInTheDocument();
+        expect(
+          screen.queryByTestId("risk-assessment-panel"),
+        ).not.toBeInTheDocument();
+        expect(
+          screen.queryByTestId("decision-history-panel"),
+        ).not.toBeInTheDocument();
       });
     });
   });

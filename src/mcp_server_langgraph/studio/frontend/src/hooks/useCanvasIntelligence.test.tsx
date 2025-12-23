@@ -32,7 +32,8 @@ vi.mock("../api", () => ({
                 { type: "code", confidence: 0.3 },
                 { type: "markdown", confidence: 0.1 },
               ],
-              reason: "Content contains flowchart syntax with graph TB declaration",
+              reason:
+                "Content contains flowchart syntax with graph TB declaration",
             },
             code_analyze: {
               complexity: 8,
@@ -56,7 +57,8 @@ vi.mock("../api", () => ({
               lines_of_code: 120,
             },
             diff_explain: {
-              summary: "Added authentication middleware and updated error handling",
+              summary:
+                "Added authentication middleware and updated error handling",
               changes: [
                 {
                   type: "addition",
@@ -147,9 +149,8 @@ describe("Canvas Intelligence Hooks", () => {
 
   describe("useArtifactTypeSuggestion", () => {
     it("returns suggested artifact type with confidence", async () => {
-      const { useArtifactTypeSuggestion } = await import(
-        "./useCanvasIntelligence"
-      );
+      const { useArtifactTypeSuggestion } =
+        await import("./useCanvasIntelligence");
 
       const { result } = renderHook(
         () =>
@@ -173,9 +174,8 @@ describe("Canvas Intelligence Hooks", () => {
     });
 
     it("handles disabled state", async () => {
-      const { useArtifactTypeSuggestion } = await import(
-        "./useCanvasIntelligence"
-      );
+      const { useArtifactTypeSuggestion } =
+        await import("./useCanvasIntelligence");
 
       const { result } = renderHook(
         () =>
@@ -193,9 +193,8 @@ describe("Canvas Intelligence Hooks", () => {
     });
 
     it("handles empty content", async () => {
-      const { useArtifactTypeSuggestion } = await import(
-        "./useCanvasIntelligence"
-      );
+      const { useArtifactTypeSuggestion } =
+        await import("./useCanvasIntelligence");
 
       const { result } = renderHook(
         () =>
@@ -359,7 +358,8 @@ describe("Canvas Intelligence Hooks", () => {
           useDiagramToCode({
             userId: "test-user",
             sessionId: "session-123",
-            diagramCode: "graph TB\n  A[Login] --> B{Valid?}\n  B -->|Yes| C[Token]",
+            diagramCode:
+              "graph TB\n  A[Login] --> B{Valid?}\n  B -->|Yes| C[Token]",
             targetLanguage: "typescript",
           }),
         { wrapper: createWrapper() },

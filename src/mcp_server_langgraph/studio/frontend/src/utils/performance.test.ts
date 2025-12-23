@@ -273,8 +273,14 @@ describe("Performance Utilities", () => {
       // @ts-expect-error - intentionally removing for test
       delete window.requestIdleCallback;
 
-      let capturedDeadline: { didTimeout: boolean; timeRemaining: () => number } | null = null;
-      const callback = (deadline: { didTimeout: boolean; timeRemaining: () => number }) => {
+      let capturedDeadline: {
+        didTimeout: boolean;
+        timeRemaining: () => number;
+      } | null = null;
+      const callback = (deadline: {
+        didTimeout: boolean;
+        timeRemaining: () => number;
+      }) => {
         capturedDeadline = deadline;
       };
 

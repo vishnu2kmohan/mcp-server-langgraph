@@ -102,9 +102,7 @@ async function fetchJson<T>(url: string): Promise<T | null> {
 export async function sessionsLoader(
   _args: LoaderFunctionArgs,
 ): Promise<SessionsLoaderData> {
-  const result = await fetchJson<unknown>(
-    `${API_BASE}/sessions?limit=50`,
-  );
+  const result = await fetchJson<unknown>(`${API_BASE}/sessions?limit=50`);
 
   if (!result) {
     return {
@@ -198,7 +196,8 @@ export async function chatLoader({
       validatedSession = {
         id: sessionValidation.data.id,
         name: sessionValidation.data.name || "Untitled",
-        status: (sessionValidation.data.status as Session["status"]) || "active",
+        status:
+          (sessionValidation.data.status as Session["status"]) || "active",
         created_at: sessionValidation.data.created_at,
         updated_at: sessionValidation.data.updated_at,
         config: sessionValidation.data.config as Session["config"],

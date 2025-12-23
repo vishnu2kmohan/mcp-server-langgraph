@@ -102,9 +102,9 @@ describe("useThresholdSettings", () => {
                       sample_size: 50,
                     }),
                 }),
-              100
-            )
-          )
+              100,
+            ),
+          ),
       );
       vi.stubGlobal("fetch", mockFetch);
 
@@ -228,7 +228,7 @@ describe("useThresholdSettings", () => {
         expect.objectContaining({
           method: "PUT",
           body: JSON.stringify({ base_threshold: 0.8 }),
-        })
+        }),
       );
 
       vi.unstubAllGlobals();

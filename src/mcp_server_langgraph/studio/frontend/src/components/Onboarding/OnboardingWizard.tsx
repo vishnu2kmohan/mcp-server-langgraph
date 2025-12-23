@@ -150,7 +150,8 @@ export function OnboardingWizard({
   const mapPersonaPrediction = useCallback(
     (prediction: string | null): Persona | null => {
       if (!prediction) return null;
-      if (prediction.includes("admin") || prediction === "security-admin") return "admin";
+      if (prediction.includes("admin") || prediction === "security-admin")
+        return "admin";
       if (
         prediction.includes("alice") ||
         prediction.includes("developer") ||
@@ -162,13 +163,13 @@ export function OnboardingWizard({
       if (prediction === "bob" || prediction.includes("user")) return "user";
       return null;
     },
-    []
+    [],
   );
 
   // Get recommended template from AI path
   const aiRecommendedTemplateId = useMemo(() => {
     const templateStep = recommendedPath.find(
-      (step) => step.step === "template_selection" && step.template
+      (step) => step.step === "template_selection" && step.template,
     );
     return templateStep?.template || null;
   }, [recommendedPath]);
@@ -194,7 +195,12 @@ export function OnboardingWizard({
   // Check if current step should be skipped
   const shouldSkipCurrentStep = useMemo(() => {
     if (skipSteps.length === 0 || confidence < 0.8) return false;
-    const stepNames = ["welcome", "persona_selection", "template_selection", "tour"];
+    const stepNames = [
+      "welcome",
+      "persona_selection",
+      "template_selection",
+      "tour",
+    ];
     return skipSteps.includes(stepNames[currentStep - 1] || "");
   }, [skipSteps, currentStep, confidence]);
 
@@ -438,7 +444,8 @@ export function OnboardingWizard({
                   <div className="flex items-center gap-2 text-purple-700 dark:text-purple-300">
                     <Zap className="w-4 h-4" />
                     <span className="text-sm font-medium">
-                      AI recommends: {aiRecommendedTemplateId.replace(/-/g, " ")}
+                      AI recommends:{" "}
+                      {aiRecommendedTemplateId.replace(/-/g, " ")}
                     </span>
                   </div>
                 </div>
@@ -453,7 +460,8 @@ export function OnboardingWizard({
                 <div className="grid grid-cols-1 gap-3 mb-4">
                   {templates.map((template) => {
                     const isAIRecommended =
-                      aiRecommendedTemplateId === template.id && confidence >= 0.7;
+                      aiRecommendedTemplateId === template.id &&
+                      confidence >= 0.7;
 
                     return (
                       <button

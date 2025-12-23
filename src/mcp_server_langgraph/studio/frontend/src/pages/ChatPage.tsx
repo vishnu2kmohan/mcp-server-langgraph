@@ -119,7 +119,8 @@ export function ChatPage() {
   // Try both route IDs: "chat-session" (for /studio/v2/chat/:sessionId)
   // and "chat-index" (for /studio/v2/chat)
   // Use safe version that returns undefined when not in data router context
-  const chatSessionData = useSafeRouteLoaderData<ChatLoaderData>("chat-session");
+  const chatSessionData =
+    useSafeRouteLoaderData<ChatLoaderData>("chat-session");
   const chatIndexData = useSafeRouteLoaderData<ChatLoaderData>("chat-index");
   const loaderData = chatSessionData || chatIndexData;
 

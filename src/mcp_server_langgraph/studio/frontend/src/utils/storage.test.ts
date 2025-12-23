@@ -546,7 +546,10 @@ describe("storage.setWithTTL and getWithTTL", () => {
     });
 
     it("handles malformed TTL data gracefully", () => {
-      localStorage.setItem("studio-malformed", JSON.stringify({ broken: true }));
+      localStorage.setItem(
+        "studio-malformed",
+        JSON.stringify({ broken: true }),
+      );
 
       const result = storage.getWithTTL("malformed", "fallback");
       expect(result).toBe("fallback");
@@ -601,7 +604,10 @@ describe("sessionStore", () => {
     });
 
     it("parses JSON objects", () => {
-      sessionStorage.setItem("studio-session-test", JSON.stringify({ foo: "bar" }));
+      sessionStorage.setItem(
+        "studio-session-test",
+        JSON.stringify({ foo: "bar" }),
+      );
       const result = sessionStore.get<{ foo: string }>("session-test");
       expect(result).toEqual({ foo: "bar" });
     });
@@ -621,9 +627,11 @@ describe("sessionStore", () => {
     it("returns default value and logs warning when getItem throws", () => {
       // First call allows availability check to pass (uses setItem/removeItem with "__session_test__")
       // Then mock getItem to throw
-      const getItemSpy = vi.spyOn(sessionStorage, "getItem").mockImplementation(() => {
-        throw new Error("Storage error");
-      });
+      const getItemSpy = vi
+        .spyOn(sessionStorage, "getItem")
+        .mockImplementation(() => {
+          throw new Error("Storage error");
+        });
 
       const result = sessionStore.get<string>("test", "fallback");
 
@@ -652,7 +660,8 @@ describe("sessionStore", () => {
     it("returns false and logs error when setItem throws", () => {
       // First call allows availability check to pass (uses "__session_test__" key)
       // Second call is the actual set operation which throws
-      const setItemSpy = vi.spyOn(sessionStorage, "setItem")
+      const setItemSpy = vi
+        .spyOn(sessionStorage, "setItem")
         .mockImplementationOnce(() => undefined) // Allow availability check
         .mockImplementationOnce(() => {
           throw new Error("QuotaExceededError");
@@ -678,7 +687,8 @@ describe("sessionStore", () => {
 
       // First call allows availability check to pass
       // Second call is the actual remove operation which throws
-      const removeItemSpy = vi.spyOn(sessionStorage, "removeItem")
+      const removeItemSpy = vi
+        .spyOn(sessionStorage, "removeItem")
         .mockImplementationOnce(() => undefined) // Allow availability check
         .mockImplementationOnce(() => {
           throw new Error("Storage error");
@@ -710,7 +720,8 @@ describe("sessionStore", () => {
 
       // First call allows availability check to pass
       // Subsequent calls are actual removes which throw
-      const removeItemSpy = vi.spyOn(sessionStorage, "removeItem")
+      const removeItemSpy = vi
+        .spyOn(sessionStorage, "removeItem")
         .mockImplementationOnce(() => undefined) // Allow availability check
         .mockImplementation(() => {
           throw new Error("Storage quota exceeded");
@@ -785,9 +796,15 @@ describe("sessionStore TTL support", () => {
 
   it("getWithTTL returns default value when data is not a TTL wrapper", () => {
     // Store a plain value (not a TTL wrapper)
-    sessionStorage.setItem("studio-plain-value", JSON.stringify({ foo: "bar" }));
+    sessionStorage.setItem(
+      "studio-plain-value",
+      JSON.stringify({ foo: "bar" }),
+    );
 
-    const result = sessionStore.getWithTTL<string>("plain-value", "default-val");
+    const result = sessionStore.getWithTTL<string>(
+      "plain-value",
+      "default-val",
+    );
     expect(result).toBe("default-val");
   });
 
@@ -835,7 +852,9 @@ describe("STORAGE_KEYS - hook integration", () => {
 
   it("STORAGE_KEYS.AI_SUGGESTIONS_CACHE matches expected format", () => {
     // AI suggestions should use TTL cache with this key
-    expect(STORAGE_KEYS.AI_SUGGESTIONS_CACHE).toBe("studio-ai-suggestions-cache");
+    expect(STORAGE_KEYS.AI_SUGGESTIONS_CACHE).toBe(
+      "studio-ai-suggestions-cache",
+    );
   });
 
   it("STORAGE_KEYS.SESSION_SYNC_STATE matches expected format", () => {
@@ -863,15 +882,26 @@ describe("AI suggestions cache pattern", () => {
 
   it("can cache AI suggestions with 5-minute TTL", () => {
     const suggestions = [
-      { id: "1", type: "completion", content: "test suggestion", confidence: 0.9 },
+      {
+        id: "1",
+        type: "completion",
+        content: "test suggestion",
+        confidence: 0.9,
+      },
     ];
 
     // Cache with 5 min TTL
     const TTL_5_MIN = 5 * 60 * 1000;
-    storage.setWithTTL(STORAGE_KEYS.AI_SUGGESTIONS_CACHE, suggestions, TTL_5_MIN);
+    storage.setWithTTL(
+      STORAGE_KEYS.AI_SUGGESTIONS_CACHE,
+      suggestions,
+      TTL_5_MIN,
+    );
 
     // Should be available immediately
-    const cached = storage.getWithTTL<typeof suggestions>(STORAGE_KEYS.AI_SUGGESTIONS_CACHE);
+    const cached = storage.getWithTTL<typeof suggestions>(
+      STORAGE_KEYS.AI_SUGGESTIONS_CACHE,
+    );
     expect(cached).toEqual(suggestions);
   });
 
@@ -879,7 +909,11 @@ describe("AI suggestions cache pattern", () => {
     const suggestions = [{ id: "1", content: "test" }];
     const TTL_5_MIN = 5 * 60 * 1000;
 
-    storage.setWithTTL(STORAGE_KEYS.AI_SUGGESTIONS_CACHE, suggestions, TTL_5_MIN);
+    storage.setWithTTL(
+      STORAGE_KEYS.AI_SUGGESTIONS_CACHE,
+      suggestions,
+      TTL_5_MIN,
+    );
 
     // Advance time past TTL
     vi.advanceTimersByTime(TTL_5_MIN + 1000);
@@ -893,7 +927,9 @@ describe("AI suggestions cache pattern", () => {
 
     sessionStore.set(STORAGE_KEYS.AI_CONTEXT_HISTORY, context);
 
-    const retrieved = sessionStore.get<typeof context>(STORAGE_KEYS.AI_CONTEXT_HISTORY);
+    const retrieved = sessionStore.get<typeof context>(
+      STORAGE_KEYS.AI_CONTEXT_HISTORY,
+    );
     expect(retrieved).toEqual(context);
   });
 
@@ -905,7 +941,9 @@ describe("AI suggestions cache pattern", () => {
 
     // Still valid at 25 min
     vi.advanceTimersByTime(25 * 60 * 1000);
-    const prefs = sessionStore.getWithTTL<typeof tempPrefs>(STORAGE_KEYS.AI_PREFERENCES);
+    const prefs = sessionStore.getWithTTL<typeof tempPrefs>(
+      STORAGE_KEYS.AI_PREFERENCES,
+    );
     expect(prefs).toEqual(tempPrefs);
 
     // Expired at 35 min
@@ -934,7 +972,10 @@ describe("storage.migrate", () => {
     localStorage.setItem("old_preferences", JSON.stringify({ theme: "dark" }));
 
     // Migrate to new key
-    const migrated = storage.migrate("old_preferences", STORAGE_KEYS.PREFERENCES);
+    const migrated = storage.migrate(
+      "old_preferences",
+      STORAGE_KEYS.PREFERENCES,
+    );
 
     expect(migrated).toBe(true);
 
@@ -947,7 +988,10 @@ describe("storage.migrate", () => {
   });
 
   it("returns false if legacy key does not exist", () => {
-    const migrated = storage.migrate("nonexistent_key", STORAGE_KEYS.PREFERENCES);
+    const migrated = storage.migrate(
+      "nonexistent_key",
+      STORAGE_KEYS.PREFERENCES,
+    );
 
     expect(migrated).toBe(false);
   });
@@ -973,7 +1017,9 @@ describe("storage.migrate", () => {
     storage.set(STORAGE_KEYS.PREFERENCES, { new: true });
 
     // Force migration
-    const migrated = storage.migrate("old_key", STORAGE_KEYS.PREFERENCES, { force: true });
+    const migrated = storage.migrate("old_key", STORAGE_KEYS.PREFERENCES, {
+      force: true,
+    });
 
     expect(migrated).toBe(true);
 
@@ -996,7 +1042,9 @@ describe("storage.migrate", () => {
     localStorage.setItem("old_key", JSON.stringify({ value: "data" }));
 
     // Save original and track call count
-    const originalSetItem = window.localStorage.setItem.bind(window.localStorage);
+    const originalSetItem = window.localStorage.setItem.bind(
+      window.localStorage,
+    );
     let callCount = 0;
 
     // First call allows availability check, second call (the actual setItem) throws
@@ -1198,9 +1246,11 @@ describe("storage.cleanup", () => {
 
   it("returns zero counts when localStorage is unavailable", () => {
     // Mock localStorage.setItem to throw, making isLocalStorageAvailable() return false
-    const setItemSpy = vi.spyOn(localStorage, "setItem").mockImplementation(() => {
-      throw new Error("localStorage disabled");
-    });
+    const setItemSpy = vi
+      .spyOn(localStorage, "setItem")
+      .mockImplementation(() => {
+        throw new Error("localStorage disabled");
+      });
 
     const result = storage.cleanup();
 

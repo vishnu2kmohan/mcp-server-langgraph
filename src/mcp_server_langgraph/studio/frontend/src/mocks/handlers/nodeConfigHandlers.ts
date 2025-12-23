@@ -9,7 +9,10 @@
  */
 
 import { http, HttpResponse, delay } from "msw";
-import type { NodeConfigHelpRequest, NodeConfigHelpResponse } from "../../types/api";
+import type {
+  NodeConfigHelpRequest,
+  NodeConfigHelpResponse,
+} from "../../types/api";
 
 // =============================================================================
 // Mock Data
@@ -55,7 +58,8 @@ const NODE_TYPE_HELP: Record<string, Partial<NodeConfigHelpResponse>> = {
     answer:
       "Prompt nodes let you define template prompts with variable substitution. Use {variable_name} syntax to inject dynamic values at runtime.",
     suggested_config: {
-      template: "You are a helpful assistant. {context}\n\nUser: {input}\nAssistant:",
+      template:
+        "You are a helpful assistant. {context}\n\nUser: {input}\nAssistant:",
       input_variables: ["context", "input"],
     },
     examples: [
@@ -129,7 +133,7 @@ function generateHelpResponse(
   nodeType: string,
   nodeConfig: Record<string, unknown>,
   question: string,
-  context?: string
+  context?: string,
 ): NodeConfigHelpResponse {
   // Get node-type specific help or use default
   const typeHelp = NODE_TYPE_HELP[nodeType] || {};
@@ -137,7 +141,8 @@ function generateHelpResponse(
   // Build base response
   const baseResponse: NodeConfigHelpResponse = {
     answer: typeHelp.answer || mockNodeConfigHelpResponse.answer,
-    suggested_config: typeHelp.suggested_config || mockNodeConfigHelpResponse.suggested_config,
+    suggested_config:
+      typeHelp.suggested_config || mockNodeConfigHelpResponse.suggested_config,
     examples: typeHelp.examples || mockNodeConfigHelpResponse.examples,
   };
 
@@ -148,7 +153,10 @@ function generateHelpResponse(
   if (lowerQuestion.includes("temperature")) {
     baseResponse.answer =
       "Temperature controls the randomness of model outputs. Values range from 0 (deterministic) to 2 (highly random). For most applications, 0.7 provides a good balance between creativity and coherence.";
-    baseResponse.suggested_config = { ...baseResponse.suggested_config, temperature: 0.7 };
+    baseResponse.suggested_config = {
+      ...baseResponse.suggested_config,
+      temperature: 0.7,
+    };
   }
 
   if (lowerQuestion.includes("optimal") || lowerQuestion.includes("best")) {
@@ -166,7 +174,8 @@ function generateHelpResponse(
     lowerQuestion.includes("variable")
   ) {
     // Always include examples for how-to questions
-    baseResponse.examples = typeHelp.examples || mockNodeConfigHelpResponse.examples;
+    baseResponse.examples =
+      typeHelp.examples || mockNodeConfigHelpResponse.examples;
   }
 
   // Add context awareness
@@ -194,21 +203,21 @@ export const nodeConfigHandlers = [
     if (!body.node_type) {
       return HttpResponse.json(
         { error: "Missing required field: node_type" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     if (!body.question) {
       return HttpResponse.json(
         { error: "Missing required field: question" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     if (!body.node_config) {
       return HttpResponse.json(
         { error: "Missing required field: node_config" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -217,7 +226,7 @@ export const nodeConfigHandlers = [
       body.node_type,
       body.node_config,
       body.question,
-      body.context
+      body.context,
     );
 
     return HttpResponse.json(response);

@@ -163,7 +163,7 @@ describe("AgentTraceTab", () => {
         <AgentTraceTab
           sessionId="session-123"
           onNodeHighlight={handleNodeHighlight}
-        />
+        />,
       );
 
       const node = screen.getByTestId("trace-node-node-1");
@@ -179,7 +179,7 @@ describe("AgentTraceTab", () => {
         <AgentTraceTab
           sessionId="session-123"
           onNodeHighlight={handleNodeHighlight}
-        />
+        />,
       );
 
       const node = screen.getByTestId("trace-node-node-1");
@@ -285,7 +285,7 @@ describe("AgentTraceTab", () => {
 
       // Should have proper heading
       expect(
-        screen.getByRole("heading", { name: /trace/i })
+        screen.getByRole("heading", { name: /trace/i }),
       ).toBeInTheDocument();
     });
 

@@ -53,8 +53,18 @@ describe("canvasLoaders", () => {
   describe("sessionsLoader", () => {
     it("should return list of sessions on success", async () => {
       const mockApiSessions = [
-        { id: "session-1", name: "Session 1", created_at: "2024-01-01T00:00:00Z", updated_at: "2024-01-01T00:00:00Z" },
-        { id: "session-2", name: "Session 2", created_at: "2024-01-02T00:00:00Z", updated_at: "2024-01-02T00:00:00Z" },
+        {
+          id: "session-1",
+          name: "Session 1",
+          created_at: "2024-01-01T00:00:00Z",
+          updated_at: "2024-01-01T00:00:00Z",
+        },
+        {
+          id: "session-2",
+          name: "Session 2",
+          created_at: "2024-01-02T00:00:00Z",
+          updated_at: "2024-01-02T00:00:00Z",
+        },
       ];
 
       mockFetch.mockResolvedValueOnce({
@@ -116,10 +126,25 @@ describe("canvasLoaders", () => {
     });
 
     it("should fetch session, messages, and artifacts in parallel", async () => {
-      const mockApiSession = { id: "session-1", name: "Test Session", created_at: "2024-01-01T00:00:00Z", updated_at: "2024-01-01T00:00:00Z" };
+      const mockApiSession = {
+        id: "session-1",
+        name: "Test Session",
+        created_at: "2024-01-01T00:00:00Z",
+        updated_at: "2024-01-01T00:00:00Z",
+      };
       const mockMessages = [
-        { id: "msg-1", role: "user", content: "Hello", created_at: "2024-01-01T00:00:00Z" },
-        { id: "msg-2", role: "assistant", content: "Hi!", created_at: "2024-01-01T00:01:00Z" },
+        {
+          id: "msg-1",
+          role: "user",
+          content: "Hello",
+          created_at: "2024-01-01T00:00:00Z",
+        },
+        {
+          id: "msg-2",
+          role: "assistant",
+          content: "Hi!",
+          created_at: "2024-01-01T00:01:00Z",
+        },
       ];
       const mockArtifacts = [
         { id: "artifact-1", type: "code", content: "console.log('hello')" },
@@ -139,7 +164,9 @@ describe("canvasLoaders", () => {
           json: () => Promise.resolve({ items: mockArtifacts }),
         });
 
-      const result = await chatLoader(createLoaderArgs({ sessionId: "session-1" }));
+      const result = await chatLoader(
+        createLoaderArgs({ sessionId: "session-1" }),
+      );
 
       expect(result.sessionId).toBe("session-1");
       expect(result.session?.id).toBe("session-1");
@@ -151,38 +178,75 @@ describe("canvasLoaders", () => {
     });
 
     it("should transform message timestamps", async () => {
-      const mockApiSession = { id: "s1", name: "Test", created_at: "2024-06-15T10:00:00Z", updated_at: "2024-06-15T10:00:00Z" };
+      const mockApiSession = {
+        id: "s1",
+        name: "Test",
+        created_at: "2024-06-15T10:00:00Z",
+        updated_at: "2024-06-15T10:00:00Z",
+      };
       const mockMessages = [
-        { id: "msg-1", role: "user", content: "Test", created_at: "2024-06-15T10:30:00Z" },
+        {
+          id: "msg-1",
+          role: "user",
+          content: "Test",
+          created_at: "2024-06-15T10:30:00Z",
+        },
       ];
 
       mockFetch
-        .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve(mockApiSession) })
-        .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve({ items: mockMessages }) })
-        .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve({ items: [] }) });
+        .mockResolvedValueOnce({
+          ok: true,
+          json: () => Promise.resolve(mockApiSession),
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          json: () => Promise.resolve({ items: mockMessages }),
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          json: () => Promise.resolve({ items: [] }),
+        });
 
       const result = await chatLoader(createLoaderArgs({ sessionId: "s1" }));
 
-      expect(result.messages[0].timestamp).toBe(new Date("2024-06-15T10:30:00Z").getTime());
+      expect(result.messages[0].timestamp).toBe(
+        new Date("2024-06-15T10:30:00Z").getTime(),
+      );
     });
 
     it("should return error when session not found", async () => {
       mockFetch
         .mockResolvedValueOnce({ ok: false }) // Session not found
-        .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve({ items: [] }) })
-        .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve({ items: [] }) });
+        .mockResolvedValueOnce({
+          ok: true,
+          json: () => Promise.resolve({ items: [] }),
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          json: () => Promise.resolve({ items: [] }),
+        });
 
-      const result = await chatLoader(createLoaderArgs({ sessionId: "invalid" }));
+      const result = await chatLoader(
+        createLoaderArgs({ sessionId: "invalid" }),
+      );
 
       expect(result.session).toBeUndefined();
       expect(result.error).toBe("Session not found");
     });
 
     it("should handle partial failures gracefully", async () => {
-      const mockApiSession = { id: "s1", name: "Test", created_at: "2024-01-01T00:00:00Z", updated_at: "2024-01-01T00:00:00Z" };
+      const mockApiSession = {
+        id: "s1",
+        name: "Test",
+        created_at: "2024-01-01T00:00:00Z",
+        updated_at: "2024-01-01T00:00:00Z",
+      };
 
       mockFetch
-        .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve(mockApiSession) })
+        .mockResolvedValueOnce({
+          ok: true,
+          json: () => Promise.resolve(mockApiSession),
+        })
         .mockResolvedValueOnce({ ok: false }) // Messages fail
         .mockResolvedValueOnce({ ok: false }); // Artifacts fail
 
@@ -199,9 +263,18 @@ describe("canvasLoaders", () => {
       const invalidSession = { name: "No ID Session" };
 
       mockFetch
-        .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve(invalidSession) })
-        .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve({ items: [] }) })
-        .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve({ items: [] }) });
+        .mockResolvedValueOnce({
+          ok: true,
+          json: () => Promise.resolve(invalidSession),
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          json: () => Promise.resolve({ items: [] }),
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          json: () => Promise.resolve({ items: [] }),
+        });
 
       const result = await chatLoader(createLoaderArgs({ sessionId: "s1" }));
 
@@ -211,16 +284,30 @@ describe("canvasLoaders", () => {
     });
 
     it("should handle message validation failure gracefully", async () => {
-      const mockApiSession = { id: "s1", name: "Test", created_at: "2024-01-01T00:00:00Z", updated_at: "2024-01-01T00:00:00Z" };
+      const mockApiSession = {
+        id: "s1",
+        name: "Test",
+        created_at: "2024-01-01T00:00:00Z",
+        updated_at: "2024-01-01T00:00:00Z",
+      };
       // Messages missing required fields
       const invalidMessages = [
         { content: "No ID or role" }, // Missing id, role, created_at
       ];
 
       mockFetch
-        .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve(mockApiSession) })
-        .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve({ items: invalidMessages }) })
-        .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve({ items: [] }) });
+        .mockResolvedValueOnce({
+          ok: true,
+          json: () => Promise.resolve(mockApiSession),
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          json: () => Promise.resolve({ items: invalidMessages }),
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          json: () => Promise.resolve({ items: [] }),
+        });
 
       const result = await chatLoader(createLoaderArgs({ sessionId: "s1" }));
 
@@ -266,7 +353,9 @@ describe("canvasLoaders", () => {
           json: () => Promise.resolve(mockVersions),
         });
 
-      const result = await artifactLoader(createLoaderArgs({ artifactId: "artifact-1" }));
+      const result = await artifactLoader(
+        createLoaderArgs({ artifactId: "artifact-1" }),
+      );
 
       expect(result.artifact).toEqual(mockArtifact);
       expect(result.versions).toEqual(mockVersions);
@@ -278,7 +367,9 @@ describe("canvasLoaders", () => {
         .mockResolvedValueOnce({ ok: false })
         .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve([]) });
 
-      const result = await artifactLoader(createLoaderArgs({ artifactId: "invalid" }));
+      const result = await artifactLoader(
+        createLoaderArgs({ artifactId: "invalid" }),
+      );
 
       expect(result.artifact).toBeNull();
       expect(result.error).toBe("Artifact not found");
@@ -288,10 +379,15 @@ describe("canvasLoaders", () => {
       const mockArtifact = { id: "a1", type: "code", content: "test" };
 
       mockFetch
-        .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve(mockArtifact) })
+        .mockResolvedValueOnce({
+          ok: true,
+          json: () => Promise.resolve(mockArtifact),
+        })
         .mockResolvedValueOnce({ ok: false }); // Versions fail
 
-      const result = await artifactLoader(createLoaderArgs({ artifactId: "a1" }));
+      const result = await artifactLoader(
+        createLoaderArgs({ artifactId: "a1" }),
+      );
 
       expect(result.artifact).toEqual(mockArtifact);
       expect(result.versions).toEqual([]);

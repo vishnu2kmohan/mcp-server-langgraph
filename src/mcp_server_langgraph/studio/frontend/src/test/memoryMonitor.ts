@@ -162,7 +162,8 @@ export class MemoryMonitor {
       const envThresholds = getThresholdsFromEnv();
       this.thresholds = {
         heapUsedWarningMB:
-          envThresholds.heapUsedWarningMB ?? DEFAULT_THRESHOLDS.heapUsedWarningMB,
+          envThresholds.heapUsedWarningMB ??
+          DEFAULT_THRESHOLDS.heapUsedWarningMB,
         heapUsedErrorMB:
           envThresholds.heapUsedErrorMB ?? DEFAULT_THRESHOLDS.heapUsedErrorMB,
         deltaWarningMB:
@@ -201,7 +202,7 @@ export class MemoryMonitor {
     if (this.verbose) {
       console.log(
         `[MemoryMonitor] ${label}: heap=${formatBytes(snap.heapUsed)}, ` +
-          `total=${formatBytes(snap.heapTotal)}, rss=${formatBytes(snap.rss)}`
+          `total=${formatBytes(snap.heapTotal)}, rss=${formatBytes(snap.rss)}`,
       );
     }
 
@@ -248,12 +249,12 @@ export class MemoryMonitor {
     if (heapUsedMB >= this.thresholds.heapUsedErrorMB) {
       errors.push(
         `Heap used (${heapUsedMB.toFixed(1)}MB) exceeds error threshold ` +
-          `(${this.thresholds.heapUsedErrorMB}MB)`
+          `(${this.thresholds.heapUsedErrorMB}MB)`,
       );
     } else if (heapUsedMB >= this.thresholds.heapUsedWarningMB) {
       warnings.push(
         `Heap used (${heapUsedMB.toFixed(1)}MB) exceeds warning threshold ` +
-          `(${this.thresholds.heapUsedWarningMB}MB)`
+          `(${this.thresholds.heapUsedWarningMB}MB)`,
       );
     }
 
@@ -266,7 +267,7 @@ export class MemoryMonitor {
       if (deltaMB >= this.thresholds.deltaWarningMB) {
         warnings.push(
           `Heap grew by ${deltaMB.toFixed(1)}MB from "${first.label}" to ` +
-            `"${last.label}" (threshold: ${this.thresholds.deltaWarningMB}MB)`
+            `"${last.label}" (threshold: ${this.thresholds.deltaWarningMB}MB)`,
         );
       }
     }
@@ -310,7 +311,7 @@ export class MemoryMonitor {
         `    Heap Total: ${formatBytes(snap.heapTotal)}`,
         `    RSS:        ${formatBytes(snap.rss)}`,
         `    External:   ${formatBytes(snap.external)}`,
-        ""
+        "",
       );
     }
 
@@ -387,7 +388,7 @@ export function createMemoryHooks(suiteName: string) {
       if (delta && Math.abs(delta.heapUsedDelta) > 10 * 1024 * 1024) {
         // Log if delta > 10MB
         console.log(
-          `[MemoryMonitor] ${suiteName}: heap delta = ${formatBytes(delta.heapUsedDelta)}`
+          `[MemoryMonitor] ${suiteName}: heap delta = ${formatBytes(delta.heapUsedDelta)}`,
         );
       }
     },

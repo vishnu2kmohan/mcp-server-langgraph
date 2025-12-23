@@ -14,7 +14,10 @@
 import { useMemo, useCallback } from "react";
 import { RefreshCw, AlertTriangle } from "lucide-react";
 import { useGetComplianceSummaryQuery } from "../api";
-import { ComplianceDashboard, type ComplianceSummary } from "./ComplianceDashboard";
+import {
+  ComplianceDashboard,
+  type ComplianceSummary,
+} from "./ComplianceDashboard";
 import { cn } from "../utils/cn";
 
 // =============================================================================
@@ -108,9 +111,8 @@ export function ConnectedComplianceDashboard({
   }, [startTime, endTime]);
 
   // Fetch compliance summary from API
-  const { data, isLoading, error, refetch } = useGetComplianceSummaryQuery(
-    dateRange,
-  );
+  const { data, isLoading, error, refetch } =
+    useGetComplianceSummaryQuery(dateRange);
 
   // Transform backend data to frontend format
   const summary = useMemo(() => {

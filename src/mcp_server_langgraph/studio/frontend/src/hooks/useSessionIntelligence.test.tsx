@@ -83,7 +83,7 @@ describe("useSessionSummary", () => {
           userId: "test-user",
           sessionId: "session-123",
         }),
-      { wrapper: createWrapper() }
+      { wrapper: createWrapper() },
     );
 
     await waitFor(() => {
@@ -102,7 +102,7 @@ describe("useSessionSummary", () => {
           userId: "test-user",
           sessionId: "session-456",
         }),
-      { wrapper: createWrapper() }
+      { wrapper: createWrapper() },
     );
 
     await waitFor(() => {
@@ -122,7 +122,7 @@ describe("useSessionSummary", () => {
           userId: "test-user",
           sessionId: "session-789",
         }),
-      { wrapper: createWrapper() }
+      { wrapper: createWrapper() },
     );
 
     expect(typeof result.current.refetch).toBe("function");
@@ -138,7 +138,7 @@ describe("useSessionSummary", () => {
           sessionId: "session-disabled",
           enabled: false,
         }),
-      { wrapper: createWrapper() }
+      { wrapper: createWrapper() },
     );
 
     // Should not be loading when disabled
@@ -201,7 +201,7 @@ describe("useSessionGroups", () => {
           userId: "test-user",
           sessionIds: ["s1", "s2", "s3", "s4", "s5", "s6"],
         }),
-      { wrapper: createWrapper() }
+      { wrapper: createWrapper() },
     );
 
     await waitFor(() => {
@@ -220,7 +220,7 @@ describe("useSessionGroups", () => {
           userId: "test-user",
           sessionIds: ["s1", "s2"],
         }),
-      { wrapper: createWrapper() }
+      { wrapper: createWrapper() },
     );
 
     await waitFor(() => {
@@ -241,7 +241,7 @@ describe("useSessionGroups", () => {
           userId: "test-user",
           sessionIds: ["unique-session"],
         }),
-      { wrapper: createWrapper() }
+      { wrapper: createWrapper() },
     );
 
     await waitFor(() => {
@@ -306,7 +306,7 @@ describe("useSessionSimilarity", () => {
           userId: "test-user",
           sessionId: "session-123",
         }),
-      { wrapper: createWrapper() }
+      { wrapper: createWrapper() },
     );
 
     await waitFor(() => {
@@ -325,7 +325,7 @@ describe("useSessionSimilarity", () => {
           userId: "test-user",
           sessionId: "session-123",
         }),
-      { wrapper: createWrapper() }
+      { wrapper: createWrapper() },
     );
 
     await waitFor(() => {
@@ -337,7 +337,7 @@ describe("useSessionSimilarity", () => {
       result.current.similarSessions.length > 0
     ) {
       expect(result.current.similarSessions[0]).toHaveProperty(
-        "similarity_score"
+        "similarity_score",
       );
     }
   });
@@ -372,7 +372,7 @@ describe("useSessionSimilarity", () => {
           userId: "test-user",
           sessionId: "unique-session",
         }),
-      { wrapper: createWrapper() }
+      { wrapper: createWrapper() },
     );
 
     await waitFor(() => {
@@ -407,7 +407,7 @@ describe("Session Intelligence Error Handling", () => {
           userId: "test-user",
           sessionId: "error-session",
         }),
-      { wrapper: createWrapper() }
+      { wrapper: createWrapper() },
     );
 
     await waitFor(() => {

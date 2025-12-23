@@ -22,7 +22,13 @@ vi.mock("../api", () => ({
           analyses: {
             diff_explain: {
               summary: "Added authentication middleware",
-              changes: [{ type: "addition", description: "New feature", impact: "medium" }],
+              changes: [
+                {
+                  type: "addition",
+                  description: "New feature",
+                  impact: "medium",
+                },
+              ],
               breaking_changes: false,
               affected_areas: ["auth"],
             },
@@ -73,7 +79,10 @@ const createVersion = (
   metadata: { editType },
 });
 
-const baseVersion = createVersion(1, "function hello() {\n  return 'world';\n}");
+const baseVersion = createVersion(
+  1,
+  "function hello() {\n  return 'world';\n}",
+);
 const modifiedVersion = createVersion(
   2,
   "function hello() {\n  console.log('starting');\n  return 'world!';\n}",
@@ -273,7 +282,9 @@ describe("VersionDiff", () => {
         />,
       );
 
-      expect(screen.queryByTestId("ai-diff-explanation")).not.toBeInTheDocument();
+      expect(
+        screen.queryByTestId("ai-diff-explanation"),
+      ).not.toBeInTheDocument();
     });
 
     it("should not show AI panel without userId", () => {
@@ -285,7 +296,9 @@ describe("VersionDiff", () => {
         />,
       );
 
-      expect(screen.queryByTestId("ai-diff-explanation")).not.toBeInTheDocument();
+      expect(
+        screen.queryByTestId("ai-diff-explanation"),
+      ).not.toBeInTheDocument();
     });
   });
 });

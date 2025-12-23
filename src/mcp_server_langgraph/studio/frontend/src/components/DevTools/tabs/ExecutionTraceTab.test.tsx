@@ -169,7 +169,7 @@ describe("ExecutionTraceTab", () => {
         <ExecutionTraceTab
           workflowId="workflow-123"
           onNodeHighlight={handleNodeHighlight}
-        />
+        />,
       );
 
       const step = screen.getByTestId("execution-step-step-1");
@@ -185,7 +185,7 @@ describe("ExecutionTraceTab", () => {
         <ExecutionTraceTab
           workflowId="workflow-123"
           onNodeHighlight={handleNodeHighlight}
-        />
+        />,
       );
 
       const step = screen.getByTestId("execution-step-step-1");
@@ -227,7 +227,9 @@ describe("ExecutionTraceTab", () => {
     it("should have refresh button", () => {
       render(<ExecutionTraceTab workflowId="workflow-123" />);
 
-      expect(screen.getByTestId("refresh-execution-button")).toBeInTheDocument();
+      expect(
+        screen.getByTestId("refresh-execution-button"),
+      ).toBeInTheDocument();
     });
 
     it("should call refetch when refresh clicked", async () => {
@@ -263,7 +265,9 @@ describe("ExecutionTraceTab", () => {
       render(<ExecutionTraceTab workflowId="workflow-123" />);
 
       expect(screen.getByTestId("execution-trace-error")).toBeInTheDocument();
-      expect(screen.getByText(/workflow execution failed/i)).toBeInTheDocument();
+      expect(
+        screen.getByText(/workflow execution failed/i),
+      ).toBeInTheDocument();
     });
   });
 
@@ -272,13 +276,13 @@ describe("ExecutionTraceTab", () => {
       render(<ExecutionTraceTab workflowId="workflow-123" />);
 
       expect(
-        screen.getByRole("heading", { name: /execution/i })
+        screen.getByRole("heading", { name: /execution/i }),
       ).toBeInTheDocument();
     });
 
     it("should have no accessibility violations", async () => {
       const { container } = render(
-        <ExecutionTraceTab workflowId="workflow-123" />
+        <ExecutionTraceTab workflowId="workflow-123" />,
       );
       const results = await axe(container);
       expect(results).toHaveNoViolations();

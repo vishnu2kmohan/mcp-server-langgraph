@@ -56,18 +56,18 @@ describe("useNudges", () => {
         http.post("/api/v1/ai/nudges/recommend", async () => {
           await delay(50);
           return HttpResponse.json(mockNudgeRecommendation);
-        })
+        }),
       );
 
       const { result } = renderHook(() =>
-        useNudges({ enableAI: true, pageContext: "chat" })
+        useNudges({ enableAI: true, pageContext: "chat" }),
       );
 
       await waitFor(
         () => {
           expect(result.current.activeNudge).not.toBeNull();
         },
-        { timeout: 2000 }
+        { timeout: 2000 },
       );
 
       expect(result.current.activeNudge?.id).toBe("keyboard-shortcuts");
@@ -81,11 +81,11 @@ describe("useNudges", () => {
             should_show: false,
             confidence: 0.4,
           });
-        })
+        }),
       );
 
       const { result } = renderHook(() =>
-        useNudges({ enableAI: true, pageContext: "chat" })
+        useNudges({ enableAI: true, pageContext: "chat" }),
       );
 
       await act(async () => {
@@ -101,18 +101,18 @@ describe("useNudges", () => {
       server.use(
         http.post("/api/v1/ai/nudges/recommend", async () => {
           return HttpResponse.json(mockNudgeRecommendation);
-        })
+        }),
       );
 
       const { result } = renderHook(() =>
-        useNudges({ enableAI: true, pageContext: "chat" })
+        useNudges({ enableAI: true, pageContext: "chat" }),
       );
 
       await waitFor(
         () => {
           expect(result.current.activeNudge).not.toBeNull();
         },
-        { timeout: 2000 }
+        { timeout: 2000 },
       );
 
       act(() => {
@@ -126,18 +126,18 @@ describe("useNudges", () => {
       server.use(
         http.post("/api/v1/ai/nudges/recommend", async () => {
           return HttpResponse.json(mockNudgeRecommendation);
-        })
+        }),
       );
 
       const { result } = renderHook(() =>
-        useNudges({ enableAI: true, pageContext: "chat" })
+        useNudges({ enableAI: true, pageContext: "chat" }),
       );
 
       await waitFor(
         () => {
           expect(result.current.activeNudge).not.toBeNull();
         },
-        { timeout: 2000 }
+        { timeout: 2000 },
       );
 
       act(() => {
@@ -146,9 +146,9 @@ describe("useNudges", () => {
 
       const history = result.current.getNudgeHistory();
       expect(history.some((h) => h.id === "keyboard-shortcuts")).toBe(true);
-      expect(
-        history.find((h) => h.id === "keyboard-shortcuts")?.action
-      ).toBe("dismissed");
+      expect(history.find((h) => h.id === "keyboard-shortcuts")?.action).toBe(
+        "dismissed",
+      );
     });
   });
 
@@ -157,18 +157,18 @@ describe("useNudges", () => {
       server.use(
         http.post("/api/v1/ai/nudges/recommend", async () => {
           return HttpResponse.json(mockNudgeRecommendation);
-        })
+        }),
       );
 
       const { result } = renderHook(() =>
-        useNudges({ enableAI: true, pageContext: "chat" })
+        useNudges({ enableAI: true, pageContext: "chat" }),
       );
 
       await waitFor(
         () => {
           expect(result.current.activeNudge).not.toBeNull();
         },
-        { timeout: 2000 }
+        { timeout: 2000 },
       );
 
       act(() => {
@@ -176,27 +176,27 @@ describe("useNudges", () => {
       });
 
       const history = result.current.getNudgeHistory();
-      expect(
-        history.find((h) => h.id === "keyboard-shortcuts")?.action
-      ).toBe("accepted");
+      expect(history.find((h) => h.id === "keyboard-shortcuts")?.action).toBe(
+        "accepted",
+      );
     });
 
     it("should clear active nudge after acceptance", async () => {
       server.use(
         http.post("/api/v1/ai/nudges/recommend", async () => {
           return HttpResponse.json(mockNudgeRecommendation);
-        })
+        }),
       );
 
       const { result } = renderHook(() =>
-        useNudges({ enableAI: true, pageContext: "chat" })
+        useNudges({ enableAI: true, pageContext: "chat" }),
       );
 
       await waitFor(
         () => {
           expect(result.current.activeNudge).not.toBeNull();
         },
-        { timeout: 2000 }
+        { timeout: 2000 },
       );
 
       act(() => {
@@ -218,18 +218,18 @@ describe("useNudges", () => {
       server.use(
         http.post("/api/v1/ai/nudges/recommend", async () => {
           return HttpResponse.json(mockNudgeRecommendation);
-        })
+        }),
       );
 
       const { result } = renderHook(() =>
-        useNudges({ enableAI: true, pageContext: "chat" })
+        useNudges({ enableAI: true, pageContext: "chat" }),
       );
 
       await waitFor(
         () => {
           expect(result.current.activeNudge).not.toBeNull();
         },
-        { timeout: 2000 }
+        { timeout: 2000 },
       );
 
       expect(result.current.hasShown("keyboard-shortcuts")).toBe(true);
@@ -241,18 +241,18 @@ describe("useNudges", () => {
       server.use(
         http.post("/api/v1/ai/nudges/recommend", async () => {
           return HttpResponse.json(mockNudgeRecommendation);
-        })
+        }),
       );
 
       const { result } = renderHook(() =>
-        useNudges({ enableAI: true, pageContext: "chat" })
+        useNudges({ enableAI: true, pageContext: "chat" }),
       );
 
       await waitFor(
         () => {
           expect(result.current.activeNudge).not.toBeNull();
         },
-        { timeout: 2000 }
+        { timeout: 2000 },
       );
 
       act(() => {
@@ -276,7 +276,7 @@ describe("useNudges", () => {
         http.post("/api/v1/ai/nudges/recommend", () => {
           apiCalled = true;
           return HttpResponse.json(mockNudgeRecommendation);
-        })
+        }),
       );
 
       renderHook(() => useNudges({ enableAI: false }));
@@ -292,11 +292,11 @@ describe("useNudges", () => {
       server.use(
         http.post("/api/v1/ai/nudges/recommend", () => {
           return new HttpResponse(null, { status: 500 });
-        })
+        }),
       );
 
       const { result } = renderHook(() =>
-        useNudges({ enableAI: true, pageContext: "chat" })
+        useNudges({ enableAI: true, pageContext: "chat" }),
       );
 
       await new Promise((resolve) => setTimeout(resolve, 200));
@@ -310,18 +310,18 @@ describe("useNudges", () => {
       server.use(
         http.post("/api/v1/ai/nudges/recommend", async () => {
           return HttpResponse.json(mockNudgeRecommendation);
-        })
+        }),
       );
 
       const { result } = renderHook(() =>
-        useNudges({ enableAI: true, pageContext: "chat" })
+        useNudges({ enableAI: true, pageContext: "chat" }),
       );
 
       await waitFor(
         () => {
           expect(result.current.activeNudge).not.toBeNull();
         },
-        { timeout: 2000 }
+        { timeout: 2000 },
       );
 
       act(() => {
@@ -342,18 +342,18 @@ describe("useNudges", () => {
       server.use(
         http.post("/api/v1/ai/nudges/recommend", async () => {
           return HttpResponse.json(mockNudgeRecommendation);
-        })
+        }),
       );
 
       const { result } = renderHook(() =>
-        useNudges({ enableAI: true, pageContext: "chat" })
+        useNudges({ enableAI: true, pageContext: "chat" }),
       );
 
       await waitFor(
         () => {
           expect(result.current.activeNudge).not.toBeNull();
         },
-        { timeout: 2000 }
+        { timeout: 2000 },
       );
 
       act(() => {
@@ -376,21 +376,18 @@ describe("useNudges", () => {
         http.post("/api/v1/ai/nudges/recommend", async () => {
           fetchCount++;
           return HttpResponse.json(mockNudgeRecommendation);
-        })
+        }),
       );
 
-      const { result, rerender } = renderHook(
-        (props) => useNudges(props),
-        {
-          initialProps: { enableAI: true, pageContext: "chat", maxPerSession: 1 },
-        }
-      );
+      const { result, rerender } = renderHook((props) => useNudges(props), {
+        initialProps: { enableAI: true, pageContext: "chat", maxPerSession: 1 },
+      });
 
       await waitFor(
         () => {
           expect(result.current.activeNudge).not.toBeNull();
         },
-        { timeout: 2000 }
+        { timeout: 2000 },
       );
 
       // First nudge shown, session count is now 1
@@ -430,11 +427,11 @@ describe("useNudges", () => {
             should_show: true,
             confidence: 0.88,
           });
-        })
+        }),
       );
 
       const { result } = renderHook(() =>
-        useNudges({ enableAI: true, pageContext: "chat" })
+        useNudges({ enableAI: true, pageContext: "chat" }),
       );
 
       // Nudge should not be shown immediately
@@ -445,7 +442,7 @@ describe("useNudges", () => {
         () => {
           expect(result.current.activeNudge).not.toBeNull();
         },
-        { timeout: 500 }
+        { timeout: 500 },
       );
 
       expect(result.current.activeNudge?.id).toBe("delayed-nudge");
@@ -471,7 +468,9 @@ describe("useNudges", () => {
       // History should include the previously stored item
       const history = result.current.getNudgeHistory();
       expect(history.some((h) => h.id === "old-nudge")).toBe(true);
-      expect(history.find((h) => h.id === "old-nudge")?.action).toBe("dismissed");
+      expect(history.find((h) => h.id === "old-nudge")?.action).toBe(
+        "dismissed",
+      );
     });
 
     it("should handle invalid history in localStorage gracefully", async () => {
@@ -512,7 +511,7 @@ describe("useNudges", () => {
         http.post("/api/v1/ai/nudges/recommend", () => {
           apiCalled = true;
           return HttpResponse.json(mockNudgeRecommendation);
-        })
+        }),
       );
 
       renderHook(() => useNudges({ enableAI: true })); // No pageContext

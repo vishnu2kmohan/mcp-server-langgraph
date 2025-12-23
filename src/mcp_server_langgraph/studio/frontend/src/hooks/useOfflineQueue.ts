@@ -82,7 +82,9 @@ export interface UseOfflineQueueResult {
   /** Current conflicts needing resolution */
   conflicts: SyncConflict[];
   /** Add action to queue */
-  enqueue: (action: Omit<QueuedAction, "id" | "timestamp" | "retries">) => string;
+  enqueue: (
+    action: Omit<QueuedAction, "id" | "timestamp" | "retries">,
+  ) => string;
   /** Manually trigger sync */
   sync: () => Promise<SyncResult>;
   /** Clear all pending actions */
@@ -115,7 +117,7 @@ function generateId(): string {
  * Hook for managing offline action queue.
  */
 export function useOfflineQueue(
-  options: UseOfflineQueueOptions = {}
+  options: UseOfflineQueueOptions = {},
 ): UseOfflineQueueResult {
   const {
     maxQueueSize: _maxQueueSize = 50,
@@ -156,7 +158,7 @@ export function useOfflineQueue(
       setQueue((prev) => [...prev, fullAction]);
       return id;
     },
-    []
+    [],
   );
 
   /**
@@ -249,7 +251,7 @@ export function useOfflineQueue(
       // For now, just remove from conflicts and queue
       setQueue((prev) => prev.filter((a) => a.id !== conflictId));
     },
-    []
+    [],
   );
 
   /**

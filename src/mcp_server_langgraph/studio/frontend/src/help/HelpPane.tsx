@@ -40,7 +40,11 @@ export interface HelpPaneProps {
   /** Current feature being used */
   currentFeature?: string;
   /** Callback for quick action click */
-  onQuickAction?: (action: { id: string; label: string; action: string }) => void;
+  onQuickAction?: (action: {
+    id: string;
+    label: string;
+    action: string;
+  }) => void;
 }
 
 // =============================================================================
@@ -186,13 +190,19 @@ export function HelpPane({
                   <button
                     key={`${action.label}-${index}`}
                     type="button"
-                    onClick={() => onQuickAction?.({ id: `action-${index}`, label: action.label, action: action.action })}
+                    onClick={() =>
+                      onQuickAction?.({
+                        id: `action-${index}`,
+                        label: action.label,
+                        action: action.action,
+                      })
+                    }
                     className={cn(
                       "inline-flex items-center gap-1 px-2 py-1 rounded text-xs",
                       "bg-gray-100 dark:bg-gray-800",
                       "text-gray-700 dark:text-gray-300",
                       "hover:bg-primary-100 dark:hover:bg-primary-900/30",
-                      "transition-colors"
+                      "transition-colors",
                     )}
                   >
                     <Zap size={12} />
@@ -213,18 +223,20 @@ export function HelpPane({
                 <button
                   key={topic.id}
                   type="button"
-                  onClick={() => onTopicSelect({
-                    id: topic.id,
-                    title: topic.title,
-                    category: "ai-suggested",
-                    content: topic.summary,
-                    keywords: [],
-                  })}
+                  onClick={() =>
+                    onTopicSelect({
+                      id: topic.id,
+                      title: topic.title,
+                      category: "ai-suggested",
+                      content: topic.summary,
+                      keywords: [],
+                    })
+                  }
                   className={cn(
                     "w-full text-left p-2 rounded-lg text-sm",
                     "bg-gray-50 dark:bg-gray-800",
                     "hover:bg-primary-50 dark:hover:bg-primary-900/20",
-                    "transition-colors"
+                    "transition-colors",
                   )}
                 >
                   <span className="text-gray-700 dark:text-gray-300">

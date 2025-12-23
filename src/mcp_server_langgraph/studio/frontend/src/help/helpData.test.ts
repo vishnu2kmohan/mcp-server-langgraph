@@ -5,10 +5,7 @@
  * Ensures data integrity and completeness.
  */
 import { describe, it, expect } from "vitest";
-import {
-  DEFAULT_HELP_TOPICS,
-  DEFAULT_SHORTCUT_CATEGORIES,
-} from "./helpData";
+import { DEFAULT_HELP_TOPICS, DEFAULT_SHORTCUT_CATEGORIES } from "./helpData";
 
 describe("Help Data", () => {
   describe("DEFAULT_HELP_TOPICS", () => {
@@ -35,28 +32,28 @@ describe("Help Data", () => {
 
     it("should include basics category topics", () => {
       const basicsTopics = DEFAULT_HELP_TOPICS.filter(
-        (t) => t.category === "basics"
+        (t) => t.category === "basics",
       );
       expect(basicsTopics.length).toBeGreaterThan(0);
     });
 
     it("should include productivity category topics", () => {
       const productivityTopics = DEFAULT_HELP_TOPICS.filter(
-        (t) => t.category === "productivity"
+        (t) => t.category === "productivity",
       );
       expect(productivityTopics.length).toBeGreaterThan(0);
     });
 
     it("should include compliance category topics", () => {
       const complianceTopics = DEFAULT_HELP_TOPICS.filter(
-        (t) => t.category === "compliance"
+        (t) => t.category === "compliance",
       );
       expect(complianceTopics.length).toBeGreaterThan(0);
     });
 
     it("should include advanced category topics for MCP", () => {
       const advancedTopics = DEFAULT_HELP_TOPICS.filter(
-        (t) => t.category === "advanced"
+        (t) => t.category === "advanced",
       );
       expect(advancedTopics.length).toBeGreaterThan(0);
 
@@ -109,12 +106,12 @@ describe("Help Data", () => {
     describe("navigation category", () => {
       it("should include command palette shortcut", () => {
         const navCategory = DEFAULT_SHORTCUT_CATEGORIES.find(
-          (c) => c.id === "navigation"
+          (c) => c.id === "navigation",
         );
         expect(navCategory).toBeDefined();
 
         const cmdPalette = navCategory?.shortcuts.find(
-          (s) => s.id === "command-palette"
+          (s) => s.id === "command-palette",
         );
         expect(cmdPalette).toBeDefined();
         expect(cmdPalette?.keys).toContain("Cmd");
@@ -125,7 +122,7 @@ describe("Help Data", () => {
     describe("mcp category", () => {
       it("should include MCP category", () => {
         const mcpCategory = DEFAULT_SHORTCUT_CATEGORIES.find(
-          (c) => c.id === "mcp"
+          (c) => c.id === "mcp",
         );
         expect(mcpCategory).toBeDefined();
         expect(mcpCategory?.name).toBe("MCP (Model Context Protocol)");
@@ -133,17 +130,17 @@ describe("Help Data", () => {
 
       it("should have 4 MCP shortcuts", () => {
         const mcpCategory = DEFAULT_SHORTCUT_CATEGORIES.find(
-          (c) => c.id === "mcp"
+          (c) => c.id === "mcp",
         );
         expect(mcpCategory?.shortcuts).toHaveLength(4);
       });
 
       it("should include Cmd+M for toggle panel", () => {
         const mcpCategory = DEFAULT_SHORTCUT_CATEGORIES.find(
-          (c) => c.id === "mcp"
+          (c) => c.id === "mcp",
         );
         const toggleShortcut = mcpCategory?.shortcuts.find(
-          (s) => s.id === "mcp-toggle-panel"
+          (s) => s.id === "mcp-toggle-panel",
         );
         expect(toggleShortcut).toBeDefined();
         expect(toggleShortcut?.keys).toEqual(["Cmd", "M"]);
@@ -151,10 +148,10 @@ describe("Help Data", () => {
 
       it("should include Cmd+Shift+T for tool dialog", () => {
         const mcpCategory = DEFAULT_SHORTCUT_CATEGORIES.find(
-          (c) => c.id === "mcp"
+          (c) => c.id === "mcp",
         );
         const toolShortcut = mcpCategory?.shortcuts.find(
-          (s) => s.id === "mcp-tool-dialog"
+          (s) => s.id === "mcp-tool-dialog",
         );
         expect(toolShortcut).toBeDefined();
         expect(toolShortcut?.keys).toEqual(["Cmd", "Shift", "T"]);
@@ -162,10 +159,10 @@ describe("Help Data", () => {
 
       it("should include Cmd+Shift+R for resource viewer", () => {
         const mcpCategory = DEFAULT_SHORTCUT_CATEGORIES.find(
-          (c) => c.id === "mcp"
+          (c) => c.id === "mcp",
         );
         const resourceShortcut = mcpCategory?.shortcuts.find(
-          (s) => s.id === "mcp-resource-viewer"
+          (s) => s.id === "mcp-resource-viewer",
         );
         expect(resourceShortcut).toBeDefined();
         expect(resourceShortcut?.keys).toEqual(["Cmd", "Shift", "R"]);
@@ -173,10 +170,10 @@ describe("Help Data", () => {
 
       it("should include Cmd+Shift+P for prompt tester", () => {
         const mcpCategory = DEFAULT_SHORTCUT_CATEGORIES.find(
-          (c) => c.id === "mcp"
+          (c) => c.id === "mcp",
         );
         const promptShortcut = mcpCategory?.shortcuts.find(
-          (s) => s.id === "mcp-prompt-tester"
+          (s) => s.id === "mcp-prompt-tester",
         );
         expect(promptShortcut).toBeDefined();
         expect(promptShortcut?.keys).toEqual(["Cmd", "Shift", "P"]);
@@ -186,7 +183,7 @@ describe("Help Data", () => {
     describe("admin category", () => {
       it("should include admin dashboard shortcuts", () => {
         const adminCategory = DEFAULT_SHORTCUT_CATEGORIES.find(
-          (c) => c.id === "admin"
+          (c) => c.id === "admin",
         );
         expect(adminCategory).toBeDefined();
         expect(adminCategory?.shortcuts.length).toBeGreaterThanOrEqual(3);

@@ -8,8 +8,8 @@
  * - Persona context
  */
 
-import { describe, it, expect, beforeEach, vi } from "vitest";
-import { renderHook, act } from "@testing-library/react";
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
+import { renderHook, act, cleanup } from "@testing-library/react";
 import { Provider } from "react-redux";
 import { configureStore } from "@reduxjs/toolkit";
 import { ReactNode } from "react";
@@ -62,6 +62,11 @@ describe("useHeartMetricsTracker", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     (storage.get as ReturnType<typeof vi.fn>).mockReturnValue(null);
+  });
+
+  afterEach(() => {
+    cleanup();
+    vi.clearAllMocks();
   });
 
   describe("initialization", () => {
@@ -192,7 +197,10 @@ describe("useHeartMetricsTracker", () => {
 
       act(() => {
         for (let i = 0; i < 10; i++) {
-          result.current.trackEngagement({ feature: "test", action: `action_${i}` });
+          result.current.trackEngagement({
+            feature: "test",
+            action: `action_${i}`,
+          });
         }
       });
 
@@ -248,7 +256,10 @@ describe("useHeartMetricsTracker", () => {
       });
 
       act(() => {
-        result.current.trackEngagement({ feature: "workflow_builder", action: "create" });
+        result.current.trackEngagement({
+          feature: "workflow_builder",
+          action: "create",
+        });
       });
 
       expect(result.current.pendingEventsCount).toBe(1);
@@ -319,7 +330,9 @@ describe("useHeartMetricsTracker", () => {
 
     it("should calculate days since last visit", () => {
       const threeDaysAgo = Date.now() - 3 * 86400000;
-      (storage.get as ReturnType<typeof vi.fn>).mockReturnValue(threeDaysAgo.toString());
+      (storage.get as ReturnType<typeof vi.fn>).mockReturnValue(
+        threeDaysAgo.toString(),
+      );
 
       const { result } = renderHook(() => useHeartMetricsTracker(), {
         wrapper: createWrapper(),
@@ -330,7 +343,9 @@ describe("useHeartMetricsTracker", () => {
 
     it("should calculate days since last visit for 1 day", () => {
       const oneDayAgo = Date.now() - 1 * 86400000;
-      (storage.get as ReturnType<typeof vi.fn>).mockReturnValue(oneDayAgo.toString());
+      (storage.get as ReturnType<typeof vi.fn>).mockReturnValue(
+        oneDayAgo.toString(),
+      );
 
       const { result } = renderHook(() => useHeartMetricsTracker(), {
         wrapper: createWrapper(),

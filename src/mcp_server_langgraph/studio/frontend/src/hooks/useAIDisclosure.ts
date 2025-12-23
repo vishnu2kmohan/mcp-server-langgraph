@@ -101,7 +101,7 @@ const DEFAULT_MIN_CONFIDENCE = 0.7;
  * Analyzes user behavior to recommend UI complexity level.
  */
 export function useAIDisclosure(
-  options: UseAIDisclosureOptions = {}
+  options: UseAIDisclosureOptions = {},
 ): UseAIDisclosureResult {
   const {
     enabled = false,
@@ -117,7 +117,7 @@ export function useAIDisclosure(
   // Only actually used when useRedux is true and hook is wrapped in Provider
   const dispatch = useAppDispatch();
   const reduxLevel = useAppSelector((state) =>
-    useRedux ? state.disclosure?.level ?? "beginner" : "beginner"
+    useRedux ? (state.disclosure?.level ?? "beginner") : "beginner",
   );
   const hasReduxContext = useRedux;
 
@@ -128,7 +128,7 @@ export function useAIDisclosure(
   const [confidence, setConfidence] = useState<number>(0);
   const [unlockFeatures, setUnlockFeatures] = useState<string[]>([]);
   const [personalizedMessage, setPersonalizedMessage] = useState<string | null>(
-    null
+    null,
   );
   const isMounted = useRef(true);
 
@@ -150,56 +150,57 @@ export function useAIDisclosure(
         setLocalLevel(newLevel);
       }
     },
-    [hasReduxContext, dispatch]
+    [hasReduxContext, dispatch],
   );
 
   /**
    * Analyze user behavior and get AI recommendation
    */
-  const analyze = useCallback(async (): Promise<AIDisclosureAnalysis | null> => {
-    if (!enabled) {
-      return null;
-    }
-
-    try {
-      const data = await analyzeDisclosure({
-        current_level: level,
-      }).unwrap();
-
-      if (!isMounted.current) {
+  const analyze =
+    useCallback(async (): Promise<AIDisclosureAnalysis | null> => {
+      if (!enabled) {
         return null;
       }
 
-      // Transform snake_case to camelCase
-      const analysis: AIDisclosureAnalysis = {
-        currentLevel: data.current_level as DisclosureLevel,
-        recommendedLevel: data.recommended_level as DisclosureLevel,
-        confidence: data.confidence,
-        unlockFeatures: data.unlock_features,
-        personalizedMessage: data.personalized_message,
-        reasoning: data.reasoning,
-      };
+      try {
+        const data = await analyzeDisclosure({
+          current_level: level,
+        }).unwrap();
 
-      // Update state - only update local level from API response when not using Redux
-      if (!useRedux) {
-        setLocalLevel(analysis.currentLevel);
+        if (!isMounted.current) {
+          return null;
+        }
+
+        // Transform snake_case to camelCase
+        const analysis: AIDisclosureAnalysis = {
+          currentLevel: data.current_level as DisclosureLevel,
+          recommendedLevel: data.recommended_level as DisclosureLevel,
+          confidence: data.confidence,
+          unlockFeatures: data.unlock_features,
+          personalizedMessage: data.personalized_message,
+          reasoning: data.reasoning,
+        };
+
+        // Update state - only update local level from API response when not using Redux
+        if (!useRedux) {
+          setLocalLevel(analysis.currentLevel);
+        }
+        setConfidence(analysis.confidence);
+        setUnlockFeatures(analysis.unlockFeatures);
+        setPersonalizedMessage(analysis.personalizedMessage);
+
+        // Only set recommended level if above minConfidence threshold
+        if (analysis.confidence >= minConfidence) {
+          setRecommendedLevel(analysis.recommendedLevel);
+        } else {
+          setRecommendedLevel(null);
+        }
+
+        return analysis;
+      } catch {
+        return null;
       }
-      setConfidence(analysis.confidence);
-      setUnlockFeatures(analysis.unlockFeatures);
-      setPersonalizedMessage(analysis.personalizedMessage);
-
-      // Only set recommended level if above minConfidence threshold
-      if (analysis.confidence >= minConfidence) {
-        setRecommendedLevel(analysis.recommendedLevel);
-      } else {
-        setRecommendedLevel(null);
-      }
-
-      return analysis;
-    } catch {
-      return null;
-    }
-  }, [enabled, level, minConfidence, useRedux, analyzeDisclosure]);
+    }, [enabled, level, minConfidence, useRedux, analyzeDisclosure]);
 
   /**
    * Accept the AI recommendation

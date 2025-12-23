@@ -3,8 +3,8 @@
  *
  * Tests for the Help Center page component.
  */
-import { describe, it, expect, vi } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { describe, it, expect, vi, afterEach } from "vitest";
+import { render, screen, fireEvent, cleanup } from "@testing-library/react";
 import { HelpPage } from "./HelpPage";
 import { TestProvider } from "../test-utils";
 
@@ -24,6 +24,11 @@ describe("HelpPage", () => {
         <HelpPage />
       </TestProvider>,
     );
+
+  afterEach(() => {
+    cleanup();
+    vi.clearAllMocks();
+  });
 
   describe("rendering", () => {
     it("should render the help page with title", () => {
@@ -159,7 +164,7 @@ describe("HelpPage", () => {
 
       // Find admin category
       const adminCategory = DEFAULT_SHORTCUT_CATEGORIES.find(
-        (cat) => cat.id === "admin"
+        (cat) => cat.id === "admin",
       );
 
       expect(adminCategory).toBeDefined();
@@ -170,11 +175,11 @@ describe("HelpPage", () => {
       const { DEFAULT_SHORTCUT_CATEGORIES } = await import("./HelpPage");
 
       const adminCategory = DEFAULT_SHORTCUT_CATEGORIES.find(
-        (cat) => cat.id === "admin"
+        (cat) => cat.id === "admin",
       );
 
       const alertsShortcut = adminCategory?.shortcuts.find(
-        (s) => s.id === "admin-alerts"
+        (s) => s.id === "admin-alerts",
       );
 
       expect(alertsShortcut).toBeDefined();
@@ -186,11 +191,11 @@ describe("HelpPage", () => {
       const { DEFAULT_SHORTCUT_CATEGORIES } = await import("./HelpPage");
 
       const adminCategory = DEFAULT_SHORTCUT_CATEGORIES.find(
-        (cat) => cat.id === "admin"
+        (cat) => cat.id === "admin",
       );
 
       const overviewShortcut = adminCategory?.shortcuts.find(
-        (s) => s.id === "admin-overview"
+        (s) => s.id === "admin-overview",
       );
 
       expect(overviewShortcut).toBeDefined();
@@ -201,11 +206,11 @@ describe("HelpPage", () => {
       const { DEFAULT_SHORTCUT_CATEGORIES } = await import("./HelpPage");
 
       const adminCategory = DEFAULT_SHORTCUT_CATEGORIES.find(
-        (cat) => cat.id === "admin"
+        (cat) => cat.id === "admin",
       );
 
       const usersShortcut = adminCategory?.shortcuts.find(
-        (s) => s.id === "admin-users"
+        (s) => s.id === "admin-users",
       );
 
       expect(usersShortcut).toBeDefined();
@@ -218,7 +223,7 @@ describe("HelpPage", () => {
       const { DEFAULT_SHORTCUT_CATEGORIES } = await import("./HelpPage");
 
       const mcpCategory = DEFAULT_SHORTCUT_CATEGORIES.find(
-        (cat) => cat.id === "mcp"
+        (cat) => cat.id === "mcp",
       );
 
       expect(mcpCategory).toBeDefined();
@@ -229,11 +234,11 @@ describe("HelpPage", () => {
       const { DEFAULT_SHORTCUT_CATEGORIES } = await import("./HelpPage");
 
       const mcpCategory = DEFAULT_SHORTCUT_CATEGORIES.find(
-        (cat) => cat.id === "mcp"
+        (cat) => cat.id === "mcp",
       );
 
       const toggleShortcut = mcpCategory?.shortcuts.find(
-        (s) => s.id === "mcp-toggle-panel"
+        (s) => s.id === "mcp-toggle-panel",
       );
 
       expect(toggleShortcut).toBeDefined();
@@ -245,11 +250,11 @@ describe("HelpPage", () => {
       const { DEFAULT_SHORTCUT_CATEGORIES } = await import("./HelpPage");
 
       const mcpCategory = DEFAULT_SHORTCUT_CATEGORIES.find(
-        (cat) => cat.id === "mcp"
+        (cat) => cat.id === "mcp",
       );
 
       const toolShortcut = mcpCategory?.shortcuts.find(
-        (s) => s.id === "mcp-tool-dialog"
+        (s) => s.id === "mcp-tool-dialog",
       );
 
       expect(toolShortcut).toBeDefined();
@@ -261,11 +266,11 @@ describe("HelpPage", () => {
       const { DEFAULT_SHORTCUT_CATEGORIES } = await import("./HelpPage");
 
       const mcpCategory = DEFAULT_SHORTCUT_CATEGORIES.find(
-        (cat) => cat.id === "mcp"
+        (cat) => cat.id === "mcp",
       );
 
       const resourceShortcut = mcpCategory?.shortcuts.find(
-        (s) => s.id === "mcp-resource-viewer"
+        (s) => s.id === "mcp-resource-viewer",
       );
 
       expect(resourceShortcut).toBeDefined();
@@ -277,11 +282,11 @@ describe("HelpPage", () => {
       const { DEFAULT_SHORTCUT_CATEGORIES } = await import("./HelpPage");
 
       const mcpCategory = DEFAULT_SHORTCUT_CATEGORIES.find(
-        (cat) => cat.id === "mcp"
+        (cat) => cat.id === "mcp",
       );
 
       const promptShortcut = mcpCategory?.shortcuts.find(
-        (s) => s.id === "mcp-prompt-tester"
+        (s) => s.id === "mcp-prompt-tester",
       );
 
       expect(promptShortcut).toBeDefined();
@@ -293,7 +298,7 @@ describe("HelpPage", () => {
       const { DEFAULT_SHORTCUT_CATEGORIES } = await import("./HelpPage");
 
       const mcpCategory = DEFAULT_SHORTCUT_CATEGORIES.find(
-        (cat) => cat.id === "mcp"
+        (cat) => cat.id === "mcp",
       );
 
       expect(mcpCategory?.shortcuts).toHaveLength(4);

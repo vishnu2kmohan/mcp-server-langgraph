@@ -5,8 +5,8 @@
  * Integrates real-time AI suggestions with AIIntelligence context.
  */
 
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { renderHook } from "@testing-library/react";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { renderHook, cleanup } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { Provider } from "react-redux";
 import { configureStore } from "@reduxjs/toolkit";
@@ -59,11 +59,15 @@ describe("useAIRealTimeUXSuggestions", () => {
     vi.clearAllMocks();
   });
 
+  afterEach(() => {
+    cleanup();
+    vi.clearAllMocks();
+  });
+
   describe("context integration", () => {
     it("should use WebSocket config from AIIntelligence context", async () => {
-      const { useAIRealTimeSuggestions } = await import(
-        "./useAIRealTimeSuggestions"
-      );
+      const { useAIRealTimeSuggestions } =
+        await import("./useAIRealTimeSuggestions");
 
       renderHook(() => useAIRealTimeUXSuggestions(), {
         wrapper: createWrapper({
@@ -77,9 +81,8 @@ describe("useAIRealTimeUXSuggestions", () => {
     });
 
     it("should be disabled when AI features are globally disabled", async () => {
-      const { useAIRealTimeSuggestions } = await import(
-        "./useAIRealTimeSuggestions"
-      );
+      const { useAIRealTimeSuggestions } =
+        await import("./useAIRealTimeSuggestions");
 
       renderHook(() => useAIRealTimeUXSuggestions(), {
         wrapper: createWrapper({
@@ -93,9 +96,8 @@ describe("useAIRealTimeUXSuggestions", () => {
     });
 
     it("should be disabled when WebSocket is specifically disabled", async () => {
-      const { useAIRealTimeSuggestions } = await import(
-        "./useAIRealTimeSuggestions"
-      );
+      const { useAIRealTimeSuggestions } =
+        await import("./useAIRealTimeSuggestions");
 
       renderHook(() => useAIRealTimeUXSuggestions(), {
         wrapper: createWrapper({

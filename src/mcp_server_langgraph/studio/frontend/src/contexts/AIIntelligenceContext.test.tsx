@@ -28,7 +28,9 @@ import {
 function createWrapper(config?: Partial<AIIntelligenceConfig>) {
   return function Wrapper({ children }: { children: ReactNode }) {
     return (
-      <AIIntelligenceProvider config={config}>{children}</AIIntelligenceProvider>
+      <AIIntelligenceProvider config={config}>
+        {children}
+      </AIIntelligenceProvider>
     );
   };
 }
@@ -43,7 +45,7 @@ describe("AIIntelligenceContext", () => {
       render(
         <AIIntelligenceProvider>
           <div data-testid="child">Test Child</div>
-        </AIIntelligenceProvider>
+        </AIIntelligenceProvider>,
       );
 
       expect(screen.getByTestId("child")).toBeInTheDocument();
@@ -65,7 +67,7 @@ describe("AIIntelligenceContext", () => {
       render(
         <AIIntelligenceProvider config={config}>
           <div>Test</div>
-        </AIIntelligenceProvider>
+        </AIIntelligenceProvider>,
       );
 
       // Should render without errors
@@ -215,7 +217,9 @@ describe("AIIntelligenceContext", () => {
         }),
       });
 
-      expect(result.current.cacheConfig.navPredictionStaleTime).toBe(10 * 60 * 1000);
+      expect(result.current.cacheConfig.navPredictionStaleTime).toBe(
+        10 * 60 * 1000,
+      );
     });
   });
 

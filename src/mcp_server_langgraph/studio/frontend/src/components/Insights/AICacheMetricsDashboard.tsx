@@ -13,8 +13,19 @@
  * Integrates with useAIMetrics hook for data.
  */
 
-import { RefreshCw, Database, Zap, AlertTriangle, Clock, Activity, HardDrive } from "lucide-react";
-import type { AIMetricsSnapshot, FeatureMetrics } from "../../hooks/useAIMetrics";
+import {
+  RefreshCw,
+  Database,
+  Zap,
+  AlertTriangle,
+  Clock,
+  Activity,
+  HardDrive,
+} from "lucide-react";
+import type {
+  AIMetricsSnapshot,
+  FeatureMetrics,
+} from "../../hooks/useAIMetrics";
 import type { CacheStats } from "../../hooks/useTieredCache";
 
 // =============================================================================
@@ -94,9 +105,12 @@ function MetricCard({
 }: MetricCardProps) {
   const colorClasses = {
     blue: "text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30",
-    green: "text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/30",
-    purple: "text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-900/30",
-    orange: "text-orange-600 dark:text-orange-400 bg-orange-50 dark:bg-orange-900/30",
+    green:
+      "text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/30",
+    purple:
+      "text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-900/30",
+    orange:
+      "text-orange-600 dark:text-orange-400 bg-orange-50 dark:bg-orange-900/30",
     red: "text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/30",
   };
 
@@ -106,7 +120,9 @@ function MetricCard({
         {icon && (
           <div className={`p-1.5 rounded ${colorClasses[color]}`}>{icon}</div>
         )}
-        <span className="text-sm text-gray-500 dark:text-gray-400">{label}</span>
+        <span className="text-sm text-gray-500 dark:text-gray-400">
+          {label}
+        </span>
       </div>
       <div
         className={`text-2xl font-bold text-gray-900 dark:text-gray-100 ${valueClassName ?? ""}`}
@@ -141,9 +157,7 @@ function FeatureRow({ feature, metrics }: FeatureRowProps) {
           {Math.round(metrics.averageLatency)}ms
         </span>
         {metrics.errorCount > 0 && (
-          <span className="text-red-500">
-            {metrics.errorCount} err
-          </span>
+          <span className="text-red-500">{metrics.errorCount} err</span>
         )}
       </div>
     </div>
@@ -163,7 +177,10 @@ export function AICacheMetricsDashboard({
   className = "",
   tieredCacheStats,
 }: AICacheMetricsDashboardProps) {
-  const hasData = snapshot.requestCount > 0 || snapshot.cacheHits > 0 || snapshot.cacheMisses > 0;
+  const hasData =
+    snapshot.requestCount > 0 ||
+    snapshot.cacheHits > 0 ||
+    snapshot.cacheMisses > 0;
   const featureNames = Object.keys(featureMetrics);
   const hasTieredStats = tieredCacheStats !== undefined;
 
@@ -245,7 +262,13 @@ export function AICacheMetricsDashboard({
               label="Error Rate"
               value={formatPercentage(snapshot.errorRate)}
               icon={<AlertTriangle size={16} />}
-              color={snapshot.errorRate >= 0.1 ? "red" : snapshot.errorRate >= 0.05 ? "orange" : "green"}
+              color={
+                snapshot.errorRate >= 0.1
+                  ? "red"
+                  : snapshot.errorRate >= 0.05
+                    ? "orange"
+                    : "green"
+              }
               testId="error-rate-value"
               valueClassName={getErrorRateColor(snapshot.errorRate)}
             />
@@ -298,7 +321,10 @@ export function AICacheMetricsDashboard({
                 aria-label="Tiered cache distribution"
               >
                 {(() => {
-                  const total = tieredCacheStats.l1Hits + tieredCacheStats.l2Hits + tieredCacheStats.misses;
+                  const total =
+                    tieredCacheStats.l1Hits +
+                    tieredCacheStats.l2Hits +
+                    tieredCacheStats.misses;
                   if (total === 0) return null;
                   const l1Pct = (tieredCacheStats.l1Hits / total) * 100;
                   const l2Pct = (tieredCacheStats.l2Hits / total) * 100;
@@ -330,7 +356,9 @@ export function AICacheMetricsDashboard({
                 <div className="flex items-center gap-2">
                   <div className="flex items-center gap-1.5">
                     <Zap size={14} className="text-green-500" />
-                    <span className="text-gray-600 dark:text-gray-400">L1 (Memory)</span>
+                    <span className="text-gray-600 dark:text-gray-400">
+                      L1 (Memory)
+                    </span>
                   </div>
                   <span
                     data-testid="l1-hits-value"
@@ -343,7 +371,9 @@ export function AICacheMetricsDashboard({
                 <div className="flex items-center gap-2">
                   <div className="flex items-center gap-1.5">
                     <HardDrive size={14} className="text-blue-500" />
-                    <span className="text-gray-600 dark:text-gray-400">L2 (Session)</span>
+                    <span className="text-gray-600 dark:text-gray-400">
+                      L2 (Session)
+                    </span>
                   </div>
                   <span
                     data-testid="l2-hits-value"
@@ -356,7 +386,9 @@ export function AICacheMetricsDashboard({
                 <div className="flex items-center gap-2">
                   <div className="flex items-center gap-1.5">
                     <Database size={14} className="text-gray-400" />
-                    <span className="text-gray-600 dark:text-gray-400">Misses</span>
+                    <span className="text-gray-600 dark:text-gray-400">
+                      Misses
+                    </span>
                   </div>
                   <span
                     data-testid="tiered-misses-value"
@@ -369,7 +401,9 @@ export function AICacheMetricsDashboard({
                 <div className="flex items-center gap-2">
                   <div className="flex items-center gap-1.5">
                     <Clock size={14} className="text-purple-500" />
-                    <span className="text-gray-600 dark:text-gray-400">Cache Age</span>
+                    <span className="text-gray-600 dark:text-gray-400">
+                      Cache Age
+                    </span>
                   </div>
                   <span
                     data-testid="cache-age-value"

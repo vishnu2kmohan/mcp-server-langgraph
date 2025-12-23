@@ -23,7 +23,9 @@ describe("ErrorClassifier", () => {
         const classified = classifyError(error);
 
         expect(classified.category).toBe("client");
-        expect(classified.message).toBe("Cannot read property 'x' of undefined");
+        expect(classified.message).toBe(
+          "Cannot read property 'x' of undefined",
+        );
         expect(classified.recoverable).toBe("maybe");
       });
 
@@ -102,13 +104,13 @@ describe("ErrorClassifier", () => {
 
       it("classifies 5xx as server errors", () => {
         expect(classifyError(new Error(""), { statusCode: 500 }).category).toBe(
-          "server"
+          "server",
         );
         expect(classifyError(new Error(""), { statusCode: 502 }).category).toBe(
-          "server"
+          "server",
         );
         expect(classifyError(new Error(""), { statusCode: 503 }).category).toBe(
-          "server"
+          "server",
         );
       });
 
@@ -277,7 +279,9 @@ describe("ErrorClassifier", () => {
         isAxiosError: true,
         response: {
           status: 400,
-          data: { error: { code: "VALIDATION_ERROR", message: "Invalid input" } },
+          data: {
+            error: { code: "VALIDATION_ERROR", message: "Invalid input" },
+          },
         },
       };
 
@@ -355,7 +359,9 @@ describe("ErrorClassifier", () => {
     });
 
     it("handles string as error", () => {
-      const classified = classifyError("Something went wrong" as unknown as Error);
+      const classified = classifyError(
+        "Something went wrong" as unknown as Error,
+      );
 
       expect(classified.message).toBe("Something went wrong");
       expect(classified.category).toBe("unknown");

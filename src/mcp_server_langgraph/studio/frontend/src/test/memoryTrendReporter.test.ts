@@ -97,9 +97,24 @@ describe("memoryTrendReporter", () => {
       });
 
       it("should handle multiple entries correctly", () => {
-        reporter.recordEntry("phase1", { heapUsed: 50 * 1024 * 1024, heapTotal: 100 * 1024 * 1024, external: 0, rss: 0 });
-        reporter.recordEntry("phase2", { heapUsed: 60 * 1024 * 1024, heapTotal: 110 * 1024 * 1024, external: 0, rss: 0 });
-        reporter.recordEntry("phase3", { heapUsed: 55 * 1024 * 1024, heapTotal: 105 * 1024 * 1024, external: 0, rss: 0 });
+        reporter.recordEntry("phase1", {
+          heapUsed: 50 * 1024 * 1024,
+          heapTotal: 100 * 1024 * 1024,
+          external: 0,
+          rss: 0,
+        });
+        reporter.recordEntry("phase2", {
+          heapUsed: 60 * 1024 * 1024,
+          heapTotal: 110 * 1024 * 1024,
+          external: 0,
+          rss: 0,
+        });
+        reporter.recordEntry("phase3", {
+          heapUsed: 55 * 1024 * 1024,
+          heapTotal: 105 * 1024 * 1024,
+          external: 0,
+          rss: 0,
+        });
 
         expect(reporter.getEntryCount()).toBe(3);
         expect(reporter.getEntries()[2].deltaMB).toBeCloseTo(-5, 0); // 55 - 60 = -5MB (memory freed)
@@ -108,8 +123,18 @@ describe("memoryTrendReporter", () => {
 
     describe("generateReport", () => {
       it("should generate a complete report with metadata", () => {
-        reporter.recordEntry("start", { heapUsed: 50 * 1024 * 1024, heapTotal: 100 * 1024 * 1024, external: 0, rss: 0 });
-        reporter.recordEntry("end", { heapUsed: 80 * 1024 * 1024, heapTotal: 120 * 1024 * 1024, external: 0, rss: 0 });
+        reporter.recordEntry("start", {
+          heapUsed: 50 * 1024 * 1024,
+          heapTotal: 100 * 1024 * 1024,
+          external: 0,
+          rss: 0,
+        });
+        reporter.recordEntry("end", {
+          heapUsed: 80 * 1024 * 1024,
+          heapTotal: 120 * 1024 * 1024,
+          external: 0,
+          rss: 0,
+        });
 
         const report = reporter.generateReport();
 
@@ -119,9 +144,24 @@ describe("memoryTrendReporter", () => {
       });
 
       it("should include summary statistics", () => {
-        reporter.recordEntry("start", { heapUsed: 50 * 1024 * 1024, heapTotal: 100 * 1024 * 1024, external: 0, rss: 0 });
-        reporter.recordEntry("mid", { heapUsed: 100 * 1024 * 1024, heapTotal: 150 * 1024 * 1024, external: 0, rss: 0 });
-        reporter.recordEntry("end", { heapUsed: 70 * 1024 * 1024, heapTotal: 120 * 1024 * 1024, external: 0, rss: 0 });
+        reporter.recordEntry("start", {
+          heapUsed: 50 * 1024 * 1024,
+          heapTotal: 100 * 1024 * 1024,
+          external: 0,
+          rss: 0,
+        });
+        reporter.recordEntry("mid", {
+          heapUsed: 100 * 1024 * 1024,
+          heapTotal: 150 * 1024 * 1024,
+          external: 0,
+          rss: 0,
+        });
+        reporter.recordEntry("end", {
+          heapUsed: 70 * 1024 * 1024,
+          heapTotal: 120 * 1024 * 1024,
+          external: 0,
+          rss: 0,
+        });
 
         const report = reporter.generateReport();
 
@@ -143,7 +183,12 @@ describe("memoryTrendReporter", () => {
 
     describe("toJSON", () => {
       it("should return JSON-serializable output", () => {
-        reporter.recordEntry("test", { heapUsed: 50 * 1024 * 1024, heapTotal: 100 * 1024 * 1024, external: 0, rss: 0 });
+        reporter.recordEntry("test", {
+          heapUsed: 50 * 1024 * 1024,
+          heapTotal: 100 * 1024 * 1024,
+          external: 0,
+          rss: 0,
+        });
 
         const json = reporter.toJSON();
         const parsed = JSON.parse(JSON.stringify(json));
@@ -156,7 +201,12 @@ describe("memoryTrendReporter", () => {
 
     describe("reset", () => {
       it("should clear all entries", () => {
-        reporter.recordEntry("test", { heapUsed: 50 * 1024 * 1024, heapTotal: 100 * 1024 * 1024, external: 0, rss: 0 });
+        reporter.recordEntry("test", {
+          heapUsed: 50 * 1024 * 1024,
+          heapTotal: 100 * 1024 * 1024,
+          external: 0,
+          rss: 0,
+        });
         expect(reporter.getEntryCount()).toBe(1);
 
         reporter.reset();
@@ -195,7 +245,11 @@ describe("memoryTrendReporter", () => {
     it("should parse valid JSON trend data", () => {
       const json = JSON.stringify({
         runs: [
-          { timestamp: "2025-01-01T00:00:00Z", peakHeapMB: 100, commit: "abc123" },
+          {
+            timestamp: "2025-01-01T00:00:00Z",
+            peakHeapMB: 100,
+            commit: "abc123",
+          },
         ],
         metadata: { created: "2025-01-01T00:00:00Z" },
       });
@@ -224,8 +278,19 @@ describe("memoryTrendReporter", () => {
   describe("mergeTrendData", () => {
     it("should add new run to existing trends", () => {
       const existing = {
-        runs: [{ timestamp: "2025-01-01T00:00:00Z", peakHeapMB: 100, commit: "abc123", finalHeapMB: 80, deltaMB: -20 }],
-        metadata: { created: "2025-01-01T00:00:00Z", updated: "2025-01-01T00:00:00Z" },
+        runs: [
+          {
+            timestamp: "2025-01-01T00:00:00Z",
+            peakHeapMB: 100,
+            commit: "abc123",
+            finalHeapMB: 80,
+            deltaMB: -20,
+          },
+        ],
+        metadata: {
+          created: "2025-01-01T00:00:00Z",
+          updated: "2025-01-01T00:00:00Z",
+        },
       };
 
       const newRun = {
@@ -252,7 +317,10 @@ describe("memoryTrendReporter", () => {
 
       const existing = {
         runs,
-        metadata: { created: "2025-01-01T00:00:00Z", updated: "2025-01-01T00:00:00Z" },
+        metadata: {
+          created: "2025-01-01T00:00:00Z",
+          updated: "2025-01-01T00:00:00Z",
+        },
       };
 
       const newRun = {
@@ -271,7 +339,10 @@ describe("memoryTrendReporter", () => {
     it("should update metadata timestamp", () => {
       const existing = {
         runs: [],
-        metadata: { created: "2025-01-01T00:00:00Z", updated: "2025-01-01T00:00:00Z" },
+        metadata: {
+          created: "2025-01-01T00:00:00Z",
+          updated: "2025-01-01T00:00:00Z",
+        },
       };
 
       const before = new Date().toISOString();
@@ -341,9 +412,27 @@ describe("memoryTrendReporter", () => {
   describe("calculateRollingAverage", () => {
     it("should calculate average of peak heap values", () => {
       const runs: MemoryTrendRunEntry[] = [
-        { timestamp: "2025-01-01", peakHeapMB: 100, finalHeapMB: 80, deltaMB: 0, commit: "a" },
-        { timestamp: "2025-01-02", peakHeapMB: 120, finalHeapMB: 90, deltaMB: 10, commit: "b" },
-        { timestamp: "2025-01-03", peakHeapMB: 110, finalHeapMB: 85, deltaMB: 5, commit: "c" },
+        {
+          timestamp: "2025-01-01",
+          peakHeapMB: 100,
+          finalHeapMB: 80,
+          deltaMB: 0,
+          commit: "a",
+        },
+        {
+          timestamp: "2025-01-02",
+          peakHeapMB: 120,
+          finalHeapMB: 90,
+          deltaMB: 10,
+          commit: "b",
+        },
+        {
+          timestamp: "2025-01-03",
+          peakHeapMB: 110,
+          finalHeapMB: 85,
+          deltaMB: 5,
+          commit: "c",
+        },
       ];
 
       const avg = calculateRollingAverage(runs);
@@ -356,7 +445,13 @@ describe("memoryTrendReporter", () => {
 
     it("should handle single run", () => {
       const runs: MemoryTrendRunEntry[] = [
-        { timestamp: "2025-01-01", peakHeapMB: 100, finalHeapMB: 80, deltaMB: 0, commit: "a" },
+        {
+          timestamp: "2025-01-01",
+          peakHeapMB: 100,
+          finalHeapMB: 80,
+          deltaMB: 0,
+          commit: "a",
+        },
       ];
 
       expect(calculateRollingAverage(runs)).toBe(100);
@@ -364,10 +459,34 @@ describe("memoryTrendReporter", () => {
 
     it("should limit to last N runs when specified", () => {
       const runs: MemoryTrendRunEntry[] = [
-        { timestamp: "2025-01-01", peakHeapMB: 200, finalHeapMB: 80, deltaMB: 0, commit: "a" },
-        { timestamp: "2025-01-02", peakHeapMB: 100, finalHeapMB: 90, deltaMB: 10, commit: "b" },
-        { timestamp: "2025-01-03", peakHeapMB: 100, finalHeapMB: 85, deltaMB: 5, commit: "c" },
-        { timestamp: "2025-01-04", peakHeapMB: 100, finalHeapMB: 85, deltaMB: 5, commit: "d" },
+        {
+          timestamp: "2025-01-01",
+          peakHeapMB: 200,
+          finalHeapMB: 80,
+          deltaMB: 0,
+          commit: "a",
+        },
+        {
+          timestamp: "2025-01-02",
+          peakHeapMB: 100,
+          finalHeapMB: 90,
+          deltaMB: 10,
+          commit: "b",
+        },
+        {
+          timestamp: "2025-01-03",
+          peakHeapMB: 100,
+          finalHeapMB: 85,
+          deltaMB: 5,
+          commit: "c",
+        },
+        {
+          timestamp: "2025-01-04",
+          peakHeapMB: 100,
+          finalHeapMB: 85,
+          deltaMB: 5,
+          commit: "d",
+        },
       ];
 
       // Only use last 3 runs (excludes the 200MB outlier)
@@ -377,7 +496,10 @@ describe("memoryTrendReporter", () => {
   });
 
   describe("detectMemoryRegression", () => {
-    const createRun = (peakHeapMB: number, commit: string): MemoryTrendRunEntry => ({
+    const createRun = (
+      peakHeapMB: number,
+      commit: string,
+    ): MemoryTrendRunEntry => ({
       timestamp: new Date().toISOString(),
       peakHeapMB,
       finalHeapMB: peakHeapMB * 0.8,
@@ -525,7 +647,11 @@ describe("memoryTrendReporter", () => {
           rollingAverageWindow: 5,
         };
 
-        const result = detectMemoryRegression(currentRun, previousRuns, customThresholds);
+        const result = detectMemoryRegression(
+          currentRun,
+          previousRuns,
+          customThresholds,
+        );
 
         expect(result.status).toBe("warning"); // 5% > 3% warning threshold
       });
@@ -540,7 +666,11 @@ describe("memoryTrendReporter", () => {
           rollingAverageWindow: 5,
         };
 
-        const result = detectMemoryRegression(currentRun, previousRuns, customThresholds);
+        const result = detectMemoryRegression(
+          currentRun,
+          previousRuns,
+          customThresholds,
+        );
 
         expect(result.status).toBe("error"); // 8% > 5% error threshold
       });

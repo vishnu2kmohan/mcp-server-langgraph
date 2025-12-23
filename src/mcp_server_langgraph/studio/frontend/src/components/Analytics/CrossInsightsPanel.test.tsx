@@ -77,12 +77,12 @@ describe("CrossInsightsPanel", () => {
           disclosureResult={mockDisclosureResult}
           confidence={0.84}
           isLoading={false}
-        />
+        />,
       );
 
       expect(screen.getByText("AI Insights")).toBeInTheDocument();
       expect(
-        screen.getByText(/User behavior suggests higher expertise/)
+        screen.getByText(/User behavior suggests higher expertise/),
       ).toBeInTheDocument();
     });
 
@@ -94,7 +94,7 @@ describe("CrossInsightsPanel", () => {
           disclosureResult={null}
           confidence={0.75}
           isLoading={false}
-        />
+        />,
       );
 
       mockCrossInsights.forEach((insight) => {
@@ -110,7 +110,7 @@ describe("CrossInsightsPanel", () => {
           disclosureResult={null}
           confidence={0.85}
           isLoading={false}
-        />
+        />,
       );
 
       expect(screen.getByText(/Persona mismatch/i)).toBeInTheDocument();
@@ -126,15 +126,17 @@ describe("CrossInsightsPanel", () => {
           disclosureResult={mockDisclosureResult}
           confidence={0.82}
           isLoading={false}
-        />
+        />,
       );
 
       // Check for level upgrade section
-      expect(screen.getByText(/Level upgrade recommended/i)).toBeInTheDocument();
+      expect(
+        screen.getByText(/Level upgrade recommended/i),
+      ).toBeInTheDocument();
       expect(screen.getByText(/Current:/i)).toBeInTheDocument();
       expect(screen.getByText(/Recommended:/i)).toBeInTheDocument();
       expect(
-        screen.getByText(/Ready for advanced features/i)
+        screen.getByText(/Ready for advanced features/i),
       ).toBeInTheDocument();
     });
   });
@@ -148,7 +150,7 @@ describe("CrossInsightsPanel", () => {
           disclosureResult={null}
           confidence={0}
           isLoading={true}
-        />
+        />,
       );
 
       expect(screen.getByTestId("insights-loading")).toBeInTheDocument();
@@ -162,11 +164,11 @@ describe("CrossInsightsPanel", () => {
           disclosureResult={mockDisclosureResult}
           confidence={0.84}
           isLoading={true}
-        />
+        />,
       );
 
       expect(
-        screen.queryByText(/User behavior suggests/)
+        screen.queryByText(/User behavior suggests/),
       ).not.toBeInTheDocument();
     });
   });
@@ -180,7 +182,7 @@ describe("CrossInsightsPanel", () => {
           disclosureResult={null}
           confidence={0}
           isLoading={false}
-        />
+        />,
       );
 
       expect(screen.getByText(/No insights available/i)).toBeInTheDocument();
@@ -195,7 +197,7 @@ describe("CrossInsightsPanel", () => {
           confidence={0}
           isLoading={false}
           hideWhenEmpty={true}
-        />
+        />,
       );
 
       expect(container.firstChild).toBeNull();
@@ -211,7 +213,7 @@ describe("CrossInsightsPanel", () => {
           disclosureResult={null}
           confidence={0.84}
           isLoading={false}
-        />
+        />,
       );
 
       expect(screen.getByText(/84%/)).toBeInTheDocument();
@@ -225,7 +227,7 @@ describe("CrossInsightsPanel", () => {
           disclosureResult={null}
           confidence={0.85}
           isLoading={false}
-        />
+        />,
       );
 
       expect(screen.getByTestId("confidence-high")).toBeInTheDocument();
@@ -239,7 +241,7 @@ describe("CrossInsightsPanel", () => {
           disclosureResult={null}
           confidence={0.7}
           isLoading={false}
-        />
+        />,
       );
 
       expect(screen.getByTestId("confidence-medium")).toBeInTheDocument();
@@ -253,7 +255,7 @@ describe("CrossInsightsPanel", () => {
           disclosureResult={null}
           confidence={0.5}
           isLoading={false}
-        />
+        />,
       );
 
       expect(screen.getByTestId("confidence-low")).toBeInTheDocument();
@@ -269,7 +271,7 @@ describe("CrossInsightsPanel", () => {
           disclosureResult={null}
           confidence={0.84}
           isLoading={false}
-        />
+        />,
       );
 
       const toggleButton = screen.getByRole("button", { name: /toggle/i });
@@ -284,7 +286,7 @@ describe("CrossInsightsPanel", () => {
           disclosureResult={null}
           confidence={0.84}
           isLoading={false}
-        />
+        />,
       );
 
       // Content should be visible initially
@@ -305,7 +307,7 @@ describe("CrossInsightsPanel", () => {
           disclosureResult={null}
           confidence={0.84}
           isLoading={false}
-        />
+        />,
       );
 
       const toggleButton = screen.getByRole("button", { name: /toggle/i });
@@ -327,7 +329,7 @@ describe("CrossInsightsPanel", () => {
           confidence={0.84}
           isLoading={false}
           defaultCollapsed={true}
-        />
+        />,
       );
 
       // Content should be removed from DOM when defaultCollapsed is true
@@ -346,10 +348,12 @@ describe("CrossInsightsPanel", () => {
           confidence={0.84}
           isLoading={false}
           onDismiss={onDismiss}
-        />
+        />,
       );
 
-      expect(screen.getByRole("button", { name: /dismiss/i })).toBeInTheDocument();
+      expect(
+        screen.getByRole("button", { name: /dismiss/i }),
+      ).toBeInTheDocument();
     });
 
     it("should call onDismiss when dismiss button is clicked", () => {
@@ -362,7 +366,7 @@ describe("CrossInsightsPanel", () => {
           confidence={0.84}
           isLoading={false}
           onDismiss={onDismiss}
-        />
+        />,
       );
 
       fireEvent.click(screen.getByRole("button", { name: /dismiss/i }));
@@ -379,7 +383,7 @@ describe("CrossInsightsPanel", () => {
           disclosureResult={null}
           confidence={0.85}
           isLoading={false}
-        />
+        />,
       );
 
       expect(screen.getByText(/workflow_builder/i)).toBeInTheDocument();
@@ -394,7 +398,7 @@ describe("CrossInsightsPanel", () => {
           disclosureResult={mockDisclosureResult}
           confidence={0.82}
           isLoading={false}
-        />
+        />,
       );
 
       expect(screen.getByText(/custom_agents/i)).toBeInTheDocument();
@@ -411,11 +415,11 @@ describe("CrossInsightsPanel", () => {
           disclosureResult={null}
           confidence={0.84}
           isLoading={false}
-        />
+        />,
       );
 
       expect(
-        screen.getByRole("heading", { name: /AI Insights/i })
+        screen.getByRole("heading", { name: /AI Insights/i }),
       ).toBeInTheDocument();
     });
 
@@ -427,12 +431,12 @@ describe("CrossInsightsPanel", () => {
           disclosureResult={null}
           confidence={0.84}
           isLoading={false}
-        />
+        />,
       );
 
       expect(screen.getByRole("list")).toBeInTheDocument();
       expect(screen.getAllByRole("listitem")).toHaveLength(
-        mockCrossInsights.length
+        mockCrossInsights.length,
       );
     });
 
@@ -444,11 +448,11 @@ describe("CrossInsightsPanel", () => {
           disclosureResult={null}
           confidence={0.84}
           isLoading={false}
-        />
+        />,
       );
 
       expect(
-        screen.getByLabelText(/confidence score: 84%/i)
+        screen.getByLabelText(/confidence score: 84%/i),
       ).toBeInTheDocument();
     });
   });

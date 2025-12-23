@@ -53,7 +53,7 @@ describe("MarkdownContent", () => {
     it("should render headings", () => {
       render(<MarkdownContent content="# Heading 1" />);
       expect(
-        screen.getByRole("heading", { level: 1, name: "Heading 1" })
+        screen.getByRole("heading", { level: 1, name: "Heading 1" }),
       ).toBeInTheDocument();
     });
 
@@ -69,7 +69,9 @@ describe("MarkdownContent", () => {
 
     it("should render blockquotes", () => {
       render(<MarkdownContent content="> This is a quote" />);
-      const blockquote = screen.getByText("This is a quote").closest("blockquote");
+      const blockquote = screen
+        .getByText("This is a quote")
+        .closest("blockquote");
       expect(blockquote).toBeInTheDocument();
     });
 
@@ -81,9 +83,7 @@ describe("MarkdownContent", () => {
 
   describe("links", () => {
     it("should render links with target=_blank", () => {
-      render(
-        <MarkdownContent content="[Click here](https://example.com)" />
-      );
+      render(<MarkdownContent content="[Click here](https://example.com)" />);
       const link = screen.getByRole("link", { name: "Click here" });
       expect(link).toHaveAttribute("href", "https://example.com");
       expect(link).toHaveAttribute("target", "_blank");
@@ -141,7 +141,9 @@ describe("MarkdownContent", () => {
   describe("interactive artifacts", () => {
     it("should render mermaid diagrams when enabled", async () => {
       const mermaidCode = "```mermaid\ngraph TD\nA-->B\n```";
-      render(<MarkdownContent content={mermaidCode} enableInteractiveArtifacts />);
+      render(
+        <MarkdownContent content={mermaidCode} enableInteractiveArtifacts />,
+      );
 
       await waitFor(() => {
         expect(screen.getByTestId("mermaid-diagram")).toBeInTheDocument();
@@ -151,7 +153,10 @@ describe("MarkdownContent", () => {
     it("should not render mermaid diagrams when disabled", async () => {
       const mermaidCode = "```mermaid\ngraph TD\nA-->B\n```";
       render(
-        <MarkdownContent content={mermaidCode} enableInteractiveArtifacts={false} />
+        <MarkdownContent
+          content={mermaidCode}
+          enableInteractiveArtifacts={false}
+        />,
       );
 
       await waitFor(() => {
@@ -163,7 +168,8 @@ describe("MarkdownContent", () => {
 
     it("should render JSX with Sandpack when enabled", async () => {
       // Multi-line JSX to trigger Sandpack rendering
-      const jsxCode = "```jsx\nconst App = () => {\n  return <div>Hello</div>;\n};\n```";
+      const jsxCode =
+        "```jsx\nconst App = () => {\n  return <div>Hello</div>;\n};\n```";
       render(<MarkdownContent content={jsxCode} enableInteractiveArtifacts />);
 
       await waitFor(() => {
@@ -175,7 +181,8 @@ describe("MarkdownContent", () => {
 
     it("should render TSX with Sandpack when enabled", async () => {
       // Multi-line TSX to trigger Sandpack rendering
-      const tsxCode = "```tsx\nconst App: React.FC = () => {\n  return <div>Hello</div>;\n};\n```";
+      const tsxCode =
+        "```tsx\nconst App: React.FC = () => {\n  return <div>Hello</div>;\n};\n```";
       render(<MarkdownContent content={tsxCode} enableInteractiveArtifacts />);
 
       await waitFor(() => {
@@ -206,14 +213,20 @@ describe("MarkdownContent", () => {
 
     it("should disable all interactive artifacts when false", async () => {
       // Multi-line JSX so it renders as CodeBlock when interactive is disabled
-      const jsxCode = "```jsx\nconst App = () => {\n  return <div>Hello</div>;\n};\n```";
+      const jsxCode =
+        "```jsx\nconst App = () => {\n  return <div>Hello</div>;\n};\n```";
       render(
-        <MarkdownContent content={jsxCode} enableInteractiveArtifacts={false} />
+        <MarkdownContent
+          content={jsxCode}
+          enableInteractiveArtifacts={false}
+        />,
       );
 
       await waitFor(() => {
         // Should render as regular code block, not Sandpack
-        expect(screen.queryByTestId("sandpack-executor")).not.toBeInTheDocument();
+        expect(
+          screen.queryByTestId("sandpack-executor"),
+        ).not.toBeInTheDocument();
         expect(screen.getByTestId("code-block")).toBeInTheDocument();
       });
     });

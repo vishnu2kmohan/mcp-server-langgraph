@@ -155,7 +155,7 @@ export function useAuditWebSocket(
         Object.keys(message.filter).some(
           (key) =>
             Array.isArray(message.filter[key as keyof AuditFilter]) &&
-            (message.filter[key as keyof AuditFilter] as string[]).length > 0
+            (message.filter[key as keyof AuditFilter] as string[]).length > 0,
         );
       activeFilterRef.current = hasActiveFilter ? message.filter : null;
       callbacksRef.current.onFilterUpdated?.(message.filter);

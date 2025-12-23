@@ -90,7 +90,7 @@ export interface DecisionHistoryResult {
  * @returns Risk assessment with score, factors, and recommendation
  */
 export function useRiskAssessment(
-  options: RiskAssessmentOptions
+  options: RiskAssessmentOptions,
 ): RiskAssessmentResult {
   const { userId, requestId, actionType, parameters, enabled = true } = options;
 
@@ -191,7 +191,7 @@ export function useRiskAssessment(
       error: result.error,
       refetch: fetchRiskAssessment,
     }),
-    [result, isLoading, fetchRiskAssessment]
+    [result, isLoading, fetchRiskAssessment],
   );
 }
 
@@ -209,9 +209,15 @@ export function useRiskAssessment(
  * @returns Decision history with similar decisions and statistics
  */
 export function useDecisionHistory(
-  options: DecisionHistoryOptions
+  options: DecisionHistoryOptions,
 ): DecisionHistoryResult {
-  const { userId, actionType, persona, timeRangeDays, enabled = true } = options;
+  const {
+    userId,
+    actionType,
+    persona,
+    timeRangeDays,
+    enabled = true,
+  } = options;
 
   const [analyzeMutation, { isLoading }] = useStudioAnalyzeMutation();
 
@@ -304,6 +310,6 @@ export function useDecisionHistory(
       error: result.error,
       refetch: fetchDecisionHistory,
     }),
-    [result, isLoading, fetchDecisionHistory]
+    [result, isLoading, fetchDecisionHistory],
   );
 }

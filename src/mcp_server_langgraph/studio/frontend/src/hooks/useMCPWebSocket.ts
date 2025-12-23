@@ -336,8 +336,11 @@ export function useMCPWebSocket(
 
   // Compute WebSocket URL - recalculate when auth state changes
   // This ensures the token query param is included when user becomes authenticated
-  // eslint-disable-next-line react-hooks/exhaustive-deps -- isAuthenticated triggers recalculation
-  const wsUrl = useMemo(() => url ?? getDefaultMCPWebSocketUrl(authenticated), [url, authenticated, isAuthenticated]);
+   
+  const wsUrl = useMemo(
+    () => url ?? getDefaultMCPWebSocketUrl(authenticated),
+    [url, authenticated],
+  );
 
   // Track effective enabled state - only connect when authenticated (for authenticated endpoints)
   // WebSocket requires valid auth token, so we only connect when authenticated
@@ -410,7 +413,9 @@ export function useMCPWebSocket(
 
   // Track if enabled - if not authenticated or explicitly disabled, override status
   // WebSocket requires valid auth token, so we only connect when authenticated
-  const status: ConnectionStatus = effectiveEnabled ? realtimeStatus : "disconnected";
+  const status: ConnectionStatus = effectiveEnabled
+    ? realtimeStatus
+    : "disconnected";
 
   // Disconnect when disabled or unauthenticated, reconnect when transitioning to enabled+authenticated
   useEffect(() => {

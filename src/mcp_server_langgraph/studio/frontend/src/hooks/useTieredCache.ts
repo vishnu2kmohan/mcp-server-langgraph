@@ -169,7 +169,7 @@ async function getFromRedisL2<T>(key: string): Promise<CacheEntry<T> | null> {
 async function setToRedisL2<T>(
   key: string,
   entry: CacheEntry<T>,
-  ttlMs: number
+  ttlMs: number,
 ): Promise<void> {
   try {
     await fetch(`/api/v1/cache/${encodeURIComponent(key)}`, {
@@ -206,7 +206,7 @@ async function deleteFromRedisL2(key: string): Promise<void> {
 export function useTieredCache<T>(
   key: string,
   fetcher: () => Promise<T>,
-  options: UseTieredCacheOptions = {}
+  options: UseTieredCacheOptions = {},
 ): UseTieredCacheResult<T> {
   const {
     ttlMs = DEFAULT_TTL_MS,
@@ -244,7 +244,7 @@ export function useTieredCache<T>(
       const age = Date.now() - entry._cachedAt;
       return age > ttlMs;
     },
-    [ttlMs]
+    [ttlMs],
   );
 
   /**
@@ -256,7 +256,7 @@ export function useTieredCache<T>(
       const timeUntilExpiry = ttlMs - age;
       return timeUntilExpiry > 0 && timeUntilExpiry < staleThresholdMs;
     },
-    [ttlMs, staleThresholdMs]
+    [ttlMs, staleThresholdMs],
   );
 
   /**
@@ -381,7 +381,7 @@ export function useTieredCache<T>(
           });
       }
     },
-    [key, isDataStale, fetchData]
+    [key, isDataStale, fetchData],
   );
 
   /**
@@ -496,7 +496,16 @@ export function useTieredCache<T>(
     return () => {
       mountedRef.current = false;
     };
-  }, [key, enabled, isExpired, isDataStale, fetchData, useRedisL2, handleL2Hit, handleCacheMiss]);
+  }, [
+    key,
+    enabled,
+    isExpired,
+    isDataStale,
+    fetchData,
+    useRedisL2,
+    handleL2Hit,
+    handleCacheMiss,
+  ]);
 
   // Re-run when data becomes undefined (after invalidation)
   useEffect(() => {

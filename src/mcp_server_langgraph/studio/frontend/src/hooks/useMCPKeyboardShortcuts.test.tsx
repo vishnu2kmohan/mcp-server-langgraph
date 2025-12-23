@@ -33,7 +33,10 @@ const createMockCallbacks = () => ({
 // Keyboard Event Helper
 // =============================================================================
 
-const createKeyboardEvent = (key: string, options: Partial<KeyboardEvent> = {}) => {
+const createKeyboardEvent = (
+  key: string,
+  options: Partial<KeyboardEvent> = {},
+) => {
   return new KeyboardEvent("keydown", {
     key,
     bubbles: true,
@@ -62,9 +65,7 @@ describe("useMCPKeyboardShortcuts", () => {
       renderHook(() => useMCPKeyboardShortcuts(callbacks));
 
       act(() => {
-        document.dispatchEvent(
-          createKeyboardEvent("m", { metaKey: true })
-        );
+        document.dispatchEvent(createKeyboardEvent("m", { metaKey: true }));
       });
 
       expect(callbacks.onToggleMCPPanel).toHaveBeenCalledTimes(1);
@@ -74,9 +75,7 @@ describe("useMCPKeyboardShortcuts", () => {
       renderHook(() => useMCPKeyboardShortcuts(callbacks));
 
       act(() => {
-        document.dispatchEvent(
-          createKeyboardEvent("m", { ctrlKey: true })
-        );
+        document.dispatchEvent(createKeyboardEvent("m", { ctrlKey: true }));
       });
 
       expect(callbacks.onToggleMCPPanel).toHaveBeenCalledTimes(1);
@@ -99,7 +98,7 @@ describe("useMCPKeyboardShortcuts", () => {
 
       act(() => {
         document.dispatchEvent(
-          createKeyboardEvent("t", { metaKey: true, shiftKey: true })
+          createKeyboardEvent("t", { metaKey: true, shiftKey: true }),
         );
       });
 
@@ -111,7 +110,7 @@ describe("useMCPKeyboardShortcuts", () => {
 
       act(() => {
         document.dispatchEvent(
-          createKeyboardEvent("t", { ctrlKey: true, shiftKey: true })
+          createKeyboardEvent("t", { ctrlKey: true, shiftKey: true }),
         );
       });
 
@@ -125,7 +124,7 @@ describe("useMCPKeyboardShortcuts", () => {
 
       act(() => {
         document.dispatchEvent(
-          createKeyboardEvent("r", { metaKey: true, shiftKey: true })
+          createKeyboardEvent("r", { metaKey: true, shiftKey: true }),
         );
       });
 
@@ -139,7 +138,7 @@ describe("useMCPKeyboardShortcuts", () => {
 
       act(() => {
         document.dispatchEvent(
-          createKeyboardEvent("p", { metaKey: true, shiftKey: true })
+          createKeyboardEvent("p", { metaKey: true, shiftKey: true }),
         );
       });
 
@@ -168,7 +167,7 @@ describe("useMCPKeyboardShortcuts", () => {
 
       expect(removeEventListenerSpy).toHaveBeenCalledWith(
         "keydown",
-        expect.any(Function)
+        expect.any(Function),
       );
 
       removeEventListenerSpy.mockRestore();
@@ -177,12 +176,12 @@ describe("useMCPKeyboardShortcuts", () => {
 
   describe("Disabled State", () => {
     it("does not respond to shortcuts when disabled", () => {
-      renderHook(() => useMCPKeyboardShortcuts({ ...callbacks, disabled: true }));
+      renderHook(() =>
+        useMCPKeyboardShortcuts({ ...callbacks, disabled: true }),
+      );
 
       act(() => {
-        document.dispatchEvent(
-          createKeyboardEvent("m", { metaKey: true })
-        );
+        document.dispatchEvent(createKeyboardEvent("m", { metaKey: true }));
       });
 
       expect(callbacks.onToggleMCPPanel).not.toHaveBeenCalled();
@@ -199,9 +198,7 @@ describe("useMCPKeyboardShortcuts", () => {
       input.focus();
 
       act(() => {
-        input.dispatchEvent(
-          createKeyboardEvent("m", { metaKey: true })
-        );
+        input.dispatchEvent(createKeyboardEvent("m", { metaKey: true }));
       });
 
       expect(callbacks.onToggleMCPPanel).not.toHaveBeenCalled();

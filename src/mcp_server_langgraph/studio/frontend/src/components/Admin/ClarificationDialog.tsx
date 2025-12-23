@@ -105,7 +105,7 @@ export function ClarificationDialog({
         onClose();
       }
     },
-    [isOpen, onClose]
+    [isOpen, onClose],
   );
 
   useEffect(() => {
@@ -202,7 +202,10 @@ export function ClarificationDialog({
 
           {/* Agent Info */}
           <div className="text-sm text-gray-500 dark:text-gray-400">
-            Agent: <strong className="text-gray-900 dark:text-white">{request.agent_name}</strong>
+            Agent:{" "}
+            <strong className="text-gray-900 dark:text-white">
+              {request.agent_name}
+            </strong>
           </div>
 
           {/* Question */}
@@ -334,7 +337,10 @@ export function ClarificationDialog({
                 className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 {isSubmitting ? (
-                  <Loader2 data-testid="submit-loading" className="w-4 h-4 animate-spin" />
+                  <Loader2
+                    data-testid="submit-loading"
+                    className="w-4 h-4 animate-spin"
+                  />
                 ) : (
                   <Check className="w-4 h-4" />
                 )}
@@ -356,7 +362,10 @@ export function ClarificationDialog({
                 className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 {isSubmitting ? (
-                  <Loader2 data-testid="submit-loading" className="w-4 h-4 animate-spin" />
+                  <Loader2
+                    data-testid="submit-loading"
+                    className="w-4 h-4 animate-spin"
+                  />
                 ) : (
                   <Check className="w-4 h-4" />
                 )}

@@ -81,9 +81,21 @@ export interface SuggestionActionEvent {
 }
 
 export interface TelemetryEvent {
-  type: "session_creation" | "revalidation" | "sync" | "artifact_save" | "artifact_delete" | "suggestion_action";
+  type:
+    | "session_creation"
+    | "revalidation"
+    | "sync"
+    | "artifact_save"
+    | "artifact_delete"
+    | "suggestion_action";
   timestamp: number;
-  data: SessionCreationEvent | RevalidationEvent | SyncEvent | ArtifactSaveEvent | ArtifactDeleteEvent | SuggestionActionEvent;
+  data:
+    | SessionCreationEvent
+    | RevalidationEvent
+    | SyncEvent
+    | ArtifactSaveEvent
+    | ArtifactDeleteEvent
+    | SuggestionActionEvent;
 }
 
 export interface SessionTelemetryMetrics {
@@ -154,7 +166,9 @@ export interface TelemetryExportPayload {
 /**
  * Telemetry exporter function type
  */
-export type TelemetryExporter = (payload: TelemetryExportPayload) => Promise<void>;
+export type TelemetryExporter = (
+  payload: TelemetryExportPayload,
+) => Promise<void>;
 
 interface SessionTelemetryOptions {
   debug?: boolean;

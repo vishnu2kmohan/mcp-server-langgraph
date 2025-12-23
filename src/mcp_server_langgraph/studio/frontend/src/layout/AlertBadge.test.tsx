@@ -12,8 +12,8 @@
  * Reference: ADR-0026 - Comprehensive Client Resilience Patterns
  */
 
-import { describe, it, expect, vi } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { describe, it, expect, vi, afterEach } from "vitest";
+import { render, screen, fireEvent, cleanup } from "@testing-library/react";
 import { Provider } from "react-redux";
 import { configureStore } from "@reduxjs/toolkit";
 import type { ReactNode } from "react";
@@ -25,7 +25,11 @@ import alertReducer from "../store/slices/alertSlice";
 // Test Helpers
 // =============================================================================
 
-const createTestStore = (criticalCount = 0, warningCount = 0, lastCriticalTime: number | null = null) =>
+const createTestStore = (
+  criticalCount = 0,
+  warningCount = 0,
+  lastCriticalTime: number | null = null,
+) =>
   configureStore({
     reducer: {
       alerts: alertReducer,
@@ -34,30 +38,34 @@ const createTestStore = (criticalCount = 0, warningCount = 0, lastCriticalTime: 
       alerts: {
         alerts: [
           // Create alerts based on counts
-          ...Array(criticalCount).fill(null).map((_, i) => ({
-            alert_id: `crit-${i}`,
-            name: `Critical${i}`,
-            severity: "critical" as const,
-            state: "firing" as const,
-            message: "Critical alert",
-            labels: {},
-            annotations: {},
-            started_at: new Date().toISOString(),
-            ended_at: null,
-            fingerprint: `fp-crit-${i}`,
-          })),
-          ...Array(warningCount).fill(null).map((_, i) => ({
-            alert_id: `warn-${i}`,
-            name: `Warning${i}`,
-            severity: "warning" as const,
-            state: "firing" as const,
-            message: "Warning alert",
-            labels: {},
-            annotations: {},
-            started_at: new Date().toISOString(),
-            ended_at: null,
-            fingerprint: `fp-warn-${i}`,
-          })),
+          ...Array(criticalCount)
+            .fill(null)
+            .map((_, i) => ({
+              alert_id: `crit-${i}`,
+              name: `Critical${i}`,
+              severity: "critical" as const,
+              state: "firing" as const,
+              message: "Critical alert",
+              labels: {},
+              annotations: {},
+              started_at: new Date().toISOString(),
+              ended_at: null,
+              fingerprint: `fp-crit-${i}`,
+            })),
+          ...Array(warningCount)
+            .fill(null)
+            .map((_, i) => ({
+              alert_id: `warn-${i}`,
+              name: `Warning${i}`,
+              severity: "warning" as const,
+              state: "firing" as const,
+              message: "Warning alert",
+              labels: {},
+              annotations: {},
+              started_at: new Date().toISOString(),
+              ended_at: null,
+              fingerprint: `fp-warn-${i}`,
+            })),
         ],
         selectedAlertId: null,
         pendingRemediations: [],
@@ -72,16 +80,19 @@ const defaultProps: AlertBadgeProps = {
   onClick: vi.fn(),
 };
 
-const renderWithStore = (
-  ui: ReactNode,
-  store = createTestStore()
-) => render(<Provider store={store}>{ui}</Provider>);
+const renderWithStore = (ui: ReactNode, store = createTestStore()) =>
+  render(<Provider store={store}>{ui}</Provider>);
 
 // =============================================================================
 // Tests
 // =============================================================================
 
 describe("AlertBadge", () => {
+  afterEach(() => {
+    cleanup();
+    vi.clearAllMocks();
+  });
+
   describe("Basic Rendering", () => {
     it("should render the badge", () => {
       renderWithStore(<AlertBadge {...defaultProps} />, createTestStore(1, 0));
@@ -116,7 +127,10 @@ describe("AlertBadge", () => {
     });
 
     it("should display 99+ for large counts", () => {
-      renderWithStore(<AlertBadge {...defaultProps} />, createTestStore(100, 50));
+      renderWithStore(
+        <AlertBadge {...defaultProps} />,
+        createTestStore(100, 50),
+      );
 
       expect(screen.getByTestId("alert-count")).toHaveTextContent("99+");
     });
@@ -140,7 +154,10 @@ describe("AlertBadge", () => {
     it("should pulse when there are new critical alerts", () => {
       // Set last critical alert time to now (within pulse window)
       const recentTime = Date.now() - 5000; // 5 seconds ago
-      renderWithStore(<AlertBadge {...defaultProps} />, createTestStore(1, 0, recentTime));
+      renderWithStore(
+        <AlertBadge {...defaultProps} />,
+        createTestStore(1, 0, recentTime),
+      );
 
       expect(screen.getByTestId("alert-badge")).toHaveClass("animate-pulse");
     });
@@ -148,22 +165,32 @@ describe("AlertBadge", () => {
     it("should not pulse when critical alerts are old", () => {
       // Set last critical alert time to 2 minutes ago (outside pulse window)
       const oldTime = Date.now() - 120000; // 2 minutes ago
-      renderWithStore(<AlertBadge {...defaultProps} />, createTestStore(1, 0, oldTime));
+      renderWithStore(
+        <AlertBadge {...defaultProps} />,
+        createTestStore(1, 0, oldTime),
+      );
 
-      expect(screen.getByTestId("alert-badge")).not.toHaveClass("animate-pulse");
+      expect(screen.getByTestId("alert-badge")).not.toHaveClass(
+        "animate-pulse",
+      );
     });
 
     it("should not pulse for warning-only alerts", () => {
       renderWithStore(<AlertBadge {...defaultProps} />, createTestStore(0, 2));
 
-      expect(screen.getByTestId("alert-badge")).not.toHaveClass("animate-pulse");
+      expect(screen.getByTestId("alert-badge")).not.toHaveClass(
+        "animate-pulse",
+      );
     });
   });
 
   describe("Interaction", () => {
     it("should call onClick when clicked", () => {
       const onClick = vi.fn();
-      renderWithStore(<AlertBadge {...defaultProps} onClick={onClick} />, createTestStore(1, 0));
+      renderWithStore(
+        <AlertBadge {...defaultProps} onClick={onClick} />,
+        createTestStore(1, 0),
+      );
 
       fireEvent.click(screen.getByTestId("alert-badge"));
 
@@ -179,7 +206,10 @@ describe("AlertBadge", () => {
 
     it("should trigger onClick on Enter key", () => {
       const onClick = vi.fn();
-      renderWithStore(<AlertBadge {...defaultProps} onClick={onClick} />, createTestStore(1, 0));
+      renderWithStore(
+        <AlertBadge {...defaultProps} onClick={onClick} />,
+        createTestStore(1, 0),
+      );
 
       fireEvent.keyDown(screen.getByTestId("alert-badge"), { key: "Enter" });
 
@@ -193,7 +223,7 @@ describe("AlertBadge", () => {
 
       expect(screen.getByTestId("alert-badge")).toHaveAttribute(
         "aria-label",
-        expect.stringContaining("5 alerts")
+        expect.stringContaining("5 alerts"),
       );
     });
 
@@ -202,7 +232,7 @@ describe("AlertBadge", () => {
 
       expect(screen.getByTestId("alert-badge")).toHaveAttribute(
         "aria-label",
-        expect.stringContaining("2 critical")
+        expect.stringContaining("2 critical"),
       );
     });
   });

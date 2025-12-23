@@ -131,7 +131,7 @@ describe("ToolInvocationDialog", () => {
   describe("rendering", () => {
     it("renders dialog when open", () => {
       renderWithProvider(
-        <ToolInvocationDialog open={true} onClose={mockOnClose} />
+        <ToolInvocationDialog open={true} onClose={mockOnClose} />,
       );
 
       expect(screen.getByRole("dialog")).toBeInTheDocument();
@@ -140,7 +140,7 @@ describe("ToolInvocationDialog", () => {
 
     it("does not render when closed", () => {
       renderWithProvider(
-        <ToolInvocationDialog open={false} onClose={mockOnClose} />
+        <ToolInvocationDialog open={false} onClose={mockOnClose} />,
       );
 
       expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
@@ -154,7 +154,7 @@ describe("ToolInvocationDialog", () => {
       });
 
       renderWithProvider(
-        <ToolInvocationDialog open={true} onClose={mockOnClose} />
+        <ToolInvocationDialog open={true} onClose={mockOnClose} />,
       );
 
       expect(screen.getByText(/loading/i)).toBeInTheDocument();
@@ -168,7 +168,7 @@ describe("ToolInvocationDialog", () => {
       });
 
       renderWithProvider(
-        <ToolInvocationDialog open={true} onClose={mockOnClose} />
+        <ToolInvocationDialog open={true} onClose={mockOnClose} />,
       );
 
       expect(screen.getByText(/error/i)).toBeInTheDocument();
@@ -178,7 +178,7 @@ describe("ToolInvocationDialog", () => {
   describe("tool selection", () => {
     it("displays list of available tools", () => {
       renderWithProvider(
-        <ToolInvocationDialog open={true} onClose={mockOnClose} />
+        <ToolInvocationDialog open={true} onClose={mockOnClose} />,
       );
 
       expect(screen.getByText("read_file")).toBeInTheDocument();
@@ -188,7 +188,7 @@ describe("ToolInvocationDialog", () => {
 
     it("shows tool description on selection", async () => {
       renderWithProvider(
-        <ToolInvocationDialog open={true} onClose={mockOnClose} />
+        <ToolInvocationDialog open={true} onClose={mockOnClose} />,
       );
 
       const toolSelect = screen.getByLabelText(/select tool/i);
@@ -199,7 +199,7 @@ describe("ToolInvocationDialog", () => {
 
     it("generates input fields from schema", async () => {
       renderWithProvider(
-        <ToolInvocationDialog open={true} onClose={mockOnClose} />
+        <ToolInvocationDialog open={true} onClose={mockOnClose} />,
       );
 
       const toolSelect = screen.getByLabelText(/select tool/i);
@@ -216,7 +216,7 @@ describe("ToolInvocationDialog", () => {
       });
 
       renderWithProvider(
-        <ToolInvocationDialog open={true} onClose={mockOnClose} />
+        <ToolInvocationDialog open={true} onClose={mockOnClose} />,
       );
 
       // Select tool
@@ -243,7 +243,7 @@ describe("ToolInvocationDialog", () => {
       });
 
       renderWithProvider(
-        <ToolInvocationDialog open={true} onClose={mockOnClose} />
+        <ToolInvocationDialog open={true} onClose={mockOnClose} />,
       );
 
       // Select tool and fill in arguments
@@ -264,7 +264,7 @@ describe("ToolInvocationDialog", () => {
 
     it("shows loading state during invocation", async () => {
       mockInvokeTool.mockImplementation(
-        () => new Promise((resolve) => setTimeout(resolve, 1000))
+        () => new Promise((resolve) => setTimeout(resolve, 1000)),
       );
 
       mockUseInvokeMcpToolMutation.mockReturnValue([
@@ -273,7 +273,7 @@ describe("ToolInvocationDialog", () => {
       ]);
 
       renderWithProvider(
-        <ToolInvocationDialog open={true} onClose={mockOnClose} />
+        <ToolInvocationDialog open={true} onClose={mockOnClose} />,
       );
 
       // Select tool and fill required field
@@ -298,7 +298,7 @@ describe("ToolInvocationDialog", () => {
       });
 
       renderWithProvider(
-        <ToolInvocationDialog open={true} onClose={mockOnClose} />
+        <ToolInvocationDialog open={true} onClose={mockOnClose} />,
       );
 
       // Select tool and fill in arguments
@@ -321,7 +321,7 @@ describe("ToolInvocationDialog", () => {
   describe("validation", () => {
     it("disables invoke button when required fields are empty", async () => {
       renderWithProvider(
-        <ToolInvocationDialog open={true} onClose={mockOnClose} />
+        <ToolInvocationDialog open={true} onClose={mockOnClose} />,
       );
 
       // Select tool but don't fill in arguments
@@ -334,7 +334,7 @@ describe("ToolInvocationDialog", () => {
 
     it("enables invoke button when required fields are filled", async () => {
       renderWithProvider(
-        <ToolInvocationDialog open={true} onClose={mockOnClose} />
+        <ToolInvocationDialog open={true} onClose={mockOnClose} />,
       );
 
       // Select tool and fill in required field
@@ -352,7 +352,7 @@ describe("ToolInvocationDialog", () => {
   describe("dialog actions", () => {
     it("calls onClose when cancel button clicked", async () => {
       renderWithProvider(
-        <ToolInvocationDialog open={true} onClose={mockOnClose} />
+        <ToolInvocationDialog open={true} onClose={mockOnClose} />,
       );
 
       const cancelButton = screen.getByRole("button", { name: /cancel/i });
@@ -363,7 +363,7 @@ describe("ToolInvocationDialog", () => {
 
     it("resets form when dialog is reopened", async () => {
       const { rerender } = renderWithProvider(
-        <ToolInvocationDialog open={true} onClose={mockOnClose} />
+        <ToolInvocationDialog open={true} onClose={mockOnClose} />,
       );
 
       // Select tool and fill in arguments
@@ -377,17 +377,19 @@ describe("ToolInvocationDialog", () => {
       rerender(
         <Provider store={createTestStore()}>
           <ToolInvocationDialog open={false} onClose={mockOnClose} />
-        </Provider>
+        </Provider>,
       );
 
       rerender(
         <Provider store={createTestStore()}>
           <ToolInvocationDialog open={true} onClose={mockOnClose} />
-        </Provider>
+        </Provider>,
       );
 
       // Form should be reset
-      expect(screen.queryByText("Read contents of a file")).not.toBeInTheDocument();
+      expect(
+        screen.queryByText("Read contents of a file"),
+      ).not.toBeInTheDocument();
     });
   });
 });

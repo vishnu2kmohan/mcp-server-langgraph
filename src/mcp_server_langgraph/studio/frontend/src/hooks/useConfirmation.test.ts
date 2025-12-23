@@ -4,8 +4,8 @@
  * Tests for the confirmation dialog management hook.
  */
 
-import { describe, it, expect } from "vitest";
-import { renderHook, act } from "@testing-library/react";
+import { describe, it, expect, afterEach } from "vitest";
+import { renderHook, act, cleanup } from "@testing-library/react";
 
 import { useConfirmation } from "./useConfirmation";
 import type { ConfirmationConfig } from "./useConfirmation";
@@ -15,6 +15,10 @@ import type { ConfirmationConfig } from "./useConfirmation";
 // =============================================================================
 
 describe("useConfirmation", () => {
+  afterEach(() => {
+    cleanup();
+  });
+
   describe("Initial State", () => {
     it("should return initial closed state", () => {
       const { result } = renderHook(() => useConfirmation());
@@ -52,7 +56,7 @@ describe("useConfirmation", () => {
       expect(result.current.state.isOpen).toBe(true);
       expect(result.current.state.title).toBe("Delete Item");
       expect(result.current.state.message).toBe(
-        "Are you sure you want to delete this item?"
+        "Are you sure you want to delete this item?",
       );
       expect(result.current.state.severity).toBe("warning");
     });
@@ -242,7 +246,8 @@ describe("useConfirmation", () => {
       });
 
       // Call onConfirm (simulating user clicking confirm button)
-      const stateWithHandlers = result.current.state as typeof result.current.state & {
+      const stateWithHandlers = result.current
+        .state as typeof result.current.state & {
         onConfirm: () => void;
       };
 
@@ -271,7 +276,8 @@ describe("useConfirmation", () => {
         });
       });
 
-      const stateWithHandlers = result.current.state as typeof result.current.state & {
+      const stateWithHandlers = result.current
+        .state as typeof result.current.state & {
         onCancel: () => void;
       };
 

@@ -54,9 +54,7 @@ export function ResourceViewer({ open, onClose }: ResourceViewerProps) {
   // Get selected resource details
   const selectedResource = useMemo(() => {
     if (!selectedUri || !resourcesData?.resources) return null;
-    return (
-      resourcesData.resources.find((r) => r.uri === selectedUri) || null
-    );
+    return resourcesData.resources.find((r) => r.uri === selectedUri) || null;
   }, [selectedUri, resourcesData?.resources]);
 
   // Handle resource selection
@@ -83,7 +81,7 @@ export function ResourceViewer({ open, onClose }: ResourceViewerProps) {
         setReadError("Failed to read resource");
       }
     },
-    [readResource]
+    [readResource],
   );
 
   // Handle copy to clipboard
@@ -266,13 +264,14 @@ export function ResourceViewer({ open, onClose }: ResourceViewerProps) {
                     )}
 
                     {/* Binary content (image) */}
-                    {content.blob && content.mime_type?.startsWith("image/") && (
-                      <img
-                        src={`data:${content.mime_type};base64,${content.blob}`}
-                        alt={selectedResource?.name || "Resource content"}
-                        className="max-w-full rounded-md"
-                      />
-                    )}
+                    {content.blob &&
+                      content.mime_type?.startsWith("image/") && (
+                        <img
+                          src={`data:${content.mime_type};base64,${content.blob}`}
+                          alt={selectedResource?.name || "Resource content"}
+                          className="max-w-full rounded-md"
+                        />
+                      )}
 
                     {/* Binary content (other) */}
                     {content.blob &&

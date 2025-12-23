@@ -135,9 +135,7 @@ describe("useAgentRequestWebSocket", () => {
         await vi.advanceTimersByTimeAsync(100);
       });
 
-      expect(MockWebSocket.instances[0].url).toContain(
-        "token=test-jwt-token"
-      );
+      expect(MockWebSocket.instances[0].url).toContain("token=test-jwt-token");
     });
 
     it("should return connected status when WebSocket opens", async () => {
@@ -181,10 +179,9 @@ describe("useAgentRequestWebSocket", () => {
 
     it("should call onApprovalRequired when message received", async () => {
       const onApprovalRequired = vi.fn();
-      renderHook(
-        () => useAgentRequestWebSocket({ onApprovalRequired }),
-        { wrapper: createWrapper(store) }
-      );
+      renderHook(() => useAgentRequestWebSocket({ onApprovalRequired }), {
+        wrapper: createWrapper(store),
+      });
 
       await act(async () => {
         await vi.advanceTimersByTimeAsync(100);
@@ -238,10 +235,9 @@ describe("useAgentRequestWebSocket", () => {
 
     it("should call onClarificationRequired when message received", async () => {
       const onClarificationRequired = vi.fn();
-      renderHook(
-        () => useAgentRequestWebSocket({ onClarificationRequired }),
-        { wrapper: createWrapper(store) }
-      );
+      renderHook(() => useAgentRequestWebSocket({ onClarificationRequired }), {
+        wrapper: createWrapper(store),
+      });
 
       await act(async () => {
         await vi.advanceTimersByTimeAsync(100);
@@ -255,7 +251,7 @@ describe("useAgentRequestWebSocket", () => {
       });
 
       expect(onClarificationRequired).toHaveBeenCalledWith(
-        mockClarificationPayload
+        mockClarificationPayload,
       );
     });
 
@@ -277,7 +273,7 @@ describe("useAgentRequestWebSocket", () => {
 
       expect(result.current.pendingClarifications).toHaveLength(1);
       expect(result.current.pendingClarifications[0].request_id).toBe(
-        "clar-001"
+        "clar-001",
       );
     });
   });
@@ -309,7 +305,7 @@ describe("useAgentRequestWebSocket", () => {
       });
 
       expect(onApprovalUpdated).toHaveBeenCalledWith(
-        mockApprovalUpdatedPayload
+        mockApprovalUpdatedPayload,
       );
     });
 
@@ -382,7 +378,7 @@ describe("useAgentRequestWebSocket", () => {
       });
 
       expect(onExecutionResumed).toHaveBeenCalledWith(
-        mockExecutionResumedPayload
+        mockExecutionResumedPayload,
       );
     });
   });
@@ -404,9 +400,7 @@ describe("useAgentRequestWebSocket", () => {
         await vi.advanceTimersByTimeAsync(30000);
       });
 
-      expect(ws.send).toHaveBeenCalledWith(
-        JSON.stringify({ type: "ping" })
-      );
+      expect(ws.send).toHaveBeenCalledWith(JSON.stringify({ type: "ping" }));
     });
   });
 
@@ -454,10 +448,9 @@ describe("useAgentRequestWebSocket", () => {
 
   describe("Subscription Restoration", () => {
     it("should send subscribe message with sessionId on connect", async () => {
-      renderHook(
-        () => useAgentRequestWebSocket({ sessionId: "session-123" }),
-        { wrapper: createWrapper(store) }
-      );
+      renderHook(() => useAgentRequestWebSocket({ sessionId: "session-123" }), {
+        wrapper: createWrapper(store),
+      });
 
       await act(async () => {
         await vi.advanceTimersByTimeAsync(100);
@@ -465,14 +458,14 @@ describe("useAgentRequestWebSocket", () => {
 
       const ws = MockWebSocket.instances[0];
       expect(ws.send).toHaveBeenCalledWith(
-        JSON.stringify({ type: "subscribe", session_id: "session-123" })
+        JSON.stringify({ type: "subscribe", session_id: "session-123" }),
       );
     });
 
     it("should request pending items on reconnect", async () => {
       const { result } = renderHook(
         () => useAgentRequestWebSocket({ sessionId: "session-123" }),
-        { wrapper: createWrapper(store) }
+        { wrapper: createWrapper(store) },
       );
 
       await act(async () => {
@@ -497,18 +490,18 @@ describe("useAgentRequestWebSocket", () => {
       const secondWs = MockWebSocket.instances[1];
       // Should send subscribe message on reconnect
       expect(secondWs.send).toHaveBeenCalledWith(
-        JSON.stringify({ type: "subscribe", session_id: "session-123" })
+        JSON.stringify({ type: "subscribe", session_id: "session-123" }),
       );
       // Should request pending items
       expect(secondWs.send).toHaveBeenCalledWith(
-        JSON.stringify({ type: "get_pending" })
+        JSON.stringify({ type: "get_pending" }),
       );
     });
 
     it("should preserve pending approvals during temporary disconnect", async () => {
       const { result } = renderHook(
         () => useAgentRequestWebSocket({ sessionId: "session-123" }),
-        { wrapper: createWrapper(store) }
+        { wrapper: createWrapper(store) },
       );
 
       await act(async () => {
@@ -558,7 +551,7 @@ describe("useAgentRequestWebSocket", () => {
 
       const ws = MockWebSocket.instances[0];
       const subscribeCalls = ws.send.mock.calls.filter(
-        (call: string[]) => call[0] && JSON.parse(call[0]).type === "subscribe"
+        (call: string[]) => call[0] && JSON.parse(call[0]).type === "subscribe",
       );
       expect(subscribeCalls).toHaveLength(0);
     });

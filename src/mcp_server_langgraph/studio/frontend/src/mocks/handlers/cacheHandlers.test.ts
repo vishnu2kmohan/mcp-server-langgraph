@@ -26,8 +26,8 @@ describe("cacheHandlers", () => {
 
   afterEach(() => {
     server.resetHandlers();
-      vi.clearAllMocks();
-      vi.restoreAllMocks();
+    vi.clearAllMocks();
+    vi.restoreAllMocks();
   });
 
   describe("handler exports", () => {
@@ -223,19 +223,25 @@ describe("cacheHandlers", () => {
         fetch("/api/v1/cache/user:123:profile", {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ value: { data: "profile" }, ttl_seconds: 300 }),
+          body: JSON.stringify({
+            value: { data: "profile" },
+            ttl_seconds: 300,
+          }),
         }),
         fetch("/api/v1/cache/user:123:settings", {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ value: { data: "settings" }, ttl_seconds: 300 }),
+          body: JSON.stringify({
+            value: { data: "settings" },
+            ttl_seconds: 300,
+          }),
         }),
       ]);
 
       // Delete by prefix
       const response = await fetch(
         `/api/v1/cache/prefix/${encodeURIComponent("user:123")}`,
-        { method: "DELETE" }
+        { method: "DELETE" },
       );
 
       expect(response.ok).toBe(true);
@@ -249,7 +255,7 @@ describe("cacheHandlers", () => {
     it("should return zero count for non-matching prefix", async () => {
       const response = await fetch(
         `/api/v1/cache/prefix/${encodeURIComponent("nonexistent:prefix")}`,
-        { method: "DELETE" }
+        { method: "DELETE" },
       );
 
       expect(response.ok).toBe(true);

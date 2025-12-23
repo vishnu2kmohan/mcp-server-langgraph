@@ -19,7 +19,10 @@ import {
 } from "lucide-react";
 
 import { cn } from "../../../utils/cn";
-import { useWorkflowExecution, type ExecutionStep } from "../hooks/useWorkflowExecution";
+import {
+  useWorkflowExecution,
+  type ExecutionStep,
+} from "../hooks/useWorkflowExecution";
 import type { ExecutionTraceTabProps } from "../types";
 
 // =============================================================================
@@ -81,7 +84,8 @@ function ExecutionStepRow({
         "border-b border-gray-100 dark:border-gray-800",
         "hover:bg-gray-50 dark:hover:bg-gray-800/50",
         isSelected && "bg-blue-50 dark:bg-blue-900/20",
-        isCurrent && "bg-yellow-50 dark:bg-yellow-900/20 border-l-2 border-l-yellow-500"
+        isCurrent &&
+          "bg-yellow-50 dark:bg-yellow-900/20 border-l-2 border-l-yellow-500",
       )}
       onClick={onSelect}
     >
@@ -95,7 +99,9 @@ function ExecutionStepRow({
         }}
         className="p-0.5 hover:bg-gray-200 dark:hover:bg-gray-700 rounded"
         aria-expanded={isExpanded}
-        aria-label={isExpanded ? `Collapse ${step.nodeName}` : `Expand ${step.nodeName}`}
+        aria-label={
+          isExpanded ? `Collapse ${step.nodeName}` : `Expand ${step.nodeName}`
+        }
       >
         {isExpanded ? (
           <ChevronDown size={12} className="text-gray-500" />
@@ -206,7 +212,7 @@ export function ExecutionTraceTab({
         onNodeHighlight?.(step.nodeId);
       }
     },
-    [selectedStepId, onNodeHighlight]
+    [selectedStepId, onNodeHighlight],
   );
 
   // Handle step expand/collapse
@@ -270,7 +276,9 @@ export function ExecutionTraceTab({
         >
           <Workflow size={32} className="mb-2 opacity-50" />
           <p className="text-sm">No execution data available</p>
-          <p className="text-xs mt-1">Run the workflow to see execution traces</p>
+          <p className="text-xs mt-1">
+            Run the workflow to see execution traces
+          </p>
         </div>
       </div>
     );

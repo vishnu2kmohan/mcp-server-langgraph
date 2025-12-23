@@ -116,7 +116,10 @@ const _MOCK_PROMPT_DETAIL = {
   messages: [
     {
       role: "user",
-      content: { type: "text", text: "Summarize the given text: {\"text\":\"Hello world\"}" },
+      content: {
+        type: "text",
+        text: 'Summarize the given text: {"text":"Hello world"}',
+      },
     },
   ],
 };
@@ -169,14 +172,16 @@ describe("MCP RTK Query Endpoints", () => {
       // Verify data structure (not exact match due to dynamic values)
       expect(result.current.data?.resources).toHaveLength(3);
       expect(result.current.data?.resources[0].name).toBe("README.md");
-      expect(result.current.data?.resources[0].uri).toBe("file:///project/README.md");
+      expect(result.current.data?.resources[0].uri).toBe(
+        "file:///project/README.md",
+      );
     });
 
     it("handles empty resources list", async () => {
       server.use(
         http.get("/api/v1/mcp/resources", () => {
           return HttpResponse.json({ resources: [] });
-        })
+        }),
       );
 
       const { result } = renderHook(() => useListMcpResourcesQuery(), {
@@ -196,7 +201,9 @@ describe("MCP RTK Query Endpoints", () => {
 
       const [readResource] = result.current;
 
-      const response = await readResource({ uri: "file:///project/README.md" }).unwrap();
+      const response = await readResource({
+        uri: "file:///project/README.md",
+      }).unwrap();
 
       expect(response.contents).toHaveLength(1);
       expect(response.contents[0].text).toContain("Project README");
@@ -208,9 +215,9 @@ describe("MCP RTK Query Endpoints", () => {
         http.get("/api/v1/mcp/resources/content", () => {
           return HttpResponse.json(
             { detail: "Resource not found" },
-            { status: 404 }
+            { status: 404 },
           );
-        })
+        }),
       );
 
       const { result } = renderHook(() => useReadMcpResourceMutation(), {
@@ -220,7 +227,7 @@ describe("MCP RTK Query Endpoints", () => {
       const [readResource] = result.current;
 
       await expect(
-        readResource({ uri: "file:///nonexistent.md" }).unwrap()
+        readResource({ uri: "file:///nonexistent.md" }).unwrap(),
       ).rejects.toThrow();
     });
   });
@@ -250,9 +257,9 @@ describe("MCP RTK Query Endpoints", () => {
         http.post("/api/v1/mcp/tools/call", () => {
           return HttpResponse.json(
             { content: [{ type: "text", text: "Error" }], isError: true },
-            { status: 200 }
+            { status: 200 },
           );
-        })
+        }),
       );
 
       const { result } = renderHook(() => useInvokeMcpToolMutation(), {
@@ -338,7 +345,7 @@ describe("MCP RTK Query Endpoints", () => {
             action: "decline",
             content: null,
           });
-        })
+        }),
       );
 
       const { result } = renderHook(() => useRequestMcpElicitationMutation(), {
@@ -371,7 +378,9 @@ describe("MCP RTK Query Endpoints", () => {
       // Verify data structure (not exact match due to dynamic values)
       expect(result.current.data?.prompts).toHaveLength(2);
       expect(result.current.data?.prompts[0].name).toBe("summarize");
-      expect(result.current.data?.prompts[0].description).toBe("Summarize the given text");
+      expect(result.current.data?.prompts[0].description).toBe(
+        "Summarize the given text",
+      );
     });
   });
 
@@ -398,9 +407,9 @@ describe("MCP RTK Query Endpoints", () => {
         http.post("/api/v1/mcp/prompts/get", () => {
           return HttpResponse.json(
             { detail: "Prompt not found" },
-            { status: 404 }
+            { status: 404 },
           );
-        })
+        }),
       );
 
       const { result } = renderHook(() => useGetMcpPromptMutation(), {
@@ -410,7 +419,7 @@ describe("MCP RTK Query Endpoints", () => {
       const [getPrompt] = result.current;
 
       await expect(
-        getPrompt({ name: "nonexistent" }).unwrap()
+        getPrompt({ name: "nonexistent" }).unwrap(),
       ).rejects.toThrow();
     });
   });
@@ -429,7 +438,7 @@ describe("MCP RTK Query Endpoints", () => {
 
       const { result: tasksResult } = renderHook(
         () => api.endpoints.listMcpTasks.useQuery(),
-        { wrapper: taskWrapper }
+        { wrapper: taskWrapper },
       );
 
       await waitFor(() => expect(tasksResult.current.isSuccess).toBe(true));
@@ -437,14 +446,14 @@ describe("MCP RTK Query Endpoints", () => {
       // Get initial fetch count from RTK Query state
       const initialState = store.getState().api.queries;
       const initialTasksQuery = Object.values(initialState).find(
-        (q) => q && "endpointName" in q && q.endpointName === "listMcpTasks"
+        (q) => q && "endpointName" in q && q.endpointName === "listMcpTasks",
       );
       expect(initialTasksQuery).toBeDefined();
 
       // Invoke a tool (should invalidate TASKS) - use valid mock tool name
       const { result: toolResult } = renderHook(
         () => useInvokeMcpToolMutation(),
-        { wrapper: taskWrapper }
+        { wrapper: taskWrapper },
       );
 
       const [invokeTool] = toolResult.current;
@@ -457,7 +466,7 @@ describe("MCP RTK Query Endpoints", () => {
       await waitFor(() => {
         const state = store.getState().api.queries;
         const tasksQuery = Object.values(state).find(
-          (q) => q && "endpointName" in q && q.endpointName === "listMcpTasks"
+          (q) => q && "endpointName" in q && q.endpointName === "listMcpTasks",
         );
         // Query should still exist (refetched after invalidation)
         return tasksQuery !== undefined;
@@ -473,7 +482,7 @@ describe("MCP RTK Query Endpoints", () => {
       // Fetch a specific task - use valid mock task ID
       const { result: taskResult } = renderHook(
         () => api.endpoints.getMcpTask.useQuery("task-1"),
-        { wrapper: taskWrapper }
+        { wrapper: taskWrapper },
       );
 
       await waitFor(() => expect(taskResult.current.isSuccess).toBe(true));
@@ -481,7 +490,7 @@ describe("MCP RTK Query Endpoints", () => {
       // Cancel the task
       const { result: cancelResult } = renderHook(
         () => api.endpoints.cancelMcpTask.useMutation(),
-        { wrapper: taskWrapper }
+        { wrapper: taskWrapper },
       );
 
       const [cancelTask] = cancelResult.current;
@@ -529,7 +538,7 @@ describe("MCP RTK Query Endpoints", () => {
 
       const { result } = renderHook(
         () => api.endpoints.listMcpTools.useQuery(),
-        { wrapper: cacheWrapper }
+        { wrapper: cacheWrapper },
       );
 
       await waitFor(() => expect(result.current.isSuccess).toBe(true));
@@ -544,7 +553,7 @@ describe("MCP RTK Query Endpoints", () => {
 
       const { result } = renderHook(
         () => api.endpoints.listMcpPrompts.useQuery(),
-        { wrapper: cacheWrapper }
+        { wrapper: cacheWrapper },
       );
 
       await waitFor(() => expect(result.current.isSuccess).toBe(true));
@@ -558,19 +567,17 @@ describe("MCP RTK Query Endpoints", () => {
       );
 
       // First query
-      const { result: result1 } = renderHook(
-        () => useListMcpResourcesQuery(),
-        { wrapper: cacheWrapper }
-      );
+      const { result: result1 } = renderHook(() => useListMcpResourcesQuery(), {
+        wrapper: cacheWrapper,
+      });
 
       await waitFor(() => expect(result1.current.isSuccess).toBe(true));
       const firstData = result1.current.data;
 
       // Second query uses same store - should use cached data
-      const { result: result2 } = renderHook(
-        () => useListMcpResourcesQuery(),
-        { wrapper: cacheWrapper }
-      );
+      const { result: result2 } = renderHook(() => useListMcpResourcesQuery(), {
+        wrapper: cacheWrapper,
+      });
 
       // Should immediately have data (from cache)
       await waitFor(() => expect(result2.current.isSuccess).toBe(true));

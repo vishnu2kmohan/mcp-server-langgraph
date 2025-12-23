@@ -131,7 +131,10 @@ export function ObservabilityPage() {
     (tab: ObservabilityTab) => {
       setActiveTab(tab);
       // Construct the new path based on current path structure
-      const basePath = location.pathname.replace(/\/(traces|logs|metrics|alerts)$/, "");
+      const basePath = location.pathname.replace(
+        /\/(traces|logs|metrics|alerts)$/,
+        "",
+      );
       const newPath = tab === "traces" ? basePath : `${basePath}/${tab}`;
       navigate(newPath, { replace: true });
     },

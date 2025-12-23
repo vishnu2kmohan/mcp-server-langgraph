@@ -182,7 +182,7 @@ describe("ResourceViewer", () => {
       await userEvent.click(readmeItem);
 
       expect(
-        screen.getByText("Main project documentation")
+        screen.getByText("Main project documentation"),
       ).toBeInTheDocument();
     });
 
@@ -223,7 +223,7 @@ describe("ResourceViewer", () => {
 
       await waitFor(() => {
         expect(
-          screen.getByText(/This is the project documentation/)
+          screen.getByText(/This is the project documentation/),
         ).toBeInTheDocument();
       });
     });
@@ -249,7 +249,7 @@ describe("ResourceViewer", () => {
       mockReadResource.mockReturnValue({
         unwrap: () =>
           new Promise((resolve) =>
-            setTimeout(() => resolve(MOCK_TEXT_CONTENT), 1000)
+            setTimeout(() => resolve(MOCK_TEXT_CONTENT), 1000),
           ),
       });
 
@@ -296,7 +296,7 @@ describe("ResourceViewer", () => {
       await waitFor(() => {
         // Should display the content text (unique phrase from content)
         expect(
-          screen.getByText(/This is the project documentation/)
+          screen.getByText(/This is the project documentation/),
         ).toBeInTheDocument();
       });
     });
@@ -340,7 +340,7 @@ describe("ResourceViewer", () => {
       });
 
       const { rerender } = renderWithProvider(
-        <ResourceViewer open={true} onClose={mockOnClose} />
+        <ResourceViewer open={true} onClose={mockOnClose} />,
       );
 
       // Select a resource
@@ -349,7 +349,7 @@ describe("ResourceViewer", () => {
 
       await waitFor(() => {
         expect(
-          screen.getByText(/This is the project documentation/)
+          screen.getByText(/This is the project documentation/),
         ).toBeInTheDocument();
       });
 
@@ -357,18 +357,18 @@ describe("ResourceViewer", () => {
       rerender(
         <Provider store={createTestStore()}>
           <ResourceViewer open={false} onClose={mockOnClose} />
-        </Provider>
+        </Provider>,
       );
 
       rerender(
         <Provider store={createTestStore()}>
           <ResourceViewer open={true} onClose={mockOnClose} />
-        </Provider>
+        </Provider>,
       );
 
       // Content should be reset
       expect(
-        screen.queryByText(/This is the project documentation/)
+        screen.queryByText(/This is the project documentation/),
       ).not.toBeInTheDocument();
     });
   });

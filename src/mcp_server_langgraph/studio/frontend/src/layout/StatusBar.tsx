@@ -15,7 +15,14 @@
  * - Keyboard shortcut hints
  * - Feature flag toggle (dev mode)
  */
-import { Cpu, Hash, User, ListTodo, AlertTriangle, Terminal } from "lucide-react";
+import {
+  Cpu,
+  Hash,
+  User,
+  ListTodo,
+  AlertTriangle,
+  Terminal,
+} from "lucide-react";
 import { cn } from "../utils/cn";
 import { FeatureFlagToggle } from "./FeatureFlagToggle";
 
@@ -157,7 +164,10 @@ export function StatusBar({
 
         {/* User indicator */}
         {userName && (
-          <span data-testid="user-indicator" className="flex items-center gap-1">
+          <span
+            data-testid="user-indicator"
+            className="flex items-center gap-1"
+          >
             <User size={12} aria-hidden="true" />
             <span>{userName}</span>
           </span>

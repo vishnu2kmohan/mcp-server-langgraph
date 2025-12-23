@@ -47,7 +47,7 @@ describe("disclosureSlice", () => {
     it("should set level to beginner", () => {
       const state = disclosureReducer(
         initialState,
-        setDisclosureLevel("beginner")
+        setDisclosureLevel("beginner"),
       );
       expect(state.level).toBe("beginner");
     });
@@ -55,7 +55,7 @@ describe("disclosureSlice", () => {
     it("should set level to intermediate", () => {
       const state = disclosureReducer(
         initialState,
-        setDisclosureLevel("intermediate")
+        setDisclosureLevel("intermediate"),
       );
       expect(state.level).toBe("intermediate");
     });
@@ -63,7 +63,7 @@ describe("disclosureSlice", () => {
     it("should set level to advanced", () => {
       const state = disclosureReducer(
         initialState,
-        setDisclosureLevel("advanced")
+        setDisclosureLevel("advanced"),
       );
       expect(state.level).toBe("advanced");
     });
@@ -71,7 +71,7 @@ describe("disclosureSlice", () => {
     it("should set level to expert", () => {
       const state = disclosureReducer(
         initialState,
-        setDisclosureLevel("expert")
+        setDisclosureLevel("expert"),
       );
       expect(state.level).toBe("expert");
     });
@@ -83,7 +83,7 @@ describe("disclosureSlice", () => {
       };
       const state = disclosureReducer(
         stateWithAutoDetect,
-        setDisclosureLevel("advanced")
+        setDisclosureLevel("advanced"),
       );
       expect(state.autoDetect).toBe(false);
     });
@@ -92,7 +92,7 @@ describe("disclosureSlice", () => {
       const before = Date.now();
       const state = disclosureReducer(
         initialState,
-        setDisclosureLevel("intermediate")
+        setDisclosureLevel("intermediate"),
       );
       const after = Date.now();
 
@@ -171,7 +171,10 @@ describe("disclosureSlice", () => {
 
   describe("recordAction", () => {
     it("should add action to history", () => {
-      const state = disclosureReducer(initialState, recordAction("click_button"));
+      const state = disclosureReducer(
+        initialState,
+        recordAction("click_button"),
+      );
       expect(state.actionsHistory).toContain("click_button");
     });
 
@@ -310,10 +313,10 @@ describe("disclosureSlice", () => {
 
     it("should have correct level progression", () => {
       expect(levels.indexOf("beginner")).toBeLessThan(
-        levels.indexOf("intermediate")
+        levels.indexOf("intermediate"),
       );
       expect(levels.indexOf("intermediate")).toBeLessThan(
-        levels.indexOf("advanced")
+        levels.indexOf("advanced"),
       );
       expect(levels.indexOf("advanced")).toBeLessThan(levels.indexOf("expert"));
     });

@@ -113,7 +113,7 @@ function InsightCard({ insight, onDismiss }: InsightCardProps) {
       data-testid={`ai-insight-${insight.id}`}
       className={cn(
         "relative border rounded-lg p-3 transition-colors",
-        getSeverityColor(insight.severity)
+        getSeverityColor(insight.severity),
       )}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
@@ -124,7 +124,7 @@ function InsightCard({ insight, onDismiss }: InsightCardProps) {
         data-severity={insight.severity}
         className={cn(
           "absolute left-0 top-0 bottom-0 w-1 rounded-l-lg",
-          getSeverityIndicatorColor(insight.severity)
+          getSeverityIndicatorColor(insight.severity),
         )}
       />
 
@@ -143,7 +143,7 @@ function InsightCard({ insight, onDismiss }: InsightCardProps) {
             <span
               className={cn(
                 "text-xs px-1.5 py-0.5 rounded-full font-medium",
-                getTypeBadgeColor(insight.type)
+                getTypeBadgeColor(insight.type),
               )}
             >
               {insight.type}
@@ -183,7 +183,7 @@ function InsightCard({ insight, onDismiss }: InsightCardProps) {
             "absolute top-1 right-1 p-1 rounded",
             "bg-gray-200/80 dark:bg-gray-700/80",
             "hover:bg-gray-300 dark:hover:bg-gray-600",
-            "text-gray-600 dark:text-gray-400"
+            "text-gray-600 dark:text-gray-400",
           )}
           aria-label="Dismiss insight"
         >
@@ -211,7 +211,7 @@ function LayoutSuggestionBanner({
       className={cn(
         "flex items-center justify-between gap-4 p-3 mb-3",
         "bg-primary-50 dark:bg-primary-900/20",
-        "border border-primary-200 dark:border-primary-700 rounded-lg"
+        "border border-primary-200 dark:border-primary-700 rounded-lg",
       )}
     >
       <div className="flex items-center gap-2">
@@ -236,7 +236,7 @@ function LayoutSuggestionBanner({
         className={cn(
           "px-3 py-1.5 text-xs font-medium rounded",
           "bg-primary-500 hover:bg-primary-600",
-          "text-white"
+          "text-white",
         )}
       >
         Apply
@@ -249,7 +249,10 @@ function LayoutSuggestionBanner({
 // Main Component
 // =============================================================================
 
-export function AIInsightsTab({ context, contextEntityId }: AIInsightsTabProps) {
+export function AIInsightsTab({
+  context,
+  contextEntityId,
+}: AIInsightsTabProps) {
   const [filter, setFilter] = useState<FilterType>("all");
 
   const {
@@ -321,7 +324,10 @@ export function AIInsightsTab({ context, contextEntityId }: AIInsightsTabProps) 
       >
         {/* Toolbar */}
         <div className="flex items-center gap-2 px-2 py-1 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
-          <h2 role="heading" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+          <h2
+            role="heading"
+            className="text-sm font-medium text-gray-700 dark:text-gray-300"
+          >
             AI Insights
           </h2>
           <div className="flex-1" />
@@ -355,7 +361,10 @@ export function AIInsightsTab({ context, contextEntityId }: AIInsightsTabProps) 
     >
       {/* Toolbar */}
       <div className="flex items-center gap-2 px-2 py-1 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
-        <h2 role="heading" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+        <h2
+          role="heading"
+          className="text-sm font-medium text-gray-700 dark:text-gray-300"
+        >
           AI Insights
         </h2>
 
@@ -369,7 +378,7 @@ export function AIInsightsTab({ context, contextEntityId }: AIInsightsTabProps) 
               "px-2 py-1 text-xs rounded",
               filter === "all"
                 ? "bg-primary-100 dark:bg-primary-900/30 text-primary-600"
-                : "hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-500"
+                : "hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-500",
             )}
           >
             All
@@ -382,7 +391,7 @@ export function AIInsightsTab({ context, contextEntityId }: AIInsightsTabProps) 
               "px-2 py-1 text-xs rounded",
               filter === "anomaly"
                 ? "bg-primary-100 dark:bg-primary-900/30 text-primary-600"
-                : "hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-500"
+                : "hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-500",
             )}
           >
             Anomaly
@@ -395,7 +404,7 @@ export function AIInsightsTab({ context, contextEntityId }: AIInsightsTabProps) 
               "px-2 py-1 text-xs rounded",
               filter === "suggestion"
                 ? "bg-primary-100 dark:bg-primary-900/30 text-primary-600"
-                : "hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-500"
+                : "hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-500",
             )}
           >
             Suggestion
@@ -417,7 +426,8 @@ export function AIInsightsTab({ context, contextEntityId }: AIInsightsTabProps) 
 
         {/* Insight count */}
         <span className="text-xs text-gray-500">
-          {filteredInsights.length} insight{filteredInsights.length !== 1 ? "s" : ""}
+          {filteredInsights.length} insight
+          {filteredInsights.length !== 1 ? "s" : ""}
         </span>
       </div>
 

@@ -52,12 +52,14 @@ export interface UseDevToolsAIReturn {
 // Hook Implementation
 // =============================================================================
 
-export function useDevToolsAI(options: UseDevToolsAIOptions): UseDevToolsAIReturn {
+export function useDevToolsAI(
+  options: UseDevToolsAIOptions,
+): UseDevToolsAIReturn {
   const { context, entityId, userId, enabled, onApplyLayout } = options;
 
-  const [suggestedLayout, setSuggestedLayout] = useState<DevToolsTabId[] | null>(
-    null
-  );
+  const [suggestedLayout, setSuggestedLayout] = useState<
+    DevToolsTabId[] | null
+  >(null);
   const [confidence, setConfidence] = useState(0);
   const [insights, setInsights] = useState<AIInsight[]>([]);
   const [localError, setLocalError] = useState<Error | null>(null);
@@ -74,7 +76,7 @@ export function useDevToolsAI(options: UseDevToolsAIOptions): UseDevToolsAIRetur
         },
       },
     ],
-    [context, entityId]
+    [context, entityId],
   );
 
   // Use the Studio AI hook
@@ -110,8 +112,8 @@ export function useDevToolsAI(options: UseDevToolsAIOptions): UseDevToolsAIRetur
         }
       }
     }
-  // Only depend on specific properties to avoid re-renders when studioAI object reference changes
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // Only depend on specific properties to avoid re-renders when studioAI object reference changes
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [studioAI.results, studioAI.getResult]);
 
   // Handle errors

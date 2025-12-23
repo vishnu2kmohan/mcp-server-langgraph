@@ -805,7 +805,10 @@ describe("authSlice", () => {
       await store.dispatch(initializeAuth());
 
       // Should have refreshed the token
-      expect(mockFetch).toHaveBeenCalledWith("/api/v1/auth/refresh", expect.any(Object));
+      expect(mockFetch).toHaveBeenCalledWith(
+        "/api/v1/auth/refresh",
+        expect.any(Object),
+      );
       // Should have called /me with new token
       expect(mockFetch).toHaveBeenCalledWith("/api/v1/me", {
         headers: { Authorization: "Bearer new-access-token" },
@@ -892,7 +895,9 @@ describe("authSlice", () => {
       await store.dispatch(switchOrganization("org-2"));
 
       // Should use default error message
-      expect(selectAuthError(store.getState())).toBe("Failed to switch organization");
+      expect(selectAuthError(store.getState())).toBe(
+        "Failed to switch organization",
+      );
     });
 
     it("should set error when organization not found in list", async () => {

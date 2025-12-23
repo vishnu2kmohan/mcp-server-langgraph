@@ -190,7 +190,9 @@ const DEFAULT_CONTEXT_VALUE: AIIntelligenceContextValue = {
 // Context
 // =============================================================================
 
-const AIIntelligenceContext = createContext<AIIntelligenceContextValue>(DEFAULT_CONTEXT_VALUE);
+const AIIntelligenceContext = createContext<AIIntelligenceContextValue>(
+  DEFAULT_CONTEXT_VALUE,
+);
 
 // =============================================================================
 // Provider
@@ -216,7 +218,7 @@ export function AIIntelligenceProvider({
       ...DEFAULT_FEATURES,
       ...config.features,
     }),
-    [config.features]
+    [config.features],
   );
 
   const cacheConfig: Required<AICacheConfig> = useMemo(
@@ -224,7 +226,7 @@ export function AIIntelligenceProvider({
       ...DEFAULT_CACHE_CONFIG,
       ...config.cacheConfig,
     }),
-    [config.cacheConfig]
+    [config.cacheConfig],
   );
 
   const webSocket: Required<AIWebSocketConfig> = useMemo(
@@ -232,7 +234,7 @@ export function AIIntelligenceProvider({
       ...DEFAULT_WEBSOCKET_CONFIG,
       ...config.webSocket,
     }),
-    [config.webSocket]
+    [config.webSocket],
   );
 
   const reportError = useCallback((err: Error) => {
@@ -267,7 +269,8 @@ export function AIIntelligenceProvider({
       isTraceIntelligenceEnabled: enabled && features.traceIntelligence,
       isCanvasIntelligenceEnabled: enabled && features.canvasIntelligence,
       isSessionIntelligenceEnabled: enabled && features.sessionIntelligence,
-      isConversationIntelligenceEnabled: enabled && features.conversationIntelligence,
+      isConversationIntelligenceEnabled:
+        enabled && features.conversationIntelligence,
     }),
     [
       enabled,
@@ -279,7 +282,7 @@ export function AIIntelligenceProvider({
       error,
       reportError,
       clearError,
-    ]
+    ],
   );
 
   return (

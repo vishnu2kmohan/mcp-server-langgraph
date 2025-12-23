@@ -212,11 +212,7 @@ describe("PersonaRouter", () => {
         persona: "user",
         subPersona: "bob",
       });
-      renderWithRouter(
-        store,
-        "/studio/v2/admin",
-        <div>Admin Content</div>,
-      );
+      renderWithRouter(store, "/studio/v2/admin", <div>Admin Content</div>);
 
       await waitFor(() => {
         expect(screen.getByText(/request access/i)).toBeInTheDocument();

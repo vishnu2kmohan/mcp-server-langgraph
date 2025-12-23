@@ -72,7 +72,7 @@ const cacheStore = new Map<string, CacheEntry<unknown>>();
  */
 export function createCacheKey(
   taskType: string,
-  params: Record<string, unknown>
+  params: Record<string, unknown>,
 ): string {
   const sortedParams = Object.keys(params)
     .sort()
@@ -99,7 +99,9 @@ function isEntryStale(entry: CacheEntry<unknown>): boolean {
  * @param options - Cache configuration options
  * @returns Cached data and cache management functions
  */
-export function useAICache<T>(options: UseAICacheOptions<T>): UseAICacheResult<T> {
+export function useAICache<T>(
+  options: UseAICacheOptions<T>,
+): UseAICacheResult<T> {
   const {
     cacheKey,
     fetchFn,
@@ -143,7 +145,7 @@ export function useAICache<T>(options: UseAICacheOptions<T>): UseAICacheResult<T
       cacheStore.set(cacheKey, entry);
       return entry;
     },
-    [cacheKey, staleTime]
+    [cacheKey, staleTime],
   );
 
   /**
@@ -184,7 +186,8 @@ export function useAICache<T>(options: UseAICacheOptions<T>): UseAICacheResult<T
         }
       } catch (err) {
         if (isMounted.current) {
-          const fetchError = err instanceof Error ? err : new Error(String(err));
+          const fetchError =
+            err instanceof Error ? err : new Error(String(err));
           setError(fetchError);
 
           // Return stale data if available and configured
@@ -203,7 +206,7 @@ export function useAICache<T>(options: UseAICacheOptions<T>): UseAICacheResult<T
         }
       }
     },
-    [enabled, getCachedEntry, setCacheEntry, returnStaleOnError]
+    [enabled, getCachedEntry, setCacheEntry, returnStaleOnError],
   );
 
   /**
@@ -254,7 +257,16 @@ export function useAICache<T>(options: UseAICacheOptions<T>): UseAICacheResult<T
       forceRefetch,
       invalidate,
     }),
-    [data, isLoading, isStale, error, cachedAt, refetch, forceRefetch, invalidate]
+    [
+      data,
+      isLoading,
+      isStale,
+      error,
+      cachedAt,
+      refetch,
+      forceRefetch,
+      invalidate,
+    ],
   );
 }
 

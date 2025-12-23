@@ -10,8 +10,8 @@
  * - Category filtering
  */
 
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { renderHook, act } from "@testing-library/react";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { renderHook, act, cleanup } from "@testing-library/react";
 import { useCommandPalette, Command } from "./useCommandPalette";
 
 describe("useCommandPalette", () => {
@@ -54,6 +54,11 @@ describe("useCommandPalette", () => {
     vi.clearAllMocks();
     // Clear localStorage
     localStorage.clear();
+  });
+
+  afterEach(() => {
+    cleanup();
+    vi.clearAllMocks();
   });
 
   // ===========================================================================

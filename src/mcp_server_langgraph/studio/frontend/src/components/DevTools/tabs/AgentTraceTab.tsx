@@ -52,16 +52,10 @@ function NodeStatusIcon({ status, nodeId }: NodeStatusIconProps) {
   return (
     <span data-testid={`node-status-${nodeId}`}>
       {status === "completed" && (
-        <CheckCircle
-          {...iconProps}
-          className="text-green-500"
-        />
+        <CheckCircle {...iconProps} className="text-green-500" />
       )}
       {status === "running" && (
-        <Loader2
-          {...iconProps}
-          className="text-blue-500 animate-spin"
-        />
+        <Loader2 {...iconProps} className="text-blue-500 animate-spin" />
       )}
       {status === "pending" && (
         <Clock {...iconProps} className="text-gray-400" />
@@ -98,7 +92,7 @@ function TraceNodeRow({
         "flex items-center gap-2 px-2 py-1.5 cursor-pointer",
         "border-b border-gray-100 dark:border-gray-800",
         "hover:bg-gray-50 dark:hover:bg-gray-800/50",
-        isSelected && "bg-blue-50 dark:bg-blue-900/20"
+        isSelected && "bg-blue-50 dark:bg-blue-900/20",
       )}
       onClick={onSelect}
     >
@@ -112,7 +106,9 @@ function TraceNodeRow({
         }}
         className="p-0.5 hover:bg-gray-200 dark:hover:bg-gray-700 rounded"
         aria-expanded={isExpanded}
-        aria-label={isExpanded ? `Collapse ${node.name}` : `Expand ${node.name}`}
+        aria-label={
+          isExpanded ? `Collapse ${node.name}` : `Expand ${node.name}`
+        }
       >
         {isExpanded ? (
           <ChevronDown size={12} className="text-gray-500" />
@@ -190,7 +186,8 @@ interface TimelineNodeProps {
 }
 
 function TimelineNode({ node, totalDuration, startOffset }: TimelineNodeProps) {
-  const width = totalDuration > 0 ? ((node.duration ?? 0) / totalDuration) * 100 : 0;
+  const width =
+    totalDuration > 0 ? ((node.duration ?? 0) / totalDuration) * 100 : 0;
   const left = totalDuration > 0 ? (startOffset / totalDuration) * 100 : 0;
 
   const statusColors: Record<TraceNode["status"], string> = {
@@ -248,7 +245,7 @@ export function AgentTraceTab({
         onNodeHighlight?.(nodeId);
       }
     },
-    [selectedNodeId, onNodeHighlight]
+    [selectedNodeId, onNodeHighlight],
   );
 
   // Handle node expand/collapse
@@ -340,9 +337,7 @@ export function AgentTraceTab({
         {/* Session indicator */}
         <div className="flex items-center gap-1.5">
           <Activity size={14} className="text-gray-500" aria-hidden="true" />
-          <h3 className="text-xs text-gray-600 dark:text-gray-400">
-            Trace
-          </h3>
+          <h3 className="text-xs text-gray-600 dark:text-gray-400">Trace</h3>
           <span className="text-xs text-gray-500 dark:text-gray-500 ml-1 px-1.5 py-0.5 bg-gray-100 dark:bg-gray-700 rounded">
             {sessionId}
           </span>
@@ -364,7 +359,9 @@ export function AgentTraceTab({
               <span className="text-gray-400">out</span>
             </span>
             <span className="flex items-center gap-1 text-gray-500">
-              <span data-testid="token-total">{trace.tokens.input + trace.tokens.output}</span>
+              <span data-testid="token-total">
+                {trace.tokens.input + trace.tokens.output}
+              </span>
               <span className="text-gray-400">total</span>
             </span>
           </div>
@@ -380,7 +377,7 @@ export function AgentTraceTab({
               "p-1 rounded",
               viewMode === "list"
                 ? "bg-primary-100 dark:bg-primary-900/30 text-primary-600"
-                : "hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-500"
+                : "hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-500",
             )}
             aria-label="List view"
             aria-pressed={viewMode === "list"}
@@ -395,7 +392,7 @@ export function AgentTraceTab({
               "p-1 rounded",
               viewMode === "timeline"
                 ? "bg-primary-100 dark:bg-primary-900/30 text-primary-600"
-                : "hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-500"
+                : "hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-500",
             )}
             aria-label="Timeline view"
             aria-pressed={viewMode === "timeline"}

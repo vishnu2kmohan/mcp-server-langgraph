@@ -1276,7 +1276,9 @@ describe("App", () => {
 
       await new Promise((r) => setTimeout(r, 100));
 
-      expect(screen.queryByText(/navigate your workspace/i)).not.toBeInTheDocument();
+      expect(
+        screen.queryByText(/navigate your workspace/i),
+      ).not.toBeInTheDocument();
     });
   });
 
@@ -1454,10 +1456,12 @@ describe("App", () => {
       mockUserQueryError = { status: 500 };
 
       // Malformed token - create spy and track for cleanup
-      const storageSpy = vi.spyOn(Storage.prototype, "getItem").mockImplementation((key) => {
-        if (key === "auth_token") return "malformed-token-without-dots";
-        return null;
-      });
+      const storageSpy = vi
+        .spyOn(Storage.prototype, "getItem")
+        .mockImplementation((key) => {
+          if (key === "auth_token") return "malformed-token-without-dots";
+          return null;
+        });
 
       try {
         const { store } = renderWithStore(
@@ -1566,10 +1570,7 @@ describe("App", () => {
         >
           <Routes>
             <Route element={<App />}>
-              <Route
-                path="studio/workflows"
-                element={<div>Workflows</div>}
-              />
+              <Route path="studio/workflows" element={<div>Workflows</div>} />
             </Route>
           </Routes>
         </MemoryRouter>,
@@ -1588,10 +1589,7 @@ describe("App", () => {
         >
           <Routes>
             <Route element={<App />}>
-              <Route
-                path="studio/settings"
-                element={<div>Settings</div>}
-              />
+              <Route path="studio/settings" element={<div>Settings</div>} />
             </Route>
           </Routes>
         </MemoryRouter>,
@@ -1730,7 +1728,8 @@ describe("App", () => {
       // Survey dismissed recently (within 7 days)
       vi.spyOn(Storage.prototype, "getItem").mockImplementation((key) => {
         if (key === "studio_sus_completed") return "false";
-        if (key === "studio_sus_dismissed") return String(Date.now() - 86400000); // 1 day ago
+        if (key === "studio_sus_dismissed")
+          return String(Date.now() - 86400000); // 1 day ago
         return null;
       });
 
@@ -1761,7 +1760,9 @@ describe("App", () => {
     it("should handle handleNewChat error gracefully", async () => {
       // This test verifies the error handling branch exists
       // The actual error is caught and logged to console
-      const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+      const consoleSpy = vi
+        .spyOn(console, "error")
+        .mockImplementation(() => {});
 
       renderWithStore(
         <MemoryRouter
@@ -1786,7 +1787,9 @@ describe("App", () => {
 
     it("should handle handleNewProject error gracefully", async () => {
       // This test verifies the error handling branch exists
-      const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+      const consoleSpy = vi
+        .spyOn(console, "error")
+        .mockImplementation(() => {});
 
       renderWithStore(
         <MemoryRouter
@@ -2242,7 +2245,10 @@ describe("App", () => {
         >
           <Routes>
             <Route element={<App />}>
-              <Route path="studio/settings" element={<div>Settings Route</div>} />
+              <Route
+                path="studio/settings"
+                element={<div>Settings Route</div>}
+              />
             </Route>
           </Routes>
         </MemoryRouter>,
@@ -2280,7 +2286,10 @@ describe("App", () => {
         >
           <Routes>
             <Route element={<App />}>
-              <Route path="studio/observability" element={<div>Observability Route</div>} />
+              <Route
+                path="studio/observability"
+                element={<div>Observability Route</div>}
+              />
             </Route>
           </Routes>
         </MemoryRouter>,
@@ -2490,7 +2499,10 @@ describe("App", () => {
         >
           <Routes>
             <Route element={<App />}>
-              <Route path="studio/workflows/:id/edit" element={<div>Workflow Edit</div>} />
+              <Route
+                path="studio/workflows/:id/edit"
+                element={<div>Workflow Edit</div>}
+              />
             </Route>
           </Routes>
         </MemoryRouter>,

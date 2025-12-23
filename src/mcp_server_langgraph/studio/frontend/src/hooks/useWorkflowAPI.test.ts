@@ -6,11 +6,14 @@
  * without loading the entire RTK Query module.
  */
 
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 
 // Mock the API module to prevent OOM during test loading
 vi.mock("../api", () => ({
-  useGetWorkflowSuggestionsMutation: vi.fn(() => [vi.fn(), { isLoading: false }]),
+  useGetWorkflowSuggestionsMutation: vi.fn(() => [
+    vi.fn(),
+    { isLoading: false },
+  ]),
   useListWorkflowExecutionsQuery: vi.fn(() => ({
     data: undefined,
     isLoading: false,
@@ -26,6 +29,10 @@ import {
 
 describe("useWorkflowAPI", () => {
   beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  afterEach(() => {
     vi.clearAllMocks();
   });
 

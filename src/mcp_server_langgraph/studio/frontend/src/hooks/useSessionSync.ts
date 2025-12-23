@@ -19,7 +19,10 @@
  */
 import { useEffect, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { setCurrentSession, selectHasPendingMutation } from "../store/slices/sessionSlice";
+import {
+  setCurrentSession,
+  selectHasPendingMutation,
+} from "../store/slices/sessionSlice";
 import type { AppDispatch, RootState } from "../store";
 import type { ChatLoaderData } from "../router/loaders";
 import { useSessionTelemetry } from "../contexts/TelemetryContext";
@@ -30,7 +33,6 @@ import {
 import { devLogger } from "../utils/devLogger";
 
 const logger = devLogger.withPrefix("[useSessionSync]");
-
 
 // =============================================================================
 // Hook
@@ -115,7 +117,10 @@ export function useSessionSync(loaderData: ChatLoaderData | undefined): void {
       });
     } else if (loaderData.session) {
       // Session data exists but failed validation - log warning
-      logger.warn("Received invalid session data, skipping sync", loaderData.session);
+      logger.warn(
+        "Received invalid session data, skipping sync",
+        loaderData.session,
+      );
       dispatch(setCurrentSession(null));
       sessionTelemetry.trackSync({
         sessionId: loaderData.sessionId,

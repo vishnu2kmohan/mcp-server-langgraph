@@ -186,7 +186,9 @@ describe("aiContextSlice", () => {
         },
       };
 
-      const highConfidence = selectHighConfidenceSuggestions(stateWithMixedConfidence);
+      const highConfidence = selectHighConfidenceSuggestions(
+        stateWithMixedConfidence,
+      );
       expect(highConfidence).toHaveLength(1);
       expect(highConfidence[0].id).toBe("sug-1");
       expect(highConfidence[0].confidence).toBe(0.85);

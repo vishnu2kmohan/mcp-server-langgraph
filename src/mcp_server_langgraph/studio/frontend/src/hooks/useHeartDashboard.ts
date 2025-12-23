@@ -83,7 +83,7 @@ const API_ENDPOINT = "/api/v1/metrics/heart/aggregate";
 // =============================================================================
 
 export function useHeartDashboard(
-  options: UseHeartDashboardOptions = {}
+  options: UseHeartDashboardOptions = {},
 ): UseHeartDashboardResult {
   const { initialTimeRange = "30d", autoRefreshMs } = options;
 

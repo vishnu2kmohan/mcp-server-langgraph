@@ -88,7 +88,7 @@ describe("useNudges + NudgeTooltip Integration", () => {
           nudge: mockNudge,
           confidence: 0.88,
         });
-      })
+      }),
     );
 
     // Component that integrates hook with component
@@ -116,7 +116,7 @@ describe("useNudges + NudgeTooltip Integration", () => {
       () => {
         expect(screen.getByRole("tooltip")).toBeInTheDocument();
       },
-      { timeout: 3000 }
+      { timeout: 3000 },
     );
 
     // Verify nudge content
@@ -140,7 +140,7 @@ describe("useNudges + NudgeTooltip Integration", () => {
           nudge: mockNudge,
           confidence: 0.85,
         });
-      })
+      }),
     );
 
     function NudgeIntegration() {
@@ -194,18 +194,21 @@ describe("useNudges + NudgeTooltip Integration", () => {
           nudge: mockNudge,
           confidence: 0.9,
         });
-      })
+      }),
     );
 
     function NudgeIntegration() {
-      const { activeNudge, dismiss, trackAcceptance, getNudgeHistory } = useNudges({
-        enableAI: true,
-        pageContext: "/studio/v2/chat",
-      });
+      const { activeNudge, dismiss, trackAcceptance, getNudgeHistory } =
+        useNudges({
+          enableAI: true,
+          pageContext: "/studio/v2/chat",
+        });
 
       if (!activeNudge) {
         const history = getNudgeHistory();
-        const acceptedCount = history.filter((h) => h.action === "accepted").length;
+        const acceptedCount = history.filter(
+          (h) => h.action === "accepted",
+        ).length;
         return <div data-testid="accepted-count">{acceptedCount}</div>;
       }
 
@@ -268,7 +271,7 @@ describe("useAIErrorRecovery + ErrorRecoveryPanel Integration", () => {
           suggested_action: "The server took too long to respond",
           confidence: 0.95,
         });
-      })
+      }),
     );
 
     const testError = new Error("Request timeout");
@@ -277,7 +280,7 @@ describe("useAIErrorRecovery + ErrorRecoveryPanel Integration", () => {
     render(
       <Provider store={store}>
         <ErrorRecoveryPanel error={testError} testId="error-panel" />
-      </Provider>
+      </Provider>,
     );
 
     // Wait for analysis
@@ -285,7 +288,7 @@ describe("useAIErrorRecovery + ErrorRecoveryPanel Integration", () => {
       () => {
         expect(screen.queryByText(/analyzing/i)).not.toBeInTheDocument();
       },
-      { timeout: 3000 }
+      { timeout: 3000 },
     );
 
     // Verify classification is shown
@@ -313,7 +316,7 @@ describe("useAIErrorRecovery + ErrorRecoveryPanel Integration", () => {
           suggested_action: "Server error occurred",
           confidence: 0.9,
         });
-      })
+      }),
     );
 
     const testError = new Error("Server error");
@@ -321,8 +324,12 @@ describe("useAIErrorRecovery + ErrorRecoveryPanel Integration", () => {
 
     render(
       <Provider store={store}>
-        <ErrorRecoveryPanel error={testError} onRetry={onRetry} testId="error-panel" />
-      </Provider>
+        <ErrorRecoveryPanel
+          error={testError}
+          onRetry={onRetry}
+          testId="error-panel"
+        />
+      </Provider>,
     );
 
     // Wait for analysis
@@ -356,7 +363,7 @@ describe("OfflineBanner Component Integration", () => {
         pendingCount={5}
         onSync={onSync}
         testId="offline-banner"
-      />
+      />,
     );
 
     expect(screen.getByRole("alert")).toBeInTheDocument();
@@ -376,7 +383,7 @@ describe("OfflineBanner Component Integration", () => {
         isOffline={false}
         pendingCount={0}
         testId="offline-banner"
-      />
+      />,
     );
 
     expect(screen.queryByRole("alert")).not.toBeInTheDocument();
@@ -392,7 +399,7 @@ describe("OfflineBanner Component Integration", () => {
         onSync={onSync}
         isSyncing={true}
         testId="offline-banner"
-      />
+      />,
     );
 
     const syncButton = screen.getByRole("button", { name: /syncing/i });
@@ -414,8 +421,13 @@ describe("useProgressiveDisclosure Integration", () => {
     const store = createTestStore();
 
     function DisclosureIntegration() {
-      const { level, setLevel, shouldShow, featureUsageCount, trackFeatureUse } =
-        useProgressiveDisclosure();
+      const {
+        level,
+        setLevel,
+        shouldShow,
+        featureUsageCount,
+        trackFeatureUse,
+      } = useProgressiveDisclosure();
 
       return (
         <div>
@@ -433,7 +445,7 @@ describe("useProgressiveDisclosure Integration", () => {
     render(
       <TestWrapper store={store}>
         <DisclosureIntegration />
-      </TestWrapper>
+      </TestWrapper>,
     );
 
     // Initial level is beginner
@@ -455,7 +467,9 @@ describe("useProgressiveDisclosure Integration", () => {
     fireEvent.click(screen.getByText("Level Up"));
 
     await waitFor(() => {
-      expect(screen.getByTestId("current-level")).toHaveTextContent("intermediate");
+      expect(screen.getByTestId("current-level")).toHaveTextContent(
+        "intermediate",
+      );
     });
   });
 });

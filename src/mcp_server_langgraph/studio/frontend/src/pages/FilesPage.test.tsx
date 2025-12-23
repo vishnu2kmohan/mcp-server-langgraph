@@ -12,7 +12,13 @@
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { render, screen, fireEvent, waitFor, within } from "@testing-library/react";
+import {
+  render,
+  screen,
+  fireEvent,
+  waitFor,
+  within,
+} from "@testing-library/react";
 import { MemoryRouter } from "react-router";
 import { FilesPage } from "./FilesPage";
 import type { CanvasArtifact } from "../types/artifacts";
@@ -53,7 +59,9 @@ vi.mock("../utils/devLogger", () => ({
 }));
 
 // Sample test artifacts
-const createTestArtifact = (overrides: Partial<CanvasArtifact> = {}): CanvasArtifact => ({
+const createTestArtifact = (
+  overrides: Partial<CanvasArtifact> = {},
+): CanvasArtifact => ({
   id: "artifact-1",
   sessionId: "session-1",
   title: "test-file",
@@ -66,9 +74,24 @@ const createTestArtifact = (overrides: Partial<CanvasArtifact> = {}): CanvasArti
 });
 
 const testArtifacts: CanvasArtifact[] = [
-  createTestArtifact({ id: "art-1", title: "main.py", contentType: "code", editMetadata: { language: "python" } }),
-  createTestArtifact({ id: "art-2", title: "README", contentType: "markdown", content: "# Hello" }),
-  createTestArtifact({ id: "art-3", title: "config", contentType: "json", content: '{"key": "value"}' }),
+  createTestArtifact({
+    id: "art-1",
+    title: "main.py",
+    contentType: "code",
+    editMetadata: { language: "python" },
+  }),
+  createTestArtifact({
+    id: "art-2",
+    title: "README",
+    contentType: "markdown",
+    content: "# Hello",
+  }),
+  createTestArtifact({
+    id: "art-3",
+    title: "config",
+    contentType: "json",
+    content: '{"key": "value"}',
+  }),
 ];
 
 // Helper to render with router
@@ -199,7 +222,9 @@ describe("FilesPage", () => {
       const searchInput = screen.getByTestId("files-search");
       fireEvent.change(searchInput, { target: { value: "nonexistent" } });
 
-      expect(screen.getByText("No files match your search")).toBeInTheDocument();
+      expect(
+        screen.getByText("No files match your search"),
+      ).toBeInTheDocument();
     });
 
     it("should update file count based on search results", () => {
@@ -299,7 +324,9 @@ describe("FilesPage", () => {
 
       // Find and click download button on first file card
       const fileCard = screen.getByTestId("file-card-art-1");
-      const downloadButton = fileCard.querySelector('button[aria-label="Download"]');
+      const downloadButton = fileCard.querySelector(
+        'button[aria-label="Download"]',
+      );
       expect(downloadButton).toBeInTheDocument();
 
       // Mock anchor element creation AFTER render but BEFORE click
@@ -326,7 +353,9 @@ describe("FilesPage", () => {
       renderFilesPage();
 
       const fileCard = screen.getByTestId("file-card-art-1");
-      const downloadButton = fileCard.querySelector('button[aria-label="Download"]');
+      const downloadButton = fileCard.querySelector(
+        'button[aria-label="Download"]',
+      );
 
       // Mock anchor element creation AFTER render but BEFORE click
       const mockAnchor = { href: "", download: "", click: vi.fn() };
@@ -365,7 +394,9 @@ describe("FilesPage", () => {
 
       // Click download in preview modal (find button by text content inside modal)
       const modal = screen.getByTestId("preview-modal");
-      const downloadButton = within(modal).getByRole("button", { name: /download/i });
+      const downloadButton = within(modal).getByRole("button", {
+        name: /download/i,
+      });
       fireEvent.click(downloadButton);
 
       expect(mockCreateObjectURL).toHaveBeenCalled();
@@ -394,7 +425,9 @@ describe("FilesPage", () => {
       renderFilesPage();
 
       const fileCard = screen.getByTestId("file-card-art-1");
-      const deleteButton = fileCard.querySelector('button[aria-label="Delete"]');
+      const deleteButton = fileCard.querySelector(
+        'button[aria-label="Delete"]',
+      );
       fireEvent.click(deleteButton!);
 
       expect(screen.getByTestId("delete-confirm-modal")).toBeInTheDocument();
@@ -405,7 +438,9 @@ describe("FilesPage", () => {
       renderFilesPage();
 
       const fileCard = screen.getByTestId("file-card-art-1");
-      const deleteButton = fileCard.querySelector('button[aria-label="Delete"]');
+      const deleteButton = fileCard.querySelector(
+        'button[aria-label="Delete"]',
+      );
       fireEvent.click(deleteButton!);
 
       // The file name appears in the confirmation message
@@ -417,38 +452,48 @@ describe("FilesPage", () => {
       renderFilesPage();
 
       const fileCard = screen.getByTestId("file-card-art-1");
-      const deleteButton = fileCard.querySelector('button[aria-label="Delete"]');
+      const deleteButton = fileCard.querySelector(
+        'button[aria-label="Delete"]',
+      );
       fireEvent.click(deleteButton!);
 
       expect(screen.getByTestId("delete-confirm-modal")).toBeInTheDocument();
 
       fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
 
-      expect(screen.queryByTestId("delete-confirm-modal")).not.toBeInTheDocument();
+      expect(
+        screen.queryByTestId("delete-confirm-modal"),
+      ).not.toBeInTheDocument();
     });
 
     it("should close confirmation modal when clicking backdrop", () => {
       renderFilesPage();
 
       const fileCard = screen.getByTestId("file-card-art-1");
-      const deleteButton = fileCard.querySelector('button[aria-label="Delete"]');
+      const deleteButton = fileCard.querySelector(
+        'button[aria-label="Delete"]',
+      );
       fireEvent.click(deleteButton!);
 
       fireEvent.click(screen.getByTestId("delete-confirm-modal"));
 
-      expect(screen.queryByTestId("delete-confirm-modal")).not.toBeInTheDocument();
+      expect(
+        screen.queryByTestId("delete-confirm-modal"),
+      ).not.toBeInTheDocument();
     });
 
     it("should call DELETE API when confirming delete", async () => {
       renderFilesPage();
 
       const fileCard = screen.getByTestId("file-card-art-1");
-      const deleteButton = fileCard.querySelector('button[aria-label="Delete"]');
+      const deleteButton = fileCard.querySelector(
+        'button[aria-label="Delete"]',
+      );
       fireEvent.click(deleteButton!);
 
       // Find the confirm delete button in the modal (not the aria-label Delete button)
       const modal = screen.getByTestId("delete-confirm-modal");
-      const confirmButton = modal.querySelector('button.bg-red-500');
+      const confirmButton = modal.querySelector("button.bg-red-500");
       fireEvent.click(confirmButton!);
 
       await waitFor(() => {
@@ -466,11 +511,13 @@ describe("FilesPage", () => {
       renderFilesPage();
 
       const fileCard = screen.getByTestId("file-card-art-1");
-      const deleteButton = fileCard.querySelector('button[aria-label="Delete"]');
+      const deleteButton = fileCard.querySelector(
+        'button[aria-label="Delete"]',
+      );
       fireEvent.click(deleteButton!);
 
       const modal = screen.getByTestId("delete-confirm-modal");
-      const confirmButton = modal.querySelector('button.bg-red-500');
+      const confirmButton = modal.querySelector("button.bg-red-500");
       fireEvent.click(confirmButton!);
 
       await waitFor(() => {
@@ -489,11 +536,13 @@ describe("FilesPage", () => {
       renderFilesPage();
 
       const fileCard = screen.getByTestId("file-card-art-1");
-      const deleteButton = fileCard.querySelector('button[aria-label="Delete"]');
+      const deleteButton = fileCard.querySelector(
+        'button[aria-label="Delete"]',
+      );
       fireEvent.click(deleteButton!);
 
       const modal = screen.getByTestId("delete-confirm-modal");
-      const confirmButton = modal.querySelector('button.bg-red-500');
+      const confirmButton = modal.querySelector("button.bg-red-500");
       fireEvent.click(confirmButton!);
 
       await waitFor(() => {
@@ -503,16 +552,23 @@ describe("FilesPage", () => {
 
     it("should show loading state while deleting", async () => {
       // Make fetch slow
-      mockFetch.mockImplementation(() => new Promise((resolve) => setTimeout(() => resolve({ ok: true }), 100)));
+      mockFetch.mockImplementation(
+        () =>
+          new Promise((resolve) =>
+            setTimeout(() => resolve({ ok: true }), 100),
+          ),
+      );
 
       renderFilesPage();
 
       const fileCard = screen.getByTestId("file-card-art-1");
-      const deleteButton = fileCard.querySelector('button[aria-label="Delete"]');
+      const deleteButton = fileCard.querySelector(
+        'button[aria-label="Delete"]',
+      );
       fireEvent.click(deleteButton!);
 
       const modal = screen.getByTestId("delete-confirm-modal");
-      const confirmButton = modal.querySelector('button.bg-red-500');
+      const confirmButton = modal.querySelector("button.bg-red-500");
       fireEvent.click(confirmButton!);
 
       expect(screen.getByText("Deleting...")).toBeInTheDocument();
@@ -522,15 +578,19 @@ describe("FilesPage", () => {
       renderFilesPage();
 
       const fileCard = screen.getByTestId("file-card-art-1");
-      const deleteButton = fileCard.querySelector('button[aria-label="Delete"]');
+      const deleteButton = fileCard.querySelector(
+        'button[aria-label="Delete"]',
+      );
       fireEvent.click(deleteButton!);
 
       const modal = screen.getByTestId("delete-confirm-modal");
-      const confirmButton = modal.querySelector('button.bg-red-500');
+      const confirmButton = modal.querySelector("button.bg-red-500");
       fireEvent.click(confirmButton!);
 
       await waitFor(() => {
-        expect(screen.queryByTestId("delete-confirm-modal")).not.toBeInTheDocument();
+        expect(
+          screen.queryByTestId("delete-confirm-modal"),
+        ).not.toBeInTheDocument();
       });
     });
 
@@ -540,15 +600,19 @@ describe("FilesPage", () => {
       renderFilesPage();
 
       const fileCard = screen.getByTestId("file-card-art-1");
-      const deleteButton = fileCard.querySelector('button[aria-label="Delete"]');
+      const deleteButton = fileCard.querySelector(
+        'button[aria-label="Delete"]',
+      );
       fireEvent.click(deleteButton!);
 
       const modal = screen.getByTestId("delete-confirm-modal");
-      const confirmButton = modal.querySelector('button.bg-red-500');
+      const confirmButton = modal.querySelector("button.bg-red-500");
       fireEvent.click(confirmButton!);
 
       await waitFor(() => {
-        expect(screen.queryByTestId("delete-confirm-modal")).not.toBeInTheDocument();
+        expect(
+          screen.queryByTestId("delete-confirm-modal"),
+        ).not.toBeInTheDocument();
       });
     });
   });
@@ -564,22 +628,30 @@ describe("FilesPage", () => {
 
     it("should show preview button in list view", () => {
       const fileRow = screen.getByTestId("file-row-art-1");
-      expect(fileRow.querySelector('button[aria-label="Preview"]')).toBeInTheDocument();
+      expect(
+        fileRow.querySelector('button[aria-label="Preview"]'),
+      ).toBeInTheDocument();
     });
 
     it("should show download button in list view", () => {
       const fileRow = screen.getByTestId("file-row-art-1");
-      expect(fileRow.querySelector('button[aria-label="Download"]')).toBeInTheDocument();
+      expect(
+        fileRow.querySelector('button[aria-label="Download"]'),
+      ).toBeInTheDocument();
     });
 
     it("should show delete button in list view", () => {
       const fileRow = screen.getByTestId("file-row-art-1");
-      expect(fileRow.querySelector('button[aria-label="Delete"]')).toBeInTheDocument();
+      expect(
+        fileRow.querySelector('button[aria-label="Delete"]'),
+      ).toBeInTheDocument();
     });
 
     it("should open preview when clicking Preview button in list view", () => {
       const fileRow = screen.getByTestId("file-row-art-1");
-      const previewButton = fileRow.querySelector('button[aria-label="Preview"]');
+      const previewButton = fileRow.querySelector(
+        'button[aria-label="Preview"]',
+      );
       fireEvent.click(previewButton!);
 
       expect(screen.getByTestId("preview-modal")).toBeInTheDocument();

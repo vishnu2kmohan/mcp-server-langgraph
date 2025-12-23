@@ -90,14 +90,14 @@ function detectCategoryFromErrorType(error: Error): ErrorCategory | null {
  */
 export function classifyError(
   error: Error | unknown,
-  options: ErrorClassificationOptions = {}
+  options: ErrorClassificationOptions = {},
 ): ClassifiedError {
   // Handle null/undefined
   if (error === null || error === undefined) {
     return createClassifiedError(
       new Error("Unknown error occurred"),
       "unknown",
-      options
+      options,
     );
   }
 
@@ -115,7 +115,9 @@ export function classifyError(
         : "Unknown error occurred";
 
   // Priority 1: Status code
-  const statusCategory = options.statusCode ? ERROR_CODES[options.statusCode] : undefined;
+  const statusCategory = options.statusCode
+    ? ERROR_CODES[options.statusCode]
+    : undefined;
   if (statusCategory) {
     return createClassifiedError(error, statusCategory, {
       ...options,
@@ -131,7 +133,7 @@ export function classifyError(
       return createClassifiedError(
         error,
         messageCategory ?? typeCategory,
-        options
+        options,
       );
     }
   }
@@ -158,7 +160,7 @@ export function classifyError(
  * Classify a fetch Response or fetch error
  */
 export function classifyFetchError(
-  responseOrError: Response | Error
+  responseOrError: Response | Error,
 ): ClassifiedError | Promise<ClassifiedError> {
   // Check for AbortError first (by name - works in all environments)
   // DOMException may not be caught by instanceof Error in some test environments
@@ -324,7 +326,7 @@ const WS_CLOSE_CODES: Record<number, ErrorCategory> = {
  * Classify a WebSocket close event
  */
 export function classifyWebSocketError(
-  event: WebSocketCloseEvent
+  event: WebSocketCloseEvent,
 ): ClassifiedError {
   const category = WS_CLOSE_CODES[event.code] ?? "unknown";
   const message = event.reason || `WebSocket closed with code ${event.code}`;

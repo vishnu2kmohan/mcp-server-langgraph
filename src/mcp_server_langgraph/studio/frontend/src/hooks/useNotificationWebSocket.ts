@@ -115,8 +115,11 @@ export function useNotificationWebSocket(
 
   // Compute WebSocket URL - recalculate when auth state changes
   // This ensures the token query param is included when user becomes authenticated
-  // eslint-disable-next-line react-hooks/exhaustive-deps -- isAuthenticated triggers recalculation
-  const wsUrl = useMemo(() => url ?? getDefaultWebSocketUrl(), [url, isAuthenticated]);
+   
+  const wsUrl = useMemo(
+    () => url ?? getDefaultWebSocketUrl(),
+    [url],
+  );
 
   // Handle incoming messages
   const handleMessage = useCallback(

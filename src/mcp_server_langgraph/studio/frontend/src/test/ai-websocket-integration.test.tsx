@@ -9,13 +9,13 @@
  * 3. Protocol is followed correctly (request_suggestions, ping/pong, etc.)
  */
 
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { renderHook, act, waitFor } from '@testing-library/react';
-import { Provider } from 'react-redux';
-import { configureStore } from '@reduxjs/toolkit';
-import { ReactNode } from 'react';
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { renderHook, act, waitFor } from "@testing-library/react";
+import { Provider } from "react-redux";
+import { configureStore } from "@reduxjs/toolkit";
+import { ReactNode } from "react";
 
-import { useAIRealTimeSuggestions } from '../hooks/useAIRealTimeSuggestions';
+import { useAIRealTimeSuggestions } from "../hooks/useAIRealTimeSuggestions";
 
 // =============================================================================
 // Mock Setup
@@ -24,14 +24,14 @@ import { useAIRealTimeSuggestions } from '../hooks/useAIRealTimeSuggestions';
 const mockSend = vi.fn();
 let mockOnMessage: ((data: unknown) => void) | undefined;
 
-vi.mock('../hooks/useRealtimeSync', () => ({
+vi.mock("../hooks/useRealtimeSync", () => ({
   useRealtimeSync: (options: {
     url: string;
     onMessage?: (data: unknown) => void;
   }) => {
     mockOnMessage = options.onMessage;
     return {
-      status: options.url ? 'connected' : 'disconnected',
+      status: options.url ? "connected" : "disconnected",
       reconnectAttempts: 0,
       lastMessageTime: null,
       send: mockSend,
@@ -44,7 +44,7 @@ vi.mock('../hooks/useRealtimeSync', () => ({
 const createTestStore = () =>
   configureStore({
     reducer: {
-      auth: () => ({ user: { id: 'integration-test-user' } }),
+      auth: () => ({ user: { id: "integration-test-user" } }),
     },
   });
 
@@ -60,11 +60,11 @@ const wrapper = ({ children }: { children: ReactNode }) => (
  * Backend WebSocket message types (from ai_ux.py)
  */
 const BACKEND_MESSAGE_TYPES = {
-  REQUEST_SUGGESTIONS: 'request_suggestions',
-  SUGGESTIONS: 'suggestions',
-  PING: 'ping',
-  PONG: 'pong',
-  ERROR: 'error',
+  REQUEST_SUGGESTIONS: "request_suggestions",
+  SUGGESTIONS: "suggestions",
+  PING: "ping",
+  PONG: "pong",
+  ERROR: "error",
 } as const;
 
 /**
@@ -72,18 +72,18 @@ const BACKEND_MESSAGE_TYPES = {
  */
 interface BackendSuggestion {
   id: string;
-  type: 'tooltip' | 'spotlight' | 'banner' | 'modal';
+  type: "tooltip" | "spotlight" | "banner" | "modal";
   message: string;
-  priority: 'low' | 'medium' | 'high';
-  target_element?: string;  // Backend uses snake_case
-  show_after_ms?: number;   // Backend uses snake_case
+  priority: "low" | "medium" | "high";
+  target_element?: string; // Backend uses snake_case
+  show_after_ms?: number; // Backend uses snake_case
 }
 
 /**
  * Backend WebSocket response format
  */
 interface BackendSuggestionResponse {
-  type: 'suggestions';
+  type: "suggestions";
   data: BackendSuggestion[];
   timestamp?: number;
 }
@@ -92,7 +92,7 @@ interface BackendSuggestionResponse {
 // Integration Tests
 // =============================================================================
 
-describe('AI WebSocket Integration', () => {
+describe("AI WebSocket Integration", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockOnMessage = undefined;
@@ -102,18 +102,18 @@ describe('AI WebSocket Integration', () => {
     vi.resetAllMocks();
   });
 
-  describe('Frontend -> Backend Message Format', () => {
-    it('should send request_suggestions with correct format for backend', () => {
+  describe("Frontend -> Backend Message Format", () => {
+    it("should send request_suggestions with correct format for backend", () => {
       const { result } = renderHook(
         () => useAIRealTimeSuggestions({ enabled: true }),
-        { wrapper }
+        { wrapper },
       );
 
       act(() => {
         result.current.requestSuggestions({
-          page: 'chat',
-          action: 'typing',
-          sessionId: 'session-123',
+          page: "chat",
+          action: "typing",
+          sessionId: "session-123",
         });
       });
 
@@ -122,25 +122,26 @@ describe('AI WebSocket Integration', () => {
         expect.objectContaining({
           type: BACKEND_MESSAGE_TYPES.REQUEST_SUGGESTIONS,
           context: expect.objectContaining({
-            page: 'chat',
-            action: 'typing',
-            sessionId: 'session-123',
+            page: "chat",
+            action: "typing",
+            sessionId: "session-123",
           }),
-        })
+        }),
       );
 
       // Backend expects timestamp
       const sentMessage = mockSend.mock.calls[0][0];
-      expect(sentMessage).toHaveProperty('timestamp');
-      expect(typeof sentMessage.timestamp).toBe('number');
+      expect(sentMessage).toHaveProperty("timestamp");
+      expect(typeof sentMessage.timestamp).toBe("number");
     });
 
-    it('should send ping with correct format for backend', async () => {
+    it("should send ping with correct format for backend", async () => {
       vi.useFakeTimers();
 
       renderHook(
-        () => useAIRealTimeSuggestions({ enabled: true, heartbeatInterval: 1000 }),
-        { wrapper }
+        () =>
+          useAIRealTimeSuggestions({ enabled: true, heartbeatInterval: 1000 }),
+        { wrapper },
       );
 
       act(() => {
@@ -152,30 +153,30 @@ describe('AI WebSocket Integration', () => {
         expect.objectContaining({
           type: BACKEND_MESSAGE_TYPES.PING,
           timestamp: expect.any(Number),
-        })
+        }),
       );
 
       vi.useRealTimers();
     });
   });
 
-  describe('Backend -> Frontend Message Format', () => {
-    it('should correctly parse backend suggestions response', async () => {
+  describe("Backend -> Frontend Message Format", () => {
+    it("should correctly parse backend suggestions response", async () => {
       const { result } = renderHook(
         () => useAIRealTimeSuggestions({ enabled: true }),
-        { wrapper }
+        { wrapper },
       );
 
       // Simulate backend response with snake_case fields
       const backendResponse: BackendSuggestionResponse = {
-        type: 'suggestions',
+        type: "suggestions",
         data: [
           {
-            id: 'suggestion-1',
-            type: 'tooltip',
-            message: 'Try keyboard shortcuts',
-            priority: 'medium',
-            target_element: '#search-input',
+            id: "suggestion-1",
+            type: "tooltip",
+            message: "Try keyboard shortcuts",
+            priority: "medium",
+            target_element: "#search-input",
             show_after_ms: 5000,
           },
         ],
@@ -190,19 +191,19 @@ describe('AI WebSocket Integration', () => {
         expect(result.current.suggestions).toHaveLength(1);
         expect(result.current.suggestions[0]).toEqual(
           expect.objectContaining({
-            id: 'suggestion-1',
-            type: 'tooltip',
-            message: 'Try keyboard shortcuts',
-            priority: 'medium',
-          })
+            id: "suggestion-1",
+            type: "tooltip",
+            message: "Try keyboard shortcuts",
+            priority: "medium",
+          }),
         );
       });
     });
 
-    it('should correctly parse backend pong response', async () => {
+    it("should correctly parse backend pong response", async () => {
       const { result } = renderHook(
         () => useAIRealTimeSuggestions({ enabled: true }),
-        { wrapper }
+        { wrapper },
       );
 
       const pongTimestamp = Date.now();
@@ -220,80 +221,84 @@ describe('AI WebSocket Integration', () => {
       });
     });
 
-    it('should handle backend error messages', async () => {
+    it("should handle backend error messages", async () => {
       const { result } = renderHook(
         () => useAIRealTimeSuggestions({ enabled: true }),
-        { wrapper }
+        { wrapper },
       );
 
       // Simulate backend error response
       act(() => {
         mockOnMessage?.({
           type: BACKEND_MESSAGE_TYPES.ERROR,
-          data: 'Rate limit exceeded',
+          data: "Rate limit exceeded",
         });
       });
 
       await waitFor(() => {
         expect(result.current.error).not.toBeNull();
-        expect(result.current.error?.message).toBe('Rate limit exceeded');
+        expect(result.current.error?.message).toBe("Rate limit exceeded");
       });
     });
 
-    it('should handle multiple suggestions in batch', async () => {
+    it("should handle multiple suggestions in batch", async () => {
       const { result } = renderHook(
         () => useAIRealTimeSuggestions({ enabled: true }),
-        { wrapper }
+        { wrapper },
       );
 
       // Simulate backend batch response
       act(() => {
         mockOnMessage?.({
-          type: 'suggestions',
+          type: "suggestions",
           data: [
-            { id: 's1', type: 'tooltip', message: 'Tip 1', priority: 'low' },
-            { id: 's2', type: 'spotlight', message: 'Tip 2', priority: 'high' },
-            { id: 's3', type: 'banner', message: 'Tip 3', priority: 'medium' },
+            { id: "s1", type: "tooltip", message: "Tip 1", priority: "low" },
+            { id: "s2", type: "spotlight", message: "Tip 2", priority: "high" },
+            { id: "s3", type: "banner", message: "Tip 3", priority: "medium" },
           ],
         });
       });
 
       await waitFor(() => {
         expect(result.current.suggestions).toHaveLength(3);
-        expect(result.current.suggestions.map(s => s.id)).toEqual(['s1', 's2', 's3']);
+        expect(result.current.suggestions.map((s) => s.id)).toEqual([
+          "s1",
+          "s2",
+          "s3",
+        ]);
       });
     });
   });
 
-  describe('Protocol Compliance', () => {
-    it('should filter dismissed suggestions from new backend responses', async () => {
+  describe("Protocol Compliance", () => {
+    it("should filter dismissed suggestions from new backend responses", async () => {
       const { result } = renderHook(
         () => useAIRealTimeSuggestions({ enabled: true }),
-        { wrapper }
+        { wrapper },
       );
 
       // First batch
       act(() => {
         mockOnMessage?.({
-          type: 'suggestions',
+          type: "suggestions",
           data: [
-            { id: 's1', type: 'tooltip', message: 'Tip 1', priority: 'low' },
+            { id: "s1", type: "tooltip", message: "Tip 1", priority: "low" },
           ],
         });
       });
 
       // Dismiss the suggestion
       act(() => {
-        result.current.dismissSuggestion('s1');
+        result.current.dismissSuggestion("s1");
       });
 
       // Backend sends same suggestion again (e.g., after reconnect)
       act(() => {
         mockOnMessage?.({
-          type: 'suggestions',
+          type: "suggestions",
           data: [
-            { id: 's1', type: 'tooltip', message: 'Tip 1', priority: 'low' },
-            { id: 's2', type: 'tooltip', message: 'Tip 2', priority: 'high' },
+            { id: "s1", type: "tooltip", message: "Tip 1", priority: "low" },
+            { id: "s2", type: "tooltip", message: "Tip 2", priority: "high" },
           ],
         });
       });
@@ -301,22 +306,22 @@ describe('AI WebSocket Integration', () => {
       await waitFor(() => {
         // Only s2 should be added, s1 was dismissed
         expect(result.current.suggestions).toHaveLength(1);
-        expect(result.current.suggestions[0].id).toBe('s2');
+        expect(result.current.suggestions[0].id).toBe("s2");
       });
     });
 
-    it('should handle malformed backend responses gracefully', async () => {
+    it("should handle malformed backend responses gracefully", async () => {
       const { result } = renderHook(
         () => useAIRealTimeSuggestions({ enabled: true }),
-        { wrapper }
+        { wrapper },
       );
 
       // Simulate malformed responses
       act(() => {
         mockOnMessage?.(null);
         mockOnMessage?.(undefined);
-        mockOnMessage?.({ type: 'unknown' });
-        mockOnMessage?.({ type: 'suggestions', data: 'not-an-array' });
+        mockOnMessage?.({ type: "unknown" });
+        mockOnMessage?.({ type: "suggestions", data: "not-an-array" });
       });
 
       // Should not crash and suggestions should remain empty
@@ -324,25 +329,29 @@ describe('AI WebSocket Integration', () => {
       expect(result.current.error).toBeNull();
     });
 
-    it('should accumulate suggestions across multiple responses', async () => {
+    it("should accumulate suggestions across multiple responses", async () => {
       const { result } = renderHook(
         () => useAIRealTimeSuggestions({ enabled: true }),
-        { wrapper }
+        { wrapper },
       );
 
       // First response
       act(() => {
         mockOnMessage?.({
-          type: 'suggestions',
-          data: [{ id: 's1', type: 'tooltip', message: 'Tip 1', priority: 'low' }],
+          type: "suggestions",
+          data: [
+            { id: "s1", type: "tooltip", message: "Tip 1", priority: "low" },
+          ],
         });
       });
 
       // Second response
       act(() => {
         mockOnMessage?.({
-          type: 'suggestions',
-          data: [{ id: 's2', type: 'tooltip', message: 'Tip 2', priority: 'high' }],
+          type: "suggestions",
+          data: [
+            { id: "s2", type: "tooltip", message: "Tip 2", priority: "high" },
+          ],
         });
       });
 
@@ -352,13 +361,13 @@ describe('AI WebSocket Integration', () => {
     });
   });
 
-  describe('User Context in WebSocket URL', () => {
-    it('should include user_id in WebSocket connection', () => {
+  describe("User Context in WebSocket URL", () => {
+    it("should include user_id in WebSocket connection", () => {
       // The hook builds URL with user_id from Redux store
       // This is verified by checking the URL format used
       const { result } = renderHook(
         () => useAIRealTimeSuggestions({ enabled: true }),
-        { wrapper }
+        { wrapper },
       );
 
       // Hook should be connected

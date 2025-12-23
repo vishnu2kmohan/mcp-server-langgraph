@@ -27,7 +27,9 @@ function setupSessionHandlers() {
     // NOTE: Static paths MUST come before parameterized paths to avoid conflicts
     // POST /api/v1/sessions/generate-title - Generate session title
     http.post("/api/v1/sessions/generate-title", async ({ request }) => {
-      const body = (await request.json()) as { messages: Array<{ role: string; content: string }> };
+      const body = (await request.json()) as {
+        messages: Array<{ role: string; content: string }>;
+      };
       return HttpResponse.json({
         title:
           body.messages.length > 0
@@ -87,7 +89,7 @@ function setupSessionHandlers() {
       // Filter by search
       if (search) {
         sessions = sessions.filter((s) =>
-          s.name.toLowerCase().includes(search.toLowerCase())
+          s.name.toLowerCase().includes(search.toLowerCase()),
         );
       }
 
@@ -100,7 +102,8 @@ function setupSessionHandlers() {
       }
 
       const items = sessions.slice(startIndex, startIndex + limit);
-      const nextCursor = items.length === limit ? items[items.length - 1].id : null;
+      const nextCursor =
+        items.length === limit ? items[items.length - 1].id : null;
 
       return HttpResponse.json({
         items,
@@ -133,7 +136,10 @@ function setupSessionHandlers() {
 
     // POST /api/v1/sessions - Create new session
     http.post("/api/v1/sessions", async ({ request }) => {
-      const body = (await request.json()) as { name?: string; workflow_id?: string };
+      const body = (await request.json()) as {
+        name?: string;
+        workflow_id?: string;
+      };
       return HttpResponse.json({
         id: "session-new-001",
         name: body.name || "New Session",
@@ -200,7 +206,8 @@ function setupSessionHandlers() {
         {
           message_id: "msg-002",
           role: "assistant",
-          content: "I'd be happy to help with your research. What topic are you exploring?",
+          content:
+            "I'd be happy to help with your research. What topic are you exploring?",
           timestamp: "2024-01-15T10:00:05Z",
           metadata: { model: "gpt-4" },
           sources: [
@@ -261,7 +268,7 @@ function setupSessionHandlers() {
         edge_count: 2,
         created_at: new Date().toISOString(),
       });
-    })
+    }),
   );
 }
 
@@ -457,7 +464,10 @@ describe("Session API Contract", () => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           messages: [
-            { role: "user", content: "Help me understand machine learning algorithms" },
+            {
+              role: "user",
+              content: "Help me understand machine learning algorithms",
+            },
           ],
         }),
       });
@@ -623,7 +633,7 @@ describe("Session API Contract", () => {
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-        }
+        },
       );
 
       expect(response.ok).toBe(true);

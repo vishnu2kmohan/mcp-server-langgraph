@@ -4,8 +4,8 @@
  * TDD tests for the extracted StatusBar component.
  * Tests status display, keyboard shortcuts, and feature flag toggle.
  */
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { render, screen, cleanup } from "@testing-library/react";
 import { axe, toHaveNoViolations } from "jest-axe";
 
 expect.extend(toHaveNoViolations);
@@ -22,6 +22,11 @@ vi.mock("./FeatureFlagToggle", () => ({
 
 describe("StatusBar", () => {
   beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  afterEach(() => {
+    cleanup();
     vi.clearAllMocks();
   });
 
@@ -96,7 +101,9 @@ describe("StatusBar", () => {
     it("should hide connection indicator when status is undefined", () => {
       render(<StatusBar />);
 
-      expect(screen.queryByTestId("connection-indicator")).not.toBeInTheDocument();
+      expect(
+        screen.queryByTestId("connection-indicator"),
+      ).not.toBeInTheDocument();
     });
   });
 
@@ -212,7 +219,10 @@ describe("StatusBar", () => {
 
     it("should show both connection error indicator and error message", () => {
       render(
-        <StatusBar connectionStatus="error" errorMessage="Server unreachable" />,
+        <StatusBar
+          connectionStatus="error"
+          errorMessage="Server unreachable"
+        />,
       );
 
       const indicator = screen.getByTestId("connection-indicator");
@@ -233,13 +243,17 @@ describe("StatusBar", () => {
     it("should not display agent queue button when agentCount is 0", () => {
       render(<StatusBar agentCount={0} onAgentQueueToggle={() => {}} />);
 
-      expect(screen.queryByTestId("agent-queue-toggle")).not.toBeInTheDocument();
+      expect(
+        screen.queryByTestId("agent-queue-toggle"),
+      ).not.toBeInTheDocument();
     });
 
     it("should not display agent queue button when agentCount is undefined", () => {
       render(<StatusBar />);
 
-      expect(screen.queryByTestId("agent-queue-toggle")).not.toBeInTheDocument();
+      expect(
+        screen.queryByTestId("agent-queue-toggle"),
+      ).not.toBeInTheDocument();
     });
 
     it("should call onAgentQueueToggle when button is clicked", async () => {
@@ -269,7 +283,10 @@ describe("StatusBar", () => {
       render(<StatusBar agentCount={5} onAgentQueueToggle={() => {}} />);
 
       const button = screen.getByTestId("agent-queue-toggle");
-      expect(button).toHaveAttribute("aria-label", "Toggle agent task queue (5 agents)");
+      expect(button).toHaveAttribute(
+        "aria-label",
+        "Toggle agent task queue (5 agents)",
+      );
     });
   });
 
@@ -305,7 +322,10 @@ describe("StatusBar", () => {
     it("should call onPendingApprovalsClick when button is clicked", async () => {
       const handleClick = vi.fn();
       render(
-        <StatusBar pendingApprovals={2} onPendingApprovalsClick={handleClick} />,
+        <StatusBar
+          pendingApprovals={2}
+          onPendingApprovalsClick={handleClick}
+        />,
       );
 
       const button = screen.getByTestId("pending-approvals-indicator");
@@ -383,10 +403,7 @@ describe("StatusBar", () => {
 
     it("should show active state when DevTools is open", () => {
       render(
-        <StatusBar
-          onDevToolsToggle={() => {}}
-          devToolsCollapsed={false}
-        />,
+        <StatusBar onDevToolsToggle={() => {}} devToolsCollapsed={false} />,
       );
 
       const button = screen.getByTestId("devtools-toggle");
@@ -395,10 +412,7 @@ describe("StatusBar", () => {
 
     it("should not show active state when DevTools is collapsed", () => {
       render(
-        <StatusBar
-          onDevToolsToggle={() => {}}
-          devToolsCollapsed={true}
-        />,
+        <StatusBar onDevToolsToggle={() => {}} devToolsCollapsed={true} />,
       );
 
       const button = screen.getByTestId("devtools-toggle");
@@ -433,9 +447,7 @@ describe("StatusBar", () => {
     });
 
     it("should display problem count badge when problemCount > 0", () => {
-      render(
-        <StatusBar onDevToolsToggle={() => {}} problemCount={5} />,
-      );
+      render(<StatusBar onDevToolsToggle={() => {}} problemCount={5} />);
 
       const badge = screen.getByTestId("devtools-problem-count");
       expect(badge).toBeInTheDocument();
@@ -443,23 +455,23 @@ describe("StatusBar", () => {
     });
 
     it("should not display problem count badge when problemCount is 0", () => {
-      render(
-        <StatusBar onDevToolsToggle={() => {}} problemCount={0} />,
-      );
+      render(<StatusBar onDevToolsToggle={() => {}} problemCount={0} />);
 
-      expect(screen.queryByTestId("devtools-problem-count")).not.toBeInTheDocument();
+      expect(
+        screen.queryByTestId("devtools-problem-count"),
+      ).not.toBeInTheDocument();
     });
 
     it("should not display problem count badge when problemCount is undefined", () => {
       render(<StatusBar onDevToolsToggle={() => {}} />);
 
-      expect(screen.queryByTestId("devtools-problem-count")).not.toBeInTheDocument();
+      expect(
+        screen.queryByTestId("devtools-problem-count"),
+      ).not.toBeInTheDocument();
     });
 
     it("should display 99+ when problem count exceeds 99", () => {
-      render(
-        <StatusBar onDevToolsToggle={() => {}} problemCount={150} />,
-      );
+      render(<StatusBar onDevToolsToggle={() => {}} problemCount={150} />);
 
       const badge = screen.getByTestId("devtools-problem-count");
       expect(badge).toHaveTextContent("99+");

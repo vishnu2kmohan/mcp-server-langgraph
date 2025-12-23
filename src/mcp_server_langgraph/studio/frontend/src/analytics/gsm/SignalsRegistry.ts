@@ -204,7 +204,7 @@ export function getAllSignals(): Signal[] {
 export function recordSignal(
   signalId: string,
   value: number | boolean | string,
-  metadata?: Record<string, unknown>
+  metadata?: Record<string, unknown>,
 ): void {
   const event: SignalEvent = {
     signalId,
@@ -223,7 +223,7 @@ export function recordSignal(
  */
 export function getSignalValues(
   signalId: string,
-  options: SignalFilterOptions = {}
+  options: SignalFilterOptions = {},
 ): SignalEvent[] {
   const values = signalValues.get(signalId) ?? [];
 

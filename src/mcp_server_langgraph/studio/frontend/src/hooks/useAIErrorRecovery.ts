@@ -72,7 +72,7 @@ export interface UseAIErrorRecoveryResult {
   /** Analyze an error and get recovery suggestions */
   analyze: (
     error: Error,
-    context?: Record<string, unknown>
+    context?: Record<string, unknown>,
   ) => Promise<AIErrorAnalysis | null>;
   /** Whether analysis is in progress */
   isAnalyzing: boolean;
@@ -96,7 +96,7 @@ const DEFAULT_TIMEOUT_MS = 5000;
  * Map RTK Query action_type to hook's action type
  */
 function mapActionType(
-  actionType: "automatic" | "manual" | "contact_support"
+  actionType: "automatic" | "manual" | "contact_support",
 ): AIRecoverySuggestion["action"] {
   switch (actionType) {
     case "automatic":
@@ -121,16 +121,17 @@ function mapActionType(
  * @returns Analysis function and state
  */
 export function useAIErrorRecovery(
-  options: UseAIErrorRecoveryOptions = {}
+  options: UseAIErrorRecoveryOptions = {},
 ): UseAIErrorRecoveryResult {
-  const { enabled = true, timeoutMs: _timeoutMs = DEFAULT_TIMEOUT_MS } = options;
+  const { enabled = true, timeoutMs: _timeoutMs = DEFAULT_TIMEOUT_MS } =
+    options;
 
   // RTK Query mutation
   const [analyzeErrorMutation, { isLoading: isMutationLoading }] =
     useAnalyzeErrorMutation();
 
   const [lastAnalysis, setLastAnalysis] = useState<AIErrorAnalysis | null>(
-    null
+    null,
   );
   const [analysisError, setAnalysisError] = useState<Error | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -145,7 +146,7 @@ export function useAIErrorRecovery(
   const analyze = useCallback(
     async (
       error: Error,
-      context?: Record<string, unknown>
+      context?: Record<string, unknown>,
     ): Promise<AIErrorAnalysis | null> => {
       // If disabled, return null immediately
       if (!enabled) {
@@ -193,7 +194,7 @@ export function useAIErrorRecovery(
         return null;
       }
     },
-    [enabled, analyzeErrorMutation]
+    [enabled, analyzeErrorMutation],
   );
 
   return {

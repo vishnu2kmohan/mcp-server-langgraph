@@ -170,7 +170,9 @@ describe("AgentTaskQueue", () => {
       ]);
       render(<AgentTaskQueue />, { wrapper: createWrapper(store) });
 
-      expect(screen.getByRole("button", { name: /cancel/i })).toBeInTheDocument();
+      expect(
+        screen.getByRole("button", { name: /cancel/i }),
+      ).toBeInTheDocument();
     });
 
     it("should show cancel button for running tasks", () => {
@@ -179,16 +181,24 @@ describe("AgentTaskQueue", () => {
       ]);
       render(<AgentTaskQueue />, { wrapper: createWrapper(store) });
 
-      expect(screen.getByRole("button", { name: /cancel/i })).toBeInTheDocument();
+      expect(
+        screen.getByRole("button", { name: /cancel/i }),
+      ).toBeInTheDocument();
     });
 
     it("should not show cancel button for completed tasks", () => {
       const store = createTestStore([
-        createMockAgent({ id: "1", name: "Completed Task", status: "completed" }),
+        createMockAgent({
+          id: "1",
+          name: "Completed Task",
+          status: "completed",
+        }),
       ]);
       render(<AgentTaskQueue />, { wrapper: createWrapper(store) });
 
-      expect(screen.queryByRole("button", { name: /cancel/i })).not.toBeInTheDocument();
+      expect(
+        screen.queryByRole("button", { name: /cancel/i }),
+      ).not.toBeInTheDocument();
     });
 
     it("should call onCancel when cancel button clicked", async () => {
@@ -212,7 +222,9 @@ describe("AgentTaskQueue", () => {
       ]);
       render(<AgentTaskQueue />, { wrapper: createWrapper(store) });
 
-      expect(screen.getByRole("button", { name: /dismiss/i })).toBeInTheDocument();
+      expect(
+        screen.getByRole("button", { name: /dismiss/i }),
+      ).toBeInTheDocument();
     });
 
     it("should remove task when dismiss clicked", async () => {
@@ -235,7 +247,9 @@ describe("AgentTaskQueue", () => {
       ]);
       render(<AgentTaskQueue />, { wrapper: createWrapper(store) });
 
-      expect(screen.getByRole("button", { name: /clear completed/i })).toBeInTheDocument();
+      expect(
+        screen.getByRole("button", { name: /clear completed/i }),
+      ).toBeInTheDocument();
     });
 
     it("should not show clear all button when no completed tasks", () => {
@@ -244,7 +258,9 @@ describe("AgentTaskQueue", () => {
       ]);
       render(<AgentTaskQueue />, { wrapper: createWrapper(store) });
 
-      expect(screen.queryByRole("button", { name: /clear completed/i })).not.toBeInTheDocument();
+      expect(
+        screen.queryByRole("button", { name: /clear completed/i }),
+      ).not.toBeInTheDocument();
     });
 
     it("should clear completed tasks when clear all clicked", async () => {
@@ -255,7 +271,9 @@ describe("AgentTaskQueue", () => {
       ]);
       render(<AgentTaskQueue />, { wrapper: createWrapper(store) });
 
-      await user.click(screen.getByRole("button", { name: /clear completed/i }));
+      await user.click(
+        screen.getByRole("button", { name: /clear completed/i }),
+      );
 
       expect(screen.getByText("Running")).toBeInTheDocument();
       expect(screen.queryByText("Completed")).not.toBeInTheDocument();
@@ -328,7 +346,9 @@ describe("AgentTaskQueue", () => {
       const store = createTestStore([createMockAgent({ id: "1" })]);
       render(<AgentTaskQueue />, { wrapper: createWrapper(store) });
 
-      expect(screen.getByRole("heading", { name: /task queue/i })).toBeInTheDocument();
+      expect(
+        screen.getByRole("heading", { name: /task queue/i }),
+      ).toBeInTheDocument();
     });
 
     it("should have accessible task list", () => {
@@ -360,7 +380,9 @@ describe("AgentTaskQueue", () => {
         wrapper: createWrapper(store),
       });
 
-      expect(screen.getByTestId("agent-task-queue")).toHaveClass("custom-class");
+      expect(screen.getByTestId("agent-task-queue")).toHaveClass(
+        "custom-class",
+      );
     });
 
     it("should show status badge with correct color for running", () => {

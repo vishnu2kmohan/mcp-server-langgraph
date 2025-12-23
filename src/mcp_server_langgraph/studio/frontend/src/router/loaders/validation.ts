@@ -100,7 +100,9 @@ export function validateSession(value: unknown): ValidationResult<APISession> {
   if (!isObject(value)) {
     return {
       success: false,
-      errors: [{ field: "root", message: `Expected object, got ${typeof value}` }],
+      errors: [
+        { field: "root", message: `Expected object, got ${typeof value}` },
+      ],
     };
   }
 
@@ -246,7 +248,9 @@ export function validateMessages(
     if (result.success) {
       validMessages.push(result.data);
     } else {
-      warnings.push(`Message at index ${i} is invalid: ${result.errors[0]?.message}`);
+      warnings.push(
+        `Message at index ${i} is invalid: ${result.errors[0]?.message}`,
+      );
     }
   }
 

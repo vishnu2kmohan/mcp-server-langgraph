@@ -131,7 +131,9 @@ export function CanvasWorkspace({
 
   // AI Edit Overlay state (Phase 4)
   const [aiEditVisible, setAiEditVisible] = useState(false);
-  const [aiEditSelection, setAiEditSelection] = useState<Selection | null>(null);
+  const [aiEditSelection, setAiEditSelection] = useState<Selection | null>(
+    null,
+  );
 
   // Feature flag for AI edit functionality
   const aiEditEnabled = useFeatureFlag("canvas_ai_palette");

@@ -109,15 +109,18 @@ export function WorkflowsPage() {
   const canExecute = useAppSelector(selectCanExecute);
 
   // Execution history query - only fetch when panel is visible and workflow has ID
-  const { data: executionsData, isLoading: isLoadingExecutions, isFetching } =
-    useListWorkflowExecutionsQuery(
-      {
-        workflow_id: metadata?.id ?? "",
-        limit: 20,
-        cursor: executionsCursor,
-      },
-      { skip: !metadata?.id || !showHistoryPanel },
-    );
+  const {
+    data: executionsData,
+    isLoading: isLoadingExecutions,
+    isFetching,
+  } = useListWorkflowExecutionsQuery(
+    {
+      workflow_id: metadata?.id ?? "",
+      limit: 20,
+      cursor: executionsCursor,
+    },
+    { skip: !metadata?.id || !showHistoryPanel },
+  );
 
   // Accumulate executions when new data arrives (for pagination)
   useEffect(() => {
@@ -148,14 +151,11 @@ export function WorkflowsPage() {
   }, [showHistoryPanel, metadata?.id]);
 
   // Handle execution selection
-  const handleSelectExecution = useCallback(
-    (execution: WorkflowExecution) => {
-      setSelectedExecutionId(execution.id);
-      // Show execution panel with the selected execution's output/logs
-      setShowExecutionPanel(true);
-    },
-    [],
-  );
+  const handleSelectExecution = useCallback((execution: WorkflowExecution) => {
+    setSelectedExecutionId(execution.id);
+    // Show execution panel with the selected execution's output/logs
+    setShowExecutionPanel(true);
+  }, []);
 
   // Handle load more (pagination)
   const handleLoadMoreExecutions = useCallback(() => {

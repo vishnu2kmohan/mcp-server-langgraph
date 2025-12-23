@@ -101,7 +101,9 @@ export function OfflineBanner({
         {/* Message */}
         <span className="offline-banner__message">
           {isOffline ? (
-            <>You are currently <strong>offline</strong></>
+            <>
+              You are currently <strong>offline</strong>
+            </>
           ) : (
             <>Syncing changes...</>
           )}
@@ -110,8 +112,10 @@ export function OfflineBanner({
         {/* Pending Count */}
         {pendingCount > 0 && (
           <span className="offline-banner__pending">
-            <span className="offline-banner__pending-count">{pendingCount}</span>
-            {" "}pending action{pendingCount !== 1 ? "s" : ""}
+            <span className="offline-banner__pending-count">
+              {pendingCount}
+            </span>{" "}
+            pending action{pendingCount !== 1 ? "s" : ""}
           </span>
         )}
 

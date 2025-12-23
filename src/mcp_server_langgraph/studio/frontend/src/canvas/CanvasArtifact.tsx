@@ -10,7 +10,15 @@
  * - AI-powered code analysis (Sprint 4)
  */
 import { useState, useCallback, useMemo } from "react";
-import { Edit2, Save, X, Sparkles, Loader2, AlertTriangle, CheckCircle2 } from "lucide-react";
+import {
+  Edit2,
+  Save,
+  X,
+  Sparkles,
+  Loader2,
+  AlertTriangle,
+  CheckCircle2,
+} from "lucide-react";
 import type { CanvasArtifact as CanvasArtifactType } from "../types/artifacts";
 import { cn } from "../utils/cn";
 import { useCodeAnalysis } from "../hooks";
@@ -463,12 +471,14 @@ export function CanvasArtifact({
               )}
 
               {/* Suggestions */}
-              {aiSuggestions && aiSuggestions.length > 0 && aiSuggestions[0] && (
-                <div className="text-xs text-gray-500 dark:text-gray-400">
-                  <span className="font-medium">Suggestion:</span>{" "}
-                  {aiSuggestions[0].description}
-                </div>
-              )}
+              {aiSuggestions &&
+                aiSuggestions.length > 0 &&
+                aiSuggestions[0] && (
+                  <div className="text-xs text-gray-500 dark:text-gray-400">
+                    <span className="font-medium">Suggestion:</span>{" "}
+                    {aiSuggestions[0].description}
+                  </div>
+                )}
             </div>
           )}
         </div>

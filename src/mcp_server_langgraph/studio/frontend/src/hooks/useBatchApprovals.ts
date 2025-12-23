@@ -37,12 +37,12 @@ export interface UseBatchApprovalsReturn {
   /** Batch approve multiple requests */
   batchApprove: (
     requestIds: string[],
-    reason?: string
+    reason?: string,
   ) => Promise<BatchApprovalResponse | null>;
   /** Batch reject multiple requests */
   batchReject: (
     requestIds: string[],
-    reason?: string
+    reason?: string,
   ) => Promise<BatchApprovalResponse | null>;
   /** Whether approval request is in progress */
   isApproving: boolean;
@@ -78,7 +78,7 @@ export function useBatchApprovals(): UseBatchApprovalsReturn {
       endpoint: string,
       requestIds: string[],
       reason?: string,
-      setLoading: (v: boolean) => void = () => {}
+      setLoading: (v: boolean) => void = () => {},
     ): Promise<BatchApprovalResponse | null> => {
       setLoading(true);
       setError(null);
@@ -118,7 +118,7 @@ export function useBatchApprovals(): UseBatchApprovalsReturn {
         setLoading(false);
       }
     },
-    []
+    [],
   );
 
   /**
@@ -127,16 +127,16 @@ export function useBatchApprovals(): UseBatchApprovalsReturn {
   const batchApprove = useCallback(
     async (
       requestIds: string[],
-      reason?: string
+      reason?: string,
     ): Promise<BatchApprovalResponse | null> => {
       return makeBatchRequest(
         "/agents/requests/batch/approve",
         requestIds,
         reason,
-        setIsApproving
+        setIsApproving,
       );
     },
-    [makeBatchRequest]
+    [makeBatchRequest],
   );
 
   /**
@@ -145,16 +145,16 @@ export function useBatchApprovals(): UseBatchApprovalsReturn {
   const batchReject = useCallback(
     async (
       requestIds: string[],
-      reason?: string
+      reason?: string,
     ): Promise<BatchApprovalResponse | null> => {
       return makeBatchRequest(
         "/agents/requests/batch/reject",
         requestIds,
         reason,
-        setIsRejecting
+        setIsRejecting,
       );
     },
-    [makeBatchRequest]
+    [makeBatchRequest],
   );
 
   return {

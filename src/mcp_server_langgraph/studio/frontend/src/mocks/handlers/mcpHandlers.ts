@@ -60,7 +60,7 @@ export interface MCPTask {
 // =============================================================================
 
 export const createMockResource = (
-  overrides: Partial<MCPResource> = {}
+  overrides: Partial<MCPResource> = {},
 ): MCPResource => ({
   uri: "file:///project/README.md",
   name: "README.md",
@@ -69,9 +69,7 @@ export const createMockResource = (
   ...overrides,
 });
 
-export const createMockTool = (
-  overrides: Partial<MCPTool> = {}
-): MCPTool => ({
+export const createMockTool = (overrides: Partial<MCPTool> = {}): MCPTool => ({
   name: "read_file",
   description: "Read contents of a file",
   inputSchema: {
@@ -85,20 +83,22 @@ export const createMockTool = (
 });
 
 export const createMockPrompt = (
-  overrides: Partial<MCPPrompt> = {}
+  overrides: Partial<MCPPrompt> = {},
 ): MCPPrompt => ({
   name: "summarize",
   description: "Summarize the given text",
   arguments: [
     { name: "text", description: "Text to summarize", required: true },
-    { name: "maxLength", description: "Maximum summary length", required: false },
+    {
+      name: "maxLength",
+      description: "Maximum summary length",
+      required: false,
+    },
   ],
   ...overrides,
 });
 
-export const createMockTask = (
-  overrides: Partial<MCPTask> = {}
-): MCPTask => ({
+export const createMockTask = (overrides: Partial<MCPTask> = {}): MCPTask => ({
   id: "task-1",
   status: "running",
   createdAt: new Date().toISOString(),
@@ -173,7 +173,11 @@ export const MOCK_PROMPTS: MCPPrompt[] = [
     description: "Translate text to another language",
     arguments: [
       { name: "text", description: "Text to translate", required: true },
-      { name: "targetLanguage", description: "Target language", required: true },
+      {
+        name: "targetLanguage",
+        description: "Target language",
+        required: true,
+      },
     ],
   }),
 ];
@@ -230,7 +234,7 @@ export function createErrorHandler(
   path: string,
   status: number,
   message: string,
-  details?: Record<string, unknown>
+  details?: Record<string, unknown>,
 ) {
   const handler = http[method](path, () => {
     const body: { error: string; details?: Record<string, unknown> } = {
@@ -280,7 +284,7 @@ export function createDelayedHandler(
   method: HttpMethod,
   path: string,
   delayMs: number,
-  response: unknown
+  response: unknown,
 ) {
   return http[method](path, async () => {
     await new Promise((resolve) => setTimeout(resolve, delayMs));
@@ -308,7 +312,7 @@ export const mcpHandlers = [
     if (!uri) {
       return HttpResponse.json(
         { error: "Missing uri parameter" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -318,7 +322,7 @@ export const mcpHandlers = [
     if (!content) {
       return HttpResponse.json(
         { error: "Resource not found" },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
@@ -342,7 +346,10 @@ export const mcpHandlers = [
 
   // POST /api/v1/mcp/tools/call - Invoke tool
   http.post("/api/v1/mcp/tools/call", async ({ request }) => {
-    const body = (await request.json()) as { name: string; arguments: Record<string, unknown> };
+    const body = (await request.json()) as {
+      name: string;
+      arguments: Record<string, unknown>;
+    };
     const { name } = body;
 
     // Check if tool exists
@@ -350,7 +357,7 @@ export const mcpHandlers = [
     if (!tool) {
       return HttpResponse.json(
         { error: `Tool '${name}' not found` },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
@@ -408,7 +415,10 @@ export const mcpHandlers = [
 
   // POST /api/v1/mcp/prompts/get - Get prompt with arguments
   http.post("/api/v1/mcp/prompts/get", async ({ request }) => {
-    const body = (await request.json()) as { name: string; arguments: Record<string, unknown> };
+    const body = (await request.json()) as {
+      name: string;
+      arguments: Record<string, unknown>;
+    };
     const { name, arguments: args } = body;
 
     // Check if prompt exists
@@ -416,7 +426,7 @@ export const mcpHandlers = [
     if (!prompt) {
       return HttpResponse.json(
         { error: `Prompt '${name}' not found` },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
@@ -450,7 +460,7 @@ export const mcpHandlers = [
     if (!task) {
       return HttpResponse.json(
         { error: `Task '${id}' not found` },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
@@ -465,7 +475,7 @@ export const mcpHandlers = [
     if (!task) {
       return HttpResponse.json(
         { error: `Task '${id}' not found` },
-        { status: 404 }
+        { status: 404 },
       );
     }
 

@@ -67,7 +67,7 @@ describe("AISessionCard", () => {
           title="React Development"
           userId="user-123"
         />
-      </Wrapper>
+      </Wrapper>,
     );
 
     expect(screen.getByText("React Development")).toBeInTheDocument();
@@ -85,11 +85,11 @@ describe("AISessionCard", () => {
           userId="user-123"
           showSummary
         />
-      </Wrapper>
+      </Wrapper>,
     );
 
     expect(
-      screen.getByText(/React component patterns and debugging techniques/)
+      screen.getByText(/React component patterns and debugging techniques/),
     ).toBeInTheDocument();
   });
 
@@ -105,7 +105,7 @@ describe("AISessionCard", () => {
           userId="user-123"
           showTopics
         />
-      </Wrapper>
+      </Wrapper>,
     );
 
     expect(screen.getByText("React")).toBeInTheDocument();
@@ -136,7 +136,7 @@ describe("AISessionCard", () => {
           userId="user-123"
           showSummary
         />
-      </Wrapper>
+      </Wrapper>,
     );
 
     // Should show a loading indicator (skeleton or spinner)
@@ -159,7 +159,7 @@ describe("AISessionCard", () => {
           userId="user-123"
           timestamp={timestamp}
         />
-      </Wrapper>
+      </Wrapper>,
     );
 
     expect(screen.getByText("Timestamped Session")).toBeInTheDocument();
@@ -178,7 +178,7 @@ describe("AISessionCard", () => {
           userId="user-123"
           onClick={handleClick}
         />
-      </Wrapper>
+      </Wrapper>,
     );
 
     const card = screen.getByText("Clickable Session").closest("div");
@@ -199,10 +199,12 @@ describe("AISessionCard", () => {
           userId="user-123"
           isActive
         />
-      </Wrapper>
+      </Wrapper>,
     );
 
-    const card = screen.getByText("Active Session").closest('[data-testid="session-card"]');
+    const card = screen
+      .getByText("Active Session")
+      .closest('[data-testid="session-card"]');
     expect(card).toHaveClass("active");
   });
 
@@ -218,7 +220,7 @@ describe("AISessionCard", () => {
           userId="user-123"
           enableAI={false}
         />
-      </Wrapper>
+      </Wrapper>,
     );
 
     expect(screen.getByText("Basic Session")).toBeInTheDocument();
@@ -251,7 +253,7 @@ describe("AISessionCard - Error States", () => {
           userId="user-123"
           showSummary
         />
-      </Wrapper>
+      </Wrapper>,
     );
 
     // Should still render the card title

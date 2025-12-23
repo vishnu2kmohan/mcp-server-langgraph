@@ -60,11 +60,19 @@ describe("useBatchApprovals", () => {
       const { useBatchApprovals } = await import("./useBatchApprovals");
 
       // Mock fetch
-      const mockFetch = vi.fn().mockImplementation(() =>
-        new Promise((resolve) => setTimeout(() => resolve({
-          ok: true,
-          json: () => Promise.resolve({ succeeded: 2, failed: 0, results: [] }),
-        }), 100))
+      const mockFetch = vi.fn().mockImplementation(
+        () =>
+          new Promise((resolve) =>
+            setTimeout(
+              () =>
+                resolve({
+                  ok: true,
+                  json: () =>
+                    Promise.resolve({ succeeded: 2, failed: 0, results: [] }),
+                }),
+              100,
+            ),
+          ),
       );
       vi.stubGlobal("fetch", mockFetch);
 
@@ -106,7 +114,7 @@ describe("useBatchApprovals", () => {
             request_ids: ["req-001", "req-002"],
             reason: "Verified",
           }),
-        })
+        }),
       );
 
       vi.unstubAllGlobals();
@@ -125,11 +133,19 @@ describe("useBatchApprovals", () => {
     it("should set isRejecting to true during request", async () => {
       const { useBatchApprovals } = await import("./useBatchApprovals");
 
-      const mockFetch = vi.fn().mockImplementation(() =>
-        new Promise((resolve) => setTimeout(() => resolve({
-          ok: true,
-          json: () => Promise.resolve({ succeeded: 1, failed: 0, results: [] }),
-        }), 100))
+      const mockFetch = vi.fn().mockImplementation(
+        () =>
+          new Promise((resolve) =>
+            setTimeout(
+              () =>
+                resolve({
+                  ok: true,
+                  json: () =>
+                    Promise.resolve({ succeeded: 1, failed: 0, results: [] }),
+                }),
+              100,
+            ),
+          ),
       );
       vi.stubGlobal("fetch", mockFetch);
 
@@ -174,7 +190,8 @@ describe("useBatchApprovals", () => {
     it("should clear error on subsequent successful request", async () => {
       const { useBatchApprovals } = await import("./useBatchApprovals");
 
-      const mockFetch = vi.fn()
+      const mockFetch = vi
+        .fn()
         .mockResolvedValueOnce({
           ok: false,
           status: 500,
@@ -228,7 +245,11 @@ describe("useBatchApprovals", () => {
 
       let response;
       await act(async () => {
-        response = await result.current.batchApprove(["req-001", "req-002", "req-003"]);
+        response = await result.current.batchApprove([
+          "req-001",
+          "req-002",
+          "req-003",
+        ]);
       });
 
       expect(response).toEqual(mockResponse);

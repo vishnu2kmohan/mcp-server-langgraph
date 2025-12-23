@@ -13,7 +13,11 @@
  * }
  * ```
  */
-import type { ClientSession, SessionConfig, ChatMessage } from "../types/session";
+import type {
+  ClientSession,
+  SessionConfig,
+  ChatMessage,
+} from "../types/session";
 import { devLogger } from "./devLogger";
 
 const logger = devLogger.withPrefix("[apiTransforms]");
@@ -112,7 +116,10 @@ export function isApiSession(value: unknown): value is ApiSession {
     return false;
   }
 
-  if (obj.organization_id !== undefined && typeof obj.organization_id !== "string") {
+  if (
+    obj.organization_id !== undefined &&
+    typeof obj.organization_id !== "string"
+  ) {
     return false;
   }
 
@@ -122,7 +129,9 @@ export function isApiSession(value: unknown): value is ApiSession {
 /**
  * Validate API session and return typed result
  */
-export function validateApiSession(value: unknown): ValidationResult<ApiSession> {
+export function validateApiSession(
+  value: unknown,
+): ValidationResult<ApiSession> {
   if (isApiSession(value)) {
     return { success: true, data: value };
   }
@@ -169,9 +178,11 @@ export function transformApiConfig(
 
   // Map 'model_provider' or 'modelProvider'
   if (typeof apiConfig.model_provider === "string") {
-    config.modelProvider = apiConfig.model_provider as SessionConfig["modelProvider"];
+    config.modelProvider =
+      apiConfig.model_provider as SessionConfig["modelProvider"];
   } else if (typeof apiConfig.modelProvider === "string") {
-    config.modelProvider = apiConfig.modelProvider as SessionConfig["modelProvider"];
+    config.modelProvider =
+      apiConfig.modelProvider as SessionConfig["modelProvider"];
   }
 
   // Map 'max_tokens' to 'maxTokens'

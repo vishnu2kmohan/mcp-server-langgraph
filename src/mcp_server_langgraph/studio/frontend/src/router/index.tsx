@@ -1,10 +1,10 @@
-import { createBrowserRouter, Navigate, Outlet } from "react-router";
+import { createBrowserRouter, Navigate, Outlet, useLocation } from "react-router";
 import { App } from "../App";
 import { AuthGuard } from "./guards/AuthGuard";
 import { PersonaGuard } from "./guards/PersonaGuard";
-import { HybridShellGuard } from "./guards/HybridShellGuard";
 import { PermissionGuard } from "./guards/PermissionGuard";
-import { HybridShellLayout } from "../layout";
+import { RootRedirect } from "./guards/RootRedirect";
+import { StudioShellGuard } from "./guards/StudioShellGuard";
 import {
   chatLoader,
   sessionsLoader,
@@ -32,8 +32,8 @@ export const router = createBrowserRouter(
       path: "/",
       element: <App />,
       children: [
-        // Root redirect to studio
-        { index: true, element: <Navigate to="/studio" replace /> },
+        // Root redirect - uses feature flag to choose HybridShell or legacy
+        { index: true, element: <RootRedirect /> },
 
         // Studio routes (lazy-loaded, authentication required)
         {
@@ -374,7 +374,9 @@ export const router = createBrowserRouter(
             // Traces - standalone route (redirects to observability/traces)
             {
               path: "traces",
-              element: <Navigate to="/studio/v2/observability/traces" replace />,
+              element: (
+                <Navigate to="/studio/v2/observability/traces" replace />
+              ),
             },
             // Files - file browser with artifacts loader
             {

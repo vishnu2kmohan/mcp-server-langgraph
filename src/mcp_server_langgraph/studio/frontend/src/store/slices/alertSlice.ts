@@ -179,7 +179,7 @@ const alertSlice = createSlice({
      */
     addAlert: (state, action: PayloadAction<Alert>) => {
       const existingIndex = state.alerts.findIndex(
-        (a) => a.alert_id === action.payload.alert_id
+        (a) => a.alert_id === action.payload.alert_id,
       );
 
       if (existingIndex !== -1) {
@@ -201,10 +201,10 @@ const alertSlice = createSlice({
      */
     updateAlert: (
       state,
-      action: PayloadAction<Partial<Alert> & { alert_id: string }>
+      action: PayloadAction<Partial<Alert> & { alert_id: string }>,
     ) => {
       const index = state.alerts.findIndex(
-        (a) => a.alert_id === action.payload.alert_id
+        (a) => a.alert_id === action.payload.alert_id,
       );
 
       if (index !== -1) {
@@ -237,9 +237,12 @@ const alertSlice = createSlice({
     /**
      * Add a pending remediation
      */
-    addPendingRemediation: (state, action: PayloadAction<RemediationRequest>) => {
+    addPendingRemediation: (
+      state,
+      action: PayloadAction<RemediationRequest>,
+    ) => {
       const existingIndex = state.pendingRemediations.findIndex(
-        (r) => r.remediation_id === action.payload.remediation_id
+        (r) => r.remediation_id === action.payload.remediation_id,
       );
 
       if (existingIndex === -1) {
@@ -252,10 +255,12 @@ const alertSlice = createSlice({
      */
     updateRemediation: (
       state,
-      action: PayloadAction<Partial<RemediationRequest> & { remediation_id: string }>
+      action: PayloadAction<
+        Partial<RemediationRequest> & { remediation_id: string }
+      >,
     ) => {
       const index = state.pendingRemediations.findIndex(
-        (r) => r.remediation_id === action.payload.remediation_id
+        (r) => r.remediation_id === action.payload.remediation_id,
       );
 
       if (index !== -1) {
@@ -274,7 +279,7 @@ const alertSlice = createSlice({
      */
     removePendingRemediation: (state, action: PayloadAction<string>) => {
       state.pendingRemediations = state.pendingRemediations.filter(
-        (r) => r.remediation_id !== action.payload
+        (r) => r.remediation_id !== action.payload,
       );
     },
 
@@ -379,14 +384,15 @@ export const selectSelectedAlertId = (state: RootState): string | null =>
 export const selectSelectedAlert = createSelector(
   [selectAlerts, selectSelectedAlertId],
   (alerts, selectedId): Alert | undefined =>
-    selectedId ? alerts.find((a) => a.alert_id === selectedId) : undefined
+    selectedId ? alerts.find((a) => a.alert_id === selectedId) : undefined,
 );
 
 /**
  * Select pending remediations
  */
-export const selectPendingRemediations = (state: RootState): RemediationRequest[] =>
-  state.alerts.pendingRemediations;
+export const selectPendingRemediations = (
+  state: RootState,
+): RemediationRequest[] => state.alerts.pendingRemediations;
 
 /**
  * Select sound enabled state
@@ -406,7 +412,8 @@ export const selectFilters = (state: RootState): AlertFilters =>
 export const selectCriticalAlertCount = createSelector(
   [selectAlerts],
   (alerts): number =>
-    alerts.filter((a) => a.severity === "critical" && a.state === "firing").length
+    alerts.filter((a) => a.severity === "critical" && a.state === "firing")
+      .length,
 );
 
 /**
@@ -415,7 +422,8 @@ export const selectCriticalAlertCount = createSelector(
 export const selectWarningAlertCount = createSelector(
   [selectAlerts],
   (alerts): number =>
-    alerts.filter((a) => a.severity === "warning" && a.state === "firing").length
+    alerts.filter((a) => a.severity === "warning" && a.state === "firing")
+      .length,
 );
 
 /**
@@ -426,8 +434,9 @@ export const selectFilteredAlerts = createSelector(
   (alerts, filters): Alert[] =>
     alerts.filter(
       (a) =>
-        filters.severity.includes(a.severity) && filters.state.includes(a.state)
-    )
+        filters.severity.includes(a.severity) &&
+        filters.state.includes(a.state),
+    ),
 );
 
 /**
@@ -494,12 +503,12 @@ export const selectAlertGroups = createSelector(
       // Sort by started_at to find most recent
       const sortedByTime = [...groupAlerts].sort(
         (a, b) =>
-          new Date(b.started_at).getTime() - new Date(a.started_at).getTime()
+          new Date(b.started_at).getTime() - new Date(a.started_at).getTime(),
       );
 
       // Get timestamps
       const timestamps = groupAlerts.map((a) =>
-        new Date(a.started_at).getTime()
+        new Date(a.started_at).getTime(),
       );
       const firstFiredAt = new Date(Math.min(...timestamps)).toISOString();
       const lastUpdatedAt = new Date(Math.max(...timestamps)).toISOString();
@@ -523,7 +532,7 @@ export const selectAlertGroups = createSelector(
     });
 
     return groups;
-  }
+  },
 );
 
 /**
@@ -534,8 +543,9 @@ export const selectFilteredAlertGroups = createSelector(
   (groups, filters): AlertGroup[] =>
     groups.filter(
       (g) =>
-        filters.severity.includes(g.severity) && filters.state.includes(g.state)
-    )
+        filters.severity.includes(g.severity) &&
+        filters.state.includes(g.state),
+    ),
 );
 
 /**
@@ -543,7 +553,7 @@ export const selectFilteredAlertGroups = createSelector(
  */
 export const selectAlertGroupCount = createSelector(
   [selectAlertGroups],
-  (groups): number => groups.length
+  (groups): number => groups.length,
 );
 
 // =============================================================================

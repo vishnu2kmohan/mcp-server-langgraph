@@ -106,8 +106,7 @@ export function AgentExecutionTracePanel({
   }
 
   const hasNodes = trace.nodes && trace.nodes.length > 0;
-  const hasSteps =
-    !hasNodes && trace.steps && trace.steps.length > 0;
+  const hasSteps = !hasNodes && trace.steps && trace.steps.length > 0;
 
   return (
     <div
@@ -275,7 +274,8 @@ export function AgentExecutionTracePanel({
                   >
                     <span>{bottleneck.step_name}</span>
                     <span className="font-mono">
-                      {bottleneck.duration_ms}ms ({bottleneck.percentage_of_total}%)
+                      {bottleneck.duration_ms}ms (
+                      {bottleneck.percentage_of_total}%)
                     </span>
                   </li>
                 ))}

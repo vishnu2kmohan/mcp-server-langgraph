@@ -11,8 +11,14 @@
 
 import { describe, it, expect, beforeAll, afterAll, afterEach } from "vitest";
 import { setupServer } from "msw/node";
-import { nodeConfigHandlers, mockNodeConfigHelpResponse } from "./nodeConfigHandlers";
-import type { NodeConfigHelpRequest, NodeConfigHelpResponse } from "../../types/api";
+import {
+  nodeConfigHandlers,
+  mockNodeConfigHelpResponse,
+} from "./nodeConfigHandlers";
+import type {
+  NodeConfigHelpRequest,
+  NodeConfigHelpResponse,
+} from "../../types/api";
 
 // Setup MSW server with handlers
 const server = setupServer(...nodeConfigHandlers);
@@ -159,7 +165,14 @@ describe("nodeConfigHandlers", () => {
     });
 
     it("handles different node types", async () => {
-      const nodeTypes = ["llm", "prompt", "tool", "memory", "router", "retriever"];
+      const nodeTypes = [
+        "llm",
+        "prompt",
+        "tool",
+        "memory",
+        "router",
+        "retriever",
+      ];
 
       for (const nodeType of nodeTypes) {
         const request: NodeConfigHelpRequest = {

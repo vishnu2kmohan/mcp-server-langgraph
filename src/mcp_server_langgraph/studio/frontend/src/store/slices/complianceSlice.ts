@@ -4,7 +4,11 @@
  * State management for compliance dashboard status.
  * Tracks SOC-2, HIPAA, GDPR, and FedRAMP compliance states.
  */
-import { createSlice, createSelector, type PayloadAction } from "@reduxjs/toolkit";
+import {
+  createSlice,
+  createSelector,
+  type PayloadAction,
+} from "@reduxjs/toolkit";
 
 // =============================================================================
 // Types

@@ -194,10 +194,7 @@ export function AgentTaskQueue({ onCancel, className }: AgentTaskQueueProps) {
   const runningCount = useAppSelector(selectRunningAgentCount);
 
   const hasCompletedOrFailed = useMemo(
-    () =>
-      agents.some(
-        (a) => a.status === "completed" || a.status === "failed",
-      ),
+    () => agents.some((a) => a.status === "completed" || a.status === "failed"),
     [agents],
   );
 
@@ -270,10 +267,7 @@ export function AgentTaskQueue({ onCancel, className }: AgentTaskQueueProps) {
       </div>
 
       {/* Task list */}
-      <ul
-        role="list"
-        className="flex-1 overflow-y-auto p-4 space-y-3"
-      >
+      <ul role="list" className="flex-1 overflow-y-auto p-4 space-y-3">
         {agents.map((agent) => (
           <TaskItem
             key={agent.id}

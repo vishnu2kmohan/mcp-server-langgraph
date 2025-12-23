@@ -62,7 +62,7 @@ describe("useProgressiveDisclosure", () => {
       // Set localStorage before rendering
       localStorage.setItem(
         STORAGE_KEY,
-        JSON.stringify({ level: "advanced", autoDetect: false })
+        JSON.stringify({ level: "advanced", autoDetect: false }),
       );
 
       const { result } = renderHook(() => useProgressiveDisclosure(), {

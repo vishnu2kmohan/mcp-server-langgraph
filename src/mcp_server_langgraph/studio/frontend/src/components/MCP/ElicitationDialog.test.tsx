@@ -84,7 +84,7 @@ describe("ElicitationDialog", () => {
   describe("rendering", () => {
     it("renders dialog when open", () => {
       renderWithProvider(
-        <ElicitationDialog open={true} onClose={mockOnClose} />
+        <ElicitationDialog open={true} onClose={mockOnClose} />,
       );
 
       expect(screen.getByRole("dialog")).toBeInTheDocument();
@@ -93,7 +93,7 @@ describe("ElicitationDialog", () => {
 
     it("does not render when closed", () => {
       renderWithProvider(
-        <ElicitationDialog open={false} onClose={mockOnClose} />
+        <ElicitationDialog open={false} onClose={mockOnClose} />,
       );
 
       expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
@@ -103,7 +103,7 @@ describe("ElicitationDialog", () => {
   describe("message input", () => {
     it("has a message textarea", () => {
       renderWithProvider(
-        <ElicitationDialog open={true} onClose={mockOnClose} />
+        <ElicitationDialog open={true} onClose={mockOnClose} />,
       );
 
       expect(screen.getByLabelText(/message/i)).toBeInTheDocument();
@@ -111,7 +111,7 @@ describe("ElicitationDialog", () => {
 
     it("allows entering a message", async () => {
       renderWithProvider(
-        <ElicitationDialog open={true} onClose={mockOnClose} />
+        <ElicitationDialog open={true} onClose={mockOnClose} />,
       );
 
       const messageInput = screen.getByLabelText(/message/i);
@@ -124,7 +124,7 @@ describe("ElicitationDialog", () => {
   describe("schema input", () => {
     it("has an optional schema textarea", () => {
       renderWithProvider(
-        <ElicitationDialog open={true} onClose={mockOnClose} />
+        <ElicitationDialog open={true} onClose={mockOnClose} />,
       );
 
       expect(screen.getByLabelText(/schema/i)).toBeInTheDocument();
@@ -132,7 +132,7 @@ describe("ElicitationDialog", () => {
 
     it("allows entering a JSON schema", async () => {
       renderWithProvider(
-        <ElicitationDialog open={true} onClose={mockOnClose} />
+        <ElicitationDialog open={true} onClose={mockOnClose} />,
       );
 
       const schemaInput = screen.getByLabelText(/schema/i);
@@ -148,7 +148,7 @@ describe("ElicitationDialog", () => {
 
     it("shows validation error for invalid JSON", async () => {
       renderWithProvider(
-        <ElicitationDialog open={true} onClose={mockOnClose} />
+        <ElicitationDialog open={true} onClose={mockOnClose} />,
       );
 
       const schemaInput = screen.getByLabelText(/schema/i);
@@ -169,7 +169,7 @@ describe("ElicitationDialog", () => {
       });
 
       renderWithProvider(
-        <ElicitationDialog open={true} onClose={mockOnClose} />
+        <ElicitationDialog open={true} onClose={mockOnClose} />,
       );
 
       // Enter message
@@ -192,7 +192,7 @@ describe("ElicitationDialog", () => {
       });
 
       renderWithProvider(
-        <ElicitationDialog open={true} onClose={mockOnClose} />
+        <ElicitationDialog open={true} onClose={mockOnClose} />,
       );
 
       // Enter message
@@ -201,8 +201,13 @@ describe("ElicitationDialog", () => {
 
       // Enter schema (use fireEvent for JSON with braces)
       const schemaInput = screen.getByLabelText(/schema/i);
-      const schema = { type: "object", properties: { name: { type: "string" } } };
-      fireEvent.change(schemaInput, { target: { value: JSON.stringify(schema) } });
+      const schema = {
+        type: "object",
+        properties: { name: { type: "string" } },
+      };
+      fireEvent.change(schemaInput, {
+        target: { value: JSON.stringify(schema) },
+      });
 
       // Send request
       const sendButton = screen.getByRole("button", { name: /send/i });
@@ -220,7 +225,7 @@ describe("ElicitationDialog", () => {
       });
 
       renderWithProvider(
-        <ElicitationDialog open={true} onClose={mockOnClose} />
+        <ElicitationDialog open={true} onClose={mockOnClose} />,
       );
 
       // Enter message and send
@@ -242,7 +247,7 @@ describe("ElicitationDialog", () => {
       });
 
       renderWithProvider(
-        <ElicitationDialog open={true} onClose={mockOnClose} />
+        <ElicitationDialog open={true} onClose={mockOnClose} />,
       );
 
       // Enter message and send
@@ -261,7 +266,7 @@ describe("ElicitationDialog", () => {
       mockRequestElicitation.mockReturnValue({
         unwrap: () =>
           new Promise((resolve) =>
-            setTimeout(() => resolve(MOCK_ELICITATION_ACCEPT), 1000)
+            setTimeout(() => resolve(MOCK_ELICITATION_ACCEPT), 1000),
           ),
       });
 
@@ -271,7 +276,7 @@ describe("ElicitationDialog", () => {
       ]);
 
       renderWithProvider(
-        <ElicitationDialog open={true} onClose={mockOnClose} />
+        <ElicitationDialog open={true} onClose={mockOnClose} />,
       );
 
       // Enter message
@@ -289,7 +294,7 @@ describe("ElicitationDialog", () => {
       });
 
       renderWithProvider(
-        <ElicitationDialog open={true} onClose={mockOnClose} />
+        <ElicitationDialog open={true} onClose={mockOnClose} />,
       );
 
       // Enter message and send
@@ -308,7 +313,7 @@ describe("ElicitationDialog", () => {
   describe("validation", () => {
     it("disables send button when message is empty", () => {
       renderWithProvider(
-        <ElicitationDialog open={true} onClose={mockOnClose} />
+        <ElicitationDialog open={true} onClose={mockOnClose} />,
       );
 
       const sendButton = screen.getByRole("button", { name: /send/i });
@@ -317,7 +322,7 @@ describe("ElicitationDialog", () => {
 
     it("enables send button when message is provided", async () => {
       renderWithProvider(
-        <ElicitationDialog open={true} onClose={mockOnClose} />
+        <ElicitationDialog open={true} onClose={mockOnClose} />,
       );
 
       const messageInput = screen.getByLabelText(/message/i);
@@ -329,7 +334,7 @@ describe("ElicitationDialog", () => {
 
     it("disables send button when schema is invalid JSON", async () => {
       renderWithProvider(
-        <ElicitationDialog open={true} onClose={mockOnClose} />
+        <ElicitationDialog open={true} onClose={mockOnClose} />,
       );
 
       const messageInput = screen.getByLabelText(/message/i);
@@ -347,7 +352,7 @@ describe("ElicitationDialog", () => {
   describe("dialog actions", () => {
     it("calls onClose when cancel button clicked", async () => {
       renderWithProvider(
-        <ElicitationDialog open={true} onClose={mockOnClose} />
+        <ElicitationDialog open={true} onClose={mockOnClose} />,
       );
 
       const cancelButton = screen.getByRole("button", { name: /cancel/i });
@@ -358,7 +363,7 @@ describe("ElicitationDialog", () => {
 
     it("resets form when dialog is reopened", async () => {
       const { rerender } = renderWithProvider(
-        <ElicitationDialog open={true} onClose={mockOnClose} />
+        <ElicitationDialog open={true} onClose={mockOnClose} />,
       );
 
       // Enter message
@@ -371,13 +376,13 @@ describe("ElicitationDialog", () => {
       rerender(
         <Provider store={createTestStore()}>
           <ElicitationDialog open={false} onClose={mockOnClose} />
-        </Provider>
+        </Provider>,
       );
 
       rerender(
         <Provider store={createTestStore()}>
           <ElicitationDialog open={true} onClose={mockOnClose} />
-        </Provider>
+        </Provider>,
       );
 
       // Form should be reset

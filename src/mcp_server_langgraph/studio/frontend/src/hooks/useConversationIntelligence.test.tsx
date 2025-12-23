@@ -94,7 +94,8 @@ describe("Conversation Intelligence Hooks", () => {
   });
 
   it("useIntentDetection returns intent with confidence", async () => {
-    const { useIntentDetection } = await import("./useConversationIntelligence");
+    const { useIntentDetection } =
+      await import("./useConversationIntelligence");
 
     const { result } = renderHook(
       () =>
@@ -116,7 +117,8 @@ describe("Conversation Intelligence Hooks", () => {
   });
 
   it("useIntentDetection handles disabled state", async () => {
-    const { useIntentDetection } = await import("./useConversationIntelligence");
+    const { useIntentDetection } =
+      await import("./useConversationIntelligence");
 
     const { result } = renderHook(
       () =>
@@ -134,7 +136,8 @@ describe("Conversation Intelligence Hooks", () => {
   });
 
   it("useContextOptimization returns suggestions and usage", async () => {
-    const { useContextOptimization } = await import("./useConversationIntelligence");
+    const { useContextOptimization } =
+      await import("./useConversationIntelligence");
 
     const { result } = renderHook(
       () =>
@@ -173,7 +176,10 @@ describe("Conversation Intelligence Hooks", () => {
     });
 
     expect(result.current.primaryGoal).toBe("Build a REST API");
-    expect(result.current.subGoals).toEqual(["Implement auth", "Add endpoints"]);
+    expect(result.current.subGoals).toEqual([
+      "Implement auth",
+      "Add endpoints",
+    ]);
     expect(result.current.progressPercent).toBe(45);
     expect(typeof result.current.refetch).toBe("function");
   });

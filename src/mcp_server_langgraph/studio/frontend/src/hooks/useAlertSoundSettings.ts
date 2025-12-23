@@ -67,7 +67,7 @@ export interface UseAlertSoundSettingsReturn {
   /** Update a specific setting */
   updateSetting: <K extends keyof AlertSoundSettings>(
     key: K,
-    value: AlertSoundSettings[K]
+    value: AlertSoundSettings[K],
   ) => void;
   /** Update multiple settings at once */
   updateSettings: (updates: Partial<AlertSoundSettings>) => void;
@@ -154,28 +154,25 @@ export function useAlertSoundSettings(): UseAlertSoundSettingsReturn {
   const updateSetting = useCallback(
     <K extends keyof AlertSoundSettings>(
       key: K,
-      value: AlertSoundSettings[K]
+      value: AlertSoundSettings[K],
     ) => {
       setSettings((prev) => ({
         ...prev,
         [key]: value,
       }));
     },
-    []
+    [],
   );
 
   /**
    * Update multiple settings
    */
-  const updateSettings = useCallback(
-    (updates: Partial<AlertSoundSettings>) => {
-      setSettings((prev) => ({
-        ...prev,
-        ...updates,
-      }));
-    },
-    []
-  );
+  const updateSettings = useCallback((updates: Partial<AlertSoundSettings>) => {
+    setSettings((prev) => ({
+      ...prev,
+      ...updates,
+    }));
+  }, []);
 
   /**
    * Reset to defaults
@@ -208,7 +205,7 @@ export function useAlertSoundSettings(): UseAlertSoundSettingsReturn {
         name: config.name,
         description: config.description,
       })),
-    []
+    [],
   );
 
   return {

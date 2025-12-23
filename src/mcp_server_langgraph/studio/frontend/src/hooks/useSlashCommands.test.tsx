@@ -201,7 +201,9 @@ describe("useSlashCommands", () => {
       });
 
       // Find a built-in command
-      const helpCommand = result.current.commands.find((c) => c.name === "help");
+      const helpCommand = result.current.commands.find(
+        (c) => c.name === "help",
+      );
       expect(helpCommand).toBeDefined();
 
       // Simulate selecting the command

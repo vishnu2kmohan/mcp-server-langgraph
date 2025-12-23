@@ -52,7 +52,10 @@ const createTestStore = (
   initialAlerts: Alert[] = [],
   initialRemediations: RemediationRequest[] = [],
   soundEnabled = true,
-  filters: AlertFilters = { severity: ["critical", "warning"], state: ["firing"] }
+  filters: AlertFilters = {
+    severity: ["critical", "warning"],
+    state: ["firing"],
+  },
 ) => {
   return configureStore({
     reducer: {
@@ -86,7 +89,7 @@ const createMockAlert = (overrides: Partial<Alert> = {}): Alert => ({
 });
 
 const createMockRemediation = (
-  overrides: Partial<RemediationRequest> = {}
+  overrides: Partial<RemediationRequest> = {},
 ): RemediationRequest => ({
   remediation_id: `rem-${Math.random().toString(36).slice(2, 9)}`,
   alert_id: "alert-001",
@@ -170,7 +173,10 @@ describe("alertSlice", () => {
     it("should not add duplicate alerts (same alert_id)", () => {
       const store = createTestStore();
       const alert1 = createMockAlert({ alert_id: "alert-001", name: "First" });
-      const alert2 = createMockAlert({ alert_id: "alert-001", name: "Duplicate" });
+      const alert2 = createMockAlert({
+        alert_id: "alert-001",
+        name: "Duplicate",
+      });
 
       store.dispatch(addAlert(alert1));
       store.dispatch(addAlert(alert2));
@@ -201,7 +207,9 @@ describe("alertSlice", () => {
       const alert = createMockAlert({ alert_id: "alert-001" });
       const store = createTestStore([alert]);
 
-      store.dispatch(updateAlert({ alert_id: "non-existent", state: "resolved" }));
+      store.dispatch(
+        updateAlert({ alert_id: "non-existent", state: "resolved" }),
+      );
 
       const state = store.getState();
       const alerts = selectAlerts(state);
@@ -265,7 +273,9 @@ describe("alertSlice", () => {
     describe("addPendingRemediation", () => {
       it("should add a pending remediation", () => {
         const store = createTestStore();
-        const remediation = createMockRemediation({ remediation_id: "rem-001" });
+        const remediation = createMockRemediation({
+          remediation_id: "rem-001",
+        });
 
         store.dispatch(addPendingRemediation(remediation));
 
@@ -277,7 +287,9 @@ describe("alertSlice", () => {
       });
 
       it("should not add duplicate remediation with same ID", () => {
-        const remediation = createMockRemediation({ remediation_id: "rem-001" });
+        const remediation = createMockRemediation({
+          remediation_id: "rem-001",
+        });
         const store = createTestStore([], [remediation]);
 
         // Try to add the same remediation again
@@ -304,7 +316,7 @@ describe("alertSlice", () => {
             status: "approved",
             approved_by: "admin@example.com",
             approved_at: new Date().toISOString(),
-          })
+          }),
         );
 
         const state = store.getState();
@@ -467,7 +479,10 @@ describe("alertSlice", () => {
   describe("Selectors", () => {
     describe("selectSelectedAlert", () => {
       it("should return the selected alert", () => {
-        const alert = createMockAlert({ alert_id: "alert-001", name: "Selected" });
+        const alert = createMockAlert({
+          alert_id: "alert-001",
+          name: "Selected",
+        });
         const store = createTestStore([alert]);
 
         store.dispatch(setSelectedAlertId("alert-001"));
@@ -526,9 +541,21 @@ describe("alertSlice", () => {
     describe("selectFilteredAlerts", () => {
       it("should filter alerts by severity", () => {
         const alerts = [
-          createMockAlert({ alert_id: "1", severity: "critical", state: "firing" }),
-          createMockAlert({ alert_id: "2", severity: "warning", state: "firing" }),
-          createMockAlert({ alert_id: "3", severity: "critical", state: "firing" }),
+          createMockAlert({
+            alert_id: "1",
+            severity: "critical",
+            state: "firing",
+          }),
+          createMockAlert({
+            alert_id: "2",
+            severity: "warning",
+            state: "firing",
+          }),
+          createMockAlert({
+            alert_id: "3",
+            severity: "critical",
+            state: "firing",
+          }),
         ];
         const store = createTestStore(alerts, [], true, {
           severity: ["critical"],
@@ -544,9 +571,21 @@ describe("alertSlice", () => {
 
       it("should filter alerts by state", () => {
         const alerts = [
-          createMockAlert({ alert_id: "1", severity: "critical", state: "firing" }),
-          createMockAlert({ alert_id: "2", severity: "critical", state: "resolved" }),
-          createMockAlert({ alert_id: "3", severity: "warning", state: "firing" }),
+          createMockAlert({
+            alert_id: "1",
+            severity: "critical",
+            state: "firing",
+          }),
+          createMockAlert({
+            alert_id: "2",
+            severity: "critical",
+            state: "resolved",
+          }),
+          createMockAlert({
+            alert_id: "3",
+            severity: "warning",
+            state: "firing",
+          }),
         ];
         const store = createTestStore(alerts, [], true, {
           severity: ["critical", "warning"],
@@ -562,9 +601,21 @@ describe("alertSlice", () => {
 
       it("should filter by both severity and state", () => {
         const alerts = [
-          createMockAlert({ alert_id: "1", severity: "critical", state: "firing" }),
-          createMockAlert({ alert_id: "2", severity: "critical", state: "resolved" }),
-          createMockAlert({ alert_id: "3", severity: "warning", state: "firing" }),
+          createMockAlert({
+            alert_id: "1",
+            severity: "critical",
+            state: "firing",
+          }),
+          createMockAlert({
+            alert_id: "2",
+            severity: "critical",
+            state: "resolved",
+          }),
+          createMockAlert({
+            alert_id: "3",
+            severity: "warning",
+            state: "firing",
+          }),
         ];
         const store = createTestStore(alerts, [], true, {
           severity: ["critical"],
@@ -593,8 +644,8 @@ describe("alertSlice", () => {
         message: "High CPU usage",
         labels: { instance: "node-1" },
         annotations: {},
-        started_at: "2025-12-20T10:00:00Z",  // Backend field name
-        ended_at: null,                       // Backend field name
+        started_at: "2025-12-20T10:00:00Z", // Backend field name
+        ended_at: null, // Backend field name
         fingerprint: "fp-123",
       };
 
@@ -679,7 +730,8 @@ describe("alertSlice localStorage persistence", () => {
 
   describe("toggleSound with persistence", () => {
     it("should persist sound state when toggling", async () => {
-      const { default: alertReducer, toggleSound } = await import("./alertSlice");
+      const { default: alertReducer, toggleSound } =
+        await import("./alertSlice");
 
       const store = configureStore({
         reducer: { alerts: alertReducer },
@@ -705,7 +757,8 @@ describe("alertSlice localStorage persistence", () => {
 
   describe("setSoundEnabled with persistence", () => {
     it("should persist sound state when setting value", async () => {
-      const { default: alertReducer, setSoundEnabled } = await import("./alertSlice");
+      const { default: alertReducer, setSoundEnabled } =
+        await import("./alertSlice");
 
       const store = configureStore({
         reducer: { alerts: alertReducer },
@@ -736,7 +789,11 @@ describe("alertSlice localStorage persistence", () => {
       // Set localStorage before importing
       localStorage.setItem(STORAGE_KEY, "false");
 
-      const { default: alertReducer, initializeSoundFromStorage, selectSoundEnabled } = await import("./alertSlice");
+      const {
+        default: alertReducer,
+        initializeSoundFromStorage,
+        selectSoundEnabled,
+      } = await import("./alertSlice");
 
       const store = configureStore({
         reducer: { alerts: alertReducer },
@@ -756,7 +813,11 @@ describe("alertSlice localStorage persistence", () => {
       // Clear localStorage
       localStorage.clear();
 
-      const { default: alertReducer, initializeSoundFromStorage, selectSoundEnabled } = await import("./alertSlice");
+      const {
+        default: alertReducer,
+        initializeSoundFromStorage,
+        selectSoundEnabled,
+      } = await import("./alertSlice");
 
       const store = configureStore({
         reducer: { alerts: alertReducer },
@@ -777,7 +838,8 @@ describe("alertSlice localStorage persistence", () => {
 describe("alertSlice grouping selectors", () => {
   describe("selectAlertGroups", () => {
     it("should group alerts by service and alertname", async () => {
-      const { default: alertReducer, selectAlertGroups } = await import("./alertSlice");
+      const { default: alertReducer, selectAlertGroups } =
+        await import("./alertSlice");
 
       const alerts = [
         createMockAlert({
@@ -835,7 +897,8 @@ describe("alertSlice grouping selectors", () => {
     });
 
     it("should use highest severity in group", async () => {
-      const { default: alertReducer, selectAlertGroups } = await import("./alertSlice");
+      const { default: alertReducer, selectAlertGroups } =
+        await import("./alertSlice");
 
       const alerts = [
         createMockAlert({
@@ -878,7 +941,8 @@ describe("alertSlice grouping selectors", () => {
     });
 
     it("should set state to firing if any alert in group is firing", async () => {
-      const { default: alertReducer, selectAlertGroups } = await import("./alertSlice");
+      const { default: alertReducer, selectAlertGroups } =
+        await import("./alertSlice");
 
       const alerts = [
         createMockAlert({
@@ -908,7 +972,10 @@ describe("alertSlice grouping selectors", () => {
             pendingRemediations: [],
             soundEnabled: true,
             lastCriticalAlertTime: null,
-            filters: { severity: ["critical", "warning"], state: ["firing", "resolved"] },
+            filters: {
+              severity: ["critical", "warning"],
+              state: ["firing", "resolved"],
+            },
           },
         },
       });
@@ -920,7 +987,8 @@ describe("alertSlice grouping selectors", () => {
     });
 
     it("should set state to resolved if all alerts are resolved", async () => {
-      const { default: alertReducer, selectAlertGroups } = await import("./alertSlice");
+      const { default: alertReducer, selectAlertGroups } =
+        await import("./alertSlice");
 
       const alerts = [
         createMockAlert({
@@ -950,7 +1018,10 @@ describe("alertSlice grouping selectors", () => {
             pendingRemediations: [],
             soundEnabled: true,
             lastCriticalAlertTime: null,
-            filters: { severity: ["critical", "warning"], state: ["firing", "resolved"] },
+            filters: {
+              severity: ["critical", "warning"],
+              state: ["firing", "resolved"],
+            },
           },
         },
       });
@@ -962,7 +1033,8 @@ describe("alertSlice grouping selectors", () => {
     });
 
     it("should identify most recent alert in group", async () => {
-      const { default: alertReducer, selectAlertGroups } = await import("./alertSlice");
+      const { default: alertReducer, selectAlertGroups } =
+        await import("./alertSlice");
 
       const alerts = [
         createMockAlert({
@@ -1006,7 +1078,8 @@ describe("alertSlice grouping selectors", () => {
     });
 
     it("should use unknown for service when not present in labels", async () => {
-      const { default: alertReducer, selectAlertGroups } = await import("./alertSlice");
+      const { default: alertReducer, selectAlertGroups } =
+        await import("./alertSlice");
 
       const alerts = [
         createMockAlert({
@@ -1037,7 +1110,8 @@ describe("alertSlice grouping selectors", () => {
     });
 
     it("should group alerts from different services separately", async () => {
-      const { default: alertReducer, selectAlertGroups } = await import("./alertSlice");
+      const { default: alertReducer, selectAlertGroups } =
+        await import("./alertSlice");
 
       const alerts = [
         createMockAlert({
@@ -1076,7 +1150,8 @@ describe("alertSlice grouping selectors", () => {
     });
 
     it("should return empty array when no alerts", async () => {
-      const { default: alertReducer, selectAlertGroups } = await import("./alertSlice");
+      const { default: alertReducer, selectAlertGroups } =
+        await import("./alertSlice");
 
       const store = configureStore({
         reducer: { alerts: alertReducer },
@@ -1099,7 +1174,8 @@ describe("alertSlice grouping selectors", () => {
 
   describe("selectFilteredAlertGroups", () => {
     it("should filter groups by severity", async () => {
-      const { default: alertReducer, selectFilteredAlertGroups } = await import("./alertSlice");
+      const { default: alertReducer, selectFilteredAlertGroups } =
+        await import("./alertSlice");
 
       const alerts = [
         createMockAlert({
@@ -1139,7 +1215,8 @@ describe("alertSlice grouping selectors", () => {
     });
 
     it("should filter groups by state", async () => {
-      const { default: alertReducer, selectFilteredAlertGroups } = await import("./alertSlice");
+      const { default: alertReducer, selectFilteredAlertGroups } =
+        await import("./alertSlice");
 
       const alerts = [
         createMockAlert({
@@ -1179,7 +1256,8 @@ describe("alertSlice grouping selectors", () => {
     });
 
     it("should return all groups when no filters applied", async () => {
-      const { default: alertReducer, selectFilteredAlertGroups } = await import("./alertSlice");
+      const { default: alertReducer, selectFilteredAlertGroups } =
+        await import("./alertSlice");
 
       const alerts = [
         createMockAlert({
@@ -1207,7 +1285,10 @@ describe("alertSlice grouping selectors", () => {
             pendingRemediations: [],
             soundEnabled: true,
             lastCriticalAlertTime: null,
-            filters: { severity: ["critical", "warning"], state: ["firing", "resolved"] },
+            filters: {
+              severity: ["critical", "warning"],
+              state: ["firing", "resolved"],
+            },
           },
         },
       });
@@ -1220,13 +1301,30 @@ describe("alertSlice grouping selectors", () => {
 
   describe("selectAlertGroupCount", () => {
     it("should return total count of alert groups", async () => {
-      const { default: alertReducer, selectAlertGroupCount } = await import("./alertSlice");
+      const { default: alertReducer, selectAlertGroupCount } =
+        await import("./alertSlice");
 
       const alerts = [
-        createMockAlert({ alert_id: "1", name: "CPUHigh", labels: { service: "api-server" } }),
-        createMockAlert({ alert_id: "2", name: "CPUHigh", labels: { service: "api-server" } }),
-        createMockAlert({ alert_id: "3", name: "MemoryHigh", labels: { service: "api-server" } }),
-        createMockAlert({ alert_id: "4", name: "DiskHigh", labels: { service: "worker" } }),
+        createMockAlert({
+          alert_id: "1",
+          name: "CPUHigh",
+          labels: { service: "api-server" },
+        }),
+        createMockAlert({
+          alert_id: "2",
+          name: "CPUHigh",
+          labels: { service: "api-server" },
+        }),
+        createMockAlert({
+          alert_id: "3",
+          name: "MemoryHigh",
+          labels: { service: "api-server" },
+        }),
+        createMockAlert({
+          alert_id: "4",
+          name: "DiskHigh",
+          labels: { service: "worker" },
+        }),
       ];
 
       const store = configureStore({

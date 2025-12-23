@@ -11,7 +11,6 @@ export {
   HybridShellGuard,
   type HybridShellGuardProps,
 } from "./HybridShellGuard";
-export {
-  PermissionGuard,
-  type PermissionGuardProps,
-} from "./PermissionGuard";
+export { PermissionGuard, type PermissionGuardProps } from "./PermissionGuard";
+export { RootRedirect } from "./RootRedirect";
+export { StudioShellGuard } from "./StudioShellGuard";

@@ -147,7 +147,7 @@ export interface UseSessionSimilarityResult {
  * @returns Session summary result
  */
 export function useSessionSummary(
-  options: UseSessionSummaryOptions
+  options: UseSessionSummaryOptions,
 ): UseSessionSummaryResult {
   const { userId, sessionId, enabled = true } = options;
 
@@ -183,11 +183,13 @@ export function useSessionSummary(
         ],
       }).unwrap();
 
-      const sessionResult = data.analyses?.session_summarize as {
-        summary?: string;
-        key_topics?: string[];
-        message_count?: number;
-      } | undefined;
+      const sessionResult = data.analyses?.session_summarize as
+        | {
+            summary?: string;
+            key_topics?: string[];
+            message_count?: number;
+          }
+        | undefined;
       if (sessionResult) {
         setSummary(sessionResult.summary || null);
         setKeyTopics(sessionResult.key_topics || []);
@@ -243,7 +245,7 @@ export function useSessionSummary(
  * @returns Session groups result
  */
 export function useSessionGroups(
-  options: UseSessionGroupsOptions
+  options: UseSessionGroupsOptions,
 ): UseSessionGroupsResult {
   const { userId, sessionIds, enabled = true } = options;
 
@@ -278,16 +280,20 @@ export function useSessionGroups(
         ],
       }).unwrap();
 
-      const groupResult = data.analyses?.session_group as {
-        groups?: SessionGroup[];
-        ungrouped?: string[];
-      } | undefined;
+      const groupResult = data.analyses?.session_group as
+        | {
+            groups?: SessionGroup[];
+            ungrouped?: string[];
+          }
+        | undefined;
       if (groupResult) {
         setGroups(groupResult.groups || []);
         setUngrouped(groupResult.ungrouped || []);
       }
     } catch (err) {
-      setError(err instanceof Error ? err : new Error("Failed to group sessions"));
+      setError(
+        err instanceof Error ? err : new Error("Failed to group sessions"),
+      );
       setGroups([]);
       setUngrouped([]);
     } finally {
@@ -338,7 +344,7 @@ export function useSessionGroups(
  * @returns Similar sessions result
  */
 export function useSessionSimilarity(
-  options: UseSessionSimilarityOptions
+  options: UseSessionSimilarityOptions,
 ): UseSessionSimilarityResult {
   const { userId, sessionId, limit = 5, enabled = true } = options;
 
@@ -372,15 +378,19 @@ export function useSessionSimilarity(
         ],
       }).unwrap();
 
-      const similarResult = data.analyses?.session_similarity as {
-        similar_sessions?: SimilarSession[];
-      } | undefined;
+      const similarResult = data.analyses?.session_similarity as
+        | {
+            similar_sessions?: SimilarSession[];
+          }
+        | undefined;
       if (similarResult) {
         setSimilarSessions(similarResult.similar_sessions || []);
       }
     } catch (err) {
       setError(
-        err instanceof Error ? err : new Error("Failed to find similar sessions")
+        err instanceof Error
+          ? err
+          : new Error("Failed to find similar sessions"),
       );
       setSimilarSessions([]);
     } finally {

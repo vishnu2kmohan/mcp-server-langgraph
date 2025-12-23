@@ -31,9 +31,8 @@ const mockSessionLoaderData: ChatLoaderData = {
 };
 
 vi.mock("react-router", async () => {
-  const actual = await vi.importActual<typeof import("react-router")>(
-    "react-router",
-  );
+  const actual =
+    await vi.importActual<typeof import("react-router")>("react-router");
   return {
     ...actual,
     useRouteLoaderData: vi.fn((routeId: string) => {
@@ -75,12 +74,14 @@ const createTestStore = (preloadedState?: TestStorePreloadedState) => {
     reducer: {
       canvas: canvasReducer,
     },
-    preloadedState: preloadedState ? {
-      canvas: {
-        ...canvasReducer(undefined, { type: "@@INIT" }),
-        ...preloadedState.canvas,
-      } as ReturnType<typeof canvasReducer>,
-    } : undefined,
+    preloadedState: preloadedState
+      ? {
+          canvas: {
+            ...canvasReducer(undefined, { type: "@@INIT" }),
+            ...preloadedState.canvas,
+          } as ReturnType<typeof canvasReducer>,
+        }
+      : undefined,
   });
 };
 
@@ -493,9 +494,7 @@ describe("ConnectedCanvasPanel", () => {
       expect(screen.getByTestId("canvas-panel")).toBeInTheDocument();
       // With flag enabled and code artifact selected, suggestions should be visible
       await waitFor(() => {
-        expect(
-          screen.queryByTestId("inline-suggestions"),
-        ).toBeInTheDocument();
+        expect(screen.queryByTestId("inline-suggestions")).toBeInTheDocument();
       });
     });
   });
@@ -532,7 +531,9 @@ describe("ConnectedCanvasPanel", () => {
 
       // Wait for artifact selection
       await waitFor(() => {
-        expect(store.getState().canvas.selectedArtifactId).toBe("code-artifact");
+        expect(store.getState().canvas.selectedArtifactId).toBe(
+          "code-artifact",
+        );
       });
 
       // Component should render - suggestions are fetched async
@@ -576,7 +577,9 @@ describe("ConnectedCanvasPanel", () => {
 
       // Wait for artifact selection
       await waitFor(() => {
-        expect(store.getState().canvas.selectedArtifactId).toBe("text-artifact");
+        expect(store.getState().canvas.selectedArtifactId).toBe(
+          "text-artifact",
+        );
       });
 
       // No inline suggestions should be visible for non-code content
@@ -638,8 +641,16 @@ describe("ConnectedCanvasPanel", () => {
       const user = userEvent.setup();
       const store = createTestStore();
       mockSessionLoaderData.artifacts = [
-        createMockArtifact({ id: "art-cache-1", title: "First", contentType: "code" }),
-        createMockArtifact({ id: "art-cache-2", title: "Second", contentType: "code" }),
+        createMockArtifact({
+          id: "art-cache-1",
+          title: "First",
+          contentType: "code",
+        }),
+        createMockArtifact({
+          id: "art-cache-2",
+          title: "Second",
+          contentType: "code",
+        }),
       ];
 
       render(<ConnectedCanvasPanel />, { wrapper: createWrapper(store) });
@@ -719,7 +730,7 @@ describe("ConnectedCanvasPanel", () => {
           status: 200,
           statusText: "OK",
           json: () => Promise.resolve({ id: "artifact-1", version: 2 }),
-        } as Response)
+        } as Response),
       );
     });
 
@@ -847,7 +858,8 @@ describe("ConnectedCanvasPanel", () => {
         createMockArtifact({
           id: "explain-art",
           title: "Explain Test",
-          content: "const fibonacci = (n) => n <= 1 ? n : fibonacci(n-1) + fibonacci(n-2);",
+          content:
+            "const fibonacci = (n) => n <= 1 ? n : fibonacci(n-1) + fibonacci(n-2);",
           contentType: "code",
         }),
       ];
@@ -949,7 +961,7 @@ describe("ConnectedCanvasPanel", () => {
           status: 200,
           statusText: "OK",
           json: () => Promise.resolve({ id: "artifact-1", version: 2 }),
-        } as Response)
+        } as Response),
       );
     });
 
@@ -1364,7 +1376,7 @@ describe("ConnectedCanvasPanel", () => {
       } as Response);
 
       const { unmount } = render(<ConnectedCanvasPanel />, {
-        wrapper: createWrapper(store)
+        wrapper: createWrapper(store),
       });
 
       // Enter edit mode and save

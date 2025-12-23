@@ -234,7 +234,7 @@ const PERSONA_OVERRIDES: Partial<
  */
 export function getEmptyStateConfig(
   context: EmptyStateContext,
-  persona: Persona = "default"
+  persona: Persona = "default",
 ): EmptyStateConfig {
   const defaultConfig = DEFAULT_CONFIGS[context];
   const personaOverrides = PERSONA_OVERRIDES[context]?.[persona];
@@ -278,7 +278,7 @@ export function getSupportedPersonas(): Persona[] {
  */
 export function hasPersonaConfig(
   context: EmptyStateContext,
-  persona: Persona
+  persona: Persona,
 ): boolean {
   return !!PERSONA_OVERRIDES[context]?.[persona];
 }

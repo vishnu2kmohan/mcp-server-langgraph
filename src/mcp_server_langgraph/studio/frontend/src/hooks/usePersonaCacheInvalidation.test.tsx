@@ -11,7 +11,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { renderHook, act, waitFor , cleanup} from "@testing-library/react";
+import { renderHook, act, waitFor, cleanup } from "@testing-library/react";
 import { Provider } from "react-redux";
 import { configureStore } from "@reduxjs/toolkit";
 import type { ReactNode } from "react";
@@ -33,7 +33,10 @@ vi.mock("../api", () => ({
 
 import { usePersonaCacheInvalidation } from "./usePersonaCacheInvalidation";
 import { clearAllAICache } from "./useAICache";
-import personaReducer, { setUserInfo, setSubPersona } from "../store/slices/personaSlice";
+import personaReducer, {
+  setUserInfo,
+  setSubPersona,
+} from "../store/slices/personaSlice";
 import authReducer from "../store/slices/authSlice";
 
 // =============================================================================
@@ -90,7 +93,7 @@ describe("usePersonaCacheInvalidation", () => {
 
   afterEach(() => {
     vi.restoreAllMocks();
-      cleanup();
+    cleanup();
   });
 
   describe("basic functionality", () => {
@@ -131,7 +134,7 @@ describe("usePersonaCacheInvalidation", () => {
             email: "admin@example.com",
             roles: ["admin"],
             persona: "admin",
-          })
+          }),
         );
       });
 
@@ -154,7 +157,7 @@ describe("usePersonaCacheInvalidation", () => {
             email: "new@example.com",
             roles: [],
             persona: "user", // Same persona
-          })
+          }),
         );
       });
 
@@ -217,10 +220,9 @@ describe("usePersonaCacheInvalidation", () => {
   describe("configuration options", () => {
     it("should respect enabled option", () => {
       const store = createTestStore("user");
-      renderHook(
-        () => usePersonaCacheInvalidation({ enabled: false }),
-        { wrapper: createWrapper(store) }
-      );
+      renderHook(() => usePersonaCacheInvalidation({ enabled: false }), {
+        wrapper: createWrapper(store),
+      });
 
       // Change persona
       act(() => {
@@ -230,7 +232,7 @@ describe("usePersonaCacheInvalidation", () => {
             email: "admin@example.com",
             roles: ["admin"],
             persona: "admin",
-          })
+          }),
         );
       });
 

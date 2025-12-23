@@ -270,21 +270,33 @@ describe("personaSlice", () => {
     describe("selectHasPermission", () => {
       it("should return true for admin regardless of permission", () => {
         const adminState = {
-          persona: { ...mockState.persona, persona: "admin" as Persona, permissions: [] },
+          persona: {
+            ...mockState.persona,
+            persona: "admin" as Persona,
+            permissions: [],
+          },
         };
         expect(selectHasPermission("any:permission")(adminState)).toBe(true);
       });
 
       it("should return true when user has the permission", () => {
         const state = {
-          persona: { ...mockState.persona, persona: "developer" as Persona, permissions: ["read:projects", "write:projects"] },
+          persona: {
+            ...mockState.persona,
+            persona: "developer" as Persona,
+            permissions: ["read:projects", "write:projects"],
+          },
         };
         expect(selectHasPermission("read:projects")(state)).toBe(true);
       });
 
       it("should return false when user lacks the permission", () => {
         const state = {
-          persona: { ...mockState.persona, persona: "user" as Persona, permissions: ["read:projects"] },
+          persona: {
+            ...mockState.persona,
+            persona: "user" as Persona,
+            permissions: ["read:projects"],
+          },
         };
         expect(selectHasPermission("admin:manage")(state)).toBe(false);
       });
@@ -298,10 +310,7 @@ describe("personaSlice", () => {
   describe("sub-personas", () => {
     describe("setSubPersona reducer", () => {
       it("should set admin sub-persona", () => {
-        const actual = personaReducer(
-          initialState,
-          setSubPersona("admin"),
-        );
+        const actual = personaReducer(initialState, setSubPersona("admin"));
         expect(actual.subPersona).toBe("admin");
         expect(actual.persona).toBe("admin");
       });
@@ -316,10 +325,7 @@ describe("personaSlice", () => {
       });
 
       it("should set auditor sub-persona", () => {
-        const actual = personaReducer(
-          initialState,
-          setSubPersona("auditor"),
-        );
+        const actual = personaReducer(initialState, setSubPersona("auditor"));
         expect(actual.subPersona).toBe("auditor");
         expect(actual.persona).toBe("admin");
       });

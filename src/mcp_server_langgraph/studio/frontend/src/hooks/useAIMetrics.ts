@@ -19,7 +19,11 @@ import { useCallback, useMemo, useRef } from "react";
 // Types
 // =============================================================================
 
-export type AIMetricsEventType = "request" | "error" | "cache_hit" | "cache_miss";
+export type AIMetricsEventType =
+  | "request"
+  | "error"
+  | "cache_hit"
+  | "cache_miss";
 
 export interface AIMetricsEvent {
   /** Type of event */
@@ -112,7 +116,7 @@ function createInitialStore(): MetricsStore {
 
 function getOrCreateFeatureMetrics(
   store: MetricsStore,
-  feature: string
+  feature: string,
 ): FeatureMetrics {
   let metrics = store.features.get(feature);
   if (!metrics) {
@@ -142,7 +146,7 @@ export interface CreateAIMetricsTrackerOptions {
  * Create a standalone metrics tracker (for use outside React components)
  */
 export function createAIMetricsTracker(
-  options: CreateAIMetricsTrackerOptions = {}
+  options: CreateAIMetricsTrackerOptions = {},
 ): AIMetricsTracker {
   const { onEvent } = options;
   let store = createInitialStore();
@@ -272,7 +276,7 @@ export function createAIMetricsTracker(
  * ```
  */
 export function useAIMetrics(
-  options: UseAIMetricsOptions = {}
+  options: UseAIMetricsOptions = {},
 ): UseAIMetricsResult {
   const { onEvent } = options;
 
@@ -304,7 +308,7 @@ export function useAIMetrics(
         latency: latencyMs,
       });
     },
-    [emitEvent]
+    [emitEvent],
   );
 
   const trackError = useCallback(
@@ -322,7 +326,7 @@ export function useAIMetrics(
         error,
       });
     },
-    [emitEvent]
+    [emitEvent],
   );
 
   const trackCacheHit = useCallback(
@@ -334,7 +338,7 @@ export function useAIMetrics(
         timestamp: Date.now(),
       });
     },
-    [emitEvent]
+    [emitEvent],
   );
 
   const trackCacheMiss = useCallback(
@@ -346,7 +350,7 @@ export function useAIMetrics(
         timestamp: Date.now(),
       });
     },
-    [emitEvent]
+    [emitEvent],
   );
 
   const getSnapshot = useCallback((): AIMetricsSnapshot => {
@@ -400,6 +404,6 @@ export function useAIMetrics(
       getSnapshot,
       getFeatureMetrics,
       reset,
-    ]
+    ],
   );
 }
