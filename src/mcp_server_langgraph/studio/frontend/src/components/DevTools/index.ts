@@ -29,6 +29,20 @@ export {
   preloadContextTabs,
 } from "./lazy";
 
+// Performance utilities
+export {
+  useBatchedUpdates,
+  useDebouncedValue,
+  useThrottledCallback,
+  useVirtualList,
+  useMemoizedFilter,
+  useStableCallback,
+  useRenderCount,
+  measureTime,
+  useLazyInit,
+  useIntersectionObserver,
+} from "./utils/performance";
+
 // Types
 export type {
   DevToolsTabId,

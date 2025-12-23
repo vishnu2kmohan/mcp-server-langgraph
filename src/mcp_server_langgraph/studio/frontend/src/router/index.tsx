@@ -119,18 +119,20 @@ export const router = createBrowserRouter(
               children: [
                 {
                   index: true,
+                  id: "chat-index",
+                  loader: chatLoader,
                   lazy: async () => {
                     const { ChatPage } = await import("../pages/ChatPage");
                     return { Component: ChatPage };
                   },
                 },
-                // Redirect /studio/chat/:sessionId to /studio/chat?session=:sessionId
                 {
+                  id: "chat-session",
                   path: ":sessionId",
+                  loader: chatLoader,
                   lazy: async () => {
-                    const { ChatSessionRedirect } =
-                      await import("../components/Chat/ChatSessionRedirect");
-                    return { Component: ChatSessionRedirect };
+                    const { ChatPage } = await import("../pages/ChatPage");
+                    return { Component: ChatPage };
                   },
                 },
               ],
@@ -230,6 +232,95 @@ export const router = createBrowserRouter(
               lazy: async () => {
                 const { CostPage } = await import("../pages/CostPage");
                 return { Component: CostPage };
+              },
+            },
+            // Files - file browser with artifacts loader
+            {
+              id: "files",
+              path: "files",
+              loader: filesLoader,
+              lazy: async () => {
+                const { FilesPage } = await import("../pages/FilesPage");
+                return { Component: FilesPage };
+              },
+            },
+            // Compliance - requires compliance:read permission
+            {
+              path: "compliance",
+              element: (
+                <PermissionGuard
+                  requiredPermissions={["compliance:read"]}
+                  fallbackPath="/studio/chat"
+                >
+                  <Outlet />
+                </PermissionGuard>
+              ),
+              children: [
+                {
+                  index: true,
+                  id: "compliance-dashboard",
+                  loader: complianceLoader,
+                  lazy: async () => {
+                    const { ConnectedComplianceDashboard } = await import(
+                      "../compliance/ConnectedComplianceDashboard"
+                    );
+                    return { Component: ConnectedComplianceDashboard };
+                  },
+                },
+              ],
+            },
+            // Audit - requires audit:read permission
+            {
+              path: "audit",
+              element: (
+                <PermissionGuard
+                  requiredPermissions={["audit:read"]}
+                  fallbackPath="/studio/chat"
+                >
+                  <Outlet />
+                </PermissionGuard>
+              ),
+              children: [
+                {
+                  index: true,
+                  lazy: async () => {
+                    const { AuditLogPage } = await import(
+                      "../pages/AuditLogPage"
+                    );
+                    return { Component: AuditLogPage };
+                  },
+                },
+              ],
+            },
+            // Analytics - HEART metrics dashboard (admin only)
+            {
+              path: "analytics",
+              element: (
+                <PermissionGuard
+                  requiredPermissions={["admin:access"]}
+                  fallbackPath="/studio/chat"
+                >
+                  <Outlet />
+                </PermissionGuard>
+              ),
+              children: [
+                {
+                  index: true,
+                  lazy: async () => {
+                    const { AnalyticsDashboardPage } = await import(
+                      "../pages/AnalyticsDashboardPage"
+                    );
+                    return { Component: AnalyticsDashboardPage };
+                  },
+                },
+              ],
+            },
+            // Help - full help center
+            {
+              path: "help",
+              lazy: async () => {
+                const { HelpPage } = await import("../pages/HelpPage");
+                return { Component: HelpPage };
               },
             },
             // Admin routes nested under /studio/admin (lazy-loaded with PersonaGuard)
