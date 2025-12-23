@@ -128,7 +128,7 @@ export function PromptTester({ open, onClose }: PromptTesterProps) {
         arguments: args,
       }).unwrap();
       setResult(response);
-    } catch (err) {
+    } catch (_err) {
       setError("Failed to execute prompt");
     }
   }, [selectedPrompt, argumentValues, isFormValid, getPrompt]);

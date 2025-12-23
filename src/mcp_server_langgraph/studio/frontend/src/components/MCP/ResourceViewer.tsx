@@ -79,7 +79,7 @@ export function ResourceViewer({ open, onClose }: ResourceViewerProps) {
             });
           }
         }
-      } catch (error) {
+      } catch (_error) {
         setReadError("Failed to read resource");
       }
     },

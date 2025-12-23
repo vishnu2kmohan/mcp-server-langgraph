@@ -20,10 +20,10 @@
  */
 
 import { describe, it, expect, afterEach } from "vitest";
-import { http, HttpResponse } from "msw";
+import { http as _http, HttpResponse as _HttpResponse } from "msw";
 import { server } from "../server";
 import {
-  mcpHandlers,
+  mcpHandlers as _mcpHandlers,
   createMockResource,
   createMockTool,
   createMockPrompt,

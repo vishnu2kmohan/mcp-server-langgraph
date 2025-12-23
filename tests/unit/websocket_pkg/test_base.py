@@ -7,9 +7,14 @@ Tests the WebSocketBase abstract class and its infrastructure.
 from __future__ import annotations
 
 import gc
+from typing import TYPE_CHECKING
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+
+if TYPE_CHECKING:
+    from mcp_server_langgraph.websocket.config import WebSocketConfig
+    from mcp_server_langgraph.websocket.metrics import WebSocketMetrics
 
 pytestmark = [
     pytest.mark.unit,
@@ -25,7 +30,7 @@ RATE_LIMITER_PATCH = "mcp_server_langgraph.websocket.rate_limiter.get_websocket_
 class _ConcreteWebSocket:
     """Concrete WebSocketBase implementation for testing."""
 
-    def __init__(self, config: "WebSocketConfig", metrics: "WebSocketMetrics | None" = None):
+    def __init__(self, config: WebSocketConfig, metrics: WebSocketMetrics | None = None):
         from mcp_server_langgraph.websocket.base import WebSocketBase
         from mcp_server_langgraph.websocket.types import MessageEnvelope
 
@@ -926,7 +931,7 @@ class TestGetAuthMiddlewareFromWebsocket:
         """GIVEN websocket WHEN getting auth middleware THEN delegates to dependencies."""
         from mcp_server_langgraph.websocket.base import get_auth_middleware_from_websocket
 
-        mock_ws = MagicMock()
+        _mock_ws = MagicMock()  # noqa: F841 - Reserved for future use
         mock_middleware = MagicMock()
 
         with patch(
@@ -953,7 +958,7 @@ class TestWebSocketBaseRun:
     async def test_run_accepts_connection(self) -> None:
         """GIVEN handler WHEN run called THEN accepts websocket connection."""
         from mcp_server_langgraph.websocket.base import WebSocketBase
-        from mcp_server_langgraph.websocket.types import AuthUser, MessageEnvelope, WebSocketConfig
+        from mcp_server_langgraph.websocket.types import MessageEnvelope, WebSocketConfig
 
         class TestHandler(WebSocketBase):
             async def handle_message(self, message: MessageEnvelope) -> MessageEnvelope | None:

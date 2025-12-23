@@ -206,5 +206,5 @@ class TestHandlerClassStructure:
                 handler_cls, "handle_message"
             ), f"{handler_cls.__name__} missing handle_message"
             assert callable(
-                getattr(handler_cls, "handle_message")
+                handler_cls.handle_message
             ), f"{handler_cls.__name__}.handle_message not callable"

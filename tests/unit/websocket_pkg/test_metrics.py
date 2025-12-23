@@ -7,7 +7,7 @@ collection for all WebSocket endpoints with optional OpenTelemetry integration.
 from __future__ import annotations
 
 import gc
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 import pytest
 

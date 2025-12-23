@@ -17,8 +17,8 @@ import { renderHook, act } from "@testing-library/react";
 import {
   useAIMetrics,
   createAIMetricsTracker,
-  type AIMetricsEvent,
-  type AIMetricsSnapshot,
+  type _AIMetricsEvent,
+  type _AIMetricsSnapshot,
 } from "./useAIMetrics";
 
 describe("useAIMetrics", () => {

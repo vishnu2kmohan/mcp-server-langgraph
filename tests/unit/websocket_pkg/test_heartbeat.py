@@ -7,7 +7,7 @@ Tests the HeartbeatManager class for server-initiated heartbeat functionality.
 import asyncio
 import gc
 from datetime import UTC, datetime, timedelta
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
@@ -281,7 +281,7 @@ class TestHeartbeatLoop:
         await manager.start(mock_ws)
         try:
             await asyncio.wait_for(timeout_called.wait(), timeout=1.0)
-        except asyncio.TimeoutError:
+        except TimeoutError:
             pytest.fail("Timeout callback was not called")
         finally:
             await manager.stop()
@@ -303,7 +303,7 @@ class TestHeartbeatLoop:
         await manager.start(mock_ws)
         try:
             await asyncio.wait_for(timeout_called.wait(), timeout=1.0)
-        except asyncio.TimeoutError:
+        except TimeoutError:
             pytest.fail("Timeout callback was not called on send failure")
         finally:
             await manager.stop()

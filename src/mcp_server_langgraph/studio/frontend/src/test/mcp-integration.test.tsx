@@ -152,7 +152,7 @@ describe("MCP Full Flow Integration", () => {
       await waitFor(() => expect(tasksResult.current.isSuccess).toBe(true));
 
       // Track refetch via subscription count
-      const initialFetchTime = tasksResult.current.fulfilledTimeStamp;
+      const _initialFetchTime = tasksResult.current.fulfilledTimeStamp;
 
       // Invoke a tool (should invalidate TASKS)
       const { result: toolResult } = renderHook(

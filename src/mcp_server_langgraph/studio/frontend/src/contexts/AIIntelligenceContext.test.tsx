@@ -12,7 +12,7 @@
  * - Error boundary integration
  */
 
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect } from "vitest";
 import { render, screen, renderHook } from "@testing-library/react";
 import type { ReactNode } from "react";
 import {

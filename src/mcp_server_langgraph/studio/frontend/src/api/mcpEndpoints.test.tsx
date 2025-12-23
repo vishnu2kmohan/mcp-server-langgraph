@@ -79,19 +79,19 @@ const _MOCK_TOOL_RESULT = {
   isError: false,
 };
 
-const MOCK_SAMPLING_RESPONSE = {
+const _MOCK_SAMPLING_RESPONSE = {
   role: "assistant",
   content: { type: "text", text: "This is a mock sampling response." },
   model: "mock-model",
   stopReason: "end_turn",
 };
 
-const MOCK_ELICITATION_RESPONSE = {
+const _MOCK_ELICITATION_RESPONSE = {
   action: "accept",
   content: { name: "John Doe", email: "john@example.com" },
 };
 
-const MOCK_PROMPTS = {
+const _MOCK_PROMPTS = {
   prompts: [
     {
       name: "summarize",
@@ -111,7 +111,7 @@ const MOCK_PROMPTS = {
   ],
 };
 
-const MOCK_PROMPT_DETAIL = {
+const _MOCK_PROMPT_DETAIL = {
   description: "Summarize the given text",
   messages: [
     {
@@ -490,7 +490,7 @@ describe("MCP RTK Query Endpoints", () => {
       // After cancel, the cache should be invalidated
       // This is verified by checking that the endpoint would refetch
       await waitFor(() => {
-        const state = store.getState().api.queries;
+        const _state = store.getState().api.queries;
         // At minimum, the mutation should complete without error
         return cancelResult.current[1].isSuccess;
       });

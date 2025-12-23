@@ -101,7 +101,7 @@ export interface UseAIPersonaAnalysisResult {
 }
 
 // Note: DEFAULT_TIMEOUT_MS kept for API compatibility but not used with RTK Query
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
+ 
 
 /**
  * Hook for AI-powered persona behavior analysis.

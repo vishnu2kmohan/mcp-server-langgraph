@@ -13,7 +13,7 @@
  */
 
 import { createSlice, PayloadAction, createSelector } from "@reduxjs/toolkit";
-import { storage, STORAGE_KEYS } from "../../utils/storage";
+import { storage } from "../../utils/storage";
 import type { Persona } from "./personaSlice";
 
 // =============================================================================

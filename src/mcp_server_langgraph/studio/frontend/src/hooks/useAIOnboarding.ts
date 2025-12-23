@@ -153,7 +153,7 @@ export function useAIOnboarding(
     usePersonalizeOnboardingMutation();
 
   // Get session context from Redux
-  const currentSession = useSelector(selectCurrentSession);
+  const _currentSession = useSelector(selectCurrentSession);
 
   // State
   const [detectedIntent, setDetectedIntent] = useState<string | null>(null);

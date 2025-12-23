@@ -140,7 +140,7 @@ describe("AISessionCard", () => {
     );
 
     // Should show a loading indicator (skeleton or spinner)
-    const loadingElement = screen.queryByTestId("ai-loading");
+    const _loadingElement = screen.queryByTestId("ai-loading");
     // Loading state may be shown differently, but component should render
     expect(screen.getByText("Loading Session")).toBeInTheDocument();
   });

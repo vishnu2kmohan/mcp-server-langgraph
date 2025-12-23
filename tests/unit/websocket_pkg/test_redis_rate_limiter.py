@@ -13,8 +13,6 @@ Following TDD RED-GREEN-REFACTOR cycle:
 from __future__ import annotations
 
 import gc
-from datetime import UTC, datetime
-from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest

@@ -12,7 +12,7 @@
  */
 
 import { useState, useMemo } from "react";
-import { HelpCircle, Search, X, Loader2, BookOpen, Sparkles, Zap } from "lucide-react";
+import { HelpCircle, Search, X, Loader2, BookOpen, Zap } from "lucide-react";
 import { cn } from "../utils/cn";
 import { useContextualHelp } from "../hooks/useUXIntelligence";
 

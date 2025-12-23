@@ -112,7 +112,7 @@ export interface KeyboardShortcut {
   /** Key combination (e.g., "Cmd+K", "Ctrl+Shift+P") */
   keys: string;
   /** Scope where shortcut is active */
-  scope: "global" | "chat" | "workflow" | "settings";
+  scope: "global" | "chat" | "workflow" | "settings" | "devtools";
   /** Whether the shortcut is customizable */
   customizable: boolean;
 }
@@ -174,6 +174,42 @@ export const DEFAULT_KEYBOARD_SHORTCUTS: KeyboardShortcut[] = [
     keys: "Escape",
     scope: "global",
     customizable: false,
+  },
+  // DevTools shortcuts
+  {
+    action: "toggleDevTools",
+    label: "Toggle DevTools",
+    keys: "Cmd+Shift+I",
+    scope: "global",
+    customizable: true,
+  },
+  {
+    action: "focusDevToolsConsole",
+    label: "Focus DevTools Console",
+    keys: "Cmd+Shift+C",
+    scope: "global",
+    customizable: true,
+  },
+  {
+    action: "clearDevToolsConsole",
+    label: "Clear DevTools Console",
+    keys: "Cmd+K",
+    scope: "devtools",
+    customizable: true,
+  },
+  {
+    action: "devToolsNextTab",
+    label: "DevTools Next Tab",
+    keys: "Cmd+]",
+    scope: "devtools",
+    customizable: true,
+  },
+  {
+    action: "devToolsPrevTab",
+    label: "DevTools Previous Tab",
+    keys: "Cmd+[",
+    scope: "devtools",
+    customizable: true,
   },
 ];
 
