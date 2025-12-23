@@ -57,6 +57,8 @@ export interface DevToolsState {
   aiInsightsEnabled: boolean;
   /** AI-suggested tab order (null if no suggestion) */
   aiSuggestedLayout: DevToolsTabId[] | null;
+  /** Counter to trigger console clear (increment triggers clear in ConsoleTab) */
+  consoleClearCounter: number;
 }
 
 // =============================================================================
@@ -186,6 +188,7 @@ const initialState: DevToolsState = {
   consoleFilter: "all",
   aiInsightsEnabled: false,
   aiSuggestedLayout: null,
+  consoleClearCounter: 0,
 };
 
 // =============================================================================
@@ -316,6 +319,14 @@ export const devToolsSlice = createSlice({
         state.collapsed = getDefaultCollapsedFromPersona(action.payload);
       }
     },
+
+    /**
+     * Clear console logs.
+     * Increments counter to trigger clear in ConsoleTab component.
+     */
+    clearConsole: (state) => {
+      state.consoleClearCounter += 1;
+    },
   },
 });
 
@@ -335,6 +346,7 @@ export const {
   applyAILayout,
   clearAILayout,
   initializeFromPersona,
+  clearConsole,
 } = devToolsSlice.actions;
 
 // =============================================================================
@@ -372,6 +384,9 @@ export const selectAiInsightsEnabled = (state: DevToolsRootState) =>
 
 export const selectAISuggestedLayout = (state: DevToolsRootState) =>
   state.devTools.aiSuggestedLayout;
+
+export const selectConsoleClearCounter = (state: DevToolsRootState) =>
+  state.devTools.consoleClearCounter;
 
 /**
  * Get available tabs based on current context and AI settings.

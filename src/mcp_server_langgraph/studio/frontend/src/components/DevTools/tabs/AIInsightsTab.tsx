@@ -19,6 +19,8 @@ import {
 
 import { cn } from "../../../utils/cn";
 import { useDevToolsAI } from "../hooks/useDevToolsAI";
+import { useAppSelector } from "../../../store/hooks";
+import { selectUser } from "../../../store/slices/authSlice";
 import type { AIInsightsTabProps, AIInsight, AIInsightType } from "../types";
 
 // =============================================================================
@@ -255,6 +257,9 @@ export function AIInsightsTab({
 }: AIInsightsTabProps) {
   const [filter, setFilter] = useState<FilterType>("all");
 
+  // Get current user from auth state
+  const user = useAppSelector(selectUser);
+
   const {
     insights,
     suggestedLayout,
@@ -267,7 +272,7 @@ export function AIInsightsTab({
   } = useDevToolsAI({
     context,
     entityId: contextEntityId,
-    userId: "current-user", // TODO: Get from auth context
+    userId: user?.id ?? "anonymous",
     enabled: true,
   });
 

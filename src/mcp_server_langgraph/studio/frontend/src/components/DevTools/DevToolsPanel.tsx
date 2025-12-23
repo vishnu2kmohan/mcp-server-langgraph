@@ -39,6 +39,7 @@ import {
   setActiveTab,
   setMaximized,
   setConsoleFilter,
+  clearConsole,
   selectDevToolsCollapsed,
   selectDevToolsMaximized,
   selectActiveTab,
@@ -50,6 +51,7 @@ import {
 import { useDevToolsContext } from "./hooks/useDevToolsContext";
 import { TimelineBar } from "./TimelineBar";
 import { DevToolsTimelineProvider } from "./context/DevToolsTimelineProvider";
+import { DevToolsWebSocketObserver } from "./components/DevToolsWebSocketObserver";
 import type { DevToolsPanelProps } from "./types";
 
 // =============================================================================
@@ -225,9 +227,8 @@ export function DevToolsPanel({ className }: DevToolsPanelProps) {
   );
 
   const handleClearConsole = useCallback(() => {
-    // TODO: Dispatch clear console action
-    console.log("Clear console");
-  }, []);
+    dispatch(clearConsole());
+  }, [dispatch]);
 
   // Don't render if collapsed
   if (collapsed) {
@@ -340,6 +341,8 @@ export function DevToolsPanel({ className }: DevToolsPanelProps) {
 
   return (
     <DevToolsTimelineProvider>
+      {/* WebSocket observer bridges real-time events to the timeline */}
+      <DevToolsWebSocketObserver />
       <div
         data-testid="devtools-panel"
         className={cn(

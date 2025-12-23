@@ -26,6 +26,7 @@ import devToolsReducer, {
   applyAILayout,
   clearAILayout,
   initializeFromPersona,
+  clearConsole,
   selectDevToolsCollapsed,
   selectDevToolsMaximized,
   selectDevToolsHeight,
@@ -35,6 +36,7 @@ import devToolsReducer, {
   selectConsoleFilter,
   selectAiInsightsEnabled,
   selectAISuggestedLayout,
+  selectConsoleClearCounter,
   selectAvailableTabs,
   getDefaultCollapsedFromPersona,
   type DevToolsTabId,
@@ -54,6 +56,7 @@ describe("devToolsSlice", () => {
     consoleFilter: "all" as const,
     aiInsightsEnabled: false,
     aiSuggestedLayout: null as DevToolsTabId[] | null,
+    consoleClearCounter: 0,
   };
 
   beforeEach(() => {
@@ -372,6 +375,36 @@ describe("devToolsSlice", () => {
     it("should set filter to error", () => {
       const result = devToolsReducer(initialState, setConsoleFilter("error"));
       expect(result.consoleFilter).toBe("error");
+    });
+  });
+
+  // ===========================================================================
+  // Console Clear
+  // ===========================================================================
+
+  describe("clearConsole", () => {
+    it("should increment consoleClearCounter", () => {
+      const result = devToolsReducer(initialState, clearConsole());
+      expect(result.consoleClearCounter).toBe(1);
+    });
+
+    it("should increment counter each time called", () => {
+      let state = initialState;
+      state = devToolsReducer(state, clearConsole());
+      expect(state.consoleClearCounter).toBe(1);
+      state = devToolsReducer(state, clearConsole());
+      expect(state.consoleClearCounter).toBe(2);
+      state = devToolsReducer(state, clearConsole());
+      expect(state.consoleClearCounter).toBe(3);
+    });
+  });
+
+  describe("selectConsoleClearCounter", () => {
+    it("should select console clear counter", () => {
+      const rootState = {
+        devTools: { ...initialState, consoleClearCounter: 5 },
+      };
+      expect(selectConsoleClearCounter(rootState)).toBe(5);
     });
   });
 

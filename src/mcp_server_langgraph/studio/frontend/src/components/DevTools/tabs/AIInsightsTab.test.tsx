@@ -86,6 +86,16 @@ vi.mock("../hooks/useDevToolsAI", () => ({
   useDevToolsAI: (options: unknown) => mockUseDevToolsAI(options),
 }));
 
+// Mock Redux store hooks
+vi.mock("../../../store/hooks", () => ({
+  useAppSelector: vi.fn(() => ({ id: "test-user-id", username: "testuser" })),
+  useAppDispatch: vi.fn(() => vi.fn()),
+}));
+
+vi.mock("../../../store/slices/authSlice", () => ({
+  selectUser: vi.fn(),
+}));
+
 // =============================================================================
 // Tests
 // =============================================================================

@@ -206,8 +206,7 @@ export function ExecutionTraceTab({
     useWorkflowExecution({ workflowId });
 
   // Filter steps by timeline window for time-travel debugging
-  // TODO: Use filteredSteps in the render output for time-travel filtering
-  const _filteredSteps = useMemo(() => {
+  const filteredSteps = useMemo(() => {
     if (!steps) return [];
     if (!timeline.timeWindow) return steps;
 
@@ -282,8 +281,8 @@ export function ExecutionTraceTab({
     );
   }
 
-  // Empty state
-  if (steps.length === 0) {
+  // Empty state (use filteredSteps for time-travel filtered view)
+  if (filteredSteps.length === 0) {
     return (
       <div
         data-testid="execution-trace-tab"
@@ -326,8 +325,11 @@ export function ExecutionTraceTab({
 
         {/* Step count */}
         <span className="text-xs text-gray-500">
-          {steps.filter((s) => s.status === "completed").length}/{steps.length}{" "}
-          steps
+          {filteredSteps.filter((s) => s.status === "completed").length}/
+          {filteredSteps.length} steps
+          {timeline.timeWindow && filteredSteps.length !== steps.length && (
+            <span className="ml-1 text-gray-400">({steps.length} total)</span>
+          )}
         </span>
 
         {/* Refresh button */}
@@ -342,9 +344,9 @@ export function ExecutionTraceTab({
         </button>
       </div>
 
-      {/* Steps list */}
+      {/* Steps list - filtered by timeline window for time-travel debugging */}
       <div className="flex-1 overflow-y-auto">
-        {steps.map((step) => (
+        {filteredSteps.map((step) => (
           <div key={step.id}>
             <ExecutionStepRow
               step={step}

@@ -90,8 +90,11 @@ function getStatusIcon(status: "ok" | "error" | "unset") {
   }
 }
 
-// TODO: Use _getStatusColor for span bar coloring in waterfall view
-function _getStatusColor(status: "ok" | "error" | "unset"): string {
+/**
+ * Get background color for span bar based on status.
+ * Used in waterfall view to visually indicate span status.
+ */
+function getStatusColor(status: "ok" | "error" | "unset"): string {
   switch (status) {
     case "ok":
       return "bg-green-500";
@@ -163,13 +166,17 @@ function SpanRow({
         {formatDuration(span.duration_ms)}
       </div>
 
-      {/* Timing bar */}
+      {/* Timing bar with status-based coloring */}
       <div className="flex-1 relative h-4 bg-gray-100 dark:bg-gray-800 rounded">
         <div
           data-testid="span-timing-bar"
+          data-status={span.status}
           className={cn(
             "absolute h-full rounded",
-            getDurationColor(span.duration_ms, totalDuration),
+            // Use status color for error spans, duration color otherwise
+            span.status === "error"
+              ? getStatusColor(span.status)
+              : getDurationColor(span.duration_ms, totalDuration),
           )}
           style={{
             left: `${Math.max(0, leftOffset)}%`,
