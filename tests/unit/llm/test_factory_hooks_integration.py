@@ -484,3 +484,157 @@ class TestLLMFactoryBackwardCompatibility:
         assert len(hook_context_received) == 1
         assert hook_context_received[0] is not None
         assert hasattr(hook_context_received[0], "session_id")
+
+
+@pytest.mark.xdist_group(name="llm_factory_hooks")
+class TestFactoryFunctionHookDispatcherInjection:
+    """Test suite for factory function hook_dispatcher injection.
+
+    These tests verify that the public factory functions pass hook_dispatcher
+    to the LLMFactory class, enabling observability at all call sites.
+    """
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers."""
+        gc.collect()
+
+    @pytest.mark.unit
+    def test_create_factory_with_config_accepts_hook_dispatcher(self):
+        """GIVEN a mock config and hook_dispatcher
+        WHEN _create_factory_with_config is called with hook_dispatcher
+        THEN the LLMFactory is created with the hook_dispatcher attached"""
+        from unittest.mock import MagicMock
+
+        from mcp_server_langgraph.core.hook_registry import HookDispatcher, HookRegistry
+        from mcp_server_langgraph.llm.factory import _create_factory_with_config
+
+        # Create mock config with required attributes
+        mock_config = MagicMock()
+        mock_config.llm_provider = "google"
+        mock_config.model_name = "gemini-2.5-flash"
+        mock_config.model_temperature = 0.7
+        mock_config.model_max_tokens = 4096
+        mock_config.model_timeout = 60
+        mock_config.enable_fallback = False
+        mock_config.fallback_models = []
+        mock_config.google_api_key = "test-key"
+        mock_config.google_project_id = None
+        mock_config.vertex_ai_project_id = None
+
+        # Create a hook dispatcher
+        registry = HookRegistry()
+        dispatcher = HookDispatcher(registry)
+
+        # Call the factory function with hook_dispatcher
+        factory = _create_factory_with_config(
+            config=mock_config,
+            provider="google",
+            model_name="gemini-2.5-flash",
+            temperature=0.7,
+            max_tokens=4096,
+            hook_dispatcher=dispatcher,
+        )
+
+        # Verify the hook_dispatcher was attached
+        assert factory.hook_dispatcher is dispatcher
+
+    @pytest.mark.unit
+    def test_create_model_accepts_hook_dispatcher(self):
+        """GIVEN a mock config and hook_dispatcher
+        WHEN create_model is called with hook_dispatcher
+        THEN the LLMFactory is created with the hook_dispatcher attached"""
+        from unittest.mock import MagicMock
+
+        from mcp_server_langgraph.core.hook_registry import HookDispatcher, HookRegistry
+        from mcp_server_langgraph.llm.factory import ModelType, create_model
+
+        # Create mock config
+        mock_config = MagicMock()
+        mock_config.llm_provider = "google"
+        mock_config.model_name = "gemini-2.5-flash"
+        mock_config.model_temperature = 0.7
+        mock_config.model_max_tokens = 4096
+        mock_config.model_timeout = 60
+        mock_config.enable_fallback = False
+        mock_config.fallback_models = []
+        mock_config.google_api_key = "test-key"
+        mock_config.google_project_id = None
+        mock_config.vertex_ai_project_id = None
+
+        # Create a hook dispatcher
+        registry = HookRegistry()
+        dispatcher = HookDispatcher(registry)
+
+        # Call the factory function with hook_dispatcher
+        factory = create_model(
+            config=mock_config,
+            model_type=ModelType.PRIMARY,
+            hook_dispatcher=dispatcher,
+        )
+
+        # Verify the hook_dispatcher was attached
+        assert factory.hook_dispatcher is dispatcher
+
+    @pytest.mark.unit
+    def test_create_llm_from_config_accepts_hook_dispatcher(self):
+        """GIVEN a mock config and hook_dispatcher
+        WHEN create_llm_from_config is called with hook_dispatcher
+        THEN the LLMFactory is created with the hook_dispatcher attached"""
+        from unittest.mock import MagicMock
+
+        from mcp_server_langgraph.core.hook_registry import HookDispatcher, HookRegistry
+        from mcp_server_langgraph.llm.factory import create_llm_from_config
+
+        # Create mock config
+        mock_config = MagicMock()
+        mock_config.llm_provider = "google"
+        mock_config.model_name = "gemini-2.5-flash"
+        mock_config.model_temperature = 0.7
+        mock_config.model_max_tokens = 4096
+        mock_config.model_timeout = 60
+        mock_config.enable_fallback = False
+        mock_config.fallback_models = []
+        mock_config.google_api_key = "test-key"
+        mock_config.google_project_id = None
+        mock_config.vertex_ai_project_id = None
+
+        # Create a hook dispatcher
+        registry = HookRegistry()
+        dispatcher = HookDispatcher(registry)
+
+        # Call the factory function with hook_dispatcher
+        factory = create_llm_from_config(
+            config=mock_config,
+            hook_dispatcher=dispatcher,
+        )
+
+        # Verify the hook_dispatcher was attached
+        assert factory.hook_dispatcher is dispatcher
+
+    @pytest.mark.unit
+    def test_factory_function_backward_compatible_without_hook_dispatcher(self):
+        """GIVEN a mock config without hook_dispatcher
+        WHEN create_llm_from_config is called without hook_dispatcher
+        THEN the LLMFactory is created with hook_dispatcher=None (backward compat)"""
+        from unittest.mock import MagicMock
+
+        from mcp_server_langgraph.llm.factory import create_llm_from_config
+
+        # Create mock config
+        mock_config = MagicMock()
+        mock_config.llm_provider = "google"
+        mock_config.model_name = "gemini-2.5-flash"
+        mock_config.model_temperature = 0.7
+        mock_config.model_max_tokens = 4096
+        mock_config.model_timeout = 60
+        mock_config.enable_fallback = False
+        mock_config.fallback_models = []
+        mock_config.google_api_key = "test-key"
+        mock_config.google_project_id = None
+        mock_config.vertex_ai_project_id = None
+
+        # Call without hook_dispatcher (backward compatible)
+        factory = create_llm_from_config(config=mock_config)
+
+        # hook_dispatcher should be None (backward compatible)
+        assert factory.hook_dispatcher is None

@@ -201,44 +201,41 @@ export function StudioShellLayout() {
   // Only /studio/chat and /studio/chat/:sessionId use the 3-panel canvas layout.
   // All other /studio/* routes use the Outlet for full-page rendering.
   //
-  // WORKAROUND: React Router v7's useLocation() can be out of sync with the actual browser URL
-  // when navigating to child routes that render empty fragments. We use window.location.pathname
-  // directly and force a re-render when React Router's location object changes.
-  const [renderKey, setRenderKey] = useState(0);
-
-  // Force re-render when React Router's location changes (even if pathname is stale)
-  useEffect(() => {
-    setRenderKey((k) => k + 1);
-  }, [location]);
-
-  // Also listen for popstate events (browser back/forward)
-  useEffect(() => {
-    const handlePopState = () => {
-      setRenderKey((k) => k + 1);
-    };
-    window.addEventListener("popstate", handlePopState);
-    return () => window.removeEventListener("popstate", handlePopState);
-  }, []);
+  // NOTE: We use location.pathname from useLocation() as the primary source because:
+  // 1. It's reactive - changes trigger re-renders automatically
+  // 2. It's the canonical source from React Router
+  // We also check window.location.pathname as a fallback for edge cases with empty fragments.
+  const routerPath = location.pathname;
+  const windowPath = window.location.pathname;
 
   // Determine if current route is a chat route
-  // CRITICAL: Use window.location.pathname (always up-to-date after navigate())
-  // React Router's location.pathname can be stale for empty fragment routes
-  const currentPath = window.location.pathname;
+  // A route is a chat route if EITHER React Router OR the browser URL indicates chat.
+  // This handles edge cases where one might be out of sync with the other.
+  const isRouterChatRoute =
+    routerPath === "/studio/chat" || routerPath.startsWith("/studio/chat/");
+  const isWindowChatRoute =
+    windowPath === "/studio/chat" || windowPath.startsWith("/studio/chat/");
+
+  // Use window.location.pathname as the source of truth because React Router's
+  // location can be stale for empty fragment routes. But if they disagree and
+  // the router says it's NOT a chat route, trust the router (we're navigating away).
   const isChatRoute =
-    currentPath === "/studio/chat" || currentPath.startsWith("/studio/chat/");
+    isRouterChatRoute && isWindowChatRoute
+      ? true // Both agree: chat route
+      : !isRouterChatRoute
+        ? false // Router says NOT chat: trust it (navigating away from chat)
+        : isWindowChatRoute; // Router says chat but window might be more up-to-date
 
   // Log for debugging navigation issues (dev mode only)
   if (import.meta.env.DEV) {
     logger.debug("Route detection:", {
-      windowPath: currentPath,
-      routerPath: location.pathname,
+      routerPath,
+      windowPath,
+      isRouterChatRoute,
+      isWindowChatRoute,
       isChatRoute,
-      renderKey,
     });
   }
-
-  // renderKey is used to force re-renders when location changes
-  void renderKey;
 
   // AI-powered nudges (Phase 1.3 + 6.3)
   const { activeNudge, dismiss, trackAcceptance } = useNudges({

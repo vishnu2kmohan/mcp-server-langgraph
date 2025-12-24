@@ -1255,12 +1255,25 @@ services:
       # -----------------------------------------------------------------------
       - FF_ENABLE_AI_UX=true                       # Master switch for AI UX features
       - FF_ENABLE_AI_UX_PARALLEL_GRAPH=true        # Parallel graph execution
+      # Sandboxed code execution (Docker or K8s)
+      - ENABLE_CODE_EXECUTION=true
+      - CODE_EXECUTION_BACKEND=docker-engine
+      - CODE_EXECUTION_DOCKER_IMAGE=studio-sandbox:latest
+      - CODE_EXECUTION_NETWORK_MODE=unrestricted
+      - CODE_EXECUTION_TIMEOUT=30
+      - CODE_EXECUTION_MEMORY_LIMIT_MB=512
+      - CODE_EXECUTION_CPU_QUOTA=1.0
+      # Visual verification / screenshot tooling
+      - ENABLE_VISUAL_VERIFICATION=true
+      # Explicitly mark sandbox tools as allowed in test stack
+      - ENABLE_SANDBOX_TOOLS=true
     # Map localhost to traefik-gateway so MCP server can resolve OIDC issuer URLs from Keycloak
     # OPENFGA_OIDC_ISSUER=http://localhost/authn/realms/default requires localhost to resolve to gateway
     # Same pattern as openfga-test (line 333-334) for consistent OIDC token acquisition
     extra_hosts:
       - "localhost:host-gateway"
     volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
       # Mount GCP ADC credentials for Vertex AI (local development only)
       - ~/.config/gcloud/application_default_credentials.json:/app/.config/gcloud/application_default_credentials.json:ro
     healthcheck:

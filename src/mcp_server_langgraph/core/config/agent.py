@@ -85,7 +85,7 @@ class AgentSettings(DomainSettings):
     ]
 
     # Docker-specific settings
-    code_execution_docker_image: str = "python:3.12-slim"
+    code_execution_docker_image: str = "mcr.microsoft.com/playwright/python:v1.42.0-jammy"
     code_execution_docker_socket: str = "/var/run/docker.sock"
 
     # Kubernetes-specific settings

@@ -26,10 +26,14 @@ from mcp_server_langgraph.tools.computer_use_tools import (
     scroll,
     select_option,
 )
+from mcp_server_langgraph.tools.bash_tools import execute_bash
+from mcp_server_langgraph.tools.edit_file_tools import edit_file
+from mcp_server_langgraph.tools.write_file_tools import write_file
 from mcp_server_langgraph.tools.defer_loading import DEFERRED_TOOLS
 from mcp_server_langgraph.tools.filesystem_tools import list_directory, read_file, search_files
 from mcp_server_langgraph.tools.screenshot_tools import capture_screenshot
 from mcp_server_langgraph.tools.search_tools import search_knowledge_base, web_search
+from mcp_server_langgraph.tools.web_fetch_tools import web_fetch
 
 
 def get_all_tools(settings_override: Any | None = None) -> list[BaseTool]:
@@ -67,18 +71,53 @@ def get_all_tools(settings_override: Any | None = None) -> list[BaseTool]:
         search_files,
     ]
 
+    # High-risk tools should only be exposed in sandboxed environments.
+    # Use env/feature flag checks to gate them.
+    sandbox_tools_enabled = effective_settings.environment.lower() in ("test", "sandbox") or str(
+        getattr(effective_settings, "enable_sandbox_tools", False)
+    ).lower() in ("1", "true", "yes")
+
+    if sandbox_tools_enabled:
+        # Computer use tools
+        tools.extend(
+            [
+                navigate,
+                go_back,
+                go_forward,
+                mouse_click,
+                mouse_move,
+                mouse_drag,
+                keyboard_type,
+                keyboard_press,
+                scroll,
+                select_option,
+                fill_form,
+                get_element_info,
+                get_screen_info,
+            ]
+        )
+
+        # Bash (allowlist) and workspace file mutation tools
+        tools.append(execute_bash)
+        tools.append(edit_file)
+        tools.append(write_file)
+        # Network fetch (with SSRF protections)
+        tools.append(web_fetch)
+
     # Code execution tools (conditional on configuration)
     if effective_settings.enable_code_execution:
         try:
             from mcp_server_langgraph.tools.code_execution_tools import execute_python
 
+            # Mark execute_python as requiring HITL approval in downstream agents
+            execute_python.metadata = {**getattr(execute_python, "metadata", {}), "requires_hitl": True}  # type: ignore[attr-defined]
             tools.append(execute_python)
         except ImportError:
             # Code execution dependencies not installed - silently skip
             pass
 
-    # Visual verification tools (conditional on configuration)
-    if getattr(effective_settings, "enable_visual_verification", False):
+    # Visual verification tools (conditional on configuration) - only in sandbox
+    if sandbox_tools_enabled and getattr(effective_settings, "enable_visual_verification", False):
         tools.append(capture_screenshot)
 
     return tools

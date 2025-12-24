@@ -43,6 +43,8 @@ from mcp_server_langgraph.api.v1.vectors import router as vectors_router
 from mcp_server_langgraph.api.v1.workflow_bootstrap import workflow_bootstrap_router
 from mcp_server_langgraph.api.v1.workflows import workflows_router
 from mcp_server_langgraph.api.v1.workflow_executions import workflow_executions_router
+from mcp_server_langgraph.api.v1.sandbox import router as sandbox_router
+from mcp_server_langgraph.api.v1.code_execution import router as code_execution_router
 
 # Alert infrastructure imports (ADR-0026 - Comprehensive Client Resilience Patterns)
 # Note: Alert WebSocket moved to consolidated ws_router (ADR-0068)
@@ -138,6 +140,12 @@ v1_router.include_router(ai_router, prefix="/ai", tags=["ai"])
 
 # Include AI UX endpoints (disclosure, nudges, error recovery, onboarding, metrics)
 v1_router.include_router(ai_ux_router, prefix="/ai", tags=["ai-ux"])
+
+# Sandbox runner for high-risk operations (bash, etc.)
+v1_router.include_router(sandbox_router, tags=["sandbox"])
+
+# Include sandboxed code execution endpoint for Studio Canvas
+v1_router.include_router(code_execution_router, tags=["code-execution"])
 
 # Include Studio AI endpoints (unified StudioShell AI capabilities - Sprint 1)
 v1_router.include_router(studio_ai_router, prefix="/studio", tags=["studio-ai"])

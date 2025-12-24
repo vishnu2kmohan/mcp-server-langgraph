@@ -1,0 +1,18 @@
+# Sandbox runner image for high-risk tools (bash, web_fetch, screenshot, computer-use)
+# Includes Playwright/Chromium for headless automation plus curl/jq for diagnostics.
+#
+# Build locally with:
+#   docker build -f docker/Dockerfile.sandbox -t studio-sandbox:latest .
+#
+# Then set CODE_EXECUTION_DOCKER_IMAGE=studio-sandbox:latest (see docker-compose.test.yml).
+FROM mcr.microsoft.com/playwright/python:v1.42.0-jammy
+
+USER root
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends curl jq ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+# Playwright base image includes browsers; run as pwuser by default.
+USER pwuser
+
+WORKDIR /home/pwuser

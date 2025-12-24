@@ -100,6 +100,8 @@ export const router = createBrowserRouter(
             // Shows owned workflows (editable) + shared workflows (read-only)
             {
               path: "workflows",
+              // Explicit Outlet element ensures React Router properly renders children
+              element: <Outlet />,
               children: [
                 {
                   index: true,

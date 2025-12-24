@@ -9,7 +9,7 @@
  * - Inline editing with save/cancel
  * - AI-powered code analysis (Sprint 4)
  */
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useEffect } from "react";
 import {
   Edit2,
   Save,
@@ -22,6 +22,16 @@ import {
 import type { CanvasArtifact as CanvasArtifactType } from "../types/artifacts";
 import { cn } from "../utils/cn";
 import { useCodeAnalysis } from "../hooks";
+import { InteractiveMermaidDiagram } from "../components/Chat/InteractiveMermaidDiagram";
+import { SandpackExecutor } from "../components/Artifacts/SandpackExecutor";
+import { JSONArtifact } from "../components/Artifacts/JSONArtifact";
+import type { JSONArtifact as JSONArtifactType } from "../types/artifacts";
+import { getAuthToken } from "../utils/storage";
+import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
+import {
+  duotoneLight,
+  duotoneDark,
+} from "react-syntax-highlighter/dist/esm/styles/prism";
 
 // =============================================================================
 // Types
@@ -55,6 +65,69 @@ export interface CanvasArtifactProps {
   /** Enable AI-powered code analysis (Sprint 4) */
   enableAI?: boolean;
 }
+
+// =============================================================================
+// Pyodide Loader (on-demand for Python execution)
+// =============================================================================
+
+const PYODIDE_JS_URL =
+  "https://cdn.jsdelivr.net/pyodide/v0.24.1/full/pyodide.js";
+const PYODIDE_INDEX_URL = "https://cdn.jsdelivr.net/pyodide/v0.24.1/full/";
+// Pyodide type definitions
+interface PyodideInterface {
+  runPython: (code: string) => unknown;
+  runPythonAsync: (code: string) => Promise<unknown>;
+  loadPackage: (packages: string | string[]) => Promise<void>;
+}
+
+interface PyodideLoaderOptions {
+  indexURL: string;
+}
+
+type PyodideLoader = (opts?: PyodideLoaderOptions) => Promise<PyodideInterface>;
+
+let pyodidePromise: Promise<PyodideInterface> | null = null;
+
+async function getPyodide(): Promise<PyodideInterface> {
+  if (typeof window === "undefined") {
+    throw new Error("Python runtime is only available in the browser");
+  }
+
+  if (pyodidePromise) return pyodidePromise;
+
+  pyodidePromise = new Promise((resolve, reject) => {
+    const win = window as unknown as { loadPyodide?: PyodideLoader };
+
+    // If the loader is already present, just load the runtime
+    if (win.loadPyodide) {
+      win
+        .loadPyodide?.({ indexURL: PYODIDE_INDEX_URL })
+        .then(resolve)
+        .catch(reject);
+      return;
+    }
+
+    const script = document.createElement("script");
+    script.src = PYODIDE_JS_URL;
+    script.async = true;
+    script.onload = () => {
+      const loader = (window as unknown as { loadPyodide?: PyodideLoader })
+        .loadPyodide;
+      if (!loader) {
+        reject(new Error("Pyodide loader unavailable after script load"));
+        return;
+      }
+      loader({ indexURL: PYODIDE_INDEX_URL }).then(resolve).catch(reject);
+    };
+    script.onerror = () =>
+      reject(new Error("Failed to load Python runtime (Pyodide)"));
+    document.head.appendChild(script);
+  });
+
+  return pyodidePromise;
+}
+
+type ExecutionRuntime = "sandbox" | "pyodide";
 
 // =============================================================================
 // Utility
@@ -117,7 +190,9 @@ export function CanvasArtifact({
     artifact.editMetadata?.editedBy === "ai-suggestion";
 
   const aiConfidence = artifact.editMetadata?.aiConfidence;
-  const language = artifact.editMetadata?.language;
+  const language =
+    artifact.editMetadata?.language ||
+    (artifact.contentType === "code" ? "plaintext" : artifact.contentType);
 
   // Determine if this is a code artifact that can be analyzed
   const isCodeArtifact = artifact.contentType === "code";
@@ -138,6 +213,33 @@ export function CanvasArtifact({
     language: language ?? undefined,
     enabled: enableAI && isCodeArtifact && !!userId && !!sessionId,
   });
+
+  // Python execution (client-side, best-effort via Pyodide)
+  const [isRunningPython, setIsRunningPython] = useState(false);
+  const [pythonStdout, setPythonStdout] = useState<string | null>(null);
+  const [pythonStderr, setPythonStderr] = useState<string | null>(null);
+  const [pythonImage, setPythonImage] = useState<string | null>(null);
+  const [pythonError, setPythonError] = useState<string | null>(null);
+  const [runtime, setRuntime] = useState<ExecutionRuntime>(
+    language?.toLowerCase() === "python" ? "sandbox" : "sandbox",
+  );
+  const [isRunningSandbox, setIsRunningSandbox] = useState(false);
+  const [sandboxResult, setSandboxResult] = useState<{
+    stdout?: string | null;
+    stderr?: string | null;
+    exitCode?: number | null;
+    durationMs?: number | null;
+    timedOut?: boolean | null;
+    error?: string | null;
+  } | null>(null);
+  const [sandboxError, setSandboxError] = useState<string | null>(null);
+
+  // Ensure runtime stays valid for the current language
+  useEffect(() => {
+    if (language?.toLowerCase() !== "python" && runtime === "pyodide") {
+      setRuntime("sandbox");
+    }
+  }, [language, runtime]);
 
   const handleContentChange = useCallback(
     (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -171,12 +273,137 @@ export function CanvasArtifact({
     onSave?.();
   }, [onSave, isEditingProp]);
 
+  const handleRunSandbox = useCallback(async () => {
+    setIsRunningSandbox(true);
+    setSandboxError(null);
+    setSandboxResult(null);
+    try {
+      const token = getAuthToken();
+      const response = await fetch("/api/v1/code/execute", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token && { Authorization: `Bearer ${token}` }),
+        },
+        credentials: "include",
+        body: JSON.stringify({
+          language: language ?? "python",
+          code: isEditing ? editContent : artifact.content,
+          runtime: "sandbox",
+        }),
+      });
+
+      const data = await response.json().catch(() => null);
+
+      if (!response.ok) {
+        const detail =
+          (data && (data.detail || data.error)) ||
+          `Sandbox execution failed (HTTP ${response.status})`;
+        setSandboxError(typeof detail === "string" ? detail : String(detail));
+        return;
+      }
+
+      setSandboxResult({
+        stdout: data?.stdout ?? null,
+        stderr: data?.stderr ?? null,
+        exitCode: data?.exit_code ?? data?.exitCode ?? null,
+        durationMs: data?.duration_ms ?? data?.durationMs ?? null,
+        timedOut: data?.timed_out ?? data?.timedOut ?? null,
+        error: data?.error ?? null,
+      });
+    } catch (error) {
+      setSandboxError(
+        error instanceof Error ? error.message : "Failed to execute code",
+      );
+    } finally {
+      setIsRunningSandbox(false);
+    }
+  }, [artifact.content, editContent, isEditing, language]);
+
+  const handleRunPython = useCallback(async () => {
+    setIsRunningPython(true);
+    setPythonStdout(null);
+    setPythonStderr(null);
+    setPythonImage(null);
+    setPythonError(null);
+
+    try {
+      const pyodide = await getPyodide();
+
+      // Prepare stdout/stderr capture and matplotlib backend
+      await pyodide.runPythonAsync(`
+import sys, io, matplotlib
+matplotlib.use("agg")
+stdout_buffer = io.StringIO()
+stderr_buffer = io.StringIO()
+sys.stdout = stdout_buffer
+sys.stderr = stderr_buffer
+`);
+
+      const codeToRun = isEditing ? editContent : artifact.content;
+      await pyodide.runPythonAsync(codeToRun);
+
+      const stdout = pyodide.runPython("stdout_buffer.getvalue()");
+      const stderr = pyodide.runPython("stderr_buffer.getvalue()");
+      setPythonStdout(String(stdout) || "(no stdout)");
+      if (stderr) setPythonStderr(String(stderr));
+
+      // Attempt to grab the latest matplotlib figure (best-effort)
+      try {
+        const imageBase64 = pyodide.runPython(`
+import base64, io
+import matplotlib.pyplot as plt
+buf = io.BytesIO()
+plt.savefig(buf, format="png")
+buf.seek(0)
+base64.b64encode(buf.read()).decode("utf-8")
+`);
+        if (imageBase64) {
+          setPythonImage(String(imageBase64));
+        }
+      } catch {
+        // Ignore if matplotlib was not used
+      }
+    } catch (error) {
+      setPythonError(
+        error instanceof Error
+          ? error.message
+          : String(error ?? "Unknown error"),
+      );
+    } finally {
+      setIsRunningPython(false);
+    }
+  }, [artifact.content, editContent, isEditing]);
+
   const formattedContent = useMemo(() => {
     if (artifact.contentType === "json") {
       return formatJson(artifact.content);
     }
     return artifact.content;
   }, [artifact.content, artifact.contentType]);
+
+  const prefersDarkMode =
+    typeof document !== "undefined" &&
+    document.documentElement.classList.contains("dark");
+
+  const highlightedContent = useMemo(() => {
+    if (isEditing) return null;
+    return (
+      <SyntaxHighlighter
+        language={language}
+        style={prefersDarkMode ? duotoneDark : duotoneLight}
+        showLineNumbers={showLineNumbers}
+        wrapLines
+        customStyle={{
+          margin: 0,
+          background: "transparent",
+          padding: 0,
+        }}
+      >
+        {artifact.content}
+      </SyntaxHighlighter>
+    );
+  }, [artifact.content, isEditing, language, prefersDarkMode, showLineNumbers]);
 
   const renderContent = () => {
     if (isEditing) {
@@ -209,26 +436,91 @@ export function CanvasArtifact({
         );
 
       case "json":
+        // Use JSONArtifact component for interactive JSON viewing
+        try {
+          const jsonData = JSON.parse(artifact.content);
+          const jsonArtifact: JSONArtifactType = {
+            id: artifact.id,
+            type: "json",
+            data: jsonData,
+            title: artifact.title,
+          };
+          return (
+            <div data-testid="json-content" className="w-full">
+              <JSONArtifact artifact={jsonArtifact} />
+            </div>
+          );
+        } catch {
+          // Fallback to pre if JSON parsing fails
+          return (
+            <pre
+              data-testid="json-content"
+              className={cn(
+                "p-4 rounded-lg text-sm overflow-auto",
+                "bg-gray-50 dark:bg-gray-900",
+                "text-gray-800 dark:text-gray-200",
+                "font-mono",
+              )}
+            >
+              {formattedContent}
+            </pre>
+          );
+        }
+
+      case "mermaid":
         return (
-          <pre
-            data-testid="json-content"
+          <div data-testid="mermaid-content" className="w-full">
+            <InteractiveMermaidDiagram
+              code={artifact.content}
+              className="rounded-lg border border-gray-200 dark:border-gray-700"
+            />
+          </div>
+        );
+
+      case "html":
+        return (
+          <div
+            data-testid="html-content"
             className={cn(
-              "p-4 rounded-lg text-sm overflow-auto",
-              "bg-gray-50 dark:bg-gray-900",
-              "text-gray-800 dark:text-gray-200",
-              "font-mono",
+              "p-4 rounded-lg overflow-auto",
+              "bg-white dark:bg-gray-900",
+              "border border-gray-200 dark:border-gray-700",
             )}
           >
-            {formattedContent}
-          </pre>
+            {/* Render HTML content in an iframe for sandboxing */}
+            <iframe
+              title={artifact.title ?? "HTML Preview"}
+              srcDoc={artifact.content}
+              className="w-full h-64 border-0"
+              sandbox="allow-scripts"
+            />
+          </div>
+        );
+
+      case "jsx":
+        // JSX artifacts are rendered with SandpackExecutor for live preview
+        return (
+          <div data-testid="jsx-content" className="w-full">
+            <SandpackExecutor
+              code={artifact.content}
+              language="jsx"
+              title={artifact.title ?? "JSX Preview"}
+              showRunButton={true}
+              showEditor={true}
+              readOnly={!editable}
+              theme="dark"
+            />
+          </div>
         );
 
       case "code":
       default:
         return (
           <div className="flex">
-            {showLineNumbers && <LineNumbers content={artifact.content} />}
-            <pre
+            {showLineNumbers && !highlightedContent && (
+              <LineNumbers content={artifact.content} />
+            )}
+            <div
               className={cn(
                 "flex-1 p-4 rounded-lg text-sm overflow-auto",
                 "bg-gray-50 dark:bg-gray-900",
@@ -236,8 +528,8 @@ export function CanvasArtifact({
                 "font-mono",
               )}
             >
-              {artifact.content}
-            </pre>
+              {highlightedContent ?? artifact.content}
+            </div>
           </div>
         );
     }
@@ -486,6 +778,183 @@ export function CanvasArtifact({
 
       {/* Content */}
       <div className="flex-1 p-4 overflow-auto">{renderContent()}</div>
+
+      {/* Execution controls (server sandbox + optional Pyodide for Python) */}
+      {!isEditing && artifact.contentType === "code" && (
+        <div className="border-t border-gray-200 dark:border-gray-700 px-4 py-3 space-y-3">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-gray-600 dark:text-gray-400">
+                Runtime:
+              </span>
+              <div className="flex items-center gap-1">
+                <button
+                  type="button"
+                  onClick={() => setRuntime("sandbox")}
+                  className={cn(
+                    "px-2 py-1 text-xs rounded border",
+                    runtime === "sandbox"
+                      ? "bg-primary-50 dark:bg-primary-900/30 border-primary-200 dark:border-primary-700 text-primary-700 dark:text-primary-200"
+                      : "border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800",
+                  )}
+                >
+                  Server sandbox
+                </button>
+                {language?.toLowerCase() === "python" && (
+                  <button
+                    type="button"
+                    onClick={() => setRuntime("pyodide")}
+                    className={cn(
+                      "px-2 py-1 text-xs rounded border",
+                      runtime === "pyodide"
+                        ? "bg-primary-50 dark:bg-primary-900/30 border-primary-200 dark:border-primary-700 text-primary-700 dark:text-primary-200"
+                        : "border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800",
+                    )}
+                  >
+                    Pyodide (browser)
+                  </button>
+                )}
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={
+                runtime === "pyodide" ? handleRunPython : handleRunSandbox
+              }
+              disabled={
+                runtime === "pyodide" ? isRunningPython : isRunningSandbox
+              }
+              className={cn(
+                "flex items-center gap-2 px-3 py-1.5 rounded text-sm font-medium",
+                "bg-green-600 text-white hover:bg-green-700",
+                "disabled:opacity-50 disabled:cursor-not-allowed",
+              )}
+            >
+              {runtime === "pyodide" ? (
+                isRunningPython ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Running...
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="w-4 h-4" />
+                    Run in browser
+                  </>
+                )
+              ) : isRunningSandbox ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Running...
+                </>
+              ) : (
+                <>
+                  <Sparkles className="w-4 h-4" />
+                  Run on server
+                </>
+              )}
+            </button>
+          </div>
+
+          {runtime === "sandbox" && (sandboxResult || sandboxError) && (
+            <div className="space-y-2">
+              {sandboxError && (
+                <div className="rounded border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-950/40 p-3 text-sm text-red-800 dark:text-red-200">
+                  {sandboxError}
+                </div>
+              )}
+              {sandboxResult && (
+                <div className="space-y-2">
+                  <div className="flex flex-wrap items-center gap-3 text-xs text-gray-600 dark:text-gray-400">
+                    {sandboxResult.exitCode !== undefined &&
+                      sandboxResult.exitCode !== null && (
+                        <span>
+                          Exit code: {sandboxResult.exitCode}
+                          {sandboxResult.timedOut ? " (timed out)" : ""}
+                        </span>
+                      )}
+                    {sandboxResult.durationMs !== undefined &&
+                      sandboxResult.durationMs !== null && (
+                        <span>
+                          Duration: {sandboxResult.durationMs.toFixed(1)} ms
+                        </span>
+                      )}
+                  </div>
+                  {sandboxResult.stdout && (
+                    <div className="rounded border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-3">
+                      <div className="text-xs font-semibold text-gray-600 dark:text-gray-300 mb-1">
+                        stdout
+                      </div>
+                      <pre className="text-sm text-gray-800 dark:text-gray-100 whitespace-pre-wrap">
+                        {sandboxResult.stdout}
+                      </pre>
+                    </div>
+                  )}
+                  {sandboxResult.stderr && (
+                    <div className="rounded border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-950/40 p-3">
+                      <div className="text-xs font-semibold text-red-700 dark:text-red-300 mb-1">
+                        stderr
+                      </div>
+                      <pre className="text-sm text-red-800 dark:text-red-200 whitespace-pre-wrap">
+                        {sandboxResult.stderr}
+                      </pre>
+                    </div>
+                  )}
+                  {sandboxResult.error && !sandboxResult.stderr && (
+                    <div className="rounded border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-950/40 p-3 text-sm text-red-800 dark:text-red-200">
+                      {sandboxResult.error}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+
+          {runtime === "pyodide" &&
+            (pythonStdout || pythonStderr || pythonError) && (
+              <div className="space-y-2">
+                {pythonStdout && (
+                  <div className="rounded border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-3">
+                    <div className="text-xs font-semibold text-gray-600 dark:text-gray-300 mb-1">
+                      stdout
+                    </div>
+                    <pre className="text-sm text-gray-800 dark:text-gray-100 whitespace-pre-wrap">
+                      {pythonStdout}
+                    </pre>
+                  </div>
+                )}
+                {pythonStderr && (
+                  <div className="rounded border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-950/40 p-3">
+                    <div className="text-xs font-semibold text-red-700 dark:text-red-300 mb-1">
+                      stderr
+                    </div>
+                    <pre className="text-sm text-red-800 dark:text-red-200 whitespace-pre-wrap">
+                      {pythonStderr}
+                    </pre>
+                  </div>
+                )}
+                {pythonError && (
+                  <div className="rounded border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-950/40 p-3 text-sm text-red-800 dark:text-red-200">
+                    {pythonError}
+                  </div>
+                )}
+                {pythonImage && (
+                  <div className="rounded border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-3">
+                    <div className="text-xs font-semibold text-gray-600 dark:text-gray-300 mb-2">
+                      Matplotlib Render
+                    </div>
+                    <img
+                      src={`data:image/png;base64,${pythonImage}`}
+                      alt="Matplotlib render"
+                      className="max-w-full"
+                    />
+                  </div>
+                )}
+              </div>
+            )}
+        </div>
+      )}
     </div>
   );
 }

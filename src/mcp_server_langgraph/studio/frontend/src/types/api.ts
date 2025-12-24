@@ -837,18 +837,122 @@ export interface VectorTextUpsertResponse {
 // Agents
 // =============================================================================
 
+/**
+ * Information about a specific thinking level
+ */
+export interface ThinkingLevelInfo {
+  /** Thinking level (low, medium, high, ultra) */
+  level: string;
+  /** Effort parameter for Claude Opus 4.5 (low, medium, high) */
+  claude_opus_effort: string;
+  /** Token budget for non-Opus models */
+  other_models_tokens: number;
+  /** Description of this thinking level */
+  description: string;
+}
+
+/**
+ * Thinking budget default configuration
+ */
+export interface ThinkingBudgetDefaults {
+  /** Whether thinking budget is enabled */
+  enabled: boolean;
+  /** Default thinking level (low, medium, high, ultra) */
+  default_level: string;
+  /** Available thinking levels with model-specific behavior */
+  levels: ThinkingLevelInfo[];
+  /** Task complexity to thinking level mapping */
+  complexity_mapping: Record<string, string>;
+}
+
+/**
+ * Agent configuration response from backend
+ *
+ * Extended in Sprint 1 with optional fields:
+ * - thinking_budget_defaults: Thinking level configuration
+ * - feature_flags_snapshot: Agent-related feature flags
+ */
 export interface AgentConfig {
   model: string;
   provider: string;
   temperature: number;
   verification_enabled: boolean;
   tools: AgentTool[];
+
+  /** Thinking budget default configuration (optional, Sprint 1 extension) */
+  thinking_budget_defaults?: ThinkingBudgetDefaults | null;
+  /** Snapshot of agent-related feature flags (optional, Sprint 1 extension) */
+  feature_flags_snapshot?: Record<string, boolean> | null;
+  /** List of registered orchestrators (optional, Phase 6 extension) */
+  orchestrators?: OrchestratorInfo[] | null;
+  /** List of supported LLM providers (optional) */
+  providers?: ProviderInfo[] | null;
+}
+
+/**
+ * Request for updating thinking budget configuration
+ */
+export interface ThinkingBudgetUpdateRequest {
+  /** Default thinking level (low, medium, high, ultra) */
+  default_level?: string | null;
+  /** Whether thinking budget is enabled */
+  enabled?: boolean | null;
+}
+
+/**
+ * Response from thinking budget update
+ */
+export interface ThinkingBudgetUpdateResponse {
+  /** Whether the update was successful */
+  success: boolean;
+  /** List of fields that were updated */
+  updated_fields: string[];
+  /** Current thinking budget configuration after update */
+  current_config?: ThinkingBudgetDefaults | null;
+  /** Optional message about the update */
+  message?: string | null;
 }
 
 export interface AgentTool {
   name: string;
   description: string;
-  enabled: boolean;
+  enabled?: boolean;
+}
+
+/**
+ * Information about an orchestrator
+ * Matches backend OrchestratorInfo from agents/registry.py
+ */
+export interface OrchestratorInfo {
+  /** Orchestrator class name */
+  name: string;
+  /** Human-readable display name */
+  display_name: string;
+  /** Description of orchestrator purpose */
+  description: string;
+  /** Feature flag controlling this orchestrator */
+  feature_flag: string;
+  /** Task categories this orchestrator handles */
+  task_categories: string[];
+}
+
+/**
+ * Information about an LLM provider
+ * Matches backend ProviderInfo from llm/providers.py
+ */
+export interface ProviderInfo {
+  /** Provider identifier (e.g., "anthropic") */
+  name: string;
+  /** Human-readable display name */
+  display_name: string;
+  /** Description of the provider */
+  description: string;
+  /** Model types this provider supports */
+  supported_model_types: string[];
+  /** Whether this provider requires an API key */
+  requires_api_key: boolean;
+  /** Environment variable name for API key */
+  api_key_env_var: string | null;
 }
 
 // =============================================================================

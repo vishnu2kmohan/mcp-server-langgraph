@@ -307,12 +307,17 @@ class Settings(BaseSettings):
     ]  # Allowed Python imports (whitelist)
 
     # Docker-specific settings
-    code_execution_docker_image: str = "python:3.12-slim"  # Docker image for execution
+    code_execution_docker_image: str = (
+        "mcr.microsoft.com/playwright/python:v1.42.0-jammy"  # Docker image for execution (includes Chromium/Playwright + curl)
+    )
     code_execution_docker_socket: str = "/var/run/docker.sock"  # Docker socket path
 
     # Kubernetes-specific settings
     code_execution_k8s_namespace: str = "default"  # Kubernetes namespace for jobs
     code_execution_k8s_job_ttl: int = 300  # Kubernetes job TTL in seconds (cleanup)
+
+    # Sandbox tool surface (high-risk tools like bash/edit/write/computer-use)
+    enable_sandbox_tools: bool = False
 
     # Conversation Checkpointing (for distributed state across replicas)
     checkpoint_backend: str = "memory"  # "memory", "redis"

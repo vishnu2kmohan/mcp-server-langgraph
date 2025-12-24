@@ -10,8 +10,11 @@
  * - Temperature slider
  * - Verification toggle
  * - Loading and error states
+ *
+ * Updated for Sprint 2: Uses custom test wrapper with Redux provider.
  */
 
+import type { ReactNode } from "react";
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import {
   render,
@@ -20,14 +23,24 @@ import {
   waitFor,
   cleanup,
 } from "@testing-library/react";
+import { Provider } from "react-redux";
+import { configureStore } from "@reduxjs/toolkit";
+import { createMemoryRouter, RouterProvider } from "react-router";
 import { AgentsPage } from "./AgentsPage";
-import { TestRouter } from "../test-utils";
+import personaReducer from "../store/slices/personaSlice";
 
-// Mock the RTK Query hook
+// Mock the RTK Query hooks
 const mockRefetch = vi.fn();
+const mockUpdateThinkingBudget = vi.fn().mockReturnValue({
+  unwrap: vi.fn().mockResolvedValue({}),
+});
 
 vi.mock("../api", () => ({
   useGetAgentConfigQuery: vi.fn(),
+  useUpdateThinkingBudgetMutation: () => [
+    mockUpdateThinkingBudget,
+    { isLoading: false },
+  ],
 }));
 
 import { useGetAgentConfigQuery } from "../api";
@@ -36,6 +49,28 @@ import { useGetAgentConfigQuery } from "../api";
 const mockUseGetAgentConfigQuery = useGetAgentConfigQuery as ReturnType<
   typeof vi.fn
 >;
+
+/**
+ * Custom test wrapper for AgentsPage tests.
+ * Provides Redux store with persona state without importing the real api module.
+ */
+function AgentsPageTestWrapper({ children }: { children: ReactNode }) {
+  const store = configureStore({
+    reducer: {
+      persona: personaReducer,
+    },
+  });
+
+  const router = createMemoryRouter([{ path: "*", element: children }], {
+    initialEntries: ["/"],
+  });
+
+  return (
+    <Provider store={store}>
+      <RouterProvider router={router} />
+    </Provider>
+  );
+}
 
 // Default mock data
 const mockConfig = {
@@ -70,23 +105,25 @@ describe("AgentsPage", () => {
   describe("Header", () => {
     it("should display page title", () => {
       render(
-        <TestRouter>
+        <AgentsPageTestWrapper>
           <AgentsPage />
-        </TestRouter>,
+        </AgentsPageTestWrapper>,
       );
 
-      expect(screen.getByText("Agent Configuration")).toBeInTheDocument();
+      // Default persona is "user" which shows "AI Capabilities" title
+      expect(screen.getByText("AI Capabilities")).toBeInTheDocument();
     });
 
     it("should display page description", () => {
       render(
-        <TestRouter>
+        <AgentsPageTestWrapper>
           <AgentsPage />
-        </TestRouter>,
+        </AgentsPageTestWrapper>,
       );
 
+      // Default persona is "user" which shows user-focused description
       expect(
-        screen.getByText(/Configure your LangGraph agent/),
+        screen.getByText(/Available AI tools and features/),
       ).toBeInTheDocument();
     });
   });
@@ -101,9 +138,9 @@ describe("AgentsPage", () => {
       });
 
       render(
-        <TestRouter>
+        <AgentsPageTestWrapper>
           <AgentsPage />
-        </TestRouter>,
+        </AgentsPageTestWrapper>,
       );
 
       expect(document.querySelector(".animate-spin")).toBeInTheDocument();
@@ -120,9 +157,9 @@ describe("AgentsPage", () => {
       });
 
       render(
-        <TestRouter>
+        <AgentsPageTestWrapper>
           <AgentsPage />
-        </TestRouter>,
+        </AgentsPageTestWrapper>,
       );
 
       // ErrorState component has role="alert" for accessibility
@@ -143,9 +180,9 @@ describe("AgentsPage", () => {
       });
 
       render(
-        <TestRouter>
+        <AgentsPageTestWrapper>
           <AgentsPage />
-        </TestRouter>,
+        </AgentsPageTestWrapper>,
       );
 
       // Retry button inside ErrorState
@@ -158,9 +195,9 @@ describe("AgentsPage", () => {
   describe("Agent Configuration Display", () => {
     it("should display current model", () => {
       render(
-        <TestRouter>
+        <AgentsPageTestWrapper>
           <AgentsPage />
-        </TestRouter>,
+        </AgentsPageTestWrapper>,
       );
 
       expect(screen.getByText(/gemini-2.5-flash/)).toBeInTheDocument();
@@ -168,9 +205,9 @@ describe("AgentsPage", () => {
 
     it("should display temperature value", () => {
       render(
-        <TestRouter>
+        <AgentsPageTestWrapper>
           <AgentsPage />
-        </TestRouter>,
+        </AgentsPageTestWrapper>,
       );
 
       expect(screen.getByText(/0.7/)).toBeInTheDocument();
@@ -178,9 +215,9 @@ describe("AgentsPage", () => {
 
     it("should display verification status", async () => {
       render(
-        <TestRouter>
+        <AgentsPageTestWrapper>
           <AgentsPage />
-        </TestRouter>,
+        </AgentsPageTestWrapper>,
       );
 
       await waitFor(() => {
@@ -195,9 +232,9 @@ describe("AgentsPage", () => {
   describe("Tools List", () => {
     it("should display available tools", () => {
       render(
-        <TestRouter>
+        <AgentsPageTestWrapper>
           <AgentsPage />
-        </TestRouter>,
+        </AgentsPageTestWrapper>,
       );
 
       expect(screen.getByText("calculator")).toBeInTheDocument();
@@ -206,9 +243,9 @@ describe("AgentsPage", () => {
 
     it("should display tool count", () => {
       render(
-        <TestRouter>
+        <AgentsPageTestWrapper>
           <AgentsPage />
-        </TestRouter>,
+        </AgentsPageTestWrapper>,
       );
 
       expect(screen.getByText(/2 tools/i)).toBeInTheDocument();
@@ -223,9 +260,9 @@ describe("AgentsPage", () => {
       });
 
       render(
-        <TestRouter>
+        <AgentsPageTestWrapper>
           <AgentsPage />
-        </TestRouter>,
+        </AgentsPageTestWrapper>,
       );
 
       expect(screen.getByText(/No tools available/)).toBeInTheDocument();
@@ -235,9 +272,9 @@ describe("AgentsPage", () => {
   describe("Model Selection", () => {
     it("should have model dropdown", () => {
       render(
-        <TestRouter>
+        <AgentsPageTestWrapper>
           <AgentsPage />
-        </TestRouter>,
+        </AgentsPageTestWrapper>,
       );
 
       expect(screen.getByLabelText(/Model/i)).toBeInTheDocument();
@@ -247,9 +284,9 @@ describe("AgentsPage", () => {
   describe("Temperature Control", () => {
     it("should have temperature slider", () => {
       render(
-        <TestRouter>
+        <AgentsPageTestWrapper>
           <AgentsPage />
-        </TestRouter>,
+        </AgentsPageTestWrapper>,
       );
 
       expect(screen.getByLabelText(/Temperature/i)).toBeInTheDocument();
@@ -257,9 +294,9 @@ describe("AgentsPage", () => {
 
     it("should update temperature value when slider changes", async () => {
       render(
-        <TestRouter>
+        <AgentsPageTestWrapper>
           <AgentsPage />
-        </TestRouter>,
+        </AgentsPageTestWrapper>,
       );
 
       await waitFor(() => {
@@ -273,9 +310,9 @@ describe("AgentsPage", () => {
   describe("Verification Toggle", () => {
     it("should have verification checkbox", () => {
       render(
-        <TestRouter>
+        <AgentsPageTestWrapper>
           <AgentsPage />
-        </TestRouter>,
+        </AgentsPageTestWrapper>,
       );
 
       expect(
@@ -285,9 +322,9 @@ describe("AgentsPage", () => {
 
     it("should toggle verification when clicked", async () => {
       render(
-        <TestRouter>
+        <AgentsPageTestWrapper>
           <AgentsPage />
-        </TestRouter>,
+        </AgentsPageTestWrapper>,
       );
 
       await waitFor(() => {
@@ -304,9 +341,9 @@ describe("AgentsPage", () => {
   describe("Refresh Functionality", () => {
     it("should have refresh button", () => {
       render(
-        <TestRouter>
+        <AgentsPageTestWrapper>
           <AgentsPage />
-        </TestRouter>,
+        </AgentsPageTestWrapper>,
       );
 
       expect(screen.getByText(/Refresh/i)).toBeInTheDocument();
@@ -314,9 +351,9 @@ describe("AgentsPage", () => {
 
     it("should call refetch when refresh is clicked", async () => {
       render(
-        <TestRouter>
+        <AgentsPageTestWrapper>
           <AgentsPage />
-        </TestRouter>,
+        </AgentsPageTestWrapper>,
       );
 
       const refreshButton = screen.getByText(/Refresh/i);

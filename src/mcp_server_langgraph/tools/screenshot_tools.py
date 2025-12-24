@@ -1,34 +1,31 @@
 """
 Screenshot Tool for Visual Verification
 
-Captures webpage screenshots for visual verification in agent loops.
-Uses Playwright for headless browser automation.
-
-Requires the 'visual-verification' optional dependency:
-    pip install mcp-server-langgraph[visual-verification]
-
-Or directly:
-    pip install playwright
-    playwright install chromium
+Captures webpage screenshots for visual verification in agent loops by
+delegating to the sandbox runner (Docker/K8s). The sandbox image should
+provide the required headless browser utilities.
 
 Usage:
     from mcp_server_langgraph.tools.screenshot_tools import capture_screenshot
 
     result = await capture_screenshot.ainvoke({"url": "https://example.com"})
-    # result contains base64-encoded screenshot
+    # result contains sandbox runner output or an error message
 """
 
 from __future__ import annotations
 
-import base64
 import ipaddress
 import re
 from typing import Any
 from urllib.parse import urlparse
 
+import json
+
 from langchain_core.tools import tool
 from pydantic import BaseModel, Field
 
+from mcp_server_langgraph.core.config import settings
+from mcp_server_langgraph.execution.sandbox_runner import get_sandbox_runner, SandboxError
 
 # =============================================================================
 # Data Models
@@ -85,6 +82,8 @@ BLOCKED_HOSTNAMES = {
     "localhost.localdomain",
     "local",
 }
+
+SANDBOX_ENVIRONMENTS = {"test", "sandbox"}
 
 
 def is_safe_url(url: str) -> bool:
@@ -174,6 +173,51 @@ def _validate_url(url: str) -> str | None:
     return None
 
 
+def _check_screenshot_enabled() -> dict[str, Any] | None:
+    """Ensure screenshot tools are only available in sandbox/code-execution environments."""
+    if not settings.enable_code_execution or not (
+        settings.environment.lower() in SANDBOX_ENVIRONMENTS or settings.enable_sandbox_tools
+    ):
+        return {"error": "Screenshot tools are restricted to sandbox environments with code execution enabled."}
+    return None
+
+
+def _run_sandbox_capture(operation: str, payload: dict[str, Any]) -> dict[str, Any]:
+    """Delegate capture operations to the sandbox runner."""
+    _safe_log("debug", "Delegating capture to sandbox", operation=operation, payload_keys=list(payload.keys()))
+    try:
+        runner = get_sandbox_runner()
+        result = runner.run_screenshot({"operation": operation, **payload})
+    except SandboxError as exc:
+        return {"error": f"Sandbox error: {exc}"}
+
+    if result.timed_out:
+        return {
+            "error": f"{operation} timed out in sandbox",
+            "details": result.stderr or result.error_message,
+        }
+
+    if result.exit_code != 0 or result.error_message:
+        return {
+            "error": result.error_message or result.stderr or f"{operation} failed in sandbox",
+            "stdout": result.stdout,
+            "stderr": result.stderr,
+        }
+
+    if not result.stdout:
+        return {"error": "Empty response from sandbox", "stderr": result.stderr}
+
+    try:
+        data = json.loads(result.stdout)
+    except json.JSONDecodeError:
+        return {"error": "Invalid JSON from sandbox", "raw": result.stdout, "stderr": result.stderr}
+
+    if isinstance(data, dict) and data.get("error"):
+        return data
+
+    return data if isinstance(data, dict) else {"result": data}
+
+
 # =============================================================================
 # Screenshot Tool
 # =============================================================================
@@ -255,7 +299,10 @@ async def capture_screenshot(
         Or error dictionary if capture fails:
         - error: Error description
     """
-    # Resolve any FieldInfo objects to actual defaults (LangChain @tool workaround)
+    enabled_error = _check_screenshot_enabled()
+    if enabled_error:
+        return enabled_error
+
     resolved_viewport_width = _resolve_field_default(viewport_width, 1280)
     resolved_viewport_height = _resolve_field_default(viewport_height, 720)
     resolved_full_page = _resolve_field_default(full_page, False)
@@ -266,87 +313,18 @@ async def capture_screenshot(
     if error:
         return {"error": error, "url": url}
 
-    _safe_log("debug", "Capturing screenshot", url=url)
-
-    try:
-        # Dynamic import to handle optional dependency
-        from playwright.async_api import async_playwright  # type: ignore[import-not-found]
-    except ImportError:
-        return {
-            "error": "Playwright not installed. Install with: pip install playwright && playwright install chromium",
+    result = _run_sandbox_capture(
+        "capture_screenshot",
+        {
             "url": url,
-        }
-
-    browser = None
-    try:
-        async with async_playwright() as p:
-            # Launch headless browser
-            browser = await p.chromium.launch(headless=True)
-            context = await browser.new_context()
-            page = await context.new_page()
-
-            # Set viewport size
-            await page.set_viewport_size(
-                {
-                    "width": resolved_viewport_width,
-                    "height": resolved_viewport_height,
-                }
-            )
-
-            # Navigate to URL
-            try:
-                await page.goto(url, timeout=resolved_timeout)
-                await page.wait_for_load_state("networkidle", timeout=resolved_timeout)
-            except Exception as nav_error:
-                error_msg = str(nav_error).lower()
-                if "timeout" in error_msg:
-                    return {"error": "Timeout: Page took too long to load", "url": url}
-                raise
-
-            # Get page title
-            title = await page.title()
-
-            # Capture screenshot
-            screenshot_bytes = await page.screenshot(full_page=resolved_full_page)
-
-            # Close resources
-            await page.close()
-            await context.close()
-            await browser.close()
-
-            # Encode as base64
-            image_data = base64.b64encode(screenshot_bytes).decode("utf-8")
-
-            result = ScreenshotResult(
-                image_data=image_data,
-                mime_type="image/png",
-                url=url,
-                title=title,
-                width=resolved_viewport_width,
-                height=resolved_viewport_height,
-            )
-
-            _safe_log(
-                "debug",
-                "Screenshot captured successfully",
-                url=url,
-                size_bytes=len(screenshot_bytes),
-            )
-
-            return result.model_dump()
-
-    except TimeoutError:
-        return {"error": "Timeout: Page took too long to load", "url": url}
-    except Exception as e:
-        error_type = type(e).__name__
-        _safe_log("error", "Screenshot capture failed", url=url, error=str(e))
-        return {"error": f"{error_type}: {e!s}", "url": url}
-    finally:
-        if browser:
-            try:
-                await browser.close()
-            except Exception:
-                pass
+            "viewport_width": resolved_viewport_width,
+            "viewport_height": resolved_viewport_height,
+            "full_page": resolved_full_page,
+            "timeout": resolved_timeout,
+        },
+    )
+    result.setdefault("url", url)
+    return result
 
 
 # =============================================================================
@@ -409,7 +387,10 @@ async def capture_element_screenshot(
         Or error dictionary if capture fails:
         - error: Error description
     """
-    # Resolve any FieldInfo objects to actual defaults
+    enabled_error = _check_screenshot_enabled()
+    if enabled_error:
+        return enabled_error
+
     resolved_timeout = _resolve_field_default(timeout, 30000)
 
     # Validate URL
@@ -417,82 +398,13 @@ async def capture_element_screenshot(
     if error:
         return {"error": error, "url": url}
 
-    _safe_log("debug", "Capturing element screenshot", url=url, selector=selector)
-
-    try:
-        from playwright.async_api import async_playwright
-    except ImportError:
-        return {
-            "error": "Playwright not installed. Install with: pip install playwright && playwright install chromium",
-            "url": url,
-        }
-
-    browser = None
-    try:
-        async with async_playwright() as p:
-            browser = await p.chromium.launch(headless=True)
-            context = await browser.new_context()
-            page = await context.new_page()
-
-            await page.set_viewport_size({"width": 1280, "height": 720})
-
-            try:
-                await page.goto(url, timeout=resolved_timeout)
-                await page.wait_for_load_state("networkidle", timeout=resolved_timeout)
-            except Exception as nav_error:
-                error_msg = str(nav_error).lower()
-                if "timeout" in error_msg:
-                    return {"error": "Timeout: Page took too long to load", "url": url}
-                raise
-
-            title = await page.title()
-
-            # Locate and screenshot the element
-            element = page.locator(selector)
-            screenshot_bytes = await element.screenshot()
-
-            await page.close()
-            await context.close()
-            await browser.close()
-
-            image_data = base64.b64encode(screenshot_bytes).decode("utf-8")
-
-            result = ElementScreenshotResult(
-                image_data=image_data,
-                mime_type="image/png",
-                url=url,
-                selector=selector,
-                title=title,
-            )
-
-            _safe_log(
-                "debug",
-                "Element screenshot captured successfully",
-                url=url,
-                selector=selector,
-                size_bytes=len(screenshot_bytes),
-            )
-
-            return result.model_dump()
-
-    except TimeoutError:
-        return {"error": "Timeout: Page took too long to load", "url": url}
-    except Exception as e:
-        error_type = type(e).__name__
-        _safe_log(
-            "error",
-            "Element screenshot capture failed",
-            url=url,
-            selector=selector,
-            error=str(e),
-        )
-        return {"error": f"{error_type}: {e!s}", "url": url}
-    finally:
-        if browser:
-            try:
-                await browser.close()
-            except Exception:
-                pass
+    result = _run_sandbox_capture(
+        "capture_element_screenshot",
+        {"url": url, "selector": selector, "timeout": resolved_timeout},
+    )
+    result.setdefault("url", url)
+    result.setdefault("selector", selector)
+    return result
 
 
 # =============================================================================
@@ -560,7 +472,10 @@ async def capture_pdf(
         Or error dictionary if capture fails:
         - error: Error description
     """
-    # Resolve any FieldInfo objects to actual defaults
+    enabled_error = _check_screenshot_enabled()
+    if enabled_error:
+        return enabled_error
+
     resolved_timeout = _resolve_field_default(timeout, 30000)
     resolved_format = _resolve_field_default(format, "A4")
     resolved_print_background = _resolve_field_default(print_background, True)
@@ -570,74 +485,17 @@ async def capture_pdf(
     if error:
         return {"error": error, "url": url}
 
-    _safe_log("debug", "Capturing PDF", url=url)
-
-    try:
-        from playwright.async_api import async_playwright
-    except ImportError:
-        return {
-            "error": "Playwright not installed. Install with: pip install playwright && playwright install chromium",
+    result = _run_sandbox_capture(
+        "capture_pdf",
+        {
             "url": url,
-        }
-
-    browser = None
-    try:
-        async with async_playwright() as p:
-            browser = await p.chromium.launch(headless=True)
-            context = await browser.new_context()
-            page = await context.new_page()
-
-            try:
-                await page.goto(url, timeout=resolved_timeout)
-                await page.wait_for_load_state("networkidle", timeout=resolved_timeout)
-            except Exception as nav_error:
-                error_msg = str(nav_error).lower()
-                if "timeout" in error_msg:
-                    return {"error": "Timeout: Page took too long to load", "url": url}
-                raise
-
-            title = await page.title()
-
-            # Generate PDF
-            pdf_bytes = await page.pdf(
-                format=resolved_format,
-                print_background=resolved_print_background,
-            )
-
-            await page.close()
-            await context.close()
-            await browser.close()
-
-            pdf_data = base64.b64encode(pdf_bytes).decode("utf-8")
-
-            result = PDFResult(
-                pdf_data=pdf_data,
-                mime_type="application/pdf",
-                url=url,
-                title=title,
-            )
-
-            _safe_log(
-                "debug",
-                "PDF captured successfully",
-                url=url,
-                size_bytes=len(pdf_bytes),
-            )
-
-            return result.model_dump()
-
-    except TimeoutError:
-        return {"error": "Timeout: Page took too long to load", "url": url}
-    except Exception as e:
-        error_type = type(e).__name__
-        _safe_log("error", "PDF capture failed", url=url, error=str(e))
-        return {"error": f"{error_type}: {e!s}", "url": url}
-    finally:
-        if browser:
-            try:
-                await browser.close()
-            except Exception:
-                pass
+            "timeout": resolved_timeout,
+            "format": resolved_format,
+            "print_background": resolved_print_background,
+        },
+    )
+    result.setdefault("url", url)
+    return result
 
 
 # =============================================================================
@@ -691,7 +549,10 @@ async def wait_and_capture(
         Or error dictionary if capture fails:
         - error: Error description
     """
-    # Resolve any FieldInfo objects to actual defaults
+    enabled_error = _check_screenshot_enabled()
+    if enabled_error:
+        return enabled_error
+
     resolved_viewport_width = _resolve_field_default(viewport_width, 1280)
     resolved_viewport_height = _resolve_field_default(viewport_height, 720)
     resolved_timeout = _resolve_field_default(timeout, 30000)
@@ -701,94 +562,16 @@ async def wait_and_capture(
     if error:
         return {"error": error, "url": url}
 
-    _safe_log("debug", "Wait and capture screenshot", url=url, wait_for=wait_for)
-
-    try:
-        from playwright.async_api import async_playwright
-    except ImportError:
-        return {
-            "error": "Playwright not installed. Install with: pip install playwright && playwright install chromium",
+    result = _run_sandbox_capture(
+        "wait_and_capture",
+        {
             "url": url,
-        }
-
-    browser = None
-    try:
-        async with async_playwright() as p:
-            browser = await p.chromium.launch(headless=True)
-            context = await browser.new_context()
-            page = await context.new_page()
-
-            await page.set_viewport_size(
-                {
-                    "width": resolved_viewport_width,
-                    "height": resolved_viewport_height,
-                }
-            )
-
-            try:
-                await page.goto(url, timeout=resolved_timeout)
-                await page.wait_for_load_state("networkidle", timeout=resolved_timeout)
-            except Exception as nav_error:
-                error_msg = str(nav_error).lower()
-                if "timeout" in error_msg:
-                    return {"error": "Timeout: Page took too long to load", "url": url}
-                raise
-
-            # Wait for the specified selector
-            try:
-                await page.wait_for_selector(wait_for, timeout=resolved_timeout)
-            except TimeoutError:
-                return {
-                    "error": f"Timeout: Element '{wait_for}' did not appear",
-                    "url": url,
-                }
-
-            title = await page.title()
-
-            # Capture screenshot
-            screenshot_bytes = await page.screenshot()
-
-            await page.close()
-            await context.close()
-            await browser.close()
-
-            image_data = base64.b64encode(screenshot_bytes).decode("utf-8")
-
-            result = {
-                "image_data": image_data,
-                "mime_type": "image/png",
-                "url": url,
-                "title": title,
-                "waited_for": wait_for,
-                "width": resolved_viewport_width,
-                "height": resolved_viewport_height,
-            }
-
-            _safe_log(
-                "debug",
-                "Wait and capture completed successfully",
-                url=url,
-                wait_for=wait_for,
-                size_bytes=len(screenshot_bytes),
-            )
-
-            return result
-
-    except TimeoutError:
-        return {"error": "Timeout: Page took too long to load", "url": url}
-    except Exception as e:
-        error_type = type(e).__name__
-        _safe_log(
-            "error",
-            "Wait and capture failed",
-            url=url,
-            wait_for=wait_for,
-            error=str(e),
-        )
-        return {"error": f"{error_type}: {e!s}", "url": url}
-    finally:
-        if browser:
-            try:
-                await browser.close()
-            except Exception:
-                pass
+            "wait_for": wait_for,
+            "viewport_width": resolved_viewport_width,
+            "viewport_height": resolved_viewport_height,
+            "timeout": resolved_timeout,
+        },
+    )
+    result.setdefault("url", url)
+    result.setdefault("wait_for", wait_for)
+    return result

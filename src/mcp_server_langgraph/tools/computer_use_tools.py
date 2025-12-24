@@ -17,6 +17,7 @@ Reference: Anthropic Computer Use, Google ADK Computer Use, OpenAI ComputerTool
 
 from __future__ import annotations
 
+import json
 import re
 from typing import Annotated, Any
 from urllib.parse import urlparse
@@ -24,11 +25,9 @@ from urllib.parse import urlparse
 from langchain_core.tools import tool
 from pydantic import Field
 
+from mcp_server_langgraph.core.config import settings
 from mcp_server_langgraph.core.feature_flags import feature_flags
-
-# Default screen dimensions for simulation
-DEFAULT_SCREEN_WIDTH = 1920
-DEFAULT_SCREEN_HEIGHT = 1080
+from mcp_server_langgraph.execution.sandbox_runner import get_sandbox_runner, SandboxError
 
 # Patterns for dangerous input detection
 DANGEROUS_PATTERNS = [
@@ -41,6 +40,8 @@ DANGEROUS_PATTERNS = [
     r"DELETE\s+FROM",
 ]
 
+SANDBOX_ENVIRONMENTS = {"test", "sandbox"}
+
 
 def _check_feature_enabled() -> dict[str, Any] | None:
     """Check if computer use feature is enabled.
@@ -48,6 +49,14 @@ def _check_feature_enabled() -> dict[str, Any] | None:
     Returns:
         Error dict if feature is disabled, None if enabled.
     """
+    if not settings.enable_code_execution or not (
+        settings.environment.lower() in SANDBOX_ENVIRONMENTS or settings.enable_sandbox_tools
+    ):
+        return {
+            "success": False,
+            "error": "Computer Use tools are restricted to sandbox environments with code execution enabled.",
+        }
+
     if not feature_flags.enable_computer_use:
         return {
             "success": False,
@@ -74,9 +83,7 @@ def _is_safe_url(url: str) -> bool:
             return False
         if parsed.hostname and parsed.hostname.startswith("192.168."):
             return False
-        if parsed.hostname and parsed.hostname.startswith("10."):
-            return False
-        return True
+        return not (parsed.hostname and parsed.hostname.startswith("10."))
     except Exception:
         return False
 
@@ -97,6 +104,49 @@ def _check_dangerous_input(text: str) -> dict[str, Any] | None:
                 "sanitized": True,
             }
     return None
+
+
+def _run_computer_action(action: str, payload: dict[str, Any]) -> dict[str, Any]:
+    """Delegate computer-use actions to the sandbox runner."""
+    error = _check_feature_enabled()
+    if error:
+        return error
+
+    try:
+        runner = get_sandbox_runner()
+        result = runner.run_computer_use(action, payload)
+    except SandboxError as exc:
+        return {"success": False, "error": f"Sandbox error: {exc}"}
+
+    if result.timed_out:
+        return {
+            "success": False,
+            "error": f"Sandbox action '{action}' timed out",
+            "stderr": result.stderr,
+        }
+
+    if result.exit_code != 0 or result.error_message:
+        return {
+            "success": False,
+            "error": result.error_message or result.stderr or f"{action} failed in sandbox",
+            "stdout": result.stdout,
+            "stderr": result.stderr,
+        }
+
+    if result.stdout:
+        try:
+            data = json.loads(result.stdout)
+            if isinstance(data, dict):
+                return data
+        except json.JSONDecodeError:
+            pass
+
+    return {
+        "success": True,
+        "action": action,
+        "output": result.stdout,
+        "stderr": result.stderr or "",
+    }
 
 
 # =============================================================================
@@ -128,30 +178,20 @@ async def mouse_click(
         # Double-click
         mouse_click(x=100, y=200, click_count=2)
     """
-    error = _check_feature_enabled()
-    if error:
-        return error
-
-    result: dict[str, Any] = {
-        "success": True,
-        "action": "click",
-        "button": button,
-        "click_count": click_count,
-    }
-
-    if selector:
-        result["selector"] = selector
-        # In real implementation, would find element and get its center coordinates
-        result["coordinates"] = {"x": 100, "y": 100}  # Simulated
-    elif x is not None and y is not None:
-        result["coordinates"] = {"x": x, "y": y}
-    else:
+    if selector is None and (x is None or y is None):
         return {
             "success": False,
             "error": "Must provide either coordinates (x, y) or selector",
         }
 
-    return result
+    payload: dict[str, Any] = {
+        "x": x,
+        "y": y,
+        "selector": selector,
+        "button": button,
+        "click_count": click_count,
+    }
+    return _run_computer_action("mouse_click", payload)
 
 
 @tool
@@ -167,15 +207,13 @@ async def mouse_move(
     Example:
         mouse_move(x=500, y=300)
     """
-    error = _check_feature_enabled()
-    if error:
-        return error
-
-    return {
-        "success": True,
-        "action": "move",
-        "coordinates": {"x": x, "y": y},
-    }
+    return _run_computer_action(
+        "mouse_move",
+        {
+            "x": x,
+            "y": y,
+        },
+    )
 
 
 @tool
@@ -193,16 +231,15 @@ async def mouse_drag(
     Example:
         mouse_drag(start_x=100, start_y=100, end_x=300, end_y=300)
     """
-    error = _check_feature_enabled()
-    if error:
-        return error
-
-    return {
-        "success": True,
-        "action": "drag",
-        "start": {"x": start_x, "y": start_y},
-        "end": {"x": end_x, "y": end_y},
-    }
+    return _run_computer_action(
+        "mouse_drag",
+        {
+            "start_x": start_x,
+            "start_y": start_y,
+            "end_x": end_x,
+            "end_y": end_y,
+        },
+    )
 
 
 # =============================================================================
@@ -227,27 +264,16 @@ async def keyboard_type(
         # Type into specific element
         keyboard_type(text="user@example.com", selector="#email-input")
     """
-    error = _check_feature_enabled()
-    if error:
-        return error
-
-    # Check for dangerous input
     warning = _check_dangerous_input(text)
+    result = _run_computer_action(
+        "keyboard_type",
+        {
+            "text": text,
+            "selector": selector,
+        },
+    )
     if warning:
-        return {
-            "success": True,
-            "text_typed": text,
-            **warning,
-        }
-
-    result: dict[str, Any] = {
-        "success": True,
-        "text_typed": text,
-    }
-
-    if selector:
-        result["selector"] = selector
-
+        result.update(warning)
     return result
 
 
@@ -271,19 +297,13 @@ async def keyboard_press(
         # Press Ctrl+Shift+S
         keyboard_press(key="s", modifiers=["Control", "Shift"])
     """
-    error = _check_feature_enabled()
-    if error:
-        return error
-
-    result: dict[str, Any] = {
-        "success": True,
-        "key_pressed": key,
-    }
-
-    if modifiers:
-        result["modifiers"] = modifiers
-
-    return result
+    return _run_computer_action(
+        "keyboard_press",
+        {
+            "key": key,
+            "modifiers": modifiers,
+        },
+    )
 
 
 # =============================================================================
@@ -311,29 +331,23 @@ async def scroll(
         # Scroll element into view
         scroll(selector="#footer", scroll_into_view=True)
     """
-    error = _check_feature_enabled()
-    if error:
-        return error
-
     if scroll_into_view and selector:
-        return {
-            "success": True,
-            "action": "scroll_into_view",
-            "scrolled_to_selector": selector,
+        payload = {
+            "selector": selector,
+            "scroll_into_view": True,
         }
-
-    if direction:
-        return {
-            "success": True,
-            "action": "scroll",
+    elif direction:
+        payload = {
             "direction": direction,
             "amount": amount,
         }
+    else:
+        return {
+            "success": False,
+            "error": "Must provide either direction or selector with scroll_into_view=True",
+        }
 
-    return {
-        "success": False,
-        "error": "Must provide either direction or selector with scroll_into_view=True",
-    }
+    return _run_computer_action("scroll", payload)
 
 
 # =============================================================================
@@ -353,16 +367,10 @@ async def get_screen_info() -> dict[str, Any]:
         info = get_screen_info()
         print(f"Screen: {info['width']}x{info['height']}")
     """
-    error = _check_feature_enabled()
-    if error:
-        return error
-
-    return {
-        "width": DEFAULT_SCREEN_WIDTH,
-        "height": DEFAULT_SCREEN_HEIGHT,
-        "device_pixel_ratio": 1.0,
-        "color_depth": 24,
-    }
+    return _run_computer_action(
+        "get_screen_info",
+        {},
+    )
 
 
 @tool
@@ -378,23 +386,10 @@ async def get_element_info(
         info = get_element_info(selector="#main-content")
         print(f"Element at ({info['bounds']['x']}, {info['bounds']['y']})")
     """
-    error = _check_feature_enabled()
-    if error:
-        return error
-
-    # Simulated element bounds
-    return {
-        "selector": selector,
-        "bounds": {
-            "x": 100,
-            "y": 100,
-            "width": 800,
-            "height": 600,
-        },
-        "visible": True,
-        "tag_name": "div",
-        "text_content": "",
-    }
+    return _run_computer_action(
+        "get_element_info",
+        {"selector": selector},
+    )
 
 
 # =============================================================================
@@ -415,22 +410,16 @@ async def navigate(
     Example:
         navigate(url="https://example.com")
     """
-    error = _check_feature_enabled()
-    if error:
-        return error
-
     if not _is_safe_url(url):
         return {
             "success": False,
             "error": f"URL '{url}' is not allowed (must be https:// or http:// to external host)",
         }
 
-    return {
-        "success": True,
-        "action": "navigate",
-        "url": url,
-        "status": 200,
-    }
+    return _run_computer_action(
+        "navigate",
+        {"url": url},
+    )
 
 
 @tool
@@ -443,14 +432,7 @@ async def go_back() -> dict[str, Any]:
     Example:
         go_back()
     """
-    error = _check_feature_enabled()
-    if error:
-        return error
-
-    return {
-        "success": True,
-        "action": "go_back",
-    }
+    return _run_computer_action("go_back", {})
 
 
 @tool
@@ -463,14 +445,7 @@ async def go_forward() -> dict[str, Any]:
     Example:
         go_forward()
     """
-    error = _check_feature_enabled()
-    if error:
-        return error
-
-    return {
-        "success": True,
-        "action": "go_forward",
-    }
+    return _run_computer_action("go_forward", {})
 
 
 # =============================================================================
@@ -495,16 +470,10 @@ async def fill_form(
             "#password": "securepass123",
         })
     """
-    error = _check_feature_enabled()
-    if error:
-        return error
-
-    return {
-        "success": True,
-        "action": "fill_form",
-        "fields_filled": len(fields),
-        "fields": list(fields.keys()),
-    }
+    return _run_computer_action(
+        "fill_form",
+        {"fields": fields},
+    )
 
 
 @tool
@@ -529,29 +498,19 @@ async def select_option(
         # Select by index
         select_option(selector="#country-select", index=0)
     """
-    error = _check_feature_enabled()
-    if error:
-        return error
-
-    result: dict[str, Any] = {
-        "success": True,
-        "action": "select_option",
-        "selector": selector,
-    }
-
-    if value is not None:
-        result["selected_value"] = value
-    elif label is not None:
-        result["selected_label"] = label
-    elif index is not None:
-        result["selected_index"] = index
-    else:
+    if value is None and label is None and index is None:
         return {
             "success": False,
             "error": "Must provide value, label, or index to select",
         }
 
-    return result
+    payload: dict[str, Any] = {
+        "selector": selector,
+        "value": value,
+        "label": label,
+        "index": index,
+    }
+    return _run_computer_action("select_option", payload)
 
 
 # =============================================================================

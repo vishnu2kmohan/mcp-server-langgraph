@@ -54,6 +54,59 @@ def upgrade() -> None:
     )
 
     # ==========================================================================
+    # 1b. ADD MISSING COLUMNS: Handle case where table exists but is incomplete
+    # ==========================================================================
+
+    # The table may have been created by an earlier migration (8348487e5796 GDPR schema)
+    # with a different structure. Add any missing columns to make this migration idempotent.
+    op.execute(
+        """
+        DO $$
+        BEGIN
+            -- Add sub_persona column if missing
+            IF NOT EXISTS (
+                SELECT 1 FROM information_schema.columns
+                WHERE table_name = 'user_preferences' AND column_name = 'sub_persona'
+            ) THEN
+                ALTER TABLE user_preferences ADD COLUMN sub_persona VARCHAR(50);
+            END IF;
+
+            -- Add feature_flags column if missing
+            IF NOT EXISTS (
+                SELECT 1 FROM information_schema.columns
+                WHERE table_name = 'user_preferences' AND column_name = 'feature_flags'
+            ) THEN
+                ALTER TABLE user_preferences ADD COLUMN feature_flags JSONB NOT NULL DEFAULT '{}';
+            END IF;
+
+            -- Add preferences column if missing
+            IF NOT EXISTS (
+                SELECT 1 FROM information_schema.columns
+                WHERE table_name = 'user_preferences' AND column_name = 'preferences'
+            ) THEN
+                ALTER TABLE user_preferences ADD COLUMN preferences JSONB NOT NULL DEFAULT '{}';
+            END IF;
+
+            -- Add created_at column if missing
+            IF NOT EXISTS (
+                SELECT 1 FROM information_schema.columns
+                WHERE table_name = 'user_preferences' AND column_name = 'created_at'
+            ) THEN
+                ALTER TABLE user_preferences ADD COLUMN created_at TIMESTAMPTZ NOT NULL DEFAULT NOW();
+            END IF;
+
+            -- Add updated_at column if missing
+            IF NOT EXISTS (
+                SELECT 1 FROM information_schema.columns
+                WHERE table_name = 'user_preferences' AND column_name = 'updated_at'
+            ) THEN
+                ALTER TABLE user_preferences ADD COLUMN updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW();
+            END IF;
+        END $$;
+        """
+    )
+
+    # ==========================================================================
     # 2. COMMENTS: Document columns
     # ==========================================================================
 
@@ -120,10 +173,12 @@ def upgrade() -> None:
         """
     )
 
+    # Drop existing trigger first (asyncpg requires separate statements)
+    op.execute("DROP TRIGGER IF EXISTS trigger_user_preferences_updated_at ON user_preferences;")
+
     # Create trigger
     op.execute(
         """
-        DROP TRIGGER IF EXISTS trigger_user_preferences_updated_at ON user_preferences;
         CREATE TRIGGER trigger_user_preferences_updated_at
             BEFORE UPDATE ON user_preferences
             FOR EACH ROW

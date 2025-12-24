@@ -84,11 +84,19 @@ export const baseQueryWithReauth: BaseQueryFn<
 
   // Check for 401 Unauthorized
   if (result.error && result.error.status === 401) {
-    // Check if we have a refresh token (stored under legacy key without prefix)
+    // Check if we have a refresh token
     const refreshToken =
-      typeof window !== "undefined"
+      // Prefer Redux state (keeps the latest token even if localStorage is out of sync)
+      (api.getState() as { auth?: { tokens?: { refreshToken?: string } } })
+        ?.auth?.tokens?.refreshToken ||
+      // Raw localStorage (PKCE flow stores without studio- prefix)
+      (typeof window !== "undefined"
+        ? window.localStorage.getItem(STORAGE_KEYS.REFRESH_TOKEN)
+        : null) ||
+      // Legacy storage util (uses studio- prefix)
+      (typeof window !== "undefined"
         ? storage.get<string>(STORAGE_KEYS.REFRESH_TOKEN)
-        : null;
+        : null);
 
     if (!refreshToken) {
       // No refresh token, logout immediately

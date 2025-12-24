@@ -104,7 +104,13 @@ class DockerSandbox(Sandbox):
                 msg = f"Failed to pull Docker image {self.image}: {e}"
                 raise SandboxError(msg)
 
-    def execute(self, code: str) -> ExecutionResult:
+    def execute(
+        self,
+        code: str,
+        *,
+        is_shell_command: bool = False,
+        timeout_seconds: int | None = None,
+    ) -> ExecutionResult:
         """
         Execute Python code in a Docker container.
 
@@ -131,7 +137,7 @@ class DockerSandbox(Sandbox):
 
         try:
             # Create container with resource limits
-            container = self._create_container(code)
+            container = self._create_container(code, is_shell_command=is_shell_command)
 
             # Start container
             container.start()
@@ -139,7 +145,7 @@ class DockerSandbox(Sandbox):
             # Wait for completion with timeout
             timed_out = False
             try:
-                exit_code = container.wait(timeout=self.limits.timeout_seconds)
+                exit_code = container.wait(timeout=timeout_seconds or self.limits.timeout_seconds)
                 if isinstance(exit_code, dict):
                     exit_code = exit_code.get("StatusCode", 1)
             except Exception:
@@ -227,7 +233,7 @@ class DockerSandbox(Sandbox):
             msg = f"Docker execution failed: {e}"
             raise SandboxError(msg)
 
-    def _create_container(self, code: str) -> Container:
+    def _create_container(self, code: str, is_shell_command: bool = False) -> Container:
         """
         Create Docker container with resource limits and security settings.
 
@@ -252,7 +258,7 @@ class DockerSandbox(Sandbox):
             # Note: We don't use auto_remove=True because we need to get logs after execution
             container = self.client.containers.create(
                 image=self.image,
-                command=["python", "-c", code],
+                command=(["bash", "-lc", code] if is_shell_command else ["python", "-c", code]),
                 detach=True,
                 user="nobody",  # Run as non-root user (security best practice)
                 mem_limit=mem_limit,

@@ -13,7 +13,12 @@
 import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
 import type { RootState } from "../index";
 import type { User, AuthTokens, Organization, Persona } from "../../types/auth";
-import { storage, STORAGE_KEYS, clearAuthTokens } from "../../utils/storage";
+import {
+  storage,
+  STORAGE_KEYS,
+  clearAuthTokens,
+  setAuthTokens,
+} from "../../utils/storage";
 
 // ============================================================================
 // Constants
@@ -92,10 +97,18 @@ function loadTokensFromStorage(): AuthTokens | null {
     return stored.state.tokens;
   }
 
-  // Fallback: check OAuth2 PKCE storage keys
-  const accessToken = storage.get<string>(STORAGE_KEYS.ACCESS_TOKEN);
+  // Fallback: check raw OAuth2 PKCE storage keys (no studio- prefix)
+  const accessToken =
+    typeof window !== "undefined"
+      ? window.localStorage.getItem(STORAGE_KEYS.ACCESS_TOKEN) ||
+        window.localStorage.getItem(STORAGE_KEYS.AUTH_TOKEN)
+      : null;
   if (accessToken) {
-    const refreshToken = storage.get<string>(STORAGE_KEYS.REFRESH_TOKEN);
+    // Note: refresh_token is also stored without the studio- prefix
+    const refreshToken =
+      typeof window !== "undefined"
+        ? window.localStorage.getItem(STORAGE_KEYS.REFRESH_TOKEN)
+        : null;
     const expiresAt = decodeJwtExp(accessToken);
     // Refresh token typically expires later (e.g., 30 days)
     const refreshExpiresAt = refreshToken
@@ -114,12 +127,24 @@ function loadTokensFromStorage(): AuthTokens | null {
 
 /**
  * Save tokens to localStorage
+ *
+ * Writes to BOTH storage locations:
+ * 1. studio-auth (structured storage for authSlice)
+ * 2. access_token/refresh_token/auth_token (raw keys for getAuthToken())
+ *
+ * This ensures that getAuthToken() (used by loaders and RTK Query) can find
+ * the tokens after login/refresh.
  */
 function saveTokensToStorage(tokens: AuthTokens | null): void {
   if (tokens) {
+    // Save to structured storage (authSlice)
     storage.set(AUTH_STORAGE_KEY, { state: { tokens } });
+    // Also save to raw token keys (for getAuthToken() used by loaders/RTK Query)
+    setAuthTokens(tokens.accessToken, tokens.refreshToken);
   } else {
     storage.remove(AUTH_STORAGE_KEY);
+    // Clear raw token keys as well
+    clearAuthTokens();
   }
 }
 

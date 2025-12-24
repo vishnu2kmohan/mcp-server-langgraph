@@ -761,6 +761,7 @@ def _create_factory_with_config(  # type: ignore[no-untyped-def]
     model_name: str,
     temperature: float,
     max_tokens: int,
+    hook_dispatcher: HookDispatcher | None = None,
 ) -> LLMFactory:
     """
     Create LLMFactory with common configuration pattern.
@@ -771,6 +772,7 @@ def _create_factory_with_config(  # type: ignore[no-untyped-def]
         model_name: Model name to use
         temperature: Model temperature
         max_tokens: Maximum tokens for response
+        hook_dispatcher: Optional hook dispatcher for BEFORE_MODEL/AFTER_MODEL hooks
 
     Returns:
         Configured LLMFactory instance
@@ -787,6 +789,7 @@ def _create_factory_with_config(  # type: ignore[no-untyped-def]
         timeout=config.model_timeout,
         enable_fallback=config.enable_fallback,
         fallback_models=config.fallback_models,
+        hook_dispatcher=hook_dispatcher,
         **provider_kwargs,
     )
 
@@ -796,12 +799,16 @@ def _create_factory_with_config(  # type: ignore[no-untyped-def]
     return factory
 
 
-def create_llm_from_config(config) -> LLMFactory:  # type: ignore[no-untyped-def]
+def create_llm_from_config(  # type: ignore[no-untyped-def]
+    config,
+    hook_dispatcher: HookDispatcher | None = None,
+) -> LLMFactory:
     """
     Create primary LLM instance from configuration.
 
     Args:
         config: Settings object with LLM configuration
+        hook_dispatcher: Optional hook dispatcher for BEFORE_MODEL/AFTER_MODEL hooks
 
     Returns:
         Configured LLMFactory instance for primary chat operations
@@ -812,10 +819,14 @@ def create_llm_from_config(config) -> LLMFactory:  # type: ignore[no-untyped-def
         model_name=config.model_name,
         temperature=config.model_temperature,
         max_tokens=config.model_max_tokens,
+        hook_dispatcher=hook_dispatcher,
     )
 
 
-def create_summarization_model(config) -> LLMFactory:  # type: ignore[no-untyped-def]
+def create_summarization_model(  # type: ignore[no-untyped-def]
+    config,
+    hook_dispatcher: HookDispatcher | None = None,
+) -> LLMFactory:
     """
     Create dedicated LLM instance for summarization (cost-optimized).
 
@@ -824,13 +835,14 @@ def create_summarization_model(config) -> LLMFactory:  # type: ignore[no-untyped
 
     Args:
         config: Settings object with LLM configuration
+        hook_dispatcher: Optional hook dispatcher for BEFORE_MODEL/AFTER_MODEL hooks
 
     Returns:
         Configured LLMFactory instance for summarization
     """
     # If dedicated summarization model not enabled, use primary model
     if not getattr(config, "use_dedicated_summarization_model", False):
-        return create_llm_from_config(config)
+        return create_llm_from_config(config, hook_dispatcher=hook_dispatcher)
 
     provider = config.summarization_model_provider or config.llm_provider
     model_name = config.summarization_model_name or config.model_name
@@ -841,10 +853,14 @@ def create_summarization_model(config) -> LLMFactory:  # type: ignore[no-untyped
         model_name=model_name,
         temperature=config.summarization_model_temperature,
         max_tokens=config.summarization_model_max_tokens,
+        hook_dispatcher=hook_dispatcher,
     )
 
 
-def create_verification_model(config) -> LLMFactory:  # type: ignore[no-untyped-def]
+def create_verification_model(  # type: ignore[no-untyped-def]
+    config,
+    hook_dispatcher: HookDispatcher | None = None,
+) -> LLMFactory:
     """
     Create dedicated LLM instance for verification (LLM-as-judge).
 
@@ -853,13 +869,14 @@ def create_verification_model(config) -> LLMFactory:  # type: ignore[no-untyped-
 
     Args:
         config: Settings object with LLM configuration
+        hook_dispatcher: Optional hook dispatcher for BEFORE_MODEL/AFTER_MODEL hooks
 
     Returns:
         Configured LLMFactory instance for verification
     """
     # If dedicated verification model not enabled, use primary model
     if not getattr(config, "use_dedicated_verification_model", False):
-        return create_llm_from_config(config)
+        return create_llm_from_config(config, hook_dispatcher=hook_dispatcher)
 
     provider = config.verification_model_provider or config.llm_provider
     model_name = config.verification_model_name or config.model_name
@@ -870,6 +887,7 @@ def create_verification_model(config) -> LLMFactory:  # type: ignore[no-untyped-
         model_name=model_name,
         temperature=config.verification_model_temperature,
         max_tokens=config.verification_model_max_tokens,
+        hook_dispatcher=hook_dispatcher,
     )
 
 
@@ -878,7 +896,11 @@ def create_verification_model(config) -> LLMFactory:  # type: ignore[no-untyped-
 # ==============================================================================
 
 
-def create_model(config, model_type: ModelType) -> LLMFactory:  # type: ignore[no-untyped-def]
+def create_model(  # type: ignore[no-untyped-def]
+    config,
+    model_type: ModelType,
+    hook_dispatcher: HookDispatcher | None = None,
+) -> LLMFactory:
     """
     Create LLM instance for specified model type (consolidated factory function).
 
@@ -889,6 +911,7 @@ def create_model(config, model_type: ModelType) -> LLMFactory:  # type: ignore[n
     Args:
         config: Settings object with LLM configuration
         model_type: The type of model to create (PRIMARY, SUMMARIZATION, VERIFICATION)
+        hook_dispatcher: Optional hook dispatcher for BEFORE_MODEL/AFTER_MODEL hooks
 
     Returns:
         Configured LLMFactory instance
@@ -904,12 +927,13 @@ def create_model(config, model_type: ModelType) -> LLMFactory:  # type: ignore[n
             model_name=config.model_name,
             temperature=config.model_temperature,
             max_tokens=config.model_max_tokens,
+            hook_dispatcher=hook_dispatcher,
         )
 
     elif model_type == ModelType.SUMMARIZATION:
         # Fall back to primary if dedicated model not enabled
         if not getattr(config, "use_dedicated_summarization_model", False):
-            return create_model(config, ModelType.PRIMARY)
+            return create_model(config, ModelType.PRIMARY, hook_dispatcher=hook_dispatcher)
 
         provider = config.summarization_model_provider or config.llm_provider
         model_name = config.summarization_model_name or config.model_name
@@ -920,12 +944,13 @@ def create_model(config, model_type: ModelType) -> LLMFactory:  # type: ignore[n
             model_name=model_name,
             temperature=config.summarization_model_temperature,
             max_tokens=config.summarization_model_max_tokens,
+            hook_dispatcher=hook_dispatcher,
         )
 
     elif model_type == ModelType.VERIFICATION:
         # Fall back to primary if dedicated model not enabled
         if not getattr(config, "use_dedicated_verification_model", False):
-            return create_model(config, ModelType.PRIMARY)
+            return create_model(config, ModelType.PRIMARY, hook_dispatcher=hook_dispatcher)
 
         provider = config.verification_model_provider or config.llm_provider
         model_name = config.verification_model_name or config.model_name
@@ -936,6 +961,7 @@ def create_model(config, model_type: ModelType) -> LLMFactory:  # type: ignore[n
             model_name=model_name,
             temperature=config.verification_model_temperature,
             max_tokens=config.verification_model_max_tokens,
+            hook_dispatcher=hook_dispatcher,
         )
 
     else:

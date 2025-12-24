@@ -20,13 +20,14 @@ from __future__ import annotations
 
 import re
 import shlex
-import subprocess
 from typing import Annotated
 
 from langchain_core.tools import tool
 from pydantic import BaseModel, Field
 
 from mcp_server_langgraph.core.feature_flags import feature_flags
+from mcp_server_langgraph.core.config import settings
+from mcp_server_langgraph.execution.sandbox_runner import get_sandbox_runner, SandboxError
 
 # =============================================================================
 # Constants
@@ -159,6 +160,7 @@ SENSITIVE_PATHS: set[str] = {
 
 DEFAULT_TIMEOUT: int = 30
 DEFAULT_MAX_OUTPUT_SIZE: int = 10000
+SANDBOX_ENVIRONMENTS = {"test", "sandbox"}
 
 
 # =============================================================================
@@ -303,6 +305,12 @@ def execute_bash(
     Returns:
         Command output or error message
     """
+    # Allow only when sandbox tools are enabled and code execution is on
+    if not settings.enable_code_execution or not (
+        settings.environment.lower() in SANDBOX_ENVIRONMENTS or settings.enable_sandbox_tools
+    ):
+        return "Error: Bash tool is restricted to sandbox environments with code execution enabled."
+
     # Check feature flag
     if not feature_flags.enable_bash_tool:
         return "Error: Bash tool is disabled. Enable the 'enable_bash_tool' feature flag to use this tool."
@@ -312,18 +320,9 @@ def execute_bash(
         return f"Error: Command is blocked or not allowed. Only safe, read-only commands are permitted. Blocked: {command}"
 
     try:
-        # Execute the command
-        result = subprocess.run(
-            command,
-            shell=True,
-            capture_output=True,
-            text=True,
-            timeout=timeout,
-            cwd=working_directory,
-            env=None,  # Use default environment
-        )
+        runner = get_sandbox_runner()
+        result = runner.run_bash(command, timeout_override=timeout)
 
-        # Combine stdout and stderr
         output = result.stdout
         if result.stderr:
             if output:
@@ -331,24 +330,21 @@ def execute_bash(
             else:
                 output = result.stderr
 
-        # Handle empty output
         if not output:
-            if result.returncode == 0:
+            if result.exit_code == 0 and not result.timed_out:
                 output = "(command completed successfully with no output)"
             else:
-                output = f"(command failed with exit code {result.returncode})"
+                output = f"(command failed with exit code {result.exit_code})"
 
-        # Truncate if necessary
         output = truncate_output(output)
-
+        if result.timed_out:
+            output = f"Error: Command timed out after {timeout} seconds\n\n{output}"
+        if result.error_message:
+            output = f"Error: {result.error_message}\n\n{output}"
         return output
 
-    except subprocess.TimeoutExpired:
-        return f"Error: Command timed out after {timeout} seconds"
-    except FileNotFoundError:
-        return f"Error: Working directory not found: {working_directory}"
-    except PermissionError:
-        return "Error: Permission denied"
+    except SandboxError as e:
+        return f"Sandbox error: {e}"
     except Exception as e:
         return f"Error: Command execution failed: {e!s}"
 

@@ -53,6 +53,8 @@ import type {
   VectorTextUpsertRequest,
   VectorTextUpsertResponse,
   AgentConfig,
+  ThinkingBudgetUpdateRequest,
+  ThinkingBudgetUpdateResponse,
   AuditLogEntry,
   AuditLogListParams,
   HealthStatus,
@@ -1091,6 +1093,19 @@ export const api = createApi({
       query: () => "/agents/config",
       providesTags: ["Agent"],
       keepUnusedDataFor: 300, // 5 minutes - agent config rarely changes
+    }),
+
+    // Update thinking budget (PATCH)
+    updateThinkingBudget: builder.mutation<
+      ThinkingBudgetUpdateResponse,
+      ThinkingBudgetUpdateRequest
+    >({
+      query: (body) => ({
+        url: "/agents/config/thinking-budget",
+        method: "PATCH",
+        body,
+      }),
+      invalidatesTags: ["Agent"],
     }),
 
     // Audit Logs (Admin)
@@ -3039,6 +3054,7 @@ export const {
   useUpsertVectorTextMutation,
   // Agents
   useGetAgentConfigQuery,
+  useUpdateThinkingBudgetMutation,
   // Audit Logs
   useListAuditLogsQuery,
   // Admin Users

@@ -5,16 +5,60 @@
  * available tools, and model configuration.
  *
  * Uses RTK Query for data fetching with automatic caching.
+ *
+ * Enhanced in Sprint 2 with persona-aware rendering and new cards:
+ * - ThinkingBudgetCard (admin, developer)
+ * - FeatureFlagsCard (admin, developer)
+ * - OrchestratorsListCard (admin, developer) - future when backend provides data
  */
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
+import { useSelector } from "react-redux";
 import { Cpu, RefreshCw, Wrench, Check, X } from "lucide-react";
 import { useGetAgentConfigQuery } from "../api";
 import { ErrorState } from "../components/UI";
+import {
+  ThinkingBudgetCard,
+  FeatureFlagsCard,
+  OrchestratorsListCard,
+  TaskMappingCard,
+  LLMProvidersCard,
+} from "../components/Agents";
+import { selectPersona, type Persona } from "../store/slices/personaSlice";
+
+/**
+ * Get page configuration based on persona
+ */
+function getPageConfig(persona: Persona) {
+  switch (persona) {
+    case "admin":
+      return {
+        title: "Agent Infrastructure",
+        description:
+          "Complete LLM provider, orchestrator, and resilience configuration",
+      };
+    case "developer":
+      return {
+        title: "Agent Configuration",
+        description: "Model types, orchestrators, and available tools",
+      };
+    default:
+      return {
+        title: "AI Capabilities",
+        description: "Available AI tools and features",
+      };
+  }
+}
 
 export function AgentsPage() {
+  // Get current persona for persona-aware rendering
+  const persona = useSelector(selectPersona);
+
   // Fetch agent config using RTK Query
   const { data: config, isLoading, error, refetch } = useGetAgentConfigQuery();
+
+  // Persona-specific page config
+  const pageConfig = useMemo(() => getPageConfig(persona), [persona]);
 
   // Local state for form controls (for UI responsiveness)
   const [localTemperature, setLocalTemperature] = useState(0.7);
@@ -73,10 +117,10 @@ export function AgentsPage() {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-              Agent Configuration
+              {pageConfig.title}
             </h1>
             <p className="text-sm text-gray-500 dark:text-gray-400">
-              Configure your LangGraph agent settings and tools
+              {pageConfig.description}
             </p>
           </div>
           <button
@@ -221,6 +265,29 @@ export function AgentsPage() {
               </div>
             )}
           </div>
+
+          {/* Sprint 2: Enhanced Cards (persona-aware, components handle visibility) */}
+
+          {/* Thinking Budget Card */}
+          <ThinkingBudgetCard data={config?.thinking_budget_defaults} />
+
+          {/* LLM Providers Card (shows supported providers) */}
+          <LLMProvidersCard providers={config?.providers ?? []} />
+
+          {/* Feature Flags Card */}
+          <FeatureFlagsCard data={config?.feature_flags_snapshot} />
+
+          {/* Orchestrators List Card (shows registered orchestrators) */}
+          <OrchestratorsListCard
+            orchestrators={config?.orchestrators ?? []}
+            featureFlags={config?.feature_flags_snapshot ?? {}}
+          />
+
+          {/* Phase 6: Task Mapping Card (shows orchestrator-to-task mapping) */}
+          <TaskMappingCard
+            orchestrators={config?.orchestrators ?? []}
+            featureFlags={config?.feature_flags_snapshot ?? {}}
+          />
         </div>
       </div>
     </div>

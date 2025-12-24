@@ -95,6 +95,21 @@ export function ConnectedCanvasPanel({ className }: ConnectedCanvasPanelProps) {
     };
   }, []);
 
+  // Clear selected artifact when session changes to prevent stale selection
+  // This fixes the "sticky canvas selection" bug where artifacts from previous
+  // sessions would remain selected when switching to a new session.
+  const prevSessionIdRef = useRef(sessionId);
+  useEffect(() => {
+    if (prevSessionIdRef.current !== sessionId) {
+      logger.debug("Session changed, clearing artifact selection", {
+        previousSession: prevSessionIdRef.current,
+        newSession: sessionId,
+      });
+      dispatch(setSelectedArtifactId(null));
+      prevSessionIdRef.current = sessionId;
+    }
+  }, [sessionId, dispatch]);
+
   // Derived state for backwards compatibility
   const isSaving = saveStatus === "saving";
 
@@ -111,6 +126,20 @@ export function ConnectedCanvasPanel({ className }: ConnectedCanvasPanelProps) {
     () => loaderData?.artifacts ?? [],
     [loaderData?.artifacts],
   );
+
+  // Reset selected artifact when switching sessions to avoid stale selection IDs
+  const previousSessionId = useRef<string | null>(null);
+  useEffect(() => {
+    const activeSessionId = loaderData?.sessionId ?? null;
+    if (
+      previousSessionId.current &&
+      activeSessionId &&
+      previousSessionId.current !== activeSessionId
+    ) {
+      dispatch(setSelectedArtifactId(null));
+    }
+    previousSessionId.current = activeSessionId;
+  }, [dispatch, loaderData?.sessionId]);
 
   // Find the currently selected artifact
   const selectedArtifact = useMemo(

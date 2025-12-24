@@ -6,18 +6,18 @@ All operations are restricted to the workspace directory for security.
 """
 
 import os
-import shutil
 from pathlib import Path
 from typing import Annotated
 
 from langchain_core.tools import tool
 from pydantic import Field
 
+from mcp_server_langgraph.core.config import settings
 from mcp_server_langgraph.observability.telemetry import logger, metrics
+from mcp_server_langgraph.execution.sandbox_runner import get_sandbox_runner, SandboxError
 
 # Configuration constants (can be overridden via environment variables)
 WRITE_FILE_MAX_SIZE_BYTES = int(os.getenv("WRITE_FILE_MAX_SIZE_BYTES", str(1024 * 1024)))  # 1MB default
-WRITE_FILE_CREATE_BACKUP = os.getenv("WRITE_FILE_CREATE_BACKUP", "true").lower() == "true"
 
 # Allowed extensions for writing (security control)
 WRITE_FILE_ALLOWED_EXTENSIONS = {
@@ -30,6 +30,7 @@ WRITE_FILE_ALLOWED_EXTENSIONS = {
 
 # Dangerous extensions that are always blocked
 DANGEROUS_EXTENSIONS = {".exe", ".sh", ".bat", ".cmd", ".ps1", ".dll", ".so", ".bin", ".run"}
+SANDBOX_ENVIRONMENTS = {"test", "sandbox"}
 
 
 def get_workspace_root() -> Path:
@@ -151,29 +152,6 @@ def _validate_content_size(content: str) -> tuple[bool, str]:
     return True, ""
 
 
-def _create_backup(file_path: Path) -> Path | None:
-    """
-    Create a backup of an existing file.
-
-    Args:
-        file_path: Path to the file to backup
-
-    Returns:
-        Path to backup file, or None if no backup was created
-    """
-    if not file_path.exists():
-        return None
-
-    backup_path = file_path.parent / f"{file_path.name}.bak"
-    try:
-        shutil.copy2(file_path, backup_path)
-        logger.info("Backup created", extra={"original": str(file_path), "backup": str(backup_path)})
-        return backup_path
-    except Exception as e:
-        logger.warning("Failed to create backup", extra={"file_path": str(file_path), "error": str(e)})
-        return None
-
-
 @tool
 def write_file(
     file_path: Annotated[str, Field(description="Relative path within workspace to create or overwrite")],
@@ -196,13 +174,17 @@ def write_file(
 
     SECURITY: Restricted to workspace directory, blocks dangerous paths.
     """
+    if not settings.enable_code_execution or not (
+        settings.environment.lower() in SANDBOX_ENVIRONMENTS or settings.enable_sandbox_tools
+    ):
+        return "Error: write_file is restricted to sandbox environments with code execution enabled."
+
     try:
         logger.info("Write file tool invoked", extra={"file_path": file_path})
         metrics.tool_calls.add(1, {"tool": "write_file"})
 
         workspace_root = get_workspace_root()
 
-        # Validate path security
         is_valid, error_msg = _validate_path_security(file_path, workspace_root)
         if not is_valid:
             logger.warning("Path validation failed", extra={"file_path": file_path, "error": error_msg})
@@ -210,10 +192,7 @@ def write_file(
 
         # Resolve the final path
         path = Path(file_path)
-        if path.is_absolute():
-            resolved_path = path.resolve()
-        else:
-            resolved_path = (workspace_root / path).resolve()
+        resolved_path = path.resolve() if path.is_absolute() else (workspace_root / path).resolve()
 
         # Validate extension
         is_valid, error_msg = _validate_extension(resolved_path)
@@ -221,36 +200,34 @@ def write_file(
             logger.warning("Extension validation failed", extra={"file_path": file_path, "error": error_msg})
             return error_msg
 
-        # Validate content size
         is_valid, error_msg = _validate_content_size(content)
         if not is_valid:
             logger.warning("Content size validation failed", extra={"file_path": file_path, "error": error_msg})
             return error_msg
 
-        # Create parent directories if requested
-        if create_directories:
-            resolved_path.parent.mkdir(parents=True, exist_ok=True)
-        elif not resolved_path.parent.exists():
-            return f"Error: Parent directory does not exist: {resolved_path.parent}"
+        try:
+            runner = get_sandbox_runner()
+            result = runner.run_write_file(file_path, content, create_directories=create_directories)
+        except SandboxError as exc:
+            logger.error("Sandbox error writing file", extra={"file_path": file_path, "error": str(exc)})
+            return f"Sandbox error: {exc}"
 
-        # Create backup if file exists and backup is enabled
-        file_existed = resolved_path.exists()
-        if file_existed and WRITE_FILE_CREATE_BACKUP:
-            _create_backup(resolved_path)
+        output = result.stdout or ""
+        if result.stderr:
+            output = (output + "\n\nSTDERR:\n" + result.stderr) if output else result.stderr
 
-        # Write the file
-        resolved_path.write_text(content, encoding="utf-8")
+        if not output:
+            if result.exit_code == 0 and not result.timed_out:
+                output = f"File write completed in sandbox: {file_path}"
+            else:
+                output = f"(sandbox exit code {result.exit_code})"
 
-        action = "overwritten" if file_existed else "created"
-        result = f"File {action} successfully: {file_path}"
-        logger.info(f"File {action}", extra={"file_path": file_path, "size": len(content)})
+        if result.timed_out:
+            output = f"Error: Sandbox write timed out after {settings.code_execution_timeout}s\n\n{output}"
+        if result.error_message:
+            output = f"Error: {result.error_message}\n\n{output}"
 
-        return result
-
-    except PermissionError:
-        error_msg = f"Error: Permission denied writing to '{file_path}'"
-        logger.error(error_msg)
-        return error_msg
+        return output
 
     except Exception as e:
         error_msg = f"Error writing file '{file_path}': {e}"

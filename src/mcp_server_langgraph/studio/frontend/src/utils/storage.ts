@@ -594,9 +594,20 @@ export interface CleanupResult {
  */
 export function getAuthToken(): string | null {
   if (!isLocalStorageAvailable()) return null;
-  return (
-    localStorage.getItem("access_token") ?? localStorage.getItem("auth_token")
-  );
+  // 1) Raw keys written by OAuth/PKCE flow or saveTokensToStorage
+  const rawToken =
+    localStorage.getItem("access_token") ?? localStorage.getItem("auth_token");
+  if (rawToken) return rawToken;
+
+  // 2) Structured storage (studio-auth) used by authSlice
+  try {
+    const stored = storage.get<{
+      state?: { tokens?: { accessToken: string } };
+    }>(STORAGE_KEYS.AUTH_STATE, { expectObject: true });
+    return stored?.state?.tokens?.accessToken ?? null;
+  } catch {
+    return null;
+  }
 }
 
 /**

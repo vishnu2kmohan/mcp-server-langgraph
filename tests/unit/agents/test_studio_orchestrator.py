@@ -1230,3 +1230,292 @@ class TestCommandIntelligence:
 
             result = await orchestrator._execute_task(task)
             assert result.success is True
+
+
+# =============================================================================
+# ExplanationOrchestrator Consolidation Tests (TDD - Sprint 3)
+# =============================================================================
+
+
+@pytest.mark.xdist_group(name="studio_orchestrator_explanation_consolidation")
+class TestExplanationOrchestratorConsolidation:
+    """Test consolidation of ExplanationOrchestrator into StudioOrchestrator.
+
+    ExplanationOrchestrator provides 4 HITL explanation task types:
+    - uncertainty_analysis: Analyze WHY the agent is uncertain
+    - risk_analysis: Analyze what could go wrong
+    - alternatives_analysis: Generate safer alternatives
+    - evidence_extraction: Extract confidence factors from reasoning trace
+
+    These should be accessible via StudioOrchestrator's HITL category.
+    """
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
+
+    def test_hitl_explanation_task_types_exist(self) -> None:
+        """Test that HITL explanation task types are in STUDIO_TASK_TYPES."""
+        from mcp_server_langgraph.agents.studio_orchestrator import STUDIO_TASK_TYPES
+
+        explanation_types = {
+            "uncertainty_analysis",
+            "risk_analysis",
+            "alternatives_analysis",
+            "evidence_extraction",
+        }
+        for task_type in explanation_types:
+            assert task_type in STUDIO_TASK_TYPES, f"{task_type} not in STUDIO_TASK_TYPES"
+
+    def test_hitl_explanation_types_mapped_to_hitl_category(self) -> None:
+        """Test that explanation task types are mapped to HITL category."""
+        from mcp_server_langgraph.agents.studio_orchestrator import (
+            TASK_TYPE_TO_CATEGORY,
+            TaskCategory,
+        )
+
+        explanation_types = [
+            "uncertainty_analysis",
+            "risk_analysis",
+            "alternatives_analysis",
+            "evidence_extraction",
+        ]
+        for task_type in explanation_types:
+            assert task_type in TASK_TYPE_TO_CATEGORY, f"{task_type} not mapped"
+            assert TASK_TYPE_TO_CATEGORY[task_type] == TaskCategory.HITL, f"{task_type} not mapped to HITL"
+
+    def test_studio_orchestrator_accepts_explanation_orchestrator(self) -> None:
+        """Test that StudioOrchestrator accepts explanation_orchestrator dependency."""
+        from mcp_server_langgraph.agents.studio_orchestrator import StudioOrchestrator
+
+        mock_explanation_orchestrator = MagicMock()
+        orchestrator = StudioOrchestrator(explanation_orchestrator=mock_explanation_orchestrator)
+        assert orchestrator.explanation_orchestrator == mock_explanation_orchestrator
+
+    def test_explanation_orchestrator_default_to_none(self) -> None:
+        """Test that explanation_orchestrator defaults to None."""
+        from mcp_server_langgraph.agents.studio_orchestrator import StudioOrchestrator
+
+        orchestrator = StudioOrchestrator()
+        assert orchestrator.explanation_orchestrator is None
+
+    @pytest.mark.asyncio
+    async def test_uncertainty_analysis_delegated_to_explanation_orchestrator(
+        self,
+    ) -> None:
+        """Test that uncertainty_analysis task delegates to ExplanationOrchestrator."""
+        from mcp_server_langgraph.agents.studio_orchestrator import (
+            StudioOrchestrator,
+            StudioTask,
+            TaskCategory,
+        )
+
+        mock_result = {"why_uncertain": "The input is ambiguous"}
+        mock_explanation_orch = MagicMock()
+        mock_explanation_orch._analyze_uncertainty = AsyncMock(return_value=mock_result)
+
+        orchestrator = StudioOrchestrator(explanation_orchestrator=mock_explanation_orch)
+
+        task = StudioTask(
+            category=TaskCategory.HITL,
+            task_type="uncertainty_analysis",
+            user_id="test-user",
+            data={
+                "approval_id": "approval-123",
+                "context": {
+                    "agent_name": "TestAgent",
+                    "proposed_action": "Delete file",
+                    "confidence": 0.65,
+                    "threshold": 0.7,
+                    "trigger_reason": "low_confidence",
+                },
+            },
+        )
+
+        result = await orchestrator._execute_task(task)
+
+        assert result.success is True
+        assert result.result["why_uncertain"] == "The input is ambiguous"
+
+    @pytest.mark.asyncio
+    async def test_risk_analysis_delegated_to_explanation_orchestrator(self) -> None:
+        """Test that risk_analysis task delegates to ExplanationOrchestrator."""
+        from mcp_server_langgraph.agents.studio_orchestrator import (
+            StudioOrchestrator,
+            StudioTask,
+            TaskCategory,
+        )
+
+        mock_result = {"what_could_go_wrong": "File deletion is irreversible"}
+        mock_explanation_orch = MagicMock()
+        mock_explanation_orch._analyze_risk = AsyncMock(return_value=mock_result)
+
+        orchestrator = StudioOrchestrator(explanation_orchestrator=mock_explanation_orch)
+
+        task = StudioTask(
+            category=TaskCategory.HITL,
+            task_type="risk_analysis",
+            user_id="test-user",
+            data={
+                "approval_id": "approval-123",
+                "context": {
+                    "proposed_action": "Delete file",
+                    "trigger_reason": "destructive_action",
+                },
+            },
+        )
+
+        result = await orchestrator._execute_task(task)
+
+        assert result.success is True
+        assert "what_could_go_wrong" in result.result
+
+    @pytest.mark.asyncio
+    async def test_alternatives_analysis_delegated_to_explanation_orchestrator(
+        self,
+    ) -> None:
+        """Test that alternatives_analysis task delegates to ExplanationOrchestrator."""
+        from mcp_server_langgraph.agents.studio_orchestrator import (
+            StudioOrchestrator,
+            StudioTask,
+            TaskCategory,
+        )
+
+        mock_result = {
+            "safer_alternatives": [
+                {"action": "Move to trash", "confidence": 0.95, "trade_off": "Recoverable"},
+            ]
+        }
+        mock_explanation_orch = MagicMock()
+        mock_explanation_orch._analyze_alternatives = AsyncMock(return_value=mock_result)
+
+        orchestrator = StudioOrchestrator(explanation_orchestrator=mock_explanation_orch)
+
+        task = StudioTask(
+            category=TaskCategory.HITL,
+            task_type="alternatives_analysis",
+            user_id="test-user",
+            data={
+                "approval_id": "approval-123",
+                "context": {
+                    "proposed_action": "Delete file",
+                    "confidence": 0.65,
+                },
+            },
+        )
+
+        result = await orchestrator._execute_task(task)
+
+        assert result.success is True
+        assert "safer_alternatives" in result.result
+
+    @pytest.mark.asyncio
+    async def test_evidence_extraction_delegated_to_explanation_orchestrator(
+        self,
+    ) -> None:
+        """Test that evidence_extraction task delegates to ExplanationOrchestrator."""
+        from mcp_server_langgraph.agents.studio_orchestrator import (
+            StudioOrchestrator,
+            StudioTask,
+            TaskCategory,
+        )
+
+        mock_result = {
+            "confidence_factors": [
+                {"factor": "ambiguous_input", "weight": -0.2, "evidence": "Multiple matches"},
+            ],
+            "reasoning_trace": ["Step 1", "Step 2"],
+        }
+        mock_explanation_orch = MagicMock()
+        mock_explanation_orch._extract_evidence = AsyncMock(return_value=mock_result)
+
+        orchestrator = StudioOrchestrator(explanation_orchestrator=mock_explanation_orch)
+
+        task = StudioTask(
+            category=TaskCategory.HITL,
+            task_type="evidence_extraction",
+            user_id="test-user",
+            data={
+                "approval_id": "approval-123",
+                "reasoning_trace": ["Step 1", "Step 2"],
+            },
+        )
+
+        result = await orchestrator._execute_task(task)
+
+        assert result.success is True
+        assert "confidence_factors" in result.result
+
+    @pytest.mark.asyncio
+    async def test_explanation_task_fallback_when_orchestrator_not_configured(
+        self,
+    ) -> None:
+        """Test explanation tasks return error when orchestrator not configured."""
+        from mcp_server_langgraph.agents.studio_orchestrator import (
+            StudioOrchestrator,
+            StudioTask,
+            TaskCategory,
+        )
+
+        orchestrator = StudioOrchestrator(explanation_orchestrator=None)
+
+        task = StudioTask(
+            category=TaskCategory.HITL,
+            task_type="uncertainty_analysis",
+            user_id="test-user",
+            data={"approval_id": "approval-123", "context": {}},
+        )
+
+        result = await orchestrator._execute_task(task)
+
+        assert result.success is False
+        assert "not configured" in result.error.lower()
+
+    @pytest.mark.asyncio
+    async def test_explanation_task_handles_orchestrator_exception(self) -> None:
+        """Test explanation tasks handle orchestrator exceptions gracefully."""
+        from mcp_server_langgraph.agents.studio_orchestrator import (
+            StudioOrchestrator,
+            StudioTask,
+            TaskCategory,
+        )
+
+        mock_explanation_orch = MagicMock()
+        mock_explanation_orch._analyze_uncertainty = AsyncMock(side_effect=Exception("LLM unavailable"))
+
+        orchestrator = StudioOrchestrator(explanation_orchestrator=mock_explanation_orch)
+
+        task = StudioTask(
+            category=TaskCategory.HITL,
+            task_type="uncertainty_analysis",
+            user_id="test-user",
+            data={"approval_id": "approval-123", "context": {}},
+        )
+
+        result = await orchestrator._execute_task(task)
+
+        assert result.success is False
+        assert "llm unavailable" in result.error.lower()
+
+    def test_hitl_category_has_all_task_types(self) -> None:
+        """Test HITL category has all expected task types including explanation."""
+        from mcp_server_langgraph.agents.studio_orchestrator import (
+            TASK_TYPE_TO_CATEGORY,
+            TaskCategory,
+        )
+
+        expected_hitl_types = {
+            # Original HITL types
+            "risk_assess",
+            "decision_history",
+            # ExplanationOrchestrator types
+            "uncertainty_analysis",
+            "risk_analysis",
+            "alternatives_analysis",
+            "evidence_extraction",
+        }
+
+        hitl_types = {k for k, v in TASK_TYPE_TO_CATEGORY.items() if v == TaskCategory.HITL}
+
+        for expected in expected_hitl_types:
+            assert expected in hitl_types, f"{expected} not in HITL category"

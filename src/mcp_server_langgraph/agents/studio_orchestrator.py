@@ -110,6 +110,11 @@ STUDIO_TASK_TYPES = frozenset(
         # HITL Intelligence
         "risk_assess",
         "decision_history",
+        # HITL Explanation (consolidated from ExplanationOrchestrator)
+        "uncertainty_analysis",
+        "risk_analysis",
+        "alternatives_analysis",
+        "evidence_extraction",
         # Command Intelligence
         "command_interpret",
         "inline_suggest",
@@ -160,6 +165,11 @@ TASK_TYPE_TO_CATEGORY: dict[str, TaskCategory] = {
     # HITL category
     "risk_assess": TaskCategory.HITL,
     "decision_history": TaskCategory.HITL,
+    # HITL Explanation (consolidated from ExplanationOrchestrator)
+    "uncertainty_analysis": TaskCategory.HITL,
+    "risk_analysis": TaskCategory.HITL,
+    "alternatives_analysis": TaskCategory.HITL,
+    "evidence_extraction": TaskCategory.HITL,
     # Command category
     "command_interpret": TaskCategory.COMMAND,
     "inline_suggest": TaskCategory.COMMAND,
@@ -228,6 +238,7 @@ class StudioOrchestrator(BaseOrchestrator[StudioTask, StudioResult]):
         enable_metrics: bool = True,
         cost_tracker: CostTracker | None = None,
         session_id: str | None = None,
+        explanation_orchestrator: Any | None = None,
     ) -> None:
         """Initialize Studio Orchestrator.
 
@@ -238,6 +249,7 @@ class StudioOrchestrator(BaseOrchestrator[StudioTask, StudioResult]):
             enable_metrics: Whether to record metrics (default: True)
             cost_tracker: Optional CostTracker for cost/budget management
             session_id: Optional session ID for cost tracking scope
+            explanation_orchestrator: Optional ExplanationOrchestrator for HITL explanations
         """
         super().__init__(
             enable_metrics=enable_metrics,
@@ -247,6 +259,7 @@ class StudioOrchestrator(BaseOrchestrator[StudioTask, StudioResult]):
         self._ai_ux_service = ai_ux_service
         self._llm_factory = llm_factory
         self._artifact_storage = artifact_storage
+        self._explanation_orchestrator = explanation_orchestrator
 
     @property
     def ai_ux_service(self) -> Any | None:
@@ -262,6 +275,11 @@ class StudioOrchestrator(BaseOrchestrator[StudioTask, StudioResult]):
     def artifact_storage(self) -> Any | None:
         """Get the artifact storage instance."""
         return self._artifact_storage
+
+    @property
+    def explanation_orchestrator(self) -> Any | None:
+        """Get the ExplanationOrchestrator instance for HITL explanations."""
+        return self._explanation_orchestrator
 
     @property
     def feature_flag_name(self) -> str:
@@ -756,6 +774,10 @@ class StudioOrchestrator(BaseOrchestrator[StudioTask, StudioResult]):
         Task types:
         - risk_assess: AI-generated risk score for pending actions
         - decision_history: Show how user decided similar requests before
+        - uncertainty_analysis: Analyze WHY the agent is uncertain (via ExplanationOrchestrator)
+        - risk_analysis: Analyze what could go wrong (via ExplanationOrchestrator)
+        - alternatives_analysis: Generate safer alternatives (via ExplanationOrchestrator)
+        - evidence_extraction: Extract confidence factors (via ExplanationOrchestrator)
 
         Args:
             task: The HITL task to execute
@@ -764,6 +786,18 @@ class StudioOrchestrator(BaseOrchestrator[StudioTask, StudioResult]):
             StudioResult from the HITL task
         """
         try:
+            # Route explanation tasks to ExplanationOrchestrator
+            explanation_task_types = {
+                "uncertainty_analysis",
+                "risk_analysis",
+                "alternatives_analysis",
+                "evidence_extraction",
+            }
+
+            if task.task_type in explanation_task_types:
+                return await self._handle_explanation_task(task)
+
+            # Existing HITL tasks require ai_ux_service
             if self._ai_ux_service is None:
                 return StudioResult(
                     task_type=task.task_type,
@@ -804,6 +838,71 @@ class StudioOrchestrator(BaseOrchestrator[StudioTask, StudioResult]):
 
         except Exception as e:
             logger.exception(f"Error in HITL task {task.task_type}: {e}")
+            return StudioResult(
+                task_type=task.task_type,
+                success=False,
+                error=str(e),
+            )
+
+    async def _handle_explanation_task(self, task: StudioTask) -> StudioResult:
+        """Handle HITL explanation tasks (delegated from ExplanationOrchestrator).
+
+        Routes explanation analysis tasks to the ExplanationOrchestrator.
+
+        Task types:
+        - uncertainty_analysis: Analyze WHY the agent is uncertain
+        - risk_analysis: Analyze what could go wrong
+        - alternatives_analysis: Generate safer alternatives
+        - evidence_extraction: Extract confidence factors from reasoning trace
+
+        Args:
+            task: The explanation task to execute
+
+        Returns:
+            StudioResult from the explanation task
+        """
+        if self._explanation_orchestrator is None:
+            return StudioResult(
+                task_type=task.task_type,
+                success=False,
+                error="Explanation orchestrator not configured",
+            )
+
+        try:
+            # Build ExplanationTask-like data structure for the orchestrator
+            from mcp_server_langgraph.agents.explanation_orchestrator import ExplanationTask
+
+            explanation_task = ExplanationTask(
+                task_type=task.task_type,
+                approval_id=task.data.get("approval_id", ""),
+                context=task.data.get("context", {}),
+                reasoning_trace=task.data.get("reasoning_trace", []),
+            )
+
+            # Delegate to appropriate method based on task type
+            if task.task_type == "uncertainty_analysis":
+                result = await self._explanation_orchestrator._analyze_uncertainty(explanation_task)
+            elif task.task_type == "risk_analysis":
+                result = await self._explanation_orchestrator._analyze_risk(explanation_task)
+            elif task.task_type == "alternatives_analysis":
+                result = await self._explanation_orchestrator._analyze_alternatives(explanation_task)
+            elif task.task_type == "evidence_extraction":
+                result = await self._explanation_orchestrator._extract_evidence(explanation_task)
+            else:
+                return StudioResult(
+                    task_type=task.task_type,
+                    success=False,
+                    error=f"Unknown explanation task type: {task.task_type}",
+                )
+
+            return StudioResult(
+                task_type=task.task_type,
+                success=True,
+                result=result,
+            )
+
+        except Exception as e:
+            logger.exception(f"Error in explanation task {task.task_type}: {e}")
             return StudioResult(
                 task_type=task.task_type,
                 success=False,

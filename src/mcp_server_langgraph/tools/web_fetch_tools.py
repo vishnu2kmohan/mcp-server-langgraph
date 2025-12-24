@@ -5,16 +5,18 @@ Provides secure URL fetching for the agent with comprehensive security controls.
 """
 
 import ipaddress
+import json
 import os
 import re
 from typing import Annotated
 from urllib.parse import urlparse
 
-import aiohttp
 from langchain_core.tools import tool
 from pydantic import Field
 
+from mcp_server_langgraph.core.config import settings
 from mcp_server_langgraph.observability.telemetry import logger, metrics
+from mcp_server_langgraph.execution.sandbox_runner import get_sandbox_runner, SandboxError
 
 # Configuration constants
 WEB_FETCH_TIMEOUT_SECONDS = int(os.getenv("WEB_FETCH_TIMEOUT_SECONDS", "30"))
@@ -79,18 +81,11 @@ def _is_private_ip(host: str) -> bool:
             return True
 
         # Check for link-local
-        if ip.is_link_local:
-            return True
-
-        return False
+        return bool(ip.is_link_local)
 
     except ValueError:
         # Not an IP address, check prefixes for dotted-quad looking hosts
-        for prefix in BLOCKED_IP_PREFIXES:
-            if host.startswith(prefix):
-                return True
-
-        return False
+        return any(host.startswith(prefix) for prefix in BLOCKED_IP_PREFIXES)
 
 
 def _validate_url(url: str) -> tuple[bool, str]:
@@ -214,73 +209,83 @@ async def web_fetch(
 
     SECURITY: Blocks internal IPs, dangerous schemes, and blocked domains.
     """
+    if not settings.enable_code_execution or not (
+        settings.environment.lower() in SANDBOX_ENVIRONMENTS or settings.enable_sandbox_tools
+    ):
+        return "Error: web_fetch is restricted to sandbox environments with code execution enabled."
+
     try:
         logger.info("Web fetch tool invoked", extra={"url": url})
         metrics.tool_calls.add(1, {"tool": "web_fetch"})
 
-        # Validate URL security
         is_valid, error_msg = _validate_url(url)
         if not is_valid:
             logger.warning("URL validation failed", extra={"url": url, "error": error_msg})
             return error_msg
 
-        # Create timeout
-        timeout = aiohttp.ClientTimeout(total=WEB_FETCH_TIMEOUT_SECONDS)
+        runner = get_sandbox_runner()
+        result = runner.run_web_fetch(url, timeout_override=WEB_FETCH_TIMEOUT_SECONDS, max_bytes=WEB_FETCH_MAX_SIZE_BYTES)
 
-        # Fetch the URL
-        async with aiohttp.ClientSession(timeout=timeout) as session:
-            async with session.get(url, allow_redirects=True, max_redirects=5) as response:
-                # Check status
-                if response.status == 404:
-                    return f"Error: URL not found (404): {url}"
+        if result.timed_out:
+            error_msg = f"Error: Timeout fetching URL (>{WEB_FETCH_TIMEOUT_SECONDS}s): {url}"
+            logger.warning(error_msg)
+            return error_msg
 
-                if response.status >= 500:
-                    return f"Error: Server error ({response.status}): {url}"
+        if result.exit_code != 0 or result.error_message:
+            error_msg = result.error_message or result.stderr or "Unknown sandbox error"
+            return f"Error fetching URL '{url}': {error_msg}"
 
-                if response.status >= 400:
-                    return f"Error: HTTP error ({response.status}): {url}"
+        if not result.stdout:
+            return f"Error fetching URL '{url}': Empty response from sandbox fetch"
 
-                # Check content length
-                content_length = response.headers.get("content-length")
-                if content_length and int(content_length) > WEB_FETCH_MAX_SIZE_BYTES:
-                    return f"Error: Content too large ({content_length} bytes). Maximum: {WEB_FETCH_MAX_SIZE_BYTES} bytes"
+        try:
+            payload = json.loads(result.stdout)
+        except json.JSONDecodeError:
+            payload = {
+                "text": result.stdout,
+                "content_type": "",
+                "status": None,
+                "truncated": False,
+            }
 
-                # Read content with size limit
-                content = await response.text()
-                if len(content) > WEB_FETCH_MAX_SIZE_BYTES:
-                    content = content[:WEB_FETCH_MAX_SIZE_BYTES]
-                    content += "\n\n[... content truncated at size limit ...]"
+        content = payload.get("text", "")
+        content_type_header = payload.get("content_type") or ""
+        content_type_lower = content_type_header.lower()
+        truncated = bool(payload.get("truncated"))
+        status = payload.get("status")
 
-        # Check content type and convert if HTML
-        content_type = response.headers.get("content-type", "").lower()
-        if convert_html and "text/html" in content_type:
+        if convert_html and "text/html" in content_type_lower:
             content = _html_to_markdown(content)
 
-        # Build result
-        result = f"URL: {url}\n"
-        result += f"Content-Type: {content_type}\n"
-        result += "-" * 40 + "\n"
+        result_text = f"URL: {url}\nContent-Type: {content_type_header}\n"
+        if status:
+            result_text += f"Status: {status}\n"
+        result_text += "-" * 40 + "\n"
 
         if prompt:
-            result += f"Extraction prompt: {prompt}\n"
-            result += "-" * 40 + "\n"
+            result_text += f"Extraction prompt: {prompt}\n"
+            result_text += "-" * 40 + "\n"
 
-        result += content
+        result_text += content
+
+        if truncated:
+            result_text += "\n\n[... content truncated at size limit ...]"
+
+        if result.stderr:
+            result_text += f"\n\n[stderr]\n{result.stderr}"
 
         logger.info("URL fetched successfully", extra={"url": url, "content_length": len(content)})
-        return result
+        return result_text
 
-    except TimeoutError:
-        error_msg = f"Error: Timeout fetching URL (>{WEB_FETCH_TIMEOUT_SECONDS}s): {url}"
-        logger.warning(error_msg)
-        return error_msg
-
-    except aiohttp.ClientError as e:
-        error_msg = f"Error: Failed to fetch URL: {e}"
-        logger.error(error_msg, exc_info=True)
+    except SandboxError as exc:
+        error_msg = f"Sandbox error: {exc}"
+        logger.error(error_msg)
         return error_msg
 
     except Exception as e:
         error_msg = f"Error fetching URL '{url}': {e}"
         logger.error(error_msg, exc_info=True)
         return f"Error: {e}"
+
+
+SANDBOX_ENVIRONMENTS = {"test", "sandbox"}
