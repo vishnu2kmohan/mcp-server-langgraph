@@ -31,6 +31,9 @@ const mockSessionLoaderData: ChatLoaderData = {
   artifacts: [],
 };
 
+// Mock useRevalidator for data router context (used by useArtifactExtraction)
+const mockRevalidate = vi.fn();
+
 vi.mock("react-router", async () => {
   const actual =
     await vi.importActual<typeof import("react-router")>("react-router");
@@ -45,6 +48,11 @@ vi.mock("react-router", async () => {
       }
       return undefined;
     }),
+    // Mock useRevalidator to avoid "must be used within a data router" error
+    useRevalidator: vi.fn(() => ({
+      revalidate: mockRevalidate,
+      state: "idle",
+    })),
   };
 });
 
@@ -144,6 +152,9 @@ const createWrapper = (store: ReturnType<typeof createTestStore>) => {
 // Tests
 // =============================================================================
 
+// Mock fetch for API calls (sendMessage thunk uses fetch)
+const mockFetch = vi.fn();
+
 describe("ConnectedConversationPanel", () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -152,6 +163,15 @@ describe("ConnectedConversationPanel", () => {
     mockSessionLoaderData.messages = [];
     mockSessionLoaderData.artifacts = [];
     mockSessionLoaderData.session = undefined;
+
+    // Setup fetch mock for API calls
+    global.fetch = mockFetch;
+    mockFetch.mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        message: { id: "msg-1", role: "user", content: "Test" },
+      }),
+    });
   });
 
   afterEach(() => {
@@ -217,15 +237,21 @@ describe("ConnectedConversationPanel", () => {
 
     it("should display session title when available from Redux", () => {
       // Session title comes from Redux currentSession.name, not loader data
+      // hasPendingMutation prevents useSessionSync from overwriting Redux state
       const store = createTestStore({
         session: {
           currentSession: {
             id: "session-123",
             name: "Test Session Title",
+            messages: [],
+            config: {},
+            createdAt: Date.now(),
+            updatedAt: Date.now(),
           },
           sessions: [],
           isLoading: false,
           error: null,
+          hasPendingMutation: true,
         },
       });
 
@@ -248,7 +274,23 @@ describe("ConnectedConversationPanel", () => {
   describe("Message Sending", () => {
     it("should dispatch sendMessage action when message is sent", async () => {
       const user = userEvent.setup();
-      const store = createTestStore();
+      // Create store with a session so sendMessage can dispatch
+      const store = createTestStore({
+        session: {
+          currentSession: {
+            id: "session-123",
+            name: "Test Session",
+            messages: [],
+            config: {},
+            createdAt: Date.now(),
+            updatedAt: Date.now(),
+          },
+          sessions: [],
+          isLoading: false,
+          error: null,
+          hasPendingMutation: true,
+        },
+      });
 
       render(<ConnectedConversationPanel />, { wrapper: createWrapper(store) });
 
@@ -268,7 +310,23 @@ describe("ConnectedConversationPanel", () => {
 
     it("should trigger message revalidation after sending", async () => {
       const user = userEvent.setup();
-      const store = createTestStore();
+      // Create store with a session so sendMessage can dispatch
+      const store = createTestStore({
+        session: {
+          currentSession: {
+            id: "session-123",
+            name: "Test Session",
+            messages: [],
+            config: {},
+            createdAt: Date.now(),
+            updatedAt: Date.now(),
+          },
+          sessions: [],
+          isLoading: false,
+          error: null,
+          hasPendingMutation: true,
+        },
+      });
 
       render(<ConnectedConversationPanel />, { wrapper: createWrapper(store) });
 
@@ -344,15 +402,21 @@ describe("ConnectedConversationPanel", () => {
   describe("Session Header", () => {
     it("should display session header when session title is provided from Redux", () => {
       // Session title comes from Redux currentSession.name
+      // hasPendingMutation prevents useSessionSync from overwriting Redux state
       const store = createTestStore({
         session: {
           currentSession: {
             id: "session-123",
             name: "My Chat Session",
+            messages: [],
+            config: {},
+            createdAt: Date.now(),
+            updatedAt: Date.now(),
           },
           sessions: [],
           isLoading: false,
           error: null,
+          hasPendingMutation: true,
         },
       });
 
@@ -453,15 +517,21 @@ describe("ConnectedConversationPanel", () => {
 
   describe("Redux Integration", () => {
     it("should read current session from Redux", () => {
+      // hasPendingMutation prevents useSessionSync from overwriting Redux state
       const store = createTestStore({
         session: {
           currentSession: {
             id: "redux-session",
             name: "Redux Session Name",
+            messages: [],
+            config: {},
+            createdAt: Date.now(),
+            updatedAt: Date.now(),
           },
           sessions: [],
           isLoading: false,
           error: null,
+          hasPendingMutation: true,
         },
       });
 
@@ -469,6 +539,101 @@ describe("ConnectedConversationPanel", () => {
 
       // Session title comes from Redux currentSession.name
       expect(screen.getByText("Redux Session Name")).toBeInTheDocument();
+    });
+
+    it("should display messages from Redux currentSession.messages (optimistic updates)", () => {
+      // CRITICAL TEST: User messages are added to Redux via sendMessage thunk
+      // The component MUST read from Redux, not just loader data, to show optimistic updates
+      // hasPendingMutation prevents useSessionSync from overwriting Redux with stale loader data
+      const store = createTestStore({
+        session: {
+          currentSession: {
+            id: "session-123",
+            name: "Test Session",
+            messages: [
+              {
+                id: "redux-msg-1",
+                role: "user",
+                content: "Optimistic user message from Redux",
+                timestamp: Date.now(),
+              },
+            ],
+            config: {},
+            createdAt: Date.now(),
+            updatedAt: Date.now(),
+          },
+          sessions: [],
+          isLoading: false,
+          error: null,
+          hasPendingMutation: true, // Prevents useSessionSync from overwriting Redux
+        },
+      });
+
+      // Loader data has NO messages - only Redux has the optimistic message
+      mockSessionLoaderData.messages = [];
+
+      render(<ConnectedConversationPanel />, { wrapper: createWrapper(store) });
+
+      // The optimistic message from Redux should be displayed
+      expect(
+        screen.getByText("Optimistic user message from Redux"),
+      ).toBeInTheDocument();
+    });
+
+    it("should merge Redux messages with loader messages without duplicates", () => {
+      // Simulate scenario where loader has some messages and Redux has additional optimistic ones
+      const sharedMessageId = "shared-msg-1";
+
+      const store = createTestStore({
+        session: {
+          currentSession: {
+            id: "session-123",
+            name: "Test Session",
+            messages: [
+              {
+                id: sharedMessageId,
+                role: "user",
+                content: "Shared message content",
+                timestamp: 1000,
+              },
+              {
+                id: "redux-only-msg",
+                role: "user",
+                content: "Optimistic message only in Redux",
+                timestamp: 2000,
+              },
+            ],
+            config: {},
+            createdAt: Date.now(),
+            updatedAt: Date.now(),
+          },
+          sessions: [],
+          isLoading: false,
+          error: null,
+          hasPendingMutation: true, // Prevents useSessionSync from overwriting Redux
+        },
+      });
+
+      // Loader has the shared message but not the optimistic one
+      mockSessionLoaderData.messages = [
+        {
+          id: sharedMessageId,
+          role: "user" as const,
+          content: "Shared message content",
+          timestamp: 1000,
+        },
+      ];
+
+      render(<ConnectedConversationPanel />, { wrapper: createWrapper(store) });
+
+      // Both messages should appear, but shared message only once (deduplication)
+      const sharedMessages = screen.getAllByText("Shared message content");
+      expect(sharedMessages).toHaveLength(1); // No duplicate
+
+      // Optimistic message should also appear
+      expect(
+        screen.getByText("Optimistic message only in Redux"),
+      ).toBeInTheDocument();
     });
   });
 

@@ -8,9 +8,12 @@
 import { createApi } from "@reduxjs/toolkit/query/react";
 
 import { baseQueryWithReauth } from "./baseQueryWithReauth";
+import { transformCursorPaginatedResponse } from "./transforms";
 
 // Import types from centralized location
 import type {
+  BackendCursorPaginatedResponse,
+  CursorPaginatedFrontendResponse,
   Workflow,
   WorkflowSummary,
   Session,
@@ -323,7 +326,7 @@ export const api = createApi({
 
     // Workflows
     listWorkflows: builder.query<
-      PaginatedResponse<WorkflowSummary>,
+      CursorPaginatedFrontendResponse<WorkflowSummary>,
       WorkflowListParams
     >({
       query: (params) => ({
@@ -338,6 +341,9 @@ export const api = createApi({
           owner_id: params.owner_id,
         }),
       }),
+      transformResponse: (
+        response: BackendCursorPaginatedResponse<WorkflowSummary>,
+      ) => transformCursorPaginatedResponse(response),
       providesTags: (result) =>
         result?.items
           ? [
@@ -478,7 +484,10 @@ export const api = createApi({
     }),
 
     // Sessions
-    listSessions: builder.query<PaginatedResponse<Session>, SessionListParams>({
+    listSessions: builder.query<
+      CursorPaginatedFrontendResponse<Session>,
+      SessionListParams
+    >({
       query: (params) => ({
         url: "/sessions",
         params: filterParams({
@@ -491,6 +500,8 @@ export const api = createApi({
           sort_order: params.sort_order,
         }),
       }),
+      transformResponse: (response: BackendCursorPaginatedResponse<Session>) =>
+        transformCursorPaginatedResponse(response),
       providesTags: (result) =>
         result?.items
           ? [
@@ -2276,12 +2287,12 @@ export const api = createApi({
      */
     forkArtifact: builder.mutation<
       ForkArtifactResponse,
-      { id: string; newTitle?: string }
+      { id: string; newName?: string }
     >({
-      query: ({ id, newTitle }) => ({
+      query: ({ id, newName }) => ({
         url: `/artifacts/${id}/fork`,
         method: "POST",
-        body: { new_title: newTitle },
+        body: { new_name: newName },
       }),
       invalidatesTags: [{ type: "Artifact", id: "LIST" }],
     }),
@@ -2656,37 +2667,52 @@ export const api = createApi({
 
     /**
      * Composite analysis combining multiple AI UX insights
+     *
+     * Maps to POST /api/v1/ai/composite/analyze
+     * Request body matches CompositeAnalysisRequest schema
      */
     analyzeComposite: builder.mutation<
       {
-        analysis_id: string;
-        timestamp: string;
-        disclosure?: {
-          recommended_level: string;
-          confidence: number;
-        };
-        nudge?: {
-          nudge_type: string;
-          message: string;
-          confidence: number;
-        };
-        persona?: {
+        user_id: string;
+        session_id: string;
+        persona_result?: {
+          assigned_persona: string;
           detected_persona: string;
           confidence: number;
+          behavior_signals: string[];
+          recommendation: string | null;
+          ui_adaptations: Array<{ feature: string; action: string }>;
         };
-        errors?: Array<{
-          error_type: string;
+        disclosure_result?: {
+          current_level: string;
+          recommended_level: string;
+          confidence: number;
+          unlock_features: string[];
+          personalized_message: string | null;
+        };
+        error_result?: {
+          category: string;
+          subcategory: string;
+          severity: string;
           auto_recoverable: boolean;
-        }>;
-        overall_confidence: number;
+          suggestions: Array<{
+            action: string;
+            label: string;
+            guidance?: string;
+          }>;
+        };
+        cross_insights: string[];
+        confidence: number;
       },
       {
-        include_disclosure?: boolean;
-        include_nudges?: boolean;
+        user_id: string;
+        session_id: string;
         include_persona?: boolean;
-        include_errors?: boolean;
-        context?: Record<string, unknown>;
-        session_id?: string;
+        include_disclosure?: boolean;
+        include_error?: boolean;
+        persona_data?: Record<string, unknown>;
+        disclosure_data?: Record<string, unknown>;
+        error_data?: Record<string, unknown>;
       }
     >({
       query: (body) => ({

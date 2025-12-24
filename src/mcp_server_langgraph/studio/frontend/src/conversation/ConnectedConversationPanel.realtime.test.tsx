@@ -30,6 +30,9 @@ const mockSessionLoaderData: ChatLoaderData = {
   artifacts: [],
 };
 
+// Mock useRevalidator for data router context (used by useArtifactExtraction)
+const mockRevalidate = vi.fn();
+
 vi.mock("react-router", async () => {
   const actual =
     await vi.importActual<typeof import("react-router")>("react-router");
@@ -44,6 +47,11 @@ vi.mock("react-router", async () => {
       }
       return undefined;
     }),
+    // Mock useRevalidator to avoid "must be used within a data router" error
+    useRevalidator: vi.fn(() => ({
+      revalidate: mockRevalidate,
+      state: "idle",
+    })),
   };
 });
 

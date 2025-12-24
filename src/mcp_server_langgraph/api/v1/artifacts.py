@@ -46,14 +46,32 @@ logger = logging.getLogger(__name__)
 
 
 class ContentType(str, Enum):
-    """Artifact content type enum."""
+    """Artifact content type enum.
 
+    Covers all artifact types supported by the frontend canvas.
+    """
+
+    # Text-based content
     code = "code"
     markdown = "markdown"
     json = "json"
     jsx = "jsx"
     mermaid = "mermaid"
     html = "html"
+    text = "text"
+
+    # Data visualization
+    chart = "chart"
+    table = "table"
+
+    # Media content
+    image = "image"
+    svg = "svg"
+    audio = "audio"
+    video = "video"
+
+    # Executable content
+    executable = "executable"
 
 
 class EditedBy(str, Enum):

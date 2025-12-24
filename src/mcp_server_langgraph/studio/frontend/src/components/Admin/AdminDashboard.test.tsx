@@ -1,7 +1,46 @@
 /**
  * AdminDashboard Tests
  *
- * Tests for the Admin dashboard component with system health metrics.
+ * =============================================================================
+ * TEST ARCHITECTURE - Admin Component Family (410+ tests across 14 files)
+ * =============================================================================
+ *
+ * This file tests the AdminDashboard component with system health metrics.
+ * The Admin module is one of the largest component families in the codebase.
+ *
+ * THIS FILE COVERS:
+ * - Dashboard layout and structure
+ * - System health metrics display
+ * - Persona/RBAC integration
+ * - Alert summary indicators
+ *
+ * RELATED COMPONENT TESTS (for coverage NOT in this file):
+ *
+ * HITL (Human-in-the-Loop) Components:
+ * - AgentApprovalDialog.test.tsx      (65 tests) - Agent action approval UI
+ * - ClarificationDialog.test.tsx      (30 tests) - Agent clarification requests
+ * - BatchApprovalPanel.test.tsx       (22 tests) - Bulk approval operations
+ * - RemediationApprovalDialog.test.tsx (34 tests) - Remediation action approval
+ * - AgentApprovalAuditLog.test.tsx    (15 tests) - HITL decision history
+ *
+ * Alert Management Components:
+ * - AlertsPanel.test.tsx              (43 tests) - Alert list and filtering
+ * - AlertDetailPanel.test.tsx         (32 tests) - Individual alert details
+ * - AlertGroupsPanel.test.tsx         (16 tests) - Alert grouping/correlation
+ * - AIRecommendationCard.test.tsx     (36 tests) - AI-powered recommendations
+ *
+ * User/Organization Management:
+ * - UserManager.test.tsx              (17 tests) - User administration
+ * - OrganizationManager.test.tsx      (19 tests) - Organization settings
+ *
+ * Utility Components:
+ * - MetricCard.test.tsx               (17 tests) - Reusable metric display
+ * - AuditLogFilters.test.tsx          (15 tests) - Audit log filtering
+ *
+ * MOCKING STRATEGY:
+ * - RTK Query API is mocked via configureStore middleware
+ * - Alert and persona slices use preloaded state for test isolation
+ * - Components are tested in isolation with minimal store configuration
  */
 
 import { describe, it, expect, vi, afterEach } from "vitest";

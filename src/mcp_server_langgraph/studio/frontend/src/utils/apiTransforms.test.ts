@@ -9,7 +9,10 @@ import {
   transformApiSessionToClient,
   validateApiSession,
   safeTransformToClientSession,
+  transformApiMessageToClient,
+  isApiMessage,
   type ApiSession,
+  type ApiMessage,
 } from "./apiTransforms";
 
 // =============================================================================
@@ -292,6 +295,171 @@ describe("apiTransforms", () => {
       const result = safeTransformToClientSession(null, []);
 
       expect(result).toBeNull();
+    });
+  });
+
+  // ===========================================================================
+  // Message Transform Tests (TDD - tests written first)
+  // ===========================================================================
+
+  describe("isApiMessage (Type Guard)", () => {
+    const validApiMessage: ApiMessage = {
+      message_id: "msg-123",
+      role: "assistant",
+      content: "Hello, how can I help you?",
+      timestamp: "2025-01-15T10:00:00Z",
+      sources: [{ title: "Documentation", url: "https://example.com/docs" }],
+      thinking_content: "Let me think about this...",
+      thinking_tokens: 150,
+      model_name: "gpt-4",
+    };
+
+    const minimalApiMessage: ApiMessage = {
+      message_id: "msg-456",
+      role: "user",
+      content: "Hello",
+      timestamp: null,
+    };
+
+    it("should return true for valid API message with all fields", () => {
+      expect(isApiMessage(validApiMessage)).toBe(true);
+    });
+
+    it("should return true for minimal API message", () => {
+      expect(isApiMessage(minimalApiMessage)).toBe(true);
+    });
+
+    it("should return false for null", () => {
+      expect(isApiMessage(null)).toBe(false);
+    });
+
+    it("should return false for undefined", () => {
+      expect(isApiMessage(undefined)).toBe(false);
+    });
+
+    it("should return false for missing message_id", () => {
+      expect(isApiMessage({ role: "user", content: "Hello" })).toBe(false);
+    });
+
+    it("should return false for missing role", () => {
+      expect(isApiMessage({ message_id: "123", content: "Hello" })).toBe(false);
+    });
+
+    it("should return false for missing content", () => {
+      expect(isApiMessage({ message_id: "123", role: "user" })).toBe(false);
+    });
+
+    it("should return false for invalid role type", () => {
+      expect(
+        isApiMessage({ message_id: "123", role: 123, content: "Hello" }),
+      ).toBe(false);
+    });
+
+    it("should return false for non-object", () => {
+      expect(isApiMessage("string")).toBe(false);
+      expect(isApiMessage(123)).toBe(false);
+      expect(isApiMessage([])).toBe(false);
+    });
+  });
+
+  describe("transformApiMessageToClient", () => {
+    const validApiMessage: ApiMessage = {
+      message_id: "msg-123",
+      role: "assistant",
+      content: "Hello, how can I help you?",
+      timestamp: "2025-01-15T10:00:00Z",
+      sources: [
+        {
+          title: "Documentation",
+          url: "https://example.com/docs",
+          snippet: "Relevant info",
+        },
+      ],
+      thinking_content: "Let me think about this...",
+      thinking_tokens: 150,
+      model_name: "gpt-4",
+    };
+
+    it("should transform message_id to id", () => {
+      const result = transformApiMessageToClient(validApiMessage);
+      expect(result.id).toBe("msg-123");
+    });
+
+    it("should preserve role", () => {
+      const result = transformApiMessageToClient(validApiMessage);
+      expect(result.role).toBe("assistant");
+    });
+
+    it("should preserve content", () => {
+      const result = transformApiMessageToClient(validApiMessage);
+      expect(result.content).toBe("Hello, how can I help you?");
+    });
+
+    it("should transform ISO timestamp to Unix milliseconds", () => {
+      const result = transformApiMessageToClient(validApiMessage);
+      expect(result.timestamp).toBeTypeOf("number");
+      expect(result.timestamp).toBe(new Date("2025-01-15T10:00:00Z").getTime());
+    });
+
+    it("should handle null timestamp", () => {
+      const messageWithNullTimestamp: ApiMessage = {
+        message_id: "msg-456",
+        role: "user",
+        content: "Hello",
+        timestamp: null,
+      };
+      const result = transformApiMessageToClient(messageWithNullTimestamp);
+      expect(result.timestamp).toBe(0);
+    });
+
+    it("should transform sources", () => {
+      const result = transformApiMessageToClient(validApiMessage);
+      expect(result.sources).toHaveLength(1);
+      expect(result.sources?.[0].title).toBe("Documentation");
+      expect(result.sources?.[0].url).toBe("https://example.com/docs");
+    });
+
+    it("should handle null sources", () => {
+      const messageWithoutSources: ApiMessage = {
+        message_id: "msg-456",
+        role: "user",
+        content: "Hello",
+        timestamp: "2025-01-15T10:00:00Z",
+        sources: null,
+      };
+      const result = transformApiMessageToClient(messageWithoutSources);
+      expect(result.sources).toBeUndefined();
+    });
+
+    it("should transform thinking_content to thinkingContent", () => {
+      const result = transformApiMessageToClient(validApiMessage);
+      expect(result.thinkingContent).toBe("Let me think about this...");
+    });
+
+    it("should transform thinking_tokens to thinkingTokens", () => {
+      const result = transformApiMessageToClient(validApiMessage);
+      expect(result.thinkingTokens).toBe(150);
+    });
+
+    it("should transform model_name to modelName", () => {
+      const result = transformApiMessageToClient(validApiMessage);
+      expect(result.modelName).toBe("gpt-4");
+    });
+
+    it("should handle missing optional fields", () => {
+      const minimalMessage: ApiMessage = {
+        message_id: "msg-789",
+        role: "user",
+        content: "Hello",
+        timestamp: "2025-01-15T10:00:00Z",
+      };
+      const result = transformApiMessageToClient(minimalMessage);
+
+      expect(result.id).toBe("msg-789");
+      expect(result.sources).toBeUndefined();
+      expect(result.thinkingContent).toBeUndefined();
+      expect(result.thinkingTokens).toBeUndefined();
+      expect(result.modelName).toBeUndefined();
     });
   });
 });

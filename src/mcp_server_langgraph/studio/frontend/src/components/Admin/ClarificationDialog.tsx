@@ -23,39 +23,23 @@ import {
   XCircle,
   AlertTriangle,
 } from "lucide-react";
+import type {
+  AgentClarificationRequest,
+  ClarificationUIResponse,
+} from "../../types/hitl";
 
 // =============================================================================
 // Types
 // =============================================================================
 
-export interface ClarificationOption {
-  id: string;
-  label: string;
-  description?: string;
-  is_recommended?: boolean;
-}
+// Re-export from canonical location for backwards compatibility
+export type {
+  ClarificationOption,
+  AgentClarificationRequest,
+} from "../../types/hitl";
 
-export interface AgentClarificationRequest {
-  request_id: string;
-  session_id: string;
-  task_id: string;
-  agent_name: string;
-  clarification_type: "text" | "choice" | "confirmation";
-  question: string;
-  options: ClarificationOption[];
-  placeholder: string | null;
-  required: boolean;
-  context: Record<string, unknown>;
-  requested_at: string;
-}
-
-export interface ClarificationResponse {
-  request_id: string;
-  value?: string;
-  selected_option_id?: string;
-  confirmed?: boolean;
-  responded_by: string;
-}
+// Alias ClarificationUIResponse as ClarificationResponse for backwards compatibility
+export type ClarificationResponse = ClarificationUIResponse;
 
 export interface ClarificationDialogProps {
   /** The clarification request to display */

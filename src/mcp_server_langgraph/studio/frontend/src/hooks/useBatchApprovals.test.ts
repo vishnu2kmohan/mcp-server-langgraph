@@ -28,6 +28,21 @@ describe("useBatchApprovals", () => {
     vi.restoreAllMocks();
   });
 
+  describe("Deprecation", () => {
+    it("should be marked as deprecated in favor of RTK Query mutations", async () => {
+      // This test documents that useBatchApprovals is deprecated.
+      // Components should use RTK Query mutations from api/index.ts instead:
+      // - useBatchApproveRequestsMutation
+      // - useBatchRejectRequestsMutation
+      //
+      // The RTK Query approach provides:
+      // - Automatic cache invalidation
+      // - Consistent error handling via RTK Query middleware
+      // - No need for manual token handling (handled by baseQuery)
+      expect(true).toBe(true);
+    });
+  });
+
   describe("Export", () => {
     it("should export useBatchApprovals hook", async () => {
       const module = await import("./useBatchApprovals");

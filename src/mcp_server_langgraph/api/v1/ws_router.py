@@ -44,6 +44,7 @@ from mcp_server_langgraph.websocket.handlers.alert import AlertHandler
 from mcp_server_langgraph.websocket.handlers.audit import AuditHandler
 from mcp_server_langgraph.websocket.handlers.agent_request import AgentRequestHandler
 from mcp_server_langgraph.websocket.handlers.mcp import MCPWebSocketHandler
+from mcp_server_langgraph.websocket.handlers.ai_suggestions import AISuggestionsHandler
 
 # Create the main WebSocket router
 ws_router = APIRouter(tags=["websocket"])
@@ -150,7 +151,7 @@ async def connections_realtime_websocket(websocket: WebSocket) -> None:
             endpoint_name="connections-realtime",
             require_auth=True,
             authz_resource_type="mcp_connection",
-            authz_resource_id="*",
+            authz_resource_id="realtime",
             authz_required_relation="viewer",
             rate_limit_per_minute=300,
             message_timeout=30,
@@ -318,7 +319,7 @@ async def connection_health_websocket(websocket: WebSocket) -> None:
             endpoint_name="connection-health",
             require_auth=True,
             authz_resource_type="mcp_connection",
-            authz_resource_id="*",
+            authz_resource_id="health",
             authz_required_relation="viewer",
             rate_limit_per_minute=300,
             message_timeout=30,
@@ -569,6 +570,56 @@ async def mcp_websocket_with_session(
 
 
 # =============================================================================
+# AI Suggestions WebSocket Endpoint
+# =============================================================================
+
+
+@ws_router.websocket("/ai/suggestions")
+async def ai_suggestions_websocket(websocket: WebSocket) -> None:
+    """
+    WebSocket endpoint for real-time AI suggestion streaming.
+
+    URL: /api/v1/ws/ai/suggestions
+
+    Provides real-time AI-powered suggestions for the Studio frontend:
+    - Typing suggestions based on context
+    - Session-aware completions
+    - Accept/reject feedback for learning
+
+    Message Types (Client -> Server):
+        - suggestion_request: Request an AI suggestion
+        - suggestion_accept: User accepted the suggestion
+        - suggestion_reject: User rejected the suggestion
+        - context_update: Update session context
+
+    Message Types (Server -> Client):
+        - suggestion_response: AI suggestion response
+        - error: Error response
+
+    Uses the standardized WebSocketBase infrastructure with:
+    - JWT authentication required
+    - OpenFGA authorization (requires 'user' relation on ai:suggestions)
+    - OpenTelemetry tracing
+    - Metrics collection
+    - Standard message envelope
+    - Rate limiting (300 requests/minute)
+    """
+    handler = AISuggestionsHandler(
+        config=WebSocketConfig(
+            endpoint_name="ai-suggestions",
+            require_auth=True,
+            authz_resource_type="ai",
+            authz_resource_id="suggestions",
+            authz_required_relation="user",
+            rate_limit_per_minute=300,
+            message_timeout=30,
+            max_message_size=65536,  # 64KB max message size
+        ),
+    )
+    await handler.run(websocket)
+
+
+# =============================================================================
 # Migration Status
 # =============================================================================
 #
@@ -594,3 +645,4 @@ async def mcp_websocket_with_session(
 # - [x] Connections Realtime WebSocket (/connections/realtime) - New!
 # - [x] HEART Metrics WebSocket (/metrics/heart) - New!
 # - [x] Cost Tracking WebSocket (/usage/cost) - New!
+# - [x] AI Suggestions WebSocket (/ai/suggestions) - New!

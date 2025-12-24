@@ -107,6 +107,17 @@ export interface ChatInputFormProps {
   fetchedUrls?: Array<{ url: string; title?: string; content: string }>;
   /** Callback to remove a fetched URL */
   onRemoveFetchedUrl?: (url: string) => void;
+  // Inline AI Suggestions props (Sprint 6 - VSCode Copilot style)
+  /** Enable inline ghost text suggestions */
+  enableInlineSuggestions?: boolean;
+  /** Current inline suggestion text (ghost text after cursor) */
+  inlineSuggestion?: string;
+  /** Whether suggestion is being fetched */
+  isSuggestionLoading?: boolean;
+  /** Callback when user accepts suggestion (Tab key) */
+  onAcceptSuggestion?: (suggestion: string) => void;
+  /** Callback when user dismisses suggestion (Escape key) */
+  onDismissSuggestion?: () => void;
 }
 
 export function ChatInputForm({
@@ -147,6 +158,12 @@ export function ChatInputForm({
   urlFetchLoading = [],
   fetchedUrls = [],
   onRemoveFetchedUrl,
+  // Inline AI Suggestions props
+  enableInlineSuggestions = false,
+  inlineSuggestion = "",
+  isSuggestionLoading = false,
+  onAcceptSuggestion,
+  onDismissSuggestion,
 }: ChatInputFormProps) {
   const [isModelDropdownOpen, setIsModelDropdownOpen] = useState(false);
   const [isVoiceBannerDismissed, setIsVoiceBannerDismissed] = useState(false);
@@ -213,9 +230,30 @@ export function ChatInputForm({
     e.target.value = "";
   };
 
-  // Handle keyboard shortcuts (Enter to send, Shift+Enter for newline)
+  // Determine if we should show inline suggestion
+  const showInlineSuggestion =
+    enableInlineSuggestions &&
+    !isProcessing &&
+    input.trim().length > 0 &&
+    inlineSuggestion.length > 0;
+
+  // Handle keyboard shortcuts (Enter to send, Shift+Enter for newline, Tab to accept suggestion)
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+      // Tab to accept inline suggestion
+      if (e.key === "Tab" && enableInlineSuggestions && inlineSuggestion) {
+        e.preventDefault();
+        onAcceptSuggestion?.(inlineSuggestion);
+        return;
+      }
+
+      // Escape to dismiss inline suggestion
+      if (e.key === "Escape" && enableInlineSuggestions && inlineSuggestion) {
+        e.preventDefault();
+        onDismissSuggestion?.();
+        return;
+      }
+
       if (e.key === "Enter" && !e.shiftKey) {
         e.preventDefault();
         if (input.trim().length > 0 && !isProcessing) {
@@ -223,7 +261,15 @@ export function ChatInputForm({
         }
       }
     },
-    [input, isProcessing, onSubmit],
+    [
+      input,
+      isProcessing,
+      onSubmit,
+      enableInlineSuggestions,
+      inlineSuggestion,
+      onAcceptSuggestion,
+      onDismissSuggestion,
+    ],
   );
 
   // Auto-resize textarea based on content
@@ -507,18 +553,61 @@ export function ChatInputForm({
             </button>
           </div>
 
-          {/* Textarea - expandable multi-line input */}
-          <textarea
-            ref={textareaRef}
-            value={input}
-            onChange={(e) => onInputChange(e.target.value)}
-            onKeyDown={handleKeyDown}
-            placeholder="Type your message..."
-            disabled={isProcessing}
-            rows={1}
-            aria-label="Chat message input"
-            className="flex-1 px-2 py-2 bg-transparent text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-inset rounded-lg disabled:opacity-50 min-h-[40px] max-h-[200px]"
-          />
+          {/* Textarea with inline suggestion overlay - expandable multi-line input */}
+          <div className="flex-1 relative">
+            {/* Ghost text overlay for inline AI suggestions */}
+            {showInlineSuggestion && (
+              <div
+                data-testid="inline-suggestion-overlay"
+                className="absolute inset-0 px-2 py-2 pointer-events-none overflow-hidden whitespace-pre-wrap break-words min-h-[40px]"
+                aria-hidden="true"
+              >
+                {/* Invisible text to position the ghost text after input */}
+                <span className="invisible">{input}</span>
+                {/* Ghost text suggestion */}
+                <span
+                  data-testid="inline-suggestion"
+                  className="text-gray-400 dark:text-gray-500"
+                >
+                  {inlineSuggestion}
+                </span>
+              </div>
+            )}
+
+            {/* Loading indicator for suggestion fetch */}
+            {enableInlineSuggestions &&
+              isSuggestionLoading &&
+              input.trim().length > 0 && (
+                <div
+                  data-testid="suggestion-loading"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none"
+                >
+                  <Loader2 className="w-4 h-4 animate-spin text-gray-400" />
+                </div>
+              )}
+
+            <textarea
+              ref={textareaRef}
+              value={input}
+              onChange={(e) => onInputChange(e.target.value)}
+              onKeyDown={handleKeyDown}
+              placeholder="Type your message..."
+              disabled={isProcessing}
+              rows={1}
+              aria-label="Chat message input"
+              className="w-full px-2 py-2 bg-transparent text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-inset rounded-lg disabled:opacity-50 min-h-[40px] max-h-[200px]"
+            />
+
+            {/* Hint text for accepting suggestion */}
+            {showInlineSuggestion && (
+              <div
+                data-testid="suggestion-hint"
+                className="absolute -bottom-5 left-2 text-xs text-gray-400 dark:text-gray-500"
+              >
+                Press Tab to accept
+              </div>
+            )}
+          </div>
 
           {/* Right controls - Voice & Send */}
           <div className="flex items-center gap-1 pb-1">

@@ -10,7 +10,7 @@
  *
  * Use this in StudioShellLayout instead of the standalone ConversationPanel.
  */
-import { useCallback, useMemo, useState, useEffect } from "react";
+import { useCallback, useMemo, useState, useEffect, useRef } from "react";
 import { useNavigate, useRouteLoaderData, useParams } from "react-router";
 import {
   AlertTriangle,
@@ -27,8 +27,11 @@ import {
   selectCurrentSession,
   createSession,
   clearMessages,
+  saveAssistantMessage,
 } from "../store/slices/sessionSlice";
 import { useMessageRevalidation } from "../hooks/useMessageRevalidation";
+import { useStreamingChat } from "../hooks/useStreamingChat";
+import { useSessionSync } from "../hooks/useSessionSync";
 import {
   useIntentDetection,
   useContextOptimization,
@@ -36,6 +39,7 @@ import {
 } from "../hooks/useConversationIntelligence";
 import { useAIRealTimeUXSuggestions } from "../hooks/useAIRealTimeUXSuggestions";
 import type { Suggestion } from "../hooks/useAIRealTimeSuggestions";
+import { useArtifactExtraction } from "../hooks/useArtifactExtraction";
 import { ConversationPanel } from "./ConversationPanel";
 import type { SlashCommand } from "./SlashCommandMenu";
 import type { ChatLoaderData } from "../router/loaders";
@@ -114,6 +118,38 @@ export function ConnectedConversationPanel({
   const [inputQuery, setInputQuery] = useState("");
 
   // =============================================================================
+  // Streaming Chat (LLM Response Generation)
+  // =============================================================================
+
+  const {
+    isStreaming,
+    streamingContent,
+    error: _streamingError, // TODO: Display streaming errors in UI
+    thinkingContent: _thinkingContent, // TODO: Display thinking content in UI
+    startStream,
+  } = useStreamingChat();
+
+  // Track if we need to save the streaming response when complete
+  const streamingCompleteRef = useRef(false);
+  const lastStreamedContentRef = useRef<string>("");
+
+  // =============================================================================
+  // Artifact Extraction (connects Chat to Canvas)
+  // =============================================================================
+
+  const { extractAndSaveArtifacts, resetExtraction } = useArtifactExtraction({
+    sessionId: sessionId ?? "default-session",
+    onArtifactsExtracted: (count) => {
+      logger.debug("Extracted and saved artifacts from stream", { count });
+    },
+  });
+
+  // Reset artifact extraction cache when session changes
+  useEffect(() => {
+    resetExtraction();
+  }, [sessionId, resetExtraction]);
+
+  // =============================================================================
   // Real-time AI UX Suggestions (WebSocket)
   // =============================================================================
 
@@ -182,13 +218,117 @@ export function ConnectedConversationPanel({
     | undefined;
   const loaderData = sessionLoaderData ?? indexLoaderData;
 
-  const messages = useMemo(
-    () => loaderData?.messages ?? [],
-    [loaderData?.messages],
-  );
+  // Sync loader data to Redux so sendMessage and other Redux actions work
+  // This bridges React Router loaders with Redux session state
+  useSessionSync(loaderData);
 
-  // Get current session for title and streaming state
+  // Get current session from Redux (contains optimistic updates)
   const currentSession = useAppSelector(selectCurrentSession);
+
+  // Combine Redux messages with loader data and streaming content for display
+  // CRITICAL: Redux currentSession.messages contains optimistic updates (user messages added immediately)
+  // Loader data may be stale until revalidation completes
+  // Use Redux as the primary source, with deduplication to handle overlap
+  const messages = useMemo(() => {
+    // Primary source: Redux state (has optimistic updates)
+    const reduxMessages = currentSession?.messages ?? [];
+
+    // Secondary source: Loader data (may have messages Redux doesn't know about yet)
+    const loaderMessages = loaderData?.messages ?? [];
+
+    // Merge with deduplication by ID (prefer Redux version if both have same ID)
+    const messageMap = new Map<string, (typeof reduxMessages)[number]>();
+
+    // Add loader messages first (will be overwritten by Redux if duplicate)
+    for (const msg of loaderMessages) {
+      messageMap.set(msg.id, msg);
+    }
+
+    // Add Redux messages (overwrites loader duplicates, adds optimistic updates)
+    for (const msg of reduxMessages) {
+      messageMap.set(msg.id, msg);
+    }
+
+    // Convert back to array and sort by timestamp
+    const mergedMessages = Array.from(messageMap.values()).sort(
+      (a, b) => (a.timestamp ?? 0) - (b.timestamp ?? 0),
+    );
+
+    // If streaming, append a temporary assistant message with the current content
+    if (isStreaming && streamingContent) {
+      return [
+        ...mergedMessages,
+        {
+          id: "streaming-message",
+          role: "assistant" as const,
+          content: streamingContent,
+          timestamp: Date.now(), // Use number timestamp for type compatibility
+        },
+      ];
+    }
+
+    return mergedMessages;
+  }, [
+    currentSession?.messages,
+    loaderData?.messages,
+    isStreaming,
+    streamingContent,
+  ]);
+
+  // =============================================================================
+  // Streaming Completion Effects
+  // =============================================================================
+
+  // When streaming completes, save the assistant message to the session
+  useEffect(() => {
+    if (
+      !isStreaming &&
+      streamingCompleteRef.current &&
+      lastStreamedContentRef.current
+    ) {
+      const assistantContent = lastStreamedContentRef.current;
+      streamingCompleteRef.current = false;
+      lastStreamedContentRef.current = "";
+
+      // Add assistant message to Redux and persist to backend
+      if (sessionId && assistantContent.trim()) {
+        dispatch(
+          saveAssistantMessage({
+            role: "assistant",
+            content: assistantContent,
+          }),
+        )
+          .unwrap()
+          .then(() => {
+            // Revalidate to sync with loader after save completes
+            revalidateMessages();
+
+            // Extract artifacts from the completed stream and save to canvas
+            // This connects chat streaming to the canvas panel
+            extractAndSaveArtifacts(assistantContent);
+          })
+          .catch(() => {
+            // Error already logged by thunk
+          });
+      }
+    }
+  }, [
+    isStreaming,
+    sessionId,
+    dispatch,
+    revalidateMessages,
+    extractAndSaveArtifacts,
+  ]);
+
+  // Track streaming content for saving when complete
+  useEffect(() => {
+    if (isStreaming && streamingContent) {
+      streamingCompleteRef.current = true;
+      lastStreamedContentRef.current = streamingContent;
+    }
+  }, [isStreaming, streamingContent]);
+
+  // Get session title for display (currentSession defined earlier for message merging)
   const sessionTitle = currentSession?.name;
 
   // =============================================================================
@@ -221,14 +361,29 @@ export function ConnectedConversationPanel({
 
   // Handle sending a message
   const handleSendMessage = useCallback(
-    (content: string) => {
-      dispatch(sendMessage(content));
-      // Trigger revalidation to sync loader data after message is sent
-      revalidateMessages();
+    async (content: string) => {
+      // Get effective session ID (from URL params or current session)
+      const effectiveSessionId =
+        sessionId ?? currentSession?.id ?? "default-session";
+
+      try {
+        // 1. Store the user message in the session
+        await dispatch(sendMessage(content)).unwrap();
+
+        // 2. Start streaming response from LLM
+        // This calls POST /api/v1/chat/completions/stream
+        startStream(effectiveSessionId, content);
+
+        // 3. Trigger revalidation to sync loader data
+        revalidateMessages();
+      } catch {
+        // Error is already logged by the thunk
+      }
+
       // Clear input for next message
       setInputQuery("");
     },
-    [dispatch, revalidateMessages],
+    [dispatch, revalidateMessages, sessionId, currentSession?.id, startStream],
   );
 
   // Handle input change for intent detection
@@ -521,6 +676,7 @@ export function ConnectedConversationPanel({
         onMessageSent={handleMessageSent}
         onSuggestionUsed={handleSuggestionUsed}
         onInputChange={handleInputChange}
+        isStreaming={isStreaming}
         autoFocus
         className="flex-1"
       />

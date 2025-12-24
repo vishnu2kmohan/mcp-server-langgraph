@@ -5,11 +5,14 @@
  * Provides connection status updates, subscription management,
  * and health check requests.
  *
- * Based on backend endpoint: /api/v1/connections/health/ws
+ * Based on backend endpoint: /api/v1/ws/connections/health (ADR-0068 consolidated WebSocket URLs)
  */
 
 import { useState, useCallback, useRef, useMemo } from "react";
 import { useRealtimeSync } from "./useRealtimeSync";
+import { useAppSelector } from "../store/hooks";
+import { selectIsAuthenticated } from "../store/slices/authSlice";
+import { getAuthToken } from "../utils/storage";
 
 // =============================================================================
 // Types
@@ -107,7 +110,7 @@ type ServerMessage =
  * Options for useConnectionHealthWebSocket hook
  */
 export interface UseConnectionHealthWebSocketOptions {
-  /** Custom WebSocket URL (defaults to /api/v1/connections/health/ws) */
+  /** Custom WebSocket URL (defaults to /api/v1/ws/connections/health) */
   url?: string;
   /** Callback when a connection is updated */
   onConnectionUpdate?: (connection: ConnectionHealth) => void;
@@ -162,10 +165,13 @@ export interface UseConnectionHealthWebSocketReturn {
 // Default URL
 // =============================================================================
 
-function getDefaultWebSocketUrl(): string {
+function getDefaultWebSocketUrl(token?: string): string {
   const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
   const host = window.location.host;
-  return `${protocol}//${host}/api/v1/connections/health/ws`;
+  // Use consolidated WebSocket URL per ADR-0068
+  // Include token for authentication (required by backend)
+  const tokenParam = token ? `?token=${encodeURIComponent(token)}` : "";
+  return `${protocol}//${host}/api/v1/ws/connections/health${tokenParam}`;
 }
 
 // =============================================================================
@@ -176,12 +182,24 @@ export function useConnectionHealthWebSocket(
   options: UseConnectionHealthWebSocketOptions = {},
 ): UseConnectionHealthWebSocketReturn {
   const {
-    url = getDefaultWebSocketUrl(),
+    url: customUrl,
     onConnectionUpdate,
     onConnectionsLoaded,
     onHealthCheckStarted,
     onError,
   } = options;
+
+  // Get auth state and token for WebSocket authentication
+  const isAuthenticated = useAppSelector(selectIsAuthenticated);
+  const authToken = isAuthenticated ? (getAuthToken() ?? undefined) : undefined;
+
+  // Compute WebSocket URL - only generate URL when authenticated
+  // Passing empty string prevents connection attempt before auth is ready
+  const url = useMemo(
+    () =>
+      isAuthenticated ? (customUrl ?? getDefaultWebSocketUrl(authToken)) : "",
+    [customUrl, authToken, isAuthenticated],
+  );
 
   // State
   const [connections, setConnections] = useState<ConnectionHealth[]>([]);

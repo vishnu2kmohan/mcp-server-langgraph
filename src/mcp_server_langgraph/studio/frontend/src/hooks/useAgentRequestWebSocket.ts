@@ -20,10 +20,20 @@ import { useEffect, useCallback, useMemo, useRef, useState } from "react";
 import { useAppSelector } from "../store/hooks";
 import { selectIsAuthenticated } from "../store/slices/authSlice";
 import { getAuthToken } from "../utils/storage";
+import type {
+  ApprovalRequiredPayload,
+  ClarificationRequiredPayload,
+} from "../types/hitl";
 
 // =============================================================================
 // Types
 // =============================================================================
+
+// Re-export from canonical location for backwards compatibility
+export type {
+  ApprovalRequiredPayload,
+  ClarificationRequiredPayload,
+} from "../types/hitl";
 
 export type ConnectionStatus =
   | "connecting"
@@ -31,38 +41,8 @@ export type ConnectionStatus =
   | "disconnected"
   | "error";
 
-export interface ApprovalRequiredPayload {
-  request_id: string;
-  session_id: string;
-  task_id: string;
-  agent_name: string;
-  confidence: number;
-  threshold: number;
-  proposed_action: string;
-  trigger_reason: string;
-  context: Record<string, unknown>;
-  requested_at: string;
-}
-
-export interface ClarificationRequiredPayload {
-  request_id: string;
-  session_id: string;
-  task_id: string;
-  agent_name: string;
-  clarification_type: "text" | "choice" | "confirmation";
-  question: string;
-  options: Array<{
-    id: string;
-    label: string;
-    description?: string;
-    is_recommended?: boolean;
-  }>;
-  placeholder: string | null;
-  required: boolean;
-  context: Record<string, unknown>;
-  requested_at: string;
-}
-
+// Note: ApprovalUpdatedPayload and ExecutionResumedPayload are WebSocket-specific
+// and not in the canonical hitl.ts types (they represent server-to-client events)
 export interface ApprovalUpdatedPayload {
   request_id: string;
   status: "approved" | "rejected";

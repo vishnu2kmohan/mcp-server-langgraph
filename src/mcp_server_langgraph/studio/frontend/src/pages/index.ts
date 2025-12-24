@@ -7,8 +7,8 @@
 
 export { WorkflowsPage } from "./WorkflowsPage";
 export { SharedWorkflowsPage } from "./SharedWorkflowsPage";
-export { ChatPage } from "./ChatPage";
-// SessionsPage removed - functionality merged into ChatPage with SessionPanel
+// ChatPage REMOVED - deprecated, replaced by StudioShellLayout 3-panel canvas layout
+// SessionsPage REMOVED - functionality now in StudioShellLayout SessionNav panel
 export { MCPPage } from "./MCPPage";
 export { ObservabilityPage } from "./ObservabilityPage";
 export { SettingsPage } from "./SettingsPage";

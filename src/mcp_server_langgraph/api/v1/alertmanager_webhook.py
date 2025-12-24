@@ -39,7 +39,7 @@ from mcp_server_langgraph.alerts.metrics import (
     record_alert_filtered,
     record_alert_received,
 )
-from mcp_server_langgraph.api.v1.alert_websocket import get_alert_broadcaster
+from mcp_server_langgraph.websocket.registry import get_alert_broadcaster
 from mcp_server_langgraph.api.v1.alert_recommendations import AlertStore, get_alert_store
 from mcp_server_langgraph.observability.query.interfaces import (
     Alert,

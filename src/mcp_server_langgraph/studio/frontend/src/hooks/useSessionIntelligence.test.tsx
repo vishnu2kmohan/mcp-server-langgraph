@@ -10,32 +10,35 @@
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { renderHook, waitFor, cleanup } from "@testing-library/react";
+import { renderHook, waitFor, cleanup, act } from "@testing-library/react";
 import { Provider } from "react-redux";
 import { configureStore } from "@reduxjs/toolkit";
 import React from "react";
 
-// Mock the API module
+// Mock the API module - use flushPromises pattern for clean async handling
+const mockAnalyzeFn = vi.fn();
 vi.mock("../api", () => ({
-  useStudioAnalyzeMutation: vi.fn(() => [
-    vi.fn(() => ({
-      unwrap: () =>
-        Promise.resolve({
-          analyses: {
-            session_summarize: {
-              summary: "Test session summary",
-              key_topics: ["React", "testing"],
-              message_count: 10,
-            },
-          },
-          cross_insights: [],
-          failed_analyses: [],
-          total_cost: "0.001",
-        }),
-    })),
-    { isLoading: false },
-  ]),
+  useStudioAnalyzeMutation: vi.fn(() => [mockAnalyzeFn, { isLoading: false }]),
 }));
+
+// Setup default mock behavior
+function setupDefaultMock() {
+  mockAnalyzeFn.mockImplementation(() => ({
+    unwrap: () =>
+      Promise.resolve({
+        analyses: {
+          session_summarize: {
+            summary: "Test session summary",
+            key_topics: ["React", "testing"],
+            message_count: 10,
+          },
+        },
+        cross_insights: [],
+        failed_analyses: [],
+        total_cost: "0.001",
+      }),
+  }));
+}
 
 // =============================================================================
 // Test Utilities
@@ -64,20 +67,29 @@ const createWrapper = () => {
 // useSessionSummary Tests
 // =============================================================================
 
+// Import hooks at the top level after mocks are set up
+
+import {
+  useSessionSummary,
+  useSessionGroups,
+  useSessionSimilarity,
+} from "./useSessionIntelligence";
+
 describe("useSessionSummary", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    setupDefaultMock();
   });
 
-  afterEach(() => {
+  afterEach(async () => {
+    // Wait for any pending state updates before cleanup
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    });
     cleanup();
-    vi.restoreAllMocks();
   });
 
   it("should return session summary when given a session ID", async () => {
-    // Import dynamically to get mocked version
-    const { useSessionSummary } = await import("./useSessionIntelligence");
-
     const { result } = renderHook(
       () =>
         useSessionSummary({
@@ -95,8 +107,6 @@ describe("useSessionSummary", () => {
   });
 
   it("should include key topics in the result", async () => {
-    const { useSessionSummary } = await import("./useSessionIntelligence");
-
     const { result } = renderHook(
       () =>
         useSessionSummary({
@@ -115,8 +125,6 @@ describe("useSessionSummary", () => {
   });
 
   it("should provide a refetch function", async () => {
-    const { useSessionSummary } = await import("./useSessionIntelligence");
-
     const { result } = renderHook(
       () =>
         useSessionSummary({
@@ -127,11 +135,14 @@ describe("useSessionSummary", () => {
     );
 
     expect(typeof result.current.refetch).toBe("function");
+
+    // Wait for async operations to complete
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false);
+    });
   });
 
   it("should handle disabled state", async () => {
-    const { useSessionSummary } = await import("./useSessionIntelligence");
-
     const { result } = renderHook(
       () =>
         useSessionSummary({
@@ -152,51 +163,48 @@ describe("useSessionSummary", () => {
 // useSessionGroups Tests
 // =============================================================================
 
+function setupGroupsMock() {
+  mockAnalyzeFn.mockImplementation(() => ({
+    unwrap: () =>
+      Promise.resolve({
+        analyses: {
+          session_group: {
+            groups: [
+              {
+                topic: "API Development",
+                session_ids: ["s1", "s2", "s3"],
+                confidence: 0.85,
+              },
+              {
+                topic: "Frontend Work",
+                session_ids: ["s4", "s5"],
+                confidence: 0.78,
+              },
+            ],
+            ungrouped: ["s6"],
+          },
+        },
+        cross_insights: [],
+        failed_analyses: [],
+        total_cost: "0.002",
+      }),
+  }));
+}
+
 describe("useSessionGroups", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-
-    // Mock API for group sessions
-    vi.doMock("../api", () => ({
-      useStudioAnalyzeMutation: vi.fn(() => [
-        vi.fn(() => ({
-          unwrap: () =>
-            Promise.resolve({
-              analyses: {
-                session_group: {
-                  groups: [
-                    {
-                      topic: "API Development",
-                      session_ids: ["s1", "s2", "s3"],
-                      confidence: 0.85,
-                    },
-                    {
-                      topic: "Frontend Work",
-                      session_ids: ["s4", "s5"],
-                      confidence: 0.78,
-                    },
-                  ],
-                  ungrouped: ["s6"],
-                },
-              },
-              cross_insights: [],
-              failed_analyses: [],
-              total_cost: "0.002",
-            }),
-        })),
-        { isLoading: false },
-      ]),
-    }));
+    setupGroupsMock();
   });
 
-  afterEach(() => {
+  afterEach(async () => {
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    });
     cleanup();
-    vi.restoreAllMocks();
   });
 
   it("should return grouped sessions", async () => {
-    const { useSessionGroups } = await import("./useSessionIntelligence");
-
     const { result } = renderHook(
       () =>
         useSessionGroups({
@@ -214,8 +222,6 @@ describe("useSessionGroups", () => {
   });
 
   it("should include topic names for each group", async () => {
-    const { useSessionGroups } = await import("./useSessionIntelligence");
-
     const { result } = renderHook(
       () =>
         useSessionGroups({
@@ -235,8 +241,6 @@ describe("useSessionGroups", () => {
   });
 
   it("should handle ungrouped sessions", async () => {
-    const { useSessionGroups } = await import("./useSessionIntelligence");
-
     const { result } = renderHook(
       () =>
         useSessionGroups({
@@ -258,51 +262,71 @@ describe("useSessionGroups", () => {
 // useSessionSimilarity Tests
 // =============================================================================
 
+function setupSimilarityMock() {
+  mockAnalyzeFn.mockImplementation(() => ({
+    unwrap: () =>
+      Promise.resolve({
+        analyses: {
+          session_similarity: {
+            source_session_id: "session-123",
+            similar_sessions: [
+              {
+                session_id: "session-456",
+                similarity_score: 0.92,
+                common_topics: ["React", "hooks"],
+              },
+              {
+                session_id: "session-789",
+                similarity_score: 0.78,
+                common_topics: ["React"],
+              },
+            ],
+          },
+        },
+        cross_insights: [],
+        failed_analyses: [],
+        total_cost: "0.001",
+      }),
+  }));
+}
+
+function setupEmptySimilarityMock() {
+  mockAnalyzeFn.mockImplementation(() => ({
+    unwrap: () =>
+      Promise.resolve({
+        analyses: {
+          session_similarity: {
+            source_session_id: "unique-session",
+            similar_sessions: [],
+          },
+        },
+        cross_insights: [],
+        failed_analyses: [],
+        total_cost: "0.001",
+      }),
+  }));
+}
+
+function setupErrorMock() {
+  mockAnalyzeFn.mockImplementation(() => ({
+    unwrap: () => Promise.reject(new Error("API Error")),
+  }));
+}
+
 describe("useSessionSimilarity", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-
-    // Mock API for similar sessions
-    vi.doMock("../api", () => ({
-      useStudioAnalyzeMutation: vi.fn(() => [
-        vi.fn(() => ({
-          unwrap: () =>
-            Promise.resolve({
-              analyses: {
-                session_similarity: {
-                  source_session_id: "session-123",
-                  similar_sessions: [
-                    {
-                      session_id: "session-456",
-                      similarity_score: 0.92,
-                      common_topics: ["React", "hooks"],
-                    },
-                    {
-                      session_id: "session-789",
-                      similarity_score: 0.78,
-                      common_topics: ["React"],
-                    },
-                  ],
-                },
-              },
-              cross_insights: [],
-              failed_analyses: [],
-              total_cost: "0.001",
-            }),
-        })),
-        { isLoading: false },
-      ]),
-    }));
+    setupSimilarityMock();
   });
 
-  afterEach(() => {
+  afterEach(async () => {
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    });
     cleanup();
-    vi.restoreAllMocks();
   });
 
   it("should return similar sessions", async () => {
-    const { useSessionSimilarity } = await import("./useSessionIntelligence");
-
     const { result } = renderHook(
       () =>
         useSessionSimilarity({
@@ -320,8 +344,6 @@ describe("useSessionSimilarity", () => {
   });
 
   it("should include similarity scores", async () => {
-    const { useSessionSimilarity } = await import("./useSessionIntelligence");
-
     const { result } = renderHook(
       () =>
         useSessionSimilarity({
@@ -346,28 +368,7 @@ describe("useSessionSimilarity", () => {
   });
 
   it("should handle no matches gracefully", async () => {
-    // Mock empty results
-    vi.doMock("../api", () => ({
-      useStudioAnalyzeMutation: vi.fn(() => [
-        vi.fn(() => ({
-          unwrap: () =>
-            Promise.resolve({
-              analyses: {
-                session_similarity: {
-                  source_session_id: "unique-session",
-                  similar_sessions: [],
-                },
-              },
-              cross_insights: [],
-              failed_analyses: [],
-              total_cost: "0.001",
-            }),
-        })),
-        { isLoading: false },
-      ]),
-    }));
-
-    const { useSessionSimilarity } = await import("./useSessionIntelligence");
+    setupEmptySimilarityMock();
 
     const { result } = renderHook(
       () =>
@@ -392,17 +393,19 @@ describe("useSessionSimilarity", () => {
 // =============================================================================
 
 describe("Session Intelligence Error Handling", () => {
-  it("should handle API errors gracefully", async () => {
-    vi.doMock("../api", () => ({
-      useStudioAnalyzeMutation: vi.fn(() => [
-        vi.fn(() => ({
-          unwrap: () => Promise.reject(new Error("API Error")),
-        })),
-        { isLoading: false },
-      ]),
-    }));
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
 
-    const { useSessionSummary } = await import("./useSessionIntelligence");
+  afterEach(async () => {
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    });
+    cleanup();
+  });
+
+  it("should handle API errors gracefully", async () => {
+    setupErrorMock();
 
     const { result } = renderHook(
       () =>

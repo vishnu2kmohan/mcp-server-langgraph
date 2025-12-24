@@ -198,9 +198,9 @@ services:
       - postgres-data:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
-      interval: 3s  # Codex Fix: interval must be >= timeout
+      interval: 5s
       timeout: 3s
-      retries: 20  # Increased from 10 to allow more time for migrations (60s max)
+      retries: 20  # Increased from 10 to allow more time for migrations (100s max)
     deploy:
       resources:
         limits:
@@ -258,6 +258,9 @@ services:
     # - Local: Build with `docker compose build alembic-migrate-test`
     #   Tags the image as ghcr.io/vishnu2kmohan/mcp-server-langgraph-alembic:latest for push
     image: ghcr.io/vishnu2kmohan/mcp-server-langgraph-alembic:latest
+    # OPTIMIZATION: Use pre-built GHCR image when available, build only if missing
+    # This avoids unnecessary rebuilds during local development
+    pull_policy: if_not_present
     build:
       context: .
       dockerfile: docker/Dockerfile.alembic
@@ -362,7 +365,7 @@ services:
       - TESTING=true
     healthcheck:
       test: ["CMD", "/usr/local/bin/grpc_health_probe", "-addr=:8081"]
-      interval: 3s  # Codex Fix: interval must be >= timeout
+      interval: 5s
       timeout: 3s
       retries: 20  # Increased to tolerate Keycloak OIDC endpoint delays
       start_period: 30s  # Allow time for OIDC discovery and token validation from Keycloak
@@ -406,6 +409,9 @@ services:
 
   openfga-seed-test:
     image: ghcr.io/vishnu2kmohan/mcp-server-langgraph-openfga-seed:latest
+    # OPTIMIZATION: Use pre-built GHCR image when available, build only if missing
+    # This avoids unnecessary rebuilds during local development
+    pull_policy: if_not_present
     build:
       context: .
       dockerfile: docker/Dockerfile.openfga-seed
@@ -468,6 +474,9 @@ services:
     #
     # The GHCR image is pushed with tags: latest, 26.4.2, 26.4.2-<sha>
     image: ghcr.io/vishnu2kmohan/mcp-server-langgraph-keycloak:latest
+    # OPTIMIZATION: Use pre-built GHCR image when available, build only if missing
+    # Keycloak rarely changes - avoid expensive Quarkus rebuild
+    pull_policy: if_not_present
     build:
       context: .
       dockerfile: docker/Dockerfile.keycloak
@@ -831,7 +840,7 @@ services:
       - redis-data:/data
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
-      interval: 3s  # Codex Fix: interval must be >= timeout
+      interval: 5s
       timeout: 2s
       retries: 10
     deploy:
@@ -907,9 +916,9 @@ services:
         - CMD-SHELL
         - |
           bash -c '{ printf "GET /readyz HTTP/1.0\r\nHost: localhost\r\n\r\n" >&0; grep -q "HTTP/1.. 200"; } 0<>/dev/tcp/localhost/6333'
-      interval: 3s
+      interval: 5s
       timeout: 3s
-      retries: 15  # Increased from 10 to allow more startup time (45s max)
+      retries: 15  # Increased from 10 to allow more startup time (75s max)
       start_period: 10s  # Increased from 5s for slower CI runners
     deploy:
       resources:
@@ -1167,6 +1176,7 @@ services:
       - FF_CANVAS_AGENTS=true            # Phase 4: Background agent panel
       - FF_CANVAS_AI_PALETTE=true        # Phase 4: AI fallback in command palette
       - FF_ENABLE_AI_SUGGESTIONS=true    # Phase 4: AI-powered suggestions in Canvas and Chat
+      - FF_ENABLE_AI_SUGGESTIONS_WEBSOCKET=true  # AI suggestions WebSocket endpoint
       - FF_CANVAS_COMPLIANCE=true        # Phase 5: Compliance dashboards (GDPR, HIPAA, SOC2, FedRAMP)
       - FF_CANVAS_HELP=true              # Phase 6: In-app help pane with contextual assistance
       # -----------------------------------------------------------------------
@@ -1256,7 +1266,7 @@ services:
     healthcheck:
       # Use /health/live to avoid 307 redirect (/health -> /health/ due to sub-app mount)
       test: ["CMD", "curl", "-f", "http://localhost:8000/health/live"]
-      interval: 5s
+      interval: 10s  # Reduced from 5s to minimize log noise
       timeout: 5s
       retries: 30  # Increased to tolerate Keycloak OIDC endpoint delays (150s max)
       start_period: 45s  # Allow time for OIDC token acquisition and dependency connections
@@ -1904,6 +1914,9 @@ services:
     # RESILIENCE: Auto-restart on failure for authorization proxy
     restart: unless-stopped
     image: ghcr.io/vishnu2kmohan/mcp-server-langgraph-authz-proxy:latest
+    # OPTIMIZATION: Use pre-built GHCR image when available, build only if missing
+    # For active development, use: docker compose build authz-proxy-test
+    pull_policy: if_not_present
     build:
       context: .
       dockerfile: docker/Dockerfile.authz-proxy
@@ -1939,9 +1952,9 @@ services:
       - ENABLE_CONSOLE_EXPORT=false
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8003/api/authz-proxy/health"]
-      interval: 5s
-      timeout: 5s  # Increased to match interval
-      retries: 20  # Increased to tolerate Keycloak OIDC endpoint delays (100s max)
+      interval: 10s  # Reduced from 5s to minimize log noise
+      timeout: 5s
+      retries: 20  # Increased to tolerate Keycloak OIDC endpoint delays (200s max with 10s interval)
       start_period: 30s  # Allow time for OIDC token acquisition from Keycloak
     init: true
     deploy:

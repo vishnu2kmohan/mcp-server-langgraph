@@ -45,10 +45,15 @@ interface DevLoggerOptions {
 /**
  * Check if we're in development mode
  * Returns true in development or test environments
+ *
+ * Uses Vite's native import.meta.env.DEV for reliable detection.
+ * In production builds, this is statically replaced with `false`,
+ * allowing dead code elimination.
  */
 export function isDevMode(): boolean {
-  const nodeEnv = process.env.NODE_ENV;
-  return nodeEnv === "development" || nodeEnv === "test";
+  // Use Vite's native env detection (more reliable than process.env.NODE_ENV)
+  // import.meta.env.DEV is true in dev, false in production builds
+  return import.meta.env.DEV;
 }
 
 /**

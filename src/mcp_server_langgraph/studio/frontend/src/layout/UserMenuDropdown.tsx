@@ -6,16 +6,25 @@
  */
 import { useState, useCallback, useRef, useEffect } from "react";
 import { useNavigate } from "react-router";
-import { User, Settings, LogOut, Users, ChevronDown } from "lucide-react";
+import {
+  User,
+  Settings,
+  LogOut,
+  Users,
+  ChevronDown,
+  Loader2,
+} from "lucide-react";
 import { useAppDispatch, useAppSelector } from "../store/hooks";
 import {
   selectUsername,
   selectPersona,
   setSubPersona,
+  resetPersona,
   type SubPersona,
 } from "../store/slices/personaSlice";
+import { logout } from "../store/slices/authSlice";
 import { cn } from "../utils/cn";
-import { clearAuthTokens } from "../utils/storage";
+import { storage, STORAGE_KEYS } from "../utils/storage";
 
 // =============================================================================
 // Types
@@ -73,6 +82,7 @@ export function UserMenuDropdown({
   const currentPersona = useAppSelector(selectPersona);
 
   const [showPersonaSwitcher, setShowPersonaSwitcher] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -117,12 +127,60 @@ export function UserMenuDropdown({
     onClose();
   }, [navigate, onClose]);
 
-  const handleLogout = useCallback(() => {
-    // Clear auth state and redirect to login
-    clearAuthTokens();
-    navigate("/login");
-    onClose();
-  }, [navigate, onClose]);
+  const handleLogout = useCallback(async () => {
+    if (isLoggingOut) return;
+    setIsLoggingOut(true);
+
+    try {
+      // Get the refresh token from storage to send to backend
+      const refreshToken = storage.get<string>(STORAGE_KEYS.REFRESH_TOKEN);
+
+      // Call the backend logout API to revoke tokens and get Keycloak logout URL
+      const response = await fetch("/api/v1/auth/logout", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          refresh_token: refreshToken,
+        }),
+      });
+
+      // Dispatch logout action to clear Redux auth state and localStorage tokens
+      // The logout action in authSlice calls clearAllAuthStorage() which clears all token keys
+      dispatch(logout());
+      // Reset persona state to initial values (also sets isPersonaLoading=true)
+      dispatch(resetPersona());
+
+      if (response.ok) {
+        const data = await response.json();
+        // Redirect to Keycloak logout URL to end SSO session
+        // This ensures the user can log in as a different user
+        if (data.keycloak_logout_url) {
+          // Add post_logout_redirect_uri to return to login page after Keycloak logout
+          const logoutUrl = new URL(data.keycloak_logout_url);
+          logoutUrl.searchParams.set(
+            "post_logout_redirect_uri",
+            `${window.location.origin}/login`,
+          );
+          window.location.href = logoutUrl.toString();
+          return;
+        }
+      }
+
+      // Fallback: If API call fails or no Keycloak URL, just go to login
+      navigate("/login", { replace: true });
+    } catch (error) {
+      console.error("Logout error:", error);
+      // Even if logout fails, clear local state and redirect
+      dispatch(logout());
+      dispatch(resetPersona());
+      navigate("/login", { replace: true });
+    } finally {
+      setIsLoggingOut(false);
+      onClose();
+    }
+  }, [dispatch, navigate, onClose, isLoggingOut]);
 
   const handlePersonaSwitch = useCallback(
     (subPersona: SubPersona) => {
@@ -160,8 +218,12 @@ export function UserMenuDropdown({
     },
     {
       id: "logout",
-      icon: <LogOut size={16} />,
-      label: "Sign Out",
+      icon: isLoggingOut ? (
+        <Loader2 size={16} className="animate-spin" />
+      ) : (
+        <LogOut size={16} />
+      ),
+      label: isLoggingOut ? "Signing Out..." : "Sign Out",
       onClick: handleLogout,
       variant: "danger",
     },

@@ -39,14 +39,10 @@ export { InteractiveChart } from "./InteractiveChart";
 export type { InteractiveChartProps, ChartData } from "./InteractiveChart";
 
 // =============================================================================
-// Workspace Layout (DevTools-style dockable panels)
+// Workspace Layout - REMOVED
+// ChatWorkspace was deprecated (AppShell architecture) and removed.
+// StudioShellLayout provides the 3-panel canvas layout for chat.
 // =============================================================================
-
-export { ChatWorkspace, usePanelControl } from "./ChatWorkspace";
-export type {
-  ChatWorkspaceProps,
-  UsePanelControlReturn,
-} from "./ChatWorkspace";
 
 // =============================================================================
 // Dockable Document Components (for MainDock integration)

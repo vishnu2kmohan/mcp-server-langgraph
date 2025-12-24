@@ -30,7 +30,12 @@ from mcp_server_langgraph.api.auth_request_middleware import AuthRequestMiddlewa
 from mcp_server_langgraph.api.v1.auth import AuthSecurityHeadersMiddleware
 from mcp_server_langgraph.auth.factory import create_auth_middleware, create_user_provider
 from mcp_server_langgraph.auth.middleware import AuthMiddleware
-from mcp_server_langgraph.auth.openfga import OpenFGAClient, OpenFGAConfig
+from mcp_server_langgraph.auth.openfga import (
+    OpenFGAClient,
+    OpenFGAConfig,
+    clear_global_openfga_client,
+    set_global_openfga_client,
+)
 from mcp_server_langgraph.auth.user_provider import KeycloakUserProvider
 from mcp_server_langgraph.core.agent import AgentState, cleanup_checkpointer, create_agent_graph
 from mcp_server_langgraph.core.config import Settings, settings
@@ -118,6 +123,9 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
             )
             openfga_client = OpenFGAClient(config=openfga_config)
             await openfga_client._ensure_initialized()
+            # Set global instance for WebSocket authorization middleware
+            # WebSocket handlers use get_openfga_client() which accesses this global
+            set_global_openfga_client(openfga_client)
             logger.info(
                 "OpenFGA client initialized for MCP server (async pattern)",
                 extra={"store_id": openfga_client.store_id, "model_id": openfga_client.model_id},
@@ -159,6 +167,17 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     except Exception as e:
         logger.warning(f"Failed to initialize session service: {e}")
 
+    # Initialize observability query clients (Grafana, Tempo, Loki, Prometheus)
+    # Required for /api/v1/observability/* endpoints
+    try:
+        from mcp_server_langgraph.observability.query.factory import init_query_clients
+
+        await init_query_clients()
+        logger.info("Observability query clients initialized successfully")
+    except Exception as e:
+        logger.warning(f"Observability query clients initialization failed: {e}")
+        # Non-fatal: observability endpoints will fail gracefully
+
     yield
 
     # Shutdown - cleanup observability and close connections
@@ -170,6 +189,8 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     try:
         if openfga_client is not None:
             await openfga_client.close()
+            # Clear global instance for WebSocket authorization middleware
+            clear_global_openfga_client()
             logger.info("OpenFGA client closed for MCP server")
     except Exception as e:
         logger.warning(f"Error closing OpenFGA client: {e}")
@@ -186,6 +207,15 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
             logger.info("Session service Redis client closed")
     except Exception as e:
         logger.warning(f"Error closing session service connections: {e}")
+
+    # Close observability query clients (Grafana, Tempo, Loki, Prometheus)
+    try:
+        from mcp_server_langgraph.observability.query.factory import close_query_clients
+
+        await close_query_clients()
+        logger.info("Observability query clients closed")
+    except Exception as e:
+        logger.warning(f"Error closing observability query clients: {e}")
 
     # Cleanup checkpointer resources (Redis connections, etc.) via server's cleanup method
     try:

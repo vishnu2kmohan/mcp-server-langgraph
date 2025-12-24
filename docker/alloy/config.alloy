@@ -465,8 +465,13 @@ prometheus.scrape "alloy" {
 }
 
 // MCP Application services (dynamic discovery as fallback)
+// Note: Excluded from dynamic scraping - handled by dedicated scrape jobs above:
+//   - redis-test (via redis-exporter:9121)
+//   - postgres-test (via postgres-exporter:9187)
+//   - qdrant-test (direct scrape on 6333)
+//   - Other infra services with explicit targets
 prometheus.scrape "mcp_services" {
-  targets = discovery.relabel.docker_containers.output
+  targets = discovery.relabel.mcp_apps_only.output
 
   forward_to = [prometheus.remote_write.mimir.receiver]
 
@@ -475,6 +480,27 @@ prometheus.scrape "mcp_services" {
 
   // Only scrape containers with metrics port exposed
   honor_labels = true
+}
+
+// Filter discovery targets to only include MCP application services
+// Excludes infrastructure services that don't expose HTTP /metrics or are handled separately
+discovery.relabel "mcp_apps_only" {
+  targets = discovery.relabel.docker_containers.output
+
+  // Drop services that don't expose HTTP /metrics endpoint
+  // These are either handled by exporters, don't have metrics, or have explicit scrape targets
+  rule {
+    source_labels = ["service"]
+    regex         = "(redis-test|postgres-test|qdrant-test|traefik-forward-auth|traefik-gateway|mcp-server-test)"
+    action        = "drop"
+  }
+
+  // Drop services already scraped by explicit targets above
+  rule {
+    source_labels = ["service"]
+    regex         = "(loki-test|tempo-test|mimir-test|grafana-test|alloy-test|keycloak-test|openfga-test|redis-exporter|postgres-exporter)"
+    action        = "drop"
+  }
 }
 
 // =============================================================================

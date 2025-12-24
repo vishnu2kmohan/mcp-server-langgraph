@@ -98,7 +98,7 @@ class ConnectionHealthHandler(WebSocketBase):
                 endpoint_name="connection-health",
                 require_auth=True,
                 authz_resource_type="mcp_connection",
-                authz_resource_id="*",
+                authz_resource_id="health",
                 authz_required_relation="viewer",
             ),
             connection_repository=get_connection_repository(),

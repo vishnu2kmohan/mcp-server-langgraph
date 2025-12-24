@@ -10,6 +10,8 @@ import canvasReducer, {
   setSessionNavCollapsed,
   toggleCanvas,
   setCanvasCollapsed,
+  toggleFocusMode,
+  setFocusModeEnabled,
   setActiveNavItem,
   setSelectedArtifactId,
   setPreferences,
@@ -17,6 +19,7 @@ import canvasReducer, {
   selectPanelSizes,
   selectSessionNavCollapsed,
   selectCanvasCollapsed,
+  selectFocusModeEnabled,
   selectActiveNavItem,
   selectSelectedArtifactId,
   selectPreferences,
@@ -44,6 +47,7 @@ describe("canvasSlice", () => {
       showLineNumbers: true,
       codeTheme: "auto",
     },
+    focusModeEnabled: false,
   };
 
   describe("reducers", () => {
@@ -83,6 +87,22 @@ describe("canvasSlice", () => {
     it("should handle setCanvasCollapsed", () => {
       const result = canvasReducer(initialState, setCanvasCollapsed(true));
       expect(result.canvasCollapsed).toBe(true);
+    });
+
+    it("should handle toggleFocusMode", () => {
+      const result = canvasReducer(initialState, toggleFocusMode());
+      expect(result.focusModeEnabled).toBe(true);
+
+      const result2 = canvasReducer(result, toggleFocusMode());
+      expect(result2.focusModeEnabled).toBe(false);
+    });
+
+    it("should handle setFocusModeEnabled", () => {
+      const result = canvasReducer(initialState, setFocusModeEnabled(true));
+      expect(result.focusModeEnabled).toBe(true);
+
+      const result2 = canvasReducer(result, setFocusModeEnabled(false));
+      expect(result2.focusModeEnabled).toBe(false);
     });
 
     it("should handle setActiveNavItem", () => {
@@ -139,6 +159,15 @@ describe("canvasSlice", () => {
 
     it("should select canvasCollapsed", () => {
       expect(selectCanvasCollapsed(rootState)).toBe(false);
+    });
+
+    it("should select focusModeEnabled", () => {
+      expect(selectFocusModeEnabled(rootState)).toBe(false);
+
+      const focusModeState = {
+        canvas: { ...initialState, focusModeEnabled: true },
+      };
+      expect(selectFocusModeEnabled(focusModeState)).toBe(true);
     });
 
     it("should select activeNavItem", () => {

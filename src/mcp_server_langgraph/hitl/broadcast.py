@@ -150,9 +150,20 @@ class AgentRequestBroadcaster:
         websocket: WebSocket,
         session_id: str,
         user_id: str,
+        accept: bool = True,
     ) -> None:
-        """Accept and register a WebSocket connection."""
-        await websocket.accept()
+        """
+        Register a WebSocket connection.
+
+        Args:
+            websocket: The WebSocket connection to register.
+            session_id: Session ID for filtering messages.
+            user_id: User ID for the connection.
+            accept: Whether to call websocket.accept(). Set to False when
+                   the connection was already accepted by WebSocketBase.
+        """
+        if accept:
+            await websocket.accept()
         self._connections[websocket] = WebSocketConnection(
             websocket=websocket,
             session_id=session_id,

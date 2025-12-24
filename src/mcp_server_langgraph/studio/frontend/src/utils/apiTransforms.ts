@@ -56,6 +56,30 @@ export interface ApiSessionConfig {
 }
 
 /**
+ * Source citation from API (snake_case from backend)
+ */
+export interface ApiSourceCitation {
+  title: string;
+  url?: string | null;
+  snippet?: string | null;
+}
+
+/**
+ * API Message format (snake_case from backend)
+ * Matches the generated MessageResponse schema
+ */
+export interface ApiMessage {
+  message_id: string;
+  role: "user" | "assistant" | "system";
+  content: string;
+  timestamp: string | null;
+  sources?: ApiSourceCitation[] | null;
+  thinking_content?: string | null;
+  thinking_tokens?: number | null;
+  model_name?: string | null;
+}
+
+/**
  * Validation result type
  */
 export type ValidationResult<T> =
@@ -244,4 +268,87 @@ export function safeTransformToClientSession(
     return null;
   }
   return transformApiSessionToClient(validation.data, messages);
+}
+
+// =============================================================================
+// Message Type Guards and Transforms
+// =============================================================================
+
+/**
+ * Type guard to check if a value is a valid ApiMessage
+ */
+export function isApiMessage(value: unknown): value is ApiMessage {
+  if (value === null || value === undefined) {
+    return false;
+  }
+
+  if (typeof value !== "object" || Array.isArray(value)) {
+    return false;
+  }
+
+  const obj = value as Record<string, unknown>;
+
+  // Required fields
+  if (typeof obj.message_id !== "string") {
+    return false;
+  }
+
+  if (typeof obj.role !== "string") {
+    return false;
+  }
+
+  if (typeof obj.content !== "string") {
+    return false;
+  }
+
+  return true;
+}
+
+/**
+ * Client-side source citation format (camelCase)
+ */
+export interface Source {
+  title: string;
+  url?: string;
+  snippet?: string;
+}
+
+/**
+ * Client-side message format (camelCase)
+ */
+export interface ClientMessage {
+  id: string;
+  role: "user" | "assistant" | "system";
+  content: string;
+  timestamp: number;
+  sources?: Source[];
+  thinkingContent?: string;
+  thinkingTokens?: number;
+  modelName?: string;
+}
+
+/**
+ * Transform API message (snake_case) to client message (camelCase)
+ */
+export function transformApiMessageToClient(
+  apiMessage: ApiMessage,
+): ClientMessage {
+  return {
+    id: apiMessage.message_id,
+    role: apiMessage.role,
+    content: apiMessage.content,
+    timestamp: apiMessage.timestamp
+      ? new Date(apiMessage.timestamp).getTime()
+      : 0,
+    sources: apiMessage.sources
+      ? apiMessage.sources.map((s) => ({
+          title: s.title,
+          url: s.url ?? undefined,
+          snippet: s.snippet ?? undefined,
+        }))
+      : undefined,
+    thinkingContent: apiMessage.thinking_content ?? undefined,
+    thinkingTokens: apiMessage.thinking_tokens ?? undefined,
+    modelName: apiMessage.model_name ?? undefined,
+  };
 }

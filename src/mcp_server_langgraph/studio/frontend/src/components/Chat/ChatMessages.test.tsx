@@ -13,12 +13,11 @@
  * - ChatMessages.artifacts.test.tsx       - Code blocks, diagrams, charts
  * - ChatMessages.integration.test.tsx     - Message actions, thinking trace
  * - ChatMessages.suggestions.test.tsx     - AI follow-up suggestions
- * - ChatMessages.agent.test.tsx           - DEPRECATED: See AgentExecutionTracePanel.test.tsx
  *
- * RELATED COMPONENT TESTS:
+ * RELATED COMPONENT TESTS (dedicated test files for sub-components):
  * - AgentExecutionTracePanel.test.tsx (28 tests) - LangGraph visualization, trace AI
- * - MarkdownContent.test.tsx              - Markdown rendering
- * - CodeBlock.test.tsx                    - Syntax highlighting
+ * - MarkdownContent.test.tsx                     - Markdown rendering
+ * - CodeBlock.test.tsx                           - Syntax highlighting
  */
 
 import { describe, it, expect, afterEach, vi } from "vitest";

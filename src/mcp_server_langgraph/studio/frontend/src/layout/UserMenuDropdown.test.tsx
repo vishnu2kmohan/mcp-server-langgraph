@@ -148,7 +148,7 @@ describe("UserMenuDropdown", () => {
       await user.click(screen.getByTestId("menu-item-logout"));
 
       expect(clearAuthTokens).toHaveBeenCalled();
-      expect(mockNavigate).toHaveBeenCalledWith("/login");
+      expect(mockNavigate).toHaveBeenCalledWith("/login", { replace: true });
       expect(onClose).toHaveBeenCalled();
     });
   });

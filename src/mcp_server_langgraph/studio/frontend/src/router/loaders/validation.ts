@@ -46,17 +46,17 @@ interface APISession {
   config?: Record<string, unknown>;
 }
 
-/** API Message format */
+/** API Message format - backend uses message_id and timestamp */
 interface APIMessage {
-  id: string;
+  message_id: string;
   role: "user" | "assistant" | "system";
   content: string;
-  created_at: string;
+  timestamp: string;
 }
 
-/** Sessions API response */
+/** Sessions API response - uses CursorPaginatedResponse format from backend */
 interface SessionsResponse {
-  items: APISession[];
+  data: APISession[];
 }
 
 /** Messages API response */
@@ -170,6 +170,8 @@ const VALID_ROLES = ["user", "assistant", "system"];
 
 /**
  * Validate a message object from the API
+ *
+ * Backend uses: { message_id, role, content, timestamp }
  */
 export function validateMessage(value: unknown): ValidationResult<APIMessage> {
   const errors: ValidationError[] = [];
@@ -181,12 +183,12 @@ export function validateMessage(value: unknown): ValidationResult<APIMessage> {
     };
   }
 
-  // Required: id (string)
-  if (!isString(value.id)) {
+  // Required: message_id (string) - backend uses message_id, not id
+  if (!isString(value.message_id)) {
     errors.push({
-      field: "id",
-      message: "Missing or invalid 'id' field",
-      value: value.id,
+      field: "message_id",
+      message: "Missing or invalid 'message_id' field",
+      value: value.message_id,
     });
   }
 
@@ -208,12 +210,12 @@ export function validateMessage(value: unknown): ValidationResult<APIMessage> {
     });
   }
 
-  // Required: created_at (string)
-  if (!isString(value.created_at)) {
+  // Required: timestamp (string) - backend uses timestamp, not created_at
+  if (!isString(value.timestamp)) {
     errors.push({
-      field: "created_at",
-      message: "Missing or invalid 'created_at' field",
-      value: value.created_at,
+      field: "timestamp",
+      message: "Missing or invalid 'timestamp' field",
+      value: value.timestamp,
     });
   }
 
@@ -267,6 +269,8 @@ export function validateMessages(
 
 /**
  * Validate sessions API response
+ *
+ * Backend uses CursorPaginatedResponse which returns { data: [...], pagination: {...} }
  */
 export function validateSessionsResponse(
   value: unknown,
@@ -278,18 +282,19 @@ export function validateSessionsResponse(
     };
   }
 
-  if (!isArray(value.items)) {
+  // Backend uses 'data' field (CursorPaginatedResponse format)
+  if (!isArray(value.data)) {
     return {
       success: false,
-      errors: [{ field: "items", message: "Missing or invalid 'items' array" }],
+      errors: [{ field: "data", message: "Missing or invalid 'data' array" }],
     };
   }
 
   const validSessions: APISession[] = [];
   const warnings: string[] = [];
 
-  for (let i = 0; i < value.items.length; i++) {
-    const result = validateSession(value.items[i]);
+  for (let i = 0; i < value.data.length; i++) {
+    const result = validateSession(value.data[i]);
     if (result.success) {
       validSessions.push(result.data);
     } else {
@@ -299,7 +304,7 @@ export function validateSessionsResponse(
 
   return {
     success: true,
-    data: { items: validSessions },
+    data: { data: validSessions },
     warnings: warnings.length > 0 ? warnings : undefined,
   };
 }

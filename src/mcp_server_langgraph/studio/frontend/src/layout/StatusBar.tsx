@@ -119,8 +119,9 @@ export function StatusBar({
           <span
             data-testid="connection-indicator"
             role="status"
+            title={`Connection: ${connectionStatus}`}
             className={cn(
-              "w-2 h-2 rounded-full",
+              "w-2 h-2 rounded-full cursor-help",
               connectionStatus === "connected" && "bg-green-500",
               connectionStatus === "disconnected" && "bg-red-500",
               connectionStatus === "connecting" && "bg-yellow-500",
@@ -147,7 +148,8 @@ export function StatusBar({
         {modelName && (
           <span
             data-testid="model-indicator"
-            className="flex items-center gap-1"
+            title={`Model: ${modelName}`}
+            className="flex items-center gap-1 cursor-help"
           >
             <Cpu size={12} aria-hidden="true" />
             <span>{modelName}</span>
@@ -156,7 +158,11 @@ export function StatusBar({
 
         {/* Token count */}
         {tokenCount !== undefined && (
-          <span data-testid="token-count" className="flex items-center gap-1">
+          <span
+            data-testid="token-count"
+            title={`Session token count: ${tokenCount.toLocaleString()}`}
+            className="flex items-center gap-1 cursor-help"
+          >
             <Hash size={12} aria-hidden="true" />
             <span>{tokenCount.toLocaleString()} tokens</span>
           </span>
@@ -166,7 +172,8 @@ export function StatusBar({
         {userName && (
           <span
             data-testid="user-indicator"
-            className="flex items-center gap-1"
+            title={`Current user: ${userName}`}
+            className="flex items-center gap-1 cursor-help"
           >
             <User size={12} aria-hidden="true" />
             <span>{userName}</span>
@@ -193,6 +200,7 @@ export function StatusBar({
             data-testid="agent-queue-toggle"
             type="button"
             onClick={onAgentQueueToggle}
+            title={`Toggle agent task queue (${agentCount} background agents)`}
             aria-label={`Toggle agent task queue (${agentCount} agents)`}
             className={cn(
               "flex items-center gap-1 px-2 py-0.5 rounded",
@@ -211,9 +219,10 @@ export function StatusBar({
           pendingApprovals > 0 &&
           onPendingApprovalsClick && (
             <button
-              data-testid="awaiting-approval-indicator"
+              data-testid="pending-approvals-indicator"
               type="button"
               onClick={onPendingApprovalsClick}
+              title={`${pendingApprovals} pending agent approval${pendingApprovals === 1 ? "" : "s"} - click to review`}
               aria-label={`View ${pendingApprovals} pending agent approval${pendingApprovals === 1 ? "" : "s"}`}
               className={cn(
                 "flex items-center gap-1 px-2 py-0.5 rounded",
@@ -241,6 +250,7 @@ export function StatusBar({
             data-testid="devtools-toggle"
             type="button"
             onClick={onDevToolsToggle}
+            title={`DevTools: ${devToolsCollapsed ? "Open" : "Close"} (⌘⇧I)`}
             aria-label={devToolsCollapsed ? "Open DevTools" : "Close DevTools"}
             aria-pressed={!devToolsCollapsed}
             className={cn(

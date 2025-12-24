@@ -343,7 +343,9 @@
             "group": "Unified Studio",
             "pages": [
               "guides/visual-workflow-builder",
-              "guides/playground"
+              "guides/playground",
+              "guides/studio-feature-flags",
+              "guides/keyboard-shortcuts"
             ]
           },
           {

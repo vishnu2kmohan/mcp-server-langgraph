@@ -20,10 +20,15 @@ import type { CanvasArtifact, ArtifactVersion } from "../../types/artifacts";
 import { getAuthToken } from "../../utils/storage";
 import {
   validateSession,
-  validateMessagesResponse,
+  validateMessages,
   validateSessionsResponse,
 } from "./validation";
 import { devLogger } from "../../utils/devLogger";
+import {
+  transformApiMessageToClient,
+  isApiMessage,
+  type ApiMessage,
+} from "../../utils/apiTransforms";
 
 const logger = devLogger.withPrefix("[canvasLoaders]");
 
@@ -127,7 +132,8 @@ export async function sessionsLoader(
 
   // Use validated API data directly (Session type uses snake_case)
   // Config is optional and may be a partial object from the API
-  const sessions: Session[] = validation.data.items.map((apiSession) => ({
+  // Backend uses CursorPaginatedResponse format with 'data' field
+  const sessions: Session[] = validation.data.data.map((apiSession) => ({
     id: apiSession.id,
     name: apiSession.name || "Untitled",
     status: (apiSession.status as Session["status"]) || "active",
@@ -139,23 +145,8 @@ export async function sessionsLoader(
   return { sessions };
 }
 
-/** API message format (snake_case from backend) */
-interface APIMessage {
-  id: string;
-  role: "user" | "assistant" | "system";
-  content: string;
-  created_at: string;
-}
-
-/** Transform API message to ChatMessage format */
-function toClientMessage(msg: APIMessage): ChatMessage {
-  return {
-    id: msg.id,
-    role: msg.role,
-    content: msg.content,
-    timestamp: new Date(msg.created_at).getTime(),
-  };
-}
+// API message types and transforms are now imported from apiTransforms.ts
+// which uses generated types from the OpenAPI spec
 
 /**
  * Load chat data for a session
@@ -175,11 +166,11 @@ export async function chatLoader({
   }
 
   // Parallel fetch session, messages, and artifacts
+  // Note: Messages endpoint returns a plain array, not { items: [...] }
+  // Artifacts endpoint returns { items: [...], cursor, hasMore }
   const [sessionResult, messagesResult, artifactsResult] = await Promise.all([
     fetchJson<unknown>(`${API_BASE}/sessions/${sessionId}`),
-    fetchJson<{ items: unknown[] }>(
-      `${API_BASE}/sessions/${sessionId}/messages`,
-    ),
+    fetchJson<unknown[]>(`${API_BASE}/sessions/${sessionId}/messages`),
     fetchJson<{ items: CanvasArtifact[] }>(
       `${API_BASE}/artifacts?session_id=${sessionId}&limit=100`,
     ),
@@ -208,11 +199,16 @@ export async function chatLoader({
   }
 
   // Validate messages response
+  // Backend returns a plain array, not { items: [...] }
+  // Uses generated ApiMessage type and transformApiMessageToClient from apiTransforms
   let messages: ChatMessage[] = [];
-  if (messagesResult?.items) {
-    const messagesValidation = validateMessagesResponse(messagesResult);
+  if (Array.isArray(messagesResult)) {
+    const messagesValidation = validateMessages(messagesResult);
     if (messagesValidation.success) {
-      messages = messagesValidation.data.items.map(toClientMessage);
+      // Transform validated API messages to client format
+      messages = messagesValidation.data
+        .filter(isApiMessage)
+        .map((msg) => transformApiMessageToClient(msg as ApiMessage));
       if (messagesValidation.warnings) {
         logger.warn("Message validation warnings", messagesValidation.warnings);
       }

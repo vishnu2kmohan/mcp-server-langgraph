@@ -15,14 +15,70 @@
 export type SortOrder = "asc" | "desc";
 
 /**
- * Generic paginated response wrapper
+ * Cursor-based pagination metadata from backend.
+ *
+ * IMPORTANT: `count` is the number of items in the CURRENT page, NOT total count.
+ * Cursor-based pagination deliberately omits total for efficiency.
+ */
+export interface CursorPaginationMetadata {
+  /** Number of items in current page (NOT total count across all pages) */
+  count: number;
+  /** Whether there is a next page */
+  has_next: boolean;
+  /** Whether there is a previous page */
+  has_prev: boolean;
+  /** Cursor for the next page (null if on last page) */
+  next_cursor?: string | null;
+  /** Cursor for the previous page (null if on first page) */
+  prev_cursor?: string | null;
+}
+
+/**
+ * Backend cursor-paginated response format.
+ * This is the raw response from the API before transformation.
+ */
+export interface BackendCursorPaginatedResponse<T> {
+  /** Array of items for the current page */
+  data: T[];
+  /** Cursor pagination metadata */
+  pagination: CursorPaginationMetadata;
+}
+
+/**
+ * Frontend-friendly cursor-paginated response.
+ * Transformed from BackendCursorPaginatedResponse for easier use in components.
+ *
+ * @deprecated Use `CursorPaginatedFrontendResponse` for new code.
+ * Legacy components may still use `items`, `total`, `limit`, `next_cursor`.
  */
 export interface PaginatedResponse<T> {
   items: T[];
-  total: number;
+  /** @deprecated Cursor pagination does not provide total. Use `count` instead. */
+  total?: number;
   limit: number;
   cursor?: string;
   next_cursor?: string;
+}
+
+/**
+ * Cursor-paginated frontend response with full pagination access.
+ * Preserves raw pagination for components needing direct cursor access.
+ */
+export interface CursorPaginatedFrontendResponse<T> {
+  /** Array of items for the current page */
+  items: T[];
+  /** Raw pagination metadata for components needing cursor access */
+  pagination: CursorPaginationMetadata;
+  /** Number of items in current page (NOT total count) */
+  count: number;
+  /** Whether there is a next page */
+  hasNext: boolean;
+  /** Whether there is a previous page */
+  hasPrev: boolean;
+  /** Cursor for the next page (undefined if on last page) */
+  nextCursor?: string;
+  /** Cursor for the previous page (undefined if on first page) */
+  prevCursor?: string;
 }
 
 /**
@@ -1496,27 +1552,36 @@ export interface RejectAgentRequestParams {
 
 /**
  * Parameters for respond to clarification mutation
+ *
+ * Backend expects (from agent_requests.py ClarificationResponseRequest):
+ * - responded_by: Required - email/ID of responder
+ * - response_type: Required - type of response
+ * - value: For text responses (NOT text_response)
+ * - selected_option_id: For choice responses (NOT selected_option)
+ * - confirmed: For confirmation responses
  */
 export interface RespondAgentRequestParams {
   request_id: string;
+  responded_by: string;
   response_type: "choice" | "text" | "confirm";
-  selected_option?: string;
-  text_response?: string;
+  value?: string;
+  selected_option_id?: string;
   confirmed?: boolean;
 }
 
 /**
  * Parameters for batch operations
+ *
+ * NOTE: approved_by/rejected_by are NOT included - backend derives from auth
+ * See: src/mcp_server_langgraph/api/v1/agent_requests.py BatchApproveRequest
  */
 export interface BatchApproveAgentRequestParams {
   request_ids: string[];
-  approved_by: string;
   reason?: string;
 }
 
 export interface BatchRejectAgentRequestParams {
   request_ids: string[];
-  rejected_by: string;
   reason?: string;
 }
 

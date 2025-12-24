@@ -1,9 +1,19 @@
 /**
  * useBatchApprovals Hook
  *
- * Hook for batch approving or rejecting multiple agent HITL requests.
+ * @deprecated Use RTK Query mutations from `api/index.ts` instead:
+ *   - `useBatchApproveRequestsMutation` for batch approvals
+ *   - `useBatchRejectRequestsMutation` for batch rejections
  *
- * Features:
+ * The RTK Query approach provides:
+ *   - Automatic cache invalidation
+ *   - Consistent error handling via RTK Query middleware
+ *   - No need for manual token handling (handled by baseQuery)
+ *   - Integration with Redux store for loading/error states
+ *
+ * This hook remains for backwards compatibility but is not actively maintained.
+ *
+ * Original Features:
  * - Batch approve multiple requests
  * - Batch reject multiple requests
  * - Loading states for each operation
@@ -65,6 +75,11 @@ const API_BASE =
 // Hook
 // =============================================================================
 
+/**
+ * @deprecated Use RTK Query mutations instead:
+ * - `useBatchApproveRequestsMutation`
+ * - `useBatchRejectRequestsMutation`
+ */
 export function useBatchApprovals(): UseBatchApprovalsReturn {
   const [isApproving, setIsApproving] = useState(false);
   const [isRejecting, setIsRejecting] = useState(false);

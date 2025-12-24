@@ -18,13 +18,16 @@ import canvasReducer from "../store/slices/canvasSlice";
 import personaReducer from "../store/slices/personaSlice";
 import type { ReactNode } from "react";
 
-// Mock navigate
+// Mock navigate and location
 const mockNavigate = vi.fn();
+let mockLocation = { pathname: "/studio/chat" };
+
 vi.mock("react-router", async () => {
   const actual = await vi.importActual("react-router");
   return {
     ...actual,
     useNavigate: () => mockNavigate,
+    useLocation: () => mockLocation,
   };
 });
 
@@ -82,6 +85,8 @@ function createWrapper(store: ReturnType<typeof createTestStore>) {
 describe("ActivityBar", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    // Reset mock location to default
+    mockLocation = { pathname: "/studio/chat" };
   });
 
   afterEach(() => {
@@ -300,6 +305,90 @@ describe("ActivityBar", () => {
       render(<ActivityBar enableAI={true} />, {
         wrapper: createWrapper(store),
       });
+      expect(screen.getByTestId("nav-chat")).toBeInTheDocument();
+    });
+  });
+
+  describe("Route Synchronization", () => {
+    it("should sync activeNavItem with current route on mount", () => {
+      // Set location to workflows before render
+      mockLocation = { pathname: "/studio/workflows" };
+
+      const store = createTestStore();
+      render(<ActivityBar />, { wrapper: createWrapper(store) });
+
+      // After render, the workflows nav item should be highlighted
+      const workflowsButton = screen.getByTestId("nav-workflows");
+      expect(workflowsButton).toHaveClass("bg-primary-100");
+    });
+
+    it("should handle deep links correctly (e.g., /studio/workflows)", () => {
+      // Test with a deep link path
+      mockLocation = { pathname: "/studio/agents" };
+
+      const store = createTestStore();
+      render(<ActivityBar />, { wrapper: createWrapper(store) });
+
+      // Agents should be highlighted, not chat (default)
+      const agentsButton = screen.getByTestId("nav-agents");
+      expect(agentsButton).toHaveClass("bg-primary-100");
+
+      const chatButton = screen.getByTestId("nav-chat");
+      expect(chatButton).not.toHaveClass("bg-primary-100");
+    });
+
+    it("should handle deep links with sub-paths", () => {
+      // Test with a path that has additional segments
+      mockLocation = { pathname: "/studio/chat/session-123" };
+
+      const store = createTestStore();
+      render(<ActivityBar />, { wrapper: createWrapper(store) });
+
+      // Chat should be highlighted (prefix match)
+      const chatButton = screen.getByTestId("nav-chat");
+      expect(chatButton).toHaveClass("bg-primary-100");
+    });
+
+    it("should ignore unknown routes (doesn't set activeNavItem to invalid value)", () => {
+      // Set location to an unknown route not in NAV_ITEMS
+      mockLocation = { pathname: "/studio/unknown-route" };
+
+      const store = createTestStore();
+      render(<ActivityBar />, { wrapper: createWrapper(store) });
+
+      // No nav item should be highlighted (or default remains)
+      // Since no match, activeNavItem should remain as initial state
+      expect(screen.getByTestId("activity-bar")).toBeInTheDocument();
+    });
+
+    it("should respect persona filtering when syncing routes", () => {
+      // User persona has limited access (no admin)
+      mockLocation = { pathname: "/studio/admin" };
+
+      const store = configureStore({
+        reducer: {
+          canvas: canvasReducer,
+          persona: personaReducer,
+        },
+        preloadedState: {
+          persona: {
+            persona: "user",
+            subPersona: "bob",
+            username: "bob",
+            email: "bob@example.com",
+            permissions: [],
+            isPersonaLoading: false,
+          },
+        },
+      });
+
+      render(<ActivityBar />, { wrapper: createWrapper(store) });
+
+      // Admin button should not exist (filtered by persona)
+      expect(screen.queryByTestId("nav-admin")).not.toBeInTheDocument();
+
+      // Even though URL is /studio/admin, it shouldn't crash
+      // and chat should remain as default since admin is not allowed
       expect(screen.getByTestId("nav-chat")).toBeInTheDocument();
     });
   });

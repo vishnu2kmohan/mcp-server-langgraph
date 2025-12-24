@@ -298,6 +298,11 @@ class FeatureFlags(BaseSettings):
         description="Enable streaming suggestions via SSE for real-time response",
     )
 
+    enable_ai_suggestions_websocket: bool = Field(
+        default=True,
+        description="Enable AI suggestions WebSocket endpoint (/api/v1/ws/ai/suggestions). Requires enable_ai_suggestions=true.",
+    )
+
     enable_personalized_suggestions: bool = Field(
         default=True,
         description="Enable personalized suggestions based on conversation history",
@@ -1139,6 +1144,7 @@ class FeatureFlags(BaseSettings):
             "observability": self.enable_observability_ui,
             "code_export": self.enable_code_export,
             "ai_suggestions": self.enable_ai_suggestions,
+            "ai_suggestions_websocket": self.enable_ai_suggestions_websocket,
             "llm_suggestions": self.enable_llm_suggestions,
             "notification_preferences": self.enable_notification_preferences,
             "mcp_websocket": self.enable_mcp_websocket,

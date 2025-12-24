@@ -12,8 +12,8 @@
  * - AI-powered navigation predictions (Sprint 6)
  */
 /* eslint-disable react-refresh/only-export-components -- Exports NavItem types and constants alongside component */
-import { useCallback, useMemo } from "react";
-import { useNavigate } from "react-router";
+import { useCallback, useMemo, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router";
 import {
   MessageSquare,
   GitBranch,
@@ -143,10 +143,32 @@ export function ActivityBar({
 }: ActivityBarProps) {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
+  const location = useLocation();
   const activeNavItem = useAppSelector(selectActiveNavItem);
 
   // RBAC: Get allowed sidebar items from persona slice (deny-by-default)
   const allowedItems = useAppSelector(selectSidebarItems);
+
+  // Sync activeNavItem with current route (fixes deep-linking/browser navigation)
+  useEffect(() => {
+    const allItems = [...NAV_ITEMS, ...BOTTOM_ITEMS];
+    const matchedItem = allItems.find(
+      (item) => item.path && location.pathname.startsWith(item.path),
+    );
+
+    // Only sync if:
+    // 1. We found a matching nav item
+    // 2. It's different from current active item
+    // 3. It's visible to the current persona (in allowedItems)
+    if (
+      matchedItem &&
+      matchedItem.id !== activeNavItem &&
+      allowedItems.includes(matchedItem.id)
+    ) {
+      dispatch(setActiveNavItem(matchedItem.id));
+    }
+    // Note: Unknown routes (e.g., /studio/projects) don't change activeNavItem
+  }, [location.pathname, activeNavItem, allowedItems, dispatch]);
 
   // AI Navigation Predictions (Sprint 6)
   const { predictedItems, isLoading: predictionsLoading } = useNavPrediction({

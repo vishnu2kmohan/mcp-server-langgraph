@@ -49,6 +49,8 @@ export interface CanvasState {
   selectedArtifactId: string | null;
   /** User preferences */
   preferences: CanvasPreferences;
+  /** Focus/Zen mode: Hide TopBar, StatusBar, ActivityBar for distraction-free experience */
+  focusModeEnabled: boolean;
 }
 
 // =============================================================================
@@ -83,6 +85,7 @@ const initialState: CanvasState = {
   activeNavItem: "chat",
   selectedArtifactId: null,
   preferences: defaultPreferences,
+  focusModeEnabled: false,
   ...loadFromStorage(),
 };
 
@@ -135,6 +138,22 @@ const canvasSlice = createSlice({
     },
 
     /**
+     * Toggle focus/zen mode (hides TopBar, StatusBar, ActivityBar)
+     */
+    toggleFocusMode(state) {
+      state.focusModeEnabled = !state.focusModeEnabled;
+      persistState(state);
+    },
+
+    /**
+     * Set focus mode state
+     */
+    setFocusModeEnabled(state, action: PayloadAction<boolean>) {
+      state.focusModeEnabled = action.payload;
+      persistState(state);
+    },
+
+    /**
      * Set active navigation item in ActivityBar
      */
     setActiveNavItem(state, action: PayloadAction<string>) {
@@ -183,6 +202,7 @@ function persistState(state: CanvasState): void {
     sessionNavCollapsed: state.sessionNavCollapsed,
     canvasCollapsed: state.canvasCollapsed,
     preferences: state.preferences,
+    focusModeEnabled: state.focusModeEnabled,
   };
   storage.set(CANVAS_STORAGE_KEY, toStore);
 }
@@ -207,6 +227,8 @@ export const selectSelectedArtifactId = (state: StateWithCanvas) =>
   state.canvas.selectedArtifactId;
 export const selectPreferences = (state: StateWithCanvas) =>
   state.canvas.preferences;
+export const selectFocusModeEnabled = (state: StateWithCanvas) =>
+  state.canvas.focusModeEnabled;
 
 // =============================================================================
 // Exports
@@ -218,6 +240,8 @@ export const {
   setSessionNavCollapsed,
   toggleCanvas,
   setCanvasCollapsed,
+  toggleFocusMode,
+  setFocusModeEnabled,
   setActiveNavItem,
   setSelectedArtifactId,
   setPreferences,

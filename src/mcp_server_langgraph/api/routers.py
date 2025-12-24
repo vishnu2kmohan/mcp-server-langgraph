@@ -35,9 +35,6 @@ def register_default_routers(registry: RouterRegistry) -> None:
     )
     from mcp_server_langgraph.api.metrics import router as metrics_router
     from mcp_server_langgraph.api.v1 import v1_router
-    from mcp_server_langgraph.api.v1.notification_websocket import (
-        router as notification_ws_router,
-    )
 
     # Health check first (doesn't require auth)
     registry.register(health_router, tags=["health"])
@@ -59,8 +56,7 @@ def register_default_routers(registry: RouterRegistry) -> None:
     # Unified v1 API (BFF architecture)
     registry.register(v1_router, prefix="/api/v1", tags=["v1"])
 
-    # Notification WebSocket (at /ws/notifications for frontend compatibility)
-    registry.register(notification_ws_router, prefix="/ws", tags=["notifications"])
+    # Note: Notification WebSocket now consolidated under /api/v1/ws/notifications (ADR-0068)
 
     # OAuth 2.0 Protected Resource Metadata (RFC 9728 / MCP 2025-11-25)
     # This enables OAuth clients to discover authorization servers

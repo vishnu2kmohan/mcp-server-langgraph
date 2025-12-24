@@ -488,6 +488,29 @@ jobs:
     - name: Install dependencies
       run: npm ci
 
+    - name: Validate OpenAPI types are current
+      run: |
+        echo "🔍 Validating generated-api.ts is in sync with api/openapi.json..."
+        npm run generate-types
+        if git diff --exit-code src/types/generated-api.ts; then
+          echo "✅ generated-api.ts is up to date"
+        else
+          echo ""
+          echo "::error::generated-api.ts is out of sync with api/openapi.json"
+          echo ""
+          echo "The generated TypeScript types do not match the OpenAPI specification."
+          echo "This can happen when:"
+          echo "  - Backend API schemas were modified"
+          echo "  - OpenAPI spec was regenerated"
+          echo "  - Types were manually edited (don't do this!)"
+          echo ""
+          echo "To fix, run locally:"
+          echo "  cd src/mcp_server_langgraph/studio/frontend && npm run generate-types"
+          echo ""
+          git diff src/types/generated-api.ts | head -50
+          exit 1
+        fi
+
     - name: Run linting
       run: npm run lint
 
@@ -519,6 +542,14 @@ jobs:
 
     - name: Install Playwright browsers
       run: npx playwright install --with-deps chromium
+
+    - name: Run CI preflight contract checks
+      run: |
+        echo "🔍 Running CI preflight contract validation..."
+        chmod +x scripts/ci-preflight.sh
+        ./scripts/ci-preflight.sh --skip-types || {
+          echo "::warning::Some preflight checks had issues. Review output above."
+        }
 
     - name: Run Playwright e2e tests
       run: npm run test:e2e

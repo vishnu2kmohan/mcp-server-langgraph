@@ -340,9 +340,10 @@ export function useHITLDialogs(): UseHITLDialogsReturn {
       try {
         await respondRequest({
           request_id: response.request_id,
+          responded_by: response.responded_by,
           response_type: response.response_type,
-          selected_option: response.selected_option,
-          text_response: response.text_response,
+          value: response.value,
+          selected_option_id: response.selected_option_id,
           confirmed: response.confirmed,
         }).unwrap();
 

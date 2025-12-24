@@ -13,7 +13,7 @@ export interface paths {
     };
     /**
      * Root
-     * @description Root endpoint redirects to Studio UI
+     * @description Root endpoint with server info
      */
     get: operations["root__get"];
     put?: never;
@@ -24,7 +24,119 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  "/.well-known/oauth-protected-resource": {
+  "/auth/login": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Login
+     * @description Authenticate user and return JWT token
+     *
+     *     This endpoint accepts username and password, validates credentials,
+     *     and returns a JWT token that can be used for subsequent tool calls.
+     *
+     *     The token should be included in the 'token' field of all tool call requests.
+     *
+     *     Example:
+     *         POST /auth/login
+     *         {
+     *             "username": "your-username",
+     *             "password": "your-secure-password"
+     *         }
+     *
+     *         Response:
+     *         {
+     *             "access_token": "eyJ...",
+     *             "token_type": "bearer",
+     *             "expires_in": 3600,
+     *             "user_id": "user:your-username",
+     *             "username": "your-username",
+     *             "roles": ["user"]
+     *         }
+     *
+     *         Note: InMemoryUserProvider no longer seeds default users (v2.8.0+).
+     *         Create users explicitly via provider.add_user() for testing.
+     */
+    post: operations["login_auth_login_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/auth/refresh": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Refresh Token
+     * @description Refresh authentication token
+     *
+     *     Supports two refresh methods:
+     *     1. Keycloak: Uses refresh_token to get new access token
+     *     2. InMemory: Validates current token and issues new one
+     *
+     *     Example (Keycloak):
+     *         POST /auth/refresh
+     *         {
+     *             "refresh_token": "eyJ..."
+     *         }
+     *
+     *     Example (InMemory):
+     *         POST /auth/refresh
+     *         {
+     *             "current_token": "eyJ..."
+     *         }
+     *
+     *     Response:
+     *         {
+     *             "access_token": "eyJ...",
+     *             "token_type": "bearer",
+     *             "expires_in": 3600,
+     *             "refresh_token": "eyJ..."  // Keycloak only
+     *         }
+     */
+    post: operations["refresh_token_auth_refresh_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/message": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Handle Message
+     * @description Handle MCP messages via StreamableHTTP POST
+     *
+     *     This is the main endpoint for MCP protocol messages.
+     *     Supports both regular and streaming responses.
+     */
+    post: operations["handle_message_message_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/tools": {
     parameters: {
       query?: never;
       header?: never;
@@ -32,18 +144,3792 @@ export interface paths {
       cookie?: never;
     };
     /**
-     * Protected Resource Metadata
-     * @description OAuth 2.0 Protected Resource Metadata per RFC 9728
+     * List Tools
+     * @description List available tools (convenience endpoint)
      */
-    get: operations["get_protected_resource_metadata__well_known_oauth_protected_resource_get"];
+    get: operations["list_tools_tools_get"];
     put?: never;
     post?: never;
     delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/resources": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
     /**
-     * Options Protected Resource Metadata
-     * @description Handle CORS preflight requests.
+     * List Resources
+     * @description List available resources (convenience endpoint)
      */
-    options: operations["options_protected_resource_metadata__well_known_oauth_protected_resource_options"];
+    get: operations["list_resources_resources_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/metrics": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Root Metrics
+     * @description Root-level Prometheus metrics endpoint.
+     *
+     *     Alloy scrapes /metrics by default. This endpoint redirects to the
+     *     health app's metrics endpoint for consistency.
+     */
+    get: operations["root_metrics_metrics_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/health": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Health Check
+     * @description Check the health status of all critical systems
+     */
+    get: operations["health_check_api_v1_health_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/health/live": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Liveness Probe
+     * @description Lightweight check that app is responsive (K8s livenessProbe)
+     */
+    get: operations["liveness_probe_api_v1_health_live_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/health/startup": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Startup Probe
+     * @description Check if app has completed initialization (K8s startupProbe)
+     */
+    get: operations["startup_probe_api_v1_health_startup_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/health/ready": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Readiness Probe
+     * @description Check if all dependencies are healthy (K8s readinessProbe)
+     */
+    get: operations["readiness_probe_api_v1_health_ready_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/health/deps": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Dependency Status
+     * @description Detailed dependency health status with latency metrics
+     */
+    get: operations["dependency_status_api_v1_health_deps_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/api-keys/": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List Api Keys
+     * @description List all API keys for the current user
+     *
+     *     Returns metadata for all keys (name, created, expires, last_used).
+     *     Does not include the actual API keys.
+     */
+    get: operations["list_api_keys_api_v1_api_keys__get"];
+    put?: never;
+    /**
+     * Create Api Key
+     * @description Create a new API key for the current user
+     *
+     *     Creates a cryptographically secure API key with bcrypt hashing.
+     *     **Save the returned api_key securely** - it will not be shown again.
+     *
+     *     Maximum 5 keys per user. Revoke an existing key before creating more.
+     *
+     *     Example:
+     *         ```json
+     *         {
+     *             "name": "Production API Key",
+     *             "expires_days": 365
+     *         }
+     *         ```
+     */
+    post: operations["create_api_key_api_v1_api_keys__post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/api-keys/{key_id}/rotate": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Rotate Api Key
+     * @description Rotate an API key
+     *
+     *     Generates a new API key while keeping the same key_id.
+     *     The old key is invalidated immediately.
+     *
+     *     **Save the new_api_key securely** - update your client configuration.
+     */
+    post: operations["rotate_api_key_api_v1_api_keys__key_id__rotate_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/api-keys/{key_id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    /**
+     * Revoke Api Key
+     * @description Revoke an API key
+     *
+     *     Permanently deletes the API key. This action cannot be undone.
+     *     Any clients using this key will immediately lose access.
+     */
+    delete: operations["revoke_api_key_api_v1_api_keys__key_id__delete"];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/service-principals/": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List Service Principals
+     * @description List service principals owned by the current user
+     *
+     *     Returns all service principals where the current user is the owner.
+     *     Does not include client secrets.
+     */
+    get: operations["list_service_principals_api_v1_service_principals__get"];
+    put?: never;
+    /**
+     * Create Service Principal
+     * @description Create a new service principal
+     *
+     *     Creates a service principal with the specified authentication mode.
+     *     The calling user becomes the owner of the service principal.
+     *
+     *     Returns the created service principal with credentials (client_secret).
+     *     **Save the client_secret securely** - it will not be shown again.
+     *
+     *     Example:
+     *         ```json
+     *         {
+     *             "name": "Batch ETL Job",
+     *             "description": "Nightly data processing",
+     *             "authentication_mode": "client_credentials",
+     *             "associated_user_id": "user:alice",
+     *             "inherit_permissions": true
+     *         }
+     *         ```
+     */
+    post: operations["create_service_principal_api_v1_service_principals__post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/service-principals/{service_id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Service Principal
+     * @description Get details of a specific service principal
+     *
+     *     Returns service principal details if the current user is the owner.
+     */
+    get: operations["get_service_principal_api_v1_service_principals__service_id__get"];
+    put?: never;
+    post?: never;
+    /**
+     * Delete Service Principal
+     * @description Delete a service principal
+     *
+     *     Permanently deletes the service principal from Keycloak and OpenFGA.
+     *     This action cannot be undone.
+     */
+    delete: operations["delete_service_principal_api_v1_service_principals__service_id__delete"];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/service-principals/{service_id}/rotate-secret": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Rotate Service Principal Secret
+     * @description Rotate service principal secret
+     *
+     *     Generates a new client secret for the service principal.
+     *     The old secret will be invalidated immediately.
+     *
+     *     **Save the new client_secret securely** - update your service configuration
+     *     before the old secret expires.
+     */
+    post: operations["rotate_service_principal_secret_api_v1_service_principals__service_id__rotate_secret_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/service-principals/{service_id}/associate-user": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Associate Service Principal With User
+     * @description Associate service principal with a user for permission inheritance
+     *
+     *     Links a service principal to a user, optionally enabling permission inheritance.
+     *     When inherit_permissions is true, the service principal can act on behalf of
+     *     the user and inherit all their permissions.
+     */
+    post: operations["associate_service_principal_with_user_api_v1_service_principals__service_id__associate_user_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/users/me/data": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get User Data
+     * @description Export all user data (GDPR Article 15 - Right to Access)
+     *
+     *     Returns all personal data associated with the authenticated user.
+     *
+     *     **GDPR Article 15**: The data subject shall have the right to obtain from the
+     *     controller confirmation as to whether or not personal data concerning him or
+     *     her are being processed, and access to the personal data.
+     *
+     *     **Response**: Complete JSON export of all user data including:
+     *     - User profile
+     *     - Sessions
+     *     - Conversations
+     *     - Preferences
+     *     - Audit log
+     *     - Consents
+     */
+    get: operations["get_user_data_api_v1_users_me_data_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/users/me/export": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Export User Data
+     * @description Export user data in portable format (GDPR Article 20 - Right to Data Portability)
+     *
+     *     **GDPR Article 20**: The data subject shall have the right to receive the personal
+     *     data concerning him or her in a structured, commonly used and machine-readable format.
+     *
+     *     **Query Parameters**:
+     *     - `format`: Export format (json or csv)
+     *
+     *     **Response**: File download in requested format
+     */
+    get: operations["export_user_data_api_v1_users_me_export_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/users/me": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    /**
+     * Delete User Account
+     * @description Delete user account and all data (GDPR Article 17 - Right to Erasure)
+     *
+     *     **WARNING**: This is an irreversible operation that permanently deletes all user data.
+     *
+     *     **GDPR Article 17**: The data subject shall have the right to obtain from the
+     *     controller the erasure of personal data concerning him or her without undue delay.
+     *
+     *     **Query Parameters**:
+     *     - `confirm`: Must be set to `true` to confirm deletion
+     *
+     *     **What gets deleted**:
+     *     - User profile and account
+     *     - All sessions
+     *     - All conversations and messages
+     *     - All preferences and settings
+     *     - All authorization tuples
+     *
+     *     **What gets anonymized** (retained for compliance):
+     *     - Audit logs (user_id replaced with hash)
+     *
+     *     **Response**: Deletion result with details
+     */
+    delete: operations["delete_user_account_api_v1_users_me_delete"];
+    options?: never;
+    head?: never;
+    /**
+     * Update User Profile
+     * @description Update user profile (GDPR Article 16 - Right to Rectification)
+     *
+     *     **GDPR Article 16**: The data subject shall have the right to obtain from the
+     *     controller without undue delay the rectification of inaccurate personal data
+     *     concerning him or her.
+     *
+     *     **Request Body**: Profile fields to update (only provided fields are updated)
+     *
+     *     **Response**: Updated user profile
+     */
+    patch: operations["update_user_profile_api_v1_users_me_patch"];
+    trace?: never;
+  };
+  "/api/v1/users/me/consent": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Consent Status
+     * @description Get current consent status (GDPR Article 21 - Right to Object)
+     *
+     *     Returns all consent preferences for the authenticated user.
+     *
+     *     **Response**: Current consent status for all consent types
+     */
+    get: operations["get_consent_status_api_v1_users_me_consent_get"];
+    put?: never;
+    /**
+     * Update Consent
+     * @description Update user consent preferences (GDPR Article 21 - Right to Object)
+     *
+     *     **GDPR Article 21**: The data subject shall have the right to object at any time
+     *     to processing of personal data concerning him or her.
+     *
+     *     **Request Body**: Consent type and whether it's granted
+     *
+     *     **Response**: Current consent status for all types
+     */
+    post: operations["update_consent_api_v1_users_me_consent_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/scim/v2/Users": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List Users
+     * @description List/search users (SCIM 2.0)
+     *
+     *     Supports SCIM filtering with 'eq' (equals) and 'sw' (startsWith) operators:
+     *     - userName eq "alice" - exact match
+     *     - userName sw "ali" - prefix match
+     *     - email eq "alice@example.com" - exact match
+     *     - email sw "alice@" - prefix match
+     */
+    get: operations["list_users_scim_v2_Users_get"];
+    put?: never;
+    /**
+     * Create User
+     * @description Create a new user (SCIM 2.0)
+     *
+     *     Provisions user in Keycloak and syncs roles to OpenFGA.
+     *
+     *     Example:
+     *         ```json
+     *         {
+     *             "schemas": ["urn:ietf:params:scim:schemas:core:2.0:User"],
+     *             "userName": "alice@example.com",
+     *             "name": {
+     *                 "givenName": "Alice",
+     *                 "familyName": "Smith"
+     *             },
+     *             "emails": [{
+     *                 "value": "alice@example.com",
+     *                 "primary": true
+     *             }],
+     *             "active": true
+     *         }
+     *         ```
+     */
+    post: operations["create_user_scim_v2_Users_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/scim/v2/Users/{user_id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get User
+     * @description Get user by ID (SCIM 2.0)
+     *
+     *     Returns user in SCIM format.
+     */
+    get: operations["get_user_scim_v2_Users__user_id__get"];
+    /**
+     * Replace User
+     * @description Replace user (SCIM 2.0 PUT)
+     *
+     *     Replaces entire user resource.
+     */
+    put: operations["replace_user_scim_v2_Users__user_id__put"];
+    post?: never;
+    /**
+     * Delete User
+     * @description Delete (deactivate) user (SCIM 2.0)
+     *
+     *     Deactivates user in Keycloak and removes OpenFGA tuples.
+     */
+    delete: operations["delete_user_scim_v2_Users__user_id__delete"];
+    options?: never;
+    head?: never;
+    /**
+     * Update User
+     * @description Update user with PATCH operations (SCIM 2.0)
+     *
+     *     Supports add, remove, replace operations.
+     *
+     *     Example:
+     *         ```json
+     *         {
+     *             "schemas": ["urn:ietf:params:scim:api:messages:2.0:PatchOp"],
+     *             "Operations": [
+     *                 {
+     *                     "op": "replace",
+     *                     "path": "active",
+     *                     "value": false
+     *                 }
+     *             ]
+     *         }
+     *         ```
+     */
+    patch: operations["update_user_scim_v2_Users__user_id__patch"];
+    trace?: never;
+  };
+  "/scim/v2/Groups": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Create Group
+     * @description Create a new group (SCIM 2.0)
+     *
+     *     Example:
+     *         ```json
+     *         {
+     *             "schemas": ["urn:ietf:params:scim:schemas:core:2.0:Group"],
+     *             "displayName": "Engineering",
+     *             "members": [
+     *                 {"value": "user-id-123", "display": "Alice Smith"}
+     *             ]
+     *         }
+     *         ```
+     */
+    post: operations["create_group_scim_v2_Groups_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/scim/v2/Groups/{group_id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Group
+     * @description Get group by ID (SCIM 2.0)
+     */
+    get: operations["get_group_scim_v2_Groups__group_id__get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/studio/workflows": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List Workflows
+     * @description List all workflows for the current user.
+     *
+     *     Returns all workflows owned by the authenticated user.
+     */
+    get: operations["list_workflows_api_v1_studio_workflows_get"];
+    put?: never;
+    /**
+     * Create Workflow
+     * @description Create a new workflow.
+     *
+     *     Creates a new workflow for the authenticated user.
+     *     Delegates to the unified workflow storage layer.
+     *
+     *     Example:
+     *         ```json
+     *         {
+     *             "name": "My Chatbot",
+     *             "description": "A simple chatbot workflow",
+     *             "nodes": [{"id": "input", "type": "input", "data": {}}],
+     *             "edges": []
+     *         }
+     *         ```
+     */
+    post: operations["create_workflow_api_v1_studio_workflows_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/studio/workflows/{workflow_id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Workflow
+     * @description Get a workflow by ID.
+     *
+     *     Returns the workflow if the user has access.
+     */
+    get: operations["get_workflow_api_v1_studio_workflows__workflow_id__get"];
+    /**
+     * Update Workflow
+     * @description Update an existing workflow.
+     *
+     *     Only the workflow owner can update it.
+     */
+    put: operations["update_workflow_api_v1_studio_workflows__workflow_id__put"];
+    post?: never;
+    /**
+     * Delete Workflow
+     * @description Delete a workflow.
+     *
+     *     Permanently deletes the workflow. This action cannot be undone.
+     */
+    delete: operations["delete_workflow_api_v1_studio_workflows__workflow_id__delete"];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/studio/templates": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List Templates
+     * @description List all available workflow templates.
+     *
+     *     Returns all built-in templates that can be used as starting points.
+     */
+    get: operations["list_templates_api_v1_studio_templates_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/studio/templates/recommend": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Recommend Templates
+     * @description Get template recommendations based on description.
+     *
+     *     Uses semantic similarity to find templates matching the description.
+     */
+    post: operations["recommend_templates_api_v1_studio_templates_recommend_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/metrics/heart": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Submit HEART Metrics
+     * @description Submit a batch of HEART framework metrics
+     */
+    post: operations["submit_heart_metrics_api_v1_metrics_heart_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/metrics/events": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Submit Feature Events
+     * @description Submit a batch of feature usage events
+     */
+    post: operations["submit_events_api_v1_metrics_events_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/metrics/heart/aggregate": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Aggregated HEART Metrics
+     * @description Get aggregated HEART metrics for a time period
+     */
+    get: operations["get_aggregate_metrics_api_v1_metrics_heart_aggregate_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/metrics/dashboard": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Dashboard Data
+     * @description Get all metrics data for admin dashboard
+     */
+    get: operations["get_dashboard_api_v1_metrics_dashboard_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/metrics/feedback": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Submit User Feedback
+     * @description Submit NPS/CSAT user feedback
+     */
+    post: operations["submit_feedback_api_v1_metrics_feedback_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/features": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Features
+     * @description Get UI feature availability based on user role.
+     *
+     *     Returns a dictionary of feature names to boolean enabled status.
+     *     Admins get access to all features, while regular users may have
+     *     restricted access to certain features (e.g., cost dashboard).
+     *
+     *     Args:
+     *         role: User role for determining feature access.
+     *
+     *     Returns:
+     *         Dictionary mapping feature names to their enabled status.
+     *
+     *     Example Response:
+     *         {
+     *             "workflows": true,
+     *             "sessions": true,
+     *             "cost_dashboard": false,
+     *             "observability": true,
+     *             "code_export": true,
+     *             "ai_suggestions": true,
+     *             "mcp_websocket": false,
+     *             "interactive_artifacts": true
+     *         }
+     */
+    get: operations["get_features_api_v1_features_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/me": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Me
+     * @description Get current authenticated user information.
+     *
+     *     Returns the current user's info including:
+     *     - user_id: OpenFGA-compatible user ID
+     *     - username: Display username
+     *     - email: Email address (if available)
+     *     - roles: Keycloak roles
+     *     - persona: Computed persona for frontend RBAC (admin/developer/user)
+     *     - sub_persona: Selected sub-persona variant (Sprint 4)
+     *     - visible_modules: Modules accessible to this persona (Sprint 4)
+     *     - feature_flags: Feature flags for this user (Sprint 4)
+     *     - api_version: API version for client compatibility (Sprint 4)
+     *
+     *     The frontend uses this endpoint on mount to:
+     *     1. Detect user's persona based on roles
+     *     2. Configure sidebar navigation items
+     *     3. Set up route access control
+     */
+    get: operations["get_me_api_v1_me_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/me/preferences": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    /**
+     * Update Persona Preferences
+     * @description Update persona-related preferences.
+     *
+     *     Allows users to:
+     *     - Switch their sub-persona (within allowed options for their base persona)
+     *     - Update feature flags
+     *
+     *     The sub_persona must be valid for the user's base persona:
+     *     - admin: can use admin, security-admin, auditor, alice-*, bob, compliance-officer
+     *     - developer: can use alice-*, bob, compliance-officer
+     *     - user: can use bob, compliance-officer
+     *
+     *     Returns the full UserInfoResponse with updated values.
+     */
+    patch: operations["update_persona_preferences_api_v1_me_preferences_patch"];
+    trace?: never;
+  };
+  "/api/v1/login": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Login
+     * @deprecated
+     * @description DEPRECATED: Authenticate user with username and password (ROPC flow).
+     *
+     *     WARNING: This endpoint uses Resource Owner Password Credentials (ROPC) grant type,
+     *     which is deprecated per RFC 9700 (OAuth 2.0 Security Best Practice).
+     *
+     *     Migration: Use GET /api/v1/auth/login for OAuth2 Authorization Code + PKCE flow.
+     *     This endpoint will be removed in a future major version.
+     *
+     *     Uses Keycloak's Resource Owner Password Credentials (ROPC) grant type
+     *     to exchange credentials for tokens without requiring browser redirect.
+     *
+     *     Note: This requires the Keycloak client to have "Direct Access Grants" enabled.
+     *
+     *     Returns:
+     *         LoginResponse with access_token, refresh_token, and user info
+     */
+    post: operations["login_api_v1_login_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/logout": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Logout
+     * @description Logout and revoke tokens.
+     *
+     *     Revokes the access token (and optionally refresh token) with Keycloak.
+     *     This is a native logout that doesn't redirect to Keycloak UI.
+     *
+     *     Security (OWASP best practice):
+     *     - Adds token JTI to denylist for immediate invalidation
+     *     - Token will be rejected even before Keycloak revocation propagates
+     *
+     *     The client should:
+     *     1. Call this endpoint
+     *     2. Clear local token storage
+     *     3. Redirect to login page
+     */
+    post: operations["logout_api_v1_logout_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/auth/login": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Oauth2 Login
+     * @description Initiate OAuth2 Authorization Code + PKCE flow.
+     *
+     *     This endpoint:
+     *     1. Generates PKCE code verifier and challenge
+     *     2. Generates state parameter for CSRF protection
+     *     3. Stores verifier and state in session (cookie)
+     *     4. Redirects user to Keycloak authorization endpoint
+     *
+     *     After successful authentication, Keycloak redirects to /auth/callback.
+     *
+     *     RFC 9126 PAR Support:
+     *     If request_uri is provided, redirects to Keycloak with just client_id and request_uri,
+     *     skipping the full PKCE flow (which was already done in the PAR request).
+     */
+    get: operations["oauth2_login_api_v1_auth_login_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/auth/callback": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Oauth2 Callback
+     * @description Handle OAuth2 authorization callback.
+     *
+     *     This endpoint:
+     *     1. Validates state parameter matches session state (CSRF protection)
+     *     2. Exchanges authorization code for tokens using PKCE verifier
+     *     3. Returns tokens to frontend
+     *
+     *     Called by Keycloak after user authenticates.
+     */
+    get: operations["oauth2_callback_api_v1_auth_callback_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/auth/par": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Pushed Authorization Request
+     * @description Pushed Authorization Request (PAR) endpoint - RFC 9126.
+     *
+     *     PAR provides enhanced security by:
+     *     - Pre-registering authorization requests server-side
+     *     - Reducing authorization request URL size
+     *     - Preventing request parameter tampering
+     *     - Enabling confidential client authentication at request time
+     *
+     *     Flow:
+     *     1. Client POSTs authorization parameters to this endpoint
+     *     2. Server returns a request_uri
+     *     3. Client uses request_uri in GET /auth/login?request_uri=...
+     *     4. Authorization server uses the pre-registered parameters
+     *
+     *     Note: Keycloak must have PAR enabled for this client.
+     */
+    post: operations["pushed_authorization_request_api_v1_auth_par_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/auth/introspect": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Token Introspection
+     * @description Token Introspection endpoint - RFC 7662.
+     *
+     *     Allows resource servers to validate access tokens and retrieve their
+     *     metadata without parsing them locally. This is useful for:
+     *     - Validating opaque tokens
+     *     - Checking token revocation status
+     *     - Getting token claims without local JWT validation
+     *
+     *     Note: Requires client authentication (client_id + client_secret).
+     */
+    post: operations["token_introspection_api_v1_auth_introspect_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/auth/refresh": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Oauth2 Refresh
+     * @description Refresh access token using refresh token.
+     *
+     *     This endpoint exchanges a valid refresh token for a new access token.
+     *     Used when the access token expires but the refresh token is still valid.
+     *
+     *     Security (Refresh Token Rotation):
+     *     - Old refresh tokens are added to denylist after successful rotation
+     *     - Prevents replay attacks with stolen refresh tokens
+     *     - Per OWASP Session Management best practices
+     */
+    post: operations["oauth2_refresh_api_v1_auth_refresh_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/auth/device": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Request device authorization code
+     * @description Initiate Device Authorization Grant flow (RFC 8628).
+     *
+     *         This endpoint is for CLI/headless authentication scenarios where the client
+     *         cannot directly interact with the user for login.
+     *
+     *         Flow:
+     *         1. Client calls GET /auth/device to get device_code and user_code
+     *         2. Display verification_uri and user_code to user
+     *         3. User visits verification_uri on another device and enters user_code
+     *         4. Client polls POST /auth/device/token until authorization completes
+     */
+    get: operations["device_auth_request_api_v1_auth_device_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/auth/device/token": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Poll for device authorization token
+     * @description Poll for access token after device authorization.
+     *
+     *         This endpoint should be called repeatedly (respecting the `interval` from
+     *         the device code response) until authorization completes or fails.
+     *
+     *         Possible error responses:
+     *         - `authorization_pending`: User hasn't completed authorization yet
+     *         - `slow_down`: Client is polling too frequently
+     *         - `expired_token`: Device code has expired
+     *         - `access_denied`: User denied the authorization request
+     */
+    post: operations["device_auth_token_api_v1_auth_device_token_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/auth/backchannel-logout": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Handle OIDC backchannel logout
+     * @description OIDC Back-Channel Logout endpoint (OIDC Back-Channel Logout 1.0).
+     *
+     *         This endpoint is called by Keycloak when a user logs out to notify our
+     *         application to invalidate the user's session.
+     *
+     *         The logout_token is a signed JWT containing:
+     *         - sub: User ID
+     *         - sid: Session ID to invalidate
+     *         - events: Contains backchannel-logout event
+     *
+     *         Flow:
+     *         1. User logs out in Keycloak (or another client)
+     *         2. Keycloak sends logout token to all registered backchannel logout URIs
+     *         3. Each application invalidates the session identified by 'sid'
+     */
+    post: operations["backchannel_logout_api_v1_auth_backchannel_logout_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/auth/logout": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Initiate OAuth2 logout
+     * @description Initiate OIDC RP-Initiated Logout flow.
+     *
+     *         This endpoint redirects the user to Keycloak's end_session endpoint to:
+     *         1. Terminate the Keycloak session
+     *         2. Clear any SSO cookies
+     *         3. Optionally redirect back to the application
+     *
+     *         Parameters:
+     *         - post_logout_redirect_uri: Where to redirect after logout (must be registered in Keycloak)
+     *         - id_token_hint: The ID token for the session being logged out (improves security)
+     */
+    get: operations["oauth2_logout_api_v1_auth_logout_get"];
+    put?: never;
+    /**
+     * Native logout (revoke tokens + terminate session)
+     * @description Native logout endpoint that revokes OAuth2 tokens and terminates the Keycloak session.
+     *
+     *         This endpoint provides a JSON-based logout for SPAs that:
+     *         1. Revokes the refresh token with Keycloak
+     *         2. Terminates the Keycloak SSO session
+     *         3. Clears session cookies (mcp_session and OAuth2 state cookies)
+     *         4. Returns a JSON response (no redirect)
+     *
+     *         The frontend should call this endpoint and then redirect to the login page.
+     */
+    post: operations["native_logout_api_v1_auth_logout_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/projects": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List projects
+     * @description List all projects accessible to the current user with sorting, filtering, and search.
+     */
+    get: operations["list_projects_api_v1_projects_get"];
+    put?: never;
+    /**
+     * Create project
+     * @description Create a new project as a unified workspace.
+     */
+    post: operations["create_project_api_v1_projects_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/projects/{project_id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get project details
+     * @description Get detailed information about a project including its resources.
+     */
+    get: operations["get_project_api_v1_projects__project_id__get"];
+    /**
+     * Update project
+     * @description Update project name or description.
+     */
+    put: operations["update_project_api_v1_projects__project_id__put"];
+    post?: never;
+    /**
+     * Delete project
+     * @description Delete a project and optionally its child resources.
+     */
+    delete: operations["delete_project_api_v1_projects__project_id__delete"];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/projects/{project_id}/workflows": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List workflows in project
+     * @description List all workflows associated with this project.
+     */
+    get: operations["list_project_workflows_api_v1_projects__project_id__workflows_get"];
+    put?: never;
+    /**
+     * Add workflow to project
+     * @description Associate an existing workflow with this project.
+     */
+    post: operations["add_workflow_to_project_api_v1_projects__project_id__workflows_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/projects/{project_id}/sessions": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List sessions in project
+     * @description List all sessions associated with this project.
+     */
+    get: operations["list_project_sessions_api_v1_projects__project_id__sessions_get"];
+    put?: never;
+    /**
+     * Add session to project
+     * @description Associate an existing session with this project.
+     */
+    post: operations["add_session_to_project_api_v1_projects__project_id__sessions_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/projects/{project_id}/connections": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List connections in project
+     * @description List all connections (MCP servers, vector stores, etc.) in this project.
+     */
+    get: operations["list_project_connections_api_v1_projects__project_id__connections_get"];
+    put?: never;
+    /**
+     * Add connection to project
+     * @description Add a connection (MCP server, vector store, etc.) to this project.
+     */
+    post: operations["add_connection_to_project_api_v1_projects__project_id__connections_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/projects/{project_id}/workflows/{workflow_id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    /**
+     * Remove workflow from project
+     * @description Disassociate a workflow from this project (does not delete the workflow).
+     */
+    delete: operations["remove_workflow_from_project_api_v1_projects__project_id__workflows__workflow_id__delete"];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/projects/{project_id}/sessions/{session_id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    /**
+     * Remove session from project
+     * @description Disassociate a session from this project (does not delete the session).
+     */
+    delete: operations["remove_session_from_project_api_v1_projects__project_id__sessions__session_id__delete"];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/projects/{project_id}/connections/{connection_id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    /**
+     * Remove connection from project
+     * @description Remove a connection from this project. The connection itself is not deleted.
+     */
+    delete: operations["remove_connection_from_project_api_v1_projects__project_id__connections__connection_id__delete"];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/projects/{project_id}/members": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List project members
+     * @description List all members of this project with their roles.
+     */
+    get: operations["list_project_members_api_v1_projects__project_id__members_get"];
+    put?: never;
+    /**
+     * Add member to project
+     * @description Add a user as a member of this project with a specific role.
+     */
+    post: operations["add_member_to_project_api_v1_projects__project_id__members_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/projects/{project_id}/members/{user_id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    /**
+     * Remove member from project
+     * @description Remove a user from this project.
+     */
+    delete: operations["remove_member_from_project_api_v1_projects__project_id__members__user_id__delete"];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/projects/{project_id}/observability/traces": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get project traces
+     * @description Get traces filtered to sessions and workflows in this project.
+     */
+    get: operations["get_project_traces_api_v1_projects__project_id__observability_traces_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/projects/{project_id}/observability/metrics": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get project metrics
+     * @description Get metrics aggregated for sessions and workflows in this project.
+     */
+    get: operations["get_project_metrics_api_v1_projects__project_id__observability_metrics_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/projects/{project_id}/observability/logs": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get project logs
+     * @description Get logs filtered to sessions and workflows in this project.
+     */
+    get: operations["get_project_logs_api_v1_projects__project_id__observability_logs_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/projects/{project_id}/observability/alerts": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get project alerts
+     * @description Get alerts for sessions and workflows in this project.
+     */
+    get: operations["get_project_alerts_api_v1_projects__project_id__observability_alerts_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/projects/{project_id}/cost/summary": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get project cost summary
+     * @description Get cost summary aggregated for sessions in this project.
+     */
+    get: operations["get_project_cost_summary_api_v1_projects__project_id__cost_summary_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/projects/{project_id}/cost/by-model": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get project cost by model
+     * @description Get cost breakdown by model for sessions in this project.
+     */
+    get: operations["get_project_cost_by_model_api_v1_projects__project_id__cost_by_model_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/projects/{project_id}/cost/history": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get project cost history
+     * @description Get cost history over time for sessions in this project.
+     */
+    get: operations["get_project_cost_history_api_v1_projects__project_id__cost_history_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/workflows": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List Workflows
+     * @description List all workflows with cursor-based pagination.
+     *
+     *     Supports:
+     *     - Pagination: cursor, limit
+     *     - Filtering: status, owner_id
+     *     - Search: search (uses PostgreSQL Full-Text Search when available)
+     *     - Sorting: sort_by, sort_order
+     *
+     *     Returns a paginated list of workflows with metadata for navigation.
+     */
+    get: operations["list_workflows_api_v1_workflows_get"];
+    put?: never;
+    /**
+     * Create Workflow
+     * @description Create a new workflow.
+     *
+     *     The workflow is created with the provided name, description, nodes, and edges.
+     */
+    post: operations["create_workflow_api_v1_workflows_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/workflows/shared-with-me": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List Shared With Me
+     * @description List workflows shared with the current user.
+     *
+     *     Returns workflows that other users have shared with the authenticated user.
+     */
+    get: operations["list_shared_with_me_api_v1_workflows_shared_with_me_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/workflows/public/{share_link}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Public Workflow
+     * @description Access a public workflow by its share link.
+     *
+     *     No authentication required for public workflows.
+     */
+    get: operations["get_public_workflow_api_v1_workflows_public__share_link__get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/workflows/{workflow_id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Workflow
+     * @description Get a specific workflow by ID.
+     *
+     *     Returns the complete workflow data including nodes and edges.
+     */
+    get: operations["get_workflow_api_v1_workflows__workflow_id__get"];
+    /**
+     * Update Workflow
+     * @description Update an existing workflow.
+     *
+     *     Only the provided fields are updated; others remain unchanged.
+     */
+    put: operations["update_workflow_api_v1_workflows__workflow_id__put"];
+    post?: never;
+    /**
+     * Delete Workflow
+     * @description Delete a workflow.
+     *
+     *     This permanently removes the workflow and cannot be undone.
+     */
+    delete: operations["delete_workflow_api_v1_workflows__workflow_id__delete"];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/workflows/{workflow_id}/shares": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Workflow Shares
+     * @description Get all shares for a workflow.
+     *
+     *     Returns the list of users the workflow is shared with and public status.
+     *     Only the workflow owner can view shares.
+     */
+    get: operations["get_workflow_shares_api_v1_workflows__workflow_id__shares_get"];
+    put?: never;
+    /**
+     * Add Workflow Share
+     * @description Share a workflow with another user.
+     *
+     *     Only the workflow owner can share. The user is identified by email.
+     */
+    post: operations["add_workflow_share_api_v1_workflows__workflow_id__shares_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/workflows/{workflow_id}/shares/{user_id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    /**
+     * Remove Workflow Share
+     * @description Remove a share from a workflow.
+     *
+     *     Only the workflow owner can remove shares.
+     */
+    delete: operations["remove_workflow_share_api_v1_workflows__workflow_id__shares__user_id__delete"];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/workflows/{workflow_id}/public": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    /**
+     * Update Workflow Public
+     * @description Toggle public visibility of a workflow.
+     *
+     *     When made public, a share_link is generated for anonymous access.
+     *     Only the workflow owner can change public status.
+     */
+    put: operations["update_workflow_public_api_v1_workflows__workflow_id__public_put"];
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/workflows/generate": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Generate Workflow
+     * @description Generate a workflow from session history or text prompt.
+     *
+     *     Uses AI to analyze the provided source and generate a workflow definition.
+     *     Exactly one of session_id or prompt must be provided.
+     */
+    post: operations["generate_workflow_api_v1_workflows_generate_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/workflows/{workflow_id}/executions": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List Executions
+     * @description List executions for a workflow.
+     *
+     *     Args:
+     *         workflow_id: Workflow ID
+     *         manager: Execution history manager (injected)
+     *         status: Optional status filter (pending, running, completed, failed)
+     *         limit: Maximum number of executions to return
+     *         cursor: Pagination cursor
+     *
+     *     Returns:
+     *         PaginatedExecutionResponse with list of executions.
+     *
+     *     Raises:
+     *         404: If workflow not found.
+     */
+    get: operations["list_executions_api_v1_workflows__workflow_id__executions_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/workflows/{workflow_id}/executions/{execution_id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Execution
+     * @description Get a specific execution.
+     *
+     *     Args:
+     *         workflow_id: Workflow ID
+     *         execution_id: Execution ID
+     *         manager: Execution history manager (injected)
+     *
+     *     Returns:
+     *         ExecutionResponse with execution details.
+     *
+     *     Raises:
+     *         404: If workflow or execution not found.
+     */
+    get: operations["get_execution_api_v1_workflows__workflow_id__executions__execution_id__get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/sessions": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List Sessions
+     * @description List all sessions with cursor-based pagination.
+     *
+     *     Requires authentication. Returns only sessions owned by the authenticated user.
+     *
+     *     Supports:
+     *     - Pagination: cursor, limit
+     *     - Filtering: workflow_id, status
+     *     - Search: search (searches title)
+     *     - Sorting: sort_by, sort_order
+     */
+    get: operations["list_sessions_api_v1_sessions_get"];
+    put?: never;
+    /**
+     * Create Session
+     * @description Create a new session.
+     *
+     *     Requires authentication. The session is associated with the authenticated user.
+     */
+    post: operations["create_session_api_v1_sessions_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/sessions/{session_id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Session
+     * @description Get a specific session by ID.
+     *
+     *     Requires authentication. Returns 404 if session not found or not owned by user.
+     */
+    get: operations["get_session_api_v1_sessions__session_id__get"];
+    put?: never;
+    post?: never;
+    /**
+     * Delete Session
+     * @description Delete a session.
+     *
+     *     Requires authentication. Only the session owner can delete it.
+     */
+    delete: operations["delete_session_api_v1_sessions__session_id__delete"];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/sessions/{session_id}/config": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    /**
+     * Update session configuration
+     * @description Update LLM configuration for a session (model, temperature, max_tokens)
+     */
+    patch: operations["update_session_config_api_v1_sessions__session_id__config_patch"];
+    trace?: never;
+  };
+  "/api/v1/sessions/{session_id}/messages": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Session Messages
+     * @description Get all messages in a session.
+     *
+     *     Requires authentication. Returns 404 if session not found or not owned by user.
+     */
+    get: operations["get_session_messages_api_v1_sessions__session_id__messages_get"];
+    put?: never;
+    /**
+     * Add Message
+     * @description Add a message to a session.
+     *
+     *     Requires authentication. Only the session owner can add messages.
+     */
+    post: operations["add_message_api_v1_sessions__session_id__messages_post"];
+    /**
+     * Clear Messages
+     * @description Clear all messages in a session.
+     *
+     *     Requires authentication. Only the session owner can clear messages.
+     */
+    delete: operations["clear_messages_api_v1_sessions__session_id__messages_delete"];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/sessions/generate-title": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Generate Title
+     * @description Generate a session title from a user message.
+     *
+     *     Uses AI to analyze the message and generate a concise, descriptive title.
+     *     This is typically called after the user sends their first message in a session.
+     *
+     *     Returns a title of max 50 characters.
+     */
+    post: operations["generate_title_api_v1_sessions_generate_title_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/sessions/{session_id}/messages/{message_id}/rating": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Rate Message
+     * @description Rate a message in a session (thumbs up/down).
+     *
+     *     Requires authentication. Only the session owner can rate messages.
+     *     Ratings are used to improve AI response quality over time.
+     *
+     *     Args:
+     *         session_id: The session containing the message
+     *         message_id: The message to rate
+     *         request: Rating value and optional feedback
+     *
+     *     Returns:
+     *         The created rating record
+     */
+    post: operations["rate_message_api_v1_sessions__session_id__messages__message_id__rating_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/artifacts/search": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Semantic Search
+     * @description Semantic search across artifacts.
+     *
+     *     Uses vector embeddings to find artifacts matching the query.
+     *     Returns results sorted by relevance score.
+     */
+    post: operations["semantic_search_api_v1_artifacts_search_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/artifacts": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List Artifacts
+     * @description List artifacts for the current user.
+     *
+     *     Supports filtering by session_id and cursor-based pagination.
+     *     Returns artifacts sorted by updated_at descending.
+     */
+    get: operations["list_artifacts_api_v1_artifacts_get"];
+    put?: never;
+    /**
+     * Create Artifact
+     * @description Create a new artifact.
+     *
+     *     Returns the new artifact ID, version, and created_at timestamp.
+     */
+    post: operations["create_artifact_api_v1_artifacts_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/artifacts/{artifact_id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Artifact
+     * @description Get a specific artifact by ID.
+     *
+     *     Returns 404 if artifact not found or not owned by user.
+     */
+    get: operations["get_artifact_api_v1_artifacts__artifact_id__get"];
+    /**
+     * Update Artifact
+     * @description Update an existing artifact.
+     *
+     *     Creates a new version and returns the updated version number.
+     *     Returns 404 if artifact not found or not owned by user.
+     */
+    put: operations["update_artifact_api_v1_artifacts__artifact_id__put"];
+    post?: never;
+    /**
+     * Delete Artifact
+     * @description Delete an artifact.
+     *
+     *     Returns 204 No Content on success, 404 if not found.
+     */
+    delete: operations["delete_artifact_api_v1_artifacts__artifact_id__delete"];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/artifacts/{artifact_id}/similar": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Find Similar Artifacts
+     * @description Find artifacts similar to a given artifact.
+     *
+     *     Uses vector embeddings to find semantically similar artifacts.
+     *     Returns results sorted by similarity score.
+     */
+    get: operations["find_similar_artifacts_api_v1_artifacts__artifact_id__similar_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/artifacts/{artifact_id}/versions": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Artifact Versions
+     * @description Get version history for an artifact.
+     *
+     *     Returns list of versions sorted by version number.
+     *     Returns 404 if artifact not found or not owned by user.
+     */
+    get: operations["get_artifact_versions_api_v1_artifacts__artifact_id__versions_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/artifacts/{artifact_id}/fork": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Fork Artifact
+     * @description Fork an artifact.
+     *
+     *     Creates a copy of the artifact with a new ID.
+     *     The new artifact starts at version 1.
+     *     Returns 404 if source artifact not found.
+     */
+    post: operations["fork_artifact_api_v1_artifacts__artifact_id__fork_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/sessions/{session_id}/bootstrap-workflow": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Bootstrap Workflow
+     * @description Bootstrap a workflow from a chat session's conversation trace.
+     *
+     *     Analyzes the chat history to identify action steps and creates a
+     *     workflow definition that can be saved and executed.
+     *
+     *     Args:
+     *         session_id: The session ID to analyze
+     *         request: Bootstrap request with workflow name and description
+     *         current_user: Authenticated user from JWT token
+     *
+     *     Returns:
+     *         Complete workflow definition with nodes and edges
+     *
+     *     Raises:
+     *         HTTPException: 404 if session not found, 400 if session has no messages
+     */
+    post: operations["bootstrap_workflow_api_v1_sessions__session_id__bootstrap_workflow_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/chat/completions": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Create Completion
+     * @description Create a chat completion.
+     *
+     *     Sends messages to the LLM and returns the assistant's response.
+     *
+     *     Raises:
+     *         HTTPException 428: When MCP requires user elicitation (authentication, consent)
+     *         HTTPException 403: When permission is denied
+     *         HTTPException 503: When MCP server is unavailable
+     */
+    post: operations["create_completion_api_v1_chat_completions_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/chat/completions/stream": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Create Stream
+     * @description Create a streaming chat completion.
+     *
+     *     Sends messages to the LLM and streams the response as Server-Sent Events.
+     */
+    post: operations["create_stream_api_v1_chat_completions_stream_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/chat/{session_id}/history": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get History
+     * @description Get chat history for a session.
+     *
+     *     Returns all messages in chronological order.
+     */
+    get: operations["get_history_api_v1_chat__session_id__history_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/cost/summary": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Summary
+     * @description Get cost summary.
+     *
+     *     Returns total cost and token usage for the specified period.
+     */
+    get: operations["get_summary_api_v1_cost_summary_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/cost/by-model": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get By Model
+     * @description Get cost breakdown by model.
+     *
+     *     Returns cost and usage for each model used.
+     */
+    get: operations["get_by_model_api_v1_cost_by_model_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/cost/history": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get History
+     * @description Get cost history over time.
+     *
+     *     Returns daily cost data for the specified period.
+     */
+    get: operations["get_history_api_v1_cost_history_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/observability/traces": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List Traces
+     * @description List traces with cursor-based pagination.
+     *
+     *     Supports:
+     *     - Pagination: cursor, limit
+     *     - Filtering: session_id, user_id, workflow_id, project_id, organization_id
+     *     - Search: search (searches trace name)
+     *     - Sorting: sort_by, sort_order
+     *
+     *     Filter by entity IDs to get traces for a specific session, user, workflow, project, or organization.
+     */
+    get: operations["list_traces_api_v1_observability_traces_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/observability/traces/{trace_id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Trace
+     * @description Get a specific trace by ID.
+     *
+     *     Returns the complete trace with all spans.
+     */
+    get: operations["get_trace_api_v1_observability_traces__trace_id__get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/observability/metrics": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Metrics
+     * @description Get metrics summary.
+     *
+     *     Returns aggregate metrics for the specified period.
+     */
+    get: operations["get_metrics_api_v1_observability_metrics_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/observability/logs": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List Logs
+     * @description List logs with cursor-based pagination.
+     *
+     *     Supports:
+     *     - Pagination: cursor, limit
+     *     - Filtering: level, trace_id, session_id, user_id, workflow_id, project_id
+     *     - Search: search (searches log message)
+     *
+     *     Use trace_id to get logs correlated with a specific distributed trace.
+     *     Use session_id, user_id, workflow_id, or project_id to filter by entity.
+     */
+    get: operations["list_logs_api_v1_observability_logs_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/observability/alerts": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List Alerts
+     * @description List alerts with filtering.
+     *
+     *     Supports:
+     *     - Filtering: state, severity, service_name, workflow_id, project_id
+     *     - Limit: max number of alerts to return
+     *
+     *     Use service_name to get alerts for a specific service.
+     *     Use workflow_id or project_id to filter by entity.
+     */
+    get: operations["list_alerts_api_v1_observability_alerts_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/observability/alerts/rules": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List Alert Rules
+     * @description List configured alerting rules.
+     *
+     *     Returns the alerting rules configured in the monitoring system.
+     */
+    get: operations["list_alert_rules_api_v1_observability_alerts_rules_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/observability/alerts/{alert_id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Alert
+     * @description Get a specific alert by ID.
+     *
+     *     Returns the alert details including labels, annotations, and timing.
+     */
+    get: operations["get_alert_api_v1_observability_alerts__alert_id__get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/observability/metrics/by-session/{session_id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Metrics By Session
+     * @description Get aggregated metrics for a specific session.
+     *
+     *     Computes metrics from traces associated with this session:
+     *     - total_requests: Total number of traces/requests in the session
+     *     - total_errors: Number of traces with errors
+     *     - avg_latency_ms: Average trace duration in milliseconds
+     *     - p95_latency_ms: 95th percentile trace duration
+     *
+     *     This endpoint uses Tempo TraceQL to aggregate spans by session_id attribute.
+     */
+    get: operations["get_metrics_by_session_api_v1_observability_metrics_by_session__session_id__get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/observability/metrics/by-workflow/{workflow_id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Metrics By Workflow
+     * @description Get aggregated metrics for a specific workflow.
+     *
+     *     Computes metrics from traces associated with this workflow:
+     *     - total_executions: Total number of workflow executions
+     *     - total_errors: Number of executions with errors
+     *     - avg_latency_ms: Average execution latency in milliseconds
+     *     - p95_latency_ms: 95th percentile execution latency
+     *
+     *     This endpoint uses Tempo TraceQL to aggregate spans by workflow_id attribute.
+     */
+    get: operations["get_metrics_by_workflow_api_v1_observability_metrics_by_workflow__workflow_id__get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/observability/metrics/by-user/{user_id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Metrics By User
+     * @description Get aggregated metrics for a specific user.
+     *
+     *     Computes metrics from traces associated with this user:
+     *     - total_requests: Total number of traces/requests by this user
+     *     - total_sessions: Number of unique sessions by this user
+     *     - total_errors: Number of traces with errors
+     *     - avg_latency_ms: Average trace duration in milliseconds
+     *
+     *     This endpoint uses Tempo TraceQL to aggregate spans by user_id attribute.
+     */
+    get: operations["get_metrics_by_user_api_v1_observability_metrics_by_user__user_id__get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/mcp/metrics/streams": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Streaming Metrics
+     * @description Get streaming metrics for monitoring and debugging.
+     *
+     *     Returns aggregate statistics and per-stream details from the
+     *     streaming_metrics_collector.
+     *
+     *     Args:
+     *         active_only: If true, only return active (in-progress) streams.
+     *         limit: Maximum number of stream entries to return.
+     *
+     *     Returns:
+     *         JSON object with aggregate stats, active count, stream list, and streaming status.
+     */
+    get: operations["get_streaming_metrics_api_v1_mcp_metrics_streams_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/mcp/resources": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List Resources
+     * @description List available MCP resources.
+     *
+     *     Returns all resources exposed by the MCP server.
+     */
+    get: operations["list_resources_api_v1_mcp_resources_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/mcp/resources/content": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Read Resource
+     * @description Read a resource by URI.
+     *
+     *     Returns the content of the specified resource.
+     */
+    get: operations["read_resource_api_v1_mcp_resources_content_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/mcp/prompts": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List Prompts
+     * @description List available MCP prompts.
+     *
+     *     Returns all prompts (workflow templates) exposed by the MCP server.
+     */
+    get: operations["list_prompts_api_v1_mcp_prompts_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/mcp/prompts/{prompt_name}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Get Prompt
+     * @description Get a prompt with arguments filled in.
+     *
+     *     Returns the prompt messages with the provided arguments substituted.
+     */
+    post: operations["get_prompt_api_v1_mcp_prompts__prompt_name__post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/mcp/sampling": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Create Sampling
+     * @description Request LLM completion via MCP sampling.
+     *
+     *     This is a server-initiated request for the client to sample from an LLM.
+     *     Useful for agent patterns where the server needs LLM assistance.
+     */
+    post: operations["create_sampling_api_v1_mcp_sampling_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/mcp/elicitation": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Create Elicitation
+     * @description Request user input via form elicitation.
+     *
+     *     Allows the server to request structured input from the user.
+     */
+    post: operations["create_elicitation_api_v1_mcp_elicitation_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/mcp/elicitation/url": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Create Url Elicitation
+     * @description Request user to navigate to a URL.
+     *
+     *     Useful for OAuth flows or handling sensitive data.
+     */
+    post: operations["create_url_elicitation_api_v1_mcp_elicitation_url_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/mcp/tasks": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List Tasks
+     * @description List active MCP tasks.
+     *
+     *     Returns all currently active tasks (experimental feature).
+     */
+    get: operations["list_tasks_api_v1_mcp_tasks_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/mcp/tasks/{task_id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Task
+     * @description Get task status.
+     *
+     *     Returns the current status of a task.
+     */
+    get: operations["get_task_api_v1_mcp_tasks__task_id__get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/mcp/tasks/{task_id}/cancel": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Cancel Task
+     * @description Cancel a running task.
+     *
+     *     Attempts to cancel the specified task.
+     */
+    post: operations["cancel_task_api_v1_mcp_tasks__task_id__cancel_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/vectors/collections": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List Collections
+     * @description List all vector collections.
+     *
+     *     Requires: viewer permission on vector_store:default
+     */
+    get: operations["list_collections_api_v1_vectors_collections_get"];
+    put?: never;
+    /**
+     * Create Collection
+     * @description Create a new vector collection.
+     *
+     *     Requires: editor permission on vector_store:default
+     */
+    post: operations["create_collection_api_v1_vectors_collections_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/vectors/collections/{collection_name}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    /**
+     * Delete Collection
+     * @description Delete a vector collection.
+     *
+     *     Requires: owner permission on vector_store:default
+     */
+    delete: operations["delete_collection_api_v1_vectors_collections__collection_name__delete"];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/vectors/search": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Search Vectors
+     * @description Search for similar vectors in a collection.
+     *
+     *     Requires: viewer permission on vector_store:default
+     */
+    post: operations["search_vectors_api_v1_vectors_search_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/vectors/points": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Upsert Points
+     * @description Upsert points into a collection.
+     *
+     *     Requires: editor permission on vector_store:default
+     */
+    post: operations["upsert_points_api_v1_vectors_points_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/vectors/search-text": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Search Vectors By Text
+     * @description Search for similar vectors using text query.
+     *
+     *     The text query is converted to a vector using the configured embedding model,
+     *     then used to search for similar vectors in the collection.
+     *
+     *     Requires: viewer permission on vector_store:default
+     */
+    post: operations["search_vectors_by_text_api_v1_vectors_search_text_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/vectors/upsert-text": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Upsert Vector By Text
+     * @description Upsert a text document as a vector.
+     *
+     *     The text is converted to a vector using the configured embedding model,
+     *     then stored in the collection with the text and metadata as payload.
+     *
+     *     Requires: editor permission on vector_store:default
+     */
+    post: operations["upsert_vector_by_text_api_v1_vectors_upsert_text_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/connections": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List Connections
+     * @description List MCP connections for the current user.
+     *
+     *     Supports:
+     *     - Pagination: cursor, limit (cursor-based for efficient large result sets)
+     *     - Filtering: status, auth_type, project_id
+     *     - Search: search (uses PostgreSQL Full-Text Search on name and description)
+     *     - Sorting: sort_by, sort_order
+     */
+    get: operations["list_connections_api_v1_connections_get"];
+    put?: never;
+    /**
+     * Create Connection
+     * @description Create a new MCP connection.
+     *
+     *     Supports three authentication types:
+     *     - none: No authentication
+     *     - api_key: API key stored in secrets provider
+     *     - oauth2: OAuth2 with PKCE flow
+     */
+    post: operations["create_connection_api_v1_connections_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/connections/{connection_id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Connection
+     * @description Get a specific MCP connection by ID.
+     *
+     *     Returns full connection details (without sensitive credentials).
+     */
+    get: operations["get_connection_api_v1_connections__connection_id__get"];
+    /**
+     * Update Connection
+     * @description Update an MCP connection.
+     *
+     *     Note: Authentication changes require separate endpoints for security.
+     */
+    put: operations["update_connection_api_v1_connections__connection_id__put"];
+    post?: never;
+    /**
+     * Delete Connection
+     * @description Delete an MCP connection.
+     *
+     *     Also removes associated secrets (API keys, OAuth2 tokens).
+     */
+    delete: operations["delete_connection_api_v1_connections__connection_id__delete"];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/connections/{connection_id}/test": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Test Connection
+     * @description Test an MCP connection.
+     *
+     *     Attempts to connect to the MCP server and retrieve server info.
+     *     Updates connection status based on result.
+     */
+    post: operations["test_connection_api_v1_connections__connection_id__test_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/connections/{connection_id}/oauth/start": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Start Oauth2 Flow
+     * @description Start OAuth2 authorization flow for a connection.
+     *
+     *     Uses PKCE (Proof Key for Code Exchange) for security.
+     *     Returns the authorization URL and state parameter.
+     */
+    post: operations["start_oauth2_flow_api_v1_connections__connection_id__oauth_start_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/connections/oauth/callback": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Oauth2 Callback Stateless
+     * @description Handle OAuth2 callback (stateless - looks up connection from state).
+     *
+     *     This endpoint is called by the frontend OAuth2CallbackPage after the user
+     *     completes authorization at the OAuth2 provider. The connection_id is
+     *     retrieved from the stored state, allowing for a simpler frontend flow.
+     *
+     *     Args:
+     *         request: FastAPI Request object for rate limiting
+     *         body: OAuth2CallbackRequest with code and state from OAuth provider
+     *
+     *     Returns:
+     *         OAuth2CallbackResponse with connection_id on success
+     *
+     *     Raises:
+     *         HTTPException 400: Invalid or expired state
+     *         HTTPException 404: Connection not found
+     */
+    post: operations["oauth2_callback_stateless_api_v1_connections_oauth_callback_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/connections/{connection_id}/oauth/callback": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Oauth2 Callback
+     * @description Handle OAuth2 callback.
+     *
+     *     Exchanges the authorization code for tokens and stores them securely.
+     */
+    post: operations["oauth2_callback_api_v1_connections__connection_id__oauth_callback_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/connection-templates/categories": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List Categories
+     * @description List all template categories.
+     *
+     *     Returns list of categories that templates can belong to.
+     */
+    get: operations["list_categories_api_v1_connection_templates_categories_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/connection-templates": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List Templates
+     * @description List all available connection templates.
+     *
+     *     Supports filtering by category, authentication type, and search.
+     */
+    get: operations["list_templates_api_v1_connection_templates_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/connection-templates/{template_id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Template
+     * @description Get a specific template by ID.
+     *
+     *     Returns full template details including configuration fields.
+     */
+    get: operations["get_template_api_v1_connection_templates__template_id__get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/connection-templates/{template_id}/apply": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Apply Template
+     * @description Apply a template to create a pre-filled connection configuration.
+     *
+     *     Takes the template and user-provided values to generate a connection
+     *     configuration that can be used to create a new connection.
+     */
+    post: operations["apply_template_api_v1_connection_templates__template_id__apply_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/connections/bulk/delete": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Bulk Delete
+     * @description Delete multiple connections at once.
+     *
+     *     Performs best-effort deletion - returns count of successfully deleted
+     *     connections and list of IDs that failed.
+     */
+    post: operations["bulk_delete_api_v1_connections_bulk_delete_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/connections/bulk/test": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Bulk Test
+     * @description Test multiple connections at once.
+     *
+     *     Performs parallel health checks and updates connection status.
+     *     Returns test results for each connection.
+     */
+    post: operations["bulk_test_api_v1_connections_bulk_test_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/connections/bulk/status": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Bulk Status Update
+     * @description Update status for multiple connections.
+     *
+     *     Useful for disconnecting all connections or marking them for re-authentication.
+     */
+    post: operations["bulk_status_update_api_v1_connections_bulk_status_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/connections/audit/log": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Log Audit Event
+     * @description Log an audit event for a connection operation.
+     *
+     *     Records the event with timestamp, actor information, and optional details.
+     *     Automatically captures IP address and user agent from headers.
+     */
+    post: operations["log_audit_event_api_v1_connections_audit_log_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/connections/audit/logs": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Query Audit Logs
+     * @description Query audit logs with filtering and pagination.
+     *
+     *     Supports filtering by resource type, resource ID, actor, event type,
+     *     and time range. Results are paginated with limit and offset.
+     */
+    get: operations["query_audit_logs_api_v1_connections_audit_logs_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/connections/{connection_id}/audit": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Connection Audit Log
+     * @description Get audit log for a specific connection.
+     *
+     *     Returns the audit trail for a connection, ordered by timestamp descending.
+     */
+    get: operations["get_connection_audit_log_api_v1_connections__connection_id__audit_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/connections/audit/retention": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    /**
+     * Delete Old Audit Logs
+     * @description Delete audit logs older than the specified retention period.
+     *
+     *     This is used for maintenance and compliance with data retention policies.
+     */
+    delete: operations["delete_old_audit_logs_api_v1_connections_audit_retention_delete"];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/connections/audit/export": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Export Audit Logs
+     * @description Export audit logs in JSON or CSV format.
+     *
+     *     Supports the same filters as the query endpoint. Results are returned
+     *     as a downloadable file.
+     *
+     *     Formats:
+     *     - json: Complete JSON export with metadata
+     *     - csv: Comma-separated values with headers
+     */
+    get: operations["export_audit_logs_api_v1_connections_audit_export_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/agents/config": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Agent Config
+     * @description Get current agent configuration.
+     *
+     *     Returns the current model settings, verification settings,
+     *     and list of available tools from the MCP server.
+     *
+     *     Returns:
+     *         AgentConfigResponse with current agent configuration.
+     */
+    get: operations["get_agent_config_api_v1_agents_config_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/agents/requests/pending": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List pending agent requests
+     * @description Get all agent requests waiting for human response. Requires authentication.
+     */
+    get: operations["list_pending_agent_requests_api_v1_agents_requests_pending_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/agents/requests/{request_id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get agent request details
+     * @description Get details of a specific agent request.
+     */
+    get: operations["get_agent_request_api_v1_agents_requests__request_id__get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/agents/requests/{request_id}/approve": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Approve an agent request
+     * @description Approve a pending agent request. Requires admin or hitl_reviewer role.
+     */
+    post: operations["approve_agent_request_api_v1_agents_requests__request_id__approve_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/agents/requests/{request_id}/reject": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Reject an agent request
+     * @description Reject a pending agent request. Requires admin or hitl_reviewer role.
+     */
+    post: operations["reject_agent_request_api_v1_agents_requests__request_id__reject_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/agents/requests/{request_id}/respond": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Respond to a clarification request
+     * @description Respond to a pending clarification request.
+     */
+    post: operations["respond_to_agent_request_api_v1_agents_requests__request_id__respond_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/agents/requests/batch/approve": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Batch approve agent requests
+     * @description Approve multiple pending agent requests at once. Requires admin or hitl_reviewer role.
+     */
+    post: operations["batch_approve_requests_api_v1_agents_requests_batch_approve_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/agents/requests/batch/reject": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Batch reject agent requests
+     * @description Reject multiple pending agent requests at once. Requires admin or hitl_reviewer role.
+     */
+    post: operations["batch_reject_requests_api_v1_agents_requests_batch_reject_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/agents/requests/threshold/recommendation": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get threshold recommendation
+     * @description Get personalized threshold recommendation based on approval history.
+     */
+    get: operations["get_threshold_recommendation_api_v1_agents_requests_threshold_recommendation_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/agents/requests/threshold/settings": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get user threshold settings
+     * @description Get the current user's threshold configuration.
+     */
+    get: operations["get_user_threshold_settings_endpoint_api_v1_agents_requests_threshold_settings_get"];
+    /**
+     * Update user threshold settings
+     * @description Update the current user's threshold configuration.
+     */
+    put: operations["update_user_threshold_settings_endpoint_api_v1_agents_requests_threshold_settings_put"];
+    post?: never;
+    delete?: never;
+    options?: never;
     head?: never;
     patch?: never;
     trace?: never;
@@ -187,200 +4073,6 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  "/api/v1/agents/config": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * Get Agent Config
-     * @description Get current agent configuration.
-     *
-     *     Returns the current model settings, verification settings,
-     *     and list of available tools from the MCP server.
-     *
-     *     Returns:
-     *         AgentConfigResponse with current agent configuration.
-     */
-    get: operations["get_agent_config_api_v1_agents_config_get"];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/ai/node-config/help": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Get Node Configuration Help
-     * @description Get AI-powered configuration help for a workflow node type
-     */
-    post: operations["get_node_config_help_api_v1_ai_node_config_help_post"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/ai/node-config/validate": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Validate Node Configuration
-     * @description Validate a node configuration against its schema
-     */
-    post: operations["validate_node_config_api_v1_ai_node_config_validate_post"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/ai/node-types": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * Get Available Node Types
-     * @description Get all available workflow node types
-     */
-    get: operations["get_node_types_api_v1_ai_node_types_get"];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/ai/node-types/{node_type}/schema": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * Get Node Type Schema
-     * @description Get the JSON Schema for a specific node type
-     */
-    get: operations["get_node_type_schema_api_v1_ai_node_types__node_type__schema_get"];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/api-keys/": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * List Api Keys
-     * @description List all API keys for the current user
-     *
-     *     Returns metadata for all keys (name, created, expires, last_used).
-     *     Does not include the actual API keys.
-     */
-    get: operations["list_api_keys_api_v1_api_keys__get"];
-    put?: never;
-    /**
-     * Create Api Key
-     * @description Create a new API key for the current user
-     *
-     *     Creates a cryptographically secure API key with bcrypt hashing.
-     *     **Save the returned api_key securely** - it will not be shown again.
-     *
-     *     Maximum 5 keys per user. Revoke an existing key before creating more.
-     *
-     *     Example:
-     *         ```json
-     *         {
-     *             "name": "Production API Key",
-     *             "expires_days": 365
-     *         }
-     *         ```
-     */
-    post: operations["create_api_key_api_v1_api_keys__post"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/api-keys/{key_id}": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    post?: never;
-    /**
-     * Revoke Api Key
-     * @description Revoke an API key
-     *
-     *     Permanently deletes the API key. This action cannot be undone.
-     *     Any clients using this key will immediately lose access.
-     */
-    delete: operations["revoke_api_key_api_v1_api_keys__key_id__delete"];
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/api-keys/{key_id}/rotate": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Rotate Api Key
-     * @description Rotate an API key
-     *
-     *     Generates a new API key while keeping the same key_id.
-     *     The old key is invalidated immediately.
-     *
-     *     **Save the new_api_key securely** - update your client configuration.
-     */
-    post: operations["rotate_api_key_api_v1_api_keys__key_id__rotate_post"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
   "/api/v1/audit/events": {
     parameters: {
       query?: never;
@@ -441,37 +4133,6 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  "/api/v1/audit/export": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * Export Audit Logs
-     * @description Export audit logs for compliance reporting.
-     *
-     *     Requires authentication and admin/compliance_officer role.
-     *
-     *     Supports JSON and CSV formats. Time range is required to
-     *     prevent accidental export of entire audit log.
-     *
-     *     Use this endpoint to generate evidence for:
-     *     - GDPR Article 30 Records of Processing
-     *     - HIPAA 164.312(b) Audit Controls
-     *     - SOC 2 Type II Evidence
-     *     - FedRAMP AU Controls
-     */
-    get: operations["export_audit_logs_api_v1_audit_export_get"];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
   "/api/v1/audit/integrity/verify": {
     parameters: {
       query?: never;
@@ -502,32 +4163,31 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  "/api/v1/audit/retention/apply": {
+  "/api/v1/audit/export": {
     parameters: {
       query?: never;
       header?: never;
       path?: never;
       cookie?: never;
     };
-    get?: never;
-    put?: never;
     /**
-     * Apply Retention Policy
-     * @description Apply retention policy for a specific regulation.
+     * Export Audit Logs
+     * @description Export audit logs for compliance reporting.
      *
      *     Requires authentication and admin/compliance_officer role.
      *
-     *     Deletes audit events that have exceeded their retention period
-     *     based on the regulation's requirements:
-     *     - GDPR: 7 years
-     *     - HIPAA: 6 years
-     *     - FedRAMP: 7 years
-     *     - EU AI Act: 6 months
-     *     - SOC 2: 3 years
+     *     Supports JSON and CSV formats. Time range is required to
+     *     prevent accidental export of entire audit log.
      *
-     *     Returns the count of deleted events.
+     *     Use this endpoint to generate evidence for:
+     *     - GDPR Article 30 Records of Processing
+     *     - HIPAA 164.312(b) Audit Controls
+     *     - SOC 2 Type II Evidence
+     *     - FedRAMP AU Controls
      */
-    post: operations["apply_retention_policy_api_v1_audit_retention_apply_post"];
+    get: operations["export_audit_logs_api_v1_audit_export_get"];
+    put?: never;
+    post?: never;
     delete?: never;
     options?: never;
     head?: never;
@@ -562,7 +4222,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  "/api/v1/auth/backchannel-logout": {
+  "/api/v1/audit/retention/apply": {
     parameters: {
       query?: never;
       header?: never;
@@ -572,402 +4232,22 @@ export interface paths {
     get?: never;
     put?: never;
     /**
-     * Handle OIDC backchannel logout
-     * @description OIDC Back-Channel Logout endpoint (OIDC Back-Channel Logout 1.0).
+     * Apply Retention Policy
+     * @description Apply retention policy for a specific regulation.
      *
-     *         This endpoint is called by Keycloak when a user logs out to notify our
-     *         application to invalidate the user's session.
+     *     Requires authentication and admin/compliance_officer role.
      *
-     *         The logout_token is a signed JWT containing:
-     *         - sub: User ID
-     *         - sid: Session ID to invalidate
-     *         - events: Contains backchannel-logout event
+     *     Deletes audit events that have exceeded their retention period
+     *     based on the regulation's requirements:
+     *     - GDPR: 7 years
+     *     - HIPAA: 6 years
+     *     - FedRAMP: 7 years
+     *     - EU AI Act: 6 months
+     *     - SOC 2: 3 years
      *
-     *         Flow:
-     *         1. User logs out in Keycloak (or another client)
-     *         2. Keycloak sends logout token to all registered backchannel logout URIs
-     *         3. Each application invalidates the session identified by 'sid'
+     *     Returns the count of deleted events.
      */
-    post: operations["backchannel_logout_api_v1_auth_backchannel_logout_post"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/auth/callback": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * Oauth2 Callback
-     * @description Handle OAuth2 authorization callback.
-     *
-     *     This endpoint:
-     *     1. Validates state parameter matches session state (CSRF protection)
-     *     2. Exchanges authorization code for tokens using PKCE verifier
-     *     3. Returns tokens to frontend
-     *
-     *     Called by Keycloak after user authenticates.
-     */
-    get: operations["oauth2_callback_api_v1_auth_callback_get"];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/auth/device": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * Request device authorization code
-     * @description Initiate Device Authorization Grant flow (RFC 8628).
-     *
-     *         This endpoint is for CLI/headless authentication scenarios where the client
-     *         cannot directly interact with the user for login.
-     *
-     *         Flow:
-     *         1. Client calls GET /auth/device to get device_code and user_code
-     *         2. Display verification_uri and user_code to user
-     *         3. User visits verification_uri on another device and enters user_code
-     *         4. Client polls POST /auth/device/token until authorization completes
-     */
-    get: operations["device_auth_request_api_v1_auth_device_get"];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/auth/device/token": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Poll for device authorization token
-     * @description Poll for access token after device authorization.
-     *
-     *         This endpoint should be called repeatedly (respecting the `interval` from
-     *         the device code response) until authorization completes or fails.
-     *
-     *         Possible error responses:
-     *         - `authorization_pending`: User hasn't completed authorization yet
-     *         - `slow_down`: Client is polling too frequently
-     *         - `expired_token`: Device code has expired
-     *         - `access_denied`: User denied the authorization request
-     */
-    post: operations["device_auth_token_api_v1_auth_device_token_post"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/auth/introspect": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Token Introspection
-     * @description Token Introspection endpoint - RFC 7662.
-     *
-     *     Allows resource servers to validate access tokens and retrieve their
-     *     metadata without parsing them locally. This is useful for:
-     *     - Validating opaque tokens
-     *     - Checking token revocation status
-     *     - Getting token claims without local JWT validation
-     *
-     *     Note: Requires client authentication (client_id + client_secret).
-     */
-    post: operations["token_introspection_api_v1_auth_introspect_post"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/auth/login": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * Oauth2 Login
-     * @description Initiate OAuth2 Authorization Code + PKCE flow.
-     *
-     *     This endpoint:
-     *     1. Generates PKCE code verifier and challenge
-     *     2. Generates state parameter for CSRF protection
-     *     3. Stores verifier and state in session (cookie)
-     *     4. Redirects user to Keycloak authorization endpoint
-     *
-     *     After successful authentication, Keycloak redirects to /auth/callback.
-     *
-     *     RFC 9126 PAR Support:
-     *     If request_uri is provided, redirects to Keycloak with just client_id and request_uri,
-     *     skipping the full PKCE flow (which was already done in the PAR request).
-     */
-    get: operations["oauth2_login_api_v1_auth_login_get"];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/auth/logout": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * Initiate OAuth2 logout
-     * @description Initiate OIDC RP-Initiated Logout flow.
-     *
-     *         This endpoint redirects the user to Keycloak's end_session endpoint to:
-     *         1. Terminate the Keycloak session
-     *         2. Clear any SSO cookies
-     *         3. Optionally redirect back to the application
-     *
-     *         Parameters:
-     *         - post_logout_redirect_uri: Where to redirect after logout (must be registered in Keycloak)
-     *         - id_token_hint: The ID token for the session being logged out (improves security)
-     */
-    get: operations["oauth2_logout_api_v1_auth_logout_get"];
-    put?: never;
-    /**
-     * Native logout (revoke tokens + terminate session)
-     * @description Native logout endpoint that revokes OAuth2 tokens and terminates the Keycloak session.
-     *
-     *         This endpoint provides a JSON-based logout for SPAs that:
-     *         1. Revokes the refresh token with Keycloak
-     *         2. Terminates the Keycloak SSO session
-     *         3. Clears session cookies (mcp_session and OAuth2 state cookies)
-     *         4. Returns a JSON response (no redirect)
-     *
-     *         The frontend should call this endpoint and then redirect to the login page.
-     */
-    post: operations["native_logout_api_v1_auth_logout_post"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/auth/par": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Pushed Authorization Request
-     * @description Pushed Authorization Request (PAR) endpoint - RFC 9126.
-     *
-     *     PAR provides enhanced security by:
-     *     - Pre-registering authorization requests server-side
-     *     - Reducing authorization request URL size
-     *     - Preventing request parameter tampering
-     *     - Enabling confidential client authentication at request time
-     *
-     *     Flow:
-     *     1. Client POSTs authorization parameters to this endpoint
-     *     2. Server returns a request_uri
-     *     3. Client uses request_uri in GET /auth/login?request_uri=...
-     *     4. Authorization server uses the pre-registered parameters
-     *
-     *     Note: Keycloak must have PAR enabled for this client.
-     */
-    post: operations["pushed_authorization_request_api_v1_auth_par_post"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/auth/refresh": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Oauth2 Refresh
-     * @description Refresh access token using refresh token.
-     *
-     *     This endpoint exchanges a valid refresh token for a new access token.
-     *     Used when the access token expires but the refresh token is still valid.
-     *
-     *     Security (Refresh Token Rotation):
-     *     - Old refresh tokens are added to denylist after successful rotation
-     *     - Prevents replay attacks with stolen refresh tokens
-     *     - Per OWASP Session Management best practices
-     */
-    post: operations["oauth2_refresh_api_v1_auth_refresh_post"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/chat/completions": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Create Completion
-     * @description Create a chat completion.
-     *
-     *     Sends messages to the LLM and returns the assistant's response.
-     *
-     *     Raises:
-     *         HTTPException 428: When MCP requires user elicitation (authentication, consent)
-     *         HTTPException 403: When permission is denied
-     *         HTTPException 503: When MCP server is unavailable
-     */
-    post: operations["create_completion_api_v1_chat_completions_post"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/chat/completions/stream": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Create Stream
-     * @description Create a streaming chat completion.
-     *
-     *     Sends messages to the LLM and streams the response as Server-Sent Events.
-     */
-    post: operations["create_stream_api_v1_chat_completions_stream_post"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/chat/{session_id}/history": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * Get History
-     * @description Get chat history for a session.
-     *
-     *     Returns all messages in chronological order.
-     */
-    get: operations["get_history_api_v1_chat__session_id__history_get"];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/compliance/reports/eu-ai-act": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * Get Eu Ai Act Report
-     * @description Generate EU AI Act Articles 12, 19, 72 Compliance report.
-     *
-     *     Returns a report containing:
-     *     - AI operations summary (total, by model, by provider)
-     *     - Decision types and their counts
-     *     - Model performance metrics
-     *     - High-risk decision flags
-     *     - Logging completeness percentage
-     *
-     *     This report supports EU AI Act compliance for high-risk AI systems
-     *     requiring automatic logging of events (Article 12), quality management
-     *     (Article 19), and post-market monitoring (Article 72).
-     */
-    get: operations["get_eu_ai_act_report_api_v1_compliance_reports_eu_ai_act_get"];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/compliance/reports/fedramp": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * Get Fedramp Report
-     * @description Generate FedRAMP NIST 800-53 AU Controls report.
-     *
-     *     Returns a report containing:
-     *     - AU-2: Audit Events (event types logged)
-     *     - AU-3: Content of Audit Records (fields captured)
-     *     - AU-9: Protection of Audit Information (integrity)
-     *     - AU-11: Audit Record Retention (policy compliance)
-     *
-     *     This report supports FedRAMP authorization by demonstrating
-     *     compliance with NIST 800-53 audit-related controls.
-     */
-    get: operations["get_fedramp_report_api_v1_compliance_reports_fedramp_get"];
-    put?: never;
-    post?: never;
+    post: operations["apply_retention_policy_api_v1_audit_retention_apply_post"];
     delete?: never;
     options?: never;
     head?: never;
@@ -1065,6 +4345,66 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/v1/compliance/reports/fedramp": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Fedramp Report
+     * @description Generate FedRAMP NIST 800-53 AU Controls report.
+     *
+     *     Returns a report containing:
+     *     - AU-2: Audit Events (event types logged)
+     *     - AU-3: Content of Audit Records (fields captured)
+     *     - AU-9: Protection of Audit Information (integrity)
+     *     - AU-11: Audit Record Retention (policy compliance)
+     *
+     *     This report supports FedRAMP authorization by demonstrating
+     *     compliance with NIST 800-53 audit-related controls.
+     */
+    get: operations["get_fedramp_report_api_v1_compliance_reports_fedramp_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/compliance/reports/eu-ai-act": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Eu Ai Act Report
+     * @description Generate EU AI Act Articles 12, 19, 72 Compliance report.
+     *
+     *     Returns a report containing:
+     *     - AI operations summary (total, by model, by provider)
+     *     - Decision types and their counts
+     *     - Model performance metrics
+     *     - High-risk decision flags
+     *     - Logging completeness percentage
+     *
+     *     This report supports EU AI Act compliance for high-risk AI systems
+     *     requiring automatic logging of events (Article 12), quality management
+     *     (Article 19), and post-market monitoring (Article 72).
+     */
+    get: operations["get_eu_ai_act_report_api_v1_compliance_reports_eu_ai_act_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/v1/compliance/reports/summary": {
     parameters: {
       query?: never;
@@ -1094,73 +4434,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  "/api/v1/connection-templates": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * List Templates
-     * @description List all available connection templates.
-     *
-     *     Supports filtering by category, authentication type, and search.
-     */
-    get: operations["list_templates_api_v1_connection_templates_get"];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/connection-templates/categories": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * List Categories
-     * @description List all template categories.
-     *
-     *     Returns list of categories that templates can belong to.
-     */
-    get: operations["list_categories_api_v1_connection_templates_categories_get"];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/connection-templates/{template_id}": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * Get Template
-     * @description Get a specific template by ID.
-     *
-     *     Returns full template details including configuration fields.
-     */
-    get: operations["get_template_api_v1_connection_templates__template_id__get"];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/connection-templates/{template_id}/apply": {
+  "/api/v1/ai/node-config/help": {
     parameters: {
       query?: never;
       header?: never;
@@ -1170,55 +4444,37 @@ export interface paths {
     get?: never;
     put?: never;
     /**
-     * Apply Template
-     * @description Apply a template to create a pre-filled connection configuration.
-     *
-     *     Takes the template and user-provided values to generate a connection
-     *     configuration that can be used to create a new connection.
+     * Get Node Configuration Help
+     * @description Get AI-powered configuration help for a workflow node type
      */
-    post: operations["apply_template_api_v1_connection_templates__template_id__apply_post"];
+    post: operations["get_node_config_help_api_v1_ai_node_config_help_post"];
     delete?: never;
     options?: never;
     head?: never;
     patch?: never;
     trace?: never;
   };
-  "/api/v1/connections": {
+  "/api/v1/ai/node-config/validate": {
     parameters: {
       query?: never;
       header?: never;
       path?: never;
       cookie?: never;
     };
-    /**
-     * List Connections
-     * @description List MCP connections for the current user.
-     *
-     *     Supports:
-     *     - Pagination: cursor, limit (cursor-based for efficient large result sets)
-     *     - Filtering: status, auth_type, project_id
-     *     - Search: search (uses PostgreSQL Full-Text Search on name and description)
-     *     - Sorting: sort_by, sort_order
-     */
-    get: operations["list_connections_api_v1_connections_get"];
+    get?: never;
     put?: never;
     /**
-     * Create Connection
-     * @description Create a new MCP connection.
-     *
-     *     Supports three authentication types:
-     *     - none: No authentication
-     *     - api_key: API key stored in secrets provider
-     *     - oauth2: OAuth2 with PKCE flow
+     * Validate Node Configuration
+     * @description Validate a node configuration against its schema
      */
-    post: operations["create_connection_api_v1_connections_post"];
+    post: operations["validate_node_config_api_v1_ai_node_config_validate_post"];
     delete?: never;
     options?: never;
     head?: never;
     patch?: never;
     trace?: never;
   };
-  "/api/v1/connections/audit/export": {
+  "/api/v1/ai/node-types": {
     parameters: {
       query?: never;
       header?: never;
@@ -1226,17 +4482,10 @@ export interface paths {
       cookie?: never;
     };
     /**
-     * Export Audit Logs
-     * @description Export audit logs in JSON or CSV format.
-     *
-     *     Supports the same filters as the query endpoint. Results are returned
-     *     as a downloadable file.
-     *
-     *     Formats:
-     *     - json: Complete JSON export with metadata
-     *     - csv: Comma-separated values with headers
+     * Get Available Node Types
+     * @description Get all available workflow node types
      */
-    get: operations["export_audit_logs_api_v1_connections_audit_export_get"];
+    get: operations["get_node_types_api_v1_ai_node_types_get"];
     put?: never;
     post?: never;
     delete?: never;
@@ -1245,30 +4494,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  "/api/v1/connections/audit/log": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Log Audit Event
-     * @description Log an audit event for a connection operation.
-     *
-     *     Records the event with timestamp, actor information, and optional details.
-     *     Automatically captures IP address and user agent from headers.
-     */
-    post: operations["log_audit_event_api_v1_connections_audit_log_post"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/connections/audit/logs": {
+  "/api/v1/ai/node-types/{node_type}/schema": {
     parameters: {
       query?: never;
       header?: never;
@@ -1276,13 +4502,10 @@ export interface paths {
       cookie?: never;
     };
     /**
-     * Query Audit Logs
-     * @description Query audit logs with filtering and pagination.
-     *
-     *     Supports filtering by resource type, resource ID, actor, event type,
-     *     and time range. Results are paginated with limit and offset.
+     * Get Node Type Schema
+     * @description Get the JSON Schema for a specific node type
      */
-    get: operations["query_audit_logs_api_v1_connections_audit_logs_get"];
+    get: operations["get_node_type_schema_api_v1_ai_node_types__node_type__schema_get"];
     put?: never;
     post?: never;
     delete?: never;
@@ -1291,7 +4514,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  "/api/v1/connections/audit/retention": {
+  "/api/v1/ai/suggestions": {
     parameters: {
       query?: never;
       header?: never;
@@ -1299,21 +4522,239 @@ export interface paths {
       cookie?: never;
     };
     get?: never;
+    put?: never;
+    /**
+     * Get AI Suggestions
+     * @description Unified endpoint for AI-powered suggestions (chat follow-up, workflow optimization)
+     */
+    post: operations["get_ai_suggestions_api_v1_ai_suggestions_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/ai/suggestions/stream": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Stream AI Suggestions
+     * @description Stream AI suggestions using Server-Sent Events (SSE)
+     */
+    post: operations["stream_ai_suggestions_api_v1_ai_suggestions_stream_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/ai/suggestions/click": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Track Suggestion Click
+     * @description Track when a user clicks on a suggestion for analytics
+     */
+    post: operations["track_suggestion_click_api_v1_ai_suggestions_click_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/ai/suggestions/track": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Track Suggestion Interaction
+     * @description Track user interactions with suggestions (click, dismiss, view)
+     */
+    post: operations["track_suggestion_interaction_api_v1_ai_suggestions_track_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/ai/suggestions/feedback": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Submit Suggestion Feedback
+     * @description Submit thumbs up/down feedback on a suggestion to improve quality
+     */
+    post: operations["submit_suggestion_feedback_api_v1_ai_suggestions_feedback_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/ai/fetch-url": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Fetch URL Content
+     * @description Fetch and extract content from a URL for chat context
+     */
+    post: operations["fetch_url_content_api_v1_ai_fetch_url_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/ai/disclosure/analyze": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Analyze user disclosure level
+     * @description Analyzes user behavior to recommend appropriate UI complexity level.
+     */
+    post: operations["analyze_disclosure_api_v1_ai_disclosure_analyze_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/ai/empty-state/suggestions": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Get empty state suggestions
+     * @description Returns contextual suggestions for empty state pages. Uses LLM when available for personalized suggestions.
+     */
+    post: operations["get_empty_state_suggestions_api_v1_ai_empty_state_suggestions_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/ai/nudges/recommend": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Get nudge recommendation
+     * @description Returns a contextual nudge recommendation based on user behavior.
+     */
+    post: operations["recommend_nudge_api_v1_ai_nudges_recommend_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/ai/errors/analyze": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Analyze error for recovery
+     * @description Analyzes an error and provides recovery suggestions. Uses LLM when available for intelligent analysis.
+     */
+    post: operations["analyze_error_api_v1_ai_errors_analyze_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/ai/onboarding/personalize": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Personalize onboarding
+     * @description Returns a personalized onboarding path based on detected intent.
+     */
+    post: operations["personalize_onboarding_api_v1_ai_onboarding_personalize_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/ai/metrics/insights": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get HEART metrics insights
+     * @description Returns AI-generated insights from HEART metrics data.
+     */
+    get: operations["get_metrics_insights_api_v1_ai_metrics_insights_get"];
     put?: never;
     post?: never;
-    /**
-     * Delete Old Audit Logs
-     * @description Delete audit logs older than the specified retention period.
-     *
-     *     This is used for maintenance and compliance with data retention policies.
-     */
-    delete: operations["delete_old_audit_logs_api_v1_connections_audit_retention_delete"];
+    delete?: never;
     options?: never;
     head?: never;
     patch?: never;
     trace?: never;
   };
-  "/api/v1/connections/bulk/delete": {
+  "/api/v1/ai/persona/analyze": {
     parameters: {
       query?: never;
       header?: never;
@@ -1323,20 +4764,17 @@ export interface paths {
     get?: never;
     put?: never;
     /**
-     * Bulk Delete
-     * @description Delete multiple connections at once.
-     *
-     *     Performs best-effort deletion - returns count of successfully deleted
-     *     connections and list of IDs that failed.
+     * Analyze user persona fit
+     * @description Analyzes user behavior to detect actual persona. Uses LLM when available for nuanced analysis.
      */
-    post: operations["bulk_delete_api_v1_connections_bulk_delete_post"];
+    post: operations["analyze_persona_api_v1_ai_persona_analyze_post"];
     delete?: never;
     options?: never;
     head?: never;
     patch?: never;
     trace?: never;
   };
-  "/api/v1/connections/bulk/status": {
+  "/api/v1/ai/composite/analyze": {
     parameters: {
       query?: never;
       header?: never;
@@ -1346,19 +4784,17 @@ export interface paths {
     get?: never;
     put?: never;
     /**
-     * Bulk Status Update
-     * @description Update status for multiple connections.
-     *
-     *     Useful for disconnecting all connections or marking them for re-authentication.
+     * Run composite analysis
+     * @description Runs multiple AI UX analyses in parallel and provides cross-service insights.
      */
-    post: operations["bulk_status_update_api_v1_connections_bulk_status_post"];
+    post: operations["composite_analyze_api_v1_ai_composite_analyze_post"];
     delete?: never;
     options?: never;
     head?: never;
     patch?: never;
     trace?: never;
   };
-  "/api/v1/connections/bulk/test": {
+  "/api/v1/ai/composite/stream": {
     parameters: {
       query?: never;
       header?: never;
@@ -1368,42 +4804,17 @@ export interface paths {
     get?: never;
     put?: never;
     /**
-     * Bulk Test
-     * @description Test multiple connections at once.
-     *
-     *     Performs parallel health checks and updates connection status.
-     *     Returns test results for each connection.
+     * Stream composite analysis
+     * @description Streams composite analysis results as Server-Sent Events.
      */
-    post: operations["bulk_test_api_v1_connections_bulk_test_post"];
+    post: operations["stream_composite_analyze_api_v1_ai_composite_stream_post"];
     delete?: never;
     options?: never;
     head?: never;
     patch?: never;
     trace?: never;
   };
-  "/api/v1/connections/health/summary": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * Get Health Summary
-     * @description Get aggregated health summary for connections belonging to current user.
-     *
-     *     Returns counts by status and timestamp of last check.
-     */
-    get: operations["get_health_summary_api_v1_connections_health_summary_get"];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/connections/oauth/callback": {
+  "/api/v1/ai/composite/batch": {
     parameters: {
       query?: never;
       header?: never;
@@ -1413,88 +4824,82 @@ export interface paths {
     get?: never;
     put?: never;
     /**
-     * Oauth2 Callback Stateless
-     * @description Handle OAuth2 callback (stateless - looks up connection from state).
+     * Batch composite analysis
+     * @description Processes multiple composite analysis requests in parallel with configurable concurrency.
+     */
+    post: operations["batch_composite_analyze_api_v1_ai_composite_batch_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/studio/analyze": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Unified composite analysis for StudioShell AI
+     * @description Execute multiple AI analysis tasks in parallel and synthesize results.
      *
-     *     This endpoint is called by the frontend OAuth2CallbackPage after the user
-     *     completes authorization at the OAuth2 provider. The connection_id is
-     *     retrieved from the stored state, allowing for a simpler frontend flow.
+     *         Supports task categories:
+     *         - ux: Persona, disclosure, error analysis, nudges
+     *         - session: Session summarize, group, similarity
+     *         - conversation: Intent detect, context optimize, goal track
+     *         - canvas: Artifact type suggest, code analyze, diff explain
+     *         - diagram: Diagram analyze, diagram-to-code
+     *         - trace: Trace summarize, trace anomaly
+     *         - hitl: Risk assess, decision history
+     *         - command: Command interpret, inline suggest, AI edit generate
+     *
+     *         Returns synthesized cross-category insights.
+     */
+    post: operations["analyze_api_v1_studio_analyze_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/notifications/push/subscribe": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Subscribe To Notifications
+     * @description Subscribe to push notifications.
+     *
+     *     Registers a push subscription endpoint for receiving notifications.
+     *     The subscription includes the endpoint URL and encryption keys.
+     *     Requires authentication.
      *
      *     Args:
-     *         request: FastAPI Request object for rate limiting
-     *         body: OAuth2CallbackRequest with code and state from OAuth provider
+     *         subscription: Push subscription details from the browser
+     *         current_user: Authenticated user making the request
+     *         store: Push subscription store dependency
+     *         request: FastAPI request object for user agent
      *
      *     Returns:
-     *         OAuth2CallbackResponse with connection_id on success
-     *
-     *     Raises:
-     *         HTTPException 400: Invalid or expired state
-     *         HTTPException 404: Connection not found
+     *         Success status and message
      */
-    post: operations["oauth2_callback_stateless_api_v1_connections_oauth_callback_post"];
+    post: operations["subscribe_to_notifications_api_v1_notifications_push_subscribe_post"];
     delete?: never;
     options?: never;
     head?: never;
     patch?: never;
     trace?: never;
   };
-  "/api/v1/connections/{connection_id}": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * Get Connection
-     * @description Get a specific MCP connection by ID.
-     *
-     *     Returns full connection details (without sensitive credentials).
-     */
-    get: operations["get_connection_api_v1_connections__connection_id__get"];
-    /**
-     * Update Connection
-     * @description Update an MCP connection.
-     *
-     *     Note: Authentication changes require separate endpoints for security.
-     */
-    put: operations["update_connection_api_v1_connections__connection_id__put"];
-    post?: never;
-    /**
-     * Delete Connection
-     * @description Delete an MCP connection.
-     *
-     *     Also removes associated secrets (API keys, OAuth2 tokens).
-     */
-    delete: operations["delete_connection_api_v1_connections__connection_id__delete"];
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/connections/{connection_id}/audit": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * Get Connection Audit Log
-     * @description Get audit log for a specific connection.
-     *
-     *     Returns the audit trail for a connection, ordered by timestamp descending.
-     */
-    get: operations["get_connection_audit_log_api_v1_connections__connection_id__audit_get"];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/connections/{connection_id}/oauth/callback": {
+  "/api/v1/notifications/push/unsubscribe": {
     parameters: {
       query?: never;
       header?: never;
@@ -1503,165 +4908,42 @@ export interface paths {
     };
     get?: never;
     put?: never;
-    /**
-     * Oauth2 Callback
-     * @description Handle OAuth2 callback.
-     *
-     *     Exchanges the authorization code for tokens and stores them securely.
-     */
-    post: operations["oauth2_callback_api_v1_connections__connection_id__oauth_callback_post"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/connections/{connection_id}/oauth/start": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Start Oauth2 Flow
-     * @description Start OAuth2 authorization flow for a connection.
-     *
-     *     Uses PKCE (Proof Key for Code Exchange) for security.
-     *     Returns the authorization URL and state parameter.
-     */
-    post: operations["start_oauth2_flow_api_v1_connections__connection_id__oauth_start_post"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/connections/{connection_id}/test": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Test Connection
-     * @description Test an MCP connection.
-     *
-     *     Attempts to connect to the MCP server and retrieve server info.
-     *     Updates connection status based on result.
-     */
-    post: operations["test_connection_api_v1_connections__connection_id__test_post"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/cost/by-model": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * Get By Model
-     * @description Get cost breakdown by model.
-     *
-     *     Returns cost and usage for each model used.
-     */
-    get: operations["get_by_model_api_v1_cost_by_model_get"];
-    put?: never;
     post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/cost/history": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
     /**
-     * Get History
-     * @description Get cost history over time.
+     * Unsubscribe From Notifications
+     * @description Unsubscribe from push notifications.
      *
-     *     Returns daily cost data for the specified period.
-     */
-    get: operations["get_history_api_v1_cost_history_get"];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/cost/summary": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * Get Summary
-     * @description Get cost summary.
-     *
-     *     Returns total cost and token usage for the specified period.
-     */
-    get: operations["get_summary_api_v1_cost_summary_get"];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/features": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * Get Features
-     * @description Get UI feature availability based on user role.
-     *
-     *     Returns a dictionary of feature names to boolean enabled status.
-     *     Admins get access to all features, while regular users may have
-     *     restricted access to certain features (e.g., cost dashboard).
+     *     Removes a push subscription endpoint for the authenticated user.
      *
      *     Args:
-     *         role: User role for determining feature access.
+     *         request_body: Unsubscribe request with endpoint URL
+     *         current_user: Authenticated user making the request
+     *         store: Push subscription store dependency
      *
      *     Returns:
-     *         Dictionary mapping feature names to their enabled status.
-     *
-     *     Example Response:
-     *         {
-     *             "workflows": true,
-     *             "sessions": true,
-     *             "cost_dashboard": false,
-     *             "observability": true,
-     *             "code_export": true,
-     *             "ai_suggestions": true,
-     *             "mcp_websocket": false,
-     *             "interactive_artifacts": true
-     *         }
+     *         Success status and message
      */
-    get: operations["get_features_api_v1_features_get"];
+    delete: operations["unsubscribe_from_notifications_api_v1_notifications_push_unsubscribe_delete"];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/notifications/push/subscriptions": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List User Subscriptions
+     * @description List all push subscriptions for the authenticated user.
+     *
+     *     Returns:
+     *         List of subscription information for the user
+     */
+    get: operations["list_user_subscriptions_api_v1_notifications_push_subscriptions_get"];
     put?: never;
     post?: never;
     delete?: never;
@@ -1670,7 +4952,51 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  "/api/v1/health": {
+  "/api/v1/notifications/subscribe": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Subscribe Legacy
+     * @description Legacy subscribe endpoint (deprecated).
+     *
+     *     Use POST /push/subscribe instead for authenticated subscriptions.
+     */
+    post: operations["subscribe_legacy_api_v1_notifications_subscribe_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/notifications/unsubscribe": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Unsubscribe Legacy
+     * @description Legacy unsubscribe endpoint (deprecated).
+     *
+     *     Use DELETE /push/unsubscribe instead for authenticated unsubscription.
+     */
+    post: operations["unsubscribe_legacy_api_v1_notifications_unsubscribe_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/notifications/preferences": {
     parameters: {
       query?: never;
       header?: never;
@@ -1678,16 +5004,68 @@ export interface paths {
       cookie?: never;
     };
     /**
-     * Health Check
-     * @description Check the health status of all critical systems
+     * Get notification preferences
+     * @description Get the current user's notification preferences.
      */
-    get: operations["health_check_api_v1_health_get"];
-    put?: never;
+    get: operations["get_preferences_api_v1_notifications_preferences_get"];
+    /**
+     * Update notification preferences
+     * @description Update the current user's notification preferences.
+     */
+    put: operations["update_preferences_api_v1_notifications_preferences_put"];
     post?: never;
     delete?: never;
     options?: never;
     head?: never;
     patch?: never;
+    trace?: never;
+  };
+  "/api/v1/notifications/preferences/reset": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Reset notification preferences
+     * @description Reset the current user's notification preferences to defaults.
+     */
+    post: operations["reset_preferences_api_v1_notifications_preferences_reset_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/preferences": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get user preferences
+     * @description Get the current user's preferences. Returns defaults if not set.
+     */
+    get: operations["get_preferences_api_v1_preferences_get"];
+    put?: never;
+    post?: never;
+    /**
+     * Reset user preferences
+     * @description Reset the current user's preferences to defaults.
+     */
+    delete: operations["reset_preferences_api_v1_preferences_delete"];
+    options?: never;
+    head?: never;
+    /**
+     * Update user preferences
+     * @description Partially update the current user's preferences.
+     */
+    patch: operations["update_preferences_api_v1_preferences_patch"];
     trace?: never;
   };
   "/api/v1/identity-providers": {
@@ -1734,7 +5112,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  "/api/v1/login": {
+  "/api/v1/sessions/{session_id}/export": {
     parameters: {
       query?: never;
       header?: never;
@@ -1744,121 +5122,259 @@ export interface paths {
     get?: never;
     put?: never;
     /**
-     * Login
-     * @deprecated
-     * @description DEPRECATED: Authenticate user with username and password (ROPC flow).
-     *
-     *     WARNING: This endpoint uses Resource Owner Password Credentials (ROPC) grant type,
-     *     which is deprecated per RFC 9700 (OAuth 2.0 Security Best Practice).
-     *
-     *     Migration: Use GET /api/v1/auth/login for OAuth2 Authorization Code + PKCE flow.
-     *     This endpoint will be removed in a future major version.
-     *
-     *     Uses Keycloak's Resource Owner Password Credentials (ROPC) grant type
-     *     to exchange credentials for tokens without requiring browser redirect.
-     *
-     *     Note: This requires the Keycloak client to have "Direct Access Grants" enabled.
+     * Export session
+     * @description Export a chat session in the specified format.
+     */
+    post: operations["export_session_api_v1_sessions__session_id__export_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/context": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get project context
+     * @description Get the project context file content.
+     */
+    get: operations["get_context_api_v1_context_get"];
+    /**
+     * Update project context
+     * @description Create or update the project context file.
+     */
+    put: operations["update_context_api_v1_context_put"];
+    post?: never;
+    /**
+     * Delete project context
+     * @description Delete the project context file.
+     */
+    delete: operations["delete_context_api_v1_context_delete"];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/webhooks/alertmanager": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Receive alerts from Alertmanager
+     * @description Webhook endpoint for Prometheus Alertmanager to push alerts.
+     */
+    post: operations["alertmanager_webhook_api_v1_webhooks_alertmanager_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/remediations/pending": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List pending remediations
+     * @description Get all remediations waiting for approval. Requires admin role.
+     */
+    get: operations["list_pending_remediations_api_v1_remediations_pending_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/remediations/{remediation_id}/approve": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Approve a remediation
+     * @description Approve a pending remediation for execution. Requires admin role.
+     */
+    post: operations["approve_remediation_api_v1_remediations__remediation_id__approve_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/remediations/{remediation_id}/reject": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Reject a remediation
+     * @description Reject a pending remediation. Requires admin role.
+     */
+    post: operations["reject_remediation_api_v1_remediations__remediation_id__reject_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/remediations/history": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get remediation history
+     * @description Get completed (approved/rejected) remediations. Requires admin role.
+     */
+    get: operations["get_remediation_history_api_v1_remediations_history_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/remediations/{remediation_id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get remediation details
+     * @description Get details of a specific remediation.
+     */
+    get: operations["get_remediation_api_v1_remediations__remediation_id__get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/alerts/": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List alerts
+     * @description Get all alerts with optional filtering by severity and state.
+     */
+    get: operations["list_alerts_api_v1_alerts__get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/alerts/{alert_id}/recommendation": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get alert recommendation
+     * @description Get AI-generated recommendation for an alert.
+     */
+    get: operations["get_alert_recommendation_api_v1_alerts__alert_id__recommendation_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/alerts/{alert_id}/recommendation/regenerate": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Regenerate alert recommendation
+     * @description Force regenerate AI recommendation for an alert.
+     */
+    post: operations["regenerate_alert_recommendation_api_v1_alerts__alert_id__recommendation_regenerate_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/alerts/correlate": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Correlate alerts
+     * @description Correlate alerts by label or time window with optional pattern detection.
+     */
+    post: operations["correlate_alerts_api_v1_alerts_correlate_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/admin/skills/updates": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Check Skill Updates
+     * @description Check for available skill updates.
      *
      *     Returns:
-     *         LoginResponse with access_token, refresh_token, and user info
+     *         Dict with list of available updates
      */
-    post: operations["login_api_v1_login_post"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/logout": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Logout
-     * @description Logout and revoke tokens.
-     *
-     *     Revokes the access token (and optionally refresh token) with Keycloak.
-     *     This is a native logout that doesn't redirect to Keycloak UI.
-     *
-     *     Security (OWASP best practice):
-     *     - Adds token JTI to denylist for immediate invalidation
-     *     - Token will be rejected even before Keycloak revocation propagates
-     *
-     *     The client should:
-     *     1. Call this endpoint
-     *     2. Clear local token storage
-     *     3. Redirect to login page
-     */
-    post: operations["logout_api_v1_logout_post"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/mcp/elicitation": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Create Elicitation
-     * @description Request user input via form elicitation.
-     *
-     *     Allows the server to request structured input from the user.
-     */
-    post: operations["create_elicitation_api_v1_mcp_elicitation_post"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/mcp/elicitation/url": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Create Url Elicitation
-     * @description Request user to navigate to a URL.
-     *
-     *     Useful for OAuth flows or handling sensitive data.
-     */
-    post: operations["create_url_elicitation_api_v1_mcp_elicitation_url_post"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/mcp/resources": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * List Resources
-     * @description List available MCP resources.
-     *
-     *     Returns all resources exposed by the MCP server.
-     */
-    get: operations["list_resources_api_v1_mcp_resources_get"];
+    get: operations["check_skill_updates_api_v1_admin_skills_updates_get"];
     put?: never;
     post?: never;
     delete?: never;
@@ -1867,29 +5383,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  "/api/v1/mcp/resources/content": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * Read Resource
-     * @description Read a resource by URI.
-     *
-     *     Returns the content of the specified resource.
-     */
-    get: operations["read_resource_api_v1_mcp_resources_content_get"];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/mcp/sampling": {
+  "/api/v1/admin/skills/updates/apply": {
     parameters: {
       query?: never;
       header?: never;
@@ -1899,275 +5393,44 @@ export interface paths {
     get?: never;
     put?: never;
     /**
-     * Create Sampling
-     * @description Request LLM completion via MCP sampling.
-     *
-     *     This is a server-initiated request for the client to sample from an LLM.
-     *     Useful for agent patterns where the server needs LLM assistance.
-     */
-    post: operations["create_sampling_api_v1_mcp_sampling_post"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/mcp/tasks": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * List Tasks
-     * @description List active MCP tasks.
-     *
-     *     Returns all currently active tasks (experimental feature).
-     */
-    get: operations["list_tasks_api_v1_mcp_tasks_get"];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/mcp/tasks/{task_id}": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * Get Task
-     * @description Get task status.
-     *
-     *     Returns the current status of a task.
-     */
-    get: operations["get_task_api_v1_mcp_tasks__task_id__get"];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/mcp/tasks/{task_id}/cancel": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Cancel Task
-     * @description Cancel a running task.
-     *
-     *     Attempts to cancel the specified task.
-     */
-    post: operations["cancel_task_api_v1_mcp_tasks__task_id__cancel_post"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/me": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * Get Me
-     * @description Get current authenticated user information.
-     *
-     *     Returns the current user's info including:
-     *     - user_id: OpenFGA-compatible user ID
-     *     - username: Display username
-     *     - email: Email address (if available)
-     *     - roles: Keycloak roles
-     *     - persona: Computed persona for frontend RBAC (admin/developer/user)
-     *
-     *     The frontend uses this endpoint on mount to:
-     *     1. Detect user's persona based on roles
-     *     2. Configure sidebar navigation items
-     *     3. Set up route access control
-     */
-    get: operations["get_me_api_v1_me_get"];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/metrics/dashboard": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * Get Dashboard Data
-     * @description Get all metrics data for admin dashboard
-     */
-    get: operations["get_dashboard_api_v1_metrics_dashboard_get"];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/metrics/events": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Submit Feature Events
-     * @description Submit a batch of feature usage events
-     */
-    post: operations["submit_events_api_v1_metrics_events_post"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/metrics/feedback": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Submit User Feedback
-     * @description Submit NPS/CSAT user feedback
-     */
-    post: operations["submit_feedback_api_v1_metrics_feedback_post"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/metrics/heart": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Submit HEART Metrics
-     * @description Submit a batch of HEART framework metrics
-     */
-    post: operations["submit_heart_metrics_api_v1_metrics_heart_post"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/metrics/heart/aggregate": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * Get Aggregated HEART Metrics
-     * @description Get aggregated HEART metrics for a time period
-     */
-    get: operations["get_aggregate_metrics_api_v1_metrics_heart_aggregate_get"];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/notifications/subscribe": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Subscribe To Notifications
-     * @description Subscribe to push notifications.
-     *
-     *     Registers a push subscription endpoint for receiving notifications.
-     *     The subscription includes the endpoint URL and encryption keys.
-     *
-     *     Args:
-     *         subscription: Push subscription details from the browser
+     * Apply Skill Updates
+     * @description Apply all available skill updates.
      *
      *     Returns:
-     *         Success status and message
+     *         Dict with list of applied updates
      */
-    post: operations["subscribe_to_notifications_api_v1_notifications_subscribe_post"];
+    post: operations["apply_skill_updates_api_v1_admin_skills_updates_apply_post"];
     delete?: never;
     options?: never;
     head?: never;
     patch?: never;
     trace?: never;
   };
-  "/api/v1/notifications/unsubscribe": {
+  "/.well-known/oauth-protected-resource": {
     parameters: {
       query?: never;
       header?: never;
       path?: never;
       cookie?: never;
     };
-    get?: never;
+    /**
+     * Protected Resource Metadata
+     * @description OAuth 2.0 Protected Resource Metadata per RFC 9728
+     */
+    get: operations["get_protected_resource_metadata__well_known_oauth_protected_resource_get"];
     put?: never;
-    /**
-     * Unsubscribe From Notifications
-     * @description Unsubscribe from push notifications.
-     *
-     *     Removes a push subscription endpoint.
-     *
-     *     Args:
-     *         request: Unsubscribe request with endpoint URL
-     *
-     *     Returns:
-     *         Success status and message
-     */
-    post: operations["unsubscribe_from_notifications_api_v1_notifications_unsubscribe_post"];
+    post?: never;
     delete?: never;
-    options?: never;
+    /**
+     * Options Protected Resource Metadata
+     * @description Handle CORS preflight requests.
+     */
+    options: operations["options_protected_resource_metadata__well_known_oauth_protected_resource_options"];
     head?: never;
     patch?: never;
     trace?: never;
   };
-  "/api/v1/observability/metrics": {
+  "/api/version": {
     parameters: {
       query?: never;
       header?: never;
@@ -2175,12 +5438,34 @@ export interface paths {
       cookie?: never;
     };
     /**
-     * Get Metrics
-     * @description Get metrics summary.
+     * Get API version information
+     * @description Returns API version metadata for client compatibility checking.
      *
-     *     Returns aggregate metrics for the specified period.
+     *         **Versioning Strategy:**
+     *         - **Semantic Versioning**: MAJOR.MINOR.PATCH
+     *         - **URL Versioning**: `/api/v1`, `/api/v2`, etc.
+     *         - **Header Negotiation**: `X-API-Version: 1.0` (optional)
+     *         - **Deprecation Policy**: 6-month sunset period for deprecated versions
+     *
+     *         **Breaking Changes:**
+     *         - Removing fields from responses
+     *         - Changing field types
+     *         - Removing endpoints
+     *         - Changing authentication methods
+     *
+     *         **Non-Breaking Changes:**
+     *         - Adding new endpoints
+     *         - Adding new optional fields to requests
+     *         - Adding new fields to responses
+     *         - Adding new query parameters (optional)
+     *
+     *         Use this endpoint to:
+     *         - Check current API version
+     *         - Determine if your client is compatible
+     *         - Find out when deprecated versions will be removed
+     *         - Locate API documentation
      */
-    get: operations["get_metrics_api_v1_observability_metrics_get"];
+    get: operations["get_api_version_metadata"];
     put?: never;
     post?: never;
     delete?: never;
@@ -2189,7 +5474,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  "/api/v1/observability/traces": {
+  "/login": {
     parameters: {
       query?: never;
       header?: never;
@@ -2197,18 +5482,16 @@ export interface paths {
       cookie?: never;
     };
     /**
-     * List Traces
-     * @description List traces with cursor-based pagination.
+     * Login Page
+     * @description Serve native login page.
      *
-     *     Supports:
-     *     - Pagination: cursor, limit
-     *     - Filtering: session_id
-     *     - Search: search (searches trace name)
-     *     - Sorting: sort_by, sort_order
+     *     This endpoint serves the SPA's index.html which loads the React app.
+     *     React Router then handles the /login route and renders the LoginPage component.
      *
-     *     Optionally filter by session_id to get traces for a specific session.
+     *     The login form calls POST /api/v1/login which authenticates via Keycloak ROPC
+     *     grant (Resource Owner Password Credentials) - no redirect to Keycloak UI.
      */
-    get: operations["list_traces_api_v1_observability_traces_get"];
+    get: operations["login_page_login_get"];
     put?: never;
     post?: never;
     delete?: never;
@@ -2217,7 +5500,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  "/api/v1/observability/traces/{trace_id}": {
+  "/auth/callback": {
     parameters: {
       query?: never;
       header?: never;
@@ -2225,1515 +5508,22 @@ export interface paths {
       cookie?: never;
     };
     /**
-     * Get Trace
-     * @description Get a specific trace by ID.
+     * Auth Callback Page
+     * @description Serve OAuth2 callback page.
      *
-     *     Returns the complete trace with all spans.
+     *     This endpoint serves the SPA's index.html which loads the React app.
+     *     React Router then handles the /auth/callback route and renders the AuthCallbackPage component.
+     *
+     *     The AuthCallbackPage extracts tokens from the URL fragment (#access_token=...)
+     *     and stores them in localStorage before redirecting to /studio.
      */
-    get: operations["get_trace_api_v1_observability_traces__trace_id__get"];
+    get: operations["auth_callback_page_auth_callback_get"];
     put?: never;
     post?: never;
     delete?: never;
     options?: never;
     head?: never;
     patch?: never;
-    trace?: never;
-  };
-  "/api/v1/projects": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * List projects
-     * @description List all projects accessible to the current user with sorting, filtering, and search.
-     */
-    get: operations["list_projects_api_v1_projects_get"];
-    put?: never;
-    /**
-     * Create project
-     * @description Create a new project as a unified workspace.
-     */
-    post: operations["create_project_api_v1_projects_post"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/projects/{project_id}": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * Get project details
-     * @description Get detailed information about a project including its resources.
-     */
-    get: operations["get_project_api_v1_projects__project_id__get"];
-    /**
-     * Update project
-     * @description Update project name or description.
-     */
-    put: operations["update_project_api_v1_projects__project_id__put"];
-    post?: never;
-    /**
-     * Delete project
-     * @description Delete a project and optionally its child resources.
-     */
-    delete: operations["delete_project_api_v1_projects__project_id__delete"];
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/projects/{project_id}/connections": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * List connections in project
-     * @description List all connections (MCP servers, vector stores, etc.) in this project.
-     */
-    get: operations["list_project_connections_api_v1_projects__project_id__connections_get"];
-    put?: never;
-    /**
-     * Add connection to project
-     * @description Add a connection (MCP server, vector store, etc.) to this project.
-     */
-    post: operations["add_connection_to_project_api_v1_projects__project_id__connections_post"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/projects/{project_id}/connections/{connection_id}": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    post?: never;
-    /**
-     * Remove connection from project
-     * @description Remove a connection from this project. The connection itself is not deleted.
-     */
-    delete: operations["remove_connection_from_project_api_v1_projects__project_id__connections__connection_id__delete"];
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/projects/{project_id}/cost/by-model": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * Get project cost by model
-     * @description Get cost breakdown by model for sessions in this project.
-     */
-    get: operations["get_project_cost_by_model_api_v1_projects__project_id__cost_by_model_get"];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/projects/{project_id}/cost/history": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * Get project cost history
-     * @description Get cost history over time for sessions in this project.
-     */
-    get: operations["get_project_cost_history_api_v1_projects__project_id__cost_history_get"];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/projects/{project_id}/cost/summary": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * Get project cost summary
-     * @description Get cost summary aggregated for sessions in this project.
-     */
-    get: operations["get_project_cost_summary_api_v1_projects__project_id__cost_summary_get"];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/projects/{project_id}/members": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * List project members
-     * @description List all members of this project with their roles.
-     */
-    get: operations["list_project_members_api_v1_projects__project_id__members_get"];
-    put?: never;
-    /**
-     * Add member to project
-     * @description Add a user as a member of this project with a specific role.
-     */
-    post: operations["add_member_to_project_api_v1_projects__project_id__members_post"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/projects/{project_id}/members/{user_id}": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    post?: never;
-    /**
-     * Remove member from project
-     * @description Remove a user from this project.
-     */
-    delete: operations["remove_member_from_project_api_v1_projects__project_id__members__user_id__delete"];
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/projects/{project_id}/observability/alerts": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * Get project alerts
-     * @description Get alerts for sessions and workflows in this project.
-     */
-    get: operations["get_project_alerts_api_v1_projects__project_id__observability_alerts_get"];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/projects/{project_id}/observability/logs": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * Get project logs
-     * @description Get logs filtered to sessions and workflows in this project.
-     */
-    get: operations["get_project_logs_api_v1_projects__project_id__observability_logs_get"];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/projects/{project_id}/observability/metrics": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * Get project metrics
-     * @description Get metrics aggregated for sessions and workflows in this project.
-     */
-    get: operations["get_project_metrics_api_v1_projects__project_id__observability_metrics_get"];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/projects/{project_id}/observability/traces": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * Get project traces
-     * @description Get traces filtered to sessions and workflows in this project.
-     */
-    get: operations["get_project_traces_api_v1_projects__project_id__observability_traces_get"];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/projects/{project_id}/sessions": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * List sessions in project
-     * @description List all sessions associated with this project.
-     */
-    get: operations["list_project_sessions_api_v1_projects__project_id__sessions_get"];
-    put?: never;
-    /**
-     * Add session to project
-     * @description Associate an existing session with this project.
-     */
-    post: operations["add_session_to_project_api_v1_projects__project_id__sessions_post"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/projects/{project_id}/sessions/{session_id}": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    post?: never;
-    /**
-     * Remove session from project
-     * @description Disassociate a session from this project (does not delete the session).
-     */
-    delete: operations["remove_session_from_project_api_v1_projects__project_id__sessions__session_id__delete"];
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/projects/{project_id}/workflows": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * List workflows in project
-     * @description List all workflows associated with this project.
-     */
-    get: operations["list_project_workflows_api_v1_projects__project_id__workflows_get"];
-    put?: never;
-    /**
-     * Add workflow to project
-     * @description Associate an existing workflow with this project.
-     */
-    post: operations["add_workflow_to_project_api_v1_projects__project_id__workflows_post"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/projects/{project_id}/workflows/{workflow_id}": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    post?: never;
-    /**
-     * Remove workflow from project
-     * @description Disassociate a workflow from this project (does not delete the workflow).
-     */
-    delete: operations["remove_workflow_from_project_api_v1_projects__project_id__workflows__workflow_id__delete"];
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/service-principals/": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * List Service Principals
-     * @description List service principals owned by the current user
-     *
-     *     Returns all service principals where the current user is the owner.
-     *     Does not include client secrets.
-     */
-    get: operations["list_service_principals_api_v1_service_principals__get"];
-    put?: never;
-    /**
-     * Create Service Principal
-     * @description Create a new service principal
-     *
-     *     Creates a service principal with the specified authentication mode.
-     *     The calling user becomes the owner of the service principal.
-     *
-     *     Returns the created service principal with credentials (client_secret).
-     *     **Save the client_secret securely** - it will not be shown again.
-     *
-     *     Example:
-     *         ```json
-     *         {
-     *             "name": "Batch ETL Job",
-     *             "description": "Nightly data processing",
-     *             "authentication_mode": "client_credentials",
-     *             "associated_user_id": "user:alice",
-     *             "inherit_permissions": true
-     *         }
-     *         ```
-     */
-    post: operations["create_service_principal_api_v1_service_principals__post"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/service-principals/{service_id}": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * Get Service Principal
-     * @description Get details of a specific service principal
-     *
-     *     Returns service principal details if the current user is the owner.
-     */
-    get: operations["get_service_principal_api_v1_service_principals__service_id__get"];
-    put?: never;
-    post?: never;
-    /**
-     * Delete Service Principal
-     * @description Delete a service principal
-     *
-     *     Permanently deletes the service principal from Keycloak and OpenFGA.
-     *     This action cannot be undone.
-     */
-    delete: operations["delete_service_principal_api_v1_service_principals__service_id__delete"];
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/service-principals/{service_id}/associate-user": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Associate Service Principal With User
-     * @description Associate service principal with a user for permission inheritance
-     *
-     *     Links a service principal to a user, optionally enabling permission inheritance.
-     *     When inherit_permissions is true, the service principal can act on behalf of
-     *     the user and inherit all their permissions.
-     */
-    post: operations["associate_service_principal_with_user_api_v1_service_principals__service_id__associate_user_post"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/service-principals/{service_id}/rotate-secret": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Rotate Service Principal Secret
-     * @description Rotate service principal secret
-     *
-     *     Generates a new client secret for the service principal.
-     *     The old secret will be invalidated immediately.
-     *
-     *     **Save the new client_secret securely** - update your service configuration
-     *     before the old secret expires.
-     */
-    post: operations["rotate_service_principal_secret_api_v1_service_principals__service_id__rotate_secret_post"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/sessions": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * List Sessions
-     * @description List all sessions with cursor-based pagination.
-     *
-     *     Supports:
-     *     - Pagination: cursor, limit
-     *     - Filtering: workflow_id, status
-     *     - Search: search (searches title)
-     *     - Sorting: sort_by, sort_order
-     */
-    get: operations["list_sessions_api_v1_sessions_get"];
-    put?: never;
-    /**
-     * Create Session
-     * @description Create a new session.
-     *
-     *     The session can optionally be associated with a workflow.
-     */
-    post: operations["create_session_api_v1_sessions_post"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/sessions/{session_id}": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * Get Session
-     * @description Get a specific session by ID.
-     *
-     *     Returns the complete session data including messages.
-     */
-    get: operations["get_session_api_v1_sessions__session_id__get"];
-    put?: never;
-    post?: never;
-    /**
-     * Delete Session
-     * @description Delete a session.
-     *
-     *     This permanently removes the session and all its messages.
-     */
-    delete: operations["delete_session_api_v1_sessions__session_id__delete"];
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/sessions/{session_id}/bootstrap-workflow": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Bootstrap Workflow
-     * @description Bootstrap a workflow from a chat session's conversation trace.
-     *
-     *     Analyzes the chat history to identify action steps and creates a
-     *     workflow definition that can be saved and executed.
-     *
-     *     Args:
-     *         session_id: The session ID to analyze
-     *         request: Bootstrap request with workflow name and description
-     *
-     *     Returns:
-     *         Complete workflow definition with nodes and edges
-     *
-     *     Raises:
-     *         HTTPException: 404 if session not found, 400 if session has no messages
-     */
-    post: operations["bootstrap_workflow_api_v1_sessions__session_id__bootstrap_workflow_post"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/sessions/{session_id}/messages": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * Get Session Messages
-     * @description Get all messages in a session.
-     *
-     *     Returns messages in chronological order.
-     */
-    get: operations["get_session_messages_api_v1_sessions__session_id__messages_get"];
-    put?: never;
-    /**
-     * Add Message
-     * @description Add a message to a session.
-     *
-     *     The message is appended to the session's message history.
-     */
-    post: operations["add_message_api_v1_sessions__session_id__messages_post"];
-    /**
-     * Clear Messages
-     * @description Clear all messages in a session.
-     *
-     *     This removes all messages but keeps the session intact.
-     */
-    delete: operations["clear_messages_api_v1_sessions__session_id__messages_delete"];
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/studio/suggestions": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Get Suggestions
-     * @description Get AI suggestions for a workflow.
-     *
-     *     Analyzes the workflow and returns optimization suggestions.
-     */
-    post: operations["get_suggestions_api_v1_studio_suggestions_post"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/studio/templates": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * List Templates
-     * @description List all available workflow templates.
-     *
-     *     Returns all built-in templates that can be used as starting points.
-     */
-    get: operations["list_templates_api_v1_studio_templates_get"];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/studio/templates/recommend": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Recommend Templates
-     * @description Get template recommendations based on description.
-     *
-     *     Uses semantic similarity to find templates matching the description.
-     */
-    post: operations["recommend_templates_api_v1_studio_templates_recommend_post"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/studio/workflows": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * List Workflows
-     * @description List all workflows for the current user.
-     *
-     *     Returns all workflows owned by the authenticated user.
-     */
-    get: operations["list_workflows_api_v1_studio_workflows_get"];
-    put?: never;
-    /**
-     * Create Workflow
-     * @description Create a new workflow.
-     *
-     *     Creates a new workflow for the authenticated user.
-     *     Delegates to the unified workflow storage layer.
-     *
-     *     Example:
-     *         ```json
-     *         {
-     *             "name": "My Chatbot",
-     *             "description": "A simple chatbot workflow",
-     *             "nodes": [{"id": "input", "type": "input", "data": {}}],
-     *             "edges": []
-     *         }
-     *         ```
-     */
-    post: operations["create_workflow_api_v1_studio_workflows_post"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/studio/workflows/{workflow_id}": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * Get Workflow
-     * @description Get a workflow by ID.
-     *
-     *     Returns the workflow if the user has access.
-     */
-    get: operations["get_workflow_api_v1_studio_workflows__workflow_id__get"];
-    /**
-     * Update Workflow
-     * @description Update an existing workflow.
-     *
-     *     Only the workflow owner can update it.
-     */
-    put: operations["update_workflow_api_v1_studio_workflows__workflow_id__put"];
-    post?: never;
-    /**
-     * Delete Workflow
-     * @description Delete a workflow.
-     *
-     *     Permanently deletes the workflow. This action cannot be undone.
-     */
-    delete: operations["delete_workflow_api_v1_studio_workflows__workflow_id__delete"];
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/users/me": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    post?: never;
-    /**
-     * Delete User Account
-     * @description Delete user account and all data (GDPR Article 17 - Right to Erasure)
-     *
-     *     **WARNING**: This is an irreversible operation that permanently deletes all user data.
-     *
-     *     **GDPR Article 17**: The data subject shall have the right to obtain from the
-     *     controller the erasure of personal data concerning him or her without undue delay.
-     *
-     *     **Query Parameters**:
-     *     - `confirm`: Must be set to `true` to confirm deletion
-     *
-     *     **What gets deleted**:
-     *     - User profile and account
-     *     - All sessions
-     *     - All conversations and messages
-     *     - All preferences and settings
-     *     - All authorization tuples
-     *
-     *     **What gets anonymized** (retained for compliance):
-     *     - Audit logs (user_id replaced with hash)
-     *
-     *     **Response**: Deletion result with details
-     */
-    delete: operations["delete_user_account_api_v1_users_me_delete"];
-    options?: never;
-    head?: never;
-    /**
-     * Update User Profile
-     * @description Update user profile (GDPR Article 16 - Right to Rectification)
-     *
-     *     **GDPR Article 16**: The data subject shall have the right to obtain from the
-     *     controller without undue delay the rectification of inaccurate personal data
-     *     concerning him or her.
-     *
-     *     **Request Body**: Profile fields to update (only provided fields are updated)
-     *
-     *     **Response**: Updated user profile
-     */
-    patch: operations["update_user_profile_api_v1_users_me_patch"];
-    trace?: never;
-  };
-  "/api/v1/users/me/consent": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * Get Consent Status
-     * @description Get current consent status (GDPR Article 21 - Right to Object)
-     *
-     *     Returns all consent preferences for the authenticated user.
-     *
-     *     **Response**: Current consent status for all consent types
-     */
-    get: operations["get_consent_status_api_v1_users_me_consent_get"];
-    put?: never;
-    /**
-     * Update Consent
-     * @description Update user consent preferences (GDPR Article 21 - Right to Object)
-     *
-     *     **GDPR Article 21**: The data subject shall have the right to object at any time
-     *     to processing of personal data concerning him or her.
-     *
-     *     **Request Body**: Consent type and whether it's granted
-     *
-     *     **Response**: Current consent status for all types
-     */
-    post: operations["update_consent_api_v1_users_me_consent_post"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/users/me/data": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * Get User Data
-     * @description Export all user data (GDPR Article 15 - Right to Access)
-     *
-     *     Returns all personal data associated with the authenticated user.
-     *
-     *     **GDPR Article 15**: The data subject shall have the right to obtain from the
-     *     controller confirmation as to whether or not personal data concerning him or
-     *     her are being processed, and access to the personal data.
-     *
-     *     **Response**: Complete JSON export of all user data including:
-     *     - User profile
-     *     - Sessions
-     *     - Conversations
-     *     - Preferences
-     *     - Audit log
-     *     - Consents
-     */
-    get: operations["get_user_data_api_v1_users_me_data_get"];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/users/me/export": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * Export User Data
-     * @description Export user data in portable format (GDPR Article 20 - Right to Data Portability)
-     *
-     *     **GDPR Article 20**: The data subject shall have the right to receive the personal
-     *     data concerning him or her in a structured, commonly used and machine-readable format.
-     *
-     *     **Query Parameters**:
-     *     - `format`: Export format (json or csv)
-     *
-     *     **Response**: File download in requested format
-     */
-    get: operations["export_user_data_api_v1_users_me_export_get"];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/vectors/collections": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * List Collections
-     * @description List all vector collections.
-     *
-     *     Requires: viewer permission on vector_store:default
-     */
-    get: operations["list_collections_api_v1_vectors_collections_get"];
-    put?: never;
-    /**
-     * Create Collection
-     * @description Create a new vector collection.
-     *
-     *     Requires: editor permission on vector_store:default
-     */
-    post: operations["create_collection_api_v1_vectors_collections_post"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/vectors/collections/{collection_name}": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    post?: never;
-    /**
-     * Delete Collection
-     * @description Delete a vector collection.
-     *
-     *     Requires: owner permission on vector_store:default
-     */
-    delete: operations["delete_collection_api_v1_vectors_collections__collection_name__delete"];
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/vectors/points": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Upsert Points
-     * @description Upsert points into a collection.
-     *
-     *     Requires: editor permission on vector_store:default
-     */
-    post: operations["upsert_points_api_v1_vectors_points_post"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/vectors/search": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Search Vectors
-     * @description Search for similar vectors in a collection.
-     *
-     *     Requires: viewer permission on vector_store:default
-     */
-    post: operations["search_vectors_api_v1_vectors_search_post"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/vectors/search-text": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Search Vectors By Text
-     * @description Search for similar vectors using text query.
-     *
-     *     The text query is converted to a vector using the configured embedding model,
-     *     then used to search for similar vectors in the collection.
-     *
-     *     Requires: viewer permission on vector_store:default
-     */
-    post: operations["search_vectors_by_text_api_v1_vectors_search_text_post"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/vectors/upsert-text": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Upsert Vector By Text
-     * @description Upsert a text document as a vector.
-     *
-     *     The text is converted to a vector using the configured embedding model,
-     *     then stored in the collection with the text and metadata as payload.
-     *
-     *     Requires: editor permission on vector_store:default
-     */
-    post: operations["upsert_vector_by_text_api_v1_vectors_upsert_text_post"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/workflows": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * List Workflows
-     * @description List all workflows with cursor-based pagination.
-     *
-     *     Supports:
-     *     - Pagination: cursor, limit
-     *     - Filtering: status, owner_id
-     *     - Search: search (uses PostgreSQL Full-Text Search when available)
-     *     - Sorting: sort_by, sort_order
-     *
-     *     Returns a paginated list of workflows with metadata for navigation.
-     */
-    get: operations["list_workflows_api_v1_workflows_get"];
-    put?: never;
-    /**
-     * Create Workflow
-     * @description Create a new workflow.
-     *
-     *     The workflow is created with the provided name, description, nodes, and edges.
-     */
-    post: operations["create_workflow_api_v1_workflows_post"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/workflows/generate": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Generate Workflow
-     * @description Generate a workflow from session history or text prompt.
-     *
-     *     Uses AI to analyze the provided source and generate a workflow definition.
-     *     Exactly one of session_id or prompt must be provided.
-     */
-    post: operations["generate_workflow_api_v1_workflows_generate_post"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/workflows/public/{share_link}": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * Get Public Workflow
-     * @description Access a public workflow by its share link.
-     *
-     *     No authentication required for public workflows.
-     */
-    get: operations["get_public_workflow_api_v1_workflows_public__share_link__get"];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/workflows/shared-with-me": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * List Shared With Me
-     * @description List workflows shared with the current user.
-     *
-     *     Returns workflows that other users have shared with the authenticated user.
-     */
-    get: operations["list_shared_with_me_api_v1_workflows_shared_with_me_get"];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/workflows/{workflow_id}": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * Get Workflow
-     * @description Get a specific workflow by ID.
-     *
-     *     Returns the complete workflow data including nodes and edges.
-     */
-    get: operations["get_workflow_api_v1_workflows__workflow_id__get"];
-    /**
-     * Update Workflow
-     * @description Update an existing workflow.
-     *
-     *     Only the provided fields are updated; others remain unchanged.
-     */
-    put: operations["update_workflow_api_v1_workflows__workflow_id__put"];
-    post?: never;
-    /**
-     * Delete Workflow
-     * @description Delete a workflow.
-     *
-     *     This permanently removes the workflow and cannot be undone.
-     */
-    delete: operations["delete_workflow_api_v1_workflows__workflow_id__delete"];
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/workflows/{workflow_id}/executions": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * List Executions
-     * @description List executions for a workflow.
-     *
-     *     Args:
-     *         workflow_id: Workflow ID
-     *         manager: Execution history manager (injected)
-     *         status: Optional status filter (pending, running, completed, failed)
-     *         limit: Maximum number of executions to return
-     *         cursor: Pagination cursor
-     *
-     *     Returns:
-     *         PaginatedExecutionResponse with list of executions.
-     *
-     *     Raises:
-     *         404: If workflow not found.
-     */
-    get: operations["list_executions_api_v1_workflows__workflow_id__executions_get"];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/workflows/{workflow_id}/executions/{execution_id}": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * Get Execution
-     * @description Get a specific execution.
-     *
-     *     Args:
-     *         workflow_id: Workflow ID
-     *         execution_id: Execution ID
-     *         manager: Execution history manager (injected)
-     *
-     *     Returns:
-     *         ExecutionResponse with execution details.
-     *
-     *     Raises:
-     *         404: If workflow or execution not found.
-     */
-    get: operations["get_execution_api_v1_workflows__workflow_id__executions__execution_id__get"];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/workflows/{workflow_id}/public": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    /**
-     * Update Workflow Public
-     * @description Toggle public visibility of a workflow.
-     *
-     *     When made public, a share_link is generated for anonymous access.
-     *     Only the workflow owner can change public status.
-     */
-    put: operations["update_workflow_public_api_v1_workflows__workflow_id__public_put"];
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/workflows/{workflow_id}/shares": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * Get Workflow Shares
-     * @description Get all shares for a workflow.
-     *
-     *     Returns the list of users the workflow is shared with and public status.
-     *     Only the workflow owner can view shares.
-     */
-    get: operations["get_workflow_shares_api_v1_workflows__workflow_id__shares_get"];
-    put?: never;
-    /**
-     * Add Workflow Share
-     * @description Share a workflow with another user.
-     *
-     *     Only the workflow owner can share. The user is identified by email.
-     */
-    post: operations["add_workflow_share_api_v1_workflows__workflow_id__shares_post"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/workflows/{workflow_id}/shares/{user_id}": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    post?: never;
-    /**
-     * Remove Workflow Share
-     * @description Remove a share from a workflow.
-     *
-     *     Only the workflow owner can remove shares.
-     */
-    delete: operations["remove_workflow_share_api_v1_workflows__workflow_id__shares__user_id__delete"];
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/health": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * Health Check
-     * @description Health check endpoint
-     */
-    get: operations["health_check_health_get"];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/scim/v2/Groups": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Create Group
-     * @description Create a new group (SCIM 2.0)
-     *
-     *     Example:
-     *         ```json
-     *         {
-     *             "schemas": ["urn:ietf:params:scim:schemas:core:2.0:Group"],
-     *             "displayName": "Engineering",
-     *             "members": [
-     *                 {"value": "user-id-123", "display": "Alice Smith"}
-     *             ]
-     *         }
-     *         ```
-     */
-    post: operations["create_group_scim_v2_Groups_post"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/scim/v2/Groups/{group_id}": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * Get Group
-     * @description Get group by ID (SCIM 2.0)
-     */
-    get: operations["get_group_scim_v2_Groups__group_id__get"];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/scim/v2/Users": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * List Users
-     * @description List/search users (SCIM 2.0)
-     *
-     *     Supports SCIM filtering with 'eq' (equals) and 'sw' (startsWith) operators:
-     *     - userName eq "alice" - exact match
-     *     - userName sw "ali" - prefix match
-     *     - email eq "alice@example.com" - exact match
-     *     - email sw "alice@" - prefix match
-     */
-    get: operations["list_users_scim_v2_Users_get"];
-    put?: never;
-    /**
-     * Create User
-     * @description Create a new user (SCIM 2.0)
-     *
-     *     Provisions user in Keycloak and syncs roles to OpenFGA.
-     *
-     *     Example:
-     *         ```json
-     *         {
-     *             "schemas": ["urn:ietf:params:scim:schemas:core:2.0:User"],
-     *             "userName": "alice@example.com",
-     *             "name": {
-     *                 "givenName": "Alice",
-     *                 "familyName": "Smith"
-     *             },
-     *             "emails": [{
-     *                 "value": "alice@example.com",
-     *                 "primary": true
-     *             }],
-     *             "active": true
-     *         }
-     *         ```
-     */
-    post: operations["create_user_scim_v2_Users_post"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/scim/v2/Users/{user_id}": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * Get User
-     * @description Get user by ID (SCIM 2.0)
-     *
-     *     Returns user in SCIM format.
-     */
-    get: operations["get_user_scim_v2_Users__user_id__get"];
-    /**
-     * Replace User
-     * @description Replace user (SCIM 2.0 PUT)
-     *
-     *     Replaces entire user resource.
-     */
-    put: operations["replace_user_scim_v2_Users__user_id__put"];
-    post?: never;
-    /**
-     * Delete User
-     * @description Delete (deactivate) user (SCIM 2.0)
-     *
-     *     Deactivates user in Keycloak and removes OpenFGA tuples.
-     */
-    delete: operations["delete_user_scim_v2_Users__user_id__delete"];
-    options?: never;
-    head?: never;
-    /**
-     * Update User
-     * @description Update user with PATCH operations (SCIM 2.0)
-     *
-     *     Supports add, remove, replace operations.
-     *
-     *     Example:
-     *         ```json
-     *         {
-     *             "schemas": ["urn:ietf:params:scim:api:messages:2.0:PatchOp"],
-     *             "Operations": [
-     *                 {
-     *                     "op": "replace",
-     *                     "path": "active",
-     *                     "value": false
-     *                 }
-     *             ]
-     *         }
-     *         ```
-     */
-    patch: operations["update_user_scim_v2_Users__user_id__patch"];
     trace?: never;
   };
 }
@@ -3741,33 +5531,245 @@ export type webhooks = Record<string, never>;
 export interface components {
   schemas: {
     /**
+     * AIExplanation
+     * @description AI-generated explanation for HITL approval requests.
+     *
+     *     Provides rich, context-aware explanations generated by the
+     *     ExplanationOrchestrator using parallel analysis agents.
+     *
+     *     Core Explanation:
+     *         - why_uncertain: Natural language explanation of uncertainty
+     *         - what_could_go_wrong: Risk analysis of potential issues
+     *         - safer_alternatives: List of safer options with trade-offs
+     *
+     *     Supporting Evidence:
+     *         - confidence_factors: Factors affecting confidence score
+     *         - reasoning_trace: Key steps in the agent's reasoning
+     *
+     *     Metadata:
+     *         - explanation_type: Category of explanation
+     *         - model_used: LLM model that generated the explanation
+     *         - generated_at: Timestamp of generation
+     *         - generation_latency_ms: Time taken to generate
+     *         - cached: Whether explanation was retrieved from cache
+     *
+     *     Example:
+     *         explanation = AIExplanation(
+     *             why_uncertain="Multiple interpretations possible for 'delete old files'",
+     *             what_could_go_wrong="May delete important files if threshold is wrong",
+     *             safer_alternatives=[
+     *                 AlternativeSuggestion(
+     *                     action="List files first, then confirm",
+     *                     confidence=0.92,
+     *                     trade_off="Extra step before deletion",
+     *                 )
+     *             ],
+     *             confidence_factors=[
+     *                 ConfidenceFactor(
+     *                     factor="ambiguous_threshold",
+     *                     weight=-0.25,
+     *                     evidence="'Old' not defined precisely",
+     *                 )
+     *             ],
+     *         )
+     */
+    AIExplanation: {
+      /**
+       * Why Uncertain
+       * @description Natural language explanation of why the agent is uncertain
+       */
+      why_uncertain: string;
+      /**
+       * What Could Go Wrong
+       * @description Risk analysis of potential negative outcomes
+       */
+      what_could_go_wrong: string;
+      /**
+       * Safer Alternatives
+       * @description List of safer alternative actions
+       */
+      safer_alternatives?: components["schemas"]["AlternativeSuggestion"][];
+      /**
+       * Confidence Factors
+       * @description Factors affecting the confidence score
+       */
+      confidence_factors?: components["schemas"]["ConfidenceFactor"][];
+      /**
+       * Reasoning Trace
+       * @description Key steps in the agent's reasoning process
+       */
+      reasoning_trace?: string[];
+      /**
+       * @description Type of explanation for categorization
+       * @default uncertainty
+       */
+      explanation_type: components["schemas"]["ExplanationType"];
+      /**
+       * Model Used
+       * @description LLM model used to generate the explanation
+       * @default gpt-4o-mini
+       */
+      model_used: string;
+      /**
+       * Generated At
+       * Format: date-time
+       * @description Timestamp when explanation was generated
+       */
+      generated_at?: string;
+      /**
+       * Generation Latency Ms
+       * @description Time taken to generate explanation in milliseconds
+       * @default 0
+       */
+      generation_latency_ms: number;
+      /**
+       * Cached
+       * @description Whether explanation was retrieved from cache
+       * @default false
+       */
+      cached: boolean;
+    };
+    /**
+     * AIRecommendation
+     * @description AI-generated recommendation for an alert.
+     */
+    AIRecommendation: {
+      /**
+       * Recommendation Id
+       * @description Unique recommendation ID
+       */
+      recommendation_id: string;
+      /**
+       * Alert Id
+       * @description Associated alert ID
+       */
+      alert_id: string;
+      /**
+       * Root Cause Analysis
+       * @description Analysis of the root cause
+       */
+      root_cause_analysis: string;
+      /**
+       * Remediation Steps
+       * @description Ordered list of remediation steps
+       */
+      remediation_steps?: {
+        [key: string]: unknown;
+      }[];
+      /**
+       * Risk Assessment
+       * @description Risk assessment details
+       */
+      risk_assessment?: {
+        [key: string]: unknown;
+      };
+      /**
+       * Runbook Reference
+       * @description Link to relevant runbook
+       */
+      runbook_reference?: string | null;
+      /**
+       * Generated At
+       * @description ISO8601 timestamp of generation
+       */
+      generated_at: string;
+      /**
+       * Model Used
+       * @description LLM model used for generation
+       */
+      model_used: string;
+      /**
+       * Confidence Score
+       * @description Confidence score (0.0-1.0) for the recommendation
+       * @default 0.5
+       */
+      confidence_score: number;
+    };
+    /**
      * APIKeyResponse
      * @description Response containing API key metadata
      */
     APIKeyResponse: {
+      /** Key Id */
+      key_id: string;
+      /** Name */
+      name: string;
       /** Created */
       created: string;
       /** Expires At */
       expires_at: string;
-      /** Key Id */
-      key_id: string;
       /** Last Used */
       last_used?: string | null;
-      /** Name */
-      name: string;
+    };
+    /**
+     * APIVersionInfo
+     * @description API version metadata
+     *
+     *     Follows semantic versioning (MAJOR.MINOR.PATCH):
+     *     - MAJOR: Breaking changes (incompatible API changes)
+     *     - MINOR: New features (backward-compatible)
+     *     - PATCH: Bug fixes (backward-compatible)
+     */
+    APIVersionInfo: {
+      /**
+       * Version
+       * @description Application version (semantic versioning: MAJOR.MINOR.PATCH)
+       * @example 2.8.0
+       */
+      version: string;
+      /**
+       * Api Version
+       * @description Current API version (e.g., 'v1')
+       * @example v1
+       */
+      api_version: string;
+      /**
+       * Supported Versions
+       * @description List of supported API versions
+       * @example [
+       *       "v1"
+       *     ]
+       */
+      supported_versions: string[];
+      /**
+       * Deprecated Versions
+       * @description List of deprecated API versions (still functional but will be removed)
+       * @example []
+       */
+      deprecated_versions?: string[];
+      /**
+       * Sunset Dates
+       * @description Sunset dates for deprecated versions (ISO 8601 format)
+       * @example {}
+       */
+      sunset_dates?: {
+        [key: string]: string;
+      };
+      /**
+       * Changelog Url
+       * @description URL to API changelog
+       * @example https://docs.example.com/api/changelog
+       */
+      changelog_url?: string | null;
+      /**
+       * Documentation Url
+       * @description URL to API documentation
+       * @example https://docs.example.com/api/v1
+       */
+      documentation_url?: string | null;
     };
     /**
      * AddMemberRequest
      * @description Request to add a member to a project.
      */
     AddMemberRequest: {
+      /** User Id */
+      user_id: string;
       /**
        * Role
        * @description Role: editor, viewer, executor
        */
       role: string;
-      /** User Id */
-      user_id: string;
     };
     /**
      * AddWorkflowShareRequest
@@ -3824,62 +5826,161 @@ export interface components {
        */
       temperature: number;
       /**
-       * Tools
-       * @description List of available tools
-       */
-      tools?: components["schemas"]["ToolInfo"][];
-      /**
        * Verification Enabled
        * @description Whether verification/human-in-loop is enabled
        */
       verification_enabled: boolean;
+      /**
+       * Tools
+       * @description List of available tools
+       */
+      tools?: components["schemas"]["ToolInfo"][];
     };
+    /**
+     * AgentRequest
+     * @description Agent HITL request details.
+     */
+    AgentRequest: {
+      /**
+       * Request Id
+       * @description Unique request identifier
+       */
+      request_id: string;
+      /**
+       * Session Id
+       * @description Session ID for the agent
+       */
+      session_id: string;
+      /**
+       * Task Id
+       * @description Task ID being executed
+       */
+      task_id: string;
+      /**
+       * Agent Name
+       * @description Name of the agent making the request
+       */
+      agent_name: string;
+      /** @description Type of request */
+      request_type: components["schemas"]["AgentRequestType"];
+      /**
+       * Confidence
+       * @description Agent confidence score (0-1)
+       */
+      confidence?: number | null;
+      /**
+       * Threshold
+       * @description Confidence threshold that triggered the request
+       */
+      threshold?: number | null;
+      /**
+       * Question
+       * @description Question or action description
+       */
+      question: string;
+      /**
+       * Proposed Action
+       * @description Proposed action for approval requests
+       */
+      proposed_action?: string | null;
+      /**
+       * Trigger Reason
+       * @description Reason that triggered the request (e.g., low_confidence, destructive_action)
+       */
+      trigger_reason?: string | null;
+      /**
+       * Placeholder
+       * @description Placeholder text for text input clarifications
+       */
+      placeholder?: string | null;
+      /** @description Type of clarification (for clarification requests) */
+      clarification_type?: components["schemas"]["ClarificationType"] | null;
+      /**
+       * Options
+       * @description Options for choice clarifications
+       */
+      options?: components["schemas"]["ClarificationOption"][] | null;
+      /** @description Current status */
+      status: components["schemas"]["AgentRequestStatus"];
+      /**
+       * Requested At
+       * @description ISO 8601 timestamp
+       */
+      requested_at: string;
+      /**
+       * Responded At
+       * @description When the request was responded to
+       */
+      responded_at?: string | null;
+      /**
+       * Responded By
+       * @description Who responded to the request
+       */
+      responded_by?: string | null;
+      /**
+       * Context
+       * @description Additional context for the request
+       */
+      context?: {
+        [key: string]: unknown;
+      };
+      /** @description AI-generated explanation for HITL dialog (when enable_ai_explanations is True) */
+      ai_explanation?: components["schemas"]["AIExplanation"] | null;
+    };
+    /**
+     * AgentRequestActionResponse
+     * @description Response for approve/reject/respond actions.
+     */
+    AgentRequestActionResponse: {
+      /** Request Id */
+      request_id: string;
+      status: components["schemas"]["AgentRequestStatus"];
+      /** Message */
+      message: string;
+      /**
+       * Resumed
+       * @description Whether the agent execution was resumed
+       * @default false
+       */
+      resumed: boolean;
+    };
+    /**
+     * AgentRequestStatus
+     * @description Status of an agent request.
+     * @enum {string}
+     */
+    AgentRequestStatus:
+      | "pending"
+      | "approved"
+      | "rejected"
+      | "responded"
+      | "timeout";
+    /**
+     * AgentRequestType
+     * @description Type of agent HITL request.
+     * @enum {string}
+     */
+    AgentRequestType: "approval" | "clarification";
     /**
      * AggregateMetrics
      * @description Aggregated metrics for dashboard
      */
     AggregateMetrics: {
       /**
+       * Period
+       * @description Aggregation period (e.g., '7d', '30d')
+       */
+      period: string;
+      /**
        * App Name
        * @description Filter by app
        */
       app_name?: string | null;
       /**
-       * Avg Days Active
-       * @description Average active days
-       */
-      avg_days_active?: number | null;
-      /**
-       * Avg Return Visits
-       * @description Average return visits
-       */
-      avg_return_visits?: number | null;
-      /**
-       * Avg Session Duration Ms
-       * @description Average session duration
-       */
-      avg_session_duration_ms?: number | null;
-      /**
-       * New Users Count
-       * @description Number of new users
-       * @default 0
-       */
-      new_users_count: number;
-      /**
        * Nps Score Avg
        * @description Average NPS score
        */
       nps_score_avg?: number | null;
-      /**
-       * Onboarding Completion Rate
-       * @description Onboarding completion rate
-       */
-      onboarding_completion_rate?: number | null;
-      /**
-       * Period
-       * @description Aggregation period (e.g., '7d', '30d')
-       */
-      period: string;
       /**
        * Satisfaction Avg
        * @description Average satisfaction
@@ -3891,18 +5992,11 @@ export interface components {
        */
       task_success_rate?: number | null;
       /**
-       * Top Features
-       * @description Top features by usage
-       */
-      top_features?: {
-        [key: string]: number;
-      };
-      /**
-       * Total Interactions
-       * @description Total interactions
+       * Total Tasks Started
+       * @description Total tasks started
        * @default 0
        */
-      total_interactions: number;
+      total_tasks_started: number;
       /**
        * Total Tasks Completed
        * @description Total tasks completed
@@ -3916,31 +6010,276 @@ export interface components {
        */
       total_tasks_errored: number;
       /**
-       * Total Tasks Started
-       * @description Total tasks started
+       * Avg Session Duration Ms
+       * @description Average session duration
+       */
+      avg_session_duration_ms?: number | null;
+      /**
+       * Total Interactions
+       * @description Total interactions
        * @default 0
        */
-      total_tasks_started: number;
+      total_interactions: number;
+      /**
+       * Top Features
+       * @description Top features by usage
+       */
+      top_features?: {
+        [key: string]: number;
+      };
+      /**
+       * New Users Count
+       * @description Number of new users
+       * @default 0
+       */
+      new_users_count: number;
+      /**
+       * Onboarding Completion Rate
+       * @description Onboarding completion rate
+       */
+      onboarding_completion_rate?: number | null;
+      /**
+       * Avg Return Visits
+       * @description Average return visits
+       */
+      avg_return_visits?: number | null;
+      /**
+       * Avg Days Active
+       * @description Average active days
+       */
+      avg_days_active?: number | null;
+    };
+    /** Alert */
+    Alert: {
+      /** Alert Id */
+      alert_id: string;
+      /** Name */
+      name: string;
+      severity: components["schemas"]["AlertSeverity"];
+      state: components["schemas"]["AlertState"];
+      /** Message */
+      message: string;
+      /** Labels */
+      labels?: {
+        [key: string]: string;
+      };
+      /** Annotations */
+      annotations?: {
+        [key: string]: string;
+      };
+      /** Started At */
+      started_at?: string | null;
+      /** Ended At */
+      ended_at?: string | null;
+      /** Generator Url */
+      generator_url?: string | null;
+    };
+    /**
+     * AlertListResponse
+     * @description Response model for listing alerts.
+     */
+    AlertListResponse: {
+      /**
+       * Alerts
+       * @description List of alerts
+       */
+      alerts?: components["schemas"]["Alert"][];
+      /**
+       * Count
+       * @description Total count of alerts returned
+       * @default 0
+       */
+      count: number;
+    };
+    /**
+     * AlertResponse
+     * @description Response model for an alert.
+     */
+    AlertResponse: {
+      /**
+       * Alert Id
+       * @description Alert ID/fingerprint
+       */
+      alert_id: string;
+      /**
+       * Name
+       * @description Alert name
+       */
+      name: string;
+      /**
+       * Severity
+       * @description Severity level (info, warning, error, critical)
+       */
+      severity: string;
+      /**
+       * State
+       * @description Alert state (pending, firing, resolved, silenced)
+       */
+      state: string;
+      /**
+       * Message
+       * @description Alert message/summary
+       */
+      message: string;
+      /**
+       * Labels
+       * @description Alert labels
+       */
+      labels?: {
+        [key: string]: string;
+      };
+      /**
+       * Annotations
+       * @description Alert annotations
+       */
+      annotations?: {
+        [key: string]: string;
+      };
+      /**
+       * Started At
+       * @description Alert start timestamp
+       */
+      started_at?: string | null;
+      /**
+       * Ended At
+       * @description Alert end timestamp
+       */
+      ended_at?: string | null;
+      /**
+       * Generator Url
+       * @description Link to view in monitoring system
+       */
+      generator_url?: string | null;
+    };
+    /**
+     * AlertRuleResponse
+     * @description Response model for an alerting rule.
+     */
+    AlertRuleResponse: {
+      /**
+       * Rule Id
+       * @description Rule ID
+       */
+      rule_id: string;
+      /**
+       * Name
+       * @description Rule name
+       */
+      name: string;
+      /**
+       * Expression
+       * @description Query expression (PromQL, LogQL, etc.)
+       */
+      expression: string;
+      /**
+       * Severity
+       * @description Default severity level
+       */
+      severity: string;
+      /**
+       * Labels
+       * @description Rule labels
+       */
+      labels?: {
+        [key: string]: string;
+      };
+      /**
+       * Annotations
+       * @description Rule annotations
+       */
+      annotations?: {
+        [key: string]: string;
+      };
+      /**
+       * Evaluation Interval Seconds
+       * @description Evaluation interval in seconds
+       */
+      evaluation_interval_seconds: number;
+      /**
+       * For Duration Seconds
+       * @description For duration in seconds
+       */
+      for_duration_seconds?: number | null;
+      /**
+       * Enabled
+       * @description Whether rule is enabled
+       */
+      enabled: boolean;
+    };
+    /**
+     * AlertSeverity
+     * @description Alert severity levels.
+     * @enum {string}
+     */
+    AlertSeverity: "info" | "warning" | "error" | "critical";
+    /**
+     * AlertState
+     * @description Current state of an alert.
+     * @enum {string}
+     */
+    AlertState: "pending" | "firing" | "resolved" | "silenced";
+    /**
+     * AlertmanagerWebhookResponse
+     * @description Response model for Alertmanager webhook.
+     */
+    AlertmanagerWebhookResponse: {
+      /** Status */
+      status: string;
+      /** Alerts Received */
+      alerts_received: number;
+      /** Alerts Broadcast */
+      alerts_broadcast: number;
+      /** Ai Recommendations Queued */
+      ai_recommendations_queued: number;
+    };
+    /**
+     * AlternativeSuggestion
+     * @description Safer alternative action the agent could take.
+     *
+     *     Represents an alternative approach with expected confidence and
+     *     trade-offs, helping users make informed decisions.
+     *
+     *     Attributes:
+     *         action: Description of the alternative action
+     *         confidence: Expected confidence if this action is taken (0.0 to 1.0)
+     *         trade_off: What the user gives up by choosing this alternative
+     */
+    AlternativeSuggestion: {
+      /**
+       * Action
+       * @description Description of the alternative action
+       */
+      action: string;
+      /**
+       * Confidence
+       * @description Expected confidence for this alternative (0.0 to 1.0)
+       */
+      confidence: number;
+      /**
+       * Trade Off
+       * @description Trade-off or limitation of this alternative
+       */
+      trade_off: string;
     };
     /**
      * ApplyTemplateRequest
      * @description Request to apply a template.
      */
     ApplyTemplateRequest: {
-      /** Api Key */
-      api_key?: string | null;
-      /** Description */
-      description?: string | null;
       /** Name */
       name: string;
+      /** Description */
+      description?: string | null;
       /** Oauth2 Client Id */
       oauth2_client_id?: string | null;
       /** Oauth2 Scopes */
       oauth2_scopes?: string[] | null;
-      /** Project Id */
-      project_id?: string | null;
+      /** Api Key */
+      api_key?: string | null;
       /** Url */
       url?: string | null;
+      /** Project Id */
+      project_id?: string | null;
     };
     /**
      * ApplyTemplateResponse
@@ -3948,6 +6287,197 @@ export interface components {
      */
     ApplyTemplateResponse: {
       connection: components["schemas"]["ConnectionConfig"];
+    };
+    /**
+     * ApprovalResponse
+     * @description Response for approval/rejection actions.
+     */
+    ApprovalResponse: {
+      /** Remediation Id */
+      remediation_id: string;
+      status: components["schemas"]["ApprovalStatus"];
+      /** Message */
+      message: string;
+    };
+    /**
+     * ApprovalStatus
+     * @description Status of approval request.
+     * @enum {string}
+     */
+    ApprovalStatus: "pending" | "approved" | "rejected" | "expired";
+    /**
+     * ApproveAgentRequest
+     * @description Request body for approving an agent request.
+     */
+    ApproveAgentRequest: {
+      /**
+       * Approved By
+       * @description Email/ID of the approver
+       */
+      approved_by: string;
+      /**
+       * Reason
+       * @description Approval reason
+       */
+      reason?: string | null;
+      /**
+       * Modifications
+       * @description Modifications to the proposed action
+       */
+      modifications?: {
+        [key: string]: unknown;
+      } | null;
+    };
+    /**
+     * ApproveRequest
+     * @description Request body for approving a remediation.
+     */
+    ApproveRequest: {
+      /**
+       * Approved By
+       * @description Email/ID of the approver
+       */
+      approved_by: string;
+    };
+    /**
+     * ArtifactCreateRequest
+     * @description Request body for creating an artifact.
+     */
+    ArtifactCreateRequest: {
+      /**
+       * Type
+       * @description Artifact type
+       */
+      type: string;
+      /**
+       * Content
+       * @description Artifact content
+       */
+      content: string;
+      /** @description Content type */
+      content_type: components["schemas"]["ContentType"];
+      /**
+       * Session Id
+       * @description Associated session ID
+       */
+      session_id: string;
+      /**
+       * Title
+       * @default Untitled Artifact
+       */
+      title: string | null;
+      edit_metadata?: components["schemas"]["EditMetadata"] | null;
+    };
+    /**
+     * ArtifactCreateResponse
+     * @description Response for artifact creation.
+     */
+    ArtifactCreateResponse: {
+      /** Id */
+      id: string;
+      /** Version */
+      version: number;
+      /** Created At */
+      created_at: string;
+    };
+    /**
+     * ArtifactForkRequest
+     * @description Request body for forking an artifact.
+     */
+    ArtifactForkRequest: {
+      /** New Name */
+      new_name?: string | null;
+    };
+    /**
+     * ArtifactForkResponse
+     * @description Response for artifact fork.
+     */
+    ArtifactForkResponse: {
+      /** Id */
+      id: string;
+      /** Parent Id */
+      parent_id: string;
+      /** Version */
+      version: number;
+    };
+    /**
+     * ArtifactResponse
+     * @description Full artifact response model.
+     */
+    ArtifactResponse: {
+      /** Id */
+      id: string;
+      /** Type */
+      type: string;
+      /** Session Id */
+      session_id: string;
+      /** Version */
+      version: number;
+      /** Content */
+      content: string;
+      /** Content Type */
+      content_type: string;
+      /** Created At */
+      created_at: string;
+      /** Updated At */
+      updated_at: string;
+      /** Title */
+      title: string;
+      /** User Id */
+      user_id: string;
+      edit_metadata?: components["schemas"]["EditMetadata"] | null;
+    };
+    /**
+     * ArtifactUpdateRequest
+     * @description Request body for updating an artifact.
+     */
+    ArtifactUpdateRequest: {
+      /**
+       * Content
+       * @description New content
+       */
+      content?: string | null;
+      /** Title */
+      title?: string | null;
+      edit_metadata?: components["schemas"]["EditMetadata"] | null;
+    };
+    /**
+     * ArtifactUpdateResponse
+     * @description Response for artifact update.
+     */
+    ArtifactUpdateResponse: {
+      /** Id */
+      id: string;
+      /** Version */
+      version: number;
+      /** Updated At */
+      updated_at: string;
+    };
+    /**
+     * ArtifactVersionResponse
+     * @description Artifact version response model.
+     */
+    ArtifactVersionResponse: {
+      /** Id */
+      id: string;
+      /** Artifact Id */
+      artifact_id: string;
+      /** Version */
+      version: number;
+      /** Content */
+      content: string;
+      /** Content Type */
+      content_type: string;
+      /** Created By */
+      created_by: string;
+      /** Created At */
+      created_at: string;
+      /** Parent Version */
+      parent_version?: number | null;
+      /** Metadata */
+      metadata?: {
+        [key: string]: unknown;
+      } | null;
     };
     /**
      * AuditEventsListResponse
@@ -3958,6 +6488,8 @@ export interface components {
       events: {
         [key: string]: unknown;
       }[];
+      /** Total */
+      total: number;
       /**
        * Page
        * @default 1
@@ -3968,8 +6500,6 @@ export interface components {
        * @default 50
        */
       page_size: number;
-      /** Total */
-      total: number;
     };
     /**
      * AuditLogEventRequest
@@ -3977,15 +6507,30 @@ export interface components {
      */
     AuditLogEventRequest: {
       /**
-       * Action
-       * @description Action performed (e.g., create, update, delete)
+       * Event Type
+       * @description Type of event (e.g., connection.created, connection.deleted)
        */
-      action: string;
+      event_type: string;
+      /**
+       * Resource Type
+       * @description Type of resource (e.g., connection, template)
+       */
+      resource_type: string;
+      /**
+       * Resource Id
+       * @description ID of the resource affected
+       */
+      resource_id: string;
       /**
        * Actor Id
        * @description ID of the user/service performing the action
        */
       actor_id: string;
+      /**
+       * Action
+       * @description Action performed (e.g., create, update, delete)
+       */
+      action: string;
       /**
        * Details
        * @description Additional details about the event
@@ -3993,35 +6538,20 @@ export interface components {
       details?: {
         [key: string]: unknown;
       } | null;
-      /**
-       * Event Type
-       * @description Type of event (e.g., connection.created, connection.deleted)
-       */
-      event_type: string;
-      /**
-       * Resource Id
-       * @description ID of the resource affected
-       */
-      resource_id: string;
-      /**
-       * Resource Type
-       * @description Type of resource (e.g., connection, template)
-       */
-      resource_type: string;
     };
     /**
      * AuditLogListResponse
      * @description Response containing a list of audit logs.
      */
     AuditLogListResponse: {
-      /** Limit */
-      limit: number;
       /** Logs */
       logs: components["schemas"]["mcp_server_langgraph__api__v1__connection_audit__AuditLogEntry"][];
-      /** Offset */
-      offset: number;
       /** Total */
       total: number;
+      /** Limit */
+      limit: number;
+      /** Offset */
+      offset: number;
     };
     /**
      * AuthErrorResponse
@@ -4040,20 +6570,172 @@ export interface components {
       error_description?: string | null;
     };
     /**
+     * BatchApprovalResponse
+     * @description Response for batch approval/rejection operations.
+     */
+    BatchApprovalResponse: {
+      /**
+       * Results
+       * @description Results for each request
+       */
+      results: components["schemas"]["BatchApprovalResult"][];
+      /**
+       * Succeeded
+       * @description Count of successful operations
+       */
+      succeeded: number;
+      /**
+       * Failed
+       * @description Count of failed operations
+       */
+      failed: number;
+    };
+    /**
+     * BatchApprovalResult
+     * @description Result for a single request in a batch operation.
+     */
+    BatchApprovalResult: {
+      /**
+       * Request Id
+       * @description The request ID
+       */
+      request_id: string;
+      /** @description New status (None if failed) */
+      status?: components["schemas"]["AgentRequestStatus"] | null;
+      /**
+       * Success
+       * @description Whether the operation succeeded
+       */
+      success: boolean;
+      /**
+       * Message
+       * @description Result message
+       */
+      message: string;
+      /**
+       * Error Code
+       * @description Error code if failed
+       */
+      error_code?: string | null;
+    };
+    /**
+     * BatchApproveRequest
+     * @description Request body for batch approving multiple agent requests.
+     */
+    BatchApproveRequest: {
+      /**
+       * Request Ids
+       * @description List of request IDs to approve
+       */
+      request_ids: string[];
+      /**
+       * Reason
+       * @description Common reason for all approvals
+       */
+      reason?: string | null;
+    };
+    /**
+     * BatchCompositeErrorResult
+     * @description Error result for a failed batch item.
+     */
+    BatchCompositeErrorResult: {
+      /** Error */
+      error: string;
+      /** User Id */
+      user_id: string;
+    };
+    /**
+     * BatchCompositeRequest
+     * @description Request for batch composite analysis.
+     */
+    BatchCompositeRequest: {
+      /**
+       * Requests
+       * @description List of composite analysis requests
+       */
+      requests: components["schemas"]["CompositeAnalysisRequest"][];
+      /**
+       * Max Concurrency
+       * @description Maximum concurrent requests
+       * @default 5
+       */
+      max_concurrency: number;
+    };
+    /**
+     * BatchCompositeResponse
+     * @description Response from batch composite analysis.
+     */
+    BatchCompositeResponse: {
+      /**
+       * Results
+       * @description Results for each request (may include errors)
+       */
+      results: (
+        | components["schemas"]["CompositeAnalysisResponse"]
+        | components["schemas"]["BatchCompositeErrorResult"]
+      )[];
+      /**
+       * Total
+       * @description Total number of requests processed
+       */
+      total: number;
+      /**
+       * Successful
+       * @description Number of successful analyses
+       */
+      successful: number;
+      /**
+       * Failed
+       * @description Number of failed analyses
+       */
+      failed: number;
+    };
+    /**
+     * BatchRejectRequest
+     * @description Request body for batch rejecting multiple agent requests.
+     */
+    BatchRejectRequest: {
+      /**
+       * Request Ids
+       * @description List of request IDs to reject
+       */
+      request_ids: string[];
+      /**
+       * Reason
+       * @description Common reason for all rejections
+       */
+      reason?: string | null;
+    };
+    /** Body_list_alerts_api_v1_alerts__get */
+    Body_list_alerts_api_v1_alerts__get: {
+      /** Severity */
+      severity?: components["schemas"]["AlertSeverity"][] | null;
+      /** State */
+      state?: components["schemas"]["AlertState"][] | null;
+    };
+    /** Body_native_logout_api_v1_auth_logout_post */
+    Body_native_logout_api_v1_auth_logout_post: {
+      /**
+       * Refresh Token
+       * @description Refresh token to revoke
+       */
+      refresh_token?: string | null;
+    };
+    /**
      * BootstrapRequest
      * @description Request body for bootstrapping a workflow from a session.
      */
     BootstrapRequest: {
       /**
-       * Description
-       * @description Workflow description
-       */
-      description?: string | null;
-      /**
        * Name
        * @description Workflow name
        */
       name: string;
+      /**
+       * Description
+       * @description Workflow description
+       */
+      description?: string | null;
       /**
        * Selected Messages
        * @description Optional list of message indices to use (if not provided, uses all)
@@ -4066,18 +6748,6 @@ export interface components {
      */
     BootstrapResponse: {
       /**
-       * Description
-       * @description Workflow description
-       */
-      description?: string | null;
-      /**
-       * Edges
-       * @description Workflow edges
-       */
-      edges?: {
-        [key: string]: unknown;
-      }[];
-      /**
        * Id
        * @description Workflow ID
        */
@@ -4088,10 +6758,22 @@ export interface components {
        */
       name: string;
       /**
+       * Description
+       * @description Workflow description
+       */
+      description?: string | null;
+      /**
        * Nodes
        * @description Workflow nodes
        */
       nodes?: {
+        [key: string]: unknown;
+      }[];
+      /**
+       * Edges
+       * @description Workflow edges
+       */
+      edges?: {
         [key: string]: unknown;
       }[];
     };
@@ -4142,10 +6824,10 @@ export interface components {
      * @description Response for bulk status update.
      */
     BulkStatusResponse: {
-      /** Failed Ids */
-      failed_ids?: string[];
       /** Updated Count */
       updated_count: number;
+      /** Failed Ids */
+      failed_ids?: string[];
     };
     /**
      * BulkTestRequest
@@ -4163,10 +6845,10 @@ export interface components {
      * @description Response for bulk test operation.
      */
     BulkTestResponse: {
-      /** Not Found */
-      not_found?: string[];
       /** Results */
       results: components["schemas"]["ConnectionTestResult"][];
+      /** Not Found */
+      not_found?: string[];
     };
     /**
      * CategoryListResponse
@@ -4182,10 +6864,10 @@ export interface components {
      */
     ChatCompletionRequest: {
       /**
-       * Max Tokens
-       * @description Maximum tokens to generate
+       * Session Id
+       * @description Session ID for the conversation
        */
-      max_tokens?: number | null;
+      session_id: string;
       /**
        * Messages
        * @description List of messages in the conversation
@@ -4197,21 +6879,32 @@ export interface components {
        */
       model?: string | null;
       /**
-       * Resource Uris
-       * @description Optional list of MCP resource URIs to inject as context (MCP 2025-11-25)
-       */
-      resource_uris?: string[] | null;
-      /**
-       * Session Id
-       * @description Session ID for the conversation
-       */
-      session_id: string;
-      /**
        * Temperature
        * @description Sampling temperature
        * @default 0.7
        */
       temperature: number;
+      /**
+       * Max Tokens
+       * @description Maximum tokens to generate
+       */
+      max_tokens?: number | null;
+      /**
+       * Resource Uris
+       * @description Optional list of MCP resource URIs to inject as context (MCP 2025-11-25)
+       */
+      resource_uris?: string[] | null;
+      /**
+       * Reasoning Effort
+       * @description Reasoning effort level for models supporting extended thinking (Claude Opus 4.5, Sonnet 4, Gemini 2.5). Maps to LiteLLM's reasoning_effort parameter which translates to Anthropic's thinking budget.
+       */
+      reasoning_effort?: ("low" | "medium" | "high") | null;
+      /**
+       * Enable Thinking
+       * @description Whether to enable extended thinking for supported models. Set to False to disable thinking even on models that support it.
+       * @default true
+       */
+      enable_thinking: boolean;
     };
     /**
      * ChatCompletionResponse
@@ -4225,13 +6918,49 @@ export interface components {
       id: string;
       /** @description Assistant's response message */
       message: components["schemas"]["ChatMessage"];
+      /** @description Token usage */
+      usage?: components["schemas"]["ChatUsage"] | null;
       /**
        * Model
        * @description Model used
        */
       model?: string | null;
-      /** @description Token usage */
-      usage?: components["schemas"]["ChatUsage"] | null;
+      /**
+       * Trace Id
+       * @description OpenTelemetry trace ID for observability correlation
+       */
+      trace_id?: string | null;
+      /** @description Thinking/reasoning content from extended thinking models (Claude Opus 4.5, Sonnet 4, Gemini 2.5) */
+      thinking?: components["schemas"]["ThinkingContent"] | null;
+    };
+    /**
+     * ChatFollowUpCategory
+     * @description Categories for chat follow-up suggestions.
+     * @enum {string}
+     */
+    ChatFollowUpCategory:
+      | "explore"
+      | "clarify"
+      | "example"
+      | "alternative"
+      | "continue";
+    /**
+     * ChatFollowUpSuggestion
+     * @description A single chat follow-up suggestion.
+     */
+    ChatFollowUpSuggestion: {
+      /**
+       * Id
+       * @description Unique suggestion ID
+       */
+      id: string;
+      /**
+       * Text
+       * @description The suggestion text
+       */
+      text: string;
+      /** @description Category of suggestion */
+      category: components["schemas"]["ChatFollowUpCategory"];
     };
     /**
      * ChatMessage
@@ -4239,16 +6968,16 @@ export interface components {
      */
     ChatMessage: {
       /**
-       * Content
-       * @description Message content
-       */
-      content: string;
-      /**
        * Role
        * @description Message role
        * @enum {string}
        */
       role: "user" | "assistant" | "system";
+      /**
+       * Content
+       * @description Message content
+       */
+      content: string;
     };
     /**
      * ChatUsage
@@ -4256,15 +6985,15 @@ export interface components {
      */
     ChatUsage: {
       /**
-       * Completion Tokens
-       * @description Tokens in the completion
-       */
-      completion_tokens: number;
-      /**
        * Prompt Tokens
        * @description Tokens in the prompt
        */
       prompt_tokens: number;
+      /**
+       * Completion Tokens
+       * @description Tokens in the completion
+       */
+      completion_tokens: number;
       /**
        * Total Tokens
        * @description Total tokens used
@@ -4272,51 +7001,226 @@ export interface components {
       total_tokens?: number | null;
     };
     /**
+     * ClarificationOption
+     * @description Option for choice-type clarifications.
+     */
+    ClarificationOption: {
+      /**
+       * Id
+       * @description Unique identifier for the option
+       */
+      id: string;
+      /**
+       * Label
+       * @description Display label for the option
+       */
+      label: string;
+      /**
+       * Description
+       * @description Optional description explaining this option
+       */
+      description?: string | null;
+      /**
+       * Is Recommended
+       * @description Whether this option is recommended
+       * @default false
+       */
+      is_recommended: boolean;
+    };
+    /**
+     * ClarificationResponseRequest
+     * @description Request body for responding to a clarification request.
+     */
+    ClarificationResponseRequest: {
+      /**
+       * Responded By
+       * @description Email/ID of the responder
+       */
+      responded_by: string;
+      /** @description Type of response */
+      response_type: components["schemas"]["ClarificationType"];
+      /**
+       * Value
+       * @description Text response
+       */
+      value?: string | null;
+      /**
+       * Selected Option Id
+       * @description Selected option ID (for choice type)
+       */
+      selected_option_id?: string | null;
+      /**
+       * Confirmed
+       * @description Confirmation result (for confirmation type)
+       */
+      confirmed?: boolean | null;
+    };
+    /**
+     * ClarificationType
+     * @description Type of clarification request.
+     * @enum {string}
+     */
+    ClarificationType:
+      | "text"
+      | "choice"
+      | "confirmation"
+      | "file"
+      | "credentials";
+    /**
+     * CompositeAnalysisRequest
+     * @description Request for composite analysis across multiple AI UX services.
+     */
+    CompositeAnalysisRequest: {
+      /**
+       * User Id
+       * @description User identifier
+       */
+      user_id: string;
+      /**
+       * Session Id
+       * @description Session identifier for context storage
+       */
+      session_id: string;
+      /**
+       * Include Persona
+       * @description Include persona analysis
+       * @default true
+       */
+      include_persona: boolean;
+      /**
+       * Include Disclosure
+       * @description Include disclosure analysis
+       * @default true
+       */
+      include_disclosure: boolean;
+      /**
+       * Include Error
+       * @description Include error analysis
+       * @default false
+       */
+      include_error: boolean;
+      /**
+       * Persona Data
+       * @description Data for persona analysis
+       */
+      persona_data?: {
+        [key: string]: unknown;
+      } | null;
+      /**
+       * Disclosure Data
+       * @description Data for disclosure analysis
+       */
+      disclosure_data?: {
+        [key: string]: unknown;
+      } | null;
+      /**
+       * Error Data
+       * @description Error data for analysis
+       */
+      error_data?: {
+        [key: string]: unknown;
+      } | null;
+    };
+    /**
+     * CompositeAnalysisResponse
+     * @description Response from composite analysis with cross-service insights.
+     */
+    CompositeAnalysisResponse: {
+      /** User Id */
+      user_id: string;
+      /** Session Id */
+      session_id: string;
+      persona_result?: components["schemas"]["PersonaAnalyzeResponse"] | null;
+      disclosure_result?:
+        | components["schemas"]["DisclosureAnalyzeResponse"]
+        | null;
+      error_result?: components["schemas"]["ErrorAnalyzeResponse"] | null;
+      /**
+       * Cross Insights
+       * @description Insights derived from combining multiple analyses
+       */
+      cross_insights?: string[];
+      /**
+       * Confidence
+       * @description Overall confidence score for the composite analysis
+       */
+      confidence: number;
+    };
+    /**
+     * ConfidenceFactor
+     * @description Individual factor contributing to confidence score.
+     *
+     *     Represents a single piece of evidence that either increases or
+     *     decreases the agent's confidence in its proposed action.
+     *
+     *     Attributes:
+     *         factor: Factor name (e.g., "ambiguous_input", "multiple_interpretations")
+     *         weight: Impact on confidence (-1.0 to 1.0, negative reduces confidence)
+     *         evidence: Supporting evidence or reasoning for this factor
+     */
+    ConfidenceFactor: {
+      /**
+       * Factor
+       * @description Factor name identifying the confidence contributor
+       */
+      factor: string;
+      /**
+       * Weight
+       * @description Impact on confidence score (-1.0 to 1.0)
+       */
+      weight: number;
+      /**
+       * Evidence
+       * @description Supporting evidence or reasoning for this factor
+       */
+      evidence: string;
+    };
+    /**
      * ConfigField
      * @description Configuration field definition for a template.
      */
     ConfigField: {
-      /** Default */
-      default?: string | null;
-      /** Description */
-      description?: string | null;
-      /** Label */
-      label: string;
       /** Name */
       name: string;
-      /** Placeholder */
-      placeholder?: string | null;
-      /**
-       * Required
-       * @default true
-       */
-      required: boolean;
+      /** Label */
+      label: string;
       /**
        * Type
        * @enum {string}
        */
       type: "text" | "password" | "url" | "textarea";
+      /**
+       * Required
+       * @default true
+       */
+      required: boolean;
+      /** Placeholder */
+      placeholder?: string | null;
+      /** Description */
+      description?: string | null;
+      /** Default */
+      default?: string | null;
     };
     /**
      * ConnectionConfig
      * @description Pre-filled connection configuration.
      */
     ConnectionConfig: {
+      /** Name */
+      name: string;
+      /** Description */
+      description: string | null;
+      /** Url */
+      url: string;
       /**
        * Auth Type
        * @enum {string}
        */
       auth_type: "none" | "api_key" | "oauth2";
-      /** Description */
-      description: string | null;
-      /** Name */
-      name: string;
       /** Oauth2 Client Id */
       oauth2_client_id?: string | null;
       /** Oauth2 Scopes */
       oauth2_scopes?: string[] | null;
-      /** Url */
-      url: string;
     };
     /**
      * ConnectionRef
@@ -4325,6 +7229,11 @@ export interface components {
     ConnectionRef: {
       /** Id */
       id: string;
+      /**
+       * Type
+       * @description Type: mcp_server, vector_store, api_key
+       */
+      type: string;
       /** Name */
       name: string;
       /**
@@ -4332,11 +7241,6 @@ export interface components {
        * @default active
        */
       status: string;
-      /**
-       * Type
-       * @description Type: mcp_server, vector_store, api_key
-       */
-      type: string;
     };
     /**
      * ConnectionResponse
@@ -4348,70 +7252,70 @@ export interface components {
      *     - command/args: System paths (security exposure risk)
      */
     ConnectionResponse: {
-      /** Auth Type */
-      auth_type: string;
-      /** Created At */
-      created_at: string;
-      /** Description */
-      description?: string | null;
       /** Id */
       id: string;
       /** Name */
       name: string;
-      /**
-       * Prompt Count
-       * @default 0
-       */
-      prompt_count: number;
-      /**
-       * Resource Count
-       * @default 0
-       */
-      resource_count: number;
+      /** Description */
+      description?: string | null;
+      /** Url */
+      url: string;
+      /** Transport */
+      transport: string;
+      /** Auth Type */
+      auth_type: string;
+      /** Status */
+      status: string;
       /** Server Name */
       server_name?: string | null;
       /** Server Version */
       server_version?: string | null;
-      /** Status */
-      status: string;
       /**
        * Tool Count
        * @default 0
        */
       tool_count: number;
-      /** Transport */
-      transport: string;
+      /**
+       * Resource Count
+       * @default 0
+       */
+      resource_count: number;
+      /**
+       * Prompt Count
+       * @default 0
+       */
+      prompt_count: number;
+      /** Created At */
+      created_at: string;
       /** Updated At */
       updated_at: string;
-      /** Url */
-      url: string;
     };
     /**
      * ConnectionTemplate
      * @description MCP connection template definition.
      */
     ConnectionTemplate: {
+      /** Id */
+      id: string;
+      /** Name */
+      name: string;
+      /** Description */
+      description: string;
+      /** Icon */
+      icon: string;
       /**
        * Auth Type
        * @enum {string}
        */
       auth_type: "none" | "api_key" | "oauth2";
-      /** Category */
-      category: string;
-      /** Config Fields */
-      config_fields?: components["schemas"]["ConfigField"][];
       /** Default Url */
       default_url: string;
-      /** Description */
-      description: string;
-      /** Icon */
-      icon: string;
-      /** Id */
-      id: string;
-      /** Name */
-      name: string;
+      /** Category */
+      category: string;
       /** Oauth2 Scopes */
       oauth2_scopes?: string[];
+      /** Config Fields */
+      config_fields?: components["schemas"]["ConfigField"][];
     };
     /**
      * ConnectionTestResult
@@ -4420,19 +7324,19 @@ export interface components {
     ConnectionTestResult: {
       /** Connection Id */
       connection_id: string;
-      /** Error */
-      error?: string | null;
+      /** Success */
+      success: boolean;
       /** Server Name */
       server_name?: string | null;
       /** Server Version */
       server_version?: string | null;
-      /** Success */
-      success: boolean;
       /**
        * Tool Count
        * @default 0
        */
       tool_count: number;
+      /** Error */
+      error?: string | null;
     };
     /**
      * ConsentRecord
@@ -4451,15 +7355,15 @@ export interface components {
        */
       granted: boolean;
       /**
-       * Ip Address
-       * @description IP address (auto-captured)
-       */
-      ip_address?: string | null;
-      /**
        * Timestamp
        * @description ISO timestamp (auto-generated)
        */
       timestamp?: string | null;
+      /**
+       * Ip Address
+       * @description IP address (auto-captured)
+       */
+      ip_address?: string | null;
       /**
        * User Agent
        * @description User agent (auto-captured)
@@ -4485,6 +7389,8 @@ export interface components {
      *     }
      */
     ConsentResponse: {
+      /** User Id */
+      user_id: string;
       /**
        * Consents
        * @description Current consent status for all types
@@ -4494,8 +7400,6 @@ export interface components {
           [key: string]: unknown;
         };
       };
-      /** User Id */
-      user_id: string;
     };
     /**
      * ConsentType
@@ -4504,40 +7408,176 @@ export interface components {
      */
     ConsentType: "analytics" | "marketing" | "third_party" | "profiling";
     /**
+     * ContentType
+     * @description Artifact content type enum.
+     *
+     *     Covers all artifact types supported by the frontend canvas.
+     * @enum {string}
+     */
+    ContentType:
+      | "code"
+      | "markdown"
+      | "json"
+      | "jsx"
+      | "mermaid"
+      | "html"
+      | "text"
+      | "chart"
+      | "table"
+      | "image"
+      | "svg"
+      | "audio"
+      | "video"
+      | "executable";
+    /**
+     * ConversationMessage
+     * @description A single message in the conversation history.
+     */
+    ConversationMessage: {
+      /**
+       * Role
+       * @description Role of the message sender
+       * @enum {string}
+       */
+      role: "user" | "assistant";
+      /**
+       * Content
+       * @description Message content
+       */
+      content: string;
+    };
+    /**
+     * CorrelateAlertsRequest
+     * @description Request model for alert correlation.
+     */
+    CorrelateAlertsRequest: {
+      /**
+       * Correlation Type
+       * @description Type of correlation: 'label' for label-based, 'time' for time-based
+       * @default label
+       * @enum {string}
+       */
+      correlation_type: "label" | "time";
+      /**
+       * Label Key
+       * @description Label key for label-based correlation (required if correlation_type='label')
+       */
+      label_key?: string | null;
+      /**
+       * Window Minutes
+       * @description Time window in minutes for time-based correlation
+       * @default 5
+       */
+      window_minutes: number;
+      /**
+       * Detect Patterns
+       * @description Whether to detect patterns (cascading_failure, resource_exhaustion)
+       * @default false
+       */
+      detect_patterns: boolean;
+      /**
+       * Identify Root Cause
+       * @description Whether to identify root cause in correlation groups
+       * @default false
+       */
+      identify_root_cause: boolean;
+    };
+    /**
+     * CorrelateAlertsResponse
+     * @description Response model for alert correlation.
+     */
+    CorrelateAlertsResponse: {
+      /**
+       * Groups
+       * @description List of correlation groups
+       */
+      groups?: components["schemas"]["CorrelationGroupResponse"][];
+      /**
+       * Total Alerts
+       * @description Total alerts processed
+       * @default 0
+       */
+      total_alerts: number;
+      /**
+       * Total Groups
+       * @description Number of correlation groups found
+       * @default 0
+       */
+      total_groups: number;
+    };
+    /**
+     * CorrelatedAlertResponse
+     * @description Response model for a correlated alert.
+     */
+    CorrelatedAlertResponse: {
+      /** Alert Id */
+      alert_id: string;
+      /** Name */
+      name: string;
+      /** Severity */
+      severity: string;
+      /** Started At */
+      started_at: string | null;
+      /** Labels */
+      labels: {
+        [key: string]: string;
+      };
+      /**
+       * Is Root Cause
+       * @default false
+       */
+      is_root_cause: boolean;
+    };
+    /**
+     * CorrelationGroupResponse
+     * @description Response model for a correlation group.
+     */
+    CorrelationGroupResponse: {
+      /** Group Key */
+      group_key: string;
+      /** Label Value */
+      label_value?: string | null;
+      /** Alerts */
+      alerts: components["schemas"]["CorrelatedAlertResponse"][];
+      /** Root Cause Id */
+      root_cause_id?: string | null;
+      pattern?: components["schemas"]["PatternResultResponse"] | null;
+    };
+    /**
      * CostSummaryResponse
      * @description Response model for cost summary.
      */
     CostSummaryResponse: {
-      /**
-       * Completion Tokens
-       * @description Total completion tokens used
-       */
-      completion_tokens: number;
-      /**
-       * Period End
-       * @description Period end date
-       */
-      period_end?: string | null;
-      /**
-       * Period Start
-       * @description Period start date
-       */
-      period_start?: string | null;
-      /**
-       * Prompt Tokens
-       * @description Total prompt tokens used
-       */
-      prompt_tokens: number;
       /**
        * Total Cost
        * @description Total cost in USD
        */
       total_cost: number;
       /**
+       * Prompt Tokens
+       * @description Total prompt tokens used
+       */
+      prompt_tokens: number;
+      /**
+       * Completion Tokens
+       * @description Total completion tokens used
+       */
+      completion_tokens: number;
+      /**
        * Total Tokens
        * @description Total tokens used
        */
       total_tokens?: number | null;
+      /**
+       * Period Start
+       * @description Period start date
+       */
+      period_start?: string | null;
+      /**
+       * Period End
+       * @description Period end date
+       */
+      period_end?: string | null;
     };
     /**
      * CreateAPIKeyRequest
@@ -4545,42 +7585,42 @@ export interface components {
      */
     CreateAPIKeyRequest: {
       /**
+       * Name
+       * @description Human-readable name for the API key
+       */
+      name: string;
+      /**
        * Expires Days
        * @description Days until expiration (default: 365)
        * @default 365
        */
       expires_days: number;
-      /**
-       * Name
-       * @description Human-readable name for the API key
-       */
-      name: string;
     };
     /**
      * CreateAPIKeyResponse
      * @description Response when creating API key (includes the key itself)
      */
     CreateAPIKeyResponse: {
+      /** Key Id */
+      key_id: string;
+      /** Name */
+      name: string;
+      /** Created */
+      created: string;
+      /** Expires At */
+      expires_at: string;
+      /** Last Used */
+      last_used?: string | null;
       /**
        * Api Key
        * @description API key (save securely, won't be shown again)
        */
       api_key: string;
-      /** Created */
-      created: string;
-      /** Expires At */
-      expires_at: string;
-      /** Key Id */
-      key_id: string;
-      /** Last Used */
-      last_used?: string | null;
       /**
        * Message
        * @default API key created successfully. Save it securely - it will not be shown again.
        */
       message: string;
-      /** Name */
-      name: string;
     };
     /**
      * CreateCollectionRequest
@@ -4601,10 +7641,15 @@ export interface components {
      */
     CreateServicePrincipalRequest: {
       /**
-       * Associated User Id
-       * @description User to act as for permission inheritance (e.g., 'user:alice')
+       * Name
+       * @description Human-readable name for the service
        */
-      associated_user_id?: string | null;
+      name: string;
+      /**
+       * Description
+       * @description Purpose/description of the service
+       */
+      description: string;
       /**
        * Authentication Mode
        * @description Authentication mode: 'client_credentials' or 'service_account_user'
@@ -4612,61 +7657,61 @@ export interface components {
        */
       authentication_mode: string;
       /**
-       * Description
-       * @description Purpose/description of the service
+       * Associated User Id
+       * @description User to act as for permission inheritance (e.g., 'user:alice')
        */
-      description: string;
+      associated_user_id?: string | null;
       /**
        * Inherit Permissions
        * @description Whether to inherit permissions from associated user
        * @default false
        */
       inherit_permissions: boolean;
-      /**
-       * Name
-       * @description Human-readable name for the service
-       */
-      name: string;
     };
     /**
      * CreateServicePrincipalResponse
      * @description Response when creating service principal (includes secret)
      */
     CreateServicePrincipalResponse: {
-      /** Associated User Id */
-      associated_user_id: string | null;
+      /** Service Id */
+      service_id: string;
+      /** Name */
+      name: string;
+      /** Description */
+      description: string;
       /** Authentication Mode */
       authentication_mode: string;
+      /** Associated User Id */
+      associated_user_id: string | null;
+      /** Owner User Id */
+      owner_user_id: string | null;
+      /** Inherit Permissions */
+      inherit_permissions: boolean;
+      /** Enabled */
+      enabled: boolean;
+      /** Created At */
+      created_at: string | null;
       /**
        * Client Secret
        * @description Client secret (save securely, won't be shown again)
        */
       client_secret: string;
-      /** Created At */
-      created_at: string | null;
-      /** Description */
-      description: string;
-      /** Enabled */
-      enabled: boolean;
-      /** Inherit Permissions */
-      inherit_permissions: boolean;
       /**
        * Message
        * @default Service principal created successfully. Save the client_secret securely.
        */
       message: string;
-      /** Name */
-      name: string;
-      /** Owner User Id */
-      owner_user_id: string | null;
-      /** Service Id */
-      service_id: string;
     };
     /**
      * CreateUserRequest
      * @description Request model for creating a new user.
      */
     CreateUserRequest: {
+      /**
+       * Username
+       * @description Username
+       */
+      username: string;
       /**
        * Email
        * Format: email
@@ -4683,11 +7728,6 @@ export interface components {
        * @description User roles
        */
       roles?: string[];
-      /**
-       * Username
-       * @description Username
-       */
-      username: string;
     };
     /**
      * CreateWorkflowRequest
@@ -4695,20 +7735,20 @@ export interface components {
      */
     CreateWorkflowRequest: {
       /**
+       * Name
+       * @description Workflow name
+       */
+      name: string;
+      /**
        * Description
        * @description Workflow description
        * @default
        */
       description: string;
-      /** Edges */
-      edges?: components["schemas"]["mcp_server_langgraph__api__studio__WorkflowEdge"][];
-      /**
-       * Name
-       * @description Workflow name
-       */
-      name: string;
       /** Nodes */
       nodes?: components["schemas"]["mcp_server_langgraph__api__studio__WorkflowNode"][];
+      /** Edges */
+      edges?: components["schemas"]["mcp_server_langgraph__api__studio__WorkflowEdge"][];
     };
     /**
      * CursorPaginatedResponse[dict[str, Any]]
@@ -4756,10 +7796,15 @@ export interface components {
      */
     CursorPaginationMetadata: {
       /**
-       * Count
-       * @description Number of items in current page
+       * Next Cursor
+       * @description Cursor for the next page (None if on last page)
        */
-      count: number;
+      next_cursor?: string | null;
+      /**
+       * Prev Cursor
+       * @description Cursor for the previous page (None if on first page)
+       */
+      prev_cursor?: string | null;
       /**
        * Has Next
        * @description Whether there is a next page
@@ -4771,15 +7816,10 @@ export interface components {
        */
       has_prev: boolean;
       /**
-       * Next Cursor
-       * @description Cursor for the next page (None if on last page)
+       * Count
+       * @description Number of items in current page
        */
-      next_cursor?: string | null;
-      /**
-       * Prev Cursor
-       * @description Cursor for the previous page (None if on first page)
-       */
-      prev_cursor?: string | null;
+      count: number;
     };
     /**
      * DailyCostResponse
@@ -4787,20 +7827,50 @@ export interface components {
      */
     DailyCostResponse: {
       /**
-       * Cost
-       * @description Cost in USD
-       */
-      cost: number;
-      /**
        * Date
        * @description Date (YYYY-MM-DD)
        */
       date: string;
       /**
+       * Cost
+       * @description Cost in USD
+       */
+      cost: number;
+      /**
        * Requests
        * @description Number of requests
        */
       requests?: number | null;
+    };
+    /**
+     * DeleteResponse
+     * @description Delete response model.
+     */
+    DeleteResponse: {
+      /**
+       * Success
+       * @description Whether deletion succeeded
+       */
+      success: boolean;
+      /**
+       * Message
+       * @description Status message
+       */
+      message: string;
+    };
+    /**
+     * DependencyStatus
+     * @description Detailed dependency status.
+     */
+    DependencyStatus: {
+      /** Name */
+      name: string;
+      /** Healthy */
+      healthy: boolean;
+      /** Message */
+      message: string;
+      /** Latency Ms */
+      latency_ms?: number | null;
     };
     /**
      * DeviceAuthErrorResponse
@@ -4829,17 +7899,6 @@ export interface components {
        */
       device_code: string;
       /**
-       * Expires In
-       * @description Lifetime of device_code in seconds
-       */
-      expires_in: number;
-      /**
-       * Interval
-       * @description Polling interval in seconds
-       * @default 5
-       */
-      interval: number;
-      /**
        * User Code
        * @description User code to enter at verification_uri
        */
@@ -4854,6 +7913,17 @@ export interface components {
        * @description URL with user_code embedded (for QR codes)
        */
       verification_uri_complete?: string | null;
+      /**
+       * Expires In
+       * @description Lifetime of device_code in seconds
+       */
+      expires_in: number;
+      /**
+       * Interval
+       * @description Polling interval in seconds
+       * @default 5
+       */
+      interval: number;
     };
     /**
      * DeviceTokenRequest
@@ -4865,6 +7935,72 @@ export interface components {
        * @description Device code from /auth/device
        */
       device_code: string;
+    };
+    /**
+     * DisclosureAnalyzeRequest
+     * @description Request for disclosure level analysis.
+     */
+    DisclosureAnalyzeRequest: {
+      /**
+       * User Id
+       * @description User identifier
+       */
+      user_id: string;
+      /**
+       * Session History
+       * @description Recent session history
+       */
+      session_history?: components["schemas"]["SessionHistoryItem"][];
+      /**
+       * Feature Usage
+       * @description Feature usage counts
+       */
+      feature_usage?: {
+        [key: string]: number;
+      };
+    };
+    /**
+     * DisclosureAnalyzeResponse
+     * @description Response from disclosure level analysis.
+     */
+    DisclosureAnalyzeResponse: {
+      current_level: components["schemas"]["DisclosureLevel"];
+      recommended_level: components["schemas"]["DisclosureLevel"];
+      /** Confidence */
+      confidence: number;
+      /** Unlock Features */
+      unlock_features?: string[];
+      /** Personalized Message */
+      personalized_message?: string | null;
+    };
+    /**
+     * DisclosureLevel
+     * @description User disclosure/expertise levels.
+     * @enum {string}
+     */
+    DisclosureLevel: "beginner" | "intermediate" | "advanced" | "expert";
+    /**
+     * EditMetadata
+     * @description Metadata about artifact editing.
+     */
+    EditMetadata: {
+      /**
+       * Edited By
+       * @description Who edited the artifact
+       * @default user
+       * @enum {string}
+       */
+      edited_by: "user" | "ai-suggestion" | "ai-generation";
+      /**
+       * Language
+       * @description Programming language
+       */
+      language?: string | null;
+      /**
+       * Ai Confidence
+       * @description AI confidence score
+       */
+      ai_confidence?: number | null;
     };
     /**
      * ElicitationFormRequest
@@ -4919,10 +8055,71 @@ export interface components {
       url: string;
     };
     /**
+     * EmptyStateSuggestion
+     * @description A single empty state suggestion.
+     */
+    EmptyStateSuggestion: {
+      /** Text */
+      text: string;
+      action: components["schemas"]["mcp_server_langgraph__api__v1__ai_ux__SuggestionAction"];
+      /** Target */
+      target?: string | null;
+      /**
+       * Confidence
+       * @default 0.8
+       */
+      confidence: number;
+      /**
+       * Category
+       * @default default
+       */
+      category: string;
+    };
+    /**
+     * EmptyStateSuggestionsRequest
+     * @description Request for empty state suggestions.
+     */
+    EmptyStateSuggestionsRequest: {
+      /**
+       * Context
+       * @description Page context (e.g., 'workflows', 'sessions')
+       */
+      context: string;
+      /**
+       * Persona
+       * @description User persona
+       */
+      persona: string;
+      /** Session Id */
+      session_id?: string | null;
+      /** History */
+      history?: {
+        [key: string]: unknown;
+      }[];
+    };
+    /**
+     * EmptyStateSuggestionsResponse
+     * @description Response with empty state suggestions.
+     */
+    EmptyStateSuggestionsResponse: {
+      /** Suggestions */
+      suggestions: components["schemas"]["EmptyStateSuggestion"][];
+    };
+    /**
      * EngagementMetrics
      * @description Engagement metrics
      */
     EngagementMetrics: {
+      /**
+       * Session Duration Ms
+       * @description Session duration in milliseconds
+       */
+      session_duration_ms: number;
+      /**
+       * Interaction Count
+       * @description Number of interactions
+       */
+      interaction_count: number;
       /**
        * Feature Usage
        * @description Feature usage counts
@@ -4930,16 +8127,71 @@ export interface components {
       feature_usage?: {
         [key: string]: number;
       };
+    };
+    /**
+     * ErrorAnalyzeRequest
+     * @description Request for error analysis.
+     */
+    ErrorAnalyzeRequest: {
+      error: components["schemas"]["ErrorInfo"];
+      user_context?: components["schemas"]["UserContext"] | null;
+    };
+    /**
+     * ErrorAnalyzeResponse
+     * @description Response from error analysis.
+     */
+    ErrorAnalyzeResponse: {
+      classification: components["schemas"]["ErrorClassification"];
+      /** Root Cause */
+      root_cause: string;
+      /** Suggestions */
+      suggestions: components["schemas"]["RecoverySuggestion"][];
+      /** Similar Issues */
+      similar_issues?: components["schemas"]["SimilarIssue"][];
+    };
+    /**
+     * ErrorCategory
+     * @description Error classification categories.
+     * @enum {string}
+     */
+    ErrorCategory:
+      | "network"
+      | "authentication"
+      | "authorization"
+      | "validation"
+      | "server"
+      | "client"
+      | "timeout"
+      | "quota"
+      | "unknown";
+    /**
+     * ErrorClassification
+     * @description Error classification result.
+     */
+    ErrorClassification: {
+      category: components["schemas"]["ErrorCategory"];
       /**
-       * Interaction Count
-       * @description Number of interactions
+       * Subcategory
+       * @default general
        */
-      interaction_count: number;
+      subcategory: string;
+      /** Confidence */
+      confidence: number;
+    };
+    /**
+     * ErrorInfo
+     * @description Information about an error.
+     */
+    ErrorInfo: {
+      /** Message */
+      message: string;
       /**
-       * Session Duration Ms
-       * @description Session duration in milliseconds
+       * Name
+       * @default Error
        */
-      session_duration_ms: number;
+      name: string;
+      /** Stack Trace */
+      stack_trace?: string | null;
     };
     /**
      * EventBatch
@@ -4947,9 +8199,14 @@ export interface components {
      */
     EventBatch: {
       /**
+       * Session Id
+       * @description Anonymous session identifier
+       */
+      session_id: string;
+      /**
        * App Name
        * @description Source application
-       * @enum {string}
+       * @constant
        */
       app_name: "studio";
       /**
@@ -4957,11 +8214,6 @@ export interface components {
        * @description List of events
        */
       events: components["schemas"]["FeatureEvent"][];
-      /**
-       * Session Id
-       * @description Anonymous session identifier
-       */
-      session_id: string;
     };
     /**
      * EventReceiptResponse
@@ -4986,20 +8238,30 @@ export interface components {
      */
     ExecutionResponse: {
       /**
-       * Completed At
-       * @description Completion time (ISO 8601)
-       */
-      completed_at?: string | null;
-      /**
-       * Error
-       * @description Error message if failed
-       */
-      error?: string | null;
-      /**
        * Id
        * @description Execution ID
        */
       id: string;
+      /**
+       * Workflow Id
+       * @description Workflow ID
+       */
+      workflow_id: string;
+      /**
+       * Status
+       * @description Execution status (pending, running, completed, failed)
+       */
+      status: string;
+      /**
+       * Started At
+       * @description Start time (ISO 8601)
+       */
+      started_at: string;
+      /**
+       * Completed At
+       * @description Completion time (ISO 8601)
+       */
+      completed_at?: string | null;
       /**
        * Input Data
        * @description Input data
@@ -5015,20 +8277,47 @@ export interface components {
         [key: string]: unknown;
       } | null;
       /**
-       * Started At
-       * @description Start time (ISO 8601)
+       * Error
+       * @description Error message if failed
        */
-      started_at: string;
+      error?: string | null;
+    };
+    /**
+     * ExplanationType
+     * @description Type of AI explanation.
+     *
+     *     Categorizes the explanation to help UI rendering and analytics.
+     *
+     *     Values:
+     *         UNCERTAINTY: Explains why the agent lacks confidence
+     *         RISK_ANALYSIS: Focuses on potential negative outcomes
+     *         ALTERNATIVES: Emphasizes safer options
+     *         EVIDENCE: Presents reasoning trace and confidence factors
+     * @enum {string}
+     */
+    ExplanationType:
+      | "uncertainty"
+      | "risk_analysis"
+      | "alternatives"
+      | "evidence";
+    /**
+     * ExportRequest
+     * @description Export request parameters.
+     */
+    ExportRequest: {
       /**
-       * Status
-       * @description Execution status (pending, running, completed, failed)
+       * Format
+       * @description Export format
+       * @default markdown
+       * @enum {string}
        */
-      status: string;
+      format: "markdown" | "json" | "html";
       /**
-       * Workflow Id
-       * @description Workflow ID
+       * Include Metadata
+       * @description Include session metadata
+       * @default false
        */
-      workflow_id: string;
+      include_metadata: boolean;
     };
     /**
      * FeatureEvent
@@ -5036,16 +8325,16 @@ export interface components {
      */
     FeatureEvent: {
       /**
+       * Feature Name
+       * @description Name of the feature used
+       */
+      feature_name: string;
+      /**
        * Event Type
        * @description Type of event
        * @enum {string}
        */
       event_type: "used" | "clicked" | "error";
-      /**
-       * Feature Name
-       * @description Name of the feature used
-       */
-      feature_name: string;
       /**
        * Metadata
        * @description Additional metadata
@@ -5060,26 +8349,31 @@ export interface components {
      */
     FeedbackRequest: {
       /**
-       * Comment
-       * @description Optional feedback comment
+       * Nps Score
+       * @description Net Promoter Score (0-10)
        */
-      comment?: string | null;
+      nps_score?: number | null;
       /**
        * Csat Rating
        * @description Customer Satisfaction Rating (1-5)
        */
       csat_rating?: number | null;
       /**
-       * Nps Score
-       * @description Net Promoter Score (0-10)
+       * Comment
+       * @description Optional feedback comment
        */
-      nps_score?: number | null;
+      comment?: string | null;
     };
     /**
      * FeedbackResponse
      * @description Response for feedback submission
      */
     FeedbackResponse: {
+      /**
+       * Success
+       * @description Whether feedback was submitted successfully
+       */
+      success: boolean;
       /**
        * Feedback Id
        * @description Unique feedback identifier
@@ -5091,11 +8385,42 @@ export interface components {
        * @description Server receipt timestamp
        */
       received_at: string;
+    };
+    /**
+     * FeedbackType
+     * @description Feedback types for suggestions.
+     * @enum {string}
+     */
+    FeedbackType: "positive" | "negative";
+    /**
+     * FindSimilarResponse
+     * @description Response for find similar artifacts.
+     */
+    FindSimilarResponse: {
+      /** Results */
+      results: components["schemas"]["SemanticSearchResult"][];
+    };
+    /**
+     * GenerateTitleRequest
+     * @description Request body for generating a session title.
+     */
+    GenerateTitleRequest: {
       /**
-       * Success
-       * @description Whether feedback was submitted successfully
+       * Message
+       * @description The user's first message to generate a title from
        */
-      success: boolean;
+      message: string;
+    };
+    /**
+     * GenerateTitleResponse
+     * @description Response model for generated title.
+     */
+    GenerateTitleResponse: {
+      /**
+       * Title
+       * @description Generated session title
+       */
+      title: string;
     };
     /**
      * GenerateWorkflowRequest
@@ -5103,21 +8428,23 @@ export interface components {
      */
     GenerateWorkflowRequest: {
       /**
-       * Prompt
-       * @description Generate from text prompt
-       */
-      prompt?: string | null;
-      /**
        * Session Id
        * @description Generate from session history
        */
       session_id?: string | null;
+      /**
+       * Prompt
+       * @description Generate from text prompt
+       */
+      prompt?: string | null;
     };
     /**
      * GenerateWorkflowResponse
      * @description Response containing generated workflow.
      */
     GenerateWorkflowResponse: {
+      /** @description Generated workflow definition */
+      workflow: components["schemas"]["mcp_server_langgraph__api__v1__workflows__WorkflowResponse"];
       /**
        * Confidence
        * @description Generation confidence score
@@ -5128,8 +8455,6 @@ export interface components {
        * @description Improvement suggestions
        */
       suggestions?: string[];
-      /** @description Generated workflow definition */
-      workflow: components["schemas"]["mcp_server_langgraph__api__v1__workflows__WorkflowResponse"];
     };
     /** HTTPValidationError */
     HTTPValidationError: {
@@ -5157,66 +8482,53 @@ export interface components {
      * @description Health check result model
      */
     HealthCheckResult: {
+      /** Status */
+      status: string;
       /** Checks */
       checks: {
         [key: string]: boolean;
       };
       /** Errors */
       errors: string[];
-      /** Status */
-      status: string;
       /** Warnings */
       warnings: string[];
-    };
-    /**
-     * HealthSummary
-     * @description Aggregated health summary for all connections.
-     */
-    HealthSummary: {
-      /** Auth Required */
-      auth_required: number;
-      /** Connected */
-      connected: number;
-      /** Connecting */
-      connecting: number;
-      /** Disconnected */
-      disconnected: number;
-      /** Error */
-      error: number;
-      /**
-       * Last Check
-       * Format: date-time
-       */
-      last_check: string;
-      /** Total */
-      total: number;
     };
     /**
      * HeartMetricsBatch
      * @description Batch of HEART metrics for submission
      */
     HeartMetricsBatch: {
-      adoption?: components["schemas"]["AdoptionMetrics"] | null;
-      /**
-       * App Name
-       * @description Source application
-       * @enum {string}
-       */
-      app_name: "studio";
-      engagement?: components["schemas"]["EngagementMetrics"] | null;
-      happiness?: components["schemas"]["HappinessMetrics"] | null;
-      retention?: components["schemas"]["RetentionMetrics"] | null;
       /**
        * Session Id
        * @description Anonymous session identifier
        */
       session_id: string;
+      /**
+       * App Name
+       * @description Source application
+       * @constant
+       */
+      app_name: "studio";
       task_success?: components["schemas"]["TaskMetrics"] | null;
+      engagement?: components["schemas"]["EngagementMetrics"] | null;
+      happiness?: components["schemas"]["HappinessMetrics"] | null;
+      adoption?: components["schemas"]["AdoptionMetrics"] | null;
+      retention?: components["schemas"]["RetentionMetrics"] | null;
       /**
        * Timestamp
        * Format: date-time
        */
       timestamp?: string;
+    };
+    /**
+     * HistoryResponse
+     * @description Response for remediation history.
+     */
+    HistoryResponse: {
+      /** Remediations */
+      remediations: components["schemas"]["RemediationRequest"][];
+      /** Count */
+      count: number;
     };
     /**
      * IdentityProviderResponse
@@ -5234,6 +8546,16 @@ export interface components {
        */
       display_name: string;
       /**
+       * Provider Type
+       * @description Type: 'social' or 'enterprise'
+       */
+      provider_type: string;
+      /**
+       * Provider Id
+       * @description Keycloak provider type (google, oidc, saml, etc.)
+       */
+      provider_id: string;
+      /**
        * Icon
        * @description Icon name for UI display
        */
@@ -5243,16 +8565,6 @@ export interface components {
        * @description URL to initiate SSO login with this provider
        */
       login_url: string;
-      /**
-       * Provider Id
-       * @description Keycloak provider type (google, oidc, saml, etc.)
-       */
-      provider_id: string;
-      /**
-       * Provider Type
-       * @description Type: 'social' or 'enterprise'
-       */
-      provider_type: string;
     };
     /**
      * IdentityProvidersListResponse
@@ -5260,16 +8572,10 @@ export interface components {
      */
     IdentityProvidersListResponse: {
       /**
-       * Error
-       * @description Error message if IdP discovery failed
+       * Identity Providers
+       * @description Available identity providers for login
        */
-      error?: string | null;
-      /**
-       * Has Enterprise Sso
-       * @description Whether enterprise SSO providers are available
-       * @default false
-       */
-      has_enterprise_sso: boolean;
+      identity_providers?: components["schemas"]["IdentityProviderResponse"][];
       /**
        * Has Social Login
        * @description Whether social login providers are available
@@ -5277,26 +8583,32 @@ export interface components {
        */
       has_social_login: boolean;
       /**
-       * Identity Providers
-       * @description Available identity providers for login
+       * Has Enterprise Sso
+       * @description Whether enterprise SSO providers are available
+       * @default false
        */
-      identity_providers?: components["schemas"]["IdentityProviderResponse"][];
+      has_enterprise_sso: boolean;
+      /**
+       * Error
+       * @description Error message if IdP discovery failed
+       */
+      error?: string | null;
     };
     /**
      * IntegrityVerificationResponse
      * @description Response model for integrity verification.
      */
     IntegrityVerificationResponse: {
-      /** Chain Valid */
-      chain_valid: boolean;
-      /** End Time */
-      end_time: string;
-      /** Errors */
-      errors: string[];
-      /** Events Verified */
-      events_verified: number;
       /** Start Time */
       start_time: string;
+      /** End Time */
+      end_time: string;
+      /** Events Verified */
+      events_verified: number;
+      /** Chain Valid */
+      chain_valid: boolean;
+      /** Errors */
+      errors: string[];
       /** Verification Time */
       verification_time: number;
       /** Verified At */
@@ -5329,15 +8641,25 @@ export interface components {
        */
       active: boolean;
       /**
-       * Aud
-       * @description Token audience
+       * Scope
+       * @description Token scope
        */
-      aud?: string | string[] | null;
+      scope?: string | null;
       /**
        * Client Id
        * @description Client ID that requested the token
        */
       client_id?: string | null;
+      /**
+       * Username
+       * @description Username of the token subject
+       */
+      username?: string | null;
+      /**
+       * Token Type
+       * @description Token type
+       */
+      token_type?: string | null;
       /**
        * Exp
        * @description Token expiration timestamp
@@ -5349,75 +8671,43 @@ export interface components {
        */
       iat?: number | null;
       /**
-       * Iss
-       * @description Token issuer
-       */
-      iss?: string | null;
-      /**
-       * Scope
-       * @description Token scope
-       */
-      scope?: string | null;
-      /**
        * Sub
        * @description Token subject (user ID)
        */
       sub?: string | null;
       /**
-       * Token Type
-       * @description Token type
+       * Aud
+       * @description Token audience
        */
-      token_type?: string | null;
+      aud?: string | string[] | null;
       /**
-       * Username
-       * @description Username of the token subject
+       * Iss
+       * @description Token issuer
        */
-      username?: string | null;
+      iss?: string | null;
     };
     /**
-     * LoginRequest
-     * @description Login credentials.
+     * ListArtifactsResponse
+     * @description Paginated list response for artifacts.
      */
-    LoginRequest: {
+    ListArtifactsResponse: {
+      /** Items */
+      items: components["schemas"]["ArtifactResponse"][];
+      /** Cursor */
+      cursor?: string | null;
       /**
-       * Password
-       * @description Password
+       * Hasmore
+       * @default false
        */
-      password: string;
-      /**
-       * Username
-       * @description Username
-       */
-      username: string;
+      hasMore: boolean;
     };
     /**
-     * LoginResponse
-     * @description Token response from login.
+     * LivenessResult
+     * @description Liveness probe result (K8s livenessProbe).
      */
-    LoginResponse: {
-      /**
-       * Access Token
-       * @description JWT access token
-       */
-      access_token: string;
-      /**
-       * Expires In
-       * @description Token expiry in seconds
-       */
-      expires_in: number;
-      /**
-       * Refresh Token
-       * @description JWT refresh token
-       */
-      refresh_token?: string | null;
-      /**
-       * Token Type
-       * @description Token type
-       * @default Bearer
-       */
-      token_type: string;
-      /** @description User information */
-      user: components["schemas"]["UserInfoResponse"];
+    LivenessResult: {
+      /** Status */
+      status: string;
     };
     /**
      * LogoutRequest
@@ -5436,15 +8726,15 @@ export interface components {
      */
     LogoutResponse: {
       /**
-       * Message
-       * @description Status message
-       */
-      message: string;
-      /**
        * Success
        * @description Whether logout was successful
        */
       success: boolean;
+      /**
+       * Message
+       * @description Status message
+       */
+      message: string;
     };
     /**
      * MCPConnectionCreate
@@ -5452,15 +8742,27 @@ export interface components {
      */
     MCPConnectionCreate: {
       /**
-       * Api Key
-       * @description API key (stored securely)
+       * Name
+       * @description Display name
        */
-      api_key?: string | null;
+      name: string;
       /**
-       * Args
-       * @description Command arguments (stdio transport)
+       * Description
+       * @description Description
        */
-      args?: string[] | null;
+      description?: string | null;
+      /**
+       * Url
+       * @description MCP server URL
+       */
+      url: string;
+      /**
+       * Transport
+       * @description Transport protocol
+       * @default streamable_http
+       * @enum {string}
+       */
+      transport: "streamable_http" | "stdio";
       /**
        * Auth Type
        * @description Authentication method
@@ -5469,27 +8771,10 @@ export interface components {
        */
       auth_type: "none" | "api_key" | "oauth2";
       /**
-       * Command
-       * @description Command to execute (stdio transport)
+       * Api Key
+       * @description API key (stored securely)
        */
-      command?: string | null;
-      /**
-       * Description
-       * @description Description
-       */
-      description?: string | null;
-      /**
-       * Env
-       * @description Environment variables (stdio transport)
-       */
-      env?: {
-        [key: string]: string;
-      } | null;
-      /**
-       * Name
-       * @description Display name
-       */
-      name: string;
+      api_key?: string | null;
       /**
        * Oauth2 Client Id
        * @description OAuth2 client ID
@@ -5506,22 +8791,27 @@ export interface components {
        */
       oauth2_scopes?: string[] | null;
       /**
+       * Command
+       * @description Command to execute (stdio transport)
+       */
+      command?: string | null;
+      /**
+       * Args
+       * @description Command arguments (stdio transport)
+       */
+      args?: string[] | null;
+      /**
+       * Env
+       * @description Environment variables (stdio transport)
+       */
+      env?: {
+        [key: string]: string;
+      } | null;
+      /**
        * Project Id
        * @description Project to associate with
        */
       project_id?: string | null;
-      /**
-       * Transport
-       * @description Transport protocol
-       * @default streamable_http
-       * @enum {string}
-       */
-      transport: "streamable_http" | "stdio";
-      /**
-       * Url
-       * @description MCP server URL
-       */
-      url: string;
     };
     /**
      * MCPConnectionSummary
@@ -5529,49 +8819,32 @@ export interface components {
      */
     MCPConnectionSummary: {
       /**
-       * Auth Type
-       * @description Authentication method
-       * @enum {string}
-       */
-      auth_type: "none" | "api_key" | "oauth2";
-      /**
-       * Created At
-       * Format: date-time
-       * @description Creation timestamp
-       */
-      created_at: string;
-      /**
        * Id
        * @description Connection ID
        */
       id: string;
-      /**
-       * Last Connected At
-       * @description Last successful connection
-       */
-      last_connected_at?: string | null;
       /**
        * Name
        * @description Display name
        */
       name: string;
       /**
-       * Prompt Count
-       * @description Number of prompts available
-       * @default 0
+       * Url
+       * @description MCP server URL
        */
-      prompt_count: number;
+      url: string;
       /**
-       * Resource Count
-       * @description Number of resources available
-       * @default 0
+       * Transport
+       * @description Transport protocol
+       * @enum {string}
        */
-      resource_count: number;
+      transport: "streamable_http" | "stdio";
       /**
-       * Server Name
-       * @description MCP server name
+       * Auth Type
+       * @description Authentication method
+       * @enum {string}
        */
-      server_name?: string | null;
+      auth_type: "none" | "api_key" | "oauth2";
       /**
        * Status
        * @description Connection status
@@ -5584,38 +8857,22 @@ export interface components {
         | "error"
         | "auth_required";
       /**
+       * Server Name
+       * @description MCP server name
+       */
+      server_name?: string | null;
+      /**
        * Tool Count
        * @description Number of tools available
        * @default 0
        */
       tool_count: number;
       /**
-       * Transport
-       * @description Transport protocol
-       * @enum {string}
+       * Resource Count
+       * @description Number of resources available
+       * @default 0
        */
-      transport: "streamable_http" | "stdio";
-      /**
-       * Url
-       * @description MCP server URL
-       */
-      url: string;
-    };
-    /**
-     * MCPConnectionTestResult
-     * @description Result of testing an MCP connection.
-     */
-    MCPConnectionTestResult: {
-      /**
-       * Error
-       * @description Error message if test failed
-       */
-      error?: string | null;
-      /**
-       * Latency Ms
-       * @description Connection latency in milliseconds
-       */
-      latency_ms?: number | null;
+      resource_count: number;
       /**
        * Prompt Count
        * @description Number of prompts available
@@ -5623,11 +8880,27 @@ export interface components {
        */
       prompt_count: number;
       /**
-       * Resource Count
-       * @description Number of resources available
-       * @default 0
+       * Last Connected At
+       * @description Last successful connection
        */
-      resource_count: number;
+      last_connected_at?: string | null;
+      /**
+       * Created At
+       * Format: date-time
+       * @description Creation timestamp
+       */
+      created_at: string;
+    };
+    /**
+     * MCPConnectionTestResult
+     * @description Result of testing an MCP connection.
+     */
+    MCPConnectionTestResult: {
+      /**
+       * Success
+       * @description Whether the test was successful
+       */
+      success: boolean;
       /**
        * Server Name
        * @description MCP server name
@@ -5639,16 +8912,33 @@ export interface components {
        */
       server_version?: string | null;
       /**
-       * Success
-       * @description Whether the test was successful
-       */
-      success: boolean;
-      /**
        * Tool Count
        * @description Number of tools available
        * @default 0
        */
       tool_count: number;
+      /**
+       * Resource Count
+       * @description Number of resources available
+       * @default 0
+       */
+      resource_count: number;
+      /**
+       * Prompt Count
+       * @description Number of prompts available
+       * @default 0
+       */
+      prompt_count: number;
+      /**
+       * Latency Ms
+       * @description Connection latency in milliseconds
+       */
+      latency_ms?: number | null;
+      /**
+       * Error
+       * @description Error message if test failed
+       */
+      error?: string | null;
     };
     /**
      * MCPConnectionUpdate
@@ -5656,15 +8946,15 @@ export interface components {
      */
     MCPConnectionUpdate: {
       /**
-       * Description
-       * @description Description
-       */
-      description?: string | null;
-      /**
        * Name
        * @description Display name
        */
       name?: string | null;
+      /**
+       * Description
+       * @description Description
+       */
+      description?: string | null;
       /**
        * Url
        * @description MCP server URL
@@ -5678,10 +8968,46 @@ export interface components {
     MemberListResponse: {
       /** Members */
       members: components["schemas"]["ProjectMember"][];
-      /** Project Id */
-      project_id: string;
       /** Total */
       total: number;
+      /** Project Id */
+      project_id: string;
+    };
+    /**
+     * MessageRatingRequest
+     * @description Request body for rating a message.
+     */
+    MessageRatingRequest: {
+      /** @description Positive or negative rating */
+      rating: components["schemas"]["RatingValue"];
+      /**
+       * Feedback
+       * @description Optional feedback text
+       */
+      feedback?: string | null;
+    };
+    /**
+     * MessageRatingResponse
+     * @description Response model for message rating.
+     */
+    MessageRatingResponse: {
+      /**
+       * Id
+       * @description Rating record ID
+       */
+      id: string;
+      /** @description The rating value */
+      rating: components["schemas"]["RatingValue"];
+      /**
+       * Message Id
+       * @description The rated message ID
+       */
+      message_id: string;
+      /**
+       * Feedback
+       * @description Optional feedback text
+       */
+      feedback?: string | null;
     };
     /**
      * MessageRequest
@@ -5689,16 +9015,120 @@ export interface components {
      */
     MessageRequest: {
       /**
-       * Content
-       * @description Message content
-       */
-      content: string;
-      /**
        * Role
        * @description Message role
        * @enum {string}
        */
       role: "user" | "assistant" | "system";
+      /**
+       * Content
+       * @description Message content
+       */
+      content: string;
+    };
+    /**
+     * MessageResponse
+     * @description Response model for a message.
+     *
+     *     Includes optional fields for extended thinking support and source citations
+     *     used by the frontend for rich message display.
+     */
+    MessageResponse: {
+      /**
+       * Message Id
+       * @description Unique message ID
+       */
+      message_id: string;
+      /** @description Message role */
+      role: components["schemas"]["MessageRole"];
+      /**
+       * Content
+       * @description Message content
+       */
+      content: string;
+      /**
+       * Timestamp
+       * @description Message timestamp (ISO 8601)
+       */
+      timestamp?: string | null;
+      /**
+       * Sources
+       * @description Source citations for the message content
+       */
+      sources?: components["schemas"]["SourceCitation"][] | null;
+      /**
+       * Thinking Content
+       * @description Internal reasoning/thinking content from extended thinking models
+       */
+      thinking_content?: string | null;
+      /**
+       * Thinking Tokens
+       * @description Number of tokens used for thinking/reasoning
+       */
+      thinking_tokens?: number | null;
+      /**
+       * Model Name
+       * @description Name of the LLM model that generated this message
+       */
+      model_name?: string | null;
+    };
+    /**
+     * MessageRole
+     * @description Message role enum for type safety.
+     * @enum {string}
+     */
+    MessageRole: "user" | "assistant" | "system";
+    /**
+     * MetricInsight
+     * @description A single metric insight.
+     */
+    MetricInsight: {
+      /** Type */
+      type: string;
+      /** Dimension */
+      dimension: string;
+      /** Message */
+      message: string;
+      /**
+       * Severity
+       * @default info
+       */
+      severity: string;
+      /**
+       * Sentiment
+       * @default neutral
+       */
+      sentiment: string;
+      /** Suggested Actions */
+      suggested_actions?: string[];
+      /** Detected At */
+      detected_at?: string | null;
+    };
+    /**
+     * MetricPrediction
+     * @description A metric prediction.
+     */
+    MetricPrediction: {
+      /** Metric */
+      metric: string;
+      /** Current */
+      current: number;
+      /** Predicted */
+      predicted: number;
+      /** Confidence */
+      confidence: number;
+      /** Drivers */
+      drivers?: string[];
+    };
+    /**
+     * MetricsInsightsResponse
+     * @description Response with metrics insights.
+     */
+    MetricsInsightsResponse: {
+      /** Insights */
+      insights: components["schemas"]["MetricInsight"][];
+      /** Predictions */
+      predictions: components["schemas"]["MetricPrediction"][];
     };
     /**
      * MetricsReceiptResponse
@@ -5711,22 +9141,27 @@ export interface components {
        */
       id: string;
       /**
-       * Message
-       * @description Status message
-       */
-      message: string;
-      /**
        * Received At
        * Format: date-time
        * @description Server receipt timestamp
        */
       received_at: string;
+      /**
+       * Message
+       * @description Status message
+       */
+      message: string;
     };
     /**
      * MetricsResponse
      * @description Response model for metrics.
      */
     MetricsResponse: {
+      /**
+       * Requests Total
+       * @description Total requests
+       */
+      requests_total: number;
       /**
        * Errors Total
        * @description Total errors
@@ -5747,11 +9182,6 @@ export interface components {
        * @description P99 latency in seconds
        */
       latency_p99?: number | null;
-      /**
-       * Requests Total
-       * @description Total requests
-       */
-      requests_total: number;
     };
     /**
      * ModelCostResponse
@@ -5759,30 +9189,30 @@ export interface components {
      */
     ModelCostResponse: {
       /**
-       * Completion Tokens
-       * @description Completion tokens
+       * Model
+       * @description Model name
        */
-      completion_tokens?: number | null;
+      model: string;
       /**
        * Cost
        * @description Cost in USD
        */
       cost: number;
       /**
-       * Model
-       * @description Model name
+       * Requests
+       * @description Number of requests
        */
-      model: string;
+      requests: number;
       /**
        * Prompt Tokens
        * @description Prompt tokens
        */
       prompt_tokens?: number | null;
       /**
-       * Requests
-       * @description Number of requests
+       * Completion Tokens
+       * @description Completion tokens
        */
-      requests: number;
+      completion_tokens?: number | null;
     };
     /**
      * NodeConfigHelpRequest
@@ -5790,30 +9220,23 @@ export interface components {
      */
     NodeConfigHelpRequest: {
       /**
+       * Node Type
+       * @description The type of node (llm, tool, input, output, code, condition)
+       */
+      node_type: string;
+      /**
        * Context
        * @description Optional context including existing nodes, workflow goal, etc.
        */
       context?: {
         [key: string]: unknown;
       } | null;
-      /**
-       * Node Type
-       * @description The type of node (llm, tool, input, output, code, condition)
-       */
-      node_type: string;
     };
     /**
      * NodeConfigHelpResponse
      * @description Response containing node configuration help.
      */
     NodeConfigHelpResponse: {
-      /**
-       * Examples
-       * @description Example configurations
-       */
-      examples?: {
-        [key: string]: unknown;
-      }[];
       /**
        * Help Text
        * @description Human-readable help text
@@ -5826,6 +9249,13 @@ export interface components {
       suggested_config?: {
         [key: string]: unknown;
       };
+      /**
+       * Examples
+       * @description Example configurations
+       */
+      examples?: {
+        [key: string]: unknown;
+      }[];
       /**
        * Suggested Connections
        * @description Suggested connections to/from existing nodes
@@ -5842,17 +9272,17 @@ export interface components {
      */
     NodeConfigValidateRequest: {
       /**
+       * Node Type
+       * @description The type of node
+       */
+      node_type: string;
+      /**
        * Config
        * @description The configuration to validate
        */
       config: {
         [key: string]: unknown;
       };
-      /**
-       * Node Type
-       * @description The type of node
-       */
-      node_type: string;
     };
     /**
      * NodeConfigValidateResponse
@@ -5860,15 +9290,15 @@ export interface components {
      */
     NodeConfigValidateResponse: {
       /**
-       * Errors
-       * @description Validation errors
-       */
-      errors?: string[];
-      /**
        * Valid
        * @description Whether the configuration is valid
        */
       valid: boolean;
+      /**
+       * Errors
+       * @description Validation errors
+       */
+      errors?: string[];
       /**
        * Warnings
        * @description Validation warnings
@@ -5907,10 +9337,95 @@ export interface components {
      * @description Response for notification operations.
      */
     NotificationResponse: {
-      /** Message */
-      message: string;
       /** Success */
       success: boolean;
+      /** Message */
+      message: string;
+    };
+    /**
+     * Nudge
+     * @description A nudge to show to the user.
+     */
+    Nudge: {
+      /** Id */
+      id: string;
+      /**
+       * Type
+       * @default tooltip
+       */
+      type: string;
+      /** Target Element */
+      target_element?: string | null;
+      /** Message */
+      message: string;
+      /**
+       * Priority
+       * @default medium
+       */
+      priority: string;
+      /**
+       * Show After Ms
+       * @default 0
+       */
+      show_after_ms: number;
+    };
+    /**
+     * NudgeContext
+     * @description Current user context for nudge decisions.
+     */
+    NudgeContext: {
+      /** Page */
+      page: string;
+      /**
+       * Action
+       * @default viewing
+       */
+      action: string;
+      /**
+       * Time On Page
+       * @default 0
+       */
+      time_on_page: number;
+    };
+    /**
+     * NudgeHistoryItem
+     * @description A single nudge history entry.
+     */
+    NudgeHistoryItem: {
+      /** Id */
+      id: string;
+      /** Shown At */
+      shown_at: string;
+      /**
+       * Action
+       * @default dismissed
+       */
+      action: string;
+    };
+    /**
+     * NudgeRecommendRequest
+     * @description Request for nudge recommendation.
+     */
+    NudgeRecommendRequest: {
+      /** User Id */
+      user_id: string;
+      current_context: components["schemas"]["NudgeContext"];
+      /** Nudge History */
+      nudge_history?: components["schemas"]["NudgeHistoryItem"][];
+    };
+    /**
+     * NudgeRecommendResponse
+     * @description Response with nudge recommendation.
+     */
+    NudgeRecommendResponse: {
+      /** Should Show */
+      should_show: boolean;
+      nudge?: components["schemas"]["Nudge"] | null;
+      /**
+       * Confidence
+       * @default 0.5
+       */
+      confidence: number;
     };
     /**
      * OAuth2CallbackRequest
@@ -5934,21 +9449,21 @@ export interface components {
      */
     OAuth2CallbackResponse: {
       /**
-       * Connection Id
-       * @description ID of the authorized connection
+       * Status
+       * @default success
+       * @constant
        */
-      connection_id: string;
+      status: "success";
       /**
        * Message
        * @default OAuth2 authorization completed
        */
       message: string;
       /**
-       * Status
-       * @default success
-       * @constant
+       * Connection Id
+       * @description ID of the authorized connection
        */
-      status: "success";
+      connection_id: string;
     };
     /**
      * OAuth2StartResponse
@@ -5967,26 +9482,54 @@ export interface components {
       state: string;
     };
     /**
+     * OnboardingPersonalizeRequest
+     * @description Request for onboarding personalization.
+     */
+    OnboardingPersonalizeRequest: {
+      /** User Id */
+      user_id: string;
+      /** Initial Actions */
+      initial_actions?: string[];
+      signup_context?: components["schemas"]["SignupContext"] | null;
+    };
+    /**
+     * OnboardingPersonalizeResponse
+     * @description Response with personalized onboarding.
+     */
+    OnboardingPersonalizeResponse: {
+      /** Detected Intent */
+      detected_intent: string;
+      /** Confidence */
+      confidence: number;
+      /** Recommended Path */
+      recommended_path: components["schemas"]["OnboardingStep"][];
+      /** Skip Steps */
+      skip_steps?: string[];
+      /** Persona Prediction */
+      persona_prediction?: string | null;
+    };
+    /**
+     * OnboardingStep
+     * @description A step in the onboarding path.
+     */
+    OnboardingStep: {
+      /** Step */
+      step: string;
+      /** Template */
+      template?: string | null;
+      /**
+       * Guided
+       * @default false
+       */
+      guided: boolean;
+      /** Focus */
+      focus?: string | null;
+    };
+    /**
      * PARRequest
      * @description Pushed Authorization Request (RFC 9126).
      */
     PARRequest: {
-      /**
-       * Code Challenge
-       * @description PKCE code challenge
-       */
-      code_challenge?: string | null;
-      /**
-       * Code Challenge Method
-       * @description PKCE challenge method
-       * @default S256
-       */
-      code_challenge_method: string;
-      /**
-       * Nonce
-       * @description Optional nonce for OpenID Connect
-       */
-      nonce?: string | null;
       /**
        * Redirect Uri
        * @description OAuth2 redirect URI
@@ -5999,10 +9542,26 @@ export interface components {
        */
       scope: string;
       /**
+       * Code Challenge
+       * @description PKCE code challenge
+       */
+      code_challenge?: string | null;
+      /**
+       * Code Challenge Method
+       * @description PKCE challenge method
+       * @default S256
+       */
+      code_challenge_method: string;
+      /**
        * State
        * @description Optional state parameter
        */
       state?: string | null;
+      /**
+       * Nonce
+       * @description Optional nonce for OpenID Connect
+       */
+      nonce?: string | null;
     };
     /**
      * PARResponse
@@ -6010,15 +9569,15 @@ export interface components {
      */
     PARResponse: {
       /**
-       * Expires In
-       * @description Request URI expiration in seconds
-       */
-      expires_in: number;
-      /**
        * Request Uri
        * @description PAR request URI
        */
       request_uri: string;
+      /**
+       * Expires In
+       * @description Request URI expiration in seconds
+       */
+      expires_in: number;
     };
     /**
      * PaginatedAuditLogResponse
@@ -6031,15 +9590,15 @@ export interface components {
        */
       items: components["schemas"]["mcp_server_langgraph__api__v1__admin__AuditLogEntry"][];
       /**
-       * Next Cursor
-       * @description Cursor for next page (if more results exist)
-       */
-      next_cursor?: string | null;
-      /**
        * Total
        * @description Total number of matching entries
        */
       total: number;
+      /**
+       * Next Cursor
+       * @description Cursor for next page (if more results exist)
+       */
+      next_cursor?: string | null;
     };
     /**
      * PaginatedExecutionResponse
@@ -6052,15 +9611,15 @@ export interface components {
        */
       items: components["schemas"]["ExecutionResponse"][];
       /**
-       * Next Cursor
-       * @description Cursor for next page
-       */
-      next_cursor?: string | null;
-      /**
        * Total
        * @description Total number of executions
        */
       total: number;
+      /**
+       * Next Cursor
+       * @description Cursor for next page
+       */
+      next_cursor?: string | null;
     };
     /**
      * PaginatedUserResponse
@@ -6079,26 +9638,171 @@ export interface components {
       total: number;
     };
     /**
+     * PatternResultResponse
+     * @description Response model for pattern detection result.
+     */
+    PatternResultResponse: {
+      /** Pattern Type */
+      pattern_type: string;
+      /** Confidence */
+      confidence: number;
+      /** Description */
+      description: string;
+      /** Affected Alerts */
+      affected_alerts: string[];
+    };
+    /**
+     * PendingAgentRequestsResponse
+     * @description Response for list pending agent requests.
+     */
+    PendingAgentRequestsResponse: {
+      /** Requests */
+      requests: components["schemas"]["AgentRequest"][];
+      /** Count */
+      count: number;
+    };
+    /**
+     * PendingRemediationsResponse
+     * @description Response for list pending remediations.
+     */
+    PendingRemediationsResponse: {
+      /** Remediations */
+      remediations: components["schemas"]["RemediationRequest"][];
+      /** Count */
+      count: number;
+    };
+    /**
+     * PersonaAnalyzeRequest
+     * @description Request for persona analysis.
+     */
+    PersonaAnalyzeRequest: {
+      /** User Id */
+      user_id: string;
+      /** Assigned Persona */
+      assigned_persona: string;
+      /** Recent Actions */
+      recent_actions?: string[];
+      /** Feature Usage */
+      feature_usage?: {
+        [key: string]: number;
+      };
+    };
+    /**
+     * PersonaAnalyzeResponse
+     * @description Response from persona analysis.
+     */
+    PersonaAnalyzeResponse: {
+      /** Assigned Persona */
+      assigned_persona: string;
+      /** Detected Persona */
+      detected_persona: string;
+      /** Confidence */
+      confidence: number;
+      /** Behavior Signals */
+      behavior_signals: string[];
+      /** Recommendation */
+      recommendation?: string | null;
+      /** Ui Adaptations */
+      ui_adaptations?: components["schemas"]["UIAdaptation"][];
+    };
+    /**
+     * PersonaPreferencesUpdate
+     * @description Model for updating persona-related preferences.
+     *
+     *     Used by PATCH /me/preferences endpoint.
+     */
+    PersonaPreferencesUpdate: {
+      /**
+       * Sub Persona
+       * @description New sub-persona selection
+       */
+      sub_persona?: string | null;
+      /**
+       * Feature Flags
+       * @description Feature flag updates
+       */
+      feature_flags?: {
+        [key: string]: boolean;
+      } | null;
+    };
+    /**
+     * PreferencesResponse
+     * @description Response model for notification preferences.
+     */
+    PreferencesResponse: {
+      /**
+       * User Id
+       * @description User identifier
+       */
+      user_id: string;
+      /**
+       * Info Enabled
+       * @description Receive info notifications
+       */
+      info_enabled: boolean;
+      /**
+       * Success Enabled
+       * @description Receive success notifications
+       */
+      success_enabled: boolean;
+      /**
+       * Warning Enabled
+       * @description Receive warning notifications
+       */
+      warning_enabled: boolean;
+      /**
+       * Error Enabled
+       * @description Receive error notifications
+       */
+      error_enabled: boolean;
+    };
+    /**
+     * PreferencesUpdateRequest
+     * @description Request model for updating preferences.
+     */
+    PreferencesUpdateRequest: {
+      /**
+       * Info Enabled
+       * @description Receive info notifications
+       */
+      info_enabled?: boolean | null;
+      /**
+       * Success Enabled
+       * @description Receive success notifications
+       */
+      success_enabled?: boolean | null;
+      /**
+       * Warning Enabled
+       * @description Receive warning notifications
+       */
+      warning_enabled?: boolean | null;
+      /**
+       * Error Enabled
+       * @description Receive error notifications
+       */
+      error_enabled?: boolean | null;
+    };
+    /**
      * ProjectAlert
      * @description Alert scoped to a project.
      */
     ProjectAlert: {
       /** Alert Id */
       alert_id: string;
-      /** Created At */
-      created_at: string;
-      /** Message */
-      message: string;
       /** Name */
       name: string;
-      /** Resource Id */
-      resource_id?: string | null;
-      /** Resource Type */
-      resource_type?: string | null;
       /** Severity */
       severity: string;
       /** Status */
       status: string;
+      /** Message */
+      message: string;
+      /** Created At */
+      created_at: string;
+      /** Resource Type */
+      resource_type?: string | null;
+      /** Resource Id */
+      resource_id?: string | null;
     };
     /**
      * ProjectAlertsResponse
@@ -6107,10 +9811,58 @@ export interface components {
     ProjectAlertsResponse: {
       /** Alerts */
       alerts: components["schemas"]["ProjectAlert"][];
-      /** Project Id */
-      project_id: string;
       /** Total */
       total: number;
+      /** Project Id */
+      project_id: string;
+    };
+    /**
+     * ProjectContextResponse
+     * @description Project context response model.
+     */
+    ProjectContextResponse: {
+      /**
+       * Project Id
+       * @description Project ID
+       */
+      project_id: string;
+      /**
+       * Content
+       * @description Context file content
+       */
+      content: string;
+      /**
+       * Path
+       * @description Context file path
+       * @default .studio/context.md
+       */
+      path: string;
+      /**
+       * Exists
+       * @description Whether context file exists
+       */
+      exists: boolean;
+      /**
+       * Last Modified
+       * @description Last modification time
+       */
+      last_modified?: string | null;
+    };
+    /**
+     * ProjectContextUpdate
+     * @description Project context update request model.
+     */
+    ProjectContextUpdate: {
+      /**
+       * Project Id
+       * @description Project ID
+       */
+      project_id: string;
+      /**
+       * Content
+       * @description Context file content
+       */
+      content: string;
     };
     /**
      * ProjectCostByModelResponse
@@ -6119,10 +9871,10 @@ export interface components {
     ProjectCostByModelResponse: {
       /** Models */
       models: components["schemas"]["ProjectModelCost"][];
-      /** Project Id */
-      project_id: string;
       /** Total Cost */
       total_cost: number;
+      /** Project Id */
+      project_id: string;
     };
     /**
      * ProjectCostHistoryResponse
@@ -6131,30 +9883,30 @@ export interface components {
     ProjectCostHistoryResponse: {
       /** History */
       history: components["schemas"]["ProjectDailyCost"][];
-      /** Project Id */
-      project_id: string;
       /** Total Cost */
       total_cost: number;
+      /** Project Id */
+      project_id: string;
     };
     /**
      * ProjectCostSummaryResponse
      * @description Response model for project cost summary.
      */
     ProjectCostSummaryResponse: {
-      /** Completion Tokens */
-      completion_tokens: number;
-      /** Period End */
-      period_end?: string | null;
-      /** Period Start */
-      period_start?: string | null;
-      /** Project Id */
-      project_id: string;
-      /** Prompt Tokens */
-      prompt_tokens: number;
       /** Total Cost */
       total_cost: number;
+      /** Prompt Tokens */
+      prompt_tokens: number;
+      /** Completion Tokens */
+      completion_tokens: number;
       /** Total Tokens */
       total_tokens?: number | null;
+      /** Period Start */
+      period_start?: string | null;
+      /** Period End */
+      period_end?: string | null;
+      /** Project Id */
+      project_id: string;
     };
     /**
      * ProjectCreate
@@ -6162,15 +9914,15 @@ export interface components {
      */
     ProjectCreate: {
       /**
-       * Description
-       * @description Project description
-       */
-      description?: string | null;
-      /**
        * Name
        * @description Project name
        */
       name: string;
+      /**
+       * Description
+       * @description Project description
+       */
+      description?: string | null;
       /**
        * Organization Id
        * @description Optional organization ID
@@ -6182,10 +9934,10 @@ export interface components {
      * @description Daily cost for a project.
      */
     ProjectDailyCost: {
-      /** Cost */
-      cost: number;
       /** Date */
       date: string;
+      /** Cost */
+      cost: number;
       /** Requests */
       requests?: number | null;
     };
@@ -6194,50 +9946,20 @@ export interface components {
      * @description Detailed response model including child resources.
      */
     ProjectDetailResponse: {
-      /**
-       * Connection Count
-       * @default 0
-       */
-      connection_count: number;
-      /**
-       * Connections
-       * @default []
-       */
-      connections: components["schemas"]["ConnectionRef"][];
-      /** Created At */
-      created_at: string;
-      /** Description */
-      description?: string | null;
       /** Id */
       id: string;
-      /**
-       * Members
-       * @default []
-       */
-      members: components["schemas"]["ProjectMember"][];
       /** Name */
       name: string;
+      /** Description */
+      description?: string | null;
       /** Organization Id */
       organization_id?: string | null;
       /** Owner Id */
       owner_id: string;
       /** Owner Name */
       owner_name?: string | null;
-      /**
-       * Session Count
-       * @default 0
-       */
-      session_count: number;
-      /**
-       * Sessions
-       * @default []
-       */
-      sessions: components["schemas"]["SessionRef"][];
-      /**
-       * Status
-       * @default active
-       */
-      status: string;
+      /** Created At */
+      created_at: string;
       /** Updated At */
       updated_at: string;
       /**
@@ -6246,10 +9968,40 @@ export interface components {
        */
       workflow_count: number;
       /**
+       * Session Count
+       * @default 0
+       */
+      session_count: number;
+      /**
+       * Connection Count
+       * @default 0
+       */
+      connection_count: number;
+      /**
+       * Status
+       * @default active
+       */
+      status: string;
+      /**
        * Workflows
        * @default []
        */
       workflows: components["schemas"]["WorkflowRef"][];
+      /**
+       * Sessions
+       * @default []
+       */
+      sessions: components["schemas"]["SessionRef"][];
+      /**
+       * Connections
+       * @default []
+       */
+      connections: components["schemas"]["ConnectionRef"][];
+      /**
+       * Members
+       * @default []
+       */
+      members: components["schemas"]["ProjectMember"][];
     };
     /**
      * ProjectListResponse
@@ -6260,6 +10012,8 @@ export interface components {
     ProjectListResponse: {
       /** Items */
       items: components["schemas"]["ProjectResponse"][];
+      /** Total */
+      total: number;
       /**
        * Page
        * @default 1
@@ -6270,8 +10024,6 @@ export interface components {
        * @default 20
        */
       per_page: number;
-      /** Total */
-      total: number;
       /**
        * Total Pages
        * @default 1
@@ -6283,14 +10035,14 @@ export interface components {
      * @description Log entry scoped to a project.
      */
     ProjectLogEntry: {
+      /** Timestamp */
+      timestamp: string;
       /** Level */
       level: string;
       /** Message */
       message: string;
       /** Session Id */
       session_id?: string | null;
-      /** Timestamp */
-      timestamp: string;
       /** Workflow Id */
       workflow_id?: string | null;
     };
@@ -6301,31 +10053,33 @@ export interface components {
     ProjectLogsResponse: {
       /** Logs */
       logs: components["schemas"]["ProjectLogEntry"][];
-      /** Project Id */
-      project_id: string;
       /** Total */
       total: number;
+      /** Project Id */
+      project_id: string;
     };
     /**
      * ProjectMember
      * @description A member of a project with their role.
      */
     ProjectMember: {
-      /** Added At */
-      added_at: string;
+      /** User Id */
+      user_id: string;
       /**
        * Role
        * @description Role: owner, editor, viewer, executor
        */
       role: string;
-      /** User Id */
-      user_id: string;
+      /** Added At */
+      added_at: string;
     };
     /**
      * ProjectMetricsResponse
      * @description Response model for project-scoped metrics.
      */
     ProjectMetricsResponse: {
+      /** Requests Total */
+      requests_total: number;
       /** Errors Total */
       errors_total: number;
       /** Latency P50 */
@@ -6336,59 +10090,42 @@ export interface components {
       latency_p99?: number | null;
       /** Project Id */
       project_id: string;
-      /** Requests Total */
-      requests_total: number;
     };
     /**
      * ProjectModelCost
      * @description Per-model cost within a project.
      */
     ProjectModelCost: {
-      /** Completion Tokens */
-      completion_tokens?: number | null;
-      /** Cost */
-      cost: number;
       /** Model */
       model: string;
-      /** Prompt Tokens */
-      prompt_tokens?: number | null;
+      /** Cost */
+      cost: number;
       /** Requests */
       requests: number;
+      /** Prompt Tokens */
+      prompt_tokens?: number | null;
+      /** Completion Tokens */
+      completion_tokens?: number | null;
     };
     /**
      * ProjectResponse
      * @description Response model for a project.
      */
     ProjectResponse: {
-      /**
-       * Connection Count
-       * @default 0
-       */
-      connection_count: number;
-      /** Created At */
-      created_at: string;
-      /** Description */
-      description?: string | null;
       /** Id */
       id: string;
       /** Name */
       name: string;
+      /** Description */
+      description?: string | null;
       /** Organization Id */
       organization_id?: string | null;
       /** Owner Id */
       owner_id: string;
       /** Owner Name */
       owner_name?: string | null;
-      /**
-       * Session Count
-       * @default 0
-       */
-      session_count: number;
-      /**
-       * Status
-       * @default active
-       */
-      status: string;
+      /** Created At */
+      created_at: string;
       /** Updated At */
       updated_at: string;
       /**
@@ -6396,38 +10133,53 @@ export interface components {
        * @default 0
        */
       workflow_count: number;
+      /**
+       * Session Count
+       * @default 0
+       */
+      session_count: number;
+      /**
+       * Connection Count
+       * @default 0
+       */
+      connection_count: number;
+      /**
+       * Status
+       * @default active
+       */
+      status: string;
     };
     /**
      * ProjectTraceListItem
      * @description Trace item scoped to a project.
      */
     ProjectTraceListItem: {
-      /** Duration Ms */
-      duration_ms?: number | null;
+      /** Trace Id */
+      trace_id: string;
       /** Name */
       name: string;
       /** Session Id */
       session_id?: string | null;
-      /** Span Count */
-      span_count?: number | null;
-      /** Start Time */
-      start_time?: string | null;
-      /** Trace Id */
-      trace_id: string;
       /** Workflow Id */
       workflow_id?: string | null;
+      /** Start Time */
+      start_time?: string | null;
+      /** Duration Ms */
+      duration_ms?: number | null;
+      /** Span Count */
+      span_count?: number | null;
     };
     /**
      * ProjectTracesResponse
      * @description Response model for project traces.
      */
     ProjectTracesResponse: {
-      /** Project Id */
-      project_id: string;
-      /** Total */
-      total: number;
       /** Traces */
       traces: components["schemas"]["ProjectTraceListItem"][];
+      /** Total */
+      total: number;
+      /** Project Id */
+      project_id: string;
     };
     /**
      * ProjectUpdate
@@ -6435,15 +10187,116 @@ export interface components {
      */
     ProjectUpdate: {
       /**
-       * Description
-       * @description New description
-       */
-      description?: string | null;
-      /**
        * Name
        * @description New project name
        */
       name?: string | null;
+      /**
+       * Description
+       * @description New description
+       */
+      description?: string | null;
+    };
+    /**
+     * PromptArgumentResponse
+     * @description Response model for a prompt argument.
+     */
+    PromptArgumentResponse: {
+      /**
+       * Name
+       * @description Argument name
+       */
+      name: string;
+      /**
+       * Description
+       * @description Argument description
+       */
+      description: string;
+      /**
+       * Required
+       * @description Whether argument is required
+       * @default false
+       */
+      required: boolean;
+    };
+    /**
+     * PromptGetRequest
+     * @description Request model for getting a prompt with arguments.
+     */
+    PromptGetRequest: {
+      /**
+       * Arguments
+       * @description Prompt arguments
+       */
+      arguments?: {
+        [key: string]: unknown;
+      };
+    };
+    /**
+     * PromptGetResponse
+     * @description Response model for getting a prompt.
+     */
+    PromptGetResponse: {
+      /**
+       * Description
+       * @description Prompt description
+       */
+      description?: string | null;
+      /**
+       * Messages
+       * @description Prompt messages
+       */
+      messages: components["schemas"]["PromptMessageResponse"][];
+    };
+    /**
+     * PromptListResponse
+     * @description Response model for listing prompts.
+     */
+    PromptListResponse: {
+      /**
+       * Prompts
+       * @description List of prompts
+       */
+      prompts: components["schemas"]["PromptResponse"][];
+    };
+    /**
+     * PromptMessageResponse
+     * @description Response model for a prompt message.
+     */
+    PromptMessageResponse: {
+      /**
+       * Role
+       * @description Message role (user, assistant, system)
+       */
+      role: string;
+      /**
+       * Content
+       * @description Message content
+       */
+      content: {
+        [key: string]: unknown;
+      };
+    };
+    /**
+     * PromptResponse
+     * @description Response model for a prompt.
+     */
+    PromptResponse: {
+      /**
+       * Name
+       * @description Prompt name
+       */
+      name: string;
+      /**
+       * Description
+       * @description Prompt description
+       */
+      description: string;
+      /**
+       * Arguments
+       * @description Prompt arguments
+       */
+      arguments?: components["schemas"]["PromptArgumentResponse"][];
     };
     /**
      * ProtectedResourceMetadataResponse
@@ -6451,43 +10304,25 @@ export interface components {
      */
     ProtectedResourceMetadataResponse: {
       /**
-       * Authorization Servers
-       * @description List of authorization server issuer URLs
-       */
-      authorization_servers: string[];
-      /**
-       * Bearer Methods Supported
-       * @description Methods for sending bearer tokens
-       */
-      bearer_methods_supported?: string[];
-      /**
        * Resource
        * @description Protected resource identifier URL
        */
       resource: string;
       /**
+       * Authorization Servers
+       * @description List of authorization server issuer URLs
+       */
+      authorization_servers: string[];
+      /**
        * Scopes Supported
        * @description OAuth scopes supported by this resource
        */
       scopes_supported?: string[];
-    };
-    /**
-     * PushSubscription
-     * @description Push subscription payload from the browser.
-     */
-    PushSubscription: {
       /**
-       * Endpoint
-       * @description Push service endpoint URL
+       * Bearer Methods Supported
+       * @description Methods for sending bearer tokens
        */
-      endpoint: string;
-      /**
-       * Expirationtime
-       * @description Optional expiration time
-       */
-      expirationTime?: number | null;
-      /** @description Subscription keys */
-      keys: components["schemas"]["PushSubscriptionKeys"];
+      bearer_methods_supported?: string[];
     };
     /**
      * PushSubscriptionKeys
@@ -6495,15 +10330,60 @@ export interface components {
      */
     PushSubscriptionKeys: {
       /**
-       * Auth
-       * @description Authentication secret
-       */
-      auth: string;
-      /**
        * P256Dh
        * @description P-256 public key
        */
       p256dh: string;
+      /**
+       * Auth
+       * @description Authentication secret
+       */
+      auth: string;
+    };
+    /**
+     * PushSubscriptionRequest
+     * @description Push subscription payload from the browser.
+     */
+    PushSubscriptionRequest: {
+      /**
+       * Endpoint
+       * @description Push service endpoint URL
+       */
+      endpoint: string;
+      /** @description Subscription keys */
+      keys: components["schemas"]["PushSubscriptionKeys"];
+      /**
+       * Expirationtime
+       * @description Optional expiration time (ms)
+       */
+      expirationTime?: number | null;
+      /**
+       * Devicename
+       * @description Optional device name for identification
+       */
+      deviceName?: string | null;
+    };
+    /**
+     * RatingValue
+     * @description Rating values for message feedback.
+     * @enum {string}
+     */
+    RatingValue: "positive" | "negative";
+    /**
+     * ReadinessResult
+     * @description Readiness probe result (K8s readinessProbe).
+     */
+    ReadinessResult: {
+      /** Status */
+      status: string;
+      /** Checks */
+      checks: {
+        [key: string]: boolean;
+      };
+      /** Resilience Stats */
+      resilience_stats?: {
+        [key: string]: unknown;
+      } | null;
     };
     /**
      * RecommendTemplatesRequest
@@ -6527,21 +10407,196 @@ export interface components {
      * @description Response containing template recommendations.
      */
     RecommendationsResponse: {
-      /** Query */
-      query: string;
       /** Recommendations */
       recommendations: components["schemas"]["TemplateRecommendation"][];
+      /** Query */
+      query: string;
     };
     /**
-     * RefreshTokenRequest
-     * @description Refresh token request.
+     * RecoverySuggestion
+     * @description A recovery suggestion for an error.
      */
-    RefreshTokenRequest: {
+    RecoverySuggestion: {
+      action: components["schemas"]["mcp_server_langgraph__api__v1__ai_ux__SuggestionAction"];
+      /** Label */
+      label: string;
+      /** Guidance */
+      guidance?: string | null;
+      /**
+       * Estimated Success
+       * @default 0.7
+       */
+      estimated_success: number;
+      /** Wait Time */
+      wait_time?: number | null;
+    };
+    /**
+     * RefreshTokenResponse
+     * @description Token refresh response
+     */
+    RefreshTokenResponse: {
+      /**
+       * Access Token
+       * @description New JWT access token
+       */
+      access_token: string;
+      /**
+       * Token Type
+       * @description Token type
+       * @default bearer
+       */
+      token_type: string;
+      /**
+       * Expires In
+       * @description Token expiration in seconds
+       */
+      expires_in: number;
       /**
        * Refresh Token
-       * @description Refresh token
+       * @description New refresh token (Keycloak only)
        */
-      refresh_token: string;
+      refresh_token?: string | null;
+    };
+    /**
+     * RejectAgentRequest
+     * @description Request body for rejecting an agent request.
+     */
+    RejectAgentRequest: {
+      /**
+       * Rejected By
+       * @description Email/ID of the rejector
+       */
+      rejected_by: string;
+      /**
+       * Reason
+       * @description Rejection reason
+       */
+      reason: string;
+    };
+    /**
+     * RejectRequest
+     * @description Request body for rejecting a remediation.
+     */
+    RejectRequest: {
+      /**
+       * Rejected By
+       * @description Email/ID of the rejector
+       */
+      rejected_by: string;
+      /**
+       * @description Structured rejection reason
+       * @default other
+       */
+      reason: components["schemas"]["RejectionReason"];
+      /**
+       * Reason Detail
+       * @description Additional details for rejection reason
+       */
+      reason_detail?: string | null;
+    };
+    /**
+     * RejectionReason
+     * @description Structured rejection reasons for AI learning.
+     *
+     *     These categories help the AI learn from human feedback:
+     *     - TOO_RISKY: Avoid high-risk commands
+     *     - INCORRECT_DIAGNOSIS: Focus on accurate root cause analysis
+     *     - WRONG_COMMAND: Double-check command syntax
+     *     - INCOMPLETE_STEPS: Provide complete step-by-step instructions
+     *     - NOT_RELEVANT: Ensure remediation matches alert context
+     *     - PREFER_MANUAL: Some situations need human judgment
+     *     - OTHER: Free-form reason for edge cases
+     * @enum {string}
+     */
+    RejectionReason:
+      | "too_risky"
+      | "incorrect_diagnosis"
+      | "wrong_command"
+      | "incomplete_steps"
+      | "not_relevant"
+      | "prefer_manual"
+      | "other";
+    /**
+     * RemediationRequest
+     * @description A pending remediation action requiring approval.
+     */
+    RemediationRequest: {
+      /**
+       * Remediation Id
+       * @description Unique remediation ID
+       */
+      remediation_id: string;
+      /**
+       * Alert Id
+       * @description Associated alert ID
+       */
+      alert_id: string;
+      /**
+       * Alert Name
+       * @description Name of the alert
+       */
+      alert_name: string;
+      /**
+       * Severity
+       * @description Alert severity
+       */
+      severity: string;
+      /**
+       * Step Number
+       * @description Step number in remediation plan
+       */
+      step_number: number;
+      /**
+       * Action
+       * @description Action type
+       */
+      action: string;
+      /**
+       * Description
+       * @description Human-readable description
+       */
+      description: string;
+      /**
+       * Command
+       * @description Command to execute
+       */
+      command?: string | null;
+      /**
+       * Risk Level
+       * @description Risk level
+       * @default medium
+       */
+      risk_level: string;
+      /**
+       * @description Current status
+       * @default pending
+       */
+      status: components["schemas"]["ApprovalStatus"];
+      /**
+       * Requested At
+       * @description When remediation was requested
+       */
+      requested_at: string;
+      /**
+       * Approved By
+       * @description Who approved/rejected
+       */
+      approved_by?: string | null;
+      /**
+       * Approved At
+       * @description When decision was made
+       */
+      approved_at?: string | null;
+      /**
+       * Reason
+       * @description Reason for rejection
+       */
+      reason?: string | null;
+      /**
+       * Recommendation Id
+       * @description Source recommendation ID
+       */
+      recommendation_id?: string | null;
     };
     /**
      * ResourceContentItem
@@ -6549,10 +10604,10 @@ export interface components {
      */
     ResourceContentItem: {
       /**
-       * Blob
-       * @description Base64 encoded binary content
+       * Uri
+       * @description Resource URI
        */
-      blob?: string | null;
+      uri: string;
       /**
        * Mime Type
        * @description MIME type
@@ -6564,10 +10619,10 @@ export interface components {
        */
       text?: string | null;
       /**
-       * Uri
-       * @description Resource URI
+       * Blob
+       * @description Base64 encoded binary content
        */
-      uri: string;
+      blob?: string | null;
     };
     /**
      * ResourceContentResponse
@@ -6597,15 +10652,10 @@ export interface components {
      */
     ResourceResponse: {
       /**
-       * Description
-       * @description Resource description
+       * Uri
+       * @description Resource URI
        */
-      description?: string | null;
-      /**
-       * Mime Type
-       * @description MIME type
-       */
-      mime_type?: string | null;
+      uri: string;
       /**
        * Name
        * @description Resource name
@@ -6617,20 +10667,25 @@ export interface components {
        */
       title?: string | null;
       /**
-       * Uri
-       * @description Resource URI
+       * Description
+       * @description Resource description
        */
-      uri: string;
+      description?: string | null;
+      /**
+       * Mime Type
+       * @description MIME type
+       */
+      mime_type?: string | null;
     };
     /**
      * RetentionApplyResponse
      * @description Response model for retention policy application.
      */
     RetentionApplyResponse: {
-      /** Deleted Count */
-      deleted_count: number;
       /** Regulation */
       regulation: string;
+      /** Deleted Count */
+      deleted_count: number;
     };
     /**
      * RetentionDeleteResponse
@@ -6648,15 +10703,15 @@ export interface components {
      */
     RetentionMetrics: {
       /**
-       * Days Active
-       * @description Number of active days
-       */
-      days_active: number;
-      /**
        * Return Visits
        * @description Number of return visits
        */
       return_visits: number;
+      /**
+       * Days Active
+       * @description Number of active days
+       */
+      days_active: number;
     };
     /**
      * RotateAPIKeyResponse
@@ -6666,21 +10721,23 @@ export interface components {
       /** Key Id */
       key_id: string;
       /**
-       * Message
-       * @default API key rotated successfully. Update your client configuration.
-       */
-      message: string;
-      /**
        * New Api Key
        * @description New API key
        */
       new_api_key: string;
+      /**
+       * Message
+       * @default API key rotated successfully. Update your client configuration.
+       */
+      message: string;
     };
     /**
      * RotateSecretResponse
      * @description Response when rotating service principal secret
      */
     RotateSecretResponse: {
+      /** Service Id */
+      service_id: string;
       /**
        * Client Secret
        * @description New client secret
@@ -6691,84 +10748,89 @@ export interface components {
        * @default Secret rotated successfully. Update your service configuration.
        */
       message: string;
-      /** Service Id */
-      service_id: string;
     };
     /**
      * SCIMAddress
      * @description SCIM address
      */
     SCIMAddress: {
-      /** Country */
-      country?: string | null;
       /** Formatted */
       formatted?: string | null;
-      /** Locality */
-      locality?: string | null;
-      /** Postalcode */
-      postalCode?: string | null;
-      /**
-       * Primary
-       * @default false
-       */
-      primary: boolean;
-      /** Region */
-      region?: string | null;
       /** Streetaddress */
       streetAddress?: string | null;
+      /** Locality */
+      locality?: string | null;
+      /** Region */
+      region?: string | null;
+      /** Postalcode */
+      postalCode?: string | null;
+      /** Country */
+      country?: string | null;
       /**
        * Type
        * @default work
        */
       type: string | null;
+      /**
+       * Primary
+       * @default false
+       */
+      primary: boolean;
     };
     /**
      * SCIMEmail
      * @description SCIM email address
      */
     SCIMEmail: {
-      /**
-       * Primary
-       * @default false
-       */
-      primary: boolean;
+      /** Value */
+      value: string;
       /**
        * Type
        * @default work
        */
       type: string | null;
-      /** Value */
-      value: string;
+      /**
+       * Primary
+       * @default false
+       */
+      primary: boolean;
     };
     /**
      * SCIMEnterpriseUser
      * @description SCIM Enterprise User Extension (RFC 7643 Section 4.3)
      */
     SCIMEnterpriseUser: {
-      /** Costcenter */
-      costCenter?: string | null;
-      /** Department */
-      department?: string | null;
-      /** Division */
-      division?: string | null;
       /** Employeenumber */
       employeeNumber?: string | null;
+      /** Costcenter */
+      costCenter?: string | null;
+      /** Organization */
+      organization?: string | null;
+      /** Division */
+      division?: string | null;
+      /** Department */
+      department?: string | null;
       /** Manager */
       manager?: {
         [key: string]: string;
       } | null;
-      /** Organization */
-      organization?: string | null;
     };
     /**
      * SCIMGroup
      * @description SCIM 2.0 Group Resource
      */
     SCIMGroup: {
-      /** Displayname */
-      displayName: string;
+      /**
+       * Schemas
+       * @default [
+       *       "urn:ietf:params:scim:schemas:core:2.0:Group"
+       *     ]
+       */
+      schemas: string[];
       /** Id */
       id?: string | null;
+      /** Displayname */
+      displayName: string;
       /**
        * Members
        * @default []
@@ -6778,40 +10840,29 @@ export interface components {
       meta?: {
         [key: string]: unknown;
       } | null;
-      /**
-       * Schemas
-       * @default [
-       *       "urn:ietf:params:scim:schemas:core:2.0:Group"
-       *     ]
-       */
-      schemas: string[];
     };
     /**
      * SCIMGroupMembership
      * @description SCIM group membership
      */
     SCIMGroupMembership: {
-      /** Display */
-      display?: string | null;
+      /** Value */
+      value: string;
       /** $Ref */
       ref?: string | null;
+      /** Display */
+      display?: string | null;
       /**
        * Type
        * @default direct
        */
       type: string | null;
-      /** Value */
-      value: string;
     };
     /**
      * SCIMListResponse
      * @description SCIM List Response
      */
     SCIMListResponse: {
-      /** Resources */
-      Resources: unknown[];
-      /** Itemsperpage */
-      itemsPerPage: number;
       /**
        * Schemas
        * @default [
@@ -6819,48 +10870,52 @@ export interface components {
        *     ]
        */
       schemas: string[];
+      /** Totalresults */
+      totalResults: number;
       /**
        * Startindex
        * @default 1
        */
       startIndex: number;
-      /** Totalresults */
-      totalResults: number;
+      /** Itemsperpage */
+      itemsPerPage: number;
+      /** Resources */
+      Resources: unknown[];
     };
     /**
      * SCIMMember
      * @description SCIM group member
      */
     SCIMMember: {
-      /** Display */
-      display?: string | null;
+      /** Value */
+      value: string;
       /** $Ref */
       ref?: string | null;
+      /** Display */
+      display?: string | null;
       /**
        * Type
        * @default User
        */
       type: string | null;
-      /** Value */
-      value: string;
     };
     /**
      * SCIMName
      * @description SCIM user name
      */
     SCIMName: {
-      /** Familyname */
-      familyName?: string | null;
       /** Formatted */
       formatted?: string | null;
+      /** Familyname */
+      familyName?: string | null;
       /** Givenname */
       givenName?: string | null;
+      /** Middlename */
+      middleName?: string | null;
       /** Honorificprefix */
       honorificPrefix?: string | null;
       /** Honorificsuffix */
       honorificSuffix?: string | null;
-      /** Middlename */
-      middleName?: string | null;
     };
     /**
      * SCIMPatchOp
@@ -6884,8 +10939,6 @@ export interface components {
      * @description SCIM PATCH request
      */
     SCIMPatchRequest: {
-      /** Operations */
-      Operations: components["schemas"]["SCIMPatchOperation"][];
       /**
        * Schemas
        * @default [
@@ -6893,24 +10946,26 @@ export interface components {
        *     ]
        */
       schemas: string[];
+      /** Operations */
+      Operations: components["schemas"]["SCIMPatchOperation"][];
     };
     /**
      * SCIMPhoneNumber
      * @description SCIM phone number
      */
     SCIMPhoneNumber: {
-      /**
-       * Primary
-       * @default false
-       */
-      primary: boolean;
+      /** Value */
+      value: string;
       /**
        * Type
        * @default work
        */
       type: string | null;
-      /** Value */
-      value: string;
+      /**
+       * Primary
+       * @default false
+       */
+      primary: boolean;
     };
     /**
      * SCIMUser
@@ -6920,93 +10975,75 @@ export interface components {
      */
     SCIMUser: {
       /**
-       * Active
-       * @default true
-       */
-      active: boolean;
-      /**
-       * Addresses
-       * @default []
-       */
-      addresses: components["schemas"]["SCIMAddress"][];
-      /** Displayname */
-      displayName?: string | null;
-      /**
-       * Emails
-       * @default []
-       */
-      emails: components["schemas"]["SCIMEmail"][];
-      /** Externalid */
-      externalId?: string | null;
-      /**
-       * Groups
-       * @default []
-       */
-      groups: components["schemas"]["SCIMGroupMembership"][];
-      /** Id */
-      id?: string | null;
-      /** Locale */
-      locale?: string | null;
-      /** Meta */
-      meta?: {
-        [key: string]: unknown;
-      } | null;
-      name?: components["schemas"]["SCIMName"] | null;
-      /** Nickname */
-      nickName?: string | null;
-      /** Password */
-      password?: string | null;
-      /**
-       * Phonenumbers
-       * @default []
-       */
-      phoneNumbers: components["schemas"]["SCIMPhoneNumber"][];
-      /** Preferredlanguage */
-      preferredLanguage?: string | null;
-      /** Profileurl */
-      profileUrl?: string | null;
-      /**
        * Schemas
        * @default [
        *       "urn:ietf:params:scim:schemas:core:2.0:User"
        *     ]
        */
       schemas: string[];
-      /** Timezone */
-      timezone?: string | null;
+      /** Id */
+      id?: string | null;
+      /** Externalid */
+      externalId?: string | null;
+      /** Username */
+      userName: string;
+      name?: components["schemas"]["SCIMName"] | null;
+      /** Displayname */
+      displayName?: string | null;
+      /** Nickname */
+      nickName?: string | null;
+      /** Profileurl */
+      profileUrl?: string | null;
       /** Title */
       title?: string | null;
+      /** Usertype */
+      userType?: string | null;
+      /** Preferredlanguage */
+      preferredLanguage?: string | null;
+      /** Locale */
+      locale?: string | null;
+      /** Timezone */
+      timezone?: string | null;
+      /**
+       * Active
+       * @default true
+       */
+      active: boolean;
+      /** Password */
+      password?: string | null;
+      /**
+       * Emails
+       * @default []
+       */
+      emails: components["schemas"]["SCIMEmail"][];
+      /**
+       * Phonenumbers
+       * @default []
+       */
+      phoneNumbers: components["schemas"]["SCIMPhoneNumber"][];
+      /**
+       * Addresses
+       * @default []
+       */
+      addresses: components["schemas"]["SCIMAddress"][];
+      /**
+       * Groups
+       * @default []
+       */
+      groups: components["schemas"]["SCIMGroupMembership"][];
+      /** Meta */
+      meta?: {
+        [key: string]: unknown;
+      } | null;
       "urn:ietf:params:scim:schemas:extension:enterprise:2.0:User"?:
         | components["schemas"]["SCIMEnterpriseUser"]
         | null;
-      /** Username */
-      userName: string;
-      /** Usertype */
-      userType?: string | null;
     };
     /**
      * SamplingRequest
      * @description Request model for sampling.
      */
     SamplingRequest: {
-      /**
-       * Cost Priority
-       * @description Cost priority
-       * @default 0.5
-       */
-      cost_priority: number;
-      /**
-       * Intelligence Priority
-       * @description Intelligence priority
-       * @default 0.5
-       */
-      intelligence_priority: number;
-      /**
-       * Max Tokens
-       * @description Max tokens
-       * @default 1000
-       */
-      max_tokens: number;
       /**
        * Messages
        * @description Conversation messages
@@ -7015,10 +11052,27 @@ export interface components {
         [key: string]: unknown;
       }[];
       /**
+       * Max Tokens
+       * @description Max tokens
+       * @default 1000
+       */
+      max_tokens: number;
+      /**
+       * System Prompt
+       * @description System prompt
+       */
+      system_prompt?: string | null;
+      /**
        * Model Hints
        * @description Model name hints
        */
       model_hints?: string[] | null;
+      /**
+       * Intelligence Priority
+       * @description Intelligence priority
+       * @default 0.5
+       */
+      intelligence_priority: number;
       /**
        * Speed Priority
        * @description Speed priority
@@ -7026,16 +11080,22 @@ export interface components {
        */
       speed_priority: number;
       /**
-       * System Prompt
-       * @description System prompt
+       * Cost Priority
+       * @description Cost priority
+       * @default 0.5
        */
-      system_prompt?: string | null;
+      cost_priority: number;
     };
     /**
      * SamplingResponseModel
      * @description Response model for sampling.
      */
     SamplingResponseModel: {
+      /**
+       * Role
+       * @description Message role
+       */
+      role: string;
       /**
        * Content
        * @description Message content
@@ -7048,11 +11108,6 @@ export interface components {
        * @description Model used
        */
       model?: string | null;
-      /**
-       * Role
-       * @description Message role
-       */
-      role: string;
       /**
        * Stop Reason
        * @description Stop reason
@@ -7070,40 +11125,125 @@ export interface components {
        */
       collection_name: string;
       /**
+       * Query Vector
+       * @description Query vector
+       */
+      query_vector: number[];
+      /**
        * Limit
        * @description Maximum number of results
        * @default 10
        */
       limit: number;
+    };
+    /**
+     * SemanticSearchRequest
+     * @description Request body for semantic search.
+     */
+    SemanticSearchRequest: {
       /**
-       * Query Vector
-       * @description Query vector
+       * Query
+       * @description Search query
        */
-      query_vector: number[];
+      query: string;
+      /**
+       * Limit
+       * @description Max results
+       * @default 10
+       */
+      limit: number;
+    };
+    /**
+     * SemanticSearchResponse
+     * @description Response for semantic search.
+     */
+    SemanticSearchResponse: {
+      /** Results */
+      results: components["schemas"]["SemanticSearchResult"][];
+    };
+    /**
+     * SemanticSearchResult
+     * @description Individual search result.
+     */
+    SemanticSearchResult: {
+      /** Artifact Id */
+      artifact_id: string;
+      /** Score */
+      score: number;
+      /** Title */
+      title?: string | null;
     };
     /**
      * ServicePrincipalResponse
      * @description Response containing service principal details
      */
     ServicePrincipalResponse: {
-      /** Associated User Id */
-      associated_user_id: string | null;
-      /** Authentication Mode */
-      authentication_mode: string;
-      /** Created At */
-      created_at: string | null;
-      /** Description */
-      description: string;
-      /** Enabled */
-      enabled: boolean;
-      /** Inherit Permissions */
-      inherit_permissions: boolean;
-      /** Name */
-      name: string;
-      /** Owner User Id */
-      owner_user_id: string | null;
       /** Service Id */
       service_id: string;
+      /** Name */
+      name: string;
+      /** Description */
+      description: string;
+      /** Authentication Mode */
+      authentication_mode: string;
+      /** Associated User Id */
+      associated_user_id: string | null;
+      /** Owner User Id */
+      owner_user_id: string | null;
+      /** Inherit Permissions */
+      inherit_permissions: boolean;
+      /** Enabled */
+      enabled: boolean;
+      /** Created At */
+      created_at: string | null;
+    };
+    /**
+     * SessionConfigResponse
+     * @description Response model for session configuration.
+     */
+    SessionConfigResponse: {
+      /**
+       * Model
+       * @description LLM model to use
+       * @default gpt-4o-mini
+       */
+      model: string;
+      /**
+       * Temperature
+       * @description Sampling temperature
+       * @default 0.7
+       */
+      temperature: number;
+      /**
+       * Max Tokens
+       * @description Max tokens per response
+       * @default 1000
+       */
+      max_tokens: number;
+    };
+    /**
+     * SessionConfigUpdateRequest
+     * @description Request body for updating session configuration.
+     *
+     *     All fields are optional to support partial updates.
+     *     Only provided fields will be updated.
+     */
+    SessionConfigUpdateRequest: {
+      /**
+       * Model
+       * @description LLM model to use
+       */
+      model?: string | null;
+      /**
+       * Temperature
+       * @description Sampling temperature
+       */
+      temperature?: number | null;
+      /**
+       * Max Tokens
+       * @description Max tokens per response
+       */
+      max_tokens?: number | null;
     };
     /**
      * SessionCreateRequest
@@ -7116,44 +11256,83 @@ export interface components {
        */
       name?: string | null;
       /**
-       * Title
-       * @description Session title (deprecated, use 'name')
-       */
-      title?: string | null;
-      /**
        * Workflow Id
        * @description Associated workflow ID
        */
       workflow_id?: string | null;
+      /**
+       * Title
+       * @description Session title (deprecated, use 'name')
+       */
+      title?: string | null;
+    };
+    /**
+     * SessionHistoryItem
+     * @description A single session history entry.
+     */
+    SessionHistoryItem: {
+      /** Page */
+      page: string;
+      /**
+       * Duration Ms
+       * @default 0
+       */
+      duration_ms: number;
     };
     /**
      * SessionListResponse
      * @description Response model for listing sessions in a project.
      */
     SessionListResponse: {
-      /** Project Id */
-      project_id: string;
       /** Sessions */
       sessions: components["schemas"]["SessionRef"][];
       /** Total */
       total: number;
+      /** Project Id */
+      project_id: string;
+    };
+    /**
+     * SessionMetricsResponse
+     * @description Response model for session-level aggregated metrics.
+     */
+    SessionMetricsResponse: {
+      /**
+       * Total Requests
+       * @description Total requests in this session
+       */
+      total_requests: number;
+      /**
+       * Total Errors
+       * @description Total errors in this session
+       */
+      total_errors: number;
+      /**
+       * Avg Latency Ms
+       * @description Average latency in milliseconds
+       */
+      avg_latency_ms: number;
+      /**
+       * P95 Latency Ms
+       * @description 95th percentile latency in milliseconds
+       */
+      p95_latency_ms: number;
     };
     /**
      * SessionRef
      * @description Reference to a session within a project.
      */
     SessionRef: {
-      /** Created At */
-      created_at?: string | null;
       /** Id */
       id: string;
+      /** Name */
+      name: string;
       /**
        * Message Count
        * @default 0
        */
       message_count: number;
-      /** Name */
-      name: string;
+      /** Created At */
+      created_at?: string | null;
     };
     /**
      * SessionResponse
@@ -7161,15 +11340,22 @@ export interface components {
      */
     SessionResponse: {
       /**
-       * Created At
-       * @description Creation timestamp
-       */
-      created_at?: string | null;
-      /**
        * Id
        * @description Session ID
        */
       id: string;
+      /**
+       * Name
+       * @description Session name
+       */
+      name?: string | null;
+      /**
+       * Workflow Id
+       * @description Associated workflow ID
+       */
+      workflow_id?: string | null;
+      /** @description Session LLM configuration */
+      config?: components["schemas"]["SessionConfigResponse"] | null;
       /**
        * Messages
        * @description Session messages
@@ -7178,25 +11364,20 @@ export interface components {
         [key: string]: unknown;
       }[];
       /**
-       * Name
-       * @description Session name
+       * Created At
+       * @description Creation timestamp
        */
-      name?: string | null;
-      /**
-       * @description Session status
-       * @default active
-       */
-      status: components["schemas"]["SessionStatus"];
+      created_at?: string | null;
       /**
        * Updated At
        * @description Last update timestamp
        */
       updated_at?: string | null;
       /**
-       * Workflow Id
-       * @description Associated workflow ID
+       * @description Session status
+       * @default active
        */
-      workflow_id?: string | null;
+      status: components["schemas"]["SessionStatus"];
     };
     /**
      * SessionStatus
@@ -7205,10 +11386,92 @@ export interface components {
      */
     SessionStatus: "active" | "archived" | "deleted";
     /**
+     * SignupContext
+     * @description Context from signup.
+     */
+    SignupContext: {
+      /** Referrer */
+      referrer?: string | null;
+      /** Utm Source */
+      utm_source?: string | null;
+    };
+    /**
+     * SimilarIssue
+     * @description A similar resolved issue.
+     */
+    SimilarIssue: {
+      /** Id */
+      id: string;
+      /** Resolution */
+      resolution: string;
+      /** Success Rate */
+      success_rate: number;
+    };
+    /**
+     * SourceCitation
+     * @description A source citation for a message.
+     */
+    SourceCitation: {
+      /**
+       * Title
+       * @description Source title
+       */
+      title: string;
+      /**
+       * Url
+       * @description Source URL
+       */
+      url?: string | null;
+      /**
+       * Snippet
+       * @description Relevant snippet from source
+       */
+      snippet?: string | null;
+    };
+    /**
      * SpanResponse
      * @description Response model for a span.
+     *
+     *     Includes optional fields for LLM thinking metadata used by the frontend
+     *     for displaying extended thinking content in trace visualization.
      */
     SpanResponse: {
+      /**
+       * Span Id
+       * @description Span ID
+       */
+      span_id: string;
+      /**
+       * Parent Span Id
+       * @description Parent span ID
+       */
+      parent_span_id?: string | null;
+      /**
+       * Name
+       * @description Span name
+       */
+      name: string;
+      /**
+       * Start Time
+       * @description Start timestamp (ISO 8601)
+       */
+      start_time: string;
+      /**
+       * End Time
+       * @description End timestamp (ISO 8601)
+       */
+      end_time?: string | null;
+      /**
+       * Duration Ms
+       * @description Duration in milliseconds
+       */
+      duration_ms?: number | null;
+      /**
+       * Status
+       * @description Span status
+       * @default OK
+       */
+      status: string;
       /**
        * Attributes
        * @description Span attributes
@@ -7217,92 +11480,244 @@ export interface components {
         [key: string]: unknown;
       };
       /**
-       * Duration Ms
-       * @description Duration in milliseconds
+       * Thinking Content
+       * @description Internal reasoning/thinking content from extended thinking LLM spans
        */
-      duration_ms?: number | null;
+      thinking_content?: string | null;
       /**
-       * End Time
-       * @description End timestamp
+       * Thinking Tokens
+       * @description Number of tokens used for thinking/reasoning in this span
        */
-      end_time?: string | null;
+      thinking_tokens?: number | null;
       /**
-       * Name
-       * @description Span name
+       * Model Name
+       * @description Name of the LLM model used in this span
        */
-      name: string;
-      /**
-       * Parent Span Id
-       * @description Parent span ID
-       */
-      parent_span_id?: string | null;
-      /**
-       * Span Id
-       * @description Span ID
-       */
-      span_id: string;
-      /**
-       * Start Time
-       * @description Start timestamp
-       */
-      start_time: string;
-      /**
-       * Status
-       * @description Span status
-       * @default OK
-       */
-      status: string;
+      model_name?: string | null;
     };
     /**
-     * SuggestionRequest
-     * @description Request for AI suggestions on a workflow.
+     * StartupResult
+     * @description Startup probe result (K8s startupProbe).
      */
-    SuggestionRequest: {
+    StartupResult: {
+      /** Status */
+      status: string;
+      /** Observability */
+      observability: boolean;
+    };
+    /**
+     * StudioAnalyzeRequest
+     * @description Request model for unified Studio AI analysis.
+     */
+    StudioAnalyzeRequest: {
       /**
-       * Confidence Threshold
+       * User Id
+       * @description User identifier
+       */
+      user_id: string;
+      /**
+       * Session Id
+       * @description Session identifier
+       */
+      session_id: string;
+      /**
+       * Persona
+       * @description User persona for RBAC filtering
+       */
+      persona?: string | null;
+      /**
+       * Tasks
+       * @description List of tasks to execute in parallel
+       */
+      tasks?: components["schemas"]["TaskRequest"][];
+      /**
+       * Context
+       * @description Additional context for analysis
+       */
+      context?: {
+        [key: string]: unknown;
+      };
+    };
+    /**
+     * StudioAnalyzeResponse
+     * @description Response model for unified Studio AI analysis.
+     */
+    StudioAnalyzeResponse: {
+      /**
+       * User Id
+       * @description User identifier
+       */
+      user_id: string;
+      /**
+       * Session Id
+       * @description Session identifier
+       */
+      session_id: string;
+      /**
+       * Analyses
+       * @description Results by task type
+       */
+      analyses?: {
+        [key: string]: unknown;
+      };
+      /**
+       * Cross Insights
+       * @description Cross-category synthesized insights
+       */
+      cross_insights?: string[];
+      /**
+       * Failed Analyses
+       * @description List of failed task types
+       */
+      failed_analyses?: string[];
+      /**
+       * Total Cost
+       * @description Total cost of analysis as string (Decimal-compatible)
        * @default 0
        */
-      confidence_threshold: number;
-      /**
-       * Max Suggestions
-       * @description Max suggestions to return
-       * @default 5
-       */
-      max_suggestions: number;
-      /**
-       * Workflow
-       * @description Workflow to analyze
-       */
-      workflow: {
-        [key: string]: unknown;
-      };
+      total_cost: string;
     };
     /**
-     * SuggestionResponse
-     * @description A single suggestion item.
+     * SubscriptionInfo
+     * @description Information about a push subscription.
      */
-    SuggestionResponse: {
-      /** Confidence */
-      confidence: number;
-      /** Description */
-      description: string;
-      /** Metadata */
-      metadata?: {
-        [key: string]: unknown;
-      };
-      /** Type */
-      type: string;
+    SubscriptionInfo: {
+      /** Id */
+      id: string;
+      /** Endpoint */
+      endpoint: string;
+      /** Device Name */
+      device_name: string | null;
+      /** Created At */
+      created_at: string;
+      /** Last Used At */
+      last_used_at: string | null;
     };
     /**
-     * SuggestionsResponse
-     * @description Response containing AI suggestions.
+     * SuggestionClickRequest
+     * @description Request to track a suggestion click.
      */
-    SuggestionsResponse: {
-      /** Suggestions */
-      suggestions: components["schemas"]["SuggestionResponse"][];
-      /** Workflow Id */
-      workflow_id?: string | null;
+    SuggestionClickRequest: {
+      /**
+       * Suggestion Id
+       * @description ID of the clicked suggestion
+       */
+      suggestion_id: string;
+      /** @description Type of suggestion (chat_followup, workflow) */
+      suggestion_type: components["schemas"]["SuggestionType"];
+      /**
+       * Category
+       * @description Category of the suggestion (for chat_followup)
+       */
+      category?: string | null;
+      /**
+       * Session Id
+       * @description Session ID for context
+       */
+      session_id?: string | null;
     };
+    /**
+     * SuggestionClickResponse
+     * @description Response confirming click tracking.
+     */
+    SuggestionClickResponse: {
+      /**
+       * Tracked
+       * @description Whether the click was successfully tracked
+       */
+      tracked: boolean;
+    };
+    /**
+     * SuggestionFeedbackRequest
+     * @description Request to submit feedback on a suggestion.
+     */
+    SuggestionFeedbackRequest: {
+      /**
+       * Suggestion Id
+       * @description ID of the suggestion
+       */
+      suggestion_id: string;
+      /** @description Type of suggestion (chat_followup, workflow) */
+      suggestion_type: components["schemas"]["SuggestionType"];
+      /** @description Feedback type (positive, negative) */
+      feedback: components["schemas"]["FeedbackType"];
+      /**
+       * Category
+       * @description Category of the suggestion
+       */
+      category?: string | null;
+      /**
+       * Session Id
+       * @description Session ID for context
+       */
+      session_id?: string | null;
+      /**
+       * Comment
+       * @description Optional user comment about the suggestion
+       */
+      comment?: string | null;
+    };
+    /**
+     * SuggestionFeedbackResponse
+     * @description Response confirming feedback submission.
+     */
+    SuggestionFeedbackResponse: {
+      /**
+       * Recorded
+       * @description Whether the feedback was successfully recorded
+       */
+      recorded: boolean;
+      /**
+       * Feedback Id
+       * @description ID of the recorded feedback (if available)
+       */
+      feedback_id?: string | null;
+    };
+    /**
+     * SuggestionTrackRequest
+     * @description Request to track a suggestion interaction.
+     */
+    SuggestionTrackRequest: {
+      /**
+       * Suggestion Id
+       * @description ID of the suggestion
+       */
+      suggestion_id: string;
+      /** @description Action taken (click, dismiss, view) */
+      action: components["schemas"]["mcp_server_langgraph__api__v1__ai__SuggestionAction"];
+      /**
+       * Session Id
+       * @description Session ID for context
+       */
+      session_id?: string | null;
+      /**
+       * Suggestion Type
+       * @description Type of suggestion (chat_followup, workflow)
+       */
+      suggestion_type?: string | null;
+      /**
+       * Category
+       * @description Category of the suggestion
+       */
+      category?: string | null;
+    };
+    /**
+     * SuggestionTrackResponse
+     * @description Response confirming interaction tracking.
+     */
+    SuggestionTrackResponse: {
+      /**
+       * Tracked
+       * @description Whether the interaction was successfully tracked
+       */
+      tracked: boolean;
+    };
+    /**
+     * SuggestionType
+     * @description Types of AI suggestions supported.
+     * @enum {string}
+     */
+    SuggestionType: "chat_followup" | "workflow";
     /**
      * TaskListResponse
      * @description Response model for listing tasks.
@@ -7320,6 +11735,11 @@ export interface components {
      */
     TaskMetrics: {
       /**
+       * Tasks Started
+       * @description Number of tasks started
+       */
+      tasks_started: number;
+      /**
        * Tasks Completed
        * @description Number of tasks completed
        */
@@ -7329,17 +11749,45 @@ export interface components {
        * @description Number of tasks that errored
        */
       tasks_errored: number;
+    };
+    /**
+     * TaskRequest
+     * @description Individual task request within composite analysis.
+     */
+    TaskRequest: {
       /**
-       * Tasks Started
-       * @description Number of tasks started
+       * Category
+       * @description Task category (ux, session, canvas, etc.)
        */
-      tasks_started: number;
+      category: string;
+      /**
+       * Type
+       * @description Task type (persona_analysis, session_summarize, etc.)
+       */
+      type: string;
+      /**
+       * Data
+       * @description Task-specific data
+       */
+      data?: {
+        [key: string]: unknown;
+      };
     };
     /**
      * TaskResponse
      * @description Response model for a task.
      */
     TaskResponse: {
+      /**
+       * Task Id
+       * @description Task ID
+       */
+      task_id: string;
+      /**
+       * Status
+       * @description Task status
+       */
+      status: string;
       /**
        * Created At
        * Format: date-time
@@ -7353,42 +11801,32 @@ export interface components {
        */
       last_updated_at: string;
       /**
+       * Ttl
+       * @description TTL in milliseconds
+       */
+      ttl?: number | null;
+      /**
        * Poll Interval
        * @description Recommended poll interval in ms
        */
       poll_interval?: number | null;
       /**
-       * Status
-       * @description Task status
-       */
-      status: string;
-      /**
        * Status Message
        * @description Status message
        */
       status_message?: string | null;
-      /**
-       * Task Id
-       * @description Task ID
-       */
-      task_id: string;
-      /**
-       * Ttl
-       * @description TTL in milliseconds
-       */
-      ttl?: number | null;
     };
     /**
      * TemplateCategory
      * @description Template category.
      */
     TemplateCategory: {
-      /** Description */
-      description: string;
       /** Id */
       id: string;
       /** Name */
       name: string;
+      /** Description */
+      description: string;
     };
     /**
      * TemplateListResponse
@@ -7403,14 +11841,14 @@ export interface components {
      * @description A single template recommendation.
      */
     TemplateRecommendation: {
-      /** Category */
-      category: string;
-      /** Description */
-      description: string;
       /** Id */
       id: string;
       /** Name */
       name: string;
+      /** Description */
+      description: string;
+      /** Category */
+      category: string;
       /** Similarity */
       similarity: number;
     };
@@ -7419,24 +11857,24 @@ export interface components {
      * @description Response containing template data.
      */
     TemplateResponse: {
-      /** Category */
-      category: string;
-      /** Description */
-      description: string;
-      /** Edges */
-      edges: {
-        [key: string]: unknown;
-      }[];
       /** Id */
       id: string;
       /** Name */
       name: string;
+      /** Description */
+      description: string;
+      /** Category */
+      category: string;
+      /** Tags */
+      tags: string[];
       /** Nodes */
       nodes: {
         [key: string]: unknown;
       }[];
-      /** Tags */
-      tags: string[];
+      /** Edges */
+      edges: {
+        [key: string]: unknown;
+      }[];
     };
     /**
      * TextSearchRequest
@@ -7449,16 +11887,16 @@ export interface components {
        */
       collection_name: string;
       /**
+       * Query Text
+       * @description Query text to embed and search
+       */
+      query_text: string;
+      /**
        * Limit
        * @description Maximum number of results
        * @default 10
        */
       limit: number;
-      /**
-       * Query Text
-       * @description Query text to embed and search
-       */
-      query_text: string;
     };
     /**
      * TextUpsertRequest
@@ -7471,17 +11909,64 @@ export interface components {
        */
       collection_name: string;
       /**
+       * Text
+       * @description Text content to embed and store
+       */
+      text: string;
+      /**
        * Metadata
        * @description Additional metadata to store with the point
        */
       metadata?: {
         [key: string]: unknown;
       };
+    };
+    /**
+     * ThinkingContent
+     * @description Thinking/reasoning content from extended thinking models.
+     */
+    ThinkingContent: {
       /**
-       * Text
-       * @description Text content to embed and store
+       * Content
+       * @description The model's internal reasoning/thinking content
        */
-      text: string;
+      content: string;
+      /**
+       * Tokens
+       * @description Number of tokens used for thinking
+       */
+      tokens?: number | null;
+    };
+    /**
+     * ThresholdRecommendation
+     * @description Recommendation for threshold adjustment based on approval patterns.
+     */
+    ThresholdRecommendation: {
+      /**
+       * Current Threshold
+       * @description Current threshold value
+       */
+      current_threshold: number;
+      /**
+       * Recommended Threshold
+       * @description Recommended new threshold
+       */
+      recommended_threshold: number;
+      /**
+       * Reason
+       * @description Explanation for the recommendation
+       */
+      reason: string;
+      /**
+       * Confidence Level
+       * @description Confidence in the recommendation (0-1)
+       */
+      confidence_level: number;
+      /**
+       * Sample Size
+       * @description Number of decisions analyzed
+       */
+      sample_size: number;
     };
     /**
      * TokenResponse
@@ -7494,26 +11979,26 @@ export interface components {
        */
       access_token: string;
       /**
-       * Expires In
-       * @description Token expiry in seconds
-       */
-      expires_in: number;
-      /**
        * Refresh Token
        * @description JWT refresh token
        */
       refresh_token?: string | null;
-      /**
-       * Scope
-       * @description Granted scopes
-       */
-      scope?: string | null;
       /**
        * Token Type
        * @description Token type
        * @default Bearer
        */
       token_type: string;
+      /**
+       * Expires In
+       * @description Token expiry in seconds
+       */
+      expires_in: number;
+      /**
+       * Scope
+       * @description Granted scopes
+       */
+      scope?: string | null;
     };
     /**
      * ToolInfo
@@ -7521,15 +12006,15 @@ export interface components {
      */
     ToolInfo: {
       /**
-       * Description
-       * @description Tool description
-       */
-      description: string;
-      /**
        * Name
        * @description Tool name
        */
       name: string;
+      /**
+       * Description
+       * @description Tool description
+       */
+      description: string;
     };
     /**
      * TraceResponse
@@ -7537,20 +12022,30 @@ export interface components {
      */
     TraceResponse: {
       /**
-       * Duration Ms
-       * @description Total duration
+       * Trace Id
+       * @description Trace ID
        */
-      duration_ms?: number | null;
+      trace_id: string;
+      /**
+       * Name
+       * @description Trace name
+       */
+      name: string;
+      /**
+       * Start Time
+       * @description Start timestamp
+       */
+      start_time?: string | null;
       /**
        * End Time
        * @description End timestamp
        */
       end_time?: string | null;
       /**
-       * Name
-       * @description Trace name
+       * Duration Ms
+       * @description Total duration
        */
-      name: string;
+      duration_ms?: number | null;
       /**
        * Span Count
        * @description Number of spans
@@ -7561,16 +12056,68 @@ export interface components {
        * @description Trace spans
        */
       spans?: components["schemas"]["SpanResponse"][];
+    };
+    /**
+     * UIAdaptation
+     * @description A UI adaptation recommendation.
+     */
+    UIAdaptation: {
+      /** Feature */
+      feature: string;
+      /** Action */
+      action: string;
+    };
+    /**
+     * UnifiedSuggestionsRequest
+     * @description Unified request for AI suggestions.
+     */
+    UnifiedSuggestionsRequest: {
+      /** @description Type of suggestions to generate */
+      type: components["schemas"]["SuggestionType"];
       /**
-       * Start Time
-       * @description Start timestamp
+       * Content
+       * @description Chat content to analyze (for chat_followup)
        */
-      start_time?: string | null;
+      content?: string | null;
       /**
-       * Trace Id
-       * @description Trace ID
+       * Session Id
+       * @description Session ID for context
        */
-      trace_id: string;
+      session_id?: string | null;
+      /**
+       * Conversation History
+       * @description Previous conversation messages for personalization
+       */
+      conversation_history?:
+        | components["schemas"]["ConversationMessage"][]
+        | null;
+      /**
+       * Workflow
+       * @description Workflow to analyze (for workflow)
+       */
+      workflow?: {
+        [key: string]: unknown;
+      } | null;
+      /**
+       * Max Suggestions
+       * @description Maximum suggestions to return
+       * @default 4
+       */
+      max_suggestions: number;
+    };
+    /**
+     * UnifiedSuggestionsResponse
+     * @description Unified response containing AI suggestions.
+     */
+    UnifiedSuggestionsResponse: {
+      /**
+       * Suggestions
+       * @description List of suggestions
+       */
+      suggestions?: (
+        | components["schemas"]["ChatFollowUpSuggestion"]
+        | components["schemas"]["WorkflowSuggestion"]
+      )[];
     };
     /**
      * UnsubscribeRequest
@@ -7584,15 +12131,36 @@ export interface components {
       endpoint: string;
     };
     /**
+     * UpdateThresholdSettingsRequest
+     * @description Request body for updating threshold settings.
+     */
+    UpdateThresholdSettingsRequest: {
+      /**
+       * Base Threshold
+       * @description New base threshold
+       */
+      base_threshold?: number | null;
+      /**
+       * Auto Adjust Enabled
+       * @description Enable/disable auto-adjustment
+       */
+      auto_adjust_enabled?: boolean | null;
+      /**
+       * Min Threshold
+       * @description Minimum allowed threshold
+       */
+      min_threshold?: number | null;
+      /**
+       * Max Threshold
+       * @description Maximum allowed threshold
+       */
+      max_threshold?: number | null;
+    };
+    /**
      * UpdateUserRequest
      * @description Request model for updating a user.
      */
     UpdateUserRequest: {
-      /**
-       * Active
-       * @description New active status
-       */
-      active?: boolean | null;
       /**
        * Email
        * @description New email address
@@ -7603,6 +12171,11 @@ export interface components {
        * @description New roles
        */
       roles?: string[] | null;
+      /**
+       * Active
+       * @description New active status
+       */
+      active?: boolean | null;
     };
     /**
      * UpdateWorkflowPublicRequest
@@ -7620,17 +12193,17 @@ export interface components {
      * @description Request to update an existing workflow.
      */
     UpdateWorkflowRequest: {
-      /** Description */
-      description?: string | null;
-      /** Edges */
-      edges?:
-        | components["schemas"]["mcp_server_langgraph__api__studio__WorkflowEdge"][]
-        | null;
       /** Name */
       name?: string | null;
+      /** Description */
+      description?: string | null;
       /** Nodes */
       nodes?:
         | components["schemas"]["mcp_server_langgraph__api__studio__WorkflowNode"][]
+        | null;
+      /** Edges */
+      edges?:
+        | components["schemas"]["mcp_server_langgraph__api__studio__WorkflowEdge"][]
         | null;
     };
     /**
@@ -7650,6 +12223,66 @@ export interface components {
       points: {
         [key: string]: unknown;
       }[];
+    };
+    /**
+     * UrlFetchRequest
+     * @description Request to fetch content from a URL.
+     */
+    UrlFetchRequest: {
+      /**
+       * Url
+       * @description The URL to fetch content from (must be http:// or https://)
+       */
+      url: string;
+    };
+    /**
+     * UrlFetchResponse
+     * @description Response containing fetched URL content.
+     */
+    UrlFetchResponse: {
+      /**
+       * Url
+       * @description The URL that was fetched
+       */
+      url: string;
+      /**
+       * Title
+       * @description Page title if available
+       */
+      title?: string | null;
+      /**
+       * Content
+       * @description Extracted text content from the page
+       */
+      content: string;
+      /**
+       * Content Type
+       * @description Content type of the response
+       */
+      content_type: string;
+      /**
+       * Content Length
+       * @description Length of extracted content in characters
+       */
+      content_length: number;
+      /**
+       * Truncated
+       * @description Whether content was truncated due to size limits
+       * @default false
+       */
+      truncated: boolean;
+    };
+    /**
+     * UserContext
+     * @description User context for error analysis.
+     */
+    UserContext: {
+      /** Persona */
+      persona?: string | null;
+      /** Session Id */
+      session_id?: string | null;
+      /** Recent Actions */
+      recent_actions?: string[];
     };
     /**
      * UserDataExport
@@ -7682,32 +12315,6 @@ export interface components {
      */
     UserDataExport: {
       /**
-       * Audit Log
-       * @description User activity audit log
-       */
-      audit_log?: {
-        [key: string]: unknown;
-      }[];
-      /**
-       * Consents
-       * @description Consent records
-       */
-      consents?: {
-        [key: string]: unknown;
-      }[];
-      /**
-       * Conversations
-       * @description Conversation history
-       */
-      conversations?: {
-        [key: string]: unknown;
-      }[];
-      /**
-       * Email
-       * @description User email address
-       */
-      email: string;
-      /**
        * Export Id
        * @description Unique export identifier
        */
@@ -7718,19 +12325,20 @@ export interface components {
        */
       export_timestamp: string;
       /**
-       * Metadata
-       * @description Additional metadata
+       * User Id
+       * @description User identifier
        */
-      metadata?: {
-        [key: string]: unknown;
-      };
+      user_id: string;
       /**
-       * Preferences
-       * @description User preferences and settings
+       * Username
+       * @description Username
        */
-      preferences?: {
-        [key: string]: unknown;
-      };
+      username: string;
+      /**
+       * Email
+       * @description User email address
+       */
+      email: string;
       /**
        * Profile
        * @description User profile data
@@ -7746,8 +12354,55 @@ export interface components {
         [key: string]: unknown;
       }[];
       /**
+       * Conversations
+       * @description Conversation history
+       */
+      conversations?: {
+        [key: string]: unknown;
+      }[];
+      /**
+       * Preferences
+       * @description User preferences and settings
+       */
+      preferences?: {
+        [key: string]: unknown;
+      };
+      /**
+       * Audit Log
+       * @description User activity audit log
+       */
+      audit_log?: {
+        [key: string]: unknown;
+      }[];
+      /**
+       * Consents
+       * @description Consent records
+       */
+      consents?: {
+        [key: string]: unknown;
+      }[];
+      /**
+       * Metadata
+       * @description Additional metadata
+       */
+      metadata?: {
+        [key: string]: unknown;
+      };
+    };
+    /**
+     * UserInfoResponse
+     * @description Current user information response.
+     *
+     *     Extended in Sprint 4 to include persona-related fields for frontend RBAC:
+     *     - api_version: For client compatibility detection
+     *     - sub_persona: Specific persona variant (alice-builder, etc.)
+     *     - visible_modules: List of modules this persona can access
+     *     - feature_flags: Feature flags for this user/persona
+     */
+    UserInfoResponse: {
+      /**
        * User Id
-       * @description User identifier
+       * @description User identifier in OpenFGA format (user:username)
        */
       user_id: string;
       /**
@@ -7755,17 +12410,6 @@ export interface components {
        * @description Username
        */
       username: string;
-    };
-    /**
-     * UserInfoResponse
-     * @description Current user information response.
-     */
-    UserInfoResponse: {
-      /**
-       * Display Name
-       * @description Full display name from Keycloak (name claim)
-       */
-      display_name?: string | null;
       /**
        * Email
        * @description Email address
@@ -7777,15 +12421,20 @@ export interface components {
        */
       first_name?: string | null;
       /**
-       * Keycloak Id
-       * @description Keycloak UUID (for admin operations)
-       */
-      keycloak_id?: string | null;
-      /**
        * Last Name
        * @description Last name from Keycloak (family_name claim)
        */
       last_name?: string | null;
+      /**
+       * Display Name
+       * @description Full display name from Keycloak (name claim)
+       */
+      display_name?: string | null;
+      /**
+       * Roles
+       * @description User roles from Keycloak
+       */
+      roles?: string[];
       /**
        * Persona
        * @description Computed persona for frontend RBAC
@@ -7793,20 +12442,178 @@ export interface components {
        */
       persona: "admin" | "developer" | "user";
       /**
-       * Roles
-       * @description User roles from Keycloak
+       * Keycloak Id
+       * @description Keycloak UUID (for admin operations)
        */
-      roles?: string[];
+      keycloak_id?: string | null;
       /**
-       * User Id
-       * @description User identifier in OpenFGA format (user:username)
+       * Api Version
+       * @description API version for client compatibility detection
+       * @default 2
        */
-      user_id: string;
+      api_version: string;
       /**
-       * Username
-       * @description Username
+       * Sub Persona
+       * @description Specific persona variant (alice-builder, alice-analyst, etc.)
        */
-      username: string;
+      sub_persona?: string | null;
+      /**
+       * Visible Modules
+       * @description List of modules this persona can access
+       */
+      visible_modules?: string[];
+      /**
+       * Feature Flags
+       * @description Feature flags for this user/persona
+       */
+      feature_flags?: {
+        [key: string]: boolean;
+      };
+    };
+    /**
+     * UserMetricsResponse
+     * @description Response model for user-level aggregated metrics.
+     */
+    UserMetricsResponse: {
+      /**
+       * Total Requests
+       * @description Total requests by this user
+       */
+      total_requests: number;
+      /**
+       * Total Sessions
+       * @description Total unique sessions by this user
+       */
+      total_sessions: number;
+      /**
+       * Total Errors
+       * @description Total errors for this user
+       */
+      total_errors: number;
+      /**
+       * Avg Latency Ms
+       * @description Average latency in milliseconds
+       */
+      avg_latency_ms: number;
+    };
+    /**
+     * UserPreferences
+     * @description User preferences model.
+     */
+    UserPreferences: {
+      /**
+       * Theme
+       * @description UI theme
+       * @default system
+       * @enum {string}
+       */
+      theme: "light" | "dark" | "system";
+      /**
+       * Language
+       * @description UI language code
+       * @default en
+       */
+      language: string;
+      /**
+       * Auto Scroll
+       * @description Auto-scroll to new messages
+       * @default true
+       */
+      auto_scroll: boolean;
+      /**
+       * Reduced Motion
+       * @description Reduce animations for accessibility
+       * @default false
+       */
+      reduced_motion: boolean;
+      /**
+       * High Contrast
+       * @description High contrast mode
+       * @default false
+       */
+      high_contrast: boolean;
+      /**
+       * Screen Reader Mode
+       * @description Screen reader optimizations
+       * @default false
+       */
+      screen_reader_mode: boolean;
+      /**
+       * Font Size
+       * @description UI font size
+       * @default medium
+       * @enum {string}
+       */
+      font_size: "small" | "medium" | "large";
+      /**
+       * Default Model
+       * @description Default LLM model
+       */
+      default_model?: string | null;
+      /**
+       * Default Temperature
+       * @description Default temperature
+       * @default 0.7
+       */
+      default_temperature: number;
+      /**
+       * Default Max Tokens
+       * @description Default max tokens
+       * @default 4096
+       */
+      default_max_tokens: number;
+      /**
+       * Pinned Sessions
+       * @description Pinned session IDs
+       */
+      pinned_sessions?: string[];
+      /**
+       * Notifications Enabled
+       * @description Enable desktop notifications
+       * @default true
+       */
+      notifications_enabled: boolean;
+      /**
+       * Keyboard Shortcuts
+       * @description Custom keyboard shortcut overrides
+       */
+      keyboard_shortcuts?: {
+        [key: string]: string;
+      };
+    };
+    /**
+     * UserPreferencesUpdate
+     * @description Partial update model for user preferences.
+     */
+    UserPreferencesUpdate: {
+      /** Theme */
+      theme?: ("light" | "dark" | "system") | null;
+      /** Language */
+      language?: string | null;
+      /** Auto Scroll */
+      auto_scroll?: boolean | null;
+      /** Reduced Motion */
+      reduced_motion?: boolean | null;
+      /** High Contrast */
+      high_contrast?: boolean | null;
+      /** Screen Reader Mode */
+      screen_reader_mode?: boolean | null;
+      /** Font Size */
+      font_size?: ("small" | "medium" | "large") | null;
+      /** Default Model */
+      default_model?: string | null;
+      /** Default Temperature */
+      default_temperature?: number | null;
+      /** Default Max Tokens */
+      default_max_tokens?: number | null;
+      /** Pinned Sessions */
+      pinned_sessions?: string[] | null;
+      /** Notifications Enabled */
+      notifications_enabled?: boolean | null;
+      /** Keyboard Shortcuts */
+      keyboard_shortcuts?: {
+        [key: string]: string;
+      } | null;
     };
     /**
      * UserProfileUpdate
@@ -7822,15 +12629,15 @@ export interface components {
      */
     UserProfileUpdate: {
       /**
-       * Email
-       * @description User's email address
-       */
-      email?: string | null;
-      /**
        * Name
        * @description User's full name
        */
       name?: string | null;
+      /**
+       * Email
+       * @description User's email address
+       */
+      email?: string | null;
       /**
        * Preferences
        * @description User preferences
@@ -7845,11 +12652,15 @@ export interface components {
      */
     UserResponse: {
       /**
-       * Active
-       * @description Whether user is active
-       * @default true
+       * User Id
+       * @description User identifier
        */
-      active: boolean;
+      user_id: string;
+      /**
+       * Username
+       * @description Username
+       */
+      username: string;
       /**
        * Email
        * @description Email address
@@ -7861,15 +12672,50 @@ export interface components {
        */
       roles?: string[];
       /**
+       * Active
+       * @description Whether user is active
+       * @default true
+       */
+      active: boolean;
+    };
+    /**
+     * UserThresholdSettings
+     * @description User-specific threshold configuration.
+     */
+    UserThresholdSettings: {
+      /**
        * User Id
-       * @description User identifier
+       * @description User ID
        */
       user_id: string;
       /**
-       * Username
-       * @description Username
+       * Base Threshold
+       * @description Base threshold before adjustments
        */
-      username: string;
+      base_threshold: number;
+      /**
+       * Adjusted Threshold
+       * @description Currently adjusted threshold
+       */
+      adjusted_threshold: number;
+      /**
+       * Auto Adjust Enabled
+       * @description Whether auto-adjustment is enabled
+       * @default true
+       */
+      auto_adjust_enabled: boolean;
+      /**
+       * Min Threshold
+       * @description Minimum allowed threshold
+       * @default 0.5
+       */
+      min_threshold: number;
+      /**
+       * Max Threshold
+       * @description Maximum allowed threshold
+       * @default 0.9
+       */
+      max_threshold: number;
     };
     /** ValidationError */
     ValidationError: {
@@ -7886,16 +12732,16 @@ export interface components {
      */
     VectorConfig: {
       /**
+       * Size
+       * @description Vector dimension size
+       */
+      size: number;
+      /**
        * Distance
        * @description Distance metric: Cosine, Euclidean, Dot
        * @default Cosine
        */
       distance: string;
-      /**
-       * Size
-       * @description Vector dimension size
-       */
-      size: number;
     };
     /**
      * WorkflowCreateRequest
@@ -7903,55 +12749,86 @@ export interface components {
      */
     WorkflowCreateRequest: {
       /**
-       * Description
-       * @description Workflow description
-       */
-      description?: string | null;
-      /**
-       * Edges
-       * @description Workflow edges
-       */
-      edges?: components["schemas"]["mcp_server_langgraph__api__v1__workflows__WorkflowEdge"][];
-      /**
        * Name
        * @description Workflow name
        */
       name: string;
       /**
+       * Description
+       * @description Workflow description
+       */
+      description?: string | null;
+      /**
        * Nodes
        * @description Workflow nodes
        */
       nodes?: components["schemas"]["mcp_server_langgraph__api__v1__workflows__WorkflowNode"][];
+      /**
+       * Edges
+       * @description Workflow edges
+       */
+      edges?: components["schemas"]["mcp_server_langgraph__api__v1__workflows__WorkflowEdge"][];
     };
     /**
      * WorkflowListResponse
      * @description Response model for listing workflows in a project.
      */
     WorkflowListResponse: {
-      /** Project Id */
-      project_id: string;
-      /** Total */
-      total: number;
       /** Workflows */
       workflows: components["schemas"]["WorkflowRef"][];
+      /** Total */
+      total: number;
+      /** Project Id */
+      project_id: string;
+    };
+    /**
+     * WorkflowMetricsResponse
+     * @description Response model for workflow-level aggregated metrics.
+     */
+    WorkflowMetricsResponse: {
+      /**
+       * Total Executions
+       * @description Total workflow executions
+       */
+      total_executions: number;
+      /**
+       * Total Errors
+       * @description Total errors in workflow executions
+       */
+      total_errors: number;
+      /**
+       * Avg Latency Ms
+       * @description Average execution latency in milliseconds
+       */
+      avg_latency_ms: number;
+      /**
+       * P95 Latency Ms
+       * @description 95th percentile latency in milliseconds
+       */
+      p95_latency_ms: number;
     };
     /**
      * WorkflowRef
      * @description Reference to a workflow within a project.
      */
     WorkflowRef: {
-      /** Created At */
-      created_at?: string | null;
       /** Id */
       id: string;
       /** Name */
       name: string;
+      /** Created At */
+      created_at?: string | null;
     };
     /**
      * WorkflowShare
      * @description A share relationship for a workflow.
      */
     WorkflowShare: {
+      /**
+       * User Id
+       * @description User ID the workflow is shared with
+       */
+      user_id: string;
       /**
        * Email
        * @description Email of the user
@@ -7963,17 +12840,17 @@ export interface components {
        * @enum {string}
        */
       permission: "view" | "edit" | "execute";
-      /**
-       * User Id
-       * @description User ID the workflow is shared with
-       */
-      user_id: string;
     };
     /**
      * WorkflowSharesResponse
      * @description Response containing all shares for a workflow.
      */
     WorkflowSharesResponse: {
+      /**
+       * Shares
+       * @description List of shares
+       */
+      shares?: components["schemas"]["WorkflowShare"][];
       /**
        * Is Public
        * @description Whether workflow is publicly accessible
@@ -7985,11 +12862,34 @@ export interface components {
        * @description Public share link if is_public=True
        */
       share_link?: string | null;
+    };
+    /**
+     * WorkflowSuggestion
+     * @description A single workflow optimization suggestion.
+     */
+    WorkflowSuggestion: {
       /**
-       * Shares
-       * @description List of shares
+       * Type
+       * @description Type of suggestion (e.g., 'optimization', 'error_handling')
        */
-      shares?: components["schemas"]["WorkflowShare"][];
+      type: string;
+      /**
+       * Description
+       * @description Human-readable description
+       */
+      description: string;
+      /**
+       * Confidence
+       * @description Confidence score
+       */
+      confidence: number;
+      /**
+       * Metadata
+       * @description Additional metadata
+       */
+      metadata?: {
+        [key: string]: unknown;
+      };
     };
     /**
      * WorkflowUpdateRequest
@@ -7997,22 +12897,15 @@ export interface components {
      */
     WorkflowUpdateRequest: {
       /**
-       * Description
-       * @description Workflow description
-       */
-      description?: string | null;
-      /**
-       * Edges
-       * @description Workflow edges
-       */
-      edges?:
-        | components["schemas"]["mcp_server_langgraph__api__v1__workflows__WorkflowEdge"][]
-        | null;
-      /**
        * Name
        * @description Workflow name
        */
       name?: string | null;
+      /**
+       * Description
+       * @description Workflow description
+       */
+      description?: string | null;
       /**
        * Nodes
        * @description Workflow nodes
@@ -8020,14 +12913,13 @@ export interface components {
       nodes?:
         | components["schemas"]["mcp_server_langgraph__api__v1__workflows__WorkflowNode"][]
         | null;
-    };
-    /** Body_native_logout_api_v1_auth_logout_post */
-    fastapi___compat__v2__Body_native_logout_api_v1_auth_logout_post: {
       /**
-       * Refresh Token
-       * @description Refresh token to revoke
+       * Edges
+       * @description Workflow edges
        */
-      refresh_token?: string | null;
+      edges?:
+        | components["schemas"]["mcp_server_langgraph__api__v1__workflows__WorkflowEdge"][]
+        | null;
     };
     /**
      * WorkflowEdge
@@ -8044,38 +12936,38 @@ export interface components {
      * @description A node in a workflow graph.
      */
     mcp_server_langgraph__api__studio__WorkflowNode: {
-      /** Data */
-      data?: {
-        [key: string]: unknown;
-      };
       /** Id */
       id: string;
       /** Type */
       type: string;
+      /** Data */
+      data?: {
+        [key: string]: unknown;
+      };
     };
     /**
      * WorkflowResponse
      * @description Response containing workflow data.
      */
     mcp_server_langgraph__api__studio__WorkflowResponse: {
-      /** Created At */
-      created_at: string;
-      /** Description */
-      description: string;
-      /** Edges */
-      edges: {
-        [key: string]: unknown;
-      }[];
       /** Id */
       id: string;
       /** Name */
       name: string;
+      /** Description */
+      description: string;
       /** Nodes */
       nodes: {
         [key: string]: unknown;
       }[];
+      /** Edges */
+      edges: {
+        [key: string]: unknown;
+      }[];
       /** Owner Id */
       owner_id: string;
+      /** Created At */
+      created_at: string;
       /** Updated At */
       updated_at: string;
     };
@@ -8085,10 +12977,45 @@ export interface components {
      */
     mcp_server_langgraph__api__v1__admin__AuditLogEntry: {
       /**
+       * Id
+       * @description Unique log entry ID
+       */
+      id: string;
+      /**
        * Action
        * @description Action performed (create, update, delete, login, etc.)
        */
       action: string;
+      /**
+       * User Id
+       * @description ID of the user who performed the action
+       */
+      user_id: string;
+      /**
+       * User Email
+       * @description Email of the user (if available)
+       */
+      user_email?: string | null;
+      /**
+       * Resource Type
+       * @description Type of resource affected
+       */
+      resource_type: string;
+      /**
+       * Resource Id
+       * @description ID of the resource affected
+       */
+      resource_id: string;
+      /**
+       * Timestamp
+       * @description ISO 8601 timestamp of the action
+       */
+      timestamp: string;
+      /**
+       * Ip Address
+       * @description IP address of the client
+       */
+      ip_address?: string | null;
       /**
        * Details
        * @description Additional details about the action
@@ -8096,84 +13023,82 @@ export interface components {
       details?: {
         [key: string]: unknown;
       } | null;
+    };
+    /**
+     * SuggestionAction
+     * @description Actions that can be tracked for suggestions.
+     * @enum {string}
+     */
+    mcp_server_langgraph__api__v1__ai__SuggestionAction:
+      | "click"
+      | "dismiss"
+      | "view";
+    /**
+     * SuggestionAction
+     * @description Action types for suggestions.
+     * @enum {string}
+     */
+    mcp_server_langgraph__api__v1__ai_ux__SuggestionAction:
+      | "navigate"
+      | "modal"
+      | "execute"
+      | "retry"
+      | "wait"
+      | "simplify"
+      | "contact";
+    /**
+     * RefreshTokenRequest
+     * @description Refresh token request.
+     */
+    mcp_server_langgraph__api__v1__auth__RefreshTokenRequest: {
       /**
-       * Id
-       * @description Unique log entry ID
+       * Refresh Token
+       * @description Refresh token
        */
-      id: string;
-      /**
-       * Ip Address
-       * @description IP address of the client
-       */
-      ip_address?: string | null;
-      /**
-       * Resource Id
-       * @description ID of the resource affected
-       */
-      resource_id: string;
-      /**
-       * Resource Type
-       * @description Type of resource affected
-       */
-      resource_type: string;
-      /**
-       * Timestamp
-       * @description ISO 8601 timestamp of the action
-       */
-      timestamp: string;
-      /**
-       * User Email
-       * @description Email of the user (if available)
-       */
-      user_email?: string | null;
-      /**
-       * User Id
-       * @description ID of the user who performed the action
-       */
-      user_id: string;
+      refresh_token: string;
     };
     /**
      * AuditLogEntry
      * @description An audit log entry.
      */
     mcp_server_langgraph__api__v1__connection_audit__AuditLogEntry: {
-      /** Action */
-      action: string;
+      /** Id */
+      id: string;
+      /** Event Type */
+      event_type: string;
+      /** Resource Type */
+      resource_type: string;
+      /** Resource Id */
+      resource_id: string;
       /** Actor Id */
       actor_id: string;
+      /** Action */
+      action: string;
       /** Details */
       details?: {
         [key: string]: unknown;
       };
-      /** Event Type */
-      event_type: string;
-      /** Id */
-      id: string;
       /** Ip Address */
       ip_address?: string | null;
-      /** Resource Id */
-      resource_id: string;
-      /** Resource Type */
-      resource_type: string;
+      /** User Agent */
+      user_agent?: string | null;
       /**
        * Timestamp
        * Format: date-time
        */
       timestamp: string;
-      /** User Agent */
-      user_agent?: string | null;
     };
     /**
      * ConnectionListResponse
      * @description Response model for listing connections.
      */
     mcp_server_langgraph__api__v1__connections__ConnectionListResponse: {
-      /** Cursor */
-      cursor?: string | null;
       /** Items */
       items: components["schemas"]["MCPConnectionSummary"][];
       /** Total */
       total: number;
+      /** Cursor */
+      cursor?: string | null;
     };
     /**
      * ConnectionListResponse
@@ -8182,21 +13107,61 @@ export interface components {
     mcp_server_langgraph__api__v1__projects__ConnectionListResponse: {
       /** Connections */
       connections: components["schemas"]["ConnectionRef"][];
-      /** Project Id */
-      project_id: string;
       /** Total */
       total: number;
+      /** Project Id */
+      project_id: string;
+    };
+    /**
+     * LoginRequest
+     * @description Login credentials.
+     */
+    mcp_server_langgraph__api__v1__user__LoginRequest: {
+      /**
+       * Username
+       * @description Username
+       */
+      username: string;
+      /**
+       * Password
+       * @description Password
+       */
+      password: string;
+    };
+    /**
+     * LoginResponse
+     * @description Token response from login.
+     */
+    mcp_server_langgraph__api__v1__user__LoginResponse: {
+      /**
+       * Access Token
+       * @description JWT access token
+       */
+      access_token: string;
+      /**
+       * Refresh Token
+       * @description JWT refresh token
+       */
+      refresh_token?: string | null;
+      /**
+       * Token Type
+       * @description Token type
+       * @default Bearer
+       */
+      token_type: string;
+      /**
+       * Expires In
+       * @description Token expiry in seconds
+       */
+      expires_in: number;
+      /** @description User information */
+      user: components["schemas"]["UserInfoResponse"];
     };
     /**
      * WorkflowEdge
      * @description An edge connecting two nodes in the workflow.
      */
     mcp_server_langgraph__api__v1__workflows__WorkflowEdge: {
-      /**
-       * Label
-       * @description Edge label
-       */
-      label?: string | null;
       /**
        * Source
        * @description Source node ID
@@ -8207,6 +13172,11 @@ export interface components {
        * @description Target node ID
        */
       target: string;
+      /**
+       * Label
+       * @description Edge label
+       */
+      label?: string | null;
     };
     /**
      * WorkflowNode
@@ -8214,47 +13184,30 @@ export interface components {
      */
     mcp_server_langgraph__api__v1__workflows__WorkflowNode: {
       /**
+       * Id
+       * @description Unique identifier for the node
+       */
+      id: string;
+      /**
+       * Type
+       * @description Node type (start, llm, tool, condition, end)
+       */
+      type: string;
+      /** @description Position on the canvas */
+      position: components["schemas"]["NodePosition"];
+      /**
        * Data
        * @description Node-specific data
        */
       data?: {
         [key: string]: unknown;
       };
-      /**
-       * Id
-       * @description Unique identifier for the node
-       */
-      id: string;
-      /** @description Position on the canvas */
-      position: components["schemas"]["NodePosition"];
-      /**
-       * Type
-       * @description Node type (start, llm, tool, condition, end)
-       */
-      type: string;
     };
     /**
      * WorkflowResponse
      * @description Response model for a workflow.
      */
     mcp_server_langgraph__api__v1__workflows__WorkflowResponse: {
-      /**
-       * Created At
-       * @description Creation timestamp
-       */
-      created_at?: string | null;
-      /**
-       * Description
-       * @description Workflow description
-       */
-      description?: string | null;
-      /**
-       * Edges
-       * @description Workflow edges
-       */
-      edges?: {
-        [key: string]: unknown;
-      }[];
       /**
        * Id
        * @description Workflow ID
@@ -8266,6 +13219,11 @@ export interface components {
        */
       name: string;
       /**
+       * Description
+       * @description Workflow description
+       */
+      description?: string | null;
+      /**
        * Nodes
        * @description Workflow nodes
        */
@@ -8273,10 +13231,182 @@ export interface components {
         [key: string]: unknown;
       }[];
       /**
+       * Edges
+       * @description Workflow edges
+       */
+      edges?: {
+        [key: string]: unknown;
+      }[];
+      /**
+       * Created At
+       * @description Creation timestamp
+       */
+      created_at?: string | null;
+      /**
        * Updated At
        * @description Last update timestamp
        */
       updated_at?: string | null;
+    };
+    /**
+     * LoginRequest
+     * @description Login request with username and password
+     */
+    mcp_server_langgraph__mcp__server_streamable__LoginRequest: {
+      /**
+       * Username
+       * @description Username
+       */
+      username: string;
+      /**
+       * Password
+       * @description Password
+       */
+      password: string;
+    };
+    /**
+     * LoginResponse
+     * @description Login response with JWT token
+     */
+    mcp_server_langgraph__mcp__server_streamable__LoginResponse: {
+      /**
+       * Access Token
+       * @description JWT access token
+       */
+      access_token: string;
+      /**
+       * Token Type
+       * @description Token type (always 'bearer')
+       * @default bearer
+       */
+      token_type: string;
+      /**
+       * Expires In
+       * @description Token expiration in seconds
+       */
+      expires_in: number;
+      /**
+       * User Id
+       * @description User identifier
+       */
+      user_id: string;
+      /**
+       * Username
+       * @description Username
+       */
+      username: string;
+      /**
+       * Roles
+       * @description User roles
+       */
+      roles: string[];
+    };
+    /**
+     * RefreshTokenRequest
+     * @description Token refresh request
+     */
+    mcp_server_langgraph__mcp__server_streamable__RefreshTokenRequest: {
+      /**
+       * Refresh Token
+       * @description Refresh token (Keycloak only)
+       */
+      refresh_token?: string | null;
+      /**
+       * Current Token
+       * @description Current access token (for InMemory provider)
+       */
+      current_token?: string | null;
+    };
+    /**
+     * PaginationParams
+     * @description Pagination parameters for list endpoints
+     *
+     *     Supports both page-based and offset-based pagination:
+     *     - Page-based: page + page_size
+     *     - Offset-based: offset + limit
+     *
+     *     Page-based is automatically converted to offset/limit for database queries.
+     * @example {
+     *       "limit": 20,
+     *       "offset": 0,
+     *       "page": 1,
+     *       "page_size": 20
+     *     }
+     * @example {
+     *       "limit": 50,
+     *       "offset": 100,
+     *       "page": 3,
+     *       "page_size": 50
+     *     }
+     */
+    PaginationParams: {
+      /**
+       * Page
+       * @description Page number (1-indexed)
+       * @default 1
+       * @example 1
+       * @example 2
+       * @example 10
+       */
+      page: number;
+      /**
+       * Page Size
+       * @description Number of items per page (max: 1000)
+       * @default 20
+       * @example 20
+       * @example 50
+       * @example 100
+       */
+      page_size: number;
+    };
+    /**
+     * PaginationMetadata
+     * @description Pagination metadata included in responses
+     *
+     *     Provides information for clients to navigate pages.
+     * @example {
+     *       "has_next": true,
+     *       "has_prev": true,
+     *       "next_page": 3,
+     *       "page": 2,
+     *       "page_size": 20,
+     *       "prev_page": 1,
+     *       "total": 100,
+     *       "total_pages": 5
+     *     }
+     */
+    PaginationMetadata: {
+      /**
+       * Total
+       * @description Total number of items across all pages
+       * @example 100
+       * @example 1000
+       */
+      total: number;
+      /**
+       * Page
+       * @description Current page number (1-indexed)
+       * @example 1
+       * @example 2
+       * @example 10
+       */
+      page: number;
+      /**
+       * Page Size
+       * @description Number of items per page
+       * @example 20
+       * @example 50
+       * @example 100
+       */
+      page_size: number;
+      /**
+       * Total Pages
+       * @description Total number of pages
+       * @example 5
+       * @example 20
+       * @example 100
+       */
+      total_pages: number;
     };
   };
   responses: never;
@@ -8302,132 +13432,42 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "application/json": unknown;
+          "application/json": {
+            [key: string]: unknown;
+          };
         };
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
       };
     };
   };
-  get_protected_resource_metadata__well_known_oauth_protected_resource_get: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ProtectedResourceMetadataResponse"];
-        };
-      };
-    };
-  };
-  options_protected_resource_metadata__well_known_oauth_protected_resource_options: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": unknown;
-        };
-      };
-    };
-  };
-  list_audit_logs_api_v1_admin_audit_logs_get: {
-    parameters: {
-      query?: {
-        /** @description Pagination cursor */
-        cursor?: string | null;
-        /** @description Maximum entries per page */
-        limit?: number;
-        /** @description Filter by user ID */
-        user_id?: string | null;
-        /** @description Filter by action type */
-        action?: string | null;
-        /** @description Filter by resource type */
-        resource_type?: string | null;
-        /** @description Filter by start time (ISO 8601) */
-        start_time?: string | null;
-        /** @description Filter by end time (ISO 8601) */
-        end_time?: string | null;
-        /** @description Field to sort by */
-        sort_by?: string | null;
-        /** @description Sort order (asc/desc) */
-        sort_order?: string | null;
-      };
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["PaginatedAuditLogResponse"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  list_users_api_v1_admin_users_get: {
-    parameters: {
-      query?: {
-        /** @description Search filter for username/email */
-        search?: string | null;
-      };
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["PaginatedUserResponse"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  create_user_api_v1_admin_users_post: {
+  login_auth_login_post: {
     parameters: {
       query?: never;
       header?: never;
@@ -8436,73 +13476,7 @@ export interface operations {
     };
     requestBody: {
       content: {
-        "application/json": components["schemas"]["CreateUserRequest"];
-      };
-    };
-    responses: {
-      /** @description Successful Response */
-      201: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["UserResponse"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  get_user_api_v1_admin_users__user_id__get: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        user_id: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["UserResponse"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  update_user_api_v1_admin_users__user_id__put: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        user_id: string;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["UpdateUserRequest"];
+        "application/json": components["schemas"]["mcp_server_langgraph__mcp__server_streamable__LoginRequest"];
       };
     };
     responses: {
@@ -8512,33 +13486,18 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "application/json": components["schemas"]["UserResponse"];
+          "application/json": components["schemas"]["mcp_server_langgraph__mcp__server_streamable__LoginResponse"];
         };
       };
-      /** @description Validation Error */
-      422: {
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
         headers: {
           [name: string]: unknown;
         };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
+        content?: never;
       };
-    };
-  };
-  delete_user_api_v1_admin_users__user_id__delete: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        user_id: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      204: {
+      /** @description Forbidden - Insufficient permissions */
+      403: {
         headers: {
           [name: string]: unknown;
         };
@@ -8553,9 +13512,84 @@ export interface operations {
           "application/json": components["schemas"]["HTTPValidationError"];
         };
       };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
     };
   };
-  get_agent_config_api_v1_agents_config_get: {
+  refresh_token_auth_refresh_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["mcp_server_langgraph__mcp__server_streamable__RefreshTokenRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["RefreshTokenResponse"];
+        };
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  handle_message_message_post: {
     parameters: {
       query?: never;
       header?: never;
@@ -8570,104 +13604,44 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "application/json": components["schemas"]["AgentConfigResponse"];
+          "application/json": unknown;
         };
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
       };
     };
   };
-  get_node_config_help_api_v1_ai_node_config_help_post: {
+  list_tools_tools_get: {
     parameters: {
       query?: never;
       header?: never;
       path?: never;
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["NodeConfigHelpRequest"];
-      };
-    };
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["NodeConfigHelpResponse"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  validate_node_config_api_v1_ai_node_config_validate_post: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["NodeConfigValidateRequest"];
-      };
-    };
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["NodeConfigValidateResponse"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  get_node_types_api_v1_ai_node_types_get: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["NodeTypesResponse"];
-        };
-      };
-    };
-  };
-  get_node_type_schema_api_v1_ai_node_types__node_type__schema_get: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        node_type: string;
-      };
       cookie?: never;
     };
     requestBody?: never;
@@ -8683,14 +13657,371 @@ export interface operations {
           };
         };
       };
-      /** @description Validation Error */
-      422: {
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  list_resources_resources_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
         headers: {
           [name: string]: unknown;
         };
         content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
+          "application/json": {
+            [key: string]: unknown;
+          };
         };
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  root_metrics_metrics_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": unknown;
+        };
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  health_check_api_v1_health_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HealthCheckResult"];
+        };
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  liveness_probe_api_v1_health_live_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["LivenessResult"];
+        };
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  startup_probe_api_v1_health_startup_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["StartupResult"];
+        };
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  readiness_probe_api_v1_health_ready_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ReadinessResult"];
+        };
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  dependency_status_api_v1_health_deps_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["DependencyStatus"][];
+        };
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
       };
     };
   };
@@ -8711,6 +14042,34 @@ export interface operations {
         content: {
           "application/json": components["schemas"]["APIKeyResponse"][];
         };
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
       };
     };
   };
@@ -8736,30 +14095,15 @@ export interface operations {
           "application/json": components["schemas"]["CreateAPIKeyResponse"];
         };
       };
-      /** @description Validation Error */
-      422: {
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
         headers: {
           [name: string]: unknown;
         };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
+        content?: never;
       };
-    };
-  };
-  revoke_api_key_api_v1_api_keys__key_id__delete: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        key_id: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      204: {
+      /** @description Forbidden - Insufficient permissions */
+      403: {
         headers: {
           [name: string]: unknown;
         };
@@ -8773,6 +14117,20 @@ export interface operations {
         content: {
           "application/json": components["schemas"]["HTTPValidationError"];
         };
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
       };
     };
   };
@@ -8796,6 +14154,20 @@ export interface operations {
           "application/json": components["schemas"]["RotateAPIKeyResponse"];
         };
       };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
       /** @description Validation Error */
       422: {
         headers: {
@@ -8805,31 +14177,478 @@ export interface operations {
           "application/json": components["schemas"]["HTTPValidationError"];
         };
       };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
     };
   };
-  list_audit_events_api_v1_audit_events_get: {
+  revoke_api_key_api_v1_api_keys__key_id__delete: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        key_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  list_service_principals_api_v1_service_principals__get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ServicePrincipalResponse"][];
+        };
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  create_service_principal_api_v1_service_principals__post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["CreateServicePrincipalRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["CreateServicePrincipalResponse"];
+        };
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  get_service_principal_api_v1_service_principals__service_id__get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        service_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ServicePrincipalResponse"];
+        };
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  delete_service_principal_api_v1_service_principals__service_id__delete: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        service_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  rotate_service_principal_secret_api_v1_service_principals__service_id__rotate_secret_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        service_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["RotateSecretResponse"];
+        };
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  associate_service_principal_with_user_api_v1_service_principals__service_id__associate_user_post: {
+    parameters: {
+      query: {
+        user_id: string;
+        inherit_permissions?: boolean;
+      };
+      header?: never;
+      path: {
+        service_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ServicePrincipalResponse"];
+        };
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  get_user_data_api_v1_users_me_data_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["UserDataExport"];
+        };
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  export_user_data_api_v1_users_me_export_get: {
     parameters: {
       query?: {
-        /** @description Filter by event category */
-        category?: string | null;
-        /** @description Filter by event type */
-        event_type?: string | null;
-        /** @description Filter by regulation tag */
-        regulation?: string | null;
-        /** @description Filter by actor ID */
-        actor_id?: string | null;
-        /** @description Filter by resource type */
-        resource_type?: string | null;
-        /** @description Filter by resource ID */
-        resource_id?: string | null;
-        /** @description Start of time range */
-        start_time?: string | null;
-        /** @description End of time range */
-        end_time?: string | null;
-        /** @description Page number */
-        page?: number;
-        /** @description Page size */
-        page_size?: number;
+        /** @description Export format: json or csv */
+        format?: string;
       };
       header?: never;
       path?: never;
@@ -8843,8 +14662,22 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "application/json": components["schemas"]["AuditEventsListResponse"];
+          "application/json": unknown;
         };
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
       };
       /** @description Validation Error */
       422: {
@@ -8855,15 +14688,30 @@ export interface operations {
           "application/json": components["schemas"]["HTTPValidationError"];
         };
       };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
     };
   };
-  get_audit_event_api_v1_audit_events__event_id__get: {
+  delete_user_account_api_v1_users_me_delete: {
     parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        event_id: string;
+      query: {
+        /** @description Must be true to confirm account deletion */
+        confirm: boolean;
       };
+      header?: never;
+      path?: never;
       cookie?: never;
     };
     requestBody?: never;
@@ -8879,6 +14727,20 @@ export interface operations {
           };
         };
       };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
       /** @description Validation Error */
       422: {
         headers: {
@@ -8888,21 +14750,203 @@ export interface operations {
           "application/json": components["schemas"]["HTTPValidationError"];
         };
       };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
     };
   };
-  export_audit_logs_api_v1_audit_export_get: {
+  update_user_profile_api_v1_users_me_patch: {
     parameters: {
-      query: {
-        /** @description Export format: json or csv */
-        format?: string;
-        /** @description Start of time range */
-        start_time: string;
-        /** @description End of time range */
-        end_time: string;
-        /** @description Filter by category */
-        category?: string | null;
-        /** @description Filter by regulation */
-        regulation?: string | null;
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["UserProfileUpdate"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            [key: string]: unknown;
+          };
+        };
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  get_consent_status_api_v1_users_me_consent_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ConsentResponse"];
+        };
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  update_consent_api_v1_users_me_consent_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["ConsentRecord"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ConsentResponse"];
+        };
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  list_users_scim_v2_Users_get: {
+    parameters: {
+      query?: {
+        /** @description SCIM filter expression */
+        filter?: string | null;
+        /** @description 1-based start index */
+        startIndex?: number;
+        /** @description Number of results */
+        count?: number;
       };
       header?: never;
       path?: never;
@@ -8916,8 +14960,22 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "application/json": unknown;
+          "application/json": components["schemas"]["SCIMListResponse"];
         };
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
       };
       /** @description Validation Error */
       422: {
@@ -8928,15 +14986,977 @@ export interface operations {
           "application/json": components["schemas"]["HTTPValidationError"];
         };
       };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
     };
   };
-  verify_integrity_api_v1_audit_integrity_verify_get: {
+  create_user_scim_v2_Users_post: {
     parameters: {
-      query: {
-        /** @description Start of time range */
-        start_time: string;
-        /** @description End of time range */
-        end_time: string;
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          [key: string]: unknown;
+        };
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["SCIMUser"];
+        };
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  get_user_scim_v2_Users__user_id__get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        user_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["SCIMUser"];
+        };
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  replace_user_scim_v2_Users__user_id__put: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        user_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          [key: string]: unknown;
+        };
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["SCIMUser"];
+        };
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  delete_user_scim_v2_Users__user_id__delete: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        user_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  update_user_scim_v2_Users__user_id__patch: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        user_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["SCIMPatchRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["SCIMUser"];
+        };
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  create_group_scim_v2_Groups_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          [key: string]: unknown;
+        };
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["SCIMGroup"];
+        };
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  get_group_scim_v2_Groups__group_id__get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        group_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["SCIMGroup"];
+        };
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  list_workflows_api_v1_studio_workflows_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["mcp_server_langgraph__api__studio__WorkflowResponse"][];
+        };
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  create_workflow_api_v1_studio_workflows_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["CreateWorkflowRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["mcp_server_langgraph__api__studio__WorkflowResponse"];
+        };
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  get_workflow_api_v1_studio_workflows__workflow_id__get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        workflow_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["mcp_server_langgraph__api__studio__WorkflowResponse"];
+        };
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  update_workflow_api_v1_studio_workflows__workflow_id__put: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        workflow_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["UpdateWorkflowRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["mcp_server_langgraph__api__studio__WorkflowResponse"];
+        };
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  delete_workflow_api_v1_studio_workflows__workflow_id__delete: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        workflow_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  list_templates_api_v1_studio_templates_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["TemplateResponse"][];
+        };
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  recommend_templates_api_v1_studio_templates_recommend_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["RecommendTemplatesRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["RecommendationsResponse"];
+        };
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  submit_heart_metrics_api_v1_metrics_heart_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["HeartMetricsBatch"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["MetricsReceiptResponse"];
+        };
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  submit_events_api_v1_metrics_events_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["EventBatch"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["EventReceiptResponse"];
+        };
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  get_aggregate_metrics_api_v1_metrics_heart_aggregate_get: {
+    parameters: {
+      query?: {
+        /** @description Time period (e.g., '7d', '30d') */
+        period?: string;
+        /** @description Filter by app name */
+        app?: string | null;
       };
       header?: never;
       path?: never;
@@ -8950,8 +15970,22 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "application/json": components["schemas"]["IntegrityVerificationResponse"];
+          "application/json": components["schemas"]["AggregateMetrics"];
         };
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
       };
       /** @description Validation Error */
       422: {
@@ -8962,41 +15996,23 @@ export interface operations {
           "application/json": components["schemas"]["HTTPValidationError"];
         };
       };
-    };
-  };
-  apply_retention_policy_api_v1_audit_retention_apply_post: {
-    parameters: {
-      query: {
-        /** @description Regulation to apply retention for */
-        regulation: string;
-      };
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
         headers: {
           [name: string]: unknown;
         };
-        content: {
-          "application/json": components["schemas"]["RetentionApplyResponse"];
-        };
+        content?: never;
       };
-      /** @description Validation Error */
-      422: {
+      /** @description Internal Server Error */
+      500: {
         headers: {
           [name: string]: unknown;
         };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
+        content?: never;
       };
     };
   };
-  get_retention_status_api_v1_audit_retention_status_get: {
+  get_dashboard_api_v1_metrics_dashboard_get: {
     parameters: {
       query?: never;
       header?: never;
@@ -9012,18 +16028,401 @@ export interface operations {
         };
         content: {
           "application/json": {
-            [key: string]: {
-              [key: string]: number;
-            };
+            [key: string]: unknown;
           };
         };
       };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
     };
   };
-  backchannel_logout_api_v1_auth_backchannel_logout_post: {
+  submit_feedback_api_v1_metrics_feedback_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["FeedbackRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["FeedbackResponse"];
+        };
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  get_features_api_v1_features_get: {
     parameters: {
       query?: {
-        logout_token?: string | null;
+        /** @description User role for feature access (user, admin, viewer) */
+        role?: string;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            [key: string]: boolean;
+          };
+        };
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  get_me_api_v1_me_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["UserInfoResponse"];
+        };
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  update_persona_preferences_api_v1_me_preferences_patch: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["PersonaPreferencesUpdate"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["UserInfoResponse"];
+        };
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  login_api_v1_login_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["mcp_server_langgraph__api__v1__user__LoginRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["mcp_server_langgraph__api__v1__user__LoginResponse"];
+        };
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  logout_api_v1_logout_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: {
+      content: {
+        "application/json": components["schemas"]["LogoutRequest"] | null;
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["LogoutResponse"];
+        };
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  oauth2_login_api_v1_auth_login_get: {
+    parameters: {
+      query?: {
+        /** @description Optional custom redirect URI */
+        redirect_uri?: string | null;
+        /** @description PAR request_uri (RFC 9126) */
+        request_uri?: string | null;
       };
       header?: never;
       path?: never;
@@ -9040,8 +16439,15 @@ export interface operations {
           "application/json": unknown;
         };
       };
-      /** @description Invalid logout token */
-      400: {
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
         headers: {
           [name: string]: unknown;
         };
@@ -9056,8 +16462,15 @@ export interface operations {
           "application/json": components["schemas"]["HTTPValidationError"];
         };
       };
-      /** @description Service unavailable */
-      503: {
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
         headers: {
           [name: string]: unknown;
         };
@@ -9092,6 +16505,20 @@ export interface operations {
           "application/json": unknown;
         };
       };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
       /** @description Validation Error */
       422: {
         headers: {
@@ -9100,6 +16527,203 @@ export interface operations {
         content: {
           "application/json": components["schemas"]["HTTPValidationError"];
         };
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  pushed_authorization_request_api_v1_auth_par_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["PARRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["PARResponse"];
+        };
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  token_introspection_api_v1_auth_introspect_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["IntrospectionRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["IntrospectionResponse"];
+        };
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  oauth2_refresh_api_v1_auth_refresh_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["mcp_server_langgraph__api__v1__auth__RefreshTokenRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["TokenResponse"];
+        };
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
       };
     };
   };
@@ -9120,6 +16744,34 @@ export interface operations {
         content: {
           "application/json": components["schemas"]["DeviceCodeResponse"];
         };
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
       };
       /** @description Authentication service unavailable */
       503: {
@@ -9163,6 +16815,20 @@ export interface operations {
           "application/json": components["schemas"]["DeviceAuthErrorResponse"];
         };
       };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
       /** @description Validation Error */
       422: {
         headers: {
@@ -9171,6 +16837,20 @@ export interface operations {
         content: {
           "application/json": components["schemas"]["HTTPValidationError"];
         };
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
       };
       /** @description Authentication service unavailable */
       503: {
@@ -9183,46 +16863,10 @@ export interface operations {
       };
     };
   };
-  token_introspection_api_v1_auth_introspect_post: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["IntrospectionRequest"];
-      };
-    };
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["IntrospectionResponse"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  oauth2_login_api_v1_auth_login_get: {
+  backchannel_logout_api_v1_auth_backchannel_logout_post: {
     parameters: {
       query?: {
-        /** @description Optional custom redirect URI */
-        redirect_uri?: string | null;
-        /** @description PAR request_uri (RFC 9126) */
-        request_uri?: string | null;
+        logout_token?: string | null;
       };
       header?: never;
       path?: never;
@@ -9239,6 +16883,27 @@ export interface operations {
           "application/json": unknown;
         };
       };
+      /** @description Invalid logout token */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
       /** @description Validation Error */
       422: {
         headers: {
@@ -9247,6 +16912,27 @@ export interface operations {
         content: {
           "application/json": components["schemas"]["HTTPValidationError"];
         };
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Service unavailable */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
       };
     };
   };
@@ -9273,6 +16959,20 @@ export interface operations {
           "application/json": unknown;
         };
       };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
       /** @description Validation Error */
       422: {
         headers: {
@@ -9281,6 +16981,20 @@ export interface operations {
         content: {
           "application/json": components["schemas"]["HTTPValidationError"];
         };
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
       };
     };
   };
@@ -9293,7 +17007,7 @@ export interface operations {
     };
     requestBody?: {
       content: {
-        "application/json": components["schemas"]["fastapi___compat__v2__Body_native_logout_api_v1_auth_logout_post"];
+        "application/json": components["schemas"]["Body_native_logout_api_v1_auth_logout_post"];
       };
     };
     responses: {
@@ -9306,6 +17020,20 @@ export interface operations {
           "application/json": unknown;
         };
       };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
       /** @description Validation Error */
       422: {
         headers: {
@@ -9315,9 +17043,97 @@ export interface operations {
           "application/json": components["schemas"]["HTTPValidationError"];
         };
       };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
     };
   };
-  pushed_authorization_request_api_v1_auth_par_post: {
+  list_projects_api_v1_projects_get: {
+    parameters: {
+      query?: {
+        /** @description Page number (1-indexed) */
+        page?: number;
+        /** @description Items per page */
+        per_page?: number;
+        /** @description Filter by organization ID */
+        organization_id?: string | null;
+        /** @description Filter by project status (active, archived) */
+        status?: string | null;
+        /** @description Filter by owner user ID */
+        owner_id?: string | null;
+        /** @description Search in name and description */
+        search?: string | null;
+        /** @description Field to sort by */
+        sort_by?: "name" | "created_at" | "updated_at";
+        /** @description Sort order */
+        sort_order?: "asc" | "desc";
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ProjectListResponse"];
+        };
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  create_project_api_v1_projects_post: {
     parameters: {
       query?: never;
       header?: never;
@@ -9326,7 +17142,7 @@ export interface operations {
     };
     requestBody: {
       content: {
-        "application/json": components["schemas"]["PARRequest"];
+        "application/json": components["schemas"]["ProjectCreate"];
       };
     };
     responses: {
@@ -9336,8 +17152,22 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "application/json": components["schemas"]["PARResponse"];
+          "application/json": components["schemas"]["ProjectResponse"];
         };
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
       };
       /** @description Validation Error */
       422: {
@@ -9348,18 +17178,93 @@ export interface operations {
           "application/json": components["schemas"]["HTTPValidationError"];
         };
       };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
     };
   };
-  oauth2_refresh_api_v1_auth_refresh_post: {
+  get_project_api_v1_projects__project_id__get: {
     parameters: {
       query?: never;
       header?: never;
-      path?: never;
+      path: {
+        project_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ProjectDetailResponse"];
+        };
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  update_project_api_v1_projects__project_id__put: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        project_id: string;
+      };
       cookie?: never;
     };
     requestBody: {
       content: {
-        "application/json": components["schemas"]["RefreshTokenRequest"];
+        "application/json": components["schemas"]["ProjectUpdate"];
       };
     };
     responses: {
@@ -9369,8 +17274,22 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "application/json": components["schemas"]["TokenResponse"];
+          "application/json": components["schemas"]["ProjectResponse"];
         };
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
       };
       /** @description Validation Error */
       422: {
@@ -9380,6 +17299,3320 @@ export interface operations {
         content: {
           "application/json": components["schemas"]["HTTPValidationError"];
         };
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  delete_project_api_v1_projects__project_id__delete: {
+    parameters: {
+      query?: {
+        cascade?: boolean;
+      };
+      header?: never;
+      path: {
+        project_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  list_project_workflows_api_v1_projects__project_id__workflows_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        project_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["WorkflowListResponse"];
+        };
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  add_workflow_to_project_api_v1_projects__project_id__workflows_post: {
+    parameters: {
+      query: {
+        workflow_id: string;
+        workflow_name?: string;
+      };
+      header?: never;
+      path: {
+        project_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ProjectDetailResponse"];
+        };
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  list_project_sessions_api_v1_projects__project_id__sessions_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        project_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["SessionListResponse"];
+        };
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  add_session_to_project_api_v1_projects__project_id__sessions_post: {
+    parameters: {
+      query: {
+        /** @description Session ID to add */
+        session_id: string;
+        /** @description Session display name */
+        session_name?: string;
+      };
+      header?: never;
+      path: {
+        project_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ProjectDetailResponse"];
+        };
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  list_project_connections_api_v1_projects__project_id__connections_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        project_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["mcp_server_langgraph__api__v1__projects__ConnectionListResponse"];
+        };
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  add_connection_to_project_api_v1_projects__project_id__connections_post: {
+    parameters: {
+      query: {
+        connection_type: string;
+        connection_id: string;
+        connection_name?: string;
+      };
+      header?: never;
+      path: {
+        project_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ProjectDetailResponse"];
+        };
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  remove_workflow_from_project_api_v1_projects__project_id__workflows__workflow_id__delete: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        project_id: string;
+        workflow_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ProjectDetailResponse"];
+        };
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  remove_session_from_project_api_v1_projects__project_id__sessions__session_id__delete: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        project_id: string;
+        session_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ProjectDetailResponse"];
+        };
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  remove_connection_from_project_api_v1_projects__project_id__connections__connection_id__delete: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        project_id: string;
+        connection_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  list_project_members_api_v1_projects__project_id__members_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        project_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["MemberListResponse"];
+        };
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  add_member_to_project_api_v1_projects__project_id__members_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        project_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["AddMemberRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ProjectDetailResponse"];
+        };
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  remove_member_from_project_api_v1_projects__project_id__members__user_id__delete: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        project_id: string;
+        user_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ProjectDetailResponse"];
+        };
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  get_project_traces_api_v1_projects__project_id__observability_traces_get: {
+    parameters: {
+      query?: {
+        limit?: number;
+      };
+      header?: never;
+      path: {
+        project_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ProjectTracesResponse"];
+        };
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  get_project_metrics_api_v1_projects__project_id__observability_metrics_get: {
+    parameters: {
+      query?: {
+        start_date?: string | null;
+        end_date?: string | null;
+      };
+      header?: never;
+      path: {
+        project_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ProjectMetricsResponse"];
+        };
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  get_project_logs_api_v1_projects__project_id__observability_logs_get: {
+    parameters: {
+      query?: {
+        limit?: number;
+        level?: string | null;
+      };
+      header?: never;
+      path: {
+        project_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ProjectLogsResponse"];
+        };
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  get_project_alerts_api_v1_projects__project_id__observability_alerts_get: {
+    parameters: {
+      query?: {
+        status_filter?: string | null;
+      };
+      header?: never;
+      path: {
+        project_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ProjectAlertsResponse"];
+        };
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  get_project_cost_summary_api_v1_projects__project_id__cost_summary_get: {
+    parameters: {
+      query?: {
+        start_date?: string | null;
+        end_date?: string | null;
+      };
+      header?: never;
+      path: {
+        project_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ProjectCostSummaryResponse"];
+        };
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  get_project_cost_by_model_api_v1_projects__project_id__cost_by_model_get: {
+    parameters: {
+      query?: {
+        start_date?: string | null;
+        end_date?: string | null;
+      };
+      header?: never;
+      path: {
+        project_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ProjectCostByModelResponse"];
+        };
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  get_project_cost_history_api_v1_projects__project_id__cost_history_get: {
+    parameters: {
+      query?: {
+        start_date?: string | null;
+        end_date?: string | null;
+      };
+      header?: never;
+      path: {
+        project_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ProjectCostHistoryResponse"];
+        };
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  list_workflows_api_v1_workflows_get: {
+    parameters: {
+      query?: {
+        /** @description Pagination cursor */
+        cursor?: string | null;
+        /** @description Items per page */
+        limit?: number;
+        /** @description Filter by workflow status (draft, published, archived) */
+        status?: string | null;
+        /** @description Filter by owner user ID */
+        owner_id?: string | null;
+        /** @description Search in name and description */
+        search?: string | null;
+        /** @description Field to sort by */
+        sort_by?: "name" | "created_at" | "updated_at";
+        /** @description Sort order */
+        sort_order?: "asc" | "desc";
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["CursorPaginatedResponse_dict_str__Any__"];
+        };
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  create_workflow_api_v1_workflows_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["WorkflowCreateRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["mcp_server_langgraph__api__v1__workflows__WorkflowResponse"];
+        };
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  list_shared_with_me_api_v1_workflows_shared_with_me_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["mcp_server_langgraph__api__v1__workflows__WorkflowResponse"][];
+        };
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  get_public_workflow_api_v1_workflows_public__share_link__get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        share_link: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["mcp_server_langgraph__api__v1__workflows__WorkflowResponse"];
+        };
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  get_workflow_api_v1_workflows__workflow_id__get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        workflow_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["mcp_server_langgraph__api__v1__workflows__WorkflowResponse"];
+        };
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  update_workflow_api_v1_workflows__workflow_id__put: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        workflow_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["WorkflowUpdateRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["mcp_server_langgraph__api__v1__workflows__WorkflowResponse"];
+        };
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  delete_workflow_api_v1_workflows__workflow_id__delete: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        workflow_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  get_workflow_shares_api_v1_workflows__workflow_id__shares_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        workflow_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["WorkflowSharesResponse"];
+        };
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  add_workflow_share_api_v1_workflows__workflow_id__shares_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        workflow_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["AddWorkflowShareRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            [key: string]: string;
+          };
+        };
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  remove_workflow_share_api_v1_workflows__workflow_id__shares__user_id__delete: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        workflow_id: string;
+        user_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  update_workflow_public_api_v1_workflows__workflow_id__public_put: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        workflow_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["UpdateWorkflowPublicRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            [key: string]: unknown;
+          };
+        };
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  generate_workflow_api_v1_workflows_generate_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["GenerateWorkflowRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["GenerateWorkflowResponse"];
+        };
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  list_executions_api_v1_workflows__workflow_id__executions_get: {
+    parameters: {
+      query?: {
+        /** @description Filter by status */
+        status?: string | null;
+        /** @description Maximum entries per page */
+        limit?: number;
+        /** @description Pagination cursor */
+        cursor?: string | null;
+      };
+      header?: never;
+      path: {
+        workflow_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["PaginatedExecutionResponse"];
+        };
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  get_execution_api_v1_workflows__workflow_id__executions__execution_id__get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        workflow_id: string;
+        execution_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ExecutionResponse"];
+        };
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  list_sessions_api_v1_sessions_get: {
+    parameters: {
+      query?: {
+        /** @description Pagination cursor */
+        cursor?: string | null;
+        /** @description Items per page */
+        limit?: number;
+        /** @description Filter by workflow ID */
+        workflow_id?: string | null;
+        /** @description Filter by session status (active, archived) */
+        status?: string | null;
+        /** @description Search in title */
+        search?: string | null;
+        /** @description Field to sort by (use 'name', 'title' is deprecated) */
+        sort_by?: "name" | "title" | "created_at" | "updated_at";
+        /** @description Sort order */
+        sort_order?: "asc" | "desc";
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["CursorPaginatedResponse_dict_str__Any__"];
+        };
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  create_session_api_v1_sessions_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["SessionCreateRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["SessionResponse"];
+        };
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  get_session_api_v1_sessions__session_id__get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        session_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["SessionResponse"];
+        };
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  delete_session_api_v1_sessions__session_id__delete: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        session_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  update_session_config_api_v1_sessions__session_id__config_patch: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        session_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["SessionConfigUpdateRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["SessionResponse"];
+        };
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  get_session_messages_api_v1_sessions__session_id__messages_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        session_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["MessageResponse"][];
+        };
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  add_message_api_v1_sessions__session_id__messages_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        session_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["MessageRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            [key: string]: unknown;
+          };
+        };
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  clear_messages_api_v1_sessions__session_id__messages_delete: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        session_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  generate_title_api_v1_sessions_generate_title_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["GenerateTitleRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["GenerateTitleResponse"];
+        };
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  rate_message_api_v1_sessions__session_id__messages__message_id__rating_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        session_id: string;
+        message_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["MessageRatingRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["MessageRatingResponse"];
+        };
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  semantic_search_api_v1_artifacts_search_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["SemanticSearchRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["SemanticSearchResponse"];
+        };
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  list_artifacts_api_v1_artifacts_get: {
+    parameters: {
+      query?: {
+        /** @description Filter by session ID */
+        session_id?: string | null;
+        /** @description Max items to return */
+        limit?: number;
+        /** @description Pagination cursor */
+        cursor?: string | null;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ListArtifactsResponse"];
+        };
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  create_artifact_api_v1_artifacts_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["ArtifactCreateRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ArtifactCreateResponse"];
+        };
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  get_artifact_api_v1_artifacts__artifact_id__get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        artifact_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ArtifactResponse"];
+        };
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  update_artifact_api_v1_artifacts__artifact_id__put: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        artifact_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["ArtifactUpdateRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ArtifactUpdateResponse"];
+        };
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  delete_artifact_api_v1_artifacts__artifact_id__delete: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        artifact_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  find_similar_artifacts_api_v1_artifacts__artifact_id__similar_get: {
+    parameters: {
+      query?: {
+        /** @description Max results */
+        limit?: number;
+      };
+      header?: never;
+      path: {
+        artifact_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["FindSimilarResponse"];
+        };
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  get_artifact_versions_api_v1_artifacts__artifact_id__versions_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        artifact_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ArtifactVersionResponse"][];
+        };
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  fork_artifact_api_v1_artifacts__artifact_id__fork_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        artifact_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["ArtifactForkRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ArtifactForkResponse"];
+        };
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  bootstrap_workflow_api_v1_sessions__session_id__bootstrap_workflow_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        session_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["BootstrapRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["BootstrapResponse"];
+        };
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
       };
     };
   };
@@ -9405,6 +20638,20 @@ export interface operations {
           "application/json": components["schemas"]["ChatCompletionResponse"];
         };
       };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
       /** @description Validation Error */
       422: {
         headers: {
@@ -9413,6 +20660,20 @@ export interface operations {
         content: {
           "application/json": components["schemas"]["HTTPValidationError"];
         };
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
       };
     };
   };
@@ -9438,6 +20699,20 @@ export interface operations {
           "application/json": unknown;
         };
       };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
       /** @description Validation Error */
       422: {
         headers: {
@@ -9446,6 +20721,20 @@ export interface operations {
         content: {
           "application/json": components["schemas"]["HTTPValidationError"];
         };
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
       };
     };
   };
@@ -9471,41 +20760,19 @@ export interface operations {
           }[];
         };
       };
-      /** @description Validation Error */
-      422: {
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
         headers: {
           [name: string]: unknown;
         };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
+        content?: never;
       };
-    };
-  };
-  get_eu_ai_act_report_api_v1_compliance_reports_eu_ai_act_get: {
-    parameters: {
-      query: {
-        /** @description Start of time range */
-        start_time: string;
-        /** @description End of time range */
-        end_time: string;
-      };
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
+      /** @description Forbidden - Insufficient permissions */
+      403: {
         headers: {
           [name: string]: unknown;
         };
-        content: {
-          "application/json": {
-            [key: string]: unknown;
-          };
-        };
+        content?: never;
       };
       /** @description Validation Error */
       422: {
@@ -9516,197 +20783,231 @@ export interface operations {
           "application/json": components["schemas"]["HTTPValidationError"];
         };
       };
-    };
-  };
-  get_fedramp_report_api_v1_compliance_reports_fedramp_get: {
-    parameters: {
-      query: {
-        /** @description Start of time range */
-        start_time: string;
-        /** @description End of time range */
-        end_time: string;
-      };
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
         headers: {
           [name: string]: unknown;
         };
-        content: {
-          "application/json": {
-            [key: string]: unknown;
-          };
-        };
+        content?: never;
       };
-      /** @description Validation Error */
-      422: {
+      /** @description Internal Server Error */
+      500: {
         headers: {
           [name: string]: unknown;
         };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
+        content?: never;
       };
     };
   };
-  get_gdpr_report_api_v1_compliance_reports_gdpr_get: {
-    parameters: {
-      query: {
-        /** @description Start of time range */
-        start_time: string;
-        /** @description End of time range */
-        end_time: string;
-      };
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": {
-            [key: string]: unknown;
-          };
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  get_hipaa_report_api_v1_compliance_reports_hipaa_get: {
-    parameters: {
-      query: {
-        /** @description Start of time range */
-        start_time: string;
-        /** @description End of time range */
-        end_time: string;
-      };
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": {
-            [key: string]: unknown;
-          };
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  get_soc2_report_api_v1_compliance_reports_soc2_get: {
-    parameters: {
-      query: {
-        /** @description Start of time range */
-        start_time: string;
-        /** @description End of time range */
-        end_time: string;
-      };
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": {
-            [key: string]: unknown;
-          };
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  get_compliance_summary_api_v1_compliance_reports_summary_get: {
-    parameters: {
-      query: {
-        /** @description Start of time range */
-        start_time: string;
-        /** @description End of time range */
-        end_time: string;
-      };
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": {
-            [key: string]: unknown;
-          };
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  list_templates_api_v1_connection_templates_get: {
+  get_summary_api_v1_cost_summary_get: {
     parameters: {
       query?: {
-        /** @description Filter by category */
-        category?: string | null;
-        /** @description Filter by authentication type */
-        auth_type?: ("none" | "api_key" | "oauth2") | null;
-        /** @description Search by name or description */
+        /** @description Start date (YYYY-MM-DD) */
+        start_date?: string | null;
+        /** @description End date (YYYY-MM-DD) */
+        end_date?: string | null;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["CostSummaryResponse"];
+        };
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  get_by_model_api_v1_cost_by_model_get: {
+    parameters: {
+      query?: {
+        /** @description Start date (YYYY-MM-DD) */
+        start_date?: string | null;
+        /** @description End date (YYYY-MM-DD) */
+        end_date?: string | null;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ModelCostResponse"][];
+        };
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  get_history_api_v1_cost_history_get: {
+    parameters: {
+      query?: {
+        /** @description Start date (YYYY-MM-DD) */
+        start_date?: string | null;
+        /** @description End date (YYYY-MM-DD) */
+        end_date?: string | null;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["DailyCostResponse"][];
+        };
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  list_traces_api_v1_observability_traces_get: {
+    parameters: {
+      query?: {
+        /** @description Pagination cursor */
+        cursor?: string | null;
+        /** @description Items per page */
+        limit?: number;
+        /** @description Filter by session ID */
+        session_id?: string | null;
+        /** @description Filter by user ID */
+        user_id?: string | null;
+        /** @description Filter by workflow ID */
+        workflow_id?: string | null;
+        /** @description Filter by project ID */
+        project_id?: string | null;
+        /** @description Filter by organization ID (multi-tenant) */
+        organization_id?: string | null;
+        /** @description Search in trace name */
         search?: string | null;
+        /** @description Field to sort by */
+        sort_by?: "name" | "start_time" | "duration_ms";
+        /** @description Sort order */
+        sort_order?: "asc" | "desc";
       };
       header?: never;
       path?: never;
@@ -9720,8 +21021,22 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "application/json": components["schemas"]["TemplateListResponse"];
+          "application/json": components["schemas"]["CursorPaginatedResponse_dict_str__Any__"];
         };
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
       };
       /** @description Validation Error */
       422: {
@@ -9732,9 +21047,650 @@ export interface operations {
           "application/json": components["schemas"]["HTTPValidationError"];
         };
       };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
     };
   };
-  list_categories_api_v1_connection_templates_categories_get: {
+  get_trace_api_v1_observability_traces__trace_id__get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        trace_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["TraceResponse"];
+        };
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  get_metrics_api_v1_observability_metrics_get: {
+    parameters: {
+      query?: {
+        /** @description Start date (YYYY-MM-DD) */
+        start_date?: string | null;
+        /** @description End date (YYYY-MM-DD) */
+        end_date?: string | null;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["MetricsResponse"];
+        };
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  list_logs_api_v1_observability_logs_get: {
+    parameters: {
+      query?: {
+        /** @description Pagination cursor */
+        cursor?: string | null;
+        /** @description Items per page */
+        limit?: number;
+        /** @description Filter by log level */
+        level?: ("debug" | "info" | "warn" | "error" | "fatal") | null;
+        /** @description Search in log message */
+        search?: string | null;
+        /** @description Filter by correlated trace ID */
+        trace_id?: string | null;
+        /** @description Filter by session ID */
+        session_id?: string | null;
+        /** @description Filter by user ID */
+        user_id?: string | null;
+        /** @description Filter by workflow ID */
+        workflow_id?: string | null;
+        /** @description Filter by project ID */
+        project_id?: string | null;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["CursorPaginatedResponse_dict_str__Any__"];
+        };
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  list_alerts_api_v1_observability_alerts_get: {
+    parameters: {
+      query?: {
+        /** @description Filter by alert state */
+        state?: ("pending" | "firing" | "resolved" | "silenced") | null;
+        /** @description Filter by severity level */
+        severity?: ("info" | "warning" | "error" | "critical") | null;
+        /** @description Filter by service name */
+        service_name?: string | null;
+        /** @description Filter by workflow ID */
+        workflow_id?: string | null;
+        /** @description Filter by project ID */
+        project_id?: string | null;
+        /** @description Maximum alerts to return */
+        limit?: number;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["CursorPaginatedResponse_dict_str__Any__"];
+        };
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  list_alert_rules_api_v1_observability_alerts_rules_get: {
+    parameters: {
+      query?: {
+        /** @description Only return enabled rules */
+        enabled_only?: boolean;
+        /** @description Maximum rules to return */
+        limit?: number;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["AlertRuleResponse"][];
+        };
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  get_alert_api_v1_observability_alerts__alert_id__get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        alert_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["AlertResponse"];
+        };
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  get_metrics_by_session_api_v1_observability_metrics_by_session__session_id__get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        session_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["SessionMetricsResponse"];
+        };
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  get_metrics_by_workflow_api_v1_observability_metrics_by_workflow__workflow_id__get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        workflow_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["WorkflowMetricsResponse"];
+        };
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  get_metrics_by_user_api_v1_observability_metrics_by_user__user_id__get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        user_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["UserMetricsResponse"];
+        };
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  get_streaming_metrics_api_v1_mcp_metrics_streams_get: {
+    parameters: {
+      query?: {
+        active_only?: boolean;
+        limit?: number;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            [key: string]: unknown;
+          };
+        };
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  list_resources_api_v1_mcp_resources_get: {
     parameters: {
       query?: never;
       header?: never;
@@ -9749,18 +21705,47 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "application/json": components["schemas"]["CategoryListResponse"];
+          "application/json": components["schemas"]["ResourceListResponse"];
         };
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
       };
     };
   };
-  get_template_api_v1_connection_templates__template_id__get: {
+  read_resource_api_v1_mcp_resources_content_get: {
     parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        template_id: string;
+      query: {
+        /** @description Resource URI to read */
+        uri: string;
       };
+      header?: never;
+      path?: never;
       cookie?: never;
     };
     requestBody?: never;
@@ -9771,8 +21756,22 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "application/json": components["schemas"]["ConnectionTemplate"];
+          "application/json": components["schemas"]["ResourceContentResponse"];
         };
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
       };
       /** @description Validation Error */
       422: {
@@ -9783,20 +21782,143 @@ export interface operations {
           "application/json": components["schemas"]["HTTPValidationError"];
         };
       };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
     };
   };
-  apply_template_api_v1_connection_templates__template_id__apply_post: {
+  list_prompts_api_v1_mcp_prompts_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["PromptListResponse"];
+        };
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  get_prompt_api_v1_mcp_prompts__prompt_name__post: {
     parameters: {
       query?: never;
       header?: never;
       path: {
-        template_id: string;
+        prompt_name: string;
       };
+      cookie?: never;
+    };
+    requestBody?: {
+      content: {
+        "application/json": components["schemas"]["PromptGetRequest"] | null;
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["PromptGetResponse"];
+        };
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  create_sampling_api_v1_mcp_sampling_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
       cookie?: never;
     };
     requestBody: {
       content: {
-        "application/json": components["schemas"]["ApplyTemplateRequest"];
+        "application/json": components["schemas"]["SamplingRequest"];
       };
     };
     responses: {
@@ -9806,8 +21928,22 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "application/json": components["schemas"]["ApplyTemplateResponse"];
+          "application/json": components["schemas"]["SamplingResponseModel"];
         };
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
       };
       /** @description Validation Error */
       422: {
@@ -9817,6 +21953,734 @@ export interface operations {
         content: {
           "application/json": components["schemas"]["HTTPValidationError"];
         };
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  create_elicitation_api_v1_mcp_elicitation_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["ElicitationFormRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ElicitationResponseModel"];
+        };
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  create_url_elicitation_api_v1_mcp_elicitation_url_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["ElicitationUrlRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ElicitationResponseModel"];
+        };
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  list_tasks_api_v1_mcp_tasks_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["TaskListResponse"];
+        };
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  get_task_api_v1_mcp_tasks__task_id__get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        task_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["TaskResponse"];
+        };
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  cancel_task_api_v1_mcp_tasks__task_id__cancel_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        task_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["TaskResponse"];
+        };
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  list_collections_api_v1_vectors_collections_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            [key: string]: unknown;
+          };
+        };
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  create_collection_api_v1_vectors_collections_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["CreateCollectionRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            [key: string]: unknown;
+          };
+        };
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  delete_collection_api_v1_vectors_collections__collection_name__delete: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        collection_name: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            [key: string]: unknown;
+          };
+        };
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  search_vectors_api_v1_vectors_search_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["SearchRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            [key: string]: unknown;
+          };
+        };
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  upsert_points_api_v1_vectors_points_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["UpsertPointsRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            [key: string]: unknown;
+          };
+        };
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  search_vectors_by_text_api_v1_vectors_search_text_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["TextSearchRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            [key: string]: unknown;
+          };
+        };
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  upsert_vector_by_text_api_v1_vectors_upsert_text_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["TextUpsertRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            [key: string]: unknown;
+          };
+        };
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
       };
     };
   };
@@ -9865,6 +22729,20 @@ export interface operations {
           "application/json": components["schemas"]["mcp_server_langgraph__api__v1__connections__ConnectionListResponse"];
         };
       };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
       /** @description Validation Error */
       422: {
         headers: {
@@ -9873,6 +22751,20 @@ export interface operations {
         content: {
           "application/json": components["schemas"]["HTTPValidationError"];
         };
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
       };
     };
   };
@@ -9900,6 +22792,20 @@ export interface operations {
           "application/json": components["schemas"]["ConnectionResponse"];
         };
       };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
       /** @description Validation Error */
       422: {
         headers: {
@@ -9909,25 +22815,509 @@ export interface operations {
           "application/json": components["schemas"]["HTTPValidationError"];
         };
       };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
     };
   };
-  export_audit_logs_api_v1_connections_audit_export_get: {
+  get_connection_api_v1_connections__connection_id__get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        connection_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ConnectionResponse"];
+        };
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  update_connection_api_v1_connections__connection_id__put: {
+    parameters: {
+      query?: never;
+      header?: {
+        "X-User-ID"?: string | null;
+      };
+      path: {
+        connection_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["MCPConnectionUpdate"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ConnectionResponse"];
+        };
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  delete_connection_api_v1_connections__connection_id__delete: {
+    parameters: {
+      query?: never;
+      header?: {
+        "X-User-ID"?: string | null;
+      };
+      path: {
+        connection_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  test_connection_api_v1_connections__connection_id__test_post: {
+    parameters: {
+      query?: never;
+      header?: {
+        "X-User-ID"?: string | null;
+      };
+      path: {
+        connection_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["MCPConnectionTestResult"];
+        };
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  start_oauth2_flow_api_v1_connections__connection_id__oauth_start_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        connection_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["OAuth2StartResponse"];
+        };
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  oauth2_callback_stateless_api_v1_connections_oauth_callback_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["OAuth2CallbackRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["OAuth2CallbackResponse"];
+        };
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  oauth2_callback_api_v1_connections__connection_id__oauth_callback_post: {
+    parameters: {
+      query: {
+        /** @description Authorization code */
+        code: string;
+        /** @description State parameter */
+        state: string;
+      };
+      header?: never;
+      path: {
+        connection_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            [key: string]: string;
+          };
+        };
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  list_categories_api_v1_connection_templates_categories_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["CategoryListResponse"];
+        };
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  list_templates_api_v1_connection_templates_get: {
     parameters: {
       query?: {
-        /** @description Export format (json or csv) */
-        format?: "json" | "csv";
-        /** @description Filter by resource type */
-        resource_type?: string | null;
-        /** @description Filter by resource ID */
-        resource_id?: string | null;
-        /** @description Filter by actor ID */
-        actor_id?: string | null;
-        /** @description Filter by event type */
-        event_type?: string | null;
-        /** @description Filter logs after this time */
-        start_time?: string | null;
-        /** @description Filter logs before this time */
-        end_time?: string | null;
+        /** @description Filter by category */
+        category?: string | null;
+        /** @description Filter by authentication type */
+        auth_type?: ("none" | "api_key" | "oauth2") | null;
+        /** @description Search by name or description */
+        search?: string | null;
       };
       header?: never;
       path?: never;
@@ -9941,8 +23331,22 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "application/json": unknown;
+          "application/json": components["schemas"]["TemplateListResponse"];
         };
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
       };
       /** @description Validation Error */
       422: {
@@ -9952,6 +23356,325 @@ export interface operations {
         content: {
           "application/json": components["schemas"]["HTTPValidationError"];
         };
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  get_template_api_v1_connection_templates__template_id__get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        template_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ConnectionTemplate"];
+        };
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  apply_template_api_v1_connection_templates__template_id__apply_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        template_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["ApplyTemplateRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ApplyTemplateResponse"];
+        };
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  bulk_delete_api_v1_connections_bulk_delete_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["BulkDeleteRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["BulkDeleteResponse"];
+        };
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  bulk_test_api_v1_connections_bulk_test_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["BulkTestRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["BulkTestResponse"];
+        };
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  bulk_status_update_api_v1_connections_bulk_status_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["BulkStatusRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["BulkStatusResponse"];
+        };
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
       };
     };
   };
@@ -9980,6 +23703,20 @@ export interface operations {
           "application/json": components["schemas"]["mcp_server_langgraph__api__v1__connection_audit__AuditLogEntry"];
         };
       };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
       /** @description Validation Error */
       422: {
         headers: {
@@ -9988,6 +23725,20 @@ export interface operations {
         content: {
           "application/json": components["schemas"]["HTTPValidationError"];
         };
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
       };
     };
   };
@@ -10026,284 +23777,15 @@ export interface operations {
           "application/json": components["schemas"]["AuditLogListResponse"];
         };
       };
-      /** @description Validation Error */
-      422: {
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
         headers: {
           [name: string]: unknown;
         };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
+        content?: never;
       };
-    };
-  };
-  delete_old_audit_logs_api_v1_connections_audit_retention_delete: {
-    parameters: {
-      query?: {
-        /** @description Delete logs older than this many days */
-        days?: number;
-      };
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["RetentionDeleteResponse"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  bulk_delete_api_v1_connections_bulk_delete_post: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["BulkDeleteRequest"];
-      };
-    };
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["BulkDeleteResponse"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  bulk_status_update_api_v1_connections_bulk_status_post: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["BulkStatusRequest"];
-      };
-    };
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["BulkStatusResponse"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  bulk_test_api_v1_connections_bulk_test_post: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["BulkTestRequest"];
-      };
-    };
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["BulkTestResponse"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  get_health_summary_api_v1_connections_health_summary_get: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HealthSummary"];
-        };
-      };
-    };
-  };
-  oauth2_callback_stateless_api_v1_connections_oauth_callback_post: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["OAuth2CallbackRequest"];
-      };
-    };
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["OAuth2CallbackResponse"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  get_connection_api_v1_connections__connection_id__get: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        connection_id: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ConnectionResponse"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  update_connection_api_v1_connections__connection_id__put: {
-    parameters: {
-      query?: never;
-      header?: {
-        "X-User-ID"?: string | null;
-      };
-      path: {
-        connection_id: string;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["MCPConnectionUpdate"];
-      };
-    };
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ConnectionResponse"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  delete_connection_api_v1_connections__connection_id__delete: {
-    parameters: {
-      query?: never;
-      header?: {
-        "X-User-ID"?: string | null;
-      };
-      path: {
-        connection_id: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      204: {
+      /** @description Forbidden - Insufficient permissions */
+      403: {
         headers: {
           [name: string]: unknown;
         };
@@ -10317,6 +23799,20 @@ export interface operations {
         content: {
           "application/json": components["schemas"]["HTTPValidationError"];
         };
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
       };
     };
   };
@@ -10343,6 +23839,20 @@ export interface operations {
           "application/json": components["schemas"]["AuditLogListResponse"];
         };
       };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
       /** @description Validation Error */
       422: {
         headers: {
@@ -10352,19 +23862,1249 @@ export interface operations {
           "application/json": components["schemas"]["HTTPValidationError"];
         };
       };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
     };
   };
-  oauth2_callback_api_v1_connections__connection_id__oauth_callback_post: {
+  delete_old_audit_logs_api_v1_connections_audit_retention_delete: {
     parameters: {
-      query: {
-        /** @description Authorization code */
-        code: string;
-        /** @description State parameter */
-        state: string;
+      query?: {
+        /** @description Delete logs older than this many days */
+        days?: number;
       };
       header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["RetentionDeleteResponse"];
+        };
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  export_audit_logs_api_v1_connections_audit_export_get: {
+    parameters: {
+      query?: {
+        /** @description Export format (json or csv) */
+        format?: "json" | "csv";
+        /** @description Filter by resource type */
+        resource_type?: string | null;
+        /** @description Filter by resource ID */
+        resource_id?: string | null;
+        /** @description Filter by actor ID */
+        actor_id?: string | null;
+        /** @description Filter by event type */
+        event_type?: string | null;
+        /** @description Filter logs after this time */
+        start_time?: string | null;
+        /** @description Filter logs before this time */
+        end_time?: string | null;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": unknown;
+        };
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  get_agent_config_api_v1_agents_config_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["AgentConfigResponse"];
+        };
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  list_pending_agent_requests_api_v1_agents_requests_pending_get: {
+    parameters: {
+      query?: {
+        /** @description Filter by session ID */
+        session_id?: string | null;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["PendingAgentRequestsResponse"];
+        };
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  get_agent_request_api_v1_agents_requests__request_id__get: {
+    parameters: {
+      query?: never;
+      header?: never;
       path: {
-        connection_id: string;
+        request_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["AgentRequest"];
+        };
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  approve_agent_request_api_v1_agents_requests__request_id__approve_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        request_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["ApproveAgentRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["AgentRequestActionResponse"];
+        };
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  reject_agent_request_api_v1_agents_requests__request_id__reject_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        request_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["RejectAgentRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["AgentRequestActionResponse"];
+        };
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  respond_to_agent_request_api_v1_agents_requests__request_id__respond_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        request_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["ClarificationResponseRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["AgentRequestActionResponse"];
+        };
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  batch_approve_requests_api_v1_agents_requests_batch_approve_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["BatchApproveRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["BatchApprovalResponse"];
+        };
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  batch_reject_requests_api_v1_agents_requests_batch_reject_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["BatchRejectRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["BatchApprovalResponse"];
+        };
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  get_threshold_recommendation_api_v1_agents_requests_threshold_recommendation_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ThresholdRecommendation"];
+        };
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  get_user_threshold_settings_endpoint_api_v1_agents_requests_threshold_settings_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["UserThresholdSettings"];
+        };
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  update_user_threshold_settings_endpoint_api_v1_agents_requests_threshold_settings_put: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["UpdateThresholdSettingsRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["UserThresholdSettings"];
+        };
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  list_audit_logs_api_v1_admin_audit_logs_get: {
+    parameters: {
+      query?: {
+        /** @description Pagination cursor */
+        cursor?: string | null;
+        /** @description Maximum entries per page */
+        limit?: number;
+        /** @description Filter by user ID */
+        user_id?: string | null;
+        /** @description Filter by action type */
+        action?: string | null;
+        /** @description Filter by resource type */
+        resource_type?: string | null;
+        /** @description Filter by start time (ISO 8601) */
+        start_time?: string | null;
+        /** @description Filter by end time (ISO 8601) */
+        end_time?: string | null;
+        /** @description Field to sort by */
+        sort_by?: string | null;
+        /** @description Sort order (asc/desc) */
+        sort_order?: string | null;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["PaginatedAuditLogResponse"];
+        };
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  list_users_api_v1_admin_users_get: {
+    parameters: {
+      query?: {
+        /** @description Search filter for username/email */
+        search?: string | null;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["PaginatedUserResponse"];
+        };
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  create_user_api_v1_admin_users_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["CreateUserRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["UserResponse"];
+        };
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  get_user_api_v1_admin_users__user_id__get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        user_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["UserResponse"];
+        };
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  update_user_api_v1_admin_users__user_id__put: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        user_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["UpdateUserRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["UserResponse"];
+        };
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  delete_user_api_v1_admin_users__user_id__delete: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        user_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  list_audit_events_api_v1_audit_events_get: {
+    parameters: {
+      query?: {
+        /** @description Filter by event category */
+        category?: string | null;
+        /** @description Filter by event type */
+        event_type?: string | null;
+        /** @description Filter by regulation tag */
+        regulation?: string | null;
+        /** @description Filter by actor ID */
+        actor_id?: string | null;
+        /** @description Filter by resource type */
+        resource_type?: string | null;
+        /** @description Filter by resource ID */
+        resource_id?: string | null;
+        /** @description Start of time range */
+        start_time?: string | null;
+        /** @description End of time range */
+        end_time?: string | null;
+        /** @description Page number */
+        page?: number;
+        /** @description Page size */
+        page_size?: number;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["AuditEventsListResponse"];
+        };
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  get_audit_event_api_v1_audit_events__event_id__get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        event_id: string;
       };
       cookie?: never;
     };
@@ -10377,10 +25117,24 @@ export interface operations {
         };
         content: {
           "application/json": {
-            [key: string]: string;
+            [key: string]: unknown;
           };
         };
       };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
       /** @description Validation Error */
       422: {
         headers: {
@@ -10390,180 +25144,155 @@ export interface operations {
           "application/json": components["schemas"]["HTTPValidationError"];
         };
       };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
     };
   };
-  start_oauth2_flow_api_v1_connections__connection_id__oauth_start_post: {
+  verify_integrity_api_v1_audit_integrity_verify_get: {
+    parameters: {
+      query: {
+        /** @description Start of time range */
+        start_time: string;
+        /** @description End of time range */
+        end_time: string;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["IntegrityVerificationResponse"];
+        };
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  export_audit_logs_api_v1_audit_export_get: {
+    parameters: {
+      query: {
+        /** @description Export format: json or csv */
+        format?: string;
+        /** @description Start of time range */
+        start_time: string;
+        /** @description End of time range */
+        end_time: string;
+        /** @description Filter by category */
+        category?: string | null;
+        /** @description Filter by regulation */
+        regulation?: string | null;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": unknown;
+        };
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  get_retention_status_api_v1_audit_retention_status_get: {
     parameters: {
       query?: never;
-      header?: never;
-      path: {
-        connection_id: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["OAuth2StartResponse"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  test_connection_api_v1_connections__connection_id__test_post: {
-    parameters: {
-      query?: never;
-      header?: {
-        "X-User-ID"?: string | null;
-      };
-      path: {
-        connection_id: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["MCPConnectionTestResult"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  get_by_model_api_v1_cost_by_model_get: {
-    parameters: {
-      query?: {
-        /** @description Start date (YYYY-MM-DD) */
-        start_date?: string | null;
-        /** @description End date (YYYY-MM-DD) */
-        end_date?: string | null;
-      };
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ModelCostResponse"][];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  get_history_api_v1_cost_history_get: {
-    parameters: {
-      query?: {
-        /** @description Start date (YYYY-MM-DD) */
-        start_date?: string | null;
-        /** @description End date (YYYY-MM-DD) */
-        end_date?: string | null;
-      };
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["DailyCostResponse"][];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  get_summary_api_v1_cost_summary_get: {
-    parameters: {
-      query?: {
-        /** @description Start date (YYYY-MM-DD) */
-        start_date?: string | null;
-        /** @description End date (YYYY-MM-DD) */
-        end_date?: string | null;
-      };
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["CostSummaryResponse"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  get_features_api_v1_features_get: {
-    parameters: {
-      query?: {
-        /** @description User role for feature access (user, admin, viewer) */
-        role?: string;
-      };
       header?: never;
       path?: never;
       cookie?: never;
@@ -10577,218 +25306,47 @@ export interface operations {
         };
         content: {
           "application/json": {
-            [key: string]: boolean;
+            [key: string]: {
+              [key: string]: number;
+            };
           };
         };
       };
-      /** @description Validation Error */
-      422: {
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
         headers: {
           [name: string]: unknown;
         };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
         };
+        content?: never;
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
       };
     };
   };
-  health_check_api_v1_health_get: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HealthCheckResult"];
-        };
-      };
-    };
-  };
-  list_identity_providers_api_v1_identity_providers_get: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["IdentityProvidersListResponse"];
-        };
-      };
-    };
-  };
-  login_api_v1_login_post: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["LoginRequest"];
-      };
-    };
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["LoginResponse"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  logout_api_v1_logout_post: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: {
-      content: {
-        "application/json": components["schemas"]["LogoutRequest"] | null;
-      };
-    };
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["LogoutResponse"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  create_elicitation_api_v1_mcp_elicitation_post: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["ElicitationFormRequest"];
-      };
-    };
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ElicitationResponseModel"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  create_url_elicitation_api_v1_mcp_elicitation_url_post: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["ElicitationUrlRequest"];
-      };
-    };
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ElicitationResponseModel"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  list_resources_api_v1_mcp_resources_get: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ResourceListResponse"];
-        };
-      };
-    };
-  };
-  read_resource_api_v1_mcp_resources_content_get: {
+  apply_retention_policy_api_v1_audit_retention_apply_post: {
     parameters: {
       query: {
-        /** @description Resource URI to read */
-        uri: string;
+        /** @description Regulation to apply retention for */
+        regulation: string;
       };
       header?: never;
       path?: never;
@@ -10802,8 +25360,22 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "application/json": components["schemas"]["ResourceContentResponse"];
+          "application/json": components["schemas"]["RetentionApplyResponse"];
         };
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
       };
       /** @description Validation Error */
       422: {
@@ -10814,146 +25386,30 @@ export interface operations {
           "application/json": components["schemas"]["HTTPValidationError"];
         };
       };
-    };
-  };
-  create_sampling_api_v1_mcp_sampling_post: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["SamplingRequest"];
-      };
-    };
-    responses: {
-      /** @description Successful Response */
-      200: {
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
         headers: {
           [name: string]: unknown;
         };
-        content: {
-          "application/json": components["schemas"]["SamplingResponseModel"];
-        };
+        content?: never;
       };
-      /** @description Validation Error */
-      422: {
+      /** @description Internal Server Error */
+      500: {
         headers: {
           [name: string]: unknown;
         };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
+        content?: never;
       };
     };
   };
-  list_tasks_api_v1_mcp_tasks_get: {
+  get_gdpr_report_api_v1_compliance_reports_gdpr_get: {
     parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["TaskListResponse"];
-        };
+      query: {
+        /** @description Start of time range */
+        start_time: string;
+        /** @description End of time range */
+        end_time: string;
       };
-    };
-  };
-  get_task_api_v1_mcp_tasks__task_id__get: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        task_id: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["TaskResponse"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  cancel_task_api_v1_mcp_tasks__task_id__cancel_post: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        task_id: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["TaskResponse"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  get_me_api_v1_me_get: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["UserInfoResponse"];
-        };
-      };
-    };
-  };
-  get_dashboard_api_v1_metrics_dashboard_get: {
-    parameters: {
-      query?: never;
       header?: never;
       path?: never;
       cookie?: never;
@@ -10971,29 +25427,19 @@ export interface operations {
           };
         };
       };
-    };
-  };
-  submit_events_api_v1_metrics_events_post: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["EventBatch"];
-      };
-    };
-    responses: {
-      /** @description Successful Response */
-      201: {
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
         headers: {
           [name: string]: unknown;
         };
-        content: {
-          "application/json": components["schemas"]["EventReceiptResponse"];
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
         };
+        content?: never;
       };
       /** @description Validation Error */
       422: {
@@ -11004,81 +25450,29 @@ export interface operations {
           "application/json": components["schemas"]["HTTPValidationError"];
         };
       };
-    };
-  };
-  submit_feedback_api_v1_metrics_feedback_post: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["FeedbackRequest"];
-      };
-    };
-    responses: {
-      /** @description Successful Response */
-      201: {
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
         headers: {
           [name: string]: unknown;
         };
-        content: {
-          "application/json": components["schemas"]["FeedbackResponse"];
-        };
+        content?: never;
       };
-      /** @description Validation Error */
-      422: {
+      /** @description Internal Server Error */
+      500: {
         headers: {
           [name: string]: unknown;
         };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
+        content?: never;
       };
     };
   };
-  submit_heart_metrics_api_v1_metrics_heart_post: {
+  get_hipaa_report_api_v1_compliance_reports_hipaa_get: {
     parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["HeartMetricsBatch"];
-      };
-    };
-    responses: {
-      /** @description Successful Response */
-      201: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["MetricsReceiptResponse"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  get_aggregate_metrics_api_v1_metrics_heart_aggregate_get: {
-    parameters: {
-      query?: {
-        /** @description Time period (e.g., '7d', '30d') */
-        period?: string;
-        /** @description Filter by app name */
-        app?: string | null;
+      query: {
+        /** @description Start of time range */
+        start_time: string;
+        /** @description End of time range */
+        end_time: string;
       };
       header?: never;
       path?: never;
@@ -11092,8 +25486,24 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "application/json": components["schemas"]["AggregateMetrics"];
+          "application/json": {
+            [key: string]: unknown;
+          };
         };
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
       };
       /** @description Validation Error */
       422: {
@@ -11104,9 +25514,279 @@ export interface operations {
           "application/json": components["schemas"]["HTTPValidationError"];
         };
       };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
     };
   };
-  subscribe_to_notifications_api_v1_notifications_subscribe_post: {
+  get_soc2_report_api_v1_compliance_reports_soc2_get: {
+    parameters: {
+      query: {
+        /** @description Start of time range */
+        start_time: string;
+        /** @description End of time range */
+        end_time: string;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            [key: string]: unknown;
+          };
+        };
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  get_fedramp_report_api_v1_compliance_reports_fedramp_get: {
+    parameters: {
+      query: {
+        /** @description Start of time range */
+        start_time: string;
+        /** @description End of time range */
+        end_time: string;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            [key: string]: unknown;
+          };
+        };
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  get_eu_ai_act_report_api_v1_compliance_reports_eu_ai_act_get: {
+    parameters: {
+      query: {
+        /** @description Start of time range */
+        start_time: string;
+        /** @description End of time range */
+        end_time: string;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            [key: string]: unknown;
+          };
+        };
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  get_compliance_summary_api_v1_compliance_reports_summary_get: {
+    parameters: {
+      query: {
+        /** @description Start of time range */
+        start_time: string;
+        /** @description End of time range */
+        end_time: string;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            [key: string]: unknown;
+          };
+        };
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  get_node_config_help_api_v1_ai_node_config_help_post: {
     parameters: {
       query?: never;
       header?: never;
@@ -11115,7 +25795,1262 @@ export interface operations {
     };
     requestBody: {
       content: {
-        "application/json": components["schemas"]["PushSubscription"];
+        "application/json": components["schemas"]["NodeConfigHelpRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["NodeConfigHelpResponse"];
+        };
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  validate_node_config_api_v1_ai_node_config_validate_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["NodeConfigValidateRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["NodeConfigValidateResponse"];
+        };
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  get_node_types_api_v1_ai_node_types_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["NodeTypesResponse"];
+        };
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  get_node_type_schema_api_v1_ai_node_types__node_type__schema_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        node_type: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            [key: string]: unknown;
+          };
+        };
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  get_ai_suggestions_api_v1_ai_suggestions_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["UnifiedSuggestionsRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["UnifiedSuggestionsResponse"];
+        };
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  stream_ai_suggestions_api_v1_ai_suggestions_stream_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["UnifiedSuggestionsRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": unknown;
+        };
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  track_suggestion_click_api_v1_ai_suggestions_click_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["SuggestionClickRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["SuggestionClickResponse"];
+        };
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  track_suggestion_interaction_api_v1_ai_suggestions_track_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["SuggestionTrackRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["SuggestionTrackResponse"];
+        };
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  submit_suggestion_feedback_api_v1_ai_suggestions_feedback_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["SuggestionFeedbackRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["SuggestionFeedbackResponse"];
+        };
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  fetch_url_content_api_v1_ai_fetch_url_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["UrlFetchRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["UrlFetchResponse"];
+        };
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  analyze_disclosure_api_v1_ai_disclosure_analyze_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["DisclosureAnalyzeRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["DisclosureAnalyzeResponse"];
+        };
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  get_empty_state_suggestions_api_v1_ai_empty_state_suggestions_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["EmptyStateSuggestionsRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["EmptyStateSuggestionsResponse"];
+        };
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  recommend_nudge_api_v1_ai_nudges_recommend_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["NudgeRecommendRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["NudgeRecommendResponse"];
+        };
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  analyze_error_api_v1_ai_errors_analyze_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["ErrorAnalyzeRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorAnalyzeResponse"];
+        };
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  personalize_onboarding_api_v1_ai_onboarding_personalize_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["OnboardingPersonalizeRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["OnboardingPersonalizeResponse"];
+        };
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  get_metrics_insights_api_v1_ai_metrics_insights_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["MetricsInsightsResponse"];
+        };
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  analyze_persona_api_v1_ai_persona_analyze_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["PersonaAnalyzeRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["PersonaAnalyzeResponse"];
+        };
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  composite_analyze_api_v1_ai_composite_analyze_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["CompositeAnalysisRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["CompositeAnalysisResponse"];
+        };
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  stream_composite_analyze_api_v1_ai_composite_stream_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["CompositeAnalysisRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": unknown;
+        };
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  batch_composite_analyze_api_v1_ai_composite_batch_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["BatchCompositeRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["BatchCompositeResponse"];
+        };
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  analyze_api_v1_studio_analyze_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["StudioAnalyzeRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["StudioAnalyzeResponse"];
+        };
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  subscribe_to_notifications_api_v1_notifications_push_subscribe_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["PushSubscriptionRequest"];
       };
     };
     responses: {
@@ -11128,6 +27063,20 @@ export interface operations {
           "application/json": components["schemas"]["NotificationResponse"];
         };
       };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
       /** @description Validation Error */
       422: {
         headers: {
@@ -11137,9 +27086,23 @@ export interface operations {
           "application/json": components["schemas"]["HTTPValidationError"];
         };
       };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
     };
   };
-  unsubscribe_from_notifications_api_v1_notifications_unsubscribe_post: {
+  unsubscribe_from_notifications_api_v1_notifications_push_unsubscribe_delete: {
     parameters: {
       query?: never;
       header?: never;
@@ -11161,6 +27124,20 @@ export interface operations {
           "application/json": components["schemas"]["NotificationResponse"];
         };
       };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
       /** @description Validation Error */
       422: {
         headers: {
@@ -11170,15 +27147,622 @@ export interface operations {
           "application/json": components["schemas"]["HTTPValidationError"];
         };
       };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
     };
   };
-  get_metrics_api_v1_observability_metrics_get: {
+  list_user_subscriptions_api_v1_notifications_push_subscriptions_get: {
     parameters: {
-      query?: {
-        /** @description Start date (YYYY-MM-DD) */
-        start_date?: string | null;
-        /** @description End date (YYYY-MM-DD) */
-        end_date?: string | null;
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["SubscriptionInfo"][];
+        };
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  subscribe_legacy_api_v1_notifications_subscribe_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["PushSubscriptionRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["NotificationResponse"];
+        };
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  unsubscribe_legacy_api_v1_notifications_unsubscribe_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["UnsubscribeRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["NotificationResponse"];
+        };
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  get_preferences_api_v1_notifications_preferences_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["PreferencesResponse"];
+        };
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  update_preferences_api_v1_notifications_preferences_put: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["PreferencesUpdateRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["PreferencesResponse"];
+        };
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  reset_preferences_api_v1_notifications_preferences_reset_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["PreferencesResponse"];
+        };
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  get_preferences_api_v1_preferences_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["UserPreferences"];
+        };
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  reset_preferences_api_v1_preferences_delete: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["UserPreferences"];
+        };
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  update_preferences_api_v1_preferences_patch: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["UserPreferencesUpdate"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["UserPreferences"];
+        };
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  list_identity_providers_api_v1_identity_providers_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["IdentityProvidersListResponse"];
+        };
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  export_session_api_v1_sessions__session_id__export_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        session_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["ExportRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": unknown;
+        };
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  get_context_api_v1_context_get: {
+    parameters: {
+      query: {
+        /** @description Project ID */
+        project_id: string;
       };
       header?: never;
       path?: never;
@@ -11192,8 +27776,22 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "application/json": components["schemas"]["MetricsResponse"];
+          "application/json": components["schemas"]["ProjectContextResponse"];
         };
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
       };
       /** @description Validation Error */
       422: {
@@ -11204,23 +27802,387 @@ export interface operations {
           "application/json": components["schemas"]["HTTPValidationError"];
         };
       };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
     };
   };
-  list_traces_api_v1_observability_traces_get: {
+  update_context_api_v1_context_put: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["ProjectContextUpdate"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ProjectContextResponse"];
+        };
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  delete_context_api_v1_context_delete: {
+    parameters: {
+      query: {
+        /** @description Project ID */
+        project_id: string;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["DeleteResponse"];
+        };
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  alertmanager_webhook_api_v1_webhooks_alertmanager_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          [key: string]: unknown;
+        };
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["AlertmanagerWebhookResponse"];
+        };
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  list_pending_remediations_api_v1_remediations_pending_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["PendingRemediationsResponse"];
+        };
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  approve_remediation_api_v1_remediations__remediation_id__approve_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        remediation_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["ApproveRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ApprovalResponse"];
+        };
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  reject_remediation_api_v1_remediations__remediation_id__reject_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        remediation_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["RejectRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ApprovalResponse"];
+        };
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  get_remediation_history_api_v1_remediations_history_get: {
     parameters: {
       query?: {
-        /** @description Pagination cursor */
-        cursor?: string | null;
-        /** @description Items per page */
+        /** @description Maximum results */
         limit?: number;
-        /** @description Filter by session ID */
-        session_id?: string | null;
-        /** @description Search in trace name */
-        search?: string | null;
-        /** @description Field to sort by */
-        sort_by?: "name" | "start_time" | "duration_ms";
-        /** @description Sort order */
-        sort_order?: "asc" | "desc";
+        /** @description Results to skip */
+        offset?: number;
       };
       header?: never;
       path?: never;
@@ -11234,211 +28196,18 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "application/json": components["schemas"]["CursorPaginatedResponse_dict_str__Any__"];
+          "application/json": components["schemas"]["HistoryResponse"];
         };
       };
-      /** @description Validation Error */
-      422: {
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
         headers: {
           [name: string]: unknown;
         };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
+        content?: never;
       };
-    };
-  };
-  get_trace_api_v1_observability_traces__trace_id__get: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        trace_id: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["TraceResponse"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  list_projects_api_v1_projects_get: {
-    parameters: {
-      query?: {
-        /** @description Page number (1-indexed) */
-        page?: number;
-        /** @description Items per page */
-        per_page?: number;
-        /** @description Filter by organization ID */
-        organization_id?: string | null;
-        /** @description Filter by project status (active, archived) */
-        status?: string | null;
-        /** @description Filter by owner user ID */
-        owner_id?: string | null;
-        /** @description Search in name and description */
-        search?: string | null;
-        /** @description Field to sort by */
-        sort_by?: "name" | "created_at" | "updated_at";
-        /** @description Sort order */
-        sort_order?: "asc" | "desc";
-      };
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ProjectListResponse"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  create_project_api_v1_projects_post: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["ProjectCreate"];
-      };
-    };
-    responses: {
-      /** @description Successful Response */
-      201: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ProjectResponse"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  get_project_api_v1_projects__project_id__get: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        project_id: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ProjectDetailResponse"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  update_project_api_v1_projects__project_id__put: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        project_id: string;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["ProjectUpdate"];
-      };
-    };
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ProjectResponse"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  delete_project_api_v1_projects__project_id__delete: {
-    parameters: {
-      query?: {
-        cascade?: boolean;
-      };
-      header?: never;
-      path: {
-        project_id: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      204: {
+      /** @description Forbidden - Insufficient permissions */
+      403: {
         headers: {
           [name: string]: unknown;
         };
@@ -11453,14 +28222,28 @@ export interface operations {
           "application/json": components["schemas"]["HTTPValidationError"];
         };
       };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
     };
   };
-  list_project_connections_api_v1_projects__project_id__connections_get: {
+  get_remediation_api_v1_remediations__remediation_id__get: {
     parameters: {
       query?: never;
       header?: never;
       path: {
-        project_id: string;
+        remediation_id: string;
       };
       cookie?: never;
     };
@@ -11472,69 +28255,18 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "application/json": components["schemas"]["mcp_server_langgraph__api__v1__projects__ConnectionListResponse"];
+          "application/json": components["schemas"]["RemediationRequest"];
         };
       };
-      /** @description Validation Error */
-      422: {
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
         headers: {
           [name: string]: unknown;
         };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
+        content?: never;
       };
-    };
-  };
-  add_connection_to_project_api_v1_projects__project_id__connections_post: {
-    parameters: {
-      query: {
-        connection_type: string;
-        connection_id: string;
-        connection_name?: string;
-      };
-      header?: never;
-      path: {
-        project_id: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ProjectDetailResponse"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  remove_connection_from_project_api_v1_projects__project_id__connections__connection_id__delete: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        project_id: string;
-        connection_id: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      204: {
+      /** @description Forbidden - Insufficient permissions */
+      403: {
         headers: {
           [name: string]: unknown;
         };
@@ -11549,601 +28281,34 @@ export interface operations {
           "application/json": components["schemas"]["HTTPValidationError"];
         };
       };
-    };
-  };
-  get_project_cost_by_model_api_v1_projects__project_id__cost_by_model_get: {
-    parameters: {
-      query?: {
-        start_date?: string | null;
-        end_date?: string | null;
-      };
-      header?: never;
-      path: {
-        project_id: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
         headers: {
           [name: string]: unknown;
         };
-        content: {
-          "application/json": components["schemas"]["ProjectCostByModelResponse"];
-        };
+        content?: never;
       };
-      /** @description Validation Error */
-      422: {
+      /** @description Internal Server Error */
+      500: {
         headers: {
           [name: string]: unknown;
         };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
+        content?: never;
       };
     };
   };
-  get_project_cost_history_api_v1_projects__project_id__cost_history_get: {
-    parameters: {
-      query?: {
-        start_date?: string | null;
-        end_date?: string | null;
-      };
-      header?: never;
-      path: {
-        project_id: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ProjectCostHistoryResponse"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  get_project_cost_summary_api_v1_projects__project_id__cost_summary_get: {
-    parameters: {
-      query?: {
-        start_date?: string | null;
-        end_date?: string | null;
-      };
-      header?: never;
-      path: {
-        project_id: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ProjectCostSummaryResponse"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  list_project_members_api_v1_projects__project_id__members_get: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        project_id: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["MemberListResponse"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  add_member_to_project_api_v1_projects__project_id__members_post: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        project_id: string;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["AddMemberRequest"];
-      };
-    };
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ProjectDetailResponse"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  remove_member_from_project_api_v1_projects__project_id__members__user_id__delete: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        project_id: string;
-        user_id: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ProjectDetailResponse"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  get_project_alerts_api_v1_projects__project_id__observability_alerts_get: {
-    parameters: {
-      query?: {
-        status_filter?: string | null;
-      };
-      header?: never;
-      path: {
-        project_id: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ProjectAlertsResponse"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  get_project_logs_api_v1_projects__project_id__observability_logs_get: {
-    parameters: {
-      query?: {
-        limit?: number;
-        level?: string | null;
-      };
-      header?: never;
-      path: {
-        project_id: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ProjectLogsResponse"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  get_project_metrics_api_v1_projects__project_id__observability_metrics_get: {
-    parameters: {
-      query?: {
-        start_date?: string | null;
-        end_date?: string | null;
-      };
-      header?: never;
-      path: {
-        project_id: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ProjectMetricsResponse"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  get_project_traces_api_v1_projects__project_id__observability_traces_get: {
-    parameters: {
-      query?: {
-        limit?: number;
-      };
-      header?: never;
-      path: {
-        project_id: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ProjectTracesResponse"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  list_project_sessions_api_v1_projects__project_id__sessions_get: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        project_id: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["SessionListResponse"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  add_session_to_project_api_v1_projects__project_id__sessions_post: {
-    parameters: {
-      query: {
-        /** @description Session ID to add */
-        session_id: string;
-        /** @description Session display name */
-        session_name?: string;
-      };
-      header?: never;
-      path: {
-        project_id: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ProjectDetailResponse"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  remove_session_from_project_api_v1_projects__project_id__sessions__session_id__delete: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        project_id: string;
-        session_id: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ProjectDetailResponse"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  list_project_workflows_api_v1_projects__project_id__workflows_get: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        project_id: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["WorkflowListResponse"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  add_workflow_to_project_api_v1_projects__project_id__workflows_post: {
-    parameters: {
-      query: {
-        workflow_id: string;
-        workflow_name?: string;
-      };
-      header?: never;
-      path: {
-        project_id: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ProjectDetailResponse"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  remove_workflow_from_project_api_v1_projects__project_id__workflows__workflow_id__delete: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        project_id: string;
-        workflow_id: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ProjectDetailResponse"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  list_service_principals_api_v1_service_principals__get: {
+  list_alerts_api_v1_alerts__get: {
     parameters: {
       query?: never;
       header?: never;
       path?: never;
       cookie?: never;
     };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ServicePrincipalResponse"][];
-        };
-      };
-    };
-  };
-  create_service_principal_api_v1_service_principals__post: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody: {
+    requestBody?: {
       content: {
-        "application/json": components["schemas"]["CreateServicePrincipalRequest"];
+        "application/json": components["schemas"]["Body_list_alerts_api_v1_alerts__get"];
       };
     };
-    responses: {
-      /** @description Successful Response */
-      201: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["CreateServicePrincipalResponse"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  get_service_principal_api_v1_service_principals__service_id__get: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        service_id: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
     responses: {
       /** @description Successful Response */
       200: {
@@ -12151,33 +28316,18 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "application/json": components["schemas"]["ServicePrincipalResponse"];
+          "application/json": components["schemas"]["AlertListResponse"];
         };
       };
-      /** @description Validation Error */
-      422: {
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
         headers: {
           [name: string]: unknown;
         };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
+        content?: never;
       };
-    };
-  };
-  delete_service_principal_api_v1_service_principals__service_id__delete: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        service_id: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      204: {
+      /** @description Forbidden - Insufficient permissions */
+      403: {
         headers: {
           [name: string]: unknown;
         };
@@ -12192,17 +28342,28 @@ export interface operations {
           "application/json": components["schemas"]["HTTPValidationError"];
         };
       };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
     };
   };
-  associate_service_principal_with_user_api_v1_service_principals__service_id__associate_user_post: {
+  get_alert_recommendation_api_v1_alerts__alert_id__recommendation_get: {
     parameters: {
-      query: {
-        user_id: string;
-        inherit_permissions?: boolean;
-      };
+      query?: never;
       header?: never;
       path: {
-        service_id: string;
+        alert_id: string;
       };
       cookie?: never;
     };
@@ -12214,172 +28375,18 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "application/json": components["schemas"]["ServicePrincipalResponse"];
+          "application/json": components["schemas"]["AIRecommendation"];
         };
       };
-      /** @description Validation Error */
-      422: {
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
         headers: {
           [name: string]: unknown;
         };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
+        content?: never;
       };
-    };
-  };
-  rotate_service_principal_secret_api_v1_service_principals__service_id__rotate_secret_post: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        service_id: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["RotateSecretResponse"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  list_sessions_api_v1_sessions_get: {
-    parameters: {
-      query?: {
-        /** @description Pagination cursor */
-        cursor?: string | null;
-        /** @description Items per page */
-        limit?: number;
-        /** @description Filter by workflow ID */
-        workflow_id?: string | null;
-        /** @description Filter by session status (active, archived) */
-        status?: string | null;
-        /** @description Search in title */
-        search?: string | null;
-        /** @description Field to sort by (use 'name', 'title' is deprecated) */
-        sort_by?: "name" | "title" | "created_at" | "updated_at";
-        /** @description Sort order */
-        sort_order?: "asc" | "desc";
-      };
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["CursorPaginatedResponse_dict_str__Any__"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  create_session_api_v1_sessions_post: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["SessionCreateRequest"];
-      };
-    };
-    responses: {
-      /** @description Successful Response */
-      201: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["SessionResponse"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  get_session_api_v1_sessions__session_id__get: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        session_id: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["SessionResponse"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  delete_session_api_v1_sessions__session_id__delete: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        session_id: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      204: {
+      /** @description Forbidden - Insufficient permissions */
+      403: {
         headers: {
           [name: string]: unknown;
         };
@@ -12394,49 +28401,28 @@ export interface operations {
           "application/json": components["schemas"]["HTTPValidationError"];
         };
       };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
     };
   };
-  bootstrap_workflow_api_v1_sessions__session_id__bootstrap_workflow_post: {
+  regenerate_alert_recommendation_api_v1_alerts__alert_id__recommendation_regenerate_post: {
     parameters: {
       query?: never;
       header?: never;
       path: {
-        session_id: string;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["BootstrapRequest"];
-      };
-    };
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["BootstrapResponse"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  get_session_messages_api_v1_sessions__session_id__messages_get: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        session_id: string;
+        alert_id: string;
       };
       cookie?: never;
     };
@@ -12448,72 +28434,18 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "application/json": {
-            [key: string]: unknown;
-          }[];
+          "application/json": components["schemas"]["AIRecommendation"];
         };
       };
-      /** @description Validation Error */
-      422: {
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
         headers: {
           [name: string]: unknown;
         };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
+        content?: never;
       };
-    };
-  };
-  add_message_api_v1_sessions__session_id__messages_post: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        session_id: string;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["MessageRequest"];
-      };
-    };
-    responses: {
-      /** @description Successful Response */
-      201: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": {
-            [key: string]: unknown;
-          };
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  clear_messages_api_v1_sessions__session_id__messages_delete: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        session_id: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      204: {
+      /** @description Forbidden - Insufficient permissions */
+      403: {
         headers: {
           [name: string]: unknown;
         };
@@ -12528,9 +28460,23 @@ export interface operations {
           "application/json": components["schemas"]["HTTPValidationError"];
         };
       };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
     };
   };
-  get_suggestions_api_v1_studio_suggestions_post: {
+  correlate_alerts_api_v1_alerts_correlate_post: {
     parameters: {
       query?: never;
       header?: never;
@@ -12539,7 +28485,7 @@ export interface operations {
     };
     requestBody: {
       content: {
-        "application/json": components["schemas"]["SuggestionRequest"];
+        "application/json": components["schemas"]["CorrelateAlertsRequest"];
       };
     };
     responses: {
@@ -12549,205 +28495,18 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "application/json": components["schemas"]["SuggestionsResponse"];
+          "application/json": components["schemas"]["CorrelateAlertsResponse"];
         };
       };
-      /** @description Validation Error */
-      422: {
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
         headers: {
           [name: string]: unknown;
         };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
+        content?: never;
       };
-    };
-  };
-  list_templates_api_v1_studio_templates_get: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["TemplateResponse"][];
-        };
-      };
-    };
-  };
-  recommend_templates_api_v1_studio_templates_recommend_post: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["RecommendTemplatesRequest"];
-      };
-    };
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["RecommendationsResponse"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  list_workflows_api_v1_studio_workflows_get: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["mcp_server_langgraph__api__studio__WorkflowResponse"][];
-        };
-      };
-    };
-  };
-  create_workflow_api_v1_studio_workflows_post: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["CreateWorkflowRequest"];
-      };
-    };
-    responses: {
-      /** @description Successful Response */
-      201: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["mcp_server_langgraph__api__studio__WorkflowResponse"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  get_workflow_api_v1_studio_workflows__workflow_id__get: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        workflow_id: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["mcp_server_langgraph__api__studio__WorkflowResponse"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  update_workflow_api_v1_studio_workflows__workflow_id__put: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        workflow_id: string;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["UpdateWorkflowRequest"];
-      };
-    };
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["mcp_server_langgraph__api__studio__WorkflowResponse"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  delete_workflow_api_v1_studio_workflows__workflow_id__delete: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        workflow_id: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      204: {
+      /** @description Forbidden - Insufficient permissions */
+      403: {
         headers: {
           [name: string]: unknown;
         };
@@ -12762,14 +28521,25 @@ export interface operations {
           "application/json": components["schemas"]["HTTPValidationError"];
         };
       };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
     };
   };
-  delete_user_account_api_v1_users_me_delete: {
+  check_skill_updates_api_v1_admin_skills_updates_get: {
     parameters: {
-      query: {
-        /** @description Must be true to confirm account deletion */
-        confirm: boolean;
-      };
+      query?: never;
       header?: never;
       path?: never;
       cookie?: never;
@@ -12787,29 +28557,44 @@ export interface operations {
           };
         };
       };
-      /** @description Validation Error */
-      422: {
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
         headers: {
           [name: string]: unknown;
         };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
         };
+        content?: never;
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
       };
     };
   };
-  update_user_profile_api_v1_users_me_patch: {
+  apply_skill_updates_api_v1_admin_skills_updates_apply_post: {
     parameters: {
       query?: never;
       header?: never;
       path?: never;
       cookie?: never;
     };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["UserProfileUpdate"];
-      };
-    };
+    requestBody?: never;
     responses: {
       /** @description Successful Response */
       200: {
@@ -12822,18 +28607,37 @@ export interface operations {
           };
         };
       };
-      /** @description Validation Error */
-      422: {
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
         headers: {
           [name: string]: unknown;
         };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
         };
+        content?: never;
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
       };
     };
   };
-  get_consent_status_api_v1_users_me_consent_get: {
+  get_protected_resource_metadata__well_known_oauth_protected_resource_get: {
     parameters: {
       query?: never;
       header?: never;
@@ -12848,70 +28652,42 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "application/json": components["schemas"]["ConsentResponse"];
+          "application/json": components["schemas"]["ProtectedResourceMetadataResponse"];
         };
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
       };
     };
   };
-  update_consent_api_v1_users_me_consent_post: {
+  options_protected_resource_metadata__well_known_oauth_protected_resource_options: {
     parameters: {
       query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["ConsentRecord"];
-      };
-    };
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ConsentResponse"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  get_user_data_api_v1_users_me_data_get: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["UserDataExport"];
-        };
-      };
-    };
-  };
-  export_user_data_api_v1_users_me_export_get: {
-    parameters: {
-      query?: {
-        /** @description Export format: json or csv */
-        format?: string;
-      };
       header?: never;
       path?: never;
       cookie?: never;
@@ -12927,978 +28703,104 @@ export interface operations {
           "application/json": unknown;
         };
       };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  list_collections_api_v1_vectors_collections_get: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": {
-            [key: string]: unknown;
-          };
-        };
-      };
-    };
-  };
-  create_collection_api_v1_vectors_collections_post: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["CreateCollectionRequest"];
-      };
-    };
-    responses: {
-      /** @description Successful Response */
-      201: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": {
-            [key: string]: unknown;
-          };
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  delete_collection_api_v1_vectors_collections__collection_name__delete: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        collection_name: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": {
-            [key: string]: unknown;
-          };
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  upsert_points_api_v1_vectors_points_post: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["UpsertPointsRequest"];
-      };
-    };
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": {
-            [key: string]: unknown;
-          };
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  search_vectors_api_v1_vectors_search_post: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["SearchRequest"];
-      };
-    };
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": {
-            [key: string]: unknown;
-          };
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  search_vectors_by_text_api_v1_vectors_search_text_post: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["TextSearchRequest"];
-      };
-    };
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": {
-            [key: string]: unknown;
-          };
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  upsert_vector_by_text_api_v1_vectors_upsert_text_post: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["TextUpsertRequest"];
-      };
-    };
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": {
-            [key: string]: unknown;
-          };
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  list_workflows_api_v1_workflows_get: {
-    parameters: {
-      query?: {
-        /** @description Pagination cursor */
-        cursor?: string | null;
-        /** @description Items per page */
-        limit?: number;
-        /** @description Filter by workflow status (draft, published, archived) */
-        status?: string | null;
-        /** @description Filter by owner user ID */
-        owner_id?: string | null;
-        /** @description Search in name and description */
-        search?: string | null;
-        /** @description Field to sort by */
-        sort_by?: "name" | "created_at" | "updated_at";
-        /** @description Sort order */
-        sort_order?: "asc" | "desc";
-      };
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["CursorPaginatedResponse_dict_str__Any__"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  create_workflow_api_v1_workflows_post: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["WorkflowCreateRequest"];
-      };
-    };
-    responses: {
-      /** @description Successful Response */
-      201: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["mcp_server_langgraph__api__v1__workflows__WorkflowResponse"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  generate_workflow_api_v1_workflows_generate_post: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["GenerateWorkflowRequest"];
-      };
-    };
-    responses: {
-      /** @description Successful Response */
-      201: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["GenerateWorkflowResponse"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  get_public_workflow_api_v1_workflows_public__share_link__get: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        share_link: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["mcp_server_langgraph__api__v1__workflows__WorkflowResponse"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  list_shared_with_me_api_v1_workflows_shared_with_me_get: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["mcp_server_langgraph__api__v1__workflows__WorkflowResponse"][];
-        };
-      };
-    };
-  };
-  get_workflow_api_v1_workflows__workflow_id__get: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        workflow_id: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["mcp_server_langgraph__api__v1__workflows__WorkflowResponse"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  update_workflow_api_v1_workflows__workflow_id__put: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        workflow_id: string;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["WorkflowUpdateRequest"];
-      };
-    };
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["mcp_server_langgraph__api__v1__workflows__WorkflowResponse"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  delete_workflow_api_v1_workflows__workflow_id__delete: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        workflow_id: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      204: {
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
         headers: {
           [name: string]: unknown;
         };
         content?: never;
       };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  list_executions_api_v1_workflows__workflow_id__executions_get: {
-    parameters: {
-      query?: {
-        /** @description Filter by status */
-        status?: string | null;
-        /** @description Maximum entries per page */
-        limit?: number;
-        /** @description Pagination cursor */
-        cursor?: string | null;
-      };
-      header?: never;
-      path: {
-        workflow_id: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["PaginatedExecutionResponse"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  get_execution_api_v1_workflows__workflow_id__executions__execution_id__get: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        workflow_id: string;
-        execution_id: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ExecutionResponse"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  update_workflow_public_api_v1_workflows__workflow_id__public_put: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        workflow_id: string;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["UpdateWorkflowPublicRequest"];
-      };
-    };
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": {
-            [key: string]: unknown;
-          };
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  get_workflow_shares_api_v1_workflows__workflow_id__shares_get: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        workflow_id: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["WorkflowSharesResponse"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  add_workflow_share_api_v1_workflows__workflow_id__shares_post: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        workflow_id: string;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["AddWorkflowShareRequest"];
-      };
-    };
-    responses: {
-      /** @description Successful Response */
-      201: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": {
-            [key: string]: string;
-          };
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  remove_workflow_share_api_v1_workflows__workflow_id__shares__user_id__delete: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        workflow_id: string;
-        user_id: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      204: {
+      /** @description Forbidden - Insufficient permissions */
+      403: {
         headers: {
           [name: string]: unknown;
         };
         content?: never;
       };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  health_check_health_get: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": {
-            [key: string]: string;
-          };
-        };
-      };
-    };
-  };
-  create_group_scim_v2_Groups_post: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": {
-          [key: string]: unknown;
-        };
-      };
-    };
-    responses: {
-      /** @description Successful Response */
-      201: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["SCIMGroup"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  get_group_scim_v2_Groups__group_id__get: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        group_id: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["SCIMGroup"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  list_users_scim_v2_Users_get: {
-    parameters: {
-      query?: {
-        /** @description SCIM filter expression */
-        filter?: string | null;
-        /** @description 1-based start index */
-        startIndex?: number;
-        /** @description Number of results */
-        count?: number;
-      };
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["SCIMListResponse"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  create_user_scim_v2_Users_post: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": {
-          [key: string]: unknown;
-        };
-      };
-    };
-    responses: {
-      /** @description Successful Response */
-      201: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["SCIMUser"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  get_user_scim_v2_Users__user_id__get: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        user_id: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["SCIMUser"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  replace_user_scim_v2_Users__user_id__put: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        user_id: string;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": {
-          [key: string]: unknown;
-        };
-      };
-    };
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["SCIMUser"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  delete_user_scim_v2_Users__user_id__delete: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        user_id: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      204: {
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
         headers: {
           [name: string]: unknown;
         };
         content?: never;
       };
-      /** @description Validation Error */
-      422: {
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  get_api_version_metadata: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description API version information */
+      200: {
         headers: {
           [name: string]: unknown;
         };
         content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
+          /**
+           * @example {
+           *       "version": "2.8.0",
+           *       "api_version": "v1",
+           *       "supported_versions": [
+           *         "v1"
+           *       ],
+           *       "deprecated_versions": [],
+           *       "sunset_dates": {},
+           *       "documentation_url": "/docs"
+           *     }
+           */
+          "application/json": components["schemas"]["APIVersionInfo"];
         };
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
       };
     };
   };
-  update_user_scim_v2_Users__user_id__patch: {
+  login_page_login_get: {
     parameters: {
       query?: never;
       header?: never;
-      path: {
-        user_id: string;
-      };
+      path?: never;
       cookie?: never;
     };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["SCIMPatchRequest"];
-      };
-    };
+    requestBody?: never;
     responses: {
       /** @description Successful Response */
       200: {
@@ -13906,17 +28808,84 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "application/json": components["schemas"]["SCIMUser"];
+          "application/json": unknown;
         };
       };
-      /** @description Validation Error */
-      422: {
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  auth_callback_page_auth_callback_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
         headers: {
           [name: string]: unknown;
         };
         content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
+          "application/json": unknown;
         };
+      };
+      /** @description Unauthorized - Invalid or missing authentication token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden - Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Too Many Requests - Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
       };
     };
   };

@@ -779,9 +779,7 @@ async def _notify_workflow_shared(
     """
     import logging
 
-    from mcp_server_langgraph.api.v1.notification_websocket import (
-        get_notification_broadcaster,
-    )
+    from mcp_server_langgraph.websocket.registry import get_notification_broadcaster
 
     logger = logging.getLogger(__name__)
 

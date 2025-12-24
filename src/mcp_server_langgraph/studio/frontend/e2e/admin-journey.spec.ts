@@ -73,16 +73,25 @@ test.describe('Admin User Journey', () => {
           return;
         }
 
-        // User endpoint - return roles for persona derivation
+        // User endpoint - return roles for persona derivation (Sprint 4 extended)
         if (url.includes('/me')) {
           await route.fulfill({
             status: 200,
             contentType: 'application/json',
             body: JSON.stringify({
-              id: 'admin-user',
+              user_id: 'user:admin',
               username: 'admin',
               email: 'admin@example.com',
               roles: ['admin'],
+              persona: 'admin',
+              // Sprint 4: Extended persona fields
+              api_version: '2',
+              sub_persona: 'admin',
+              visible_modules: [
+                'chat', 'projects', 'workflows', 'flows', 'mcp', 'agents',
+                'traces', 'admin', 'audit', 'compliance', 'settings', 'help',
+              ],
+              feature_flags: {},
             }),
           });
           return;

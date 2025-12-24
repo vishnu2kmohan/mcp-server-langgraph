@@ -426,6 +426,22 @@
       "object": "mcp_connection:health"
     },
     {
+      "_comment": "Connection Realtime WebSocket (/api/v1/ws/connections/realtime) - viewers can monitor",
+      "user": "user:admin",
+      "relation": "viewer",
+      "object": "mcp_connection:realtime"
+    },
+    {
+      "user": "user:alice",
+      "relation": "viewer",
+      "object": "mcp_connection:realtime"
+    },
+    {
+      "user": "user:bob",
+      "relation": "viewer",
+      "object": "mcp_connection:realtime"
+    },
+    {
       "_comment": "HEART Metrics WebSocket (/api/v1/ws/metrics/heart) - viewers can access metrics",
       "user": "user:admin",
       "relation": "viewer",

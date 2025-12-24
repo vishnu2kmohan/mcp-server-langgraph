@@ -117,8 +117,10 @@ async def init_storage(settings: "Settings") -> StorageState:
         PreferencesRepository,
     )
     from mcp_server_langgraph.api.v1.notification_preferences import set_preferences_repository
-    from mcp_server_langgraph.api.v1.audit_websocket import set_audit_event_broadcaster
-    from mcp_server_langgraph.api.v1.notification_websocket import set_notification_broadcaster
+    from mcp_server_langgraph.websocket.registry import (
+        set_audit_event_broadcaster,
+        set_notification_broadcaster,
+    )
     from mcp_server_langgraph.api.v1.compliance_reports import set_compliance_service
     from mcp_server_langgraph.middleware.audit import set_audit_service
     from mcp_server_langgraph.observability.telemetry import logger

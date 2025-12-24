@@ -36,8 +36,9 @@ describe("HITL Types", () => {
 
       expect(apiResponse).toEqual({
         request_id: "req-123",
+        responded_by: "user@example.com",
         response_type: "text",
-        text_response: "My text answer",
+        value: "My text answer",
       });
     });
 
@@ -52,8 +53,9 @@ describe("HITL Types", () => {
 
       expect(apiResponse).toEqual({
         request_id: "req-456",
+        responded_by: "user@example.com",
         response_type: "choice",
-        selected_option: "option-2",
+        selected_option_id: "option-2",
       });
     });
 
@@ -68,6 +70,7 @@ describe("HITL Types", () => {
 
       expect(apiResponse).toEqual({
         request_id: "req-789",
+        responded_by: "user@example.com",
         response_type: "confirm",
         confirmed: true,
       });
@@ -84,6 +87,7 @@ describe("HITL Types", () => {
 
       expect(apiResponse).toEqual({
         request_id: "req-999",
+        responded_by: "user@example.com",
         response_type: "confirm",
         confirmed: false,
       });
@@ -115,7 +119,7 @@ describe("HITL Types", () => {
       const apiResponse = convertUIResponseToAPIResponse(uiResponse);
 
       expect(apiResponse.response_type).toBe("choice");
-      expect(apiResponse.selected_option).toBe("option-1");
+      expect(apiResponse.selected_option_id).toBe("option-1");
     });
   });
 
@@ -123,8 +127,9 @@ describe("HITL Types", () => {
     it("should convert text API response to UI response", () => {
       const apiResponse: ClarificationAPIResponse = {
         request_id: "req-123",
+        responded_by: "user@example.com",
         response_type: "text",
-        text_response: "My answer",
+        value: "My answer",
       };
 
       const uiResponse = convertAPIResponseToUIResponse(
@@ -142,8 +147,9 @@ describe("HITL Types", () => {
     it("should convert choice API response to UI response", () => {
       const apiResponse: ClarificationAPIResponse = {
         request_id: "req-456",
+        responded_by: "admin@example.com",
         response_type: "choice",
-        selected_option: "opt-3",
+        selected_option_id: "opt-3",
       };
 
       const uiResponse = convertAPIResponseToUIResponse(
@@ -161,6 +167,7 @@ describe("HITL Types", () => {
     it("should convert confirm API response to UI response", () => {
       const apiResponse: ClarificationAPIResponse = {
         request_id: "req-789",
+        responded_by: "user@example.com",
         response_type: "confirm",
         confirmed: false,
       };
@@ -174,6 +181,23 @@ describe("HITL Types", () => {
         request_id: "req-789",
         confirmed: false,
         responded_by: "user@test.com",
+      });
+    });
+
+    it("should use API responded_by if no override provided", () => {
+      const apiResponse: ClarificationAPIResponse = {
+        request_id: "req-999",
+        responded_by: "original@example.com",
+        response_type: "text",
+        value: "My answer",
+      };
+
+      const uiResponse = convertAPIResponseToUIResponse(apiResponse);
+
+      expect(uiResponse).toEqual({
+        request_id: "req-999",
+        value: "My answer",
+        responded_by: "original@example.com",
       });
     });
   });

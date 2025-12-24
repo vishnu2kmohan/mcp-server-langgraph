@@ -16,16 +16,19 @@
  * +----------------------------------------------------------------+
  */
 import { useCallback, useMemo, useEffect, useState, Suspense } from "react";
-import { useLocation } from "react-router";
+import { useLocation, Outlet } from "react-router";
 import { Panel, PanelGroup } from "react-resizable-panels";
 import { ConnectedConversationPanel } from "../conversation/ConnectedConversationPanel";
 import { useAppDispatch, useAppSelector } from "../store/hooks";
 import {
   selectCanvasCollapsed,
   selectSessionNavCollapsed,
+  selectFocusModeEnabled,
   setPanelSizes,
   toggleCanvas,
   toggleSessionNav,
+  toggleFocusMode,
+  setFocusModeEnabled,
   type CanvasPanelSizes,
 } from "../store/slices/canvasSlice";
 import {
@@ -136,6 +139,13 @@ const PALETTE_COMMANDS: Command[] = [
     description: "Open compliance monitoring",
     category: "navigation",
   },
+  {
+    id: "toggle-focus-mode",
+    name: "Toggle Focus Mode",
+    description: "Hide UI chrome for distraction-free experience",
+    shortcut: "⌘⇧F",
+    category: "layout",
+  },
 ];
 
 // =============================================================================
@@ -146,6 +156,7 @@ export function StudioShellLayout() {
   const dispatch = useAppDispatch();
   const sessionNavCollapsed = useAppSelector(selectSessionNavCollapsed);
   const canvasCollapsed = useAppSelector(selectCanvasCollapsed);
+  const focusModeEnabled = useAppSelector(selectFocusModeEnabled);
   const devToolsCollapsed = useAppSelector(selectDevToolsCollapsed);
   const _devToolsHeight = useAppSelector(selectDevToolsHeight);
 
@@ -184,6 +195,50 @@ export function StudioShellLayout() {
 
   // Get current route for page context
   const location = useLocation();
+
+  // Determine if we should show the canvas layout (3-panel: SessionNav + Conversation + Canvas)
+  // or the outlet for full-page routes like Observability, Workflows, Cost, etc.
+  // Only /studio/chat and /studio/chat/:sessionId use the 3-panel canvas layout.
+  // All other /studio/* routes use the Outlet for full-page rendering.
+  //
+  // WORKAROUND: React Router v7's useLocation() can be out of sync with the actual browser URL
+  // when navigating to child routes that render empty fragments. We use window.location.pathname
+  // directly and force a re-render when React Router's location object changes.
+  const [renderKey, setRenderKey] = useState(0);
+
+  // Force re-render when React Router's location changes (even if pathname is stale)
+  useEffect(() => {
+    setRenderKey((k) => k + 1);
+  }, [location]);
+
+  // Also listen for popstate events (browser back/forward)
+  useEffect(() => {
+    const handlePopState = () => {
+      setRenderKey((k) => k + 1);
+    };
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, []);
+
+  // Determine if current route is a chat route
+  // CRITICAL: Use window.location.pathname (always up-to-date after navigate())
+  // React Router's location.pathname can be stale for empty fragment routes
+  const currentPath = window.location.pathname;
+  const isChatRoute =
+    currentPath === "/studio/chat" || currentPath.startsWith("/studio/chat/");
+
+  // Log for debugging navigation issues (dev mode only)
+  if (import.meta.env.DEV) {
+    logger.debug("Route detection:", {
+      windowPath: currentPath,
+      routerPath: location.pathname,
+      isChatRoute,
+      renderKey,
+    });
+  }
+
+  // renderKey is used to force re-renders when location changes
+  void renderKey;
 
   // AI-powered nudges (Phase 1.3 + 6.3)
   const { activeNudge, dismiss, trackAcceptance } = useNudges({
@@ -340,12 +395,30 @@ export function StudioShellLayout() {
         return;
       }
 
+      // Check for Cmd+Shift+F (Mac) or Ctrl+Shift+F (Windows/Linux) to toggle Focus Mode
+      if (
+        (e.metaKey || e.ctrlKey) &&
+        e.shiftKey &&
+        e.key.toLowerCase() === "f"
+      ) {
+        e.preventDefault();
+        dispatch(toggleFocusMode());
+        return;
+      }
+
+      // Escape key exits focus mode
+      if (e.key === "Escape" && focusModeEnabled) {
+        e.preventDefault();
+        dispatch(setFocusModeEnabled(false));
+        return;
+      }
+
       // Note: Cmd+I / Ctrl+I for insights panel is handled by useCrossInsightsPanel hook
     };
 
     document.addEventListener("keydown", handleKeyDown);
     return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [dispatch]);
+  }, [dispatch, focusModeEnabled]);
 
   // Handler for command palette execution
   const handleCommandExecute = useCallback(
@@ -377,6 +450,9 @@ export function StudioShellLayout() {
             break;
           case "open-compliance":
             window.location.href = "/studio/compliance";
+            break;
+          case "toggle-focus-mode":
+            dispatch(toggleFocusMode());
             break;
           default:
             logger.warn("Unknown command:", command.id);
@@ -514,16 +590,43 @@ export function StudioShellLayout() {
       data-testid="studio-shell"
       className="studio-shell flex flex-col h-screen bg-white dark:bg-gray-900"
     >
-      {/* TopBar - persona-aware header */}
-      <TopBar
-        onUserMenuClick={handleUserMenuClick}
-        pendingApprovals={
-          agentHitlEnabled ? pendingApprovals.length : undefined
-        }
-        onPendingApprovalsClick={
-          agentHitlEnabled ? handlePendingApprovalsClick : undefined
-        }
-      />
+      {/* TopBar - persona-aware header (hidden in focus mode) */}
+      {!focusModeEnabled && (
+        <TopBar
+          onUserMenuClick={handleUserMenuClick}
+          pendingApprovals={
+            agentHitlEnabled ? pendingApprovals.length : undefined
+          }
+          onPendingApprovalsClick={
+            agentHitlEnabled ? handlePendingApprovalsClick : undefined
+          }
+        />
+      )}
+
+      {/* Focus Mode Exit Button - shows when in focus mode */}
+      {focusModeEnabled && (
+        <button
+          data-testid="focus-mode-exit"
+          onClick={() => dispatch(setFocusModeEnabled(false))}
+          className="fixed top-2 right-2 z-50 p-2 rounded-lg bg-gray-800/80 hover:bg-gray-700 text-white text-xs transition-opacity opacity-30 hover:opacity-100"
+          aria-label="Exit focus mode (Escape)"
+          title="Exit Focus Mode (Escape or ⌘⇧F)"
+        >
+          <svg
+            className="w-4 h-4"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5v-4m0 4h-4m4 0l-5-5"
+            />
+          </svg>
+        </button>
+      )}
 
       {/* Main content area with DevTools */}
       <PanelGroup direction="vertical" className="flex-1">
@@ -535,60 +638,94 @@ export function StudioShellLayout() {
           minSize={50}
         >
           <div
-            data-testid="left-sidebar"
+            data-testid={
+              focusModeEnabled ? "main-content-focus" : "left-sidebar"
+            }
             className="flex h-full overflow-hidden"
           >
-            {/* Activity Bar - fixed width */}
-            <ActivityBar />
+            {/* Activity Bar - fixed width (hidden in focus mode) */}
+            {!focusModeEnabled && <ActivityBar />}
 
-            {/* Resizable panels */}
-            <PanelGroup
-              direction="horizontal"
-              onLayout={handlePanelResize}
-              className="flex-1"
-            >
-              {/* Session Nav Panel */}
-              {!sessionNavCollapsed && (
-                <>
-                  <Panel
-                    id="session-nav"
-                    order={1}
-                    defaultSize={20}
-                    minSize={15}
-                    maxSize={35}
-                  >
-                    <SessionNav />
-                  </Panel>
-                  <ResizeHandle />
-                </>
-              )}
-
-              {/* Conversation Panel */}
-              <Panel
-                id="conversation"
-                order={2}
-                defaultSize={canvasCollapsed ? 80 : 40}
-                minSize={30}
+            {/* Main content area - conditionally render based on route */}
+            {/* Key props force React to unmount/remount when switching between layouts */}
+            {/* This prevents PanelGroup state from persisting across route type changes */}
+            {isChatRoute ? (
+              /* Chat routes: 3-panel canvas layout */
+              <PanelGroup
+                key="chat-canvas-layout"
+                direction="horizontal"
+                onLayout={handlePanelResize}
+                className="flex-1"
               >
-                <ConnectedConversationPanel />
-              </Panel>
+                {/* Session Nav Panel */}
+                {!sessionNavCollapsed && (
+                  <>
+                    <Panel
+                      id="session-nav"
+                      order={1}
+                      defaultSize={20}
+                      minSize={15}
+                      maxSize={35}
+                    >
+                      <SessionNav />
+                    </Panel>
+                    <ResizeHandle />
+                  </>
+                )}
 
-              {/* Canvas Panel */}
-              {!canvasCollapsed && (
-                <>
-                  <ResizeHandle />
-                  <Panel
-                    id="canvas"
-                    order={3}
-                    defaultSize={40}
-                    minSize={25}
-                    maxSize={60}
-                  >
-                    <ConnectedCanvasPanel />
-                  </Panel>
-                </>
-              )}
-            </PanelGroup>
+                {/* Conversation Panel */}
+                <Panel
+                  id="conversation"
+                  order={2}
+                  defaultSize={canvasCollapsed ? 80 : 40}
+                  minSize={30}
+                >
+                  <ConnectedConversationPanel />
+                </Panel>
+
+                {/* Canvas Panel */}
+                {!canvasCollapsed && (
+                  <>
+                    <ResizeHandle />
+                    <Panel
+                      id="canvas"
+                      order={3}
+                      defaultSize={40}
+                      minSize={25}
+                      maxSize={60}
+                    >
+                      <ConnectedCanvasPanel />
+                    </Panel>
+                  </>
+                )}
+              </PanelGroup>
+            ) : (
+              /* Full-page routes: Render the routed component via Outlet */
+              /* Suspense boundary handles lazy-loaded routes (e.g., WorkflowsPage, ObservabilityPage) */
+              <div
+                key="full-page-outlet"
+                data-testid="route-outlet"
+                className="flex-1 h-full overflow-auto bg-white dark:bg-gray-900"
+              >
+                <Suspense
+                  fallback={
+                    <div
+                      className="flex items-center justify-center h-full"
+                      data-testid="route-loading"
+                    >
+                      <div className="flex flex-col items-center gap-2">
+                        <div className="w-8 h-8 border-2 border-primary-500 border-t-transparent rounded-full animate-spin" />
+                        <span className="text-sm text-gray-500 dark:text-gray-400">
+                          Loading...
+                        </span>
+                      </div>
+                    </div>
+                  }
+                >
+                  <Outlet />
+                </Suspense>
+              </div>
+            )}
           </div>
         </Panel>
 
@@ -619,24 +756,26 @@ export function StudioShellLayout() {
         )}
       </PanelGroup>
 
-      {/* StatusBar - connection status, model, tokens, user, DevTools toggle */}
-      <StatusBar
-        connectionStatus={connectionStatus}
-        modelName={modelName ?? undefined}
-        tokenCount={tokenCount > 0 ? tokenCount : undefined}
-        userName={username ?? undefined}
-        agentCount={backgroundAgents.length}
-        onAgentQueueToggle={handleAgentQueueToggle}
-        agentQueueOpen={showAgentPanel}
-        pendingApprovals={
-          agentHitlEnabled ? pendingApprovals.length : undefined
-        }
-        onPendingApprovalsClick={
-          agentHitlEnabled ? handlePendingApprovalsClick : undefined
-        }
-        devToolsCollapsed={devToolsCollapsed}
-        onDevToolsToggle={() => dispatch(toggleDevTools())}
-      />
+      {/* StatusBar - connection status, model, tokens, user, DevTools toggle (hidden in focus mode) */}
+      {!focusModeEnabled && (
+        <StatusBar
+          connectionStatus={connectionStatus}
+          modelName={modelName ?? undefined}
+          tokenCount={tokenCount > 0 ? tokenCount : undefined}
+          userName={username ?? undefined}
+          agentCount={backgroundAgents.length}
+          onAgentQueueToggle={handleAgentQueueToggle}
+          agentQueueOpen={showAgentPanel}
+          pendingApprovals={
+            agentHitlEnabled ? pendingApprovals.length : undefined
+          }
+          onPendingApprovalsClick={
+            agentHitlEnabled ? handlePendingApprovalsClick : undefined
+          }
+          devToolsCollapsed={devToolsCollapsed}
+          onDevToolsToggle={() => dispatch(toggleDevTools())}
+        />
+      )}
 
       {/* Dev mode telemetry viewer (fixed position overlay) */}
       <TelemetryViewer />

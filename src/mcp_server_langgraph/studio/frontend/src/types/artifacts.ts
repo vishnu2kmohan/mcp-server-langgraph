@@ -443,9 +443,11 @@ export interface UpdateArtifactResponse {
 
 /**
  * Request to fork an artifact
+ *
+ * NOTE: Uses snake_case `new_name` to match backend ArtifactForkRequest schema
  */
 export interface ForkArtifactRequest {
-  newTitle?: string;
+  new_name?: string;
 }
 
 /**

@@ -5,7 +5,10 @@
  * Connects to the MCP WebSocket endpoint and subscribes to trace extensions.
  */
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, useMemo } from "react";
+import { useAppSelector } from "../store/hooks";
+import { selectIsAuthenticated } from "../store/slices/authSlice";
+import { getAuthToken } from "../utils/storage";
 
 export interface TraceSpan {
   traceId: string;
@@ -44,6 +47,13 @@ export function useTraceWebSocket(
   options: UseTraceWebSocketOptions = {},
 ): UseTraceWebSocketReturn {
   const { url = "/api/v1/mcp/ws", sessionId, autoConnect = false } = options;
+
+  // Get auth state and token for WebSocket authentication
+  const isAuthenticated = useAppSelector(selectIsAuthenticated);
+  const authToken = useMemo(
+    () => (isAuthenticated ? (getAuthToken() ?? undefined) : undefined),
+    [isAuthenticated],
+  );
 
   const wsRef = useRef<WebSocket | null>(null);
   const [isConnected, setIsConnected] = useState(false);
@@ -96,12 +106,20 @@ export function useTraceWebSocket(
   }, []);
 
   const connect = useCallback(() => {
+    // Don't attempt connection before authentication is complete
+    if (!isAuthenticated) {
+      return;
+    }
+
     if (wsRef.current?.readyState === WebSocket.OPEN) {
       return;
     }
 
     const wsUrl = sessionId ? `${url}/${sessionId}` : url;
-    const fullUrl = `${window.location.protocol === "https:" ? "wss:" : "ws:"}//${window.location.host}${wsUrl}`;
+    const tokenParam = authToken
+      ? `?token=${encodeURIComponent(authToken)}`
+      : "";
+    const fullUrl = `${window.location.protocol === "https:" ? "wss:" : "ws:"}//${window.location.host}${wsUrl}${tokenParam}`;
 
     const ws = new WebSocket(fullUrl);
 
@@ -135,7 +153,7 @@ export function useTraceWebSocket(
     ws.onmessage = handleMessage;
 
     wsRef.current = ws;
-  }, [url, sessionId, handleMessage]);
+  }, [url, sessionId, authToken, isAuthenticated, handleMessage]);
 
   const disconnect = useCallback(() => {
     if (wsRef.current) {
@@ -150,16 +168,16 @@ export function useTraceWebSocket(
     setEvents([]);
   }, []);
 
-  // Auto-connect on mount if enabled
+  // Auto-connect on mount if enabled and authenticated
   useEffect(() => {
-    if (autoConnect) {
+    if (autoConnect && isAuthenticated) {
       connect();
     }
 
     return () => {
       disconnect();
     };
-  }, [autoConnect, connect, disconnect]);
+  }, [autoConnect, isAuthenticated, connect, disconnect]);
 
   return {
     spans,

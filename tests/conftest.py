@@ -583,7 +583,7 @@ def configured_mock():  # type: ignore[no-untyped-def]
     return _factory
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def test_infrastructure_ports():
     """
     Centralized source of truth for test infrastructure port mappings.
@@ -599,6 +599,9 @@ def test_infrastructure_ports():
 
     All xdist workers connect to the SAME ports - isolation is achieved via
     PostgreSQL schemas, Redis DBs, and namespace prefixes, NOT port offsets.
+
+    **Scope**: Session-scoped to be consistent with test_infrastructure and openfga_client_real
+    fixtures that depend on these ports. Using function scope here would cause ScopeMismatch.
     """
     from tests.constants import (
         TEST_POSTGRES_PORT,

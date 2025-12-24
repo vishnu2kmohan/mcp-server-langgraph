@@ -135,75 +135,31 @@ def extract_user_from_jwt_payload(payload: dict[str, Any]) -> dict[str, Any]:
     """
     Extract user information from a JWT payload.
 
-    Handles various JWT claim formats from different identity providers
-    (Keycloak, Auth0, generic OIDC, etc.).
+    Delegates to the centralized jwt_utils.extract_user_from_jwt_payload for
+    consistent user extraction across all authentication flows (DRY principle).
 
     Args:
         payload: The decoded JWT payload.
 
     Returns:
         Normalized user data dictionary containing:
-        - user_id: Unique user identifier
+        - user_id: OpenFGA-compatible user ID (e.g., "user:alice")
         - username: Display name or preferred username
         - email: User's email address
         - roles: List of user roles
         - raw_payload: Original payload for advanced use cases
     """
-    # Try common claim names for user ID
-    user_id = payload.get("sub") or payload.get("user_id") or payload.get("uid") or payload.get("id") or "unknown"
-
-    # Try common claim names for username
-    username = (
-        payload.get("preferred_username")
-        or payload.get("username")
-        or payload.get("name")
-        or payload.get("email", "").split("@")[0]
-        or user_id
+    from mcp_server_langgraph.auth.jwt_utils import (
+        extract_user_from_jwt_payload as _extract_user,
     )
 
-    # Try common claim names for email
-    email = payload.get("email") or payload.get("mail") or ""
+    # Use centralized extraction logic (single source of truth)
+    user_data = _extract_user(payload)
 
-    # Try to extract roles from various locations
-    roles: list[str] = []
+    # Add raw_payload for backward compatibility with WebSocket consumers
+    user_data["raw_payload"] = payload
 
-    # Keycloak realm_access.roles
-    realm_access = payload.get("realm_access", {})
-    if isinstance(realm_access, dict):
-        roles.extend(realm_access.get("roles", []))
-
-    # Keycloak resource_access.{client}.roles
-    resource_access = payload.get("resource_access", {})
-    if isinstance(resource_access, dict):
-        for client_roles in resource_access.values():
-            if isinstance(client_roles, dict):
-                roles.extend(client_roles.get("roles", []))
-
-    # Direct roles claim (Auth0, generic OIDC)
-    direct_roles = payload.get("roles", [])
-    if isinstance(direct_roles, list):
-        roles.extend(direct_roles)
-
-    # Groups claim (sometimes used for roles)
-    groups = payload.get("groups", [])
-    if isinstance(groups, list):
-        roles.extend(groups)
-
-    # Deduplicate roles while preserving order
-    seen: set[str] = set()
-    unique_roles: list[str] = []
-    for role in roles:
-        if role not in seen:
-            seen.add(role)
-            unique_roles.append(role)
-
-    return {
-        "user_id": user_id,
-        "username": username,
-        "email": email,
-        "roles": unique_roles,
-        "raw_payload": payload,
-    }
+    return user_data
 
 
 async def validate_websocket_token(token: str) -> dict[str, Any] | None:

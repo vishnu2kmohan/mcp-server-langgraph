@@ -67,9 +67,10 @@ describe("canvasLoaders", () => {
         },
       ];
 
+      // Backend uses CursorPaginatedResponse format with 'data' field
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: () => Promise.resolve({ items: mockApiSessions }),
+        json: () => Promise.resolve({ data: mockApiSessions }),
       });
 
       const result = await sessionsLoader(createLoaderArgs());
@@ -132,18 +133,20 @@ describe("canvasLoaders", () => {
         created_at: "2024-01-01T00:00:00Z",
         updated_at: "2024-01-01T00:00:00Z",
       };
+      // Backend uses message_id and timestamp (not id and created_at)
+      // Messages endpoint returns plain array (not { items: [...] })
       const mockMessages = [
         {
-          id: "msg-1",
+          message_id: "msg-1",
           role: "user",
           content: "Hello",
-          created_at: "2024-01-01T00:00:00Z",
+          timestamp: "2024-01-01T00:00:00Z",
         },
         {
-          id: "msg-2",
+          message_id: "msg-2",
           role: "assistant",
           content: "Hi!",
-          created_at: "2024-01-01T00:01:00Z",
+          timestamp: "2024-01-01T00:01:00Z",
         },
       ];
       const mockArtifacts = [
@@ -157,7 +160,8 @@ describe("canvasLoaders", () => {
         })
         .mockResolvedValueOnce({
           ok: true,
-          json: () => Promise.resolve({ items: mockMessages }),
+          // Messages endpoint returns plain array
+          json: () => Promise.resolve(mockMessages),
         })
         .mockResolvedValueOnce({
           ok: true,
@@ -184,12 +188,13 @@ describe("canvasLoaders", () => {
         created_at: "2024-06-15T10:00:00Z",
         updated_at: "2024-06-15T10:00:00Z",
       };
+      // Backend uses message_id and timestamp
       const mockMessages = [
         {
-          id: "msg-1",
+          message_id: "msg-1",
           role: "user",
           content: "Test",
-          created_at: "2024-06-15T10:30:00Z",
+          timestamp: "2024-06-15T10:30:00Z",
         },
       ];
 
@@ -200,7 +205,8 @@ describe("canvasLoaders", () => {
         })
         .mockResolvedValueOnce({
           ok: true,
-          json: () => Promise.resolve({ items: mockMessages }),
+          // Messages endpoint returns plain array
+          json: () => Promise.resolve(mockMessages),
         })
         .mockResolvedValueOnce({
           ok: true,
@@ -219,7 +225,8 @@ describe("canvasLoaders", () => {
         .mockResolvedValueOnce({ ok: false }) // Session not found
         .mockResolvedValueOnce({
           ok: true,
-          json: () => Promise.resolve({ items: [] }),
+          // Messages endpoint returns plain array
+          json: () => Promise.resolve([]),
         })
         .mockResolvedValueOnce({
           ok: true,
@@ -269,7 +276,8 @@ describe("canvasLoaders", () => {
         })
         .mockResolvedValueOnce({
           ok: true,
-          json: () => Promise.resolve({ items: [] }),
+          // Messages endpoint returns plain array
+          json: () => Promise.resolve([]),
         })
         .mockResolvedValueOnce({
           ok: true,
@@ -290,9 +298,9 @@ describe("canvasLoaders", () => {
         created_at: "2024-01-01T00:00:00Z",
         updated_at: "2024-01-01T00:00:00Z",
       };
-      // Messages missing required fields
+      // Messages missing required fields (message_id, role, timestamp)
       const invalidMessages = [
-        { content: "No ID or role" }, // Missing id, role, created_at
+        { content: "No message_id or role" }, // Missing message_id, role, timestamp
       ];
 
       mockFetch
@@ -302,7 +310,8 @@ describe("canvasLoaders", () => {
         })
         .mockResolvedValueOnce({
           ok: true,
-          json: () => Promise.resolve({ items: invalidMessages }),
+          // Messages endpoint returns plain array
+          json: () => Promise.resolve(invalidMessages),
         })
         .mockResolvedValueOnce({
           ok: true,

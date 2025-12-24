@@ -1,0 +1,204 @@
+---
+title: "Keyboard Shortcuts"
+description: "Keyboard shortcuts for efficient navigation in Agent Studio"
+icon: "keyboard"
+---
+
+# Keyboard Shortcuts
+
+Agent Studio supports keyboard shortcuts for efficient navigation and actions. Shortcuts adapt to your platform (Mac uses symbols, Windows/Linux uses key names).
+
+## Global Shortcuts
+
+These shortcuts work from anywhere in the application:
+
+| Shortcut | Mac | Windows/Linux | Description |
+|----------|-----|---------------|-------------|
+| Focus Mode | `Cmd+Shift+F` | `Ctrl+Shift+F` | Toggle distraction-free Focus Mode |
+| Close/Cancel | `Esc` | `Esc` | Close dialogs, dismiss menus, exit focus mode |
+| Search | `Cmd+F` | `Ctrl+F` | Focus search input |
+| New Session | `Cmd+N` | `Ctrl+N` | Create new chat session |
+| Save | `Cmd+S` | `Ctrl+S` | Save current work |
+| Refresh | `Cmd+R` | `Ctrl+R` | Refresh current view |
+
+## Chat Input Shortcuts
+
+When typing in the chat input:
+
+| Shortcut | Description |
+|----------|-------------|
+| `Enter` | Send message |
+| `Shift+Enter` | New line (don't send) |
+| `Tab` | Accept inline AI suggestion (when visible) |
+| `Escape` | Dismiss inline AI suggestion |
+| `/` | Open slash command menu |
+
+## Navigation Shortcuts
+
+| Shortcut | Description |
+|----------|-------------|
+| `ArrowUp` / `ArrowDown` | Navigate through lists and menus |
+| `ArrowLeft` / `ArrowRight` | Navigate horizontal options |
+| `Enter` | Select focused item |
+| `Space` | Toggle selection |
+| `Escape` | Close menu / go back |
+
+## Canvas Shortcuts
+
+When working with the Canvas:
+
+| Shortcut | Description |
+|----------|-------------|
+| `Escape` | Deselect artifact |
+| `Delete` / `Backspace` | Delete selected artifact |
+| `Cmd+Z` / `Ctrl+Z` | Undo last action |
+| `Cmd+Shift+Z` / `Ctrl+Shift+Z` | Redo action |
+
+## AI Features
+
+### Inline Suggestions
+
+When AI suggestions are enabled:
+
+| Shortcut | Description |
+|----------|-------------|
+| `Tab` | Accept the ghost text suggestion |
+| `Escape` | Dismiss the suggestion |
+
+<Tip>
+  Inline AI suggestions appear as ghost text as you type. Press Tab to accept or Escape to dismiss.
+</Tip>
+
+### AI Command Palette
+
+| Shortcut | Description |
+|----------|-------------|
+| `Cmd+K` / `Ctrl+K` | Open AI command palette (when enabled) |
+| `ArrowUp` / `ArrowDown` | Navigate command options |
+| `Enter` | Execute selected command |
+| `Escape` | Close palette |
+
+## Dialog Shortcuts
+
+In modal dialogs:
+
+| Shortcut | Description |
+|----------|-------------|
+| `Escape` | Close dialog (when not loading) |
+| `Tab` | Navigate between buttons |
+| `Enter` | Confirm action (on focused button) |
+
+## Approval Dialogs (HITL)
+
+| Shortcut | Description |
+|----------|-------------|
+| `Escape` | Cancel approval dialog |
+| `Enter` | Submit with focused action |
+
+## Persona Switcher
+
+| Shortcut | Description |
+|----------|-------------|
+| `ArrowUp` / `ArrowDown` | Navigate personas |
+| `Enter` | Select persona |
+| `Escape` | Close switcher |
+
+## Accessibility Notes
+
+<CardGroup cols={2}>
+  <Card title="Keyboard Navigation" icon="keyboard">
+    All interactive elements are focusable via `Tab`. Screen readers announce shortcut hints where appropriate.
+  </Card>
+  <Card title="Focus Management" icon="bullseye">
+    `Escape` consistently dismisses overlays. Focus is trapped within modal dialogs for accessibility.
+  </Card>
+</CardGroup>
+
+## Using Shortcuts Programmatically
+
+The `useKeyboardShortcuts` hook provides keyboard shortcut handling:
+
+```typescript
+import { useKeyboardShortcuts, COMMON_SHORTCUTS } from "@/hooks/useKeyboardShortcuts";
+
+function MyComponent() {
+  useKeyboardShortcuts({
+    [COMMON_SHORTCUTS.NEW]: () => createNewItem(),
+    [COMMON_SHORTCUTS.DELETE]: () => deleteSelected(),
+    "ctrl+e": () => exportData(),
+  });
+
+  return <div>...</div>;
+}
+```
+
+## Displaying Shortcuts
+
+Use `useShortcutDisplay` to format shortcuts for display:
+
+```typescript
+import { useShortcutDisplay } from "@/hooks/useKeyboardShortcuts";
+
+function ShortcutHint({ shortcut }: { shortcut: string }) {
+  const { formatShortcut, isMac } = useShortcutDisplay();
+
+  return <kbd>{formatShortcut(shortcut)}</kbd>;
+}
+
+// On Mac: "⌘⇧F"
+// On Windows: "Ctrl+Shift+F"
+```
+
+## Feature-Gated Shortcuts
+
+Some shortcuts require feature flags to be enabled:
+
+| Shortcut | Feature Flag | Description |
+|----------|-------------|-------------|
+| Focus Mode toggle | `focus_mode` | `Cmd/Ctrl+Shift+F` |
+| AI Command Palette | `canvas_ai_palette` | `Cmd/Ctrl+K` |
+| Inline suggestions | `ai_suggestions` | `Tab` to accept |
+
+<Note>
+  See [Studio Feature Flags](/guides/studio-feature-flags) for information on enabling these features.
+</Note>
+
+## Adding New Shortcuts
+
+<Steps>
+  <Step title="Define Shortcut">
+    Use `useKeyboardShortcuts` hook in your component
+  </Step>
+  <Step title="Use Constants">
+    Use `COMMON_SHORTCUTS` constants when applicable
+  </Step>
+  <Step title="Document">
+    Update this documentation with the new shortcut
+  </Step>
+  <Step title="Add to Help Panel">
+    Add to the Help Panel (`ShortcutsPanel.tsx`)
+  </Step>
+  <Step title="Test Cross-Platform">
+    Test on both Mac and Windows/Linux
+  </Step>
+</Steps>
+
+## Avoiding Shortcut Conflicts
+
+<Warning>
+  Avoid conflicts with browser shortcuts (Cmd+T, Cmd+W), system shortcuts (Cmd+Space), and input field behavior (Tab, Enter).
+</Warning>
+
+When shortcuts may conflict with input fields, use `allowInInputs: false` (default):
+
+```typescript
+useKeyboardShortcuts(shortcuts, {
+  allowInInputs: false,  // Default: skip when in inputs
+  preventDefault: true,   // Default: prevent default browser behavior
+});
+```
+
+## Related Documentation
+
+- [Studio Feature Flags](/guides/studio-feature-flags) - Feature flags for UI features
+- [Playground Guide](/guides/playground) - Using the Agent Studio playground

@@ -8,8 +8,11 @@
  * Requires admin or compliance_officer role.
  */
 
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useMemo } from "react";
 import { useRealtimeSync } from "./useRealtimeSync";
+import { useAppSelector } from "../store/hooks";
+import { selectIsAuthenticated } from "../store/slices/authSlice";
+import { getAuthToken } from "../utils/storage";
 
 // =============================================================================
 // Types
@@ -100,10 +103,11 @@ export interface UseAuditWebSocketReturn {
 // Default URL
 // =============================================================================
 
-function getDefaultWebSocketUrl(): string {
+function getDefaultWebSocketUrl(token?: string): string {
   const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
   const host = window.location.host;
-  return `${protocol}//${host}/api/v1/audit/stream`;
+  const tokenParam = token ? `?token=${encodeURIComponent(token)}` : "";
+  return `${protocol}//${host}/api/v1/audit/stream${tokenParam}`;
 }
 
 // =============================================================================
@@ -114,11 +118,23 @@ export function useAuditWebSocket(
   options: UseAuditWebSocketOptions = {},
 ): UseAuditWebSocketReturn {
   const {
-    url = getDefaultWebSocketUrl(),
+    url: customUrl,
     maxEvents = 1000,
     onEvent,
     onFilterUpdated,
   } = options;
+
+  // Get auth state and token for WebSocket authentication
+  const isAuthenticated = useAppSelector(selectIsAuthenticated);
+  const authToken = isAuthenticated ? (getAuthToken() ?? undefined) : undefined;
+
+  // Compute WebSocket URL - only generate URL when authenticated
+  // Passing empty string prevents connection attempt before auth is ready
+  const url = useMemo(
+    () =>
+      isAuthenticated ? (customUrl ?? getDefaultWebSocketUrl(authToken)) : "",
+    [customUrl, authToken, isAuthenticated],
+  );
 
   // State
   const [events, setEvents] = useState<AuditEvent[]>([]);

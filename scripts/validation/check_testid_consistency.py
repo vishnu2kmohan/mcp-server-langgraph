@@ -44,6 +44,19 @@ KNOWN_UNMATCHED_TESTIDS: frozenset[str] = frozenset(
         "nav-chat",  # studio-shell-smoke.spec.ts - ActivityBar component
         "nav-admin",  # studio-shell-smoke.spec.ts - ActivityBar component
         "new-chat-button",  # studio-shell-smoke.spec.ts - SessionNav component
+        # HITL approval components
+        "awaiting-approval-indicator",  # agent-hitl-approval.spec.ts
+        "awaiting",  # agent-hitl-approval.spec.ts - partial match
+        # MCP/server patterns
+        "server",  # alice-*-journey.spec.ts - partial match for MCP servers
+        # Sandpack code playground (third-party component)
+        "run-code-button",  # artifact-rendering.spec.ts - Sandpack component
+        "sandpack-preview",  # artifact-rendering.spec.ts - Sandpack component
+        # Layout patterns - partial matches
+        "sidebar",  # ios-pwa.spec.ts - layout component
+        "left-sidebar",  # ios-pwa.spec.ts - layout component
+        # Persona indicator
+        "persona-indicator",  # websocket-status.spec.ts - status bar indicator
     }
 )
 

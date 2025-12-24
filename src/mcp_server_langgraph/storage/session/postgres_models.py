@@ -46,6 +46,22 @@ class SessionModel(SessionBase):
         onupdate=lambda: datetime.now(UTC),
     )
 
+    # Session status: 'active' (default) or 'archived'
+    # Uses server_default to avoid table locks during migration
+    status: Mapped[str] = mapped_column(
+        String(20),
+        nullable=False,
+        default="active",
+        server_default="active",
+    )
+
+    # Optional workflow ID this session is associated with
+    workflow_id: Mapped[str | None] = mapped_column(
+        String(36),
+        nullable=True,
+        index=True,
+    )
+
     # Full-text search vector (maintained by database trigger)
     search_vector: Mapped[str | None] = mapped_column(
         TSVECTOR,
@@ -60,11 +76,15 @@ class SessionModel(SessionBase):
             "search_vector",
             postgresql_using="gin",
         ),
+        # Composite index for user + status filtering
+        Index("ix_sessions_user_status", "user_id", "status"),
+        # Composite index for user + workflow filtering
+        Index("ix_sessions_user_workflow", "user_id", "workflow_id"),
     )
 
     def __repr__(self) -> str:
         """String representation."""
-        return f"<Session(id={self.id!r}, name={self.name!r})>"
+        return f"<Session(id={self.id!r}, name={self.name!r}, status={self.status!r})>"
 
 
 class MessageModel(SessionBase):

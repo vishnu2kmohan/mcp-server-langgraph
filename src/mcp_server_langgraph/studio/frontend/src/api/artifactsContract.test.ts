@@ -362,7 +362,7 @@ describe("Artifacts API Contract Tests", () => {
   describe("POST /api/v1/artifacts/:id/fork (Fork)", () => {
     it("should validate ForkArtifactResponse schema", async () => {
       const request: ForkArtifactRequest = {
-        newTitle: "Forked Artifact",
+        new_name: "Forked Artifact",
       };
 
       const response = await fetch("/api/v1/artifacts/art-1/fork", {
@@ -538,5 +538,58 @@ describe("Artifacts API RTK Query Hooks Contract", () => {
       version: 1,
     };
     expect(isForkArtifactResponse(response)).toBe(true);
+  });
+});
+
+// =============================================================================
+// REQUEST Contract Tests (Validate Frontend -> Backend Field Names)
+// =============================================================================
+
+/**
+ * Type guard for valid ForkArtifactRequest body matching backend contract
+ *
+ * Backend expects: { new_name?: string } (snake_case)
+ * NOT: { new_title?: string } (wrong field name)
+ * NOT: { newTitle?: string } (camelCase)
+ */
+function isValidForkArtifactRequestBody(
+  obj: unknown,
+): obj is { new_name?: string } {
+  if (typeof obj !== "object" || obj === null) return false;
+  const o = obj as Record<string, unknown>;
+
+  // MUST NOT have wrong field names
+  if ("new_title" in o) return false;
+  if ("newTitle" in o) return false;
+
+  // new_name is optional, but if present must be string
+  if ("new_name" in o && typeof o.new_name !== "string") return false;
+
+  return true;
+}
+
+describe("Artifacts API REQUEST Contract Tests", () => {
+  describe("POST /api/v1/artifacts/{id}/fork Request Body", () => {
+    it("should use new_name field (not new_title or newTitle)", () => {
+      // Valid request body matching backend ArtifactForkRequest schema
+      const validRequest = { new_name: "My Forked Artifact" };
+      expect(isValidForkArtifactRequestBody(validRequest)).toBe(true);
+    });
+
+    it("should accept empty request body (new_name is optional)", () => {
+      const emptyRequest = {};
+      expect(isValidForkArtifactRequestBody(emptyRequest)).toBe(true);
+    });
+
+    it("should reject request with new_title field (wrong field name)", () => {
+      // This is what the frontend currently sends - WRONG!
+      const wrongRequest = { new_title: "My Forked Artifact" };
+      expect(isValidForkArtifactRequestBody(wrongRequest)).toBe(false);
+    });
+
+    it("should reject request with newTitle field (camelCase - wrong)", () => {
+      const wrongRequest = { newTitle: "My Forked Artifact" };
+      expect(isValidForkArtifactRequestBody(wrongRequest)).toBe(false);
+    });
   });
 });

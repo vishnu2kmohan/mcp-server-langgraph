@@ -380,6 +380,20 @@ class TestAgentRequestBroadcaster:
         assert broadcaster.connection_count == 1
 
     @pytest.mark.asyncio
+    async def test_connect_with_accept_false_skips_accept(self) -> None:
+        """Test connecting a WebSocket with accept=False (for WebSocketBase integration)."""
+        broadcaster = AgentRequestBroadcaster()
+        mock_ws = AsyncMock()  # noqa: async-mock-config - mock used for method call assertions
+
+        # When using WebSocketBase, the connection is already accepted
+        await broadcaster.connect(mock_ws, "sess-123", "user-456", accept=False)
+
+        # accept() should NOT be called
+        mock_ws.accept.assert_not_called()
+        # But connection should still be registered
+        assert broadcaster.connection_count == 1
+
+    @pytest.mark.asyncio
     async def test_connect_multiple(self) -> None:
         """Test connecting multiple WebSockets."""
         broadcaster = AgentRequestBroadcaster()

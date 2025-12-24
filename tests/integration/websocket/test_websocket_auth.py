@@ -1,9 +1,14 @@
 """
-WebSocket Authorization Integration Tests.
+WebSocket Authorization Unit Tests (Mocked).
 
-Integration tests for OpenFGA-based authorization on WebSocket endpoints.
+Unit tests for OpenFGA-based authorization on WebSocket endpoints.
 Tests verify that personas (admin, alice, bob) have correct access to
 WebSocket endpoints based on the authorization tuples in sample-tuples.json.
+
+Note: These tests use MOCKS for OpenFGA and should be considered unit tests.
+TODO: Move to tests/unit/websocket/ in a future refactor.
+Real integration tests using actual OpenFGA infrastructure are in:
+- tests/integration/test_openfga_real_infrastructure.py
 
 Architecture:
 - Uses mock OpenFGA client to simulate authorization checks
@@ -146,7 +151,7 @@ def mock_jwt_validator():
 def mock_openfga_client():
     """Mock OpenFGA client for authorization checks."""
     with patch("mcp_server_langgraph.websocket.authz.get_openfga_client") as mock_get:
-        mock_client = AsyncMock()
+        mock_client = AsyncMock()  # noqa: async-mock-config - configured below
 
         # Define authorization rules matching sample-tuples.json
         # Note: parameter name must be 'object' to match authz.py keyword argument

@@ -49,16 +49,32 @@ observability_router = APIRouter(tags=["observability"])
 
 
 class SpanResponse(BaseModel):
-    """Response model for a span."""
+    """Response model for a span.
+
+    Includes optional fields for LLM thinking metadata used by the frontend
+    for displaying extended thinking content in trace visualization.
+    """
 
     span_id: str = Field(description="Span ID")
     parent_span_id: str | None = Field(default=None, description="Parent span ID")
     name: str = Field(description="Span name")
-    start_time: str = Field(description="Start timestamp")
-    end_time: str | None = Field(default=None, description="End timestamp")
+    start_time: str = Field(description="Start timestamp (ISO 8601)")
+    end_time: str | None = Field(default=None, description="End timestamp (ISO 8601)")
     duration_ms: float | None = Field(default=None, description="Duration in milliseconds")
     status: str = Field(default="OK", description="Span status")
     attributes: dict[str, Any] = Field(default_factory=dict, description="Span attributes")
+    thinking_content: str | None = Field(
+        default=None,
+        description="Internal reasoning/thinking content from extended thinking LLM spans",
+    )
+    thinking_tokens: int | None = Field(
+        default=None,
+        description="Number of tokens used for thinking/reasoning in this span",
+    )
+    model_name: str | None = Field(
+        default=None,
+        description="Name of the LLM model used in this span",
+    )
 
 
 class TraceResponse(BaseModel):

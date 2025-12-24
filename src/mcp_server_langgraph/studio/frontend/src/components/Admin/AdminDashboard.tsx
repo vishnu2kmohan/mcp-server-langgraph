@@ -237,26 +237,25 @@ export function AdminDashboard({
   };
 
   // Agent HITL batch handlers
+  // NOTE: approved_by/rejected_by are derived from auth on the backend
   const handleBatchApproveAgents = useCallback(
     async (requestIds: string[], reason?: string) => {
       await batchApproveRequests({
         request_ids: requestIds,
-        approved_by: currentUsername ?? "admin",
         reason,
       }).unwrap();
     },
-    [batchApproveRequests, currentUsername],
+    [batchApproveRequests],
   );
 
   const handleBatchRejectAgents = useCallback(
     async (requestIds: string[], reason?: string) => {
       await batchRejectRequests({
         request_ids: requestIds,
-        rejected_by: currentUsername ?? "admin",
         reason,
       }).unwrap();
     },
-    [batchRejectRequests, currentUsername],
+    [batchRejectRequests],
   );
 
   // Handle audit log export

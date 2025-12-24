@@ -172,16 +172,20 @@ export interface ClarificationUIResponse {
 /**
  * API-layer clarification response (used by useHITLDialogs hook for API calls)
  *
- * This format matches the backend API contract:
+ * This format matches the backend API contract (ClarificationResponseRequest):
  * - Explicit `response_type` discriminator
- * - Uses `text_response` for text input
- * - Uses `selected_option` for choice
+ * - Uses `value` for text input (NOT text_response)
+ * - Uses `selected_option_id` for choice (NOT selected_option)
+ * - Includes `responded_by` (required by backend)
+ *
+ * See: src/mcp_server_langgraph/api/v1/agent_requests.py
  */
 export interface ClarificationAPIResponse {
   request_id: string;
+  responded_by: string;
   response_type: "choice" | "text" | "confirm";
-  selected_option?: string;
-  text_response?: string;
+  value?: string;
+  selected_option_id?: string;
   confirmed?: boolean;
 }
 
@@ -258,6 +262,7 @@ export function convertUIResponseToAPIResponse(
   if (uiResponse.confirmed !== undefined) {
     return {
       request_id: uiResponse.request_id,
+      responded_by: uiResponse.responded_by,
       response_type: "confirm",
       confirmed: uiResponse.confirmed,
     };
@@ -266,16 +271,18 @@ export function convertUIResponseToAPIResponse(
   if (uiResponse.selected_option_id) {
     return {
       request_id: uiResponse.request_id,
+      responded_by: uiResponse.responded_by,
       response_type: "choice",
-      selected_option: uiResponse.selected_option_id,
+      selected_option_id: uiResponse.selected_option_id,
     };
   }
 
   // Default to text
   return {
     request_id: uiResponse.request_id,
+    responded_by: uiResponse.responded_by,
     response_type: "text",
-    text_response: uiResponse.value,
+    value: uiResponse.value,
   };
 }
 
@@ -285,23 +292,23 @@ export function convertUIResponseToAPIResponse(
  * Useful for displaying API responses in the UI or for testing.
  *
  * @param apiResponse - Response from API
- * @param respondedBy - User who responded (required for UI format)
+ * @param respondedBy - User who responded (optional, uses API value if present)
  * @returns Response formatted for UI display
  */
 export function convertAPIResponseToUIResponse(
   apiResponse: ClarificationAPIResponse,
-  respondedBy: string,
+  respondedBy?: string,
 ): ClarificationUIResponse {
   const base: ClarificationUIResponse = {
     request_id: apiResponse.request_id,
-    responded_by: respondedBy,
+    responded_by: respondedBy ?? apiResponse.responded_by,
   };
 
   switch (apiResponse.response_type) {
     case "text":
-      return { ...base, value: apiResponse.text_response };
+      return { ...base, value: apiResponse.value };
     case "choice":
-      return { ...base, selected_option_id: apiResponse.selected_option };
+      return { ...base, selected_option_id: apiResponse.selected_option_id };
     case "confirm":
       return { ...base, confirmed: apiResponse.confirmed };
     default:

@@ -42,6 +42,123 @@ class MessageType(str, Enum):
     UNSUBSCRIBED = "unsubscribed"
 
 
+class AISuggestionMessageType(str, Enum):
+    """
+    Message types for AI suggestions WebSocket.
+
+    Used for real-time AI suggestion features in the Studio frontend.
+    Endpoint: /api/v1/ws/ai/suggestions
+    """
+
+    # Client -> Server
+    SUGGESTION_REQUEST = "suggestion_request"
+    SUGGESTION_ACCEPT = "suggestion_accept"
+    SUGGESTION_REJECT = "suggestion_reject"
+    CONTEXT_UPDATE = "context_update"
+
+    # Server -> Client
+    SUGGESTION_RESPONSE = "suggestion_response"
+    ERROR = "error"
+
+
+@dataclass
+class AISuggestionRequest:
+    """
+    Request payload for AI suggestion.
+
+    Sent by client to request an AI suggestion based on current input.
+    """
+
+    session_id: str
+    input_text: str
+    cursor_position: int
+    context_window: int = 500  # Characters of context to include
+
+    def to_dict(self) -> dict[str, Any]:
+        """Convert to dictionary for JSON serialization."""
+        return {
+            "session_id": self.session_id,
+            "input_text": self.input_text,
+            "cursor_position": self.cursor_position,
+            "context_window": self.context_window,
+        }
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> AISuggestionRequest:
+        """Create from dictionary (JSON deserialization)."""
+        return cls(
+            session_id=data.get("session_id", ""),
+            input_text=data.get("input_text", ""),
+            cursor_position=data.get("cursor_position", 0),
+            context_window=data.get("context_window", 500),
+        )
+
+
+@dataclass
+class AISuggestionResponse:
+    """
+    Response payload with AI suggestion.
+
+    Sent by server with the generated suggestion.
+    """
+
+    suggestion_id: str
+    text: str
+    confidence: float
+    reasoning: str | None = None
+
+    def to_dict(self) -> dict[str, Any]:
+        """Convert to dictionary for JSON serialization."""
+        result: dict[str, Any] = {
+            "suggestion_id": self.suggestion_id,
+            "text": self.text,
+            "confidence": self.confidence,
+        }
+        if self.reasoning is not None:
+            result["reasoning"] = self.reasoning
+        return result
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> AISuggestionResponse:
+        """Create from dictionary (JSON deserialization)."""
+        return cls(
+            suggestion_id=data.get("suggestion_id", ""),
+            text=data.get("text", ""),
+            confidence=data.get("confidence", 0.0),
+            reasoning=data.get("reasoning"),
+        )
+
+
+@dataclass
+class AISuggestionError:
+    """
+    Error payload for AI suggestion failures.
+
+    Includes retryable flag to indicate if client should retry.
+    """
+
+    code: str
+    message: str
+    retryable: bool = False
+
+    def to_dict(self) -> dict[str, Any]:
+        """Convert to dictionary for JSON serialization."""
+        return {
+            "code": self.code,
+            "message": self.message,
+            "retryable": self.retryable,
+        }
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> AISuggestionError:
+        """Create from dictionary (JSON deserialization)."""
+        return cls(
+            code=data.get("code", "unknown"),
+            message=data.get("message", "Unknown error"),
+            retryable=data.get("retryable", False),
+        )
+
+
 @dataclass
 class MessageEnvelope:
     """
@@ -101,7 +218,16 @@ class AuthUser:
     def from_jwt_payload(cls, payload: dict[str, Any]) -> AuthUser:
         """Create from JWT payload claims."""
         # Extract user_id with fallbacks
-        user_id = payload.get("sub") or payload.get("user_id") or payload.get("preferred_username") or "unknown"
+        # IMPORTANT: Use preferred_username first for OpenFGA compatibility
+        # OpenFGA tuples use username format (user:admin, user:alice) not UUIDs
+        # The 'sub' claim in Keycloak is a UUID which doesn't match our tuples
+        user_id = (
+            payload.get("preferred_username")
+            or payload.get("username")
+            or payload.get("sub")
+            or payload.get("user_id")
+            or "unknown"
+        )
 
         # Extract username with fallbacks
         username = payload.get("preferred_username") or payload.get("username") or payload.get("name") or user_id

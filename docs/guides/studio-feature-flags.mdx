@@ -1,0 +1,209 @@
+---
+title: "Studio Feature Flags"
+description: "Configure feature flags for Agent Studio UI features"
+icon: "toggle-on"
+---
+
+# Agent Studio Feature Flags
+
+Feature flags in Agent Studio allow gradual rollout of UI features and quick rollback if issues arise.
+
+## Overview
+
+Feature flags are managed through the `FeatureFlagContext` and accessed via the `useFeatureFlag` hook:
+
+```typescript
+import { useFeatureFlag } from "@/contexts/FeatureFlagContext";
+
+const isEnabled = useFeatureFlag("feature_name");
+```
+
+<Note>
+  These flags control **frontend UI features** in Agent Studio. For backend/server feature flags, see [Feature Flags Guide](/guides/feature-flags).
+</Note>
+
+## Flag Categories
+
+### AI/Canvas Features
+
+| Flag | Description | Default | Status |
+|------|-------------|---------|--------|
+| `canvas_ai_palette` | Enable AI-powered canvas shortcuts menu (review, comments, fix) | `false` | Beta |
+| `ai_suggestions` | Enable inline AI suggestions in chat input (ghost text completion) | `false` | Beta |
+| `interactive_artifacts` | Enable interactive artifact editing in chat | `true` | Stable |
+
+### Human-in-the-Loop (HITL)
+
+| Flag | Description | Default | Status |
+|------|-------------|---------|--------|
+| `agent_hitl` | Enable agent approval dialogs and HITL workflows | `true` | Stable |
+| `hitl_ai_explanation` | Show AI explanation panel in approval dialogs | `false` | Beta |
+
+### Insights & Analytics
+
+| Flag | Description | Default | Status |
+|------|-------------|---------|--------|
+| `insights_session_dismissal` | Allow dismissing cross-insights per session | `true` | Stable |
+| `batch_composite_analysis` | Enable batch analysis of composite insights | `true` | Stable |
+| `persona_analysis` | Enable persona-based UX analysis | `false` | Beta |
+
+### UI/UX Features
+
+| Flag | Description | Default | Status |
+|------|-------------|---------|--------|
+| `focus_mode` | Enable distraction-free Zen mode toggle | `false` | Beta |
+| `nudges` | Enable contextual nudges and tooltips | `true` | Stable |
+| `session_export` | Enable session export functionality | `true` | Stable |
+
+### WebSocket Features
+
+| Flag | Description | Default | Status |
+|------|-------------|---------|--------|
+| `ai_suggestions_websocket_enabled` | Enable AI suggestions WebSocket endpoint | `false` | Alpha |
+| `workflow_ws_legacy_enabled` | Enable legacy workflow WebSocket path | `false` | Deprecated |
+
+## Usage Examples
+
+### Conditional Rendering
+
+<CodeGroup>
+```typescript Basic Usage
+import { useFeatureFlag } from "@/contexts/FeatureFlagContext";
+
+function MyComponent() {
+  const canvasAIPaletteEnabled = useFeatureFlag("canvas_ai_palette");
+
+  return (
+    <div>
+      {canvasAIPaletteEnabled && (
+        <CanvasShortcutsMenu onAction={handleAction} />
+      )}
+    </div>
+  );
+}
+```
+
+```typescript Hook Behavior
+function useAIFeatures() {
+  const aiEnabled = useFeatureFlag("ai_suggestions");
+
+  useEffect(() => {
+    if (!aiEnabled) return;
+    // AI initialization logic
+  }, [aiEnabled]);
+
+  return { enabled: aiEnabled };
+}
+```
+
+```typescript Route Guards
+// In router configuration
+{
+  path: "/studio/ai-insights",
+  element: <AIInsightsPage />,
+  loader: async () => {
+    const flags = await getFeatureFlags();
+    if (!flags.persona_analysis) {
+      throw redirect("/studio");
+    }
+    return null;
+  },
+}
+```
+</CodeGroup>
+
+## Backend Configuration
+
+Feature flags are served from the backend at `/api/v1/feature-flags` and can be overridden via environment variables:
+
+```bash
+# Backend .env
+FEATURE_FLAGS__AI_SUGGESTIONS=true
+FEATURE_FLAGS__CANVAS_AI_PALETTE=true
+FEATURE_FLAGS__FOCUS_MODE=true
+```
+
+## Adding New Feature Flags
+
+<Steps>
+  <Step title="Add Backend Flag">
+    Add the flag to `core/feature_flags.py`
+  </Step>
+  <Step title="Use in Frontend">
+    Use `useFeatureFlag("flag_name")` hook in your component
+  </Step>
+  <Step title="Document">
+    Update this documentation with the new flag
+  </Step>
+  <Step title="Add Tests">
+    Write tests for both enabled and disabled states
+  </Step>
+</Steps>
+
+### Naming Conventions
+
+<CardGroup cols={2}>
+  <Card title="Do" icon="check" color="#22c55e">
+    - Use `snake_case` for flag names
+    - Be descriptive: `canvas_ai_palette`
+    - Keep names concise but clear
+  </Card>
+  <Card title="Don't" icon="xmark" color="#ef4444">
+    - Avoid abbreviations: `cap`
+    - Skip prefixes like `enable_` or `feature_`
+    - Don't use camelCase
+  </Card>
+</CardGroup>
+
+## Testing with Feature Flags
+
+```typescript
+import { render } from "@testing-library/react";
+import { FeatureFlagProvider } from "@/contexts/FeatureFlagContext";
+
+// Test with specific flags
+const customFlags = {
+  ai_suggestions: true,
+  canvas_ai_palette: false,
+};
+
+render(
+  <FeatureFlagProvider initialFlags={customFlags}>
+    <MyComponent />
+  </FeatureFlagProvider>
+);
+```
+
+## Rollback Procedure
+
+<Warning>
+  If a feature causes issues in production, follow this procedure immediately.
+</Warning>
+
+<Steps>
+  <Step title="Disable Flag">
+    Set the flag to `false` in environment variables
+  </Step>
+  <Step title="Restart Services">
+    Restart the backend service to apply changes
+  </Step>
+  <Step title="Verify">
+    Confirm the feature is disabled in the UI
+  </Step>
+  <Step title="Investigate">
+    Debug the issue with the feature safely disabled
+  </Step>
+</Steps>
+
+## Deprecation Process
+
+1. Mark flag as `Deprecated` in this documentation
+2. Add deprecation warning in code with target removal version
+3. Remove flag usage in next major version
+4. Remove flag from backend configuration
+
+## Related Documentation
+
+- [Feature Flags Guide](/guides/feature-flags) - Backend feature flags
+- [Keyboard Shortcuts](/guides/keyboard-shortcuts) - Studio keyboard shortcuts
+- [Environment Configuration](/guides/environment-config) - All configuration options

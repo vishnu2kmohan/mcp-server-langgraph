@@ -80,6 +80,17 @@ export interface SuggestionActionEvent {
   artifactId?: string;
 }
 
+export interface CanvasActionEvent {
+  artifactId: string;
+  action: "review" | "comment" | "fix" | "explain" | "test" | "port" | string;
+  contentType?: string;
+  language?: string;
+  sessionId?: string;
+  success: boolean;
+  durationMs: number;
+  error?: string;
+}
+
 export interface TelemetryEvent {
   type:
     | "session_creation"
@@ -87,7 +98,8 @@ export interface TelemetryEvent {
     | "sync"
     | "artifact_save"
     | "artifact_delete"
-    | "suggestion_action";
+    | "suggestion_action"
+    | "canvas_action";
   timestamp: number;
   data:
     | SessionCreationEvent
@@ -95,7 +107,8 @@ export interface TelemetryEvent {
     | SyncEvent
     | ArtifactSaveEvent
     | ArtifactDeleteEvent
-    | SuggestionActionEvent;
+    | SuggestionActionEvent
+    | CanvasActionEvent;
 }
 
 export interface SessionTelemetryMetrics {
@@ -146,6 +159,15 @@ export interface SessionTelemetryMetrics {
     dismissed: number;
     acceptanceRate: number;
     byType: Record<string, number>;
+  };
+  canvasActions: {
+    total: number;
+    successful: number;
+    failed: number;
+    successRate: number;
+    avgDurationMs: number;
+    byAction: Record<string, number>;
+    lastError?: string;
   };
 }
 
@@ -239,6 +261,14 @@ export class SessionTelemetry {
   private suggestionAccepted = 0;
   private suggestionDismissed = 0;
   private suggestionByType: Record<string, number> = {};
+
+  // Canvas action metrics
+  private canvasActionTotal = 0;
+  private canvasActionSuccessful = 0;
+  private canvasActionFailed = 0;
+  private canvasActionDurations: number[] = [];
+  private canvasActionByType: Record<string, number> = {};
+  private canvasActionLastError?: string;
 
   constructor(options: SessionTelemetryOptions = {}) {
     this.options = {
@@ -373,6 +403,29 @@ export class SessionTelemetry {
   }
 
   /**
+   * Track canvas action event (review, comment, fix, etc.)
+   */
+  trackCanvasAction(event: CanvasActionEvent): void {
+    this.canvasActionTotal++;
+
+    if (event.success) {
+      this.canvasActionSuccessful++;
+    } else {
+      this.canvasActionFailed++;
+      if (event.error) {
+        this.canvasActionLastError = event.error;
+      }
+    }
+
+    this.canvasActionDurations.push(event.durationMs);
+    this.canvasActionByType[event.action] =
+      (this.canvasActionByType[event.action] || 0) + 1;
+
+    this.addToHistory("canvas_action", event);
+    this.log("Canvas action tracked", event);
+  }
+
+  /**
    * Get current metrics
    */
   getMetrics(): SessionTelemetryMetrics {
@@ -437,6 +490,18 @@ export class SessionTelemetry {
             : 0,
         byType: { ...this.suggestionByType },
       },
+      canvasActions: {
+        total: this.canvasActionTotal,
+        successful: this.canvasActionSuccessful,
+        failed: this.canvasActionFailed,
+        successRate:
+          this.canvasActionTotal > 0
+            ? this.canvasActionSuccessful / this.canvasActionTotal
+            : 0,
+        avgDurationMs: this.average(this.canvasActionDurations),
+        byAction: { ...this.canvasActionByType },
+        lastError: this.canvasActionLastError,
+      },
     };
   }
 
@@ -486,6 +551,13 @@ export class SessionTelemetry {
     this.suggestionAccepted = 0;
     this.suggestionDismissed = 0;
     this.suggestionByType = {};
+
+    this.canvasActionTotal = 0;
+    this.canvasActionSuccessful = 0;
+    this.canvasActionFailed = 0;
+    this.canvasActionDurations = [];
+    this.canvasActionByType = {};
+    this.canvasActionLastError = undefined;
 
     this.eventHistory = [];
   }
@@ -551,7 +623,8 @@ export class SessionTelemetry {
       | SyncEvent
       | ArtifactSaveEvent
       | ArtifactDeleteEvent
-      | SuggestionActionEvent,
+      | SuggestionActionEvent
+      | CanvasActionEvent,
   ): void {
     this.eventHistory.push({
       type,

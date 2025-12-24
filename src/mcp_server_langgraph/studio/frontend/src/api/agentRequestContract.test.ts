@@ -53,10 +53,11 @@ function setupAgentRequestHandlers() {
 
     // NOTE: Batch handlers MUST come before :id handlers to avoid path conflicts
     // POST /api/v1/agents/requests/batch/approve
+    // Backend contract: { request_ids: string[], reason?: string }
+    // approved_by is derived from auth, NOT from request body
     http.post("/api/v1/agents/requests/batch/approve", async ({ request }) => {
       const body = (await request.json()) as {
         request_ids: string[];
-        approved_by: string;
         reason?: string;
       };
 
@@ -75,10 +76,11 @@ function setupAgentRequestHandlers() {
     }),
 
     // POST /api/v1/agents/requests/batch/reject
+    // Backend contract: { request_ids: string[], reason?: string }
+    // rejected_by is derived from auth, NOT from request body
     http.post("/api/v1/agents/requests/batch/reject", async ({ request }) => {
       const body = (await request.json()) as {
         request_ids: string[];
-        rejected_by: string;
         reason?: string;
       };
 
@@ -447,12 +449,12 @@ describe("Agent Request API Contract", () => {
 
   describe("POST /api/v1/agents/requests/batch/approve", () => {
     it("should validate batch approve request and response", async () => {
+      // NOTE: approved_by is NOT sent - backend derives from auth
       const response = await fetch("/api/v1/agents/requests/batch/approve", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          request_ids: ["approval-1", "approval-2"], // Use mock pending approval IDs
-          approved_by: "admin@example.com",
+          request_ids: ["approval-1", "approval-2"],
           reason: "Batch approved",
         }),
       });
@@ -476,12 +478,12 @@ describe("Agent Request API Contract", () => {
 
   describe("POST /api/v1/agents/requests/batch/reject", () => {
     it("should validate batch reject request and response", async () => {
+      // NOTE: rejected_by is NOT sent - backend derives from auth
       const response = await fetch("/api/v1/agents/requests/batch/reject", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           request_ids: ["approval-1", "approval-2"],
-          rejected_by: "admin@example.com",
           reason: "Batch rejected - policy violation",
         }),
       });
@@ -494,6 +496,224 @@ describe("Agent Request API Contract", () => {
       expect(typeof data.processed).toBe("number");
       expect(typeof data.failed).toBe("number");
       expect(Array.isArray(data.results)).toBe(true);
+    });
+  });
+});
+
+// =============================================================================
+// REQUEST Contract Tests (Validate Frontend -> Backend Field Names)
+// =============================================================================
+
+/**
+ * Type guard for valid BatchApproveRequest body matching backend contract
+ *
+ * Backend expects: { request_ids: string[], reason?: string }
+ * NOT: { request_ids, approved_by, reason } (approved_by is derived from auth)
+ */
+function isValidBatchApproveRequestBody(
+  obj: unknown,
+): obj is { request_ids: string[]; reason?: string } {
+  if (typeof obj !== "object" || obj === null) return false;
+  const o = obj as Record<string, unknown>;
+
+  // MUST have request_ids as array
+  if (!Array.isArray(o.request_ids)) return false;
+
+  // MUST NOT have approved_by (backend derives from auth)
+  if ("approved_by" in o) return false;
+
+  // reason is optional but must be string if present
+  if ("reason" in o && typeof o.reason !== "string") return false;
+
+  return true;
+}
+
+/**
+ * Type guard for valid BatchRejectRequest body matching backend contract
+ *
+ * Backend expects: { request_ids: string[], reason?: string }
+ * NOT: { request_ids, rejected_by, reason } (rejected_by is derived from auth)
+ */
+function isValidBatchRejectRequestBody(
+  obj: unknown,
+): obj is { request_ids: string[]; reason?: string } {
+  if (typeof obj !== "object" || obj === null) return false;
+  const o = obj as Record<string, unknown>;
+
+  // MUST have request_ids as array
+  if (!Array.isArray(o.request_ids)) return false;
+
+  // MUST NOT have rejected_by (backend derives from auth)
+  if ("rejected_by" in o) return false;
+
+  // reason is optional but must be string if present
+  if ("reason" in o && typeof o.reason !== "string") return false;
+
+  return true;
+}
+
+describe("Agent Request API REQUEST Contract Tests", () => {
+  describe("POST /api/v1/agents/requests/batch/approve Request Body", () => {
+    it("should only have request_ids and optional reason", () => {
+      const validRequest = {
+        request_ids: ["req-1", "req-2"],
+        reason: "Approved per policy",
+      };
+      expect(isValidBatchApproveRequestBody(validRequest)).toBe(true);
+    });
+
+    it("should accept request without reason", () => {
+      const validRequest = { request_ids: ["req-1"] };
+      expect(isValidBatchApproveRequestBody(validRequest)).toBe(true);
+    });
+
+    it("should reject request with approved_by field (not in backend contract)", () => {
+      // This is what the frontend type currently defines - WRONG!
+      const wrongRequest = {
+        request_ids: ["req-1"],
+        approved_by: "admin@example.com",
+        reason: "Approved",
+      };
+      expect(isValidBatchApproveRequestBody(wrongRequest)).toBe(false);
+    });
+  });
+
+  describe("POST /api/v1/agents/requests/batch/reject Request Body", () => {
+    it("should only have request_ids and optional reason", () => {
+      const validRequest = {
+        request_ids: ["req-1", "req-2"],
+        reason: "Rejected per policy",
+      };
+      expect(isValidBatchRejectRequestBody(validRequest)).toBe(true);
+    });
+
+    it("should accept request without reason", () => {
+      const validRequest = { request_ids: ["req-1"] };
+      expect(isValidBatchRejectRequestBody(validRequest)).toBe(true);
+    });
+
+    it("should reject request with rejected_by field (not in backend contract)", () => {
+      // This is what the frontend type currently defines - WRONG!
+      const wrongRequest = {
+        request_ids: ["req-1"],
+        rejected_by: "admin@example.com",
+        reason: "Rejected",
+      };
+      expect(isValidBatchRejectRequestBody(wrongRequest)).toBe(false);
+    });
+  });
+
+  describe("POST /api/v1/agents/requests/:id/respond Request Body", () => {
+    /**
+     * Type guard for valid ClarificationResponseRequest body matching backend contract
+     *
+     * Backend expects (from agent_requests.py ClarificationResponseRequest):
+     * {
+     *   responded_by: str (REQUIRED)
+     *   response_type: "choice" | "text" | "confirm" (REQUIRED)
+     *   value: str | None (for text response)
+     *   selected_option_id: str | None (for choice response)
+     *   confirmed: bool | None (for confirmation response)
+     * }
+     *
+     * Frontend previously used WRONG field names:
+     * - text_response instead of value
+     * - selected_option instead of selected_option_id
+     */
+    function isValidClarificationResponseRequestBody(obj: unknown): boolean {
+      if (typeof obj !== "object" || obj === null) return false;
+      const o = obj as Record<string, unknown>;
+
+      // MUST have responded_by (required by backend)
+      if (!("responded_by" in o) || typeof o.responded_by !== "string")
+        return false;
+
+      // MUST have response_type
+      if (
+        !("response_type" in o) ||
+        !["choice", "text", "confirm"].includes(o.response_type as string)
+      )
+        return false;
+
+      // MUST NOT have old/wrong field names
+      if ("text_response" in o) return false; // Should be "value"
+      if ("selected_option" in o) return false; // Should be "selected_option_id"
+
+      // For text type, use "value" (not "text_response")
+      if (o.response_type === "text") {
+        if ("value" in o && typeof o.value !== "string") return false;
+      }
+
+      // For choice type, use "selected_option_id" (not "selected_option")
+      if (o.response_type === "choice") {
+        if (
+          "selected_option_id" in o &&
+          typeof o.selected_option_id !== "string"
+        )
+          return false;
+      }
+
+      // For confirmation type, confirmed should be boolean
+      if (o.response_type === "confirm") {
+        if ("confirmed" in o && typeof o.confirmed !== "boolean") return false;
+      }
+
+      return true;
+    }
+
+    it("should validate text response with correct field names", () => {
+      const validRequest = {
+        responded_by: "user@example.com",
+        response_type: "text",
+        value: "My text answer",
+      };
+      expect(isValidClarificationResponseRequestBody(validRequest)).toBe(true);
+    });
+
+    it("should validate choice response with correct field names", () => {
+      const validRequest = {
+        responded_by: "user@example.com",
+        response_type: "choice",
+        selected_option_id: "opt-1",
+      };
+      expect(isValidClarificationResponseRequestBody(validRequest)).toBe(true);
+    });
+
+    it("should validate confirmation response with correct field names", () => {
+      const validRequest = {
+        responded_by: "user@example.com",
+        response_type: "confirm",
+        confirmed: true,
+      };
+      expect(isValidClarificationResponseRequestBody(validRequest)).toBe(true);
+    });
+
+    it("should reject request missing responded_by (required)", () => {
+      const wrongRequest = {
+        response_type: "text",
+        value: "My answer",
+      };
+      expect(isValidClarificationResponseRequestBody(wrongRequest)).toBe(false);
+    });
+
+    it("should reject request using text_response instead of value", () => {
+      // Old/wrong field name
+      const wrongRequest = {
+        responded_by: "user@example.com",
+        response_type: "text",
+        text_response: "My text answer", // WRONG - should be "value"
+      };
+      expect(isValidClarificationResponseRequestBody(wrongRequest)).toBe(false);
+    });
+
+    it("should reject request using selected_option instead of selected_option_id", () => {
+      // Old/wrong field name
+      const wrongRequest = {
+        responded_by: "user@example.com",
+        response_type: "choice",
+        selected_option: "opt-1", // WRONG - should be "selected_option_id"
+      };
+      expect(isValidClarificationResponseRequestBody(wrongRequest)).toBe(false);
     });
   });
 });

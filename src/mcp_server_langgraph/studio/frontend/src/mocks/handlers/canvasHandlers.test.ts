@@ -231,7 +231,7 @@ describe("canvasHandlers", () => {
   describe("POST /api/v1/artifacts/:id/fork", () => {
     it("forks an artifact", async () => {
       const request: ForkArtifactRequest = {
-        newTitle: "Forked Artifact",
+        new_name: "Forked Artifact",
       };
 
       const response = await fetch("/api/v1/artifacts/art-1/fork", {

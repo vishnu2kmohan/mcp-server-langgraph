@@ -99,6 +99,14 @@ sessions_router = APIRouter(tags=["sessions"])
 # Request/Response Models
 
 
+class SourceCitation(BaseModel):
+    """A source citation for a message."""
+
+    title: str = Field(description="Source title")
+    url: str | None = Field(default=None, description="Source URL")
+    snippet: str | None = Field(default=None, description="Relevant snippet from source")
+
+
 class MessageRequest(BaseModel):
     """Request body for adding a message."""
 
@@ -107,12 +115,32 @@ class MessageRequest(BaseModel):
 
 
 class MessageResponse(BaseModel):
-    """Response model for a message."""
+    """Response model for a message.
+
+    Includes optional fields for extended thinking support and source citations
+    used by the frontend for rich message display.
+    """
 
     message_id: str = Field(description="Unique message ID")
     role: MessageRole = Field(description="Message role")
     content: str = Field(description="Message content")
-    timestamp: str | None = Field(default=None, description="Message timestamp")
+    timestamp: str | None = Field(default=None, description="Message timestamp (ISO 8601)")
+    sources: list[SourceCitation] | None = Field(
+        default=None,
+        description="Source citations for the message content",
+    )
+    thinking_content: str | None = Field(
+        default=None,
+        description="Internal reasoning/thinking content from extended thinking models",
+    )
+    thinking_tokens: int | None = Field(
+        default=None,
+        description="Number of tokens used for thinking/reasoning",
+    )
+    model_name: str | None = Field(
+        default=None,
+        description="Name of the LLM model that generated this message",
+    )
 
 
 class SessionCreateRequest(BaseModel):
@@ -1209,7 +1237,7 @@ async def update_session_config(
 
 
 @sessions_router.get("/sessions/{session_id}/messages")
-async def get_session_messages(session_id: str, current_user: CurrentUser) -> list[dict[str, Any]]:
+async def get_session_messages(session_id: str, current_user: CurrentUser) -> list[MessageResponse]:
     """
     Get all messages in a session.
 
@@ -1227,7 +1255,20 @@ async def get_session_messages(session_id: str, current_user: CurrentUser) -> li
         )
 
     messages = await service.get_session_messages(session_id)
-    return messages or []
+    # Transform dict messages to MessageResponse
+    return [
+        MessageResponse(
+            message_id=msg.get("message_id", msg.get("id", "")),
+            role=MessageRole(msg.get("role", "user")),
+            content=msg.get("content", ""),
+            timestamp=msg.get("timestamp"),
+            sources=msg.get("sources"),
+            thinking_content=msg.get("thinking_content"),
+            thinking_tokens=msg.get("thinking_tokens"),
+            model_name=msg.get("model_name"),
+        )
+        for msg in (messages or [])
+    ]
 
 
 @sessions_router.post("/sessions/{session_id}/messages", status_code=status.HTTP_201_CREATED)

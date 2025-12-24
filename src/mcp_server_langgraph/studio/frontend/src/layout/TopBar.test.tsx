@@ -184,7 +184,7 @@ describe("TopBar", () => {
         { wrapper: createWrapper(store) },
       );
 
-      const badge = screen.getByTestId("pending-approvals-badge");
+      const badge = screen.getByTestId("review-approval-button");
       expect(badge).toBeInTheDocument();
     });
 
@@ -206,7 +206,7 @@ describe("TopBar", () => {
       );
 
       expect(
-        screen.queryByTestId("pending-approvals-badge"),
+        screen.queryByTestId("review-approval-button"),
       ).not.toBeInTheDocument();
     });
 
@@ -215,7 +215,7 @@ describe("TopBar", () => {
       render(<TopBar />, { wrapper: createWrapper(store) });
 
       expect(
-        screen.queryByTestId("pending-approvals-badge"),
+        screen.queryByTestId("review-approval-button"),
       ).not.toBeInTheDocument();
     });
 
@@ -230,7 +230,7 @@ describe("TopBar", () => {
         },
       );
 
-      await user.click(screen.getByTestId("pending-approvals-badge"));
+      await user.click(screen.getByTestId("review-approval-button"));
       expect(handleClick).toHaveBeenCalledTimes(1);
     });
 
@@ -241,7 +241,7 @@ describe("TopBar", () => {
         { wrapper: createWrapper(store) },
       );
 
-      const badge = screen.getByTestId("pending-approvals-badge");
+      const badge = screen.getByTestId("review-approval-button");
       expect(badge).toHaveClass("bg-amber-100");
     });
 
@@ -252,7 +252,7 @@ describe("TopBar", () => {
         { wrapper: createWrapper(store) },
       );
 
-      const badge = screen.getByTestId("pending-approvals-badge");
+      const badge = screen.getByTestId("review-approval-button");
       expect(badge).toHaveAttribute("aria-label", "3 pending agent approvals");
     });
 
@@ -263,7 +263,7 @@ describe("TopBar", () => {
         { wrapper: createWrapper(store) },
       );
 
-      expect(screen.getByTestId("pending-approvals-badge")).toBeInTheDocument();
+      expect(screen.getByTestId("review-approval-button")).toBeInTheDocument();
     });
   });
 

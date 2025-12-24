@@ -504,4 +504,83 @@ describe("StatusBar", () => {
       expect(results).toHaveNoViolations();
     });
   });
+
+  // =============================================================================
+  // Tooltips (TDD RED - Tests should FAIL initially)
+  // =============================================================================
+  describe("tooltips", () => {
+    /**
+     * These tests verify that StatusBar elements have tooltips for better UX.
+     * TDD RED Phase: These tests should FAIL until we add title attributes.
+     */
+
+    it("should have tooltip on connection indicator", () => {
+      render(<StatusBar connectionStatus="connected" />);
+
+      const indicator = screen.getByTestId("connection-indicator");
+      expect(indicator).toHaveAttribute(
+        "title",
+        expect.stringContaining("connected"),
+      );
+    });
+
+    it("should have tooltip on model indicator", () => {
+      render(<StatusBar modelName="claude-3-opus" />);
+
+      const indicator = screen.getByTestId("model-indicator");
+      expect(indicator).toHaveAttribute(
+        "title",
+        expect.stringContaining("Model"),
+      );
+    });
+
+    it("should have tooltip on token count indicator", () => {
+      render(<StatusBar tokenCount={1500} />);
+
+      const indicator = screen.getByTestId("token-count");
+      expect(indicator).toHaveAttribute(
+        "title",
+        expect.stringContaining("token"),
+      );
+    });
+
+    it("should have tooltip on user indicator", () => {
+      render(<StatusBar userName="testuser" />);
+
+      const indicator = screen.getByTestId("user-indicator");
+      expect(indicator).toHaveAttribute(
+        "title",
+        expect.stringContaining("user"),
+      );
+    });
+
+    it("should have tooltip on agent queue toggle", () => {
+      render(<StatusBar agentCount={3} onAgentQueueToggle={() => {}} />);
+
+      const toggle = screen.getByRole("button", { name: /agent/i });
+      expect(toggle).toHaveAttribute("title", expect.stringContaining("agent"));
+    });
+
+    it("should have tooltip on DevTools toggle", () => {
+      render(<StatusBar onDevToolsToggle={() => {}} />);
+
+      const toggle = screen.getByRole("button", { name: /devtools/i });
+      expect(toggle).toHaveAttribute(
+        "title",
+        expect.stringContaining("DevTools"),
+      );
+    });
+
+    it("should have tooltip on pending approvals indicator", () => {
+      render(
+        <StatusBar pendingApprovals={2} onPendingApprovalsClick={() => {}} />,
+      );
+
+      const indicator = screen.getByRole("button", { name: /approval/i });
+      expect(indicator).toHaveAttribute(
+        "title",
+        expect.stringContaining("approval"),
+      );
+    });
+  });
 });

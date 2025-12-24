@@ -30,32 +30,15 @@ import {
   ThumbsUp,
   ThumbsDown,
 } from "lucide-react";
-import type { AIExplanation } from "../../types/hitl";
+import type { AgentApprovalRequest } from "../../types/hitl";
 import { useRiskAssessment, useDecisionHistory } from "../../hooks";
 
 // =============================================================================
 // Types
 // =============================================================================
 
-export interface AgentApprovalRequest {
-  request_id: string;
-  session_id: string;
-  task_id: string;
-  agent_name: string;
-  confidence: number;
-  threshold: number;
-  proposed_action: string;
-  trigger_reason: string;
-  context: {
-    tokens_used?: number;
-    time_elapsed_seconds?: number;
-    artifacts?: string[];
-    [key: string]: unknown;
-  };
-  requested_at: string;
-  /** AI-generated explanation for HITL dialog (Phase 1 AI-Native Enhancement) */
-  ai_explanation?: AIExplanation;
-}
+// Re-export AgentApprovalRequest from canonical location for backwards compatibility
+export type { AgentApprovalRequest } from "../../types/hitl";
 
 export interface AgentApprovalDialogProps {
   /** The approval request to display */

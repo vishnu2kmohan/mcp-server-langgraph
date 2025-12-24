@@ -13,7 +13,10 @@ export type {
 // Export everything else from api.ts except Message
 export type {
   SortOrder,
+  CursorPaginationMetadata,
+  BackendCursorPaginatedResponse,
   PaginatedResponse,
+  CursorPaginatedFrontendResponse,
   PagePaginatedResponse,
   CursorPaginationParams,
   PagePaginationParams,

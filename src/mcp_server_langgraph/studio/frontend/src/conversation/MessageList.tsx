@@ -5,8 +5,10 @@
  * loading states, and message grouping.
  */
 import { useRef, useEffect, useMemo } from "react";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, Bot, AlertTriangle } from "lucide-react";
 import { MessageBubble, type ChatMessage } from "./MessageBubble";
+import { MarkdownContent } from "../components/Chat/MarkdownContent";
+import { ErrorBoundary } from "../components/ErrorBoundary/ErrorBoundary";
 import { cn } from "../utils/cn";
 
 // =============================================================================
@@ -19,6 +21,8 @@ export interface MessageListProps {
   isStreaming?: boolean;
   isScrolledUp?: boolean;
   groupMessages?: boolean;
+  /** Enable rich content rendering for assistant messages (Markdown, diagrams, charts) */
+  enableRichContent?: boolean;
   onScrollToBottom?: () => void;
   className?: string;
 }
@@ -58,6 +62,7 @@ export function MessageList({
   isStreaming = false,
   isScrolledUp = false,
   groupMessages = false,
+  enableRichContent = true,
   onScrollToBottom,
   className,
 }: MessageListProps) {
@@ -84,6 +89,50 @@ export function MessageList({
     onScrollToBottom?.();
   };
 
+  // Render a single message - uses MarkdownContent for assistant messages when enabled
+  const renderMessage = (message: ChatMessage) => {
+    // For assistant messages with rich content enabled, use MarkdownContent
+    if (message.role === "assistant" && enableRichContent) {
+      return (
+        <div
+          key={message.id}
+          className="flex gap-3 px-4 py-2"
+          data-testid="rich-message"
+        >
+          <div
+            className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400"
+            data-testid="ai-avatar"
+          >
+            <Bot size={16} />
+          </div>
+          <div className="text-sm leading-relaxed max-w-none prose prose-sm dark:prose-invert prose-p:my-1 prose-headings:my-2">
+            <ErrorBoundary
+              name="MarkdownContent"
+              fallback={
+                <div
+                  className="flex items-center gap-2 px-3 py-2 text-sm text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-900/20 rounded border border-amber-200 dark:border-amber-800"
+                  role="alert"
+                  data-testid="message-render-error"
+                >
+                  <AlertTriangle size={16} className="flex-shrink-0" />
+                  <span>Failed to render message content</span>
+                </div>
+              }
+            >
+              <MarkdownContent
+                content={message.content}
+                enableInteractiveArtifacts
+              />
+            </ErrorBoundary>
+          </div>
+        </div>
+      );
+    }
+
+    // For user messages or when rich content is disabled, use MessageBubble
+    return <MessageBubble key={message.id} message={message} />;
+  };
+
   return (
     <div
       data-testid="message-list"
@@ -108,14 +157,10 @@ export function MessageList({
               data-testid="message-group"
               className="mb-2"
             >
-              {group.messages.map((message) => (
-                <MessageBubble key={message.id} message={message} />
-              ))}
+              {group.messages.map((message) => renderMessage(message))}
             </div>
           ))
-        : messages.map((message) => (
-            <MessageBubble key={message.id} message={message} />
-          ))}
+        : messages.map((message) => renderMessage(message))}
 
       {/* Loading indicator */}
       {isLoading && (

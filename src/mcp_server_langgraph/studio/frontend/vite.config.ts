@@ -92,18 +92,25 @@ export default defineConfig({
   server: {
     port: 5175,
     proxy: {
+      // Proxy unified v1 WebSocket connections (must be before /api/v1 for proper matching)
+      // All WebSocket endpoints under /api/v1/ws/* use this proxy rule
+      '/api/v1/ws': {
+        target: 'ws://localhost:8000',
+        ws: true,
+        changeOrigin: true,
+      },
       // Proxy unified API v1 requests to backend
       '/api/v1': {
         target: 'http://localhost:8000',
         changeOrigin: true,
       },
-      // Proxy WebSocket connections for real-time updates
+      // Proxy WebSocket connections for real-time updates (legacy)
       '/ws/v1': {
         target: 'ws://localhost:8000',
         ws: true,
         changeOrigin: true,
       },
-      // Proxy notification WebSocket
+      // Proxy notification WebSocket (legacy - deprecated route)
       '/ws/notifications': {
         target: 'ws://localhost:8000',
         ws: true,

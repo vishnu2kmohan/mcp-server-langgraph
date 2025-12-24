@@ -13,7 +13,7 @@ import { useNavigate } from "react-router";
 import { Loader2, AlertCircle, CheckCircle } from "lucide-react";
 import { useAppDispatch } from "../store/hooks";
 import { setUser } from "../store/slices/authSlice";
-import { setPersona } from "../store/slices/personaSlice";
+import { setUserInfo } from "../store/slices/personaSlice";
 import { setAuthTokens } from "../utils/storage";
 
 // Parse URL fragment into key-value pairs
@@ -122,7 +122,15 @@ export function AuthCallbackPage() {
             persona,
           }),
         );
-        dispatch(setPersona(persona));
+        // Update persona slice - setUserInfo also sets isPersonaLoading=false
+        dispatch(
+          setUserInfo({
+            username,
+            email: email ?? undefined,
+            roles,
+            persona,
+          }),
+        );
 
         // Clear fragment from URL for security
         window.history.replaceState(null, "", window.location.pathname);

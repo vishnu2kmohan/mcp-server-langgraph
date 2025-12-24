@@ -111,6 +111,10 @@ interface PersonaState {
   email: string | null;
   permissions: string[];
   isPersonaLoading: boolean;
+  // Sprint 4: Server-provided fields
+  visibleModules: ModuleId[];
+  featureFlags: Record<string, boolean>;
+  apiVersion: string | null;
 }
 
 export const initialState: PersonaState = {
@@ -121,6 +125,10 @@ export const initialState: PersonaState = {
   permissions: [],
   // Start with loading=true so PersonaGuard waits for /api/v1/me response
   isPersonaLoading: true,
+  // Sprint 4: Server-provided fields
+  visibleModules: [],
+  featureFlags: {},
+  apiVersion: null,
 };
 
 /**
@@ -165,6 +173,33 @@ export const personaSlice = createSlice({
         action.payload.persona ?? derivePersona(action.payload.roles);
       state.isPersonaLoading = false;
     },
+    /**
+     * Sprint 4: Hydrate persona state from /api/v1/me response.
+     * This is the preferred action for initializing persona from server.
+     */
+    hydrateFromServer: (
+      state,
+      action: PayloadAction<{
+        username: string;
+        email?: string | null;
+        roles: string[];
+        persona: Persona;
+        subPersona?: SubPersona | null;
+        visibleModules?: string[];
+        featureFlags?: Record<string, boolean>;
+        apiVersion?: string;
+      }>,
+    ) => {
+      state.username = action.payload.username;
+      state.email = action.payload.email ?? null;
+      state.persona = action.payload.persona;
+      state.subPersona = (action.payload.subPersona as SubPersona) ?? null;
+      state.visibleModules = (action.payload.visibleModules ??
+        []) as ModuleId[];
+      state.featureFlags = action.payload.featureFlags ?? {};
+      state.apiVersion = action.payload.apiVersion ?? null;
+      state.isPersonaLoading = false;
+    },
     setPermissions: (state, action: PayloadAction<string[]>) => {
       state.permissions = action.payload;
     },
@@ -179,6 +214,7 @@ export const {
   setPersona,
   setSubPersona,
   setUserInfo,
+  hydrateFromServer,
   setPermissions,
   setPersonaLoading,
   resetPersona,
@@ -213,15 +249,34 @@ export const selectDefaultRoute = (state: PersonaRootState) => {
 };
 
 export const selectVisibleModules = (state: PersonaRootState): ModuleId[] => {
-  const { subPersona, persona } = state.persona;
-  // Use sub-persona modules if available
+  const { subPersona, persona, visibleModules } = state.persona;
+
+  // Sprint 4: Prefer server-provided visible modules
+  if (visibleModules && visibleModules.length > 0) {
+    return visibleModules;
+  }
+
+  // Fallback: Use sub-persona modules from client-side config
   if (subPersona && PERSONA_VISIBLE_MODULES[subPersona]) {
     return PERSONA_VISIBLE_MODULES[subPersona];
   }
-  // Fallback to base persona sidebar items (converted to ModuleIds)
+
+  // Final fallback to base persona sidebar items (converted to ModuleIds)
   const sidebarItems = PERSONA_CONFIGS[persona].sidebarItems;
   return sidebarItems as ModuleId[];
 };
+
+// Sprint 4: New selectors for server-provided fields
+export const selectFeatureFlags = (state: PersonaRootState) =>
+  state.persona.featureFlags;
+
+export const selectFeatureFlag =
+  (flag: string) =>
+  (state: PersonaRootState): boolean =>
+    state.persona.featureFlags[flag] ?? false;
+
+export const selectApiVersion = (state: PersonaRootState) =>
+  state.persona.apiVersion;
 
 export const selectCanAccessRoute =
   (route: string) => (state: PersonaRootState) => {

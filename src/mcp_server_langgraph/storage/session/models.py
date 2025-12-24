@@ -43,3 +43,5 @@ class Session(BaseModel):
     messages: list[Message] = Field(default_factory=list)
     config: SessionConfig = Field(default_factory=SessionConfig)
     user_id: str | None = None
+    status: str = Field(default="active", description="Session status: active, archived")
+    workflow_id: str | None = Field(default=None, description="Associated workflow ID")

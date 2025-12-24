@@ -110,6 +110,8 @@ class RedisSessionManager:
         name: str,
         user_id: str | None = None,
         config: SessionConfig | None = None,
+        status: str = "active",
+        workflow_id: str | None = None,
     ) -> Session:
         """
         Create a new session and store it in Redis.
@@ -118,6 +120,8 @@ class RedisSessionManager:
             name: Session name
             user_id: Optional user ID for scoping
             config: Optional LLM configuration
+            status: Session status (active, archived)
+            workflow_id: Optional associated workflow ID
 
         Returns:
             Created session
@@ -133,6 +137,8 @@ class RedisSessionManager:
             messages=[],
             config=config or SessionConfig(),
             user_id=user_id,
+            status=status,
+            workflow_id=workflow_id,
         )
 
         # Store in Redis with TTL
@@ -175,6 +181,8 @@ class RedisSessionManager:
         session_id: str,
         name: str | None = None,
         config: SessionConfig | None = None,
+        status: str | None = None,
+        workflow_id: str | None = None,
     ) -> Session | None:
         """
         Update session metadata and refresh TTL.
@@ -183,6 +191,8 @@ class RedisSessionManager:
             session_id: Session ID to update
             name: Optional new name
             config: Optional new configuration
+            status: Optional new status (active, archived)
+            workflow_id: Optional new workflow ID
 
         Returns:
             Updated session if found, None otherwise
@@ -195,6 +205,10 @@ class RedisSessionManager:
             session.name = name
         if config is not None:
             session.config = config
+        if status is not None:
+            session.status = status
+        if workflow_id is not None:
+            session.workflow_id = workflow_id
         session.updated_at = datetime.now(UTC)
 
         # Store with refreshed TTL
@@ -280,18 +294,26 @@ class RedisSessionManager:
 
         return message
 
-    async def list_sessions(self, user_id: str) -> list[Session]:
+    async def list_sessions(
+        self,
+        user_id: str,
+        status: str | None = None,
+        workflow_id: str | None = None,
+    ) -> list[Session]:
         """
-        List all sessions for a user.
+        List all sessions for a user with optional filtering.
 
         Uses a Redis SET secondary index for O(1) lookup per session
-        instead of O(N) SCAN across all keys.
+        instead of O(N) SCAN across all keys. Filtering is done in Python
+        after fetching sessions.
 
         Args:
             user_id: User ID to list sessions for
+            status: Optional status filter (active, archived)
+            workflow_id: Optional workflow ID filter
 
         Returns:
-            List of sessions
+            List of sessions matching filters
         """
         # Use SET index for O(1) lookup instead of O(N) SCAN
         index_key = self._user_sessions_index_key(user_id)
@@ -304,6 +326,11 @@ class RedisSessionManager:
                 session_id = session_id.decode("utf-8")
             session = await self.get_session(session_id)
             if session:
+                # Apply filters
+                if status is not None and session.status != status:
+                    continue
+                if workflow_id is not None and session.workflow_id != workflow_id:
+                    continue
                 sessions.append(session)
 
         return sessions

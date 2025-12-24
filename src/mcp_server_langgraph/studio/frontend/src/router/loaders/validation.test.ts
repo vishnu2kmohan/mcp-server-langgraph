@@ -125,29 +125,29 @@ describe("Loader Validation", () => {
   });
 
   describe("validateMessage", () => {
-    it("should validate a valid message", () => {
+    it("should validate a valid message (backend format: message_id, timestamp)", () => {
       const message = {
-        id: "msg-1",
+        message_id: "msg-1",
         role: "user",
         content: "Hello",
-        created_at: "2025-01-15T10:00:00Z",
+        timestamp: "2025-01-15T10:00:00Z",
       };
 
       const result = validateMessage(message);
 
       expect(result.success).toBe(true);
       if (result.success) {
-        expect(result.data.id).toBe("msg-1");
+        expect(result.data.message_id).toBe("msg-1");
         expect(result.data.role).toBe("user");
       }
     });
 
     it("should reject message with invalid role", () => {
       const message = {
-        id: "msg-1",
+        message_id: "msg-1",
         role: "invalid",
         content: "Hello",
-        created_at: "2025-01-15T10:00:00Z",
+        timestamp: "2025-01-15T10:00:00Z",
       };
 
       const result = validateMessage(message);
@@ -162,9 +162,9 @@ describe("Loader Validation", () => {
 
     it("should reject message with missing content", () => {
       const message = {
-        id: "msg-1",
+        message_id: "msg-1",
         role: "user",
-        created_at: "2025-01-15T10:00:00Z",
+        timestamp: "2025-01-15T10:00:00Z",
       };
 
       const result = validateMessage(message);
@@ -193,9 +193,9 @@ describe("Loader Validation", () => {
       expect(result.success).toBe(false);
     });
 
-    it("should reject message with missing created_at", () => {
+    it("should reject message with missing timestamp", () => {
       const message = {
-        id: "msg-1",
+        message_id: "msg-1",
         role: "user",
         content: "Hello",
       };
@@ -205,26 +205,26 @@ describe("Loader Validation", () => {
       expect(result.success).toBe(false);
       if (!result.success) {
         expect(result.errors).toContainEqual(
-          expect.objectContaining({ field: "created_at" }),
+          expect.objectContaining({ field: "timestamp" }),
         );
       }
     });
   });
 
   describe("validateMessages", () => {
-    it("should validate array of messages", () => {
+    it("should validate array of messages (backend format)", () => {
       const messages = [
         {
-          id: "msg-1",
+          message_id: "msg-1",
           role: "user",
           content: "Hi",
-          created_at: "2025-01-15T10:00:00Z",
+          timestamp: "2025-01-15T10:00:00Z",
         },
         {
-          id: "msg-2",
+          message_id: "msg-2",
           role: "assistant",
           content: "Hello",
-          created_at: "2025-01-15T10:01:00Z",
+          timestamp: "2025-01-15T10:01:00Z",
         },
       ];
 
@@ -239,17 +239,17 @@ describe("Loader Validation", () => {
     it("should return partial result with valid messages only", () => {
       const messages = [
         {
-          id: "msg-1",
+          message_id: "msg-1",
           role: "user",
           content: "Hi",
-          created_at: "2025-01-15T10:00:00Z",
+          timestamp: "2025-01-15T10:00:00Z",
         },
-        { id: "msg-2", role: "invalid", content: "Bad" }, // Invalid
+        { message_id: "msg-2", role: "invalid", content: "Bad" }, // Invalid - no timestamp
         {
-          id: "msg-3",
+          message_id: "msg-3",
           role: "assistant",
           content: "Hello",
-          created_at: "2025-01-15T10:01:00Z",
+          timestamp: "2025-01-15T10:01:00Z",
         },
       ];
 
@@ -270,9 +270,9 @@ describe("Loader Validation", () => {
   });
 
   describe("validateSessionsResponse", () => {
-    it("should validate API response with items array", () => {
+    it("should validate API response with data array (CursorPaginatedResponse format)", () => {
       const response = {
-        items: [
+        data: [
           {
             id: "s-1",
             name: "Session 1",
@@ -286,29 +286,36 @@ describe("Loader Validation", () => {
             updated_at: "2025-01-15",
           },
         ],
+        pagination: {
+          next_cursor: null,
+          prev_cursor: null,
+          has_next: false,
+          has_prev: false,
+          count: 2,
+        },
       };
 
       const result = validateSessionsResponse(response);
 
       expect(result.success).toBe(true);
       if (result.success) {
-        expect(result.data.items).toHaveLength(2);
+        expect(result.data.data).toHaveLength(2);
       }
     });
 
-    it("should handle empty items array", () => {
-      const response = { items: [] };
+    it("should handle empty data array", () => {
+      const response = { data: [] };
 
       const result = validateSessionsResponse(response);
 
       expect(result.success).toBe(true);
       if (result.success) {
-        expect(result.data.items).toHaveLength(0);
+        expect(result.data.data).toHaveLength(0);
       }
     });
 
-    it("should reject response without items", () => {
-      const response = { data: [] };
+    it("should reject response without data field", () => {
+      const response = { items: [] };
 
       const result = validateSessionsResponse(response);
 
@@ -317,10 +324,15 @@ describe("Loader Validation", () => {
   });
 
   describe("validateMessagesResponse", () => {
-    it("should validate API response with items array", () => {
+    it("should validate API response with items array (backend message format)", () => {
       const response = {
         items: [
-          { id: "m-1", role: "user", content: "Hi", created_at: "2025-01-15" },
+          {
+            message_id: "m-1",
+            role: "user",
+            content: "Hi",
+            timestamp: "2025-01-15T10:00:00Z",
+          },
         ],
       };
 
@@ -389,8 +401,13 @@ describe("Loader Validation", () => {
     it("should filter invalid messages and return warnings", () => {
       const response = {
         items: [
-          { id: "m-1", role: "user", content: "Hi", created_at: "2025-01-15" },
-          { id: "m-2", role: "invalid", content: "Bad" }, // Invalid role and missing created_at
+          {
+            message_id: "m-1",
+            role: "user",
+            content: "Hi",
+            timestamp: "2025-01-15T10:00:00Z",
+          },
+          { message_id: "m-2", role: "invalid", content: "Bad" }, // Invalid role and missing timestamp
         ],
       };
 
@@ -404,52 +421,7 @@ describe("Loader Validation", () => {
     });
   });
 
-  describe("validateSessionsResponse", () => {
-    it("should validate API response with items array", () => {
-      const response = {
-        items: [
-          {
-            id: "s-1",
-            name: "Session 1",
-            created_at: "2025-01-15",
-            updated_at: "2025-01-15",
-          },
-          {
-            id: "s-2",
-            name: "Session 2",
-            created_at: "2025-01-15",
-            updated_at: "2025-01-15",
-          },
-        ],
-      };
-
-      const result = validateSessionsResponse(response);
-
-      expect(result.success).toBe(true);
-      if (result.success) {
-        expect(result.data.items).toHaveLength(2);
-      }
-    });
-
-    it("should handle empty items array", () => {
-      const response = { items: [] };
-
-      const result = validateSessionsResponse(response);
-
-      expect(result.success).toBe(true);
-      if (result.success) {
-        expect(result.data.items).toHaveLength(0);
-      }
-    });
-
-    it("should reject response without items", () => {
-      const response = { data: [] };
-
-      const result = validateSessionsResponse(response);
-
-      expect(result.success).toBe(false);
-    });
-
+  describe("validateSessionsResponse - additional tests", () => {
     it("should reject non-object input", () => {
       const result = validateSessionsResponse("string");
 
@@ -465,20 +437,20 @@ describe("Loader Validation", () => {
       expect(result.success).toBe(false);
     });
 
-    it("should reject response with non-array items", () => {
-      const response = { items: "not-an-array" };
+    it("should reject response with non-array data", () => {
+      const response = { data: "not-an-array" };
 
       const result = validateSessionsResponse(response);
 
       expect(result.success).toBe(false);
       if (!result.success) {
-        expect(result.errors[0].field).toBe("items");
+        expect(result.errors[0].field).toBe("data");
       }
     });
 
     it("should filter invalid sessions and return warnings", () => {
       const response = {
-        items: [
+        data: [
           {
             id: "s-1",
             name: "Session 1",
@@ -493,7 +465,7 @@ describe("Loader Validation", () => {
 
       expect(result.success).toBe(true);
       if (result.success) {
-        expect(result.data.items).toHaveLength(1);
+        expect(result.data.data).toHaveLength(1);
         expect(result.warnings).toHaveLength(1);
       }
     });

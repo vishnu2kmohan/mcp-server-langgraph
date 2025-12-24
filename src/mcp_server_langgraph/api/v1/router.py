@@ -12,6 +12,7 @@ from fastapi import APIRouter
 
 from mcp_server_langgraph.api.v1.admin import admin_router
 from mcp_server_langgraph.api.v1.agents import agents_router
+from mcp_server_langgraph.api.v1.agent_requests import agent_request_router
 from mcp_server_langgraph.api.v1.artifacts import artifacts_router
 from mcp_server_langgraph.api.v1.auth import auth_router
 from mcp_server_langgraph.api.v1.notifications import notifications_router
@@ -20,11 +21,9 @@ from mcp_server_langgraph.api.v1.ai import ai_router
 from mcp_server_langgraph.api.v1.ai_ux import ai_ux_router
 from mcp_server_langgraph.api.v1.studio_ai import studio_ai_router
 from mcp_server_langgraph.api.v1.audit import router as unified_audit_router
-from mcp_server_langgraph.api.v1.audit_websocket import router as audit_ws_router
 from mcp_server_langgraph.api.v1.compliance_reports import router as compliance_reports_router
 from mcp_server_langgraph.api.v1.chat import chat_router
 from mcp_server_langgraph.api.v1.connection_audit import audit_router as connection_audit_router
-from mcp_server_langgraph.api.v1.connection_health_ws import connection_health_router
 from mcp_server_langgraph.api.v1.connection_templates import templates_router
 from mcp_server_langgraph.api.v1.connections import connections_router
 from mcp_server_langgraph.api.v1.connections_bulk import bulk_router as connections_bulk_router
@@ -32,7 +31,6 @@ from mcp_server_langgraph.api.v1.cost import cost_router
 from mcp_server_langgraph.api.v1.features import features_router
 from mcp_server_langgraph.api.v1.identity_providers import router as identity_providers_router
 from mcp_server_langgraph.api.v1.mcp import mcp_router
-from mcp_server_langgraph.api.v1.mcp_task_websocket import mcp_task_ws_router
 from mcp_server_langgraph.api.v1.mcp_websocket import mcp_websocket_router
 from mcp_server_langgraph.api.v1.observability import observability_router
 from mcp_server_langgraph.api.v1.projects import projects_router
@@ -44,11 +42,10 @@ from mcp_server_langgraph.api.v1.project_context import project_context_router
 from mcp_server_langgraph.api.v1.vectors import router as vectors_router
 from mcp_server_langgraph.api.v1.workflow_bootstrap import workflow_bootstrap_router
 from mcp_server_langgraph.api.v1.workflows import workflows_router
-from mcp_server_langgraph.api.v1.workflow_execution_ws import workflow_execution_router
 from mcp_server_langgraph.api.v1.workflow_executions import workflow_executions_router
 
 # Alert infrastructure imports (ADR-0026 - Comprehensive Client Resilience Patterns)
-from mcp_server_langgraph.api.v1.alert_websocket import alert_websocket_router
+# Note: Alert WebSocket moved to consolidated ws_router (ADR-0068)
 from mcp_server_langgraph.api.v1.alertmanager_webhook import alertmanager_webhook_router
 from mcp_server_langgraph.api.v1.remediation_approvals import remediation_approval_router
 from mcp_server_langgraph.api.v1.alert_recommendations import alert_recommendation_router
@@ -71,8 +68,7 @@ v1_router.include_router(projects_router)
 # Include workflows CRUD endpoints
 v1_router.include_router(workflows_router)
 
-# Include workflow execution WebSocket endpoint
-v1_router.include_router(workflow_execution_router)
+# Note: Workflow execution WebSocket moved to consolidated ws_router (ADR-0068)
 
 # Include workflow execution history REST endpoint
 v1_router.include_router(workflow_executions_router)
@@ -101,8 +97,7 @@ v1_router.include_router(mcp_websocket_router)
 # Include MCP REST endpoints (MCP Protocol 2025-11-25 features)
 v1_router.include_router(mcp_router, prefix="/mcp")
 
-# Include MCP task status WebSocket endpoint
-v1_router.include_router(mcp_task_ws_router)
+# Note: MCP task status WebSocket moved to consolidated ws_router (ADR-0068)
 
 # Include vectors proxy endpoints (Qdrant with OpenFGA authorization - ADR-0068)
 v1_router.include_router(vectors_router, prefix="/vectors", tags=["vectors"])
@@ -110,8 +105,7 @@ v1_router.include_router(vectors_router, prefix="/vectors", tags=["vectors"])
 # Include MCP connections CRUD endpoints
 v1_router.include_router(connections_router)
 
-# Include connection health WebSocket endpoint
-v1_router.include_router(connection_health_router)
+# Note: Connection health WebSocket moved to consolidated ws_router (ADR-0068)
 
 # Include connection templates endpoint
 v1_router.include_router(templates_router)
@@ -125,14 +119,16 @@ v1_router.include_router(connection_audit_router)
 # Include agents config endpoint
 v1_router.include_router(agents_router)
 
+# Include agent HITL request endpoints (approval, rejection, clarification)
+v1_router.include_router(agent_request_router)
+
 # Include admin endpoints (audit logs, etc.)
 v1_router.include_router(admin_router)
 
 # Include unified audit logging endpoints (FedRAMP/HIPAA/GDPR/SOC2/EU AI Act)
 v1_router.include_router(unified_audit_router, prefix="/audit", tags=["audit"])
 
-# Include audit WebSocket streaming endpoint for real-time monitoring
-v1_router.include_router(audit_ws_router, prefix="/audit", tags=["audit"])
+# Note: Audit WebSocket streaming moved to consolidated ws_router (ADR-0068)
 
 # Include compliance report endpoints
 v1_router.include_router(compliance_reports_router, prefix="/compliance", tags=["compliance"])
@@ -165,8 +161,7 @@ v1_router.include_router(session_export_router)
 v1_router.include_router(project_context_router)
 
 # Include alert infrastructure endpoints (ADR-0026 - Comprehensive Client Resilience Patterns)
-# Alert WebSocket for real-time streaming to Admin persona
-v1_router.include_router(alert_websocket_router, prefix="/ws", tags=["alerts"])
+# Note: Alert WebSocket moved to consolidated ws_router (ADR-0068)
 
 # Alertmanager webhook receiver for Mimir/Prometheus alerts
 v1_router.include_router(alertmanager_webhook_router, tags=["webhooks"])

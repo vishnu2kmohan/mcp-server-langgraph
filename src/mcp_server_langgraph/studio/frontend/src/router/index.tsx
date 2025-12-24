@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import { createBrowserRouter, Navigate, Outlet } from "react-router";
 import { App } from "../App";
 import { AuthGuard } from "./guards/AuthGuard";
@@ -24,13 +25,43 @@ import {
  * All page components are lazy-loaded for optimal bundle splitting.
  *
  * Note: This is a CSR (Client-Side Rendered) app, not SSR.
- * We disable partial hydration to avoid the "No HydrateFallback" warning.
+ * We provide a HydrateFallback to handle the initial loading state.
  */
+
+/**
+ * Loading fallback component shown during route transitions and initial load.
+ * Uses the same styling as StudioShellGuard's ShellSkeleton for consistency.
+ */
+function RouterFallback() {
+  return (
+    <div
+      data-testid="router-loading"
+      className="flex flex-col h-screen bg-white dark:bg-gray-900 animate-pulse"
+    >
+      {/* TopBar skeleton */}
+      <div className="h-12 bg-gray-100 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700" />
+      {/* Main content skeleton */}
+      <div className="flex flex-1 overflow-hidden">
+        <div className="w-64 bg-gray-50 dark:bg-gray-850 border-r border-gray-200 dark:border-gray-700">
+          <div className="p-4 space-y-3">
+            <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-3/4" />
+            <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/2" />
+          </div>
+        </div>
+        <div className="flex-1 bg-white dark:bg-gray-900" />
+      </div>
+      {/* StatusBar skeleton */}
+      <div className="h-6 bg-gray-100 dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700" />
+    </div>
+  );
+}
+
 export const router = createBrowserRouter(
   [
     {
       path: "/",
       element: <App />,
+      hydrateFallbackElement: <RouterFallback />,
       children: [
         // Root redirect - uses feature flag to choose StudioShell or legacy
         { index: true, element: <RootRedirect /> },
@@ -113,6 +144,11 @@ export const router = createBrowserRouter(
               path: "shared-workflows",
               element: <Navigate to="/studio/workflows" replace />,
             },
+            // Chat routes - Empty element (StudioShellLayout provides the 3-panel UI)
+            // StudioShellLayout detects chat routes via isChatRoute and renders
+            // SessionNav + ConversationPanel + CanvasPanel directly.
+            // We use an empty fragment to satisfy React Router's leaf route requirement.
+            // ChatPage is DEPRECATED - its UI is now in StudioShellLayout panels.
             {
               path: "chat",
               children: [
@@ -120,19 +156,15 @@ export const router = createBrowserRouter(
                   index: true,
                   id: "chat-index",
                   loader: chatLoader,
-                  lazy: async () => {
-                    const { ChatPage } = await import("../pages/ChatPage");
-                    return { Component: ChatPage };
-                  },
+                  // Empty fragment - StudioShellLayout renders the chat UI
+                  element: <></>,
                 },
                 {
                   id: "chat-session",
                   path: ":sessionId",
                   loader: chatLoader,
-                  lazy: async () => {
-                    const { ChatPage } = await import("../pages/ChatPage");
-                    return { Component: ChatPage };
-                  },
+                  // Empty fragment - StudioShellLayout renders the chat UI
+                  element: <></>,
                 },
               ],
             },
@@ -201,6 +233,7 @@ export const router = createBrowserRouter(
               ],
             },
             // Observability - admin/developer only
+            // Supports tabs: /traces, /logs, /metrics, /alerts
             {
               path: "observability",
               element: (
@@ -211,6 +244,38 @@ export const router = createBrowserRouter(
               children: [
                 {
                   index: true,
+                  lazy: async () => {
+                    const { ObservabilityPage } =
+                      await import("../pages/ObservabilityPage");
+                    return { Component: ObservabilityPage };
+                  },
+                },
+                {
+                  path: "traces",
+                  lazy: async () => {
+                    const { ObservabilityPage } =
+                      await import("../pages/ObservabilityPage");
+                    return { Component: ObservabilityPage };
+                  },
+                },
+                {
+                  path: "logs",
+                  lazy: async () => {
+                    const { ObservabilityPage } =
+                      await import("../pages/ObservabilityPage");
+                    return { Component: ObservabilityPage };
+                  },
+                },
+                {
+                  path: "metrics",
+                  lazy: async () => {
+                    const { ObservabilityPage } =
+                      await import("../pages/ObservabilityPage");
+                    return { Component: ObservabilityPage };
+                  },
+                },
+                {
+                  path: "alerts",
                   lazy: async () => {
                     const { ObservabilityPage } =
                       await import("../pages/ObservabilityPage");
@@ -442,10 +507,6 @@ export const router = createBrowserRouter(
   {
     basename: "/",
     // Note: v7_startTransition and v7_relativeSplatPath are now default in React Router v7
-    future: {
-      // Disable partial hydration (not needed for CSR-only apps)
-      // Prevents "No HydrateFallback element provided" warning
-      v7_partialHydration: false,
-    },
+    // CSR-only apps don't need hydration settings - remove to use React Router v7 defaults
   },
 );

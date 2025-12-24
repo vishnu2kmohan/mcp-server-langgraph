@@ -192,10 +192,11 @@ export function useAlertWebSocket(
   // Convert null to undefined for type compatibility
   const authToken = isAuthenticated ? (getAuthToken() ?? undefined) : undefined;
 
-  // Compute WebSocket URL - recalculates when auth state changes via authToken
+  // Compute WebSocket URL - only generate URL when authenticated
+  // Passing empty string prevents connection attempt before auth is ready
   const wsUrl = useMemo(
-    () => url ?? getDefaultWebSocketUrl(authToken),
-    [url, authToken],
+    () => (isAuthenticated ? (url ?? getDefaultWebSocketUrl(authToken)) : ""),
+    [url, authToken, isAuthenticated],
   );
 
   // Handle incoming messages

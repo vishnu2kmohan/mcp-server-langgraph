@@ -17,7 +17,7 @@ import {
   useRef,
   Suspense,
 } from "react";
-import { Outlet, useRouteLoaderData, useRevalidator } from "react-router";
+import { useRouteLoaderData, useRevalidator } from "react-router";
 import { useAppDispatch, useAppSelector } from "../store/hooks";
 import {
   setSelectedArtifactId,
@@ -33,6 +33,10 @@ import { devLogger } from "../utils/devLogger";
 import { sessionTelemetry } from "../utils/sessionTelemetry";
 import { useFeatureFlag } from "../contexts/FeatureFlagContext";
 import { useAISuggestionsFetch } from "../hooks/useAISuggestionsFetch";
+import {
+  CanvasShortcutsMenu,
+  type CanvasShortcutAction,
+} from "./CanvasShortcutsMenu";
 
 // AI Components (Phase 4) - lazy-loaded for reduced bundle size
 import { LazyInlineSuggestions, type Suggestion } from "../ai/lazy";
@@ -75,8 +79,12 @@ export function ConnectedCanvasPanel({ className }: ConnectedCanvasPanelProps) {
   );
   const sessionId = currentSession?.id ?? "default-session";
 
-  // Feature flag for AI suggestions
+  // Feature flags for AI features
   const aiSuggestionsEnabled = useFeatureFlag("ai_suggestions");
+  const canvasAIPaletteEnabled = useFeatureFlag("canvas_ai_palette");
+
+  // Track loading state for canvas shortcut actions
+  const [shortcutActionLoading, setShortcutActionLoading] = useState(false);
 
   // Cleanup timeout on unmount
   useEffect(() => {
@@ -311,6 +319,150 @@ export function ConnectedCanvasPanel({ className }: ConnectedCanvasPanelProps) {
     [selectedArtifactId, dismissSuggestion],
   );
 
+  // Track shortcut action error state for user feedback
+  const [shortcutError, setShortcutError] = useState<string | null>(null);
+
+  // Canvas Shortcuts Menu handler (Sprint 6)
+  const handleShortcutAction = useCallback(
+    async (action: CanvasShortcutAction) => {
+      // Clear any previous error
+      setShortcutError(null);
+
+      if (!selectedArtifactId || !selectedArtifact) {
+        logger.warn("No artifact selected for shortcut action:", action);
+        setShortcutError("Please select an artifact first");
+        return;
+      }
+
+      const startTime = Date.now();
+      logger.debug("Shortcut action requested:", action, {
+        artifactId: selectedArtifactId,
+        contentType: selectedArtifact.contentType,
+        language: selectedArtifact.editMetadata?.language,
+      });
+
+      setShortcutActionLoading(true);
+
+      try {
+        const token = getAuthToken();
+        const response = await fetch(`/api/v1/ai/canvas/${action}`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            ...(token && { Authorization: `Bearer ${token}` }),
+          },
+          credentials: "include",
+          body: JSON.stringify({
+            artifact_id: selectedArtifactId,
+            content: selectedArtifact.content,
+            content_type: selectedArtifact.contentType,
+            language: selectedArtifact.editMetadata?.language,
+            session_id: sessionId,
+          }),
+        });
+
+        if (response.ok) {
+          const result = await response.json();
+          logger.debug("Shortcut action completed:", action, {
+            resultLength: result.content?.length,
+            durationMs: Date.now() - startTime,
+          });
+
+          // Apply the AI-generated content to the artifact
+          if (result.content) {
+            await handleSave(selectedArtifactId, result.content);
+          }
+
+          // Track successful canvas action
+          sessionTelemetry.trackCanvasAction({
+            artifactId: selectedArtifactId,
+            action,
+            contentType: selectedArtifact.contentType,
+            language: selectedArtifact.editMetadata?.language,
+            sessionId,
+            success: true,
+            durationMs: Date.now() - startTime,
+          });
+        } else {
+          // Handle specific error codes
+          let errorMessage: string;
+
+          switch (response.status) {
+            case 404:
+              // Endpoint doesn't exist - feature not available
+              errorMessage = `"${action}" is not yet available. This feature requires backend support.`;
+              logger.warn("Canvas shortcut endpoint not found:", action);
+              break;
+            case 401:
+            case 403:
+              errorMessage = "Authentication required. Please sign in again.";
+              break;
+            case 429:
+              errorMessage = "Too many requests. Please try again in a moment.";
+              break;
+            case 500:
+            case 502:
+            case 503:
+              errorMessage =
+                "AI service temporarily unavailable. Please try again.";
+              break;
+            default:
+              errorMessage = `Failed to execute "${action}" (${response.status})`;
+          }
+
+          logger.error(
+            "Shortcut action failed:",
+            response.status,
+            response.statusText,
+          );
+          setShortcutError(errorMessage);
+
+          // Track failed canvas action
+          sessionTelemetry.trackCanvasAction({
+            artifactId: selectedArtifactId,
+            action,
+            contentType: selectedArtifact.contentType,
+            language: selectedArtifact.editMetadata?.language,
+            sessionId,
+            success: false,
+            durationMs: Date.now() - startTime,
+            error: errorMessage,
+          });
+
+          // Auto-dismiss error after 5 seconds
+          setTimeout(() => setShortcutError(null), 5000);
+        }
+      } catch (error) {
+        // Network error or other exception
+        const errorMessage =
+          error instanceof Error && error.name === "AbortError"
+            ? "Request timed out. Please try again."
+            : "Network error. Please check your connection.";
+
+        logger.error("Shortcut action error:", error);
+        setShortcutError(errorMessage);
+
+        // Track failed canvas action (network error)
+        sessionTelemetry.trackCanvasAction({
+          artifactId: selectedArtifactId,
+          action,
+          contentType: selectedArtifact.contentType,
+          language: selectedArtifact.editMetadata?.language,
+          sessionId,
+          success: false,
+          durationMs: Date.now() - startTime,
+          error: errorMessage,
+        });
+
+        // Auto-dismiss error after 5 seconds
+        setTimeout(() => setShortcutError(null), 5000);
+      } finally {
+        setShortcutActionLoading(false);
+      }
+    },
+    [selectedArtifactId, selectedArtifact, sessionId, handleSave],
+  );
+
   return (
     <div
       data-testid="canvas-panel"
@@ -364,6 +516,77 @@ export function ConnectedCanvasPanel({ className }: ConnectedCanvasPanelProps) {
           </div>
         )}
 
+      {/* Canvas Shortcuts Menu (Sprint 6) - gated by canvas_ai_palette feature flag */}
+      {canvasAIPaletteEnabled && selectedArtifactId && (
+        <div className="absolute bottom-4 right-4 z-10">
+          <CanvasShortcutsMenu
+            onAction={handleShortcutAction}
+            isLoading={shortcutActionLoading}
+            language={
+              selectedArtifact?.editMetadata?.language ??
+              selectedArtifact?.contentType
+            }
+          />
+        </div>
+      )}
+
+      {/* Shortcut action error toast */}
+      {shortcutError && (
+        <div
+          data-testid="shortcut-error-toast"
+          role="alert"
+          className={cn(
+            "absolute bottom-16 right-4 z-20",
+            "max-w-sm px-4 py-3 rounded-lg shadow-lg",
+            "bg-red-50 dark:bg-red-900/80 border border-red-200 dark:border-red-700",
+            "text-red-800 dark:text-red-200 text-sm",
+            "animate-in fade-in slide-in-from-bottom-4 duration-200",
+          )}
+        >
+          <div className="flex items-start gap-2">
+            <svg
+              className="w-5 h-5 flex-shrink-0 mt-0.5 text-red-500"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+              />
+            </svg>
+            <div>
+              <p className="font-medium">Action Failed</p>
+              <p className="mt-1 text-red-600 dark:text-red-300">
+                {shortcutError}
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setShortcutError(null)}
+              className="ml-auto -mr-1 p-1 rounded hover:bg-red-100 dark:hover:bg-red-800 transition-colors"
+              aria-label="Dismiss error"
+            >
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M6 18L18 6M6 6l12 12"
+                />
+              </svg>
+            </button>
+          </div>
+        </div>
+      )}
+
       <CanvasWorkspace
         artifacts={artifacts}
         onArtifactSelect={handleArtifactSelect}
@@ -371,8 +594,9 @@ export function ConnectedCanvasPanel({ className }: ConnectedCanvasPanelProps) {
         onSave={handleSave}
         className="h-full"
       />
-      {/* Outlet for nested routes */}
-      <Outlet />
+      {/* Note: No <Outlet /> needed - chat routes don't render components.
+          StudioShellLayout provides the full 3-panel UI for chat routes.
+          The chatLoader provides data, but UI comes from SessionNav + ConversationPanel + CanvasPanel. */}
     </div>
   );
 }

@@ -216,7 +216,12 @@ log_info "Starting infrastructure services..."
 echo ""
 
 if [ "$BUILD" = true ]; then
-    docker compose $COMPOSE_OPTS -f "$COMPOSE_FILE" up -d --build
+    # OPTIMIZATION: Only rebuild mcp-server-test (changes most frequently)
+    # Other images (keycloak, alembic, openfga-seed, authz-proxy) use pre-built GHCR images
+    # via pull_policy: if_not_present. To rebuild all: docker compose build --no-cache
+    log_info "Building mcp-server-test image (other images use GHCR)..."
+    docker compose -f "$COMPOSE_FILE" build mcp-server-test
+    docker compose $COMPOSE_OPTS -f "$COMPOSE_FILE" up -d
 else
     docker compose $COMPOSE_OPTS -f "$COMPOSE_FILE" up -d
 fi

@@ -772,4 +772,185 @@ describe("ChatInputForm", () => {
       );
     });
   });
+
+  describe("Inline AI Suggestions (Sprint 6)", () => {
+    it("should not show inline suggestion when feature is disabled", () => {
+      render(
+        <ChatInputForm
+          {...defaultProps}
+          input="Hello"
+          enableInlineSuggestions={false}
+          inlineSuggestion="world"
+        />,
+      );
+
+      expect(screen.queryByTestId("inline-suggestion")).not.toBeInTheDocument();
+    });
+
+    it("should show inline suggestion ghost text when enabled", () => {
+      render(
+        <ChatInputForm
+          {...defaultProps}
+          input="Hello "
+          enableInlineSuggestions={true}
+          inlineSuggestion="world, how are you?"
+        />,
+      );
+
+      const suggestion = screen.getByTestId("inline-suggestion");
+      expect(suggestion).toBeInTheDocument();
+      expect(suggestion).toHaveTextContent("world, how are you?");
+    });
+
+    it("should not show inline suggestion when input is empty", () => {
+      render(
+        <ChatInputForm
+          {...defaultProps}
+          input=""
+          enableInlineSuggestions={true}
+          inlineSuggestion="some suggestion"
+        />,
+      );
+
+      expect(screen.queryByTestId("inline-suggestion")).not.toBeInTheDocument();
+    });
+
+    it("should not show inline suggestion when suggestion is empty", () => {
+      render(
+        <ChatInputForm
+          {...defaultProps}
+          input="Hello"
+          enableInlineSuggestions={true}
+          inlineSuggestion=""
+        />,
+      );
+
+      expect(screen.queryByTestId("inline-suggestion")).not.toBeInTheDocument();
+    });
+
+    it("should call onAcceptSuggestion when Tab is pressed", () => {
+      const onAcceptSuggestion = vi.fn();
+      render(
+        <ChatInputForm
+          {...defaultProps}
+          input="Hello "
+          enableInlineSuggestions={true}
+          inlineSuggestion="world"
+          onAcceptSuggestion={onAcceptSuggestion}
+        />,
+      );
+
+      const textarea = screen.getByPlaceholderText(/type your message/i);
+      fireEvent.keyDown(textarea, { key: "Tab" });
+
+      expect(onAcceptSuggestion).toHaveBeenCalledWith("world");
+    });
+
+    it("should not call onAcceptSuggestion when Tab pressed without suggestion", () => {
+      const onAcceptSuggestion = vi.fn();
+      render(
+        <ChatInputForm
+          {...defaultProps}
+          input="Hello"
+          enableInlineSuggestions={true}
+          inlineSuggestion=""
+          onAcceptSuggestion={onAcceptSuggestion}
+        />,
+      );
+
+      const textarea = screen.getByPlaceholderText(/type your message/i);
+      fireEvent.keyDown(textarea, { key: "Tab" });
+
+      expect(onAcceptSuggestion).not.toHaveBeenCalled();
+    });
+
+    it("should call onDismissSuggestion when Escape is pressed", () => {
+      const onDismissSuggestion = vi.fn();
+      render(
+        <ChatInputForm
+          {...defaultProps}
+          input="Hello "
+          enableInlineSuggestions={true}
+          inlineSuggestion="world"
+          onDismissSuggestion={onDismissSuggestion}
+        />,
+      );
+
+      const textarea = screen.getByPlaceholderText(/type your message/i);
+      fireEvent.keyDown(textarea, { key: "Escape" });
+
+      expect(onDismissSuggestion).toHaveBeenCalled();
+    });
+
+    it("should show suggestion loading indicator when fetching", () => {
+      render(
+        <ChatInputForm
+          {...defaultProps}
+          input="Hello"
+          enableInlineSuggestions={true}
+          isSuggestionLoading={true}
+        />,
+      );
+
+      expect(screen.getByTestId("suggestion-loading")).toBeInTheDocument();
+    });
+
+    it("should not show suggestion when processing message", () => {
+      render(
+        <ChatInputForm
+          {...defaultProps}
+          input="Hello"
+          isProcessing={true}
+          enableInlineSuggestions={true}
+          inlineSuggestion="world"
+        />,
+      );
+
+      expect(screen.queryByTestId("inline-suggestion")).not.toBeInTheDocument();
+    });
+
+    it("should render ghost text with correct styling", () => {
+      render(
+        <ChatInputForm
+          {...defaultProps}
+          input="Hello "
+          enableInlineSuggestions={true}
+          inlineSuggestion="world"
+        />,
+      );
+
+      const suggestion = screen.getByTestId("inline-suggestion");
+      expect(suggestion).toHaveClass("text-gray-400");
+    });
+
+    it("should show hint text about Tab to accept", () => {
+      render(
+        <ChatInputForm
+          {...defaultProps}
+          input="Hello "
+          enableInlineSuggestions={true}
+          inlineSuggestion="world"
+        />,
+      );
+
+      expect(screen.getByTestId("suggestion-hint")).toHaveTextContent(
+        /tab.*accept/i,
+      );
+    });
+
+    it("should position suggestion after input text", () => {
+      render(
+        <ChatInputForm
+          {...defaultProps}
+          input="Hello "
+          enableInlineSuggestions={true}
+          inlineSuggestion="world"
+        />,
+      );
+
+      // The suggestion overlay should contain both input text and suggestion
+      const overlay = screen.getByTestId("inline-suggestion-overlay");
+      expect(overlay).toBeInTheDocument();
+    });
+  });
 });

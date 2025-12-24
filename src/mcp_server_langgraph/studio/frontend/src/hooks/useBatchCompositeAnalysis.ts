@@ -224,90 +224,97 @@ export function useBatchCompositeAnalysis(
     setError(null);
 
     try {
+      // Send request matching backend CompositeAnalysisRequest schema
       const data = await analyzeCompositeMutation({
+        user_id: userId,
+        session_id: sessionId,
         include_persona: includePersona,
         include_disclosure: includeDisclosure,
-        include_errors: includeError,
-        session_id: sessionId,
-        context: {
-          user_id: userId,
-          persona_data: personaData
-            ? {
-                assigned_persona: personaData.assignedPersona,
-                recent_actions: personaData.recentActions,
-                feature_usage: personaData.featureUsage,
-              }
-            : undefined,
-          disclosure_data: disclosureData
-            ? {
-                current_level: disclosureData.currentLevel,
-                feature_usage: disclosureData.featureUsage,
-              }
-            : undefined,
-          error_data: errorData,
-        },
+        include_error: includeError,
+        persona_data: personaData
+          ? {
+              assigned_persona: personaData.assignedPersona,
+              recent_actions: personaData.recentActions,
+              feature_usage: personaData.featureUsage,
+            }
+          : undefined,
+        disclosure_data: disclosureData
+          ? {
+              current_level: disclosureData.currentLevel,
+              feature_usage: disclosureData.featureUsage,
+            }
+          : undefined,
+        error_data: errorData
+          ? {
+              error: errorData.error,
+              context: errorData.context,
+            }
+          : undefined,
       }).unwrap();
 
-      // Transform RTK Query response to hook's expected format
-      // RTK Query returns: persona?, disclosure?, errors?, overall_confidence
-      // Hook expects: personaResult, disclosureResult, errorResult, crossInsights
+      // Response matches CompositeAnalysisResponse schema from backend
+      // data.persona_result, data.disclosure_result, data.error_result, data.cross_insights, data.confidence
 
-      // Transform persona result
-      if (data.persona) {
+      // Set persona result directly (already matches expected format)
+      if (data.persona_result) {
         setPersonaResult({
-          assigned_persona: personaData?.assignedPersona || "user",
-          detected_persona: data.persona.detected_persona,
-          confidence: data.persona.confidence,
-          behavior_signals: [], // Not provided by RTK Query
-          recommendation: null, // Not provided by RTK Query
-          ui_adaptations: [],
+          assigned_persona: data.persona_result.assigned_persona,
+          detected_persona: data.persona_result.detected_persona,
+          confidence: data.persona_result.confidence,
+          behavior_signals: data.persona_result.behavior_signals || [],
+          recommendation: data.persona_result.recommendation,
+          ui_adaptations: data.persona_result.ui_adaptations || [],
         });
       } else {
         setPersonaResult(null);
       }
 
-      // Transform disclosure result
-      if (data.disclosure) {
+      // Set disclosure result
+      if (data.disclosure_result) {
         setDisclosureResult({
-          current_level: (disclosureData?.currentLevel ||
-            "intermediate") as DisclosureLevel,
-          recommended_level: data.disclosure
+          current_level: data.disclosure_result
+            .current_level as DisclosureLevel,
+          recommended_level: data.disclosure_result
             .recommended_level as DisclosureLevel,
-          confidence: data.disclosure.confidence,
-          unlock_features: [], // Not provided by RTK Query
-          personalized_message: "",
+          confidence: data.disclosure_result.confidence,
+          unlock_features: data.disclosure_result.unlock_features || [],
+          personalized_message:
+            data.disclosure_result.personalized_message || "",
         });
       } else {
         setDisclosureResult(null);
       }
 
-      // Transform error result
-      if (data.errors && data.errors.length > 0) {
-        const firstError = data.errors[0];
+      // Set error result
+      if (data.error_result) {
         setErrorResult({
           classification: {
-            category: firstError.error_type,
-            subcategory: firstError.auto_recoverable ? "recoverable" : "manual",
-            confidence: data.overall_confidence,
+            category: data.error_result.category,
+            subcategory: data.error_result.subcategory,
+            confidence: data.confidence,
           },
-          rootCause: firstError.error_type,
-          suggestions: [],
+          rootCause: data.error_result.category,
+          suggestions:
+            data.error_result.suggestions?.map((s) => ({
+              action: s.action as
+                | "retry"
+                | "simplify"
+                | "navigate"
+                | "contact"
+                | "wait",
+              label: s.label,
+              guidance: s.guidance,
+            })) || [],
           similarIssues: undefined,
         });
       } else {
         setErrorResult(null);
       }
 
-      // Generate cross-insights from combined results
-      const insights: string[] = [];
-      if (data.persona && data.disclosure) {
-        insights.push(
-          `Persona ${data.persona.detected_persona} aligns with ${data.disclosure.recommended_level} disclosure level`,
-        );
-      }
-      setCrossInsights(insights);
+      // Set cross-insights directly from backend response
+      setCrossInsights(data.cross_insights || []);
 
-      setConfidence(data.overall_confidence);
+      setConfidence(data.confidence);
     } catch (err) {
       const errorToSet =
         err instanceof Error

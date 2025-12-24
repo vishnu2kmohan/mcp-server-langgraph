@@ -19,23 +19,14 @@
 import { useState, useMemo, useCallback } from "react";
 import { CheckCircle, XCircle, Loader2, AlertTriangle } from "lucide-react";
 import { cn } from "../../utils/cn";
+import type { AgentApprovalRequest } from "../../types/hitl";
 
 // =============================================================================
 // Types
 // =============================================================================
 
-export interface ApprovalRequest {
-  request_id: string;
-  session_id: string;
-  task_id: string;
-  agent_name: string;
-  confidence: number;
-  threshold: number;
-  proposed_action: string;
-  trigger_reason: string;
-  context: Record<string, unknown>;
-  requested_at: string;
-}
+// Re-export AgentApprovalRequest as ApprovalRequest for backwards compatibility
+export type ApprovalRequest = AgentApprovalRequest;
 
 export interface BatchApprovalPanelProps {
   /** List of pending approval requests */

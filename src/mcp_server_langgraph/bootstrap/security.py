@@ -36,11 +36,15 @@ class SecurityState:
         """
         Cleanup security resources.
 
-        Closes OpenFGA client to release aiohttp session.
+        Closes OpenFGA client to release aiohttp session and clears global state.
         """
         if self.openfga_client is not None:
             try:
                 await self.openfga_client.close()
+                # Clear global instance for WebSocket authorization middleware
+                from mcp_server_langgraph.auth.openfga import clear_global_openfga_client
+
+                clear_global_openfga_client()
             except Exception as e:
                 logger.debug("Operation failed: %s", e)
 
@@ -67,7 +71,11 @@ async def init_auth(settings: "Settings") -> SecurityState:
     """
     from mcp_server_langgraph.auth.factory import create_user_provider
     from mcp_server_langgraph.auth.middleware import AuthMiddleware
-    from mcp_server_langgraph.auth.openfga import OpenFGAClient, OpenFGAConfig
+    from mcp_server_langgraph.auth.openfga import (
+        OpenFGAClient,
+        OpenFGAConfig,
+        set_global_openfga_client,
+    )
     from mcp_server_langgraph.observability.telemetry import logger
 
     # Create user provider based on AUTH_PROVIDER setting
@@ -103,6 +111,9 @@ async def init_auth(settings: "Settings") -> SecurityState:
             openfga_client = OpenFGAClient(config=openfga_config)
             # Async initialization
             await openfga_client._ensure_initialized()
+            # Set global instance for WebSocket authorization middleware
+            # WebSocket handlers use get_openfga_client() which accesses this global
+            set_global_openfga_client(openfga_client)
             logger.info(
                 "OpenFGA client initialized",
                 extra={

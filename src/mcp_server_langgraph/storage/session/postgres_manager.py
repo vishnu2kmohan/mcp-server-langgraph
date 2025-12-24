@@ -113,6 +113,8 @@ class PostgresSessionManager:
         name: str,
         user_id: str | None = None,
         config: SessionConfig | None = None,
+        status: str = "active",
+        workflow_id: str | None = None,
     ) -> Session:
         """
         Create a new session and store it in PostgreSQL.
@@ -121,6 +123,8 @@ class PostgresSessionManager:
             name: Session name
             user_id: Optional user ID for scoping
             config: Optional LLM configuration
+            status: Session status (active, archived)
+            workflow_id: Optional associated workflow ID
 
         Returns:
             Created session
@@ -138,6 +142,8 @@ class PostgresSessionManager:
             config_max_tokens=cfg.max_tokens,
             created_at=now,
             updated_at=now,
+            status=status,
+            workflow_id=workflow_id,
         )
 
         async with self._session_maker() as db_session:
@@ -179,6 +185,8 @@ class PostgresSessionManager:
         session_id: str,
         name: str | None = None,
         config: SessionConfig | None = None,
+        status: str | None = None,
+        workflow_id: str | None = None,
     ) -> Session | None:
         """
         Update session metadata.
@@ -187,6 +195,8 @@ class PostgresSessionManager:
             session_id: Session ID
             name: Optional new name
             config: Optional new configuration
+            status: Optional new status (active, archived)
+            workflow_id: Optional new workflow ID
 
         Returns:
             Updated session if found, None otherwise
@@ -205,6 +215,10 @@ class PostgresSessionManager:
                 session_model.config_model = config.model
                 session_model.config_temperature = config.temperature
                 session_model.config_max_tokens = config.max_tokens
+            if status is not None:
+                session_model.status = status
+            if workflow_id is not None:
+                session_model.workflow_id = workflow_id
 
             session_model.updated_at = datetime.now(UTC)
 
@@ -312,6 +326,8 @@ class PostgresSessionManager:
         cursor: str | None = None,
         sort_by: str | None = "updated_at",
         sort_order: str | None = "desc",
+        status: str | None = None,
+        workflow_id: str | None = None,
     ) -> tuple[list[Session], str | None]:
         """
         List sessions with pagination, filtering, search, and sorting.
@@ -327,6 +343,8 @@ class PostgresSessionManager:
             cursor: Optional cursor for cursor-based pagination
             sort_by: Field to sort by (title, created_at, updated_at)
             sort_order: Sort order (asc, desc)
+            status: Optional status filter (active, archived)
+            workflow_id: Optional workflow ID to filter by
 
         Returns:
             Tuple of (list of sessions without messages, next_cursor)
@@ -337,6 +355,14 @@ class PostgresSessionManager:
             # Filter by user if provided
             if user_id:
                 query = query.where(SessionModel.user_id == user_id)
+
+            # Filter by status if provided
+            if status:
+                query = query.where(SessionModel.status == status)
+
+            # Filter by workflow_id if provided
+            if workflow_id:
+                query = query.where(SessionModel.workflow_id == workflow_id)
 
             # Search using Full-Text Search (FTS) for efficiency
             if search:
@@ -468,6 +494,8 @@ class PostgresSessionManager:
                 max_tokens=model.config_max_tokens,
             ),
             user_id=model.user_id,
+            status=model.status,
+            workflow_id=model.workflow_id,
         )
 
     def _model_to_message(self, model: MessageModel) -> Message:

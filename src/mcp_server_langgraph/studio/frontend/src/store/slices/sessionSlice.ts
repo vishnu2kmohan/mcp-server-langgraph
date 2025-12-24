@@ -433,7 +433,7 @@ export const sendMessage = createAsyncThunk<
         {
           method: "POST",
           headers: getAuthHeaders(),
-          body: JSON.stringify({ content }),
+          body: JSON.stringify({ role: "user", content }),
           credentials: "include",
         },
       );
@@ -491,6 +491,67 @@ export const clearMessages = createAsyncThunk<
     );
   }
 });
+
+/**
+ * Save assistant message (from streaming response) to session
+ *
+ * This thunk is used after streaming chat completion to persist
+ * the assistant's response to the session storage.
+ */
+export const saveAssistantMessage = createAsyncThunk<
+  ChatMessage | null,
+  { role: "assistant" | "system"; content: string },
+  { state: { session: SessionState }; rejectValue: string }
+>(
+  "session/saveAssistantMessage",
+  async (messageData, { getState, dispatch, rejectWithValue }) => {
+    const { currentSession } = getState().session;
+
+    if (!currentSession) {
+      return rejectWithValue("No active session");
+    }
+
+    // Add message to Redux immediately (optimistic update)
+    const assistantMessage: ChatMessage = {
+      id: generateMessageId(),
+      role: messageData.role,
+      content: messageData.content,
+      timestamp: Date.now(),
+    };
+    dispatch(addMessage(assistantMessage));
+
+    try {
+      const response = await fetch(
+        `/api/v1/sessions/${currentSession.id}/messages`,
+        {
+          method: "POST",
+          headers: getAuthHeaders(),
+          body: JSON.stringify({
+            role: messageData.role,
+            content: messageData.content,
+          }),
+          credentials: "include",
+        },
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.detail || "Failed to save assistant message");
+      }
+
+      const data = await response.json();
+      return data.message || assistantMessage;
+    } catch (error) {
+      // On error, remove the optimistic message
+      dispatch(deleteMessage(assistantMessage.id));
+      return rejectWithValue(
+        error instanceof Error
+          ? error.message
+          : "Failed to save assistant message",
+      );
+    }
+  },
+);
 
 // ==============================================================================
 // Slice

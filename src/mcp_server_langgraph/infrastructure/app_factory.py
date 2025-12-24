@@ -162,7 +162,7 @@ async def create_lifespan(container: ApplicationContainer | None = None) -> Asyn
         # Initialize Push Notification Sender (optional, only if VAPID keys configured)
         # ADR-0026: Web Push API for critical alerts
         if container.settings.vapid_public_key and container.settings.vapid_private_key:
-            from mcp_server_langgraph.api.v1.alert_websocket import get_alert_broadcaster
+            from mcp_server_langgraph.websocket.registry import get_alert_broadcaster
             from mcp_server_langgraph.api.v1.notifications import set_push_subscription_store
             from mcp_server_langgraph.notifications.push_sender import PushNotificationSender
             from mcp_server_langgraph.notifications.push_store import (
@@ -280,6 +280,17 @@ async def create_lifespan(container: ApplicationContainer | None = None) -> Asyn
         else:
             logger.debug("Interactive artifacts feature flag disabled, using in-memory service")
 
+        # Initialize observability query clients (Grafana, Tempo, Loki, Prometheus)
+        # Required for /api/v1/observability/* endpoints
+        from mcp_server_langgraph.observability.query.factory import init_query_clients
+
+        try:
+            await init_query_clients()
+            logger.info("Observability query clients initialized successfully")
+        except Exception as e:
+            logger.warning(f"Observability query clients initialization failed: {e}")
+            # Non-fatal: observability endpoints will fail gracefully
+
     yield
 
     # Shutdown
@@ -296,7 +307,17 @@ async def create_lifespan(container: ApplicationContainer | None = None) -> Asyn
         set_feedback_store(None)
         set_artifacts_service(None)
         reset_gdpr_storage()
-        logger.info("Stores reset (push subscriptions, feedback, artifacts, GDPR)")
+
+        # Close observability query clients
+        from mcp_server_langgraph.observability.query.factory import close_query_clients
+
+        try:
+            await close_query_clients()
+            logger.info("Observability query clients closed")
+        except Exception as e:
+            logger.warning(f"Error closing observability query clients: {e}")
+
+        logger.info("Stores reset (push subscriptions, feedback, artifacts, GDPR, observability)")
 
 
 def customize_openapi(app: FastAPI) -> dict[str, Any]:

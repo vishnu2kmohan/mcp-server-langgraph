@@ -2,6 +2,14 @@
 /// <reference types="vite-plugin-pwa/client" />
 
 interface ImportMetaEnv {
+  // Vite built-in environment variables
+  readonly MODE: string;
+  readonly DEV: boolean;
+  readonly PROD: boolean;
+  readonly SSR: boolean;
+  readonly BASE_URL: string;
+
+  // Custom environment variables
   readonly VITE_API_BASE_URL: string;
   readonly VITE_WS_BASE_URL: string;
   readonly VITE_KEYCLOAK_URL: string;

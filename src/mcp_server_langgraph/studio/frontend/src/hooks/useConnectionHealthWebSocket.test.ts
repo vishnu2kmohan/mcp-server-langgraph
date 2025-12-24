@@ -35,6 +35,21 @@ vi.mock("./useRealtimeSync", () => ({
   }),
 }));
 
+// Mock auth store hooks and selectors
+vi.mock("../store/hooks", () => ({
+  useAppSelector: vi.fn(() => true), // isAuthenticated = true
+  useAppDispatch: vi.fn(() => vi.fn()),
+}));
+
+// Mock getAuthToken and STORAGE_KEYS
+vi.mock("../utils/storage", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("../utils/storage")>();
+  return {
+    ...actual,
+    getAuthToken: vi.fn(() => "mock-test-token"),
+  };
+});
+
 describe("useConnectionHealthWebSocket", () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -348,9 +363,10 @@ describe("useConnectionHealthWebSocket", () => {
       renderHook(() => useConnectionHealthWebSocket());
 
       const { useRealtimeSync } = await import("./useRealtimeSync");
+      // ADR-0068: Consolidated WebSocket URLs under /api/v1/ws/*
       expect(useRealtimeSync).toHaveBeenCalledWith(
         expect.objectContaining({
-          url: expect.stringContaining("/connections/health/ws"),
+          url: expect.stringContaining("/api/v1/ws/connections/health"),
         }),
       );
     });

@@ -68,7 +68,15 @@ class LogoutResponse(BaseModel):
 
 
 class UserInfoResponse(BaseModel):
-    """Current user information response."""
+    """
+    Current user information response.
+
+    Extended in Sprint 4 to include persona-related fields for frontend RBAC:
+    - api_version: For client compatibility detection
+    - sub_persona: Specific persona variant (alice-builder, etc.)
+    - visible_modules: List of modules this persona can access
+    - feature_flags: Feature flags for this user/persona
+    """
 
     user_id: str = Field(..., description="User identifier in OpenFGA format (user:username)")
     username: str = Field(..., description="Username")
@@ -80,10 +88,184 @@ class UserInfoResponse(BaseModel):
     persona: Literal["admin", "developer", "user"] = Field(..., description="Computed persona for frontend RBAC")
     keycloak_id: str | None = Field(None, description="Keycloak UUID (for admin operations)")
 
+    # Sprint 4: Extended persona fields (backward compatible - all optional with defaults)
+    api_version: str = Field(default="2", description="API version for client compatibility detection")
+    sub_persona: str | None = Field(None, description="Specific persona variant (alice-builder, alice-analyst, etc.)")
+    visible_modules: list[str] = Field(default_factory=list, description="List of modules this persona can access")
+    feature_flags: dict[str, bool] = Field(default_factory=dict, description="Feature flags for this user/persona")
+
+
+class PersonaPreferencesUpdate(BaseModel):
+    """
+    Model for updating persona-related preferences.
+
+    Used by PATCH /me/preferences endpoint.
+    """
+
+    sub_persona: str | None = Field(None, description="New sub-persona selection")
+    feature_flags: dict[str, bool] | None = Field(None, description="Feature flag updates")
+
+
+# ============================================================================
+# Persona/Module Mappings
+# ============================================================================
+
+# Mapping of sub-persona to visible modules
+# This is the server-side source of truth, mirroring PersonaVariants.ts
+# Must stay in sync with frontend for consistent RBAC
+PERSONA_VISIBLE_MODULES: dict[str, list[str]] = {
+    # Admin personas - full access
+    "admin": [
+        "chat",
+        "projects",
+        "workflows",
+        "flows",
+        "mcp",
+        "agents",
+        "traces",
+        "admin",
+        "audit",
+        "compliance",
+        "settings",
+        "help",
+    ],
+    "security-admin": [
+        "admin",
+        "audit",
+        "compliance",
+        "settings",
+        "help",
+    ],
+    "auditor": [
+        "audit",
+        "compliance",
+        "help",
+    ],
+    # Developer personas (alice variants)
+    "alice-builder": [
+        "chat",
+        "projects",
+        "workflows",
+        "flows",
+        "mcp",
+        "agents",
+        "traces",
+        "settings",
+        "help",
+    ],
+    "alice-analyst": [
+        "chat",
+        "projects",
+        "traces",
+        "observability",
+        "settings",
+        "help",
+    ],
+    "alice-devops": [
+        "chat",
+        "connections",
+        "agents",
+        "traces",
+        "settings",
+        "help",
+    ],
+    # Compliance persona
+    "compliance-officer": [
+        "audit",
+        "compliance",
+        "help",
+    ],
+    # Standard user persona
+    "bob": [
+        "chat",
+        "projects",
+        "help",
+    ],
+}
+
 
 # ============================================================================
 # Helper Functions
 # ============================================================================
+
+
+def get_visible_modules_for_persona(persona: str) -> list[str]:
+    """
+    Get the list of visible modules for a given persona.
+
+    Args:
+        persona: The sub-persona identifier (e.g., 'admin', 'alice-builder', 'bob')
+
+    Returns:
+        List of module names this persona can access, or empty list if unknown persona
+    """
+    return PERSONA_VISIBLE_MODULES.get(persona, [])
+
+
+# Mapping of base persona to allowed sub-personas
+# Higher tiers can use lower tier personas (admin can use all, developer can use user tier)
+BASE_TO_SUB_PERSONAS: dict[str, list[str]] = {
+    "admin": [
+        # Admin tier
+        "admin",
+        "security-admin",
+        "auditor",
+        # Developer tier (admin can use these too)
+        "alice-builder",
+        "alice-analyst",
+        "alice-devops",
+        # User tier
+        "bob",
+        "compliance-officer",
+    ],
+    "developer": [
+        # Developer tier
+        "alice-builder",
+        "alice-analyst",
+        "alice-devops",
+        # User tier
+        "bob",
+        "compliance-officer",
+    ],
+    "user": [
+        # User tier only
+        "bob",
+        "compliance-officer",
+    ],
+}
+
+
+def get_sub_personas_for_base(base_persona: str) -> list[str]:
+    """
+    Get the list of valid sub-personas for a base persona.
+
+    Higher-tier personas have access to lower-tier sub-personas:
+    - admin: can use admin, developer, and user sub-personas
+    - developer: can use developer and user sub-personas
+    - user: can only use user sub-personas
+
+    Args:
+        base_persona: The base persona (admin, developer, user)
+
+    Returns:
+        List of valid sub-persona identifiers
+    """
+    return BASE_TO_SUB_PERSONAS.get(base_persona, [])
+
+
+def is_valid_sub_persona(base_persona: str, sub_persona: str) -> bool:
+    """
+    Check if a sub-persona is valid for a given base persona.
+
+    Args:
+        base_persona: The base persona (admin, developer, user)
+        sub_persona: The sub-persona to validate
+
+    Returns:
+        True if the sub-persona is valid for the base persona
+    """
+    valid_subs = get_sub_personas_for_base(base_persona)
+    return sub_persona in valid_subs
 
 
 def compute_persona(roles: list[str]) -> Literal["admin", "developer", "user"]:
@@ -113,6 +295,115 @@ def compute_persona(roles: list[str]) -> Literal["admin", "developer", "user"]:
 # ============================================================================
 
 
+# In-memory fallback for testing (when database is not available)
+_persona_preferences_store: dict[str, dict[str, Any]] = {}
+_use_database_store: bool = True  # Set to False in tests without database
+
+
+def get_persona_preferences_store() -> dict[str, dict[str, Any]]:
+    """Get the persona preferences store (for testing/fallback)."""
+    return _persona_preferences_store
+
+
+def set_persona_preferences_store(store: dict[str, dict[str, Any]] | None) -> None:
+    """Set the persona preferences store (for testing)."""
+    global _persona_preferences_store
+    _persona_preferences_store = store if store is not None else {}
+
+
+def set_use_database_store(use_db: bool) -> None:
+    """Set whether to use database store (for testing)."""
+    global _use_database_store
+    _use_database_store = use_db
+
+
+async def get_user_preferences_from_db(user_id: str) -> dict[str, Any]:
+    """
+    Get user preferences from PostgreSQL database.
+
+    Falls back to in-memory store if database is not available.
+
+    Args:
+        user_id: User ID in OpenFGA format.
+
+    Returns:
+        Dict with sub_persona and feature_flags.
+    """
+    if not _use_database_store:
+        # Use in-memory fallback for testing
+        return _persona_preferences_store.get(user_id, {})
+
+    try:
+        from mcp_server_langgraph.core.dependencies import get_async_session
+        from mcp_server_langgraph.storage.user.repository import UserPreferencesRepository
+
+        async for session in get_async_session():
+            repo = UserPreferencesRepository(session)
+            prefs = await repo.get_preferences(user_id)
+            if prefs:
+                return {
+                    "sub_persona": prefs.sub_persona,
+                    "feature_flags": prefs.feature_flags,
+                }
+            return {}
+    except Exception as e:
+        # Fall back to in-memory store if database fails
+        logger.warning(
+            f"Failed to get preferences from database, using fallback: {e}",
+            extra={"user_id": user_id},
+        )
+        return _persona_preferences_store.get(user_id, {})
+
+
+async def save_user_preferences_to_db(
+    user_id: str,
+    sub_persona: str | None,
+    feature_flags: dict[str, bool],
+) -> None:
+    """
+    Save user preferences to PostgreSQL database.
+
+    Falls back to in-memory store if database is not available.
+
+    Args:
+        user_id: User ID in OpenFGA format.
+        sub_persona: Selected sub-persona.
+        feature_flags: Feature flag overrides.
+    """
+    if not _use_database_store:
+        # Use in-memory fallback for testing
+        _persona_preferences_store[user_id] = {
+            "sub_persona": sub_persona,
+            "feature_flags": feature_flags,
+        }
+        return
+
+    try:
+        from mcp_server_langgraph.core.dependencies import get_async_session
+        from mcp_server_langgraph.storage.user.models import UserPreferences
+        from mcp_server_langgraph.storage.user.repository import UserPreferencesRepository
+
+        async for session in get_async_session():
+            repo = UserPreferencesRepository(session)
+            prefs = UserPreferences(
+                user_id=user_id,
+                sub_persona=sub_persona,
+                feature_flags=feature_flags,
+            )
+            await repo.upsert_preferences(prefs)
+            return
+    except Exception as e:
+        # Fall back to in-memory store if database fails
+        logger.warning(
+            f"Failed to save preferences to database, using fallback: {e}",
+            extra={"user_id": user_id},
+        )
+        _persona_preferences_store[user_id] = {
+            "sub_persona": sub_persona,
+            "feature_flags": feature_flags,
+        }
+
+
 @user_router.get("/me")
 async def get_me(
     user: dict[str, Any] = Depends(get_current_user),
@@ -126,6 +417,10 @@ async def get_me(
     - email: Email address (if available)
     - roles: Keycloak roles
     - persona: Computed persona for frontend RBAC (admin/developer/user)
+    - sub_persona: Selected sub-persona variant (Sprint 4)
+    - visible_modules: Modules accessible to this persona (Sprint 4)
+    - feature_flags: Feature flags for this user (Sprint 4)
+    - api_version: API version for client compatibility (Sprint 4)
 
     The frontend uses this endpoint on mount to:
     1. Detect user's persona based on roles
@@ -134,9 +429,29 @@ async def get_me(
     """
     roles = user.get("roles", [])
     persona = compute_persona(roles)
+    user_id = user.get("user_id", "")
+
+    # Get stored persona preferences from database
+    prefs = await get_user_preferences_from_db(user_id)
+
+    # Get sub_persona from preferences, or default based on base persona
+    sub_persona = prefs.get("sub_persona")
+    if not sub_persona:
+        # Default sub-persona based on base persona
+        sub_persona = {
+            "admin": "admin",
+            "developer": "alice-builder",
+            "user": "bob",
+        }.get(persona, "bob")
+
+    # Get visible modules for the effective sub-persona
+    visible_modules = get_visible_modules_for_persona(sub_persona)
+
+    # Get feature flags from preferences
+    feature_flags = prefs.get("feature_flags", {})
 
     return UserInfoResponse(
-        user_id=user.get("user_id", ""),
+        user_id=user_id,
         username=user.get("username", ""),
         email=user.get("email"),
         first_name=user.get("first_name"),
@@ -145,7 +460,69 @@ async def get_me(
         roles=roles,
         persona=persona,
         keycloak_id=user.get("keycloak_id"),
+        # Sprint 4 extended fields
+        api_version="2",
+        sub_persona=sub_persona,
+        visible_modules=visible_modules,
+        feature_flags=feature_flags,
     )
+
+
+@user_router.patch("/me/preferences")
+async def update_persona_preferences(
+    updates: PersonaPreferencesUpdate,
+    user: dict[str, Any] = Depends(get_current_user),
+) -> UserInfoResponse:
+    """
+    Update persona-related preferences.
+
+    Allows users to:
+    - Switch their sub-persona (within allowed options for their base persona)
+    - Update feature flags
+
+    The sub_persona must be valid for the user's base persona:
+    - admin: can use admin, security-admin, auditor, alice-*, bob, compliance-officer
+    - developer: can use alice-*, bob, compliance-officer
+    - user: can use bob, compliance-officer
+
+    Returns the full UserInfoResponse with updated values.
+    """
+    roles = user.get("roles", [])
+    base_persona = compute_persona(roles)
+    user_id = user.get("user_id", "")
+
+    # Validate sub_persona if provided
+    if updates.sub_persona:
+        if not is_valid_sub_persona(base_persona, updates.sub_persona):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Invalid sub_persona '{updates.sub_persona}' for base persona '{base_persona}'. "
+                f"Valid options: {get_sub_personas_for_base(base_persona)}",
+            )
+
+    # Get existing preferences from database
+    prefs = await get_user_preferences_from_db(user_id)
+
+    # Apply updates
+    new_sub_persona = updates.sub_persona if updates.sub_persona is not None else prefs.get("sub_persona")
+    new_feature_flags = prefs.get("feature_flags", {})
+    if updates.feature_flags is not None:
+        new_feature_flags.update(updates.feature_flags)
+
+    # Store updated preferences to database
+    await save_user_preferences_to_db(user_id, new_sub_persona, new_feature_flags)
+
+    logger.info(
+        "Updated persona preferences",
+        extra={
+            "user_id": user_id,
+            "sub_persona": new_sub_persona,
+            "feature_flags_updated": list(updates.feature_flags.keys()) if updates.feature_flags else [],
+        },
+    )
+
+    # Return updated user info
+    return await get_me(user)
 
 
 @user_router.post("/login", deprecated=True)
@@ -228,6 +605,13 @@ async def login(body: LoginRequest) -> LoginResponse:
 
             persona = compute_persona(roles)
 
+            # Compute default sub_persona for login
+            default_sub_persona = {
+                "admin": "admin",
+                "developer": "alice-builder",
+                "user": "bob",
+            }.get(persona, "bob")
+
             user_info = UserInfoResponse(
                 user_id=user_id,
                 username=username,
@@ -238,6 +622,11 @@ async def login(body: LoginRequest) -> LoginResponse:
                 roles=roles,
                 persona=persona,
                 keycloak_id=payload.get("sub"),
+                # Sprint 4 extended fields
+                api_version="2",
+                sub_persona=default_sub_persona,
+                visible_modules=get_visible_modules_for_persona(default_sub_persona),
+                feature_flags={},
             )
 
             logger.info("Login successful", extra={"username": username, "persona": persona})

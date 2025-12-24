@@ -3333,4 +3333,384 @@ describe("StudioShellLayout", () => {
       expect(screen.getByTestId("studio-shell")).toBeInTheDocument();
     });
   });
+
+  // =============================================================================
+  // Route-Based Content Rendering (TDD RED - Tests should FAIL initially)
+  // =============================================================================
+  describe("Route-Based Content Rendering", () => {
+    /**
+     * These tests verify that StudioShellLayout correctly renders:
+     * - 3-panel layout (SessionNav + ConversationPanel + CanvasPanel) for /studio/chat routes
+     * - Outlet for other routes like /studio/observability, /studio/workflows, etc.
+     *
+     * TDD RED Phase: These tests should FAIL until we add an <Outlet /> to StudioShellLayout
+     * and conditionally render the 3-panel layout only for chat routes.
+     */
+
+    describe("Chat Routes (Canvas Layout)", () => {
+      it("should render 3-panel layout for /studio/chat", () => {
+        renderWithProviders(createTestStore());
+
+        // For chat routes, the 3-panel layout should be visible
+        expect(screen.getByTestId("conversation-panel")).toBeInTheDocument();
+        expect(screen.getByTestId("canvas-panel")).toBeInTheDocument();
+        expect(screen.getByTestId("session-nav")).toBeInTheDocument();
+      });
+
+      it("should NOT render route outlet for /studio/chat", () => {
+        renderWithProviders(createTestStore());
+
+        // For chat routes, the outlet should not be visible
+        // (the 3-panel layout is rendered instead)
+        expect(screen.queryByTestId("route-outlet")).not.toBeInTheDocument();
+      });
+    });
+
+    describe("Full-Page Routes (Outlet Layout)", () => {
+      // Note: These tests will require modifying the useLocation mock to return different paths
+      // Currently the mock returns /studio/chat, so we'll need to update for these to work
+
+      it("should render Outlet for /studio/observability instead of 3-panel layout", async () => {
+        // TDD RED: This test should FAIL because StudioShellLayout has no Outlet
+        // Override useLocation mock for this test
+        const routerModule = await import("react-router");
+        vi.spyOn(routerModule, "useLocation").mockReturnValue({
+          pathname: "/studio/observability",
+          search: "",
+          hash: "",
+          state: null,
+          key: "test",
+        });
+
+        renderWithProviders(createTestStore());
+
+        // For observability route, the route-outlet should be visible
+        // TDD RED: This will FAIL - no route-outlet exists
+        expect(screen.getByTestId("route-outlet")).toBeInTheDocument();
+
+        // 3-panel layout should NOT be visible
+        expect(
+          screen.queryByTestId("conversation-panel"),
+        ).not.toBeInTheDocument();
+        expect(screen.queryByTestId("canvas-panel")).not.toBeInTheDocument();
+      });
+
+      it("should render Outlet for /studio/workflows instead of 3-panel layout", async () => {
+        const routerModule = await import("react-router");
+        vi.spyOn(routerModule, "useLocation").mockReturnValue({
+          pathname: "/studio/workflows",
+          search: "",
+          hash: "",
+          state: null,
+          key: "test",
+        });
+
+        renderWithProviders(createTestStore());
+
+        // TDD RED: This will FAIL - no route-outlet exists
+        expect(screen.getByTestId("route-outlet")).toBeInTheDocument();
+        expect(
+          screen.queryByTestId("conversation-panel"),
+        ).not.toBeInTheDocument();
+      });
+
+      it("should render Outlet for /studio/cost instead of 3-panel layout", async () => {
+        const routerModule = await import("react-router");
+        vi.spyOn(routerModule, "useLocation").mockReturnValue({
+          pathname: "/studio/cost",
+          search: "",
+          hash: "",
+          state: null,
+          key: "test",
+        });
+
+        renderWithProviders(createTestStore());
+
+        // TDD RED: This will FAIL - no route-outlet exists
+        expect(screen.getByTestId("route-outlet")).toBeInTheDocument();
+        expect(
+          screen.queryByTestId("conversation-panel"),
+        ).not.toBeInTheDocument();
+      });
+    });
+
+    describe("Persistent Shell Elements", () => {
+      it("should always render TopBar regardless of route", async () => {
+        const routerModule = await import("react-router");
+        vi.spyOn(routerModule, "useLocation").mockReturnValue({
+          pathname: "/studio/observability",
+          search: "",
+          hash: "",
+          state: null,
+          key: "test",
+        });
+
+        renderWithProviders(createTestStore());
+
+        // TopBar should always be visible
+        expect(screen.getByTestId("top-bar")).toBeInTheDocument();
+      });
+
+      it("should always render ActivityBar regardless of route", async () => {
+        const routerModule = await import("react-router");
+        vi.spyOn(routerModule, "useLocation").mockReturnValue({
+          pathname: "/studio/observability",
+          search: "",
+          hash: "",
+          state: null,
+          key: "test",
+        });
+
+        renderWithProviders(createTestStore());
+
+        // ActivityBar should always be visible
+        expect(screen.getByTestId("activity-bar")).toBeInTheDocument();
+      });
+
+      it("should always render StatusBar regardless of route", async () => {
+        const routerModule = await import("react-router");
+        vi.spyOn(routerModule, "useLocation").mockReturnValue({
+          pathname: "/studio/observability",
+          search: "",
+          hash: "",
+          state: null,
+          key: "test",
+        });
+
+        renderWithProviders(createTestStore());
+
+        // StatusBar should always be visible
+        expect(screen.getByTestId("status-bar")).toBeInTheDocument();
+      });
+    });
+
+    describe("Dynamic Navigation", () => {
+      it("should switch from 3-panel to outlet when navigating from chat to workflows", async () => {
+        // Reset useLocation mock to /studio/chat first (other tests may have changed it)
+        const routerModule = await import("react-router");
+        vi.spyOn(routerModule, "useLocation").mockReturnValue({
+          pathname: "/studio/chat",
+          search: "",
+          hash: "",
+          state: null,
+          key: "test-chat-initial",
+        });
+
+        // Start at /studio/chat - should show 3-panel layout
+        renderWithProviders(createTestStore());
+
+        // Initially should show 3-panel layout
+        expect(screen.getByTestId("conversation-panel")).toBeInTheDocument();
+        expect(screen.queryByTestId("route-outlet")).not.toBeInTheDocument();
+
+        // Simulate navigation to workflows by updating the useLocation mock
+        vi.spyOn(routerModule, "useLocation").mockReturnValue({
+          pathname: "/studio/workflows",
+          search: "",
+          hash: "",
+          state: null,
+          key: "test-workflows",
+        });
+
+        // Re-render to pick up the new location
+        cleanup();
+        renderWithProviders(createTestStore());
+
+        // Should now show outlet instead of 3-panel layout
+        expect(screen.getByTestId("route-outlet")).toBeInTheDocument();
+        expect(
+          screen.queryByTestId("conversation-panel"),
+        ).not.toBeInTheDocument();
+      });
+
+      it("should switch from outlet to 3-panel when navigating from workflows to chat", async () => {
+        // Start at /studio/workflows - should show outlet
+        const routerModule = await import("react-router");
+        vi.spyOn(routerModule, "useLocation").mockReturnValue({
+          pathname: "/studio/workflows",
+          search: "",
+          hash: "",
+          state: null,
+          key: "test-workflows",
+        });
+
+        renderWithProviders(createTestStore());
+
+        // Initially should show outlet
+        expect(screen.getByTestId("route-outlet")).toBeInTheDocument();
+        expect(
+          screen.queryByTestId("conversation-panel"),
+        ).not.toBeInTheDocument();
+
+        // Simulate navigation to chat
+        vi.spyOn(routerModule, "useLocation").mockReturnValue({
+          pathname: "/studio/chat",
+          search: "",
+          hash: "",
+          state: null,
+          key: "test-chat",
+        });
+
+        // Re-render to pick up the new location
+        cleanup();
+        renderWithProviders(createTestStore());
+
+        // Should now show 3-panel layout
+        expect(screen.getByTestId("conversation-panel")).toBeInTheDocument();
+        expect(screen.queryByTestId("route-outlet")).not.toBeInTheDocument();
+      });
+    });
+  });
+
+  // =============================================================================
+  // Focus/Zen Mode Tests (Sprint 6 - JupyterLab UX Pattern)
+  // =============================================================================
+  // Focus mode provides a distraction-free experience by hiding:
+  // - TopBar (persona-aware header)
+  // - StatusBar (connection status, tokens, model)
+  // - ActivityBar (navigation icons)
+  // Keyboard shortcut: Cmd+Shift+F (Mac) / Ctrl+Shift+F (Windows/Linux)
+  // =============================================================================
+
+  describe("Focus/Zen Mode (Sprint 6)", () => {
+    it("should toggle focus mode with Cmd+Shift+F keyboard shortcut", async () => {
+      const user = userEvent.setup();
+      renderWithProviders(createTestStore());
+
+      // Verify all bars are visible initially
+      expect(screen.getByTestId("top-bar")).toBeInTheDocument();
+      expect(screen.getByTestId("status-bar")).toBeInTheDocument();
+      expect(screen.getByTestId("activity-bar")).toBeInTheDocument();
+
+      // Trigger focus mode with Cmd+Shift+F
+      await user.keyboard("{Meta>}{Shift>}f{/Shift}{/Meta}");
+
+      // Bars should be hidden
+      expect(screen.queryByTestId("top-bar")).not.toBeInTheDocument();
+      expect(screen.queryByTestId("status-bar")).not.toBeInTheDocument();
+      expect(screen.queryByTestId("activity-bar")).not.toBeInTheDocument();
+
+      // Toggle back off
+      await user.keyboard("{Meta>}{Shift>}f{/Shift}{/Meta}");
+
+      // Bars should be visible again
+      expect(screen.getByTestId("top-bar")).toBeInTheDocument();
+      expect(screen.getByTestId("status-bar")).toBeInTheDocument();
+      expect(screen.getByTestId("activity-bar")).toBeInTheDocument();
+    });
+
+    it("should toggle focus mode with Ctrl+Shift+F on Windows/Linux", async () => {
+      const user = userEvent.setup();
+      renderWithProviders(createTestStore());
+
+      // Verify all bars are visible initially
+      expect(screen.getByTestId("top-bar")).toBeInTheDocument();
+      expect(screen.getByTestId("status-bar")).toBeInTheDocument();
+
+      // Trigger focus mode with Ctrl+Shift+F
+      await user.keyboard("{Control>}{Shift>}f{/Shift}{/Control}");
+
+      // Bars should be hidden
+      expect(screen.queryByTestId("top-bar")).not.toBeInTheDocument();
+      expect(screen.queryByTestId("status-bar")).not.toBeInTheDocument();
+    });
+
+    it("should show focus mode indicator when in focus mode", async () => {
+      const user = userEvent.setup();
+      renderWithProviders(createTestStore());
+
+      // Enter focus mode
+      await user.keyboard("{Meta>}{Shift>}f{/Shift}{/Meta}");
+
+      // Focus mode indicator should appear (small exit button or overlay)
+      expect(screen.getByTestId("focus-mode-exit")).toBeInTheDocument();
+    });
+
+    it("should exit focus mode when clicking exit button", async () => {
+      const user = userEvent.setup();
+      renderWithProviders(createTestStore());
+
+      // Enter focus mode
+      await user.keyboard("{Meta>}{Shift>}f{/Shift}{/Meta}");
+
+      // Click exit button
+      const exitButton = screen.getByTestId("focus-mode-exit");
+      await user.click(exitButton);
+
+      // Bars should be visible again
+      expect(screen.getByTestId("top-bar")).toBeInTheDocument();
+      expect(screen.getByTestId("status-bar")).toBeInTheDocument();
+      expect(screen.getByTestId("activity-bar")).toBeInTheDocument();
+    });
+
+    it("should exit focus mode with Escape key", async () => {
+      const user = userEvent.setup();
+      renderWithProviders(createTestStore());
+
+      // Enter focus mode
+      await user.keyboard("{Meta>}{Shift>}f{/Shift}{/Meta}");
+
+      // Verify focus mode is active
+      expect(screen.queryByTestId("top-bar")).not.toBeInTheDocument();
+
+      // Press Escape to exit
+      await user.keyboard("{Escape}");
+
+      // Bars should be visible again
+      expect(screen.getByTestId("top-bar")).toBeInTheDocument();
+    });
+
+    it("should persist focus mode preference in localStorage", async () => {
+      const user = userEvent.setup();
+      renderWithProviders(createTestStore());
+
+      // Enter focus mode
+      await user.keyboard("{Meta>}{Shift>}f{/Shift}{/Meta}");
+
+      // Check that focus mode state is persisted
+      // The canvasSlice.persistState function should have saved it
+      await waitFor(() => {
+        const storedState = localStorage.getItem("studio-canvas-state");
+        if (storedState) {
+          const parsed = JSON.parse(storedState);
+          expect(parsed.focusModeEnabled).toBe(true);
+        }
+      });
+    });
+
+    it("should add focus-mode command to command palette", async () => {
+      const user = userEvent.setup();
+      renderWithProviders(createTestStore());
+
+      // Open command palette with Cmd+K
+      await user.keyboard("{Meta>}k{/Meta}");
+
+      // Wait for command palette to open
+      await waitFor(() => {
+        expect(screen.getByTestId("command-palette")).toBeInTheDocument();
+      });
+
+      // Type "focus" to search
+      await user.type(screen.getByRole("textbox"), "focus");
+
+      // Focus mode command should appear
+      expect(screen.getByText(/focus mode/i)).toBeInTheDocument();
+    });
+
+    it("should expand conversation panel to fill available space in focus mode", async () => {
+      const user = userEvent.setup();
+      renderWithProviders(createTestStore());
+
+      // Get initial layout
+      const shellBefore = screen.getByTestId("studio-shell");
+      expect(shellBefore).toHaveClass("h-screen");
+
+      // Enter focus mode
+      await user.keyboard("{Meta>}{Shift>}f{/Shift}{/Meta}");
+
+      // The main content should have full height without top/status bars
+      const mainContent = screen.getByTestId("main-content-focus");
+      expect(mainContent).toBeInTheDocument();
+    });
+  });
 });

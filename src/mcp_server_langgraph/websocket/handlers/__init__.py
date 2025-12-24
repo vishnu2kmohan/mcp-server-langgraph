@@ -16,9 +16,11 @@ Available Handlers:
     - HeartMetricsHandler: Real-time HEART metrics streaming
     - CostTrackingHandler: Real-time cost tracking during LLM operations
     - WorkflowExecutionHandler: Real-time workflow execution updates
+    - AISuggestionsHandler: Real-time AI suggestion streaming
 """
 
 from mcp_server_langgraph.websocket.handlers.agent_request import AgentRequestHandler
+from mcp_server_langgraph.websocket.handlers.ai_suggestions import AISuggestionsHandler
 from mcp_server_langgraph.websocket.handlers.alert import AlertHandler
 from mcp_server_langgraph.websocket.handlers.audit import AuditHandler
 from mcp_server_langgraph.websocket.handlers.connection_health import (
@@ -40,6 +42,7 @@ from mcp_server_langgraph.websocket.handlers.workflow_execution import (
 
 __all__ = [
     "AgentRequestHandler",
+    "AISuggestionsHandler",
     "AlertHandler",
     "AuditHandler",
     "ConnectionHealthHandler",

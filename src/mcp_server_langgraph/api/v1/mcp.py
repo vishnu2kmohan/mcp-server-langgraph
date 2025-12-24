@@ -6,6 +6,8 @@ Exposes MCP Protocol 2025-11-25 features via REST endpoints.
 Endpoints:
 - GET  /resources              - List available resources
 - GET  /resources/content      - Read a resource by URI
+- GET  /prompts                - List available prompts
+- POST /prompts/{name}         - Get a prompt with arguments
 - POST /sampling               - Request LLM completion (server-initiated)
 - POST /elicitation            - Request user input (form mode)
 - POST /elicitation/url        - Request user URL action
@@ -143,6 +145,48 @@ class TaskListResponse(BaseModel):
     tasks: list[TaskResponse] = Field(description="List of tasks")
 
 
+class PromptArgumentResponse(BaseModel):
+    """Response model for a prompt argument."""
+
+    name: str = Field(description="Argument name")
+    description: str = Field(description="Argument description")
+    required: bool = Field(default=False, description="Whether argument is required")
+
+
+class PromptResponse(BaseModel):
+    """Response model for a prompt."""
+
+    name: str = Field(description="Prompt name")
+    description: str = Field(description="Prompt description")
+    arguments: list[PromptArgumentResponse] = Field(default_factory=list, description="Prompt arguments")
+
+
+class PromptListResponse(BaseModel):
+    """Response model for listing prompts."""
+
+    prompts: list[PromptResponse] = Field(description="List of prompts")
+
+
+class PromptGetRequest(BaseModel):
+    """Request model for getting a prompt with arguments."""
+
+    arguments: dict[str, Any] = Field(default_factory=dict, description="Prompt arguments")
+
+
+class PromptMessageResponse(BaseModel):
+    """Response model for a prompt message."""
+
+    role: str = Field(description="Message role (user, assistant, system)")
+    content: dict[str, Any] = Field(description="Message content")
+
+
+class PromptGetResponse(BaseModel):
+    """Response model for getting a prompt."""
+
+    description: str | None = Field(default=None, description="Prompt description")
+    messages: list[PromptMessageResponse] = Field(description="Prompt messages")
+
+
 class ElicitationRequiredResponse(BaseModel):
     """Response model for elicitation required error."""
 
@@ -258,6 +302,80 @@ class MCPService:
         if bridge is None or not bridge.is_configured:
             raise ChatError("MCP not configured")
         return await bridge.cancel_task(task_id)
+
+    async def list_prompts(self) -> list[dict[str, Any]]:
+        """List available prompts."""
+        # Import here to avoid circular imports
+        from mcp_server_langgraph.mcp.server_streamable import get_mcp_server
+
+        mcp_server = get_mcp_server()
+        return mcp_server.list_prompts_public()
+
+    async def get_prompt(
+        self,
+        name: str,
+        arguments: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
+        """
+        Get a prompt with arguments filled in.
+
+        Args:
+            name: Prompt name
+            arguments: Prompt arguments
+
+        Returns:
+            Dict with 'description' and 'messages' keys
+        """
+        arguments = arguments or {}
+
+        # Generate prompt messages based on name
+        if name == "code_review":
+            code = arguments.get("code", "")
+            language = arguments.get("language", "unknown")
+            return {
+                "description": "Review code for issues and improvements",
+                "messages": [
+                    {
+                        "role": "user",
+                        "content": {
+                            "type": "text",
+                            "text": f"Please review the following {language} code:\n\n```{language}\n{code}\n```",
+                        },
+                    }
+                ],
+            }
+        elif name == "summarize_conversation":
+            return {
+                "description": "Summarize the current conversation",
+                "messages": [
+                    {
+                        "role": "user",
+                        "content": {
+                            "type": "text",
+                            "text": "Please summarize the key points from our conversation so far.",
+                        },
+                    }
+                ],
+            }
+        elif name == "debug_error":
+            error = arguments.get("error", "")
+            context = arguments.get("context", "")
+            context_text = f"\n\nContext:\n{context}" if context else ""
+            return {
+                "description": "Debug an error message",
+                "messages": [
+                    {
+                        "role": "user",
+                        "content": {
+                            "type": "text",
+                            "text": f"Please help me debug this error:\n\n```\n{error}\n```{context_text}",
+                        },
+                    }
+                ],
+            }
+        else:
+            # Unknown prompt
+            raise ValueError(f"Unknown prompt: {name}")
 
 
 # Service singleton
@@ -379,6 +497,78 @@ async def read_resource(
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail=f"MCP not configured: {e}",
+        )
+
+
+@mcp_router.get("/prompts")
+async def list_prompts() -> PromptListResponse:
+    """
+    List available MCP prompts.
+
+    Returns all prompts (workflow templates) exposed by the MCP server.
+    """
+    service = get_mcp_service()
+
+    try:
+        prompts = await service.list_prompts()
+        return PromptListResponse(
+            prompts=[
+                PromptResponse(
+                    name=p["name"],
+                    description=p["description"],
+                    arguments=[
+                        PromptArgumentResponse(
+                            name=arg["name"],
+                            description=arg["description"],
+                            required=arg.get("required", False),
+                        )
+                        for arg in p.get("arguments", [])
+                    ],
+                )
+                for p in prompts
+            ]
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=f"Failed to list prompts: {e}",
+        )
+
+
+@mcp_router.post("/prompts/{prompt_name}")
+async def get_prompt(
+    prompt_name: str,
+    request: PromptGetRequest | None = None,
+) -> PromptGetResponse:
+    """
+    Get a prompt with arguments filled in.
+
+    Returns the prompt messages with the provided arguments substituted.
+    """
+    service = get_mcp_service()
+
+    try:
+        arguments = request.arguments if request else {}
+        result = await service.get_prompt(prompt_name, arguments)
+        return PromptGetResponse(
+            description=result.get("description"),
+            messages=[
+                PromptMessageResponse(
+                    role=msg["role"],
+                    content=msg["content"],
+                )
+                for msg in result.get("messages", [])
+            ],
+        )
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(e),
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=f"Failed to get prompt: {e}",
         )
 
 

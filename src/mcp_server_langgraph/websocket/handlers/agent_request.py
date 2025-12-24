@@ -45,7 +45,7 @@ logger = logging.getLogger(__name__)
 class HITLBroadcasterProtocol(Protocol):
     """Protocol defining the HITL broadcaster interface."""
 
-    async def connect(self, websocket: Any, session_id: str, user_id: str) -> None:
+    async def connect(self, websocket: Any, session_id: str, user_id: str, accept: bool = True) -> None:
         """Connect and register a WebSocket."""
         ...
 
@@ -115,7 +115,8 @@ class AgentRequestHandler(WebSocketBase):
         """
         self._user_id = user.id
         if self._websocket:
-            await self._broadcaster.connect(self._websocket, self._session_id, user.id)
+            # Pass accept=False because WebSocketBase already accepted the connection
+            await self._broadcaster.connect(self._websocket, self._session_id, user.id, accept=False)
         logger.info(
             f"Agent request WebSocket connected: user={user.id}, session={self._session_id}",
             extra={"user_id": user.id, "session_id": self._session_id},
