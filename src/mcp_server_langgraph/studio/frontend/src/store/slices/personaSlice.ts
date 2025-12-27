@@ -234,8 +234,56 @@ export const selectPermissions = (state: PersonaRootState) =>
 export const selectPersonaLoading = (state: PersonaRootState) =>
   state.persona.isPersonaLoading;
 
-export const selectSidebarItems = (state: PersonaRootState) => {
-  const persona = state.persona.persona;
+/**
+ * Known nav item IDs from ActivityBar.
+ * Used to filter server-provided visibleModules to only include valid nav items.
+ *
+ * NOTE: This must stay in sync with NAV_ITEMS + BOTTOM_ITEMS in ActivityBar.tsx.
+ * See ActivityBar.tsx for the authoritative list and KNOWN_NAV_IDS export.
+ */
+const KNOWN_NAV_IDS = new Set([
+  // Core Work
+  "projects",
+  "chat",
+  "workflows",
+  // AI & Data
+  "agents",
+  "mcp",
+  "vectors",
+  "connections",
+  "files",
+  // Observability
+  "traces",
+  "observability",
+  "cost",
+  // Admin
+  "admin",
+  "audit",
+  "compliance",
+  // Bottom items
+  "help",
+  "settings",
+]);
+
+/**
+ * Select sidebar items based on server-provided visibleModules or fallback config.
+ *
+ * Priority:
+ * 1. Server-provided visibleModules (filtered to known nav IDs)
+ * 2. Hardcoded PERSONA_CONFIGS fallback
+ */
+export const selectSidebarItems = (state: PersonaRootState): string[] => {
+  const { persona, visibleModules } = state.persona;
+
+  // Sprint 4: Prefer server-provided visible modules, filtered to known nav IDs
+  if (visibleModules && visibleModules.length > 0) {
+    const filtered = visibleModules.filter((id) => KNOWN_NAV_IDS.has(id));
+    if (filtered.length > 0) {
+      return filtered;
+    }
+  }
+
+  // Fallback to client-side config
   return PERSONA_CONFIGS[persona].sidebarItems;
 };
 

@@ -16,6 +16,9 @@ import { MemoryRouter } from "react-router";
 import { ActivityBar, NAV_ITEMS, BOTTOM_ITEMS } from "./ActivityBar";
 import canvasReducer from "../store/slices/canvasSlice";
 import personaReducer from "../store/slices/personaSlice";
+import sessionReducer, {
+  initialSessionState,
+} from "../store/slices/sessionSlice";
 import type { ReactNode } from "react";
 
 // Mock navigate and location
@@ -57,6 +60,7 @@ function createTestStore(
     reducer: {
       canvas: canvasReducer,
       persona: personaReducer,
+      session: sessionReducer,
     },
     preloadedState: {
       persona: {
@@ -66,6 +70,12 @@ function createTestStore(
         email: "test@example.com",
         permissions: [],
         isPersonaLoading: false,
+        visibleModules: [],
+        featureFlags: {},
+        apiVersion: null,
+      },
+      session: {
+        ...initialSessionState,
       },
     },
   });
@@ -126,6 +136,7 @@ describe("ActivityBar", () => {
         reducer: {
           canvas: canvasReducer,
           persona: personaReducer,
+          session: sessionReducer,
         },
         preloadedState: {
           persona: {
@@ -135,7 +146,11 @@ describe("ActivityBar", () => {
             email: "bob@example.com",
             permissions: [],
             isPersonaLoading: false,
+            visibleModules: [],
+            featureFlags: {},
+            apiVersion: null,
           },
+          session: { ...initialSessionState },
         },
       });
 
@@ -224,13 +239,13 @@ describe("ActivityBar", () => {
       const store = createTestStore();
       render(<ActivityBar />, { wrapper: createWrapper(store) });
 
-      // Tab to first button
+      // Tab to first button (projects is now first in nav order)
       await user.tab();
-      expect(screen.getByTestId("nav-chat")).toHaveFocus();
+      expect(screen.getByTestId("nav-projects")).toHaveFocus();
 
       // Tab to next button
       await user.tab();
-      expect(screen.getByTestId("nav-workflows")).toHaveFocus();
+      expect(screen.getByTestId("nav-chat")).toHaveFocus();
     });
   });
 
@@ -369,6 +384,7 @@ describe("ActivityBar", () => {
         reducer: {
           canvas: canvasReducer,
           persona: personaReducer,
+          session: sessionReducer,
         },
         preloadedState: {
           persona: {
@@ -378,7 +394,11 @@ describe("ActivityBar", () => {
             email: "bob@example.com",
             permissions: [],
             isPersonaLoading: false,
+            visibleModules: [],
+            featureFlags: {},
+            apiVersion: null,
           },
+          session: { ...initialSessionState },
         },
       });
 

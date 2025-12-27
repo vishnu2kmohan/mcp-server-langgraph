@@ -1,4 +1,11 @@
-import { useState, useEffect, useCallback, lazy, Suspense } from "react";
+import {
+  useState,
+  useEffect,
+  useCallback,
+  lazy,
+  Suspense,
+  useRef,
+} from "react";
 import { Outlet, useLocation, useNavigate } from "react-router";
 import { Toaster } from "sonner";
 import { OfflineBanner } from "./components/UI";
@@ -27,7 +34,12 @@ const SUSSurvey = lazy(() =>
 );
 
 import { useAppDispatch } from "./store/hooks";
-import { setUserInfo, setPersonaLoading } from "./store/slices/personaSlice";
+import {
+  setUserInfo,
+  hydrateFromServer,
+  setPersonaLoading,
+  type SubPersona,
+} from "./store/slices/personaSlice";
 import { initializeAuth } from "./store/slices/authSlice";
 import { useNotificationWebSocket } from "./hooks/useNotificationWebSocket";
 import { useAlertWebSocket } from "./hooks/useAlertWebSocket";
@@ -42,6 +54,7 @@ import {
 } from "./api";
 import { useFeatureFlags } from "./contexts/FeatureFlagContext";
 import { storage, STORAGE_KEYS, getAuthToken } from "./utils/storage";
+import { registerServiceWorker } from "./utils/serviceWorker";
 
 /**
  * Default tour steps for first-time users (Priority 2.2)
@@ -317,14 +330,20 @@ export function App() {
     if (!isStudioRoute) return;
 
     if (userData) {
-      // Dispatch setUserInfo action to update persona state in Redux
+      // Dispatch hydrateFromServer to update persona state with all Sprint 4 fields
+      // This includes visible_modules, feature_flags, sub_persona, api_version
       // Use persona from API (computed by backend) for consistent RBAC
       dispatch(
-        setUserInfo({
+        hydrateFromServer({
           username: userData.username || "Unknown",
           email: userData.email,
           roles: userData.roles || [],
           persona: userData.persona,
+          // Sprint 4 extended fields from server
+          subPersona: userData.sub_persona as SubPersona | null | undefined,
+          visibleModules: userData.visible_modules,
+          featureFlags: userData.feature_flags,
+          apiVersion: userData.api_version,
         }),
       );
     } else if (userError) {
@@ -381,6 +400,27 @@ export function App() {
       dispatch(setPersonaLoading(false));
     }
   }, [isStudioRoute, userData, userError, dispatch]);
+
+  // Track if SW has been registered to prevent duplicate registrations
+  const swRegisteredRef = useRef(false);
+
+  // Register service worker AFTER authentication is confirmed
+  // This avoids precaching ~130+ assets for unauthenticated users on /login
+  useEffect(() => {
+    // Only register in production mode
+    if (!import.meta.env.PROD) return;
+
+    // Only register after successful user authentication
+    if (!userData) return;
+
+    // Only register once
+    if (swRegisteredRef.current) return;
+
+    swRegisteredRef.current = true;
+    registerServiceWorker().catch((error) => {
+      console.warn("Service worker registration failed:", error);
+    });
+  }, [userData]);
 
   return (
     <div className="min-h-screen bg-white dark:bg-gray-900">

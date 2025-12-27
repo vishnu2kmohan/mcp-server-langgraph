@@ -168,6 +168,29 @@ export interface SessionState {
 
   /** Whether there are pending mutations (prevents stale loader data from overwriting optimistic updates) */
   hasPendingMutation?: boolean;
+
+  // ==========================================================================
+  // Navigation Tracking (Phase 4.2: AI Predictions Support)
+  // ==========================================================================
+
+  /** Recent pages visited (last 5, most recent first) */
+  recentPages: string[];
+
+  /** Current page path */
+  currentPage: string;
+
+  /** Current navigation context for AI predictions */
+  navigationContext: NavigationContext;
+}
+
+/** Navigation context for AI predictions */
+export interface NavigationContext {
+  /** Current page path */
+  page: string;
+  /** Active feature on the page */
+  feature?: string;
+  /** Current action being performed */
+  action?: string;
 }
 
 /** Session store actions */

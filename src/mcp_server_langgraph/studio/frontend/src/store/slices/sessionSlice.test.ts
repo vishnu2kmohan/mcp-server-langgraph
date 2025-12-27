@@ -42,6 +42,12 @@ import sessionReducer, {
   selectIsLoadingMore,
   selectCursor,
   selectHasPendingMutation,
+  // Phase 4.2: Navigation tracking for AI predictions
+  trackPageVisit,
+  setNavigationContext,
+  selectRecentPages,
+  selectCurrentPage,
+  selectNavigationContext,
 } from "./sessionSlice";
 import type { Session, SessionSummary, ChatMessage } from "../../types/session";
 
@@ -2259,6 +2265,114 @@ describe("sessionSlice", () => {
       );
       // Should not throw, error should be null
       expect(state.error).toBeNull();
+    });
+  });
+
+  // =============================================================================
+  // Navigation Tracking (Phase 4.2: AI Predictions Support)
+  // =============================================================================
+
+  describe("navigation tracking", () => {
+    describe("trackPageVisit action", () => {
+      it("should add page to recentPages", () => {
+        const store = createTestStore();
+        store.dispatch(trackPageVisit("/studio/chat"));
+
+        expect(selectRecentPages(store.getState())).toContain("/studio/chat");
+      });
+
+      it("should update currentPage", () => {
+        const store = createTestStore();
+        store.dispatch(trackPageVisit("/studio/workflows"));
+
+        expect(selectCurrentPage(store.getState())).toBe("/studio/workflows");
+      });
+
+      it("should keep only last 5 pages in recentPages", () => {
+        const store = createTestStore();
+
+        // Visit 7 pages
+        store.dispatch(trackPageVisit("/studio/chat"));
+        store.dispatch(trackPageVisit("/studio/workflows"));
+        store.dispatch(trackPageVisit("/studio/agents"));
+        store.dispatch(trackPageVisit("/studio/mcp"));
+        store.dispatch(trackPageVisit("/studio/traces"));
+        store.dispatch(trackPageVisit("/studio/cost"));
+        store.dispatch(trackPageVisit("/studio/admin"));
+
+        const recentPages = selectRecentPages(store.getState());
+        expect(recentPages).toHaveLength(5);
+        // Most recent should be first
+        expect(recentPages[0]).toBe("/studio/admin");
+        // Oldest (chat, workflows) should be dropped
+        expect(recentPages).not.toContain("/studio/chat");
+        expect(recentPages).not.toContain("/studio/workflows");
+      });
+
+      it("should not duplicate pages - move to front if already visited", () => {
+        const store = createTestStore();
+
+        store.dispatch(trackPageVisit("/studio/chat"));
+        store.dispatch(trackPageVisit("/studio/workflows"));
+        store.dispatch(trackPageVisit("/studio/chat")); // Visit chat again
+
+        const recentPages = selectRecentPages(store.getState());
+        expect(recentPages).toHaveLength(2);
+        expect(recentPages[0]).toBe("/studio/chat"); // Most recent
+        expect(recentPages[1]).toBe("/studio/workflows");
+      });
+    });
+
+    describe("setNavigationContext action", () => {
+      it("should set navigation context with feature", () => {
+        const store = createTestStore();
+        store.dispatch(
+          setNavigationContext({
+            page: "/studio/chat",
+            feature: "streaming",
+          }),
+        );
+
+        const context = selectNavigationContext(store.getState());
+        expect(context.page).toBe("/studio/chat");
+        expect(context.feature).toBe("streaming");
+      });
+
+      it("should set navigation context with action", () => {
+        const store = createTestStore();
+        store.dispatch(
+          setNavigationContext({
+            page: "/studio/agents",
+            action: "create",
+          }),
+        );
+
+        const context = selectNavigationContext(store.getState());
+        expect(context.page).toBe("/studio/agents");
+        expect(context.action).toBe("create");
+      });
+    });
+
+    describe("selectors", () => {
+      it("selectRecentPages should return empty array initially", () => {
+        const store = createTestStore();
+        expect(selectRecentPages(store.getState())).toEqual([]);
+      });
+
+      it("selectCurrentPage should return empty string initially", () => {
+        const store = createTestStore();
+        expect(selectCurrentPage(store.getState())).toBe("");
+      });
+
+      it("selectNavigationContext should return default context initially", () => {
+        const store = createTestStore();
+        const context = selectNavigationContext(store.getState());
+        expect(context).toEqual({
+          page: "",
+          feature: undefined,
+          action: undefined,
+        });
+      });
     });
   });
 });

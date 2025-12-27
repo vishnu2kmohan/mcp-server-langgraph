@@ -10,16 +10,15 @@
  * 3. Maintainability - Update factory when API changes, all tests get updates
  * 4. DRY - No copy-paste of mock data across tests
  *
- * Usage in E2E tests:
- * ```typescript
+ * @example
+ * // Usage in E2E tests:
  * import { mockProject, mockSession, mockUser } from './fixtures/mock-factories';
  *
- * await page.route('**/api/v1/projects/*', (route) => {
+ * await page.route('**\/api/v1/projects/*', (route) => {
  *   route.fulfill({
  *     body: JSON.stringify(mockProject({ name: 'Custom Name' })),
  *   });
  * });
- * ```
  */
 
 import type {
@@ -95,6 +94,119 @@ export function mockUser(overrides: Partial<UserInfo> = {}): UserInfo {
     ...overrides,
   };
 }
+
+/**
+ * Extended UserInfoResponse for /api/v1/me endpoint
+ * Includes Sprint 4 extended fields: visible_modules, feature_flags, sub_persona, api_version
+ */
+export interface UserInfoResponse {
+  user_id: string;
+  username: string;
+  email?: string;
+  first_name?: string;
+  last_name?: string;
+  display_name?: string;
+  roles: string[];
+  persona: 'admin' | 'developer' | 'user';
+  keycloak_id?: string;
+  // Sprint 4 extended fields
+  api_version?: string;
+  sub_persona?: string | null;
+  visible_modules?: string[];
+  feature_flags?: Record<string, boolean>;
+}
+
+/**
+ * Create a mock UserInfoResponse for /api/v1/me endpoint
+ * Uses normalized module IDs (workflows, cost, observability - not flows, costs, metrics)
+ */
+export function mockUserInfoResponse(
+  overrides: Partial<UserInfoResponse> = {}
+): UserInfoResponse {
+  return {
+    user_id: uniqueId('user'),
+    username: 'alice',
+    email: 'alice@example.com',
+    roles: ['developer'],
+    persona: 'developer',
+    api_version: '1.0.0',
+    sub_persona: 'alice-builder',
+    visible_modules: [
+      'projects',
+      'chat',
+      'workflows',
+      'agents',
+      'mcp',
+      'vectors',
+      'files',
+      'traces',
+      'cost',
+      'settings',
+      'help',
+    ],
+    feature_flags: {},
+    ...overrides,
+  };
+}
+
+/**
+ * Persona-specific visible_modules configurations
+ * Uses normalized IDs matching ActivityBar NAV_ITEMS
+ */
+export const PERSONA_VISIBLE_MODULES: Record<string, string[]> = {
+  admin: [
+    'projects',
+    'chat',
+    'workflows',
+    'agents',
+    'mcp',
+    'vectors',
+    'files',
+    'traces',
+    'observability',
+    'cost',
+    'admin',
+    'audit',
+    'compliance',
+    'settings',
+    'help',
+  ],
+  'security-admin': ['admin', 'audit', 'compliance', 'settings', 'help'],
+  auditor: ['audit', 'compliance', 'help'],
+  'alice-builder': [
+    'projects',
+    'chat',
+    'workflows',
+    'agents',
+    'mcp',
+    'vectors',
+    'files',
+    'traces',
+    'cost',
+    'settings',
+    'help',
+  ],
+  'alice-analyst': [
+    'projects',
+    'chat',
+    'traces',
+    'observability',
+    'cost',
+    'settings',
+    'help',
+  ],
+  'alice-devops': [
+    'projects',
+    'chat',
+    'agents',
+    'mcp',
+    'traces',
+    'settings',
+    'help',
+  ],
+  'compliance-officer': ['audit', 'compliance', 'help'],
+  bob: ['projects', 'chat', 'workflows', 'help'],
+};
 
 /**
  * Create a mock AdminUser object

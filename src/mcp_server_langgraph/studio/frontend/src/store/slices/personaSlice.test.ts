@@ -12,6 +12,7 @@ import personaReducer, {
   setPersonaLoading,
   resetPersona,
   setSubPersona,
+  hydrateFromServer,
   selectPersona,
   selectSubPersona,
   selectUsername,
@@ -23,6 +24,9 @@ import personaReducer, {
   selectCanAccessRoute,
   selectVisibleModules,
   selectHasPermission,
+  selectFeatureFlags,
+  selectFeatureFlag,
+  selectApiVersion,
   initialState,
   type Persona,
   type SubPersona,
@@ -445,7 +449,7 @@ describe("personaSlice", () => {
         };
         const modules = selectVisibleModules(state);
         expect(modules).toContain("chat");
-        expect(modules).toContain("flows");
+        expect(modules).toContain("workflows");
         expect(modules).toContain("mcp");
         expect(modules).toContain("agents");
         expect(modules).not.toContain("admin");
@@ -462,8 +466,8 @@ describe("personaSlice", () => {
         const modules = selectVisibleModules(state);
         expect(modules).toContain("chat");
         expect(modules).toContain("traces");
-        expect(modules).toContain("costs");
-        expect(modules).toContain("metrics");
+        expect(modules).toContain("cost");
+        expect(modules).toContain("observability");
       });
 
       it("should return devops modules for alice-devops", () => {
@@ -506,7 +510,7 @@ describe("personaSlice", () => {
         const modules = selectVisibleModules(state);
         expect(modules).toContain("chat");
         expect(modules).toContain("projects");
-        expect(modules).toContain("flows");
+        expect(modules).toContain("workflows");
         expect(modules).not.toContain("admin");
         expect(modules).not.toContain("mcp");
       });
@@ -599,6 +603,239 @@ describe("personaSlice", () => {
           },
         };
         expect(selectDefaultRoute(state)).toBe("/studio/chat");
+      });
+    });
+  });
+
+  // =============================================================================
+  // hydrateFromServer Tests (Sprint 4: Server-Provided Persona Data)
+  // =============================================================================
+
+  describe("hydrateFromServer", () => {
+    it("should store visibleModules in state", () => {
+      const serverModules = ["chat", "workflows", "agents", "cost"];
+      const actual = personaReducer(
+        initialState,
+        hydrateFromServer({
+          username: "alice",
+          email: "alice@example.com",
+          roles: ["developer"],
+          persona: "developer",
+          visibleModules: serverModules,
+        }),
+      );
+      expect(actual.visibleModules).toEqual(serverModules);
+    });
+
+    it("should store featureFlags in state", () => {
+      const serverFlags = { ai_suggestions: true, focus_mode: false };
+      const actual = personaReducer(
+        initialState,
+        hydrateFromServer({
+          username: "alice",
+          roles: ["developer"],
+          persona: "developer",
+          featureFlags: serverFlags,
+        }),
+      );
+      expect(actual.featureFlags).toEqual(serverFlags);
+    });
+
+    it("should store subPersona and apiVersion", () => {
+      const actual = personaReducer(
+        initialState,
+        hydrateFromServer({
+          username: "alice",
+          roles: ["developer"],
+          persona: "developer",
+          subPersona: "alice-builder",
+          apiVersion: "2",
+        }),
+      );
+      expect(actual.subPersona).toBe("alice-builder");
+      expect(actual.apiVersion).toBe("2");
+    });
+
+    it("should set isPersonaLoading to false after hydration", () => {
+      const actual = personaReducer(
+        { ...initialState, isPersonaLoading: true },
+        hydrateFromServer({
+          username: "alice",
+          roles: ["developer"],
+          persona: "developer",
+        }),
+      );
+      expect(actual.isPersonaLoading).toBe(false);
+    });
+
+    it("should handle empty visibleModules gracefully", () => {
+      const actual = personaReducer(
+        initialState,
+        hydrateFromServer({
+          username: "alice",
+          roles: ["developer"],
+          persona: "developer",
+          visibleModules: [],
+        }),
+      );
+      expect(actual.visibleModules).toEqual([]);
+    });
+
+    it("should handle undefined optional fields", () => {
+      const actual = personaReducer(
+        initialState,
+        hydrateFromServer({
+          username: "alice",
+          roles: ["developer"],
+          persona: "developer",
+          // subPersona, visibleModules, featureFlags, apiVersion all undefined
+        }),
+      );
+      expect(actual.subPersona).toBeNull();
+      expect(actual.visibleModules).toEqual([]);
+      expect(actual.featureFlags).toEqual({});
+      expect(actual.apiVersion).toBeNull();
+    });
+  });
+
+  // =============================================================================
+  // selectSidebarItems with Server-Provided Modules Tests
+  // =============================================================================
+
+  describe("selectSidebarItems with server modules", () => {
+    it("should return server visibleModules when available", () => {
+      const serverModules = ["chat", "workflows", "agents", "cost"];
+      const state = {
+        persona: {
+          ...initialState,
+          persona: "developer" as Persona,
+          visibleModules: serverModules,
+          isPersonaLoading: false,
+        },
+      };
+      const items = selectSidebarItems(state);
+      // Should return server modules (after filtering to known IDs)
+      expect(items).toContain("chat");
+      expect(items).toContain("workflows");
+    });
+
+    it("should filter server modules to known NAV_ITEM ids", () => {
+      // Server returns some unknown module IDs - should be filtered out
+      const serverModules = [
+        "chat",
+        "unknown_module",
+        "workflows",
+        "fake_module",
+      ];
+      const state = {
+        persona: {
+          ...initialState,
+          persona: "developer" as Persona,
+          visibleModules: serverModules,
+          isPersonaLoading: false,
+        },
+      };
+      const items = selectSidebarItems(state);
+      // Should contain known modules
+      expect(items).toContain("chat");
+      expect(items).toContain("workflows");
+      // Should NOT contain unknown modules
+      expect(items).not.toContain("unknown_module");
+      expect(items).not.toContain("fake_module");
+    });
+
+    it("should fall back to PERSONA_CONFIGS when visibleModules is empty", () => {
+      const state = {
+        persona: {
+          ...initialState,
+          persona: "developer" as Persona,
+          visibleModules: [],
+          isPersonaLoading: false,
+        },
+      };
+      const items = selectSidebarItems(state);
+      // Should fall back to hardcoded developer config
+      expect(items).toContain("chat");
+      expect(items).toContain("workflows");
+      expect(items).not.toContain("admin"); // Developer doesn't have admin
+    });
+
+    it("should fall back to PERSONA_CONFIGS when all server modules are unknown", () => {
+      const serverModules = ["unknown1", "unknown2", "unknown3"];
+      const state = {
+        persona: {
+          ...initialState,
+          persona: "admin" as Persona,
+          visibleModules: serverModules,
+          isPersonaLoading: false,
+        },
+      };
+      const items = selectSidebarItems(state);
+      // Should fall back to hardcoded admin config since all server modules are unknown
+      expect(items).toContain("admin");
+      expect(items).toContain("chat");
+    });
+  });
+
+  // =============================================================================
+  // Feature Flag Selectors Tests
+  // =============================================================================
+
+  describe("feature flag selectors", () => {
+    describe("selectFeatureFlags", () => {
+      it("should return feature flags from state", () => {
+        const flags = { ai_suggestions: true, focus_mode: false };
+        const state = {
+          persona: {
+            ...initialState,
+            featureFlags: flags,
+          },
+        };
+        expect(selectFeatureFlags(state)).toEqual(flags);
+      });
+    });
+
+    describe("selectFeatureFlag", () => {
+      it("should return true for enabled flag", () => {
+        const state = {
+          persona: {
+            ...initialState,
+            featureFlags: { ai_suggestions: true },
+          },
+        };
+        expect(selectFeatureFlag("ai_suggestions")(state)).toBe(true);
+      });
+
+      it("should return false for disabled flag", () => {
+        const state = {
+          persona: {
+            ...initialState,
+            featureFlags: { ai_suggestions: false },
+          },
+        };
+        expect(selectFeatureFlag("ai_suggestions")(state)).toBe(false);
+      });
+
+      it("should return false for unknown flag", () => {
+        const state = {
+          persona: {
+            ...initialState,
+            featureFlags: {},
+          },
+        };
+        expect(selectFeatureFlag("unknown_flag")(state)).toBe(false);
+      });
+    });
+
+    describe("selectApiVersion", () => {
+      it("should return api version from state", () => {
+        const state = {
+          persona: {
+            ...initialState,
+            apiVersion: "2",
+          },
+        };
+        expect(selectApiVersion(state)).toBe("2");
       });
     });
   });

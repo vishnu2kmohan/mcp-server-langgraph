@@ -130,58 +130,137 @@ export const PERSONA_OPENFGA_MAPPINGS: Record<string, OpenFGATuple[]> = {
 // Persona → Visible Modules Mapping
 // =============================================================================
 
+/**
+ * ModuleId - All possible module IDs that can appear in navigation.
+ *
+ * These IDs must match the NAV_ITEMS and BOTTOM_ITEMS in ActivityBar.tsx.
+ * Use normalized IDs: 'workflows' (not 'flows'), 'cost' (not 'costs').
+ */
 export type ModuleId =
-  | "chat"
-  | "agents"
-  | "flows"
-  | "mcp"
-  | "files"
-  | "traces"
-  | "costs"
-  | "admin"
-  | "help"
+  // Core Work
   | "projects"
+  | "chat"
+  | "workflows"
+  // AI & Data
+  | "agents"
+  | "mcp"
+  | "vectors"
   | "connections"
-  | "metrics"
+  | "files"
+  // Observability
+  | "traces"
+  | "observability"
+  | "cost"
+  // Admin
+  | "admin"
   | "audit"
-  | "compliance";
+  | "compliance"
+  // Bottom items
+  | "help"
+  | "settings";
 
+/**
+ * PERSONA_VISIBLE_MODULES - Client-side fallback for visible modules.
+ *
+ * NOTE: The server (user.py PERSONA_VISIBLE_MODULES) is the source of truth.
+ * This is only used as a fallback when server data is unavailable.
+ * Uses normalized IDs: 'workflows' (not 'flows'), 'cost' (not 'costs').
+ */
 export const PERSONA_VISIBLE_MODULES: Record<string, ModuleId[]> = {
+  // === ADMIN PERSONAS (full platform access) ===
   admin: [
-    "chat",
-    "agents",
-    "flows",
-    "mcp",
-    "files",
-    "traces",
-    "costs",
-    "admin",
-    "help",
+    // Core Work
     "projects",
-    "connections",
-    "metrics",
+    "chat",
+    "workflows",
+    // AI & Data
+    "agents",
+    "mcp",
+    "vectors",
+    "files",
+    // Observability
+    "traces",
+    "observability",
+    "cost",
+    // Admin
+    "admin",
     "audit",
     "compliance",
+    // Bottom items
+    "settings",
+    "help",
   ],
   "security-admin": [
-    "chat",
-    "agents",
-    "flows",
-    "mcp",
-    "files",
-    "traces",
-    "costs",
+    // Admin-focused access
     "admin",
-    "help",
     "audit",
     "compliance",
+    "settings",
+    "help",
   ],
-  auditor: ["audit", "compliance", "help"],
-  "alice-builder": ["chat", "flows", "mcp", "agents", "help"],
-  "alice-analyst": ["chat", "traces", "costs", "metrics", "help"],
-  "alice-devops": ["chat", "mcp", "connections", "traces", "help"],
-  "compliance-officer": ["audit", "compliance", "help"],
-  bob: ["chat", "projects", "flows", "help"],
+  auditor: [
+    // Audit-only access
+    "audit",
+    "compliance",
+    "help",
+  ],
+  // === ALICE PERSONAS (developer variants) ===
+  "alice-builder": [
+    // Core Work
+    "projects",
+    "chat",
+    "workflows",
+    // AI & Data
+    "agents",
+    "mcp",
+    "vectors",
+    "files",
+    // Observability
+    "traces",
+    "cost",
+    // Bottom items
+    "settings",
+    "help",
+  ],
+  "alice-analyst": [
+    // Core Work
+    "projects",
+    "chat",
+    // Observability focus
+    "traces",
+    "observability",
+    "cost",
+    // Bottom items
+    "settings",
+    "help",
+  ],
+  "alice-devops": [
+    // Core Work
+    "projects",
+    "chat",
+    // Infrastructure focus
+    "agents",
+    "mcp",
+    "connections",
+    "traces",
+    // Bottom items
+    "settings",
+    "help",
+  ],
+  // === BOB PERSONAS (end user) ===
+  "compliance-officer": [
+    // Compliance-focused access
+    "audit",
+    "compliance",
+    "help",
+  ],
+  bob: [
+    // Core Work only - limited access
+    "projects",
+    "chat",
+    "workflows",
+    "help",
+  ],
 };
 
 // =============================================================================

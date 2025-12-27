@@ -467,11 +467,31 @@ export const router = createBrowserRouter(
         },
 
         // Native Login route (no Keycloak UI redirect)
+        // Uses eager error handling to prevent chunk load failures during logout race conditions
         {
           path: "login",
           lazy: async () => {
-            const { LoginPage } = await import("../pages/LoginPage");
-            return { Component: LoginPage };
+            try {
+              const { LoginPage } = await import("../pages/LoginPage");
+              return { Component: LoginPage };
+            } catch (error) {
+              // Handle chunk load failure gracefully (e.g., during logout redirect race)
+              // This can happen when:
+              // 1. A full-page redirect cancels the chunk request
+              // 2. The chunk is missing after a deployment (hash mismatch)
+              console.warn("Failed to load LoginPage chunk:", error);
+              // Return a simple fallback that doesn't require any additional chunks
+              return {
+                Component: () => {
+                  // If we're here due to a cancelled request, the page is likely
+                  // navigating away anyway. Try to reload if we're still here.
+                  if (typeof window !== "undefined") {
+                    window.location.reload();
+                  }
+                  return null;
+                },
+              };
+            }
           },
         },
 

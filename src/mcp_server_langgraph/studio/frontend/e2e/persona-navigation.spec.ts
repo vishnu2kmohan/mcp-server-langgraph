@@ -38,27 +38,29 @@ const mockFeatureFlags = {
 };
 
 // Module visibility per persona (from PersonaVariants.ts)
+// Uses normalized IDs: workflows (not flows), cost (not costs), observability (not metrics)
 const PERSONA_MODULES = {
-  admin: ['chat', 'agents', 'flows', 'mcp', 'files', 'traces', 'costs', 'admin', 'help'],
+  admin: ['chat', 'agents', 'workflows', 'mcp', 'files', 'traces', 'cost', 'observability', 'admin', 'help'],
   'security-admin': ['chat', 'admin', 'compliance', 'audit', 'help'],
   auditor: ['audit', 'compliance', 'help'],
-  'alice-builder': ['chat', 'flows', 'mcp', 'agents', 'help'],
-  'alice-analyst': ['chat', 'traces', 'costs', 'help'],
+  'alice-builder': ['chat', 'workflows', 'mcp', 'agents', 'help'],
+  'alice-analyst': ['chat', 'traces', 'cost', 'observability', 'help'],
   'alice-devops': ['chat', 'mcp', 'traces', 'help'],
   'compliance-officer': ['audit', 'compliance', 'help'],
-  bob: ['chat', 'projects', 'flows', 'help'],
+  bob: ['chat', 'projects', 'workflows', 'help'],
 };
 
 // Modules that should be hidden for each persona
+// Uses normalized IDs: workflows (not flows), cost (not costs), observability (not metrics)
 const PERSONA_HIDDEN_MODULES = {
   admin: [], // Admin sees everything
   'security-admin': ['projects'],
-  auditor: ['chat', 'agents', 'flows', 'mcp', 'files', 'traces', 'costs', 'admin'],
-  'alice-builder': ['admin', 'compliance', 'audit', 'costs', 'traces'],
-  'alice-analyst': ['admin', 'flows', 'agents', 'mcp', 'compliance'],
-  'alice-devops': ['admin', 'compliance', 'audit', 'agents', 'flows'],
-  'compliance-officer': ['chat', 'agents', 'flows', 'mcp', 'files', 'traces', 'costs', 'admin'],
-  bob: ['admin', 'compliance', 'audit', 'agents', 'mcp', 'traces', 'costs'],
+  auditor: ['chat', 'agents', 'workflows', 'mcp', 'files', 'traces', 'cost', 'admin'],
+  'alice-builder': ['admin', 'compliance', 'audit', 'cost', 'traces'],
+  'alice-analyst': ['admin', 'workflows', 'agents', 'mcp', 'compliance'],
+  'alice-devops': ['admin', 'compliance', 'audit', 'agents', 'workflows'],
+  'compliance-officer': ['chat', 'agents', 'workflows', 'mcp', 'files', 'traces', 'cost', 'admin'],
+  bob: ['admin', 'compliance', 'audit', 'agents', 'mcp', 'traces', 'cost'],
 };
 
 async function setupFeatureFlagMock(page: import('@playwright/test').Page) {

@@ -15,6 +15,7 @@ import type {
   SessionSummary,
   SessionConfig,
   ChatMessage,
+  NavigationContext,
 } from "../../types/session";
 import { DEFAULT_SESSION_CONFIG } from "../../types/session";
 import { getAuthToken } from "../../utils/storage";
@@ -60,6 +61,10 @@ export const initialSessionState: SessionState = {
   isLoadingMore: false,
   cursor: null,
   hasPendingMutation: false,
+  // Phase 4.2: Navigation tracking for AI predictions
+  recentPages: [],
+  currentPage: "",
+  navigationContext: { page: "", feature: undefined, action: undefined },
 };
 
 // ==============================================================================
@@ -660,6 +665,40 @@ export const sessionSlice = createSlice({
     setPendingMutation: (state, action: PayloadAction<boolean>) => {
       state.hasPendingMutation = action.payload;
     },
+
+    // =========================================================================
+    // Navigation Tracking (Phase 4.2: AI Predictions Support)
+    // =========================================================================
+
+    /**
+     * Track a page visit for AI navigation predictions.
+     * Updates currentPage and adds to recentPages (max 5, most recent first).
+     */
+    trackPageVisit: (state, action: PayloadAction<string>) => {
+      const page = action.payload;
+      state.currentPage = page;
+
+      // Remove if already in list (will be re-added at front)
+      const filteredPages = state.recentPages.filter((p) => p !== page);
+
+      // Add to front and keep only last 5
+      state.recentPages = [page, ...filteredPages].slice(0, 5);
+    },
+
+    /**
+     * Set navigation context for AI predictions.
+     * Includes page, active feature, and current action.
+     */
+    setNavigationContext: (
+      state,
+      action: PayloadAction<Partial<NavigationContext> & { page: string }>,
+    ) => {
+      state.navigationContext = {
+        page: action.payload.page,
+        feature: action.payload.feature,
+        action: action.payload.action,
+      };
+    },
   },
   extraReducers: (builder) => {
     // fetchSessions
@@ -839,6 +878,9 @@ export const {
   setCurrentSession,
   resetSession,
   setPendingMutation,
+  // Phase 4.2: Navigation tracking actions
+  trackPageVisit,
+  setNavigationContext,
 } = sessionSlice.actions;
 
 // ==============================================================================
@@ -878,5 +920,22 @@ export const selectCursor = (state: SessionRootState) =>
 // Pending mutation selector (for race condition guard)
 export const selectHasPendingMutation = (state: SessionRootState) =>
   state.session.hasPendingMutation ?? false;
+
+// =============================================================================
+// Navigation Tracking Selectors (Phase 4.2: AI Predictions Support)
+// =============================================================================
+
+/** Recent pages visited (last 5, most recent first) */
+export const selectRecentPages = (state: SessionRootState): string[] =>
+  state.session.recentPages;
+
+/** Current page path */
+export const selectCurrentPage = (state: SessionRootState): string =>
+  state.session.currentPage;
+
+/** Current navigation context */
+export const selectNavigationContext = (
+  state: SessionRootState,
+): NavigationContext => state.session.navigationContext;
 
 export default sessionSlice.reducer;

@@ -641,7 +641,13 @@ export function StudioShellLayout() {
             className="flex h-full overflow-hidden"
           >
             {/* Activity Bar - fixed width (hidden in focus mode) */}
-            {!focusModeEnabled && <ActivityBar />}
+            {/* Sprint 4: AI-native navigation predictions enabled via feature flag */}
+            {!focusModeEnabled && (
+              <ActivityBar
+                enableAI={aiSuggestionsEnabled}
+                reorderByPrediction={aiSuggestionsEnabled}
+              />
+            )}
 
             {/* Main content area - conditionally render based on route */}
             {/* Key props force React to unmount/remount when switching between layouts */}

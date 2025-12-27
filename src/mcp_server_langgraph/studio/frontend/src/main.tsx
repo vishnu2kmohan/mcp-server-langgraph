@@ -9,14 +9,12 @@ import { FeatureFlagProvider } from "./contexts/FeatureFlagContext";
 import { TelemetryProvider } from "./contexts/TelemetryContext";
 import { ConnectedAIIntelligenceProvider } from "./contexts";
 import { ErrorBoundary } from "./components/ErrorBoundary";
-import { registerServiceWorker } from "./utils/serviceWorker";
 import { sessionTelemetry } from "./utils/sessionTelemetry";
 import "./index.css";
 
-// Register service worker for PWA offline support
-if (import.meta.env.PROD) {
-  registerServiceWorker();
-}
+// NOTE: Service worker registration is deferred until after authentication
+// to avoid precaching ~130+ assets for unauthenticated users on the login page.
+// See App.tsx for the deferred registration logic.
 
 // Global error handler for ErrorBoundary - integrates with telemetry
 const handleGlobalError = (

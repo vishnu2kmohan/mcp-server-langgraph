@@ -4,10 +4,18 @@
  * React context for feature flags management.
  * Provides feature flag data from the API to all child components.
  * Enables feature gating throughout the application.
+ *
+ * Sprint 4: Passes user persona/role to get correct feature flags.
+ * Uses loading guards to wait for persona before fetching.
  */
 
 import { createContext, useContext, useMemo, ReactNode } from "react";
 import { useGetFeatureFlagsQuery } from "../api";
+import { useAppSelector } from "../store/hooks";
+import {
+  selectPersona,
+  selectPersonaLoading,
+} from "../store/slices/personaSlice";
 import type { FeatureFlags } from "../types/api";
 
 /**
@@ -60,21 +68,31 @@ export interface FeatureFlagProviderProps {
  * ```
  */
 export function FeatureFlagProvider({ children }: FeatureFlagProviderProps) {
-  const { data, isLoading, isError } = useGetFeatureFlagsQuery();
+  // Sprint 4: Get user persona from Redux to pass correct role
+  const persona = useAppSelector(selectPersona);
+  const isPersonaLoading = useAppSelector(selectPersonaLoading);
+
+  // Skip query until persona is loaded to avoid calling with wrong role
+  // This ensures admins get admin feature flags, developers get developer flags, etc.
+  const { data, isLoading, isError } = useGetFeatureFlagsQuery(
+    { role: persona },
+    { skip: isPersonaLoading },
+  );
 
   const value = useMemo<FeatureFlagContextValue>(() => {
     const flags: FeatureFlags = data ?? {};
 
     return {
       flags,
-      isLoading,
+      // Include persona loading state in overall loading status
+      isLoading: isLoading || isPersonaLoading,
       isError,
       isEnabled: (flagName: string) => {
-        if (isLoading || isError) return false;
+        if (isLoading || isPersonaLoading || isError) return false;
         return flags[flagName] === true;
       },
     };
-  }, [data, isLoading, isError]);
+  }, [data, isLoading, isPersonaLoading, isError]);
 
   return (
     <FeatureFlagContext.Provider value={value}>

@@ -146,12 +146,6 @@ export function UserMenuDropdown({
         }),
       });
 
-      // Dispatch logout action to clear Redux auth state and localStorage tokens
-      // The logout action in authSlice calls clearAllAuthStorage() which clears all token keys
-      dispatch(logout());
-      // Reset persona state to initial values (also sets isPersonaLoading=true)
-      dispatch(resetPersona());
-
       if (response.ok) {
         const data = await response.json();
         // Redirect to Keycloak logout URL to end SSO session
@@ -163,12 +157,21 @@ export function UserMenuDropdown({
             "post_logout_redirect_uri",
             `${window.location.origin}/login`,
           );
+          // Clear state JUST before full-page redirect to avoid race condition
+          // where AuthGuard tries to lazy-load LoginPage while we're navigating away
+          dispatch(logout());
+          dispatch(resetPersona());
           window.location.href = logoutUrl.toString();
           return;
         }
       }
 
-      // Fallback: If API call fails or no Keycloak URL, just go to login
+      // Fallback: If API call fails or no Keycloak URL, clear state and use React Router
+      // Dispatch logout action to clear Redux auth state and localStorage tokens
+      // The logout action in authSlice calls clearAllAuthStorage() which clears all token keys
+      dispatch(logout());
+      // Reset persona state to initial values (also sets isPersonaLoading=true)
+      dispatch(resetPersona());
       navigate("/login", { replace: true });
     } catch (error) {
       console.error("Logout error:", error);

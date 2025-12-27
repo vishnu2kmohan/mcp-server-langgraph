@@ -27,13 +27,26 @@ import {
   Database,
   DollarSign,
   Route,
+  FolderKanban,
+  Boxes,
+  Plug,
+  ClipboardCheck,
+  Scale,
 } from "lucide-react";
 import { useAppDispatch, useAppSelector } from "../store/hooks";
 import {
   selectActiveNavItem,
   setActiveNavItem,
 } from "../store/slices/canvasSlice";
-import { selectSidebarItems } from "../store/slices/personaSlice";
+import {
+  selectSidebarItems,
+  selectUsername,
+} from "../store/slices/personaSlice";
+import {
+  selectRecentPages,
+  selectCurrentPage,
+  trackPageVisit,
+} from "../store/slices/sessionSlice";
 import { cn } from "../utils/cn";
 import { useNavPrediction } from "../hooks/useUXIntelligence";
 
@@ -52,7 +65,23 @@ export interface NavItem {
 // Navigation Constants
 // =============================================================================
 
+/**
+ * NAV_ITEMS - Main navigation items (persona-filtered)
+ *
+ * Organized by functional groups for logical user journey:
+ * - Core Work: projects, chat, workflows
+ * - AI & Data: agents, mcp, vectors, connections, files
+ * - Observability: traces, observability, cost
+ * - Admin: admin, audit, compliance (persona-gated)
+ */
 export const NAV_ITEMS: NavItem[] = [
+  // === Core Work ===
+  {
+    id: "projects",
+    icon: <FolderKanban size={20} />,
+    label: "Projects",
+    path: "/studio/projects",
+  },
   {
     id: "chat",
     icon: <MessageSquare size={20} />,
@@ -65,29 +94,12 @@ export const NAV_ITEMS: NavItem[] = [
     label: "Workflows",
     path: "/studio/workflows",
   },
+  // === AI & Data ===
   {
     id: "agents",
     icon: <Cpu size={20} />,
     label: "Agents",
     path: "/studio/agents",
-  },
-  {
-    id: "observability",
-    icon: <Activity size={20} />,
-    label: "Observability",
-    path: "/studio/observability",
-  },
-  {
-    id: "files",
-    icon: <FileText size={20} />,
-    label: "Files",
-    path: "/studio/files",
-  },
-  {
-    id: "traces",
-    icon: <Route size={20} />,
-    label: "Traces",
-    path: "/studio/traces",
   },
   {
     id: "mcp",
@@ -96,16 +108,60 @@ export const NAV_ITEMS: NavItem[] = [
     path: "/studio/mcp",
   },
   {
+    id: "vectors",
+    icon: <Boxes size={20} />,
+    label: "Vectors",
+    path: "/studio/vectors",
+  },
+  {
+    id: "connections",
+    icon: <Plug size={20} />,
+    label: "Connections",
+    path: "/studio/connections",
+  },
+  {
+    id: "files",
+    icon: <FileText size={20} />,
+    label: "Files",
+    path: "/studio/files",
+  },
+  // === Observability ===
+  {
+    id: "traces",
+    icon: <Route size={20} />,
+    label: "Traces",
+    path: "/studio/traces",
+  },
+  {
+    id: "observability",
+    icon: <Activity size={20} />,
+    label: "Observability",
+    path: "/studio/observability",
+  },
+  {
     id: "cost",
     icon: <DollarSign size={20} />,
     label: "Cost",
     path: "/studio/cost",
   },
+  // === Admin (persona-gated) ===
   {
     id: "admin",
     icon: <Shield size={20} />,
     label: "Admin",
     path: "/studio/admin",
+  },
+  {
+    id: "audit",
+    icon: <ClipboardCheck size={20} />,
+    label: "Audit",
+    path: "/studio/audit",
+  },
+  {
+    id: "compliance",
+    icon: <Scale size={20} />,
+    label: "Compliance",
+    path: "/studio/compliance",
   },
 ];
 
@@ -123,6 +179,18 @@ export const BOTTOM_ITEMS: NavItem[] = [
     path: "/studio/settings",
   },
 ];
+
+/**
+ * KNOWN_NAV_IDS - Set of all valid navigation item IDs
+ *
+ * Used by selectSidebarItems to filter server-provided visible_modules
+ * to only include IDs that have corresponding nav items.
+ * This prevents invisible entries in the sidebar.
+ */
+export const KNOWN_NAV_IDS: Set<string> = new Set([
+  ...NAV_ITEMS.map((item) => item.id),
+  ...BOTTOM_ITEMS.map((item) => item.id),
+]);
 
 // =============================================================================
 // Component
@@ -149,6 +217,11 @@ export function ActivityBar({
   // RBAC: Get allowed sidebar items from persona slice (deny-by-default)
   const allowedItems = useAppSelector(selectSidebarItems);
 
+  // Phase 4.2: Get navigation tracking data for AI predictions
+  const username = useAppSelector(selectUsername);
+  const recentPages = useAppSelector(selectRecentPages);
+  const currentPage = useAppSelector(selectCurrentPage);
+
   // Sync activeNavItem with current route (fixes deep-linking/browser navigation)
   useEffect(() => {
     const allItems = [...NAV_ITEMS, ...BOTTOM_ITEMS];
@@ -170,11 +243,20 @@ export function ActivityBar({
     // Note: Unknown routes (e.g., /studio/projects) don't change activeNavItem
   }, [location.pathname, activeNavItem, allowedItems, dispatch]);
 
+  // Phase 4.2: Track page visits for AI predictions
+  useEffect(() => {
+    // Only track if we're on a studio page
+    if (location.pathname.startsWith("/studio/")) {
+      dispatch(trackPageVisit(location.pathname));
+    }
+  }, [location.pathname, dispatch]);
+
   // AI Navigation Predictions (Sprint 6)
+  // Phase 4.2: Now uses real navigation tracking data from sessionSlice
   const { predictedItems, isLoading: predictionsLoading } = useNavPrediction({
-    userId: "",
-    currentPage: activeNavItem ?? "chat",
-    recentPages: [], // Could be tracked via session history
+    userId: username ?? "",
+    currentPage: currentPage || activeNavItem || "chat",
+    recentPages: recentPages,
     enabled: enableAI,
   });
 

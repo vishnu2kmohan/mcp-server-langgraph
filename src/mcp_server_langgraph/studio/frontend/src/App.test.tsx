@@ -467,67 +467,9 @@ describe("App", () => {
     });
   });
 
-  describe("Mobile Responsive Layout", () => {
-    it("should render main content area that takes full height", () => {
-      // RTK Query mock already provides user data for studio routes
-      const { container } = renderWithStore(
-        <MemoryRouter
-          future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
-          initialEntries={["/studio/chat"]}
-        >
-          <Routes>
-            <Route element={<App />}>
-              <Route path="studio/chat" element={<div>Chat Page</div>} />
-            </Route>
-          </Routes>
-        </MemoryRouter>,
-      );
-
-      // Main content area should have h-full for full height within Panel
-      const mainElement = container.querySelector("main");
-      expect(mainElement).toBeInTheDocument();
-      expect(mainElement).toHaveClass("h-full");
-    });
-
-    it("should have overflow-auto on main content for mobile scrolling", () => {
-      // RTK Query mock already provides user data for studio routes
-      const { container } = renderWithStore(
-        <MemoryRouter
-          future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
-          initialEntries={["/studio/chat"]}
-        >
-          <Routes>
-            <Route element={<App />}>
-              <Route path="studio/chat" element={<div>Chat Page</div>} />
-            </Route>
-          </Routes>
-        </MemoryRouter>,
-      );
-
-      const mainElement = container.querySelector("main");
-      expect(mainElement).toHaveClass("overflow-auto");
-    });
-
-    it("should use flex layout for studio routes", () => {
-      // RTK Query mock already provides user data for studio routes
-      const { container } = renderWithStore(
-        <MemoryRouter
-          future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
-          initialEntries={["/studio/chat"]}
-        >
-          <Routes>
-            <Route element={<App />}>
-              <Route path="studio/chat" element={<div>Chat Page</div>} />
-            </Route>
-          </Routes>
-        </MemoryRouter>,
-      );
-
-      // Should have flex container for sidebar + main layout
-      const flexContainer = container.querySelector(".flex");
-      expect(flexContainer).toBeInTheDocument();
-    });
-  });
+  // NOTE: Mobile Responsive Layout tests removed - App.tsx no longer provides
+  // layout elements (main, flex containers). These are now in StudioShellLayout.
+  // See StudioShellLayout.test.tsx for layout tests.
 
   describe("Notification WebSocket", () => {
     it("should initialize notification WebSocket for studio routes", async () => {
@@ -879,84 +821,13 @@ describe("App", () => {
     });
   });
 
-  describe("JupyterLab layout", () => {
-    it("should render LeftSidebar in AppShell for studio routes", async () => {
-      renderWithStore(
-        <MemoryRouter
-          initialEntries={["/studio/chat"]}
-          future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
-        >
-          <Routes>
-            <Route element={<App />}>
-              <Route path="studio/chat" element={<div>Chat Page</div>} />
-            </Route>
-          </Routes>
-        </MemoryRouter>,
-      );
+  // NOTE: JupyterLab layout tests removed - LeftSidebar and MainDock components
+  // were replaced by StudioShellLayout (ActivityBar, SessionNav, CanvasPanel).
+  // Layout is now tested in StudioShellLayout.test.tsx
 
-      // LeftSidebar should be rendered with activity-bar and sidebar-content
-      await waitFor(() => {
-        expect(screen.getByTestId("left-sidebar")).toBeInTheDocument();
-        expect(screen.getByTestId("activity-bar")).toBeInTheDocument();
-      });
-    });
-
-    it("should render MainDock for studio routes", async () => {
-      renderWithStore(
-        <MemoryRouter
-          initialEntries={["/studio/chat"]}
-          future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
-        >
-          <Routes>
-            <Route element={<App />}>
-              <Route path="studio/chat" element={<div>Chat Page</div>} />
-            </Route>
-          </Routes>
-        </MemoryRouter>,
-      );
-
-      // MainDock should be rendered
-      await waitFor(() => {
-        expect(screen.getByTestId("main-dock")).toBeInTheDocument();
-      });
-    });
-  });
-
-  describe("workspace persistence", () => {
-    it("should load workspace state from localStorage on mount", async () => {
-      // Setup saved workspace state
-      const savedWorkspace = {
-        version: 1,
-        leftSidebarWidth: 350,
-        leftSidebarCollapsed: true,
-        focusMode: true,
-      };
-      localStorage.setItem(
-        "agent-studio-workspace",
-        JSON.stringify(savedWorkspace),
-      );
-
-      const { store } = renderWithStore(
-        <MemoryRouter
-          initialEntries={["/studio/chat"]}
-          future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
-        >
-          <Routes>
-            <Route element={<App />}>
-              <Route path="studio/chat" element={<div>Chat Page</div>} />
-            </Route>
-          </Routes>
-        </MemoryRouter>,
-      );
-
-      // Wait for the effect to run
-      await waitFor(() => {
-        expect(store.getState().workspace.leftSidebarWidth).toBe(350);
-        expect(store.getState().workspace.leftSidebarCollapsed).toBe(true);
-        expect(store.getState().workspace.focusMode).toBe(true);
-      });
-    });
-  });
+  // NOTE: workspace persistence tests removed - App.tsx no longer dispatches
+  // loadWorkspaceFromStorage. Workspace state is managed by StudioShellLayout.
+  // See workspaceSlice.test.ts for slice-level tests.
 
   describe("Route Type Detection Edge Cases", () => {
     it("should detect /studio/* as non-legacy route (StudioShell)", async () => {
@@ -984,7 +855,7 @@ describe("App", () => {
       expect(screen.queryByTestId("left-sidebar")).not.toBeInTheDocument();
     });
 
-    it("should detect /admin/* as legacy route (uses AppShell)", async () => {
+    it("should detect /admin/* as studio route (renders via StudioShell)", async () => {
       renderWithStore(
         <MemoryRouter
           initialEntries={["/admin/dashboard"]}
@@ -994,16 +865,16 @@ describe("App", () => {
             <Route element={<App />}>
               <Route
                 path="admin/dashboard"
-                element={<div>Admin Dashboard</div>}
+                element={<div data-testid="admin-content">Admin Dashboard</div>}
               />
             </Route>
           </Routes>
         </MemoryRouter>,
       );
 
-      // Admin routes use AppShell (legacy)
+      // Admin routes render content via Outlet (same as studio routes)
       await waitFor(() => {
-        expect(screen.getByTestId("left-sidebar")).toBeInTheDocument();
+        expect(screen.getByTestId("admin-content")).toBeInTheDocument();
       });
     });
 
@@ -1283,72 +1154,9 @@ describe("App", () => {
     });
   });
 
-  describe("Command Palette", () => {
-    it("should render command palette for legacy studio routes", async () => {
-      renderWithStore(
-        <MemoryRouter
-          initialEntries={["/studio/chat"]}
-          future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
-        >
-          <Routes>
-            <Route element={<App />}>
-              <Route path="studio/chat" element={<div>Chat Page</div>} />
-            </Route>
-          </Routes>
-        </MemoryRouter>,
-      );
-
-      // Command palette should be rendered for legacy studio routes
-      await waitFor(() => {
-        expect(screen.getByTestId("left-sidebar")).toBeInTheDocument();
-      });
-    });
-
-    it("should not render command palette for studio shell routes", async () => {
-      renderWithStore(
-        <MemoryRouter
-          initialEntries={["/studio/chat"]}
-          future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
-        >
-          <Routes>
-            <Route element={<App />}>
-              <Route
-                path="studio/chat"
-                element={<div data-testid="hybrid-content">Hybrid Chat</div>}
-              />
-            </Route>
-          </Routes>
-        </MemoryRouter>,
-      );
-
-      // StudioShell routes don't use AppShell components
-      await waitFor(() => {
-        expect(screen.getByTestId("hybrid-content")).toBeInTheDocument();
-      });
-      expect(screen.queryByTestId("left-sidebar")).not.toBeInTheDocument();
-    });
-  });
-
-  describe("MainDock Tab Rendering", () => {
-    it("should have MainDock for studio routes", async () => {
-      renderWithStore(
-        <MemoryRouter
-          initialEntries={["/studio/chat"]}
-          future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
-        >
-          <Routes>
-            <Route element={<App />}>
-              <Route path="studio/chat" element={<div>Chat Page</div>} />
-            </Route>
-          </Routes>
-        </MemoryRouter>,
-      );
-
-      await waitFor(() => {
-        expect(screen.getByTestId("main-dock")).toBeInTheDocument();
-      });
-    });
-  });
+  // NOTE: Command Palette and MainDock tests removed - App.tsx no longer renders
+  // these components. Command palette is in StudioShellLayout, MainDock was removed.
+  // See StudioShellLayout.test.tsx for command palette tests.
 
   describe("JWT Fallback Scenarios", () => {
     it("should fallback to admin persona when JWT has admin role", async () => {
@@ -1496,134 +1304,9 @@ describe("App", () => {
     });
   });
 
-  describe("Tab Content Rendering", () => {
-    it("should render ChatDocument for chat tabs with feature flags", async () => {
-      renderWithStore(
-        <MemoryRouter
-          initialEntries={["/studio/chat"]}
-          future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
-        >
-          <Routes>
-            <Route element={<App />}>
-              <Route path="studio/chat" element={<div>Chat Page</div>} />
-            </Route>
-          </Routes>
-        </MemoryRouter>,
-      );
-
-      // Just verify the page renders - feature flags are mocked
-      await waitFor(() => {
-        expect(screen.getByTestId("main-dock")).toBeInTheDocument();
-      });
-    });
-
-    it("should render workflow document for workflow tabs", async () => {
-      renderWithStore(
-        <MemoryRouter
-          initialEntries={["/studio/workflows"]}
-          future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
-        >
-          <Routes>
-            <Route element={<App />}>
-              <Route
-                path="studio/workflows"
-                element={<div>Workflows Page</div>}
-              />
-            </Route>
-          </Routes>
-        </MemoryRouter>,
-      );
-
-      await waitFor(() => {
-        expect(screen.getByTestId("main-dock")).toBeInTheDocument();
-      });
-    });
-  });
-
-  describe("Onboarding Wizard Integration", () => {
-    it("should render onboarding wizard when enabled and shouldShow is true", async () => {
-      // This test just verifies the condition paths - the wizard is mocked
-      renderWithStore(
-        <MemoryRouter
-          initialEntries={["/studio/chat"]}
-          future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
-        >
-          <Routes>
-            <Route element={<App />}>
-              <Route path="studio/chat" element={<div>Chat Page</div>} />
-            </Route>
-          </Routes>
-        </MemoryRouter>,
-      );
-
-      await waitFor(() => {
-        expect(screen.getByTestId("left-sidebar")).toBeInTheDocument();
-      });
-    });
-  });
-
-  describe("Route Detection", () => {
-    it("should correctly detect /studio path without /v2 as legacy", async () => {
-      renderWithStore(
-        <MemoryRouter
-          initialEntries={["/studio/workflows"]}
-          future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
-        >
-          <Routes>
-            <Route element={<App />}>
-              <Route path="studio/workflows" element={<div>Workflows</div>} />
-            </Route>
-          </Routes>
-        </MemoryRouter>,
-      );
-
-      await waitFor(() => {
-        expect(screen.getByTestId("left-sidebar")).toBeInTheDocument();
-      });
-    });
-
-    it("should correctly detect /studio/settings as legacy", async () => {
-      renderWithStore(
-        <MemoryRouter
-          initialEntries={["/studio/settings"]}
-          future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
-        >
-          <Routes>
-            <Route element={<App />}>
-              <Route path="studio/settings" element={<div>Settings</div>} />
-            </Route>
-          </Routes>
-        </MemoryRouter>,
-      );
-
-      await waitFor(() => {
-        expect(screen.getByTestId("left-sidebar")).toBeInTheDocument();
-      });
-    });
-
-    it("should correctly detect /auth/callback as non-legacy", async () => {
-      renderWithStore(
-        <MemoryRouter
-          initialEntries={["/auth/callback"]}
-          future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
-        >
-          <Routes>
-            <Route element={<App />}>
-              <Route
-                path="auth/callback"
-                element={<div data-testid="auth-callback">Auth Callback</div>}
-              />
-            </Route>
-          </Routes>
-        </MemoryRouter>,
-      );
-
-      await waitFor(() => {
-        expect(screen.getByTestId("auth-callback")).toBeInTheDocument();
-      });
-      expect(screen.queryByTestId("left-sidebar")).not.toBeInTheDocument();
-    });
-  });
+  // NOTE: Tab Content Rendering, Onboarding Wizard Integration, and Route Detection
+  // tests removed - they tested for obsolete components (main-dock, left-sidebar).
+  // Route rendering is verified by other tests that check for content via Outlet.
 
   describe("User Data Processing", () => {
     it("should handle user data without persona field", async () => {
@@ -1780,7 +1463,7 @@ describe("App", () => {
 
       // Component should render without crashing
       await waitFor(() => {
-        expect(screen.getByTestId("left-sidebar")).toBeInTheDocument();
+        expect(screen.getByText("Chat Page")).toBeInTheDocument();
       });
 
       consoleSpy.mockRestore();
@@ -1807,7 +1490,7 @@ describe("App", () => {
 
       // Component should render without crashing
       await waitFor(() => {
-        expect(screen.getByTestId("left-sidebar")).toBeInTheDocument();
+        expect(screen.getByText("Chat Page")).toBeInTheDocument();
       });
 
       consoleSpy.mockRestore();
@@ -1837,7 +1520,7 @@ describe("App", () => {
 
       // Verify component renders correctly with storage check
       await waitFor(() => {
-        expect(screen.getByTestId("left-sidebar")).toBeInTheDocument();
+        expect(screen.getByText("Chat Page")).toBeInTheDocument();
       });
 
       vi.restoreAllMocks();
@@ -1911,7 +1594,7 @@ describe("App", () => {
       );
 
       await waitFor(() => {
-        expect(screen.getByTestId("left-sidebar")).toBeInTheDocument();
+        expect(screen.getByText("Chat Page")).toBeInTheDocument();
       });
 
       setItemSpy.mockRestore();
@@ -1960,7 +1643,7 @@ describe("App", () => {
 
       // Component should render without crashing
       await waitFor(() => {
-        expect(screen.getByTestId("left-sidebar")).toBeInTheDocument();
+        expect(screen.getByText("Chat Page")).toBeInTheDocument();
       });
 
       // Persona state should be defined
@@ -2005,7 +1688,7 @@ describe("App", () => {
 
       // Component should render without crashing
       await waitFor(() => {
-        expect(screen.getByTestId("left-sidebar")).toBeInTheDocument();
+        expect(screen.getByText("Chat Page")).toBeInTheDocument();
       });
 
       // Persona state should be defined
@@ -2048,7 +1731,7 @@ describe("App", () => {
 
       // Component should render without crashing and process the JWT
       await waitFor(() => {
-        expect(screen.getByTestId("left-sidebar")).toBeInTheDocument();
+        expect(screen.getByText("Chat Page")).toBeInTheDocument();
       });
 
       // Persona state should be defined (JWT parsing branch was hit)
@@ -2127,7 +1810,7 @@ describe("App", () => {
       // Wait for delayed survey rendering (5 second timer in App.tsx)
       // Note: In real tests with vi.useFakeTimers this would be faster
       await waitFor(() => {
-        expect(screen.getByTestId("left-sidebar")).toBeInTheDocument();
+        expect(screen.getByText("Chat Page")).toBeInTheDocument();
       });
 
       vi.restoreAllMocks();
@@ -2158,7 +1841,7 @@ describe("App", () => {
       );
 
       await waitFor(() => {
-        expect(screen.getByTestId("left-sidebar")).toBeInTheDocument();
+        expect(screen.getByText("Chat Page")).toBeInTheDocument();
       });
 
       vi.restoreAllMocks();
@@ -2257,7 +1940,7 @@ describe("App", () => {
       );
 
       await waitFor(() => {
-        expect(screen.getByTestId("main-dock")).toBeInTheDocument();
+        expect(screen.getByText("Chat Page")).toBeInTheDocument();
       });
     });
 
@@ -2276,7 +1959,7 @@ describe("App", () => {
       );
 
       await waitFor(() => {
-        expect(screen.getByTestId("main-dock")).toBeInTheDocument();
+        expect(screen.getByText("Chat Page")).toBeInTheDocument();
       });
     });
 
@@ -2298,7 +1981,7 @@ describe("App", () => {
       );
 
       await waitFor(() => {
-        expect(screen.getByTestId("main-dock")).toBeInTheDocument();
+        expect(screen.getByText("Chat Page")).toBeInTheDocument();
       });
     });
   });
@@ -2320,7 +2003,7 @@ describe("App", () => {
 
       // Component should render correctly with feature flag context
       await waitFor(() => {
-        expect(screen.getByTestId("left-sidebar")).toBeInTheDocument();
+        expect(screen.getByText("Chat Page")).toBeInTheDocument();
       });
     });
 
@@ -2339,7 +2022,7 @@ describe("App", () => {
       );
 
       await waitFor(() => {
-        expect(screen.getByTestId("left-sidebar")).toBeInTheDocument();
+        expect(screen.getByText("Chat Page")).toBeInTheDocument();
       });
     });
 
@@ -2358,7 +2041,7 @@ describe("App", () => {
       );
 
       await waitFor(() => {
-        expect(screen.getByTestId("left-sidebar")).toBeInTheDocument();
+        expect(screen.getByText("Chat Page")).toBeInTheDocument();
       });
     });
   });
@@ -2381,7 +2064,7 @@ describe("App", () => {
       );
 
       await waitFor(() => {
-        expect(screen.getByTestId("left-sidebar")).toBeInTheDocument();
+        expect(screen.getByText("Chat Page")).toBeInTheDocument();
       });
 
       setItemSpy.mockRestore();
@@ -2404,7 +2087,7 @@ describe("App", () => {
       );
 
       await waitFor(() => {
-        expect(screen.getByTestId("left-sidebar")).toBeInTheDocument();
+        expect(screen.getByText("Chat Page")).toBeInTheDocument();
       });
     });
 
@@ -2423,7 +2106,7 @@ describe("App", () => {
       );
 
       await waitFor(() => {
-        expect(screen.getByTestId("left-sidebar")).toBeInTheDocument();
+        expect(screen.getByText("Chat Page")).toBeInTheDocument();
       });
     });
   });
@@ -2469,7 +2152,7 @@ describe("App", () => {
 
       await waitFor(() => {
         // Studio routes should have left-sidebar
-        expect(screen.getByTestId("left-sidebar")).toBeInTheDocument();
+        expect(screen.getByText("Chat Page")).toBeInTheDocument();
       });
     });
 
@@ -2489,7 +2172,7 @@ describe("App", () => {
 
       await waitFor(() => {
         // Admin routes should have left-sidebar (legacy)
-        expect(screen.getByTestId("left-sidebar")).toBeInTheDocument();
+        expect(screen.getByText("Chat Page")).toBeInTheDocument();
       });
     });
 
@@ -2511,7 +2194,7 @@ describe("App", () => {
       );
 
       await waitFor(() => {
-        expect(screen.getByTestId("left-sidebar")).toBeInTheDocument();
+        expect(screen.getByText("Chat Page")).toBeInTheDocument();
       });
     });
   });
@@ -2535,7 +2218,7 @@ describe("App", () => {
 
       // Component renders - dismiss handler is defined but not triggered in this test
       await waitFor(() => {
-        expect(screen.getByTestId("left-sidebar")).toBeInTheDocument();
+        expect(screen.getByText("Chat Page")).toBeInTheDocument();
       });
 
       setItemSpy.mockRestore();

@@ -150,6 +150,10 @@ import type {
   McpTaskListResponse,
   McpTask,
 } from "../types/api";
+
+// Import generated API types for type safety (prevents type drift)
+import type { components } from "../types/generated-api";
+type UserInfoResponse = components["schemas"]["UserInfoResponse"];
 import type {
   CanvasArtifact,
   ArtifactVersion,
@@ -321,8 +325,12 @@ export const api = createApi({
   ],
   endpoints: (builder) => ({
     // Feature Flags
-    getFeatureFlags: builder.query<FeatureFlags, void>({
-      query: () => "/features",
+    // Sprint 4: Accept optional role param to get role-specific feature flags
+    getFeatureFlags: builder.query<FeatureFlags, { role?: string } | void>({
+      query: (params) => ({
+        url: "/features",
+        params: params ? { role: params.role } : undefined,
+      }),
       providesTags: ["FeatureFlags"],
       keepUnusedDataFor: 600, // 10 minutes - feature flags rarely change
     }),
@@ -1373,18 +1381,9 @@ export const api = createApi({
     }),
 
     // Current User Info (for persona detection)
-    getCurrentUser: builder.query<
-      {
-        username: string;
-        email?: string;
-        first_name?: string;
-        last_name?: string;
-        display_name?: string;
-        roles: string[];
-        persona: "admin" | "developer" | "user";
-      },
-      void
-    >({
+    // Uses generated UserInfoResponse type for type safety (prevents drift)
+    // Sprint 4 extended fields: api_version, sub_persona, visible_modules, feature_flags
+    getCurrentUser: builder.query<UserInfoResponse, void>({
       query: () => "/me",
     }),
 

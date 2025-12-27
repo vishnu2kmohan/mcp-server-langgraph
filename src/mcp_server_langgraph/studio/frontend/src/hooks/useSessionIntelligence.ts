@@ -220,7 +220,8 @@ export function useSessionSummary(
     if (!hasFetchedRef.current) {
       fetchSummary();
     }
-  }, [enabled, sessionId, fetchSummary]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [enabled, sessionId]);
 
   return {
     summary,
@@ -413,7 +414,8 @@ export function useSessionSimilarity(
     if (!hasFetchedRef.current) {
       fetchSimilar();
     }
-  }, [enabled, sessionId, fetchSimilar]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [enabled, sessionId]);
 
   return {
     similarSessions,

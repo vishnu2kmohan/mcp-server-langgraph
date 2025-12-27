@@ -4,6 +4,42 @@ import reactHooks from 'eslint-plugin-react-hooks';
 import reactRefresh from 'eslint-plugin-react-refresh';
 import tseslint from 'typescript-eslint';
 
+/**
+ * IMPORTANT: RTK Query + useEffect Infinite Loop Pattern
+ *
+ * The react-hooks/exhaustive-deps rule warns about missing dependencies in useEffect.
+ * However, with RTK Query mutations, adding the callback to deps causes INFINITE LOOPS:
+ *
+ * DANGEROUS PATTERN (causes infinite loop):
+ * ```typescript
+ * const [mutation] = useSomeMutation();
+ *
+ * const fetchData = useCallback(async () => {
+ *   await mutation({ ... }).unwrap();
+ * }, [mutation]);  // mutation changes on every render!
+ *
+ * useEffect(() => {
+ *   fetchData();
+ * }, [fetchData]);  // fetchData changes → re-runs → infinite loop!
+ * ```
+ *
+ * SAFE PATTERN (use ref to prevent re-runs):
+ * ```typescript
+ * const hasFetchedRef = useRef(false);
+ *
+ * useEffect(() => {
+ *   if (!hasFetchedRef.current) {
+ *     hasFetchedRef.current = true;
+ *     fetchData();
+ *   }
+ *   // eslint-disable-next-line react-hooks/exhaustive-deps
+ * }, [enabled, sessionId]);  // Omit fetchData, use ref guard
+ * ```
+ *
+ * When you see eslint-disable for exhaustive-deps, check for this pattern.
+ * See: useSessionIntelligence.ts for correct implementation examples.
+ */
+
 export default tseslint.config(
   { ignores: ['dist', 'node_modules'] },
   {
