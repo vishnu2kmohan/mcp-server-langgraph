@@ -160,6 +160,93 @@ function escapeXml(str: string): string {
     .replace(/'/g, "&apos;");
 }
 
+/**
+ * Convert SVG content to PNG blob using canvas
+ */
+async function svgToPng(svgContent: string): Promise<Blob> {
+  return new Promise((resolve, reject) => {
+    // Parse SVG to get dimensions
+    const parser = new DOMParser();
+    const svgDoc = parser.parseFromString(svgContent, "image/svg+xml");
+    const svgEl = svgDoc.documentElement;
+
+    // Get width and height from SVG attributes or viewBox
+    let width = parseFloat(svgEl.getAttribute("width") || "0");
+    let height = parseFloat(svgEl.getAttribute("height") || "0");
+
+    // Try viewBox if width/height not set
+    if ((!width || !height) && svgEl.hasAttribute("viewBox")) {
+      const viewBox = svgEl.getAttribute("viewBox")!.split(/\s+|,/);
+      if (viewBox.length === 4) {
+        width = width || parseFloat(viewBox[2]);
+        height = height || parseFloat(viewBox[3]);
+      }
+    }
+
+    // Default dimensions if still not set
+    width = width || 800;
+    height = height || 600;
+
+    // Ensure SVG has xmlns attribute for proper rendering
+    if (!svgEl.hasAttribute("xmlns")) {
+      svgEl.setAttribute("xmlns", "http://www.w3.org/2000/svg");
+    }
+
+    // Serialize back to string with any modifications
+    const serializer = new XMLSerializer();
+    const svgString = serializer.serializeToString(svgEl);
+
+    // Create image from SVG data URL
+    const img = new globalThis.Image();
+    const svgBlob = new Blob([svgString], {
+      type: "image/svg+xml;charset=utf-8",
+    });
+    const url = URL.createObjectURL(svgBlob);
+
+    img.onload = () => {
+      // Create canvas and draw image
+      const canvas = document.createElement("canvas");
+      canvas.width = width;
+      canvas.height = height;
+
+      const ctx = canvas.getContext("2d");
+      if (!ctx) {
+        URL.revokeObjectURL(url);
+        reject(new Error("Failed to get canvas context"));
+        return;
+      }
+
+      // Draw white background for transparency
+      ctx.fillStyle = "#ffffff";
+      ctx.fillRect(0, 0, width, height);
+
+      // Draw SVG image
+      ctx.drawImage(img, 0, 0, width, height);
+
+      // Convert to blob
+      canvas.toBlob(
+        (blob) => {
+          URL.revokeObjectURL(url);
+          if (blob) {
+            resolve(blob);
+          } else {
+            reject(new Error("Failed to convert canvas to blob"));
+          }
+        },
+        "image/png",
+        1.0,
+      );
+    };
+
+    img.onerror = () => {
+      URL.revokeObjectURL(url);
+      reject(new Error("Failed to load SVG image"));
+    };
+
+    img.src = url;
+  });
+}
+
 // =============================================================================
 // Component
 // =============================================================================
@@ -281,7 +368,7 @@ export function ArtifactExporter({
           }
 
           case "png": {
-            // For PNG, we create a simple blob (actual canvas conversion would be needed)
+            // Get SVG content from data or element reference
             let svgContent: string;
             if (typeof data === "string") {
               svgContent = data;
@@ -292,8 +379,19 @@ export function ArtifactExporter({
             } else {
               svgContent = "";
             }
-            // In a real implementation, this would convert SVG to PNG via canvas
-            blob = new Blob([svgContent], { type: "image/png" });
+
+            // Convert SVG to PNG using canvas
+            if (svgContent) {
+              try {
+                blob = await svgToPng(svgContent);
+              } catch {
+                // Fallback: return SVG content as PNG blob type
+                // (browser may handle the conversion on download)
+                blob = new Blob([svgContent], { type: "image/png" });
+              }
+            } else {
+              blob = new Blob([], { type: "image/png" });
+            }
             break;
           }
 

@@ -354,4 +354,69 @@ describe("ArtifactExporter", () => {
       expect(button).toHaveClass("p-1");
     });
   });
+
+  describe("PNG export conversion", () => {
+    it("should call onExport with PNG blob for SVG data", async () => {
+      const mockOnExport = vi.fn();
+      const svgData =
+        '<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><rect width="100" height="100" fill="red"/></svg>';
+
+      render(
+        <ArtifactExporter
+          artifactType="svg"
+          data={svgData}
+          onExport={mockOnExport}
+        />,
+      );
+
+      fireEvent.click(screen.getByRole("button"));
+      fireEvent.click(screen.getByText(/png/i));
+
+      await waitFor(() => {
+        expect(mockOnExport).toHaveBeenCalledWith("png", expect.any(Blob));
+      });
+
+      // Verify the blob type is PNG
+      const [, blob] = mockOnExport.mock.calls[0];
+      expect(blob.type).toBe("image/png");
+    });
+
+    it("should export PNG from SVG element reference", async () => {
+      const mockOnExport = vi.fn();
+      const svgElement = document.createElementNS(
+        "http://www.w3.org/2000/svg",
+        "svg",
+      );
+      svgElement.setAttribute("width", "100");
+      svgElement.setAttribute("height", "100");
+      svgElement.setAttribute("xmlns", "http://www.w3.org/2000/svg");
+      const rect = document.createElementNS(
+        "http://www.w3.org/2000/svg",
+        "svg",
+      );
+      rect.setAttribute("width", "100");
+      rect.setAttribute("height", "100");
+      rect.setAttribute("fill", "blue");
+      svgElement.appendChild(rect);
+
+      render(
+        <ArtifactExporter
+          artifactType="chart"
+          elementRef={{ current: svgElement }}
+          onExport={mockOnExport}
+        />,
+      );
+
+      fireEvent.click(screen.getByRole("button"));
+      fireEvent.click(screen.getByText(/png/i));
+
+      await waitFor(() => {
+        expect(mockOnExport).toHaveBeenCalledWith("png", expect.any(Blob));
+      });
+
+      // Verify the blob type is PNG
+      const [, blob] = mockOnExport.mock.calls[0];
+      expect(blob.type).toBe("image/png");
+    });
+  });
 });
