@@ -8,19 +8,13 @@
 # and execute migration scripts.
 #
 # OPTIMIZATION:
+#   - Uses uv dependency group [dependency-groups.alembic] from pyproject.toml
 #   - Multi-stage build removes uv from runtime image (~52MB savings)
-#   - Uses --system install for minimal overhead
-#   - Only migration dependencies installed
+#   - Only migration dependencies installed (alembic, sqlalchemy, asyncpg, pyyaml)
 #
 # USAGE:
 #   docker build -f docker/Dockerfile.alembic -t alembic-migrate .
 #   docker run -e POSTGRES_HOST=postgres alembic-migrate
-#
-# DEPENDENCIES:
-#   - alembic: Database migration tool
-#   - sqlalchemy[asyncio]: ORM with async support
-#   - asyncpg: PostgreSQL async driver
-#   - pyyaml: YAML parsing (required by alembic env.py)
 #
 # SIZE COMPARISON:
 #   - Before (single-stage with uv): ~285MB
@@ -49,15 +43,18 @@ WORKDIR /app
 # Install uv - Fast Python package manager (only used in build stage)
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
 
-# Install ONLY the dependencies needed for migrations
-# Using uv pip install --system for direct system Python installation
-# Versions pinned to match pyproject.toml for consistency
+# Enable bytecode compilation for faster startup
+ENV UV_COMPILE_BYTECODE=1 \
+    UV_LINK_MODE=copy
+
+# Copy only pyproject.toml and uv.lock (for dependency resolution)
+COPY pyproject.toml uv.lock ./
+
+# Install ONLY the alembic dependency group
+# --no-install-project: Don't install the main project (which would pull in all deps)
+# --only-group alembic: Install only the minimal migration dependencies
 RUN --mount=type=cache,target=/root/.cache/uv,id=uv-cache-alembic,sharing=private \
-    uv pip install --system --no-cache \
-    "alembic>=1.17.2" \
-    "sqlalchemy[asyncio]>=2.0.44" \
-    "asyncpg>=0.29.0" \
-    "pyyaml>=6.0.3"
+    uv sync --frozen --no-install-project --only-group alembic
 
 # ==============================================================================
 # STAGE: runtime
@@ -67,23 +64,20 @@ FROM python:${PYTHON_VERSION}-slim AS runtime
 
 WORKDIR /app
 
-# Copy installed packages from builder (excludes uv binary)
-# Python packages are in /usr/local/lib/python3.12/site-packages
-COPY --from=builder /usr/local/lib/python3.12/site-packages /usr/local/lib/python3.12/site-packages
-
-# Copy alembic binary
-COPY --from=builder /usr/local/bin/alembic /usr/local/bin/alembic
-
 # Create non-root user BEFORE copying files for efficient --chown
 RUN useradd -u 1001 -g 0 -d /app -s /sbin/nologin appuser && \
     chown 1001:0 /app && chmod g=u /app
+
+# Copy virtual environment from builder
+COPY --from=builder /app/.venv /app/.venv
 
 # Copy only Alembic-related files with correct ownership
 COPY --chown=1001:0 alembic.ini ./
 COPY --chown=1001:0 alembic/ ./alembic/
 
-# Environment configuration
-ENV PYTHONUNBUFFERED=1 \
+# Set PATH to use virtual environment
+ENV PATH="/app/.venv/bin:$PATH" \
+    PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
     HOME=/app
 

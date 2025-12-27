@@ -2,17 +2,57 @@
 # ===========================
 # Minimal image for seeding OpenFGA with authorization model and tuples
 #
+# OPTIMIZATION:
+#   - Uses uv dependency group [dependency-groups.openfga-seed] from pyproject.toml
+#   - Multi-stage build removes uv from runtime image
+#   - Only httpx installed (single dependency)
+#
 # Usage:
 #   Runs automatically as part of docker-compose.test.yml after openfga-test is healthy
 #
 # Reference: ADR-0068 - Gateway-Level Authentication
 
-FROM python:3.12-slim
+ARG PYTHON_VERSION=3.12
+
+# ==============================================================================
+# STAGE: builder
+# Install only the openfga-seed dependency group
+# ==============================================================================
+FROM python:${PYTHON_VERSION}-slim AS builder
 
 WORKDIR /app
 
-# Install httpx for HTTP requests
-RUN pip install --no-cache-dir httpx==0.28.1
+# Install uv for fast dependency management
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
+
+# Enable bytecode compilation for faster startup
+ENV UV_COMPILE_BYTECODE=1 \
+    UV_LINK_MODE=copy
+
+# Copy only pyproject.toml and uv.lock (for dependency resolution)
+COPY pyproject.toml uv.lock ./
+
+# Install ONLY the openfga-seed dependency group
+# --no-install-project: Don't install the main project (which would pull in all deps)
+# --only-group openfga-seed: Install only httpx for HTTP requests
+RUN --mount=type=cache,target=/root/.cache/uv,id=uv-cache-openfga-seed,sharing=private \
+    uv sync --frozen --no-install-project --only-group openfga-seed
+
+# ==============================================================================
+# STAGE: runtime
+# Minimal runtime image without uv
+# ==============================================================================
+FROM python:${PYTHON_VERSION}-slim AS runtime
+
+WORKDIR /app
+
+# Copy installed packages from builder
+COPY --from=builder /app/.venv /app/.venv
+
+# Set PATH to use virtual environment
+ENV PATH="/app/.venv/bin:$PATH" \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1
 
 # Copy the seeding script and config files (single source of truth)
 COPY scripts/docker/seed_openfga.py /app/seed_openfga.py
@@ -21,6 +61,11 @@ COPY config/openfga/sample-tuples.json /app/config/openfga/sample-tuples.json
 
 # Make script executable
 RUN chmod +x /app/seed_openfga.py
+
+# OCI Image Labels
+LABEL org.opencontainers.image.title="OpenFGA Seeder"
+LABEL org.opencontainers.image.description="Minimal image for seeding OpenFGA authorization model"
+LABEL org.opencontainers.image.vendor="MCP Server LangGraph"
 
 # Run the seeding script
 CMD ["python", "/app/seed_openfga.py"]
