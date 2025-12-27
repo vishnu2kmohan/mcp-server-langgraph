@@ -110,7 +110,9 @@ def get_all_tools(settings_override: Any | None = None) -> list[BaseTool]:
             from mcp_server_langgraph.tools.code_execution_tools import execute_python
 
             # Mark execute_python as requiring HITL approval in downstream agents
-            execute_python.metadata = {**getattr(execute_python, "metadata", {}), "requires_hitl": True}  # type: ignore[attr-defined]
+            # Handle case where metadata is None (not just missing)
+            existing_metadata = getattr(execute_python, "metadata", None) or {}
+            execute_python.metadata = {**existing_metadata, "requires_hitl": True}  # type: ignore[attr-defined]
             tools.append(execute_python)
         except ImportError:
             # Code execution dependencies not installed - silently skip
