@@ -225,7 +225,10 @@ class MCPMessageHandler:
         )
 
     async def _handle_tools_list_async(self, message_id: Any, params: dict[str, Any]) -> dict[str, Any]:
-        """Handle tools/list request with built-in tools from MCP server."""
+        """Handle tools/list request with built-in tools plus aggregated tools from external MCP servers."""
+        tools: list[dict[str, Any]] = []
+
+        # Get built-in tools from MCP server
         try:
             from mcp_server_langgraph.mcp.server_streamable import get_mcp_server
 
@@ -233,7 +236,6 @@ class MCPMessageHandler:
             builtin_tools = await mcp_server.list_tools_public()
 
             # Convert Tool objects to dict format expected by MCP protocol
-            tools = []
             for tool in builtin_tools:
                 tool_dict = tool.model_dump(mode="json")
                 tools.append(
@@ -243,10 +245,27 @@ class MCPMessageHandler:
                         "inputSchema": tool_dict.get("inputSchema") or {},
                     }
                 )
-            return self._success_response(message_id, {"tools": tools})
         except Exception as e:
-            logger.warning(f"Failed to get built-in tools, falling back to static list: {e}")
-            return self._success_response(message_id, {"tools": self._tools})
+            logger.warning(f"Failed to get built-in tools, using static list: {e}")
+            tools = list(self._tools)
+
+        # Add aggregated tools from external MCP servers
+        try:
+            from mcp_server_langgraph.mcp.client.unified_registry import get_unified_registry
+
+            registry = get_unified_registry()
+            for tool in registry.get_tools():
+                tools.append(
+                    {
+                        "name": tool.qualified_name,  # Use qualified name for disambiguation
+                        "description": f"[{tool.server_name}] {tool.description}",
+                        "inputSchema": tool.input_schema,
+                    }
+                )
+        except Exception as e:
+            logger.warning(f"Failed to get aggregated tools: {e}")
+
+        return self._success_response(message_id, {"tools": tools})
 
     def _handle_tools_list(self, message_id: Any, params: dict[str, Any]) -> dict[str, Any]:
         """Handle tools/list request (sync fallback)."""
@@ -282,8 +301,31 @@ class MCPMessageHandler:
         return [{"type": "text", "text": f"Executed {tool_name} with {arguments}"}]
 
     def _handle_resources_list(self, message_id: Any, params: dict[str, Any]) -> dict[str, Any]:
-        """Handle resources/list request."""
-        return self._success_response(message_id, {"resources": self._resources})
+        """Handle resources/list request.
+
+        Returns built-in resources plus aggregated resources from external MCP servers.
+        """
+        # Start with built-in resources
+        all_resources = list(self._resources)
+
+        # Add resources from external MCP servers via unified registry
+        try:
+            from mcp_server_langgraph.mcp.client.unified_registry import get_unified_registry
+
+            registry = get_unified_registry()
+            for resource in registry.get_resources():
+                all_resources.append(
+                    {
+                        "uri": resource.qualified_name,  # Use qualified name as URI
+                        "name": f"{resource.server_name}: {resource.name}",
+                        "mimeType": resource.mime_type or "application/json",
+                        "description": resource.description or f"Resource from {resource.server_name}",
+                    }
+                )
+        except Exception as e:
+            logger.warning("Failed to get aggregated resources: %s", e)
+
+        return self._success_response(message_id, {"resources": all_resources})
 
     def _handle_resources_read(self, message_id: Any, params: dict[str, Any]) -> dict[str, Any]:
         """Handle resources/read request."""
@@ -298,8 +340,30 @@ class MCPMessageHandler:
         return self._success_response(message_id, {"contents": [content]})
 
     def _handle_prompts_list(self, message_id: Any, params: dict[str, Any]) -> dict[str, Any]:
-        """Handle prompts/list request."""
-        return self._success_response(message_id, {"prompts": self._prompts})
+        """Handle prompts/list request.
+
+        Returns built-in prompts plus aggregated prompts from external MCP servers.
+        """
+        # Start with built-in prompts
+        all_prompts = list(self._prompts)
+
+        # Add prompts from external MCP servers via unified registry
+        try:
+            from mcp_server_langgraph.mcp.client.unified_registry import get_unified_registry
+
+            registry = get_unified_registry()
+            for prompt in registry.get_prompts():
+                all_prompts.append(
+                    {
+                        "name": prompt.qualified_name,  # Use qualified name
+                        "description": prompt.description or f"Prompt from {prompt.server_name}",
+                        "arguments": prompt.arguments,
+                    }
+                )
+        except Exception as e:
+            logger.warning("Failed to get aggregated prompts: %s", e)
+
+        return self._success_response(message_id, {"prompts": all_prompts})
 
     def _handle_prompts_get(self, message_id: Any, params: dict[str, Any]) -> dict[str, Any]:
         """Handle prompts/get request."""
