@@ -704,3 +704,243 @@ class TestMessageRatingEndpoint:
             )
 
             assert response.status_code == 404
+
+
+# ============================================================================
+# Session Rename Tests
+# ============================================================================
+
+
+@pytest.mark.xdist_group(name="test_sessions_router_rename")
+class TestSessionRenameEndpoint:
+    """Tests for PATCH /api/v1/sessions/{session_id} endpoint (session rename).
+
+    TDD RED phase: Tests written FIRST before implementation.
+    The frontend renameSession thunk calls PATCH /sessions/{sessionId} with { name: str }.
+    """
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers."""
+        gc.collect()
+
+    def test_rename_session_returns_200(self, test_app: FastAPI, sample_session: dict) -> None:
+        """
+        GIVEN a valid session exists
+        WHEN PATCH request with new name is made to /sessions/{id}
+        THEN response should be 200 OK
+        """
+        updated_session = {**sample_session, "name": "Renamed Session"}
+
+        with patch("mcp_server_langgraph.api.v1.sessions.get_session_service") as mock_get_service:
+            mock_service = AsyncMock()
+            mock_service.get_session.return_value = sample_session
+            mock_service.update_name.return_value = updated_session
+            mock_get_service.return_value = mock_service
+
+            client = TestClient(test_app)
+            response = client.patch(
+                f"/api/v1/sessions/{sample_session['id']}",
+                json={"name": "Renamed Session"},
+            )
+
+            assert response.status_code == 200
+
+    def test_rename_session_returns_updated_session(self, test_app: FastAPI, sample_session: dict) -> None:
+        """
+        GIVEN a valid session exists
+        WHEN PATCH request with new name is made
+        THEN response should contain updated session with new name
+        """
+        new_name = "My Updated Chat"
+        updated_session = {**sample_session, "name": new_name}
+
+        with patch("mcp_server_langgraph.api.v1.sessions.get_session_service") as mock_get_service:
+            mock_service = AsyncMock()
+            mock_service.get_session.return_value = sample_session
+            mock_service.update_name.return_value = updated_session
+            mock_get_service.return_value = mock_service
+
+            client = TestClient(test_app)
+            response = client.patch(
+                f"/api/v1/sessions/{sample_session['id']}",
+                json={"name": new_name},
+            )
+            data = response.json()
+
+            assert data["name"] == new_name
+            assert data["id"] == sample_session["id"]
+
+    def test_rename_session_not_found_returns_404(self, test_app: FastAPI) -> None:
+        """
+        GIVEN a session does not exist
+        WHEN PATCH request with new name is made
+        THEN response should be 404 Not Found
+        """
+        with patch("mcp_server_langgraph.api.v1.sessions.get_session_service") as mock_get_service:
+            mock_service = AsyncMock()
+            mock_service.update_name.return_value = None
+            mock_get_service.return_value = mock_service
+
+            client = TestClient(test_app)
+            session_id = str(uuid4())
+            response = client.patch(
+                f"/api/v1/sessions/{session_id}",
+                json={"name": "New Name"},
+            )
+
+            assert response.status_code == 404
+
+    def test_rename_session_empty_name_returns_422(self, test_app: FastAPI, sample_session: dict) -> None:
+        """
+        GIVEN a valid session exists
+        WHEN PATCH request with empty name is made
+        THEN response should be 422 Unprocessable Entity (validation error)
+        """
+        with patch("mcp_server_langgraph.api.v1.sessions.get_session_service") as mock_get_service:
+            mock_service = AsyncMock()
+            mock_service.get_session.return_value = sample_session
+            mock_get_service.return_value = mock_service
+
+            client = TestClient(test_app)
+            response = client.patch(
+                f"/api/v1/sessions/{sample_session['id']}",
+                json={"name": ""},
+            )
+
+            # Empty string should be rejected by validation
+            assert response.status_code == 422
+
+    def test_rename_session_name_too_long_returns_422(self, test_app: FastAPI, sample_session: dict) -> None:
+        """
+        GIVEN a valid session exists
+        WHEN PATCH request with name > 255 chars is made
+        THEN response should be 422 Unprocessable Entity
+        """
+        with patch("mcp_server_langgraph.api.v1.sessions.get_session_service") as mock_get_service:
+            mock_service = AsyncMock()
+            mock_service.get_session.return_value = sample_session
+            mock_get_service.return_value = mock_service
+
+            client = TestClient(test_app)
+            response = client.patch(
+                f"/api/v1/sessions/{sample_session['id']}",
+                json={"name": "x" * 256},  # 256 chars, exceeds 255 limit
+            )
+
+            assert response.status_code == 422
+
+    def test_rename_session_preserves_session_id(self, test_app: FastAPI, sample_session: dict) -> None:
+        """
+        GIVEN a session is renamed
+        WHEN comparing before and after
+        THEN session_id should remain unchanged (only name changes)
+        """
+        original_id = sample_session["id"]
+        updated_session = {**sample_session, "name": "Renamed Session"}
+
+        with patch("mcp_server_langgraph.api.v1.sessions.get_session_service") as mock_get_service:
+            mock_service = AsyncMock()
+            mock_service.get_session.return_value = sample_session
+            mock_service.update_name.return_value = updated_session
+            mock_get_service.return_value = mock_service
+
+            client = TestClient(test_app)
+            response = client.patch(
+                f"/api/v1/sessions/{sample_session['id']}",
+                json={"name": "Renamed Session"},
+            )
+            data = response.json()
+
+            # Critical: ID must be preserved
+            assert data["id"] == original_id
+
+
+@pytest.mark.xdist_group(name="test_sessions_config")
+class TestSessionConfigResponse:
+    """Tests for SessionConfigResponse using settings instead of hardcoded values.
+
+    Following 12-factor app principle: Store config in the environment.
+    SessionConfigResponse defaults should come from get_settings(), not hardcoded strings.
+    """
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers."""
+        gc.collect()
+
+    def test_session_config_response_uses_settings_model(self) -> None:
+        """
+        GIVEN SessionConfigResponse model
+        WHEN instantiated without explicit model
+        THEN should use model_name from settings, not hardcoded "gpt-4o-mini"
+
+        This test ensures compliance with:
+        - 12-Factor App: III. Config - Store config in the environment
+        - DRY: Single source of truth for default model
+        """
+        from mcp_server_langgraph.api.v1.sessions import SessionConfigResponse
+        from mcp_server_langgraph.core.config import settings
+
+        # Create config without specifying model - should use settings default
+        config = SessionConfigResponse()
+
+        # Should match settings, not hardcoded "gpt-4o-mini"
+        assert config.model == settings.model_name, (
+            f"SessionConfigResponse.model should use settings.model_name "
+            f"({settings.model_name}), not hardcoded value ({config.model})"
+        )
+
+    def test_session_config_response_uses_settings_max_tokens(self) -> None:
+        """
+        GIVEN SessionConfigResponse model
+        WHEN instantiated without explicit max_tokens
+        THEN should use max_tokens from settings, not hardcoded 1000
+
+        This test ensures compliance with:
+        - 12-Factor App: III. Config - Store config in the environment
+        - DRY: Single source of truth for default max_tokens
+        """
+        from mcp_server_langgraph.api.v1.sessions import SessionConfigResponse
+        from mcp_server_langgraph.core.config import settings
+
+        # Create config without specifying max_tokens - should use settings default
+        config = SessionConfigResponse()
+
+        # Should match settings, not hardcoded 1000
+        assert config.max_tokens == settings.model_max_tokens, (
+            f"SessionConfigResponse.max_tokens should use settings.model_max_tokens "
+            f"({settings.model_max_tokens}), not hardcoded value ({config.max_tokens})"
+        )
+
+    def test_session_config_response_explicit_values_override_settings(self) -> None:
+        """
+        GIVEN SessionConfigResponse model
+        WHEN instantiated with explicit values
+        THEN should use provided values, not settings defaults
+        """
+        from mcp_server_langgraph.api.v1.sessions import SessionConfigResponse
+
+        # Explicit values should override settings
+        config = SessionConfigResponse(
+            model="custom-model-v1",
+            temperature=0.5,
+            max_tokens=2048,
+        )
+
+        assert config.model == "custom-model-v1"
+        assert config.temperature == 0.5
+        assert config.max_tokens == 2048
+
+    def test_session_config_response_serialization_preserves_settings(self) -> None:
+        """
+        GIVEN SessionConfigResponse using settings defaults
+        WHEN serialized to JSON
+        THEN should include the settings-derived values
+        """
+        from mcp_server_langgraph.api.v1.sessions import SessionConfigResponse
+        from mcp_server_langgraph.core.config import settings
+
+        config = SessionConfigResponse()
+        json_dict = config.model_dump()
+
+        assert json_dict["model"] == settings.model_name
+        assert json_dict["max_tokens"] == settings.model_max_tokens

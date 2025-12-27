@@ -9,9 +9,13 @@ Usage:
     GET /api/v1/sessions - List all sessions (with pagination)
     GET /api/v1/sessions/{id} - Get a specific session
     POST /api/v1/sessions - Create a new session
+    PATCH /api/v1/sessions/{id} - Rename a session
     DELETE /api/v1/sessions/{id} - Delete a session
+    PATCH /api/v1/sessions/{id}/config - Update session LLM configuration
     GET /api/v1/sessions/{id}/messages - Get messages in a session
     POST /api/v1/sessions/{id}/messages - Add a message to a session
+    DELETE /api/v1/sessions/{id}/messages - Clear all messages in a session
+    POST /api/v1/sessions/{id}/messages/{msg_id}/rating - Rate a message
     POST /api/v1/sessions/generate-title - Generate a session title from a message
 """
 
@@ -23,9 +27,10 @@ from enum import Enum
 from typing import Annotated, Any, Literal
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 from mcp_server_langgraph.auth.middleware import get_current_user
+from mcp_server_langgraph.core.config import settings
 
 
 # Enums for type-safe status and role values
@@ -157,11 +162,39 @@ class SessionCreateRequest(BaseModel):
 
 
 class SessionConfigResponse(BaseModel):
-    """Response model for session configuration."""
+    """Response model for session configuration.
 
-    model: str = Field(default="gpt-4o-mini", description="LLM model to use")
+    Defaults are sourced from application settings following 12-Factor App principles:
+    - III. Config: Store config in the environment
+    - DRY: Single source of truth for LLM configuration
+
+    The model_validator ensures defaults come from settings at instantiation time,
+    allowing environment-specific configuration without code changes.
+    """
+
+    model: str | None = Field(default=None, description="LLM model to use")
     temperature: float = Field(default=0.7, description="Sampling temperature")
-    max_tokens: int = Field(default=1000, description="Max tokens per response")
+    max_tokens: int | None = Field(default=None, description="Max tokens per response")
+
+    @model_validator(mode="before")
+    @classmethod
+    def apply_settings_defaults(cls, data: dict[str, Any] | Any) -> dict[str, Any]:
+        """Apply defaults from settings for missing config values.
+
+        This ensures session config uses environment-configured defaults
+        rather than hardcoded values, supporting different defaults per deployment.
+        """
+        # Handle non-dict input (shouldn't happen but be defensive)
+        if not isinstance(data, dict):
+            data = {}
+
+        # Apply settings defaults for missing values
+        if data.get("model") is None:
+            data["model"] = settings.model_name
+        if data.get("max_tokens") is None:
+            data["max_tokens"] = settings.model_max_tokens
+
+        return data
 
 
 class SessionConfigUpdateRequest(BaseModel):
@@ -174,6 +207,20 @@ class SessionConfigUpdateRequest(BaseModel):
     model: str | None = Field(default=None, description="LLM model to use")
     temperature: float | None = Field(default=None, ge=0.0, le=2.0, description="Sampling temperature")
     max_tokens: int | None = Field(default=None, ge=1, le=128000, description="Max tokens per response")
+
+
+class SessionUpdateRequest(BaseModel):
+    """Request body for updating session metadata (rename).
+
+    Used by PATCH /sessions/{session_id} for renaming sessions.
+    Preserves the session_id while updating the display name.
+    """
+
+    name: str = Field(
+        description="New session name",
+        min_length=1,
+        max_length=255,
+    )
 
 
 class SessionResponse(BaseModel):
@@ -256,6 +303,20 @@ class SessionService(ABC):
     @abstractmethod
     async def update_config(self, session_id: str, user_id: str, config_update: dict[str, Any]) -> dict[str, Any] | None:
         """Update session configuration. Returns updated session or None if not found/owned."""
+        ...
+
+    @abstractmethod
+    async def update_name(self, session_id: str, user_id: str, name: str) -> dict[str, Any] | None:
+        """Update session name (rename). Returns updated session or None if not found/owned.
+
+        Args:
+            session_id: Session ID to update
+            user_id: User ID making the request (for ownership check)
+            name: New session name
+
+        Returns:
+            Updated session dict, or None if session not found or not owned
+        """
         ...
 
     @abstractmethod
@@ -450,6 +511,26 @@ class InMemorySessionService(SessionService):
         session["messages"] = []
         session["updated_at"] = datetime.now(UTC).isoformat()
         return True
+
+    async def update_name(self, session_id: str, user_id: str, name: str) -> dict[str, Any] | None:
+        """Update session name (rename). Only owner can update.
+
+        Args:
+            session_id: Session ID to update
+            user_id: User ID making the request (for ownership check)
+            name: New session name
+
+        Returns:
+            Updated session dict, or None if session not found or not owned
+        """
+        session = self._sessions.get(session_id)
+        # SECURITY: Verify ownership before update
+        if session is None or session.get("user_id") != user_id:
+            return None
+
+        session["name"] = name
+        session["updated_at"] = datetime.now(UTC).isoformat()
+        return session
 
     async def rate_message(
         self,
@@ -686,6 +767,49 @@ class RedisSessionService(SessionService):
         updated_session = await self._manager.update_session(
             session_id=session_id,
             config=new_config,
+        )
+
+        if updated_session is None:
+            return None
+
+        # Return updated session as dict
+        return {
+            "id": updated_session.session_id,
+            "name": updated_session.name,
+            "user_id": updated_session.user_id,
+            "workflow_id": None,
+            "config": {
+                "model": updated_session.config.model if updated_session.config else "gpt-4o-mini",
+                "temperature": updated_session.config.temperature if updated_session.config else 0.7,
+                "max_tokens": updated_session.config.max_tokens if updated_session.config else 1000,
+            },
+            "messages": [
+                {
+                    "message_id": m.message_id,
+                    "role": m.role,
+                    "content": m.content,
+                    "timestamp": m.timestamp.isoformat(),
+                }
+                for m in updated_session.messages
+            ],
+            "created_at": updated_session.created_at.isoformat() if updated_session.created_at else None,
+            "updated_at": updated_session.updated_at.isoformat() if updated_session.updated_at else None,
+            "status": SessionStatus.active,
+        }
+
+    async def update_name(self, session_id: str, user_id: str, name: str) -> dict[str, Any] | None:
+        """Update session name (rename) with persistence.
+
+        Updates name and persists to Redis via manager.update_session.
+        """
+        session = await self._manager.get_session(session_id)
+        if session is None or session.user_id != user_id:
+            return None
+
+        # Persist via manager (already supports name updates)
+        updated_session = await self._manager.update_session(
+            session_id=session_id,
+            name=name,
         )
 
         if updated_session is None:
@@ -963,6 +1087,49 @@ class PostgresSessionService(SessionService):
             "status": SessionStatus.active,
         }
 
+    async def update_name(self, session_id: str, user_id: str, name: str) -> dict[str, Any] | None:
+        """Update session name (rename) with persistence.
+
+        Updates name and persists to PostgreSQL via manager.update_session.
+        """
+        session = await self._manager.get_session(session_id)
+        if session is None or session.user_id != user_id:
+            return None
+
+        # Persist via manager (already supports name updates)
+        updated_session = await self._manager.update_session(
+            session_id=session_id,
+            name=name,
+        )
+
+        if updated_session is None:
+            return None
+
+        # Return updated session as dict
+        return {
+            "id": updated_session.session_id,
+            "name": updated_session.name,
+            "user_id": updated_session.user_id,
+            "workflow_id": None,
+            "config": {
+                "model": updated_session.config.model if updated_session.config else "gpt-4o-mini",
+                "temperature": updated_session.config.temperature if updated_session.config else 0.7,
+                "max_tokens": updated_session.config.max_tokens if updated_session.config else 1000,
+            },
+            "messages": [
+                {
+                    "message_id": m.message_id,
+                    "role": m.role,
+                    "content": m.content,
+                    "timestamp": m.timestamp.isoformat(),
+                }
+                for m in updated_session.messages
+            ],
+            "created_at": updated_session.created_at.isoformat() if updated_session.created_at else None,
+            "updated_at": updated_session.updated_at.isoformat() if updated_session.updated_at else None,
+            "status": SessionStatus.active,
+        }
+
     async def rate_message(
         self,
         session_id: str,
@@ -1175,6 +1342,61 @@ async def delete_session(session_id: str, current_user: CurrentUser) -> None:
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Session {session_id} not found",
         )
+
+
+@sessions_router.patch(
+    "/sessions/{session_id}",
+    summary="Rename a session",
+    description="Update the session name (preserves session_id UUID)",
+)
+async def rename_session(
+    session_id: str,
+    update: SessionUpdateRequest,
+    current_user: CurrentUser,
+) -> SessionResponse:
+    """
+    Rename a session.
+
+    Updates the session display name while preserving the unique session_id UUID.
+    Requires authentication. Only the session owner can rename it.
+
+    Args:
+        session_id: The session ID to rename
+        update: New session name
+
+    Returns:
+        Updated session with new name
+    """
+    user_id = _get_user_id(current_user)
+    service = get_session_service()
+
+    updated = await service.update_name(session_id, user_id, update.name)
+
+    if updated is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Session {session_id} not found",
+        )
+
+    # Build SessionResponse from updated session dict
+    config_response = None
+    if updated.get("config"):
+        config_response = SessionConfigResponse(
+            model=updated["config"].get("model", "gpt-4o-mini"),
+            temperature=updated["config"].get("temperature", 0.7),
+            max_tokens=updated["config"].get("max_tokens", 1000),
+        )
+
+    return SessionResponse(
+        id=updated["id"],
+        name=updated.get("name"),
+        workflow_id=updated.get("workflow_id"),
+        config=config_response,
+        messages=updated.get("messages", []),
+        created_at=updated.get("created_at"),
+        updated_at=updated.get("updated_at"),
+        status=updated.get("status", SessionStatus.active),
+    )
 
 
 @sessions_router.patch(

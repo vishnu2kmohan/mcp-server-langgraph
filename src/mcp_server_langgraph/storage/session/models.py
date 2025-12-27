@@ -14,13 +14,23 @@ from typing import Any
 
 from pydantic import BaseModel, Field
 
+from mcp_server_langgraph.core.config import settings
+
 
 class SessionConfig(BaseModel):
     """Configuration for a studio session."""
 
-    model: str = Field(default="gpt-4o-mini", description="LLM model to use")
+    model: str = Field(
+        default_factory=lambda: settings.model_name,
+        description="LLM model to use",
+    )
     temperature: float = Field(default=0.7, ge=0.0, le=2.0, description="Sampling temperature")
-    max_tokens: int = Field(default=1000, ge=1, le=128000, description="Max tokens per response")
+    max_tokens: int = Field(
+        default_factory=lambda: settings.model_max_tokens,
+        ge=1,
+        le=128000,
+        description="Max tokens per response",
+    )
 
 
 class Message(BaseModel):
