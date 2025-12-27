@@ -111,25 +111,35 @@ class PersonaPreferencesUpdate(BaseModel):
 # ============================================================================
 
 # Mapping of sub-persona to visible modules
-# This is the server-side source of truth, mirroring PersonaVariants.ts
-# Must stay in sync with frontend for consistent RBAC
+# This is the server-side source of truth, mirroring frontend ActivityBar NAV_ITEMS
+# Must use normalized IDs that match frontend for consistent RBAC
+# Module IDs: cost (not costs), workflows (not flows)
 PERSONA_VISIBLE_MODULES: dict[str, list[str]] = {
-    # Admin personas - full access
+    # === ADMIN PERSONAS (full platform access) ===
     "admin": [
-        "chat",
+        # Core Work
         "projects",
+        "chat",
         "workflows",
-        "flows",
-        "mcp",
+        # AI & Data
         "agents",
+        "mcp",
+        "vectors",
+        "files",
+        # Observability
         "traces",
+        "observability",
+        "cost",
+        # Admin
         "admin",
         "audit",
         "compliance",
+        # Bottom items
         "settings",
         "help",
     ],
     "security-admin": [
+        # Admin-focused access
         "admin",
         "audit",
         "compliance",
@@ -137,48 +147,66 @@ PERSONA_VISIBLE_MODULES: dict[str, list[str]] = {
         "help",
     ],
     "auditor": [
+        # Audit-only access
         "audit",
         "compliance",
         "help",
     ],
-    # Developer personas (alice variants)
+    # === ALICE PERSONAS (developer variants) ===
     "alice-builder": [
-        "chat",
+        # Core Work
         "projects",
+        "chat",
         "workflows",
-        "flows",
-        "mcp",
+        # AI & Data
         "agents",
+        "mcp",
+        "vectors",
+        "files",
+        # Observability
         "traces",
+        "cost",
+        # Bottom items
         "settings",
         "help",
     ],
     "alice-analyst": [
-        "chat",
+        # Core Work
         "projects",
+        "chat",
+        # Observability focus
         "traces",
         "observability",
+        "cost",
+        # Bottom items
         "settings",
         "help",
     ],
     "alice-devops": [
+        # Core Work
+        "projects",
         "chat",
-        "connections",
+        # Infrastructure focus
         "agents",
+        "mcp",
+        "connections",
         "traces",
+        # Bottom items
         "settings",
         "help",
     ],
-    # Compliance persona
+    # === BOB PERSONAS (end user) ===
     "compliance-officer": [
+        # Compliance-focused access
         "audit",
         "compliance",
         "help",
     ],
-    # Standard user persona
     "bob": [
-        "chat",
+        # Core Work only - limited access
         "projects",
+        "chat",
+        "workflows",
         "help",
     ],
 }
