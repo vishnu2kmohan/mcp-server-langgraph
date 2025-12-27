@@ -55,6 +55,7 @@ import type {
   AgentConfig,
   ThinkingBudgetUpdateRequest,
   ThinkingBudgetUpdateResponse,
+  AgentMetricsResponse,
   AuditLogEntry,
   AuditLogListParams,
   HealthStatus,
@@ -1106,6 +1107,21 @@ export const api = createApi({
         body,
       }),
       invalidatesTags: ["Agent"],
+    }),
+
+    // Agent metrics
+    getAgentMetrics: builder.query<
+      AgentMetricsResponse,
+      { time_range_hours?: number } | void
+    >({
+      query: (params) => ({
+        url: "/agents/metrics",
+        params: params
+          ? { time_range_hours: params.time_range_hours ?? 24 }
+          : {},
+      }),
+      providesTags: ["Agent"],
+      keepUnusedDataFor: 60, // 1 minute - metrics refresh more frequently
     }),
 
     // Audit Logs (Admin)
@@ -3055,6 +3071,7 @@ export const {
   // Agents
   useGetAgentConfigQuery,
   useUpdateThinkingBudgetMutation,
+  useGetAgentMetricsQuery,
   // Audit Logs
   useListAuditLogsQuery,
   // Admin Users

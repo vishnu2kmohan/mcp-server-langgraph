@@ -956,6 +956,78 @@ export interface ProviderInfo {
 }
 
 // =============================================================================
+// Agent Metrics
+// =============================================================================
+
+/**
+ * Metrics for orchestrator execution
+ * Matches backend OrchestratorMetrics from api/v1/agents.py
+ */
+export interface OrchestratorMetrics {
+  /** Total orchestrator executions */
+  total_executions: number;
+  /** Successful executions */
+  successful_executions: number;
+  /** Failed executions */
+  failed_executions: number;
+  /** Average execution duration in ms */
+  avg_duration_ms: number;
+  /** 50th percentile duration */
+  p50_duration_ms?: number | null;
+  /** 95th percentile duration */
+  p95_duration_ms?: number | null;
+  /** 99th percentile duration */
+  p99_duration_ms?: number | null;
+}
+
+/**
+ * Metrics for Human-in-the-Loop interactions
+ * Matches backend HITLMetrics from api/v1/agents.py
+ */
+export interface HITLMetrics {
+  /** Total HITL requests */
+  total_requests: number;
+  /** Approved requests */
+  approved_count: number;
+  /** Rejected requests */
+  rejected_count: number;
+  /** Pending requests */
+  pending_count: number;
+  /** Average response latency in ms */
+  avg_response_latency_ms: number;
+}
+
+/**
+ * Metrics for LLM cost tracking
+ * Matches backend CostMetrics from api/v1/agents.py
+ */
+export interface CostMetrics {
+  /** Total cost in USD */
+  total_cost_usd: number;
+  /** Total tokens consumed */
+  total_tokens: number;
+  /** Average cost per request in USD */
+  avg_cost_per_request_usd: number;
+}
+
+/**
+ * Response from agent metrics endpoint
+ * Matches backend AgentMetricsResponse from api/v1/agents.py
+ */
+export interface AgentMetricsResponse {
+  /** Timestamp of metrics collection */
+  timestamp: string;
+  /** Time range for metrics in hours */
+  time_range_hours: number;
+  /** Orchestrator metrics */
+  orchestrator: OrchestratorMetrics;
+  /** HITL metrics */
+  hitl: HITLMetrics;
+  /** Cost metrics */
+  cost: CostMetrics;
+}
+
+// =============================================================================
 // Audit Logs
 // =============================================================================
 

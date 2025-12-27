@@ -13,6 +13,8 @@ This endpoint returns the current agent configuration including:
 
 Usage:
     GET /api/v1/agents/config - Get current agent configuration
+    GET /api/v1/agents/metrics - Get agent orchestration metrics
+    PATCH /api/v1/agents/config/thinking-budget - Update thinking budget settings
 """
 
 from typing import Any
@@ -382,3 +384,178 @@ async def patch_thinking_budget(
         ThinkingBudgetUpdateResponse with update status and current config.
     """
     return await update_thinking_budget(request)
+
+
+# =============================================================================
+# Agents Metrics Models and Endpoint
+# =============================================================================
+
+
+class OrchestratorMetrics(BaseModel):
+    """Metrics for orchestrator execution."""
+
+    total_executions: int = Field(..., description="Total orchestrator executions")
+    successful_executions: int = Field(..., description="Successful executions")
+    failed_executions: int = Field(..., description="Failed executions")
+    avg_duration_ms: float = Field(..., description="Average execution duration in ms")
+    p50_duration_ms: float | None = Field(default=None, description="50th percentile duration")
+    p95_duration_ms: float | None = Field(default=None, description="95th percentile duration")
+    p99_duration_ms: float | None = Field(default=None, description="99th percentile duration")
+
+
+class HITLMetrics(BaseModel):
+    """Metrics for Human-in-the-Loop interactions."""
+
+    total_requests: int = Field(..., description="Total HITL requests")
+    approved_count: int = Field(..., description="Approved requests")
+    rejected_count: int = Field(..., description="Rejected requests")
+    pending_count: int = Field(..., description="Pending requests")
+    avg_response_latency_ms: float = Field(..., description="Average response latency in ms")
+
+
+class CostMetrics(BaseModel):
+    """Metrics for LLM cost tracking."""
+
+    total_cost_usd: float = Field(..., description="Total cost in USD")
+    total_tokens: int = Field(..., description="Total tokens consumed")
+    avg_cost_per_request_usd: float = Field(..., description="Average cost per request in USD")
+
+
+class AgentMetricsResponse(BaseModel):
+    """Response model for agent metrics endpoint."""
+
+    timestamp: str = Field(..., description="Timestamp of metrics collection")
+    time_range_hours: int = Field(..., description="Time range for metrics in hours")
+    orchestrator: OrchestratorMetrics = Field(..., description="Orchestrator metrics")
+    hitl: HITLMetrics = Field(..., description="HITL metrics")
+    cost: CostMetrics = Field(..., description="Cost metrics")
+
+
+# PromQL Queries for metrics collection
+ORCHESTRATOR_METRICS_QUERIES: dict[str, str] = {
+    "total_executions": "sum(increase(orchestrator_executions_total{{time_range}}[{time_range}h]))",
+    "successful_executions": 'sum(increase(orchestrator_executions_total{{status="success"}}[{time_range}h]))',
+    "failed_executions": 'sum(increase(orchestrator_executions_total{{status="error"}}[{time_range}h]))',
+    "avg_duration_ms": "avg(rate(orchestrator_duration_seconds_sum[{time_range}h]) / rate(orchestrator_duration_seconds_count[{time_range}h])) * 1000",
+    "p50_duration_ms": "histogram_quantile(0.50, sum(rate(orchestrator_duration_seconds_bucket[{time_range}h])) by (le)) * 1000",
+    "p95_duration_ms": "histogram_quantile(0.95, sum(rate(orchestrator_duration_seconds_bucket[{time_range}h])) by (le)) * 1000",
+    "p99_duration_ms": "histogram_quantile(0.99, sum(rate(orchestrator_duration_seconds_bucket[{time_range}h])) by (le)) * 1000",
+}
+
+HITL_METRICS_QUERIES: dict[str, str] = {
+    "total_requests": "sum(increase(hitl_requests_total[{time_range}h]))",
+    "approved_count": 'sum(increase(hitl_requests_total{{decision="approved"}}[{time_range}h]))',
+    "rejected_count": 'sum(increase(hitl_requests_total{{decision="rejected"}}[{time_range}h]))',
+    "pending_count": "sum(hitl_requests_pending)",
+    "avg_response_latency_ms": "avg(rate(hitl_response_latency_seconds_sum[{time_range}h]) / rate(hitl_response_latency_seconds_count[{time_range}h])) * 1000",
+}
+
+COST_METRICS_QUERIES: dict[str, str] = {
+    "total_cost_usd": "sum(increase(llm_cost_usd_total[{time_range}h]))",
+    "total_tokens": "sum(increase(llm_tokens_total[{time_range}h]))",
+    "avg_cost_per_request_usd": "sum(increase(llm_cost_usd_total[{time_range}h])) / sum(increase(llm_requests_total[{time_range}h]))",
+}
+
+
+def get_metrics_client() -> Any | None:
+    """
+    Get the metrics client for querying Prometheus/Mimir.
+
+    Returns:
+        MetricsQueryClient instance or None if not configured.
+    """
+    try:
+        from mcp_server_langgraph.observability.metrics_query import get_prometheus_client
+
+        return get_prometheus_client()
+    except ImportError:
+        logger.warning("Metrics query client not available")
+        return None
+    except Exception as e:
+        logger.warning(f"Error getting metrics client: {e}")
+        return None
+
+
+async def _query_metric(client: Any, query: str, time_range_hours: int) -> float:
+    """Execute a PromQL query and return the result value."""
+    try:
+        formatted_query = query.format(time_range=time_range_hours)
+        result = await client.query_instant(formatted_query)
+        if result.data and len(result.data) > 0:
+            return float(result.data[0].value)
+        return 0.0
+    except Exception as e:
+        logger.warning(f"Error querying metric: {e}")
+        return 0.0
+
+
+@agents_router.get("/metrics")
+async def get_agent_metrics(
+    time_range_hours: int = 24,
+) -> AgentMetricsResponse:
+    """
+    Get agent orchestration metrics.
+
+    Queries the metrics backend (Prometheus/Mimir) for orchestrator,
+    HITL, and cost metrics over the specified time range.
+
+    Args:
+        time_range_hours: Time range for metrics in hours (default: 24)
+
+    Returns:
+        AgentMetricsResponse with orchestrator, HITL, and cost metrics.
+
+    Raises:
+        HTTPException: 503 if metrics backend is unavailable.
+    """
+    from datetime import UTC, datetime
+
+    from fastapi import HTTPException
+
+    client = get_metrics_client()
+    if client is None:
+        raise HTTPException(
+            status_code=503,
+            detail="Metrics backend unavailable",
+        )
+
+    # Query orchestrator metrics
+    orchestrator = OrchestratorMetrics(
+        total_executions=int(await _query_metric(client, ORCHESTRATOR_METRICS_QUERIES["total_executions"], time_range_hours)),
+        successful_executions=int(
+            await _query_metric(client, ORCHESTRATOR_METRICS_QUERIES["successful_executions"], time_range_hours)
+        ),
+        failed_executions=int(
+            await _query_metric(client, ORCHESTRATOR_METRICS_QUERIES["failed_executions"], time_range_hours)
+        ),
+        avg_duration_ms=await _query_metric(client, ORCHESTRATOR_METRICS_QUERIES["avg_duration_ms"], time_range_hours),
+        p50_duration_ms=await _query_metric(client, ORCHESTRATOR_METRICS_QUERIES["p50_duration_ms"], time_range_hours),
+        p95_duration_ms=await _query_metric(client, ORCHESTRATOR_METRICS_QUERIES["p95_duration_ms"], time_range_hours),
+        p99_duration_ms=await _query_metric(client, ORCHESTRATOR_METRICS_QUERIES["p99_duration_ms"], time_range_hours),
+    )
+
+    # Query HITL metrics
+    hitl = HITLMetrics(
+        total_requests=int(await _query_metric(client, HITL_METRICS_QUERIES["total_requests"], time_range_hours)),
+        approved_count=int(await _query_metric(client, HITL_METRICS_QUERIES["approved_count"], time_range_hours)),
+        rejected_count=int(await _query_metric(client, HITL_METRICS_QUERIES["rejected_count"], time_range_hours)),
+        pending_count=int(await _query_metric(client, HITL_METRICS_QUERIES["pending_count"], time_range_hours)),
+        avg_response_latency_ms=await _query_metric(client, HITL_METRICS_QUERIES["avg_response_latency_ms"], time_range_hours),
+    )
+
+    # Query cost metrics
+    cost = CostMetrics(
+        total_cost_usd=await _query_metric(client, COST_METRICS_QUERIES["total_cost_usd"], time_range_hours),
+        total_tokens=int(await _query_metric(client, COST_METRICS_QUERIES["total_tokens"], time_range_hours)),
+        avg_cost_per_request_usd=await _query_metric(
+            client, COST_METRICS_QUERIES["avg_cost_per_request_usd"], time_range_hours
+        ),
+    )
+
+    return AgentMetricsResponse(
+        timestamp=datetime.now(UTC).isoformat(),
+        time_range_hours=time_range_hours,
+        orchestrator=orchestrator,
+        hitl=hitl,
+        cost=cost,
+    )
