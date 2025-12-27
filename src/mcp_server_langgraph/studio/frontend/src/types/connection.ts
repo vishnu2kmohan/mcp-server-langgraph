@@ -235,3 +235,74 @@ export interface ConnectionActions {
 
 /** Combined connection store type */
 export type ConnectionStore = ConnectionState & ConnectionActions;
+
+// ==============================================================================
+// Aggregated Capabilities Types (MCP 2025-11-25)
+// ==============================================================================
+
+/** Tool from an external MCP server (with qualified naming) */
+export interface AggregatedTool {
+  qualified_name: string;
+  server_name: string;
+  name: string;
+  description: string;
+  input_schema: Record<string, unknown>;
+}
+
+/** Resource from an external MCP server (with qualified naming) */
+export interface AggregatedResource {
+  qualified_name: string;
+  server_name: string;
+  uri: string;
+  name: string;
+  description: string | null;
+  mime_type: string | null;
+}
+
+/** Prompt from an external MCP server (with qualified naming) */
+export interface AggregatedPrompt {
+  qualified_name: string;
+  server_name: string;
+  name: string;
+  description: string | null;
+  arguments: Array<{
+    name: string;
+    required?: boolean;
+    description?: string;
+  }>;
+}
+
+/** Response for listing aggregated tools */
+export interface AggregatedToolsResponse {
+  tools: AggregatedTool[];
+  total_count: number;
+}
+
+/** Response for listing aggregated resources */
+export interface AggregatedResourcesResponse {
+  resources: AggregatedResource[];
+  total_count: number;
+}
+
+/** Response for listing aggregated prompts */
+export interface AggregatedPromptsResponse {
+  prompts: AggregatedPrompt[];
+  total_count: number;
+}
+
+/** Server capability summary */
+export interface ServerCapabilitySummary {
+  server_name: string;
+  tool_count: number;
+  resource_count: number;
+  prompt_count: number;
+}
+
+/** Response for all servers summary */
+export interface AggregatedServersResponse {
+  servers: ServerCapabilitySummary[];
+  total_servers: number;
+  total_tools: number;
+  total_resources: number;
+  total_prompts: number;
+}

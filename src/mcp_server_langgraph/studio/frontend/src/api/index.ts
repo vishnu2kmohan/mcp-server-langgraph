@@ -172,6 +172,14 @@ import type {
   OAuth2StartResponse,
   ConnectionListResponse,
   ConnectionFilterOptions,
+  AggregatedToolsResponse,
+  AggregatedResourcesResponse,
+  AggregatedPromptsResponse,
+  AggregatedServersResponse,
+  ServerCapabilitySummary,
+  AggregatedTool,
+  AggregatedResource,
+  AggregatedPrompt,
 } from "../types/connection";
 
 // Re-export types for backward compatibility
@@ -1026,6 +1034,92 @@ export const api = createApi({
         url: `/connections/${id}/oauth/start`,
         method: "POST",
       }),
+    }),
+
+    // =========================================================================
+    // MCP Aggregated Capabilities (MCP 2025-11-25)
+    // =========================================================================
+
+    /** List all tools aggregated from registered external MCP servers */
+    listAggregatedTools: builder.query<
+      AggregatedToolsResponse,
+      string | undefined
+    >({
+      query: (serverName) =>
+        serverName
+          ? `/mcp/aggregated/tools?server_name=${encodeURIComponent(serverName)}`
+          : "/mcp/aggregated/tools",
+      providesTags: ["Connection"], // Invalidate when connections change
+      keepUnusedDataFor: 60, // 1 minute - tools can change
+    }),
+
+    /** Get a specific tool by qualified name */
+    getAggregatedTool: builder.query<AggregatedTool, string>({
+      query: (qualifiedName) =>
+        `/mcp/aggregated/tools/${encodeURIComponent(qualifiedName)}`,
+      providesTags: (_result, _error, qualifiedName) => [
+        { type: "Connection", id: qualifiedName },
+      ],
+    }),
+
+    /** List all resources aggregated from registered external MCP servers */
+    listAggregatedResources: builder.query<
+      AggregatedResourcesResponse,
+      string | undefined
+    >({
+      query: (serverName) =>
+        serverName
+          ? `/mcp/aggregated/resources?server_name=${encodeURIComponent(serverName)}`
+          : "/mcp/aggregated/resources",
+      providesTags: ["Connection"],
+      keepUnusedDataFor: 60,
+    }),
+
+    /** Get a specific resource by qualified name */
+    getAggregatedResource: builder.query<AggregatedResource, string>({
+      query: (qualifiedName) =>
+        `/mcp/aggregated/resources/${encodeURIComponent(qualifiedName)}`,
+      providesTags: (_result, _error, qualifiedName) => [
+        { type: "Connection", id: qualifiedName },
+      ],
+    }),
+
+    /** List all prompts aggregated from registered external MCP servers */
+    listAggregatedPrompts: builder.query<
+      AggregatedPromptsResponse,
+      string | undefined
+    >({
+      query: (serverName) =>
+        serverName
+          ? `/mcp/aggregated/prompts?server_name=${encodeURIComponent(serverName)}`
+          : "/mcp/aggregated/prompts",
+      providesTags: ["Connection"],
+      keepUnusedDataFor: 60,
+    }),
+
+    /** Get a specific prompt by qualified name */
+    getAggregatedPrompt: builder.query<AggregatedPrompt, string>({
+      query: (qualifiedName) =>
+        `/mcp/aggregated/prompts/${encodeURIComponent(qualifiedName)}`,
+      providesTags: (_result, _error, qualifiedName) => [
+        { type: "Connection", id: qualifiedName },
+      ],
+    }),
+
+    /** List all registered MCP servers with capability counts */
+    listAggregatedServers: builder.query<AggregatedServersResponse, void>({
+      query: () => "/mcp/aggregated/servers",
+      providesTags: ["Connection"],
+      keepUnusedDataFor: 60,
+    }),
+
+    /** Get capability summary for a specific server */
+    getServerCapabilities: builder.query<ServerCapabilitySummary, string>({
+      query: (serverName) =>
+        `/mcp/aggregated/servers/${encodeURIComponent(serverName)}`,
+      providesTags: (_result, _error, serverName) => [
+        { type: "Connection", id: serverName },
+      ],
     }),
 
     // Vectors (Qdrant Proxy)
@@ -3059,6 +3153,15 @@ export const {
   useDeleteConnectionMutation,
   useTestConnectionMutation,
   useStartOAuth2FlowMutation,
+  // MCP Aggregated Capabilities
+  useListAggregatedToolsQuery,
+  useGetAggregatedToolQuery,
+  useListAggregatedResourcesQuery,
+  useGetAggregatedResourceQuery,
+  useListAggregatedPromptsQuery,
+  useGetAggregatedPromptQuery,
+  useListAggregatedServersQuery,
+  useGetServerCapabilitiesQuery,
   // Vectors
   useListVectorCollectionsQuery,
   useCreateVectorCollectionMutation,
