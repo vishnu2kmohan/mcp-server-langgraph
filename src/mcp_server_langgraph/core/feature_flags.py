@@ -1164,6 +1164,9 @@ class FeatureFlags(BaseSettings):
             "theme_customization": self.enable_theme_customization,
             "confirmation_dialogs": self.enable_confirmation_dialogs,
             # AI UX Features (Phase 6 AI-Native Integration)
+            "ai_ux": self.enable_ai_ux,  # Master AI UX toggle
+            "ai_ux_websocket": self.enable_ai_ux_websocket,  # AI UX WebSocket
+            "ai_ux_streaming": self.enable_ai_ux_streaming,  # AI UX streaming
             "ai_disclosure": self.enable_ai_disclosure,
             "ai_empty_states": self.enable_ai_empty_states,
             "ai_nudges": self.enable_ai_nudges,
