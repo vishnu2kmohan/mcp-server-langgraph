@@ -63,7 +63,7 @@ class TestGetVisibleModulesForPersona:
         """Alice builder should have development modules."""
         modules = get_visible_modules_for_persona("alice-builder")
         assert "chat" in modules
-        assert "flows" in modules
+        assert "workflows" in modules  # Normalized: 'workflows' not 'flows'
         assert "mcp" in modules
         assert "agents" in modules
         assert "admin" not in modules  # No admin access
@@ -173,3 +173,136 @@ class TestPersonaVisibleModulesMapping:
         """Help module should be available to all personas."""
         for persona, modules in PERSONA_VISIBLE_MODULES.items():
             assert "help" in modules, f"Help missing for {persona}"
+
+
+class TestVisibleModulesNormalization:
+    """Tests for visible_modules using normalized IDs that match frontend NAV_ITEMS.
+
+    Phase 1.1: TDD Red Phase - These tests define expected behavior for module ID normalization.
+    The backend PERSONA_VISIBLE_MODULES must use IDs that match frontend ActivityBar NAV_ITEMS.
+    """
+
+    # Frontend NAV_ITEM IDs (source of truth from ActivityBar.tsx)
+    FRONTEND_NAV_ITEM_IDS = [
+        # Core Work
+        "projects",
+        "chat",
+        "workflows",  # NOT "flows"
+        # AI & Data
+        "agents",
+        "mcp",
+        "vectors",
+        "connections",
+        "files",
+        # Observability
+        "traces",
+        "observability",
+        "metrics",
+        "cost",  # NOT "costs"
+        # Admin
+        "admin",
+        "audit",
+        "compliance",
+        # Bottom items
+        "help",
+        "settings",
+    ]
+
+    def test_visible_modules_use_cost_not_costs(self):
+        """Backend should use 'cost' (singular) to match frontend NAV_ITEMS."""
+        # Check all personas that have cost-related modules
+        for persona, modules in PERSONA_VISIBLE_MODULES.items():
+            assert "costs" not in modules, f"Persona '{persona}' uses 'costs' - should be 'cost' to match frontend"
+
+    def test_visible_modules_use_workflows_not_flows(self):
+        """Backend should use 'workflows' to match frontend NAV_ITEMS."""
+        # Check all personas that have workflow-related modules
+        for persona, modules in PERSONA_VISIBLE_MODULES.items():
+            assert "flows" not in modules, f"Persona '{persona}' uses 'flows' - should be 'workflows' to match frontend"
+
+    def test_admin_visible_modules_include_cost(self):
+        """Admin persona should have access to 'cost' module."""
+        modules = get_visible_modules_for_persona("admin")
+        assert "cost" in modules, "Admin should have 'cost' module (not 'costs')"
+
+    def test_admin_visible_modules_include_observability(self):
+        """Admin persona should have access to 'observability' module."""
+        modules = get_visible_modules_for_persona("admin")
+        assert "observability" in modules, "Admin should have 'observability' module"
+
+    def test_admin_visible_modules_include_all_core_modules(self):
+        """Admin persona should have access to all core work modules."""
+        modules = get_visible_modules_for_persona("admin")
+        core_modules = ["projects", "chat", "workflows"]
+        for mod in core_modules:
+            assert mod in modules, f"Admin should have '{mod}' module"
+
+    def test_alice_builder_uses_normalized_ids(self):
+        """Alice builder should use normalized module IDs."""
+        modules = get_visible_modules_for_persona("alice-builder")
+        # Should use 'workflows' not 'flows'
+        if any(m in ["workflows", "flows"] for m in modules):
+            assert "workflows" in modules, "alice-builder should use 'workflows' not 'flows'"
+            assert "flows" not in modules, "alice-builder should use 'workflows' not 'flows'"
+
+    def test_all_visible_modules_match_frontend_nav_items(self):
+        """All module IDs in PERSONA_VISIBLE_MODULES should match frontend NAV_ITEM IDs."""
+        all_module_ids = set()
+        for modules in PERSONA_VISIBLE_MODULES.values():
+            all_module_ids.update(modules)
+
+        # Allow some flexibility for admin-only items not in main nav
+        allowed_extra_ids = {"audit-logs"}  # Legacy IDs that may still be used
+
+        for module_id in all_module_ids:
+            is_known = module_id in self.FRONTEND_NAV_ITEM_IDS or module_id in allowed_extra_ids
+            assert is_known, f"Module ID '{module_id}' not in frontend NAV_ITEMS: {self.FRONTEND_NAV_ITEM_IDS}"
+
+
+class TestPersonaJourneyModules:
+    """Tests for persona journey organization.
+
+    Modules should be organized by user journey:
+    - Admin personas: Full platform access
+    - Alice personas: Developer variants with focused access
+    - Bob personas: End user with limited access
+    """
+
+    def test_admin_journey_has_all_access(self):
+        """Admin journey should have full platform access."""
+        admin_modules = get_visible_modules_for_persona("admin")
+        # Core work
+        assert "projects" in admin_modules
+        assert "chat" in admin_modules
+        # Admin-specific
+        assert "admin" in admin_modules
+        assert "audit" in admin_modules
+        assert "compliance" in admin_modules
+
+    def test_alice_builder_journey_has_dev_focus(self):
+        """Alice builder journey should focus on development tools."""
+        modules = get_visible_modules_for_persona("alice-builder")
+        # Development tools
+        assert "chat" in modules
+        assert "agents" in modules or "mcp" in modules
+        # Should NOT have admin access
+        assert "admin" not in modules
+
+    def test_alice_analyst_journey_has_observability_focus(self):
+        """Alice analyst journey should focus on observability."""
+        modules = get_visible_modules_for_persona("alice-analyst")
+        # Observability focus
+        assert "observability" in modules or "traces" in modules
+        # Should NOT have admin access
+        assert "admin" not in modules
+
+    def test_bob_journey_has_limited_access(self):
+        """Bob journey should have limited, end-user focused access."""
+        modules = get_visible_modules_for_persona("bob")
+        # Core access only
+        assert "chat" in modules
+        assert "projects" in modules
+        # Should NOT have admin or dev tools
+        assert "admin" not in modules
+        assert "audit" not in modules
+        assert "mcp" not in modules
