@@ -16,7 +16,10 @@
 import { useEffect, useCallback, useMemo, useRef } from "react";
 import { toast } from "sonner";
 import { useAppDispatch, useAppSelector } from "../store/hooks";
-import { selectIsAuthenticated } from "../store/slices/authSlice";
+import {
+  selectIsAuthenticated,
+  selectIsInitializing,
+} from "../store/slices/authSlice";
 import { addAlert, type Alert } from "../store/slices/alertSlice";
 import { useRealtimeSync, type ConnectionStatus } from "./useRealtimeSync";
 import { getAuthToken } from "../utils/storage";
@@ -187,16 +190,22 @@ export function useAlertWebSocket(
   const { url, enabled = true, showToasts = true } = options;
   const dispatch = useAppDispatch();
   const isAuthenticated = useAppSelector(selectIsAuthenticated);
+  const isInitializing = useAppSelector(selectIsInitializing);
 
-  // Get auth token when authenticated - makes dependency explicit for React
+  // Auth is ready when: authenticated AND not still initializing
+  // This prevents WebSocket connection attempts during auth validation
+  // which can cause "connection interrupted" errors during page load
+  const isAuthReady = isAuthenticated && !isInitializing;
+
+  // Get auth token when auth is ready - makes dependency explicit for React
   // Convert null to undefined for type compatibility
-  const authToken = isAuthenticated ? (getAuthToken() ?? undefined) : undefined;
+  const authToken = isAuthReady ? (getAuthToken() ?? undefined) : undefined;
 
-  // Compute WebSocket URL - only generate URL when authenticated
-  // Passing empty string prevents connection attempt before auth is ready
+  // Compute WebSocket URL - only generate URL when auth is ready
+  // Passing empty string prevents connection attempt before auth is validated
   const wsUrl = useMemo(
-    () => (isAuthenticated ? (url ?? getDefaultWebSocketUrl(authToken)) : ""),
-    [url, authToken, isAuthenticated],
+    () => (isAuthReady ? (url ?? getDefaultWebSocketUrl(authToken)) : ""),
+    [url, authToken, isAuthReady],
   );
 
   // Handle incoming messages
@@ -244,9 +253,9 @@ export function useAlertWebSocket(
     onMessage: handleMessage,
   });
 
-  // Track if enabled - if not authenticated or explicitly disabled, override status
-  // WebSocket requires valid auth token, so we only connect when authenticated
-  const effectiveEnabled = enabled && isAuthenticated;
+  // Track if enabled - if not auth-ready or explicitly disabled, override status
+  // WebSocket requires valid auth token and completed auth initialization
+  const effectiveEnabled = enabled && isAuthReady;
   const status: ConnectionStatus = effectiveEnabled
     ? realtimeStatus
     : "disconnected";

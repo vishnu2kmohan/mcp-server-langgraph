@@ -77,7 +77,13 @@ class MockWebSocket {
 }
 
 // Create test store with auth and notifications slices
-const createTestStore = (isAuthenticated = true) => {
+interface TestStoreOptions {
+  isAuthenticated?: boolean;
+  isInitializing?: boolean;
+}
+
+const createTestStore = (options: TestStoreOptions = {}) => {
+  const { isAuthenticated = true, isInitializing = false } = options;
   return configureStore({
     reducer: {
       notifications: notificationReducer,
@@ -95,9 +101,8 @@ const createTestStore = (isAuthenticated = true) => {
           : null,
         tokens: null,
         organizations: [],
-        currentOrganization: null,
-        permissions: [],
-        lastSynced: null,
+        currentOrg: null,
+        isInitializing,
         isLoading: false,
         error: null,
       },
@@ -524,6 +529,79 @@ describe("useNotificationWebSocket", () => {
         vi.advanceTimersByTime(20);
       });
       expect(result.current.status).toBe("connected");
+    });
+  });
+
+  describe("Auth Initialization", () => {
+    it("should not connect when auth is still initializing", () => {
+      // Create store with isInitializing=true (tokens exist but auth not validated)
+      const initializingStore = createTestStore({
+        isAuthenticated: true,
+        isInitializing: true,
+      });
+
+      const { result } = renderHook(() => useNotificationWebSocket(), {
+        wrapper: createWrapper(initializingStore),
+      });
+
+      // Should not attempt WebSocket connection during auth initialization
+      expect(MockWebSocket.instances.length).toBe(0);
+      expect(result.current.status).toBe("disconnected");
+    });
+
+    it("should connect after auth initialization completes", () => {
+      // Start with initializing state
+      const initializingStore = createTestStore({
+        isAuthenticated: true,
+        isInitializing: true,
+      });
+
+      const { result, rerender: _rerender } = renderHook(
+        () => useNotificationWebSocket(),
+        {
+          wrapper: createWrapper(initializingStore),
+        },
+      );
+
+      // No connection during initialization
+      expect(MockWebSocket.instances.length).toBe(0);
+      expect(result.current.status).toBe("disconnected");
+
+      // Simulate auth initialization completing
+      // In real app, initializeAuth.fulfilled sets isInitializing=false
+      const readyStore = createTestStore({
+        isAuthenticated: true,
+        isInitializing: false,
+      });
+
+      // Re-render with updated store (simulates Redux state change)
+      cleanup();
+      const { result: result2 } = renderHook(() => useNotificationWebSocket(), {
+        wrapper: createWrapper(readyStore),
+      });
+
+      // Now should connect
+      expect(MockWebSocket.instances.length).toBe(1);
+
+      act(() => {
+        vi.advanceTimersByTime(20);
+      });
+
+      expect(result2.current.status).toBe("connected");
+    });
+
+    it("should stay disconnected when not authenticated even after initialization", () => {
+      const unauthenticatedStore = createTestStore({
+        isAuthenticated: false,
+        isInitializing: false,
+      });
+
+      const { result } = renderHook(() => useNotificationWebSocket(), {
+        wrapper: createWrapper(unauthenticatedStore),
+      });
+
+      expect(MockWebSocket.instances.length).toBe(0);
+      expect(result.current.status).toBe("disconnected");
     });
   });
 });
