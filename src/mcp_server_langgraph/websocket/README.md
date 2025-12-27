@@ -321,15 +321,20 @@ from mcp_server_langgraph.websocket.exceptions import (
 | `/api/v1/ws/metrics/heart` | HeartMetricsHandler | Required | HEART metrics |
 | `/api/v1/ws/usage/cost` | CostTrackingHandler | Required | Cost tracking |
 | `/api/v1/ws/workflows/{id}` | WorkflowExecutionHandler | Required | Workflow execution |
+| `/api/v1/ws/traces` | TraceHandler | Required | Trace/span streaming |
 
-### Legacy Endpoints (Deprecated)
+### Legacy Endpoints (Removed in v4.0)
 
-The following endpoints are deprecated and will be removed in v4.0:
+The following deprecated endpoints have been removed. Use the new consolidated URLs:
 
-- `/ws/notifications` → Use `/api/v1/ws/notifications`
-- `/ws/agents/requests` → Use `/api/v1/ws/agents/requests`
-- `/api/v1/mcp/ws` → Use `/api/v1/ws/mcp`
-- `/api/v1/audit/stream` → Use `/api/v1/ws/audit`
+| Removed | Replacement |
+|---------|-------------|
+| `/ws/notifications` | `/api/v1/ws/notifications` |
+| `/ws/agents/requests` | `/api/v1/ws/agents/requests` |
+| `/api/v1/mcp/ws` | `/api/v1/ws/mcp` |
+| `/api/v1/mcp/ws/auth` | `/api/v1/ws/mcp/auth` |
+| `/api/v1/mcp/ws/{id}` | `/api/v1/ws/mcp/{session_id}` |
+| `/api/v1/audit/stream` | `/api/v1/ws/audit` |
 
 ## Testing
 

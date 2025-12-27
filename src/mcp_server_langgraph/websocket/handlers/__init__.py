@@ -17,6 +17,7 @@ Available Handlers:
     - CostTrackingHandler: Real-time cost tracking during LLM operations
     - WorkflowExecutionHandler: Real-time workflow execution updates
     - AISuggestionsHandler: Real-time AI suggestion streaming
+    - TraceHandler: Real-time trace/span streaming
 """
 
 from mcp_server_langgraph.websocket.handlers.agent_request import AgentRequestHandler
@@ -36,6 +37,7 @@ from mcp_server_langgraph.websocket.handlers.mcp_task import MCPTaskWebSocketHan
 from mcp_server_langgraph.websocket.handlers.notifications import (
     NotificationWebSocketHandler,
 )
+from mcp_server_langgraph.websocket.handlers.trace import TraceHandler
 from mcp_server_langgraph.websocket.handlers.workflow_execution import (
     WorkflowExecutionHandler,
 )
@@ -52,5 +54,6 @@ __all__ = [
     "MCPTaskWebSocketHandler",
     "MCPWebSocketHandler",
     "NotificationWebSocketHandler",
+    "TraceHandler",
     "WorkflowExecutionHandler",
 ]

@@ -21,6 +21,7 @@ if TYPE_CHECKING:
     from mcp_server_langgraph.audit.broadcast import AuditEventBroadcaster
     from mcp_server_langgraph.hitl.broadcast import AgentRequestBroadcaster
     from mcp_server_langgraph.notifications.broadcast import NotificationBroadcaster
+    from mcp_server_langgraph.observability.trace_broadcaster import TraceBroadcaster
 
 logger = logging.getLogger(__name__)
 
@@ -121,6 +122,29 @@ def set_agent_request_broadcaster(broadcaster: AgentRequestBroadcaster | None) -
 get_broadcaster = get_agent_request_broadcaster
 
 
+# =============================================================================
+# Trace Broadcaster
+# =============================================================================
+
+_trace_broadcaster: TraceBroadcaster | None = None
+
+
+def get_trace_broadcaster() -> TraceBroadcaster:
+    """Get the trace broadcaster instance."""
+    global _trace_broadcaster
+    if _trace_broadcaster is None:
+        from mcp_server_langgraph.observability.trace_broadcaster import TraceBroadcaster
+
+        _trace_broadcaster = TraceBroadcaster()
+    return _trace_broadcaster
+
+
+def set_trace_broadcaster(broadcaster: TraceBroadcaster | None) -> None:
+    """Set the trace broadcaster instance (for app initialization or testing)."""
+    global _trace_broadcaster
+    _trace_broadcaster = broadcaster
+
+
 __all__ = [
     # Notification
     "get_notification_broadcaster",
@@ -135,4 +159,7 @@ __all__ = [
     "get_agent_request_broadcaster",
     "set_agent_request_broadcaster",
     "get_broadcaster",  # Backward compatibility
+    # Trace
+    "get_trace_broadcaster",
+    "set_trace_broadcaster",
 ]

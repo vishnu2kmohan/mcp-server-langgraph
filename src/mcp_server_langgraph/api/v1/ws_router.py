@@ -45,6 +45,7 @@ from mcp_server_langgraph.websocket.handlers.audit import AuditHandler
 from mcp_server_langgraph.websocket.handlers.agent_request import AgentRequestHandler
 from mcp_server_langgraph.websocket.handlers.mcp import MCPWebSocketHandler
 from mcp_server_langgraph.websocket.handlers.ai_suggestions import AISuggestionsHandler
+from mcp_server_langgraph.websocket.handlers.trace import TraceHandler
 
 # Create the main WebSocket router
 ws_router = APIRouter(tags=["websocket"])
@@ -620,6 +621,63 @@ async def ai_suggestions_websocket(websocket: WebSocket) -> None:
 
 
 # =============================================================================
+# Trace WebSocket Endpoint
+# =============================================================================
+
+
+@ws_router.websocket("/traces")
+async def traces_websocket(websocket: WebSocket) -> None:
+    """
+    WebSocket endpoint for real-time trace/span streaming.
+
+    URL: /api/v1/ws/traces
+
+    Provides real-time distributed trace streaming:
+    - Filter by service_name, operation_name, trace_id
+    - Filter by minimum duration and status
+    - Real-time span updates as they are collected
+
+    Message Types (Client -> Server):
+        - subscribe: Subscribe to trace events
+        - unsubscribe: Unsubscribe from trace events
+        - set_filter: Set trace filter criteria
+        - clear_filter: Clear all filters
+        - get_recent: Get recent traces
+
+    Response Types (Server -> Client):
+        - subscribed: Successfully subscribed
+        - unsubscribed: Successfully unsubscribed
+        - filter_updated: Filter has been updated
+        - filter_cleared: Filter has been cleared
+        - recent_traces: Recent trace data
+        - trace_span: Real-time trace span update
+        - error: Error message
+
+    Uses the standardized WebSocketBase infrastructure with:
+    - JWT authentication required
+    - OpenFGA authorization (requires 'viewer' relation on traces:stream)
+    - OpenTelemetry tracing
+    - Metrics collection
+    - Standard message envelope
+    """
+    from mcp_server_langgraph.websocket.registry import get_trace_broadcaster
+
+    handler = TraceHandler(
+        config=WebSocketConfig(
+            endpoint_name="traces",
+            require_auth=True,
+            authz_resource_type="traces",
+            authz_resource_id="stream",
+            authz_required_relation="viewer",
+            rate_limit_per_minute=600,
+            message_timeout=30,
+        ),
+        broadcaster=get_trace_broadcaster(),
+    )
+    await handler.run(websocket)
+
+
+# =============================================================================
 # Migration Status
 # =============================================================================
 #
@@ -646,3 +704,4 @@ async def ai_suggestions_websocket(websocket: WebSocket) -> None:
 # - [x] HEART Metrics WebSocket (/metrics/heart) - New!
 # - [x] Cost Tracking WebSocket (/usage/cost) - New!
 # - [x] AI Suggestions WebSocket (/ai/suggestions) - New!
+# - [x] Trace WebSocket (/traces) - New!
