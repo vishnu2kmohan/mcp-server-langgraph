@@ -1,10 +1,15 @@
+# Agent Studio Sandbox Image
+# ==========================
 # Sandbox runner image for high-risk tools (bash, web_fetch, screenshot, computer-use)
 # Includes Playwright/Chromium for headless automation plus curl/jq for diagnostics.
 #
 # Build locally with:
-#   docker build -f docker/Dockerfile.sandbox -t studio-sandbox:latest .
+#   docker build -f docker/Dockerfile.sandbox \
+#     -t ghcr.io/vishnu2kmohan/mcp-server-langgraph-agent-studio-sandbox:latest \
+#     -t ghcr.io/vishnu2kmohan/mcp-server-langgraph-agent-studio-sandbox:local .
 #
-# Then set CODE_EXECUTION_DOCKER_IMAGE=studio-sandbox:latest (see docker-compose.test.yml).
+# Then set CODE_EXECUTION_DOCKER_IMAGE=ghcr.io/vishnu2kmohan/mcp-server-langgraph-agent-studio-sandbox:latest
+# (see docker-compose.test.yml).
 FROM mcr.microsoft.com/playwright/python:v1.42.0-jammy
 
 USER root

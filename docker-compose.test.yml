@@ -1258,9 +1258,11 @@ services:
       - FF_ENABLE_AI_UX=true                       # Master switch for AI UX features
       - FF_ENABLE_AI_UX_PARALLEL_GRAPH=true        # Parallel graph execution
       # Sandboxed code execution (Docker or K8s)
+      # NOTE: Build the sandbox image first if not available:
+      #   docker compose -f docker-compose.test.yml build agent-studio-sandbox
       - ENABLE_CODE_EXECUTION=true
       - CODE_EXECUTION_BACKEND=docker-engine
-      - CODE_EXECUTION_DOCKER_IMAGE=studio-sandbox:latest
+      - CODE_EXECUTION_DOCKER_IMAGE=ghcr.io/vishnu2kmohan/mcp-server-langgraph-agent-studio-sandbox:latest
       - CODE_EXECUTION_NETWORK_MODE=unrestricted
       - CODE_EXECUTION_TIMEOUT=30
       - CODE_EXECUTION_MEMORY_LIMIT_MB=512
@@ -1997,6 +1999,32 @@ services:
       - "traefik.http.middlewares.openfga-playground-strip.stripprefix.prefixes=/playground"
       - "traefik.http.routers.openfga-playground.middlewares=openfga-playground-strip"
       # NOTE: No forward-auth - authz-proxy handles JWT validation and OpenFGA permission checks
+
+  # ==============================================================================
+  # AGENT STUDIO SANDBOX (Code Execution Runtime)
+  # ==============================================================================
+  # Sandbox image for high-risk tools (bash, web_fetch, screenshot, computer-use)
+  # Used by the code execution engine in mcp-server-test
+  #
+  # This is a BUILD-ONLY service - it doesn't run as a container in the compose stack.
+  # The MCP server spawns sandbox containers on-demand using Docker API.
+  #
+  # Build with: docker compose -f docker-compose.test.yml build agent-studio-sandbox
+  # Reference: docker/Dockerfile.sandbox
+
+  agent-studio-sandbox:
+    image: ghcr.io/vishnu2kmohan/mcp-server-langgraph-agent-studio-sandbox:latest
+    pull_policy: if_not_present
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.sandbox
+      tags:
+        - ghcr.io/vishnu2kmohan/mcp-server-langgraph-agent-studio-sandbox:latest
+        - ghcr.io/vishnu2kmohan/mcp-server-langgraph-agent-studio-sandbox:local
+    # This service is NOT meant to run - it's a build target only
+    # The actual sandbox containers are spawned by mcp-server-test via Docker API
+    profiles:
+      - build-only
 
 networks:
   mcp-test-network:

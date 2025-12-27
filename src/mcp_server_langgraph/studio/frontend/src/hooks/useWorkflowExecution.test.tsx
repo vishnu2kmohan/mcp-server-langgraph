@@ -120,7 +120,10 @@ describe("useWorkflowExecution", () => {
 
       expect(mockUseRealtimeSync).toHaveBeenCalledWith(
         expect.objectContaining({
-          url: expect.stringMatching(/ws.*workflows.*workflow-abc.*execution/),
+          // Consolidated WebSocket URL: /api/v1/ws/workflows/{workflow_id}
+          url: expect.stringMatching(
+            /ws.*\/api\/v1\/ws\/workflows\/workflow-abc$/,
+          ),
         }),
       );
     });

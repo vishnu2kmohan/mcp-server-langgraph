@@ -99,11 +99,12 @@ export function useWorkflowExecution(
   );
 
   // Construct WebSocket URL
+  // Uses the consolidated WebSocket endpoint: /api/v1/ws/workflows/{workflow_id}
   const wsUrl = useMemo(() => {
     if (!autoConnect || !workflowId) return "";
     const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
     const host = window.location.host;
-    return `${protocol}//${host}/api/v1/workflows/${workflowId}/execution`;
+    return `${protocol}//${host}/api/v1/ws/workflows/${workflowId}`;
   }, [workflowId, autoConnect]);
 
   // Handle incoming WebSocket messages
