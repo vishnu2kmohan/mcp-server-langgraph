@@ -8,6 +8,7 @@ import { PreferencesProvider } from "./contexts/PreferencesContext";
 import { FeatureFlagProvider } from "./contexts/FeatureFlagContext";
 import { TelemetryProvider } from "./contexts/TelemetryContext";
 import { ConnectedAIIntelligenceProvider } from "./contexts";
+import { PermissionCacheProvider } from "./hooks/usePermissionCache";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { sessionTelemetry } from "./utils/sessionTelemetry";
 import "./index.css";
@@ -40,15 +41,17 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
       <TelemetryProvider autoStartWebVitals>
         <Provider store={store}>
           <FeatureFlagProvider>
-            <ConnectedAIIntelligenceProvider>
-              <ErrorBoundary
-                name="GlobalErrorBoundary"
-                onError={handleGlobalError}
-                showDetails={import.meta.env.DEV}
-              >
-                <RouterProvider router={router} />
-              </ErrorBoundary>
-            </ConnectedAIIntelligenceProvider>
+            <PermissionCacheProvider>
+              <ConnectedAIIntelligenceProvider>
+                <ErrorBoundary
+                  name="GlobalErrorBoundary"
+                  onError={handleGlobalError}
+                  showDetails={import.meta.env.DEV}
+                >
+                  <RouterProvider router={router} />
+                </ErrorBoundary>
+              </ConnectedAIIntelligenceProvider>
+            </PermissionCacheProvider>
           </FeatureFlagProvider>
         </Provider>
       </TelemetryProvider>

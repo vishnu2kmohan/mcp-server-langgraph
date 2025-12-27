@@ -248,7 +248,7 @@ describe("Router", () => {
       expect(typeof indexRoute?.lazy).toBe("function");
     });
 
-    it("should have lazy function for chat route (via index child)", () => {
+    it("should have element for chat route (StudioShellLayout renders chat UI)", () => {
       const rootRoute = router.routes.find((r: RouteObject) => r.path === "/");
       const studioRoute = rootRoute?.children?.find(
         (r: RouteObject) => r.path === "studio",
@@ -256,10 +256,11 @@ describe("Router", () => {
       const chatRoute = studioRoute?.children?.find(
         (r: RouteObject) => r.path === "chat",
       );
-      // Chat now has children with lazy on index route
+      // Chat route uses empty fragment element - StudioShellLayout renders the chat UI
+      // No lazy loading needed because the chat UI is part of the shell layout
       const indexRoute = chatRoute?.children?.find((r: RouteObject) => r.index);
-      expect(indexRoute?.lazy).toBeDefined();
-      expect(typeof indexRoute?.lazy).toBe("function");
+      expect(indexRoute?.element).toBeDefined();
+      expect(indexRoute?.lazy).toBeUndefined();
     });
 
     it("should have lazy function for admin dashboard route", () => {
@@ -284,8 +285,10 @@ describe("Router", () => {
       const studioRoute = rootRoute?.children?.find(
         (r: RouteObject) => r.path === "studio",
       );
-      // index + projects + projects/:projectId + workflows + shared-workflows + chat + sessions + mcp + connections + observability + settings + cost + admin = 13
-      expect(studioRoute?.children?.length).toBe(13);
+      // index + projects + projects/:projectId + workflows + shared-workflows + chat + sessions
+      // + mcp + connections + observability + agents + traces + vectors + logs + metrics + alerts
+      // + settings + cost + files + compliance + audit + analytics + help + admin = 24
+      expect(studioRoute?.children?.length).toBe(24);
     });
 
     it("should have expected number of admin child routes", () => {
@@ -354,7 +357,7 @@ describe("Router", () => {
       }
     });
 
-    it("should load chat page via lazy function (via child)", async () => {
+    it("should have chat route with element not lazy (StudioShellLayout renders chat)", () => {
       const rootRoute = router.routes.find((r: RouteObject) => r.path === "/");
       const studioRoute = rootRoute?.children?.find(
         (r: RouteObject) => r.path === "studio",
@@ -362,14 +365,11 @@ describe("Router", () => {
       const chatRoute = studioRoute?.children?.find(
         (r: RouteObject) => r.path === "chat",
       );
-      // Chat now has children with index route that has lazy
+      // Chat route uses empty fragment element - StudioShellLayout renders the chat UI
+      // No lazy loading needed because the chat UI is part of the shell layout
       const indexRoute = chatRoute?.children?.find((r: RouteObject) => r.index);
-      expect(indexRoute?.lazy).toBeDefined();
-
-      if (indexRoute?.lazy) {
-        const result = await indexRoute.lazy();
-        expect(result).toHaveProperty("Component");
-      }
+      expect(indexRoute?.element).toBeDefined();
+      expect(indexRoute?.lazy).toBeUndefined();
     });
 
     it("should load MCP page via lazy function (via child)", async () => {
@@ -520,10 +520,12 @@ describe("Router", () => {
         (r: RouteObject) => r.path === "chat",
       );
 
-      // Chat route now has children with lazy on index route (no guard needed)
+      // Chat route has children with element (empty fragment) - no guard needed
+      // StudioShellLayout renders the chat UI directly
       expect(chatRoute?.children).toBeDefined();
       const indexRoute = chatRoute?.children?.find((r: RouteObject) => r.index);
-      expect(indexRoute?.lazy).toBeDefined();
+      expect(indexRoute?.element).toBeDefined();
+      expect(indexRoute?.lazy).toBeUndefined();
       expect(chatRoute?.element).toBeUndefined();
     });
 

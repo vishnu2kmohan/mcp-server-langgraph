@@ -325,6 +325,86 @@ export const router = createBrowserRouter(
                 },
               ],
             },
+            // Vectors - standalone route (ActivityBar points here)
+            // Renders VectorsPage directly - admin/developer only
+            {
+              path: "vectors",
+              element: (
+                <PersonaGuard allowedPersonas={["admin", "developer"]}>
+                  <Outlet />
+                </PersonaGuard>
+              ),
+              children: [
+                {
+                  index: true,
+                  lazy: async () => {
+                    const { VectorsPage } =
+                      await import("../pages/VectorsPage");
+                    return { Component: VectorsPage };
+                  },
+                },
+              ],
+            },
+            // Logs - standalone route (parity with /studio/traces)
+            // Renders ObservabilityPage with logs tab - admin/developer only
+            {
+              path: "logs",
+              element: (
+                <PersonaGuard allowedPersonas={["admin", "developer"]}>
+                  <Outlet />
+                </PersonaGuard>
+              ),
+              children: [
+                {
+                  index: true,
+                  lazy: async () => {
+                    const { ObservabilityPage } =
+                      await import("../pages/ObservabilityPage");
+                    return { Component: ObservabilityPage };
+                  },
+                },
+              ],
+            },
+            // Metrics - standalone route (parity with /studio/traces)
+            // Renders ObservabilityPage with metrics tab - admin/developer only
+            {
+              path: "metrics",
+              element: (
+                <PersonaGuard allowedPersonas={["admin", "developer"]}>
+                  <Outlet />
+                </PersonaGuard>
+              ),
+              children: [
+                {
+                  index: true,
+                  lazy: async () => {
+                    const { ObservabilityPage } =
+                      await import("../pages/ObservabilityPage");
+                    return { Component: ObservabilityPage };
+                  },
+                },
+              ],
+            },
+            // Alerts - standalone route (parity with /studio/traces)
+            // Renders ObservabilityPage with alerts tab - admin/developer only
+            {
+              path: "alerts",
+              element: (
+                <PersonaGuard allowedPersonas={["admin", "developer"]}>
+                  <Outlet />
+                </PersonaGuard>
+              ),
+              children: [
+                {
+                  index: true,
+                  lazy: async () => {
+                    const { ObservabilityPage } =
+                      await import("../pages/ObservabilityPage");
+                    return { Component: ObservabilityPage };
+                  },
+                },
+              ],
+            },
             {
               path: "settings",
               lazy: async () => {

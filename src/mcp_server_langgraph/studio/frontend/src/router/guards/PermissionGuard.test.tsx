@@ -2,10 +2,10 @@
  * PermissionGuard Tests
  *
  * TDD tests for the permission-based route guard.
- * Integrates with usePermissionCache for RBAC enforcement.
+ * Uses Redux state (persona and visible_modules) for permission derivation.
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { render, screen, waitFor, cleanup } from "@testing-library/react";
+import { render, screen, cleanup } from "@testing-library/react";
 import { MemoryRouter, Routes, Route } from "react-router";
 import { Provider } from "react-redux";
 import { configureStore } from "@reduxjs/toolkit";
@@ -13,27 +13,22 @@ import React from "react";
 import { PermissionGuard } from "./PermissionGuard";
 import personaReducer from "../../store/slices/personaSlice";
 import authReducer from "../../store/slices/authSlice";
-import {
-  PermissionCacheProvider,
-  usePermissionCache,
-} from "../../hooks/usePermissionCache";
-
-// Mock usePermissionCache
-vi.mock("../../hooks/usePermissionCache", async () => {
-  const actual = await vi.importActual("../../hooks/usePermissionCache");
-  return {
-    ...actual,
-    usePermissionCache: vi.fn(),
-  };
-});
 
 // =============================================================================
 // Test Setup
 // =============================================================================
 
-const createTestStore = (
-  persona: "admin" | "developer" | "user" = "developer",
-) =>
+interface CreateTestStoreOptions {
+  persona?: "admin" | "developer" | "user";
+  visibleModules?: string[];
+  isPersonaLoading?: boolean;
+}
+
+const createTestStore = ({
+  persona = "developer",
+  visibleModules = [],
+  isPersonaLoading = false,
+}: CreateTestStoreOptions = {}) =>
   configureStore({
     reducer: {
       persona: personaReducer,
@@ -42,6 +37,7 @@ const createTestStore = (
     preloadedState: {
       persona: {
         persona,
+        subPersona: null,
         username:
           persona === "admin"
             ? "admin"
@@ -50,7 +46,10 @@ const createTestStore = (
               : "bob",
         email: `${persona}@example.com`,
         permissions: [],
-        isPersonaLoading: false,
+        isPersonaLoading,
+        visibleModules,
+        featureFlags: {},
+        apiVersion: "2",
       },
       auth: {
         user: {
@@ -90,21 +89,23 @@ const TestWrapper = ({
   initialPath?: string;
 }) => (
   <Provider store={store}>
-    <PermissionCacheProvider>
-      <MemoryRouter initialEntries={[initialPath]}>
-        <Routes>
-          <Route path="/protected" element={children} />
-          <Route
-            path="/unauthorized"
-            element={<div data-testid="unauthorized-page">Unauthorized</div>}
-          />
-          <Route
-            path="/login"
-            element={<div data-testid="login-page">Login</div>}
-          />
-        </Routes>
-      </MemoryRouter>
-    </PermissionCacheProvider>
+    <MemoryRouter initialEntries={[initialPath]}>
+      <Routes>
+        <Route path="/protected" element={children} />
+        <Route
+          path="/unauthorized"
+          element={<div data-testid="unauthorized-page">Unauthorized</div>}
+        />
+        <Route
+          path="/login"
+          element={<div data-testid="login-page">Login</div>}
+        />
+        <Route
+          path="/studio/chat"
+          element={<div data-testid="fallback-page">Chat Fallback</div>}
+        />
+      </Routes>
+    </MemoryRouter>
   </Provider>
 );
 
@@ -123,51 +124,47 @@ describe("PermissionGuard", () => {
   });
 
   describe("Permission Checking", () => {
-    it("should render children when user has required permission", async () => {
-      const mockUsePermissionCache = vi.mocked(usePermissionCache);
-      mockUsePermissionCache.mockReturnValue({
-        checkPermission: vi.fn().mockResolvedValue(true),
-        checkPermissions: vi.fn().mockResolvedValue([true]),
-        invalidateOnError: vi.fn(),
-        invalidateCache: vi.fn(),
-        onTokenRefresh: vi.fn(),
-        isLoading: false,
-        error: null,
-      });
-
-      const store = createTestStore("developer");
+    it("should render children when developer has read permission", () => {
+      // Developers have read access to all modules
+      const store = createTestStore({ persona: "developer" });
 
       render(
         <TestWrapper store={store}>
-          <PermissionGuard requiredPermissions={["read:sessions"]}>
+          <PermissionGuard requiredPermissions={["sessions:read"]}>
             <div data-testid="protected-content">Protected Content</div>
           </PermissionGuard>
         </TestWrapper>,
       );
 
-      await waitFor(() => {
-        expect(screen.getByTestId("protected-content")).toBeInTheDocument();
-      });
+      expect(screen.getByTestId("protected-content")).toBeInTheDocument();
     });
 
-    it("should redirect when user lacks required permission", async () => {
-      const mockUsePermissionCache = vi.mocked(usePermissionCache);
-      mockUsePermissionCache.mockReturnValue({
-        checkPermission: vi.fn().mockResolvedValue(false),
-        checkPermissions: vi.fn().mockResolvedValue([false]),
-        invalidateOnError: vi.fn(),
-        invalidateCache: vi.fn(),
-        onTokenRefresh: vi.fn(),
-        isLoading: false,
-        error: null,
+    it("should render children when user has module in visible_modules", () => {
+      // User persona with compliance in visible_modules
+      const store = createTestStore({
+        persona: "user",
+        visibleModules: ["compliance"],
       });
 
-      const store = createTestStore("user");
+      render(
+        <TestWrapper store={store}>
+          <PermissionGuard requiredPermissions={["compliance:view"]}>
+            <div data-testid="protected-content">Protected Content</div>
+          </PermissionGuard>
+        </TestWrapper>,
+      );
+
+      expect(screen.getByTestId("protected-content")).toBeInTheDocument();
+    });
+
+    it("should redirect when user lacks required permission", () => {
+      // User persona without admin:access permission
+      const store = createTestStore({ persona: "user" });
 
       render(
         <TestWrapper store={store}>
           <PermissionGuard
-            requiredPermissions={["admin:dashboard"]}
+            requiredPermissions={["admin:access"]}
             fallbackPath="/unauthorized"
           >
             <div data-testid="protected-content">Protected Content</div>
@@ -175,30 +172,20 @@ describe("PermissionGuard", () => {
         </TestWrapper>,
       );
 
-      await waitFor(() => {
-        expect(screen.getByTestId("unauthorized-page")).toBeInTheDocument();
-      });
+      expect(screen.getByTestId("unauthorized-page")).toBeInTheDocument();
     });
 
-    it("should check multiple permissions with AND logic by default", async () => {
-      const mockCheckPermissions = vi.fn().mockResolvedValue([true, false]);
-      const mockUsePermissionCache = vi.mocked(usePermissionCache);
-      mockUsePermissionCache.mockReturnValue({
-        checkPermission: vi.fn(),
-        checkPermissions: mockCheckPermissions,
-        invalidateOnError: vi.fn(),
-        invalidateCache: vi.fn(),
-        onTokenRefresh: vi.fn(),
-        isLoading: false,
-        error: null,
+    it("should check multiple permissions with AND logic by default", () => {
+      // User has sessions in visible_modules but not admin
+      const store = createTestStore({
+        persona: "user",
+        visibleModules: ["sessions"],
       });
-
-      const store = createTestStore("developer");
 
       render(
         <TestWrapper store={store}>
           <PermissionGuard
-            requiredPermissions={["read:sessions", "write:sessions"]}
+            requiredPermissions={["sessions:view", "admin:access"]}
             fallbackPath="/unauthorized"
           >
             <div data-testid="protected-content">Protected Content</div>
@@ -206,30 +193,18 @@ describe("PermissionGuard", () => {
         </TestWrapper>,
       );
 
-      await waitFor(() => {
-        expect(screen.getByTestId("unauthorized-page")).toBeInTheDocument();
-      });
+      // Should redirect because admin:access fails
+      expect(screen.getByTestId("unauthorized-page")).toBeInTheDocument();
     });
 
-    it("should check multiple permissions with OR logic when specified", async () => {
-      const mockCheckPermissions = vi.fn().mockResolvedValue([true, false]);
-      const mockUsePermissionCache = vi.mocked(usePermissionCache);
-      mockUsePermissionCache.mockReturnValue({
-        checkPermission: vi.fn(),
-        checkPermissions: mockCheckPermissions,
-        invalidateOnError: vi.fn(),
-        invalidateCache: vi.fn(),
-        onTokenRefresh: vi.fn(),
-        isLoading: false,
-        error: null,
-      });
-
-      const store = createTestStore("developer");
+    it("should check multiple permissions with OR logic when specified", () => {
+      // Developer has read access, should pass with OR logic
+      const store = createTestStore({ persona: "developer" });
 
       render(
         <TestWrapper store={store}>
           <PermissionGuard
-            requiredPermissions={["read:sessions", "admin:dashboard"]}
+            requiredPermissions={["sessions:read", "admin:access"]}
             requireAll={false}
           >
             <div data-testid="protected-content">Protected Content</div>
@@ -237,26 +212,15 @@ describe("PermissionGuard", () => {
         </TestWrapper>,
       );
 
-      await waitFor(() => {
-        expect(screen.getByTestId("protected-content")).toBeInTheDocument();
-      });
+      // Should render because sessions:read passes (developer has read access)
+      expect(screen.getByTestId("protected-content")).toBeInTheDocument();
     });
   });
 
   describe("Admin Bypass", () => {
-    it("should always allow admin to access protected routes", async () => {
-      const mockUsePermissionCache = vi.mocked(usePermissionCache);
-      mockUsePermissionCache.mockReturnValue({
-        checkPermission: vi.fn().mockResolvedValue(true),
-        checkPermissions: vi.fn().mockResolvedValue([true]),
-        invalidateOnError: vi.fn(),
-        invalidateCache: vi.fn(),
-        onTokenRefresh: vi.fn(),
-        isLoading: false,
-        error: null,
-      });
-
-      const store = createTestStore("admin");
+    it("should always allow admin to access protected routes", () => {
+      // Admin bypasses all permission checks
+      const store = createTestStore({ persona: "admin" });
 
       render(
         <TestWrapper store={store}>
@@ -266,35 +230,68 @@ describe("PermissionGuard", () => {
         </TestWrapper>,
       );
 
-      await waitFor(() => {
-        expect(screen.getByTestId("protected-content")).toBeInTheDocument();
-      });
+      expect(screen.getByTestId("protected-content")).toBeInTheDocument();
+    });
+
+    it("should allow admin to access admin-only routes", () => {
+      const store = createTestStore({ persona: "admin" });
+
+      render(
+        <TestWrapper store={store}>
+          <PermissionGuard requiredPermissions={["admin:access"]}>
+            <div data-testid="protected-content">Admin Panel</div>
+          </PermissionGuard>
+        </TestWrapper>,
+      );
+
+      expect(screen.getByTestId("protected-content")).toBeInTheDocument();
     });
   });
 
-  describe("Loading State", () => {
-    it("should show loading indicator while checking permissions", async () => {
-      const mockUsePermissionCache = vi.mocked(usePermissionCache);
-      mockUsePermissionCache.mockReturnValue({
-        checkPermission: vi
-          .fn()
-          .mockImplementation(() => new Promise(() => {})), // Never resolves
-        checkPermissions: vi
-          .fn()
-          .mockImplementation(() => new Promise(() => {})),
-        invalidateOnError: vi.fn(),
-        invalidateCache: vi.fn(),
-        onTokenRefresh: vi.fn(),
-        isLoading: true,
-        error: null,
-      });
+  describe("Developer Access", () => {
+    it("should allow developer read access to all modules", () => {
+      const store = createTestStore({ persona: "developer" });
 
-      const store = createTestStore("developer");
+      render(
+        <TestWrapper store={store}>
+          <PermissionGuard requiredPermissions={["compliance:read"]}>
+            <div data-testid="protected-content">Compliance Dashboard</div>
+          </PermissionGuard>
+        </TestWrapper>,
+      );
+
+      expect(screen.getByTestId("protected-content")).toBeInTheDocument();
+    });
+
+    it("should deny developer access to admin:access", () => {
+      const store = createTestStore({ persona: "developer" });
 
       render(
         <TestWrapper store={store}>
           <PermissionGuard
-            requiredPermissions={["read:sessions"]}
+            requiredPermissions={["admin:access"]}
+            fallbackPath="/unauthorized"
+          >
+            <div data-testid="protected-content">Admin Panel</div>
+          </PermissionGuard>
+        </TestWrapper>,
+      );
+
+      expect(screen.getByTestId("unauthorized-page")).toBeInTheDocument();
+    });
+  });
+
+  describe("Loading State", () => {
+    it("should show loading indicator while persona is loading", () => {
+      const store = createTestStore({
+        persona: "developer",
+        isPersonaLoading: true,
+      });
+
+      render(
+        <TestWrapper store={store}>
+          <PermissionGuard
+            requiredPermissions={["sessions:read"]}
             loadingComponent={<div data-testid="loading">Loading...</div>}
           >
             <div data-testid="protected-content">Protected Content</div>
@@ -305,27 +302,15 @@ describe("PermissionGuard", () => {
       expect(screen.getByTestId("loading")).toBeInTheDocument();
     });
 
-    it("should render null by default during loading", async () => {
-      const mockUsePermissionCache = vi.mocked(usePermissionCache);
-      mockUsePermissionCache.mockReturnValue({
-        checkPermission: vi
-          .fn()
-          .mockImplementation(() => new Promise(() => {})),
-        checkPermissions: vi
-          .fn()
-          .mockImplementation(() => new Promise(() => {})),
-        invalidateOnError: vi.fn(),
-        invalidateCache: vi.fn(),
-        onTokenRefresh: vi.fn(),
-        isLoading: true,
-        error: null,
+    it("should render null by default during loading", () => {
+      const store = createTestStore({
+        persona: "developer",
+        isPersonaLoading: true,
       });
-
-      const store = createTestStore("developer");
 
       const { container } = render(
         <TestWrapper store={store}>
-          <PermissionGuard requiredPermissions={["read:sessions"]}>
+          <PermissionGuard requiredPermissions={["sessions:read"]}>
             <div data-testid="protected-content">Protected Content</div>
           </PermissionGuard>
         </TestWrapper>,
@@ -334,81 +319,90 @@ describe("PermissionGuard", () => {
       expect(
         container.querySelector('[data-testid="protected-content"]'),
       ).toBeNull();
+      expect(container.querySelector('[data-testid="loading"]')).toBeNull();
     });
   });
 
-  describe("Error Handling", () => {
-    it("should redirect to fallback on permission check error", async () => {
-      const mockUsePermissionCache = vi.mocked(usePermissionCache);
-      mockUsePermissionCache.mockReturnValue({
-        checkPermission: vi.fn().mockRejectedValue(new Error("Network error")),
-        checkPermissions: vi.fn().mockRejectedValue(new Error("Network error")),
-        invalidateOnError: vi.fn(),
-        invalidateCache: vi.fn(),
-        onTokenRefresh: vi.fn(),
-        isLoading: false,
-        error: "Network error",
+  describe("Visible Modules", () => {
+    it("should grant access when module is in visible_modules", () => {
+      const store = createTestStore({
+        persona: "user",
+        visibleModules: ["audit", "compliance"],
       });
-
-      const store = createTestStore("developer");
 
       render(
         <TestWrapper store={store}>
-          <PermissionGuard
-            requiredPermissions={["read:sessions"]}
-            fallbackPath="/unauthorized"
-          >
-            <div data-testid="protected-content">Protected Content</div>
+          <PermissionGuard requiredPermissions={["audit:view"]}>
+            <div data-testid="protected-content">Audit Log</div>
           </PermissionGuard>
         </TestWrapper>,
       );
 
-      await waitFor(() => {
-        expect(screen.getByTestId("unauthorized-page")).toBeInTheDocument();
+      expect(screen.getByTestId("protected-content")).toBeInTheDocument();
+    });
+
+    it("should deny access when module is not in visible_modules", () => {
+      const store = createTestStore({
+        persona: "user",
+        visibleModules: ["audit"],
       });
+
+      render(
+        <TestWrapper store={store}>
+          <PermissionGuard
+            requiredPermissions={["compliance:view"]}
+            fallbackPath="/unauthorized"
+          >
+            <div data-testid="protected-content">Compliance Dashboard</div>
+          </PermissionGuard>
+        </TestWrapper>,
+      );
+
+      expect(screen.getByTestId("unauthorized-page")).toBeInTheDocument();
     });
   });
 
   describe("Outlet Integration", () => {
-    it("should render Outlet when no children provided", async () => {
-      const mockUsePermissionCache = vi.mocked(usePermissionCache);
-      mockUsePermissionCache.mockReturnValue({
-        checkPermission: vi.fn().mockResolvedValue(true),
-        checkPermissions: vi.fn().mockResolvedValue([true]),
-        invalidateOnError: vi.fn(),
-        invalidateCache: vi.fn(),
-        onTokenRefresh: vi.fn(),
-        isLoading: false,
-        error: null,
-      });
-
-      const store = createTestStore("developer");
+    it("should render Outlet when no children provided", () => {
+      const store = createTestStore({ persona: "developer" });
 
       render(
         <Provider store={store}>
-          <PermissionCacheProvider>
-            <MemoryRouter initialEntries={["/protected/child"]}>
-              <Routes>
+          <MemoryRouter initialEntries={["/protected/child"]}>
+            <Routes>
+              <Route
+                path="/protected"
+                element={
+                  <PermissionGuard requiredPermissions={["sessions:read"]} />
+                }
+              >
                 <Route
-                  path="/protected"
-                  element={
-                    <PermissionGuard requiredPermissions={["read:sessions"]} />
-                  }
-                >
-                  <Route
-                    path="child"
-                    element={<div data-testid="child-route">Child Route</div>}
-                  />
-                </Route>
-              </Routes>
-            </MemoryRouter>
-          </PermissionCacheProvider>
+                  path="child"
+                  element={<div data-testid="child-route">Child Route</div>}
+                />
+              </Route>
+            </Routes>
+          </MemoryRouter>
         </Provider>,
       );
 
-      await waitFor(() => {
-        expect(screen.getByTestId("child-route")).toBeInTheDocument();
-      });
+      expect(screen.getByTestId("child-route")).toBeInTheDocument();
+    });
+  });
+
+  describe("Default Fallback", () => {
+    it("should redirect to /studio/chat by default when access denied", () => {
+      const store = createTestStore({ persona: "user" });
+
+      render(
+        <TestWrapper store={store}>
+          <PermissionGuard requiredPermissions={["admin:access"]}>
+            <div data-testid="protected-content">Admin Panel</div>
+          </PermissionGuard>
+        </TestWrapper>,
+      );
+
+      expect(screen.getByTestId("fallback-page")).toBeInTheDocument();
     });
   });
 });
