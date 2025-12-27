@@ -88,6 +88,86 @@ class TestPydanticModelNameFormatting:
 
         assert pydantic_model_name == "openai:gpt-4", f"OpenAI models must use 'openai:' prefix. Got: {pydantic_model_name}"
 
+    def test_vertex_ai_model_has_google_vertex_prefix(self, mock_pydantic_agent_class):
+        """
+        Vertex AI models must have 'google-vertex:' prefix for pydantic-ai.
+
+        Background:
+        -----------
+        Pydantic AI supports two Google providers:
+        - 'google-gla:' for Google AI (Gemini API)
+        - 'google-vertex:' for Vertex AI (GCP)
+
+        When using Vertex AI in our config (provider='vertex_ai'), we must
+        translate to pydantic-ai's 'google-vertex:' prefix.
+
+        Reference: https://ai.pydantic.dev/models/google/
+        """
+        wrapper = PydanticAIAgentWrapper(model_name="gemini-2.5-pro", provider="vertex_ai")
+
+        pydantic_model_name = wrapper.pydantic_model_name
+
+        assert pydantic_model_name == "google-vertex:gemini-2.5-pro", (
+            f"Vertex AI models must use 'google-vertex:' prefix for pydantic-ai. Got: {pydantic_model_name}"
+        )
+
+    def test_vertex_ai_anthropic_model_has_anthropic_prefix(self, mock_pydantic_agent_class):
+        """
+        Vertex AI Anthropic models (Claude on GCP) must use 'anthropic:' prefix.
+
+        Background:
+        -----------
+        Claude models on Vertex AI are accessed through the Anthropic model API,
+        not through the Google/Gemini API. Pydantic AI's anthropic provider
+        handles the actual API calls.
+
+        The model name for Vertex AI Claude includes the version in a specific format.
+        """
+        wrapper = PydanticAIAgentWrapper(model_name="claude-sonnet-4-20250514", provider="vertex_ai_anthropic")
+
+        pydantic_model_name = wrapper.pydantic_model_name
+
+        assert pydantic_model_name == "anthropic:claude-sonnet-4-20250514", (
+            f"Vertex AI Anthropic models must use 'anthropic:' prefix. Got: {pydantic_model_name}"
+        )
+
+    def test_azure_model_has_azure_prefix(self, mock_pydantic_agent_class):
+        """
+        Azure OpenAI models must have 'azure:' prefix for pydantic-ai.
+
+        Background:
+        -----------
+        Azure AI Foundry (formerly Azure OpenAI) uses 'azure:' prefix.
+        Example: agent = Agent('azure:gpt-5')
+
+        Reference: https://ai.pydantic.dev/models/openai/
+        """
+        wrapper = PydanticAIAgentWrapper(model_name="gpt-4o", provider="azure")
+
+        pydantic_model_name = wrapper.pydantic_model_name
+
+        assert pydantic_model_name == "azure:gpt-4o", (
+            f"Azure models must use 'azure:' prefix for pydantic-ai. Got: {pydantic_model_name}"
+        )
+
+    def test_bedrock_model_has_bedrock_prefix(self, mock_pydantic_agent_class):
+        """
+        AWS Bedrock models must have 'bedrock:' prefix for pydantic-ai.
+
+        Background:
+        -----------
+        AWS Bedrock models use BedrockConverseModel with 'bedrock:' prefix.
+
+        Reference: https://ai.pydantic.dev/models/bedrock/
+        """
+        wrapper = PydanticAIAgentWrapper(model_name="anthropic.claude-3-sonnet-20240229-v1:0", provider="bedrock")
+
+        pydantic_model_name = wrapper.pydantic_model_name
+
+        assert pydantic_model_name == "bedrock:anthropic.claude-3-sonnet-20240229-v1:0", (
+            f"Bedrock models must use 'bedrock:' prefix for pydantic-ai. Got: {pydantic_model_name}"
+        )
+
     def test_unknown_provider_still_adds_prefix(self, mock_pydantic_agent_class):
         """Unknown providers should still get a prefix (provider:model format)"""
         wrapper = PydanticAIAgentWrapper(model_name="custom-model", provider="custom-provider")

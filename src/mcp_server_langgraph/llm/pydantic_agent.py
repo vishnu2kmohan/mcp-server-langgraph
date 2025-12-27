@@ -125,9 +125,24 @@ class PydanticAIAgentWrapper:
         Returns:
             Pydantic AI compatible model name with provider prefix
         """
-        # Check if model name already has a prefix (edge case)
-        if ":" in self.model_name:
-            # Model name already includes provider prefix
+        # Known pydantic-ai provider prefixes (for detecting already-prefixed model names)
+        known_prefixes = (
+            "openai:",
+            "anthropic:",
+            "google-gla:",
+            "google-vertex:",
+            "azure:",
+            "bedrock:",
+            "groq:",
+            "mistral:",
+            "ollama:",
+            "cohere:",
+        )
+
+        # Check if model name already has a known provider prefix (edge case)
+        # Note: Simple ":" check is too naive - Bedrock models like "anthropic.claude-v1:0"
+        # contain colons in version suffixes, not provider prefixes
+        if any(self.model_name.startswith(prefix) for prefix in known_prefixes):
             logger.debug(
                 f"Model name '{self.model_name}' already has provider prefix",
                 extra={"model": self.model_name, "provider": self.provider},
@@ -136,12 +151,28 @@ class PydanticAIAgentWrapper:
 
         # Add provider prefix based on provider type
         if self.provider == "google" or self.provider == "gemini":
-            # Google Gemini models require google-gla prefix
+            # Google Gemini models via Generative Language API (google-gla)
             return f"google-gla:{self.model_name}"
+        elif self.provider == "vertex_ai":
+            # Vertex AI (GCP) Gemini models use google-vertex prefix
+            # Reference: https://ai.pydantic.dev/models/google/
+            return f"google-vertex:{self.model_name}"
+        elif self.provider == "vertex_ai_anthropic":
+            # Claude models on Vertex AI use anthropic prefix
+            # The underlying API is Anthropic's, just hosted on GCP
+            return f"anthropic:{self.model_name}"
         elif self.provider == "anthropic":
             return f"anthropic:{self.model_name}"
         elif self.provider == "openai":
             return f"openai:{self.model_name}"
+        elif self.provider == "azure":
+            # Azure AI Foundry (formerly Azure OpenAI) uses azure: prefix
+            # Reference: https://ai.pydantic.dev/models/openai/
+            return f"azure:{self.model_name}"
+        elif self.provider == "bedrock":
+            # AWS Bedrock uses bedrock: prefix for BedrockConverseModel
+            # Reference: https://ai.pydantic.dev/models/bedrock/
+            return f"bedrock:{self.model_name}"
         else:
             # Unknown provider: use provider name as prefix
             logger.warning(
