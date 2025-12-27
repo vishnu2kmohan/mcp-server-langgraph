@@ -1,0 +1,238 @@
+# ADR-0085: Feature Flag Consolidation (Sprint Block 5)
+
+**Status**: Accepted
+**Date**: 2025-12-27
+**Context**: StudioShell UX Improvements Plan (Sprint Block 5)
+**Supersedes**: None
+**Related**: ADR-0072 (Anthropic Best Practices), ADR-0078 (Multi-Agent Patterns)
+
+## Context
+
+The MCP Server LangGraph codebase has 164+ feature flags across 25 categories. A comprehensive audit identified critical overlaps and inconsistencies that created confusion and maintenance burden:
+
+### Problems Identified
+
+1. **Multi-Agent Flag Duplication**
+   - `enable_multi_agent_collaboration` (boolean)
+   - `enable_multi_agent_orchestration` (boolean)
+   - Unclear distinction between the two flags
+
+2. **Suggestion Flag Confusion**
+   - `enable_ai_suggestions` (master toggle)
+   - `enable_llm_suggestions` (implementation detail)
+   - Overlapping responsibility with unclear boundaries
+
+3. **Rate Limiting Fragmentation**
+   - `rate_limit_requests_per_minute` (global)
+   - `suggestion_rate_limit_per_minute`
+   - `frontend_redis_l2_rate_limit_per_minute`
+   - `websocket_rate_limit_per_minute`
+   - No unified access pattern
+
+4. **Cache TTL Scatter**
+   - `cache_ttl_seconds` (LLM)
+   - `suggestion_cache_ttl_seconds`
+   - `ai_ux_redis_cache_ttl_seconds`
+   - `frontend_redis_l2_cache_ttl_seconds`
+   - `openfga_cache_ttl_seconds`
+   - No unified access pattern
+
+5. **AI UX vs Studio AI Distinction**
+   - `enable_ai_ux` (default=True)
+   - `enable_studio_ai` (default=False)
+   - Unclear when to use which
+
+## Decision
+
+### 1. Deprecate `enable_multi_agent_collaboration`
+
+**Before:**
+```python
+enable_multi_agent_collaboration: bool = True
+enable_multi_agent_orchestration: bool = True
+```
+
+**After:**
+```python
+# DEPRECATED: Use enable_multi_agent_orchestration + multi_agent_strategy
+enable_multi_agent_orchestration: bool = True
+multi_agent_strategy: str = "orchestrator"  # orchestrator | peer | hybrid
+```
+
+**Rationale:**
+- The "orchestration" flag is the active implementation
+- Strategy enum provides granular control without boolean explosion
+- "peer" mode = decentralized, "hybrid" = adaptive based on task complexity
+
+### 2. Consolidate Suggestion Flags
+
+**Before:**
+```python
+enable_ai_suggestions: bool = True
+enable_llm_suggestions: bool = True
+```
+
+**After:**
+```python
+enable_ai_suggestions: bool = True  # Master toggle (unchanged)
+enable_llm_suggestions: bool = True  # DEPRECATED - use suggestion_strategy
+suggestion_strategy: str = "llm"     # llm | heuristic | hybrid
+```
+
+**Backward Compatibility:**
+```python
+@property
+def effective_suggestion_strategy(self) -> str:
+    if not self.enable_llm_suggestions:
+        return "heuristic"
+    return self.suggestion_strategy
+```
+
+### 3. Unified Rate Limiting
+
+**Added:**
+```python
+default_rate_limit_per_minute: int = 60
+
+def get_rate_limit(self, feature: str | None = None) -> int:
+    """Get rate limit with feature-specific overrides."""
+    if feature == "suggestions":
+        return self.suggestion_rate_limit_per_minute
+    elif feature == "frontend_cache":
+        return self.frontend_redis_l2_rate_limit_per_minute
+    elif feature == "websocket":
+        return self.websocket_rate_limit_per_minute
+    elif feature is None or feature == "api":
+        return self.rate_limit_requests_per_minute
+    else:
+        return self.default_rate_limit_per_minute
+```
+
+### 4. Unified Cache TTL
+
+**Added:**
+```python
+default_cache_ttl_seconds: int = 300
+
+def get_cache_ttl(self, feature: str | None = None) -> int:
+    """Get cache TTL with feature-specific overrides."""
+    if feature == "llm":
+        return self.cache_ttl_seconds
+    elif feature == "suggestions":
+        return self.suggestion_cache_ttl_seconds
+    elif feature == "ai_ux":
+        return self.ai_ux_redis_cache_ttl_seconds
+    elif feature == "frontend_cache":
+        return self.frontend_redis_l2_cache_ttl_seconds
+    elif feature == "openfga":
+        return self.openfga_cache_ttl_seconds
+    else:
+        return self.default_cache_ttl_seconds
+```
+
+### 5. Document AI UX vs Studio AI
+
+**AI UX (enable_ai_ux=True by default):**
+- Lightweight UX enhancements
+- Progressive disclosure, nudges, error recovery
+- Low LLM cost, fast responses
+- User-facing polish
+
+**Studio AI (enable_studio_ai=False by default):**
+- Deep content intelligence
+- Session summarization, intent detection, code analysis
+- Higher LLM cost, more comprehensive
+- Developer/power-user features
+
+### 6. Category Reorganization (25 → 12)
+
+New category structure documented in `FeatureFlags` class docstring:
+
+1. Authentication & Authorization
+2. Agent Orchestration
+3. AI Features (AI UX + Studio AI + Suggestions)
+4. Cache & Performance
+5. Context Engineering
+6. Developer Tools
+7. Observability
+8. Orchestrator Infrastructure
+9. Safety & Security
+10. Skills Ecosystem
+11. UI Components
+12. WebSocket Infrastructure
+
+## Consequences
+
+### Positive
+
+- **Cleaner API**: Strategy enums replace confusing boolean pairs
+- **Unified Access**: Helper methods provide consistent rate/TTL access
+- **Better Docs**: Clear distinction between AI UX and Studio AI
+- **Backward Compatible**: Deprecated flags still work via properties
+- **Testable**: 27 new unit tests validate consolidation
+
+### Negative
+
+- **Migration Required**: Code using deprecated flags should migrate
+- **Documentation Overhead**: Need to update catalog and inline docs
+- **Two Access Patterns**: Legacy direct access + new helper methods
+
+### Neutral
+
+- **Flag Count**: Still 164+ flags (no flags removed, just consolidated)
+- **Environment Variables**: `FF_` prefix retained for consistency
+
+## Migration Guide
+
+### Multi-Agent Code
+
+```python
+# Before (deprecated)
+if flags.enable_multi_agent_collaboration:
+    use_collaboration()
+
+# After
+if flags.enable_multi_agent_orchestration:
+    if flags.multi_agent_strategy == "orchestrator":
+        use_orchestrator_pattern()
+    elif flags.multi_agent_strategy == "peer":
+        use_peer_pattern()
+```
+
+### Suggestion Strategy
+
+```python
+# Before (deprecated)
+if flags.enable_llm_suggestions:
+    use_llm()
+else:
+    use_heuristics()
+
+# After
+strategy = flags.effective_suggestion_strategy
+if strategy == "llm":
+    use_llm()
+elif strategy == "heuristic":
+    use_heuristics()
+elif strategy == "hybrid":
+    use_adaptive()
+```
+
+### Rate Limits
+
+```python
+# Before (scattered)
+suggestions_limit = flags.suggestion_rate_limit_per_minute
+api_limit = flags.rate_limit_requests_per_minute
+
+# After (unified)
+suggestions_limit = flags.get_rate_limit("suggestions")
+api_limit = flags.get_rate_limit("api")
+```
+
+## References
+
+- Plan: `/home/vishnu/.claude/plans/golden-zooming-dewdrop.md`
+- Feature Flags: `src/mcp_server_langgraph/core/feature_flags.py`
+- Catalog: `docs-internal/FEATURE_FLAG_CATALOG.md`
+- Tests: `tests/unit/core/test_feature_flags.py`
