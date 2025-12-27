@@ -26,8 +26,8 @@ from fastapi.responses import JSONResponse
 from mcp_server_langgraph.auth.factory import create_auth_middleware
 from mcp_server_langgraph.auth.middleware import get_current_user, set_global_auth_middleware
 from mcp_server_langgraph.auth.openfga import OpenFGAClient, OpenFGAConfig
+from mcp_server_langgraph.authz_proxy.dependencies import get_openfga_client_from_request
 from mcp_server_langgraph.core.config import settings
-from mcp_server_langgraph.core.dependencies import get_openfga_client_from_request
 from mcp_server_langgraph.observability.telemetry import (
     init_observability,
     instrument_fastapi_app,
