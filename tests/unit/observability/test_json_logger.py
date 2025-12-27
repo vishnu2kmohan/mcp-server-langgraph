@@ -265,6 +265,93 @@ class TestCustomJSONFormatter:
         # Trace fields should not be present (or be None/empty)
         assert "trace_id" not in log_data or log_data.get("trace_id") is None
 
+    def test_otel_semantic_conventions_service_name(self, json_formatter, log_record):
+        """Test OpenTelemetry semantic convention: service.name"""
+        formatted = json_formatter.format(log_record)
+        log_data = json.loads(formatted)
+
+        # Verify service.name follows OpenTelemetry semantic conventions
+        assert "service.name" in log_data
+        assert log_data["service.name"] == "test-service"
+
+    def test_otel_semantic_conventions_service_namespace(self, json_formatter, log_record):
+        """Test OpenTelemetry semantic convention: service.namespace"""
+        formatted = json_formatter.format(log_record)
+        log_data = json.loads(formatted)
+
+        # Verify service.namespace follows OpenTelemetry semantic conventions
+        # Reference: https://opentelemetry.io/docs/specs/semconv/resource/
+        assert "service.namespace" in log_data
+        assert log_data["service.namespace"] == "agent-studio"
+
+    def test_otel_semantic_conventions_deployment_environment(self, json_formatter, log_record, monkeypatch):
+        """Test OpenTelemetry semantic convention: deployment.environment"""
+        # Set environment variable
+        monkeypatch.setenv("ENVIRONMENT", "production")
+
+        # Need to reimport to pick up the env var change at format time
+        from mcp_server_langgraph.observability.json_logger import CustomJSONFormatter
+
+        formatter = CustomJSONFormatter(
+            service_name="test-service",
+            include_hostname=False,
+        )
+
+        formatted = formatter.format(log_record)
+        log_data = json.loads(formatted)
+
+        # Verify deployment.environment follows OpenTelemetry semantic conventions
+        # Reference: https://opentelemetry.io/docs/specs/semconv/resource/deployment-environment/
+        assert "deployment.environment" in log_data
+        assert log_data["deployment.environment"] == "production"
+
+    def test_otel_semantic_conventions_service_instance_id(self):
+        """Test OpenTelemetry semantic convention: service.instance.id"""
+        from mcp_server_langgraph.observability.json_logger import CustomJSONFormatter
+
+        formatter = CustomJSONFormatter(
+            service_name="test-service",
+            include_hostname=True,  # Required for service.instance.id
+        )
+
+        record = logging.LogRecord(
+            name="test_logger",
+            level=logging.INFO,
+            pathname="/app/test.py",
+            lineno=42,
+            msg="Test message",
+            args=(),
+            exc_info=None,
+        )
+
+        formatted = formatter.format(record)
+        log_data = json.loads(formatted)
+
+        # Verify service.instance.id follows OpenTelemetry semantic conventions
+        # When hostname is included, service.instance.id should match hostname
+        assert "service.instance.id" in log_data
+        assert log_data["service.instance.id"] == log_data["hostname"]
+
+    def test_otel_semantic_conventions_default_environment(self, json_formatter, log_record, monkeypatch):
+        """Test OpenTelemetry semantic convention defaults when ENVIRONMENT not set"""
+        # Ensure ENVIRONMENT is not set
+        monkeypatch.delenv("ENVIRONMENT", raising=False)
+
+        # Need to reimport to pick up the env var change at format time
+        from mcp_server_langgraph.observability.json_logger import CustomJSONFormatter
+
+        formatter = CustomJSONFormatter(
+            service_name="test-service",
+            include_hostname=False,
+        )
+
+        formatted = formatter.format(log_record)
+        log_data = json.loads(formatted)
+
+        # Verify default environment is "development"
+        assert "deployment.environment" in log_data
+        assert log_data["deployment.environment"] == "development"
+
 
 @pytest.mark.unit
 @pytest.mark.xdist_group(name="testsetupjsonlogging")

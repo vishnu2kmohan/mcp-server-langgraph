@@ -52,6 +52,7 @@ except ImportError:
     _append_metrics_path = None  # type: ignore[misc, assignment, unused-ignore]
     _append_trace_path = None  # type: ignore[misc, assignment, unused-ignore]
 
+from mcp_server_langgraph.middleware.logging_filter import setup_quiet_logging
 from mcp_server_langgraph.observability.json_logger import CustomJSONFormatter
 
 # Conditional imports for auto-instrumentation (OTEL best practices)
@@ -78,6 +79,26 @@ OTLP_ENDPOINT = "http://localhost:4317"  # Change to your OTLP collector
 # Control verbose logging (defaults to False to reduce noise)
 # Set OBSERVABILITY_VERBOSE=true to enable detailed initialization logs
 OBSERVABILITY_VERBOSE = os.getenv("OBSERVABILITY_VERBOSE", "false").lower() in ("true", "1", "yes")
+
+# QUIET_LOGS mode - reduces log noise for health checks, metrics, and static assets
+# When enabled, overrides LOG_LEVEL to WARNING
+QUIET_LOGS = os.getenv("QUIET_LOGS", "false").lower() in ("true", "1", "yes")
+
+
+def _get_effective_log_level() -> int:
+    """
+    Determine the effective log level based on QUIET_LOGS and LOG_LEVEL environment variables.
+
+    Priority:
+    1. QUIET_LOGS=true → WARNING (reduces noise)
+    2. LOG_LEVEL environment variable (DEBUG, INFO, WARNING, ERROR, CRITICAL)
+    3. Default: INFO
+    """
+    if QUIET_LOGS:
+        return logging.WARNING
+
+    log_level_str = os.getenv("LOG_LEVEL", "INFO").upper()
+    return getattr(logging, log_level_str, logging.INFO)
 
 
 class ObservabilityConfig:
@@ -412,8 +433,10 @@ class ObservabilityConfig:
             console_formatter = formatter
 
         # Console handler (stdout) - always enabled
+        # Log level is configurable via LOG_LEVEL env var (or QUIET_LOGS=true for WARNING)
+        effective_log_level = _get_effective_log_level()
         console_handler = logging.StreamHandler(sys.stdout)
-        console_handler.setLevel(logging.INFO)
+        console_handler.setLevel(effective_log_level)
         console_handler.setFormatter(console_formatter)
 
         handlers: list[logging.Handler] = [console_handler]
@@ -460,14 +483,21 @@ class ObservabilityConfig:
             error_handler.setFormatter(formatter)
             handlers.append(error_handler)
 
-        # Configure root logger
-        logging.basicConfig(level=logging.INFO, handlers=handlers)
+        # Configure root logger with effective log level
+        logging.basicConfig(level=effective_log_level, handlers=handlers)
+
+        # Apply QUIET_LOGS path-based filtering to uvicorn/starlette access loggers
+        # This reduces log noise from health checks, metrics, and static assets
+        setup_quiet_logging()
 
         self.logger = logging.getLogger(self.service_name)
         if OBSERVABILITY_VERBOSE:
+            level_name = logging.getLevelName(effective_log_level)
             print(f"✓ Logging configured: {self.service_name}")
             print(f"  - Format: {self.log_format.upper()}")
-            print("  - Console output: INFO and above")
+            print(f"  - Console output: {level_name} and above")
+            if QUIET_LOGS:
+                print("  - QUIET_LOGS mode: enabled (health/metrics/assets filtered)")
             if enable_file_logging:
                 print(f"  - Main log: logs/{self.service_name}.log (rotating, 10MB, 5 backups)")
                 print(f"  - Daily log: logs/{self.service_name}-daily.log (daily, 30 days)")

@@ -7,6 +7,8 @@ compatible with centralized log aggregation platforms (ELK, Datadog, Splunk, Clo
 
 import json
 import logging
+import os
+import socket
 from datetime import datetime, UTC
 from typing import TYPE_CHECKING, Any
 
@@ -93,17 +95,29 @@ class CustomJSONFormatter(JsonFormatterBase):  # type: ignore[valid-type, misc]
         # Add logger name
         log_record["logger"] = record.name
 
-        # Add service name
+        # Add service name (standard field for compatibility)
         log_record["service"] = self.service_name
+
+        # Add OpenTelemetry semantic conventions for service resource attributes
+        # Reference: https://opentelemetry.io/docs/specs/semconv/resource/
+        log_record["service.name"] = self.service_name
+        log_record["service.namespace"] = "agent-studio"
+
+        # Add deployment environment semantic convention
+        # Reference: https://opentelemetry.io/docs/specs/semconv/resource/deployment-environment/
+        environment = os.getenv("ENVIRONMENT", "development")
+        log_record["deployment.environment"] = environment
 
         # Add hostname if enabled
         if self.include_hostname:
-            import socket
-
             try:
-                log_record["hostname"] = socket.gethostname()
+                hostname = socket.gethostname()
+                log_record["hostname"] = hostname
+                # OpenTelemetry semantic convention for service instance
+                log_record["service.instance.id"] = hostname
             except Exception:
                 log_record["hostname"] = "unknown"
+                log_record["service.instance.id"] = "unknown"
 
         # Add OpenTelemetry trace context
         span = trace.get_current_span()

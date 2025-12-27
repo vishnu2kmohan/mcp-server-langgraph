@@ -521,28 +521,6 @@ prometheus.scrape "langgraph_agent" {
   scrape_timeout  = "10s"
 }
 
-prometheus.scrape "mcp_builder" {
-  targets = [{
-    __address__ = "builder-test:8001",
-    service     = "mcp-builder-test",
-    job         = "mcp-builder",
-  }]
-  metrics_path = "/metrics"
-  forward_to   = [prometheus.remote_write.mimir.receiver]
-
-  scrape_interval = "15s"
-  scrape_timeout  = "10s"
-}
-
-prometheus.scrape "mcp_playground" {
-  targets = [{
-    __address__ = "playground-test:8002",
-    service     = "mcp-playground-test",
-    job         = "mcp-playground",
-  }]
-  metrics_path = "/metrics"
-  forward_to   = [prometheus.remote_write.mimir.receiver]
-
-  scrape_interval = "15s"
-  scrape_timeout  = "10s"
-}
+// NOTE: mcp_builder and mcp_playground scrape targets removed (2025-12-27)
+// These services (builder-test:8001, playground-test:8002) no longer exist.
+// Their functionality has been consolidated into the main mcp-server-test service.
