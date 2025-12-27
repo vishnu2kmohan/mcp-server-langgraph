@@ -101,15 +101,60 @@ export interface UseInlineSuggestionsResult {
 }
 
 /**
- * Default suggestion fetcher (placeholder - in production, use WebSocket).
+ * Default suggestion fetcher using the REST API.
+ *
+ * Fetches suggestions from /api/v1/ai/chat-suggestions endpoint.
+ * Falls back to empty string if the API is unavailable or returns no results.
+ *
+ * For real-time suggestions, consumers should use the WebSocket-based
+ * `useAIRealTimeSuggestions` hook instead.
  */
 const defaultFetchSuggestion = async (
-  _input: string,
-  _context?: SuggestionFetchContext,
-): Promise<string> => {
-  // In production, this would connect to the AI suggestions WebSocket
-  // or call the REST API. For now, return empty.
-  return "";
+  input: string,
+  context?: SuggestionFetchContext,
+): Promise<SuggestionResponse | string> => {
+  // If no session ID is provided, return empty (cannot get context-aware suggestions)
+  if (!context?.sessionId) {
+    return "";
+  }
+
+  try {
+    const response = await fetch("/api/v1/ai/chat-suggestions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      credentials: "include",
+      signal: context.signal,
+      body: JSON.stringify({
+        input_text: input,
+        session_id: context.sessionId,
+        max_suggestions: 1,
+      }),
+    });
+
+    if (!response.ok) {
+      // API not available or error - return empty (graceful degradation)
+      return "";
+    }
+
+    const data = await response.json();
+
+    // Return the first suggestion if available
+    if (data.suggestions && data.suggestions.length > 0) {
+      const suggestion = data.suggestions[0];
+      return {
+        text: suggestion.text || suggestion.content || "",
+        confidence: suggestion.confidence ?? 0.7,
+        reasoning: suggestion.reasoning,
+      };
+    }
+
+    return "";
+  } catch {
+    // Network error or API unavailable - return empty (graceful degradation)
+    return "";
+  }
 };
 
 /**
