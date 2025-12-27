@@ -1013,3 +1013,53 @@ cost-tracking = [
     "pandas>=2.2.0",     # Data analysis for workflow metrics
     "tabulate>=0.9.0",   # Table formatting for reports
 ]
+
+# Authz-proxy minimal runtime dependencies
+# Used by Dockerfile.authz-proxy with: uv sync --frozen --no-install-project --only-group authz-proxy
+# Reduces Docker image from 1.4GB to ~300MB by excluding LangGraph, LLM providers, etc.
+authz-proxy = [
+    # Web framework
+    "fastapi>=0.115.0",
+    "uvicorn[standard]>=0.30.0",
+    # HTTP client for proxying
+    "httpx>=0.28.0",
+    # JWT validation and crypto
+    "python-jose[cryptography]>=3.3.0",
+    "pyjwt>=2.8.0",  # PyJWT for jwt module import
+    "bcrypt>=5.0.0",  # Password hashing for API key management
+    # OpenFGA SDK
+    "openfga-sdk>=0.8.0",
+    # Pydantic for config
+    "pydantic>=2.10.0",
+    "pydantic-settings>=2.0.0",
+    # Database (required by core/dependencies.py imports)
+    "sqlalchemy[asyncio]>=2.0.0",
+    "asyncpg>=0.29.0",  # PostgreSQL driver for SQLAlchemy asyncio
+    # Observability (lightweight)
+    "opentelemetry-api>=1.25.0",
+    "opentelemetry-sdk>=1.25.0",
+    "opentelemetry-instrumentation-fastapi>=0.46b0",
+    "opentelemetry-instrumentation-logging>=0.46b0",
+    "opentelemetry-instrumentation-httpx>=0.46b0",
+    "opentelemetry-exporter-otlp>=1.25.0",
+    # Resilience patterns
+    "tenacity>=8.2.0",
+    "pybreaker>=1.2.0",  # Circuit breaker pattern
+    # Logging
+    "structlog>=24.0.0",
+]
+
+# Alembic database migrations - minimal dependencies
+# Used by Dockerfile.alembic with: uv sync --frozen --no-install-project --only-group alembic
+alembic = [
+    "alembic>=1.17.2",
+    "sqlalchemy[asyncio]>=2.0.44",
+    "asyncpg>=0.29.0",
+    "pyyaml>=6.0.3",
+]
+
+# OpenFGA seeding script - minimal dependencies
+# Used by Dockerfile.openfga-seed with: uv sync --frozen --no-install-project --only-group openfga-seed
+openfga-seed = [
+    "httpx>=0.28.0",
+]
