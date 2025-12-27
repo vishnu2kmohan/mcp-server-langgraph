@@ -1047,6 +1047,8 @@ authz-proxy = [
     "pybreaker>=1.2.0",  # Circuit breaker pattern
     # Logging
     "structlog>=24.0.0",
+    # Metrics
+    "prometheus-client>=0.20.0",  # Prometheus metrics endpoint
 ]
 
 # Alembic database migrations - minimal dependencies
