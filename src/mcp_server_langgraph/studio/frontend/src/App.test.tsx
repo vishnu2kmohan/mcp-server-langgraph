@@ -78,6 +78,7 @@ vi.mock("./api", async (importOriginal) => {
           username: "alice",
           email: "alice@example.com",
           roles: ["developer"],
+          persona: "developer" as const,
         },
         error: undefined,
       };
@@ -1922,7 +1923,7 @@ describe("App", () => {
 
   describe("Lazy Component Loading", () => {
     it("should render lazy-loaded Settings when tab type is settings", async () => {
-      // This tests the renderTabContent callback for settings type
+      // This tests that App renders routes via Outlet
       renderWithStore(
         <MemoryRouter
           initialEntries={["/studio/settings"]}
@@ -1940,7 +1941,7 @@ describe("App", () => {
       );
 
       await waitFor(() => {
-        expect(screen.getByText("Chat Page")).toBeInTheDocument();
+        expect(screen.getByText("Settings Route")).toBeInTheDocument();
       });
     });
 
@@ -1959,7 +1960,7 @@ describe("App", () => {
       );
 
       await waitFor(() => {
-        expect(screen.getByText("Chat Page")).toBeInTheDocument();
+        expect(screen.getByText("Cost Route")).toBeInTheDocument();
       });
     });
 
@@ -1981,7 +1982,7 @@ describe("App", () => {
       );
 
       await waitFor(() => {
-        expect(screen.getByText("Chat Page")).toBeInTheDocument();
+        expect(screen.getByText("Observability Route")).toBeInTheDocument();
       });
     });
   });
@@ -2151,12 +2152,12 @@ describe("App", () => {
       );
 
       await waitFor(() => {
-        // Studio routes should have left-sidebar
-        expect(screen.getByText("Chat Page")).toBeInTheDocument();
+        // Studio routes render via Outlet
+        expect(screen.getByText("Studio Root")).toBeInTheDocument();
       });
     });
 
-    it("should detect /admin exactly as legacy route", async () => {
+    it("should detect /admin exactly as studio route (isStudioRoute)", async () => {
       renderWithStore(
         <MemoryRouter
           initialEntries={["/admin"]}
@@ -2171,8 +2172,8 @@ describe("App", () => {
       );
 
       await waitFor(() => {
-        // Admin routes should have left-sidebar (legacy)
-        expect(screen.getByText("Chat Page")).toBeInTheDocument();
+        // Admin routes render via Outlet
+        expect(screen.getByText("Admin Root")).toBeInTheDocument();
       });
     });
 
@@ -2194,7 +2195,7 @@ describe("App", () => {
       );
 
       await waitFor(() => {
-        expect(screen.getByText("Chat Page")).toBeInTheDocument();
+        expect(screen.getByText("Workflow Edit")).toBeInTheDocument();
       });
     });
   });
