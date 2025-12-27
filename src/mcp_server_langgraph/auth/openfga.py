@@ -214,6 +214,28 @@ class OpenFGAClient:
             },
         )
 
+    def _should_refresh_token(self) -> bool:
+        """
+        Check if the OIDC token should be refreshed.
+
+        Returns True if:
+        - OIDC is configured AND
+        - Token is expired OR will expire within the refresh buffer (60 seconds)
+
+        This enables proactive token refresh to avoid 401 errors during operations.
+
+        Returns:
+            True if token should be refreshed, False otherwise
+        """
+        import time
+
+        # No refresh needed if OIDC not configured or no expiration set
+        if not self._oidc_token_expires_at:
+            return False
+
+        # Refresh if token is expired or will expire within the buffer
+        return time.time() >= (self._oidc_token_expires_at - OIDC_TOKEN_REFRESH_BUFFER_SECONDS)
+
     async def _get_oidc_access_token(self) -> str | None:
         """
         Obtain OIDC access token from Keycloak using client credentials grant.
@@ -349,7 +371,32 @@ class OpenFGAClient:
 
         If store_id is not set but store_name is, looks up the store by name.
         If model_id is not set, fetches the latest model for the store.
+
+        Token Refresh Logic:
+        - On each call, checks if OIDC token needs refresh (expired or near expiry)
+        - If refresh needed, resets _initialized to trigger re-initialization
+        - This ensures the SDK client is recreated with fresh credentials
+        - Prevents 401 errors from expired tokens causing circuit breaker opens
         """
+        # Check if OIDC token needs refresh (expired or expiring soon)
+        # If so, force re-initialization to get fresh credentials
+        if self._initialized and self._should_refresh_token():
+            logger.info(
+                "OIDC token expired or near expiry, triggering re-initialization",
+                extra={
+                    "expires_at": self._oidc_token_expires_at,
+                    "store_id": self.store_id,
+                },
+            )
+            # Close existing client to prevent resource leaks
+            if self._client is not None:
+                try:
+                    await self._client.close()
+                except Exception as e:
+                    logger.warning(f"Error closing expired client: {e}")
+            self._client = None
+            self._initialized = False
+
         if not self._initialized:
             # IMPORTANT: Obtain OIDC token FIRST if configured
             # This is needed for store/model lookups when using OIDC authentication
