@@ -89,6 +89,22 @@ export interface NavigationTimingMetrics {
 
 const logger = devLogger.withPrefix("[WebVitals]");
 
+/**
+ * Check if a PerformanceObserver entry type is supported by the browser.
+ * This prevents console warnings like "Ignoring unsupported entryTypes: layout-shift"
+ */
+function isEntryTypeSupported(entryType: string): boolean {
+  try {
+    return (
+      typeof PerformanceObserver !== "undefined" &&
+      typeof PerformanceObserver.supportedEntryTypes !== "undefined" &&
+      PerformanceObserver.supportedEntryTypes.includes(entryType)
+    );
+  } catch {
+    return false;
+  }
+}
+
 export class WebVitalsTracker {
   private options: Required<Omit<WebVitalsTrackerOptions, "onMetric">> & {
     onMetric?: WebVitalsCallback;
@@ -217,6 +233,11 @@ export class WebVitalsTracker {
   // ===========================================================================
 
   private observePaint(): void {
+    if (!isEntryTypeSupported("paint")) {
+      this.log("Paint observer not supported by this browser");
+      return;
+    }
+
     try {
       const observer = new PerformanceObserver((list) => {
         for (const entry of list.getEntries()) {
@@ -236,6 +257,11 @@ export class WebVitalsTracker {
   }
 
   private observeLCP(): void {
+    if (!isEntryTypeSupported("largest-contentful-paint")) {
+      this.log("LCP observer not supported by this browser");
+      return;
+    }
+
     try {
       const observer = new PerformanceObserver((list) => {
         const entries = list.getEntries() as LargestContentfulPaintEntry[];
@@ -257,6 +283,11 @@ export class WebVitalsTracker {
   }
 
   private observeCLS(): void {
+    if (!isEntryTypeSupported("layout-shift")) {
+      this.log("CLS observer not supported by this browser");
+      return;
+    }
+
     try {
       const observer = new PerformanceObserver((list) => {
         for (const entry of list.getEntries() as LayoutShiftEntry[]) {
@@ -277,6 +308,11 @@ export class WebVitalsTracker {
   }
 
   private observeINP(): void {
+    if (!isEntryTypeSupported("first-input")) {
+      this.log("INP observer not supported by this browser");
+      return;
+    }
+
     try {
       const observer = new PerformanceObserver((list) => {
         for (const entry of list.getEntries() as PerformanceEventTiming[]) {

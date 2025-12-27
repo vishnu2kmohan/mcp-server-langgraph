@@ -27,6 +27,49 @@ import type {
   MCPPrompt,
 } from "../types/mcp";
 
+// Mock the MCP WebSocket hook to avoid auth slice dependency
+const mockUseMCPWebSocket = vi.fn(() => ({
+  status: "connected" as const,
+  isInitialized: true,
+  serverInfo: { name: "Test MCP Server", version: "1.0.0" },
+  capabilities: { tools: { listChanged: true }, resources: {}, prompts: {} },
+  tools: [],
+  resources: [],
+  prompts: [],
+  error: null,
+  initialize: vi.fn(),
+  listTools: vi.fn(),
+  listResources: vi.fn(),
+  listPrompts: vi.fn(),
+  callTool: vi.fn(),
+  readResource: vi.fn(),
+  getPrompt: vi.fn(),
+  disconnect: vi.fn(),
+  reconnect: vi.fn(),
+}));
+
+vi.mock("../hooks/useMCPWebSocket", () => ({
+  useMCPWebSocket: () => mockUseMCPWebSocket(),
+}));
+
+// Mock the MCP Task WebSocket hook
+const mockUseMCPTaskWebSocket = vi.fn(() => ({
+  status: "connected" as const,
+  tasks: [],
+  subscribedTasks: new Set<string>(),
+  error: null,
+  sendPing: vi.fn(),
+  refresh: vi.fn(),
+  subscribe: vi.fn(),
+  unsubscribe: vi.fn(),
+  disconnect: vi.fn(),
+  reconnect: vi.fn(),
+}));
+
+vi.mock("../hooks/useMCPTaskWebSocket", () => ({
+  useMCPTaskWebSocket: () => mockUseMCPTaskWebSocket(),
+}));
+
 // Helper to create a test store with MCP state
 const createTestStore = (mcpState: Partial<MCPSliceState> = {}) => {
   return configureStore({
@@ -742,6 +785,313 @@ describe("MCPPage", () => {
       await vi.waitFor(() => {
         expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
       });
+    });
+  });
+
+  describe("WebSocket Real-time Updates", () => {
+    beforeEach(() => {
+      // Reset mock to default connected state
+      mockUseMCPWebSocket.mockReturnValue({
+        status: "connected" as const,
+        isInitialized: true,
+        serverInfo: { name: "Test MCP Server", version: "1.0.0" },
+        capabilities: {
+          tools: { listChanged: true },
+          resources: {},
+          prompts: {},
+        },
+        tools: [],
+        resources: [],
+        prompts: [],
+        error: null,
+        initialize: vi.fn(),
+        listTools: vi.fn(),
+        listResources: vi.fn(),
+        listPrompts: vi.fn(),
+        callTool: vi.fn(),
+        readResource: vi.fn(),
+        getPrompt: vi.fn(),
+        disconnect: vi.fn(),
+        reconnect: vi.fn(),
+      });
+    });
+
+    it("should show WebSocket connection status indicator", () => {
+      renderWithStore();
+
+      const wsIndicator = screen.getByTestId("mcp-ws-status-indicator");
+      expect(wsIndicator).toBeInTheDocument();
+      expect(wsIndicator).toHaveClass("bg-green-500"); // connected = green
+    });
+
+    it("should show yellow indicator when WebSocket is connecting", () => {
+      mockUseMCPWebSocket.mockReturnValue({
+        status: "connecting" as const,
+        isInitialized: false,
+        serverInfo: null,
+        capabilities: null,
+        tools: [],
+        resources: [],
+        prompts: [],
+        error: null,
+        initialize: vi.fn(),
+        listTools: vi.fn(),
+        listResources: vi.fn(),
+        listPrompts: vi.fn(),
+        callTool: vi.fn(),
+        readResource: vi.fn(),
+        getPrompt: vi.fn(),
+        disconnect: vi.fn(),
+        reconnect: vi.fn(),
+      });
+
+      renderWithStore();
+
+      const wsIndicator = screen.getByTestId("mcp-ws-status-indicator");
+      expect(wsIndicator).toHaveClass("bg-yellow-500");
+    });
+
+    it("should show gray indicator when WebSocket is disconnected", () => {
+      mockUseMCPWebSocket.mockReturnValue({
+        status: "disconnected" as const,
+        isInitialized: false,
+        serverInfo: null,
+        capabilities: null,
+        tools: [],
+        resources: [],
+        prompts: [],
+        error: null,
+        initialize: vi.fn(),
+        listTools: vi.fn(),
+        listResources: vi.fn(),
+        listPrompts: vi.fn(),
+        callTool: vi.fn(),
+        readResource: vi.fn(),
+        getPrompt: vi.fn(),
+        disconnect: vi.fn(),
+        reconnect: vi.fn(),
+      });
+
+      renderWithStore();
+
+      const wsIndicator = screen.getByTestId("mcp-ws-status-indicator");
+      expect(wsIndicator).toHaveClass("bg-gray-400");
+    });
+
+    it("should show server info when WebSocket is initialized", () => {
+      mockUseMCPWebSocket.mockReturnValue({
+        status: "connected" as const,
+        isInitialized: true,
+        serverInfo: { name: "Production MCP", version: "2.0.0" },
+        capabilities: { tools: {}, resources: {}, prompts: {} },
+        tools: [],
+        resources: [],
+        prompts: [],
+        error: null,
+        initialize: vi.fn(),
+        listTools: vi.fn(),
+        listResources: vi.fn(),
+        listPrompts: vi.fn(),
+        callTool: vi.fn(),
+        readResource: vi.fn(),
+        getPrompt: vi.fn(),
+        disconnect: vi.fn(),
+        reconnect: vi.fn(),
+      });
+
+      renderWithStore();
+
+      // The WebSocket indicator should have a title showing server info
+      const wsIndicator = screen.getByTestId("mcp-ws-status-indicator");
+      expect(wsIndicator).toHaveAttribute(
+        "title",
+        expect.stringContaining("Production MCP"),
+      );
+    });
+
+    it("should handle WebSocket error gracefully", () => {
+      mockUseMCPWebSocket.mockReturnValue({
+        status: "error" as const,
+        isInitialized: false,
+        serverInfo: null,
+        capabilities: null,
+        tools: [],
+        resources: [],
+        prompts: [],
+        error: "Connection failed",
+        initialize: vi.fn(),
+        listTools: vi.fn(),
+        listResources: vi.fn(),
+        listPrompts: vi.fn(),
+        callTool: vi.fn(),
+        readResource: vi.fn(),
+        getPrompt: vi.fn(),
+        disconnect: vi.fn(),
+        reconnect: vi.fn(),
+      });
+
+      renderWithStore();
+
+      // Should still render the page
+      expect(screen.getByText("MCP Explorer")).toBeInTheDocument();
+      // Indicator should show error state (gray)
+      const wsIndicator = screen.getByTestId("mcp-ws-status-indicator");
+      expect(wsIndicator).toHaveClass("bg-gray-400");
+    });
+  });
+
+  describe("MCP Task Monitoring", () => {
+    beforeEach(() => {
+      // Reset mocks to default state
+      mockUseMCPWebSocket.mockReturnValue({
+        status: "connected" as const,
+        isInitialized: true,
+        serverInfo: { name: "Test MCP Server", version: "1.0.0" },
+        capabilities: {},
+        tools: [],
+        resources: [],
+        prompts: [],
+        error: null,
+        initialize: vi.fn(),
+        listTools: vi.fn(),
+        listResources: vi.fn(),
+        listPrompts: vi.fn(),
+        callTool: vi.fn(),
+        readResource: vi.fn(),
+        getPrompt: vi.fn(),
+        disconnect: vi.fn(),
+        reconnect: vi.fn(),
+      });
+      mockUseMCPTaskWebSocket.mockReturnValue({
+        status: "connected" as const,
+        tasks: [],
+        subscribedTasks: new Set<string>(),
+        error: null,
+        sendPing: vi.fn(),
+        refresh: vi.fn(),
+        subscribe: vi.fn(),
+        unsubscribe: vi.fn(),
+        disconnect: vi.fn(),
+        reconnect: vi.fn(),
+      });
+    });
+
+    it("should show task count when tasks are running", () => {
+      mockUseMCPTaskWebSocket.mockReturnValue({
+        status: "connected" as const,
+        tasks: [
+          {
+            task_id: "task-1",
+            status: "running",
+            created_at: "2024-01-01T00:00:00Z",
+            last_updated_at: "2024-01-01T00:00:01Z",
+            ttl: 300,
+            poll_interval: 1000,
+          },
+          {
+            task_id: "task-2",
+            status: "pending",
+            created_at: "2024-01-01T00:00:00Z",
+            last_updated_at: "2024-01-01T00:00:01Z",
+            ttl: 300,
+            poll_interval: 1000,
+          },
+        ],
+        subscribedTasks: new Set<string>(),
+        error: null,
+        sendPing: vi.fn(),
+        refresh: vi.fn(),
+        subscribe: vi.fn(),
+        unsubscribe: vi.fn(),
+        disconnect: vi.fn(),
+        reconnect: vi.fn(),
+      });
+
+      renderWithStore();
+
+      // Should show task indicator
+      const taskIndicator = screen.getByTestId("mcp-task-indicator");
+      expect(taskIndicator).toBeInTheDocument();
+      expect(taskIndicator).toHaveTextContent("2");
+    });
+
+    it("should not show task indicator when no tasks", () => {
+      mockUseMCPTaskWebSocket.mockReturnValue({
+        status: "connected" as const,
+        tasks: [],
+        subscribedTasks: new Set<string>(),
+        error: null,
+        sendPing: vi.fn(),
+        refresh: vi.fn(),
+        subscribe: vi.fn(),
+        unsubscribe: vi.fn(),
+        disconnect: vi.fn(),
+        reconnect: vi.fn(),
+      });
+
+      renderWithStore();
+
+      // Should not show task indicator
+      const taskIndicator = screen.queryByTestId("mcp-task-indicator");
+      expect(taskIndicator).not.toBeInTheDocument();
+    });
+
+    it("should highlight running tasks with pulse animation", () => {
+      mockUseMCPTaskWebSocket.mockReturnValue({
+        status: "connected" as const,
+        tasks: [
+          {
+            task_id: "task-1",
+            status: "running",
+            created_at: "2024-01-01T00:00:00Z",
+            last_updated_at: "2024-01-01T00:00:01Z",
+            ttl: 300,
+            poll_interval: 1000,
+          },
+        ],
+        subscribedTasks: new Set<string>(),
+        error: null,
+        sendPing: vi.fn(),
+        refresh: vi.fn(),
+        subscribe: vi.fn(),
+        unsubscribe: vi.fn(),
+        disconnect: vi.fn(),
+        reconnect: vi.fn(),
+      });
+
+      renderWithStore();
+
+      const taskIndicator = screen.getByTestId("mcp-task-indicator");
+      expect(taskIndicator).toHaveClass("animate-pulse");
+    });
+
+    it("should not pulse when only completed tasks", () => {
+      mockUseMCPTaskWebSocket.mockReturnValue({
+        status: "connected" as const,
+        tasks: [
+          {
+            task_id: "task-1",
+            status: "completed",
+            created_at: "2024-01-01T00:00:00Z",
+            last_updated_at: "2024-01-01T00:00:01Z",
+            ttl: 300,
+            poll_interval: 1000,
+          },
+        ],
+        subscribedTasks: new Set<string>(),
+        error: null,
+        sendPing: vi.fn(),
+        refresh: vi.fn(),
+        subscribe: vi.fn(),
+        unsubscribe: vi.fn(),
+        disconnect: vi.fn(),
+        reconnect: vi.fn(),
+      });
+
+      renderWithStore();
+
+      const taskIndicator = screen.getByTestId("mcp-task-indicator");
+      expect(taskIndicator).not.toHaveClass("animate-pulse");
     });
   });
 });

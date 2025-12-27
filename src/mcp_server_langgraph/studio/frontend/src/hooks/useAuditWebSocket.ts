@@ -107,7 +107,7 @@ function getDefaultWebSocketUrl(token?: string): string {
   const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
   const host = window.location.host;
   const tokenParam = token ? `?token=${encodeURIComponent(token)}` : "";
-  return `${protocol}//${host}/api/v1/audit/stream${tokenParam}`;
+  return `${protocol}//${host}/api/v1/ws/audit${tokenParam}`;
 }
 
 // =============================================================================

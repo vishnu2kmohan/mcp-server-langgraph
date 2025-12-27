@@ -156,7 +156,7 @@ export function useMCPConnection(
 
     // Build WebSocket URL
     const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-    let wsUrl = `${protocol}//${window.location.host}/api/v1/mcp/ws`;
+    let wsUrl = `${protocol}//${window.location.host}/api/v1/ws/mcp`;
     if (sessionId) {
       wsUrl += `?session=${sessionId}`;
     }

@@ -53,6 +53,8 @@ import {
   LazyElicitationDialog,
 } from "../components/MCP";
 import { useMCPKeyboardShortcuts } from "../hooks";
+import { useMCPWebSocket } from "../hooks/useMCPWebSocket";
+import { useMCPTaskWebSocket } from "../hooks/useMCPTaskWebSocket";
 
 type MCPTab = "tools" | "resources" | "prompts" | "servers";
 
@@ -101,6 +103,22 @@ export function MCPPage() {
   const resources = useAppSelector(selectAllResources);
   const prompts = useAppSelector(selectAllPrompts);
   const isConnected = useAppSelector(selectIsConnected);
+
+  // MCP WebSocket for real-time protocol communication
+  const {
+    status: mcpWsStatus,
+    isInitialized: mcpWsInitialized,
+    serverInfo: mcpServerInfo,
+    error: mcpWsError,
+  } = useMCPWebSocket();
+
+  // MCP Task WebSocket for monitoring background tasks
+  const { tasks: mcpTasks } = useMCPTaskWebSocket();
+
+  // Calculate running tasks for indicator
+  const hasRunningTasks = mcpTasks.some(
+    (t) => t.status === "running" || t.status === "pending",
+  );
 
   const toggleExpanded = (id: string) => {
     const next = new Set(expandedItems);
@@ -262,6 +280,43 @@ export function MCPPage() {
                 {isConnected ? "Connected" : "Disconnected"}
               </span>
             </div>
+
+            {/* MCP WebSocket Status Indicator */}
+            <span
+              data-testid="mcp-ws-status-indicator"
+              aria-label={`MCP live sync: ${mcpWsStatus}`}
+              title={
+                mcpWsInitialized && mcpServerInfo
+                  ? `MCP Server: ${mcpServerInfo.name} v${mcpServerInfo.version}`
+                  : mcpWsError
+                    ? `MCP WebSocket: ${mcpWsError}`
+                    : `MCP WebSocket: ${mcpWsStatus}`
+              }
+              className={`w-2.5 h-2.5 rounded-full ${
+                mcpWsStatus === "connected"
+                  ? "bg-green-500"
+                  : mcpWsStatus === "connecting" ||
+                      mcpWsStatus === "reconnecting"
+                    ? "bg-yellow-500 animate-pulse"
+                    : "bg-gray-400"
+              }`}
+            />
+
+            {/* MCP Task Indicator - shown when tasks exist */}
+            {mcpTasks.length > 0 && (
+              <span
+                data-testid="mcp-task-indicator"
+                aria-label={`${mcpTasks.length} MCP task${mcpTasks.length === 1 ? "" : "s"}`}
+                title={`${mcpTasks.length} MCP task${mcpTasks.length === 1 ? "" : "s"}${hasRunningTasks ? " (running)" : ""}`}
+                className={`flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded-full ${
+                  hasRunningTasks
+                    ? "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 animate-pulse"
+                    : "bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400"
+                }`}
+              >
+                {mcpTasks.length}
+              </span>
+            )}
           </div>
         </div>
       </header>

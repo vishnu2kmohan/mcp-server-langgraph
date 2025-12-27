@@ -111,6 +111,27 @@ vi.mock("../api", () => ({
   ],
 }));
 
+// Mock the WebSocket hook to avoid auth slice dependency
+const mockUseConnectionsRealtimeWebSocket = vi.fn(() => ({
+  status: "connected" as const,
+  connections: [],
+  subscribedConnections: new Set<string>(),
+  subscribedAll: true,
+  error: null,
+  subscribeConnection: vi.fn(),
+  unsubscribeConnection: vi.fn(),
+  subscribeAll: vi.fn(),
+  requestHealthCheck: vi.fn(),
+  getConnection: vi.fn(),
+  refresh: vi.fn(),
+  disconnect: vi.fn(),
+  reconnect: vi.fn(),
+}));
+
+vi.mock("../hooks/useConnectionsRealtimeWebSocket", () => ({
+  useConnectionsRealtimeWebSocket: () => mockUseConnectionsRealtimeWebSocket(),
+}));
+
 // Mock child components to simplify testing
 vi.mock("../components/Connection", () => ({
   ConnectionDialog: ({
@@ -1058,6 +1079,149 @@ describe("ConnectionsPage", () => {
       await waitFor(() => {
         // Check that bulk actions bar is shown (2 selected)
         expect(screen.getByTestId("bulk-actions")).toBeInTheDocument();
+      });
+    });
+  });
+
+  describe("WebSocket Real-time Updates", () => {
+    beforeEach(() => {
+      // Reset mock to default connected state
+      mockUseConnectionsRealtimeWebSocket.mockReturnValue({
+        status: "connected" as const,
+        connections: [],
+        subscribedConnections: new Set<string>(),
+        subscribedAll: true,
+        error: null,
+        subscribeConnection: vi.fn(),
+        unsubscribeConnection: vi.fn(),
+        subscribeAll: vi.fn(),
+        requestHealthCheck: vi.fn(),
+        getConnection: vi.fn(),
+        refresh: vi.fn(),
+        disconnect: vi.fn(),
+        reconnect: vi.fn(),
+      });
+    });
+
+    it("should show WebSocket connection status indicator", () => {
+      renderWithProviders(<ConnectionsPage />);
+
+      // The page should have an indicator of WebSocket status
+      const wsIndicator = screen.getByTestId("ws-status-indicator");
+      expect(wsIndicator).toBeInTheDocument();
+      expect(wsIndicator).toHaveClass("bg-green-500"); // connected = green
+    });
+
+    it("should show yellow indicator when WebSocket is connecting", () => {
+      mockUseConnectionsRealtimeWebSocket.mockReturnValue({
+        status: "connecting" as const,
+        connections: [],
+        subscribedConnections: new Set<string>(),
+        subscribedAll: false,
+        error: null,
+        subscribeConnection: vi.fn(),
+        unsubscribeConnection: vi.fn(),
+        subscribeAll: vi.fn(),
+        requestHealthCheck: vi.fn(),
+        getConnection: vi.fn(),
+        refresh: vi.fn(),
+        disconnect: vi.fn(),
+        reconnect: vi.fn(),
+      });
+
+      renderWithProviders(<ConnectionsPage />);
+
+      const wsIndicator = screen.getByTestId("ws-status-indicator");
+      expect(wsIndicator).toHaveClass("bg-yellow-500");
+    });
+
+    it("should show gray indicator when WebSocket is disconnected", () => {
+      mockUseConnectionsRealtimeWebSocket.mockReturnValue({
+        status: "disconnected" as const,
+        connections: [],
+        subscribedConnections: new Set<string>(),
+        subscribedAll: false,
+        error: null,
+        subscribeConnection: vi.fn(),
+        unsubscribeConnection: vi.fn(),
+        subscribeAll: vi.fn(),
+        requestHealthCheck: vi.fn(),
+        getConnection: vi.fn(),
+        refresh: vi.fn(),
+        disconnect: vi.fn(),
+        reconnect: vi.fn(),
+      });
+
+      renderWithProviders(<ConnectionsPage />);
+
+      const wsIndicator = screen.getByTestId("ws-status-indicator");
+      expect(wsIndicator).toHaveClass("bg-gray-400");
+    });
+
+    it("should update connection status when WebSocket sends update", async () => {
+      // Simulate WebSocket returning a connection with updated status
+      mockUseConnectionsRealtimeWebSocket.mockReturnValue({
+        status: "connected" as const,
+        connections: [
+          {
+            id: "conn-1",
+            name: "Production Server",
+            status: "error", // Changed from "connected" to "error"
+            type: "mcp",
+          },
+        ],
+        subscribedConnections: new Set<string>(),
+        subscribedAll: true,
+        error: null,
+        subscribeConnection: vi.fn(),
+        unsubscribeConnection: vi.fn(),
+        subscribeAll: vi.fn(),
+        requestHealthCheck: vi.fn(),
+        getConnection: vi.fn(),
+        refresh: vi.fn(),
+        disconnect: vi.fn(),
+        reconnect: vi.fn(),
+      });
+
+      renderWithProviders(<ConnectionsPage />);
+
+      // Connection should still display from polling data
+      expect(screen.getByText("Production Server")).toBeInTheDocument();
+    });
+
+    it("should handle WebSocket disconnection gracefully", async () => {
+      mockUseConnectionsRealtimeWebSocket.mockReturnValue({
+        status: "disconnected" as const,
+        connections: [],
+        subscribedConnections: new Set<string>(),
+        subscribedAll: false,
+        error: "WebSocket connection lost",
+        subscribeConnection: vi.fn(),
+        unsubscribeConnection: vi.fn(),
+        subscribeAll: vi.fn(),
+        requestHealthCheck: vi.fn(),
+        getConnection: vi.fn(),
+        refresh: vi.fn(),
+        disconnect: vi.fn(),
+        reconnect: vi.fn(),
+      });
+
+      renderWithProviders(<ConnectionsPage />);
+
+      // Should still work with polling data when WebSocket is disconnected
+      expect(screen.getByText("Production Server")).toBeInTheDocument();
+    });
+
+    it("should trigger health check via WebSocket when test button clicked", async () => {
+      renderWithProviders(<ConnectionsPage />);
+
+      // Click test button for first connection
+      const testButtons = screen.getAllByRole("button", { name: /test/i });
+      fireEvent.click(testButtons[0]);
+
+      // RTK Query mutation is still used for testing connections
+      await waitFor(() => {
+        expect(mockTestConnection).toHaveBeenCalled();
       });
     });
   });

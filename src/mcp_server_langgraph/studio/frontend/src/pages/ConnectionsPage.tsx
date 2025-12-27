@@ -58,6 +58,7 @@ import {
   useShortcutDisplay,
   COMMON_SHORTCUTS,
 } from "../hooks/useKeyboardShortcuts";
+import { useConnectionsRealtimeWebSocket } from "../hooks/useConnectionsRealtimeWebSocket";
 
 // Status badge colors
 const statusColors: Record<ConnectionStatus, string> = {
@@ -160,8 +161,45 @@ export function ConnectionsPage() {
   const [deleteConnection, { isLoading: isDeleting }] =
     useDeleteConnectionMutation();
 
-  // Memoize connections to stabilize identity for useCallback dependencies
-  const connections = useMemo(() => data?.items ?? [], [data?.items]);
+  // Real-time WebSocket connection for instant status updates
+  const {
+    status: wsStatus,
+    connections: wsConnections,
+    subscribeAll,
+    requestHealthCheck: _requestHealthCheck,
+    error: wsError,
+  } = useConnectionsRealtimeWebSocket({
+    onConnectionUpdate: (connection) => {
+      // Real-time updates automatically merged via connections state
+      console.debug(
+        "[ConnectionsPage] WebSocket connection update:",
+        connection.id,
+        connection.status,
+      );
+    },
+  });
+
+  // Subscribe to all connection updates when WebSocket connects
+  useMemo(() => {
+    if (wsStatus === "connected") {
+      subscribeAll();
+    }
+  }, [wsStatus, subscribeAll]);
+
+  // Merge polling data with WebSocket updates for real-time status
+  // WebSocket provides faster status updates while polling ensures data freshness
+  const connections = useMemo(() => {
+    const pollingConnections = data?.items ?? [];
+    if (wsConnections.length === 0) {
+      return pollingConnections;
+    }
+    // Merge: prefer WebSocket status but keep polling data structure
+    const wsStatusMap = new Map(wsConnections.map((c) => [c.id, c.status]));
+    return pollingConnections.map((conn) => ({
+      ...conn,
+      status: wsStatusMap.get(conn.id) ?? conn.status,
+    }));
+  }, [data?.items, wsConnections]);
 
   // Handlers
   const handleAddClick = useCallback(() => {
@@ -333,6 +371,19 @@ export function ConnectionsPage() {
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
             MCP Connections
           </h1>
+          {/* WebSocket status indicator */}
+          <span
+            data-testid="ws-status-indicator"
+            aria-label={`Live sync: ${wsStatus}`}
+            title={wsError ? `WebSocket: ${wsError}` : `WebSocket: ${wsStatus}`}
+            className={`w-2.5 h-2.5 rounded-full ${
+              wsStatus === "connected"
+                ? "bg-green-500"
+                : wsStatus === "connecting" || wsStatus === "reconnecting"
+                  ? "bg-yellow-500 animate-pulse"
+                  : "bg-gray-400"
+            }`}
+          />
         </div>
         <div className="flex items-center gap-2">
           <button

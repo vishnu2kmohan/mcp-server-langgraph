@@ -46,7 +46,7 @@ interface UseTraceWebSocketReturn {
 export function useTraceWebSocket(
   options: UseTraceWebSocketOptions = {},
 ): UseTraceWebSocketReturn {
-  const { url = "/api/v1/mcp/ws", sessionId, autoConnect = false } = options;
+  const { url = "/api/v1/ws/mcp", sessionId, autoConnect = false } = options;
 
   // Get auth state and token for WebSocket authentication
   const isAuthenticated = useAppSelector(selectIsAuthenticated);

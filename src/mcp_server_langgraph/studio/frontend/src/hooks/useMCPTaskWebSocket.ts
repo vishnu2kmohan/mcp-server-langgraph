@@ -124,7 +124,7 @@ function getDefaultWebSocketUrl(token?: string): string {
   const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
   const host = window.location.host;
   const tokenParam = token ? `?token=${encodeURIComponent(token)}` : "";
-  return `${protocol}//${host}/api/v1/mcp/tasks/ws${tokenParam}`;
+  return `${protocol}//${host}/api/v1/ws/mcp/tasks${tokenParam}`;
 }
 
 // =============================================================================
