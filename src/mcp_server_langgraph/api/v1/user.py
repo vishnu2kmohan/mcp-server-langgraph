@@ -230,6 +230,49 @@ def get_visible_modules_for_persona(persona: str) -> list[str]:
     return PERSONA_VISIBLE_MODULES.get(persona, [])
 
 
+# Deprecated module ID mappings (for backward compatibility)
+# These IDs should not be used in new code
+DEPRECATED_MODULE_ID_MAP: dict[str, str] = {
+    "flows": "workflows",
+    "costs": "cost",
+    "metrics": "observability",
+}
+
+
+def normalize_module_id(module_id: str) -> str:
+    """
+    Normalize a module ID to the canonical form.
+
+    Converts deprecated module IDs to their normalized equivalents:
+    - 'flows' -> 'workflows'
+    - 'costs' -> 'cost'
+    - 'metrics' -> 'observability'
+
+    Args:
+        module_id: The module ID to normalize
+
+    Returns:
+        The normalized module ID
+
+    Example:
+        >>> normalize_module_id("flows")
+        "workflows"
+        >>> normalize_module_id("chat")
+        "chat"
+    """
+    normalized = DEPRECATED_MODULE_ID_MAP.get(module_id, module_id)
+    if normalized != module_id:
+        logger.warning(
+            f"Deprecated module ID '{module_id}' used, normalized to '{normalized}'",
+            extra={
+                "deprecated_id": module_id,
+                "normalized_id": normalized,
+                "hint": "Use normalized module IDs: workflows, cost, observability",
+            },
+        )
+    return normalized
+
+
 # Mapping of base persona to allowed sub-personas
 # Higher tiers can use lower tier personas (admin can use all, developer can use user tier)
 BASE_TO_SUB_PERSONAS: dict[str, list[str]] = {
