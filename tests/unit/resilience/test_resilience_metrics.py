@@ -524,6 +524,135 @@ class TestMetricsOpenTelemetryIntegration:
         assert metrics.meter is not None
 
 
+@pytest.mark.xdist_group(name="testratelimitmetrics")
+class TestRateLimitMetrics:
+    """Tests for rate limit metric recording"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
+
+    def test_record_rate_limit_exhaustion(self):
+        """Test recording rate limit token exhaustion"""
+        with patch.object(metrics.rate_limit_token_exhausted_counter, "add") as mock_add:
+            metrics.record_rate_limit_exhaustion(provider="anthropic")
+
+            mock_add.assert_called_once()
+            call_args = mock_add.call_args
+            assert call_args[0][0] == 1
+            assert call_args[0][1]["provider"] == "anthropic"
+
+    def test_record_rate_limit_wait_time(self):
+        """Test recording rate limit wait time"""
+        with patch.object(metrics.rate_limit_wait_time_histogram, "record") as mock_record:
+            metrics.record_rate_limit_wait_time(provider="openai", wait_time_ms=150.5)
+
+            mock_record.assert_called_once()
+            call_args = mock_record.call_args
+            assert call_args[0][0] == 150.5
+            assert call_args[0][1]["provider"] == "openai"
+
+
+@pytest.mark.xdist_group(name="testadaptivebulkheadmetrics")
+class TestAdaptiveBulkheadMetrics:
+    """Tests for adaptive bulkhead metric recording"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
+
+    def test_record_adaptive_bulkhead_adjustment(self):
+        """Test recording adaptive bulkhead limit adjustment"""
+        with patch.object(metrics.adaptive_bulkhead_adjustment_counter, "add") as mock_add:
+            metrics.record_adaptive_bulkhead_adjustment(
+                provider="anthropic",
+                direction="increase",
+                new_limit=15,
+            )
+
+            mock_add.assert_called_once()
+            call_args = mock_add.call_args
+            assert call_args[0][0] == 1
+            assert call_args[0][1]["provider"] == "anthropic"
+            assert call_args[0][1]["direction"] == "increase"
+            assert call_args[0][1]["new_limit"] == "15"
+
+    def test_update_adaptive_bulkhead_stats(self):
+        """Test updating adaptive bulkhead stats gauges"""
+        with (
+            patch.object(metrics.adaptive_bulkhead_limit_gauge, "set") as mock_limit,
+            patch.object(metrics.adaptive_bulkhead_error_rate_gauge, "set") as mock_error,
+        ):
+            metrics.update_adaptive_bulkhead_stats(
+                provider="openai",
+                current_limit=20,
+                error_rate=0.15,
+            )
+
+            # Verify limit gauge
+            mock_limit.assert_called_once()
+            limit_args = mock_limit.call_args
+            assert limit_args[0][0] == 20
+            assert limit_args[0][1]["provider"] == "openai"
+
+            # Verify error rate gauge
+            mock_error.assert_called_once()
+            error_args = mock_error.call_args
+            assert error_args[0][0] == 0.15
+            assert error_args[0][1]["provider"] == "openai"
+
+
+@pytest.mark.xdist_group(name="testpoolmetrics")
+class TestPoolMetrics:
+    """Tests for HTTP connection pool metric recording"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
+
+    def test_record_pool_metrics_normal_utilization(self):
+        """Test recording pool metrics with normal utilization"""
+        with (
+            patch.object(metrics.http_pool_active_connections_gauge, "set") as mock_active,
+            patch.object(metrics.http_pool_max_connections_gauge, "set") as mock_max,
+            patch.object(metrics.http_pool_utilization_gauge, "set") as mock_util,
+        ):
+            metrics.record_pool_metrics(
+                active_connections=50,
+                max_connections=100,
+            )
+
+            mock_active.assert_called_once_with(50)
+            mock_max.assert_called_once_with(100)
+            mock_util.assert_called_once_with(0.5)
+
+    def test_record_pool_metrics_zero_max_connections(self):
+        """Test recording pool metrics with zero max connections"""
+        with (
+            patch.object(metrics.http_pool_active_connections_gauge, "set") as mock_active,
+            patch.object(metrics.http_pool_max_connections_gauge, "set") as mock_max,
+            patch.object(metrics.http_pool_utilization_gauge, "set") as mock_util,
+        ):
+            metrics.record_pool_metrics(
+                active_connections=0,
+                max_connections=0,
+            )
+
+            mock_active.assert_called_once_with(0)
+            mock_max.assert_called_once_with(0)
+            mock_util.assert_called_once_with(0.0)
+
+    def test_record_pool_metrics_full_utilization(self):
+        """Test recording pool metrics at full capacity"""
+        with patch.object(metrics.http_pool_utilization_gauge, "set") as mock_util:
+            metrics.record_pool_metrics(
+                active_connections=100,
+                max_connections=100,
+            )
+
+            mock_util.assert_called_once_with(1.0)
+
+
 @pytest.mark.xdist_group(name="testedgecases")
 class TestEdgeCases:
     """Tests for edge cases and error handling"""
