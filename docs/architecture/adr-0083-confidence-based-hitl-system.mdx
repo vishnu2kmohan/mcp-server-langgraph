@@ -1,0 +1,535 @@
+---
+title: "83. Confidence-Based Human-in-the-Loop Decision Making"
+description: 'Architecture Decision Record: 83. Confidence-Based Human-in-the-Loop Decision Making'
+icon: 'scale-balanced'
+contentType: "reference"
+seoTitle: "83. Confidence-Based Human-in-the-Loop Decision Making - Architecture Decision Record"
+seoDescription: "Architecture Decision Record for 83. Confidence-Based Human-in-the-Loop Decision Making. Category: Agent Architecture. Part of MCP Server with LangGraph documentation."
+keywords:
+  - "architecture"
+  - "decision"
+  - "record"
+  - "ADR"
+  - "MCP Server"
+  - "LangGraph"
+  - "Confidence"
+  - "HITL"
+  - "Human-in-the-Loop"
+  - "AI Explanations"
+  - "WebSocket"
+---
+
+# 83. Confidence-Based Human-in-the-Loop Decision Making
+
+Date: 2025-12-26
+
+## Status
+
+Accepted
+
+## Category
+
+Agent Architecture
+
+## Context
+
+As AI agents become more capable and handle increasingly critical operations, the traditional binary approach to Human-in-the-Loop (HITL) decision making—where every action requires explicit human approval—creates several operational challenges:
+
+- **Review Fatigue**: Operators become overwhelmed by constant approval requests, leading to rubber-stamping behavior
+- **Reduced Safety**: Alert fatigue causes operators to approve risky actions without careful review
+- **Decreased Throughput**: Every action requiring approval creates bottlenecks and delays
+- **Poor User Experience**: Users must wait for approval even for routine, low-risk operations
+- **Operational Overhead**: High-volume deployments require dedicated operators for trivial approvals
+
+However, removing HITL controls entirely introduces unacceptable risks:
+- **Unintended Consequences**: AI may execute actions with unforeseen side effects
+- **Policy Violations**: Actions may violate organizational policies or regulatory requirements
+- **Security Incidents**: Malicious inputs could trigger harmful actions
+- **Accountability Gaps**: No human oversight for critical operations
+
+The challenge is to **maintain safety while reducing operator burden** by identifying which actions truly require human judgment and which can be safely automated.
+
+## Decision
+
+We will implement a **confidence-based HITL system** that uses AI confidence scoring to automatically approve high-confidence actions while routing low-confidence decisions to human operators.
+
+### Core Principles
+
+1. **Confidence Thresholds**: Actions are evaluated on a 0.0-1.0 confidence scale
+2. **Auto-Approval Above Threshold**: High-confidence actions (≥0.85 by default) execute automatically
+3. **Human Review Below Threshold**: Low-confidence actions pause for explicit approval
+4. **AI Explanations**: Low-confidence requests include AI-generated explanations of risks and uncertainties
+5. **Real-Time Delivery**: WebSocket-based delivery ensures operators receive requests immediately
+6. **Audit Trail**: All decisions (auto-approved and manual) are logged for compliance
+
+### Confidence Scoring Model
+
+```python
+class ConfidenceScore:
+    """Confidence assessment for HITL decision"""
+    score: float  # 0.0 (no confidence) to 1.0 (complete confidence)
+    factors: Dict[str, float]  # Contributing factors (policy_match, risk_level, etc.)
+    explanation: Optional[str]  # Why confidence is low (if score < threshold)
+    recommendation: Literal["approve", "reject", "needs_review"]
+```
+
+Confidence factors include:
+- **Policy Alignment**: How well the action matches known policies (0.0-1.0)
+- **Risk Assessment**: Estimated impact of action failure (0.0-1.0)
+- **Context Clarity**: Completeness of contextual information (0.0-1.0)
+- **Historical Success**: Success rate of similar past actions (0.0-1.0)
+- **Authorization Strength**: Strength of user permissions for this action (0.0-1.0)
+
+### Configuration
+
+```python
+# Environment variables
+HITL_CONFIDENCE_THRESHOLD=0.85  # Auto-approve above this threshold
+HITL_AUTO_APPROVE_ENABLED=true  # Enable auto-approval (disable for strict mode)
+HITL_WEBSOCKET_ENABLED=true     # Enable real-time WebSocket delivery
+HITL_EXPLANATION_MIN_LENGTH=50  # Minimum characters for AI explanations
+HITL_APPROVAL_TIMEOUT_SECONDS=300  # Max wait time before escalation
+```
+
+### Decision Flow
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│ Agent proposes action                                            │
+└────────────────┬────────────────────────────────────────────────┘
+                 │
+                 ▼
+┌─────────────────────────────────────────────────────────────────┐
+│ Compute confidence score                                         │
+│ - Policy alignment                                               │
+│ - Risk assessment                                                │
+│ - Context clarity                                                │
+│ - Historical success                                             │
+│ - Authorization strength                                         │
+└────────────────┬────────────────────────────────────────────────┘
+                 │
+                 ▼
+         ┌───────┴───────┐
+         │               │
+    score ≥ 0.85    score < 0.85
+         │               │
+         ▼               ▼
+┌─────────────────┐  ┌─────────────────────────────────────┐
+│ Auto-approve    │  │ Request human approval              │
+│ - Log decision  │  │ - Generate AI explanation           │
+│ - Execute       │  │ - Send via WebSocket                │
+│                 │  │ - Wait for response (timeout: 5min) │
+└─────────────────┘  └────────────┬────────────────────────┘
+                                  │
+                          ┌───────┴───────┐
+                          │               │
+                     Approved         Rejected
+                          │               │
+                          ▼               ▼
+                  ┌─────────────┐  ┌─────────────┐
+                  │ Execute     │  │ Cancel      │
+                  │ - Log       │  │ - Log       │
+                  └─────────────┘  └─────────────┘
+```
+
+## Consequences
+
+### Positive Consequences
+
+- **Reduced Operator Fatigue**: Routine high-confidence actions execute automatically
+- **Faster Processing**: Auto-approval reduces latency from minutes to milliseconds
+- **Focused Attention**: Operators review only genuinely uncertain actions
+- **Better Decision Quality**: AI explanations provide context for informed decisions
+- **Scalability**: System handles 10x more actions without proportional operator increase
+- **Audit Compliance**: Full logging of all decisions (auto + manual) for compliance
+
+### Negative Consequences
+
+- **Calibration Challenge**: Confidence thresholds must be carefully tuned per deployment
+- **False Confidence Risk**: AI may be overconfident on edge cases (mitigated by monitoring)
+- **Explanation Quality**: AI explanations may be vague or misleading (requires validation)
+- **Complexity**: Additional system components (scoring, WebSocket, monitoring)
+- **Trust Calibration**: Operators must learn to trust auto-approval (change management)
+
+### Neutral Consequences
+
+- **Tuning Required**: Different organizations will need different thresholds
+- **Monitoring Overhead**: Must track auto-approval accuracy and adjust thresholds
+- **Fallback Required**: System must handle WebSocket failures gracefully
+
+## Alternatives Considered
+
+### 1. All-Manual HITL (Current State)
+
+**Description**: Every action requires explicit human approval
+
+**Pros**:
+- Maximum human oversight
+- Simple implementation
+- Clear accountability
+
+**Cons**:
+- Operator fatigue and alert fatigue
+- Bottleneck for high-volume operations
+- Poor user experience (delays)
+- Does not scale
+
+**Why Rejected**: Operational overhead and review fatigue create unacceptable safety and throughput issues
+
+### 2. All-Automated (No HITL)
+
+**Description**: AI executes all actions without human approval
+
+**Pros**:
+- Maximum throughput
+- Minimal latency
+- No operator overhead
+
+**Cons**:
+- Unacceptable safety risk
+- No human judgment for edge cases
+- Compliance/regulatory concerns
+- Accountability gaps
+
+**Why Rejected**: Safety and compliance requirements mandate human oversight for uncertain actions
+
+### 3. Rule-Based Auto-Approval
+
+**Description**: Predefined rules determine which actions auto-approve (e.g., "read-only operations")
+
+**Pros**:
+- Deterministic and auditable
+- Easy to understand
+- No AI calibration needed
+
+**Cons**:
+- Brittle (hard-coded rules break on edge cases)
+- Difficult to maintain (rule explosion)
+- Cannot adapt to new scenarios
+- Misses nuanced risk factors
+
+**Why Rejected**: Static rules cannot capture complex risk assessments that consider multiple contextual factors
+
+### 4. Time-Based Auto-Approval
+
+**Description**: Auto-approve actions during business hours, require approval after hours
+
+**Pros**:
+- Simple temporal logic
+- Reduces after-hours paging
+- Predictable behavior
+
+**Cons**:
+- Time is poor proxy for risk
+- High-risk actions still happen during business hours
+- Does not reduce daytime operator burden
+- Geographic time zone complexity
+
+**Why Rejected**: Time does not correlate with action risk; does not address operator fatigue during business hours
+
+## Implementation Details
+
+### Confidence Scoring Engine
+
+```python
+# src/mcp_server_langgraph/agent/hitl/confidence.py
+class ConfidenceScorer:
+    """Compute confidence score for HITL decisions"""
+
+    def __init__(self, threshold: float = 0.85):
+        self.threshold = threshold
+
+    async def score_action(
+        self,
+        action: AgentAction,
+        context: ExecutionContext,
+        policy: Optional[Policy] = None,
+    ) -> ConfidenceScore:
+        """
+        Compute confidence score for action approval
+
+        Args:
+            action: Proposed agent action
+            context: Execution context (user, permissions, history)
+            policy: Optional policy constraints
+
+        Returns:
+            ConfidenceScore with overall score and contributing factors
+        """
+        factors = {
+            "policy_alignment": await self._score_policy_alignment(action, policy),
+            "risk_level": await self._score_risk_level(action),
+            "context_clarity": await self._score_context_clarity(context),
+            "historical_success": await self._score_historical_success(action),
+            "authorization_strength": await self._score_authorization(context),
+        }
+
+        # Weighted average (configurable weights)
+        overall_score = sum(
+            factors[k] * self.weights[k]
+            for k in factors
+        )
+
+        # Generate explanation if below threshold
+        explanation = None
+        recommendation = "approve"
+        if overall_score < self.threshold:
+            explanation = await self._generate_explanation(action, factors)
+            recommendation = "needs_review"
+
+        return ConfidenceScore(
+            score=overall_score,
+            factors=factors,
+            explanation=explanation,
+            recommendation=recommendation,
+        )
+```
+
+### AI Explanation Generation
+
+```python
+async def _generate_explanation(
+    self,
+    action: AgentAction,
+    factors: Dict[str, float],
+) -> str:
+    """
+    Generate human-readable explanation of low confidence
+
+    Uses LLM to explain why action requires human review
+    """
+    prompt = f"""
+    The following action has been flagged for human review due to low confidence.
+
+    Action: {action.description}
+    Confidence Factors:
+    - Policy Alignment: {factors['policy_alignment']:.2f}
+    - Risk Level: {factors['risk_level']:.2f}
+    - Context Clarity: {factors['context_clarity']:.2f}
+    - Historical Success: {factors['historical_success']:.2f}
+    - Authorization Strength: {factors['authorization_strength']:.2f}
+
+    Explain in 2-3 sentences why this action requires human review.
+    Focus on the specific risks or uncertainties that make automation unsafe.
+    """
+
+    llm = create_llm_from_config(settings)
+    response = await llm.ainvoke([{"role": "user", "content": prompt}])
+
+    return response.content
+```
+
+### WebSocket Delivery
+
+```python
+# src/mcp_server_langgraph/agent/hitl/websocket.py
+class HITLWebSocketManager:
+    """Manage real-time HITL approval requests via WebSocket"""
+
+    async def send_approval_request(
+        self,
+        action: AgentAction,
+        confidence: ConfidenceScore,
+        timeout: int = 300,
+    ) -> HITLDecision:
+        """
+        Send approval request to operator via WebSocket
+
+        Args:
+            action: Action requiring approval
+            confidence: Confidence score with explanation
+            timeout: Max wait time in seconds
+
+        Returns:
+            HITLDecision (approved/rejected)
+        """
+        request_id = str(uuid.uuid4())
+
+        # Publish to operator WebSocket channel
+        await self.redis.publish(
+            "hitl:approval_requests",
+            json.dumps({
+                "request_id": request_id,
+                "action": action.model_dump(),
+                "confidence": confidence.model_dump(),
+                "expires_at": (datetime.now() + timedelta(seconds=timeout)).isoformat(),
+            })
+        )
+
+        # Wait for response (with timeout)
+        try:
+            async with asyncio.timeout(timeout):
+                decision = await self._wait_for_decision(request_id)
+                return decision
+        except TimeoutError:
+            # Escalate to supervisor or reject by default
+            return HITLDecision(
+                request_id=request_id,
+                decision="rejected",
+                reason="Approval timeout exceeded",
+            )
+```
+
+### Auto-Approval Logic
+
+```python
+# src/mcp_server_langgraph/agent/hitl/approver.py
+class HITLApprover:
+    """Coordinate HITL approval decisions"""
+
+    async def request_approval(
+        self,
+        action: AgentAction,
+        context: ExecutionContext,
+    ) -> HITLDecision:
+        """
+        Request approval for action (auto-approve or human review)
+
+        Returns:
+            HITLDecision indicating approval/rejection
+        """
+        # Compute confidence score
+        confidence = await self.scorer.score_action(action, context)
+
+        # Auto-approve if high confidence
+        if confidence.score >= self.threshold and self.auto_approve_enabled:
+            decision = HITLDecision(
+                request_id=str(uuid.uuid4()),
+                decision="auto_approved",
+                confidence=confidence.score,
+                timestamp=datetime.now(),
+            )
+            await self._log_decision(decision)
+            return decision
+
+        # Request human approval via WebSocket
+        decision = await self.websocket_manager.send_approval_request(
+            action=action,
+            confidence=confidence,
+            timeout=self.approval_timeout,
+        )
+
+        await self._log_decision(decision)
+        return decision
+```
+
+## Performance Characteristics
+
+| Scenario | Latency | Operator Load |
+|----------|---------|---------------|
+| High-confidence auto-approval | ~50ms | 0% |
+| Low-confidence manual review | 30s - 5min | 100% |
+| Typical workload (80% high-conf) | ~500ms avg | 20% |
+
+**Expected Impact**: 80% reduction in approval requests with 0.85 threshold
+
+## Monitoring and Observability
+
+### Key Metrics
+
+```python
+# Prometheus metrics
+hitl_confidence_scores = Histogram(
+    "hitl_confidence_scores",
+    "Distribution of confidence scores",
+    buckets=[0.0, 0.5, 0.75, 0.85, 0.95, 1.0],
+)
+
+hitl_auto_approvals_total = Counter(
+    "hitl_auto_approvals_total",
+    "Total auto-approved actions",
+    ["action_type"],
+)
+
+hitl_manual_approvals_total = Counter(
+    "hitl_manual_approvals_total",
+    "Total manual approval requests",
+    ["action_type", "decision"],
+)
+
+hitl_approval_latency = Histogram(
+    "hitl_approval_latency_seconds",
+    "Time from request to approval/rejection",
+    buckets=[0.05, 0.1, 1, 10, 30, 60, 300],
+)
+```
+
+### Calibration Monitoring
+
+Track auto-approval accuracy to validate confidence scoring:
+
+```python
+# Post-hoc analysis: Did auto-approved actions succeed?
+hitl_auto_approval_outcomes = Counter(
+    "hitl_auto_approval_outcomes_total",
+    "Outcomes of auto-approved actions",
+    ["action_type", "outcome"],  # success, failure, partial_failure
+)
+```
+
+## Testing Strategy
+
+**Unit Tests** (`tests/unit/agent/hitl/test_confidence.py`):
+- Confidence scoring for various scenarios
+- Explanation generation quality
+- Threshold boundary conditions
+
+**Integration Tests** (`tests/integration/hitl/test_approval_flow.py`):
+- End-to-end auto-approval flow
+- WebSocket delivery and response
+- Timeout handling and escalation
+
+**Simulation Tests** (`tests/simulation/test_hitl_calibration.py`):
+- Replay historical actions with confidence scoring
+- Measure false positive/negative rates
+- Optimize threshold for target accuracy
+
+## Migration Path
+
+**Phase 1: Shadow Mode** (2 weeks)
+- Enable confidence scoring but log only (no auto-approval)
+- Collect baseline data on score distribution
+- Validate explanation quality with operators
+
+**Phase 2: Pilot Deployment** (2 weeks)
+- Enable auto-approval for single low-risk action type
+- Monitor auto-approval outcomes closely
+- Gather operator feedback
+
+**Phase 3: Gradual Rollout** (4 weeks)
+- Expand to additional action types based on pilot results
+- Tune thresholds per action type
+- Scale to production traffic
+
+**Rollback**: Disable auto-approval via `HITL_AUTO_APPROVE_ENABLED=false` (immediate effect)
+
+## Security Considerations
+
+**Adversarial Inputs**: Malicious users may craft inputs designed to boost confidence scores
+- **Mitigation**: Confidence factors include authorization strength and policy alignment
+- **Monitoring**: Anomaly detection on confidence score patterns
+
+**False Confidence**: AI may be overconfident on edge cases not seen in training data
+- **Mitigation**: Conservative threshold (0.85 default, tunable to 0.90+)
+- **Monitoring**: Track auto-approval failure rates and adjust thresholds
+
+**Explanation Manipulation**: AI-generated explanations may be misleading
+- **Mitigation**: Template-based explanations with structured data
+- **Validation**: Human review of explanation quality during pilot phase
+
+## Future Enhancements
+
+- **Per-Action-Type Thresholds**: Different thresholds for read vs. write operations
+- **User-Specific Thresholds**: Higher auto-approval for trusted users
+- **Learning from Feedback**: Train on operator decisions to improve scoring
+- **Multi-Level Approval**: Route high-risk actions to senior operators
+- **Confidence Trend Analysis**: Detect drift in confidence scores over time
+
+## References
+
+- Implementation: `src/mcp_server_langgraph/agent/hitl/` (planned)
+- Configuration: `src/mcp_server_langgraph/core/config.py`
+- Related ADRs:
+  - [ADR-0002](https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/adr/adr-0002-openfga-authorization.md) - Authorization (permission checks in confidence scoring)
+  - [ADR-0001](https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/adr/adr-0001-llm-multi-provider.md) - LLM integration (explanation generation)
+  - [ADR-0003](https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/adr/adr-0003-dual-observability.md) - Observability (HITL metrics and monitoring)

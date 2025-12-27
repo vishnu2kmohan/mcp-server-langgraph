@@ -10,6 +10,7 @@ Thank you for your interest in contributing! This document provides guidelines f
   - [Pre-Push Validation](#4-pre-push-validation-recommended)
 - [Testing Requirements](#testing-requirements)
 - [Code Style](#code-style)
+- [Agent Studio Frontend Contribution Guidelines](#agent-studio-frontend-contribution-guidelines)
 - [Commit Guidelines](#commit-guidelines)
 - [Architecture Decision Records (ADRs)](#architecture-decision-records-adrs)
 
@@ -507,6 +508,568 @@ disallow_untyped_defs = true
 - `[tool.black]` - Use `ruff format` instead
 - `[tool.isort]` - Use `ruff check --select I` instead
 - `[tool.flake8]` - Use `ruff check` instead
+
+---
+
+## Agent Studio Frontend Contribution Guidelines
+
+### Overview
+
+Agent Studio is the web-based visual interface for building, managing, and monitoring LangGraph agents. The frontend is a React-based single-page application (SPA) with advanced features for agent configuration, workflow visualization, and real-time monitoring.
+
+### Frontend Development Setup
+
+#### Prerequisites
+
+- **Node.js**: 18.x or 20.x (recommended)
+- **npm**: 9.x or higher
+- **Backend**: MCP Server LangGraph backend must be running
+
+#### Quick Start
+
+```bash
+# Navigate to frontend directory
+cd src/mcp_server_langgraph/studio/frontend
+
+# Install dependencies
+npm install
+
+# Start development server (with hot reload)
+npm run dev
+
+# Development server will be available at http://localhost:5173
+```
+
+#### Backend Integration
+
+The frontend requires the MCP Server LangGraph backend to be running:
+
+```bash
+# In a separate terminal, from project root
+make dev-setup          # Start infrastructure (PostgreSQL, Redis, etc.)
+make dev-run-studio     # Start the backend API server
+
+# Backend API will be available at http://localhost:8000
+```
+
+### Technology Stack
+
+#### Core Framework
+- **React 18**: Modern React with hooks and concurrent features
+- **TypeScript**: Strict type checking for enhanced code quality
+- **Vite**: Fast build tool with hot module replacement (HMR)
+
+#### State Management
+- **Redux Toolkit**: Centralized state management with slices
+- **RTK Query**: Powerful data fetching and caching
+- **React Query**: Additional data synchronization (if applicable)
+
+#### UI Components
+- **Tailwind CSS**: Utility-first CSS framework
+- **React Flow**: Interactive workflow visualization and node-based graphs
+- **Headless UI**: Unstyled, accessible UI components
+- **Lucide React**: Modern icon library
+
+#### Development Tools
+- **ESLint**: JavaScript/TypeScript linting
+- **Prettier**: Code formatting
+- **TypeScript Compiler**: Type checking
+- **Vitest**: Fast unit testing framework
+- **React Testing Library**: Component testing utilities
+
+### Project Structure
+
+```
+src/mcp_server_langgraph/studio/frontend/
+├── src/
+│   ├── components/          # Reusable React components
+│   │   ├── agents/          # Agent-specific components
+│   │   ├── workflows/       # Workflow visualization components
+│   │   ├── common/          # Shared UI components
+│   │   └── layout/          # Layout components (navbar, sidebar)
+│   ├── features/            # Feature-based modules (Redux slices)
+│   │   ├── agents/          # Agent management feature
+│   │   ├── workflows/       # Workflow builder feature
+│   │   └── auth/            # Authentication feature
+│   ├── services/            # API services (RTK Query)
+│   ├── hooks/               # Custom React hooks
+│   ├── types/               # TypeScript type definitions
+│   ├── utils/               # Utility functions
+│   ├── styles/              # Global styles
+│   └── App.tsx              # Root application component
+├── public/                  # Static assets
+├── tests/                   # Test files
+├── vite.config.ts           # Vite configuration
+├── tsconfig.json            # TypeScript configuration
+├── eslint.config.js         # ESLint configuration
+├── prettier.config.js       # Prettier configuration
+└── package.json             # Dependencies and scripts
+```
+
+### Code Standards
+
+#### TypeScript Strict Mode
+
+All frontend code **MUST** use TypeScript strict mode:
+
+```typescript
+// tsconfig.json enforces:
+{
+  "compilerOptions": {
+    "strict": true,
+    "noImplicitAny": true,
+    "strictNullChecks": true,
+    "strictFunctionTypes": true,
+    "strictBindCallApply": true
+  }
+}
+```
+
+**Type Safety Requirements**:
+- ✅ All component props must have explicit types
+- ✅ All function parameters and return types must be typed
+- ✅ No `any` types (use `unknown` if type is truly unknown)
+- ✅ Null/undefined handling must be explicit
+
+**Example - Component with proper typing**:
+```typescript
+// Good: Explicit types
+interface AgentCardProps {
+  agentId: string;
+  name: string;
+  status: 'active' | 'inactive';
+  onEdit?: (id: string) => void;
+}
+
+export const AgentCard: React.FC<AgentCardProps> = ({
+  agentId,
+  name,
+  status,
+  onEdit
+}) => {
+  // Implementation
+};
+
+// Bad: Missing types
+export const AgentCard = ({ agentId, name, status, onEdit }) => {
+  // TypeScript errors!
+};
+```
+
+#### ESLint Configuration
+
+ESLint enforces code quality and consistency:
+
+```javascript
+// eslint.config.js
+export default {
+  extends: [
+    'eslint:recommended',
+    'plugin:@typescript-eslint/recommended',
+    'plugin:react/recommended',
+    'plugin:react-hooks/recommended',
+  ],
+  rules: {
+    '@typescript-eslint/no-explicit-any': 'error',
+    '@typescript-eslint/explicit-function-return-type': 'warn',
+    'react/react-in-jsx-scope': 'off',  // Not needed in React 18
+    'react-hooks/rules-of-hooks': 'error',
+    'react-hooks/exhaustive-deps': 'warn',
+  }
+};
+```
+
+**Key Rules**:
+- No `any` types (error)
+- Explicit function return types (warning)
+- Proper React hooks usage (error)
+- Exhaustive dependency arrays (warning)
+
+#### Prettier Formatting
+
+Prettier ensures consistent code formatting:
+
+```javascript
+// prettier.config.js
+export default {
+  semi: true,
+  trailingComma: 'es5',
+  singleQuote: true,
+  printWidth: 100,
+  tabWidth: 2,
+  useTabs: false,
+};
+```
+
+**Running Formatters**:
+```bash
+# Check code style
+npm run lint
+
+# Auto-fix linting issues
+npm run lint:fix
+
+# Format code with Prettier
+npm run format
+
+# Check formatting without modifying files
+npm run format:check
+```
+
+### Component Development Guidelines
+
+#### Component Structure
+
+Use functional components with TypeScript and hooks:
+
+```typescript
+import React, { useState, useEffect } from 'react';
+
+interface MyComponentProps {
+  title: string;
+  count?: number;
+}
+
+export const MyComponent: React.FC<MyComponentProps> = ({
+  title,
+  count = 0
+}) => {
+  const [value, setValue] = useState<number>(count);
+
+  useEffect(() => {
+    // Side effects
+  }, [count]);
+
+  return (
+    <div className="p-4">
+      <h1>{title}</h1>
+      <p>Count: {value}</p>
+    </div>
+  );
+};
+```
+
+#### Redux Toolkit State Management
+
+Create feature slices for state management:
+
+```typescript
+// features/agents/agentsSlice.ts
+import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+
+interface AgentsState {
+  agents: Agent[];
+  selectedId: string | null;
+  loading: boolean;
+}
+
+const initialState: AgentsState = {
+  agents: [],
+  selectedId: null,
+  loading: false,
+};
+
+const agentsSlice = createSlice({
+  name: 'agents',
+  initialState,
+  reducers: {
+    setAgents(state, action: PayloadAction<Agent[]>) {
+      state.agents = action.payload;
+    },
+    selectAgent(state, action: PayloadAction<string>) {
+      state.selectedId = action.payload;
+    },
+  },
+});
+
+export const { setAgents, selectAgent } = agentsSlice.actions;
+export default agentsSlice.reducer;
+```
+
+#### RTK Query API Services
+
+Define API endpoints using RTK Query:
+
+```typescript
+// services/api.ts
+import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
+
+export const api = createApi({
+  reducerPath: 'api',
+  baseQuery: fetchBaseQuery({ baseUrl: '/api/v1' }),
+  endpoints: (builder) => ({
+    getAgents: builder.query<Agent[], void>({
+      query: () => 'agents',
+    }),
+    createAgent: builder.mutation<Agent, CreateAgentRequest>({
+      query: (agent) => ({
+        url: 'agents',
+        method: 'POST',
+        body: agent,
+      }),
+    }),
+  }),
+});
+
+export const { useGetAgentsQuery, useCreateAgentMutation } = api;
+```
+
+#### React Flow Workflow Visualization
+
+Build interactive workflows using React Flow:
+
+```typescript
+import ReactFlow, { Node, Edge, Controls, Background } from 'reactflow';
+import 'reactflow/dist/style.css';
+
+interface WorkflowCanvasProps {
+  nodes: Node[];
+  edges: Edge[];
+  onNodesChange: (changes: any) => void;
+  onEdgesChange: (changes: any) => void;
+}
+
+export const WorkflowCanvas: React.FC<WorkflowCanvasProps> = ({
+  nodes,
+  edges,
+  onNodesChange,
+  onEdgesChange,
+}) => {
+  return (
+    <div className="h-screen w-full">
+      <ReactFlow
+        nodes={nodes}
+        edges={edges}
+        onNodesChange={onNodesChange}
+        onEdgesChange={onEdgesChange}
+        fitView
+      >
+        <Controls />
+        <Background />
+      </ReactFlow>
+    </div>
+  );
+};
+```
+
+### Testing Requirements
+
+#### Test Framework
+
+- **Vitest**: Unit and integration testing
+- **React Testing Library**: Component testing
+- **MSW (Mock Service Worker)**: API mocking (optional)
+
+#### Test Coverage Requirements
+
+| Code Type | Minimum Coverage | Target Coverage |
+|-----------|------------------|-----------------|
+| **Components** | 70% | 85% |
+| **Utilities** | 80% | 95% |
+| **Redux Slices** | 80% | 90% |
+| **API Services** | 60% | 80% |
+
+#### Writing Tests
+
+**Component Testing Example**:
+```typescript
+// AgentCard.test.tsx
+import { render, screen, fireEvent } from '@testing-library/react';
+import { describe, it, expect, vi } from 'vitest';
+import { AgentCard } from './AgentCard';
+
+describe('AgentCard', () => {
+  it('renders agent name and status', () => {
+    render(
+      <AgentCard
+        agentId="123"
+        name="Test Agent"
+        status="active"
+      />
+    );
+
+    expect(screen.getByText('Test Agent')).toBeInTheDocument();
+    expect(screen.getByText('active')).toBeInTheDocument();
+  });
+
+  it('calls onEdit when edit button is clicked', () => {
+    const onEdit = vi.fn();
+    render(
+      <AgentCard
+        agentId="123"
+        name="Test Agent"
+        status="active"
+        onEdit={onEdit}
+      />
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: /edit/i }));
+    expect(onEdit).toHaveBeenCalledWith('123');
+  });
+});
+```
+
+**Redux Slice Testing Example**:
+```typescript
+// agentsSlice.test.ts
+import { describe, it, expect } from 'vitest';
+import agentsReducer, { setAgents, selectAgent } from './agentsSlice';
+
+describe('agentsSlice', () => {
+  it('should set agents', () => {
+    const initialState = { agents: [], selectedId: null, loading: false };
+    const agents = [{ id: '1', name: 'Agent 1' }];
+
+    const newState = agentsReducer(initialState, setAgents(agents));
+
+    expect(newState.agents).toEqual(agents);
+  });
+});
+```
+
+#### Running Tests
+
+```bash
+# Run all tests
+npm test
+
+# Run tests in watch mode (for development)
+npm run test:watch
+
+# Run tests with coverage report
+npm run test:coverage
+
+# Run tests for specific file
+npm test -- AgentCard.test.tsx
+```
+
+### Pull Request Requirements
+
+Before submitting a frontend PR, ensure:
+
+#### Code Quality
+- [ ] All TypeScript errors resolved (`npm run type-check`)
+- [ ] No ESLint errors (`npm run lint`)
+- [ ] Code formatted with Prettier (`npm run format`)
+- [ ] No unused imports or variables
+
+#### Testing
+- [ ] All tests pass (`npm test`)
+- [ ] New components have tests
+- [ ] Coverage meets minimum requirements (70%+)
+- [ ] No console errors in tests
+
+#### Build
+- [ ] Production build succeeds (`npm run build`)
+- [ ] No build warnings
+- [ ] Bundle size is reasonable (check with `npm run build -- --stats`)
+
+#### Browser Testing
+- [ ] Tested in Chrome/Edge (Chromium)
+- [ ] Tested in Firefox
+- [ ] Tested in Safari (if available)
+- [ ] No console errors or warnings in browser
+- [ ] Responsive design works on mobile/tablet
+
+#### Documentation
+- [ ] Component props documented with JSDoc
+- [ ] Complex logic has inline comments
+- [ ] README updated if adding new features
+- [ ] Storybook stories added (if using Storybook)
+
+### Development Workflow
+
+#### Feature Development
+
+```bash
+# 1. Create feature branch
+git checkout -b feature/agent-studio-new-feature
+
+# 2. Start dev server
+cd src/mcp_server_langgraph/studio/frontend
+npm run dev
+
+# 3. Make changes with hot reload
+
+# 4. Run tests frequently
+npm run test:watch
+
+# 5. Before committing
+npm run lint:fix
+npm run format
+npm test
+npm run type-check
+
+# 6. Commit changes
+git add .
+git commit -m "feat(studio): add new feature"
+```
+
+#### Debugging
+
+**React DevTools**: Install browser extension for component inspection
+
+**Redux DevTools**: Install browser extension for state debugging
+
+**Vite DevTools**: Built-in HMR overlay for errors
+
+**Console Logging**:
+```typescript
+// Development only
+if (import.meta.env.DEV) {
+  console.log('Debug info:', data);
+}
+```
+
+### Common Issues and Solutions
+
+#### Issue: TypeScript errors after `npm install`
+
+**Solution**:
+```bash
+# Rebuild TypeScript declarations
+npm run type-check
+# If errors persist, clear node_modules
+rm -rf node_modules package-lock.json
+npm install
+```
+
+#### Issue: Vite dev server not hot-reloading
+
+**Solution**:
+```bash
+# Restart dev server
+npm run dev
+# Or clear Vite cache
+rm -rf node_modules/.vite
+npm run dev
+```
+
+#### Issue: Tests failing with "Cannot find module"
+
+**Solution**:
+```bash
+# Ensure test environment is set up
+npm install --include=dev
+# Check vitest.config.ts has correct resolve.alias
+```
+
+#### Issue: Redux state not updating
+
+**Solution**:
+- Ensure reducers are immutable (use Redux Toolkit's `createSlice`)
+- Check Redux DevTools for action dispatches
+- Verify selectors are using correct state paths
+
+### Resources
+
+- **React Documentation**: [react.dev](https://react.dev)
+- **TypeScript Handbook**: [typescriptlang.org/docs](https://www.typescriptlang.org/docs/)
+- **Redux Toolkit**: [redux-toolkit.js.org](https://redux-toolkit.js.org/)
+- **React Flow**: [reactflow.dev](https://reactflow.dev/)
+- **Tailwind CSS**: [tailwindcss.com](https://tailwindcss.com/)
+- **Vitest**: [vitest.dev](https://vitest.dev/)
+- **React Testing Library**: [testing-library.com/react](https://testing-library.com/react)
 
 ---
 

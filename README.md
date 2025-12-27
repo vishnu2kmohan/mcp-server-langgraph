@@ -5,7 +5,7 @@
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![Production Ready](https://img.shields.io/badge/production-ready-brightgreen.svg)](docs/deployment/production-checklist.mdx)
 [![Documentation](https://img.shields.io/badge/docs-mintlify-green.svg)](https://vishnu2kmohan.github.io/mcp-server-langgraph/)
-[![ADRs](https://img.shields.io/badge/ADRs-73-informational.svg)](adr/README.md)
+[![ADRs](https://img.shields.io/badge/ADRs-81-informational.svg)](adr/README.md)
 [![Use This Template](https://img.shields.io/badge/use-this%20template-blue.svg?logo=cookiecutter)](https://github.com/vishnu2kmohan/mcp-server-langgraph#-use-this-template)
 [![Docker](https://img.shields.io/badge/docker-%230db7ed.svg?logo=docker&logoColor=white)](Dockerfile)
 [![Kubernetes](https://img.shields.io/badge/kubernetes-%23326ce5.svg?logo=kubernetes&logoColor=white)](docs/deployment/kubernetes.mdx)
@@ -19,8 +19,7 @@
 
 **Docker Images**:
 [![MCP Server](https://github.com/vishnu2kmohan/mcp-server-langgraph/actions/workflows/ci.yaml/badge.svg?branch=main)](https://github.com/vishnu2kmohan/mcp-server-langgraph/pkgs/container/mcp-server-langgraph)
-[![Builder](https://github.com/vishnu2kmohan/mcp-server-langgraph/actions/workflows/build-builder-image.yaml/badge.svg)](https://github.com/vishnu2kmohan/mcp-server-langgraph/actions/workflows/build-builder-image.yaml)
-[![Playground](https://github.com/vishnu2kmohan/mcp-server-langgraph/actions/workflows/build-playground-image.yaml/badge.svg)](https://github.com/vishnu2kmohan/mcp-server-langgraph/actions/workflows/build-playground-image.yaml)
+[![Agent Studio](https://github.com/vishnu2kmohan/mcp-server-langgraph/actions/workflows/build-builder-image.yaml/badge.svg)](https://github.com/vishnu2kmohan/mcp-server-langgraph/actions/workflows/build-builder-image.yaml)
 [![Keycloak](https://github.com/vishnu2kmohan/mcp-server-langgraph/actions/workflows/build-keycloak-image.yaml/badge.svg)](https://github.com/vishnu2kmohan/mcp-server-langgraph/actions/workflows/build-keycloak-image.yaml)
 [![Alembic](https://github.com/vishnu2kmohan/mcp-server-langgraph/actions/workflows/build-alembic-image.yaml/badge.svg)](https://github.com/vishnu2kmohan/mcp-server-langgraph/actions/workflows/build-alembic-image.yaml)
 [![OpenFGA Seed](https://github.com/vishnu2kmohan/mcp-server-langgraph/actions/workflows/build-openfga-seed-image.yaml/badge.svg)](https://github.com/vishnu2kmohan/mcp-server-langgraph/actions/workflows/build-openfga-seed-image.yaml)
@@ -143,6 +142,20 @@ Execute Python code securely with comprehensive validation and sandboxing:
 **Test Coverage**: 162 tests (100% passing) | **Security**: 96% code coverage | **Backends**: Docker + Kubernetes
 
 **See**: [Implementation Summary](docs-internal/code-execution-implementation-summary.md) | [Anthropic MCP Guide](https://www.anthropic.com/engineering/code-execution-with-mcp)
+
+### 🎨 Agent Studio (NEW)
+
+Unified visual development environment for building and testing LangGraph agents:
+
+- **Visual Workflow Builder**: Drag-and-drop React Flow interface with node editing and real-time validation
+- **Real-time Streaming Chat**: WebSocket-powered chat interface with live agent responses
+- **In-Context Observability**: Embedded traces, logs, and metrics for immediate debugging
+- **Redux Toolkit State Management**: RTK Query for efficient API caching and optimistic updates
+- **Unified Experience**: Single application at `/studio` route (consolidated from separate Builder/Playground services)
+
+**Architecture**: React 18 + TypeScript + Redux Toolkit + React Flow + WebSockets | **Port**: 8000 (unified with API server)
+
+**See**: [Agent Studio Guide](docs/guides/agent-studio.mdx) | [Frontend Architecture](docs/architecture/frontend.mdx)
 
 ### 🔗 Unified API v1 (NEW)
 
@@ -481,8 +494,8 @@ Multi-layered testing approach ensuring production quality:
 
 | **Test Type** | **Count** | **Command** | **Purpose** |
 |---------------|-----------|-------------|-------------|
-| **Unit Tests** | ~400 tests | `make test-unit` | Fast tests with mocked dependencies (2-5s) |
-| **Integration Tests** | ~200 tests | `make test-integration` | End-to-end with real infrastructure |
+| **Unit Tests** | ~8,900 tests | `make test-unit` | Fast tests with mocked dependencies (2-5s) |
+| **Integration Tests** | ~5,800 tests | `make test-integration` | End-to-end with real infrastructure |
 | **Property Tests** | 27+ tests | `make test-property` | Edge case discovery with Hypothesis |
 | **Contract Tests** | 20+ tests | `make test-contract` | MCP protocol compliance validation |
 | **Performance Tests** | Baseline tracking | `make test-regression` | Latency monitoring (p95 thresholds) |

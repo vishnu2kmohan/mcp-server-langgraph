@@ -1,0 +1,300 @@
+---
+title: Code Execution API
+description: 'API endpoints for sandboxed Python code execution'
+icon: 'terminal'
+seoTitle: "Code Execution API - MCP Server with LangGraph"
+seoDescription: "API reference for sandboxed code execution endpoints with Docker and Kubernetes backends"
+keywords: ["code execution", "sandbox", "API", "docker", "kubernetes"]
+contentType: "reference"
+---
+
+## Overview
+
+The Code Execution API provides endpoints for running Python code in isolated sandbox environments. All operations are authenticated and authorized via JWT tokens.
+
+<Warning>
+Code execution is **disabled by default**. Enable via `ENABLE_CODE_EXECUTION=true` before using these endpoints.
+</Warning>
+
+---
+
+## Run Code
+
+Execute code or operations in a sandboxed environment.
+
+<ParamField path="POST" method="/api/v1/sandbox/run">
+  Execute a sandboxed operation
+</ParamField>
+
+### Request Body
+
+<ParamField body="type" type="string" required>
+  Operation type: `python`, `bash`, `web_fetch`, `write_file`, `edit_file`, `screenshot`, `computer_use`
+</ParamField>
+
+<ParamField body="code" type="string">
+  Python code to execute (for type: `python`)
+</ParamField>
+
+<ParamField body="command" type="string">
+  Shell command to execute (for type: `bash`)
+</ParamField>
+
+<ParamField body="url" type="string">
+  URL to fetch (for type: `web_fetch`)
+</ParamField>
+
+<ParamField body="file_path" type="string">
+  File path for write/edit operations
+</ParamField>
+
+<ParamField body="content" type="string">
+  File content (for type: `write_file`)
+</ParamField>
+
+<ParamField body="old_string" type="string">
+  String to find (for type: `edit_file`)
+</ParamField>
+
+<ParamField body="new_string" type="string">
+  Replacement string (for type: `edit_file`)
+</ParamField>
+
+<ParamField body="replace_all" type="boolean" default="false">
+  Replace all occurrences (for type: `edit_file`)
+</ParamField>
+
+<ParamField body="payload" type="object">
+  Additional payload for `screenshot` and `computer_use` operations
+</ParamField>
+
+<ParamField body="timeout" type="integer">
+  Override default timeout in seconds (max: 600)
+</ParamField>
+
+### Response
+
+<ResponseField name="stdout" type="string">
+  Standard output from execution
+</ResponseField>
+
+<ResponseField name="stderr" type="string">
+  Standard error from execution
+</ResponseField>
+
+<ResponseField name="exit_code" type="integer">
+  Process exit code (0 = success)
+</ResponseField>
+
+<ResponseField name="duration_ms" type="float">
+  Execution duration in milliseconds
+</ResponseField>
+
+<ResponseField name="timed_out" type="boolean">
+  Whether execution was killed due to timeout
+</ResponseField>
+
+<ResponseField name="error" type="string">
+  Error message if execution failed
+</ResponseField>
+
+---
+
+## Examples
+
+### Execute Python Code
+
+<CodeGroup>
+
+```bash Request
+curl -X POST http://localhost:8000/api/v1/sandbox/run \
+  -H "Authorization: Bearer $JWT" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "type": "python",
+    "code": "import json\ndata = {\"result\": sum(range(10))}\nprint(json.dumps(data))"
+  }'
+```
+
+```json Response
+{
+  "stdout": "{\"result\": 45}\n",
+  "stderr": "",
+  "exit_code": 0,
+  "duration_ms": 156.3,
+  "timed_out": false
+}
+```
+
+</CodeGroup>
+
+### Execute Bash Command
+
+<CodeGroup>
+
+```bash Request
+curl -X POST http://localhost:8000/api/v1/sandbox/run \
+  -H "Authorization: Bearer $JWT" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "type": "bash",
+    "command": "echo Hello World && date"
+  }'
+```
+
+```json Response
+{
+  "stdout": "Hello World\nFri Dec 27 10:00:00 UTC 2025\n",
+  "stderr": "",
+  "exit_code": 0,
+  "duration_ms": 45.2,
+  "timed_out": false
+}
+```
+
+</CodeGroup>
+
+### Fetch URL
+
+<CodeGroup>
+
+```bash Request
+curl -X POST http://localhost:8000/api/v1/sandbox/run \
+  -H "Authorization: Bearer $JWT" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "type": "web_fetch",
+    "url": "https://api.github.com/zen"
+  }'
+```
+
+```json Response
+{
+  "stdout": "{\"status\": 200, \"content_type\": \"text/plain\", \"text\": \"Encourage flow.\", \"truncated\": false}",
+  "stderr": "",
+  "exit_code": 0,
+  "duration_ms": 234.5,
+  "timed_out": false
+}
+```
+
+</CodeGroup>
+
+### Write File
+
+<CodeGroup>
+
+```bash Request
+curl -X POST http://localhost:8000/api/v1/sandbox/run \
+  -H "Authorization: Bearer $JWT" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "type": "write_file",
+    "file_path": "/tmp/data.json",
+    "content": "{\"key\": \"value\"}"
+  }'
+```
+
+```json Response
+{
+  "stdout": "File written successfully",
+  "stderr": "",
+  "exit_code": 0,
+  "duration_ms": 12.1,
+  "timed_out": false
+}
+```
+
+</CodeGroup>
+
+### Edit File
+
+<CodeGroup>
+
+```bash Request
+curl -X POST http://localhost:8000/api/v1/sandbox/run \
+  -H "Authorization: Bearer $JWT" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "type": "edit_file",
+    "file_path": "/tmp/data.json",
+    "old_string": "value",
+    "new_string": "updated_value",
+    "replace_all": false
+  }'
+```
+
+```json Response
+{
+  "stdout": "1 replacement made",
+  "stderr": "",
+  "exit_code": 0,
+  "duration_ms": 8.3,
+  "timed_out": false
+}
+```
+
+</CodeGroup>
+
+---
+
+## Error Responses
+
+### 400 Bad Request
+
+```json
+{
+  "detail": "Invalid operation type: unknown"
+}
+```
+
+### 403 Forbidden
+
+```json
+{
+  "detail": "Code execution is disabled. Set ENABLE_CODE_EXECUTION=true"
+}
+```
+
+### 408 Request Timeout
+
+```json
+{
+  "stdout": "",
+  "stderr": "",
+  "exit_code": 124,
+  "duration_ms": 30000,
+  "timed_out": true,
+  "error": "Execution exceeded timeout of 30 seconds"
+}
+```
+
+### 500 Internal Server Error
+
+```json
+{
+  "detail": "Sandbox execution failed: Docker daemon not available"
+}
+```
+
+---
+
+## Resource Limits
+
+All executions are subject to resource limits:
+
+| Resource | Default | Environment Variable |
+|----------|---------|---------------------|
+| Timeout | 30s | `CODE_EXECUTION_TIMEOUT` |
+| Memory | 512MB | `CODE_EXECUTION_MEMORY_LIMIT_MB` |
+| CPU | 1.0 cores | `CODE_EXECUTION_CPU_QUOTA` |
+| Disk | 100MB | `CODE_EXECUTION_DISK_QUOTA_MB` |
+| Processes | 1 | `CODE_EXECUTION_MAX_PROCESSES` |
+| Network | none | `CODE_EXECUTION_NETWORK_MODE` |
+
+---
+
+## Related Documentation
+
+- [Code Execution Guide](/guides/code-execution) - Setup and configuration
+- [Security Best Practices](/security/best-practices) - Security guidelines

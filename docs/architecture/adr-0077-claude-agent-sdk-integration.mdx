@@ -1,0 +1,723 @@
+---
+title: 'ADR-0077: Claude Agent SDK Integration'
+description: 'Leverage Anthropic Claude Agent SDK for sophisticated agent patterns'
+icon: 'robot'
+---
+
+# 77. Claude Agent SDK Integration
+
+Date: 2025-12
+
+## Status
+
+Accepted
+
+## Category
+
+Core Architecture & Agent Frameworks
+
+## Context
+
+The MCP Server LangGraph project has primarily used LangGraph for agent orchestration, with LiteLLM providing multi-provider LLM access. While this approach offers flexibility across LLM providers, it doesn't fully leverage Claude-specific capabilities and best practices when using Anthropic's models.
+
+### Current Limitations
+
+1. **Generic Tool Calling**: LiteLLM provides standardized tool calling, but doesn't optimize for Claude's specific tool use patterns
+2. **Streaming Responses**: Custom streaming implementation doesn't leverage Claude SDK's built-in streaming primitives
+3. **Error Handling**: Manual retry logic doesn't utilize Claude SDK's sophisticated error recovery
+4. **Agent Patterns**: Missing Claude-specific agent patterns documented in Anthropic's engineering guides
+5. **Configuration**: Manual configuration of Claude-specific parameters (temperature, tokens, etc.)
+
+### Anthropic's Recommendations
+
+From [Building Agents with the Claude Agent SDK](https://www.anthropic.com/engineering/building-agents-with-the-claude-agent-sdk):
+
+- Use Claude SDK for Claude-specific optimizations
+- Leverage SDK's tool calling abstractions
+- Utilize built-in streaming response handlers
+- Implement retry logic with exponential backoff
+- Follow agentic loop patterns (gather, act, verify, repeat)
+
+### Requirements
+
+1. **Maintain Multi-Provider Support**: Continue supporting OpenAI, Google, Azure via LiteLLM
+2. **Claude Optimization**: Use Claude SDK when Claude models are selected
+3. **Unified Interface**: Abstract SDK differences behind consistent interface
+4. **Configuration**: Integrate SDK configuration via existing LiteLLM provider abstraction
+5. **Backward Compatibility**: No breaking changes to existing agent APIs
+
+## Decision
+
+We will integrate the **Claude Agent SDK** alongside LangGraph, using it selectively when Claude models are chosen while maintaining LiteLLM for multi-provider support.
+
+### Architecture Overview
+
+```
+┌─────────────────────────────────────────────────────┐
+│  Agent Layer (src/mcp_server_langgraph/core/agent.py) │
+└────────────────────┬────────────────────────────────┘
+                     │
+         ┌───────────┴───────────┐
+         │                       │
+┌────────▼────────┐    ┌────────▼──────────┐
+│  LangGraph      │    │  Claude SDK       │
+│  Orchestration  │    │  Agent            │
+└────────┬────────┘    └────────┬──────────┘
+         │                       │
+         │          ┌────────────▼────────────────┐
+         │          │  Claude-Specific Features:  │
+         │          │  - Optimized tool calling   │
+         │          │  - Native streaming         │
+         │          │  - Retry mechanisms         │
+         │          │  - SDK-managed context      │
+         │          └─────────────────────────────┘
+         │
+┌────────▼──────────────────────────────────────────┐
+│  LiteLLM Provider Abstraction                     │
+│  (Multi-provider: OpenAI, Google, Azure, Claude)  │
+└───────────────────────────────────────────────────┘
+```
+
+### Integration Points
+
+#### 1. SDK Initialization and Configuration
+
+**Location**: `src/mcp_server_langgraph/llm/claude_agent.py` (new file)
+
+```python
+from anthropic import Anthropic, AsyncAnthropic
+from pydantic import BaseModel, Field
+
+class ClaudeAgentConfig(BaseModel):
+    """Configuration for Claude Agent SDK integration."""
+
+    model: str = Field(default="claude-opus-4-5-20251101")
+    max_tokens: int = Field(default=4096, ge=1, le=200000)
+    temperature: float = Field(default=1.0, ge=0.0, le=1.0)
+    api_key: str | None = Field(default=None)
+    enable_streaming: bool = Field(default=True)
+    retry_max_attempts: int = Field(default=3)
+    retry_backoff_factor: float = Field(default=2.0)
+
+class ClaudeAgentWrapper:
+    """
+    Wrapper around Claude Agent SDK providing unified interface.
+
+    Uses Claude SDK when Claude models selected, falls back to
+    LiteLLM for other providers.
+    """
+
+    def __init__(self, config: ClaudeAgentConfig):
+        self.config = config
+        self.client = AsyncAnthropic(api_key=config.api_key)
+        self._setup_retry_logic()
+
+    async def invoke(
+        self,
+        messages: list[dict[str, Any]],
+        tools: list[dict[str, Any]] | None = None,
+    ) -> dict[str, Any]:
+        """Invoke Claude with tool calling support."""
+        # SDK-optimized tool calling
+        ...
+
+    async def stream(
+        self,
+        messages: list[dict[str, Any]],
+        tools: list[dict[str, Any]] | None = None,
+    ) -> AsyncIterator[dict[str, Any]]:
+        """Stream responses using Claude SDK primitives."""
+        # Native streaming implementation
+        ...
+```
+
+#### 2. Tool Calling Patterns
+
+**Claude SDK Optimizations**:
+
+```python
+# Claude SDK provides optimized tool use patterns
+tools = [
+    {
+        "name": "search_knowledge_base",
+        "description": "Search internal knowledge base for context",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "query": {"type": "string"},
+                "max_results": {"type": "integer"}
+            },
+            "required": ["query"]
+        }
+    }
+]
+
+# SDK handles tool call formatting, validation, and execution
+response = await claude_agent.invoke(
+    messages=[{"role": "user", "content": "Search for API docs"}],
+    tools=tools
+)
+
+# SDK returns structured tool calls
+if response.stop_reason == "tool_use":
+    tool_calls = response.content
+    # Execute tools and continue conversation
+```
+
+**Benefits**:
+- Automatic tool schema validation
+- Optimized prompt formatting for Claude's tool use
+- Built-in error handling for malformed tool calls
+- Streaming support for tool use events
+
+#### 3. Streaming Response Handling
+
+**Claude SDK Streaming**:
+
+```python
+async def stream_response(
+    messages: list[dict[str, Any]]
+) -> AsyncIterator[str]:
+    """Stream Claude responses using SDK primitives."""
+
+    async with claude_agent.stream(messages) as stream:
+        async for event in stream:
+            if event.type == "content_block_delta":
+                # SDK handles delta formatting
+                yield event.delta.text
+            elif event.type == "message_stop":
+                # SDK signals completion
+                break
+```
+
+**SDK Features**:
+- Automatic reconnection on network errors
+- Delta accumulation and formatting
+- Event type discrimination (content, tool_use, etc.)
+- Graceful error handling
+
+#### 4. Error Handling and Retries
+
+**Claude SDK Retry Logic**:
+
+```python
+from anthropic import (
+    APIError,
+    APIConnectionError,
+    RateLimitError,
+    APITimeoutError
+)
+
+class ClaudeAgentWrapper:
+    def _setup_retry_logic(self):
+        """Configure exponential backoff retry logic."""
+        self.retry_config = {
+            "max_attempts": self.config.retry_max_attempts,
+            "backoff_factor": self.config.retry_backoff_factor,
+            "retryable_errors": [
+                APIConnectionError,
+                RateLimitError,
+                APITimeoutError
+            ]
+        }
+
+    async def _invoke_with_retry(self, **kwargs) -> dict[str, Any]:
+        """Invoke with exponential backoff retry."""
+        for attempt in range(self.retry_config["max_attempts"]):
+            try:
+                return await self.client.messages.create(**kwargs)
+            except tuple(self.retry_config["retryable_errors"]) as e:
+                if attempt == self.retry_config["max_attempts"] - 1:
+                    raise
+                await self._backoff(attempt)
+
+    async def _backoff(self, attempt: int):
+        """Exponential backoff with jitter."""
+        delay = (
+            self.retry_config["backoff_factor"] ** attempt
+            + random.uniform(0, 1)  # jitter
+        )
+        await asyncio.sleep(delay)
+```
+
+**SDK Error Types**:
+- `APIError`: Base error for all API errors
+- `APIConnectionError`: Network connectivity issues
+- `RateLimitError`: Rate limit exceeded
+- `APITimeoutError`: Request timeout
+- `AuthenticationError`: Invalid API key
+
+#### 5. Configuration via LiteLLM Provider
+
+**Integration with Existing Config**:
+
+```python
+# src/mcp_server_langgraph/llm/factory.py
+
+class LLMFactory:
+    """Factory for creating LLM instances with provider abstraction."""
+
+    def create_llm(self, provider: str, model: str) -> BaseLLM:
+        """Create LLM instance based on provider."""
+
+        if provider == "anthropic" and model.startswith("claude"):
+            # Use Claude SDK for Claude models
+            config = ClaudeAgentConfig(
+                model=model,
+                max_tokens=self._get_config("max_tokens"),
+                temperature=self._get_config("temperature"),
+                api_key=self._get_api_key("anthropic")
+            )
+            return ClaudeAgentWrapper(config)
+        else:
+            # Use LiteLLM for other providers
+            return ChatLiteLLM(
+                model=f"{provider}/{model}",
+                api_key=self._get_api_key(provider)
+            )
+```
+
+**Feature Flag Control**:
+
+```python
+# .env or config.py
+ENABLE_CLAUDE_SDK=true  # Enable Claude SDK integration
+CLAUDE_SDK_STREAMING=true  # Enable SDK streaming
+CLAUDE_SDK_RETRY_ATTEMPTS=3  # Retry configuration
+```
+
+## Implementation Details
+
+### Key Patterns
+
+#### Pattern 1: SDK-Aware LLM Selection
+
+```python
+async def select_llm(config: AgentConfig) -> BaseLLM:
+    """Select appropriate LLM implementation."""
+
+    if (
+        config.provider == "anthropic"
+        and config.feature_flags.enable_claude_sdk
+    ):
+        return ClaudeAgentWrapper(
+            ClaudeAgentConfig.from_agent_config(config)
+        )
+    else:
+        return ChatLiteLLM(model=f"{config.provider}/{config.model}")
+```
+
+#### Pattern 2: Unified Tool Calling Interface
+
+```python
+class BaseLLM(ABC):
+    """Unified LLM interface."""
+
+    @abstractmethod
+    async def invoke(
+        self,
+        messages: list[dict[str, Any]],
+        tools: list[dict[str, Any]] | None = None,
+    ) -> dict[str, Any]:
+        """Invoke LLM with optional tools."""
+        ...
+
+    @abstractmethod
+    async def stream(
+        self,
+        messages: list[dict[str, Any]],
+        tools: list[dict[str, Any]] | None = None,
+    ) -> AsyncIterator[dict[str, Any]]:
+        """Stream LLM responses."""
+        ...
+```
+
+#### Pattern 3: SDK Feature Detection
+
+```python
+def supports_feature(llm: BaseLLM, feature: str) -> bool:
+    """Check if LLM supports specific feature."""
+
+    features = {
+        "streaming": hasattr(llm, "stream"),
+        "tool_calling": hasattr(llm, "invoke") and "tools" in signature,
+        "vision": isinstance(llm, ClaudeAgentWrapper) and llm.supports_vision,
+        "extended_thinking": isinstance(llm, ClaudeAgentWrapper),
+    }
+
+    return features.get(feature, False)
+```
+
+### Files Created/Modified
+
+#### New Files
+
+1. **`src/mcp_server_langgraph/llm/claude_agent.py`** (~400 lines)
+   - ClaudeAgentConfig model
+   - ClaudeAgentWrapper implementation
+   - Retry logic
+   - Streaming primitives
+
+2. **`src/mcp_server_langgraph/llm/base.py`** (~150 lines)
+   - BaseLLM abstract class
+   - Unified interface definitions
+   - Feature detection utilities
+
+3. **`tests/unit/llm/test_claude_agent.py`** (~300 lines)
+   - Unit tests for ClaudeAgentWrapper
+   - Mock SDK responses
+   - Retry logic tests
+
+#### Modified Files
+
+4. **`src/mcp_server_langgraph/llm/factory.py`**
+   - Add Claude SDK selection logic
+   - Maintain backward compatibility
+   - Feature flag integration
+
+5. **`src/mcp_server_langgraph/core/agent.py`**
+   - Use unified BaseLLM interface
+   - SDK-aware tool calling
+   - Streaming response handling
+
+6. **`src/mcp_server_langgraph/core/config.py`**
+   - Add Claude SDK configuration section
+   - Feature flags for SDK features
+
+## Consequences
+
+### Positive Consequences
+
+1. **Claude-Specific Optimizations**
+   - Native Claude tool calling patterns
+   - Optimized streaming performance
+   - Better error messages and debugging
+   - Access to Claude-specific features (extended thinking, vision)
+
+2. **Improved Reliability**
+   - SDK-managed retry logic with exponential backoff
+   - Automatic reconnection for streaming
+   - Better error classification and handling
+   - Rate limit awareness
+
+3. **Developer Experience**
+   - Type-safe SDK interfaces
+   - Comprehensive error types
+   - Better documentation (Anthropic's SDK docs)
+   - Easier debugging with SDK logging
+
+4. **Performance**
+   - Reduced latency for Claude requests (SDK optimizations)
+   - Efficient streaming implementation
+   - Connection pooling and reuse
+   - Automatic request batching (where applicable)
+
+5. **Future-Proof**
+   - Access to new Claude features as SDK evolves
+   - SDK updates provide instant improvements
+   - Alignment with Anthropic's best practices
+   - Support for upcoming Claude capabilities
+
+### Negative Consequences
+
+1. **Additional Dependency**
+   - `anthropic` package added (~2MB installed size)
+   - Version management for SDK updates
+   - Potential breaking changes in SDK updates
+   - Increased testing surface area
+
+2. **Code Complexity**
+   - Dual-path implementation (SDK vs LiteLLM)
+   - Abstraction layer overhead
+   - Feature detection logic required
+   - More configuration options
+
+3. **Learning Curve**
+   - Team must understand Claude SDK concepts
+   - Different debugging approaches for SDK vs LiteLLM
+   - SDK-specific error handling patterns
+
+4. **Migration Overhead**
+   - Gradual migration of existing Claude usage
+   - Feature flag management during rollout
+   - Testing both code paths during transition
+   - Documentation updates
+
+### Neutral Consequences
+
+- Backward compatible (existing LiteLLM usage unchanged)
+- Optional feature (controlled by feature flag)
+- No impact on non-Claude providers
+
+## Alternatives Considered
+
+### 1. Continue with LiteLLM Only
+
+**Pros**:
+- Simpler codebase (single provider abstraction)
+- No additional dependencies
+- Unified interface across all providers
+- Easier testing (single code path)
+
+**Cons**:
+- Missing Claude-specific optimizations
+- Manual retry logic implementation
+- No access to Claude SDK features
+- Less efficient tool calling
+
+**Why Rejected**: Leaves performance and features on the table when using Claude models
+
+### 2. Replace LiteLLM with Native SDKs
+
+**Pros**:
+- Maximum optimization for each provider
+- Direct access to all provider features
+- Best possible performance
+
+**Cons**:
+- Massive code duplication
+- Different interfaces per provider
+- Difficult to maintain
+- Loses multi-provider abstraction benefits
+
+**Why Rejected**: Too much complexity, violates DRY principle
+
+### 3. Use LangChain's ChatAnthropic
+
+**Pros**:
+- Already integrates with LangGraph
+- LangChain ecosystem integration
+- Simpler than dual-path approach
+
+**Cons**:
+- LangChain abstraction layer overhead
+- Not as optimized as native SDK
+- Dependency on LangChain updates
+- Less control over low-level SDK features
+
+**Why Rejected**: Adds unnecessary abstraction layer, prefer direct SDK usage
+
+### 4. Fork LiteLLM to Add Claude Optimizations
+
+**Pros**:
+- Maintains single provider abstraction
+- Could contribute back to LiteLLM
+- Unified interface preserved
+
+**Cons**:
+- Maintenance burden of fork
+- Divergence from upstream LiteLLM
+- Delayed updates from LiteLLM improvements
+- Difficult to keep in sync
+
+**Why Rejected**: Maintenance burden too high, fork management complex
+
+## Performance Impact
+
+### Expected Improvements
+
+| Metric | LiteLLM | Claude SDK | Improvement |
+|--------|---------|------------|-------------|
+| Tool call latency | 250ms | 180ms | 28% faster |
+| Streaming first token | 400ms | 320ms | 20% faster |
+| Retry overhead | Custom (varies) | SDK (optimized) | Consistent |
+| Connection reuse | Manual | Automatic | Better |
+
+### Benchmarking Plan
+
+```python
+# tests/benchmarks/test_claude_sdk_performance.py
+
+@pytest.mark.benchmark
+async def test_tool_calling_latency():
+    """Compare LiteLLM vs Claude SDK tool calling."""
+    # Measure both implementations
+    ...
+
+@pytest.mark.benchmark
+async def test_streaming_first_token():
+    """Compare streaming response latency."""
+    # Measure TTFT (Time To First Token)
+    ...
+```
+
+## Migration Strategy
+
+### Phase 1: Implementation (Current)
+
+- Implement ClaudeAgentWrapper
+- Create unified BaseLLM interface
+- Add feature flags
+- Unit tests for SDK wrapper
+
+### Phase 2: Integration Testing
+
+```bash
+# Enable for development testing
+ENABLE_CLAUDE_SDK=true
+CLAUDE_SDK_STREAMING=true
+```
+
+- Integration tests with real Claude API
+- Performance benchmarking
+- Error handling validation
+
+### Phase 3: Canary Deployment
+
+```bash
+# Deploy to 10% of users
+ENABLE_CLAUDE_SDK=true  # For 10% traffic only
+```
+
+- Monitor metrics for issues
+- Compare error rates SDK vs LiteLLM
+- Validate latency improvements
+
+### Phase 4: Full Rollout
+
+```bash
+# Production default
+ENABLE_CLAUDE_SDK=true
+CLAUDE_SDK_STREAMING=true
+```
+
+- Enable for all Claude model usage
+- Remove feature flag (make default)
+- Deprecate old LiteLLM path for Claude
+
+## Success Metrics
+
+### Key Performance Indicators
+
+1. **Latency Improvements**
+   - `claude_sdk.tool_call.latency`: Compare to baseline
+   - `claude_sdk.streaming.ttft`: Time to first token
+   - Target: 20-30% improvement over LiteLLM
+
+2. **Reliability**
+   - `claude_sdk.retry.success_rate`: Retry success after errors
+   - `claude_sdk.error.rate`: Overall error rate
+   - Target: 95%+ success rate after retries
+
+3. **Feature Adoption**
+   - `claude_sdk.usage.total`: Total SDK invocations
+   - `claude_sdk.feature.streaming.usage`: Streaming adoption
+   - `claude_sdk.feature.tool_calling.usage`: Tool calling usage
+
+4. **Cost Efficiency**
+   - Token usage comparison (SDK vs LiteLLM)
+   - Connection pooling effectiveness
+   - Retry overhead reduction
+
+## Testing Strategy
+
+### Unit Tests
+
+```python
+# tests/unit/llm/test_claude_agent.py
+
+@pytest.mark.unit
+async def test_claude_agent_initialization():
+    """Test ClaudeAgentWrapper initialization."""
+    config = ClaudeAgentConfig(api_key="test-key")
+    agent = ClaudeAgentWrapper(config)
+    assert agent.client is not None
+
+@pytest.mark.unit
+async def test_tool_calling_formatting():
+    """Test tool call schema formatting."""
+    # Verify SDK-compatible tool schemas
+    ...
+
+@pytest.mark.unit
+async def test_retry_logic():
+    """Test exponential backoff retry."""
+    # Mock transient errors, verify retries
+    ...
+
+@pytest.mark.unit
+async def test_streaming_primitives():
+    """Test streaming response handling."""
+    # Mock streaming events, verify parsing
+    ...
+```
+
+### Integration Tests
+
+```python
+# tests/integration/llm/test_claude_sdk_integration.py
+
+@pytest.mark.integration
+async def test_real_claude_api_call():
+    """Test actual Claude API invocation."""
+    # Real API call (requires ANTHROPIC_API_KEY)
+    ...
+
+@pytest.mark.integration
+async def test_tool_use_workflow():
+    """Test complete tool use workflow."""
+    # Tool definition → invocation → result handling
+    ...
+
+@pytest.mark.integration
+async def test_streaming_end_to_end():
+    """Test streaming from request to completion."""
+    # Verify all streaming events handled correctly
+    ...
+```
+
+## Future Enhancements
+
+1. **Extended Thinking** (Phase 1.5)
+   - Use Claude SDK's extended thinking mode
+   - Configurable thinking budget
+   - Thinking trace capture
+
+2. **Vision Support** (Phase 2)
+   - Image input support via SDK
+   - Vision-specific tool calling
+   - Multi-modal agent workflows
+
+3. **Prompt Caching** (Phase 2.5)
+   - Leverage Claude's prompt caching
+   - Automatic cache key management
+   - Cost optimization tracking
+
+4. **Multi-Modal Artifacts** (Phase 3)
+   - SDK support for artifact generation
+   - Structured output formats
+   - Interactive artifact workflows
+
+## References
+
+- **Anthropic**: [Claude Agent SDK Documentation](https://docs.anthropic.com/claude/docs/agent-sdk)
+- **Anthropic**: [Building Agents with the Claude Agent SDK](https://www.anthropic.com/engineering/building-agents-with-the-claude-agent-sdk)
+- **Implementation**: `src/mcp_server_langgraph/llm/claude_agent.py` (to be created)
+- **Related ADRs**:
+  - [ADR-0001: LLM Multi-Provider Strategy](/architecture/adr-0001-llm-multi-provider) - LiteLLM integration
+  - [ADR-0024: Agentic Loop Implementation](/architecture/adr-0024-agentic-loop-implementation) - Agent workflows
+  - [ADR-0030: Resilience Patterns](/architecture/adr-0030-resilience-patterns) - Retry logic
+  - [ADR-0078: Multi-Agent Orchestrator Patterns](/architecture/adr-0078-multi-agent-orchestrator-patterns) - Orchestration
+
+## Implementation Checklist
+
+- [ ] Create ClaudeAgentConfig Pydantic model
+- [ ] Implement ClaudeAgentWrapper class
+- [ ] Create BaseLLM abstract interface
+- [ ] Add SDK retry logic with exponential backoff
+- [ ] Implement streaming primitives
+- [ ] Update LLMFactory for SDK selection
+- [ ] Add feature flags to config
+- [ ] Create unit tests for ClaudeAgentWrapper
+- [ ] Create integration tests for real API calls
+- [ ] Add performance benchmarks
+- [ ] Update documentation
+- [ ] Create usage examples
+- [ ] Add metrics dashboards
+- [ ] Deploy canary rollout
+- [ ] Monitor production metrics
+
+---
+
+**Last Updated**: 2025-12-26
+**Next Review**: 2026-01-26 (after 1 month in production)

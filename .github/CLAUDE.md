@@ -51,9 +51,9 @@
 │
 ├── context/                           # Living context files
 │   ├── recent-work.md                 # Last 15 commits (auto-updated)
-│   ├── testing-patterns.md            # 8,700+ test patterns
+│   ├── testing-patterns.md            # 14,900+ test patterns
 │   ├── code-patterns.md               # Design patterns library
-│   ├── pytest-markers.md              # 46 markers catalog (NEW)
+│   ├── pytest-markers.md              # 67 markers catalog (NEW)
 │   ├── xdist-safety-patterns.md       # Memory safety (NEW)
 │   └── test-constants-pattern.md      # Centralized constants (NEW)
 │
@@ -75,10 +75,12 @@
 
 **Technology Stack**:
 - **Framework**: LangGraph >=1.0.4 (conversation state management)
+- **Frontend**: Agent Studio (React 18 + Redux Toolkit + RTK Query + Vite)
 - **LLM Support**: Multi-provider (OpenAI, Anthropic, Google Vertex AI, Azure)
 - **Vertex AI**: Claude + Gemini via Workload Identity Federation (keyless auth)
-- **Auth**: Keycloak SSO + OpenFGA authorization
+- **Auth**: Keycloak SSO + OpenFGA authorization + DPoP token binding
 - **Storage**: PostgreSQL + Redis (langgraph-checkpoint-redis for distributed state)
+- **Execution**: Docker/Kubernetes sandbox code execution engine
 - **Observability**: OpenTelemetry + Prometheus + Grafana
 - **Deployment**: Kubernetes (Helm + Kustomize)
 
@@ -92,14 +94,17 @@ mcp-server-langgraph/
 │   ├── llm/                      # LLM factory & validators
 │   ├── mcp/                      # MCP server implementations
 │   ├── observability/            # Telemetry & metrics
-│   └── secrets/                  # Secrets management
-├── tests/                        # 8,700+ comprehensive tests
+│   ├── secrets/                  # Secrets management
+│   ├── studio/                   # Agent Studio frontend (React + Redux)
+│   ├── execution/                # Sandboxed code execution engine
+│   └── security/                 # Prompt injection protection
+├── tests/                        # 14,900+ comprehensive tests
 ├── deployments/                  # Kubernetes, Helm, Kustomize
 ├── monitoring/                   # Grafana dashboards
 └── .claude/                      # Workflow automation
 ```
 
-**Test Suite**: 8,700+ tests, 46 pytest markers, 99.3% pass rate
+**Test Suite**: 14,900+ tests, 67 pytest markers, 99.3% pass rate
 **Coverage**: 75% (targeting 80%+)
 
 ---
@@ -130,7 +135,7 @@ mcp-server-langgraph/
 
 3. **Context** (`.claude/context/`): Living documentation
    - Auto-updated from git history
-   - Test patterns from 8,700+ tests
+   - Test patterns from 14,900+ tests
    - Design patterns from codebase
    - **NEW**: pytest markers, xdist safety, test constants
 
@@ -247,6 +252,65 @@ When running in a worktree, Claude Code automatically displays:
   ```
 
 ---
+
+## 🎨 Agent Studio (NEW)
+
+### Overview
+
+Unified frontend for AI agent development with visual workflow builder and real-time interaction:
+
+**Features**:
+- **Visual Workflow Builder**: Interactive agent graph design with React Flow
+- **Real-time Streaming Chat**: Live conversation with agents
+- **In-context Observability**: Embedded metrics and trace visualization
+- **State Management**: Redux Toolkit + RTK Query for optimized data flow
+- **Code Execution**: Sandboxed Python/JavaScript execution in Docker/Kubernetes
+- **Security**: Prompt injection protection with content filtering
+
+**Access**:
+```bash
+# Start the development server
+make run-studio
+
+# Access Agent Studio
+http://localhost:8000/studio
+```
+
+**Architecture**:
+- **Frontend**: React 18 + TypeScript + Vite
+- **State**: Redux Toolkit with RTK Query for API caching
+- **UI Components**: Shadcn/ui + Tailwind CSS
+- **Visualization**: React Flow for graph editing
+- **Backend API**: FastAPI with SSE for streaming
+
+**Key Routes**:
+- `/studio` - Main dashboard
+- `/studio/agents` - Agent management
+- `/studio/chat` - Interactive chat interface
+- `/studio/traces` - Observability traces
+- `/studio/playground` - Code execution sandbox
+
+**Development**:
+```bash
+# Install frontend dependencies
+cd src/mcp_server_langgraph/studio/frontend
+npm install
+
+# Start development server with hot reload
+npm run dev
+
+# Build for production
+npm run build
+
+# Run frontend tests
+npm test
+```
+
+**Integration with Backend**:
+- WebSocket connections for real-time streaming
+- RTK Query for automatic cache invalidation
+- OpenTelemetry integration for distributed tracing
+- Keycloak SSO for authentication
 
 ---
 

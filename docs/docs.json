@@ -183,10 +183,16 @@
             ]
           },
           {
-            "group": "Unified Studio",
+            "group": "Agent Studio",
             "pages": [
-              "api-reference/playground",
-              "api-reference/builder"
+              "api-reference/studio",
+              "api-reference/websockets"
+            ]
+          },
+          {
+            "group": "Code Execution",
+            "pages": [
+              "api-reference/code-execution"
             ]
           },
           {
@@ -335,17 +341,20 @@
               "guides/presets",
               "guides/agent-architecture",
               "guides/agent-hitl-approval",
+              "guides/hitl-confidence",
               "guides/multi-agent-orchestrators",
               "guides/sdk-hooks"
             ]
           },
           {
-            "group": "Unified Studio",
+            "group": "Agent Studio",
             "pages": [
-              "guides/visual-workflow-builder",
-              "guides/playground",
+              "guides/studio",
               "guides/studio-feature-flags",
-              "guides/keyboard-shortcuts"
+              "guides/keyboard-shortcuts",
+              "guides/code-execution",
+              "guides/devtools",
+              "guides/skills-marketplace"
             ]
           },
           {
@@ -384,7 +393,9 @@
               "guides/permission-model",
               "guides/relationship-tuples",
               "guides/keycloak-sso",
-              "guides/authentication-migration-v2-8"
+              "guides/dpop-enforcement",
+              "guides/authentication-migration-v2-8",
+              "guides/prompt-injection-protection"
             ]
           },
           {
@@ -503,7 +514,8 @@
               "architecture/adr-0004-mcp-streamable-http",
               "architecture/adr-0069-mcp-2025-11-25-upgrade",
               "architecture/adr-0005-pydantic-ai-integration",
-              "architecture/adr-0010-langgraph-functional-api"
+              "architecture/adr-0010-langgraph-functional-api",
+              "architecture/adr-0082-mcp-client-capabilities"
             ]
           },
           {
@@ -556,7 +568,13 @@
               "architecture/adr-0025-anthropic-best-practices-enhancements",
               "architecture/adr-0026-lazy-observability-initialization",
               "architecture/adr-0029-custom-exception-hierarchy",
-              "architecture/adr-0078-multi-agent-orchestrator-patterns"
+              "architecture/adr-0077-claude-agent-sdk-integration",
+              "architecture/adr-0078-multi-agent-orchestrator-patterns",
+              "architecture/adr-0079-multi-framework-tool-parity",
+              "architecture/adr-0080-llm-level-callback-system",
+              "architecture/adr-0081-handoff-pattern-multi-agent",
+              "architecture/adr-0083-confidence-based-hitl-system",
+              "architecture/adr-0084-studio-orchestrator-unified-ai"
             ]
           },
           {

@@ -1,0 +1,376 @@
+---
+title: Sandboxed Code Execution
+description: 'Execute Python code securely in isolated Docker or Kubernetes environments'
+icon: 'terminal'
+seoTitle: "Code Execution - MCP Server with LangGraph"
+seoDescription: "Secure sandboxed code execution with Docker and Kubernetes backends, resource limits, and defense-in-depth security"
+keywords: ["code execution", "sandbox", "docker", "kubernetes", "security", "isolation"]
+contentType: "tutorial"
+---
+
+## Overview
+
+The MCP Server provides a secure code execution engine that runs Python code in isolated sandbox environments. This enables AI agents to execute code safely with:
+
+- **Complete Isolation** - Each execution runs in a fresh container/pod
+- **Resource Limits** - CPU, memory, disk, and process constraints
+- **Network Isolation** - No network access by default
+- **Security Validation** - AST-based code analysis blocks dangerous patterns
+
+<Warning>
+Code execution is **disabled by default** for security. Enable it only after understanding the security implications and configuring appropriate limits.
+</Warning>
+
+---
+
+## Quick Start
+
+### Enable Code Execution
+
+```bash
+# Enable in environment
+export ENABLE_CODE_EXECUTION=true
+export CODE_EXECUTION_BACKEND="docker-engine"
+
+# Or in .env file
+ENABLE_CODE_EXECUTION=true
+CODE_EXECUTION_BACKEND=docker-engine
+```
+
+### Execute Code via API
+
+```bash
+curl -X POST http://localhost:8000/api/v1/sandbox/run \
+  -H "Authorization: Bearer $JWT" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "type": "python",
+    "code": "print(sum([1, 2, 3, 4, 5]))"
+  }'
+```
+
+**Response:**
+```json
+{
+  "stdout": "15\n",
+  "stderr": "",
+  "exit_code": 0,
+  "duration_ms": 245,
+  "timed_out": false
+}
+```
+
+---
+
+## Backends
+
+### Docker Engine (Recommended)
+
+Uses Docker containers for isolation. Best for single-node deployments.
+
+```bash
+CODE_EXECUTION_BACKEND=docker-engine
+CODE_EXECUTION_DOCKER_IMAGE=python:3.12-slim
+CODE_EXECUTION_DOCKER_SOCKET=/var/run/docker.sock
+```
+
+**Requirements:**
+- Docker daemon running
+- Socket access (`/var/run/docker.sock`)
+- Pull permission for specified image
+
+### Kubernetes
+
+Uses Kubernetes Jobs for isolation. Best for multi-node deployments.
+
+```bash
+CODE_EXECUTION_BACKEND=kubernetes
+CODE_EXECUTION_K8S_NAMESPACE=sandbox
+CODE_EXECUTION_K8S_JOB_TTL=300
+```
+
+**Requirements:**
+- Valid kubeconfig or in-cluster RBAC
+- Permission to create/delete Jobs in namespace
+- Namespace must exist
+
+---
+
+## Resource Limits
+
+Configure execution constraints to prevent resource exhaustion:
+
+| Variable | Default | Range | Description |
+|----------|---------|-------|-------------|
+| `CODE_EXECUTION_TIMEOUT` | 30 | 1-600 | Max execution time (seconds) |
+| `CODE_EXECUTION_MEMORY_LIMIT_MB` | 512 | 64-8192 | Memory limit (MB) |
+| `CODE_EXECUTION_CPU_QUOTA` | 1.0 | 0.1-8.0 | CPU cores |
+| `CODE_EXECUTION_DISK_QUOTA_MB` | 100 | 1-10240 | Disk space (MB) |
+| `CODE_EXECUTION_MAX_PROCESSES` | 1 | 1-100 | Max concurrent processes |
+
+### Preset Profiles
+
+<Tabs>
+  <Tab title="Production">
+    ```bash
+    # Strict limits for production
+    CODE_EXECUTION_TIMEOUT=30
+    CODE_EXECUTION_MEMORY_LIMIT_MB=512
+    CODE_EXECUTION_CPU_QUOTA=1.0
+    CODE_EXECUTION_NETWORK_MODE=none
+    ```
+  </Tab>
+  <Tab title="Development">
+    ```bash
+    # Relaxed limits for development
+    CODE_EXECUTION_TIMEOUT=300
+    CODE_EXECUTION_MEMORY_LIMIT_MB=2048
+    CODE_EXECUTION_CPU_QUOTA=2.0
+    CODE_EXECUTION_NETWORK_MODE=unrestricted
+    ```
+  </Tab>
+  <Tab title="Data Processing">
+    ```bash
+    # For data-heavy workloads
+    CODE_EXECUTION_TIMEOUT=300
+    CODE_EXECUTION_MEMORY_LIMIT_MB=4096
+    CODE_EXECUTION_CPU_QUOTA=4.0
+    CODE_EXECUTION_NETWORK_MODE=allowlist
+    CODE_EXECUTION_ALLOWED_DOMAINS=api.example.com,data.example.com
+    ```
+  </Tab>
+</Tabs>
+
+---
+
+## Security Model
+
+The code execution engine uses **defense-in-depth** with multiple security layers:
+
+### Layer 1: Code Validation
+
+AST-based analysis blocks dangerous patterns before execution:
+
+**Blocked Modules:**
+```python
+# OS/System (52 modules blocked)
+os, sys, subprocess, pty, shutil, ctypes
+
+# Networking
+socket, urllib, requests, http.client
+
+# Serialization (unsafe)
+pickle, marshal
+
+# Debugging/Introspection
+code, pdb, inspect, gc, ast
+```
+
+**Blocked Builtins:**
+```python
+eval, exec, compile, __import__
+open, input, breakpoint
+globals, locals, vars
+getattr, setattr, delattr
+```
+
+### Layer 2: Container Security
+
+<AccordionGroup>
+  <Accordion title="Docker Security" icon="docker">
+    ```
+    - user: nobody (non-root)
+    - read_only: true (read-only root FS)
+    - security_opt: ["no-new-privileges"]
+    - cap_drop: ["ALL"]
+    - network_mode: none (isolated)
+    - tmpfs: /tmp, /var/tmp (ephemeral)
+    ```
+  </Accordion>
+  <Accordion title="Kubernetes Security" icon="cloud">
+    ```yaml
+    securityContext:
+      runAsNonRoot: true
+      runAsUser: 1000
+      allowPrivilegeEscalation: false
+      capabilities:
+        drop: ["ALL"]
+    ```
+  </Accordion>
+</AccordionGroup>
+
+### Layer 3: Network Isolation
+
+| Mode | Description | Use Case |
+|------|-------------|----------|
+| `none` | No network access | **Default** - highest security |
+| `allowlist` | Domain-restricted via proxy | Controlled API access |
+| `unrestricted` | Full network | Development only |
+
+```bash
+# Enable domain allowlist
+CODE_EXECUTION_NETWORK_MODE=allowlist
+CODE_EXECUTION_ALLOWED_DOMAINS=api.github.com,pypi.org
+```
+
+---
+
+## Allowed Imports
+
+Only whitelisted modules can be imported:
+
+```bash
+CODE_EXECUTION_ALLOWED_IMPORTS=json,math,datetime,collections,itertools,functools,typing,dataclasses,enum,abc,statistics,re,decimal,fractions,numbers,operator
+```
+
+**Default Allowed Modules:**
+
+| Category | Modules |
+|----------|---------|
+| Data | `json`, `datetime`, `collections`, `dataclasses` |
+| Math | `math`, `statistics`, `decimal`, `fractions`, `numbers` |
+| Typing | `typing`, `enum`, `abc` |
+| Text | `re` |
+| Functional | `functools`, `itertools`, `operator` |
+
+<Note>
+To allow additional modules, extend the `CODE_EXECUTION_ALLOWED_IMPORTS` list. Be cautious with modules that have network or file system access.
+</Note>
+
+---
+
+## API Reference
+
+### Execute Python Code
+
+**Endpoint:** `POST /api/v1/sandbox/run`
+
+```json
+{
+  "type": "python",
+  "code": "import json\ndata = {'key': 'value'}\nprint(json.dumps(data))",
+  "timeout": 30
+}
+```
+
+**Response:**
+```json
+{
+  "stdout": "{\"key\": \"value\"}\n",
+  "stderr": "",
+  "exit_code": 0,
+  "duration_ms": 156,
+  "timed_out": false
+}
+```
+
+### Other Operations
+
+| Operation | Description |
+|-----------|-------------|
+| `bash` | Execute shell commands |
+| `web_fetch` | Fetch URL content (requires network) |
+| `write_file` | Create file in sandbox |
+| `edit_file` | Modify file in sandbox |
+| `screenshot` | Capture web page (Playwright) |
+| `computer_use` | Browser automation (Playwright) |
+
+---
+
+## Examples
+
+### Data Processing
+
+```python
+import json
+from collections import Counter
+from statistics import mean, stdev
+
+# Process data
+data = [1, 2, 2, 3, 3, 3, 4, 4, 5]
+result = {
+    "count": len(data),
+    "mean": mean(data),
+    "stdev": stdev(data),
+    "frequency": dict(Counter(data))
+}
+
+print(json.dumps(result, indent=2))
+```
+
+### JSON Transformation
+
+```python
+import json
+from datetime import datetime
+
+input_data = {"name": "Alice", "age": 30}
+output = {
+    **input_data,
+    "processed_at": datetime.now().isoformat(),
+    "version": "1.0"
+}
+
+print(json.dumps(output))
+```
+
+---
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Execution times out" icon="clock">
+    **Symptoms:** Code execution exceeds timeout limit
+
+    **Solutions:**
+    1. Increase `CODE_EXECUTION_TIMEOUT` (max 600 seconds)
+    2. Optimize code for efficiency
+    3. Break large operations into smaller chunks
+  </Accordion>
+
+  <Accordion title="Import not allowed" icon="ban">
+    **Symptoms:** `ImportError: Module 'xyz' is not in allowed imports`
+
+    **Solutions:**
+    1. Add module to `CODE_EXECUTION_ALLOWED_IMPORTS`
+    2. Verify module doesn't have security risks
+    3. Consider if functionality can use allowed modules
+  </Accordion>
+
+  <Accordion title="Out of memory" icon="memory">
+    **Symptoms:** Process killed due to memory limit
+
+    **Solutions:**
+    1. Increase `CODE_EXECUTION_MEMORY_LIMIT_MB`
+    2. Process data in smaller batches
+    3. Use generators instead of loading all data into memory
+  </Accordion>
+
+  <Accordion title="Docker permission denied" icon="lock">
+    **Symptoms:** Cannot connect to Docker daemon
+
+    **Solutions:**
+    1. Verify Docker daemon is running
+    2. Check socket permissions: `chmod 666 /var/run/docker.sock`
+    3. Add user to docker group: `usermod -aG docker $USER`
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Feature Flags
+
+| Flag | Default | Description |
+|------|---------|-------------|
+| `enable_code_execution` | false | Master switch (in settings, not FF_) |
+| `enable_bash_tool` | false | Allow bash command execution |
+| `enable_computer_use` | false | Allow browser automation |
+| `enable_programmatic_tools` | false | Allow sandbox code to call MCP tools |
+
+---
+
+## Related Documentation
+
+- [Internal: Code Execution Engine](/docs-internal/CODE_EXECUTION_ENGINE.md) - Architecture details
+- [Security Best Practices](/security/best-practices) - Security guidelines
+- [Feature Flags Guide](/guides/feature-flags) - Configuration options

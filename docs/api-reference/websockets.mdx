@@ -1,0 +1,453 @@
+---
+title: WebSocket API Reference
+description: 'Real-time communication endpoints for streaming, HITL approvals, and notifications'
+icon: 'plug'
+seoTitle: "WebSocket API - MCP Server with LangGraph"
+seoDescription: "Complete reference for WebSocket endpoints supporting real-time streaming, notifications, and bidirectional communication"
+keywords: ["websocket", "streaming", "real-time", "notifications", "HITL", "alerts"]
+contentType: "reference"
+---
+
+## Overview
+
+The MCP Server provides a consolidated WebSocket router (ADR-0068) for real-time bidirectional communication. All WebSocket endpoints use a standardized infrastructure with:
+
+- **JWT Authentication** - Token validated on connection
+- **Server Heartbeat** - 30-second ping/pong for connection health
+- **Enhanced Metrics** - OpenTelemetry integration
+- **Rate Limiting** - Per-connection message limits
+
+<Note>
+All WebSocket endpoints require authentication. Include your JWT token in the `Authorization` header or as a query parameter (`?token=YOUR_JWT`).
+</Note>
+
+---
+
+## Chat Streaming
+
+### `GET /api/v1/chat/ws/{session_id}`
+
+Real-time chat streaming for a specific session.
+
+**Connection URL:**
+```
+ws://localhost:8000/api/v1/chat/ws/{session_id}?token=YOUR_JWT
+```
+
+**Parameters:**
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `session_id` | string | Yes | The session ID for the conversation |
+| `token` | string | Yes | JWT token (query param or header) |
+
+**Client → Server Messages:**
+
+```json
+// Send a chat message
+{
+  "type": "chat",
+  "content": "What is the weather today?",
+  "metadata": {
+    "model": "gemini-2.5-flash"
+  }
+}
+
+// Cancel current response
+{
+  "type": "cancel"
+}
+
+// Ping (keepalive)
+{
+  "type": "ping"
+}
+```
+
+**Server → Client Messages:**
+
+```json
+// Token (streaming response)
+{ "type": "token", "content": "The" }
+{ "type": "token", "content": " weather" }
+
+// Tool invocation
+{
+  "type": "tool_call",
+  "id": "call_123",
+  "name": "get_weather",
+  "args": { "location": "New York" }
+}
+
+// Tool result
+{
+  "type": "tool_result",
+  "id": "call_123",
+  "content": "72F, sunny"
+}
+
+// End of response
+{ "type": "end", "token_count": 150 }
+
+// Error
+{ "type": "error", "message": "Rate limit exceeded" }
+
+// Server heartbeat
+{ "type": "heartbeat", "timestamp": "2025-12-27T10:00:00Z" }
+```
+
+---
+
+## AI Suggestions
+
+### `GET /api/v1/ws/ai/suggestions`
+
+Real-time AI-powered suggestions for chat input.
+
+**Connection URL:**
+```
+ws://localhost:8000/api/v1/ws/ai/suggestions?token=YOUR_JWT
+```
+
+**Feature Flag:** `enable_ai_suggestions_websocket` (default: true)
+
+**Client → Server Messages:**
+
+```json
+// Request suggestions for current input
+{
+  "type": "suggest",
+  "session_id": "session_123",
+  "input": "How do I",
+  "context": {
+    "previous_messages": 5
+  }
+}
+```
+
+**Server → Client Messages:**
+
+```json
+// Streaming suggestion
+{
+  "type": "suggestion",
+  "id": "sug_123",
+  "text": "How do I configure authentication?",
+  "confidence": 0.85,
+  "category": "question_completion"
+}
+
+// Suggestion batch complete
+{
+  "type": "suggestions_complete",
+  "count": 3,
+  "latency_ms": 120
+}
+```
+
+---
+
+## HITL Approvals
+
+### `GET /api/v1/ws/hitl/approvals`
+
+Real-time Human-in-the-Loop approval requests and updates.
+
+**Connection URL:**
+```
+ws://localhost:8000/api/v1/ws/hitl/approvals?token=YOUR_JWT
+```
+
+**Feature Flag:** `enable_agent_hitl_websocket` (default: true)
+
+**Server → Client Messages:**
+
+```json
+// New approval request
+{
+  "type": "approval_request",
+  "id": "req_123",
+  "session_id": "session_456",
+  "action": {
+    "type": "tool_call",
+    "tool_name": "delete_file",
+    "args": { "path": "/data/important.txt" }
+  },
+  "confidence": 0.65,
+  "ai_explanation": {
+    "why_uncertain": "File deletion is irreversible",
+    "what_could_go_wrong": "Data loss if file contains important data",
+    "safer_alternatives": ["Create backup first", "Move to trash instead"]
+  },
+  "expires_at": "2025-12-27T11:00:00Z"
+}
+
+// Request status update
+{
+  "type": "approval_update",
+  "id": "req_123",
+  "status": "approved",
+  "approved_by": "alice",
+  "approved_at": "2025-12-27T10:30:00Z"
+}
+```
+
+**Client → Server Messages:**
+
+```json
+// Approve request
+{
+  "type": "approve",
+  "id": "req_123",
+  "comment": "Verified backup exists"
+}
+
+// Reject request
+{
+  "type": "reject",
+  "id": "req_123",
+  "reason": "Please create backup first"
+}
+
+// Subscribe to specific session
+{
+  "type": "subscribe",
+  "session_id": "session_456"
+}
+```
+
+---
+
+## Alert Notifications
+
+### `GET /api/v1/ws/alerts`
+
+Real-time alert streaming for administrators.
+
+**Connection URL:**
+```
+ws://localhost:8000/api/v1/ws/alerts?token=YOUR_JWT
+```
+
+**Authorization:** Requires admin role
+
+**Server → Client Messages:**
+
+```json
+// New alert
+{
+  "type": "alert",
+  "id": "alert_123",
+  "severity": "critical",
+  "title": "High Error Rate",
+  "description": "Error rate exceeded 5% threshold",
+  "source": "prometheus",
+  "labels": {
+    "service": "mcp-server",
+    "namespace": "production"
+  },
+  "annotations": {
+    "runbook_url": "https://docs.example.com/runbooks/high-error-rate"
+  },
+  "created_at": "2025-12-27T10:00:00Z"
+}
+
+// Alert resolved
+{
+  "type": "alert_resolved",
+  "id": "alert_123",
+  "resolved_at": "2025-12-27T10:30:00Z"
+}
+
+// Alert correlation
+{
+  "type": "correlation",
+  "primary_alert": "alert_123",
+  "correlated_alerts": ["alert_124", "alert_125"],
+  "root_cause": "Database connection pool exhausted"
+}
+```
+
+**Client → Server Messages:**
+
+```json
+// Acknowledge alert
+{
+  "type": "acknowledge",
+  "id": "alert_123"
+}
+
+// Silence alert
+{
+  "type": "silence",
+  "id": "alert_123",
+  "duration_minutes": 60
+}
+```
+
+---
+
+## Notifications
+
+### `GET /api/v1/ws/notifications`
+
+User-specific notification streaming.
+
+**Connection URL:**
+```
+ws://localhost:8000/api/v1/ws/notifications?token=YOUR_JWT
+```
+
+**Server → Client Messages:**
+
+```json
+// Notification
+{
+  "type": "notification",
+  "id": "notif_123",
+  "category": "session",
+  "title": "Session Completed",
+  "body": "Your workflow 'Data Analysis' completed successfully",
+  "action_url": "/studio/sessions/session_456",
+  "created_at": "2025-12-27T10:00:00Z"
+}
+
+// Notification dismissed
+{
+  "type": "dismissed",
+  "id": "notif_123"
+}
+```
+
+**Client → Server Messages:**
+
+```json
+// Mark as read
+{
+  "type": "mark_read",
+  "id": "notif_123"
+}
+
+// Dismiss notification
+{
+  "type": "dismiss",
+  "id": "notif_123"
+}
+```
+
+---
+
+## MCP WebSocket
+
+### `GET /api/v1/mcp/ws`
+
+MCP 2025-11-25 compliant WebSocket for bidirectional MCP communication.
+
+**Connection URL:**
+```
+ws://localhost:8000/api/v1/mcp/ws?token=YOUR_JWT
+```
+
+**Feature Flag:** `enable_mcp_websocket` (default: true)
+
+**Supported MCP Messages:**
+
+```json
+// Tool invocation
+{
+  "jsonrpc": "2.0",
+  "method": "tools/call",
+  "params": {
+    "name": "get_weather",
+    "arguments": { "location": "NYC" }
+  },
+  "id": 1
+}
+
+// Resource read
+{
+  "jsonrpc": "2.0",
+  "method": "resources/read",
+  "params": {
+    "uri": "studio://session/abc123/traces"
+  },
+  "id": 2
+}
+
+// Prompt execution
+{
+  "jsonrpc": "2.0",
+  "method": "prompts/get",
+  "params": {
+    "name": "summarize_conversation"
+  },
+  "id": 3
+}
+```
+
+---
+
+## Connection Health
+
+### Heartbeat Protocol
+
+All WebSocket connections use server-initiated heartbeat:
+
+```
+Server: {"type": "heartbeat", "timestamp": "..."}
+Client: {"type": "pong"}
+```
+
+**Configuration:**
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `FF_WEBSOCKET_HEARTBEAT_INTERVAL_SECONDS` | 30 | Heartbeat interval |
+| `FF_WEBSOCKET_IDLE_TIMEOUT_SECONDS` | 1800 | Idle disconnect timeout |
+| `FF_WEBSOCKET_RATE_LIMIT_PER_MINUTE` | 600 | Max messages per minute |
+
+---
+
+## Error Handling
+
+All WebSocket errors use a standard format:
+
+```json
+{
+  "type": "error",
+  "code": "RATE_LIMIT_EXCEEDED",
+  "message": "Too many messages. Please wait.",
+  "retry_after_ms": 1000
+}
+```
+
+**Error Codes:**
+
+| Code | Description |
+|------|-------------|
+| `UNAUTHORIZED` | Invalid or expired token |
+| `FORBIDDEN` | Insufficient permissions |
+| `RATE_LIMIT_EXCEEDED` | Message rate limit exceeded |
+| `SESSION_NOT_FOUND` | Session ID does not exist |
+| `CONNECTION_TIMEOUT` | Idle timeout reached |
+| `INTERNAL_ERROR` | Server-side error |
+
+---
+
+## Feature Flags
+
+| Flag | Default | Description |
+|------|---------|-------------|
+| `enable_websocket_new_base` | true | Use standardized WebSocket infrastructure |
+| `enable_websocket_server_heartbeat` | true | Server-initiated heartbeat |
+| `enable_websocket_enhanced_metrics` | true | OpenTelemetry metrics |
+| `enable_ai_suggestions_websocket` | true | AI suggestions endpoint |
+| `enable_agent_hitl_websocket` | true | HITL approvals endpoint |
+| `enable_mcp_websocket` | true | MCP protocol endpoint |
+
+---
+
+## Related Documentation
+
+- [ADR-0068: WebSocket Standardization](/architecture/adr-0068-gateway-level-authentication) - Architecture decision
+- [Agent Studio Guide](/guides/studio) - Using WebSockets in the UI
+- [Feature Flags Guide](/guides/feature-flags) - Enabling/disabling endpoints

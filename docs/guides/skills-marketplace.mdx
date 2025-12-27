@@ -1,0 +1,886 @@
+---
+title: Skills Marketplace
+description: 'Discover, install, and manage agent skills from the integrated Skills Marketplace'
+icon: 'puzzle-piece'
+seoTitle: "Skills Marketplace - MCP Server with LangGraph"
+seoDescription: "Integrate pre-built agent skills from Anthropic's official marketplace and custom registries for rapid agent capability extension"
+keywords: ["skills marketplace", "agent skills", "skill installation", "anthropic skills", "skill discovery", "skill management", "agent capabilities"]
+contentType: "guide"
+---
+
+## Overview
+
+The **Skills Marketplace** provides a centralized hub for discovering and installing pre-built agent capabilities. Skills extend your agents with specialized functionality without requiring custom code development.
+
+<CardGroup cols={3}>
+  <Card title="One-Click Install" icon="download">
+    Install skills instantly from trusted sources
+  </Card>
+  <Card title="Auto-Updates" icon="arrows-rotate">
+    Keep skills current with automatic updates
+  </Card>
+  <Card title="Multi-Source" icon="layer-group">
+    Access skills from Anthropic, custom registries, and OCI
+  </Card>
+</CardGroup>
+
+### What are Skills?
+
+Skills are modular, reusable components that provide agents with specific capabilities. Each skill is defined using a `SKILL.md` file with YAML frontmatter that describes:
+
+- **Skill metadata** - Name, version, author, description
+- **Capabilities** - What the skill can do
+- **Dependencies** - Required packages and models
+- **Instructions** - How to use the skill effectively
+
+### Skill Types
+
+| Type | Description | Example |
+|------|-------------|---------|
+| **Tool Skills** | Provide new MCP tools to agents | Web scraping, API integration |
+| **Prompt Skills** | Enhance agent prompts with specialized knowledge | Legal reasoning, medical diagnosis |
+| **Resource Skills** | Add data sources and knowledge bases | Industry regulations, code patterns |
+
+### Benefits of the Marketplace Model
+
+- **Rapid Development** - Build agents faster with pre-built capabilities
+- **Quality Assurance** - Trusted skills from verified sources
+- **Community Contributions** - Share and discover best practices
+- **Version Control** - Track skill versions and updates
+- **Secure Sandboxing** - Skills run in isolated environments
+
+---
+
+## Discovering Skills
+
+### Browse the Marketplace
+
+Access the Skills Marketplace through the Agent Studio:
+
+<Steps>
+  <Step title="Open Studio">
+    Navigate to `http://localhost/studio` or your deployment URL.
+  </Step>
+  <Step title="Access Marketplace">
+    Click **"Skills"** in the left sidebar, then **"Browse Marketplace"**.
+  </Step>
+  <Step title="Explore Skills">
+    View featured skills, trending skills, and browse by category.
+  </Step>
+</Steps>
+
+### Search and Filter
+
+The marketplace provides powerful search and filtering capabilities:
+
+| Filter | Description |
+|--------|-------------|
+| **By Category** | Filter by domain (e.g., research, coding, compliance) |
+| **By Source** | Show skills from specific marketplaces |
+| **By Rating** | Sort by community ratings and usage |
+| **By Compatibility** | Filter by required models or dependencies |
+
+**Search Examples**:
+
+```bash
+# Search for web research skills
+"web research"
+
+# Find compliance-related skills
+category:compliance
+
+# Show only Anthropic official skills
+source:anthropic trusted:true
+```
+
+### View Skill Details
+
+Click any skill to view detailed information:
+
+<AccordionGroup>
+  <Accordion title="Skill Overview" icon="info-circle">
+    - **Name and Version** - Current version and release date
+    - **Author** - Skill creator and maintainer
+    - **Description** - What the skill does and when to use it
+    - **Compatibility** - Supported models and requirements
+  </Accordion>
+
+  <Accordion title="Capabilities" icon="wand-magic-sparkles">
+    - **Tools Provided** - List of MCP tools added
+    - **Prompts** - System prompt enhancements
+    - **Resources** - Knowledge bases and data sources
+    - **Examples** - Sample usage patterns
+  </Accordion>
+
+  <Accordion title="Ratings and Reviews" icon="star">
+    - **Community Rating** - Average user rating (1-5 stars)
+    - **Usage Count** - Number of installations
+    - **Reviews** - User feedback and comments
+    - **Success Rate** - Reliability metrics
+  </Accordion>
+
+  <Accordion title="Dependencies" icon="puzzle-piece">
+    - **Python Packages** - Required pip packages
+    - **System Requirements** - OS and runtime needs
+    - **Model Requirements** - Minimum model capabilities
+    - **MCP Servers** - Required MCP server connections
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Installing Skills
+
+### One-Click Installation
+
+Installing skills is simple and fast:
+
+<Steps>
+  <Step title="Find the Skill">
+    Search or browse to locate the skill you need.
+  </Step>
+  <Step title="Review Details">
+    Check skill description, dependencies, and ratings.
+  </Step>
+  <Step title="Click Install">
+    Click the **"Install"** button on the skill card.
+  </Step>
+  <Step title="Configure (Optional)">
+    Some skills require configuration (API keys, settings). Provide these if prompted.
+  </Step>
+  <Step title="Confirm Installation">
+    Review the installation summary and confirm.
+  </Step>
+</Steps>
+
+The installer will:
+- Download skill files from the marketplace
+- Install Python dependencies using `uv`
+- Validate skill integrity
+- Enable the skill for your agents
+
+### User-Level vs Organization-Level Installation
+
+Skills can be installed at different scopes:
+
+| Scope | Access | Use Case |
+|-------|--------|----------|
+| **User-Level** | Only you | Personal skills for individual workflows |
+| **Organization-Level** | All org members | Shared skills for team collaboration |
+| **Project-Level** | Project members | Skills scoped to specific projects |
+
+**Installation Scopes**:
+
+```bash
+# Install for yourself only (default)
+POST /api/v1/admin/marketplaces/{marketplace}/skills/{skill}/install
+{
+  "scope": "user"
+}
+
+# Install for entire organization (requires admin)
+POST /api/v1/admin/marketplaces/{marketplace}/skills/{skill}/install
+{
+  "scope": "organization"
+}
+
+# Install for a specific project
+POST /api/v1/admin/marketplaces/{marketplace}/skills/{skill}/install
+{
+  "scope": "project",
+  "project_id": "proj_abc123"
+}
+```
+
+### Permission Requirements
+
+Installation permissions vary by scope:
+
+| Operation | Required Permission |
+|-----------|-------------------|
+| User-level install | `authenticated` |
+| Organization install | `admin` persona |
+| Project install | `editor` on project |
+| Trusted skill install | No approval needed |
+| Untrusted skill install | `admin` approval required |
+
+<Warning>
+Skills from untrusted marketplaces require admin approval before they can be used in production workflows.
+</Warning>
+
+---
+
+## Managing Skills
+
+### View Installed Skills
+
+See all skills installed in your environment:
+
+<Tabs>
+  <Tab title="Agent Studio UI">
+    ```
+    1. Click "Skills" in left sidebar
+    2. Select "Installed Skills" tab
+    3. View list of all installed skills with status
+    ```
+  </Tab>
+  <Tab title="API">
+    ```bash
+    # List all installed skills
+    GET /api/v1/admin/marketplaces/{marketplace}/skills
+
+    # Response
+    {
+      "skills": [
+        {
+          "name": "web-research",
+          "version": "1.2.0",
+          "marketplace": "anthropic",
+          "installed_at": "2025-12-20T10:30:00Z",
+          "enabled": true,
+          "scope": "user"
+        }
+      ]
+    }
+    ```
+  </Tab>
+</Tabs>
+
+### Enable/Disable Skills
+
+Control which skills are active for your agents:
+
+<AccordionGroup>
+  <Accordion title="Enable a Skill" icon="toggle-on">
+    **Via UI**:
+    1. Navigate to **Skills > Installed Skills**
+    2. Find the skill and click the toggle switch
+    3. Skill is immediately available to agents
+
+    **Via API**:
+    ```bash
+    POST /api/v1/admin/skills/{skill_name}/enable
+    ```
+  </Accordion>
+
+  <Accordion title="Disable a Skill" icon="toggle-off">
+    **Via UI**:
+    1. Navigate to **Skills > Installed Skills**
+    2. Find the skill and click the toggle switch off
+    3. Skill is removed from agent capabilities
+
+    **Via API**:
+    ```bash
+    POST /api/v1/admin/skills/{skill_name}/disable
+    ```
+
+    <Note>
+    Disabling a skill does not uninstall it. You can re-enable it at any time without re-downloading.
+    </Note>
+  </Accordion>
+</AccordionGroup>
+
+### Uninstall Skills
+
+Remove skills you no longer need:
+
+<Steps>
+  <Step title="Navigate to Installed Skills">
+    Go to **Skills > Installed Skills** in the Studio.
+  </Step>
+  <Step title="Select Skill">
+    Click the skill you want to remove.
+  </Step>
+  <Step title="Uninstall">
+    Click **"Uninstall"** and confirm the action.
+  </Step>
+  <Step title="Cleanup">
+    The system will remove skill files and clean up dependencies.
+  </Step>
+</Steps>
+
+**API Uninstall**:
+
+```bash
+DELETE /api/v1/admin/marketplaces/{marketplace}/skills/{skill_name}
+```
+
+<Warning>
+Uninstalling a skill that's in use by active agents will cause those agents to fail until the skill is reinstalled or workflows are updated.
+</Warning>
+
+### Auto-Update Configuration
+
+Configure automatic skill updates to keep skills current:
+
+| Setting | Description | Default |
+|---------|-------------|---------|
+| **Auto-Update Enabled** | Automatically apply skill updates | `false` |
+| **Update Channel** | Which updates to apply (`stable`, `beta`, `all`) | `stable` |
+| **Update Schedule** | When to check for updates | Daily at 2 AM UTC |
+| **Require Approval** | Admin approval for major version updates | `true` |
+
+**Configure Auto-Updates**:
+
+<Tabs>
+  <Tab title="Environment Variables">
+    ```bash
+    # Enable auto-updates
+    FF_ENABLE_SKILL_AUTO_UPDATE=true
+
+    # Set update check interval (seconds)
+    SKILL_AUTO_UPDATE_INTERVAL=86400  # 24 hours
+
+    # Require approval for major versions
+    SKILL_AUTO_UPDATE_REQUIRE_APPROVAL=true
+    ```
+  </Tab>
+  <Tab title="API">
+    ```bash
+    # Configure auto-update settings
+    PUT /api/v1/admin/skills/auto-update/config
+    {
+      "enabled": true,
+      "channel": "stable",
+      "schedule": "0 2 * * *",  # Cron expression
+      "require_approval": true
+    }
+    ```
+  </Tab>
+</Tabs>
+
+**Check for Updates Manually**:
+
+```bash
+# Check for available updates
+GET /api/v1/admin/skills/updates
+
+# Response
+{
+  "updates": [
+    {
+      "skill_name": "web-research",
+      "current_version": "1.2.0",
+      "new_version": "1.3.0",
+      "marketplace": "anthropic",
+      "changelog": "Added support for PDF extraction"
+    }
+  ],
+  "count": 1
+}
+```
+
+**Apply Updates**:
+
+```bash
+# Apply all available updates
+POST /api/v1/admin/skills/updates/apply
+
+# Response
+{
+  "applied": [
+    {
+      "skill_name": "web-research",
+      "version": "1.3.0",
+      "success": true
+    }
+  ],
+  "count": 1,
+  "success_count": 1
+}
+```
+
+---
+
+## Feature Flags
+
+Control Skills Marketplace functionality using feature flags:
+
+### enable_skills_marketplace
+
+**Enable or disable the entire Skills Marketplace integration.**
+
+```bash
+# Enable marketplace (default)
+FF_ENABLE_SKILLS_MARKETPLACE=true
+
+# Disable marketplace
+FF_ENABLE_SKILLS_MARKETPLACE=false
+```
+
+**Impact**:
+- When `true`: Skills marketplace UI and API endpoints are available
+- When `false`: All marketplace features are disabled; only manually installed skills work
+
+**Use Case**: Disable for air-gapped deployments or when using only internal skills.
+
+### enable_skills_system
+
+**Enable or disable the SKILL.md-based skills system.**
+
+```bash
+# Enable skills system (default)
+FF_ENABLE_SKILLS_SYSTEM=true
+
+# Disable skills system
+FF_ENABLE_SKILLS_SYSTEM=false
+```
+
+**Impact**:
+- When `true`: Agents can use skills defined in SKILL.md files
+- When `false`: Skills are ignored; agents use only built-in capabilities
+
+**Use Case**: Disable for deployments that don't need skill extensibility.
+
+### skills_cache_ttl_seconds
+
+**Control how long marketplace data is cached locally.**
+
+This is configured through the `MarketplaceClient` initialization:
+
+```python
+from mcp_server_langgraph.skills.marketplace import MarketplaceClient
+
+# Default cache TTL (1 hour)
+client = MarketplaceClient()
+
+# Custom cache TTL (15 minutes)
+client = MarketplaceClient(cache_ttl_seconds=900)
+
+# Disable caching (always fetch fresh data)
+client = MarketplaceClient(cache_ttl_seconds=0)
+```
+
+**Impact**:
+- Higher values reduce API calls but may show stale skill listings
+- Lower values ensure fresh data but increase latency
+- `0` disables caching (not recommended for production)
+
+**Recommended Values**:
+- **Development**: `300` (5 minutes) - See changes quickly
+- **Production**: `3600` (1 hour) - Balance freshness and performance
+- **Air-gapped**: `86400` (24 hours) - Minimize external calls
+
+---
+
+## API Endpoints for Programmatic Access
+
+### Marketplace Management
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/v1/admin/marketplaces` | `GET` | List all registered marketplaces |
+| `/api/v1/admin/marketplaces` | `POST` | Register a new marketplace |
+| `/api/v1/admin/marketplaces/{name}` | `GET` | Get marketplace details |
+| `/api/v1/admin/marketplaces/{name}` | `DELETE` | Remove a marketplace |
+| `/api/v1/admin/marketplaces/{name}/sync` | `POST` | Force sync marketplace |
+
+**List Marketplaces**:
+
+```bash
+GET /api/v1/admin/marketplaces
+
+# Response
+{
+  "marketplaces": [
+    {
+      "name": "anthropic",
+      "uri": "https://github.com/anthropics/skills",
+      "type": "github",
+      "trusted": true,
+      "auto_sync": true,
+      "requires_approval": false,
+      "skill_count": 42,
+      "last_sync": "2025-12-20T14:30:00Z"
+    }
+  ]
+}
+```
+
+**Register Custom Marketplace**:
+
+```bash
+POST /api/v1/admin/marketplaces
+{
+  "name": "company-skills",
+  "uri": "https://skills.company.com/api/v1",
+  "type": "registry",
+  "trusted": false,
+  "auto_sync": true,
+  "required_approval": true
+}
+
+# Response
+{
+  "success": true,
+  "message": "Marketplace 'company-skills' registered successfully"
+}
+```
+
+### Skill Discovery
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/v1/admin/marketplaces/{marketplace}/skills` | `GET` | List skills from marketplace |
+| `/api/v1/admin/marketplaces/{marketplace}/skills/{name}` | `GET` | Get skill details |
+
+**List Skills from Marketplace**:
+
+```bash
+GET /api/v1/admin/marketplaces/anthropic/skills
+
+# Response
+{
+  "skills": [
+    {
+      "name": "web-research",
+      "version": "1.3.0",
+      "description": "Advanced web research with PDF extraction",
+      "author": "Anthropic",
+      "category": "research",
+      "rating": 4.8,
+      "installs": 15234
+    }
+  ]
+}
+```
+
+### Skill Installation
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/v1/admin/marketplaces/{marketplace}/skills/{name}/install` | `POST` | Install a skill |
+| `/api/v1/admin/skills/{name}` | `DELETE` | Uninstall a skill |
+| `/api/v1/admin/skills/{name}/enable` | `POST` | Enable a skill |
+| `/api/v1/admin/skills/{name}/disable` | `POST` | Disable a skill |
+
+**Install Skill**:
+
+```bash
+POST /api/v1/admin/marketplaces/anthropic/skills/web-research/install
+{
+  "scope": "user",
+  "version": "1.3.0",  # Optional, defaults to latest
+  "config": {
+    "api_key": "your-api-key"  # Optional skill-specific config
+  }
+}
+
+# Response
+{
+  "success": true,
+  "skill_name": "web-research",
+  "version": "1.3.0",
+  "installed_path": "/home/user/.mcp-langgraph/skills/web-research",
+  "dependencies_installed": ["beautifulsoup4", "requests"]
+}
+```
+
+### Skill Updates
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/v1/admin/skills/updates` | `GET` | Check for available updates |
+| `/api/v1/admin/skills/updates/apply` | `POST` | Apply all updates |
+| `/api/v1/admin/skills/auto-update/config` | `GET` | Get auto-update config |
+| `/api/v1/admin/skills/auto-update/config` | `PUT` | Update auto-update config |
+
+---
+
+## Marketplace Types
+
+The Skills Marketplace supports multiple source types:
+
+### GitHub Marketplaces
+
+**Default**: Anthropic's official skills repository
+
+```bash
+# Configuration
+{
+  "name": "anthropic",
+  "uri": "https://github.com/anthropics/skills",
+  "type": "github"
+}
+```
+
+**Structure**:
+```
+skills/
+├── web-research/
+│   └── SKILL.md
+├── code-review/
+│   └── SKILL.md
+└── compliance-checker/
+    └── SKILL.md
+```
+
+### OCI Registries
+
+**Use OCI (Open Container Initiative) registries for enterprise skill distribution.**
+
+```bash
+# Configuration
+{
+  "name": "company-oci",
+  "uri": "oci://ghcr.io/company/skills",
+  "type": "oci"
+}
+```
+
+**Benefits**:
+- **Version control** - Immutable skill images with SHA digests
+- **Private access** - Authentication and access control
+- **Caching** - Leverage existing container infrastructure
+
+### Custom Registries
+
+**Build your own skill registry with a REST API.**
+
+```bash
+# Configuration
+{
+  "name": "custom-registry",
+  "uri": "https://skills-api.company.com/v1",
+  "type": "registry"
+}
+```
+
+**Required API Endpoints**:
+- `GET /skills` - List all skills
+- `GET /skills/{name}` - Get skill details
+
+**Example Response**:
+```json
+{
+  "skills": [
+    {
+      "name": "internal-tool",
+      "version": "2.1.0",
+      "description": "Company-specific automation tool",
+      "type": "registry"
+    }
+  ]
+}
+```
+
+---
+
+## Security Considerations
+
+### Trusted vs Untrusted Marketplaces
+
+| Marketplace | Trust Level | Approval Required |
+|-------------|-------------|-------------------|
+| **Anthropic Official** | Trusted | No |
+| **Organization Internal** | Trusted (configurable) | Configurable |
+| **Third-Party** | Untrusted | Yes |
+
+<Warning>
+Only install skills from marketplaces you trust. Skills have access to:
+- Agent prompts and responses
+- MCP tool capabilities
+- Environment configuration
+- Session data
+</Warning>
+
+### Sandboxed Execution
+
+All skills run in isolated sandboxes with:
+
+- **Restricted filesystem access** - Skills can't read arbitrary files
+- **Network isolation** - Controlled external access
+- **Resource limits** - CPU, memory, and execution time limits
+- **API boundaries** - Skills communicate only through defined interfaces
+
+### Approval Workflows
+
+For untrusted skills, an admin approval workflow is enforced:
+
+<Steps>
+  <Step title="User Requests Skill">
+    User attempts to install skill from untrusted marketplace.
+  </Step>
+  <Step title="Request Queued">
+    Installation request is queued for admin review.
+  </Step>
+  <Step title="Admin Reviews">
+    Admin reviews skill source, dependencies, and permissions.
+  </Step>
+  <Step title="Approve or Reject">
+    Admin approves or rejects the installation.
+  </Step>
+  <Step title="Installation Proceeds">
+    If approved, skill is installed automatically.
+  </Step>
+</Steps>
+
+---
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Marketplace won't load" icon="cloud-slash">
+    **Possible Causes**:
+    1. `FF_ENABLE_SKILLS_MARKETPLACE=false` in environment
+    2. Network connectivity issues
+    3. Marketplace URL is incorrect
+
+    **Solutions**:
+    1. Check feature flag: `FF_ENABLE_SKILLS_MARKETPLACE=true`
+    2. Verify network access to marketplace URI
+    3. Test marketplace URL manually: `curl https://api.github.com/repos/anthropics/skills/contents/skills`
+  </Accordion>
+
+  <Accordion title="Skill installation fails" icon="circle-exclamation">
+    **Possible Causes**:
+    1. Missing dependencies
+    2. Permission issues
+    3. Insufficient disk space
+    4. Network timeout
+
+    **Solutions**:
+    1. Check dependency errors in logs
+    2. Verify you have write access to skill install path
+    3. Ensure adequate disk space (`df -h`)
+    4. Increase timeout: `SKILL_INSTALL_TIMEOUT_SECONDS=300`
+  </Accordion>
+
+  <Accordion title="Auto-updates not working" icon="arrows-rotate">
+    **Possible Causes**:
+    1. Auto-update disabled
+    2. Scheduler not running
+    3. Insufficient permissions
+
+    **Solutions**:
+    1. Enable: `FF_ENABLE_SKILL_AUTO_UPDATE=true`
+    2. Check scheduler status: `GET /api/v1/admin/skills/auto-update/status`
+    3. Verify admin permissions for update operations
+  </Accordion>
+
+  <Accordion title="Custom marketplace not syncing" icon="server">
+    **Possible Causes**:
+    1. Invalid marketplace URI
+    2. Authentication required but not provided
+    3. API endpoint format mismatch
+
+    **Solutions**:
+    1. Validate URI format (must be HTTPS)
+    2. Add authentication headers if needed
+    3. Ensure API returns expected format (see Custom Registries section)
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Best Practices
+
+### Skill Selection
+
+<Check>
+**DO**:
+- Review skill ratings and reviews before installing
+- Test skills in development before production use
+- Keep skills updated to latest stable versions
+- Monitor skill usage and performance
+- Remove unused skills to reduce attack surface
+</Check>
+
+<Warning>
+**DON'T**:
+- Install skills from untrusted sources without review
+- Grant organization-wide access to untested skills
+- Ignore dependency conflicts
+- Disable security features for convenience
+</Warning>
+
+### Performance Optimization
+
+1. **Use caching wisely** - Balance freshness vs API load
+2. **Enable auto-updates during off-hours** - Minimize disruption
+3. **Limit concurrent installations** - Prevent resource exhaustion
+4. **Monitor disk usage** - Clean up old skill versions
+
+### Security Hygiene
+
+1. **Audit installed skills regularly** - Review what's installed and why
+2. **Enable approval workflows** - Require review for untrusted skills
+3. **Use organization-level installs sparingly** - Limit blast radius
+4. **Monitor skill activity** - Check logs for unexpected behavior
+
+---
+
+## Related Documentation
+
+<CardGroup cols={2}>
+  <Card title="Feature Flags" icon="flag" href="/guides/feature-flags">
+    Configure skills system feature flags
+  </Card>
+  <Card title="Agent Studio" icon="wand-magic-sparkles" href="/guides/studio">
+    Use skills in the Agent Studio
+  </Card>
+  <Card title="Skills API Reference" icon="code" href="/api-reference/skills">
+    Complete API documentation
+  </Card>
+  <Card title="Security Guide" icon="shield-halved" href="/guides/security">
+    Skills security best practices
+  </Card>
+</CardGroup>
+
+---
+
+## Example: Installing the Web Research Skill
+
+Here's a complete example of discovering, installing, and using a skill:
+
+<Steps>
+  <Step title="Discover the Skill">
+    ```bash
+    # Search for web research skills
+    GET /api/v1/admin/marketplaces/anthropic/skills?search=web+research
+
+    # Review skill details
+    GET /api/v1/admin/marketplaces/anthropic/skills/web-research
+    ```
+  </Step>
+
+  <Step title="Install the Skill">
+    ```bash
+    # Install at user level
+    POST /api/v1/admin/marketplaces/anthropic/skills/web-research/install
+    {
+      "scope": "user",
+      "config": {
+        "search_engine": "google",
+        "max_results": 10
+      }
+    }
+    ```
+  </Step>
+
+  <Step title="Enable in Agent">
+    The skill is now available to all your agents. In the Studio:
+    1. Open an agent configuration
+    2. Go to "Skills" tab
+    3. Toggle "web-research" to enabled
+  </Step>
+
+  <Step title="Use the Skill">
+    Ask your agent:
+    ```
+    "Research the latest developments in quantum computing
+    and summarize the top 5 breakthroughs from 2025."
+    ```
+
+    The agent will use the web-research skill to:
+    - Search for relevant articles
+    - Extract key information
+    - Summarize findings
+  </Step>
+</Steps>
+
+---
+
+<Check>
+**Ready to extend your agents!** Enable the Skills Marketplace with `FF_ENABLE_SKILLS_MARKETPLACE=true` and start discovering capabilities at `http://localhost/studio/skills`.
+</Check>

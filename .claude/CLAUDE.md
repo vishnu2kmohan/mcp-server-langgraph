@@ -2,7 +2,7 @@
 
 **Purpose**: Essential context auto-loaded at session start
 **Full Guide**: `.github/CLAUDE.md` (1,070 lines of comprehensive documentation)
-**Last Updated**: 2025-12-02
+**Last Updated**: 2025-12-27
 
 ---
 
@@ -51,18 +51,22 @@ async def test_feature():
 
 | Metric | Value |
 |--------|-------|
-| Tests | 8,700+ |
+| Tests | 14,900+ |
 | Coverage | 75% (target: 80%) |
-| Pytest markers | 46 |
+| ADRs | 81 |
+| Feature Flags | 164 |
+| Pytest markers | 67 |
 | Slash commands | 39 |
 | Pre-commit hooks | 69 |
 | Make targets | 133 |
 
 **Technology Stack**:
 - **Framework**: LangGraph >=1.0.4 + LangChain + LiteLLM
+- **Frontend**: Agent Studio (React 18 + Redux Toolkit + RTK Query + Vite)
 - **LLM Providers**: OpenAI, Anthropic, Google (Vertex AI), Azure
-- **Auth**: Keycloak SSO + OpenFGA authorization
+- **Auth**: Keycloak SSO + OpenFGA authorization + DPoP token binding
 - **Storage**: PostgreSQL + Redis (langgraph-checkpoint-redis)
+- **Execution**: Docker/Kubernetes sandbox code execution engine
 - **Observability**: OpenTelemetry + Grafana LGTM (Loki/Tempo/Mimir/Alloy)
 - **Deployment**: Kubernetes (Helm + Kustomize)
 
@@ -94,8 +98,9 @@ async def test_feature():
 **Context files** (in `.claude/context/`):
 - `recent-work.md` - Auto-updated via git hook
 - `coding-standards.md` - Quick coding reference
-- `testing-patterns.md` - 8,700+ test patterns
+- `testing-patterns.md` - 14,900+ test patterns
 - `code-patterns.md` - Design patterns library
+- `pytest-markers.md` - 67 pytest markers reference
 
 **Memory files** (in `.claude/memory/` - MANDATORY):
 - `python-environment-usage.md` - Virtual environment guide
@@ -136,13 +141,18 @@ git push                           # Comprehensive validation
 ```
 mcp-server-langgraph/
 ├── src/mcp_server_langgraph/    # Main package
-│   ├── core/                     # Agent, config, feature flags
-│   ├── auth/                     # Keycloak + OpenFGA
+│   ├── core/                     # Agent, config, feature flags (164 flags)
+│   ├── auth/                     # Keycloak + OpenFGA + DPoP
 │   ├── llm/                      # LLM factory (multi-provider)
 │   ├── mcp/                      # MCP server implementations
-│   └── observability/            # OpenTelemetry + metrics
-├── tests/                        # 8,700+ tests
+│   ├── studio/                   # Agent Studio frontend (React + Redux)
+│   ├── execution/                # Sandboxed code execution engine
+│   ├── security/                 # Prompt injection protection
+│   └── observability/            # OpenTelemetry + Grafana LGTM
+├── tests/                        # 14,900+ tests
 ├── deployments/                  # K8s, Helm, Kustomize
+├── docs/                         # Mintlify documentation
+├── docs-internal/                # Internal architecture docs
 ├── .claude/                      # Claude Code automation
 │   ├── commands/                 # 39 slash commands
 │   ├── context/                  # Living context files

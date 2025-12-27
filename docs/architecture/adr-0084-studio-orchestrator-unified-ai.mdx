@@ -1,0 +1,337 @@
+---
+title: "ADR-0084: Studio Orchestrator"
+description: 'Unified AI intelligence services coordination for Agent Studio'
+icon: 'wand-magic-sparkles'
+seoTitle: "ADR-0084: Studio Orchestrator - Architecture Decision Record"
+seoDescription: "Architecture Decision Record for implementing StudioOrchestrator as the central AI service coordinator for Agent Studio, providing AI suggestions, title generation, and workflow recommendations."
+keywords: ["Studio Orchestrator", "AI coordination", "AI suggestions", "title generation", "workflow recommendations", "cost tracking", "ADR"]
+contentType: "adr"
+---
+
+# ADR-0084: Studio Orchestrator
+
+**Status**: Accepted
+**Date**: 2025-12
+**Deciders**: Architecture Team
+**Related**: ADR-0074 (AI Suggestions Streaming), ADR-0043 (Cost Monitoring), ADR-0027 (Rate Limiting)
+
+## Context
+
+Agent Studio requires multiple AI-powered features to enhance user experience and productivity:
+
+1. **AI Suggestions**: Inline code completions and context-aware recommendations
+2. **AI Title Generation**: Automatic conversation and workflow title creation
+3. **AI Workflow Recommendations**: Intelligent next-step suggestions based on user activity
+4. **Cost Management**: Unified tracking of LLM token usage across all AI features
+
+### Current State
+
+Prior to this ADR, AI features were implemented ad-hoc:
+- No centralized coordination of AI services
+- Inconsistent cost tracking across features
+- Duplicate LLM provider initialization
+- No unified delivery mechanism for AI responses
+- Feature flags scattered across different modules
+
+### Requirements
+
+1. **Unified Interface**: Single point of coordination for all Studio AI services
+2. **Cost Transparency**: Centralized tracking of LLM costs per feature and model
+3. **Real-time Delivery**: WebSocket-based streaming for low-latency responses
+4. **Feature Control**: Granular feature flags for A/B testing and rollout
+5. **Scalability**: Handle multiple concurrent AI requests efficiently
+6. **Observability**: Comprehensive metrics and tracing for all AI operations
+
+## Decision
+
+Implement **StudioOrchestrator** as the central AI intelligence coordinator for Agent Studio.
+
+### Architecture Components
+
+#### 1. StudioOrchestrator Service
+
+```python
+# src/mcp_server_langgraph/studio/orchestrator.py
+
+class StudioOrchestrator:
+    """Central coordinator for Studio AI intelligence services."""
+
+    def __init__(
+        self,
+        llm_factory: LLMFactory,
+        feature_flags: FeatureFlagService,
+        cost_tracker: CostTracker,
+        websocket_manager: WebSocketManager,
+    ):
+        self.llm_factory = llm_factory
+        self.feature_flags = feature_flags
+        self.cost_tracker = cost_tracker
+        self.ws_manager = websocket_manager
+
+    async def provide_inline_suggestions(
+        self, context: CodeContext, user_id: str
+    ) -> AsyncIterator[Suggestion]:
+        """Stream inline code suggestions via WebSocket."""
+
+    async def generate_title(
+        self, conversation: Conversation, user_id: str
+    ) -> str:
+        """Generate intelligent title for conversation/workflow."""
+
+    async def recommend_workflows(
+        self, user_context: UserContext, user_id: str
+    ) -> list[WorkflowRecommendation]:
+        """Provide workflow recommendations based on user activity."""
+```
+
+#### 2. Key Responsibilities
+
+**AI Suggestions (Inline Completions)**
+- Context-aware code completions
+- Real-time streaming via WebSocket
+- Debouncing and throttling to prevent excessive LLM calls
+- Integration with IDE-like editing experience
+
+**AI Title Generation**
+- Automatic title creation for conversations and workflows
+- Context summarization using conversation history
+- Model selection based on length and complexity
+- Caching for similar conversation patterns
+
+**AI Workflow Recommendations**
+- Analyze user behavior and suggest next steps
+- Pattern matching against common workflows
+- Personalization based on user history
+- Integration with workflow templates
+
+**Unified Cost Tracking**
+- Per-feature cost attribution
+- Model-specific pricing tables
+- Real-time cost monitoring
+- Budget alerts and throttling
+
+#### 3. Integration Architecture
+
+**Redux Toolkit RTK Query**
+
+```typescript
+// frontend/src/services/studioOrchestrator.ts
+
+export const studioOrchestratorApi = createApi({
+  reducerPath: 'studioOrchestrator',
+  baseQuery: fetchBaseQuery({ baseUrl: '/api/v1/studio' }),
+  endpoints: (builder) => ({
+    getInlineSuggestions: builder.query({
+      query: (context) => ({
+        url: '/suggestions/inline',
+        method: 'POST',
+        body: context,
+      }),
+    }),
+    generateTitle: builder.mutation({
+      query: (conversation) => ({
+        url: '/title/generate',
+        method: 'POST',
+        body: conversation,
+      }),
+    }),
+    getWorkflowRecommendations: builder.query({
+      query: (userContext) => ({
+        url: '/workflows/recommend',
+        method: 'POST',
+        body: userContext,
+      }),
+    }),
+  }),
+});
+```
+
+**WebSocket Delivery**
+
+```python
+# Real-time suggestion streaming
+@router.websocket("/ws/suggestions/{user_id}")
+async def suggestions_websocket(websocket: WebSocket, user_id: str):
+    await orchestrator.ws_manager.connect(websocket, user_id)
+    try:
+        async for suggestion in orchestrator.provide_inline_suggestions(
+            context=await websocket.receive_json(),
+            user_id=user_id
+        ):
+            await websocket.send_json(suggestion.model_dump())
+    except WebSocketDisconnect:
+        orchestrator.ws_manager.disconnect(user_id)
+```
+
+#### 4. Feature Flags
+
+```python
+# Feature-gated AI services
+STUDIO_AI_FLAGS = {
+    "enable_ai_suggestions_websocket": {
+        "default": False,
+        "description": "Enable WebSocket streaming for inline AI suggestions",
+        "rollout_percentage": 0,  # Gradual rollout
+    },
+    "enable_ai_title_generation": {
+        "default": True,
+        "description": "Enable automatic title generation for conversations",
+        "rollout_percentage": 100,
+    },
+    "enable_ai_workflow_recommendations": {
+        "default": True,
+        "description": "Enable AI-powered workflow recommendations",
+        "rollout_percentage": 75,
+    },
+    "ai_suggestions_model": {
+        "default": "gpt-4o-mini",
+        "description": "Model to use for inline suggestions",
+        "allowed_values": ["gpt-4o-mini", "claude-3-haiku", "gemini-1.5-flash"],
+    },
+}
+```
+
+#### 5. Cost Management
+
+```python
+# Per-feature cost tracking
+class CostTracker:
+    async def track_ai_operation(
+        self,
+        feature: str,  # "inline_suggestions", "title_generation", "workflow_recommendations"
+        model: str,
+        input_tokens: int,
+        output_tokens: int,
+        user_id: str,
+    ) -> CostMetrics:
+        cost = self._calculate_cost(model, input_tokens, output_tokens)
+
+        # Record metrics
+        await self.metrics_service.record_ai_cost(
+            feature=feature,
+            model=model,
+            cost=cost,
+            user_id=user_id,
+            timestamp=datetime.utcnow(),
+        )
+
+        # Check budget thresholds
+        if await self._exceeds_budget(user_id, feature):
+            await self._trigger_throttling(user_id, feature)
+
+        return CostMetrics(cost=cost, tokens_used=input_tokens + output_tokens)
+```
+
+### API Endpoints
+
+```
+POST /api/v1/studio/suggestions/inline         # Inline code suggestions
+POST /api/v1/studio/suggestions/inline/stream  # Streaming version (SSE)
+WS   /api/v1/studio/ws/suggestions/{user_id}   # WebSocket streaming
+
+POST /api/v1/studio/title/generate             # Generate conversation title
+POST /api/v1/studio/title/preview              # Preview title before applying
+
+POST /api/v1/studio/workflows/recommend        # Get workflow recommendations
+GET  /api/v1/studio/workflows/templates        # List workflow templates
+
+GET  /api/v1/studio/cost/summary               # Cost summary by feature
+GET  /api/v1/studio/cost/breakdown             # Detailed cost breakdown
+```
+
+## Consequences
+
+### Positive
+
+1. **Consistent AI Experience**: Unified coordination ensures consistent behavior across all AI features
+2. **Cost Visibility**: Centralized tracking provides clear visibility into LLM costs per feature
+3. **Scalability**: Single orchestrator can optimize LLM calls (batching, caching, rate limiting)
+4. **Maintainability**: All AI logic in one place simplifies debugging and updates
+5. **Feature Control**: Granular feature flags enable safe rollout and A/B testing
+6. **Performance**: WebSocket delivery reduces latency for real-time suggestions
+7. **Observability**: Centralized metrics and tracing for all AI operations
+
+### Negative
+
+1. **Single Point of Failure**: Orchestrator downtime affects all AI features
+2. **Complexity**: Additional abstraction layer adds architectural complexity
+3. **Memory Overhead**: WebSocket connections require stateful management
+4. **Migration Effort**: Existing AI features need to be refactored to use orchestrator
+
+### Mitigation Strategies
+
+**Reliability**
+- Implement graceful degradation for orchestrator failures
+- Feature-specific fallbacks to cached/default responses
+- Health checks and automatic circuit breaking
+
+**Performance**
+- Connection pooling for WebSocket management
+- Redis-backed caching for repeated requests
+- Rate limiting per user and per feature
+
+**Monitoring**
+- Comprehensive OpenTelemetry instrumentation
+- Grafana dashboards for cost and performance metrics
+- Alerting for cost thresholds and error rates
+
+## Implementation Phases
+
+### Phase 1: Core Infrastructure (Week 1-2)
+- [ ] Implement `StudioOrchestrator` class
+- [ ] Set up WebSocket manager
+- [ ] Create cost tracking service
+- [ ] Add feature flags for AI services
+
+### Phase 2: AI Suggestions (Week 3-4)
+- [ ] Implement inline suggestions endpoint
+- [ ] WebSocket streaming integration
+- [ ] Frontend RTK Query integration
+- [ ] A/B testing with 10% rollout
+
+### Phase 3: Title Generation (Week 5)
+- [ ] Implement title generation service
+- [ ] Context summarization logic
+- [ ] Caching layer for similar conversations
+- [ ] 100% rollout (low-risk feature)
+
+### Phase 4: Workflow Recommendations (Week 6-7)
+- [ ] Workflow pattern analysis
+- [ ] Recommendation engine
+- [ ] Template integration
+- [ ] 75% gradual rollout
+
+### Phase 5: Cost Optimization (Week 8)
+- [ ] Fine-tune cost tracking
+- [ ] Budget alerting
+- [ ] Model selection optimization
+- [ ] Performance benchmarking
+
+## Metrics
+
+| Metric | Target | Measurement |
+|--------|--------|-------------|
+| AI Suggestions P95 Latency | < 300ms | First token via WebSocket |
+| Title Generation P95 Latency | < 2s | End-to-end title creation |
+| Workflow Recommendations P95 | < 1s | API response time |
+| Cost per Inline Suggestion | < $0.001 | Average across all models |
+| Cost per Title Generation | < $0.005 | Average across all models |
+| WebSocket Connection Uptime | > 99.5% | Connection stability |
+| Feature Flag Rollout Success | > 95% | No rollbacks needed |
+
+## References
+
+- [ADR-0074: AI Suggestions with Streaming and Cost Tracking](./adr-0074-ai-suggestions-streaming-cost-tracking.mdx)
+- [ADR-0043: Cost Monitoring Dashboard](./adr-0043-cost-monitoring-dashboard.mdx)
+- [ADR-0027: Rate Limiting Strategy](./adr-0027-rate-limiting-strategy.mdx)
+- [ADR-0001: Multi-Provider LLM Support](./adr-0001-llm-multi-provider.mdx)
+- Studio Frontend Architecture: `/docs/studio/frontend-architecture.mdx`
+- Feature Flags Guide: `/docs/features/feature-flags.mdx`
+
+## Future Enhancements
+
+1. **Multi-Modal Support**: Extend to image/diagram generation
+2. **Collaborative AI**: Shared AI context across team members
+3. **Custom Models**: Allow users to bring their own fine-tuned models
+4. **Offline Mode**: Cache-based suggestions when LLM unavailable
+5. **Feedback Loop**: User feedback to improve suggestion quality
