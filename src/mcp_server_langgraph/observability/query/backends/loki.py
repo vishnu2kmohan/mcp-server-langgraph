@@ -264,7 +264,9 @@ class LokiLoggingClient(LoggingQueryClient):
         if service_name:
             labels.append(f'service_name="{service_name}"')
 
-        stream_selector = "{" + ", ".join(labels) + "}" if labels else "{}"
+        # Loki requires at least one label selector - use catch-all if no filters
+        # Match any job (common label in Alloy/Promtail configurations)
+        stream_selector = "{" + ", ".join(labels) + "}" if labels else '{job=~".+"}'
 
         # Build pipeline
         pipeline = []

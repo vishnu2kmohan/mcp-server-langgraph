@@ -74,7 +74,10 @@ except ImportError:
 
 # Configuration
 SERVICE_NAME = "mcp-server-langgraph"
-OTLP_ENDPOINT = "http://localhost:4317"  # Change to your OTLP collector
+# Default to HTTP port 4318 per OpenTelemetry spec:
+# "The default protocol SHOULD be http/protobuf, unless there are strong reasons
+# for SDKs to select grpc as the default."
+OTLP_ENDPOINT = "http://localhost:4318"  # HTTP/protobuf per OTel spec
 
 # Control verbose logging (defaults to False to reduce noise)
 # Set OBSERVABILITY_VERBOSE=true to enable detailed initialization logs
@@ -99,6 +102,131 @@ def _get_effective_log_level() -> int:
 
     log_level_str = os.getenv("LOG_LEVEL", "INFO").upper()
     return getattr(logging, log_level_str, logging.INFO)
+
+
+def detect_otlp_protocol(endpoint: str) -> str:
+    """
+    Detect OTLP protocol (gRPC or HTTP) from endpoint URL.
+
+    Port conventions per OpenTelemetry specification:
+    - 4317 = gRPC (OTLP/gRPC)
+    - 4318 = HTTP (OTLP/HTTP with protobuf or JSON)
+
+    Per OpenTelemetry Protocol Exporter specification:
+    "The default protocol SHOULD be http/protobuf, unless there are
+    strong reasons for SDKs to select grpc as the default."
+
+    Args:
+        endpoint: OTLP collector endpoint URL
+
+    Returns:
+        "grpc" if endpoint explicitly uses port 4317, "http" otherwise (per OTel spec)
+    """
+    # Port 4317 is the standard OTLP gRPC port - only use gRPC if explicitly specified
+    if ":4317" in endpoint:
+        return "grpc"
+    # Default to HTTP per OpenTelemetry spec (http/protobuf is recommended default)
+    return "http"
+
+
+def get_metric_exporter_type(endpoint: str) -> str:
+    """
+    Determine which metric exporter type to use based on endpoint.
+
+    This function is used to select between gRPC and HTTP OTLP exporters
+    based on the endpoint port. Port 4318 indicates HTTP protocol,
+    otherwise gRPC is used.
+
+    Args:
+        endpoint: OTLP collector endpoint URL
+
+    Returns:
+        "http" if HTTP exporter should be used, "grpc" if gRPC should be used
+    """
+    protocol = detect_otlp_protocol(endpoint)
+    if protocol == "http" and HTTP_AVAILABLE:
+        return "http"
+    if protocol == "grpc" and GRPC_AVAILABLE:
+        return "grpc"
+    # Fallback to whatever is available
+    if HTTP_AVAILABLE:
+        return "http"
+    if GRPC_AVAILABLE:
+        return "grpc"
+    return "none"
+
+
+def get_span_exporter_type(endpoint: str) -> str:
+    """
+    Determine which span exporter type to use based on endpoint.
+
+    This function is used to select between gRPC and HTTP OTLP exporters
+    based on the endpoint port. Port 4318 indicates HTTP protocol,
+    otherwise gRPC is used.
+
+    Args:
+        endpoint: OTLP collector endpoint URL
+
+    Returns:
+        "http" if HTTP exporter should be used, "grpc" if gRPC should be used
+    """
+    protocol = detect_otlp_protocol(endpoint)
+    if protocol == "http" and HTTP_AVAILABLE:
+        return "http"
+    if protocol == "grpc" and GRPC_AVAILABLE:
+        return "grpc"
+    # Fallback to whatever is available
+    if HTTP_AVAILABLE:
+        return "http"
+    if GRPC_AVAILABLE:
+        return "grpc"
+    return "none"
+
+
+def get_otlp_compression() -> str:
+    """
+    Get OTLP exporter compression setting.
+
+    Per OpenTelemetry best practices:
+    "Use Gzip compression for your telemetry payloads to reduce
+    network bandwidth usage, especially in high-volume environments."
+
+    Respects the standard OTEL_EXPORTER_OTLP_COMPRESSION environment variable.
+    Valid values: "gzip", "none"
+
+    Returns:
+        Compression algorithm to use ("gzip" by default, or value from env var)
+    """
+    return os.getenv("OTEL_EXPORTER_OTLP_COMPRESSION", "gzip")
+
+
+def get_otlp_retry_config() -> dict[str, Any]:
+    """
+    Get OTLP exporter retry configuration with exponential backoff.
+
+    Per OpenTelemetry best practices:
+    "Ensure to configure the appropriate retry mechanisms with exponential
+    backoff to ensure data is delivered even during temporary network issues."
+
+    Per Grafana Alloy docs:
+    "If a batch hasn't been sent successfully, it's discarded after
+    the time specified by max_elapsed_time elapses."
+
+    Returns:
+        Dictionary with retry configuration parameters:
+        - enabled: Whether retries are enabled (default: True)
+        - initial_backoff_ms: Initial backoff delay in milliseconds (default: 1000)
+        - max_backoff_ms: Maximum backoff delay in milliseconds (default: 30000)
+        - backoff_multiplier: Multiplier for exponential backoff (default: 1.5)
+        - max_elapsed_time_ms: Maximum total retry time in milliseconds (default: 300000 = 5 min)
+    """
+    return {
+        "enabled": True,
+        "initial_backoff_ms": int(os.getenv("OTEL_EXPORTER_OTLP_RETRY_INITIAL_BACKOFF_MS", "1000")),
+        "max_backoff_ms": int(os.getenv("OTEL_EXPORTER_OTLP_RETRY_MAX_BACKOFF_MS", "30000")),
+        "backoff_multiplier": float(os.getenv("OTEL_EXPORTER_OTLP_RETRY_MULTIPLIER", "1.5")),
+        "max_elapsed_time_ms": int(os.getenv("OTEL_EXPORTER_OTLP_RETRY_MAX_ELAPSED_MS", "300000")),
+    }
 
 
 class ObservabilityConfig:
@@ -159,16 +287,18 @@ class ObservabilityConfig:
         provider = TracerProvider(resource=resource)
 
         # OTLP exporter for production (if available)
-        if GRPC_AVAILABLE and OTLPSpanExporterGRPC is not None:
-            grpc_span_exporter = OTLPSpanExporterGRPC(endpoint=self.otlp_endpoint)
-            provider.add_span_processor(BatchSpanProcessor(grpc_span_exporter))
-        elif HTTP_AVAILABLE and OTLPSpanExporterHTTP is not None:
+        # Use protocol detection based on endpoint port (4318=HTTP, 4317=gRPC)
+        exporter_type = get_span_exporter_type(self.otlp_endpoint)
+        if exporter_type == "http" and OTLPSpanExporterHTTP is not None:
             # HTTP endpoint needs /v1/traces path appended (SDK only does this for env vars)
-            http_endpoint = self.otlp_endpoint.replace(":4317", ":4318")
+            http_endpoint = self.otlp_endpoint
             if _append_trace_path is not None:
                 http_endpoint = _append_trace_path(http_endpoint)
             http_span_exporter = OTLPSpanExporterHTTP(endpoint=http_endpoint)
             provider.add_span_processor(BatchSpanProcessor(http_span_exporter))
+        elif exporter_type == "grpc" and OTLPSpanExporterGRPC is not None:
+            grpc_span_exporter = OTLPSpanExporterGRPC(endpoint=self.otlp_endpoint)
+            provider.add_span_processor(BatchSpanProcessor(grpc_span_exporter))
         elif OBSERVABILITY_VERBOSE:
             print("⚠ OTLP exporters not available, using console-only tracing")
 
@@ -191,18 +321,20 @@ class ObservabilityConfig:
         readers = []
 
         # OTLP metric exporter (if available)
-        if GRPC_AVAILABLE and OTLPMetricExporterGRPC is not None:
-            grpc_metric_exporter = OTLPMetricExporterGRPC(endpoint=self.otlp_endpoint)
-            grpc_reader = PeriodicExportingMetricReader(grpc_metric_exporter, export_interval_millis=5000)
-            readers.append(grpc_reader)
-        elif HTTP_AVAILABLE and OTLPMetricExporterHTTP is not None:
+        # Use protocol detection based on endpoint port (4318=HTTP, 4317=gRPC)
+        exporter_type = get_metric_exporter_type(self.otlp_endpoint)
+        if exporter_type == "http" and OTLPMetricExporterHTTP is not None:
             # HTTP endpoint needs /v1/metrics path appended (SDK only does this for env vars)
-            http_endpoint = self.otlp_endpoint.replace(":4317", ":4318")
+            http_endpoint = self.otlp_endpoint
             if _append_metrics_path is not None:
                 http_endpoint = _append_metrics_path(http_endpoint)
             http_metric_exporter = OTLPMetricExporterHTTP(endpoint=http_endpoint)
             http_reader = PeriodicExportingMetricReader(http_metric_exporter, export_interval_millis=5000)
             readers.append(http_reader)
+        elif exporter_type == "grpc" and OTLPMetricExporterGRPC is not None:
+            grpc_metric_exporter = OTLPMetricExporterGRPC(endpoint=self.otlp_endpoint)
+            grpc_reader = PeriodicExportingMetricReader(grpc_metric_exporter, export_interval_millis=5000)
+            readers.append(grpc_reader)
         elif OBSERVABILITY_VERBOSE:
             print("⚠ OTLP exporters not available, using console-only metrics")
 
