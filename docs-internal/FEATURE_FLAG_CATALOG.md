@@ -1,9 +1,11 @@
 # Feature Flag Catalog
 
-**Total Flags**: 164
-**Generated**: 2025-12-27 02:45:34 UTC
+**Total Flags**: 165 (1 deprecated, 3 new)
+**Last Updated**: 2025-12-27 (Sprint Block 5 Consolidation)
 
-This catalog is auto-generated from `src/mcp_server_langgraph/core/feature_flags.py`.
+This catalog is generated from `src/mcp_server_langgraph/core/feature_flags.py`.
+
+> **Sprint Block 5 Changes**: Deprecated `enable_multi_agent_collaboration` (merged into `multi_agent_strategy`), deprecated `enable_llm_suggestions` (replaced by `suggestion_strategy`), added unified helper methods `get_rate_limit()` and `get_cache_ttl()`.
 
 ---
 
@@ -59,17 +61,20 @@ This catalog is auto-generated from `src/mcp_server_langgraph/core/feature_flags
 
 ## Agent Behavior
 
-*7 flags in this category*
+*8 flags in this category*
 
 | Flag | Type | Default | Environment Variable | Description |
 |------|------|---------|---------------------|-------------|
 | `enable_agent_memory` | bool | `True` | `FF_ENABLE_AGENT_MEMORY` | Enable conversation memory/checkpointing for stateful agents |
-| `enable_multi_agent_collaboration` | bool | `True` | `FF_ENABLE_MULTI_AGENT_COLLABORATION` | Enable multiple agents working together |
 | `enable_multi_agent_orchestration` | bool | `True` | `FF_ENABLE_MULTI_AGENT_ORCHESTRATION` | Enable orchestrator-worker pattern for parallel task execution. Supports up t... |
+| `multi_agent_strategy` | str | `"orchestrator"` | `FF_MULTI_AGENT_STRATEGY` | Multi-agent coordination strategy: 'orchestrator' (hierarchical), 'peer' (decentralized), or 'hybrid' (adaptive). Replaces deprecated enable_multi_agent_collaboration flag. |
 | `enable_tool_reflection` | bool | `True` | `FF_ENABLE_TOOL_REFLECTION` | Enable agents to reflect on tool usage effectiveness |
 | `max_agent_iterations` | int | `10` | `FF_MAX_AGENT_ITERATIONS` | Maximum iterations for agent loops before stopping |
 | `max_subagents` | int | `10` | `FF_MAX_SUBAGENTS` | Maximum number of parallel subagents in orchestrator (1-50) |
 | `memory_max_messages` | int | `100` | `FF_MEMORY_MAX_MESSAGES` | Maximum messages to retain in conversation history |
+
+> **Note**: `enable_multi_agent_collaboration` was deprecated in Sprint Block 5.
+> Use `enable_multi_agent_orchestration` + `multi_agent_strategy` instead.
 
 ## Agent HITL
 
@@ -195,16 +200,20 @@ This catalog is auto-generated from `src/mcp_server_langgraph/core/feature_flags
 
 ## LLM
 
-*6 flags in this category*
+*7 flags in this category*
 
 | Flag | Type | Default | Environment Variable | Description |
 |------|------|---------|---------------------|-------------|
 | `enable_llm_fallback` | bool | `True` | `FF_ENABLE_LLM_FALLBACK` | Enable automatic fallback to alternative models on failure |
 | `enable_llm_hooks` | bool | `True` | `FF_ENABLE_LLM_HOOKS` | Enable LLM-level hooks (BEFORE_MODEL, AFTER_MODEL) for request/response inter... |
-| `enable_llm_suggestions` | bool | `True` | `FF_ENABLE_LLM_SUGGESTIONS` | Use LLM for generating suggestions (when False, uses heuristics only). Reduce... |
+| `enable_llm_suggestions` | bool | `True` | `FF_ENABLE_LLM_SUGGESTIONS` | **[DEPRECATED]** Use `suggestion_strategy` instead. When False, uses heuristics only. |
+| `suggestion_strategy` | str | `"llm"` | `FF_SUGGESTION_STRATEGY` | Suggestion generation strategy: 'llm' (AI-powered, best quality), 'heuristic' (rule-based, lower cost), or 'hybrid' (adaptive). Replaces deprecated enable_llm_suggestions flag. |
 | `enable_streaming_responses` | bool | `True` | `FF_ENABLE_STREAMING_RESPONSES` | Enable streaming responses for real-time output |
 | `enable_streaming_suggestions` | bool | `True` | `FF_ENABLE_STREAMING_SUGGESTIONS` | Enable streaming suggestions via SSE for real-time response |
 | `llm_timeout_seconds` | int | `60` | `FF_LLM_TIMEOUT_SECONDS` | Maximum time to wait for LLM responses (10-300 seconds) |
+
+> **Note**: `enable_llm_suggestions` was deprecated in Sprint Block 5.
+> Use `suggestion_strategy` instead. The `effective_suggestion_strategy` property provides backward compatibility.
 
 ## MCP Extensions
 
@@ -257,17 +266,21 @@ This catalog is auto-generated from `src/mcp_server_langgraph/core/feature_flags
 
 ## Performance
 
-*7 flags in this category*
+*9 flags in this category*
 
 | Flag | Type | Default | Environment Variable | Description |
 |------|------|---------|---------------------|-------------|
 | `ai_ux_redis_cache_ttl_seconds` | int | `300` | `FF_AI_UX_REDIS_CACHE_TTL_SECONDS` | TTL for Redis-cached AI UX responses (60s-1h) |
 | `cache_ttl_seconds` | int | `300` | `FF_CACHE_TTL_SECONDS` | How long to cache responses (60s-24h) |
+| `default_cache_ttl_seconds` | int | `300` | `FF_DEFAULT_CACHE_TTL_SECONDS` | Default cache TTL for unknown features. Use `get_cache_ttl(feature)` helper method. |
+| `default_rate_limit_per_minute` | int | `60` | `FF_DEFAULT_RATE_LIMIT_PER_MINUTE` | Default rate limit for unknown features. Use `get_rate_limit(feature)` helper method. |
 | `enable_request_batching` | bool | `True` | `FF_ENABLE_REQUEST_BATCHING` | Batch multiple requests to reduce LLM API calls |
 | `enable_response_caching` | bool | `False` | `FF_ENABLE_RESPONSE_CACHING` | Cache LLM responses for identical inputs (experimental) |
 | `frontend_redis_l2_cache_ttl_seconds` | int | `300` | `FF_FRONTEND_REDIS_L2_CACHE_TTL_SECONDS` | TTL for frontend Redis L2 cache entries (60s-1h) |
 | `max_batch_size` | int | `10` | `FF_MAX_BATCH_SIZE` | Maximum number of requests to batch together |
 | `suggestion_cache_ttl_seconds` | int | `300` | `FF_SUGGESTION_CACHE_TTL_SECONDS` | Time-to-live for suggestion cache entries (60s-1h) |
+
+> **Helper Methods**: Use `get_rate_limit(feature)` and `get_cache_ttl(feature)` to get unified rate limits and cache TTLs with feature-specific overrides. See [Programmatic Access](#programmatic-access) for details.
 
 ## Pydantic AI
 
@@ -407,4 +420,48 @@ if flags.enable_langsmith:
 
 # Require feature (raises FeatureDisabledError if disabled)
 flags.require_feature("enable_langsmith", "LangSmith Tracing")
+
+# --- Sprint Block 5 Consolidation Helper Methods ---
+
+# Get unified rate limits with feature-specific overrides
+rate_limit = flags.get_rate_limit("suggestions")  # Returns suggestion_rate_limit_per_minute
+rate_limit = flags.get_rate_limit("api")          # Returns rate_limit_requests_per_minute
+rate_limit = flags.get_rate_limit("unknown")      # Returns default_rate_limit_per_minute
+
+# Get unified cache TTLs with feature-specific overrides
+cache_ttl = flags.get_cache_ttl("llm")         # Returns cache_ttl_seconds
+cache_ttl = flags.get_cache_ttl("suggestions") # Returns suggestion_cache_ttl_seconds
+cache_ttl = flags.get_cache_ttl("openfga")     # Returns openfga_cache_ttl_seconds
+cache_ttl = flags.get_cache_ttl("unknown")     # Returns default_cache_ttl_seconds
+
+# Get effective suggestion strategy (backward-compatible)
+# Returns "heuristic" if enable_llm_suggestions=False, otherwise suggestion_strategy
+strategy = flags.effective_suggestion_strategy  # "llm" | "heuristic" | "hybrid"
+
+# Multi-agent strategy
+strategy = flags.multi_agent_strategy  # "orchestrator" | "peer" | "hybrid"
+```
+
+## Deprecation Notes (Sprint Block 5)
+
+The following flags were deprecated and consolidated:
+
+| Deprecated Flag | Replacement |
+|-----------------|-------------|
+| `enable_multi_agent_collaboration` | `enable_multi_agent_orchestration` + `multi_agent_strategy` |
+| `enable_llm_suggestions` | `suggestion_strategy` (use `effective_suggestion_strategy` property) |
+
+**Migration Example:**
+
+```python
+# Before (deprecated)
+if flags.enable_multi_agent_collaboration:
+    use_collaboration()
+
+# After (recommended)
+if flags.enable_multi_agent_orchestration:
+    if flags.multi_agent_strategy == "orchestrator":
+        use_orchestrator_pattern()
+    elif flags.multi_agent_strategy == "peer":
+        use_peer_pattern()
 ```

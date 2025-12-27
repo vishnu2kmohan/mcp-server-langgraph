@@ -19,12 +19,72 @@ R = TypeVar("R")
 
 class FeatureFlags(BaseSettings):
     """
-    Feature flags for controlling system behavior
+    Feature flags for controlling system behavior.
 
     All flags can be overridden via environment variables with FF_ prefix.
     Example: FF_ENABLE_PYDANTIC_AI_ROUTING=false
+
+    Category Structure (12 logical groups):
+    ========================================
+
+    1. AUTHENTICATION & AUTHORIZATION
+       - enable_keycloak, enable_openfga, openfga_strict_mode, etc.
+
+    2. AGENT ORCHESTRATION
+       - enable_multi_agent_orchestration, multi_agent_strategy, max_subagents
+       - enable_sdk_*, enable_handoff_pattern, enable_loop_agent
+
+    3. AI FEATURES
+       - Studio AI: enable_studio_ai + granular intelligence flags (deep analysis)
+       - AI UX: enable_ai_ux + disclosure/nudges/error recovery (UX polish)
+       - AI Suggestions: enable_ai_suggestions, suggestion_strategy
+
+    4. CACHE & PERFORMANCE
+       - default_cache_ttl_seconds + feature-specific TTLs
+       - default_rate_limit_per_minute + feature-specific limits
+       - enable_response_caching, enable_request_batching
+
+    5. CONTEXT ENGINEERING
+       - enable_context_ranking, enable_semantic_deduplication
+       - enable_model_aware_compaction, context_split_threshold
+
+    6. DEVELOPER TOOLS
+       - devtools_panel, devtools_ai_insights, devtools_network_tab
+
+    7. OBSERVABILITY
+       - enable_langsmith, enable_detailed_logging, enable_trace_sampling
+
+    8. SAFETY & SECURITY
+       - enable_rate_limiting, enable_input_validation, enable_pii_tokenization
+       - enable_agent_hitl, agent_hitl_confidence_threshold
+
+    9. SKILLS ECOSYSTEM
+       - enable_skills_system, enable_skills_marketplace
+
+    10. UI COMPONENTS
+        - Canvas: studio_canvas_shell, canvas_editable, canvas_ai_palette
+        - Chat UX: enable_slash_commands, enable_style_presets
+        - Sessions: enable_sessions_feature, enable_session_export
+
+    11. WEBSOCKET INFRASTRUCTURE
+        - enable_websocket_new_base, enable_mcp_websocket
+        - websocket_heartbeat_interval_seconds, websocket_idle_timeout_seconds
+
+    12. EXPERIMENTAL (default=False, requires opt-in)
+        - enable_experimental_features (master switch)
+        - enable_agentic_memory, enable_computer_use, enable_bash_tool
+
+    Helper Methods:
+    ===============
+    - get_rate_limit(feature) - Get effective rate limit for a feature
+    - get_cache_ttl(feature) - Get effective cache TTL for a feature
+    - effective_suggestion_strategy - Get suggestion strategy (llm/heuristic/hybrid)
+    - get_ui_features_for_role(role) - Get UI features available for a user role
     """
 
+    # =========================================================================
+    # CATEGORY 2: AI FEATURES - Pydantic AI Integration
+    # =========================================================================
     # Pydantic AI Features
     enable_pydantic_ai_routing: bool = Field(
         default=True,
@@ -129,11 +189,24 @@ class FeatureFlags(BaseSettings):
         description="Cache LLM responses for identical inputs (experimental)",
     )
 
+    # =========================================================================
+    # Cache TTL Configuration (Unified)
+    # =========================================================================
+    # Default cache TTL inherited by all feature-specific caches unless overridden.
+    # Feature-specific overrides: suggestion_cache_ttl_seconds,
+    # ai_ux_redis_cache_ttl_seconds, frontend_redis_l2_cache_ttl_seconds, openfga_cache_ttl_seconds
+    default_cache_ttl_seconds: int = Field(
+        default=300,
+        ge=60,
+        le=86400,
+        description="Default cache TTL for all features (60s-24h). Feature-specific TTLs override this value when set.",
+    )
+
     cache_ttl_seconds: int = Field(
         default=300,
         ge=60,
         le=86400,
-        description="How long to cache responses (60s-24h)",
+        description="How long to cache LLM responses (60s-24h)",
     )
 
     enable_request_batching: bool = Field(
@@ -174,11 +247,25 @@ class FeatureFlags(BaseSettings):
         description="Enable rate limiting to prevent abuse",
     )
 
+    # =========================================================================
+    # Rate Limiting Configuration (Unified)
+    # =========================================================================
+    # Default rate limit inherited by all feature-specific limits unless overridden.
+    # Feature-specific overrides: suggestion_rate_limit_per_minute,
+    # frontend_redis_l2_rate_limit_per_minute, websocket_rate_limit_per_minute
+    default_rate_limit_per_minute: int = Field(
+        default=60,
+        ge=1,
+        le=1000,
+        description="Default rate limit for all features (requests per minute per user). "
+        "Feature-specific limits override this value when set.",
+    )
+
     rate_limit_requests_per_minute: int = Field(
         default=60,
         ge=1,
         le=1000,
-        description="Maximum requests per minute per user",
+        description="Maximum requests per minute per user (API global rate limit)",
     )
 
     enable_input_validation: bool = Field(
@@ -285,12 +372,22 @@ class FeatureFlags(BaseSettings):
 
     enable_ai_suggestions: bool = Field(
         default=True,
-        description="Enable AI-powered suggestions in UI",
+        description="Enable AI-powered suggestions in UI (master toggle for all suggestion features)",
     )
 
+    suggestion_strategy: str = Field(
+        default="llm",
+        description="Suggestion generation strategy: 'llm' (AI-powered, best quality), "
+        "'heuristic' (rule-based, lower cost), or 'hybrid' (adaptive based on complexity). "
+        "Replaces deprecated enable_llm_suggestions flag.",
+    )
+
+    # DEPRECATED: Use suggestion_strategy instead
+    # Kept for backward compatibility - will be removed in future version
     enable_llm_suggestions: bool = Field(
         default=True,
-        description="Use LLM for generating suggestions (when False, uses heuristics only). Reduces cost but may lower suggestion quality.",
+        description="[DEPRECATED] Use suggestion_strategy='llm' instead. "
+        "When False, uses heuristics only. Reduces cost but may lower suggestion quality.",
     )
 
     enable_streaming_suggestions: bool = Field(
@@ -436,10 +533,9 @@ class FeatureFlags(BaseSettings):
         description="Master switch for all experimental features",
     )
 
-    enable_multi_agent_collaboration: bool = Field(
-        default=True,
-        description="Enable multiple agents working together",
-    )
+    # NOTE: enable_multi_agent_collaboration was removed (Sprint Block 5 consolidation).
+    # Use enable_multi_agent_orchestration + multi_agent_strategy instead.
+    # Migration: All code referencing collaboration should use orchestration flag.
 
     enable_tool_reflection: bool = Field(
         default=True,
@@ -514,6 +610,11 @@ class FeatureFlags(BaseSettings):
     enable_mcp_client: bool = Field(
         default=True,
         description="Enable MCP client capabilities (ADR-0082) to consume tools from external MCP servers. Production-ready.",
+    )
+
+    enable_litellm_otel: bool = Field(
+        default=True,
+        description="Enable LiteLLM native OTEL callback for enhanced LLM tracing. Provides gen_ai.client.token.cost histogram and automatic span creation for all LLM calls.",
     )
 
     # =========================================================================
@@ -612,6 +713,13 @@ class FeatureFlags(BaseSettings):
         "Supports up to max_subagents parallel workers with artifact-based synthesis. "
         "Includes three-tier model selection and cross-vendor verification. "
         "Set FF_ENABLE_MULTI_AGENT_ORCHESTRATION=false to disable.",
+    )
+
+    multi_agent_strategy: str = Field(
+        default="orchestrator",
+        description="Multi-agent coordination strategy: 'orchestrator' (hierarchical with coordinator), "
+        "'peer' (decentralized collaboration), or 'hybrid' (adaptive based on task complexity). "
+        "Replaces deprecated enable_multi_agent_collaboration flag.",
     )
 
     max_subagents: int = Field(
@@ -770,9 +878,29 @@ class FeatureFlags(BaseSettings):
     # =========================================================================
     # Studio AI Orchestration (StudioShell AI Enhancement)
     # =========================================================================
+    # DISTINCTION: Studio AI vs AI UX
+    #
+    # Studio AI (enable_studio_ai, default=False):
+    #   - Deep AI intelligence features for content analysis
+    #   - Session/conversation/canvas/diagram/trace intelligence
+    #   - Requires LLM calls for each analysis
+    #   - Higher cost, gradual rollout
+    #   - Use case: "Summarize this session", "Detect anomalies in traces"
+    #
+    # AI UX (enable_ai_ux, default=True):
+    #   - Lightweight UX enhancements using AI
+    #   - Disclosure, nudges, error recovery, onboarding
+    #   - Uses cached/batched LLM calls, lower cost
+    #   - Production-ready, enabled by default
+    #   - Use case: "Show personalized next steps", "Suggest recovery from error"
+    #
+    # Both can be enabled independently. AI UX is for user experience polish,
+    # while Studio AI is for deep content analysis and intelligence.
+    # =========================================================================
     enable_studio_ai: bool = Field(
         default=False,
-        description="Enable unified Studio AI orchestration for StudioShell AI capabilities (gradual rollout)",
+        description="Enable unified Studio AI orchestration for deep content intelligence (gradual rollout). "
+        "See AI UX (enable_ai_ux) for lightweight UX enhancements.",
     )
 
     # -------------------------------------------------------------------------
@@ -816,6 +944,9 @@ class FeatureFlags(BaseSettings):
     # =========================================================================
     # AI UX Features (Phase 6 AI-Native Integration)
     # =========================================================================
+    # Lightweight UX enhancements using AI. Production-ready, enabled by default.
+    # See Studio AI section above for deep content intelligence features.
+    # =========================================================================
     enable_ai_disclosure: bool = Field(
         default=True,
         description="Enable AI-powered progressive disclosure analysis for adaptive UI complexity",
@@ -854,7 +985,8 @@ class FeatureFlags(BaseSettings):
     # AI UX Advanced Features
     enable_ai_ux: bool = Field(
         default=True,
-        description="Master switch for all AI UX features (disclosure, nudges, error recovery, etc.)",
+        description="Master switch for all AI UX features (disclosure, nudges, error recovery, etc.). "
+        "Independent from enable_studio_ai which controls deep content intelligence.",
     )
 
     enable_ai_ux_parallel_graph: bool = Field(
@@ -1028,6 +1160,69 @@ class FeatureFlags(BaseSettings):
         test_mode = os.environ.get("FF_TEST_MODE", "").lower()
         return test_mode in ("true", "1", "yes")
 
+    @property
+    def effective_suggestion_strategy(self) -> str:
+        """
+        Get the effective suggestion strategy, considering both new and deprecated flags.
+
+        Backward Compatibility:
+        - If enable_llm_suggestions is explicitly set to False, returns "heuristic"
+        - Otherwise, uses the new suggestion_strategy value
+
+        Returns:
+            One of: "llm", "heuristic", or "hybrid"
+        """
+        # If deprecated flag is False, map to heuristic strategy
+        if not self.enable_llm_suggestions:
+            return "heuristic"
+        # Otherwise use the new strategy field
+        return self.suggestion_strategy
+
+    def get_rate_limit(self, feature: str | None = None) -> int:
+        """
+        Get the effective rate limit for a feature.
+
+        Uses feature-specific override if set, otherwise falls back to default.
+
+        Args:
+            feature: Optional feature name ("suggestions", "frontend_cache", "websocket", None for API)
+
+        Returns:
+            Rate limit in requests per minute
+        """
+        if feature == "suggestions":
+            return self.suggestion_rate_limit_per_minute
+        elif feature == "frontend_cache":
+            return self.frontend_redis_l2_rate_limit_per_minute
+        elif feature == "websocket":
+            return self.websocket_rate_limit_per_minute
+        elif feature is None or feature == "api":
+            return self.rate_limit_requests_per_minute
+        else:
+            # Unknown feature, use default
+            return self.default_rate_limit_per_minute
+
+    def get_cache_ttl(self, feature: str | None = None) -> int:
+        """
+        Get the effective cache TTL for a feature.
+
+        Uses feature-specific override if set, otherwise falls back to default.
+
+        Args:
+            feature: Optional feature name ("llm", "suggestions", "ai_ux", "frontend_cache", "openfga")
+
+        Returns:
+            Cache TTL in seconds
+        """
+        cache_ttl_map = {
+            "llm": self.cache_ttl_seconds,
+            "suggestions": self.suggestion_cache_ttl_seconds,
+            "ai_ux": self.ai_ux_redis_cache_ttl_seconds,
+            "frontend_cache": self.frontend_redis_l2_cache_ttl_seconds,
+            "openfga": self.openfga_cache_ttl_seconds,
+        }
+        return cache_ttl_map.get(feature, self.default_cache_ttl_seconds) if feature else self.default_cache_ttl_seconds
+
     def is_feature_enabled(self, feature_name: str) -> bool:
         """
         Check if a feature is enabled
@@ -1145,7 +1340,8 @@ class FeatureFlags(BaseSettings):
             "code_export": self.enable_code_export,
             "ai_suggestions": self.enable_ai_suggestions,
             "ai_suggestions_websocket": self.enable_ai_suggestions_websocket,
-            "llm_suggestions": self.enable_llm_suggestions,
+            "suggestion_strategy": self.suggestion_strategy,
+            "llm_suggestions": self.enable_llm_suggestions,  # DEPRECATED: use suggestion_strategy
             "notification_preferences": self.enable_notification_preferences,
             "mcp_websocket": self.enable_mcp_websocket,
             "interactive_artifacts": self.enable_interactive_artifacts,

@@ -146,7 +146,8 @@ class TestFeatureFlagsMethods:
         flags = FeatureFlags()
 
         # Master switch is off by default
-        assert flags.should_use_experimental("enable_multi_agent_collaboration") is False
+        # Note: enable_multi_agent_collaboration was deprecated in Sprint Block 5
+        assert flags.should_use_experimental("enable_loop_agent") is False
 
     @pytest.mark.unit
     def test_should_use_experimental_with_master_switch_enabled(self):
@@ -154,12 +155,14 @@ class TestFeatureFlagsMethods:
         from mcp_server_langgraph.core.feature_flags import FeatureFlags
 
         # Create flags with experimental enabled
+        # Note: enable_multi_agent_collaboration was deprecated in Sprint Block 5
+        # and merged into enable_multi_agent_orchestration + multi_agent_strategy
         flags = FeatureFlags(
             enable_experimental_features=True,
-            enable_multi_agent_collaboration=True,
+            enable_loop_agent=True,  # Using loop_agent as an experimental flag
         )
 
-        assert flags.should_use_experimental("enable_multi_agent_collaboration") is True
+        assert flags.should_use_experimental("enable_loop_agent") is True
 
 
 @pytest.mark.xdist_group(name="feature_flags")
@@ -1453,3 +1456,263 @@ class TestGranularIntelligenceFeatureFlags:
         assert features["canvas_intelligence"] is True
         # Others still False
         assert features["conversation_intelligence"] is False
+
+
+@pytest.mark.xdist_group(name="feature_flags_consolidation")
+class TestFeatureFlagConsolidation:
+    """Test Sprint Block 5 feature flag consolidation methods.
+
+    Tests for unified helper methods and strategy enums that replace deprecated flags:
+    - get_rate_limit(feature) - Unified rate limiting with feature-specific overrides
+    - get_cache_ttl(feature) - Unified cache TTL with feature-specific overrides
+    - effective_suggestion_strategy - Backward-compatible suggestion strategy
+    - multi_agent_strategy - Multi-agent coordination strategy enum
+    - suggestion_strategy - Suggestion generation strategy enum
+    """
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers."""
+        gc.collect()
+
+    # =========================================================================
+    # get_rate_limit() Tests
+    # =========================================================================
+
+    @pytest.mark.unit
+    def test_get_rate_limit_api_returns_rate_limit_requests_per_minute(self):
+        """Test get_rate_limit returns API rate limit for 'api' feature."""
+        from mcp_server_langgraph.core.feature_flags import FeatureFlags
+
+        flags = FeatureFlags(rate_limit_requests_per_minute=100)
+        assert flags.get_rate_limit("api") == 100
+
+    @pytest.mark.unit
+    def test_get_rate_limit_none_returns_rate_limit_requests_per_minute(self):
+        """Test get_rate_limit returns API rate limit when feature is None."""
+        from mcp_server_langgraph.core.feature_flags import FeatureFlags
+
+        flags = FeatureFlags(rate_limit_requests_per_minute=100)
+        assert flags.get_rate_limit(None) == 100
+        assert flags.get_rate_limit() == 100  # Default argument
+
+    @pytest.mark.unit
+    def test_get_rate_limit_suggestions_returns_suggestion_rate_limit(self):
+        """Test get_rate_limit returns suggestion-specific rate limit."""
+        from mcp_server_langgraph.core.feature_flags import FeatureFlags
+
+        flags = FeatureFlags(suggestion_rate_limit_per_minute=120)
+        assert flags.get_rate_limit("suggestions") == 120
+
+    @pytest.mark.unit
+    def test_get_rate_limit_frontend_cache_returns_frontend_rate_limit(self):
+        """Test get_rate_limit returns frontend cache rate limit."""
+        from mcp_server_langgraph.core.feature_flags import FeatureFlags
+
+        flags = FeatureFlags(frontend_redis_l2_rate_limit_per_minute=90)
+        assert flags.get_rate_limit("frontend_cache") == 90
+
+    @pytest.mark.unit
+    def test_get_rate_limit_websocket_returns_websocket_rate_limit(self):
+        """Test get_rate_limit returns WebSocket rate limit."""
+        from mcp_server_langgraph.core.feature_flags import FeatureFlags
+
+        flags = FeatureFlags(websocket_rate_limit_per_minute=200)
+        assert flags.get_rate_limit("websocket") == 200
+
+    @pytest.mark.unit
+    def test_get_rate_limit_unknown_feature_returns_default(self):
+        """Test get_rate_limit returns default for unknown features."""
+        from mcp_server_langgraph.core.feature_flags import FeatureFlags
+
+        flags = FeatureFlags(default_rate_limit_per_minute=75)
+        assert flags.get_rate_limit("unknown_feature") == 75
+        assert flags.get_rate_limit("custom_endpoint") == 75
+
+    @pytest.mark.unit
+    def test_get_rate_limit_default_rate_limit_per_minute_default_value(self):
+        """Test default_rate_limit_per_minute has correct default value."""
+        from mcp_server_langgraph.core.feature_flags import FeatureFlags
+
+        flags = FeatureFlags()
+        assert flags.default_rate_limit_per_minute == 60
+
+    # =========================================================================
+    # get_cache_ttl() Tests
+    # =========================================================================
+
+    @pytest.mark.unit
+    def test_get_cache_ttl_llm_returns_cache_ttl_seconds(self):
+        """Test get_cache_ttl returns LLM cache TTL."""
+        from mcp_server_langgraph.core.feature_flags import FeatureFlags
+
+        flags = FeatureFlags(cache_ttl_seconds=600)
+        assert flags.get_cache_ttl("llm") == 600
+
+    @pytest.mark.unit
+    def test_get_cache_ttl_suggestions_returns_suggestion_cache_ttl(self):
+        """Test get_cache_ttl returns suggestion-specific cache TTL."""
+        from mcp_server_langgraph.core.feature_flags import FeatureFlags
+
+        flags = FeatureFlags(suggestion_cache_ttl_seconds=450)
+        assert flags.get_cache_ttl("suggestions") == 450
+
+    @pytest.mark.unit
+    def test_get_cache_ttl_ai_ux_returns_ai_ux_cache_ttl(self):
+        """Test get_cache_ttl returns AI UX cache TTL."""
+        from mcp_server_langgraph.core.feature_flags import FeatureFlags
+
+        flags = FeatureFlags(ai_ux_redis_cache_ttl_seconds=180)
+        assert flags.get_cache_ttl("ai_ux") == 180
+
+    @pytest.mark.unit
+    def test_get_cache_ttl_frontend_cache_returns_frontend_cache_ttl(self):
+        """Test get_cache_ttl returns frontend cache TTL."""
+        from mcp_server_langgraph.core.feature_flags import FeatureFlags
+
+        flags = FeatureFlags(frontend_redis_l2_cache_ttl_seconds=360)
+        assert flags.get_cache_ttl("frontend_cache") == 360
+
+    @pytest.mark.unit
+    def test_get_cache_ttl_openfga_returns_openfga_cache_ttl(self):
+        """Test get_cache_ttl returns OpenFGA cache TTL."""
+        from mcp_server_langgraph.core.feature_flags import FeatureFlags
+
+        flags = FeatureFlags(openfga_cache_ttl_seconds=240)
+        assert flags.get_cache_ttl("openfga") == 240
+
+    @pytest.mark.unit
+    def test_get_cache_ttl_unknown_feature_returns_default(self):
+        """Test get_cache_ttl returns default for unknown features."""
+        from mcp_server_langgraph.core.feature_flags import FeatureFlags
+
+        flags = FeatureFlags(default_cache_ttl_seconds=500)
+        assert flags.get_cache_ttl("unknown_feature") == 500
+        assert flags.get_cache_ttl("custom_cache") == 500
+
+    @pytest.mark.unit
+    def test_get_cache_ttl_none_returns_default(self):
+        """Test get_cache_ttl returns default when feature is None."""
+        from mcp_server_langgraph.core.feature_flags import FeatureFlags
+
+        flags = FeatureFlags(default_cache_ttl_seconds=400)
+        assert flags.get_cache_ttl(None) == 400
+        assert flags.get_cache_ttl() == 400  # Default argument
+
+    @pytest.mark.unit
+    def test_get_cache_ttl_default_cache_ttl_seconds_default_value(self):
+        """Test default_cache_ttl_seconds has correct default value."""
+        from mcp_server_langgraph.core.feature_flags import FeatureFlags
+
+        flags = FeatureFlags()
+        assert flags.default_cache_ttl_seconds == 300
+
+    # =========================================================================
+    # effective_suggestion_strategy Tests
+    # =========================================================================
+
+    @pytest.mark.unit
+    def test_effective_suggestion_strategy_returns_llm_by_default(self):
+        """Test effective_suggestion_strategy returns 'llm' by default."""
+        from mcp_server_langgraph.core.feature_flags import FeatureFlags
+
+        flags = FeatureFlags()
+        assert flags.effective_suggestion_strategy == "llm"
+
+    @pytest.mark.unit
+    def test_effective_suggestion_strategy_returns_heuristic_when_llm_disabled(self):
+        """Test effective_suggestion_strategy returns 'heuristic' when deprecated flag is False."""
+        from mcp_server_langgraph.core.feature_flags import FeatureFlags
+
+        flags = FeatureFlags(enable_llm_suggestions=False)
+        assert flags.effective_suggestion_strategy == "heuristic"
+
+    @pytest.mark.unit
+    def test_effective_suggestion_strategy_respects_new_strategy_field(self):
+        """Test effective_suggestion_strategy uses new suggestion_strategy field."""
+        from mcp_server_langgraph.core.feature_flags import FeatureFlags
+
+        flags = FeatureFlags(suggestion_strategy="hybrid")
+        assert flags.effective_suggestion_strategy == "hybrid"
+
+    @pytest.mark.unit
+    def test_effective_suggestion_strategy_deprecated_flag_overrides_strategy(self):
+        """Test deprecated enable_llm_suggestions=False overrides suggestion_strategy."""
+        from mcp_server_langgraph.core.feature_flags import FeatureFlags
+
+        # Even with strategy="llm", disabled deprecated flag forces heuristic
+        flags = FeatureFlags(suggestion_strategy="llm", enable_llm_suggestions=False)
+        assert flags.effective_suggestion_strategy == "heuristic"
+
+    # =========================================================================
+    # suggestion_strategy Tests
+    # =========================================================================
+
+    @pytest.mark.unit
+    def test_suggestion_strategy_default_is_llm(self):
+        """Test suggestion_strategy defaults to 'llm'."""
+        from mcp_server_langgraph.core.feature_flags import FeatureFlags
+
+        flags = FeatureFlags()
+        assert flags.suggestion_strategy == "llm"
+
+    @pytest.mark.unit
+    def test_suggestion_strategy_can_be_set_to_heuristic(self):
+        """Test suggestion_strategy can be set to 'heuristic'."""
+        from mcp_server_langgraph.core.feature_flags import FeatureFlags
+
+        flags = FeatureFlags(suggestion_strategy="heuristic")
+        assert flags.suggestion_strategy == "heuristic"
+
+    @pytest.mark.unit
+    def test_suggestion_strategy_can_be_set_to_hybrid(self):
+        """Test suggestion_strategy can be set to 'hybrid'."""
+        from mcp_server_langgraph.core.feature_flags import FeatureFlags
+
+        flags = FeatureFlags(suggestion_strategy="hybrid")
+        assert flags.suggestion_strategy == "hybrid"
+
+    @pytest.mark.unit
+    def test_suggestion_strategy_included_in_ui_features(self):
+        """Test suggestion_strategy is included in get_ui_features_for_role."""
+        from mcp_server_langgraph.core.feature_flags import FeatureFlags
+
+        flags = FeatureFlags(suggestion_strategy="hybrid")
+        features = flags.get_ui_features_for_role("admin")
+        assert features["suggestion_strategy"] == "hybrid"
+
+    # =========================================================================
+    # multi_agent_strategy Tests
+    # =========================================================================
+
+    @pytest.mark.unit
+    def test_multi_agent_strategy_default_is_orchestrator(self):
+        """Test multi_agent_strategy defaults to 'orchestrator'."""
+        from mcp_server_langgraph.core.feature_flags import FeatureFlags
+
+        flags = FeatureFlags()
+        assert flags.multi_agent_strategy == "orchestrator"
+
+    @pytest.mark.unit
+    def test_multi_agent_strategy_can_be_set_to_peer(self):
+        """Test multi_agent_strategy can be set to 'peer'."""
+        from mcp_server_langgraph.core.feature_flags import FeatureFlags
+
+        flags = FeatureFlags(multi_agent_strategy="peer")
+        assert flags.multi_agent_strategy == "peer"
+
+    @pytest.mark.unit
+    def test_multi_agent_strategy_can_be_set_to_hybrid(self):
+        """Test multi_agent_strategy can be set to 'hybrid'."""
+        from mcp_server_langgraph.core.feature_flags import FeatureFlags
+
+        flags = FeatureFlags(multi_agent_strategy="hybrid")
+        assert flags.multi_agent_strategy == "hybrid"
+
+    @pytest.mark.unit
+    def test_enable_multi_agent_collaboration_is_removed(self):
+        """Test enable_multi_agent_collaboration flag was removed."""
+        from mcp_server_langgraph.core.feature_flags import FeatureFlags
+
+        flags = FeatureFlags()
+        # The deprecated flag should not exist
+        assert not hasattr(flags, "enable_multi_agent_collaboration")
