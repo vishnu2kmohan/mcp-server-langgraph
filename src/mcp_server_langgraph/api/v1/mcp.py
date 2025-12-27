@@ -4,6 +4,8 @@ MCP REST Router.
 Exposes MCP Protocol 2025-11-25 features via REST endpoints.
 
 Endpoints:
+- GET  /tools                  - List available tools (REST fallback for WebSocket)
+- POST /tools/call             - Call a tool (REST fallback for WebSocket)
 - GET  /resources              - List available resources
 - GET  /resources/content      - Read a resource by URI
 - GET  /prompts                - List available prompts
@@ -14,6 +16,7 @@ Endpoints:
 - GET  /tasks                  - List active tasks
 - GET  /tasks/{id}             - Get task status
 - POST /tasks/{id}/cancel      - Cancel a task
+- GET  /tasks/{id}/result      - Get task result (blocks until complete)
 
 Example:
     from mcp_server_langgraph.api.v1.mcp import mcp_router
@@ -39,6 +42,8 @@ from mcp_server_langgraph.api.v1.mcp_bridge import (
     MCPResourceNotFoundError,
     MCPTask,
     MCPTaskNotFoundError,
+    MCPTool,
+    MCPToolResult,
     SamplingResponse,
     get_mcp_bridge,
 )
@@ -81,6 +86,48 @@ class ResourceContentResponse(BaseModel):
     """Response model for reading resource content."""
 
     contents: list[ResourceContentItem] = Field(description="Resource contents")
+
+
+# =============================================================================
+# Tool Request/Response Models
+# =============================================================================
+
+
+class ToolResponse(BaseModel):
+    """Response model for a single tool."""
+
+    name: str = Field(description="Tool name")
+    description: str = Field(description="Tool description")
+    inputSchema: dict[str, Any] | None = Field(default=None, description="JSON Schema for tool input")
+
+
+class ToolListResponse(BaseModel):
+    """Response model for listing tools."""
+
+    tools: list[ToolResponse] = Field(description="List of available tools")
+
+
+class ToolCallRequest(BaseModel):
+    """Request model for calling a tool."""
+
+    name: str = Field(description="Tool name to call")
+    arguments: dict[str, Any] = Field(default_factory=dict, description="Tool arguments")
+
+
+class ToolCallContentItem(BaseModel):
+    """A single content item in a tool result."""
+
+    type: str = Field(description="Content type (text, image, resource)")
+    text: str | None = Field(default=None, description="Text content")
+    data: str | None = Field(default=None, description="Base64 encoded data")
+    mimeType: str | None = Field(default=None, description="MIME type for binary content")
+
+
+class ToolCallResponse(BaseModel):
+    """Response model for tool call result."""
+
+    content: list[ToolCallContentItem] = Field(description="Result content items")
+    isError: bool = Field(default=False, description="Whether the call resulted in an error")
 
 
 class SamplingRequest(BaseModel):
@@ -222,6 +269,77 @@ class MCPService:
         """Check if the service is configured."""
         return self.bridge is not None and self.bridge.is_configured
 
+    async def list_tools(self) -> list[MCPTool]:
+        """
+        List available tools.
+
+        Returns tools from the MCP bridge if configured, otherwise falls back
+        to built-in tools from the local MCP server.
+        """
+        bridge = self.bridge
+        if bridge is not None and bridge.is_configured:
+            return await bridge.refresh_tools()
+
+        # Fall back to built-in MCP server tools
+        try:
+            from mcp_server_langgraph.mcp.server_streamable import get_mcp_server
+            import logging
+
+            logger = logging.getLogger(__name__)
+            logger.info("Listing available tools from built-in MCP server")
+
+            mcp_server = get_mcp_server()
+            builtin_tools = await mcp_server.list_tools_public()
+            logger.info(f"Found {len(builtin_tools)} built-in tools")
+
+            return [
+                MCPTool(
+                    name=tool.name,
+                    description=tool.description or "",
+                    input_schema=tool.inputSchema if hasattr(tool, "inputSchema") else {},
+                )
+                for tool in builtin_tools
+            ]
+        except Exception as e:
+            # If MCP server not initialized, return empty list
+            import logging
+
+            logger = logging.getLogger(__name__)
+            logger.warning(f"Failed to get built-in tools: {e}")
+            return []
+
+    async def call_tool(
+        self,
+        tool_name: str,
+        arguments: dict[str, Any] | None = None,
+    ) -> MCPToolResult:
+        """
+        Call a tool with the given arguments.
+
+        Uses MCP bridge if configured, otherwise falls back to built-in MCP server.
+        """
+        bridge = self.bridge
+        if bridge is not None and bridge.is_configured:
+            return await bridge.call_tool(tool_name=tool_name, arguments=arguments or {})
+
+        # Fall back to built-in MCP server
+        try:
+            from mcp_server_langgraph.mcp.server_streamable import get_mcp_server
+
+            mcp_server = get_mcp_server()
+            result = await mcp_server.call_tool_public(tool_name, arguments or {})
+            # Convert TextContent objects to dicts
+            content = [
+                item.model_dump(mode="json") if hasattr(item, "model_dump") else {"type": "text", "text": str(item)}
+                for item in result
+            ]
+            return MCPToolResult(content=content, is_error=False)
+        except Exception as e:
+            return MCPToolResult(
+                content=[{"type": "text", "text": f"Error calling tool: {e}"}],
+                is_error=True,
+            )
+
     async def list_resources(self) -> list[MCPResource]:
         """List available resources."""
         bridge = self.bridge
@@ -302,6 +420,13 @@ class MCPService:
         if bridge is None or not bridge.is_configured:
             raise ChatError("MCP not configured")
         return await bridge.cancel_task(task_id)
+
+    async def get_task_result(self, task_id: str) -> MCPToolResult:
+        """Get task result (blocks until task completes)."""
+        bridge = self.bridge
+        if bridge is None or not bridge.is_configured:
+            raise ChatError("MCP not configured")
+        return await bridge.get_task_result(task_id)
 
     async def list_prompts(self) -> list[dict[str, Any]]:
         """List available prompts."""
@@ -435,9 +560,91 @@ def _convert_task(task: MCPTask) -> TaskResponse:
     )
 
 
+def _convert_tool(tool: MCPTool) -> ToolResponse:
+    """Convert MCPTool to response model."""
+    return ToolResponse(
+        name=tool.name,
+        description=tool.description,
+        inputSchema=tool.input_schema,
+    )
+
+
+def _convert_tool_result(result: MCPToolResult) -> ToolCallResponse:
+    """Convert MCPToolResult to response model."""
+    content_items = []
+    for item in result.content:
+        content_items.append(
+            ToolCallContentItem(
+                type=item.get("type", "text"),
+                text=item.get("text"),
+                data=item.get("data"),
+                mimeType=item.get("mimeType"),
+            )
+        )
+    return ToolCallResponse(
+        content=content_items,
+        isError=result.is_error,
+    )
+
+
 # =============================================================================
 # Endpoints
 # =============================================================================
+
+
+@mcp_router.get("/tools")
+async def list_tools() -> ToolListResponse:
+    """
+    List available MCP tools.
+
+    Returns all tools exposed by the MCP server.
+    Used as REST fallback when WebSocket is unavailable.
+    """
+    service = get_mcp_service()
+
+    try:
+        tools = await service.list_tools()
+        return ToolListResponse(tools=[_convert_tool(t) for t in tools])
+    except MCPPermissionError as e:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=f"Access denied: {e}",
+        )
+    except MCPConnectionError as e:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=f"MCP connection failed: {e}",
+        )
+
+
+@mcp_router.post("/tools/call")
+async def call_tool(request: ToolCallRequest) -> ToolCallResponse:
+    """
+    Call an MCP tool.
+
+    Executes the specified tool with the given arguments.
+    Used as REST fallback when WebSocket is unavailable.
+    """
+    service = get_mcp_service()
+
+    try:
+        result = await service.call_tool(tool_name=request.name, arguments=request.arguments)
+        return _convert_tool_result(result)
+    except MCPPermissionError as e:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=f"Access denied: {e}",
+        )
+    except MCPConnectionError as e:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=f"MCP connection failed: {e}",
+        )
+    except ChatError as e:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=f"MCP not configured: {e}",
+        )
 
 
 @mcp_router.get("/resources")
@@ -762,6 +969,41 @@ async def cancel_task(task_id: str) -> TaskResponse:
     try:
         task = await service.cancel_task(task_id)
         return _convert_task(task)
+    except MCPTaskNotFoundError:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Task {task_id} not found",
+        )
+    except MCPPermissionError as e:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=f"Access denied: {e}",
+        )
+    except MCPConnectionError as e:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=f"MCP connection failed: {e}",
+        )
+    except ChatError as e:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=f"MCP not configured: {e}",
+        )
+
+
+@mcp_router.get("/tasks/{task_id}/result")
+async def get_task_result(task_id: str) -> ToolCallResponse:
+    """
+    Get task result (blocks until complete).
+
+    Waits for the task to reach a terminal status, then returns the result.
+    Per MCP 2025-11-25 spec: tasks/result.
+    """
+    service = get_mcp_service()
+
+    try:
+        result = await service.get_task_result(task_id)
+        return _convert_tool_result(result)
     except MCPTaskNotFoundError:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
