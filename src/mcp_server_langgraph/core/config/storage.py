@@ -28,7 +28,11 @@ class StorageSettings(DomainSettings):
     )
 
     # Primary Database (PostgreSQL)
-    database_url: str = "postgresql+asyncpg://postgres:postgres@localhost:5432/mcp"
+    # NOTE: Default uses placeholder credentials for dev. Set DATABASE_URL env var in production.
+    database_url: str = Field(
+        default="postgresql+asyncpg://localhost:5432/mcp",
+        description="PostgreSQL URL. Set DATABASE_URL env var with credentials in production.",
+    )
 
     # Session Management
     session_backend: str = "memory"  # "memory", "redis"

@@ -38,7 +38,12 @@ from .pricing import calculate_cost
 
 
 class TokenUsage(BaseModel):
-    """Token usage record for a single LLM call."""
+    """Token usage record for a single LLM call.
+
+    Includes distributed tracing fields for cost attribution by session,
+    workflow, and orchestrator. These fields enable correlation between
+    OpenTelemetry traces and cost records.
+    """
 
     timestamp: datetime = Field(description="When the call was made")
     user_id: str = Field(description="User who made the call")
@@ -51,6 +56,30 @@ class TokenUsage(BaseModel):
     estimated_cost_usd: Decimal = Field(description="Estimated cost in USD")
     feature: str | None = Field(default=None, description="Feature that triggered the call")
     metadata: dict[str, Any] = Field(default_factory=dict, description="Additional metadata")
+
+    # ==========================================================================
+    # Distributed Tracing Fields for Cost Attribution
+    # ==========================================================================
+    trace_id: str | None = Field(
+        default=None,
+        description="OpenTelemetry trace ID for correlating cost with execution traces",
+    )
+    span_id: str | None = Field(
+        default=None,
+        description="OpenTelemetry span ID for the specific LLM call",
+    )
+    workflow_id: str | None = Field(
+        default=None,
+        description="Workflow ID for attributing cost to specific workflows",
+    )
+    orchestrator_id: str | None = Field(
+        default=None,
+        description="Orchestrator/Agent ID for attributing cost to specific agents",
+    )
+    request_id: str | None = Field(
+        default=None,
+        description="Request tracking ID for individual request cost tracking",
+    )
 
     model_config = ConfigDict()
 
@@ -237,6 +266,12 @@ class CostMetricsCollector:
         estimated_cost_usd: Decimal | None = None,
         feature: str | None = None,
         metadata: dict[str, Any] | None = None,
+        # Distributed tracing fields for cost attribution
+        trace_id: str | None = None,
+        span_id: str | None = None,
+        workflow_id: str | None = None,
+        orchestrator_id: str | None = None,
+        request_id: str | None = None,
     ) -> TokenUsage:
         """
         Record token usage for an LLM call.
@@ -252,6 +287,11 @@ class CostMetricsCollector:
             estimated_cost_usd: Pre-calculated cost (optional)
             feature: Feature name (optional)
             metadata: Additional metadata (optional)
+            trace_id: OpenTelemetry trace ID for cost-trace correlation (optional)
+            span_id: OpenTelemetry span ID for the LLM call (optional)
+            workflow_id: Workflow ID for cost attribution (optional)
+            orchestrator_id: Orchestrator/Agent ID for cost attribution (optional)
+            request_id: Request tracking ID (optional)
 
         Returns:
             TokenUsage record
@@ -265,7 +305,9 @@ class CostMetricsCollector:
             ...     model="claude-sonnet-4-5-20250929",
             ...     provider="anthropic",
             ...     prompt_tokens=1000,
-            ...     completion_tokens=500
+            ...     completion_tokens=500,
+            ...     trace_id="abc123",  # For OpenTelemetry correlation
+            ...     workflow_id="workflow-789",  # For workflow cost attribution
             ... )
         """
         # Calculate cost if not provided
@@ -277,7 +319,7 @@ class CostMetricsCollector:
                 completion_tokens=completion_tokens,
             )
 
-        # Create usage record
+        # Create usage record with distributed tracing fields
         usage = TokenUsage(
             timestamp=timestamp,
             user_id=user_id,
@@ -289,6 +331,12 @@ class CostMetricsCollector:
             estimated_cost_usd=estimated_cost_usd,
             feature=feature,
             metadata=metadata or {},
+            # Distributed tracing fields
+            trace_id=trace_id,
+            span_id=span_id,
+            workflow_id=workflow_id,
+            orchestrator_id=orchestrator_id,
+            request_id=request_id,
         )
 
         # Phase 2.2 SRP: Delegate storage to storage backend

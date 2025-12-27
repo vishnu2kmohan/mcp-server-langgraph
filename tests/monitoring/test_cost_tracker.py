@@ -1179,3 +1179,209 @@ class TestTimePeriodFiltering:
 
         assert len(records) == 1
         assert records[0].session_id == "within_month"
+
+
+# ==============================================================================
+# Test Distributed Tracing for Cost Attribution
+# ==============================================================================
+
+
+@pytest.mark.xdist_group(name="cost_tracker_distributed_tracing")
+class TestDistributedTracingCostAttribution:
+    """Tests for distributed tracing fields in TokenUsage for cost attribution."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers."""
+        gc.collect()
+
+    @pytest.mark.unit
+    def test_token_usage_includes_trace_id_field(self) -> None:
+        """TokenUsage should include optional trace_id field for OpenTelemetry correlation."""
+        from mcp_server_langgraph.monitoring.cost_tracker import TokenUsage
+
+        usage = TokenUsage(
+            timestamp=datetime.now(UTC),
+            user_id="user123",
+            session_id="session456",
+            model="claude-sonnet-4-5-20250929",
+            provider="anthropic",
+            prompt_tokens=1000,
+            completion_tokens=500,
+            estimated_cost_usd=Decimal("0.01"),
+            trace_id="abc123def456789012345678901234",
+        )
+
+        assert usage.trace_id == "abc123def456789012345678901234"
+
+    @pytest.mark.unit
+    def test_token_usage_trace_id_defaults_to_none(self) -> None:
+        """TokenUsage trace_id should default to None when not provided."""
+        from mcp_server_langgraph.monitoring.cost_tracker import TokenUsage
+
+        usage = TokenUsage(
+            timestamp=datetime.now(UTC),
+            user_id="user123",
+            session_id="session456",
+            model="claude-sonnet-4-5-20250929",
+            provider="anthropic",
+            prompt_tokens=1000,
+            completion_tokens=500,
+            estimated_cost_usd=Decimal("0.01"),
+        )
+
+        assert usage.trace_id is None
+
+    @pytest.mark.unit
+    def test_token_usage_includes_span_id_field(self) -> None:
+        """TokenUsage should include optional span_id field."""
+        from mcp_server_langgraph.monitoring.cost_tracker import TokenUsage
+
+        usage = TokenUsage(
+            timestamp=datetime.now(UTC),
+            user_id="user123",
+            session_id="session456",
+            model="claude-sonnet-4-5-20250929",
+            provider="anthropic",
+            prompt_tokens=1000,
+            completion_tokens=500,
+            estimated_cost_usd=Decimal("0.01"),
+            span_id="0123456789abcdef",
+        )
+
+        assert usage.span_id == "0123456789abcdef"
+
+    @pytest.mark.unit
+    def test_token_usage_includes_workflow_id_field(self) -> None:
+        """TokenUsage should include optional workflow_id for workflow cost attribution."""
+        from mcp_server_langgraph.monitoring.cost_tracker import TokenUsage
+
+        usage = TokenUsage(
+            timestamp=datetime.now(UTC),
+            user_id="user123",
+            session_id="session456",
+            model="claude-sonnet-4-5-20250929",
+            provider="anthropic",
+            prompt_tokens=1000,
+            completion_tokens=500,
+            estimated_cost_usd=Decimal("0.01"),
+            workflow_id="workflow-abc-123",
+        )
+
+        assert usage.workflow_id == "workflow-abc-123"
+
+    @pytest.mark.unit
+    def test_token_usage_includes_orchestrator_id_field(self) -> None:
+        """TokenUsage should include optional orchestrator_id for agent cost attribution."""
+        from mcp_server_langgraph.monitoring.cost_tracker import TokenUsage
+
+        usage = TokenUsage(
+            timestamp=datetime.now(UTC),
+            user_id="user123",
+            session_id="session456",
+            model="claude-sonnet-4-5-20250929",
+            provider="anthropic",
+            prompt_tokens=1000,
+            completion_tokens=500,
+            estimated_cost_usd=Decimal("0.01"),
+            orchestrator_id="orchestrator-main-001",
+        )
+
+        assert usage.orchestrator_id == "orchestrator-main-001"
+
+    @pytest.mark.unit
+    def test_token_usage_includes_request_id_field(self) -> None:
+        """TokenUsage should include optional request_id for request tracking."""
+        from mcp_server_langgraph.monitoring.cost_tracker import TokenUsage
+
+        usage = TokenUsage(
+            timestamp=datetime.now(UTC),
+            user_id="user123",
+            session_id="session456",
+            model="claude-sonnet-4-5-20250929",
+            provider="anthropic",
+            prompt_tokens=1000,
+            completion_tokens=500,
+            estimated_cost_usd=Decimal("0.01"),
+            request_id="req-uuid-1234",
+        )
+
+        assert usage.request_id == "req-uuid-1234"
+
+    @pytest.mark.unit
+    @pytest.mark.asyncio
+    async def test_collector_record_usage_accepts_trace_context(self) -> None:
+        """CostMetricsCollector.record_usage should accept distributed tracing fields."""
+        from mcp_server_langgraph.monitoring.cost_tracker import CostMetricsCollector
+
+        collector = CostMetricsCollector()
+
+        usage = await collector.record_usage(
+            timestamp=datetime.now(UTC),
+            user_id="user123",
+            session_id="session456",
+            model="claude-sonnet-4-5-20250929",
+            provider="anthropic",
+            prompt_tokens=1000,
+            completion_tokens=500,
+            trace_id="trace-abc123",
+            span_id="span-def456",
+            workflow_id="workflow-789",
+            orchestrator_id="orch-001",
+            request_id="req-xyz",
+        )
+
+        assert usage.trace_id == "trace-abc123"
+        assert usage.span_id == "span-def456"
+        assert usage.workflow_id == "workflow-789"
+        assert usage.orchestrator_id == "orch-001"
+        assert usage.request_id == "req-xyz"
+
+    @pytest.mark.unit
+    @pytest.mark.asyncio
+    async def test_collector_record_usage_defaults_trace_fields_to_none(self) -> None:
+        """CostMetricsCollector.record_usage should default trace fields to None."""
+        from mcp_server_langgraph.monitoring.cost_tracker import CostMetricsCollector
+
+        collector = CostMetricsCollector()
+
+        usage = await collector.record_usage(
+            timestamp=datetime.now(UTC),
+            user_id="user123",
+            session_id="session456",
+            model="claude-sonnet-4-5-20250929",
+            provider="anthropic",
+            prompt_tokens=1000,
+            completion_tokens=500,
+        )
+
+        assert usage.trace_id is None
+        assert usage.span_id is None
+        assert usage.workflow_id is None
+        assert usage.orchestrator_id is None
+        assert usage.request_id is None
+
+    @pytest.mark.unit
+    def test_token_usage_serializes_trace_fields_in_json(self) -> None:
+        """TokenUsage should include trace fields when serialized to JSON."""
+        from mcp_server_langgraph.monitoring.cost_tracker import TokenUsage
+
+        usage = TokenUsage(
+            timestamp=datetime.now(UTC),
+            user_id="user123",
+            session_id="session456",
+            model="claude-sonnet-4-5-20250929",
+            provider="anthropic",
+            prompt_tokens=1000,
+            completion_tokens=500,
+            estimated_cost_usd=Decimal("0.01"),
+            trace_id="trace-123",
+            workflow_id="workflow-456",
+        )
+
+        data = usage.model_dump(mode="json")
+
+        assert data["trace_id"] == "trace-123"
+        assert data["workflow_id"] == "workflow-456"
+        assert data["span_id"] is None  # Default should be None
+        assert data["orchestrator_id"] is None
+        assert data["request_id"] is None

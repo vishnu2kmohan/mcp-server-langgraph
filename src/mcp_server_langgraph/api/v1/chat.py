@@ -22,9 +22,42 @@ from opentelemetry import trace
 from pydantic import BaseModel, Field
 
 from mcp_server_langgraph.core.config import settings
+from mcp_server_langgraph.monitoring.cost_tracker import get_cost_collector
+from datetime import UTC
 
 if TYPE_CHECKING:
     pass
+
+
+def _infer_provider_from_model(model_name: str) -> str:
+    """
+    Infer the LLM provider from the model name for cost tracking.
+
+    Args:
+        model_name: The model name to analyze
+
+    Returns:
+        Provider string: "openai", "anthropic", "google", "azure", or "unknown"
+    """
+    model_lower = model_name.lower()
+
+    # Azure models (prefixed with azure/) - check first since azure/gpt-4 contains "gpt-"
+    if model_lower.startswith("azure/"):
+        return "azure"
+
+    # OpenAI models
+    if any(prefix in model_lower for prefix in ["gpt-", "o1-", "chatgpt-", "text-davinci", "text-embedding"]):
+        return "openai"
+
+    # Anthropic models
+    if any(prefix in model_lower for prefix in ["claude-", "claude3"]):
+        return "anthropic"
+
+    # Google models
+    if any(prefix in model_lower for prefix in ["gemini-", "palm-", "bison", "gecko"]):
+        return "google"
+
+    return "unknown"
 
 
 chat_router = APIRouter(tags=["chat"])
@@ -404,6 +437,19 @@ class ChatServiceImpl(ChatService):
         if supports_thinking and enable_thinking and reasoning_effort:
             completion_params["reasoning_effort"] = reasoning_effort
 
+        # Add OTEL metadata for distributed tracing
+        # LiteLLM propagates metadata.* attributes to OTEL spans
+        from mcp_server_langgraph.llm.otel_integration import build_otel_metadata
+
+        completion_params["metadata"] = build_otel_metadata(
+            session_id=session_id,
+            workflow_id=kwargs.get("workflow_id"),
+            orchestrator_id=kwargs.get("orchestrator_id"),
+            user_id=kwargs.get("user_id"),
+            request_id=kwargs.get("request_id"),
+            feature="chat",
+        )
+
         response = await acompletion(**completion_params)
 
         choice = response.choices[0]
@@ -419,6 +465,44 @@ class ChatServiceImpl(ChatService):
                 "completion_tokens": response.usage.completion_tokens,
                 "total_tokens": getattr(response.usage, "total_tokens", None),
             }
+
+            # Record cost to CostMetricsCollector for /api/v1/cost endpoints
+            # This enables the /studio/cost page to display accurate usage data
+            try:
+                from datetime import datetime
+
+                user_id = kwargs.get("user_id", "anonymous")
+                actual_model = response.model or model
+                provider = _infer_provider_from_model(actual_model)
+
+                # Get trace context for cost attribution
+                trace_id = self._get_current_trace_id()
+                workflow_id = kwargs.get("workflow_id")
+                orchestrator_id = kwargs.get("orchestrator_id")
+                request_id = kwargs.get("request_id")
+
+                collector = get_cost_collector()
+                await collector.record_usage(
+                    timestamp=datetime.now(UTC),
+                    user_id=user_id,
+                    session_id=session_id,
+                    model=actual_model,
+                    provider=provider,
+                    prompt_tokens=response.usage.prompt_tokens,
+                    completion_tokens=response.usage.completion_tokens,
+                    feature="chat",
+                    # Distributed tracing fields for cost attribution
+                    trace_id=trace_id,
+                    workflow_id=workflow_id,
+                    orchestrator_id=orchestrator_id,
+                    request_id=request_id,
+                )
+            except Exception:
+                # Cost tracking errors should not fail the completion
+                # Log but continue - observability is best-effort
+                from mcp_server_langgraph.observability.telemetry import logger
+
+                logger.warning("Failed to record cost usage", exc_info=True)
 
         # Extract thinking content from response if available
         # LiteLLM returns thinking content in different ways:
@@ -544,6 +628,19 @@ class ChatServiceImpl(ChatService):
         supports_thinking = model_supports_thinking(model)
         if supports_thinking and enable_thinking and reasoning_effort:
             completion_params["reasoning_effort"] = reasoning_effort
+
+        # Add OTEL metadata for distributed tracing (streaming)
+        # LiteLLM propagates metadata.* attributes to OTEL spans
+        from mcp_server_langgraph.llm.otel_integration import build_otel_metadata
+
+        completion_params["metadata"] = build_otel_metadata(
+            session_id=session_id,
+            workflow_id=kwargs.get("workflow_id"),
+            orchestrator_id=kwargs.get("orchestrator_id"),
+            user_id=kwargs.get("user_id"),
+            request_id=kwargs.get("request_id"),
+            feature="chat_stream",
+        )
 
         response = await acompletion(**completion_params)
 

@@ -12,6 +12,7 @@ from fastapi import APIRouter
 
 from mcp_server_langgraph.api.v1.admin import admin_router
 from mcp_server_langgraph.api.v1.agents import agents_router
+from mcp_server_langgraph.api.v1.config import config_router
 from mcp_server_langgraph.api.v1.agent_requests import agent_request_router
 from mcp_server_langgraph.api.v1.artifacts import artifacts_router
 from mcp_server_langgraph.api.v1.auth import auth_router
@@ -57,6 +58,9 @@ v1_router = APIRouter()
 
 # Include feature flags endpoint
 v1_router.include_router(features_router)
+
+# Include server config defaults endpoint (12-Factor App - frontend hydration)
+v1_router.include_router(config_router)
 
 # Include user info endpoint (/me for persona detection)
 v1_router.include_router(user_router)

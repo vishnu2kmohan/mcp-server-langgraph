@@ -42,7 +42,8 @@ class ComplianceSettings(DomainSettings):
         ),
     )
     compliance_postgres_url: str = Field(
-        default="postgresql://postgres:postgres@localhost:5432/compliance",
+        # NOTE: Default has no credentials. Set COMPLIANCE_POSTGRES_URL env var in production.
+        default="postgresql://localhost:5432/compliance",
         validation_alias=AliasChoices(
             "compliance_postgres_url",
             "COMPLIANCE_POSTGRES_URL",

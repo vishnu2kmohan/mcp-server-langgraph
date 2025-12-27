@@ -437,7 +437,8 @@ class Settings(BaseSettings):
     # Primary Database (Unified Workspace Paradigm - Projects, Sessions, Workflows)
     # PostgreSQL URL for SQLAlchemy async (must use asyncpg driver)
     # Example: postgresql+asyncpg://user:pass@localhost:5432/dbname
-    database_url: str = "postgresql+asyncpg://postgres:postgres@localhost:5432/mcp"
+    # NOTE: Default has no credentials. Set DATABASE_URL env var with credentials in production.
+    database_url: str = "postgresql+asyncpg://localhost:5432/mcp"
 
     # Workflow Storage Backend
     # Determines where workflow definitions and sharing metadata are stored
@@ -465,7 +466,8 @@ class Settings(BaseSettings):
         ),
     )
     compliance_postgres_url: str = Field(
-        default="postgresql://postgres:postgres@localhost:5432/compliance",
+        # NOTE: Default has no credentials. Set COMPLIANCE_POSTGRES_URL env var in production.
+        default="postgresql://localhost:5432/compliance",
         # Accept multiple input names (order matters - first match wins):
         # - compliance_postgres_url: Primary snake_case (constructor args)
         # - COMPLIANCE_POSTGRES_URL: Primary SCREAMING_SNAKE_CASE (env vars)
