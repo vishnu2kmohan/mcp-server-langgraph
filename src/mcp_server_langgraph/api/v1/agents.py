@@ -240,10 +240,18 @@ def get_thinking_budget_defaults() -> ThinkingBudgetDefaults:
 
 # Agent-related feature flags to include in snapshot
 # These are flags relevant to agent configuration and orchestration
+# NOTE: Orchestrator flags must match ORCHESTRATOR_REGISTRY feature_flag values
+# (see agents/registry.py for the canonical list)
 AGENT_FEATURE_FLAGS = [
     "enable_thinking_budget",
-    "enable_multi_agent_orchestration",
-    "enable_loop_agent",
+    # Orchestrator flags (must match ORCHESTRATOR_REGISTRY feature_flag values)
+    "enable_multi_agent_orchestration",  # Orchestrator (Multi-Agent)
+    "enable_studio_ai",  # StudioOrchestrator
+    "enable_orchestrated_ai_ux",  # UXOrchestrator
+    "enable_orchestrated_alert_analysis",  # AlertOrchestrator
+    "enable_ai_explanations",  # ExplanationOrchestrator
+    "enable_loop_agent",  # LoopAgent
+    # Other agent configuration flags
     "enable_orchestrator_resilience",
     "enable_cost_tracking",
     "enable_sdk_hooks",
