@@ -111,9 +111,11 @@ services:
       - "--metrics.prometheus.addServicesLabels=true"
       # Health check (required for traefik healthcheck --ping)
       - "--ping=true"
-      # Logging
-      - "--log.level=INFO"
-      - "--accesslog=true"
+      # Logging (configurable via environment variables for QUIET_LOGS support)
+      # TRAEFIK_LOG_LEVEL: DEBUG, INFO, WARN, ERROR (default: INFO)
+      # TRAEFIK_ACCESS_LOG: true/false (default: true)
+      - "--log.level=${TRAEFIK_LOG_LEVEL:-INFO}"
+      - "--accesslog=${TRAEFIK_ACCESS_LOG:-true}"
       - "--accesslog.format=json"
     ports:
       - "80:80"      # Main gateway (single entry point)
@@ -122,7 +124,7 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock:ro
     healthcheck:
       test: ["CMD", "traefik", "healthcheck", "--ping"]
-      interval: 5s
+      interval: 10s  # Increased from 5s to reduce log noise (44% reduction in health checks)
       timeout: 3s
       retries: 5
     deploy:
@@ -198,9 +200,9 @@ services:
       - postgres-data:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
-      interval: 5s
+      interval: 10s  # Increased from 5s to reduce log noise
       timeout: 3s
-      retries: 20  # Increased from 10 to allow more time for migrations (100s max)
+      retries: 20  # Increased from 10 to allow more time for migrations (200s max)
     deploy:
       resources:
         limits:
@@ -365,7 +367,7 @@ services:
       - TESTING=true
     healthcheck:
       test: ["CMD", "/usr/local/bin/grpc_health_probe", "-addr=:8081"]
-      interval: 5s
+      interval: 10s  # Increased from 5s to reduce log noise
       timeout: 3s
       retries: 20  # Increased to tolerate Keycloak OIDC endpoint delays
       start_period: 30s  # Allow time for OIDC discovery and token validation from Keycloak
@@ -840,7 +842,7 @@ services:
       - redis-data:/data
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
-      interval: 5s
+      interval: 10s  # Increased from 5s to reduce log noise
       timeout: 2s
       retries: 10
     deploy:
@@ -916,9 +918,9 @@ services:
         - CMD-SHELL
         - |
           bash -c '{ printf "GET /readyz HTTP/1.0\r\nHost: localhost\r\n\r\n" >&0; grep -q "HTTP/1.. 200"; } 0<>/dev/tcp/localhost/6333'
-      interval: 5s
+      interval: 10s  # Increased from 5s to reduce log noise
       timeout: 3s
-      retries: 15  # Increased from 10 to allow more startup time (75s max)
+      retries: 15  # Increased from 10 to allow more startup time (150s max)
       start_period: 10s  # Increased from 5s for slower CI runners
     deploy:
       resources:

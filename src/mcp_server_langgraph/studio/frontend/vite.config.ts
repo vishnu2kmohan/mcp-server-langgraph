@@ -110,12 +110,6 @@ export default defineConfig({
         ws: true,
         changeOrigin: true,
       },
-      // Proxy notification WebSocket (legacy - deprecated route)
-      '/ws/notifications': {
-        target: 'ws://localhost:8000',
-        ws: true,
-        changeOrigin: true,
-      },
       // Legacy: Proxy MCP StreamableHTTP requests to backend
       '/mcp': {
         target: 'http://localhost:8001',
