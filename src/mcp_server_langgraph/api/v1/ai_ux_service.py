@@ -1415,7 +1415,7 @@ Analyze if the user's behavior matches their assigned persona."""
                 recommendation = "Consider upgrading to developer role"
 
         # Check for analyst patterns
-        analyst_features = ["traces", "observability", "metrics"]
+        analyst_features = ["traces", "observability", "cost"]
         analyst_usage = sum(usage.get(f, 0) for f in analyst_features)
 
         if analyst_usage > 15:
@@ -3543,12 +3543,12 @@ Compare with last period and generate actionable insights."""
             "chat": [
                 {"id": "agents", "score": 0.90, "reason": "Most common next action"},
                 {"id": "observability", "score": 0.70, "reason": "Debug chat issues"},
-                {"id": "flows", "score": 0.55, "reason": "Workflow creation from chat"},
+                {"id": "workflows", "score": 0.55, "reason": "Workflow creation from chat"},
             ],
             "observability": [
                 {"id": "traces", "score": 0.85, "reason": "Deep dive into traces"},
                 {"id": "chat", "score": 0.65, "reason": "Return to chat after debugging"},
-                {"id": "costs", "score": 0.50, "reason": "Cost analysis after trace review"},
+                {"id": "cost", "score": 0.50, "reason": "Cost analysis after trace review"},
             ],
         }
 
