@@ -2389,11 +2389,11 @@ export const api = createApi({
       providesTags: (result) =>
         result
           ? [
-              ...result.approvals.map(({ request_id }) => ({
+              ...(result.approvals ?? []).map(({ request_id }) => ({
                 type: "AgentRequest" as const,
                 id: request_id,
               })),
-              ...result.clarifications.map(({ request_id }) => ({
+              ...(result.clarifications ?? []).map(({ request_id }) => ({
                 type: "AgentRequest" as const,
                 id: request_id,
               })),
