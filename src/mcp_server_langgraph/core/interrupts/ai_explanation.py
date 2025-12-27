@@ -57,6 +57,8 @@ from typing import Any
 
 from pydantic import BaseModel, Field
 
+from mcp_server_langgraph.core.config import settings
+
 
 class ExplanationType(str, Enum):
     """Type of AI explanation.
@@ -185,7 +187,7 @@ class AIExplanation(BaseModel):
         description="Type of explanation for categorization",
     )
     model_used: str = Field(
-        default="gpt-4o-mini",
+        default_factory=lambda: settings.model_name,
         description="LLM model used to generate the explanation",
     )
     generated_at: datetime = Field(

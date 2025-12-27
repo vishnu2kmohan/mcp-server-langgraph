@@ -7,6 +7,7 @@ all built on the WebSocketBase class for consistent behavior.
 Available Handlers:
     - MCPWebSocketHandler: MCP protocol WebSocket (JSON-RPC 2.0)
     - MCPTaskWebSocketHandler: Real-time task status updates
+    - MCPAggregatedHandler: Real-time MCP capability change notifications
     - NotificationWebSocketHandler: Real-time notification streaming
     - ConnectionsRealtimeHandler: Real-time connection status updates
     - ConnectionHealthHandler: Real-time connection health monitoring
@@ -33,6 +34,9 @@ from mcp_server_langgraph.websocket.handlers.connections_realtime import (
 from mcp_server_langgraph.websocket.handlers.cost_tracking import CostTrackingHandler
 from mcp_server_langgraph.websocket.handlers.heart_metrics import HeartMetricsHandler
 from mcp_server_langgraph.websocket.handlers.mcp import MCPWebSocketHandler
+from mcp_server_langgraph.websocket.handlers.mcp_aggregated import (
+    MCPAggregatedHandler,
+)
 from mcp_server_langgraph.websocket.handlers.mcp_task import MCPTaskWebSocketHandler
 from mcp_server_langgraph.websocket.handlers.notifications import (
     NotificationWebSocketHandler,
@@ -51,6 +55,7 @@ __all__ = [
     "ConnectionsRealtimeHandler",
     "CostTrackingHandler",
     "HeartMetricsHandler",
+    "MCPAggregatedHandler",
     "MCPTaskWebSocketHandler",
     "MCPWebSocketHandler",
     "NotificationWebSocketHandler",

@@ -44,6 +44,7 @@ from mcp_server_langgraph.websocket.handlers.alert import AlertHandler
 from mcp_server_langgraph.websocket.handlers.audit import AuditHandler
 from mcp_server_langgraph.websocket.handlers.agent_request import AgentRequestHandler
 from mcp_server_langgraph.websocket.handlers.mcp import MCPWebSocketHandler
+from mcp_server_langgraph.websocket.handlers.mcp_aggregated import MCPAggregatedHandler
 from mcp_server_langgraph.websocket.handlers.ai_suggestions import AISuggestionsHandler
 from mcp_server_langgraph.websocket.handlers.trace import TraceHandler
 
@@ -83,6 +84,65 @@ async def mcp_tasks_websocket(websocket: WebSocket) -> None:
             message_timeout=30,
         ),
         mcp_service=get_mcp_service(),
+    )
+    await handler.run(websocket)
+
+
+# =============================================================================
+# MCP Aggregated Capabilities WebSocket Endpoint
+# =============================================================================
+
+
+@ws_router.websocket("/mcp/aggregated")
+async def mcp_aggregated_websocket(websocket: WebSocket) -> None:
+    """
+    WebSocket endpoint for real-time MCP capability change notifications.
+
+    URL: /api/v1/ws/mcp/aggregated
+
+    Provides real-time updates when MCP capabilities change:
+    - Subscribe/unsubscribe to capability events
+    - Get current capability counts
+    - Receive tools_changed, resources_changed, prompts_changed events
+    - Receive server_registered, server_unregistered events
+
+    Message Types (Client -> Server):
+        - subscribe: Subscribe to capability events
+        - unsubscribe: Unsubscribe from capability events
+        - get_counts: Get current capability counts
+
+    Response Types (Server -> Client):
+        - subscribed: Successfully subscribed
+        - unsubscribed: Successfully unsubscribed
+        - capability_counts: Current capability counts
+        - tools_changed: Tools list has changed
+        - resources_changed: Resources list has changed
+        - prompts_changed: Prompts list has changed
+        - server_registered: New server registered
+        - server_unregistered: Server unregistered
+
+    Uses the standardized WebSocketBase infrastructure with:
+    - JWT authentication required
+    - OpenFGA authorization (requires 'viewer' relation on mcp:aggregated-capabilities)
+    - OpenTelemetry tracing
+    - Metrics collection
+    - Standard message envelope
+
+    Reference: MCP Protocol 2025-11-25 capability aggregation
+    """
+    from mcp_server_langgraph.websocket.registry import get_mcp_aggregated_broadcaster
+
+    handler = MCPAggregatedHandler(
+        config=WebSocketConfig(
+            endpoint_name="mcp-aggregated",
+            require_auth=True,
+            authz_resource_type="mcp",
+            authz_resource_id="aggregated-capabilities",
+            authz_required_relation="viewer",
+            rate_limit_per_minute=600,
+            message_timeout=30,
+        ),
+        broadcaster=get_mcp_aggregated_broadcaster(),
     )
     await handler.run(websocket)
 
@@ -705,3 +765,4 @@ async def traces_websocket(websocket: WebSocket) -> None:
 # - [x] Cost Tracking WebSocket (/usage/cost) - New!
 # - [x] AI Suggestions WebSocket (/ai/suggestions) - New!
 # - [x] Trace WebSocket (/traces) - New!
+# - [x] MCP Aggregated WebSocket (/mcp/aggregated) - New!

@@ -4,6 +4,8 @@ REST API endpoints for aggregated MCP capabilities.
 Provides unified access to tools, resources, and prompts from all
 registered external MCP servers.
 
+Uses CachedUnifiedRegistry for cache-aside pattern to improve performance.
+
 Reference: MCP Protocol Specification 2025-11-25
 """
 
@@ -12,6 +14,9 @@ from typing import Any
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 
+from mcp_server_langgraph.mcp.client.cached_unified_registry import (
+    get_cached_unified_registry,
+)
 from mcp_server_langgraph.mcp.client.unified_registry import (
     get_unified_registry,
 )
@@ -111,22 +116,24 @@ async def list_aggregated_tools(
 ) -> ToolsListResponse:
     """List all tools from registered MCP servers.
 
+    Uses cached registry for improved performance.
+
     Args:
         server_name: Optional filter by server name
 
     Returns:
         List of tool definitions with total count
     """
-    registry = get_unified_registry()
-    tools = registry.get_tools(server_name)
+    cached_registry = get_cached_unified_registry()
+    tools = await cached_registry.get_tools(server_name)
 
     tool_responses = [
         ToolResponse(
-            qualified_name=t.qualified_name,
-            server_name=t.server_name,
-            name=t.name,
-            description=t.description,
-            input_schema=t.input_schema,
+            qualified_name=t["qualified_name"],
+            server_name=t["server_name"],
+            name=t["name"],
+            description=t.get("description", ""),
+            input_schema=t.get("input_schema", {}),
         )
         for t in tools
     ]
@@ -181,23 +188,25 @@ async def list_aggregated_resources(
 ) -> ResourcesListResponse:
     """List all resources from registered MCP servers.
 
+    Uses cached registry for improved performance.
+
     Args:
         server_name: Optional filter by server name
 
     Returns:
         List of resource definitions with total count
     """
-    registry = get_unified_registry()
-    resources = registry.get_resources(server_name)
+    cached_registry = get_cached_unified_registry()
+    resources = await cached_registry.get_resources(server_name)
 
     resource_responses = [
         ResourceResponse(
-            qualified_name=r.qualified_name,
-            server_name=r.server_name,
-            uri=r.uri,
-            name=r.name,
-            description=r.description,
-            mime_type=r.mime_type,
+            qualified_name=r["qualified_name"],
+            server_name=r["server_name"],
+            uri=r["uri"],
+            name=r["name"],
+            description=r.get("description"),
+            mime_type=r.get("mime_type"),
         )
         for r in resources
     ]
@@ -253,22 +262,24 @@ async def list_aggregated_prompts(
 ) -> PromptsListResponse:
     """List all prompts from registered MCP servers.
 
+    Uses cached registry for improved performance.
+
     Args:
         server_name: Optional filter by server name
 
     Returns:
         List of prompt definitions with total count
     """
-    registry = get_unified_registry()
-    prompts = registry.get_prompts(server_name)
+    cached_registry = get_cached_unified_registry()
+    prompts = await cached_registry.get_prompts(server_name)
 
     prompt_responses = [
         PromptResponse(
-            qualified_name=p.qualified_name,
-            server_name=p.server_name,
-            name=p.name,
-            description=p.description,
-            arguments=p.arguments,
+            qualified_name=p["qualified_name"],
+            server_name=p["server_name"],
+            name=p["name"],
+            description=p.get("description"),
+            arguments=p.get("arguments", []),
         )
         for p in prompts
     ]
@@ -321,11 +332,13 @@ async def get_aggregated_prompt(qualified_name: str) -> PromptResponse:
 async def list_aggregated_servers() -> AllServersResponse:
     """List all registered servers with capability counts.
 
+    Uses cached registry for improved performance.
+
     Returns:
         Summary of all servers with total counts
     """
-    registry = get_unified_registry()
-    server_names = registry.get_server_names()
+    cached_registry = get_cached_unified_registry()
+    server_names = await cached_registry.get_server_names()
 
     servers: list[ServerCapabilitiesResponse] = []
     total_tools = 0
@@ -333,7 +346,7 @@ async def list_aggregated_servers() -> AllServersResponse:
     total_prompts = 0
 
     for name in server_names:
-        caps = registry.get_server_capabilities(name)
+        caps = await cached_registry.get_server_capabilities(name)
         servers.append(
             ServerCapabilitiesResponse(
                 server_name=name,
@@ -363,6 +376,8 @@ async def list_aggregated_servers() -> AllServersResponse:
 async def get_server_capabilities(server_name: str) -> ServerCapabilitiesResponse:
     """Get capability summary for a specific server.
 
+    Uses cached registry for improved performance.
+
     Args:
         server_name: Name of the server
 
@@ -372,12 +387,13 @@ async def get_server_capabilities(server_name: str) -> ServerCapabilitiesRespons
     Raises:
         HTTPException: If server not found
     """
-    registry = get_unified_registry()
+    cached_registry = get_cached_unified_registry()
+    server_names = await cached_registry.get_server_names()
 
-    if server_name not in registry.get_server_names():
+    if server_name not in server_names:
         raise HTTPException(status_code=404, detail=f"Server '{server_name}' not found")
 
-    caps = registry.get_server_capabilities(server_name)
+    caps = await cached_registry.get_server_capabilities(server_name)
 
     return ServerCapabilitiesResponse(
         server_name=server_name,

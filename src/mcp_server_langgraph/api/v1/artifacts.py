@@ -128,6 +128,11 @@ class ArtifactCreateRequest(BaseModel):
     content_type: ContentType = Field(description="Content type")
     session_id: str = Field(description="Associated session ID")
     title: str | None = Field(default="Untitled Artifact", max_length=255)
+    name: str | None = Field(
+        default=None,
+        max_length=255,
+        description="Machine-friendly programmatic name (separate from display title)",
+    )
     edit_metadata: EditMetadata | None = Field(default=None)
 
 
@@ -136,6 +141,11 @@ class ArtifactUpdateRequest(BaseModel):
 
     content: str | None = Field(default=None, description="New content")
     title: str | None = Field(default=None, max_length=255)
+    name: str | None = Field(
+        default=None,
+        max_length=255,
+        description="Machine-friendly programmatic name (separate from display title)",
+    )
     edit_metadata: EditMetadata | None = Field(default=None)
 
 
@@ -157,6 +167,7 @@ class ArtifactResponse(BaseModel):
     created_at: str
     updated_at: str
     title: str
+    name: str | None = None
     user_id: str
     edit_metadata: EditMetadata | None = None
 
@@ -376,6 +387,7 @@ class InMemoryArtifactsService(ArtifactsServiceProtocol):
             "created_at": now,
             "updated_at": now,
             "title": data.get("title", "Untitled Artifact"),
+            "name": data.get("name"),
             "user_id": user_id,
             "edit_metadata": data.get("edit_metadata"),
         }
@@ -415,6 +427,8 @@ class InMemoryArtifactsService(ArtifactsServiceProtocol):
             artifact["content"] = data["content"]
         if data.get("title"):
             artifact["title"] = data["title"]
+        if "name" in data:
+            artifact["name"] = data["name"]
         if data.get("edit_metadata"):
             artifact["edit_metadata"] = data["edit_metadata"]
 

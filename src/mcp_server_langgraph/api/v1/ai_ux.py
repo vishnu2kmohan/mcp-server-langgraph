@@ -452,6 +452,25 @@ class BatchCompositeResponse(BaseModel):
 
 
 # =============================================================================
+# Request/Response Models - Artifact Naming
+# =============================================================================
+
+
+class ArtifactNameRequest(BaseModel):
+    """Request for artifact name generation."""
+
+    content: str = Field(..., description="The artifact content to analyze")
+    type: str = Field(..., description="Artifact type (code, mermaid, svg, json, etc.)")
+    language: str | None = Field(default=None, description="Programming language (for code artifacts)")
+
+
+class ArtifactNameResponse(BaseModel):
+    """Response with generated artifact name."""
+
+    name: str = Field(..., description="Generated machine-friendly name")
+
+
+# =============================================================================
 # Endpoints
 # =============================================================================
 
@@ -679,6 +698,39 @@ async def batch_composite_analyze(
         successful=successful,
         failed=failed,
     )
+
+
+# =============================================================================
+# Artifact Naming Endpoint
+# =============================================================================
+
+
+@ai_ux_router.post(
+    "/ai/artifact-name",
+    summary="Generate artifact name",
+    description="Generates a machine-friendly programmatic name from artifact content using heuristics and LLM.",
+)
+async def generate_artifact_name_endpoint(
+    body: ArtifactNameRequest,
+) -> ArtifactNameResponse:
+    """
+    Generate an artifact name from content.
+
+    Uses content-specific heuristics to extract meaningful names
+    (function names, class names, diagram titles, etc.).
+    Falls back to LLM when heuristics fail.
+    """
+    from mcp_server_langgraph.studio.ai.artifact_name_generator import (
+        generate_artifact_name,
+    )
+
+    logger.info(f"Generating artifact name for type: {body.type}")
+    name = await generate_artifact_name(
+        content=body.content,
+        content_type=body.type,
+        language=body.language,
+    )
+    return ArtifactNameResponse(name=name)
 
 
 # =============================================================================

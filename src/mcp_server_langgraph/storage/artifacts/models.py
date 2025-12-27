@@ -60,6 +60,7 @@ class ArtifactModel(ArtifactBase):
     # Content fields
     type: Mapped[str] = mapped_column(String(50), nullable=False, default="code")
     title: Mapped[str] = mapped_column(String(255), nullable=False, default="Untitled Artifact")
+    name: Mapped[str | None] = mapped_column(String(255), nullable=True, default=None)
     content: Mapped[str] = mapped_column(Text, nullable=False)
     content_type: Mapped[str] = mapped_column(String(20), nullable=False, default="code")
 
@@ -127,6 +128,7 @@ class ArtifactModel(ArtifactBase):
             "user_id": self.user_id,
             "type": self.type,
             "title": self.title,
+            "name": self.name,
             "content": self.content,
             "content_type": self.content_type,
             "version": self.version,
