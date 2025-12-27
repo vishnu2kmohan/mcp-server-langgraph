@@ -160,16 +160,37 @@ class MCPMessageHandler:
         # Route to appropriate handler - sync handlers
         sync_handlers: dict[str, Callable[[Any, Any], dict[str, Any]]] = {
             "initialize": self._handle_initialize,
-            "tools/list": self._handle_tools_list,
             "resources/list": self._handle_resources_list,
             "resources/read": self._handle_resources_read,
             "prompts/list": self._handle_prompts_list,
             "prompts/get": self._handle_prompts_get,
         }
 
-        # Async handler for tools/call
+        # Async handlers
         if method == "tools/call":
             return await self._handle_tools_call(message_id, params)
+        if method == "tools/list":
+            return await self._handle_tools_list_async(message_id, params)
+
+        # MCP 2025-11-25 Optional/Advanced Feature handlers
+        if method == "sampling/createMessage":
+            return await self._handle_sampling_create_message(message_id, params)
+        if method == "elicitation/create":
+            return await self._handle_elicitation_create(message_id, params)
+        if method == "tasks/list":
+            return await self._handle_tasks_list(message_id, params)
+        if method == "tasks/get":
+            return await self._handle_tasks_get(message_id, params)
+        if method == "tasks/cancel":
+            return await self._handle_tasks_cancel(message_id, params)
+        if method == "tasks/result":
+            return await self._handle_tasks_result(message_id, params)
+        if method == "completion/complete":
+            return await self._handle_completion_complete(message_id, params)
+        if method == "logging/setLevel":
+            return self._handle_logging_set_level(message_id, params)
+        if method == "roots/list":
+            return self._handle_roots_list(message_id, params)
 
         sync_handler = sync_handlers.get(method)
         if sync_handler:
@@ -203,8 +224,32 @@ class MCPMessageHandler:
             },
         )
 
+    async def _handle_tools_list_async(self, message_id: Any, params: dict[str, Any]) -> dict[str, Any]:
+        """Handle tools/list request with built-in tools from MCP server."""
+        try:
+            from mcp_server_langgraph.mcp.server_streamable import get_mcp_server
+
+            mcp_server = get_mcp_server()
+            builtin_tools = await mcp_server.list_tools_public()
+
+            # Convert Tool objects to dict format expected by MCP protocol
+            tools = []
+            for tool in builtin_tools:
+                tool_dict = tool.model_dump(mode="json")
+                tools.append(
+                    {
+                        "name": tool_dict.get("name", ""),
+                        "description": tool_dict.get("description") or "",
+                        "inputSchema": tool_dict.get("inputSchema") or {},
+                    }
+                )
+            return self._success_response(message_id, {"tools": tools})
+        except Exception as e:
+            logger.warning(f"Failed to get built-in tools, falling back to static list: {e}")
+            return self._success_response(message_id, {"tools": self._tools})
+
     def _handle_tools_list(self, message_id: Any, params: dict[str, Any]) -> dict[str, Any]:
-        """Handle tools/list request."""
+        """Handle tools/list request (sync fallback)."""
         return self._success_response(message_id, {"tools": self._tools})
 
     async def _handle_tools_call(self, message_id: Any, params: dict[str, Any]) -> dict[str, Any]:
@@ -300,6 +345,426 @@ class MCPMessageHandler:
             return self._error_response(message_id, INVALID_PARAMS, f"Unknown prompt: {prompt_name}")
 
         return self._success_response(message_id, {"messages": messages})
+
+    # =========================================================================
+    # MCP 2025-11-25 Optional/Advanced Features
+    # =========================================================================
+
+    async def _handle_sampling_create_message(self, message_id: Any, params: dict[str, Any]) -> dict[str, Any]:
+        """
+        Handle sampling/createMessage request.
+
+        Creates a message using the LiteLLM Router for LLM sampling.
+        Supports modelPreferences for model selection hints.
+
+        Reference: https://modelcontextprotocol.io/specification/2025-11-25/client/sampling
+        """
+        messages = params.get("messages", [])
+        max_tokens = params.get("maxTokens", 1024)
+        model_preferences = params.get("modelPreferences", {})
+        stop_sequences = params.get("stopSequences", [])
+        temperature = params.get("temperature")
+        system_prompt = params.get("systemPrompt")
+
+        if not messages:
+            return self._error_response(message_id, INVALID_PARAMS, "messages is required")
+
+        try:
+            # Use LiteLLM for sampling
+            from litellm import acompletion
+
+            # Convert MCP message format to LiteLLM format
+            llm_messages = []
+            if system_prompt:
+                llm_messages.append({"role": "system", "content": system_prompt})
+
+            for msg in messages:
+                role = msg.get("role", "user")
+                content = msg.get("content", {})
+                text = content.get("text", "") if isinstance(content, dict) else str(content)
+                llm_messages.append({"role": role, "content": text})
+
+            # Extract model hints from preferences
+            model = "gpt-4o-mini"  # Default model
+            hints = model_preferences.get("hints", [])
+            if hints:
+                # Use first hint as model name if available
+                first_hint = hints[0]
+                if isinstance(first_hint, dict) and "name" in first_hint:
+                    model = first_hint["name"]
+
+            # Build completion kwargs
+            completion_kwargs: dict[str, Any] = {
+                "model": model,
+                "messages": llm_messages,
+                "max_tokens": max_tokens,
+            }
+            if stop_sequences:
+                completion_kwargs["stop"] = stop_sequences
+            if temperature is not None:
+                completion_kwargs["temperature"] = temperature
+
+            response = await acompletion(**completion_kwargs)
+
+            # Extract response content
+            content = response.choices[0].message.content or ""
+            stop_reason = response.choices[0].finish_reason or "end_turn"
+
+            # Map finish_reason to MCP stopReason
+            stop_reason_map = {
+                "stop": "endTurn",
+                "length": "maxTokens",
+                "content_filter": "endTurn",
+            }
+            mcp_stop_reason = stop_reason_map.get(stop_reason, "endTurn")
+
+            return self._success_response(
+                message_id,
+                {
+                    "role": "assistant",
+                    "content": {"type": "text", "text": content},
+                    "model": model,
+                    "stopReason": mcp_stop_reason,
+                },
+            )
+
+        except ImportError:
+            return self._error_response(
+                message_id,
+                INTERNAL_ERROR,
+                "LiteLLM not available for sampling",
+            )
+        except Exception as e:
+            logger.exception(f"Sampling error: {e}")
+            return self._error_response(
+                message_id,
+                INTERNAL_ERROR,
+                f"Sampling failed: {e}",
+            )
+
+    async def _handle_elicitation_create(self, message_id: Any, params: dict[str, Any]) -> dict[str, Any]:
+        """
+        Handle elicitation/create request.
+
+        Elicitation allows the server to request structured input from the user.
+        This implementation returns a placeholder since actual user interaction
+        requires frontend integration.
+
+        Reference: https://modelcontextprotocol.io/specification/2025-11-25/client/elicitation
+        """
+        message_text = params.get("message", "")
+        requested_schema = params.get("requestedSchema", {})
+
+        if not message_text:
+            return self._error_response(message_id, INVALID_PARAMS, "message is required")
+
+        # For now, return a "declined" action since we can't interact with user
+        # In production, this would integrate with the frontend to show a form
+        logger.info(
+            f"Elicitation requested: {message_text}",
+            extra={"schema": requested_schema},
+        )
+
+        return self._success_response(
+            message_id,
+            {
+                "action": "decline",
+                "content": None,
+            },
+        )
+
+    async def _handle_tasks_list(self, message_id: Any, params: dict[str, Any]) -> dict[str, Any]:
+        """
+        Handle tasks/list request.
+
+        Lists all active tasks from the Orchestrator and MCP task registry.
+
+        Reference: https://modelcontextprotocol.io/specification/2025-11-25/server/utilities/tasks
+        """
+        try:
+            from mcp_server_langgraph.agents.base_orchestrator import get_orchestrator_registry
+
+            tasks = []
+            registry = get_orchestrator_registry()
+
+            # Collect tasks from all registered orchestrators
+            for name, orchestrator in registry.items():
+                if hasattr(orchestrator, "list_tasks"):
+                    orch_tasks = await orchestrator.list_tasks()
+                    for task in orch_tasks:
+                        tasks.append(
+                            {
+                                "id": task.get("id", ""),
+                                "name": task.get("name", name),
+                                "status": task.get("status", "pending"),
+                                "progress": task.get("progress"),
+                            }
+                        )
+
+            return self._success_response(message_id, {"tasks": tasks})
+
+        except ImportError:
+            # Orchestrator not available, return empty list
+            return self._success_response(message_id, {"tasks": []})
+        except Exception as e:
+            logger.warning(f"Failed to list tasks: {e}")
+            return self._success_response(message_id, {"tasks": []})
+
+    async def _handle_tasks_get(self, message_id: Any, params: dict[str, Any]) -> dict[str, Any]:
+        """
+        Handle tasks/get request.
+
+        Gets details about a specific task by ID.
+        """
+        task_id = params.get("taskId")
+        if not task_id:
+            return self._error_response(message_id, INVALID_PARAMS, "taskId is required")
+
+        try:
+            from mcp_server_langgraph.agents.base_orchestrator import get_orchestrator_registry
+
+            registry = get_orchestrator_registry()
+
+            # Search for task in all orchestrators
+            for orchestrator in registry.values():
+                if hasattr(orchestrator, "get_task"):
+                    task = await orchestrator.get_task(task_id)
+                    if task:
+                        return self._success_response(
+                            message_id,
+                            {
+                                "id": task.get("id", task_id),
+                                "name": task.get("name", ""),
+                                "status": task.get("status", "pending"),
+                                "progress": task.get("progress"),
+                                "result": task.get("result"),
+                            },
+                        )
+
+            return self._error_response(message_id, INVALID_PARAMS, f"Task not found: {task_id}")
+
+        except ImportError:
+            return self._error_response(message_id, INVALID_PARAMS, f"Task not found: {task_id}")
+        except Exception as e:
+            logger.warning(f"Failed to get task {task_id}: {e}")
+            return self._error_response(message_id, INTERNAL_ERROR, f"Failed to get task: {e}")
+
+    async def _handle_tasks_cancel(self, message_id: Any, params: dict[str, Any]) -> dict[str, Any]:
+        """
+        Handle tasks/cancel request.
+
+        Cancels a running task by ID.
+        """
+        task_id = params.get("taskId")
+        if not task_id:
+            return self._error_response(message_id, INVALID_PARAMS, "taskId is required")
+
+        try:
+            from mcp_server_langgraph.agents.base_orchestrator import get_orchestrator_registry
+
+            registry = get_orchestrator_registry()
+
+            # Try to cancel in all orchestrators
+            for orchestrator in registry.values():
+                if hasattr(orchestrator, "cancel_task"):
+                    cancelled = await orchestrator.cancel_task(task_id)
+                    if cancelled:
+                        return self._success_response(message_id, {"cancelled": True})
+
+            # Task not found or couldn't be cancelled
+            return self._success_response(message_id, {"cancelled": False})
+
+        except ImportError:
+            return self._success_response(message_id, {"cancelled": False})
+        except Exception as e:
+            logger.warning(f"Failed to cancel task {task_id}: {e}")
+            return self._success_response(message_id, {"cancelled": False})
+
+    async def _handle_tasks_result(self, message_id: Any, params: dict[str, Any]) -> dict[str, Any]:
+        """
+        Handle tasks/result request.
+
+        Gets the result of a completed task.
+        """
+        task_id = params.get("taskId")
+        if not task_id:
+            return self._error_response(message_id, INVALID_PARAMS, "taskId is required")
+
+        try:
+            from mcp_server_langgraph.agents.base_orchestrator import get_orchestrator_registry
+
+            registry = get_orchestrator_registry()
+
+            # Search for task result in all orchestrators
+            for orchestrator in registry.values():
+                if hasattr(orchestrator, "get_task_result"):
+                    result = await orchestrator.get_task_result(task_id)
+                    if result is not None:
+                        return self._success_response(
+                            message_id,
+                            {
+                                "taskId": task_id,
+                                "result": result,
+                            },
+                        )
+
+            return self._error_response(message_id, INVALID_PARAMS, f"Task result not found: {task_id}")
+
+        except ImportError:
+            return self._error_response(message_id, INVALID_PARAMS, f"Task result not found: {task_id}")
+        except Exception as e:
+            logger.warning(f"Failed to get task result {task_id}: {e}")
+            return self._error_response(message_id, INTERNAL_ERROR, f"Failed to get task result: {e}")
+
+    async def _handle_completion_complete(self, message_id: Any, params: dict[str, Any]) -> dict[str, Any]:
+        """
+        Handle completion/complete request.
+
+        Provides autocompletion for prompt arguments and resource URIs.
+
+        Reference: https://modelcontextprotocol.io/specification/2025-11-25/server/utilities/completion
+        """
+        ref = params.get("ref", {})
+        argument = params.get("argument", {})
+
+        ref_type = ref.get("type", "")
+        argument_name = argument.get("name", "")
+        argument_value = argument.get("value", "")
+
+        completions: list[str] = []
+        total = 0
+
+        if ref_type == "ref/prompt":
+            prompt_name = ref.get("name", "")
+            # Provide completions for known prompt arguments
+            if prompt_name == "code_review" and argument_name == "language":
+                languages = [
+                    "python",
+                    "javascript",
+                    "typescript",
+                    "go",
+                    "rust",
+                    "java",
+                    "c",
+                    "cpp",
+                    "csharp",
+                    "ruby",
+                    "php",
+                ]
+                completions = [lang for lang in languages if lang.startswith(argument_value.lower())]
+                total = len(completions)
+
+        elif ref_type == "ref/resource":
+            uri_value = argument.get("value", "")
+            # Provide completions for resource URIs
+            if uri_value.startswith("config://"):
+                available_configs = [
+                    "config://studio/default",
+                    "config://studio/theme",
+                    "config://agent/settings",
+                ]
+                completions = [cfg for cfg in available_configs if cfg.startswith(uri_value)]
+                total = len(completions)
+
+        return self._success_response(
+            message_id,
+            {
+                "completion": {
+                    "values": completions[:10],  # Limit to 10 results
+                    "hasMore": len(completions) > 10,
+                    "total": total,
+                }
+            },
+        )
+
+    def _handle_logging_set_level(self, message_id: Any, params: dict[str, Any]) -> dict[str, Any]:
+        """
+        Handle logging/setLevel request.
+
+        Dynamically adjusts the logging level for the MCP server.
+
+        Reference: https://modelcontextprotocol.io/specification/2025-11-25/server/utilities/logging
+        """
+        level = params.get("level", "").lower()
+
+        # MCP logging levels map to Python logging levels
+        level_map = {
+            "debug": logging.DEBUG,
+            "info": logging.INFO,
+            "notice": logging.INFO,  # Python doesn't have NOTICE
+            "warning": logging.WARNING,
+            "error": logging.ERROR,
+            "critical": logging.CRITICAL,
+            "alert": logging.CRITICAL,  # Map to CRITICAL
+            "emergency": logging.CRITICAL,  # Map to CRITICAL
+        }
+
+        if level not in level_map:
+            return self._error_response(
+                message_id,
+                INVALID_PARAMS,
+                f"Invalid log level: {level}. Valid levels: {list(level_map.keys())}",
+            )
+
+        # Set the logging level for MCP-related loggers
+        python_level = level_map[level]
+        logging.getLogger("mcp_server_langgraph").setLevel(python_level)
+        logging.getLogger("mcp_server_langgraph.mcp").setLevel(python_level)
+
+        logger.info(f"Logging level set to: {level}")
+
+        return self._success_response(message_id, {})
+
+    def _handle_roots_list(self, message_id: Any, params: dict[str, Any]) -> dict[str, Any]:
+        """
+        Handle roots/list request.
+
+        Returns filesystem roots that the server can access.
+        Integrates with sandbox workspace mapping for secure execution.
+
+        Reference: https://modelcontextprotocol.io/specification/2025-11-25/client/roots
+        """
+        import os
+
+        roots = []
+
+        # Try to get workspace from sandbox context
+        try:
+            from mcp_server_langgraph.execution.sandbox_context import get_sandbox_context
+
+            context = get_sandbox_context()
+            if context and hasattr(context, "_working_directory"):
+                working_dir = context._working_directory
+                if working_dir:
+                    roots.append(
+                        {
+                            "uri": f"file://{working_dir}",
+                            "name": "Workspace",
+                        }
+                    )
+        except ImportError:
+            pass
+
+        # Add default workspace if no sandbox context
+        if not roots:
+            # Use current working directory or configurable workspace
+            workspace = os.getenv("MCP_WORKSPACE_ROOT", os.getcwd())
+            roots.append(
+                {
+                    "uri": f"file://{workspace}",
+                    "name": "Workspace",
+                }
+            )
+
+        # Add config root for configuration resources
+        roots.append(
+            {
+                "uri": "config://",
+                "name": "Configuration",
+            }
+        )
+
+        return self._success_response(message_id, {"roots": roots})
 
     # =========================================================================
     # Streaming Extensions ($/streaming/*)

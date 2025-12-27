@@ -276,6 +276,10 @@ class MCPService:
         Returns tools from the MCP bridge if configured, otherwise falls back
         to built-in tools from the local MCP server.
         """
+        import logging
+
+        logger = logging.getLogger(__name__)
+
         bridge = self.bridge
         if bridge is not None and bridge.is_configured:
             return await bridge.refresh_tools()
@@ -283,28 +287,24 @@ class MCPService:
         # Fall back to built-in MCP server tools
         try:
             from mcp_server_langgraph.mcp.server_streamable import get_mcp_server
-            import logging
-
-            logger = logging.getLogger(__name__)
-            logger.info("Listing available tools from built-in MCP server")
 
             mcp_server = get_mcp_server()
             builtin_tools = await mcp_server.list_tools_public()
-            logger.info(f"Found {len(builtin_tools)} built-in tools")
 
-            return [
-                MCPTool(
-                    name=tool.name,
-                    description=tool.description or "",
-                    input_schema=tool.inputSchema if hasattr(tool, "inputSchema") else {},
+            tools = []
+            for tool in builtin_tools:
+                # Tool is a Pydantic model from mcp.types, use model_dump for conversion
+                tool_dict = tool.model_dump(mode="json")
+                tools.append(
+                    MCPTool(
+                        name=tool_dict.get("name", ""),
+                        description=tool_dict.get("description") or "",
+                        input_schema=tool_dict.get("inputSchema") or {},
+                    )
                 )
-                for tool in builtin_tools
-            ]
+            return tools
         except Exception as e:
             # If MCP server not initialized, return empty list
-            import logging
-
-            logger = logging.getLogger(__name__)
             logger.warning(f"Failed to get built-in tools: {e}")
             return []
 

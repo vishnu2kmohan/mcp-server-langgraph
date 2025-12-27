@@ -15,7 +15,7 @@ import uuid
 from typing import TYPE_CHECKING, Any
 
 from mcp_server_langgraph.websocket.base import WebSocketBase
-from mcp_server_langgraph.websocket.types import WebSocketConfig
+from mcp_server_langgraph.websocket.types import MessageEnvelope, WebSocketConfig
 
 if TYPE_CHECKING:
     from mcp_server_langgraph.websocket.types import AuthUser
@@ -126,25 +126,30 @@ class MCPWebSocketHandler(WebSocketBase):
             extra={"user_id": self._user_id, "session_id": self.session_id},
         )
 
-    async def handle_message(  # type: ignore[override]
-        self, message: dict[str, Any]
-    ) -> dict[str, Any] | None:
+    async def handle_message(self, message: MessageEnvelope) -> MessageEnvelope | None:
         """
         Handle incoming MCP protocol message.
 
         Routes the message to the internal MCPMessageHandler.
-        Note: Intentionally differs from base class signature for MCP protocol.
 
         Args:
-            message: Parsed JSON-RPC 2.0 message.
+            message: MessageEnvelope containing the JSON-RPC 2.0 message in payload.
 
         Returns:
-            JSON-RPC response or None for notifications.
+            MessageEnvelope with JSON-RPC response or None for notifications.
         """
+        # Extract the actual JSON-RPC message from the envelope payload
+        # The payload should contain the JSON-RPC 2.0 message structure
+        json_rpc_message: dict[str, Any] = message.payload or {}
+
         # Validate JSON-RPC structure
-        validation_error = self._validate_jsonrpc(message)
+        validation_error = self._validate_jsonrpc(json_rpc_message)
         if validation_error:
-            return validation_error
+            return MessageEnvelope(
+                type="mcp_response",
+                payload=validation_error,
+                id=message.id,
+            )
 
         # If no handler initialized, create base handler
         if self._mcp_handler is None:
@@ -154,17 +159,27 @@ class MCPWebSocketHandler(WebSocketBase):
 
         # Route to MCP handler
         try:
-            response: dict[str, Any] | None = await self._mcp_handler.handle(message)
-            return response
+            response: dict[str, Any] | None = await self._mcp_handler.handle(json_rpc_message)
+            if response is None:
+                return None
+            return MessageEnvelope(
+                type="mcp_response",
+                payload=response,
+                id=message.id,
+            )
         except Exception as e:
             logger.exception(
                 f"Error handling MCP message: {e}",
-                extra={"session_id": self.session_id, "method": message.get("method")},
+                extra={"session_id": self.session_id, "method": json_rpc_message.get("method")},
             )
-            return self._error_response(
-                message.get("id"),
-                INTERNAL_ERROR,
-                f"Internal error: {str(e)}",
+            return MessageEnvelope(
+                type="mcp_response",
+                payload=self._error_response(
+                    json_rpc_message.get("id"),
+                    INTERNAL_ERROR,
+                    f"Internal error: {str(e)}",
+                ),
+                id=message.id,
             )
 
     def _validate_jsonrpc(self, message: dict[str, Any]) -> dict[str, Any] | None:
