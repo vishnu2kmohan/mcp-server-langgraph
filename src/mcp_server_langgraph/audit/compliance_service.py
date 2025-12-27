@@ -53,16 +53,82 @@ class ComplianceService:
     Generates compliance reports from audit data.
 
     Implements ComplianceServiceProtocol for the compliance_reports API.
+
+    Gracefully handles unavailable audit service by returning placeholder
+    reports with empty data. This ensures the compliance endpoints remain
+    available (return 200) even when the audit database is unavailable.
     """
 
-    def __init__(self, audit_service: AuditServiceProtocol) -> None:
+    def __init__(self, audit_service: AuditServiceProtocol | None = None) -> None:
         """
-        Initialize with audit service dependency.
+        Initialize with optional audit service dependency.
 
         Args:
-            audit_service: Service for querying audit events.
+            audit_service: Service for querying audit events. If None,
+                          placeholder reports with empty data are returned.
         """
         self._audit = audit_service
+
+    def _is_available(self) -> bool:
+        """Check if audit service is available."""
+        return self._audit is not None
+
+    async def _safe_query_events(
+        self,
+        regulation: str | None = None,
+        category: str | None = None,
+        event_type: str | None = None,
+        start_time: datetime | None = None,
+        end_time: datetime | None = None,
+        page_size: int = 1000,
+    ) -> tuple[list[dict[str, Any]], int]:
+        """
+        Query audit events with graceful error handling.
+
+        Returns empty results if audit service is unavailable or errors.
+        """
+        if self._audit is None:
+            return [], 0
+
+        try:
+            return await self._audit.query_events(
+                regulation=regulation,
+                category=category,
+                event_type=event_type,
+                start_time=start_time,
+                end_time=end_time,
+                page_size=page_size,
+            )
+        except Exception as e:
+            logger.warning(f"Failed to query audit events: {e}")
+            return [], 0
+
+    async def _safe_get_integrity_report(
+        self,
+        start_time: datetime,
+        end_time: datetime,
+    ) -> dict[str, Any]:
+        """
+        Get integrity report with graceful error handling.
+
+        Returns placeholder if audit service is unavailable or errors.
+        """
+        if self._audit is None:
+            return {
+                "chain_valid": None,
+                "events_verified": 0,
+                "errors": ["Audit service unavailable"],
+            }
+
+        try:
+            return await self._audit.get_integrity_report(start_time, end_time)
+        except Exception as e:
+            logger.warning(f"Failed to get integrity report: {e}")
+            return {
+                "chain_valid": None,
+                "events_verified": 0,
+                "errors": [str(e)],
+            }
 
     async def generate_gdpr_report(
         self,
@@ -85,7 +151,7 @@ class ComplianceService:
             GDPR compliance report in Article 30 format.
         """
         # Query GDPR-tagged events
-        events, total = await self._audit.query_events(
+        events, total = await self._safe_query_events(
             regulation="GDPR",
             start_time=start_time,
             end_time=end_time,
@@ -116,21 +182,21 @@ class ComplianceService:
         ]
 
         # Count data subject requests
-        export_events, export_count = await self._audit.query_events(
+        export_events, export_count = await self._safe_query_events(
             regulation="GDPR",
             event_type="data_export",
             start_time=start_time,
             end_time=end_time,
         )
 
-        deletion_events, deletion_count = await self._audit.query_events(
+        deletion_events, deletion_count = await self._safe_query_events(
             regulation="GDPR",
             event_type="data_deletion",
             start_time=start_time,
             end_time=end_time,
         )
 
-        rectification_events, rectification_count = await self._audit.query_events(
+        rectification_events, rectification_count = await self._safe_query_events(
             regulation="GDPR",
             event_type="data_rectification",
             start_time=start_time,
@@ -177,7 +243,7 @@ class ComplianceService:
             HIPAA compliance report.
         """
         # Query HIPAA-tagged events
-        events, total = await self._audit.query_events(
+        events, total = await self._safe_query_events(
             regulation="HIPAA",
             start_time=start_time,
             end_time=end_time,
@@ -202,7 +268,7 @@ class ComplianceService:
                 failed_accesses += 1
 
         # Query security incidents
-        security_events, security_count = await self._audit.query_events(
+        security_events, security_count = await self._safe_query_events(
             regulation="HIPAA",
             category="security",
             start_time=start_time,
@@ -260,7 +326,7 @@ class ComplianceService:
             SOC 2 compliance report.
         """
         # Query authentication events
-        auth_events, auth_total = await self._audit.query_events(
+        auth_events, auth_total = await self._safe_query_events(
             regulation="SOC2",
             category="authentication",
             start_time=start_time,
@@ -278,7 +344,7 @@ class ComplianceService:
                 failed_logins += 1
 
         # Query system operations
-        system_events, system_total = await self._audit.query_events(
+        system_events, system_total = await self._safe_query_events(
             regulation="SOC2",
             category="system",
             start_time=start_time,
@@ -332,7 +398,7 @@ class ComplianceService:
             FedRAMP compliance report.
         """
         # Query FedRAMP-tagged events
-        events, total = await self._audit.query_events(
+        events, total = await self._safe_query_events(
             regulation="FedRAMP",
             start_time=start_time,
             end_time=end_time,
@@ -345,20 +411,12 @@ class ComplianceService:
             by_category[event.get("category", "unknown")] += 1
 
         # Get integrity verification status
-        try:
-            integrity_report = await self._audit.get_integrity_report(start_time, end_time)
-            integrity_status = {
-                "chain_valid": integrity_report.get("chain_valid", False),
-                "events_verified": integrity_report.get("events_verified", 0),
-                "errors": integrity_report.get("errors", []),
-            }
-        except Exception as e:
-            logger.warning(f"Failed to get integrity report: {e}")
-            integrity_status = {
-                "chain_valid": None,
-                "events_verified": 0,
-                "errors": [str(e)],
-            }
+        integrity_report = await self._safe_get_integrity_report(start_time, end_time)
+        integrity_status = {
+            "chain_valid": integrity_report.get("chain_valid", False),
+            "events_verified": integrity_report.get("events_verified", 0),
+            "errors": integrity_report.get("errors", []),
+        }
 
         return {
             "regulation": "FedRAMP",
@@ -408,7 +466,7 @@ class ComplianceService:
             EU AI Act compliance report.
         """
         # Query AI operation events
-        events, total = await self._audit.query_events(
+        events, total = await self._safe_query_events(
             regulation="EU_AI_ACT",
             category="ai_operation",
             start_time=start_time,
@@ -485,7 +543,7 @@ class ComplianceService:
 
         total_events = 0
         for reg in regulations:
-            events, count = await self._audit.query_events(
+            events, count = await self._safe_query_events(
                 regulation=reg,
                 start_time=start_time,
                 end_time=end_time,

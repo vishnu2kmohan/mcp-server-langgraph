@@ -200,13 +200,17 @@ async def init_storage(settings: "Settings") -> StorageState:
         preferences_repository = create_preferences_repository(redis_client=redis_client)
         set_preferences_repository(preferences_repository)
 
-        # Create compliance service
-        compliance_service = ComplianceService(audit_service=audit_service)
-        set_compliance_service(compliance_service)
-        logger.info("Compliance service initialized")
-
     except Exception as e:
         logger.warning(f"Failed to initialize audit service: {e}")
+
+    # Create compliance service (always initialized, gracefully degrades if audit unavailable)
+    # ComplianceService handles None audit_service by returning empty data with valid structure
+    compliance_service = ComplianceService(audit_service=audit_service)
+    set_compliance_service(compliance_service)
+    if audit_service is not None:
+        logger.info("Compliance service initialized with audit service")
+    else:
+        logger.info("Compliance service initialized (degraded mode - audit service unavailable)")
 
     # Start audit scheduler if enabled (FedRAMP AU-9)
     if settings.audit_scheduler_enabled and audit_service is not None:
