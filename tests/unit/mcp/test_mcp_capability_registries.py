@@ -9,7 +9,6 @@ Reference: MCP Protocol Specification 2025-11-25
 """
 
 import gc
-from typing import Any
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
@@ -356,21 +355,29 @@ class TestMCPClientSessionExtendedMethods:
         )
 
         session = MCPClientSession(config)
-
-        # Mock the HTTP client response
-        session._http_client = MagicMock()
         session._connected = True
         session._session_id = "test-session"
 
-        # Mock _send_request_http to return resources
-        async def mock_send_and_receive(*args: Any, **kwargs: Any) -> dict[str, Any]:
-            return {
-                "resources": [
-                    {"uri": "config://test", "name": "Test Config"},
-                ]
+        # Mock the HTTP response using patch
+        mock_response = MagicMock()
+        mock_response.status = 200
+        mock_response.json = AsyncMock(
+            return_value={
+                "jsonrpc": "2.0",
+                "id": "test",
+                "result": {
+                    "resources": [
+                        {"uri": "config://test", "name": "Test Config"},
+                    ]
+                },
             }
+        )
+        mock_response.__aenter__ = AsyncMock(return_value=mock_response)
+        mock_response.__aexit__ = AsyncMock(return_value=None)
 
-        session._send_request_http = AsyncMock(side_effect=mock_send_and_receive)
+        mock_http_client = MagicMock()
+        mock_http_client.post = MagicMock(return_value=mock_response)
+        session._http_client = mock_http_client
 
         resources = await session.list_resources()
 
@@ -389,18 +396,29 @@ class TestMCPClientSessionExtendedMethods:
         )
 
         session = MCPClientSession(config)
-        session._http_client = MagicMock()
         session._connected = True
         session._session_id = "test-session"
 
-        async def mock_send_and_receive(*args: Any, **kwargs: Any) -> dict[str, Any]:
-            return {
-                "prompts": [
-                    {"name": "code_review", "description": "Review code"},
-                ]
+        # Mock the HTTP response
+        mock_response = MagicMock()
+        mock_response.status = 200
+        mock_response.json = AsyncMock(
+            return_value={
+                "jsonrpc": "2.0",
+                "id": "test",
+                "result": {
+                    "prompts": [
+                        {"name": "code_review", "description": "Review code"},
+                    ]
+                },
             }
+        )
+        mock_response.__aenter__ = AsyncMock(return_value=mock_response)
+        mock_response.__aexit__ = AsyncMock(return_value=None)
 
-        session._send_request_http = AsyncMock(side_effect=mock_send_and_receive)
+        mock_http_client = MagicMock()
+        mock_http_client.post = MagicMock(return_value=mock_response)
+        session._http_client = mock_http_client
 
         prompts = await session.list_prompts()
 
