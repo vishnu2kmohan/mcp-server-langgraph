@@ -343,3 +343,81 @@ def parse_stdio_messages(raw: str) -> list[dict[str, Any]]:
             pass
 
     return messages
+
+
+# =============================================================================
+# Resources Protocol
+# =============================================================================
+
+
+def create_resources_list_request(cursor: str | None = None) -> MCPRequest:
+    """Create a resources/list request.
+
+    Args:
+        cursor: Optional pagination cursor
+
+    Returns:
+        MCPRequest for resources/list
+    """
+    params: dict[str, Any] = {}
+    if cursor is not None:
+        params["cursor"] = cursor
+    else:
+        params["cursor"] = None  # Explicit null per spec
+
+    return MCPRequest(method="resources/list", params=params)
+
+
+def parse_resources_list_result(
+    result: dict[str, Any],
+) -> tuple[list[dict[str, Any]], str | None]:
+    """Parse resources/list response result.
+
+    Args:
+        result: The 'result' field from the resources/list response
+
+    Returns:
+        Tuple of (list of resource definitions, next cursor or None)
+    """
+    resources = result.get("resources", [])
+    next_cursor = result.get("nextCursor")
+    return resources, next_cursor
+
+
+# =============================================================================
+# Prompts Protocol
+# =============================================================================
+
+
+def create_prompts_list_request(cursor: str | None = None) -> MCPRequest:
+    """Create a prompts/list request.
+
+    Args:
+        cursor: Optional pagination cursor
+
+    Returns:
+        MCPRequest for prompts/list
+    """
+    params: dict[str, Any] = {}
+    if cursor is not None:
+        params["cursor"] = cursor
+    else:
+        params["cursor"] = None  # Explicit null per spec
+
+    return MCPRequest(method="prompts/list", params=params)
+
+
+def parse_prompts_list_result(
+    result: dict[str, Any],
+) -> tuple[list[dict[str, Any]], str | None]:
+    """Parse prompts/list response result.
+
+    Args:
+        result: The 'result' field from the prompts/list response
+
+    Returns:
+        Tuple of (list of prompt definitions, next cursor or None)
+    """
+    prompts = result.get("prompts", [])
+    next_cursor = result.get("nextCursor")
+    return prompts, next_cursor

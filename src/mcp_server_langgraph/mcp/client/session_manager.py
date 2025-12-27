@@ -19,11 +19,15 @@ from mcp_server_langgraph.mcp.client.protocol import (
     ServerInfo,
     create_initialize_request,
     create_initialized_notification,
+    create_prompts_list_request,
+    create_resources_list_request,
     create_tools_call_request,
     create_tools_list_request,
     frame_stdio_message,
     get_mcp_headers,
     parse_initialize_result,
+    parse_prompts_list_result,
+    parse_resources_list_result,
     parse_tools_call_result,
     parse_tools_list_result,
 )
@@ -536,3 +540,179 @@ class MCPClientSession:
     def is_connected(self) -> bool:
         """Check if connected to the server."""
         return self._connected
+
+    # =========================================================================
+    # Resources Methods (MCP 2025-11-25)
+    # =========================================================================
+
+    async def list_resources(self) -> list[dict[str, Any]]:
+        """Get available resources from the server.
+
+        Returns:
+            List of resource definitions as dictionaries with:
+                - uri: Resource URI
+                - name: Resource name
+                - description: Optional description
+                - mimeType: Optional MIME type
+
+        Raises:
+            ConnectionError: If not connected
+        """
+        if not self._connected:
+            raise ConnectionError("Not connected to MCP server")
+
+        if self.transport_type == MCPTransportType.STDIO:
+            return await self._list_resources_stdio()
+        elif self.transport_type == MCPTransportType.HTTP:
+            return await self._list_resources_http()
+
+        # For other transports, return empty list
+        return []
+
+    async def _list_resources_stdio(self) -> list[dict[str, Any]]:
+        """List resources via STDIO transport."""
+        request = create_resources_list_request(cursor=None)
+        await self._send_request_stdio(request)
+
+        response = await self._read_response_stdio()
+        if not response.is_success:
+            error_msg = response.error.get("message", "Unknown error") if response.error else "Unknown error"
+            raise ConnectionError(f"resources/list failed: {error_msg}")
+
+        if response.result is None:
+            raise ConnectionError("resources/list succeeded but returned no result")
+        resources, _next_cursor = parse_resources_list_result(response.result)
+        return resources
+
+    async def _list_resources_http(self) -> list[dict[str, Any]]:
+        """List resources via HTTP transport."""
+        if not self._http_client:
+            raise ConnectionError("HTTP client not initialized")
+
+        request = create_resources_list_request(cursor=None)
+        headers = get_mcp_headers(session_id=self._session_id)
+
+        async with self._http_client.post(
+            self.config.url,
+            json=request.to_dict(),
+            headers=headers,
+        ) as resp:
+            if resp.status >= 400:
+                error_text = await resp.text()
+                raise ConnectionError(f"HTTP error {resp.status}: {error_text}")
+
+            data = await resp.json()
+            response = MCPResponse.from_dict(data)
+
+            if not response.is_success:
+                error_msg = response.error.get("message", "Unknown error") if response.error else "Unknown error"
+                raise ConnectionError(f"resources/list failed: {error_msg}")
+
+            if response.result is None:
+                raise ConnectionError("resources/list succeeded but returned no result")
+            resources, _next_cursor = parse_resources_list_result(response.result)
+            return resources
+
+    async def _send_request_http(
+        self,
+        request: MCPRequest,
+    ) -> dict[str, Any]:
+        """Send an HTTP request and return the result.
+
+        This is a general-purpose method for sending MCP requests via HTTP.
+        """
+        if not self._http_client:
+            raise ConnectionError("HTTP client not initialized")
+
+        headers = get_mcp_headers(session_id=self._session_id)
+
+        async with self._http_client.post(
+            self.config.url,
+            json=request.to_dict(),
+            headers=headers,
+        ) as resp:
+            if resp.status >= 400:
+                error_text = await resp.text()
+                raise ConnectionError(f"HTTP error {resp.status}: {error_text}")
+
+            data = await resp.json()
+            response = MCPResponse.from_dict(data)
+
+            if not response.is_success:
+                error_msg = response.error.get("message", "Unknown error") if response.error else "Unknown error"
+                raise ConnectionError(f"Request failed: {error_msg}")
+
+            if response.result is None:
+                raise ConnectionError("Request succeeded but returned no result")
+            return response.result
+
+    # =========================================================================
+    # Prompts Methods (MCP 2025-11-25)
+    # =========================================================================
+
+    async def list_prompts(self) -> list[dict[str, Any]]:
+        """Get available prompts from the server.
+
+        Returns:
+            List of prompt definitions as dictionaries with:
+                - name: Prompt name
+                - description: Optional description
+                - arguments: List of argument definitions
+
+        Raises:
+            ConnectionError: If not connected
+        """
+        if not self._connected:
+            raise ConnectionError("Not connected to MCP server")
+
+        if self.transport_type == MCPTransportType.STDIO:
+            return await self._list_prompts_stdio()
+        elif self.transport_type == MCPTransportType.HTTP:
+            return await self._list_prompts_http()
+
+        # For other transports, return empty list
+        return []
+
+    async def _list_prompts_stdio(self) -> list[dict[str, Any]]:
+        """List prompts via STDIO transport."""
+        request = create_prompts_list_request(cursor=None)
+        await self._send_request_stdio(request)
+
+        response = await self._read_response_stdio()
+        if not response.is_success:
+            error_msg = response.error.get("message", "Unknown error") if response.error else "Unknown error"
+            raise ConnectionError(f"prompts/list failed: {error_msg}")
+
+        if response.result is None:
+            raise ConnectionError("prompts/list succeeded but returned no result")
+        prompts, _next_cursor = parse_prompts_list_result(response.result)
+        return prompts
+
+    async def _list_prompts_http(self) -> list[dict[str, Any]]:
+        """List prompts via HTTP transport."""
+        if not self._http_client:
+            raise ConnectionError("HTTP client not initialized")
+
+        request = create_prompts_list_request(cursor=None)
+        headers = get_mcp_headers(session_id=self._session_id)
+
+        async with self._http_client.post(
+            self.config.url,
+            json=request.to_dict(),
+            headers=headers,
+        ) as resp:
+            if resp.status >= 400:
+                error_text = await resp.text()
+                raise ConnectionError(f"HTTP error {resp.status}: {error_text}")
+
+            data = await resp.json()
+            response = MCPResponse.from_dict(data)
+
+            if not response.is_success:
+                error_msg = response.error.get("message", "Unknown error") if response.error else "Unknown error"
+                raise ConnectionError(f"prompts/list failed: {error_msg}")
+
+            if response.result is None:
+                raise ConnectionError("prompts/list succeeded but returned no result")
+            prompts, _next_cursor = parse_prompts_list_result(response.result)
+            return prompts
