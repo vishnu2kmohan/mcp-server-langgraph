@@ -157,12 +157,12 @@ describe("useAIIntelligenceConfig", () => {
   });
 
   describe("feature flag mapping", () => {
-    it("should map enable_studio_ai to global enabled", () => {
+    it("should map studio_ai to global enabled", () => {
       vi.mocked(useFeatureFlags).mockReturnValue({
-        flags: { enable_studio_ai: true },
+        flags: { studio_ai: true },
         isLoading: false,
         isError: false,
-        isEnabled: (name: string) => name === "enable_studio_ai",
+        isEnabled: (name: string) => name === "studio_ai",
       });
 
       const store = createTestStore();
@@ -175,10 +175,10 @@ describe("useAIIntelligenceConfig", () => {
 
     it("should map enable_ai_persona_analysis to personaAnalysis feature", () => {
       vi.mocked(useFeatureFlags).mockReturnValue({
-        flags: { enable_ai_persona_analysis: true },
+        flags: { ai_persona_analysis: true },
         isLoading: false,
         isError: false,
-        isEnabled: (name: string) => name === "enable_ai_persona_analysis",
+        isEnabled: (name: string) => name === "ai_persona_analysis",
       });
 
       const store = createTestStore();
@@ -193,10 +193,10 @@ describe("useAIIntelligenceConfig", () => {
 
     it("should map enable_agent_hitl to riskAssessment and decisionHistory", () => {
       vi.mocked(useFeatureFlags).mockReturnValue({
-        flags: { enable_agent_hitl: true },
+        flags: { agent_hitl: true },
         isLoading: false,
         isError: false,
-        isEnabled: (name: string) => name === "enable_agent_hitl",
+        isEnabled: (name: string) => name === "agent_hitl",
       });
 
       const store = createTestStore();
@@ -210,10 +210,10 @@ describe("useAIIntelligenceConfig", () => {
 
     it("should map enable_ai_disclosure to contextualHelp", () => {
       vi.mocked(useFeatureFlags).mockReturnValue({
-        flags: { enable_ai_disclosure: true },
+        flags: { ai_disclosure: true },
         isLoading: false,
         isError: false,
-        isEnabled: (name: string) => name === "enable_ai_disclosure",
+        isEnabled: (name: string) => name === "ai_disclosure",
       });
 
       const store = createTestStore();
@@ -226,10 +226,10 @@ describe("useAIIntelligenceConfig", () => {
 
     it("should map enable_ai_onboarding to learningPath", () => {
       vi.mocked(useFeatureFlags).mockReturnValue({
-        flags: { enable_ai_onboarding: true },
+        flags: { ai_onboarding: true },
         isLoading: false,
         isError: false,
-        isEnabled: (name: string) => name === "enable_ai_onboarding",
+        isEnabled: (name: string) => name === "ai_onboarding",
       });
 
       const store = createTestStore();
@@ -244,10 +244,10 @@ describe("useAIIntelligenceConfig", () => {
   describe("user context integration", () => {
     it("should include userId from auth state", () => {
       vi.mocked(useFeatureFlags).mockReturnValue({
-        flags: { enable_studio_ai: true },
+        flags: { studio_ai: true },
         isLoading: false,
         isError: false,
-        isEnabled: (name: string) => name === "enable_studio_ai",
+        isEnabled: (name: string) => name === "studio_ai",
       });
 
       const store = createTestStore({ username: "alice" });
@@ -260,10 +260,10 @@ describe("useAIIntelligenceConfig", () => {
 
     it("should include persona from persona slice", () => {
       vi.mocked(useFeatureFlags).mockReturnValue({
-        flags: { enable_studio_ai: true },
+        flags: { studio_ai: true },
         isLoading: false,
         isError: false,
-        isEnabled: (name: string) => name === "enable_studio_ai",
+        isEnabled: (name: string) => name === "studio_ai",
       });
 
       const store = createTestStore({
@@ -280,10 +280,10 @@ describe("useAIIntelligenceConfig", () => {
 
     it("should fallback to base persona when no subPersona", () => {
       vi.mocked(useFeatureFlags).mockReturnValue({
-        flags: { enable_studio_ai: true },
+        flags: { studio_ai: true },
         isLoading: false,
         isError: false,
-        isEnabled: (name: string) => name === "enable_studio_ai",
+        isEnabled: (name: string) => name === "studio_ai",
       });
 
       const store = createTestStore({ persona: "developer", subPersona: null });
@@ -298,10 +298,10 @@ describe("useAIIntelligenceConfig", () => {
   describe("WebSocket configuration", () => {
     it("should enable WebSocket when enable_ai_ux_websocket is true", () => {
       vi.mocked(useFeatureFlags).mockReturnValue({
-        flags: { enable_ai_ux_websocket: true },
+        flags: { ai_ux_websocket: true },
         isLoading: false,
         isError: false,
-        isEnabled: (name: string) => name === "enable_ai_ux_websocket",
+        isEnabled: (name: string) => name === "ai_ux_websocket",
       });
 
       const store = createTestStore();
@@ -332,10 +332,10 @@ describe("useAIIntelligenceConfig", () => {
   describe("cache configuration", () => {
     it("should include default cache configuration", () => {
       vi.mocked(useFeatureFlags).mockReturnValue({
-        flags: { enable_studio_ai: true },
+        flags: { studio_ai: true },
         isLoading: false,
         isError: false,
-        isEnabled: (name: string) => name === "enable_studio_ai",
+        isEnabled: (name: string) => name === "studio_ai",
       });
 
       const store = createTestStore();
@@ -355,10 +355,10 @@ describe("useAIIntelligenceConfig", () => {
   describe("granular intelligence feature flags", () => {
     it("should map enable_session_intelligence to sessionIntelligence", () => {
       vi.mocked(useFeatureFlags).mockReturnValue({
-        flags: { enable_session_intelligence: true },
+        flags: { session_intelligence: true },
         isLoading: false,
         isError: false,
-        isEnabled: (name: string) => name === "enable_session_intelligence",
+        isEnabled: (name: string) => name === "session_intelligence",
       });
 
       const store = createTestStore();
@@ -371,11 +371,10 @@ describe("useAIIntelligenceConfig", () => {
 
     it("should map enable_conversation_intelligence to conversationIntelligence", () => {
       vi.mocked(useFeatureFlags).mockReturnValue({
-        flags: { enable_conversation_intelligence: true },
+        flags: { conversation_intelligence: true },
         isLoading: false,
         isError: false,
-        isEnabled: (name: string) =>
-          name === "enable_conversation_intelligence",
+        isEnabled: (name: string) => name === "conversation_intelligence",
       });
 
       const store = createTestStore();
@@ -388,10 +387,10 @@ describe("useAIIntelligenceConfig", () => {
 
     it("should map enable_canvas_intelligence to canvasIntelligence", () => {
       vi.mocked(useFeatureFlags).mockReturnValue({
-        flags: { enable_canvas_intelligence: true },
+        flags: { canvas_intelligence: true },
         isLoading: false,
         isError: false,
-        isEnabled: (name: string) => name === "enable_canvas_intelligence",
+        isEnabled: (name: string) => name === "canvas_intelligence",
       });
 
       const store = createTestStore();
@@ -404,10 +403,10 @@ describe("useAIIntelligenceConfig", () => {
 
     it("should map enable_trace_intelligence to traceIntelligence", () => {
       vi.mocked(useFeatureFlags).mockReturnValue({
-        flags: { enable_trace_intelligence: true },
+        flags: { trace_intelligence: true },
         isLoading: false,
         isError: false,
-        isEnabled: (name: string) => name === "enable_trace_intelligence",
+        isEnabled: (name: string) => name === "trace_intelligence",
       });
 
       const store = createTestStore();
@@ -420,10 +419,10 @@ describe("useAIIntelligenceConfig", () => {
 
     it("should map enable_diagram_intelligence to diagramIntelligence", () => {
       vi.mocked(useFeatureFlags).mockReturnValue({
-        flags: { enable_diagram_intelligence: true },
+        flags: { diagram_intelligence: true },
         isLoading: false,
         isError: false,
-        isEnabled: (name: string) => name === "enable_diagram_intelligence",
+        isEnabled: (name: string) => name === "diagram_intelligence",
       });
 
       const store = createTestStore();
@@ -436,10 +435,10 @@ describe("useAIIntelligenceConfig", () => {
 
     it("should map enable_hitl_ai to hitlIntelligence", () => {
       vi.mocked(useFeatureFlags).mockReturnValue({
-        flags: { enable_hitl_ai: true },
+        flags: { hitl_ai: true },
         isLoading: false,
         isError: false,
-        isEnabled: (name: string) => name === "enable_hitl_ai",
+        isEnabled: (name: string) => name === "hitl_ai",
       });
 
       const store = createTestStore();
@@ -452,10 +451,10 @@ describe("useAIIntelligenceConfig", () => {
 
     it("should map enable_genui to genuiComponents", () => {
       vi.mocked(useFeatureFlags).mockReturnValue({
-        flags: { enable_genui: true },
+        flags: { genui: true },
         isLoading: false,
         isError: false,
-        isEnabled: (name: string) => name === "enable_genui",
+        isEnabled: (name: string) => name === "genui",
       });
 
       const store = createTestStore();
@@ -468,9 +467,9 @@ describe("useAIIntelligenceConfig", () => {
 
     it("should support multiple granular flags simultaneously", () => {
       const enabledFlags = new Set([
-        "enable_session_intelligence",
-        "enable_canvas_intelligence",
-        "enable_trace_intelligence",
+        "session_intelligence",
+        "canvas_intelligence",
+        "trace_intelligence",
       ]);
 
       vi.mocked(useFeatureFlags).mockReturnValue({
@@ -496,13 +495,13 @@ describe("useAIIntelligenceConfig", () => {
       expect(result.current.features?.genuiComponents).toBe(false);
     });
 
-    it("should fallback to enable_studio_ai when granular flag not available", () => {
-      // When enable_studio_ai is true but no granular flag, should still enable
+    it("should fallback to studio_ai when granular flag not available", () => {
+      // When studio_ai is true but no granular flag, should still enable
       vi.mocked(useFeatureFlags).mockReturnValue({
-        flags: { enable_studio_ai: true },
+        flags: { studio_ai: true },
         isLoading: false,
         isError: false,
-        isEnabled: (name: string) => name === "enable_studio_ai",
+        isEnabled: (name: string) => name === "studio_ai",
       });
 
       const store = createTestStore();
