@@ -242,16 +242,65 @@ export function useOfflineQueue(
   }, [storageKey]);
 
   /**
-   * Resolve a conflict
+   * Resolve a conflict by applying the specified resolution strategy
    */
   const resolveConflict = useCallback(
-    (conflictId: string, _resolution: ConflictResolution) => {
+    (conflictId: string, resolution: ConflictResolution) => {
+      // Find the conflict to get server version for merging
+      const conflict = conflicts.find((c) => c.actionId === conflictId);
+
+      // Remove the conflict from the list
       setConflicts((prev) => prev.filter((c) => c.actionId !== conflictId));
-      // In a real implementation, we would apply the resolution
-      // For now, just remove from conflicts and queue
-      setQueue((prev) => prev.filter((a) => a.id !== conflictId));
+
+      if (resolution === "keep-server") {
+        // Discard local changes - just remove from queue
+        setQueue((prev) => prev.filter((a) => a.id !== conflictId));
+      } else if (resolution === "keep-local") {
+        // Re-queue with force flag to override server
+        setQueue((prev) =>
+          prev.map((a) => {
+            if (a.id === conflictId) {
+              return {
+                ...a,
+                retries: a.retries + 1,
+                payload: {
+                  ...(a.payload as Record<string, unknown>),
+                  _force: true,
+                },
+              };
+            }
+            return a;
+          }),
+        );
+      } else if (resolution === "merge" && conflict) {
+        // Merge server data with local data (local wins on conflicts)
+        setQueue((prev) =>
+          prev.map((a) => {
+            if (a.id === conflictId) {
+              const serverData = conflict.serverVersion as Record<
+                string,
+                unknown
+              >;
+              const localData = a.payload as Record<string, unknown>;
+              return {
+                ...a,
+                retries: a.retries + 1,
+                payload: {
+                  ...serverData, // Server data first
+                  ...localData, // Local data overrides (wins on conflicts)
+                  _merged: true,
+                },
+              };
+            }
+            return a;
+          }),
+        );
+      } else {
+        // Fallback: just remove from queue
+        setQueue((prev) => prev.filter((a) => a.id !== conflictId));
+      }
     },
-    [],
+    [conflicts],
   );
 
   /**

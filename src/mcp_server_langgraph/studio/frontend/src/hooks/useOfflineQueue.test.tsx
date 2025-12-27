@@ -402,7 +402,7 @@ describe("useOfflineQueue", () => {
   });
 
   describe("resolveConflict", () => {
-    it("should remove conflict and action when resolved", async () => {
+    it("should remove conflict and action when resolved with keep-server", async () => {
       // Mock fetch returning 409 conflict
       vi.stubGlobal(
         "fetch",
@@ -432,10 +432,108 @@ describe("useOfflineQueue", () => {
       const conflictId = result.current.conflicts[0].actionId;
 
       act(() => {
+        result.current.resolveConflict(conflictId, "keep-server");
+      });
+
+      // Should remove conflict and discard the action
+      expect(result.current.conflicts).toHaveLength(0);
+      expect(result.current.pendingCount).toBe(0);
+
+      vi.unstubAllGlobals();
+    });
+
+    it("should re-queue action with force flag when resolved with keep-local", async () => {
+      // First call returns 409, second call (after resolution) returns ok
+      const mockFetch = vi
+        .fn()
+        .mockResolvedValueOnce({
+          ok: false,
+          status: 409,
+          json: () => Promise.resolve({ serverData: "conflict" }),
+        })
+        .mockResolvedValueOnce({ ok: true });
+
+      vi.stubGlobal("fetch", mockFetch);
+
+      const { result } = renderHook(() => useOfflineQueue());
+
+      act(() => {
+        result.current.enqueue({
+          type: "update",
+          endpoint: "/api/v1/test",
+          payload: { localData: "value" },
+          priority: 1,
+        });
+      });
+
+      await act(async () => {
+        await result.current.sync();
+      });
+
+      expect(result.current.conflicts).toHaveLength(1);
+      const conflictId = result.current.conflicts[0].actionId;
+
+      act(() => {
         result.current.resolveConflict(conflictId, "keep-local");
       });
 
+      // Conflict should be removed
       expect(result.current.conflicts).toHaveLength(0);
+
+      // Action should be re-queued with force flag
+      expect(result.current.pendingCount).toBe(1);
+      const queue = result.current.getQueue();
+      expect(queue[0].payload).toHaveProperty("_force", true);
+
+      vi.unstubAllGlobals();
+    });
+
+    it("should merge payloads when resolved with merge", async () => {
+      const serverData = { serverField: "server-value", sharedField: "server" };
+
+      vi.stubGlobal(
+        "fetch",
+        vi.fn().mockResolvedValue({
+          ok: false,
+          status: 409,
+          json: () => Promise.resolve(serverData),
+        }),
+      );
+
+      const { result } = renderHook(() => useOfflineQueue());
+
+      act(() => {
+        result.current.enqueue({
+          type: "update",
+          endpoint: "/api/v1/test",
+          payload: { localField: "local-value", sharedField: "local" },
+          priority: 1,
+        });
+      });
+
+      await act(async () => {
+        await result.current.sync();
+      });
+
+      expect(result.current.conflicts).toHaveLength(1);
+      const conflictId = result.current.conflicts[0].actionId;
+
+      act(() => {
+        result.current.resolveConflict(conflictId, "merge");
+      });
+
+      // Conflict should be removed
+      expect(result.current.conflicts).toHaveLength(0);
+
+      // Action should be re-queued with merged payload (local wins on conflicts)
+      expect(result.current.pendingCount).toBe(1);
+      const queue = result.current.getQueue();
+      expect(queue[0].payload).toEqual({
+        serverField: "server-value",
+        localField: "local-value",
+        sharedField: "local", // Local wins
+        _merged: true,
+      });
 
       vi.unstubAllGlobals();
     });
