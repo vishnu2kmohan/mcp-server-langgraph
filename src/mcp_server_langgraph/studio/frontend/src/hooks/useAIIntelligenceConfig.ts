@@ -4,12 +4,15 @@
  * Maps FeatureFlagContext flags to AIIntelligenceProvider config.
  * Bridges backend feature flags to the AI Intelligence system.
  *
- * Feature Flag Mapping:
- * - enable_studio_ai → global enabled
- * - enable_agent_hitl → riskAssessment, decisionHistory
- * - enable_ai_disclosure → contextualHelp
- * - enable_ai_onboarding → learningPath
- * - enable_ai_ux_websocket → webSocket.enabled
+ * Feature Flag Mapping (uses backend key names without 'enable_' prefix):
+ * - studio_ai → global enabled
+ * - agent_hitl → riskAssessment, decisionHistory
+ * - ai_disclosure → contextualHelp
+ * - ai_onboarding → learningPath
+ * - ai_ux_websocket → webSocket.enabled
+ *
+ * NOTE: The backend get_ui_features_for_role() returns flags without the
+ * 'enable_' prefix for cleaner frontend code. Always use the short names.
  */
 
 import { useMemo } from "react";
@@ -66,44 +69,41 @@ export function useAIIntelligenceConfig(): UseAIIntelligenceConfigReturn {
     }
 
     // Map backend flags to AIIntelligenceConfig
-    const enabled = isEnabled("enable_studio_ai") || isEnabled("enable_ai_ux");
+    // NOTE: Backend returns flags WITHOUT 'enable_' prefix (e.g., 'studio_ai' not 'enable_studio_ai')
+    const enabled = isEnabled("studio_ai") || isEnabled("ai_ux");
 
     // Helper to check granular flag with fallback to master flag
     const isIntelligenceEnabled = (granularFlag: string): boolean =>
-      isEnabled(granularFlag) || isEnabled("enable_studio_ai");
+      isEnabled(granularFlag) || isEnabled("studio_ai");
 
     return {
       enabled,
       userId,
       persona: effectivePersona,
       features: {
-        // Navigation prediction - maps from enable_studio_ai
-        navPrediction: isEnabled("enable_studio_ai"),
+        // Navigation prediction - maps from studio_ai
+        navPrediction: isEnabled("studio_ai"),
 
-        // Contextual help - maps from enable_ai_disclosure
-        contextualHelp: isEnabled("enable_ai_disclosure"),
+        // Contextual help - maps from ai_disclosure
+        contextualHelp: isEnabled("ai_disclosure"),
 
-        // Learning path - maps from enable_ai_onboarding
-        learningPath: isEnabled("enable_ai_onboarding"),
+        // Learning path - maps from ai_onboarding
+        learningPath: isEnabled("ai_onboarding"),
 
-        // HITL features - map from enable_agent_hitl
-        riskAssessment: isEnabled("enable_agent_hitl"),
-        decisionHistory: isEnabled("enable_agent_hitl"),
+        // HITL features - map from agent_hitl
+        riskAssessment: isEnabled("agent_hitl"),
+        decisionHistory: isEnabled("agent_hitl"),
 
         // Granular Intelligence features - map from specific flags with fallback
-        sessionIntelligence: isIntelligenceEnabled(
-          "enable_session_intelligence",
-        ),
+        sessionIntelligence: isIntelligenceEnabled("session_intelligence"),
         conversationIntelligence: isIntelligenceEnabled(
-          "enable_conversation_intelligence",
+          "conversation_intelligence",
         ),
-        canvasIntelligence: isIntelligenceEnabled("enable_canvas_intelligence"),
-        traceIntelligence: isIntelligenceEnabled("enable_trace_intelligence"),
-        diagramIntelligence: isIntelligenceEnabled(
-          "enable_diagram_intelligence",
-        ),
-        hitlIntelligence: isEnabled("enable_hitl_ai"),
-        genuiComponents: isEnabled("enable_genui"),
+        canvasIntelligence: isIntelligenceEnabled("canvas_intelligence"),
+        traceIntelligence: isIntelligenceEnabled("trace_intelligence"),
+        diagramIntelligence: isIntelligenceEnabled("diagram_intelligence"),
+        hitlIntelligence: isEnabled("hitl_ai"),
+        genuiComponents: isEnabled("genui"),
       },
       cacheConfig: {
         // Default cache configuration - can be extended later
@@ -114,7 +114,7 @@ export function useAIIntelligenceConfig(): UseAIIntelligenceConfigReturn {
         decisionHistoryStaleTime: 5 * 60 * 1000, // 5 minutes
       },
       webSocket: {
-        enabled: isEnabled("enable_ai_ux_websocket"),
+        enabled: isEnabled("ai_ux_websocket"),
         endpoint: "/api/v1/ws/ai/suggestions",
       },
       isLoading,
