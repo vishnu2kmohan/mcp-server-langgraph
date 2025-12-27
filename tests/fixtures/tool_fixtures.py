@@ -249,3 +249,54 @@ def skip_if_no_test_infra(test_infra_available):
     if not test_infra_available:
         pytest.skip("Test infrastructure not available. Start with: make test-infra-up")
     return True
+
+
+# ==============================================================================
+# Keycloak Infrastructure Fixtures
+# ==============================================================================
+
+
+@pytest.fixture(scope="session")
+def keycloak_service_available():
+    """
+    Check if Keycloak service is available via the Traefik gateway.
+
+    Validates the OIDC discovery endpoint to ensure Keycloak is fully ready
+    for authentication flows, not just that the JVM is running.
+
+    Returns True if Keycloak is responding with valid OIDC configuration.
+    """
+    try:
+        import httpx
+
+        response = httpx.get(
+            "http://localhost/authn/realms/default/.well-known/openid-configuration",
+            timeout=5.0,
+        )
+        return response.status_code == 200
+    except Exception:
+        return False
+
+
+@pytest.fixture(scope="session")
+def keycloak_direct_available():
+    """
+    Check if Keycloak is available on direct test port (9082).
+
+    This bypasses the Traefik gateway for tests that need direct access.
+    Returns True if Keycloak health endpoint is responding.
+    """
+    return _check_service_health("localhost", 9082)
+
+
+@pytest.fixture
+def skip_if_no_keycloak(keycloak_service_available):
+    """
+    Skip test if Keycloak service is not available.
+
+    Use this fixture for tests that require Keycloak for authentication.
+    Tests will be skipped with a clear message when infrastructure isn't available.
+    """
+    if not keycloak_service_available:
+        pytest.skip("Keycloak not available at localhost:80/authn. Start test infrastructure with: make test-infra-up")
+    return True
