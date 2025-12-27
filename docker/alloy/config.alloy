@@ -21,6 +21,7 @@ logging {
 // OTLP RECEIVER (OpenTelemetry Protocol)
 // =============================================================================
 // Receives traces, metrics, and logs from applications via OTLP
+// Supports both gRPC (4317) and HTTP/protobuf (4318) per OTel spec
 
 otelcol.receiver.otlp "default" {
   grpc {
@@ -31,6 +32,35 @@ otelcol.receiver.otlp "default" {
   }
 
   output {
+    // Route through memory_limiter first to prevent OOM
+    metrics = [otelcol.processor.memory_limiter.default.input]
+    logs    = [otelcol.processor.memory_limiter.default.input]
+    traces  = [otelcol.processor.memory_limiter.default.input]
+  }
+}
+
+// =============================================================================
+// MEMORY LIMITER PROCESSOR (Production Best Practice)
+// =============================================================================
+// Prevents out-of-memory conditions by limiting memory usage
+// Per Grafana Alloy docs: "Graceful shutdown of collectors requires memory
+// headroom that may not exist on smaller nodes."
+//
+// Reference: https://grafana.com/docs/alloy/latest/reference/components/otelcol/otelcol.processor.memory_limiter/
+
+otelcol.processor.memory_limiter "default" {
+  // Check memory usage every second
+  check_interval = "1s"
+
+  // Hard limit: 80% of container memory (assumes 512MB container = 410MB limit)
+  // Adjust based on actual container memory allocation
+  limit = "410MiB"
+
+  // Soft limit spike: Start refusing data when approaching limit
+  // This provides headroom for graceful shutdown
+  spike_limit = "100MiB"
+
+  output {
     metrics = [otelcol.processor.batch.default.input]
     logs    = [otelcol.processor.batch.default.input]
     traces  = [otelcol.processor.batch.default.input]
@@ -38,10 +68,24 @@ otelcol.receiver.otlp "default" {
 }
 
 // =============================================================================
-// OTLP BATCH PROCESSOR
+// OTLP BATCH PROCESSOR (Production Readiness)
 // =============================================================================
+// Per Grafana Alloy docs: "Production-ready Alloy configurations shouldn't
+// send OpenTelemetry data directly to an exporter for delivery. Instead,
+// data is usually sent to one or more processor components."
+//
+// Batching improves data compression and reduces outgoing network requests.
 
 otelcol.processor.batch "default" {
+  // Maximum time to wait before sending a batch
+  timeout = "5s"
+
+  // Target batch size (number of spans/metrics/logs per batch)
+  send_batch_size = 8192
+
+  // Maximum batch size (hard limit)
+  send_batch_max_size = 16384
+
   output {
     metrics = [otelcol.exporter.prometheus.mimir.input]
     logs    = [otelcol.processor.attributes.observability_labels.input]
@@ -130,12 +174,32 @@ otelcol.processor.attributes "observability_labels" {
 // =============================================================================
 
 // Export traces to Tempo
+// Per OTel best practices: "Ensure to configure the appropriate retry mechanisms
+// with exponential backoff to ensure data is delivered during temporary network issues."
 otelcol.exporter.otlp "tempo" {
   client {
     endpoint = "tempo:4317"
     tls {
       insecure = true
     }
+
+    // Compression per OTel best practices (reduces network bandwidth)
+    compression = "gzip"
+  }
+
+  // Retry configuration with exponential backoff
+  retry_on_failure {
+    enabled = true
+    initial_interval = "1s"
+    max_interval = "30s"
+    max_elapsed_time = "5m"
+  }
+
+  // Queue configuration to buffer data during transient failures
+  sending_queue {
+    enabled = true
+    num_consumers = 10
+    queue_size = 5000
   }
 }
 
@@ -152,10 +216,23 @@ otelcol.exporter.loki "default" {
 // =============================================================================
 // PROMETHEUS REMOTE WRITE TO MIMIR
 // =============================================================================
+// Per OTel best practices: Configure retry with exponential backoff
 
 prometheus.remote_write "mimir" {
   endpoint {
     url = "http://mimir:9009/api/v1/push"
+
+    // Queue configuration for reliability during transient failures
+    queue_config {
+      capacity = 10000
+      max_shards = 50
+      min_shards = 1
+      max_samples_per_send = 2000
+      batch_send_deadline = "5s"
+      min_backoff = "1s"
+      max_backoff = "30s"
+      retry_on_http_429 = true
+    }
   }
 }
 
@@ -289,11 +366,23 @@ loki.process "json_logs" {
 // =============================================================================
 // LOKI OUTPUT
 // =============================================================================
+// Per OTel best practices: Configure retry with exponential backoff
 
 loki.write "loki" {
   endpoint {
     url       = "http://loki:3100/loki/api/v1/push"
     tenant_id = "test"
+
+    // Retry configuration with exponential backoff
+    min_backoff_period = "1s"
+    max_backoff_period = "30s"
+    max_backoff_retries = 10
+  }
+
+  // External labels applied to all log streams
+  external_labels = {
+    cluster = "test",
+    env     = "development",
   }
 }
 
