@@ -486,14 +486,18 @@ def retry_with_backoff(  # noqa: C901
                     except Exception as e:
                         last_exception = e
 
-                        # Check if we should filter this exception type
-                        if retry_on and not isinstance(e, retry_on):
-                            raise
-
-                        # Check if this specific exception should not be retried
-                        # (e.g., hook denials are deterministic and won't change on retry)
-                        if not should_retry_exception(e):
-                            raise
+                        # Check if we should retry this exception
+                        # If retry_on is specified, use it to filter exception types
+                        # Otherwise, use should_retry_exception() for auto-detection
+                        if retry_on:
+                            # Explicit retry_on filter: only retry if exception matches
+                            if not isinstance(e, retry_on):
+                                raise
+                        else:
+                            # No explicit filter: use auto-detection for retryable exceptions
+                            # (e.g., hook denials are deterministic and won't change on retry)
+                            if not should_retry_exception(e):
+                                raise
 
                         # Check if we should switch to overload config
                         if overload_aware and not switched_to_overload_config and is_overload_error(e):

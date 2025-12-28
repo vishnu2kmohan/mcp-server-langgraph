@@ -260,6 +260,103 @@ groups:
           summary: "Dependency {{ $labels.job }} performance degraded"
           description: "Dependency {{ $labels.job }} p95 response time {{ $value | humanizeDuration }} exceeds 200ms threshold."
 
+  - name: sla_streaming_performance
+    interval: 5m
+    rules:
+      - alert: SLAStreamingTTFCBreach
+        expr: |
+          histogram_quantile(
+            0.95,
+            sum(rate(llm_streaming_ttfc_seconds_bucket[5m])) by (le)
+          ) > 2.0
+        for: 5m
+        labels:
+          severity: critical
+          sla_metric: ttfc
+          component: streaming
+        annotations:
+          summary: "SLA Time To First Chunk breach (p95)"
+          description: "Streaming TTFC p95 {{ $value | humanizeDuration }} exceeds SLA target of 2s for the last 5 minutes."
+          dashboard: "https://grafana.example.com/d/llm-streaming/llm-streaming"
+          runbook: "https://docs.example.com/runbooks/streaming-ttfc-breach"
+
+      - alert: SLAStreamingTTFCAtRisk
+        expr: |
+          histogram_quantile(
+            0.95,
+            sum(rate(llm_streaming_ttfc_seconds_bucket[5m])) by (le)
+          ) > 1.0 and <= 2.0
+        for: 5m
+        labels:
+          severity: warning
+          sla_metric: ttfc
+          component: streaming
+        annotations:
+          summary: "SLA Time To First Chunk at risk (p95)"
+          description: "Streaming TTFC p95 {{ $value | humanizeDuration }} is approaching SLA threshold of 2s."
+
+      - alert: SLAStreamingTTFCByProvider
+        expr: |
+          histogram_quantile(
+            0.95,
+            sum(rate(llm_streaming_ttfc_seconds_bucket[5m])) by (le, provider)
+          ) > 3.0
+        for: 5m
+        labels:
+          severity: warning
+          sla_metric: ttfc_by_provider
+          component: streaming
+        annotations:
+          summary: "Provider {{ $labels.provider }} TTFC degraded"
+          description: "Provider {{ $labels.provider }} TTFC p95 {{ $value | humanizeDuration }} exceeds 3s threshold. Consider fallback or provider health check."
+
+      - alert: SLAStreamingInterChunkLatencyHigh
+        expr: |
+          histogram_quantile(
+            0.95,
+            sum(rate(llm_streaming_inter_chunk_latency_seconds_bucket[5m])) by (le)
+          ) > 0.25
+        for: 5m
+        labels:
+          severity: warning
+          sla_metric: inter_chunk_latency
+          component: streaming
+        annotations:
+          summary: "Streaming inter-chunk latency high"
+          description: "Inter-chunk latency p95 {{ $value | humanizeDuration }} exceeds 250ms threshold, impacting streaming UX smoothness."
+
+      - alert: SLAStreamingErrorRateHigh
+        expr: |
+          (
+            sum(rate(llm_streaming_duration_seconds_count{status=~"error|timeout"}[5m]))
+            / sum(rate(llm_streaming_duration_seconds_count[5m]))
+            * 100
+          ) > 5.0
+        for: 5m
+        labels:
+          severity: critical
+          sla_metric: streaming_error_rate
+          component: streaming
+        annotations:
+          summary: "SLA streaming error rate high"
+          description: "Streaming error rate {{ $value | humanizePercentage }} exceeds 5% threshold."
+          dashboard: "https://grafana.example.com/d/llm-streaming/llm-streaming"
+
+      - alert: SLAStreamingDurationHigh
+        expr: |
+          histogram_quantile(
+            0.95,
+            sum(rate(llm_streaming_duration_seconds_bucket[5m])) by (le)
+          ) > 60.0
+        for: 10m
+        labels:
+          severity: warning
+          sla_metric: streaming_duration
+          component: streaming
+        annotations:
+          summary: "Streaming duration abnormally high"
+          description: "Streaming duration p95 {{ $value | humanizeDuration }} exceeds 60s threshold. Check for slow models or network issues."
+
   - name: sla_resource_exhaustion
     interval: 5m
     rules:

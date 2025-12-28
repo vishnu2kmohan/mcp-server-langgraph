@@ -19,6 +19,7 @@ Each runbook follows a standard template:
 | Service Health | [langgraph-agent-health.md](langgraph-agent-health.md) | Critical |
 | Authentication | [authentication-alerts.md](authentication-alerts.md) | Critical/Warning |
 | LLM Performance | [llm-performance-alerts.md](llm-performance-alerts.md) | Warning |
+| LLM Streaming | [streaming-alerts.md](streaming-alerts.md) | Critical/Warning |
 | Infrastructure | [infrastructure-alerts.md](infrastructure-alerts.md) | Critical/Warning |
 | SLA Breaches | [sla-alerts.md](sla-alerts.md) | Critical |
 
@@ -39,6 +40,8 @@ Alerts are defined in:
 | `KeycloakDown` | Auth failures for all users | Check Keycloak deployment, DB connection |
 | `OpenFGADown` | Authorization failures | Check OpenFGA deployment, PostgreSQL |
 | `SLAUptimeBreach` | Customer-facing outage | Immediate incident escalation |
+| `SLAStreamingTTFCBreach` | Slow streaming initiation | Check provider status, enable fallback |
+| `SLAStreamingErrorRateHigh` | Streaming failures | Check provider connectivity, enable retry |
 
 ### Warning Alerts (Response Within 30 Minutes)
 
@@ -47,6 +50,8 @@ Alerts are defined in:
 | `HighErrorRate` | Degraded service quality | Check logs for error patterns |
 | `SlowLLMResponses` | Poor user experience | Check LLM provider status |
 | `AuthenticationFailureSpike` | Potential attack or misconfiguration | Review auth logs |
+| `SLAStreamingTTFCAtRisk` | TTFC approaching SLA threshold | Monitor and prepare failover |
+| `SLAStreamingInterChunkLatencyHigh` | Choppy streaming UX | Check network and provider throttling |
 
 ## Creating New Runbooks
 

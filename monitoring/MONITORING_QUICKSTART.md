@@ -45,9 +45,19 @@ That's it! You now have:
   - Fallback events
   - Rate limiting
 
+#### 3. **LLM Streaming Dashboard**
+- **URL**: http://localhost:3000/d/llm-streaming
+- **Purpose**: Streaming LLM response performance tracking
+- **Key Metrics**:
+  - Time To First Chunk (TTFC) - p50, p95, p99
+  - Inter-chunk latency distribution
+  - Streaming duration by status
+  - Chunk throughput by model/provider
+  - Streaming success rate
+
 ### Security & Compliance
 
-#### 3. **Security Dashboard**
+#### 4. **Security Dashboard**
 - **URL**: http://localhost:3000/d/security
 - **Purpose**: Security event monitoring
 - **Key Metrics**:
@@ -179,6 +189,12 @@ make jaeger-ui
 - **`agent_response_time_seconds`** - End-to-end latency (target: p95 < 5s)
 - **`llm_call_duration_seconds`** - LLM provider latency (target: p95 < 10s)
 - **`tool_execution_duration_seconds`** - Tool performance
+
+### Streaming Performance
+- **`llm_streaming_ttfc_seconds`** - Time To First Chunk (target: p95 < 2s)
+- **`llm_streaming_inter_chunk_latency_seconds`** - Inter-chunk latency (target: p95 < 250ms)
+- **`llm_streaming_duration_seconds`** - Total streaming duration
+- **`llm_streaming_chunks_total`** - Chunks emitted per stream
 
 ### Reliability
 - **`agent_requests_total`** - Request rate and trends

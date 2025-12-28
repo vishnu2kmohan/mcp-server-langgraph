@@ -456,7 +456,8 @@ class TestOverloadRetryBehavior:
 
         call_count = 0
 
-        @retry_with_backoff(max_attempts=2, overload_aware=True)
+        # ValueError is not auto-retried, so we must specify retry_on
+        @retry_with_backoff(max_attempts=2, overload_aware=True, retry_on=ValueError)
         async def simple_func():
             nonlocal call_count
             call_count += 1
@@ -477,7 +478,8 @@ class TestOverloadRetryBehavior:
 
         call_count = 0
 
-        @retry_with_backoff(max_attempts=2, jitter_strategy=JitterStrategy.DECORRELATED)
+        # ValueError is not auto-retried, so we must specify retry_on
+        @retry_with_backoff(max_attempts=2, jitter_strategy=JitterStrategy.DECORRELATED, retry_on=ValueError)
         async def simple_func():
             nonlocal call_count
             call_count += 1
@@ -519,7 +521,8 @@ class TestOverloadRetryBehavior:
 
         call_count = 0
 
-        @retry_with_backoff(max_attempts=3, overload_aware=True)
+        # ValueError is not auto-retried, so we must specify retry_on
+        @retry_with_backoff(max_attempts=3, overload_aware=True, retry_on=ValueError)
         async def regular_error_func():
             nonlocal call_count
             call_count += 1
@@ -568,7 +571,10 @@ class TestOverloadRetryBehavior:
         call_count = 0
 
         # Use minimal delay for faster test execution
-        @retry_with_backoff(max_attempts=3, overload_aware=True, exponential_base=0.01, exponential_max=0.1)
+        # ValueError is not auto-retried, so we must specify retry_on
+        @retry_with_backoff(
+            max_attempts=3, overload_aware=True, exponential_base=0.01, exponential_max=0.1, retry_on=ValueError
+        )
         async def non_overload_func():
             nonlocal call_count
             call_count += 1
