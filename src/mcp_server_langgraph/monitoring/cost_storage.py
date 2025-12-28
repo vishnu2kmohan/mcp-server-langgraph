@@ -170,6 +170,9 @@ class CostStorageBackend(Protocol):
         start_date: datetime | None = None,
         end_date: datetime | None = None,
         user_id: str | None = None,
+        organization_id: str | None = None,
+        project_id: str | None = None,
+        team_id: str | None = None,
     ) -> Any:
         """
         Get aggregated cost summary for a time period.
@@ -178,6 +181,9 @@ class CostStorageBackend(Protocol):
             start_date: Start of time period (inclusive)
             end_date: End of time period (inclusive)
             user_id: Optional user filter
+            organization_id: Optional organization filter for entity-specific queries
+            project_id: Optional project filter for entity-specific queries
+            team_id: Optional team filter for entity-specific queries
 
         Returns:
             CostSummary with aggregated metrics
@@ -411,6 +417,9 @@ class MemoryCostStorage:
         start_date: datetime | None = None,
         end_date: datetime | None = None,
         user_id: str | None = None,
+        organization_id: str | None = None,
+        project_id: str | None = None,
+        team_id: str | None = None,
     ) -> CostSummary:
         """
         Get aggregated cost summary for in-memory records.
@@ -419,6 +428,9 @@ class MemoryCostStorage:
             start_date: Start of period (inclusive)
             end_date: End of period (inclusive)
             user_id: Optional user filter
+            organization_id: Optional organization filter for entity-specific queries
+            project_id: Optional project filter for entity-specific queries
+            team_id: Optional team filter for entity-specific queries
 
         Returns:
             CostSummary with aggregated metrics
@@ -433,6 +445,12 @@ class MemoryCostStorage:
             records = [r for r in records if r.timestamp <= end_date]
         if user_id:
             records = [r for r in records if r.user_id == user_id]
+        if organization_id:
+            records = [r for r in records if r.organization_id == organization_id]
+        if project_id:
+            records = [r for r in records if r.project_id == project_id]
+        if team_id:
+            records = [r for r in records if r.team_id == team_id]
 
         if not records:
             return CostSummary(
@@ -1007,6 +1025,9 @@ class PostgresCostStorage:
         start_date: datetime | None = None,
         end_date: datetime | None = None,
         user_id: str | None = None,
+        organization_id: str | None = None,
+        project_id: str | None = None,
+        team_id: str | None = None,
     ) -> CostSummary:
         """
         Get aggregated cost summary.
@@ -1018,6 +1039,9 @@ class PostgresCostStorage:
             start_date: Start of period (inclusive)
             end_date: End of period (inclusive)
             user_id: Optional user filter
+            organization_id: Optional organization filter for entity-specific queries
+            project_id: Optional project filter for entity-specific queries
+            team_id: Optional team filter for entity-specific queries
 
         Returns:
             CostSummary with aggregated metrics
@@ -1077,6 +1101,18 @@ class PostgresCostStorage:
             if user_id:
                 query += " AND user_id = :user_id"
                 params["user_id"] = user_id
+
+            if organization_id:
+                query += " AND organization_id = :organization_id"
+                params["organization_id"] = organization_id
+
+            if project_id:
+                query += " AND project_id = :project_id"
+                params["project_id"] = project_id
+
+            if team_id:
+                query += " AND team_id = :team_id"
+                params["team_id"] = team_id
 
             result = await session.execute(text(query), params)
             row = result.fetchone()

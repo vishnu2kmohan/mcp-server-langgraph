@@ -219,40 +219,48 @@ async def get_current_spend_for_entity(entity_type: str, entity_id: str) -> Deci
     Returns:
         Current month's spend in USD as Decimal
     """
-    from mcp_server_langgraph.monitoring.cost_storage import get_cost_storage
+    from mcp_server_langgraph.monitoring.cost_storage_factory import get_cost_storage_backend
 
-    storage = get_cost_storage()
+    storage = get_cost_storage_backend()
 
     # Get start of current month
     now = datetime.now(UTC)
     start_of_month = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
 
-    # Get cost summary - we need to map entity_type to the appropriate filter
-    # Currently cost_storage supports user_id filter, we need to extend for org context
-    # For now, we use the entity_id directly if it matches user format
-    if entity_type == "user":
-        summary = await storage.get_cost_summary(
-            start_date=start_of_month,
-            end_date=now,
-            user_id=entity_id,
-        )
-        return summary.total_cost
-    else:
-        # For organization/project/team, we need organizational cost aggregation
-        # This requires the cost_storage to support organizational filtering
-        # For now, return the summary to support the basic flow
-        # The organizational filtering is handled by extended get_cost_summary in PostgresCostStorage
-        try:
-            # Try to use organizational filtering if available
+    # Map entity_type to the appropriate filter parameter
+    # get_cost_summary now supports organization_id, project_id, team_id, user_id
+    try:
+        if entity_type == "user":
             summary = await storage.get_cost_summary(
                 start_date=start_of_month,
                 end_date=now,
+                user_id=entity_id,
             )
-            # Note: This returns total spend, not entity-specific
-            # Full implementation requires extending cost_storage protocol
-            return summary.total_cost
-        except Exception:
+        elif entity_type == "organization":
+            summary = await storage.get_cost_summary(
+                start_date=start_of_month,
+                end_date=now,
+                organization_id=entity_id,
+            )
+        elif entity_type == "project":
+            summary = await storage.get_cost_summary(
+                start_date=start_of_month,
+                end_date=now,
+                project_id=entity_id,
+            )
+        elif entity_type == "team":
+            summary = await storage.get_cost_summary(
+                start_date=start_of_month,
+                end_date=now,
+                team_id=entity_id,
+            )
+        else:
+            # Unknown entity type - return 0
             return Decimal("0")
+
+        return summary.total_cost
+    except Exception:
+        return Decimal("0")
 
 
 async def check_and_broadcast_budget_alert(
