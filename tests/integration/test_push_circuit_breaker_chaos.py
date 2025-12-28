@@ -34,7 +34,6 @@ from mcp_server_langgraph.resilience.circuit_breaker import (
     CircuitBreakerState,
     get_circuit_breaker,
     get_circuit_breaker_state,
-    reset_all_circuit_breakers,
 )
 
 if TYPE_CHECKING:
@@ -77,10 +76,7 @@ def sample_subscription() -> PushSubscription:
     )
 
 
-@pytest.fixture(autouse=True)
-def reset_breakers() -> None:
-    """Reset all circuit breakers before each test."""
-    reset_all_circuit_breakers()
+# Note: reset_breakers fixture is defined in tests/integration/conftest.py
 
 
 @pytest.mark.xdist_group(name="chaos_circuit_breaker")
@@ -447,7 +443,7 @@ class TestCircuitBreakerRecoveryPatterns:
             # Force circuit to OPEN
             for _ in range(cb.fail_max + 1):
                 try:
-                    cb.call(lambda: (_ for _ in ()).throw(Exception(f"cycle-{cycle}")))
+                    cb.call(lambda c=cycle: (_ for _ in ()).throw(Exception(f"cycle-{c}")))
                 except Exception:
                     pass
 
@@ -455,7 +451,7 @@ class TestCircuitBreakerRecoveryPatterns:
 
             # Wait and recover
             await asyncio.sleep(1.2)
-            result = cb.call(lambda: f"recovered-{cycle}")
+            result = cb.call(lambda c=cycle: f"recovered-{c}")
             assert result == f"recovered-{cycle}"
             assert get_circuit_breaker_state("webpush") == CircuitBreakerState.CLOSED
 

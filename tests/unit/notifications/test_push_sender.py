@@ -84,6 +84,18 @@ def sender(mock_subscription_store: InMemoryPushSubscriptionStore) -> PushNotifi
     )
 
 
+@pytest.fixture(autouse=True)
+def reset_circuit_breakers() -> None:
+    """Reset all circuit breakers before each test.
+
+    Module-level autouse fixture for circuit breaker isolation.
+    Consolidated from class-level fixtures per tests/meta/test_fixture_organization.py.
+    """
+    from mcp_server_langgraph.resilience.circuit_breaker import reset_all_circuit_breakers
+
+    reset_all_circuit_breakers()
+
+
 # =============================================================================
 # PushMessage Tests
 # =============================================================================
@@ -92,7 +104,7 @@ def sender(mock_subscription_store: InMemoryPushSubscriptionStore) -> PushNotifi
 class TestPushMessage:
     """Tests for the PushMessage dataclass."""
 
-    def test_create_message(self) -> None:
+    def test_create_message_with_all_fields_succeeds(self) -> None:
         """Test creating a push message with all fields."""
         message = PushMessage(
             title="Test Alert",
@@ -111,7 +123,7 @@ class TestPushMessage:
         assert message.tag == "test-alert-001"
         assert len(message.actions or []) == 2
 
-    def test_to_payload(self) -> None:
+    def test_to_payload_returns_json_dict(self) -> None:
         """Test converting message to JSON payload."""
         message = PushMessage(
             title="Test Alert",
@@ -123,7 +135,7 @@ class TestPushMessage:
         assert "body" in payload
         assert payload["title"] == "Test Alert"
 
-    def test_minimal_message(self) -> None:
+    def test_minimal_message_with_required_fields_only(self) -> None:
         """Test creating a minimal push message."""
         message = PushMessage(title="Minimal", body="Just a body")
         assert message.title == "Minimal"
@@ -140,7 +152,7 @@ class TestPushMessage:
 class TestPushNotificationSender:
     """Tests for the push notification sender service."""
 
-    def test_create_sender(self, mock_subscription_store: InMemoryPushSubscriptionStore) -> None:
+    def test_create_sender_with_valid_config_succeeds(self, mock_subscription_store: InMemoryPushSubscriptionStore) -> None:
         """Test creating a push notification sender."""
         sender = PushNotificationSender(
             vapid_private_key="fake-private-key",
@@ -332,7 +344,7 @@ class TestPushSenderErrorHandling:
             # The sender should handle 410 internally
 
         # For now, just verify it doesn't crash
-        result = await sender.send_to_user(sample_subscription.user_id, message)
+        await sender.send_to_user(sample_subscription.user_id, message)
         # Result may be 0 (failed) or subscription may be removed
 
 
@@ -344,12 +356,7 @@ class TestPushSenderErrorHandling:
 class TestPushSenderCircuitBreaker:
     """Tests for circuit breaker integration in push sender."""
 
-    @pytest.fixture(autouse=True)
-    def reset_circuit_breakers(self) -> None:
-        """Reset circuit breakers before each test."""
-        from mcp_server_langgraph.resilience.circuit_breaker import reset_all_circuit_breakers
-
-        reset_all_circuit_breakers()
+    # Note: reset_circuit_breakers fixture is now module-level (defined above)
 
     @pytest.mark.asyncio
     async def test_circuit_breaker_opens_after_failures(
@@ -363,7 +370,8 @@ class TestPushSenderCircuitBreaker:
             CircuitBreakerState,
         )
 
-        sender = PushNotificationSender(
+        # Create sender - validates that configuration is accepted
+        PushNotificationSender(
             vapid_private_key="fake-private-key",
             vapid_public_key="fake-public-key",
             vapid_claims={"sub": "mailto:admin@example.com"},
@@ -382,8 +390,6 @@ class TestPushSenderCircuitBreaker:
                 updated_at=datetime.now(UTC),
             )
             await mock_subscription_store.save_subscription(sub)
-
-        message = PushMessage(title="Test", body="Test message")
 
         # Get the circuit breaker to force failures directly
         cb = get_circuit_breaker("webpush")
@@ -528,20 +534,15 @@ class TestPushSenderFallbackQueue:
 
         gc.collect()
 
-    @pytest.fixture(autouse=True)
-    def reset_circuit_breakers(self) -> None:
-        """Reset circuit breakers before each test."""
-        from mcp_server_langgraph.resilience.circuit_breaker import reset_all_circuit_breakers
-
-        reset_all_circuit_breakers()
+    # Note: reset_circuit_breakers fixture is now module-level (defined above)
 
     @pytest.fixture
     def mock_fallback_queue(self) -> AsyncMock:
         """Create a mock fallback queue."""
-        queue = AsyncMock()
-        queue.enqueue = AsyncMock()
+        queue = AsyncMock()  # noqa: async-mock-config
+        queue.enqueue = AsyncMock()  # noqa: async-mock-config
         queue.dequeue_batch = AsyncMock(return_value=[])
-        queue.requeue = AsyncMock()
+        queue.requeue = AsyncMock()  # noqa: async-mock-config
         return queue
 
     @pytest.fixture
@@ -830,8 +831,8 @@ class TestPushSenderAnalyticsIntegration:
     @pytest.fixture
     def mock_analytics(self) -> AsyncMock:
         """Create a mock PushAnalytics instance."""
-        analytics = AsyncMock()
-        analytics.record_delivery = AsyncMock()
+        analytics = AsyncMock()  # noqa: async-mock-config
+        analytics.record_delivery = AsyncMock()  # noqa: async-mock-config
         return analytics
 
     @pytest.fixture

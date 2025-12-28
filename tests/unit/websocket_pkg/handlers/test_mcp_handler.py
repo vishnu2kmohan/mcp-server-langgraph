@@ -11,6 +11,8 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
+from mcp_server_langgraph.websocket.types import MessageEnvelope
+
 pytestmark = [
     pytest.mark.unit,
     pytest.mark.websocket,
@@ -161,7 +163,7 @@ class TestMCPWebSocketHandlerMessages:
         with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
             handler = MCPWebSocketHandler()
 
-        mock_mcp_handler = AsyncMock()
+        mock_mcp_handler = AsyncMock()  # noqa: async-mock-config
         mock_mcp_handler.handle.return_value = {
             "jsonrpc": "2.0",
             "id": 1,
@@ -169,13 +171,14 @@ class TestMCPWebSocketHandlerMessages:
         }
         handler._mcp_handler = mock_mcp_handler
 
-        message = {"jsonrpc": "2.0", "id": 1, "method": "tools/list", "params": {}}
+        jsonrpc_message = {"jsonrpc": "2.0", "id": 1, "method": "tools/list", "params": {}}
+        message = MessageEnvelope(type="mcp_request", payload=jsonrpc_message, id="msg-1")
         response = await handler.handle_message(message)
 
         assert response is not None
-        assert response["jsonrpc"] == "2.0"
-        assert "result" in response
-        mock_mcp_handler.handle.assert_called_once_with(message)
+        assert response.payload["jsonrpc"] == "2.0"
+        assert "result" in response.payload
+        mock_mcp_handler.handle.assert_called_once_with(jsonrpc_message)
 
     @pytest.mark.asyncio
     async def test_handle_message_invalid_jsonrpc_version(self) -> None:
@@ -185,12 +188,13 @@ class TestMCPWebSocketHandlerMessages:
         with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
             handler = MCPWebSocketHandler()
 
-        message = {"jsonrpc": "1.0", "id": 1, "method": "test"}
+        jsonrpc_message = {"jsonrpc": "1.0", "id": 1, "method": "test"}
+        message = MessageEnvelope(type="mcp_request", payload=jsonrpc_message, id="msg-1")
         response = await handler.handle_message(message)
 
         assert response is not None
-        assert "error" in response
-        assert response["error"]["code"] == -32600  # INVALID_REQUEST
+        assert "error" in response.payload
+        assert response.payload["error"]["code"] == -32600  # INVALID_REQUEST
 
     @pytest.mark.asyncio
     async def test_handle_message_missing_method(self) -> None:
@@ -200,12 +204,13 @@ class TestMCPWebSocketHandlerMessages:
         with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
             handler = MCPWebSocketHandler()
 
-        message = {"jsonrpc": "2.0", "id": 1}
+        jsonrpc_message = {"jsonrpc": "2.0", "id": 1}
+        message = MessageEnvelope(type="mcp_request", payload=jsonrpc_message, id="msg-1")
         response = await handler.handle_message(message)
 
         assert response is not None
-        assert "error" in response
-        assert response["error"]["code"] == -32600
+        assert "error" in response.payload
+        assert response.payload["error"]["code"] == -32600
 
     @pytest.mark.asyncio
     async def test_handle_message_response_message(self) -> None:
@@ -215,13 +220,14 @@ class TestMCPWebSocketHandlerMessages:
         with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
             handler = MCPWebSocketHandler()
 
-        mock_mcp_handler = AsyncMock()
+        mock_mcp_handler = AsyncMock()  # noqa: async-mock-config
         mock_mcp_handler.handle.return_value = None
         handler._mcp_handler = mock_mcp_handler
 
         # Response message (has result, not method)
-        message = {"jsonrpc": "2.0", "id": 1, "result": {"success": True}}
-        response = await handler.handle_message(message)
+        jsonrpc_message = {"jsonrpc": "2.0", "id": 1, "result": {"success": True}}
+        message = MessageEnvelope(type="mcp_request", payload=jsonrpc_message, id="msg-1")
+        await handler.handle_message(message)
 
         mock_mcp_handler.handle.assert_called_once()
 
@@ -233,13 +239,14 @@ class TestMCPWebSocketHandlerMessages:
         with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
             handler = MCPWebSocketHandler()
 
-        mock_mcp_handler = AsyncMock()
+        mock_mcp_handler = AsyncMock()  # noqa: async-mock-config
         mock_mcp_handler.handle.return_value = None
         handler._mcp_handler = mock_mcp_handler
 
         # Error response message
-        message = {"jsonrpc": "2.0", "id": 1, "error": {"code": -1, "message": "Error"}}
-        response = await handler.handle_message(message)
+        jsonrpc_message = {"jsonrpc": "2.0", "id": 1, "error": {"code": -1, "message": "Error"}}
+        message = MessageEnvelope(type="mcp_request", payload=jsonrpc_message, id="msg-1")
+        await handler.handle_message(message)
 
         mock_mcp_handler.handle.assert_called_once()
 
@@ -254,11 +261,12 @@ class TestMCPWebSocketHandlerMessages:
         handler._mcp_handler = None
 
         with patch("mcp_server_langgraph.mcp.message_handler.MCPMessageHandler") as mock_handler_class:
-            mock_instance = AsyncMock()
+            mock_instance = AsyncMock()  # noqa: async-mock-config
             mock_instance.handle.return_value = {"jsonrpc": "2.0", "id": 1, "result": {}}
             mock_handler_class.return_value = mock_instance
 
-            message = {"jsonrpc": "2.0", "id": 1, "method": "test"}
+            jsonrpc_message = {"jsonrpc": "2.0", "id": 1, "method": "test"}
+            message = MessageEnvelope(type="mcp_request", payload=jsonrpc_message, id="msg-1")
             await handler.handle_message(message)
 
             mock_handler_class.assert_called_once()
@@ -271,16 +279,17 @@ class TestMCPWebSocketHandlerMessages:
         with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
             handler = MCPWebSocketHandler()
 
-        mock_mcp_handler = AsyncMock()
+        mock_mcp_handler = AsyncMock()  # noqa: async-mock-config
         mock_mcp_handler.handle.side_effect = Exception("Internal error")
         handler._mcp_handler = mock_mcp_handler
 
-        message = {"jsonrpc": "2.0", "id": 1, "method": "test"}
+        jsonrpc_message = {"jsonrpc": "2.0", "id": 1, "method": "test"}
+        message = MessageEnvelope(type="mcp_request", payload=jsonrpc_message, id="msg-1")
         response = await handler.handle_message(message)
 
         assert response is not None
-        assert "error" in response
-        assert response["error"]["code"] == -32603  # INTERNAL_ERROR
+        assert "error" in response.payload
+        assert response.payload["error"]["code"] == -32603  # INTERNAL_ERROR
 
 
 @pytest.mark.xdist_group(name="websocket_mcp_handler_validation")
@@ -375,7 +384,7 @@ class TestMCPWebSocketHandlerError:
         """Force GC to prevent mock accumulation in xdist workers."""
         gc.collect()
 
-    def test_error_response(self) -> None:
+    def test_error_response_returns_formatted_jsonrpc_error(self) -> None:
         """GIVEN error params WHEN _error_response called THEN returns formatted error."""
         from mcp_server_langgraph.websocket.handlers.mcp import MCPWebSocketHandler
 
@@ -418,7 +427,7 @@ class TestMCPWebSocketHandlerNotification:
         with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
             handler = MCPWebSocketHandler()
 
-        mock_ws = AsyncMock()
+        mock_ws = AsyncMock()  # noqa: async-mock-config
         handler._websocket = mock_ws
 
         notification = {"jsonrpc": "2.0", "method": "progress", "params": {"progress": 50}}

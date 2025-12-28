@@ -149,7 +149,7 @@ class TestWebSocketBaseProperties:
         """Force GC to prevent mock accumulation in xdist workers."""
         gc.collect()
 
-    def test_state_property(self) -> None:
+    def test_state_property_returns_connecting_initially(self) -> None:
         """GIVEN handler WHEN accessing state THEN returns current state."""
         from mcp_server_langgraph.websocket.base import WebSocketBase
         from mcp_server_langgraph.websocket.types import (
@@ -172,7 +172,7 @@ class TestWebSocketBaseProperties:
 
         assert handler.state == ConnectionState.CONNECTING
 
-    def test_websocket_property(self) -> None:
+    def test_websocket_property_returns_none_initially(self) -> None:
         """GIVEN handler WHEN accessing websocket THEN returns None initially."""
         from mcp_server_langgraph.websocket.base import WebSocketBase
         from mcp_server_langgraph.websocket.types import MessageEnvelope, WebSocketConfig
@@ -191,7 +191,7 @@ class TestWebSocketBaseProperties:
 
         assert handler.websocket is None
 
-    def test_user_property(self) -> None:
+    def test_user_property_returns_none_initially(self) -> None:
         """GIVEN handler WHEN accessing user THEN returns None initially."""
         from mcp_server_langgraph.websocket.base import WebSocketBase
         from mcp_server_langgraph.websocket.types import MessageEnvelope, WebSocketConfig
@@ -266,7 +266,7 @@ class TestWebSocketBaseAuthentication:
         mock_ws.query_params = {"token": "test-token"}
         mock_ws.headers = {}
 
-        mock_auth = AsyncMock()
+        mock_auth = AsyncMock()  # noqa: async-mock-config
         mock_result = MagicMock()
         mock_result.valid = True
         mock_result.payload = {"sub": "user-123", "preferred_username": "testuser"}
@@ -279,7 +279,9 @@ class TestWebSocketBaseAuthentication:
             result = await handler._authenticate(mock_ws)
 
         assert result is not None
-        assert result.id == "user-123"
+        # AuthUser.from_jwt_payload uses preferred_username first for OpenFGA compatibility
+        # See comment in websocket/types.py: OpenFGA tuples use username format, not UUIDs
+        assert result.id == "testuser"
         mock_auth.verify_token.assert_called_once_with("test-token")
 
     @pytest.mark.asyncio
@@ -304,7 +306,7 @@ class TestWebSocketBaseAuthentication:
         mock_ws.query_params = {}
         mock_ws.headers = {"Authorization": "Bearer header-token"}
 
-        mock_auth = AsyncMock()
+        mock_auth = AsyncMock()  # noqa: async-mock-config
         mock_result = MagicMock()
         mock_result.valid = True
         mock_result.payload = {"sub": "user-456", "preferred_username": "headeruser"}
@@ -317,7 +319,8 @@ class TestWebSocketBaseAuthentication:
             result = await handler._authenticate(mock_ws)
 
         assert result is not None
-        assert result.id == "user-456"
+        # AuthUser.from_jwt_payload uses preferred_username first for OpenFGA compatibility
+        assert result.id == "headeruser"
         mock_auth.verify_token.assert_called_once_with("header-token")
 
     @pytest.mark.asyncio
@@ -368,7 +371,7 @@ class TestWebSocketBaseAuthentication:
         mock_ws.query_params = {"token": "invalid-token"}
         mock_ws.headers = {}
 
-        mock_auth = AsyncMock()
+        mock_auth = AsyncMock()  # noqa: async-mock-config
         mock_result = MagicMock()
         mock_result.valid = False
         mock_result.payload = None
@@ -469,7 +472,7 @@ class TestWebSocketBaseAuthorization:
         user = AuthUser(id="user-123", username="testuser")
 
         with patch("mcp_server_langgraph.websocket.base.WebSocketAuthorizationMiddleware") as MockAuthz:
-            mock_instance = AsyncMock()
+            mock_instance = AsyncMock()  # noqa: async-mock-config
             mock_instance.authorize_connection = AsyncMock(return_value=True)
             MockAuthz.return_value = mock_instance
 
@@ -505,7 +508,7 @@ class TestWebSocketBaseSend:
         ):
             handler = TestHandler(config)
 
-        mock_ws = AsyncMock()
+        mock_ws = AsyncMock()  # noqa: async-mock-config
         message = MessageEnvelope(type="test")
 
         await handler._send_message(mock_ws, message)
@@ -531,7 +534,7 @@ class TestWebSocketBaseSend:
         ):
             handler = TestHandler(config)
 
-        mock_ws = AsyncMock()
+        mock_ws = AsyncMock()  # noqa: async-mock-config
         ping = MessageEnvelope(type="ping", id="ping-123")
 
         await handler._send_pong(mock_ws, ping)
@@ -560,7 +563,7 @@ class TestWebSocketBaseSend:
         ):
             handler = TestHandler(config)
 
-        mock_ws = AsyncMock()
+        mock_ws = AsyncMock()  # noqa: async-mock-config
         rate_limit_info = RateLimitInfo(limit=100, remaining=0, retry_after=30)
 
         await handler._send_error(
@@ -595,7 +598,7 @@ class TestWebSocketBaseSend:
         ):
             handler = TestHandler(config)
 
-        mock_ws = AsyncMock()
+        mock_ws = AsyncMock()  # noqa: async-mock-config
         mock_ws.send_json.side_effect = Exception("Connection closed")
 
         # Should not raise
@@ -781,7 +784,7 @@ class TestWebSocketBaseClose:
         ):
             handler = TestHandler(config)
 
-        mock_ws = AsyncMock()
+        mock_ws = AsyncMock()  # noqa: async-mock-config
         error = AuthenticationError("Token expired")
 
         await handler._close_with_error(mock_ws, error)
@@ -809,7 +812,7 @@ class TestWebSocketBaseClose:
         ):
             handler = TestHandler(config)
 
-        mock_ws = AsyncMock()
+        mock_ws = AsyncMock()  # noqa: async-mock-config
         error = ValueError("Something went wrong")
 
         await handler._close_with_error(mock_ws, error)
@@ -836,7 +839,7 @@ class TestWebSocketBaseClose:
         ):
             handler = TestHandler(config)
 
-        mock_ws = AsyncMock()
+        mock_ws = AsyncMock()  # noqa: async-mock-config
         mock_ws.close.side_effect = Exception("Connection already closed")
 
         # Should not raise
@@ -970,7 +973,7 @@ class TestWebSocketBaseRun:
         ):
             handler = TestHandler(config)
 
-        mock_ws = AsyncMock()
+        mock_ws = AsyncMock()  # noqa: async-mock-config
         mock_ws.client_state = None  # Prevent close attempt
 
         # Simulate disconnect after accept
@@ -1000,7 +1003,7 @@ class TestWebSocketBaseRun:
         ):
             handler = TestHandler(config)
 
-        mock_ws = AsyncMock()
+        mock_ws = AsyncMock()  # noqa: async-mock-config
         mock_ws.query_params = {}
         mock_ws.headers = {}
         mock_ws.client_state = None
@@ -1032,7 +1035,7 @@ class TestWebSocketBaseRun:
         ):
             handler = TestHandler(config)
 
-        mock_ws = AsyncMock()
+        mock_ws = AsyncMock()  # noqa: async-mock-config
         mock_ws.client_state = None
 
         from starlette.websockets import WebSocketDisconnect
@@ -1067,7 +1070,7 @@ class TestWebSocketBaseRun:
         ):
             handler = TestHandler(config)
 
-        mock_ws = AsyncMock()
+        mock_ws = AsyncMock()  # noqa: async-mock-config
         mock_ws.client_state = None
 
         from starlette.websockets import WebSocketDisconnect
@@ -1096,7 +1099,7 @@ class TestWebSocketBaseRun:
         ):
             handler = TestHandler(config)
 
-        mock_ws = AsyncMock()
+        mock_ws = AsyncMock()  # noqa: async-mock-config
         mock_ws.client_state = None
 
         from starlette.websockets import WebSocketDisconnect
@@ -1104,7 +1107,7 @@ class TestWebSocketBaseRun:
         mock_ws.receive_json = AsyncMock(side_effect=WebSocketDisconnect())
 
         # Mock the heartbeat manager
-        handler._heartbeat = AsyncMock()
+        handler._heartbeat = AsyncMock()  # noqa: async-mock-config
 
         await handler.run(mock_ws)
 
@@ -1138,7 +1141,7 @@ class TestWebSocketBaseMessageLoop:
         ):
             handler = TestHandler(config)
 
-        mock_ws = AsyncMock()
+        mock_ws = AsyncMock()  # noqa: async-mock-config
         mock_ws.client_state = None
 
         from starlette.websockets import WebSocketDisconnect
@@ -1178,8 +1181,8 @@ class TestWebSocketBaseMessageLoop:
         ):
             handler = TestHandler(config)
 
-        mock_ws = AsyncMock()
-        mock_heartbeat = AsyncMock()
+        mock_ws = AsyncMock()  # noqa: async-mock-config
+        mock_heartbeat = AsyncMock()  # noqa: async-mock-config
         handler._heartbeat = mock_heartbeat
 
         from starlette.websockets import WebSocketDisconnect
@@ -1222,7 +1225,7 @@ class TestWebSocketBaseMessageLoop:
             handler._user = MagicMock()
             handler._user.id = "user-123"
 
-        mock_ws = AsyncMock()
+        mock_ws = AsyncMock()  # noqa: async-mock-config
 
         from starlette.websockets import WebSocketDisconnect
 
@@ -1262,7 +1265,7 @@ class TestWebSocketBaseMessageLoop:
             handler = TestHandler(config)
             handler._user = AuthUser(id="user-123", username="testuser")
 
-        mock_ws = AsyncMock()
+        mock_ws = AsyncMock()  # noqa: async-mock-config
 
         from starlette.websockets import WebSocketDisconnect
 
@@ -1300,7 +1303,7 @@ class TestWebSocketBaseMessageLoop:
         ):
             handler = TestHandler(config)
 
-        mock_ws = AsyncMock()
+        mock_ws = AsyncMock()  # noqa: async-mock-config
 
         from starlette.websockets import WebSocketDisconnect
 
@@ -1318,3 +1321,214 @@ class TestWebSocketBaseMessageLoop:
         error_call = mock_ws.send_json.call_args_list[0]
         assert error_call[0][0]["type"] == "error"
         assert error_call[0][0]["payload"]["code"] == "invalid_json"
+
+
+@pytest.mark.xdist_group(name="websocket_base_token_validation")
+class TestWebSocketBaseTokenValidation:
+    """Tests for WebSocketBase periodic token validation."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers."""
+        gc.collect()
+
+    @pytest.mark.asyncio
+    async def test_stores_auth_token_during_authentication(self) -> None:
+        """GIVEN token in query params WHEN authenticating THEN stores token for validation."""
+        from mcp_server_langgraph.websocket.base import WebSocketBase
+        from mcp_server_langgraph.websocket.types import MessageEnvelope, WebSocketConfig
+
+        class TestHandler(WebSocketBase):
+            async def handle_message(self, message: MessageEnvelope) -> MessageEnvelope | None:
+                return None
+
+        config = WebSocketConfig(endpoint_name="test", require_auth=True)
+
+        with patch(
+            RATE_LIMITER_PATCH,
+            return_value=MagicMock(),
+        ):
+            handler = TestHandler(config)
+
+        mock_ws = MagicMock()
+        mock_ws.query_params = {"token": "test-jwt-token"}
+        mock_ws.headers = {}
+
+        mock_auth = AsyncMock()  # noqa: async-mock-config
+        mock_result = MagicMock()
+        mock_result.valid = True
+        mock_result.payload = {"sub": "user-123", "preferred_username": "testuser"}
+        mock_auth.verify_token = AsyncMock(return_value=mock_result)
+
+        with patch(
+            "mcp_server_langgraph.websocket.base.get_auth_middleware_from_websocket",
+            return_value=mock_auth,
+        ):
+            result = await handler._authenticate(mock_ws)
+
+        assert result is not None
+        assert handler._auth_token == "test-jwt-token"
+
+    @pytest.mark.asyncio
+    async def test_no_validation_task_when_interval_zero(self) -> None:
+        """GIVEN token_validation_interval=0 WHEN running THEN no validation task."""
+        from mcp_server_langgraph.websocket.base import WebSocketBase
+        from mcp_server_langgraph.websocket.types import MessageEnvelope, WebSocketConfig
+
+        class TestHandler(WebSocketBase):
+            async def handle_message(self, message: MessageEnvelope) -> MessageEnvelope | None:
+                return None
+
+        config = WebSocketConfig(
+            endpoint_name="test",
+            require_auth=False,
+            token_validation_interval=0,
+        )
+
+        with patch(
+            RATE_LIMITER_PATCH,
+            return_value=MagicMock(),
+        ):
+            handler = TestHandler(config)
+
+        mock_ws = AsyncMock()  # noqa: async-mock-config
+        mock_ws.client_state = None
+
+        from starlette.websockets import WebSocketDisconnect
+
+        mock_ws.receive_json = AsyncMock(side_effect=WebSocketDisconnect())
+
+        await handler.run(mock_ws)
+
+        # No validation task should be started
+        assert handler._validation_task is None
+
+    @pytest.mark.asyncio
+    async def test_validation_task_cancels_on_disconnect(self) -> None:
+        """GIVEN running validation task WHEN disconnecting THEN task is cancelled."""
+
+        from mcp_server_langgraph.websocket.base import WebSocketBase
+        from mcp_server_langgraph.websocket.types import MessageEnvelope, WebSocketConfig
+
+        class TestHandler(WebSocketBase):
+            async def handle_message(self, message: MessageEnvelope) -> MessageEnvelope | None:
+                return None
+
+        config = WebSocketConfig(
+            endpoint_name="test",
+            require_auth=True,
+            token_validation_interval=1,  # Short interval for testing
+        )
+
+        with patch(
+            RATE_LIMITER_PATCH,
+            return_value=MagicMock(),
+        ):
+            handler = TestHandler(config)
+
+        mock_ws = AsyncMock()  # noqa: async-mock-config
+        mock_ws.query_params = {"token": "valid-token"}
+        mock_ws.headers = {}
+        mock_ws.client_state = None
+
+        # Mock auth to succeed
+        mock_auth = AsyncMock()  # noqa: async-mock-config
+        mock_result = MagicMock()
+        mock_result.valid = True
+        mock_result.payload = {"sub": "user-123", "preferred_username": "testuser", "exp": 9999999999}
+        mock_auth.verify_token = AsyncMock(return_value=mock_result)
+
+        from starlette.websockets import WebSocketDisconnect
+
+        mock_ws.receive_json = AsyncMock(side_effect=WebSocketDisconnect())
+
+        with patch(
+            "mcp_server_langgraph.websocket.base.get_auth_middleware_from_websocket",
+            return_value=mock_auth,
+        ):
+            with patch(
+                "mcp_server_langgraph.websocket.token_validation.is_token_expired",
+                return_value=False,
+            ):
+                await handler.run(mock_ws)
+
+        # Validation task should be None after run completes (cancelled in finally)
+        assert handler._validation_task is None or handler._validation_task.cancelled()
+
+    @pytest.mark.asyncio
+    @pytest.mark.timeout(10)  # Short timeout for this test
+    async def test_closes_connection_when_token_expires(self) -> None:
+        """GIVEN active connection WHEN token expires THEN closes with 4010."""
+        import asyncio
+
+        from starlette.websockets import WebSocketDisconnect
+
+        from mcp_server_langgraph.websocket.base import WebSocketBase
+        from mcp_server_langgraph.websocket.types import MessageEnvelope, WebSocketConfig
+
+        class TestHandler(WebSocketBase):
+            async def handle_message(self, message: MessageEnvelope) -> MessageEnvelope | None:
+                return None
+
+        config = WebSocketConfig(
+            endpoint_name="test",
+            require_auth=True,
+            token_validation_interval=1,  # 1 second for fast testing
+        )
+
+        with patch(
+            RATE_LIMITER_PATCH,
+            return_value=MagicMock(),
+        ):
+            handler = TestHandler(config)
+
+        mock_ws = AsyncMock()  # noqa: async-mock-config
+        mock_ws.query_params = {"token": "expiring-token"}
+        mock_ws.headers = {}
+        mock_ws.client_state = None
+
+        # Mock auth to succeed initially
+        mock_auth = AsyncMock()  # noqa: async-mock-config
+        mock_result = MagicMock()
+        mock_result.valid = True
+        mock_result.payload = {"sub": "user-123", "preferred_username": "testuser", "exp": 1}
+        mock_auth.verify_token = AsyncMock(return_value=mock_result)
+
+        # Track is_token_expired calls - return True immediately (token expired)
+        def mock_is_expired(token):
+            return True  # Token is always expired
+
+        # Track close calls to verify 4010
+        close_code_used = []
+
+        async def track_close(**kwargs):
+            close_code_used.append(kwargs.get("code"))
+            # After close, subsequent receive should raise disconnect
+            mock_ws.receive_json = AsyncMock(side_effect=WebSocketDisconnect())
+
+        mock_ws.close = AsyncMock(side_effect=track_close)
+
+        # First receive will hang, but close should trigger and then disconnect
+        receive_count = [0]
+
+        async def receive_or_hang():
+            receive_count[0] += 1
+            if receive_count[0] == 1:
+                # First call: wait briefly then raise disconnect (simulating close)
+                await asyncio.sleep(0.1)  # noqa: sleep-duration - testing async behavior
+                raise WebSocketDisconnect()
+            raise WebSocketDisconnect()
+
+        mock_ws.receive_json = AsyncMock(side_effect=receive_or_hang)
+
+        with patch(
+            "mcp_server_langgraph.websocket.base.get_auth_middleware_from_websocket",
+            return_value=mock_auth,
+        ):
+            with patch(
+                "mcp_server_langgraph.websocket.base.is_token_expired",
+                side_effect=mock_is_expired,
+            ):
+                await handler.run(mock_ws)
+
+        # Verify close was called with 4010
+        assert 4010 in close_code_used

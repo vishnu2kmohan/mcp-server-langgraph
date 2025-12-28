@@ -30,7 +30,6 @@ from mcp_server_langgraph.resilience.circuit_breaker import (
     CircuitBreakerState,
     get_circuit_breaker,
     get_circuit_breaker_state,
-    reset_all_circuit_breakers,
 )
 
 # Mark as integration test
@@ -92,10 +91,7 @@ def sample_critical_alert() -> Alert:
     )
 
 
-@pytest.fixture(autouse=True)
-def reset_breakers() -> None:
-    """Reset all circuit breakers before each test."""
-    reset_all_circuit_breakers()
+# Note: reset_breakers fixture is defined in tests/integration/conftest.py
 
 
 @pytest.mark.xdist_group(name="integration_alert_push_flow")
@@ -311,7 +307,8 @@ class TestPushSubscriptionLifecycle:
         assert sub is not None
 
         # Simulate 410 Gone error in the actual _send_webpush method
-        message = PushMessage(title="Test", body="Test message")
+        # Note: The actual 410 handling is in _send_webpush when we get an exception
+        # For this test, we verify the subscription deletion directly
 
         # Use the real _send_webpush method but mock the webpush import
         with patch("mcp_server_langgraph.notifications.push_sender.get_circuit_breaker") as mock_cb:
