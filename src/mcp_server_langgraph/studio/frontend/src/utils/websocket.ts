@@ -103,20 +103,92 @@ export function buildWebSocketUrl(
 
 /**
  * WebSocket endpoint paths (centralized for consistency)
+ *
+ * Use these constants with buildWebSocketUrl() to ensure consistent URL construction.
+ * For dynamic endpoints (with path parameters), use buildWebSocketUrlWithPath().
+ *
+ * @example
+ * ```ts
+ * // Static endpoint
+ * buildWebSocketUrl(WS_ENDPOINTS.NOTIFICATIONS)
+ *
+ * // Dynamic endpoint with path parameter
+ * buildWebSocketUrlWithPath(WS_ENDPOINTS.WORKFLOW_EXECUTION, { workflowId: "123" })
+ * ```
  */
 export const WS_ENDPOINTS = {
+  // Core WebSocket endpoints
   NOTIFICATIONS: "/api/v1/ws/notifications",
   AGENTS_REQUESTS: "/api/v1/ws/agents/requests",
   ALERTS: "/api/v1/ws/alerts",
+
+  // MCP WebSocket endpoints
   MCP: "/api/v1/ws/mcp",
   MCP_AUTH: "/api/v1/ws/mcp/auth",
   MCP_AGGREGATED: "/api/v1/ws/mcp/aggregated",
-  METRICS_HEART: "/api/v1/ws/metrics/heart",
+  MCP_TASKS: "/api/v1/ws/mcp/tasks",
+  MCP_SESSION: "/api/v1/ws/mcp/:sessionId",
+
+  // AI/UX WebSocket endpoints
   AI_SUGGESTIONS: "/api/v1/ws/ai/suggestions",
+
+  // Workflow WebSocket endpoints
   WORKFLOWS: "/api/v1/ws/workflows",
-  CONNECTIONS: "/api/v1/ws/connections",
-  AUDIT: "/api/v1/ws/audit",
+  WORKFLOW_EXECUTION: "/api/v1/ws/workflows/:workflowId",
+
+  // Monitoring WebSocket endpoints
+  METRICS_HEART: "/api/v1/ws/metrics/heart",
   COST: "/api/v1/ws/usage/cost",
+  BUDGET_ALERTS: "/api/v1/ws/budget/alerts",
+
+  // Connections WebSocket endpoints
+  CONNECTIONS_REALTIME: "/api/v1/ws/connections/realtime",
+  CONNECTIONS_HEALTH: "/api/v1/ws/connections/health",
+
+  // DevTools WebSocket endpoints
+  DEVTOOLS: "/api/v1/ws/devtools",
+
+  // Audit WebSocket endpoints
+  AUDIT: "/api/v1/ws/audit",
+
+  // Trace WebSocket endpoints (for debugging)
+  TRACES: "/api/v1/ws/traces",
 } as const;
 
 export type WsEndpoint = (typeof WS_ENDPOINTS)[keyof typeof WS_ENDPOINTS];
+
+/**
+ * Build a WebSocket URL with path parameters replaced.
+ *
+ * Use this for endpoints with dynamic path segments (e.g., `:workflowId`).
+ *
+ * @param endpoint - The endpoint template with :param placeholders
+ * @param pathParams - Object mapping param names to values
+ * @param queryParams - Optional query parameters
+ * @param includeAuthToken - Whether to include auth token
+ * @returns Full WebSocket URL with substituted path parameters
+ *
+ * @example
+ * ```ts
+ * buildWebSocketUrlWithPath(
+ *   WS_ENDPOINTS.WORKFLOW_EXECUTION,
+ *   { workflowId: "abc-123" },
+ *   { debug: "true" }
+ * )
+ * // => "wss://app.example.com/api/v1/ws/workflows/abc-123?debug=true"
+ * ```
+ */
+export function buildWebSocketUrlWithPath(
+  endpoint: string,
+  pathParams: Record<string, string>,
+  queryParams?: Record<string, string>,
+  includeAuthToken = false,
+): string {
+  // Replace path parameters (e.g., :workflowId -> actual value)
+  let resolvedEndpoint = endpoint;
+  for (const [key, value] of Object.entries(pathParams)) {
+    resolvedEndpoint = resolvedEndpoint.replace(`:${key}`, value);
+  }
+
+  return buildWebSocketUrl(resolvedEndpoint, queryParams, includeAuthToken);
+}

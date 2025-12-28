@@ -33,7 +33,7 @@ export async function registerServiceWorker(): Promise<boolean> {
     logger.log("Service worker registered:", registration);
     return true;
   } catch (error) {
-    console.error("Service worker registration failed:", error);
+    logger.error("Service worker registration failed:", error);
     return false;
   }
 }
@@ -55,7 +55,7 @@ export async function unregisterServiceWorker(): Promise<boolean> {
     logger.log("All service workers unregistered");
     return true;
   } catch (error) {
-    console.error("Service worker unregistration failed:", error);
+    logger.error("Service worker unregistration failed:", error);
     return false;
   }
 }

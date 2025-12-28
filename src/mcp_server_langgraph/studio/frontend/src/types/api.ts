@@ -729,6 +729,105 @@ export interface ProjectModelCost {
   tokens: number;
 }
 
+// =============================================================================
+// Organizational Cost Attribution (new endpoints)
+// =============================================================================
+
+/**
+ * Organization cost breakdown response
+ * GET /api/v1/cost/summary/by-organization
+ */
+export interface OrganizationCostResponse {
+  organization_id: string;
+  total_cost: number;
+  total_tokens: number;
+  request_count: number;
+}
+
+/**
+ * Project cost breakdown response
+ * GET /api/v1/cost/summary/by-project
+ */
+export interface ProjectCostBreakdown {
+  project_id: string;
+  organization_id: string | null;
+  total_cost: number;
+  total_tokens: number;
+  request_count: number;
+}
+
+/**
+ * Team cost breakdown response
+ * GET /api/v1/cost/summary/by-team
+ */
+export interface TeamCostResponse {
+  team_id: string;
+  organization_id: string | null;
+  project_id: string | null;
+  total_cost: number;
+  total_tokens: number;
+  request_count: number;
+}
+
+/**
+ * Parameters for organizational cost queries
+ */
+export interface OrganizationalCostParams {
+  organization_id?: string;
+  project_id?: string;
+  start_date?: string;
+  end_date?: string;
+}
+
+// =============================================================================
+// Budget Status & Forecasting
+// =============================================================================
+
+/**
+ * Budget status response
+ * GET /api/v1/cost/budget/status
+ */
+export interface BudgetStatusResponse {
+  status: "ok" | "warning" | "critical" | "exceeded";
+  percent_used: number;
+  current_spend: number;
+  remaining: number;
+  monthly_limit: number;
+  entity_type: "organization" | "project" | "team" | "user";
+  entity_id: string;
+  message: string;
+}
+
+/**
+ * Parameters for budget status query
+ */
+export interface BudgetStatusParams {
+  entity_type: "organization" | "project" | "team" | "user";
+  entity_id: string;
+}
+
+/**
+ * Cost forecast response
+ * GET /api/v1/cost/budget/forecast
+ */
+export interface CostForecastResponse {
+  projected_total: number;
+  confidence_low: number;
+  confidence_high: number;
+  trend: "increasing" | "decreasing" | "stable";
+  days_analyzed: number;
+  message: string;
+  monthly_limit: number;
+}
+
+/**
+ * Parameters for cost forecast query
+ */
+export interface CostForecastParams {
+  entity_type: "organization" | "project" | "team" | "user";
+  entity_id: string;
+}
+
 /**
  * Add project member request
  */

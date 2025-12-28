@@ -14,6 +14,45 @@ import {
   unregisterServiceWorker,
 } from "./serviceWorker";
 
+// Mock devLogger to always enable logging in tests
+// The createDevLogger function captures isDevMode in a closure,
+// so we need to provide a fully working mock implementation
+vi.mock("./devLogger", () => {
+  const createMockLogger = (prefix: string = "") => ({
+    debug: (message: string, ...args: unknown[]) => {
+      const formatted = prefix ? `${prefix} ${message}` : message;
+      console.debug(formatted, ...args);
+    },
+    log: (message: string, ...args: unknown[]) => {
+      const formatted = prefix ? `${prefix} ${message}` : message;
+      console.log(formatted, ...args);
+    },
+    warn: (message: string, ...args: unknown[]) => {
+      const formatted = prefix ? `${prefix} ${message}` : message;
+      console.warn(formatted, ...args);
+    },
+    error: (message: string, ...args: unknown[]) => {
+      const formatted = prefix ? `${prefix} ${message}` : message;
+      console.error(formatted, ...args);
+    },
+    withPrefix: (newPrefix: string) => {
+      return createMockLogger(prefix ? `${prefix} ${newPrefix}` : newPrefix);
+    },
+    withMinLevel: () => createMockLogger(prefix),
+  });
+
+  return {
+    devLogger: createMockLogger(),
+    isDevMode: () => true,
+    DevLogLevel: {
+      DEBUG: 0,
+      LOG: 1,
+      WARN: 2,
+      ERROR: 3,
+    },
+  };
+});
+
 describe("serviceWorker", () => {
   const originalServiceWorker = navigator.serviceWorker;
   const originalLocation = window.location;
@@ -100,7 +139,7 @@ describe("serviceWorker", () => {
 
       expect(result).toBe(false);
       expect(consoleSpy).toHaveBeenCalledWith(
-        "Service worker registration failed:",
+        "[ServiceWorker] Service worker registration failed:",
         expect.any(Error),
       );
 
@@ -112,7 +151,7 @@ describe("serviceWorker", () => {
 
       await registerServiceWorker();
 
-      // devLogger adds [ServiceWorker] prefix in dev/test mode
+      // devLogger adds [ServiceWorker] prefix when isDevMode returns true
       expect(consoleSpy).toHaveBeenCalledWith(
         "[ServiceWorker] Service worker registered:",
         expect.any(Object),
@@ -150,7 +189,7 @@ describe("serviceWorker", () => {
 
       expect(result).toBe(false);
       expect(consoleSpy).toHaveBeenCalledWith(
-        "Service worker unregistration failed:",
+        "[ServiceWorker] Service worker unregistration failed:",
         expect.any(Error),
       );
 

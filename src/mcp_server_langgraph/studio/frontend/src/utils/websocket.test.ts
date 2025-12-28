@@ -9,8 +9,10 @@ import {
   getApiHost,
   getWsProtocol,
   buildWebSocketUrl,
+  buildWebSocketUrlWithPath,
   WS_ENDPOINTS,
 } from "./websocket";
+import { getAuthToken } from "./storage";
 
 // Mock the storage module
 vi.mock("./storage", () => ({
@@ -156,13 +158,48 @@ describe("websocket utilities", () => {
 
   describe("WS_ENDPOINTS", () => {
     it("should have all expected endpoints", () => {
+      // Core endpoints
       expect(WS_ENDPOINTS.NOTIFICATIONS).toBe("/api/v1/ws/notifications");
       expect(WS_ENDPOINTS.AGENTS_REQUESTS).toBe("/api/v1/ws/agents/requests");
       expect(WS_ENDPOINTS.ALERTS).toBe("/api/v1/ws/alerts");
+
+      // MCP endpoints
       expect(WS_ENDPOINTS.MCP).toBe("/api/v1/ws/mcp");
       expect(WS_ENDPOINTS.MCP_AUTH).toBe("/api/v1/ws/mcp/auth");
       expect(WS_ENDPOINTS.MCP_AGGREGATED).toBe("/api/v1/ws/mcp/aggregated");
+      expect(WS_ENDPOINTS.MCP_TASKS).toBe("/api/v1/ws/mcp/tasks");
+      expect(WS_ENDPOINTS.MCP_SESSION).toBe("/api/v1/ws/mcp/:sessionId");
+
+      // AI/UX endpoints
+      expect(WS_ENDPOINTS.AI_SUGGESTIONS).toBe("/api/v1/ws/ai/suggestions");
+
+      // Workflow endpoints
+      expect(WS_ENDPOINTS.WORKFLOWS).toBe("/api/v1/ws/workflows");
+      expect(WS_ENDPOINTS.WORKFLOW_EXECUTION).toBe(
+        "/api/v1/ws/workflows/:workflowId",
+      );
+
+      // Monitoring endpoints
       expect(WS_ENDPOINTS.METRICS_HEART).toBe("/api/v1/ws/metrics/heart");
+      expect(WS_ENDPOINTS.COST).toBe("/api/v1/ws/usage/cost");
+      expect(WS_ENDPOINTS.BUDGET_ALERTS).toBe("/api/v1/ws/budget/alerts");
+
+      // Connections endpoints (standardized under /api/v1/ws/)
+      expect(WS_ENDPOINTS.CONNECTIONS_REALTIME).toBe(
+        "/api/v1/ws/connections/realtime",
+      );
+      expect(WS_ENDPOINTS.CONNECTIONS_HEALTH).toBe(
+        "/api/v1/ws/connections/health",
+      );
+
+      // DevTools endpoints
+      expect(WS_ENDPOINTS.DEVTOOLS).toBe("/api/v1/ws/devtools");
+
+      // Audit endpoints
+      expect(WS_ENDPOINTS.AUDIT).toBe("/api/v1/ws/audit");
+
+      // Trace endpoints
+      expect(WS_ENDPOINTS.TRACES).toBe("/api/v1/ws/traces");
     });
 
     it("should not contain hardcoded hosts or protocols", () => {
@@ -170,8 +207,61 @@ describe("websocket utilities", () => {
         expect(endpoint).not.toContain("localhost");
         expect(endpoint).not.toContain("ws://");
         expect(endpoint).not.toContain("wss://");
-        expect(endpoint).toMatch(/^\/api\/v1\/ws\//);
+        // All endpoints should start with /api/v1/
+        expect(endpoint).toMatch(/^\/api\/v1\//);
       });
+    });
+  });
+
+  describe("buildWebSocketUrlWithPath", () => {
+    beforeEach(() => {
+      Object.defineProperty(global, "window", {
+        value: {
+          location: {
+            protocol: "https:",
+            host: "app.example.com",
+          },
+        },
+        writable: true,
+      });
+    });
+
+    it("should replace single path parameter", () => {
+      const url = buildWebSocketUrlWithPath(WS_ENDPOINTS.WORKFLOW_EXECUTION, {
+        workflowId: "abc-123",
+      });
+      expect(url).toBe("wss://app.example.com/api/v1/ws/workflows/abc-123");
+    });
+
+    it("should replace multiple path parameters", () => {
+      const url = buildWebSocketUrlWithPath("/api/v1/ws/:foo/:bar", {
+        foo: "value1",
+        bar: "value2",
+      });
+      expect(url).toBe("wss://app.example.com/api/v1/ws/value1/value2");
+    });
+
+    it("should include query parameters", () => {
+      const url = buildWebSocketUrlWithPath(
+        WS_ENDPOINTS.WORKFLOW_EXECUTION,
+        { workflowId: "abc-123" },
+        { debug: "true", verbose: "1" },
+      );
+      expect(url).toContain("/api/v1/ws/workflows/abc-123");
+      expect(url).toContain("debug=true");
+      expect(url).toContain("verbose=1");
+    });
+
+    it("should include auth token when requested", () => {
+      vi.mocked(getAuthToken).mockReturnValue("test-token");
+      const url = buildWebSocketUrlWithPath(
+        WS_ENDPOINTS.MCP_SESSION,
+        { sessionId: "session-789" },
+        {},
+        true,
+      );
+      expect(url).toContain("/api/v1/ws/mcp/session-789");
+      expect(url).toContain("token=test-token");
     });
   });
 });

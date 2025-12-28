@@ -74,6 +74,16 @@ export type {
   ProjectAlertsResponse,
   ProjectCostSummaryResponse,
   ProjectModelCost,
+  // Organizational cost attribution
+  OrganizationCostResponse,
+  ProjectCostBreakdown,
+  TeamCostResponse,
+  OrganizationalCostParams,
+  // Budget status & forecasting
+  BudgetStatusResponse,
+  BudgetStatusParams,
+  CostForecastResponse,
+  CostForecastParams,
   AddProjectMemberRequest,
   RemoveProjectMemberRequest,
   AddProjectConnectionRequest,

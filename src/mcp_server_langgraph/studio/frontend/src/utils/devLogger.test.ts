@@ -73,12 +73,36 @@ describe("devLogger", () => {
       );
     });
 
-    it("should pass additional arguments with prefix", () => {
-      const logger = devLogger.withPrefix("[API]");
+    it("should pass additional arguments with prefix (using withTestOutput)", () => {
+      // Note: withPrefix() now suppresses debug/log in tests by default
+      // Use withTestOutput() to verify logging behavior in tests
+      const logger = devLogger.withPrefix("[API]").withTestOutput();
       logger.debug("Request", { url: "/test" });
       expect(consoleSpies.debug).toHaveBeenCalledWith("[API] Request", {
         url: "/test",
       });
+    });
+
+    it("should suppress debug/log in tests with withPrefix by default", () => {
+      const logger = devLogger.withPrefix("[API]");
+      logger.debug("Debug message");
+      logger.log("Log message");
+      logger.warn("Warning message"); // Warnings should still log
+      logger.error("Error message"); // Errors should still log
+
+      expect(consoleSpies.debug).not.toHaveBeenCalled();
+      expect(consoleSpies.log).not.toHaveBeenCalled();
+      expect(consoleSpies.warn).toHaveBeenCalledWith("[API] Warning message");
+      expect(consoleSpies.error).toHaveBeenCalledWith("[API] Error message");
+    });
+
+    it("should allow enabling test output with withTestOutput()", () => {
+      const logger = devLogger.withPrefix("[Test]").withTestOutput();
+      logger.debug("Debug visible");
+      logger.log("Log visible");
+
+      expect(consoleSpies.debug).toHaveBeenCalledWith("[Test] Debug visible");
+      expect(consoleSpies.log).toHaveBeenCalledWith("[Test] Log visible");
     });
   });
 

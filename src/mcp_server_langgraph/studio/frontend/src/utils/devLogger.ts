@@ -36,11 +36,31 @@ interface DevLoggerOptions {
   minLevel?: DevLogLevel;
   /** Prefix to prepend to all messages */
   prefix?: string;
+  /**
+   * Whether to suppress debug/log level messages in test mode.
+   * When true, only WARN and ERROR will be logged during tests.
+   * This reduces noise in test output while keeping important messages visible.
+   * Default: true
+   */
+  suppressInTests?: boolean;
 }
 
 // =============================================================================
 // Implementation
 // =============================================================================
+
+/**
+ * Check if we're in test mode (vitest/jest)
+ * Returns true when running in test environment
+ */
+export function isTestMode(): boolean {
+  // Vitest sets import.meta.env.MODE to 'test'
+  // Also check for process.env.NODE_ENV in case of SSR/node context
+  return (
+    import.meta.env.MODE === "test" ||
+    (typeof process !== "undefined" && process.env?.NODE_ENV === "test")
+  );
+}
 
 /**
  * Check if we're in development mode
@@ -60,10 +80,25 @@ export function isDevMode(): boolean {
  * Create a development logger with optional configuration
  */
 function createDevLogger(options: DevLoggerOptions = {}) {
-  const { minLevel = DevLogLevel.DEBUG, prefix = "" } = options;
+  // Default suppressInTests to false for backwards compatibility
+  // Component loggers (created via withPrefix) should set suppressInTests: true
+  // to reduce noise in test output
+  const {
+    minLevel = DevLogLevel.DEBUG,
+    prefix = "",
+    suppressInTests = false,
+  } = options;
 
   const shouldLog = (level: DevLogLevel): boolean => {
-    return isDevMode() && level >= minLevel;
+    if (!isDevMode()) return false;
+
+    // In test mode, optionally suppress debug/log level messages
+    // to reduce noise in test output
+    if (suppressInTests && isTestMode() && level < DevLogLevel.WARN) {
+      return false;
+    }
+
+    return level >= minLevel;
   };
 
   const formatMessage = (message: string): string => {
@@ -109,11 +144,18 @@ function createDevLogger(options: DevLoggerOptions = {}) {
 
     /**
      * Create a new logger with a prefix
+     *
+     * Note: Component loggers (those with a prefix) automatically suppress
+     * debug/log level messages in tests to reduce test output noise.
+     * Use .withTestOutput() to override this behavior when debugging.
      */
     withPrefix: (newPrefix: string) => {
       return createDevLogger({
         minLevel,
         prefix: prefix ? `${prefix} ${newPrefix}` : newPrefix,
+        // Component loggers suppress debug/log in tests by default
+        // to reduce noise in test output
+        suppressInTests: true,
       });
     },
 
@@ -124,6 +166,19 @@ function createDevLogger(options: DevLoggerOptions = {}) {
       return createDevLogger({
         minLevel: newMinLevel,
         prefix,
+        suppressInTests,
+      });
+    },
+
+    /**
+     * Create a new logger that shows all messages even in tests
+     * Useful for debugging test failures
+     */
+    withTestOutput: () => {
+      return createDevLogger({
+        minLevel,
+        prefix,
+        suppressInTests: false,
       });
     },
   };

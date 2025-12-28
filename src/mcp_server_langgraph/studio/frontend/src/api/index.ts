@@ -149,6 +149,16 @@ import type {
   McpGetPromptResponse,
   McpTaskListResponse,
   McpTask,
+  // Organizational Cost Attribution
+  OrganizationCostResponse,
+  ProjectCostBreakdown,
+  TeamCostResponse,
+  OrganizationalCostParams,
+  // Budget Status & Forecasting
+  BudgetStatusResponse,
+  BudgetStatusParams,
+  CostForecastResponse,
+  CostForecastParams,
 } from "../types/api";
 
 // Import generated API types for type safety (prevents type drift)
@@ -959,6 +969,78 @@ export const api = createApi({
           params: filterParams({ start_date, end_date }),
         };
       },
+      providesTags: ["Cost"],
+    }),
+
+    // Organizational Cost Attribution
+    getCostByOrganization: builder.query<
+      OrganizationCostResponse[],
+      OrganizationalCostParams | void
+    >({
+      query: (params) => {
+        const p = params ?? {};
+        return {
+          url: "/cost/summary/by-organization",
+          params: filterParams({
+            start_date: p.start_date,
+            end_date: p.end_date,
+          }),
+        };
+      },
+      providesTags: ["Cost"],
+    }),
+
+    getCostByProject: builder.query<
+      ProjectCostBreakdown[],
+      OrganizationalCostParams | void
+    >({
+      query: (params) => {
+        const p = params ?? {};
+        return {
+          url: "/cost/summary/by-project",
+          params: filterParams({
+            organization_id: p.organization_id,
+            start_date: p.start_date,
+            end_date: p.end_date,
+          }),
+        };
+      },
+      providesTags: ["Cost"],
+    }),
+
+    getCostByTeam: builder.query<
+      TeamCostResponse[],
+      OrganizationalCostParams | void
+    >({
+      query: (params) => {
+        const p = params ?? {};
+        return {
+          url: "/cost/summary/by-team",
+          params: filterParams({
+            organization_id: p.organization_id,
+            project_id: p.project_id,
+            start_date: p.start_date,
+            end_date: p.end_date,
+          }),
+        };
+      },
+      providesTags: ["Cost"],
+    }),
+
+    // Budget Status & Forecasting
+    getBudgetStatus: builder.query<BudgetStatusResponse, BudgetStatusParams>({
+      query: ({ entity_type, entity_id }) => ({
+        url: "/cost/budget/status",
+        params: filterParams({ entity_type, entity_id }),
+      }),
+      providesTags: ["Cost"],
+    }),
+
+    getCostForecast: builder.query<CostForecastResponse, CostForecastParams>({
+      query: ({ entity_type, entity_id }) => ({
+        url: "/cost/budget/forecast",
+        params: filterParams({ entity_type, entity_id }),
+      }),
       providesTags: ["Cost"],
     }),
 
@@ -3131,6 +3213,13 @@ export const {
   useGetCostSummaryQuery,
   useGetCostByModelQuery,
   useGetCostHistoryQuery,
+  // Organizational Cost Attribution
+  useGetCostByOrganizationQuery,
+  useGetCostByProjectQuery,
+  useGetCostByTeamQuery,
+  // Budget Status & Forecasting
+  useGetBudgetStatusQuery,
+  useGetCostForecastQuery,
   // Observability
   useListTracesQuery,
   useGetTraceQuery,
