@@ -43,6 +43,7 @@
 import { useState, useCallback, useEffect, useMemo, useRef } from "react";
 import type { MetricsSummary } from "../analytics/gsm";
 import { getAuthToken } from "../utils/storage";
+import { buildWebSocketUrl } from "../utils/websocket";
 import { useRealtimeSync } from "./useRealtimeSync";
 import type {
   HeartMetricsSnapshot,
@@ -137,28 +138,6 @@ export interface UseHeartDashboardResult {
 // =============================================================================
 
 const API_ENDPOINT = "/api/v1/metrics/heart/aggregate";
-const DEFAULT_WS_ENDPOINT = "/api/v1/ws/metrics/heart";
-
-// =============================================================================
-// Helper Functions
-// =============================================================================
-
-/**
- * Build WebSocket URL from current window location
- */
-function buildWebSocketUrl(customUrl?: string): string {
-  if (customUrl) {
-    return customUrl;
-  }
-  if (typeof window === "undefined") {
-    return `ws://localhost:8000${DEFAULT_WS_ENDPOINT}`;
-  }
-  const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-  const host = window.location.host;
-  const token = getAuthToken();
-  const tokenParam = token ? `?token=${encodeURIComponent(token)}` : "";
-  return `${protocol}//${host}${DEFAULT_WS_ENDPOINT}${tokenParam}`;
-}
 
 /**
  * Convert WebSocket snapshot to DashboardDimensionScore array
@@ -353,7 +332,7 @@ export function useHeartDashboard(
 
   // WebSocket connection (only when enableRealtime is true)
   const websocketUrl = useMemo(
-    () => (enableRealtime ? buildWebSocketUrl(wsUrl) : ""),
+    () => (enableRealtime && wsUrl ? buildWebSocketUrl(wsUrl) : ""),
     [enableRealtime, wsUrl],
   );
 

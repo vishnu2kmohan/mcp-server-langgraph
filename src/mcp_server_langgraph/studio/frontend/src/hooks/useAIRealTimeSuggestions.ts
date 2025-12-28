@@ -13,6 +13,7 @@
 
 import { useState, useCallback, useRef, useEffect } from "react";
 import { useAppSelector } from "../store/hooks";
+import { buildWebSocketUrl } from "../utils/websocket";
 import { useRealtimeSync } from "./useRealtimeSync";
 
 /** Suggestion type from the AI UX backend */
@@ -71,21 +72,6 @@ interface WebSocketMessage {
   type: string;
   data?: Suggestion[];
   timestamp?: number;
-}
-
-/**
- * Build WebSocket URL for AI suggestions
- */
-function buildWebSocketUrl(userId: string): string {
-  const protocol =
-    typeof window !== "undefined" && window.location?.protocol === "https:"
-      ? "wss:"
-      : "ws:";
-  const host =
-    typeof window !== "undefined" && window.location?.host
-      ? window.location.host
-      : "localhost:8000";
-  return `${protocol}//${host}/api/v1/ws/ai/suggestions?user_id=${encodeURIComponent(userId)}`;
 }
 
 /**

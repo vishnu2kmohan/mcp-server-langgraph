@@ -125,6 +125,12 @@ export { useAutoSessionTitle } from "./useAutoSessionTitle";
 
 export { useSessionAutoName } from "./useSessionAutoName";
 
+export { useWorkflowAutoName } from "./useWorkflowAutoName";
+export type {
+  UseWorkflowAutoNameOptions,
+  UseWorkflowAutoNameResult,
+} from "./useWorkflowAutoName";
+
 export { useNewChat } from "./useNewChat";
 
 export { useSessionSync } from "./useSessionSync";

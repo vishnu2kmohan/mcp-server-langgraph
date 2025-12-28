@@ -33,7 +33,9 @@ const _EXPECTED_API_RESPONSE_KEYS = [
   "observability",
   "code_export",
   "ai_suggestions",
-  "llm_suggestions",
+  "llm_suggestions", // DEPRECATED: use suggestion_strategy
+  "suggestion_strategy", // Sprint Block 5: "llm" | "heuristic" | "hybrid"
+  "multi_agent_strategy", // Sprint Block 5: "orchestrator" | "peer" | "hybrid"
   "notification_preferences",
   "mcp_websocket",
   "interactive_artifacts",
@@ -128,6 +130,25 @@ describe("Feature Flags API Contract", () => {
       // Backend: enable_agent_hitl → API response: agent_hitl
       expect(mockFeatureFlags).toHaveProperty("agent_hitl");
       expect(typeof mockFeatureFlags.agent_hitl).toBe("boolean");
+    });
+
+    it("should include Sprint Block 5 strategy fields", () => {
+      // Sprint Block 5 introduced strategy enums to replace boolean pairs
+      // These are STRING values, not booleans
+
+      // suggestion_strategy: "llm" | "heuristic" | "hybrid"
+      expect(mockFeatureFlags).toHaveProperty("suggestion_strategy");
+      expect(typeof mockFeatureFlags.suggestion_strategy).toBe("string");
+      expect(["llm", "heuristic", "hybrid"]).toContain(
+        mockFeatureFlags.suggestion_strategy,
+      );
+
+      // multi_agent_strategy: "orchestrator" | "peer" | "hybrid"
+      expect(mockFeatureFlags).toHaveProperty("multi_agent_strategy");
+      expect(typeof mockFeatureFlags.multi_agent_strategy).toBe("string");
+      expect(["orchestrator", "peer", "hybrid"]).toContain(
+        mockFeatureFlags.multi_agent_strategy,
+      );
     });
 
     it("should include AI UX feature flags", () => {
