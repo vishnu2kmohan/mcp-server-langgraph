@@ -118,6 +118,9 @@ env:
   ENABLE_DEBUG: "true"  # Enable debug features
   GDPR_STORAGE_BACKEND: "postgres"
   CACHE_BACKEND: "redis"
+  # LLM Factory Streaming - Production-ready resilient streaming via LLMFactory.astream()
+  # Provides bulkhead, circuit breaker, and retry patterns for streaming responses
+  FF_ENABLE_LLM_FACTORY_STREAMING: "true"
 
 # Staging-specific settings
 staging:

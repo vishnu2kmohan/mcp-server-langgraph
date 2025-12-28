@@ -46,6 +46,7 @@ from mcp_server_langgraph.core.exceptions import (
 from mcp_server_langgraph.core.feature_flags import feature_flags
 from mcp_server_langgraph.core.hooks import HookContext
 from mcp_server_langgraph.llm.metrics import record_llm_request_duration, record_llm_token_usage
+from mcp_server_langgraph.llm.streaming_metrics import StreamingMetricsContext
 from mcp_server_langgraph.observability.telemetry import logger, metrics, tracer
 from mcp_server_langgraph.resilience import circuit_breaker, retry_with_backoff, with_bulkhead, with_timeout
 from mcp_server_langgraph.resilience.adaptive import get_provider_adaptive_bulkhead
@@ -770,6 +771,10 @@ class LLMFactory:
 
         start_time = time.perf_counter()
 
+        # Initialize streaming metrics context
+        streaming_metrics_ctx = StreamingMetricsContext(model=self.model_name, provider=self.provider)
+        streaming_metrics_ctx.start()
+
         with self.telemetry.tracer.start_as_current_span("llm.astream") as span:
             # OTEL GenAI semantic conventions
             span.set_attribute("gen_ai.system", self.provider)
@@ -844,6 +849,12 @@ class LLMFactory:
                             else:
                                 chunk = await response_iter.__anext__()
 
+                            # Record streaming metrics
+                            if not first_chunk_received:
+                                streaming_metrics_ctx.record_first_chunk()
+                            else:
+                                streaming_metrics_ctx.record_chunk()
+
                             first_chunk_received = True
 
                         except StopAsyncIteration:
@@ -887,9 +898,15 @@ class LLMFactory:
                     adaptive_bulkhead.record_success()
                     self.telemetry.metrics.successful_calls.add(1, {"operation": "llm.astream", "model": self.model_name})
 
+                    # Finalize streaming metrics
+                    streaming_metrics_ctx.finalize(status="success")
+
             except Exception as e:
                 # Record failure for adaptive bulkhead
                 adaptive_bulkhead.record_error()
+
+                # Finalize streaming metrics with error status
+                streaming_metrics_ctx.finalize(status="error")
 
                 error_msg = str(e).lower()
 
