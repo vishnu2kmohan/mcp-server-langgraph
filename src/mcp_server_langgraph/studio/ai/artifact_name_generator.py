@@ -4,11 +4,19 @@ Artifact Name Generator Module
 Generates machine-friendly programmatic names for artifacts based on their content.
 Uses heuristics to extract meaningful names from code, diagrams, and other content types.
 Falls back to LLM when heuristics fail or for complex content.
+
+Uses LLMFactory for resilient LLM calls with SOLID compliance:
+- Circuit breaker, retry, timeout, bulkhead patterns
+- Dependency injection for testability
 """
 
 import json
 import logging
 import re
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from mcp_server_langgraph.llm.factory import LLMFactory
 
 logger = logging.getLogger(__name__)
 
@@ -34,6 +42,7 @@ class ArtifactNameGenerator:
         model_name: str = "gemini-2.0-flash",
         max_name_length: int = 64,
         enable_llm: bool = True,
+        llm_factory: "LLMFactory | None" = None,
     ) -> None:
         """Initialize the artifact name generator.
 
@@ -41,10 +50,26 @@ class ArtifactNameGenerator:
             model_name: The LLM model to use (fast model recommended)
             max_name_length: Maximum length of generated name
             enable_llm: Whether to use LLM (set False for testing/heuristics only)
+            llm_factory: Optional LLMFactory for dependency injection.
+                         If not provided, will be lazily initialized from settings.
         """
         self.model_name = model_name
         self.max_name_length = max_name_length
         self.enable_llm = enable_llm
+        self._llm_factory = llm_factory
+
+    def _get_llm_factory(self) -> Any:
+        """Get or create the LLM factory (lazy initialization).
+
+        Returns:
+            LLMFactory instance with resilience patterns.
+        """
+        if self._llm_factory is None:
+            from mcp_server_langgraph.core.config import settings
+            from mcp_server_langgraph.llm.factory import create_llm_from_config
+
+            self._llm_factory = create_llm_from_config(settings)
+        return self._llm_factory
 
     async def generate(
         self,
@@ -321,7 +346,10 @@ class ArtifactNameGenerator:
         content_type: str,
         language: str | None = None,
     ) -> str:
-        """Generate name using LLM.
+        """Generate name using LLM via LLMFactory with resilience patterns.
+
+        Uses LLMFactory for circuit breaker, retry, timeout, and bulkhead
+        patterns (SOLID compliance - ADR-0026).
 
         Args:
             content: The artifact content
@@ -331,7 +359,7 @@ class ArtifactNameGenerator:
         Returns:
             Generated name string
         """
-        from litellm import acompletion
+        from langchain_core.messages import HumanMessage
 
         # Truncate very long content
         truncated = content[:1000] if len(content) > 1000 else content
@@ -353,16 +381,17 @@ Rules:
 
 Name:"""
 
-        response = await acompletion(
-            model=self.model_name,
-            messages=[
-                {"role": "user", "content": prompt},
-            ],
+        # Use LLMFactory for resilient LLM calls
+        factory = self._get_llm_factory()
+        messages = [HumanMessage(content=prompt)]
+
+        response = await factory.ainvoke(
+            messages,
             temperature=0.2,
             max_tokens=30,
         )
 
-        result = response.choices[0].message.content
+        result = response.content
         return result.strip() if result else ""
 
     def _camel_to_snake(self, name: str) -> str:

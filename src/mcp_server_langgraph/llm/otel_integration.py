@@ -30,15 +30,22 @@ References:
 
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import litellm
+
+if TYPE_CHECKING:
+    from mcp_server_langgraph.monitoring.litellm_cost_callback import CostTrackingCallback
 
 from mcp_server_langgraph.core.feature_flags import feature_flags
 from mcp_server_langgraph.observability.telemetry import logger
 
 # Flag to track if OTEL has been configured (idempotency)
 _otel_configured = False
+_cost_tracking_configured = False
+
+# Store reference to the cost tracking callback instance
+_cost_tracking_callback: CostTrackingCallback | None = None
 
 
 def configure_litellm_otel() -> None:
@@ -103,12 +110,19 @@ def build_otel_metadata(
     user_id: str | None = None,
     request_id: str | None = None,
     feature: str | None = None,
+    # Organizational hierarchy for cost attribution
+    organization_id: str | None = None,
+    project_id: str | None = None,
+    team_id: str | None = None,
+    # Tracing
+    trace_id: str | None = None,
 ) -> dict[str, Any]:
     """
-    Build metadata dict for LiteLLM OTEL span attributes.
+    Build metadata dict for LiteLLM span attributes and cost tracking.
 
-    LiteLLM's OTEL callback prefixes these with 'metadata.' on spans,
-    enabling filtering and grouping by session, workflow, etc.
+    This metadata is used by:
+    - OTEL callback: Prefixes with 'metadata.' on spans for filtering
+    - CostTrackingCallback: Extracts org context for cost attribution
 
     Args:
         session_id: Session identifier for multi-turn conversations
@@ -117,6 +131,10 @@ def build_otel_metadata(
         user_id: User identifier for per-user cost tracking
         request_id: Unique request ID for tracing
         feature: Feature tag (e.g., "chat", "summarization", "verification")
+        organization_id: Organization ID for multi-tenant cost attribution
+        project_id: Project ID for project-level cost breakdown
+        team_id: Team/group ID for team-level cost attribution
+        trace_id: Trace ID for distributed tracing correlation
 
     Returns:
         Dictionary of metadata to pass to LiteLLM's metadata parameter.
@@ -126,12 +144,14 @@ def build_otel_metadata(
         metadata = build_otel_metadata(
             session_id="sess-123",
             workflow_id="wf-456",
+            organization_id="organization:acme",
+            project_id="project:backend",
+            team_id="team:platform",
         )
         response = await litellm.acompletion(..., metadata=metadata)
 
-        # On OTEL span, these appear as:
-        # metadata.session_id = "sess-123"
-        # metadata.workflow_id = "wf-456"
+        # CostTrackingCallback will extract org fields for cost attribution
+        # OTEL span will include metadata.session_id, metadata.workflow_id, etc.
     """
     metadata: dict[str, Any] = {}
 
@@ -153,6 +173,20 @@ def build_otel_metadata(
     if feature is not None:
         metadata["feature"] = feature
 
+    # Organizational hierarchy
+    if organization_id is not None:
+        metadata["organization_id"] = organization_id
+
+    if project_id is not None:
+        metadata["project_id"] = project_id
+
+    if team_id is not None:
+        metadata["team_id"] = team_id
+
+    # Tracing
+    if trace_id is not None:
+        metadata["trace_id"] = trace_id
+
     return metadata
 
 
@@ -164,3 +198,78 @@ def reset_otel_configuration() -> None:
     """
     global _otel_configured
     _otel_configured = False
+
+
+def configure_litellm_cost_tracking() -> None:
+    """
+    Configure LiteLLM to use the CostTrackingCallback for automatic cost recording.
+
+    This function:
+    1. Creates a CostTrackingCallback instance
+    2. Adds it to litellm.callbacks if not already present
+    3. Uses LiteLLM's response_cost as the authoritative cost source
+
+    Should be called once at application startup.
+
+    The callback provides:
+    - Automatic cost recording for all LLM calls
+    - Organizational cost attribution (org, project, team)
+    - Integration with the cost collector singleton
+
+    Note:
+        Unlike OTEL, this is not controlled by a feature flag as cost tracking
+        is a core requirement for operational visibility.
+    """
+    global _cost_tracking_configured, _cost_tracking_callback
+
+    # Ensure idempotency
+    if _cost_tracking_configured:
+        logger.debug("LiteLLM cost tracking already configured, skipping")
+        return
+
+    # Import here to avoid circular imports
+    from mcp_server_langgraph.monitoring.litellm_cost_callback import (
+        CostTrackingCallback as CostTrackingCallbackClass,
+    )
+
+    # Check if we already have a CostTrackingCallback in callbacks
+    for callback in litellm.callbacks:
+        if isinstance(callback, CostTrackingCallbackClass):
+            logger.debug("CostTrackingCallback already present in litellm.callbacks")
+            _cost_tracking_configured = True
+            _cost_tracking_callback = callback
+            return
+
+    # Create and add callback
+    _cost_tracking_callback = CostTrackingCallbackClass()
+    litellm.callbacks.append(_cost_tracking_callback)
+
+    _cost_tracking_configured = True
+
+    logger.info(
+        "LiteLLM cost tracking callback configured",
+        extra={
+            "callbacks_count": len(litellm.callbacks),
+        },
+    )
+
+
+def reset_cost_tracking_configuration() -> None:
+    """
+    Reset cost tracking configuration (for testing only).
+
+    This allows re-running configure_litellm_cost_tracking() in tests.
+    Also removes the callback from litellm.callbacks if present.
+    """
+    global _cost_tracking_configured, _cost_tracking_callback
+
+    # Import here to avoid circular imports
+    from mcp_server_langgraph.monitoring.litellm_cost_callback import (
+        CostTrackingCallback as CostTrackingCallbackClass,
+    )
+
+    # Remove any CostTrackingCallback instances from litellm.callbacks
+    litellm.callbacks = [cb for cb in litellm.callbacks if not isinstance(cb, CostTrackingCallbackClass)]
+
+    _cost_tracking_configured = False
+    _cost_tracking_callback = None

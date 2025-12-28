@@ -178,6 +178,19 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         logger.warning(f"Observability query clients initialization failed: {e}")
         # Non-fatal: observability endpoints will fail gracefully
 
+    # Initialize storage layer (audit, compliance, notification services)
+    # Required for /api/v1/compliance/* and /api/v1/audit/* endpoints
+    storage_state = None
+    try:
+        from mcp_server_langgraph.bootstrap.storage import init_storage
+
+        storage_state = await init_storage(settings)
+        app.state.storage = storage_state
+        logger.info("Storage layer initialized (compliance service available)")
+    except Exception as e:
+        logger.warning(f"Storage layer initialization failed: {e}")
+        # Non-fatal: compliance/audit endpoints will return 503
+
     yield
 
     # Shutdown - cleanup observability and close connections
@@ -216,6 +229,14 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         logger.info("Observability query clients closed")
     except Exception as e:
         logger.warning(f"Error closing observability query clients: {e}")
+
+    # Cleanup storage layer (audit schedulers, etc.)
+    try:
+        if hasattr(app.state, "storage") and app.state.storage:
+            await app.state.storage.cleanup()
+            logger.info("Storage layer cleaned up")
+    except Exception as e:
+        logger.warning(f"Error cleaning up storage layer: {e}")
 
     # Cleanup checkpointer resources (Redis connections, etc.) via server's cleanup method
     try:

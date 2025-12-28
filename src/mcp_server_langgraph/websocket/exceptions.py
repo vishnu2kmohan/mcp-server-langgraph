@@ -42,6 +42,23 @@ class AuthenticationError(WebSocketError):
         super().__init__(message, code, reason or "Authentication required")
 
 
+class TokenExpiredError(AuthenticationError):
+    """Raised when WebSocket token expires during active connection.
+
+    This is a specialized authentication error with close code 4010,
+    distinct from 4001 (initial auth failure) to allow clients to
+    differentiate between "need to login" vs "need to refresh token".
+    """
+
+    def __init__(
+        self,
+        message: str = "Token expired",
+        code: int = 4010,
+        reason: str | None = None,
+    ) -> None:
+        super().__init__(message, code, reason or "Token expired. Please refresh and reconnect.")
+
+
 class AuthorizationError(WebSocketError):
     """Raised when WebSocket authorization fails (OpenFGA check)."""
 
@@ -175,10 +192,11 @@ class SubscriptionError(WebSocketError):
 #
 # Application-defined codes (4000-4999):
 # 4000 - Generic application error
-# 4001 - Authentication required
+# 4001 - Authentication required (initial auth failure)
 # 4002 - Invalid message format
 # 4003 - Authorization denied
 # 4004 - Resource not found / subscription failed
 # 4008 - Timeout (idle or heartbeat)
+# 4010 - Token expired (can refresh and reconnect)
 # 4013 - Message too large
 # 4029 - Rate limit exceeded (matches HTTP 429)

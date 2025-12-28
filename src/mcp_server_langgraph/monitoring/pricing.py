@@ -1,6 +1,23 @@
 """
 LLM Pricing Table and Cost Calculation
 
+.. deprecated:: 2025.12
+    This module is deprecated. Cost calculation is now handled automatically
+    by the CostTrackingCallback in llm/factory.py using LiteLLM's built-in
+    response_cost. LiteLLM maintains live pricing for 100+ models and handles
+    special cases like prompt caching and extended context automatically.
+
+    Migration:
+        Instead of manually calling calculate_cost(), pass metadata to
+        litellm.acompletion() and let CostTrackingCallback handle recording:
+
+        >>> response = await litellm.acompletion(
+        ...     model="claude-sonnet-4-5-20250929",
+        ...     messages=[...],
+        ...     metadata={"user_id": "...", "session_id": "..."}
+        ... )
+        # Cost is automatically recorded by CostTrackingCallback
+
 Provides pricing data for all supported LLM providers and accurate cost calculation
 based on token usage.
 
@@ -21,6 +38,7 @@ Example:
     $0.0105
 """
 
+import warnings
 from decimal import Decimal
 
 # ==============================================================================
@@ -134,6 +152,10 @@ def calculate_cost(
     """
     Calculate cost for an LLM API call based on token usage.
 
+    .. deprecated:: 2025.12
+        Use CostTrackingCallback with LiteLLM's response_cost instead.
+        This function may not have accurate pricing for all models.
+
     Args:
         model: Model name (e.g., "claude-sonnet-4-5-20250929")
         provider: Provider name ("anthropic", "openai", "google")
@@ -156,6 +178,13 @@ def calculate_cost(
         >>> cost
         Decimal('0.0105')
     """
+    warnings.warn(
+        "calculate_cost() is deprecated. Cost calculation is now handled automatically "
+        "by CostTrackingCallback using LiteLLM's response_cost. "
+        "See llm/factory.py for the callback registration.",
+        DeprecationWarning,
+        stacklevel=2,
+    )
     # Get pricing for model
     pricing = PRICING_TABLE[provider][model]
 

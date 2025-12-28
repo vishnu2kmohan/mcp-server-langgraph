@@ -19,11 +19,13 @@ Available Handlers:
     - WorkflowExecutionHandler: Real-time workflow execution updates
     - AISuggestionsHandler: Real-time AI suggestion streaming
     - TraceHandler: Real-time trace/span streaming
+    - BudgetAlertsHandler: Real-time budget alert notifications
 """
 
 from mcp_server_langgraph.websocket.handlers.agent_request import AgentRequestHandler
 from mcp_server_langgraph.websocket.handlers.ai_suggestions import AISuggestionsHandler
 from mcp_server_langgraph.websocket.handlers.alert import AlertHandler
+from mcp_server_langgraph.websocket.handlers.budget_alerts import BudgetAlertsHandler
 from mcp_server_langgraph.websocket.handlers.audit import AuditHandler
 from mcp_server_langgraph.websocket.handlers.connection_health import (
     ConnectionHealthHandler,
@@ -51,6 +53,7 @@ __all__ = [
     "AISuggestionsHandler",
     "AlertHandler",
     "AuditHandler",
+    "BudgetAlertsHandler",
     "ConnectionHealthHandler",
     "ConnectionsRealtimeHandler",
     "CostTrackingHandler",

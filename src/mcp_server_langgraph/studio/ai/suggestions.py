@@ -760,6 +760,7 @@ class WorkflowSuggestionAgent:
         model_name: str = "gemini-2.5-flash",
         temperature: float = 0.7,
         enable_llm: bool = True,
+        llm_factory: Any | None = None,
     ) -> None:
         """Initialize the workflow suggestion agent.
 
@@ -767,11 +768,26 @@ class WorkflowSuggestionAgent:
             model_name: The LLM model to use
             temperature: Sampling temperature
             enable_llm: Whether to use LLM (set False for testing)
+            llm_factory: Optional LLMFactory for dependency injection.
+                         If not provided, will be lazily initialized from settings.
         """
         self.model_name = model_name
         self.temperature = temperature
         self.enable_llm = enable_llm
-        self._llm_factory = None
+        self._llm_factory = llm_factory
+
+    def _get_llm_factory(self) -> Any:
+        """Get or create the LLM factory (lazy initialization).
+
+        Returns:
+            LLMFactory instance with resilience patterns.
+        """
+        if self._llm_factory is None:
+            from mcp_server_langgraph.core.config import settings
+            from mcp_server_langgraph.llm.factory import create_llm_from_config
+
+            self._llm_factory = create_llm_from_config(settings)
+        return self._llm_factory
 
     async def suggest(
         self,
@@ -838,10 +854,10 @@ class WorkflowSuggestionAgent:
         return suggestions
 
     async def _invoke_llm(self, workflow: dict[str, Any]) -> dict[str, Any]:
-        """Invoke the LLM to generate suggestions.
+        """Invoke the LLM to generate suggestions via LLMFactory.
 
-        Uses LiteLLM for multi-provider support. Falls back to
-        heuristics if LLM call fails.
+        Uses LLMFactory for circuit breaker, retry, timeout, and bulkhead
+        patterns (SOLID compliance - ADR-0026).
 
         Args:
             workflow: The workflow to analyze
@@ -850,7 +866,7 @@ class WorkflowSuggestionAgent:
             Raw response with suggestions
         """
         try:
-            from litellm import acompletion
+            from langchain_core.messages import HumanMessage, SystemMessage
 
             # Build prompt from workflow
             nodes = workflow.get("nodes", [])
@@ -868,12 +884,15 @@ Provide suggestions in JSON format with fields:
 
 Return a JSON object with a "suggestions" array."""
 
-            response = await acompletion(
-                model=self.model_name,
-                messages=[
-                    {"role": "system", "content": "You are a workflow optimization assistant."},
-                    {"role": "user", "content": prompt},
-                ],
+            # Use LLMFactory for resilient LLM calls
+            factory = self._get_llm_factory()
+            messages = [
+                SystemMessage(content="You are a workflow optimization assistant."),
+                HumanMessage(content=prompt),
+            ]
+
+            response = await factory.ainvoke(
+                messages,
                 temperature=self.temperature,
                 max_tokens=1024,
                 response_format={"type": "json_object"},
@@ -882,7 +901,7 @@ Return a JSON object with a "suggestions" array."""
             # Parse LLM response
             import json
 
-            content = response.choices[0].message.content
+            content = response.content
             result = json.loads(content)
 
             # Ensure we return a properly typed dict
@@ -1056,6 +1075,7 @@ class ChatFollowUpSuggestionAgent:
         temperature: float = 0.8,
         enable_llm: bool = True,
         enable_cache: bool = True,
+        llm_factory: Any | None = None,
     ) -> None:
         """Initialize the chat follow-up suggestion agent.
 
@@ -1064,11 +1084,27 @@ class ChatFollowUpSuggestionAgent:
             temperature: Sampling temperature (slightly higher for creativity)
             enable_llm: Whether to use LLM (set False for testing)
             enable_cache: Whether to use caching for suggestions
+            llm_factory: Optional LLMFactory for dependency injection.
+                         If not provided, will be lazily initialized from settings.
         """
         self.model_name = model_name
         self.temperature = temperature
         self.enable_llm = enable_llm
         self.enable_cache = enable_cache
+        self._llm_factory = llm_factory
+
+    def _get_llm_factory(self) -> Any:
+        """Get or create the LLM factory (lazy initialization).
+
+        Returns:
+            LLMFactory instance with resilience patterns.
+        """
+        if self._llm_factory is None:
+            from mcp_server_langgraph.core.config import settings
+            from mcp_server_langgraph.llm.factory import create_llm_from_config
+
+            self._llm_factory = create_llm_from_config(settings)
+        return self._llm_factory
 
     async def suggest(
         self,
@@ -1175,7 +1211,10 @@ class ChatFollowUpSuggestionAgent:
         max_suggestions: int,
         conversation_history: list[dict[str, str]] | None = None,
     ) -> tuple[dict[str, Any], dict[str, int]]:
-        """Invoke the LLM to generate follow-up suggestions.
+        """Invoke the LLM to generate follow-up suggestions via LLMFactory.
+
+        Uses LLMFactory for circuit breaker, retry, timeout, and bulkhead
+        patterns (SOLID compliance - ADR-0026).
 
         Args:
             content: The assistant message content
@@ -1185,7 +1224,7 @@ class ChatFollowUpSuggestionAgent:
         Returns:
             Tuple of (raw response with suggestions, token usage info)
         """
-        from litellm import acompletion
+        from langchain_core.messages import HumanMessage, SystemMessage
 
         # Build conversation context section if history is provided
         context_section = ""
@@ -1219,30 +1258,33 @@ Return a JSON object with a "suggestions" array. Each suggestion should have:
 
 Make suggestions specific to the content and conversation context, not generic."""
 
-        response = await acompletion(
-            model=self.model_name,
-            messages=[
-                {
-                    "role": "system",
-                    "content": "You are a helpful assistant that suggests relevant follow-up questions based on AI responses. Generate concise, specific questions.",
-                },
-                {"role": "user", "content": prompt},
-            ],
+        # Use LLMFactory for resilient LLM calls
+        factory = self._get_llm_factory()
+        messages = [
+            SystemMessage(
+                content="You are a helpful assistant that suggests relevant follow-up questions based on AI responses. Generate concise, specific questions."
+            ),
+            HumanMessage(content=prompt),
+        ]
+
+        response = await factory.ainvoke(
+            messages,
             temperature=self.temperature,
             max_tokens=512,
             response_format={"type": "json_object"},
         )
 
-        # Extract token usage from response
+        # Token usage is tracked by LiteLLM's CostTrackingCallback
+        # We estimate based on content length for local metrics
         token_info = {
-            "prompt_tokens": getattr(response.usage, "prompt_tokens", 0) if response.usage else 0,
-            "completion_tokens": getattr(response.usage, "completion_tokens", 0) if response.usage else 0,
+            "prompt_tokens": len(prompt.split()) * 2,  # Rough estimate
+            "completion_tokens": len(str(response.content).split()) * 2,
         }
 
-        # Parse LLM response
+        # Parse LLM response (LLMFactory returns AIMessage)
         import json
 
-        response_content = response.choices[0].message.content
+        response_content = response.content
         result = json.loads(response_content)
 
         if isinstance(result, dict):
@@ -1387,3 +1429,289 @@ Make suggestions specific to the content and conversation context, not generic."
         except Exception as e:
             # Don't let metrics failures break the app
             logger.debug("Metric recording failed: %s", e)
+
+
+# =============================================================================
+# Command Interpretation
+# =============================================================================
+
+
+@dataclass
+class InterpretedCommand:
+    """Represents an interpreted command with action and parameters."""
+
+    action: str
+    intent: str
+    confidence: float
+    parameters: dict[str, Any] = field(default_factory=dict)
+    alternatives: list[dict[str, Any]] = field(default_factory=list)
+
+
+class CommandInterpreterAgent:
+    """AI agent that interprets natural language commands.
+
+    Uses LLMFactory to parse user intent from natural language commands
+    with proper resilience patterns (circuit breaker, retry, timeout, bulkhead).
+    Falls back to heuristic pattern matching when LLM is unavailable.
+
+    Follows SOLID principles:
+    - DIP: Accepts LLMFactory via dependency injection
+    - SRP: Only responsible for command interpretation
+    - OCP: Extensible via factory configuration
+
+    Example:
+        # With default factory (uses global settings)
+        agent = CommandInterpreterAgent()
+        result = await agent.interpret(command="create a new session")
+
+        # With injected factory (for testing or custom config)
+        from mcp_server_langgraph.llm.factory import LLMFactory
+        factory = LLMFactory(model_name="gemini-2.5-flash", temperature=0.3)
+        agent = CommandInterpreterAgent(llm_factory=factory)
+    """
+
+    def __init__(
+        self,
+        llm_factory: Any | None = None,
+        enable_llm: bool = True,
+    ) -> None:
+        """Initialize the command interpreter agent.
+
+        Args:
+            llm_factory: Optional LLMFactory instance (dependency injection).
+                        If None, creates one from global settings on first use.
+            enable_llm: Whether to use LLM (set False for testing/heuristics only)
+        """
+        self._llm_factory = llm_factory
+        self.enable_llm = enable_llm
+
+    def _get_llm_factory(self) -> Any:
+        """Get or create the LLM factory (lazy initialization).
+
+        Returns:
+            LLMFactory instance for making LLM calls
+        """
+        if self._llm_factory is None:
+            from mcp_server_langgraph.core.config import settings
+            from mcp_server_langgraph.llm.factory import create_llm_from_config
+
+            self._llm_factory = create_llm_from_config(settings)
+        return self._llm_factory
+
+    async def interpret(
+        self,
+        command: str,
+        context: dict[str, Any] | None = None,
+        session_id: str | None = None,
+    ) -> InterpretedCommand:
+        """Interpret a natural language command.
+
+        Args:
+            command: The natural language command from the user
+            context: Optional context (current page, selected items, etc.)
+            session_id: Optional session ID for context
+
+        Returns:
+            InterpretedCommand with action, intent, confidence, and parameters
+        """
+        start_time = time.monotonic()
+
+        if not command or not command.strip():
+            return InterpretedCommand(
+                action="none",
+                intent="empty",
+                confidence=1.0,
+                parameters={},
+            )
+
+        # Try LLM first, fallback to heuristics
+        if self.enable_llm:
+            try:
+                result = await self._invoke_llm(command, context)
+                source = "llm"
+            except Exception as e:
+                logger.warning("LLM command interpretation failed: %s", e)
+                result = self._interpret_heuristic(command, context)
+                source = "heuristic"
+        else:
+            result = self._interpret_heuristic(command, context)
+            source = "heuristic"
+
+        latency = time.monotonic() - start_time
+        logger.debug(
+            "Interpreted command in %.3fs (source=%s): %s -> %s",
+            latency,
+            source,
+            command[:50],
+            result.action,
+        )
+
+        return result
+
+    async def _invoke_llm(
+        self,
+        command: str,
+        context: dict[str, Any] | None = None,
+    ) -> InterpretedCommand:
+        """Invoke the LLM to interpret the command via LLMFactory.
+
+        Uses LLMFactory with full resilience patterns:
+        - Circuit breaker for provider failures
+        - Retry with exponential backoff
+        - Timeout enforcement
+        - Bulkhead for concurrency control
+
+        Args:
+            command: The user's command
+            context: Optional context information
+
+        Returns:
+            InterpretedCommand from LLM interpretation
+        """
+        from langchain_core.messages import HumanMessage, SystemMessage
+
+        context_section = ""
+        if context:
+            context_section = f"""
+Current context:
+- Page: {context.get("current_page", "unknown")}
+- Selected items: {context.get("selected_items", [])}
+- Recent actions: {context.get("recent_actions", [])}
+
+"""
+
+        prompt = f"""Interpret this natural language command and determine the intended action.
+{context_section}
+User command: "{command}"
+
+Available actions:
+1. create_session - Create a new session/chat
+2. create_workflow - Create a new workflow
+3. create_project - Create a new project
+4. run_workflow - Execute a workflow
+5. run_agent - Execute an AI agent
+6. run_tests - Run test suite
+7. show_logs - Display logs
+8. show_history - Display history
+9. show_status - Show current status
+10. connect_mcp - Connect to MCP server
+11. connect_server - Connect to a server
+12. show_help - Display help
+13. open_settings - Open settings panel
+14. search - Search for something
+15. send_message - Send a chat message (default for conversational input)
+
+Return a JSON object with:
+- action: The primary action to take (from the list above)
+- intent: High-level intent category (create, execute, display, connect, help, search, chat)
+- confidence: Float from 0.0 to 1.0 indicating interpretation confidence
+- parameters: Object with extracted parameters (e.g., {{"type": "session"}}, {{"query": "..."}})
+- alternatives: Array of alternative interpretations with action/confidence (max 2)
+
+Be specific about action selection. If the command is conversational or doesn't match any action, use "send_message"."""
+
+        # Use LLMFactory for resilient LLM calls
+        factory = self._get_llm_factory()
+        messages = [
+            SystemMessage(
+                content="You are a command interpreter. Parse natural language commands into structured actions. Be precise and deterministic."
+            ),
+            HumanMessage(content=prompt),
+        ]
+
+        # Call LLM with JSON response format
+        response = await factory.ainvoke(
+            messages,
+            temperature=0.3,  # Low temperature for deterministic interpretation
+            max_tokens=256,
+            response_format={"type": "json_object"},
+        )
+
+        # Parse the response (AIMessage.content)
+        import json
+
+        content = response.content if hasattr(response, "content") else str(response)
+        result = json.loads(content or "{}")
+
+        return InterpretedCommand(
+            action=result.get("action", "unknown"),
+            intent=result.get("intent", "unknown"),
+            confidence=result.get("confidence", 0.5),
+            parameters=result.get("parameters", {}),
+            alternatives=result.get("alternatives", []),
+        )
+
+    def _interpret_heuristic(
+        self,
+        command: str,
+        context: dict[str, Any] | None = None,
+    ) -> InterpretedCommand:
+        """Fallback heuristic-based command interpretation.
+
+        Args:
+            command: The user's command
+            context: Optional context (unused in heuristics)
+
+        Returns:
+            InterpretedCommand based on pattern matching
+        """
+        command_lower = command.lower().strip()
+
+        # Pattern-based interpretation
+        command_patterns = {
+            "create": {
+                "session": ("create_session", "create", {"type": "session"}),
+                "workflow": ("create_workflow", "create", {"type": "workflow"}),
+                "project": ("create_project", "create", {"type": "project"}),
+                "new": ("create_session", "create", {"type": "session"}),
+            },
+            "run": {
+                "workflow": ("run_workflow", "execute", {}),
+                "agent": ("run_agent", "execute", {}),
+                "test": ("run_tests", "execute", {}),
+            },
+            "show": {
+                "log": ("show_logs", "display", {}),
+                "history": ("show_history", "display", {}),
+                "status": ("show_status", "display", {}),
+            },
+            "connect": {
+                "mcp": ("connect_mcp", "connect", {"type": "mcp"}),
+                "server": ("connect_server", "connect", {}),
+            },
+            "help": {
+                "": ("show_help", "help", {}),
+            },
+            "search": {
+                "": ("search", "search", {"query": command}),
+            },
+            "find": {
+                "": ("search", "search", {"query": command}),
+            },
+            "settings": {
+                "": ("open_settings", "settings", {}),
+            },
+            "configure": {
+                "": ("open_settings", "settings", {}),
+            },
+        }
+
+        # Find matching pattern
+        for verb, targets in command_patterns.items():
+            if verb in command_lower:
+                for target, (action, intent, params) in targets.items():
+                    if target in command_lower or target == "":
+                        return InterpretedCommand(
+                            action=action,
+                            intent=intent,
+                            confidence=0.85,
+                            parameters=params,
+                        )
+
+        # Default: treat as chat message
+        return InterpretedCommand(
+            action="send_message",
+            intent="chat",
+            confidence=0.6,
+            parameters={"message": command},
+        )

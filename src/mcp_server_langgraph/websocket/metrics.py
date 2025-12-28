@@ -66,6 +66,7 @@ class WebSocketMetrics:
         self._errors = 0
         self._rate_limit_exceeded = 0
         self._connections_rejected = 0
+        self._token_expirations = 0
         self._latencies: list[float] = []
         self._otel_available = False
         self._otel_meter: Any = None
@@ -102,6 +103,10 @@ class WebSocketMetrics:
             self._otel_connections_rejected = self._otel_meter.create_counter(
                 f"websocket_{self.endpoint_name}_connections_rejected_total",
                 description="Rejected connections",
+            )
+            self._otel_token_expirations = self._otel_meter.create_counter(
+                f"websocket_{self.endpoint_name}_token_expirations_total",
+                description="Token expirations (close code 4010)",
             )
 
             # Create histogram for latency
@@ -164,6 +169,11 @@ class WebSocketMetrics:
     def connections_rejected(self) -> int:
         """Get total rejected connections."""
         return self._connections_rejected
+
+    @property
+    def token_expirations(self) -> int:
+        """Get total token expiration events (close code 4010)."""
+        return self._token_expirations
 
     @property
     def average_latency(self) -> float:
@@ -281,6 +291,27 @@ class WebSocketMetrics:
                 },
             )
 
+    def record_token_expired(self, user_id: str = "") -> None:
+        """
+        Record a token expiration event (close code 4010).
+
+        This is tracked when a WebSocket connection is closed due to
+        JWT token expiration during an active connection.
+
+        Args:
+            user_id: Optional user ID whose token expired.
+        """
+        self._token_expirations += 1
+
+        if self._otel_available:
+            self._otel_token_expirations.add(
+                1,
+                {
+                    "endpoint": self.endpoint_name,
+                    "user_id": user_id,
+                },
+            )
+
     def record_latency(self, latency_ms: float, message_type: str = "") -> None:
         """
         Record message processing latency.
@@ -330,6 +361,7 @@ class WebSocketMetrics:
             "errors": self._errors,
             "rate_limit_exceeded": self._rate_limit_exceeded,
             "connections_rejected": self._connections_rejected,
+            "token_expirations": self._token_expirations,
             "average_latency_ms": self.average_latency,
         }
 
@@ -342,4 +374,5 @@ class WebSocketMetrics:
         self._errors = 0
         self._rate_limit_exceeded = 0
         self._connections_rejected = 0
+        self._token_expirations = 0
         self._latencies = []

@@ -2,12 +2,19 @@
 Title Generator Module
 
 Generates concise, descriptive titles for chat sessions based on the first user message.
-Uses LiteLLM for AI-powered title generation with fallback to simple extraction.
+Uses LLMFactory for AI-powered title generation with fallback to simple extraction.
+
+Uses LLMFactory for resilient LLM calls with SOLID compliance:
+- Circuit breaker, retry, timeout, bulkhead patterns
+- Dependency injection for testability
 """
 
 import logging
 import re
+from typing import TYPE_CHECKING, Any
 
+if TYPE_CHECKING:
+    from mcp_server_langgraph.llm.factory import LLMFactory
 
 logger = logging.getLogger(__name__)
 
@@ -30,6 +37,7 @@ class SessionTitleGenerator:
         model_name: str = "gemini-2.0-flash",
         max_title_length: int = 50,
         enable_llm: bool = True,
+        llm_factory: "LLMFactory | None" = None,
     ) -> None:
         """Initialize the title generator.
 
@@ -37,10 +45,26 @@ class SessionTitleGenerator:
             model_name: The LLM model to use (fast model recommended)
             max_title_length: Maximum length of generated title
             enable_llm: Whether to use LLM (set False for testing)
+            llm_factory: Optional LLMFactory for dependency injection.
+                         If not provided, will be lazily initialized from settings.
         """
         self.model_name = model_name
         self.max_title_length = max_title_length
         self.enable_llm = enable_llm
+        self._llm_factory = llm_factory
+
+    def _get_llm_factory(self) -> Any:
+        """Get or create the LLM factory (lazy initialization).
+
+        Returns:
+            LLMFactory instance with resilience patterns.
+        """
+        if self._llm_factory is None:
+            from mcp_server_langgraph.core.config import settings
+            from mcp_server_langgraph.llm.factory import create_llm_from_config
+
+            self._llm_factory = create_llm_from_config(settings)
+        return self._llm_factory
 
     async def generate(self, message: str) -> str:
         """Generate a title from the user's message.
@@ -66,7 +90,10 @@ class SessionTitleGenerator:
         return self._generate_heuristic_title(message)
 
     async def _generate_with_llm(self, message: str) -> str:
-        """Generate title using LLM.
+        """Generate title using LLM via LLMFactory with resilience patterns.
+
+        Uses LLMFactory for circuit breaker, retry, timeout, and bulkhead
+        patterns (SOLID compliance - ADR-0026).
 
         Args:
             message: The user's message
@@ -74,7 +101,7 @@ class SessionTitleGenerator:
         Returns:
             Generated title string
         """
-        from litellm import acompletion
+        from langchain_core.messages import HumanMessage
 
         # Truncate very long messages
         truncated = message[:500] if len(message) > 500 else message
@@ -92,16 +119,17 @@ Rules:
 
 Title:"""
 
-        response = await acompletion(
-            model=self.model_name,
-            messages=[
-                {"role": "user", "content": prompt},
-            ],
+        # Use LLMFactory for resilient LLM calls
+        factory = self._get_llm_factory()
+        messages = [HumanMessage(content=prompt)]
+
+        response = await factory.ainvoke(
+            messages,
             temperature=0.3,  # Low temperature for consistent titles
             max_tokens=50,
         )
 
-        content = response.choices[0].message.content
+        content = response.content
         return content.strip() if content else ""
 
     def _generate_heuristic_title(self, message: str) -> str:

@@ -20,6 +20,7 @@ if TYPE_CHECKING:
     from mcp_server_langgraph.alerts.broadcaster import AlertBroadcaster
     from mcp_server_langgraph.audit.broadcast import AuditEventBroadcaster
     from mcp_server_langgraph.hitl.broadcast import AgentRequestBroadcaster
+    from mcp_server_langgraph.monitoring.cost_budget import BudgetAlertBroadcaster
     from mcp_server_langgraph.notifications.broadcast import NotificationBroadcaster
     from mcp_server_langgraph.observability.trace_broadcaster import TraceBroadcaster
     from mcp_server_langgraph.websocket.handlers.mcp_aggregated import (
@@ -173,6 +174,31 @@ def set_mcp_aggregated_broadcaster(broadcaster: MCPAggregatedBroadcaster | None)
     _mcp_aggregated_broadcaster = broadcaster
 
 
+# =============================================================================
+# Budget Alert Broadcaster
+# =============================================================================
+
+_budget_alert_broadcaster: BudgetAlertBroadcaster | None = None
+
+
+def get_budget_alert_broadcaster() -> BudgetAlertBroadcaster:
+    """Get the budget alert broadcaster instance."""
+    global _budget_alert_broadcaster
+    if _budget_alert_broadcaster is None:
+        from mcp_server_langgraph.monitoring.cost_budget import (
+            get_budget_alert_broadcaster as _get,
+        )
+
+        _budget_alert_broadcaster = _get()
+    return _budget_alert_broadcaster
+
+
+def set_budget_alert_broadcaster(broadcaster: BudgetAlertBroadcaster | None) -> None:
+    """Set the budget alert broadcaster instance (for app initialization or testing)."""
+    global _budget_alert_broadcaster
+    _budget_alert_broadcaster = broadcaster
+
+
 __all__ = [
     # Notification
     "get_notification_broadcaster",
@@ -193,4 +219,7 @@ __all__ = [
     # MCP Aggregated
     "get_mcp_aggregated_broadcaster",
     "set_mcp_aggregated_broadcaster",
+    # Budget Alert
+    "get_budget_alert_broadcaster",
+    "set_budget_alert_broadcaster",
 ]

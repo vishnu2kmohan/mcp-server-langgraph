@@ -972,13 +972,20 @@ class AuthenticatedMCPHandler(MCPMessageHandler):
         if is_streaming_requested and self.notification_callback is not None:
             # Import here to avoid circular dependency
             try:
-                from mcp_server_langgraph.api.v1.mcp_websocket import (
+                # Import from mcp/websocket package (fully migrated)
+                from mcp_server_langgraph.mcp.websocket.streaming import (
                     StreamingToolCallHandler,
                     streaming_metrics_collector,
-                    is_streaming_enabled,
-                    get_outbound_rate_limiter,
-                    get_streaming_max_chunk_size,
+                )
+                from mcp_server_langgraph.mcp.websocket.connection_manager import (
                     get_connection_manager,
+                )
+                from mcp_server_langgraph.mcp.websocket.config import (
+                    is_streaming_enabled,
+                    get_streaming_max_chunk_size,
+                )
+                from mcp_server_langgraph.mcp.websocket.rate_limiter import (
+                    get_outbound_rate_limiter,
                 )
 
                 if is_streaming_enabled():

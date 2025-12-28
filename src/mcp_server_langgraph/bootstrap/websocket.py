@@ -13,11 +13,9 @@ from typing import TYPE_CHECKING, Any
 from mcp_server_langgraph.observability.telemetry import logger
 
 if TYPE_CHECKING:
-    from mcp_server_langgraph.api.v1.mcp_websocket import (
-        MCPWebSocketLifecycleManager,
-        ConnectionManager,
-        UserRateLimiterManager,
-    )
+    from mcp_server_langgraph.mcp.websocket.lifecycle import MCPWebSocketLifecycleManager
+    from mcp_server_langgraph.mcp.websocket.connection_manager import ConnectionManager
+    from mcp_server_langgraph.mcp.websocket.rate_limiter import UserRateLimiterManager
 
 
 @dataclass
@@ -52,7 +50,7 @@ def _get_lifecycle_manager_class() -> type:
     """Lazy import of MCPWebSocketLifecycleManager."""
     global _lifecycle_manager_class
     if _lifecycle_manager_class is None:
-        from mcp_server_langgraph.api.v1.mcp_websocket import (
+        from mcp_server_langgraph.mcp.websocket.lifecycle import (
             MCPWebSocketLifecycleManager as _Manager,
         )
 
@@ -78,15 +76,23 @@ async def init_websocket_lifecycle(
     Returns:
         WebSocketState with initialized lifecycle manager and security configs.
     """
-    from mcp_server_langgraph.api.v1.mcp_websocket import (
+    # Import from mcp/websocket package (fully migrated)
+    from mcp_server_langgraph.mcp.websocket.lifecycle import (
         create_mcp_lifecycle_manager,
         set_mcp_lifecycle_manager,
-        set_streaming_enabled,
+    )
+    from mcp_server_langgraph.mcp.websocket.connection_manager import (
         create_connection_manager,
         set_connection_manager,
+    )
+    from mcp_server_langgraph.mcp.websocket.config import (
+        set_streaming_enabled,
+        set_streaming_max_chunk_size,
+        set_token_validation_interval,
+    )
+    from mcp_server_langgraph.mcp.websocket.rate_limiter import (
         create_user_rate_limiter,
         set_user_rate_limiter,
-        set_streaming_max_chunk_size,
         create_outbound_rate_limiter,
         set_outbound_rate_limiter,
     )
@@ -110,6 +116,7 @@ async def init_websocket_lifecycle(
     # Set max chunk size from settings
     if streaming_settings is not None:
         set_streaming_max_chunk_size(streaming_settings.streaming_max_chunk_size)
+        set_token_validation_interval(streaming_settings.streaming_token_validation_interval)
 
     # Create and set configured outbound rate limiter
     outbound_limiter = create_outbound_rate_limiter(streaming_settings=streaming_settings)
@@ -127,6 +134,7 @@ async def init_websocket_lifecycle(
                 "streaming_enabled": streaming_settings.streaming_enabled,
                 "max_connections_per_user": streaming_settings.streaming_max_connections_per_user,
                 "max_messages_per_minute": streaming_settings.streaming_max_messages_per_minute,
+                "token_validation_interval": streaming_settings.streaming_token_validation_interval,
             },
         )
     else:

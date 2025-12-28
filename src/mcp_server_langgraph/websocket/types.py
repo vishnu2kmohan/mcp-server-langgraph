@@ -290,6 +290,9 @@ class WebSocketConfig:
     # Message handling
     message_timeout: int = 30  # Seconds to process each message
 
+    # Token validation
+    token_validation_interval: int = 300  # Seconds between token expiration checks (5 min)
+
     # Metrics
     endpoint_name: str = "unknown"
     enable_tracing: bool = True  # Enable OpenTelemetry tracing

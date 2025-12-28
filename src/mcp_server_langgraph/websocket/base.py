@@ -43,7 +43,9 @@ from mcp_server_langgraph.websocket.authz import WebSocketAuthorizationMiddlewar
 from mcp_server_langgraph.websocket.exceptions import (
     AuthenticationError,
     AuthorizationError,
+    TokenExpiredError,
 )
+from mcp_server_langgraph.websocket.token_validation import is_token_expired
 from mcp_server_langgraph.websocket.heartbeat import HeartbeatManager
 from mcp_server_langgraph.websocket.types import (
     AuthUser,
@@ -115,6 +117,10 @@ class WebSocketBase(ABC):
         self._user: AuthUser | None = None
         self._metrics = metrics
         self._message_timeout = config.message_timeout
+
+        # Token validation for active connections
+        self._auth_token: str | None = None
+        self._validation_task: asyncio.Task[None] | None = None
 
         # Initialize rate limiter (Redis or in-memory based on feature flag)
         self._rate_limiter = self._create_rate_limiter()
@@ -274,6 +280,14 @@ class WebSocketBase(ABC):
                         extra={"interval": self.config.heartbeat_interval},
                     )
 
+                # Start periodic token validation if configured and token available
+                if self._auth_token and self.config.token_validation_interval > 0:
+                    self._validation_task = asyncio.create_task(self._validate_token_periodically(websocket))
+                    logger.debug(
+                        f"Token validation started for {self.config.endpoint_name}",
+                        extra={"interval": self.config.token_validation_interval},
+                    )
+
                 # Enter message loop
                 await self._message_loop(websocket)
 
@@ -287,6 +301,16 @@ class WebSocketBase(ABC):
                 await self.on_error(e)
             finally:
                 self._state = ConnectionState.DISCONNECTING
+
+                # Cancel token validation task if running
+                if self._validation_task is not None:
+                    self._validation_task.cancel()
+                    try:
+                        await self._validation_task
+                    except asyncio.CancelledError:
+                        pass
+                    self._validation_task = None
+                    logger.debug(f"Token validation stopped for {self.config.endpoint_name}")
 
                 # Stop heartbeat if running
                 if self._heartbeat:
@@ -360,6 +384,8 @@ class WebSocketBase(ABC):
                 return None
 
             user = AuthUser.from_jwt_payload(result.payload)
+            # Store token for periodic validation during connection
+            self._auth_token = token
             logger.debug(
                 f"WebSocket auth success: user={user.id}",
                 extra={"endpoint": self.config.endpoint_name},
@@ -391,6 +417,41 @@ class WebSocketBase(ABC):
         )
 
         return await authz.authorize_connection(user.id)
+
+    async def _validate_token_periodically(self, websocket: WebSocket) -> None:
+        """
+        Periodically validate the authentication token.
+
+        If the token expires during the connection, closes the WebSocket
+        with code 4010 (TokenExpiredError) to allow clients to refresh
+        and reconnect.
+
+        Args:
+            websocket: The WebSocket connection to close if token expires.
+        """
+        try:
+            while True:
+                await asyncio.sleep(self.config.token_validation_interval)
+
+                if self._auth_token is None:
+                    break
+
+                if is_token_expired(self._auth_token):
+                    user_id = self._user.id if self._user else "unknown"
+                    logger.warning(
+                        f"Token expired for WebSocket: {self.config.endpoint_name}",
+                        extra={"user_id": user_id},
+                    )
+                    # Record token expiration metric for observability
+                    if self._metrics:
+                        self._metrics.record_token_expired(user_id=user_id)
+                    await self._close_with_error(websocket, TokenExpiredError())
+                    break
+        except asyncio.CancelledError:
+            # Normal cancellation during disconnect
+            raise
+        except Exception as e:
+            logger.warning(f"Error in token validation task: {e}")
 
     async def _message_loop(self, websocket: WebSocket) -> None:
         """
