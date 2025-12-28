@@ -19,6 +19,7 @@ import {
   clearAuthTokens,
   setAuthTokens,
 } from "../../utils/storage";
+import { authenticatedFetch } from "../../utils/authenticatedFetch";
 
 // ============================================================================
 // Constants
@@ -230,14 +231,8 @@ export const initializeAuth = createAsyncThunk<
   }
 
   try {
-    const currentTokens = getState().auth.tokens;
-    const response = await fetch("/api/v1/me", {
-      headers: {
-        Authorization: `Bearer ${currentTokens?.accessToken}`,
-      },
-      // Include credentials (cookies) for forward-auth (Keycloak SSO)
-      credentials: "include",
-    });
+    // Use authenticatedFetch which handles token from storage and includes credentials
+    const response = await authenticatedFetch("/api/v1/me");
 
     if (!response.ok) {
       throw new Error("Failed to fetch user info");
@@ -273,13 +268,12 @@ export const login = createAsyncThunk<
   { rejectValue: string }
 >("auth/login", async ({ username, password }, { rejectWithValue }) => {
   try {
-    const response = await fetch("/api/v1/auth/login", {
+    // Login is a public endpoint - skip auth header
+    const response = await authenticatedFetch("/api/v1/auth/login", {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ username, password }),
-      credentials: "include",
+      skipAuth: true,
     });
 
     if (!response.ok) {
@@ -322,15 +316,14 @@ export const refreshToken = createAsyncThunk<
   }
 
   try {
-    const response = await fetch("/api/v1/auth/refresh", {
+    // Refresh uses its own token (refresh token), not access token
+    const response = await authenticatedFetch("/api/v1/auth/refresh", {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         refreshToken: currentTokens.refreshToken,
       }),
-      credentials: "include",
+      skipAuth: true,
     });
 
     if (!response.ok) {
@@ -354,7 +347,7 @@ export const switchOrganization = createAsyncThunk<
   string,
   { state: RootState; rejectValue: string }
 >("auth/switchOrganization", async (orgId, { getState, rejectWithValue }) => {
-  const { organizations, tokens } = getState().auth;
+  const { organizations } = getState().auth;
 
   const org = organizations.find((o) => o.id === orgId);
   if (!org) {
@@ -362,15 +355,13 @@ export const switchOrganization = createAsyncThunk<
   }
 
   try {
-    await fetch("/api/v1/auth/switch-org", {
+    await authenticatedFetch("/api/v1/auth/switch-org", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${tokens?.accessToken}`,
         "X-Organization-ID": orgId,
       },
       body: JSON.stringify({ orgId }),
-      credentials: "include",
     });
 
     return org;

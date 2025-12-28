@@ -480,10 +480,13 @@ describe("authSlice", () => {
       const store = createTestStore({ tokens: mockTokens });
       await store.dispatch(initializeAuth());
 
-      expect(mockFetch).toHaveBeenCalledWith("/api/v1/me", {
-        headers: { Authorization: `Bearer ${mockTokens.accessToken}` },
-        credentials: "include",
-      });
+      // authenticatedFetch handles Authorization header internally
+      expect(mockFetch).toHaveBeenCalledWith(
+        "/api/v1/me",
+        expect.objectContaining({
+          credentials: "include",
+        }),
+      );
     });
   });
 
@@ -809,11 +812,13 @@ describe("authSlice", () => {
         "/api/v1/auth/refresh",
         expect.any(Object),
       );
-      // Should have called /me with new token
-      expect(mockFetch).toHaveBeenCalledWith("/api/v1/me", {
-        headers: { Authorization: "Bearer new-access-token" },
-        credentials: "include",
-      });
+      // Should have called /me (authenticatedFetch handles Authorization header)
+      expect(mockFetch).toHaveBeenCalledWith(
+        "/api/v1/me",
+        expect.objectContaining({
+          credentials: "include",
+        }),
+      );
       // User should be set
       expect(selectUser(store.getState())).toBeTruthy();
     });

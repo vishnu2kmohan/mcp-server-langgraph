@@ -36,6 +36,8 @@ export interface BaseArtifact {
   title?: string;
   /** Machine-friendly programmatic identifier (for code/API references) */
   name?: string;
+  /** Description explaining the artifact purpose or context */
+  description?: string;
   metadata?: Record<string, unknown>;
   timestamp?: number;
 }
@@ -396,6 +398,8 @@ export interface CreateArtifactRequest {
   content: string;
   sessionId: string;
   title?: string;
+  /** Description explaining the artifact purpose or context */
+  description?: string;
   language?: string;
 }
 
@@ -435,6 +439,8 @@ export interface UpdateArtifactRequest {
   title?: string;
   /** Machine-friendly programmatic identifier */
   name?: string;
+  /** Description explaining the artifact purpose or context */
+  description?: string;
   editedBy?: "user" | "ai-suggestion" | "ai-generation";
   aiConfidence?: number;
 }

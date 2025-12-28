@@ -14,16 +14,17 @@
  * }
  */
 
-import type { LoaderFunctionArgs } from "react-router";
+import { redirect, type LoaderFunctionArgs } from "react-router";
 import type { Session, ChatMessage } from "../../types";
 import type { CanvasArtifact, ArtifactVersion } from "../../types/artifacts";
-import { getAuthToken } from "../../utils/storage";
+import { getAuthToken, storage, STORAGE_KEYS } from "../../utils/storage";
 import {
   validateSession,
   validateMessages,
   validateSessionsResponse,
 } from "./validation";
 import { devLogger } from "../../utils/devLogger";
+import { saveCurrentRouteAsIntended } from "../../utils/intendedRoute";
 import {
   transformApiMessageToClient,
   isApiMessage,
@@ -79,20 +80,80 @@ function getAuthHeaders(): Record<string, string> {
 }
 
 /**
- * Fetch JSON with auth headers.
- * Handles both authenticated and unauthenticated scenarios gracefully.
+ * Attempt to refresh the access token.
+ * Returns true if refresh succeeded, false otherwise.
+ */
+async function tryRefreshToken(): Promise<boolean> {
+  const refreshToken = storage.get<string>(STORAGE_KEYS.REFRESH_TOKEN);
+  if (!refreshToken) {
+    return false;
+  }
+
+  try {
+    const response = await fetch("/api/v1/auth/refresh", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ refresh_token: refreshToken }),
+      credentials: "include",
+    });
+
+    if (!response.ok) {
+      return false;
+    }
+
+    const data = await response.json();
+    if (data.access_token) {
+      storage.set(STORAGE_KEYS.ACCESS_TOKEN, data.access_token);
+      if (data.refresh_token) {
+        storage.set(STORAGE_KEYS.REFRESH_TOKEN, data.refresh_token);
+      }
+      return true;
+    }
+    return false;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Fetch JSON with auth headers and 401 handling.
+ * Handles token refresh and redirects to login on auth failure.
+ *
+ * For route loaders, we use React Router's redirect() on 401
+ * since we can't use React hooks outside of components.
  */
 async function fetchJson<T>(url: string): Promise<T | null> {
   try {
-    const response = await fetch(url, {
+    let response = await fetch(url, {
       headers: getAuthHeaders(),
       credentials: "include", // Forward-auth (Keycloak SSO) support
     });
+
+    // Handle 401 - attempt token refresh
+    if (response.status === 401) {
+      const refreshed = await tryRefreshToken();
+      if (refreshed) {
+        // Retry with new token
+        response = await fetch(url, {
+          headers: getAuthHeaders(),
+          credentials: "include",
+        });
+      } else {
+        // Save intended route and redirect to login
+        saveCurrentRouteAsIntended();
+        throw redirect("/login");
+      }
+    }
+
     if (!response.ok) {
       return null;
     }
     return response.json();
-  } catch {
+  } catch (error) {
+    // Re-throw redirect responses
+    if (error instanceof Response) {
+      throw error;
+    }
     return null;
   }
 }

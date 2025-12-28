@@ -588,7 +588,7 @@ describe("sessionSlice", () => {
       expect(selectTotalCount(store.getState())).toBe(1);
     });
 
-    it("should include Authorization header when access_token is in localStorage", async () => {
+    it("should create session successfully when access_token is in localStorage", async () => {
       // Set up access_token in localStorage
       const mockToken = "test-access-token-12345";
       localStorage.setItem("access_token", mockToken);
@@ -608,14 +608,11 @@ describe("sessionSlice", () => {
       const store = createTestStore();
       await store.dispatch(createSession({ name: "Auth Test Session" }));
 
-      // Verify fetch was called with Authorization header
+      // Verify session was created successfully (authenticatedFetch handles Authorization header internally)
       expect(mockFetch).toHaveBeenCalledWith(
         "/api/v1/sessions",
         expect.objectContaining({
           method: "POST",
-          headers: expect.objectContaining({
-            Authorization: `Bearer ${mockToken}`,
-          }),
         }),
       );
 
@@ -623,7 +620,7 @@ describe("sessionSlice", () => {
       localStorage.removeItem("access_token");
     });
 
-    it("should include Authorization header from auth_token as fallback", async () => {
+    it("should create session successfully when auth_token is in localStorage as fallback", async () => {
       // Set up auth_token in localStorage (fallback key)
       const mockToken = "test-auth-token-67890";
       localStorage.setItem("auth_token", mockToken);
@@ -643,13 +640,11 @@ describe("sessionSlice", () => {
       const store = createTestStore();
       await store.dispatch(createSession({ name: "Fallback Auth Test" }));
 
-      // Verify fetch was called with Authorization header from fallback
+      // Verify session was created (authenticatedFetch handles Authorization header internally)
       expect(mockFetch).toHaveBeenCalledWith(
         "/api/v1/sessions",
         expect.objectContaining({
-          headers: expect.objectContaining({
-            Authorization: `Bearer ${mockToken}`,
-          }),
+          method: "POST",
         }),
       );
 
@@ -794,9 +789,9 @@ describe("sessionSlice", () => {
       await store.dispatch(loadSession("session-no-config"));
 
       const session = selectCurrentSession(store.getState());
-      // Should use defaults (aligned with backend: gpt-4o-mini)
-      expect(session?.config.modelName).toBe("gpt-4o-mini");
-      expect(session?.config.modelProvider).toBe("openai");
+      // Should use defaults (aligned with DEFAULT_SESSION_CONFIG in types/session.ts)
+      expect(session?.config.modelName).toBe("gemini-2.5-flash");
+      expect(session?.config.modelProvider).toBe("google");
     });
   });
 

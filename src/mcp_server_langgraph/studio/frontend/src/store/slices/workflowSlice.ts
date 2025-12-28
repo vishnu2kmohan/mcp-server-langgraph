@@ -24,6 +24,7 @@ import type {
   NodeStatus,
   ExecutionState,
 } from "../../types/workflow";
+import { authenticatedFetch } from "../../utils/authenticatedFetch";
 
 // ============================================================================
 // Constants
@@ -108,9 +109,7 @@ export const loadWorkflow = createAsyncThunk<
   { rejectValue: string }
 >("workflow/loadWorkflow", async (id, { rejectWithValue }) => {
   try {
-    const response = await fetch(`/api/v1/workflows/${id}`, {
-      credentials: "include",
-    });
+    const response = await authenticatedFetch(`/api/v1/workflows/${id}`);
 
     if (!response.ok) {
       const errorData = await response.json();
@@ -142,16 +141,18 @@ export const saveWorkflow = createAsyncThunk<
   }
 
   try {
-    const response = await fetch(`/api/v1/workflows/${metadata.id}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        metadata: { ...metadata, updatedAt: Date.now() },
-        nodes,
-        edges,
-      }),
-      credentials: "include",
-    });
+    const response = await authenticatedFetch(
+      `/api/v1/workflows/${metadata.id}`,
+      {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          metadata: { ...metadata, updatedAt: Date.now() },
+          nodes,
+          edges,
+        }),
+      },
+    );
 
     if (!response.ok) {
       const errorData = await response.json();
@@ -176,12 +177,14 @@ export const renameWorkflow = createAsyncThunk<
   "workflow/renameWorkflow",
   async ({ workflowId, name }, { rejectWithValue }) => {
     try {
-      const response = await fetch(`/api/v1/workflows/${workflowId}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name }),
-        credentials: "include",
-      });
+      const response = await authenticatedFetch(
+        `/api/v1/workflows/${workflowId}`,
+        {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ name }),
+        },
+      );
 
       if (!response.ok) {
         const errorData = await response.json();
@@ -218,12 +221,14 @@ export const executeWorkflow = createAsyncThunk<
     );
 
     try {
-      const response = await fetch(`/api/v1/workflows/${metadata.id}/execute`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ nodes, edges }),
-        credentials: "include",
-      });
+      const response = await authenticatedFetch(
+        `/api/v1/workflows/${metadata.id}/execute`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ nodes, edges }),
+        },
+      );
 
       if (!response.ok) {
         const errorData = await response.json();

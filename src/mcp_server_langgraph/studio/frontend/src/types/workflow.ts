@@ -51,6 +51,8 @@ export interface WorkflowNode extends Node<WorkflowNodeData> {
 export interface WorkflowMetadata {
   id: string;
   name: string;
+  /** Human-friendly display title (defaults to name if not provided) */
+  title?: string;
   description: string;
   version: number;
   createdAt: number;

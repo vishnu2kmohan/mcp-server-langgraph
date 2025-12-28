@@ -6,6 +6,7 @@
 
 import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
 import type { RootState } from "../index";
+import { authenticatedFetch } from "../../utils/authenticatedFetch";
 
 // ============================================================================
 // Types
@@ -82,13 +83,8 @@ export const fetchProjects = createAsyncThunk<
   try {
     const page = params?.page ?? 1;
     const perPage = params?.perPage ?? 20;
-    const response = await fetch(
+    const response = await authenticatedFetch(
       `/api/v1/projects?page=${page}&per_page=${perPage}`,
-      {
-        method: "GET",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-      },
     );
 
     if (!response.ok) {
@@ -116,11 +112,7 @@ export const loadProject = createAsyncThunk<
   { rejectValue: string }
 >("project/loadProject", async (projectId, { rejectWithValue }) => {
   try {
-    const response = await fetch(`/api/v1/projects/${projectId}`, {
-      method: "GET",
-      headers: { "Content-Type": "application/json" },
-      credentials: "include",
-    });
+    const response = await authenticatedFetch(`/api/v1/projects/${projectId}`);
 
     if (!response.ok) {
       throw new Error("Failed to load project");
@@ -140,14 +132,13 @@ export const createProject = createAsyncThunk<
   { rejectValue: string }
 >("project/createProject", async (params, { rejectWithValue }) => {
   try {
-    const response = await fetch("/api/v1/projects", {
+    const response = await authenticatedFetch("/api/v1/projects", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         name: params.name,
         description: params.description || null,
       }),
-      credentials: "include",
     });
 
     if (!response.ok) {
@@ -168,9 +159,8 @@ export const deleteProject = createAsyncThunk<
   { rejectValue: string }
 >("project/deleteProject", async (projectId, { rejectWithValue }) => {
   try {
-    const response = await fetch(`/api/v1/projects/${projectId}`, {
+    const response = await authenticatedFetch(`/api/v1/projects/${projectId}`, {
       method: "DELETE",
-      credentials: "include",
     });
 
     if (!response.ok) {
@@ -193,12 +183,14 @@ export const updateProject = createAsyncThunk<
   "project/updateProject",
   async ({ projectId, ...updates }, { rejectWithValue }) => {
     try {
-      const response = await fetch(`/api/v1/projects/${projectId}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(updates),
-        credentials: "include",
-      });
+      const response = await authenticatedFetch(
+        `/api/v1/projects/${projectId}`,
+        {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(updates),
+        },
+      );
 
       if (!response.ok) {
         throw new Error("Failed to update project");

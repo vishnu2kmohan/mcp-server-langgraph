@@ -110,6 +110,8 @@ export interface ChatMessage {
 export interface SessionSummary {
   id: string;
   name: string;
+  /** Longer context or notes for the session */
+  description?: string;
   createdAt: number;
   updatedAt: number;
   messageCount: number;
@@ -120,6 +122,8 @@ export interface SessionSummary {
 export interface ClientSession {
   id: string;
   name: string;
+  /** Longer context or notes for the session */
+  description?: string;
   config: SessionConfig;
   messages: ChatMessage[];
   createdAt: number;

@@ -667,9 +667,12 @@ describe("workflowSlice", () => {
         const store = createTestStore();
         await store.dispatch(loadWorkflow("wf-1"));
 
-        expect(mockFetch).toHaveBeenCalledWith("/api/v1/workflows/wf-1", {
-          credentials: "include",
-        });
+        expect(mockFetch).toHaveBeenCalledWith(
+          "/api/v1/workflows/wf-1",
+          expect.objectContaining({
+            credentials: "include",
+          }),
+        );
         expect(selectWorkflowMetadata(store.getState())?.name).toBe(
           "Loaded Workflow",
         );

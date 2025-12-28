@@ -18,32 +18,13 @@ import type {
   NavigationContext,
 } from "../../types/session";
 import { DEFAULT_SESSION_CONFIG } from "../../types/session";
-import { getAuthToken } from "../../utils/storage";
+import { authenticatedFetch } from "../../utils/authenticatedFetch";
 
 /**
  * Generate unique message ID
  */
 function generateMessageId(): string {
   return `msg-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
-}
-
-/**
- * Get auth headers for API requests.
- * Uses centralized storage utility for token retrieval.
- */
-function getAuthHeaders(): Record<string, string> {
-  const headers: Record<string, string> = {
-    "Content-Type": "application/json",
-  };
-
-  // Use centralized storage utility for consistent token access
-  const token = getAuthToken();
-
-  if (token) {
-    headers["Authorization"] = `Bearer ${token}`;
-  }
-
-  return headers;
 }
 
 /**
@@ -110,10 +91,7 @@ export const fetchSessions = createAsyncThunk<
     const url = queryString
       ? `/api/v1/sessions?${queryString}`
       : "/api/v1/sessions";
-    const response = await fetch(url, {
-      headers: getAuthHeaders(),
-      credentials: "include",
-    });
+    const response = await authenticatedFetch(url);
 
     if (!response.ok) {
       const errorData = await response.json();
@@ -171,10 +149,7 @@ export const fetchMoreSessions = createAsyncThunk<
     const url = queryString
       ? `/api/v1/sessions?${queryString}`
       : "/api/v1/sessions";
-    const response = await fetch(url, {
-      headers: getAuthHeaders(),
-      credentials: "include",
-    });
+    const response = await authenticatedFetch(url);
 
     if (!response.ok) {
       const errorData = await response.json();
@@ -298,11 +273,10 @@ export const createSession = createAsyncThunk<
   { rejectValue: string }
 >("session/createSession", async ({ name, config }, { rejectWithValue }) => {
   try {
-    const response = await fetch("/api/v1/sessions", {
+    const response = await authenticatedFetch("/api/v1/sessions", {
       method: "POST",
-      headers: getAuthHeaders(),
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ name, config }),
-      credentials: "include",
     });
 
     if (!response.ok) {
@@ -328,10 +302,7 @@ export const loadSession = createAsyncThunk<
   { rejectValue: string }
 >("session/loadSession", async (sessionId, { rejectWithValue }) => {
   try {
-    const response = await fetch(`/api/v1/sessions/${sessionId}`, {
-      headers: getAuthHeaders(),
-      credentials: "include",
-    });
+    const response = await authenticatedFetch(`/api/v1/sessions/${sessionId}`);
 
     if (!response.ok) {
       const errorData = await response.json();
@@ -356,10 +327,8 @@ export const deleteSession = createAsyncThunk<
   { rejectValue: string }
 >("session/deleteSession", async (sessionId, { rejectWithValue }) => {
   try {
-    const response = await fetch(`/api/v1/sessions/${sessionId}`, {
+    const response = await authenticatedFetch(`/api/v1/sessions/${sessionId}`, {
       method: "DELETE",
-      headers: getAuthHeaders(),
-      credentials: "include",
     });
 
     if (!response.ok) {
@@ -384,11 +353,10 @@ export const renameSession = createAsyncThunk<
   { rejectValue: string }
 >("session/renameSession", async ({ sessionId, name }, { rejectWithValue }) => {
   try {
-    const response = await fetch(`/api/v1/sessions/${sessionId}`, {
+    const response = await authenticatedFetch(`/api/v1/sessions/${sessionId}`, {
       method: "PATCH",
-      headers: getAuthHeaders(),
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ name }),
-      credentials: "include",
     });
 
     if (!response.ok) {
@@ -403,6 +371,45 @@ export const renameSession = createAsyncThunk<
     );
   }
 });
+
+/**
+ * Update session metadata (name and/or description)
+ */
+export const updateSession = createAsyncThunk<
+  { sessionId: string; name?: string; description?: string },
+  { sessionId: string; name?: string; description?: string },
+  { rejectValue: string }
+>(
+  "session/updateSession",
+  async ({ sessionId, name, description }, { rejectWithValue }) => {
+    try {
+      // Build update payload with only provided fields
+      const updatePayload: { name?: string; description?: string } = {};
+      if (name !== undefined) updatePayload.name = name;
+      if (description !== undefined) updatePayload.description = description;
+
+      const response = await authenticatedFetch(
+        `/api/v1/sessions/${sessionId}`,
+        {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(updatePayload),
+        },
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.detail || "Failed to update session");
+      }
+
+      return { sessionId, name, description };
+    } catch (error) {
+      return rejectWithValue(
+        error instanceof Error ? error.message : "Failed to update session",
+      );
+    }
+  },
+);
 
 /**
  * Send a message in the current session
@@ -433,13 +440,12 @@ export const sendMessage = createAsyncThunk<
     dispatch(addUserMessage(userMessage));
 
     try {
-      const response = await fetch(
+      const response = await authenticatedFetch(
         `/api/v1/sessions/${currentSession.id}/messages`,
         {
           method: "POST",
-          headers: getAuthHeaders(),
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ role: "user", content }),
-          credentials: "include",
         },
       );
 
@@ -476,12 +482,10 @@ export const clearMessages = createAsyncThunk<
   }
 
   try {
-    const response = await fetch(
+    const response = await authenticatedFetch(
       `/api/v1/sessions/${currentSession.id}/messages`,
       {
         method: "DELETE",
-        headers: getAuthHeaders(),
-        credentials: "include",
       },
     );
 
@@ -526,16 +530,15 @@ export const saveAssistantMessage = createAsyncThunk<
     dispatch(addMessage(assistantMessage));
 
     try {
-      const response = await fetch(
+      const response = await authenticatedFetch(
         `/api/v1/sessions/${currentSession.id}/messages`,
         {
           method: "POST",
-          headers: getAuthHeaders(),
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             role: messageData.role,
             content: messageData.content,
           }),
-          credentials: "include",
         },
       );
 
@@ -677,6 +680,11 @@ export const sessionSlice = createSlice({
     trackPageVisit: (state, action: PayloadAction<string>) => {
       const page = action.payload;
       state.currentPage = page;
+
+      // Initialize recentPages if missing (can happen with partial preloadedState in tests)
+      if (!state.recentPages) {
+        state.recentPages = [];
+      }
 
       // Remove if already in list (will be re-added at front)
       const filteredPages = state.recentPages.filter((p) => p !== page);
@@ -837,6 +845,37 @@ export const sessionSlice = createSlice({
       })
       .addCase(renameSession.rejected, (state, action) => {
         state.error = action.payload || "Failed to rename session";
+      });
+
+    // updateSession
+    builder
+      .addCase(updateSession.fulfilled, (state, action) => {
+        const { sessionId, name, description } = action.payload;
+        const updatedAt = Date.now();
+
+        const sessionIndex = state.sessions.findIndex(
+          (s) => s.id === sessionId,
+        );
+        if (sessionIndex >= 0) {
+          const session = state.sessions[sessionIndex];
+          if (session) {
+            if (name !== undefined) session.name = name;
+            if (description !== undefined) session.description = description;
+            session.updatedAt = updatedAt;
+          }
+        }
+
+        if (state.currentSession?.id === sessionId) {
+          if (name !== undefined) state.currentSession.name = name;
+          if (description !== undefined)
+            state.currentSession.description = description;
+          state.currentSession.updatedAt = updatedAt;
+        }
+
+        state.error = null;
+      })
+      .addCase(updateSession.rejected, (state, action) => {
+        state.error = action.payload || "Failed to update session";
       });
 
     // sendMessage
