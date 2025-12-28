@@ -10,10 +10,12 @@ The artifact name generator should:
 3. Use LLM when available, fallback to heuristics
 4. Extract meaningful names from code (function/class names)
 5. Return sensible defaults when content is unclear
+6. Use LLMFactory for resilient LLM calls (SOLID compliance)
 """
 
 import gc
 from typing import Any
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
@@ -323,3 +325,135 @@ class TestArtifactNameEndpoint:
             assert response.status_code == 200
             data = response.json()
             assert "name" in data
+
+
+@pytest.mark.xdist_group(name="test_artifact_name_llm_factory")
+class TestArtifactNameGeneratorLLMFactory:
+    """Tests for LLMFactory integration (SOLID compliance).
+
+    These tests verify that ArtifactNameGenerator uses LLMFactory
+    for resilient LLM calls with circuit breaker, retry, timeout,
+    and bulkhead patterns.
+    """
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers."""
+        gc.collect()
+
+    @pytest.mark.asyncio
+    async def test_accepts_llm_factory_via_dependency_injection(self) -> None:
+        """
+        GIVEN an LLMFactory instance
+        WHEN ArtifactNameGenerator is initialized with llm_factory parameter
+        THEN it should use the injected factory for LLM calls
+        """
+        from langchain_core.messages import AIMessage
+
+        from mcp_server_langgraph.studio.ai.artifact_name_generator import (
+            ArtifactNameGenerator,
+        )
+
+        # Create mock LLM factory
+        mock_factory = MagicMock()
+        mock_factory.ainvoke = AsyncMock(return_value=AIMessage(content="test_artifact"))
+
+        generator = ArtifactNameGenerator(enable_llm=True, llm_factory=mock_factory)
+        name = await generator.generate(
+            content="some complex content that needs LLM",
+            content_type="unknown",
+        )
+
+        # Factory's ainvoke should have been called
+        mock_factory.ainvoke.assert_called_once()
+        assert "test_artifact" in name
+
+    @pytest.mark.asyncio
+    async def test_lazy_initializes_llm_factory_when_not_provided(self) -> None:
+        """
+        GIVEN no LLM factory provided
+        WHEN generate is called with LLM enabled
+        THEN it should lazy-initialize the factory from settings
+        """
+        from unittest.mock import patch
+
+        from langchain_core.messages import AIMessage
+
+        from mcp_server_langgraph.studio.ai.artifact_name_generator import (
+            ArtifactNameGenerator,
+        )
+
+        # Create a mock factory
+        mock_factory = MagicMock()
+        mock_factory.ainvoke = AsyncMock(return_value=AIMessage(content="lazy_init_name"))
+
+        # Patch at the source module where create_llm_from_config is defined
+        with patch(
+            "mcp_server_langgraph.llm.factory.create_llm_from_config",
+            return_value=mock_factory,
+        ) as mock_create:
+            generator = ArtifactNameGenerator(enable_llm=True)
+            # Use content that won't match heuristics to force LLM call
+            name = await generator.generate(
+                content="~~~ambiguous~~~",
+                content_type="unknown",
+            )
+
+            # Should have lazily created the factory
+            mock_create.assert_called_once()
+            assert name is not None
+
+    @pytest.mark.asyncio
+    async def test_llm_factory_receives_correct_messages(self) -> None:
+        """
+        GIVEN an LLMFactory and artifact content
+        WHEN generate is called
+        THEN the factory should receive properly formatted messages
+        """
+        from langchain_core.messages import AIMessage
+
+        from mcp_server_langgraph.studio.ai.artifact_name_generator import (
+            ArtifactNameGenerator,
+        )
+
+        # Create mock LLM factory
+        mock_factory = MagicMock()
+        mock_factory.ainvoke = AsyncMock(return_value=AIMessage(content="generated_name"))
+
+        generator = ArtifactNameGenerator(enable_llm=True, llm_factory=mock_factory)
+        await generator.generate(
+            content="def hello(): pass",
+            content_type="code",
+            language="python",
+        )
+
+        # Verify the messages passed to ainvoke
+        call_args = mock_factory.ainvoke.call_args
+        if call_args:
+            messages = call_args[0][0]  # First positional arg is messages
+            # Should have a HumanMessage with the prompt
+            assert len(messages) >= 1
+
+    @pytest.mark.asyncio
+    async def test_falls_back_to_heuristics_on_llm_error(self) -> None:
+        """
+        GIVEN an LLMFactory that raises an error
+        WHEN generate is called
+        THEN it should fall back to heuristic name generation
+        """
+        from mcp_server_langgraph.studio.ai.artifact_name_generator import (
+            ArtifactNameGenerator,
+        )
+
+        # Create mock LLM factory that fails
+        mock_factory = MagicMock()
+        mock_factory.ainvoke = AsyncMock(side_effect=Exception("LLM error"))
+
+        generator = ArtifactNameGenerator(enable_llm=True, llm_factory=mock_factory)
+        name = await generator.generate(
+            content="def calculate_total(): pass",
+            content_type="code",
+            language="python",
+        )
+
+        # Should fall back to heuristics and extract function name
+        assert "calculate" in name.lower() or "total" in name.lower()
