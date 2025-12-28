@@ -11,6 +11,10 @@
  */
 
 import { useState, useCallback, useRef, useEffect, useMemo } from "react";
+import { devLogger } from "../utils/devLogger";
+
+// Create prefixed logger for this hook
+const logger = devLogger.withPrefix("[VoiceInput]");
 
 /**
  * Web Speech API type declarations
@@ -231,7 +235,7 @@ export function useVoiceInput(
         recognition.start();
       } catch (err) {
         // May throw if already started
-        console.warn("Speech recognition start error:", err);
+        logger.warn("Speech recognition start error:", err);
       }
     }
   }, [isSupported, onError]);

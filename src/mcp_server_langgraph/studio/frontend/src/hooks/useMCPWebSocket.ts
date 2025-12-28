@@ -13,10 +13,9 @@
 
 import { useState, useCallback, useRef, useMemo, useEffect } from "react";
 import { useRealtimeSync, type ConnectionStatus } from "./useRealtimeSync";
-import { useAppSelector } from "../store/hooks";
-import { selectIsAuthenticated } from "../store/slices/authSlice";
-import { getAuthToken } from "../utils/storage";
-import { buildWebSocketUrl, API_ENDPOINTS } from "../config/api";
+import { useAppDispatch, useAppSelector } from "../store/hooks";
+import { logout, selectIsAuthenticated } from "../store/slices/authSlice";
+import { buildWebSocketUrl, WS_ENDPOINTS } from "../utils/websocket";
 
 // ============================================================================
 // MCP Protocol Types
@@ -212,20 +211,12 @@ export interface UseMCPWebSocketReturn {
 
 /**
  * Get default MCP WebSocket URL
- */
-/**
- * Get default MCP WebSocket URL
  *
- * Uses centralized config from src/config/api.ts
+ * Uses centralized config from src/utils/websocket.ts
  */
-function getDefaultMCPWebSocketUrl(
-  authenticated: boolean,
-  token?: string,
-): string {
-  const endpoint = authenticated
-    ? API_ENDPOINTS.WS_MCP_AUTH
-    : API_ENDPOINTS.WS_MCP;
-  return buildWebSocketUrl(endpoint, window, authenticated ? token : undefined);
+function getDefaultMCPWebSocketUrl(authenticated: boolean): string {
+  const endpoint = authenticated ? WS_ENDPOINTS.MCP_AUTH : WS_ENDPOINTS.MCP;
+  return buildWebSocketUrl(endpoint, {}, authenticated);
 }
 
 /**
@@ -292,6 +283,7 @@ export function useMCPWebSocket(
     onStreamingEnd,
   } = options;
 
+  const dispatch = useAppDispatch();
   const isAuthenticated = useAppSelector(selectIsAuthenticated);
 
   // State
@@ -331,14 +323,10 @@ export function useMCPWebSocket(
     };
   }, [onStreamingChunk, onStreamingStart, onStreamingEnd]);
 
-  // Get auth token when authenticated - makes dependency explicit for React
-  // Convert null to undefined for type compatibility
-  const authToken = isAuthenticated ? (getAuthToken() ?? undefined) : undefined;
-
-  // Compute WebSocket URL - recalculates when auth state changes via authToken
+  // Compute WebSocket URL - token is included automatically when using authenticated endpoint
   const wsUrl = useMemo(
-    () => url ?? getDefaultMCPWebSocketUrl(authenticated, authToken),
-    [url, authenticated, authToken],
+    () => url ?? getDefaultMCPWebSocketUrl(authenticated && isAuthenticated),
+    [url, authenticated, isAuthenticated],
   );
 
   // Track effective enabled state - only connect when authenticated (for authenticated endpoints)
@@ -408,6 +396,7 @@ export function useMCPWebSocket(
       });
       pendingRequestsRef.current.clear();
     },
+    onTokenExpired: () => dispatch(logout()),
   });
 
   // Track if enabled - if not authenticated or explicitly disabled, override status

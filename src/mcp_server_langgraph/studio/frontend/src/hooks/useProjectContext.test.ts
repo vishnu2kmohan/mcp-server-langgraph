@@ -7,34 +7,58 @@
  * - Context active/inactive states
  * - Updating context content
  * - Error handling
+ * - Authentication with authenticatedFetch
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { renderHook, act, waitFor } from "@testing-library/react";
+import { renderHook, act, waitFor, cleanup } from "@testing-library/react";
+
+// Mock react-router
+const mockNavigate = vi.fn();
+vi.mock("react-router", () => ({
+  useNavigate: () => mockNavigate,
+}));
+
+// Mock authenticatedFetch
+const mockAuthenticatedFetch = vi.fn();
+vi.mock("../utils/authenticatedFetch", () => ({
+  authenticatedFetch: (...args: unknown[]) => mockAuthenticatedFetch(...args),
+}));
+
+// Mock intendedRoute
+const mockSetIntendedRoute = vi.fn();
+vi.mock("../utils/intendedRoute", () => ({
+  setIntendedRoute: (...args: unknown[]) => mockSetIntendedRoute(...args),
+}));
+
 import { useProjectContext } from "./useProjectContext";
 
 describe("useProjectContext", () => {
-  let fetchSpy: ReturnType<typeof vi.spyOn>;
-
   beforeEach(() => {
     vi.clearAllMocks();
-    fetchSpy = vi.spyOn(global, "fetch");
+    // Default successful response
+    mockAuthenticatedFetch.mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve({ exists: false }),
+    });
   });
 
   afterEach(() => {
-    fetchSpy.mockRestore();
+    cleanup();
+    vi.clearAllMocks();
+    vi.restoreAllMocks();
   });
 
   describe("loading state", () => {
     it("should start with loading state", () => {
-      fetchSpy.mockImplementation(() => new Promise(() => {}));
+      mockAuthenticatedFetch.mockImplementation(() => new Promise(() => {}));
       const { result } = renderHook(() => useProjectContext());
 
       expect(result.current.isLoading).toBe(true);
     });
 
     it("should set loading to false after fetch completes", async () => {
-      fetchSpy.mockResolvedValueOnce({
+      mockAuthenticatedFetch.mockResolvedValueOnce({
         ok: true,
         json: () => Promise.resolve({ exists: false }),
       } as Response);
@@ -49,7 +73,7 @@ describe("useProjectContext", () => {
 
   describe("context detection", () => {
     it("should detect when project context exists", async () => {
-      fetchSpy.mockResolvedValueOnce({
+      mockAuthenticatedFetch.mockResolvedValueOnce({
         ok: true,
         json: () =>
           Promise.resolve({
@@ -70,7 +94,7 @@ describe("useProjectContext", () => {
     });
 
     it("should detect when project context does not exist", async () => {
-      fetchSpy.mockResolvedValueOnce({
+      mockAuthenticatedFetch.mockResolvedValueOnce({
         ok: true,
         json: () => Promise.resolve({ exists: false }),
       } as Response);
@@ -86,7 +110,7 @@ describe("useProjectContext", () => {
 
   describe("context path", () => {
     it("should return the context file path when exists", async () => {
-      fetchSpy.mockResolvedValueOnce({
+      mockAuthenticatedFetch.mockResolvedValueOnce({
         ok: true,
         json: () =>
           Promise.resolve({
@@ -106,7 +130,7 @@ describe("useProjectContext", () => {
 
   describe("updating context", () => {
     it("should update context content", async () => {
-      fetchSpy
+      mockAuthenticatedFetch
         .mockResolvedValueOnce({
           ok: true,
           json: () =>
@@ -131,7 +155,7 @@ describe("useProjectContext", () => {
         await result.current.updateContent("New content");
       });
 
-      expect(fetchSpy).toHaveBeenCalledWith(
+      expect(mockAuthenticatedFetch).toHaveBeenCalledWith(
         expect.stringContaining("/api/v1/context"),
         expect.objectContaining({
           method: "PUT",
@@ -143,7 +167,7 @@ describe("useProjectContext", () => {
 
   describe("creating context", () => {
     it("should create new context file", async () => {
-      fetchSpy
+      mockAuthenticatedFetch
         .mockResolvedValueOnce({
           ok: true,
           json: () => Promise.resolve({ exists: false }),
@@ -167,7 +191,7 @@ describe("useProjectContext", () => {
         await result.current.createContext("# New Project\nDescription here.");
       });
 
-      expect(fetchSpy).toHaveBeenCalledWith(
+      expect(mockAuthenticatedFetch).toHaveBeenCalledWith(
         expect.stringContaining("/api/v1/context"),
         expect.objectContaining({
           method: "POST",
@@ -179,7 +203,7 @@ describe("useProjectContext", () => {
 
   describe("error handling", () => {
     it("should handle fetch errors gracefully", async () => {
-      fetchSpy.mockRejectedValueOnce(new Error("Network error"));
+      mockAuthenticatedFetch.mockRejectedValueOnce(new Error("Network error"));
 
       const { result } = renderHook(() => useProjectContext());
 
@@ -190,7 +214,7 @@ describe("useProjectContext", () => {
     });
 
     it("should handle non-OK responses", async () => {
-      fetchSpy.mockResolvedValueOnce({
+      mockAuthenticatedFetch.mockResolvedValueOnce({
         ok: false,
         status: 500,
       } as Response);
@@ -205,7 +229,7 @@ describe("useProjectContext", () => {
 
   describe("refresh", () => {
     it("should refresh context data", async () => {
-      fetchSpy.mockResolvedValue({
+      mockAuthenticatedFetch.mockResolvedValue({
         ok: true,
         json: () =>
           Promise.resolve({
@@ -225,7 +249,7 @@ describe("useProjectContext", () => {
         await result.current.refresh();
       });
 
-      expect(fetchSpy).toHaveBeenCalledTimes(2);
+      expect(mockAuthenticatedFetch).toHaveBeenCalledTimes(2);
     });
   });
 });

@@ -10,7 +10,15 @@
  */
 
 import { useState, useCallback, useEffect, useRef } from "react";
-import { getAuthToken } from "../utils/storage";
+import { useNavigate } from "react-router";
+import { useAppDispatch } from "../store/hooks";
+import { logout } from "../store/slices/authSlice";
+import { authenticatedFetch } from "../utils/authenticatedFetch";
+import { saveCurrentRouteAsIntended } from "../utils/intendedRoute";
+import {
+  WS_CLOSE_TOKEN_EXPIRED,
+  ensureValidTokenForWebSocket,
+} from "../utils/websocketAuth";
 
 export interface Tool {
   name: string;
@@ -42,6 +50,9 @@ export interface MCPConnectionState {
 export function useMCPConnection(
   options: MCPConnectionOptions = {},
 ): MCPConnectionState {
+  const navigate = useNavigate();
+  // Redux dispatch for token expiration handling
+  const dispatch = useAppDispatch();
   const {
     autoConnect = false,
     autoReconnect = false,
@@ -76,6 +87,12 @@ export function useMCPConnection(
     return messageIdRef.current;
   }, []);
 
+  // Handle auth failure - redirect to login
+  const handleAuthFailure = useCallback(() => {
+    saveCurrentRouteAsIntended();
+    navigate("/login", { replace: true });
+  }, [navigate]);
+
   const sendRequest = useCallback(
     (method: string, params?: Record<string, unknown>): Promise<unknown> => {
       return new Promise((resolve, reject) => {
@@ -101,14 +118,9 @@ export function useMCPConnection(
 
   const fetchToolsViaRest = useCallback(async () => {
     try {
-      const token = getAuthToken();
-      const response = await fetch("/api/v1/mcp/tools", {
+      const response = await authenticatedFetch("/api/v1/mcp/tools", {
         method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          ...(token && { Authorization: `Bearer ${token}` }),
-        },
-        credentials: "include",
+        onAuthFailure: handleAuthFailure,
       });
       if (response.ok) {
         const data = await response.json();
@@ -117,7 +129,7 @@ export function useMCPConnection(
     } catch {
       throw new Error("Failed to fetch tools via REST");
     }
-  }, []);
+  }, [handleAuthFailure]);
 
   const fallbackToRest = useCallback(async () => {
     try {
@@ -215,13 +227,30 @@ export function useMCPConnection(
         // WebSocket error - will trigger onclose
       };
 
-      ws.onclose = () => {
+      ws.onclose = async (event) => {
         wsRef.current = null;
         const wasConnected = wasConnectedRef.current;
         wasConnectedRef.current = false;
 
         // Only update state if still mounted
         if (!isMountedRef.current) return;
+
+        // Handle token expiration close code (4010)
+        if (event.code === WS_CLOSE_TOKEN_EXPIRED) {
+          const refreshed = await ensureValidTokenForWebSocket();
+          if (refreshed) {
+            // Token refreshed successfully - reconnect
+            inReconnectSequenceRef.current = true;
+            setIsReconnecting(true);
+            reconnectTimerRef.current = setTimeout(() => {
+              if (isMountedRef.current) connect();
+            }, 100);
+          } else {
+            // Refresh failed - logout
+            dispatch(logout());
+          }
+          return;
+        }
 
         // If we were never properly connected (error during handshake)
         if (!wasConnected) {
@@ -280,6 +309,7 @@ export function useMCPConnection(
     fallbackToRest,
     autoReconnect,
     maxReconnectAttempts,
+    dispatch,
   ]);
 
   const disconnect = useCallback(() => {
@@ -306,15 +336,10 @@ export function useMCPConnection(
       }
 
       // REST fallback
-      const token = getAuthToken();
-      const response = await fetch("/api/v1/mcp/tools/call", {
+      const response = await authenticatedFetch("/api/v1/mcp/tools/call", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          ...(token && { Authorization: `Bearer ${token}` }),
-        },
         body: JSON.stringify({ name, arguments: args }),
-        credentials: "include",
+        onAuthFailure: handleAuthFailure,
       });
 
       if (!response.ok) {
@@ -323,7 +348,7 @@ export function useMCPConnection(
 
       return response.json();
     },
-    [connectionMode, sendRequest],
+    [connectionMode, sendRequest, handleAuthFailure],
   );
 
   // Track mounted state for async callback safety

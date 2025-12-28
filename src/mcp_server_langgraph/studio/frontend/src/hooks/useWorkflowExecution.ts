@@ -11,6 +11,7 @@
 import { useCallback, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useRealtimeSync } from "./useRealtimeSync";
+import { logout } from "../store/slices/authSlice";
 import {
   setExecutionState,
   updateNodeStatus,
@@ -214,6 +215,7 @@ export function useWorkflowExecution(
       onConnect: handleConnect,
       onDisconnect: handleDisconnect,
       onError: handleError,
+      onTokenExpired: () => dispatch(logout()),
     });
 
   // Start execution

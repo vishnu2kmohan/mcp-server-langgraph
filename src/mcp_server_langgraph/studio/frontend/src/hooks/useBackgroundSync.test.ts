@@ -9,8 +9,22 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { renderHook, act, waitFor } from "@testing-library/react";
 import { useBackgroundSync, InMemoryQueueStorage } from "./useBackgroundSync";
 
-// Mock fetch for testing request replay
-const mockFetch = vi.fn();
+// Mock react-router
+const mockNavigate = vi.fn();
+vi.mock("react-router", () => ({
+  useNavigate: () => mockNavigate,
+}));
+
+// Mock intendedRoute
+vi.mock("../utils/intendedRoute", () => ({
+  setIntendedRoute: vi.fn(),
+}));
+
+// Mock authenticatedFetch for testing request replay
+const mockAuthenticatedFetch = vi.fn();
+vi.mock("../utils/authenticatedFetch", () => ({
+  authenticatedFetch: (...args: unknown[]) => mockAuthenticatedFetch(...args),
+}));
 
 describe("useBackgroundSync", () => {
   const originalServiceWorker = navigator.serviceWorker;
@@ -22,9 +36,11 @@ describe("useBackgroundSync", () => {
     // Create fresh in-memory storage for each test
     mockStorage = new InMemoryQueueStorage();
 
-    // Stub fetch globally
-    vi.stubGlobal("fetch", mockFetch);
-    mockFetch.mockResolvedValue({ ok: true, json: () => Promise.resolve({}) });
+    // Set up authenticatedFetch mock with default success response
+    mockAuthenticatedFetch.mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve({}),
+    });
 
     // Mock navigator.serviceWorker
     Object.defineProperty(navigator, "serviceWorker", {
@@ -168,7 +184,7 @@ describe("useBackgroundSync", () => {
         });
       });
 
-      expect(mockFetch).toHaveBeenCalledWith(
+      expect(mockAuthenticatedFetch).toHaveBeenCalledWith(
         "/api/v1/chat/messages",
         expect.objectContaining({
           method: "POST",
@@ -278,7 +294,7 @@ describe("useBackgroundSync", () => {
         await result.current.syncNow();
       });
 
-      expect(mockFetch).toHaveBeenCalled();
+      expect(mockAuthenticatedFetch).toHaveBeenCalled();
       expect(result.current.pendingCount).toBe(0);
     });
 
@@ -343,7 +359,7 @@ describe("useBackgroundSync", () => {
       });
 
       // Mock fetch to fail
-      mockFetch.mockRejectedValueOnce(new Error("Network error"));
+      mockAuthenticatedFetch.mockRejectedValueOnce(new Error("Network error"));
 
       Object.defineProperty(navigator, "onLine", {
         value: true,
@@ -443,7 +459,7 @@ describe("useBackgroundSync", () => {
         expect(result.current.pendingCount).toBe(0);
       });
 
-      expect(mockFetch).toHaveBeenCalled();
+      expect(mockAuthenticatedFetch).toHaveBeenCalled();
     });
   });
 
@@ -469,7 +485,7 @@ describe("useBackgroundSync", () => {
         });
       });
 
-      expect(mockFetch).toHaveBeenCalledWith(
+      expect(mockAuthenticatedFetch).toHaveBeenCalledWith(
         "/api/v1/chat/messages",
         expect.objectContaining({
           headers: expect.objectContaining({
@@ -496,7 +512,7 @@ describe("useBackgroundSync", () => {
         });
       });
 
-      expect(mockFetch).toHaveBeenCalledWith(
+      expect(mockAuthenticatedFetch).toHaveBeenCalledWith(
         "/api/v1/resource/123",
         expect.objectContaining({
           method: "DELETE",
@@ -587,7 +603,7 @@ describe("useBackgroundSync", () => {
       });
 
       // Should still try to execute immediately
-      expect(mockFetch).toHaveBeenCalled();
+      expect(mockAuthenticatedFetch).toHaveBeenCalled();
     });
   });
 });

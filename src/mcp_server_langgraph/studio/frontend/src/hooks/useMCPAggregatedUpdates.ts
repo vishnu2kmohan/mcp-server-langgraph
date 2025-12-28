@@ -15,10 +15,9 @@
 
 import { useState, useCallback, useRef, useMemo, useEffect } from "react";
 import { useRealtimeSync, type ConnectionStatus } from "./useRealtimeSync";
-import { useAppSelector } from "../store/hooks";
-import { selectIsAuthenticated } from "../store/slices/authSlice";
-import { getAuthToken } from "../utils/storage";
-import { buildWebSocketUrl, API_ENDPOINTS } from "../config/api";
+import { useAppDispatch, useAppSelector } from "../store/hooks";
+import { logout, selectIsAuthenticated } from "../store/slices/authSlice";
+import { buildWebSocketUrl, WS_ENDPOINTS } from "../utils/websocket";
 
 // ============================================================================
 // Types
@@ -77,10 +76,10 @@ export interface UseMCPAggregatedUpdatesReturn {
 /**
  * Get default MCP aggregated updates WebSocket URL
  *
- * Uses centralized config from src/config/api.ts
+ * Uses centralized config from src/utils/websocket.ts
  */
-function getDefaultWebSocketUrl(token?: string): string {
-  return buildWebSocketUrl(API_ENDPOINTS.WS_MCP_AGGREGATED, window, token);
+function getDefaultWebSocketUrl(includeToken: boolean = true): string {
+  return buildWebSocketUrl(WS_ENDPOINTS.MCP_AGGREGATED, {}, includeToken);
 }
 
 /**
@@ -133,6 +132,9 @@ export function useMCPAggregatedUpdates(
     onPromptsChanged,
   } = options;
 
+  // Redux dispatch for token expiration handling
+  const dispatch = useAppDispatch();
+
   const isAuthenticated = useAppSelector(selectIsAuthenticated);
 
   // State
@@ -158,13 +160,10 @@ export function useMCPAggregatedUpdates(
     };
   }, [onToolsChanged, onResourcesChanged, onPromptsChanged]);
 
-  // Get auth token
-  const authToken = isAuthenticated ? (getAuthToken() ?? undefined) : undefined;
-
-  // Compute WebSocket URL
+  // Compute WebSocket URL (token is included automatically when authenticated)
   const wsUrl = useMemo(
-    () => url ?? getDefaultWebSocketUrl(authToken),
-    [url, authToken],
+    () => url ?? getDefaultWebSocketUrl(isAuthenticated),
+    [url, isAuthenticated],
   );
 
   // Track effective enabled state
@@ -201,6 +200,7 @@ export function useMCPAggregatedUpdates(
     maxDelayMs: 30000,
     maxReconnectAttempts: 10,
     onMessage: handleMessage,
+    onTokenExpired: () => dispatch(logout()),
   });
 
   // Override status if not enabled

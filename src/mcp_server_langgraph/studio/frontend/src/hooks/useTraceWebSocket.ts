@@ -6,9 +6,18 @@
  */
 
 import { useCallback, useEffect, useRef, useState, useMemo } from "react";
-import { useAppSelector } from "../store/hooks";
-import { selectIsAuthenticated } from "../store/slices/authSlice";
+import { useAppDispatch, useAppSelector } from "../store/hooks";
+import { logout, selectIsAuthenticated } from "../store/slices/authSlice";
 import { getAuthToken } from "../utils/storage";
+import { devLogger } from "../utils/devLogger";
+import { buildWebSocketUrl, WS_ENDPOINTS } from "../utils/websocket";
+import {
+  WS_CLOSE_TOKEN_EXPIRED,
+  ensureValidTokenForWebSocket,
+} from "../utils/websocketAuth";
+
+// Create prefixed logger for this hook
+const logger = devLogger.withPrefix("[TraceWebSocket]");
 
 export interface TraceSpan {
   traceId: string;
@@ -47,6 +56,9 @@ export function useTraceWebSocket(
   options: UseTraceWebSocketOptions = {},
 ): UseTraceWebSocketReturn {
   const { url = "/api/v1/ws/mcp", sessionId, autoConnect = false } = options;
+
+  // Redux dispatch for token expiration handling
+  const dispatch = useAppDispatch();
 
   // Get auth state and token for WebSocket authentication
   const isAuthenticated = useAppSelector(selectIsAuthenticated);
@@ -101,7 +113,7 @@ export function useTraceWebSocket(
         setEvents((prev) => [...prev, traceEvent]);
       }
     } catch (error) {
-      console.error("Failed to parse trace message:", error);
+      logger.error("Failed to parse trace message:", error);
     }
   }, []);
 
@@ -115,11 +127,12 @@ export function useTraceWebSocket(
       return;
     }
 
-    const wsUrl = sessionId ? `${url}/${sessionId}` : url;
-    const tokenParam = authToken
-      ? `?token=${encodeURIComponent(authToken)}`
-      : "";
-    const fullUrl = `${window.location.protocol === "https:" ? "wss:" : "ws:"}//${window.location.host}${wsUrl}${tokenParam}`;
+    // Build WebSocket URL using standardized utilities
+    // Use custom url if provided, otherwise use MCP endpoint (default for trace subscriptions)
+    const endpoint = sessionId
+      ? `${url || WS_ENDPOINTS.MCP}/${sessionId}`
+      : url || WS_ENDPOINTS.MCP;
+    const fullUrl = buildWebSocketUrl(endpoint, {}, !!authToken);
 
     const ws = new WebSocket(fullUrl);
 
@@ -141,19 +154,34 @@ export function useTraceWebSocket(
       );
     };
 
-    ws.onclose = () => {
+    ws.onclose = async (event) => {
       setIsConnected(false);
+
+      // Handle token expiration close code (4010)
+      if (event.code === WS_CLOSE_TOKEN_EXPIRED) {
+        logger.warn("Token expired, attempting refresh...");
+        const refreshed = await ensureValidTokenForWebSocket();
+        if (refreshed) {
+          // Token refreshed successfully - reconnect
+          logger.log("Token refreshed, reconnecting...");
+          setTimeout(() => connect(), 100);
+        } else {
+          // Refresh failed - logout
+          logger.error("Token refresh failed, logging out...");
+          dispatch(logout());
+        }
+      }
     };
 
     ws.onerror = (error) => {
-      console.error("WebSocket error:", error);
+      logger.error("WebSocket error:", error);
       setIsConnected(false);
     };
 
     ws.onmessage = handleMessage;
 
     wsRef.current = ws;
-  }, [url, sessionId, authToken, isAuthenticated, handleMessage]);
+  }, [url, sessionId, authToken, isAuthenticated, handleMessage, dispatch]);
 
   const disconnect = useCallback(() => {
     if (wsRef.current) {

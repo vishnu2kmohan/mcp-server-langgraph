@@ -29,7 +29,10 @@
  */
 
 import { useState, useCallback, useEffect } from "react";
+import { useNavigate } from "react-router";
 import { storage, STORAGE_KEYS } from "../utils/storage";
+import { authenticatedFetch } from "../utils/authenticatedFetch";
+import { saveCurrentRouteAsIntended } from "../utils/intendedRoute";
 
 // =============================================================================
 // Types
@@ -119,11 +122,18 @@ function generateId(): string {
 export function useOfflineQueue(
   options: UseOfflineQueueOptions = {},
 ): UseOfflineQueueResult {
+  const navigate = useNavigate();
   const {
     maxQueueSize: _maxQueueSize = 50,
     autoSync: _autoSync = true,
     storageKey = DEFAULT_STORAGE_KEY,
   } = options;
+
+  // Handle auth failure - redirect to login
+  const handleAuthFailure = useCallback(() => {
+    saveCurrentRouteAsIntended();
+    navigate("/login", { replace: true });
+  }, [navigate]);
 
   const [queue, setQueue] = useState<QueuedAction[]>(() => {
     const stored = storage.get<QueuedAction[]>(storageKey);
@@ -178,10 +188,10 @@ export function useOfflineQueue(
 
       for (const action of sortedQueue) {
         try {
-          const response = await fetch(action.endpoint, {
+          const response = await authenticatedFetch(action.endpoint, {
             method: action.type === "delete" ? "DELETE" : "POST",
-            headers: { "Content-Type": "application/json" },
             body: JSON.stringify(action.payload),
+            onAuthFailure: handleAuthFailure,
           });
 
           if (response.ok) {
@@ -230,7 +240,7 @@ export function useOfflineQueue(
       setIsSyncing(false);
       return result;
     }
-  }, [queue]);
+  }, [queue, handleAuthFailure]);
 
   /**
    * Clear all pending actions

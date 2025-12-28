@@ -21,6 +21,7 @@ import { useState, useCallback, useRef, useEffect, useMemo } from "react";
 import { useSelector } from "react-redux";
 import { storage, STORAGE_KEYS } from "../utils/storage";
 import { devLogger } from "../utils/devLogger";
+import { authenticatedFetch } from "../utils/authenticatedFetch";
 import { recordSignal as gsmRecordSignal } from "../analytics/gsm";
 import { HeartAggregator } from "../analytics";
 import {
@@ -243,17 +244,15 @@ export function useHeartMetricsTracker(): HeartMetricsTrackerResult {
     ): Promise<void> => {
       try {
         const context = buildContext();
-        await fetch(HEART_API_ENDPOINT, {
+        await authenticatedFetch(HEART_API_ENDPOINT, {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
           body: JSON.stringify({
             event_type: eventType,
             ...payload,
             ...context,
             timestamp: Date.now(),
           }),
+          // No onAuthFailure - metrics should fail silently
         });
       } catch {
         // Silently handle errors - metrics should not break the app
@@ -476,10 +475,9 @@ export function useHeartMetricsTracker(): HeartMetricsTrackerResult {
           }),
         );
       } else {
-        // Fallback to fetch (may not complete on unload)
-        fetch(HEART_API_ENDPOINT, {
+        // Fallback to authenticatedFetch (may not complete on unload)
+        authenticatedFetch(HEART_API_ENDPOINT, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             event_type: "session_end",
             session_id: sessionStartTime,
@@ -488,6 +486,7 @@ export function useHeartMetricsTracker(): HeartMetricsTrackerResult {
             timestamp: Date.now(),
           }),
           keepalive: true,
+          // No onAuthFailure - cleanup should fail silently
         }).catch(() => {
           // Ignore errors on unmount
         });

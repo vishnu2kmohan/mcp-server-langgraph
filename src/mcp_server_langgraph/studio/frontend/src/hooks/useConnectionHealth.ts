@@ -2,10 +2,20 @@
  * useConnectionHealth Hook
  *
  * React hook for real-time connection health monitoring via WebSocket.
- * Connects to /api/v1/connections/health/ws and manages connection state.
+ * Connects to /api/v1/ws/connections/health (consolidated URL per ADR-0068).
+ *
+ * @deprecated Consider using useConnectionHealthWebSocket instead which uses
+ * the standardized useRealtimeSync infrastructure.
  */
 
 import { useState, useCallback, useRef, useEffect, useMemo } from "react";
+import { useAppDispatch } from "../store/hooks";
+import { logout } from "../store/slices/authSlice";
+import { buildWebSocketUrl, WS_ENDPOINTS } from "../utils/websocket";
+import {
+  WS_CLOSE_TOKEN_EXPIRED,
+  ensureValidTokenForWebSocket,
+} from "../utils/websocketAuth";
 
 /**
  * Connection health status from WebSocket
@@ -79,6 +89,9 @@ export function useConnectionHealth(
   options: UseConnectionHealthOptions = {},
 ): UseConnectionHealthReturn {
   const { autoConnect = false, reconnectInterval = 5000 } = options;
+
+  // Redux dispatch for token expiration handling
+  const dispatch = useAppDispatch();
 
   const [state, setState] = useState<ConnectionHealthState>({
     isConnected: false,
@@ -173,9 +186,8 @@ export function useConnectionHealth(
       reconnectTimeoutRef.current = null;
     }
 
-    const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-    const host = window.location.host;
-    const url = `${protocol}//${host}/api/v1/connections/health/ws`;
+    // Use standardized WebSocket URL (ADR-0068 consolidated WebSocket URLs)
+    const url = buildWebSocketUrl(WS_ENDPOINTS.CONNECTIONS_HEALTH);
 
     const ws = new WebSocket(url);
     wsRef.current = ws;
@@ -193,16 +205,29 @@ export function useConnectionHealth(
       }));
     };
 
-    ws.onclose = () => {
+    ws.onclose = async (event) => {
       setState((prev) => ({ ...prev, isConnected: false }));
       wsRef.current = null;
+
+      // Handle token expiration close code (4010)
+      if (event.code === WS_CLOSE_TOKEN_EXPIRED) {
+        const refreshed = await ensureValidTokenForWebSocket();
+        if (refreshed) {
+          // Token refreshed successfully - reconnect
+          reconnectTimeoutRef.current = setTimeout(connect, 100);
+        } else {
+          // Refresh failed - logout
+          dispatch(logout());
+        }
+        return;
+      }
 
       // Schedule reconnect
       if (reconnectInterval > 0) {
         reconnectTimeoutRef.current = setTimeout(connect, reconnectInterval);
       }
     };
-  }, [handleMessage, reconnectInterval]);
+  }, [handleMessage, reconnectInterval, dispatch]);
 
   /**
    * Disconnect from WebSocket

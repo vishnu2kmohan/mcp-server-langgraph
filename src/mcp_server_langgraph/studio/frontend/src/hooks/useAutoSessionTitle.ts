@@ -15,6 +15,10 @@ import { useCallback, useRef } from "react";
 import { useGenerateSessionTitleMutation } from "../api";
 import { useAppDispatch } from "../store/hooks";
 import { renameSession } from "../store/slices/sessionSlice";
+import { devLogger } from "../utils/devLogger";
+
+// Create prefixed logger for this hook
+const logger = devLogger.withPrefix("[AutoSessionTitle]");
 
 // Default names that indicate the session hasn't been named yet
 const DEFAULT_SESSION_NAMES = [
@@ -109,7 +113,7 @@ export function useAutoSessionTitle(): UseAutoSessionTitleReturn {
       } catch (error) {
         // Title generation failed - remove from set so user can try again
         generatedSessionsRef.current.delete(sessionId);
-        console.warn("Failed to generate session title:", error);
+        logger.warn("Failed to generate session title:", error);
       }
     },
     [dispatch, generateTitle],

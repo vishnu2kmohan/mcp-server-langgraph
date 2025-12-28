@@ -17,7 +17,9 @@
  */
 
 import { useState, useCallback, useRef, useEffect } from "react";
-import { getAuthToken } from "../utils/storage";
+import { useNavigate } from "react-router";
+import { authenticatedFetch } from "../utils/authenticatedFetch";
+import { saveCurrentRouteAsIntended } from "../utils/intendedRoute";
 import { useAppDispatch } from "../store/hooks";
 import {
   addNode,
@@ -127,6 +129,7 @@ export interface UseStreamingChatReturn extends StreamingChatState {
  */
 export function useStreamingChat(): UseStreamingChatReturn {
   const dispatch = useAppDispatch();
+  const navigate = useNavigate();
   const [state, setState] = useState<StreamingChatState>({
     isStreaming: false,
     streamingContent: "",
@@ -307,20 +310,25 @@ export function useStreamingChat(): UseStreamingChatReturn {
       // Start the fetch + stream processing
       const processStream = async () => {
         try {
-          // Get JWT token using storage utility (hybrid auth: JWT primary, cookies fallback)
-          const token = getAuthToken();
+          // Handle authentication failure by saving current route and redirecting to login
+          const handleAuthFailure = () => {
+            saveCurrentRouteAsIntended();
+            navigate("/login", { replace: true });
+          };
 
-          const response = await fetch("/api/v1/chat/completions/stream", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              ...(token && { Authorization: `Bearer ${token}` }),
+          // Use authenticatedFetch for automatic 401 handling with token refresh
+          const response = await authenticatedFetch(
+            "/api/v1/chat/completions/stream",
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify(requestBody),
+              signal: abortController.signal,
+              onAuthFailure: handleAuthFailure,
             },
-            body: JSON.stringify(requestBody),
-            signal: abortController.signal,
-            // Include credentials (cookies) for forward-auth (Keycloak SSO)
-            credentials: "include",
-          });
+          );
 
           if (!response.ok) {
             throw new Error(`HTTP ${response.status}: ${response.statusText}`);
@@ -460,7 +468,7 @@ export function useStreamingChat(): UseStreamingChatReturn {
       // Start processing (don't await - let it run async)
       processStream();
     },
-    [parseSSELine, dispatch],
+    [parseSSELine, dispatch, navigate],
   );
 
   /**

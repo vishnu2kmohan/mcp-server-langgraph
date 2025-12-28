@@ -8,6 +8,24 @@
 import { renderHook, act, waitFor, cleanup } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 
+// Mock react-router
+const mockNavigate = vi.fn();
+vi.mock("react-router", () => ({
+  useNavigate: () => mockNavigate,
+}));
+
+// Mock authenticatedFetch
+const mockAuthenticatedFetch = vi.fn();
+vi.mock("../utils/authenticatedFetch", () => ({
+  authenticatedFetch: (...args: unknown[]) => mockAuthenticatedFetch(...args),
+}));
+
+// Mock intendedRoute
+const mockSetIntendedRoute = vi.fn();
+vi.mock("../utils/intendedRoute", () => ({
+  setIntendedRoute: (...args: unknown[]) => mockSetIntendedRoute(...args),
+}));
+
 import { useInlineSuggestions } from "./useInlineSuggestions";
 
 // Mock debounce to execute immediately in tests
@@ -250,6 +268,94 @@ describe("useInlineSuggestions", () => {
           sessionId: "session-123",
         }),
       );
+    });
+  });
+
+  describe("authentication", () => {
+    it("should use authenticatedFetch for default suggestion fetch", async () => {
+      mockAuthenticatedFetch.mockResolvedValueOnce({
+        ok: true,
+        json: () =>
+          Promise.resolve({
+            suggestions: [{ text: "world!", confidence: 0.8 }],
+          }),
+      });
+
+      const { result } = renderHook(() =>
+        useInlineSuggestions({
+          enabled: true,
+          sessionId: "session-123",
+        }),
+      );
+
+      await act(async () => {
+        result.current.updateInput("Hello ");
+        await Promise.resolve();
+      });
+
+      await waitFor(() => {
+        expect(mockAuthenticatedFetch).toHaveBeenCalledWith(
+          "/api/v1/ai/chat-suggestions",
+          expect.objectContaining({
+            method: "POST",
+            onAuthFailure: expect.any(Function),
+          }),
+        );
+      });
+    });
+
+    it("should navigate to login on auth failure", async () => {
+      mockAuthenticatedFetch.mockImplementationOnce(
+        async (_url: string, options: { onAuthFailure?: () => void }) => {
+          options.onAuthFailure?.();
+          return { ok: false, status: 401 };
+        },
+      );
+
+      const { result } = renderHook(() =>
+        useInlineSuggestions({
+          enabled: true,
+          sessionId: "session-123",
+        }),
+      );
+
+      await act(async () => {
+        result.current.updateInput("Hello ");
+        await Promise.resolve();
+      });
+
+      await waitFor(() => {
+        expect(mockSetIntendedRoute).toHaveBeenCalled();
+      });
+
+      expect(mockNavigate).toHaveBeenCalledWith("/login", { replace: true });
+    });
+
+    it("should gracefully degrade when API returns non-401 error", async () => {
+      mockAuthenticatedFetch.mockResolvedValueOnce({
+        ok: false,
+        status: 500,
+      });
+
+      const { result } = renderHook(() =>
+        useInlineSuggestions({
+          enabled: true,
+          sessionId: "session-123",
+        }),
+      );
+
+      await act(async () => {
+        result.current.updateInput("Hello ");
+        await Promise.resolve();
+      });
+
+      await waitFor(() => {
+        expect(result.current.isLoading).toBe(false);
+      });
+
+      // Should gracefully degrade - no redirect, empty suggestion
+      expect(mockNavigate).not.toHaveBeenCalled();
+      expect(result.current.suggestion).toBe("");
     });
   });
 

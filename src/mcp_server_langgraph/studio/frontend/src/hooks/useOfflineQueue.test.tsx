@@ -6,6 +6,25 @@
 
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { renderHook, act, cleanup } from "@testing-library/react";
+
+// Mock react-router
+const mockNavigate = vi.fn();
+vi.mock("react-router", () => ({
+  useNavigate: () => mockNavigate,
+}));
+
+// Mock authenticatedFetch
+const mockAuthenticatedFetch = vi.fn();
+vi.mock("../utils/authenticatedFetch", () => ({
+  authenticatedFetch: (...args: unknown[]) => mockAuthenticatedFetch(...args),
+}));
+
+// Mock intendedRoute
+const mockSetIntendedRoute = vi.fn();
+vi.mock("../utils/intendedRoute", () => ({
+  setIntendedRoute: (...args: unknown[]) => mockSetIntendedRoute(...args),
+}));
+
 import { useOfflineQueue } from "./useOfflineQueue";
 
 describe("useOfflineQueue", () => {
@@ -241,8 +260,8 @@ describe("useOfflineQueue", () => {
 
   describe("sync with fetch", () => {
     it("should sync successfully when fetch returns ok", async () => {
-      // Mock fetch
-      vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: true }));
+      // Mock authenticatedFetch
+      mockAuthenticatedFetch.mockResolvedValue({ ok: true });
 
       const { result } = renderHook(() => useOfflineQueue());
 
@@ -269,20 +288,15 @@ describe("useOfflineQueue", () => {
         conflicts: [],
       });
       expect(result.current.pendingCount).toBe(0);
-
-      vi.unstubAllGlobals();
     });
 
     it("should handle 409 conflict response", async () => {
-      // Mock fetch returning 409 conflict
-      vi.stubGlobal(
-        "fetch",
-        vi.fn().mockResolvedValue({
-          ok: false,
-          status: 409,
-          json: () => Promise.resolve({ serverData: "conflict" }),
-        }),
-      );
+      // Mock authenticatedFetch returning 409 conflict
+      mockAuthenticatedFetch.mockResolvedValue({
+        ok: false,
+        status: 409,
+        json: () => Promise.resolve({ serverData: "conflict" }),
+      });
 
       const { result } = renderHook(() => useOfflineQueue());
 
@@ -305,19 +319,14 @@ describe("useOfflineQueue", () => {
       expect(result.current.conflicts[0].suggestedResolution).toBe(
         "keep-server",
       );
-
-      vi.unstubAllGlobals();
     });
 
     it("should handle non-409 failure response", async () => {
-      // Mock fetch returning 500 error
-      vi.stubGlobal(
-        "fetch",
-        vi.fn().mockResolvedValue({
-          ok: false,
-          status: 500,
-        }),
-      );
+      // Mock authenticatedFetch returning 500 error
+      mockAuthenticatedFetch.mockResolvedValue({
+        ok: false,
+        status: 500,
+      });
 
       const { result } = renderHook(() => useOfflineQueue());
 
@@ -341,16 +350,11 @@ describe("useOfflineQueue", () => {
         failed: 1,
         conflicts: [],
       });
-
-      vi.unstubAllGlobals();
     });
 
     it("should handle fetch throwing exception", async () => {
-      // Mock fetch throwing
-      vi.stubGlobal(
-        "fetch",
-        vi.fn().mockRejectedValue(new Error("Network error")),
-      );
+      // Mock authenticatedFetch throwing
+      mockAuthenticatedFetch.mockRejectedValue(new Error("Network error"));
 
       const { result } = renderHook(() => useOfflineQueue());
 
@@ -369,13 +373,10 @@ describe("useOfflineQueue", () => {
       });
 
       expect(syncResult?.failed).toBe(1);
-
-      vi.unstubAllGlobals();
     });
 
     it("should use DELETE method for delete actions", async () => {
-      const mockFetch = vi.fn().mockResolvedValue({ ok: true });
-      vi.stubGlobal("fetch", mockFetch);
+      mockAuthenticatedFetch.mockResolvedValue({ ok: true });
 
       const { result } = renderHook(() => useOfflineQueue());
 
@@ -392,26 +393,21 @@ describe("useOfflineQueue", () => {
         await result.current.sync();
       });
 
-      expect(mockFetch).toHaveBeenCalledWith(
+      expect(mockAuthenticatedFetch).toHaveBeenCalledWith(
         "/api/v1/test/123",
         expect.objectContaining({ method: "DELETE" }),
       );
-
-      vi.unstubAllGlobals();
     });
   });
 
   describe("resolveConflict", () => {
     it("should remove conflict and action when resolved with keep-server", async () => {
-      // Mock fetch returning 409 conflict
-      vi.stubGlobal(
-        "fetch",
-        vi.fn().mockResolvedValue({
-          ok: false,
-          status: 409,
-          json: () => Promise.resolve({ serverData: "conflict" }),
-        }),
-      );
+      // Mock authenticatedFetch returning 409 conflict
+      mockAuthenticatedFetch.mockResolvedValue({
+        ok: false,
+        status: 409,
+        json: () => Promise.resolve({ serverData: "conflict" }),
+      });
 
       const { result } = renderHook(() => useOfflineQueue());
 
@@ -438,22 +434,17 @@ describe("useOfflineQueue", () => {
       // Should remove conflict and discard the action
       expect(result.current.conflicts).toHaveLength(0);
       expect(result.current.pendingCount).toBe(0);
-
-      vi.unstubAllGlobals();
     });
 
     it("should re-queue action with force flag when resolved with keep-local", async () => {
       // First call returns 409, second call (after resolution) returns ok
-      const mockFetch = vi
-        .fn()
+      mockAuthenticatedFetch
         .mockResolvedValueOnce({
           ok: false,
           status: 409,
           json: () => Promise.resolve({ serverData: "conflict" }),
         })
         .mockResolvedValueOnce({ ok: true });
-
-      vi.stubGlobal("fetch", mockFetch);
 
       const { result } = renderHook(() => useOfflineQueue());
 
@@ -484,21 +475,16 @@ describe("useOfflineQueue", () => {
       expect(result.current.pendingCount).toBe(1);
       const queue = result.current.getQueue();
       expect(queue[0].payload).toHaveProperty("_force", true);
-
-      vi.unstubAllGlobals();
     });
 
     it("should merge payloads when resolved with merge", async () => {
       const serverData = { serverField: "server-value", sharedField: "server" };
 
-      vi.stubGlobal(
-        "fetch",
-        vi.fn().mockResolvedValue({
-          ok: false,
-          status: 409,
-          json: () => Promise.resolve(serverData),
-        }),
-      );
+      mockAuthenticatedFetch.mockResolvedValue({
+        ok: false,
+        status: 409,
+        json: () => Promise.resolve(serverData),
+      });
 
       const { result } = renderHook(() => useOfflineQueue());
 
@@ -534,8 +520,6 @@ describe("useOfflineQueue", () => {
         sharedField: "local", // Local wins
         _merged: true,
       });
-
-      vi.unstubAllGlobals();
     });
   });
 });

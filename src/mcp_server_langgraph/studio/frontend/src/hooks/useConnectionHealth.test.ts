@@ -92,7 +92,8 @@ describe("useConnectionHealth", () => {
     it("should connect to correct WebSocket URL", () => {
       renderHook(() => useConnectionHealth({ autoConnect: true }));
 
-      expect(createdWebSocket?.url).toContain("/api/v1/connections/health/ws");
+      // Standardized URL per ADR-0068: /api/v1/ws/connections/health
+      expect(createdWebSocket?.url).toContain("/api/v1/ws/connections/health");
     });
 
     it("should update isConnected when connected", async () => {

@@ -12,7 +12,7 @@
  * - Deduplicates via content hash to prevent duplicate extractions
  */
 import { useCallback, useRef, useState } from "react";
-import { useRevalidator } from "react-router";
+import { useNavigate, useRevalidator } from "react-router";
 import { parseArtifacts } from "../utils/artifactParser";
 import type {
   Artifact,
@@ -20,7 +20,12 @@ import type {
   CodeArtifact,
   ExecutableArtifact,
 } from "../types/artifacts";
-import { getAuthToken } from "../utils/storage";
+import { devLogger } from "../utils/devLogger";
+import { authenticatedFetch } from "../utils/authenticatedFetch";
+import { saveCurrentRouteAsIntended } from "../utils/intendedRoute";
+
+// Create prefixed logger for this hook
+const logger = devLogger.withPrefix("[ArtifactExtraction]");
 
 // =============================================================================
 // Types
@@ -177,20 +182,6 @@ function toCreateArtifactRequest(
 }
 
 /**
- * Get auth headers following canvasLoaders.ts pattern
- */
-function getAuthHeaders(): Record<string, string> {
-  const headers: Record<string, string> = {
-    "Content-Type": "application/json",
-  };
-  const token = getAuthToken();
-  if (token) {
-    headers["Authorization"] = `Bearer ${token}`;
-  }
-  return headers;
-}
-
-/**
  * Sleep for a given number of milliseconds
  */
 function sleep(ms: number): Promise<void> {
@@ -204,6 +195,7 @@ function sleep(ms: number): Promise<void> {
 export function useArtifactExtraction(
   options: UseArtifactExtractionOptions,
 ): UseArtifactExtractionResult {
+  const navigate = useNavigate();
   const {
     sessionId,
     onArtifactsExtracted,
@@ -217,6 +209,12 @@ export function useArtifactExtraction(
   // This hook requires a Data Router context - error is appropriate if missing
   const revalidator = useRevalidator();
 
+  // Handle auth failure - redirect to login
+  const handleAuthFailure = useCallback(() => {
+    saveCurrentRouteAsIntended();
+    navigate("/login", { replace: true });
+  }, [navigate]);
+
   // Track extracted content hashes to prevent duplicates
   const extractedHashesRef = useRef<Set<string>>(new Set());
 
@@ -227,9 +225,7 @@ export function useArtifactExtraction(
     async (content: string): Promise<number> => {
       // Validate sessionId
       if (!sessionId || sessionId === "default-session" || sessionId === "") {
-        console.warn(
-          "useArtifactExtraction: Invalid sessionId, skipping extraction",
-        );
+        logger.warn("Invalid sessionId, skipping extraction");
         return 0;
       }
 
@@ -277,11 +273,10 @@ export function useArtifactExtraction(
           // Retry loop with exponential backoff
           for (let attempt = 0; attempt <= maxRetries; attempt++) {
             try {
-              const response = await fetch("/api/v1/artifacts", {
+              const response = await authenticatedFetch("/api/v1/artifacts", {
                 method: "POST",
-                headers: getAuthHeaders(),
-                credentials: "include", // Keycloak SSO support
                 body: JSON.stringify(request),
+                onAuthFailure: handleAuthFailure,
               });
               if (response.ok) {
                 createdCount++;
@@ -291,7 +286,7 @@ export function useArtifactExtraction(
             } catch (error) {
               lastError =
                 error instanceof Error ? error : new Error(String(error));
-              console.error("Failed to save artifact:", error);
+              logger.error("Failed to save artifact:", error);
 
               // If we have more retries, wait with exponential backoff
               if (attempt < maxRetries) {
@@ -304,7 +299,7 @@ export function useArtifactExtraction(
 
           // If all retries failed, log the final error
           if (!success && lastError) {
-            console.error(
+            logger.error(
               "Failed to save artifact after all retries:",
               lastError,
             );
@@ -329,6 +324,7 @@ export function useArtifactExtraction(
       maxRetries,
       retryDelayMs,
       onRetry,
+      handleAuthFailure,
     ],
   );
 

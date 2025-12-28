@@ -12,14 +12,14 @@
 import { useEffect, useCallback, useMemo, useRef } from "react";
 import { useAppDispatch, useAppSelector } from "../store/hooks";
 import {
+  logout,
   selectIsAuthenticated,
   selectIsInitializing,
 } from "../store/slices/authSlice";
 import { addNotification } from "../store/slices/notificationSlice";
 import type { AddNotificationPayload } from "../store/slices/notificationSlice";
 import { useRealtimeSync, type ConnectionStatus } from "./useRealtimeSync";
-import { getAuthToken } from "../utils/storage";
-import { buildWebSocketUrl, API_ENDPOINTS } from "../config/api";
+import { buildWebSocketUrl, WS_ENDPOINTS } from "../utils/websocket";
 
 /**
  * Options for useNotificationWebSocket hook
@@ -70,13 +70,13 @@ function isNotificationMessage(data: unknown): data is NotificationMessage {
 /**
  * Get the default WebSocket URL for notifications
  *
- * Uses centralized config from src/config/api.ts for:
- * - Environment variable support (VITE_WS_BASE_URL)
+ * Uses standardized WebSocket utilities from src/utils/websocket.ts for:
+ * - Environment variable support (VITE_API_HOST)
  * - Protocol detection (wss:// for https://)
  * - SSR-safe defaults
  */
-function getDefaultWebSocketUrl(token?: string): string {
-  return buildWebSocketUrl(API_ENDPOINTS.WS_NOTIFICATIONS, window, token);
+function getDefaultWebSocketUrl(includeAuthToken: boolean = false): string {
+  return buildWebSocketUrl(WS_ENDPOINTS.NOTIFICATIONS, {}, includeAuthToken);
 }
 
 /**
@@ -109,15 +109,15 @@ export function useNotificationWebSocket(
   // which can cause "connection interrupted" errors during page load
   const isAuthReady = isAuthenticated && !isInitializing;
 
-  // Get auth token when authenticated - makes dependency explicit for React
-  // Convert null to undefined for type compatibility
-  const authToken = isAuthReady ? (getAuthToken() ?? undefined) : undefined;
-
   // Compute WebSocket URL - only generate URL when auth is ready
   // Passing empty string prevents connection attempt before auth is validated
+  // The buildWebSocketUrl utility fetches the auth token internally when includeAuthToken=true
   const wsUrl = useMemo(
-    () => (isAuthReady ? (url ?? getDefaultWebSocketUrl(authToken)) : ""),
-    [url, authToken, isAuthReady],
+    () =>
+      isAuthReady
+        ? (url ?? getDefaultWebSocketUrl(true /* includeAuthToken */))
+        : "",
+    [url, isAuthReady],
   );
 
   // Handle incoming messages
@@ -143,6 +143,7 @@ export function useNotificationWebSocket(
     maxDelayMs: 30000, // Max 30 seconds between attempts
     maxReconnectAttempts: 10, // Try up to 10 times
     onMessage: handleMessage,
+    onTokenExpired: () => dispatch(logout()),
   });
 
   // Track if enabled - if not auth-ready or explicitly disabled, override status

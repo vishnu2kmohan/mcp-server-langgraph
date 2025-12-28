@@ -17,14 +17,21 @@
  */
 
 import { useEffect, useCallback, useMemo, useRef, useState } from "react";
-import { useAppSelector } from "../store/hooks";
-import { selectIsAuthenticated } from "../store/slices/authSlice";
-import { getAuthToken } from "../utils/storage";
-import { buildWebSocketUrl, API_ENDPOINTS } from "../config/api";
+import { useAppDispatch, useAppSelector } from "../store/hooks";
+import { logout, selectIsAuthenticated } from "../store/slices/authSlice";
+import { buildWebSocketUrl, WS_ENDPOINTS } from "../utils/websocket";
+import {
+  WS_CLOSE_TOKEN_EXPIRED,
+  ensureValidTokenForWebSocket,
+} from "../utils/websocketAuth";
+import { devLogger } from "../utils/devLogger";
 import type {
   ApprovalRequiredPayload,
   ClarificationRequiredPayload,
 } from "../types/hitl";
+
+// Create prefixed logger for this hook
+const logger = devLogger.withPrefix("[AgentRequestWS]");
 
 // =============================================================================
 // Types
@@ -208,39 +215,24 @@ export function parseAgentRequestMessage(
 /**
  * Get the default WebSocket URL for agent requests
  *
- * Uses centralized config from src/config/api.ts for base URL,
- * with custom query param handling for sessionId and token.
+ * Uses standardized WebSocket utilities from src/utils/websocket.ts
  */
-function getDefaultWebSocketUrl(sessionId?: string, token?: string): string {
-  // Build base URL from centralized config (handles env vars and SSR)
-  const baseUrl = buildWebSocketUrl(
-    API_ENDPOINTS.WS_AGENT_REQUESTS,
-    typeof window !== "undefined" ? window : undefined,
-  );
-
-  // Add session_id to query params if provided
+function getDefaultWebSocketUrl(
+  sessionId?: string,
+  includeAuthToken: boolean = false,
+): string {
+  // Build query params
+  const params: Record<string, string> = {};
   if (sessionId) {
-    const url = new URL(baseUrl, "ws://localhost");
-    url.searchParams.set("session_id", sessionId);
-    if (token) {
-      url.searchParams.set("token", token);
-    }
-    // Return just pathname + search (relative) or full URL
-    return baseUrl.includes("://")
-      ? `${baseUrl.split("?")[0]}?${url.searchParams.toString()}`
-      : `${baseUrl.split("?")[0]}?${url.searchParams.toString()}`;
+    params.session_id = sessionId;
   }
 
-  // If only token, use the URL from centralized config which handles token
-  if (token) {
-    return buildWebSocketUrl(
-      API_ENDPOINTS.WS_AGENT_REQUESTS,
-      typeof window !== "undefined" ? window : undefined,
-      token,
-    );
-  }
-
-  return baseUrl;
+  // Use standardized WebSocket URL builder
+  return buildWebSocketUrl(
+    WS_ENDPOINTS.AGENTS_REQUESTS,
+    params,
+    includeAuthToken,
+  );
 }
 
 // =============================================================================
@@ -260,6 +252,9 @@ export function useAgentRequestWebSocket(
     onApprovalUpdated,
     onExecutionResumed,
   } = options;
+
+  // Redux dispatch for token expiration handling
+  const dispatch = useAppDispatch();
 
   const isAuthenticated = useAppSelector(selectIsAuthenticated);
   const [status, setStatus] = useState<ConnectionStatus>("disconnected");
@@ -294,14 +289,13 @@ export function useAgentRequestWebSocket(
     onExecutionResumed,
   };
 
-  // Get auth token when authenticated - makes dependency explicit for React
-  // Convert null to undefined for type compatibility
-  const authToken = isAuthenticated ? (getAuthToken() ?? undefined) : undefined;
-
-  // Compute WebSocket URL - recalculates when auth state changes via authToken
+  // Compute WebSocket URL - recalculates when auth state changes
+  // The buildWebSocketUrl utility fetches the auth token internally when includeAuthToken=true
   const wsUrl = useMemo(
-    () => url ?? getDefaultWebSocketUrl(sessionId, authToken),
-    [url, sessionId, authToken],
+    () =>
+      url ??
+      getDefaultWebSocketUrl(sessionId, isAuthenticated /* includeAuthToken */),
+    [url, sessionId, isAuthenticated],
   );
 
   // Track effective enabled state - only connect when authenticated
@@ -350,11 +344,11 @@ export function useAgentRequestWebSocket(
           break;
 
         case "error":
-          console.error("[AgentRequestWS] Error:", message.payload.message);
+          logger.error("Error:", message.payload.message);
           break;
       }
     } catch (err) {
-      console.error("[AgentRequestWS] Failed to parse message:", err);
+      logger.error("Failed to parse message:", err);
     }
   }, []);
 
@@ -417,12 +411,33 @@ export function useAgentRequestWebSocket(
         }
       };
 
-      ws.onclose = () => {
+      ws.onclose = async (event) => {
+        stopPingInterval();
+
+        // Handle token expiration close code (4010)
+        if (event.code === WS_CLOSE_TOKEN_EXPIRED) {
+          logger.warn("Token expired, attempting refresh...");
+          const refreshed = await ensureValidTokenForWebSocket();
+          if (refreshed) {
+            // Token refreshed successfully - reconnect
+            logger.log("Token refreshed, reconnecting...");
+            isReconnectRef.current = true;
+            // Small delay before reconnecting
+            reconnectTimeoutRef.current = setTimeout(() => {
+              connect();
+            }, 100);
+          } else {
+            // Refresh failed - logout
+            logger.error("Token refresh failed, logging out...");
+            dispatch(logout());
+          }
+          return;
+        }
+
         // Only set status if not a manual/cleanup close
         if (!manualCloseRef.current) {
           setStatus("disconnected");
         }
-        stopPingInterval();
       };
 
       ws.onerror = () => {
@@ -434,10 +449,10 @@ export function useAgentRequestWebSocket(
 
       wsRef.current = ws;
     } catch (err) {
-      console.error("[AgentRequestWS] Failed to connect:", err);
+      logger.error("Failed to connect:", err);
       setStatus("error");
     }
-  }, [wsUrl, handleMessage, startPingInterval, stopPingInterval]);
+  }, [wsUrl, handleMessage, startPingInterval, stopPingInterval, dispatch]);
 
   // Disconnect from WebSocket
   const disconnect = useCallback(() => {

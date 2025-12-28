@@ -13,6 +13,15 @@ import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { renderHook, waitFor, act, cleanup } from "@testing-library/react";
 import { useTieredCache } from "./useTieredCache";
 
+// Mock authenticatedFetch for Redis L2 cache operations
+const mockAuthenticatedFetch = vi.fn().mockResolvedValue({
+  ok: false,
+  json: async () => ({ hit: false }),
+});
+vi.mock("../utils/authenticatedFetch", () => ({
+  authenticatedFetch: (...args: unknown[]) => mockAuthenticatedFetch(...args),
+}));
+
 // =============================================================================
 // Test Constants
 // =============================================================================
@@ -360,15 +369,11 @@ describe("useTieredCache", () => {
   });
 
   describe("Redis L2 option", () => {
-    // Mock fetch for Redis L2 API calls
-    const originalFetch = global.fetch;
-
     beforeEach(() => {
-      global.fetch = vi.fn();
+      mockAuthenticatedFetch.mockClear();
     });
 
     afterEach(() => {
-      global.fetch = originalFetch;
       cleanup();
       vi.clearAllMocks();
       vi.restoreAllMocks();
@@ -379,7 +384,7 @@ describe("useTieredCache", () => {
       const key = TEST_CACHE_KEY + "-redis-l2";
 
       // Mock Redis L2 cache miss then successful fetch
-      (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValue({
+      mockAuthenticatedFetch.mockResolvedValue({
         ok: true,
         json: () => Promise.resolve({ key, hit: false, value: null }),
       });
@@ -392,8 +397,8 @@ describe("useTieredCache", () => {
         expect(result.current.data).toEqual(TEST_DATA);
       });
 
-      // Verify Redis L2 API was called
-      expect(global.fetch).toHaveBeenCalled();
+      // Verify Redis L2 API was called via authenticatedFetch
+      expect(mockAuthenticatedFetch).toHaveBeenCalled();
     });
 
     it("should fall back to sessionStorage when Redis L2 fails", async () => {
@@ -401,9 +406,7 @@ describe("useTieredCache", () => {
       const key = TEST_CACHE_KEY + "-redis-fallback";
 
       // Mock Redis L2 API failure
-      (global.fetch as ReturnType<typeof vi.fn>).mockRejectedValue(
-        new Error("Network error"),
-      );
+      mockAuthenticatedFetch.mockRejectedValue(new Error("Network error"));
 
       // Pre-populate sessionStorage as fallback
       const cachedEntry = {
@@ -440,8 +443,8 @@ describe("useTieredCache", () => {
         expect(result.current.data).toEqual(TEST_DATA);
       });
 
-      // Redis L2 API should not be called
-      expect(global.fetch).not.toHaveBeenCalled();
+      // Redis L2 API should not be called (authenticatedFetch not called)
+      expect(mockAuthenticatedFetch).not.toHaveBeenCalled();
     });
   });
 });

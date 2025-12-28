@@ -24,6 +24,9 @@
  */
 
 import { useState, useCallback, useRef, useEffect } from "react";
+import { useNavigate } from "react-router";
+import { authenticatedFetch } from "../utils/authenticatedFetch";
+import { saveCurrentRouteAsIntended } from "../utils/intendedRoute";
 
 // =============================================================================
 // Types
@@ -94,7 +97,14 @@ const URL_PATTERN = /(?:^|\s)#(https?:\/\/[^\s]+)/g;
 export function useUrlContentFetch(
   options: UseUrlContentFetchOptions = {},
 ): UseUrlContentFetchResult {
+  const navigate = useNavigate();
   const { autoFetch = false, debounceMs = 0 } = options;
+
+  // Handle auth failure - redirect to login
+  const handleAuthFailure = useCallback(() => {
+    saveCurrentRouteAsIntended();
+    navigate("/login", { replace: true });
+  }, [navigate]);
 
   const [detectedUrls, setDetectedUrls] = useState<DetectedUrl[]>([]);
   const [fetchedContent, setFetchedContent] = useState<FetchedContent[]>([]);
@@ -132,59 +142,61 @@ export function useUrlContentFetch(
   /**
    * Fetch content from a URL via the backend API
    */
-  const fetchUrl = useCallback(async (url: string) => {
-    // Skip if already fetched
-    if (fetchedUrlsRef.current.has(url)) {
-      return;
-    }
-
-    // Mark as fetched to prevent duplicate requests
-    fetchedUrlsRef.current.add(url);
-
-    // Add to loading state
-    setLoadingUrls((prev) => [...prev, url]);
-
-    try {
-      const response = await fetch("/api/v1/ai/fetch-url", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ url }),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(
-          errorData.detail || `Failed to fetch URL: ${response.status}`,
-        );
+  const fetchUrl = useCallback(
+    async (url: string) => {
+      // Skip if already fetched
+      if (fetchedUrlsRef.current.has(url)) {
+        return;
       }
 
-      const data = await response.json();
+      // Mark as fetched to prevent duplicate requests
+      fetchedUrlsRef.current.add(url);
 
-      setFetchedContent((prev) => [
-        ...prev,
-        {
-          url: data.url || url,
-          title: data.title,
-          content: data.content,
-          contentType: data.content_type,
-          error: undefined,
-        },
-      ]);
-    } catch (error) {
-      setFetchedContent((prev) => [
-        ...prev,
-        {
-          url,
-          error: error instanceof Error ? error.message : "Failed to fetch URL",
-        },
-      ]);
-    } finally {
-      // Remove from loading state
-      setLoadingUrls((prev) => prev.filter((u) => u !== url));
-    }
-  }, []);
+      // Add to loading state
+      setLoadingUrls((prev) => [...prev, url]);
+
+      try {
+        const response = await authenticatedFetch("/api/v1/ai/fetch-url", {
+          method: "POST",
+          body: JSON.stringify({ url }),
+          onAuthFailure: handleAuthFailure,
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(
+            errorData.detail || `Failed to fetch URL: ${response.status}`,
+          );
+        }
+
+        const data = await response.json();
+
+        setFetchedContent((prev) => [
+          ...prev,
+          {
+            url: data.url || url,
+            title: data.title,
+            content: data.content,
+            contentType: data.content_type,
+            error: undefined,
+          },
+        ]);
+      } catch (error) {
+        setFetchedContent((prev) => [
+          ...prev,
+          {
+            url,
+            error:
+              error instanceof Error ? error.message : "Failed to fetch URL",
+          },
+        ]);
+      } finally {
+        // Remove from loading state
+        setLoadingUrls((prev) => prev.filter((u) => u !== url));
+      }
+    },
+    [handleAuthFailure],
+  );
 
   /**
    * Clear all fetched content

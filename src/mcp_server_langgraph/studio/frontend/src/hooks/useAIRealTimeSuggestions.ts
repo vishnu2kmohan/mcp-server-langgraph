@@ -12,8 +12,9 @@
  */
 
 import { useState, useCallback, useRef, useEffect } from "react";
-import { useAppSelector } from "../store/hooks";
-import { buildWebSocketUrl } from "../utils/websocket";
+import { useAppDispatch, useAppSelector } from "../store/hooks";
+import { logout } from "../store/slices/authSlice";
+import { buildWebSocketUrl, WS_ENDPOINTS } from "../utils/websocket";
 import { useRealtimeSync } from "./useRealtimeSync";
 
 /** Suggestion type from the AI UX backend */
@@ -106,6 +107,9 @@ export function useAIRealTimeSuggestions(
     heartbeatInterval = 30000,
   } = options;
 
+  // Redux dispatch for token expiration handling
+  const dispatch = useAppDispatch();
+
   // Get user ID from Redux store
   const userId = useAppSelector((state) => state.auth?.user?.id ?? "anonymous");
 
@@ -171,8 +175,10 @@ export function useAIRealTimeSuggestions(
     setError(null);
   }, []);
 
-  // Build WebSocket URL
-  const wsUrl = enabled ? buildWebSocketUrl(userId) : "";
+  // Build WebSocket URL with proper endpoint and user_id param
+  const wsUrl = enabled
+    ? buildWebSocketUrl(WS_ENDPOINTS.AI_SUGGESTIONS, { user_id: userId })
+    : "";
 
   // Use the realtime sync hook
   const { status, reconnectAttempts, send } = useRealtimeSync({
@@ -182,6 +188,7 @@ export function useAIRealTimeSuggestions(
     onMessage: handleMessage,
     onError: handleError,
     onConnect: handleConnect,
+    onTokenExpired: () => dispatch(logout()),
   });
 
   // Determine if connected

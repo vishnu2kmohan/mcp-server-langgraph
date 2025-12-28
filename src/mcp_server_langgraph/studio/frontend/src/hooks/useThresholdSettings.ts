@@ -13,7 +13,9 @@
  */
 
 import { useState, useCallback } from "react";
-import { getAuthToken } from "../utils/storage";
+import { useNavigate } from "react-router";
+import { authenticatedFetch } from "../utils/authenticatedFetch";
+import { saveCurrentRouteAsIntended } from "../utils/intendedRoute";
 
 // =============================================================================
 // Types
@@ -78,6 +80,7 @@ const API_BASE =
 // =============================================================================
 
 export function useThresholdSettings(): UseThresholdSettingsReturn {
+  const navigate = useNavigate();
   const [recommendation, setRecommendation] = useState<
     ThresholdRecommendation | undefined
   >(undefined);
@@ -87,19 +90,11 @@ export function useThresholdSettings(): UseThresholdSettingsReturn {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  /**
-   * Get authorization headers
-   */
-  const getHeaders = useCallback((): Record<string, string> => {
-    const headers: Record<string, string> = {
-      "Content-Type": "application/json",
-    };
-    const token = getAuthToken();
-    if (token) {
-      headers["Authorization"] = `Bearer ${token}`;
-    }
-    return headers;
-  }, []);
+  // Handle auth failure - redirect to login
+  const handleAuthFailure = useCallback(() => {
+    saveCurrentRouteAsIntended();
+    navigate("/login", { replace: true });
+  }, [navigate]);
 
   /**
    * Fetch threshold recommendation
@@ -110,11 +105,11 @@ export function useThresholdSettings(): UseThresholdSettingsReturn {
       setError(null);
 
       try {
-        const response = await fetch(
+        const response = await authenticatedFetch(
           `${API_BASE}/agents/requests/threshold/recommendation`,
           {
             method: "GET",
-            headers: getHeaders(),
+            onAuthFailure: handleAuthFailure,
           },
         );
 
@@ -135,7 +130,7 @@ export function useThresholdSettings(): UseThresholdSettingsReturn {
       } finally {
         setIsLoading(false);
       }
-    }, [getHeaders]);
+    }, [handleAuthFailure]);
 
   /**
    * Fetch user threshold settings
@@ -146,11 +141,11 @@ export function useThresholdSettings(): UseThresholdSettingsReturn {
       setError(null);
 
       try {
-        const response = await fetch(
+        const response = await authenticatedFetch(
           `${API_BASE}/agents/requests/threshold/settings`,
           {
             method: "GET",
-            headers: getHeaders(),
+            onAuthFailure: handleAuthFailure,
           },
         );
 
@@ -171,7 +166,7 @@ export function useThresholdSettings(): UseThresholdSettingsReturn {
       } finally {
         setIsLoading(false);
       }
-    }, [getHeaders]);
+    }, [handleAuthFailure]);
 
   /**
    * Update user threshold settings
@@ -184,12 +179,12 @@ export function useThresholdSettings(): UseThresholdSettingsReturn {
       setError(null);
 
       try {
-        const response = await fetch(
+        const response = await authenticatedFetch(
           `${API_BASE}/agents/requests/threshold/settings`,
           {
             method: "PUT",
-            headers: getHeaders(),
             body: JSON.stringify(updates),
+            onAuthFailure: handleAuthFailure,
           },
         );
 
@@ -211,7 +206,7 @@ export function useThresholdSettings(): UseThresholdSettingsReturn {
         setIsLoading(false);
       }
     },
-    [getHeaders],
+    [handleAuthFailure],
   );
 
   /**

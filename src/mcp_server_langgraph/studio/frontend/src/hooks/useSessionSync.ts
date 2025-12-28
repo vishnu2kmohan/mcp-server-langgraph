@@ -57,6 +57,16 @@ const logger = devLogger.withPrefix("[useSessionSync]");
  * - loaderData is always undefined, hook does nothing
  * - Session management continues via Redux thunks
  *
+ * Testing:
+ * When testing components that use this hook, mock it to prevent interference
+ * with preloaded Redux state:
+ * ```typescript
+ * vi.mock("../hooks/useSessionSync", () => ({
+ *   useSessionSync: vi.fn(),
+ * }));
+ * ```
+ * Then control session state via the preloadedState option in your test store.
+ *
  * @param loaderData - ChatLoaderData from useRouteLoaderData, or undefined
  */
 export function useSessionSync(loaderData: ChatLoaderData | undefined): void {

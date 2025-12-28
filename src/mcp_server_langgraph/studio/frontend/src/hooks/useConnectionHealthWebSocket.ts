@@ -10,9 +10,9 @@
 
 import { useState, useCallback, useRef, useMemo } from "react";
 import { useRealtimeSync } from "./useRealtimeSync";
-import { useAppSelector } from "../store/hooks";
-import { selectIsAuthenticated } from "../store/slices/authSlice";
-import { getAuthToken } from "../utils/storage";
+import { useAppDispatch, useAppSelector } from "../store/hooks";
+import { logout, selectIsAuthenticated } from "../store/slices/authSlice";
+import { buildWebSocketUrl, WS_ENDPOINTS } from "../utils/websocket";
 
 // =============================================================================
 // Types
@@ -165,13 +165,9 @@ export interface UseConnectionHealthWebSocketReturn {
 // Default URL
 // =============================================================================
 
-function getDefaultWebSocketUrl(token?: string): string {
-  const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-  const host = window.location.host;
-  // Use consolidated WebSocket URL per ADR-0068
-  // Include token for authentication (required by backend)
-  const tokenParam = token ? `?token=${encodeURIComponent(token)}` : "";
-  return `${protocol}//${host}/api/v1/ws/connections/health${tokenParam}`;
+function getDefaultWebSocketUrl(includeToken: boolean = false): string {
+  // Use standardized WebSocket utilities (ADR-0068 consolidated WebSocket URLs)
+  return buildWebSocketUrl(WS_ENDPOINTS.CONNECTIONS_HEALTH, {}, includeToken);
 }
 
 // =============================================================================
@@ -189,16 +185,19 @@ export function useConnectionHealthWebSocket(
     onError,
   } = options;
 
-  // Get auth state and token for WebSocket authentication
+  // Get auth state for WebSocket authentication
+  const dispatch = useAppDispatch();
   const isAuthenticated = useAppSelector(selectIsAuthenticated);
-  const authToken = isAuthenticated ? (getAuthToken() ?? undefined) : undefined;
 
   // Compute WebSocket URL - only generate URL when authenticated
   // Passing empty string prevents connection attempt before auth is ready
+  // The buildWebSocketUrl utility fetches the auth token internally when includeAuthToken=true
   const url = useMemo(
     () =>
-      isAuthenticated ? (customUrl ?? getDefaultWebSocketUrl(authToken)) : "",
-    [customUrl, authToken, isAuthenticated],
+      isAuthenticated
+        ? (customUrl ?? getDefaultWebSocketUrl(true /* includeAuthToken */))
+        : "",
+    [customUrl, isAuthenticated],
   );
 
   // State
@@ -312,6 +311,7 @@ export function useConnectionHealthWebSocket(
     reconnectInterval: 1000, // Start with 1 second
     maxDelayMs: 30000, // Max 30 seconds between attempts
     maxReconnectAttempts: 10, // Try up to 10 times
+    onTokenExpired: () => dispatch(logout()),
   });
 
   // Keep sendRef in sync for use in handleConnect

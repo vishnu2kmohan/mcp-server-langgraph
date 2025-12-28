@@ -19,8 +19,9 @@
  */
 import { useState, useCallback } from "react";
 import { useNavigate } from "react-router";
-import { getAuthToken } from "../utils/storage";
 import { useSessionTelemetry } from "../contexts/TelemetryContext";
+import { authenticatedFetch } from "../utils/authenticatedFetch";
+import { setIntendedRoute } from "../utils/intendedRoute";
 
 // =============================================================================
 // Types
@@ -46,26 +47,6 @@ interface UseNewChatResult {
 }
 
 // =============================================================================
-// API Helper
-// =============================================================================
-
-/**
- * Get auth headers for API requests.
- */
-function getAuthHeaders(): Record<string, string> {
-  const headers: Record<string, string> = {
-    "Content-Type": "application/json",
-  };
-
-  const token = getAuthToken();
-  if (token) {
-    headers["Authorization"] = `Bearer ${token}`;
-  }
-
-  return headers;
-}
-
-// =============================================================================
 // Hook
 // =============================================================================
 
@@ -85,6 +66,14 @@ export function useNewChat(options: UseNewChatOptions = {}): UseNewChatResult {
   // Get telemetry from context
   const sessionTelemetry = useSessionTelemetry();
 
+  // Handle auth failure by navigating to login
+  const handleAuthFailure = useCallback(() => {
+    setIntendedRoute(
+      window.location.pathname + window.location.search + window.location.hash,
+    );
+    navigate("/login", { replace: true });
+  }, [navigate]);
+
   const createNewChat = useCallback(
     async (createOptions: CreateNewChatOptions = {}) => {
       const { name = "New Chat" } = createOptions;
@@ -95,11 +84,11 @@ export function useNewChat(options: UseNewChatOptions = {}): UseNewChatResult {
       setIsCreating(true);
 
       try {
-        const response = await fetch("/api/v1/sessions", {
+        const response = await authenticatedFetch("/api/v1/sessions", {
           method: "POST",
-          headers: getAuthHeaders(),
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ name }),
-          credentials: "include",
+          onAuthFailure: handleAuthFailure,
         });
 
         if (!response.ok) {
@@ -135,7 +124,7 @@ export function useNewChat(options: UseNewChatOptions = {}): UseNewChatResult {
         setIsCreating(false);
       }
     },
-    [basePath, navigate, sessionTelemetry],
+    [basePath, navigate, sessionTelemetry, handleAuthFailure],
   );
 
   return {

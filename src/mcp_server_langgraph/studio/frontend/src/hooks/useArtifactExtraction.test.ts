@@ -11,18 +11,22 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { renderHook, act } from "@testing-library/react";
 import { useArtifactExtraction } from "./useArtifactExtraction";
 
-// Mock fetch globally
-const mockFetch = vi.fn();
+// Mock authenticatedFetch
+const mockAuthenticatedFetch = vi.fn();
+vi.mock("../utils/authenticatedFetch", () => ({
+  authenticatedFetch: (...args: unknown[]) => mockAuthenticatedFetch(...args),
+}));
 
-// Mock getAuthToken
-vi.mock("../utils/storage", () => ({
-  getAuthToken: () => "test-token",
+// Mock setIntendedRoute
+vi.mock("../utils/intendedRoute", () => ({
+  setIntendedRoute: vi.fn(),
 }));
 
 // Mock useRevalidator since we're not in a real Data Router context
-// Use vi.hoisted to ensure mockRevalidate is available before vi.mock runs
-const { mockRevalidate } = vi.hoisted(() => ({
+// Use vi.hoisted to ensure mockRevalidate and mockNavigate are available before vi.mock runs
+const { mockRevalidate, mockNavigate } = vi.hoisted(() => ({
   mockRevalidate: vi.fn(),
+  mockNavigate: vi.fn(),
 }));
 
 vi.mock("react-router", () => ({
@@ -30,6 +34,7 @@ vi.mock("react-router", () => ({
     revalidate: mockRevalidate,
     state: "idle",
   }),
+  useNavigate: () => mockNavigate,
 }));
 
 // =============================================================================
@@ -39,9 +44,8 @@ vi.mock("react-router", () => ({
 describe("useArtifactExtraction", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    // Set up global fetch mock
-    global.fetch = mockFetch;
-    mockFetch.mockResolvedValue({
+    // Set up authenticatedFetch mock
+    mockAuthenticatedFetch.mockResolvedValue({
       ok: true,
       json: async () => ({ id: "created-artifact-1", version: 1 }),
     });
@@ -66,15 +70,12 @@ describe("useArtifactExtraction", () => {
         await result.current.extractAndSaveArtifacts(content);
       });
 
-      // Should have called fetch to create artifact
-      expect(mockFetch).toHaveBeenCalledWith(
+      // Should have called authenticatedFetch to create artifact
+      expect(mockAuthenticatedFetch).toHaveBeenCalledWith(
         "/api/v1/artifacts",
         expect.objectContaining({
           method: "POST",
-          headers: expect.objectContaining({
-            "Content-Type": "application/json",
-            Authorization: "Bearer test-token",
-          }),
+          onAuthFailure: expect.any(Function),
         }),
       );
     });
@@ -93,10 +94,10 @@ describe("useArtifactExtraction", () => {
         await result.current.extractAndSaveArtifacts(content);
       });
 
-      expect(mockFetch).toHaveBeenCalled();
+      expect(mockAuthenticatedFetch).toHaveBeenCalled();
 
       // Verify the payload has type "json" (charts are stored as JSON)
-      const callArgs = mockFetch.mock.calls[0];
+      const callArgs = mockAuthenticatedFetch.mock.calls[0];
       const body = JSON.parse(callArgs[1].body);
       expect(body.type).toBe("json");
     });
@@ -114,10 +115,10 @@ describe("useArtifactExtraction", () => {
         await result.current.extractAndSaveArtifacts(content);
       });
 
-      expect(mockFetch).toHaveBeenCalled();
+      expect(mockAuthenticatedFetch).toHaveBeenCalled();
 
       // Verify the payload has type "code" and language in edit_metadata
-      const callArgs = mockFetch.mock.calls[0];
+      const callArgs = mockAuthenticatedFetch.mock.calls[0];
       const body = JSON.parse(callArgs[1].body);
       expect(body.type).toBe("code");
       expect(body.content_type).toBe("code");
@@ -144,7 +145,7 @@ describe("useArtifactExtraction", () => {
       });
 
       // Should only have called fetch once
-      expect(mockFetch).toHaveBeenCalledTimes(1);
+      expect(mockAuthenticatedFetch).toHaveBeenCalledTimes(1);
     });
 
     it("should reset extraction state with resetExtraction", async () => {
@@ -171,7 +172,7 @@ describe("useArtifactExtraction", () => {
         await result.current.extractAndSaveArtifacts(content);
       });
 
-      expect(mockFetch).toHaveBeenCalledTimes(2);
+      expect(mockAuthenticatedFetch).toHaveBeenCalledTimes(2);
     });
   });
 
@@ -189,7 +190,7 @@ describe("useArtifactExtraction", () => {
         await result.current.extractAndSaveArtifacts(content);
       });
 
-      const callArgs = mockFetch.mock.calls[0];
+      const callArgs = mockAuthenticatedFetch.mock.calls[0];
       const body = JSON.parse(callArgs[1].body);
 
       // Verify CreateArtifactRequest matches backend API schema (snake_case)
@@ -220,7 +221,7 @@ describe("useArtifactExtraction", () => {
         await result.current.extractAndSaveArtifacts(content);
       });
 
-      const callArgs = mockFetch.mock.calls[0];
+      const callArgs = mockAuthenticatedFetch.mock.calls[0];
       const body = JSON.parse(callArgs[1].body);
 
       // Content should be a string (serialized JSON)
@@ -242,15 +243,11 @@ describe("useArtifactExtraction", () => {
         );
       });
 
-      expect(mockFetch).toHaveBeenCalledWith(
+      expect(mockAuthenticatedFetch).toHaveBeenCalledWith(
         "/api/v1/artifacts",
         expect.objectContaining({
           method: "POST",
-          credentials: "include",
-          headers: expect.objectContaining({
-            "Content-Type": "application/json",
-            Authorization: "Bearer test-token",
-          }),
+          onAuthFailure: expect.any(Function),
         }),
       );
     });
@@ -275,7 +272,7 @@ describe("useArtifactExtraction", () => {
     });
 
     it("should handle API errors gracefully", async () => {
-      mockFetch.mockRejectedValueOnce(new Error("Network error"));
+      mockAuthenticatedFetch.mockRejectedValueOnce(new Error("Network error"));
 
       const { result } = renderHook(() =>
         useArtifactExtraction({
@@ -307,7 +304,7 @@ describe("useArtifactExtraction", () => {
       });
 
       // Should not have called fetch
-      expect(mockFetch).not.toHaveBeenCalled();
+      expect(mockAuthenticatedFetch).not.toHaveBeenCalled();
     });
   });
 
@@ -326,7 +323,7 @@ describe("useArtifactExtraction", () => {
         expect(count).toBe(0);
       });
 
-      expect(mockFetch).not.toHaveBeenCalled();
+      expect(mockAuthenticatedFetch).not.toHaveBeenCalled();
     });
   });
 
@@ -338,7 +335,7 @@ describe("useArtifactExtraction", () => {
         resolvePromise = resolve;
       });
 
-      mockFetch.mockImplementationOnce(async () => {
+      mockAuthenticatedFetch.mockImplementationOnce(async () => {
         await delayedPromise;
         return { ok: true, json: async () => ({ id: "1" }) };
       });
@@ -395,7 +392,7 @@ describe("useArtifactExtraction", () => {
   describe("retry logic", () => {
     it("should retry failed requests up to maxRetries", async () => {
       // Fail twice, then succeed
-      mockFetch
+      mockAuthenticatedFetch
         .mockRejectedValueOnce(new Error("Network error 1"))
         .mockRejectedValueOnce(new Error("Network error 2"))
         .mockResolvedValueOnce({
@@ -418,12 +415,14 @@ describe("useArtifactExtraction", () => {
       });
 
       // Should have been called 3 times (2 failures + 1 success)
-      expect(mockFetch).toHaveBeenCalledTimes(3);
+      expect(mockAuthenticatedFetch).toHaveBeenCalledTimes(3);
     });
 
     it("should give up after maxRetries exceeded", async () => {
       // Fail all retries
-      mockFetch.mockRejectedValue(new Error("Persistent network error"));
+      mockAuthenticatedFetch.mockRejectedValue(
+        new Error("Persistent network error"),
+      );
 
       const { result } = renderHook(() =>
         useArtifactExtraction({
@@ -440,13 +439,13 @@ describe("useArtifactExtraction", () => {
       });
 
       // Should have been called maxRetries + 1 times (initial + retries)
-      expect(mockFetch).toHaveBeenCalledTimes(3);
+      expect(mockAuthenticatedFetch).toHaveBeenCalledTimes(3);
     });
 
     it("should use exponential backoff between retries", async () => {
       vi.useFakeTimers();
 
-      mockFetch
+      mockAuthenticatedFetch
         .mockRejectedValueOnce(new Error("Error 1"))
         .mockRejectedValueOnce(new Error("Error 2"))
         .mockResolvedValueOnce({ ok: true, json: async () => ({ id: "1" }) });
@@ -468,19 +467,19 @@ describe("useArtifactExtraction", () => {
       });
 
       // First call happens immediately
-      expect(mockFetch).toHaveBeenCalledTimes(1);
+      expect(mockAuthenticatedFetch).toHaveBeenCalledTimes(1);
 
       // Advance timer for first retry (100ms)
       await act(async () => {
         await vi.advanceTimersByTimeAsync(100);
       });
-      expect(mockFetch).toHaveBeenCalledTimes(2);
+      expect(mockAuthenticatedFetch).toHaveBeenCalledTimes(2);
 
       // Advance timer for second retry (200ms - exponential backoff)
       await act(async () => {
         await vi.advanceTimersByTimeAsync(200);
       });
-      expect(mockFetch).toHaveBeenCalledTimes(3);
+      expect(mockAuthenticatedFetch).toHaveBeenCalledTimes(3);
 
       // Cleanup
       await act(async () => {
@@ -493,7 +492,7 @@ describe("useArtifactExtraction", () => {
     it("should call onRetry callback on each retry attempt", async () => {
       const onRetry = vi.fn();
 
-      mockFetch
+      mockAuthenticatedFetch
         .mockRejectedValueOnce(new Error("Error 1"))
         .mockResolvedValueOnce({ ok: true, json: async () => ({ id: "1" }) });
 
@@ -516,7 +515,7 @@ describe("useArtifactExtraction", () => {
     });
 
     it("should default to no retries when maxRetries is 0", async () => {
-      mockFetch.mockRejectedValue(new Error("Network error"));
+      mockAuthenticatedFetch.mockRejectedValue(new Error("Network error"));
 
       const { result } = renderHook(() =>
         useArtifactExtraction({
@@ -533,7 +532,7 @@ describe("useArtifactExtraction", () => {
       });
 
       // Should only try once
-      expect(mockFetch).toHaveBeenCalledTimes(1);
+      expect(mockAuthenticatedFetch).toHaveBeenCalledTimes(1);
     });
   });
 });

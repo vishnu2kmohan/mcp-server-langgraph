@@ -12,6 +12,9 @@
  */
 
 import { useState, useEffect, useCallback } from "react";
+import { useNavigate } from "react-router";
+import { authenticatedFetch } from "../utils/authenticatedFetch";
+import { saveCurrentRouteAsIntended } from "../utils/intendedRoute";
 
 // ==============================================================================
 // Types
@@ -47,11 +50,18 @@ const API_BASE = "/api/v1/context";
 // ==============================================================================
 
 export function useProjectContext(): ProjectContextState {
+  const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(true);
   const [hasContext, setHasContext] = useState(false);
   const [content, setContent] = useState<string | null>(null);
   const [contextPath, setContextPath] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  // Handle auth failure - redirect to login
+  const handleAuthFailure = useCallback(() => {
+    saveCurrentRouteAsIntended();
+    navigate("/login", { replace: true });
+  }, [navigate]);
 
   // Fetch context data from API
   const fetchContext = useCallback(async () => {
@@ -59,7 +69,9 @@ export function useProjectContext(): ProjectContextState {
     setError(null);
 
     try {
-      const response = await fetch(API_BASE);
+      const response = await authenticatedFetch(API_BASE, {
+        onAuthFailure: handleAuthFailure,
+      });
 
       if (!response.ok) {
         throw new Error("Failed to fetch context");
@@ -78,7 +90,7 @@ export function useProjectContext(): ProjectContextState {
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [handleAuthFailure]);
 
   // Load context on mount
   useEffect(() => {
@@ -86,41 +98,43 @@ export function useProjectContext(): ProjectContextState {
   }, [fetchContext]);
 
   // Update context content
-  const updateContent = useCallback(async (newContent: string) => {
-    try {
-      await fetch(API_BASE, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ content: newContent }),
-      });
-      setContent(newContent);
-    } catch {
-      throw new Error("Failed to update context");
-    }
-  }, []);
+  const updateContent = useCallback(
+    async (newContent: string) => {
+      try {
+        await authenticatedFetch(API_BASE, {
+          method: "PUT",
+          body: JSON.stringify({ content: newContent }),
+          onAuthFailure: handleAuthFailure,
+        });
+        setContent(newContent);
+      } catch {
+        throw new Error("Failed to update context");
+      }
+    },
+    [handleAuthFailure],
+  );
 
   // Create new context file
-  const createContext = useCallback(async (initialContent: string) => {
-    try {
-      const response = await fetch(API_BASE, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ content: initialContent }),
-      });
+  const createContext = useCallback(
+    async (initialContent: string) => {
+      try {
+        const response = await authenticatedFetch(API_BASE, {
+          method: "POST",
+          body: JSON.stringify({ content: initialContent }),
+          onAuthFailure: handleAuthFailure,
+        });
 
-      const data = await response.json();
+        const data = await response.json();
 
-      setHasContext(true);
-      setContent(initialContent);
-      setContextPath(data.path);
-    } catch {
-      throw new Error("Failed to create context");
-    }
-  }, []);
+        setHasContext(true);
+        setContent(initialContent);
+        setContextPath(data.path);
+      } catch {
+        throw new Error("Failed to create context");
+      }
+    },
+    [handleAuthFailure],
+  );
 
   return {
     isLoading,

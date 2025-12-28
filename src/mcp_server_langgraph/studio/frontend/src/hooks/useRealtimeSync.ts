@@ -7,9 +7,14 @@
  * - Automatic reconnection
  * - Message handling
  * - Connection status tracking
+ * - Token expiration handling (4010 close code)
  */
 
 import { useState, useCallback, useRef, useEffect } from "react";
+import {
+  WS_CLOSE_TOKEN_EXPIRED,
+  ensureValidTokenForWebSocket,
+} from "../utils/websocketAuth";
 
 /**
  * Connection status type
@@ -45,6 +50,17 @@ export interface UseRealtimeSyncOptions {
   onConnect?: () => void;
   /** Callback when connection is closed */
   onDisconnect?: () => void;
+  /**
+   * Callback when token expires (close code 4010) and refresh fails.
+   * Use this to redirect to login.
+   */
+  onTokenExpired?: () => void;
+  /**
+   * Enable proactive token refresh before connecting.
+   * When true, validates and refreshes token before WebSocket connection.
+   * Default: true (recommended for production)
+   */
+  proactiveTokenRefresh?: boolean;
 }
 
 /**
@@ -113,6 +129,7 @@ export function useRealtimeSync(
     onError,
     onConnect,
     onDisconnect,
+    onTokenExpired,
   } = options;
 
   const [status, setStatus] = useState<ConnectionStatus>(
@@ -129,6 +146,8 @@ export function useRealtimeSync(
   );
   const manualCloseRef = useRef(false);
   const reconnectAttemptsRef = useRef(0);
+  // Ref to store createConnection for use in actuallyCreateConnection without circular deps
+  const createConnectionRef = useRef<() => void>(() => {});
 
   // Keep ref in sync with state
   reconnectAttemptsRef.current = reconnectAttempts;
@@ -139,8 +158,15 @@ export function useRealtimeSync(
     onError,
     onConnect,
     onDisconnect,
+    onTokenExpired,
   });
-  callbacksRef.current = { onMessage, onError, onConnect, onDisconnect };
+  callbacksRef.current = {
+    onMessage,
+    onError,
+    onConnect,
+    onDisconnect,
+    onTokenExpired,
+  };
 
   /**
    * Flush queued messages after connection
@@ -156,15 +182,10 @@ export function useRealtimeSync(
   }, []);
 
   /**
-   * Create and configure WebSocket connection
+   * Internal function that actually creates the WebSocket connection.
+   * Called after proactive token validation in createConnection.
    */
-  const createConnection = useCallback(() => {
-    // Don't attempt connection with empty URL
-    if (!url) {
-      // Note: Initial state is already 'disconnected' when url is empty
-      return;
-    }
-
+  const actuallyCreateConnection = useCallback(() => {
     // Clean up existing connection without triggering onclose
     if (wsRef.current) {
       wsRef.current.onclose = null;
@@ -210,6 +231,29 @@ export function useRealtimeSync(
         return;
       }
 
+      // Token expiration (4010) - special handling with refresh attempt
+      // Note: proactive token refresh in createConnection usually prevents this,
+      // but handles edge cases where token expires during long-lived connection
+      if (event.code === WS_CLOSE_TOKEN_EXPIRED) {
+        // Async handler for token refresh
+        (async () => {
+          const refreshed = await ensureValidTokenForWebSocket();
+          if (refreshed) {
+            // Token refreshed successfully - reconnect immediately
+            // Use actuallyCreateConnection directly since we just validated
+            setReconnectAttempts(0);
+            reconnectAttemptsRef.current = 0;
+            actuallyCreateConnection();
+          } else {
+            // Refresh failed - notify and disconnect
+            setStatus("disconnected");
+            callbacksRef.current.onTokenExpired?.();
+            callbacksRef.current.onDisconnect?.();
+          }
+        })();
+        return;
+      }
+
       // Abnormal close - attempt reconnection using ref for current value
       const currentAttempts = reconnectAttemptsRef.current;
       if (currentAttempts < maxReconnectAttempts) {
@@ -230,7 +274,9 @@ export function useRealtimeSync(
         );
 
         reconnectTimeoutRef.current = setTimeout(() => {
-          createConnection();
+          // Re-validate token before reconnecting (may have expired during delay)
+          // Use ref to avoid circular dependency with createConnection
+          createConnectionRef.current();
         }, delay);
       } else {
         setStatus("disconnected");
@@ -246,6 +292,50 @@ export function useRealtimeSync(
     backoffMultiplier,
     flushMessageQueue,
   ]);
+
+  /**
+   * Create and configure WebSocket connection with proactive token refresh.
+   *
+   * Before connecting, checks if the token is expiring soon and refreshes
+   * if needed. This prevents the round-trip of:
+   * connect → 4010 close → refresh → reconnect
+   */
+  const createConnection = useCallback(() => {
+    // Don't attempt connection with empty URL
+    if (!url) {
+      // Note: Initial state is already 'disconnected' when url is empty
+      return;
+    }
+
+    // Validate WebSocket URL protocol to prevent DOMException
+    // WebSocket URLs must start with ws:// or wss://
+    if (!url.startsWith("ws://") && !url.startsWith("wss://")) {
+      const error = new Error(
+        `Invalid WebSocket URL: "${url}". URL must start with ws:// or wss://`,
+      );
+      setStatus("error");
+      callbacksRef.current.onError?.(error);
+      return;
+    }
+
+    // Proactive token refresh: Check if token is valid before connecting
+    // This prevents the connect → 4010 → refresh → reconnect round-trip
+    ensureValidTokenForWebSocket().then((tokenValid) => {
+      if (!tokenValid) {
+        // Token invalid and refresh failed - notify and disconnect
+        setStatus("disconnected");
+        callbacksRef.current.onTokenExpired?.();
+        callbacksRef.current.onDisconnect?.();
+        return;
+      }
+
+      // Token is valid - proceed with connection
+      actuallyCreateConnection();
+    });
+  }, [url, actuallyCreateConnection]);
+
+  // Keep ref in sync for use in actuallyCreateConnection's reconnect timeout
+  createConnectionRef.current = createConnection;
 
   /**
    * Send a message through the WebSocket

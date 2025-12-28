@@ -19,8 +19,11 @@
  *   });
  */
 
-import { useState, useCallback, useRef, useEffect } from "react";
+import { useState, useCallback, useRef, useEffect, useMemo } from "react";
+import { useNavigate } from "react-router";
 import debounce from "lodash/debounce";
+import { authenticatedFetch } from "../utils/authenticatedFetch";
+import { saveCurrentRouteAsIntended } from "../utils/intendedRoute";
 
 /**
  * Suggestion response from fetch function.
@@ -101,7 +104,7 @@ export interface UseInlineSuggestionsResult {
 }
 
 /**
- * Default suggestion fetcher using the REST API.
+ * Creates a default suggestion fetcher using the REST API.
  *
  * Fetches suggestions from /api/v1/ai/chat-suggestions endpoint.
  * Falls back to empty string if the API is unavailable or returns no results.
@@ -109,52 +112,51 @@ export interface UseInlineSuggestionsResult {
  * For real-time suggestions, consumers should use the WebSocket-based
  * `useAIRealTimeSuggestions` hook instead.
  */
-const defaultFetchSuggestion = async (
-  input: string,
-  context?: SuggestionFetchContext,
-): Promise<SuggestionResponse | string> => {
-  // If no session ID is provided, return empty (cannot get context-aware suggestions)
-  if (!context?.sessionId) {
-    return "";
-  }
-
-  try {
-    const response = await fetch("/api/v1/ai/chat-suggestions", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      credentials: "include",
-      signal: context.signal,
-      body: JSON.stringify({
-        input_text: input,
-        session_id: context.sessionId,
-        max_suggestions: 1,
-      }),
-    });
-
-    if (!response.ok) {
-      // API not available or error - return empty (graceful degradation)
+const createDefaultFetchSuggestion = (onAuthFailure: () => void) => {
+  return async (
+    input: string,
+    context?: SuggestionFetchContext,
+  ): Promise<SuggestionResponse | string> => {
+    // If no session ID is provided, return empty (cannot get context-aware suggestions)
+    if (!context?.sessionId) {
       return "";
     }
 
-    const data = await response.json();
+    try {
+      const response = await authenticatedFetch("/api/v1/ai/chat-suggestions", {
+        method: "POST",
+        body: JSON.stringify({
+          input_text: input,
+          session_id: context.sessionId,
+          max_suggestions: 1,
+        }),
+        signal: context.signal,
+        onAuthFailure,
+      });
 
-    // Return the first suggestion if available
-    if (data.suggestions && data.suggestions.length > 0) {
-      const suggestion = data.suggestions[0];
-      return {
-        text: suggestion.text || suggestion.content || "",
-        confidence: suggestion.confidence ?? 0.7,
-        reasoning: suggestion.reasoning,
-      };
+      if (!response.ok) {
+        // API not available or error - return empty (graceful degradation)
+        return "";
+      }
+
+      const data = await response.json();
+
+      // Return the first suggestion if available
+      if (data.suggestions && data.suggestions.length > 0) {
+        const suggestion = data.suggestions[0];
+        return {
+          text: suggestion.text || suggestion.content || "",
+          confidence: suggestion.confidence ?? 0.7,
+          reasoning: suggestion.reasoning,
+        };
+      }
+
+      return "";
+    } catch {
+      // Network error or API unavailable - return empty (graceful degradation)
+      return "";
     }
-
-    return "";
-  } catch {
-    // Network error or API unavailable - return empty (graceful degradation)
-    return "";
-  }
+  };
 };
 
 /**
@@ -163,6 +165,20 @@ const defaultFetchSuggestion = async (
 export function useInlineSuggestions(
   options: UseInlineSuggestionsOptions = {},
 ): UseInlineSuggestionsResult {
+  const navigate = useNavigate();
+
+  // Handle auth failure - redirect to login
+  const handleAuthFailure = useCallback(() => {
+    saveCurrentRouteAsIntended();
+    navigate("/login", { replace: true });
+  }, [navigate]);
+
+  // Create auth-aware default fetch function
+  const defaultFetchSuggestion = useMemo(
+    () => createDefaultFetchSuggestion(handleAuthFailure),
+    [handleAuthFailure],
+  );
+
   const {
     enabled = true,
     minLength = 3,

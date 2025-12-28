@@ -9,6 +9,23 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { renderHook, act, waitFor } from "@testing-library/react";
 import { usePushNotifications } from "./usePushNotifications";
 
+// Mock react-router
+const mockNavigate = vi.fn();
+vi.mock("react-router", () => ({
+  useNavigate: () => mockNavigate,
+}));
+
+// Mock intendedRoute
+vi.mock("../utils/intendedRoute", () => ({
+  setIntendedRoute: vi.fn(),
+}));
+
+// Mock authenticatedFetch
+const mockAuthenticatedFetch = vi.fn();
+vi.mock("../utils/authenticatedFetch", () => ({
+  authenticatedFetch: (...args: unknown[]) => mockAuthenticatedFetch(...args),
+}));
+
 // Mock navigator.serviceWorker
 const mockPushManager = {
   getSubscription: vi.fn(),
@@ -19,9 +36,6 @@ const mockRegistration = {
   pushManager: mockPushManager,
 };
 
-// Mock fetch for API calls - use vi.stubGlobal to properly override
-const mockFetch = vi.fn();
-
 describe("usePushNotifications", () => {
   const originalNavigator = navigator.serviceWorker;
   const originalNotification = window.Notification;
@@ -30,8 +44,11 @@ describe("usePushNotifications", () => {
   beforeEach(() => {
     vi.clearAllMocks();
 
-    // Mock fetch globally before MSW can intercept
-    vi.stubGlobal("fetch", mockFetch);
+    // Set up authenticatedFetch mock with default success response
+    mockAuthenticatedFetch.mockResolvedValue({
+      ok: true,
+      json: async () => ({}),
+    });
 
     // Mock PushManager class
     Object.defineProperty(window, "PushManager", {
@@ -74,7 +91,7 @@ describe("usePushNotifications", () => {
       }),
     });
 
-    mockFetch.mockResolvedValue({
+    mockAuthenticatedFetch.mockResolvedValue({
       ok: true,
       json: () => Promise.resolve({ success: true }),
     });
@@ -221,14 +238,12 @@ describe("usePushNotifications", () => {
         await result.current.subscribe();
       });
 
-      expect(mockFetch).toHaveBeenCalledWith(
+      expect(mockAuthenticatedFetch).toHaveBeenCalledWith(
         "/api/v1/notifications/push/subscribe",
         expect.objectContaining({
           method: "POST",
-          headers: expect.objectContaining({
-            "Content-Type": "application/json",
-          }),
           body: expect.any(String),
+          onAuthFailure: expect.any(Function),
         }),
       );
     });
@@ -302,7 +317,7 @@ describe("usePushNotifications", () => {
 
     it("should handle backend API failure on subscribe", async () => {
       // Mock API returning error
-      mockFetch.mockResolvedValue({
+      mockAuthenticatedFetch.mockResolvedValue({
         ok: false,
         status: 500,
       });
@@ -399,20 +414,18 @@ describe("usePushNotifications", () => {
         expect(result.current.isSubscribed).toBe(true);
       });
 
-      mockFetch.mockClear();
+      mockAuthenticatedFetch.mockClear();
 
       // Then unsubscribe
       await act(async () => {
         await result.current.unsubscribe();
       });
 
-      expect(mockFetch).toHaveBeenCalledWith(
+      expect(mockAuthenticatedFetch).toHaveBeenCalledWith(
         "/api/v1/notifications/push/unsubscribe",
         expect.objectContaining({
           method: "DELETE",
-          headers: expect.objectContaining({
-            "Content-Type": "application/json",
-          }),
+          onAuthFailure: expect.any(Function),
         }),
       );
     });

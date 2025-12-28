@@ -9,9 +9,10 @@
 
 import { useState, useCallback, useRef, useMemo } from "react";
 import { useRealtimeSync } from "./useRealtimeSync";
-import { useAppSelector } from "../store/hooks";
-import { selectIsAuthenticated } from "../store/slices/authSlice";
+import { useAppDispatch, useAppSelector } from "../store/hooks";
+import { logout, selectIsAuthenticated } from "../store/slices/authSlice";
 import { getAuthToken } from "../utils/storage";
+import { buildWebSocketUrl, WS_ENDPOINTS } from "../utils/websocket";
 
 // =============================================================================
 // Types
@@ -153,17 +154,6 @@ export interface UseConnectionsRealtimeWebSocketReturn {
 }
 
 // =============================================================================
-// Default URL
-// =============================================================================
-
-function getDefaultWebSocketUrl(token?: string): string {
-  const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-  const host = window.location.host;
-  const tokenParam = token ? `?token=${encodeURIComponent(token)}` : "";
-  return `${protocol}//${host}/api/v1/ws/connections/realtime${tokenParam}`;
-}
-
-// =============================================================================
 // Hook Implementation
 // =============================================================================
 
@@ -178,15 +168,24 @@ export function useConnectionsRealtimeWebSocket(
     onError,
   } = options;
 
+  // Redux dispatch for token expiration handling
+  const dispatch = useAppDispatch();
+
   // Get auth state and token for WebSocket authentication
   const isAuthenticated = useAppSelector(selectIsAuthenticated);
+  // Track token changes to trigger URL regeneration on refresh
   const authToken = isAuthenticated ? (getAuthToken() ?? undefined) : undefined;
 
   // Compute WebSocket URL - only generate URL when authenticated
   // Passing empty string prevents connection attempt before auth is ready
   const url = useMemo(
     () =>
-      isAuthenticated ? (customUrl ?? getDefaultWebSocketUrl(authToken)) : "",
+      isAuthenticated
+        ? (customUrl ??
+          buildWebSocketUrl(WS_ENDPOINTS.CONNECTIONS_REALTIME, {}, true))
+        : "",
+    // authToken dependency ensures URL regenerates when token is refreshed
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [customUrl, authToken, isAuthenticated],
   );
 
@@ -294,6 +293,7 @@ export function useConnectionsRealtimeWebSocket(
     reconnectInterval: 1000,
     maxDelayMs: 30000,
     maxReconnectAttempts: 10,
+    onTokenExpired: () => dispatch(logout()),
   });
 
   // Commands

@@ -6,7 +6,13 @@
  */
 
 import { useState, useEffect, useCallback } from "react";
-import { getAuthToken } from "../utils/storage";
+import { useNavigate } from "react-router";
+import { devLogger } from "../utils/devLogger";
+import { authenticatedFetch } from "../utils/authenticatedFetch";
+import { saveCurrentRouteAsIntended } from "../utils/intendedRoute";
+
+// Create prefixed logger for this hook
+const logger = devLogger.withPrefix("[PushNotifications]");
 
 // VAPID public key for push notifications (should come from env in production)
 // This is a test key - replace with actual key in production
@@ -70,6 +76,7 @@ export type UsePushNotificationsReturn = PushNotificationState &
  * ```
  */
 export function usePushNotifications(): UsePushNotificationsReturn {
+  const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(true);
   const [subscription, setSubscription] = useState<PushSubscription | null>(
     null,
@@ -78,6 +85,12 @@ export function usePushNotifications(): UsePushNotificationsReturn {
   const [permission, setPermission] = useState<
     NotificationPermission | "unsupported"
   >("default");
+
+  // Handle auth failure - redirect to login
+  const handleAuthFailure = useCallback(() => {
+    saveCurrentRouteAsIntended();
+    navigate("/login", { replace: true });
+  }, [navigate]);
 
   // Check if push notifications are supported
   const isSupported =
@@ -110,7 +123,7 @@ export function usePushNotifications(): UsePushNotificationsReturn {
           setSubscription(existingSubscription);
         }
       } catch (err) {
-        console.error("Failed to check push subscription:", err);
+        logger.error("Failed to check push subscription:", err);
         setError(err instanceof Error ? err : new Error(String(err)));
       } finally {
         setIsLoading(false);
@@ -151,16 +164,14 @@ export function usePushNotifications(): UsePushNotificationsReturn {
       });
 
       // Send subscription to backend (uses authenticated endpoint)
-      const token = getAuthToken();
-      const response = await fetch("/api/v1/notifications/push/subscribe", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          ...(token && { Authorization: `Bearer ${token}` }),
+      const response = await authenticatedFetch(
+        "/api/v1/notifications/push/subscribe",
+        {
+          method: "POST",
+          body: JSON.stringify(pushSubscription.toJSON()),
+          onAuthFailure: handleAuthFailure,
         },
-        body: JSON.stringify(pushSubscription.toJSON()),
-        credentials: "include",
-      });
+      );
 
       if (!response.ok) {
         throw new Error("Failed to register subscription with server");
@@ -168,12 +179,12 @@ export function usePushNotifications(): UsePushNotificationsReturn {
 
       setSubscription(pushSubscription);
     } catch (err) {
-      console.error("Failed to subscribe to push notifications:", err);
+      logger.error("Failed to subscribe to push notifications:", err);
       setError(err instanceof Error ? err : new Error(String(err)));
     } finally {
       setIsLoading(false);
     }
-  }, [isSupported]);
+  }, [isSupported, handleAuthFailure]);
 
   const unsubscribe = useCallback(async () => {
     if (!subscription) {
@@ -188,25 +199,20 @@ export function usePushNotifications(): UsePushNotificationsReturn {
       await subscription.unsubscribe();
 
       // Notify backend (uses authenticated DELETE endpoint)
-      const token = getAuthToken();
-      await fetch("/api/v1/notifications/push/unsubscribe", {
+      await authenticatedFetch("/api/v1/notifications/push/unsubscribe", {
         method: "DELETE",
-        headers: {
-          "Content-Type": "application/json",
-          ...(token && { Authorization: `Bearer ${token}` }),
-        },
         body: JSON.stringify({ endpoint: subscription.endpoint }),
-        credentials: "include",
+        onAuthFailure: handleAuthFailure,
       });
 
       setSubscription(null);
     } catch (err) {
-      console.error("Failed to unsubscribe from push notifications:", err);
+      logger.error("Failed to unsubscribe from push notifications:", err);
       setError(err instanceof Error ? err : new Error(String(err)));
     } finally {
       setIsLoading(false);
     }
-  }, [subscription]);
+  }, [subscription, handleAuthFailure]);
 
   return {
     isSupported,

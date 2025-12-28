@@ -16,6 +16,23 @@ import { renderHook, waitFor, act, cleanup } from "@testing-library/react";
 import { useHeartDashboard } from "./useHeartDashboard";
 import type { MetricsSummary } from "../analytics/gsm";
 
+// Mock react-router
+const mockNavigate = vi.fn();
+vi.mock("react-router", () => ({
+  useNavigate: () => mockNavigate,
+}));
+
+// Mock intendedRoute
+vi.mock("../utils/intendedRoute", () => ({
+  setIntendedRoute: vi.fn(),
+}));
+
+// Mock authenticatedFetch
+const mockAuthenticatedFetch = vi.fn();
+vi.mock("../utils/authenticatedFetch", () => ({
+  authenticatedFetch: (...args: unknown[]) => mockAuthenticatedFetch(...args),
+}));
+
 // =============================================================================
 // Test Setup
 // =============================================================================
@@ -58,21 +75,13 @@ const mockMetricsData: MetricsSummary = {
 };
 
 describe("useHeartDashboard", () => {
-  let fetchSpy: ReturnType<typeof vi.fn>;
-
   beforeEach(() => {
-    fetchSpy = vi.fn().mockResolvedValue({
+    vi.clearAllMocks();
+
+    // Set up authenticatedFetch mock with default success response
+    mockAuthenticatedFetch.mockResolvedValue({
       ok: true,
       json: () => Promise.resolve(mockMetricsData),
-    });
-    vi.stubGlobal("fetch", fetchSpy);
-
-    // Mock localStorage for auth token
-    vi.stubGlobal("localStorage", {
-      getItem: vi.fn().mockReturnValue("test-token"),
-      setItem: vi.fn(),
-      removeItem: vi.fn(),
-      clear: vi.fn(),
     });
   });
 
@@ -111,10 +120,10 @@ describe("useHeartDashboard", () => {
 
       await waitFor(() => expect(result.current.loading).toBe(false));
 
-      expect(fetchSpy).toHaveBeenCalledWith(
+      expect(mockAuthenticatedFetch).toHaveBeenCalledWith(
         "/api/v1/metrics/heart/aggregate?range=30d",
         expect.objectContaining({
-          credentials: "include",
+          onAuthFailure: expect.any(Function),
         }),
       );
     });
@@ -136,23 +145,21 @@ describe("useHeartDashboard", () => {
       expect(result.current.error).toBeNull();
     });
 
-    it("includes auth token in request headers", async () => {
+    it("uses authenticatedFetch with onAuthFailure callback", async () => {
       const { result } = renderHook(() => useHeartDashboard());
 
       await waitFor(() => expect(result.current.loading).toBe(false));
 
-      expect(fetchSpy).toHaveBeenCalledWith(
+      expect(mockAuthenticatedFetch).toHaveBeenCalledWith(
         expect.any(String),
         expect.objectContaining({
-          headers: expect.objectContaining({
-            Authorization: "Bearer test-token",
-          }),
+          onAuthFailure: expect.any(Function),
         }),
       );
     });
 
     it("handles fetch errors gracefully", async () => {
-      fetchSpy.mockRejectedValueOnce(new Error("Network error"));
+      mockAuthenticatedFetch.mockRejectedValueOnce(new Error("Network error"));
 
       const { result } = renderHook(() => useHeartDashboard());
 
@@ -165,7 +172,7 @@ describe("useHeartDashboard", () => {
     });
 
     it("handles non-OK responses", async () => {
-      fetchSpy.mockResolvedValueOnce({
+      mockAuthenticatedFetch.mockResolvedValueOnce({
         ok: false,
         status: 500,
       });
@@ -203,14 +210,14 @@ describe("useHeartDashboard", () => {
       const { result } = renderHook(() => useHeartDashboard());
 
       await waitFor(() => expect(result.current.loading).toBe(false));
-      fetchSpy.mockClear();
+      mockAuthenticatedFetch.mockClear();
 
       act(() => {
         result.current.setTimeRange("90d");
       });
 
       await waitFor(() => {
-        expect(fetchSpy).toHaveBeenCalledWith(
+        expect(mockAuthenticatedFetch).toHaveBeenCalledWith(
           "/api/v1/metrics/heart/aggregate?range=90d",
           expect.any(Object),
         );
@@ -277,7 +284,9 @@ describe("useHeartDashboard", () => {
 
     it("returns empty dimensions when loading", () => {
       // Use a never-resolving promise to keep it loading
-      fetchSpy.mockImplementationOnce(() => new Promise(() => {}));
+      mockAuthenticatedFetch.mockImplementationOnce(
+        () => new Promise(() => {}),
+      );
 
       const { result } = renderHook(() => useHeartDashboard());
 
@@ -304,13 +313,13 @@ describe("useHeartDashboard", () => {
       const { result } = renderHook(() => useHeartDashboard());
 
       await waitFor(() => expect(result.current.loading).toBe(false));
-      fetchSpy.mockClear();
+      mockAuthenticatedFetch.mockClear();
 
       await act(async () => {
         await result.current.refresh();
       });
 
-      expect(fetchSpy).toHaveBeenCalledTimes(1);
+      expect(mockAuthenticatedFetch).toHaveBeenCalledTimes(1);
     });
 
     it("sets loading state during refresh", async () => {
@@ -356,15 +365,15 @@ describe("useHeartDashboard", () => {
       await waitFor(() => expect(result.current.loading).toBe(false));
 
       // Initial fetch should have occurred
-      expect(fetchSpy).toHaveBeenCalledTimes(1);
+      expect(mockAuthenticatedFetch).toHaveBeenCalledTimes(1);
 
       // No additional fetches should happen without auto-refresh
-      fetchSpy.mockClear();
+      mockAuthenticatedFetch.mockClear();
 
       // Wait a bit to ensure no auto-refresh happens
       await new Promise((resolve) => setTimeout(resolve, 100));
 
-      expect(fetchSpy).not.toHaveBeenCalled();
+      expect(mockAuthenticatedFetch).not.toHaveBeenCalled();
     });
   });
 
@@ -382,7 +391,7 @@ describe("useHeartDashboard", () => {
 
       await waitFor(() => expect(result.current.loading).toBe(false));
 
-      expect(fetchSpy).toHaveBeenCalledWith(
+      expect(mockAuthenticatedFetch).toHaveBeenCalledWith(
         "/api/v1/metrics/heart/aggregate?range=7d",
         expect.any(Object),
       );

@@ -6,7 +6,13 @@
  */
 
 import { useState, useEffect, useCallback, useRef } from "react";
-import { getAuthToken } from "../utils/storage";
+import { useNavigate } from "react-router";
+import { devLogger } from "../utils/devLogger";
+import { authenticatedFetch } from "../utils/authenticatedFetch";
+import { saveCurrentRouteAsIntended } from "../utils/intendedRoute";
+
+// Create prefixed logger for this hook
+const logger = devLogger.withPrefix("[BackgroundSync]");
 
 const DB_NAME = "mcp-studio-sync-queue";
 const STORE_NAME = "requests";
@@ -228,7 +234,14 @@ export class IndexedDBQueueStorage implements QueueStorage {
 export function useBackgroundSync(
   options: BackgroundSyncOptions = {},
 ): UseBackgroundSyncReturn {
+  const navigate = useNavigate();
   const { autoSync = true, storage } = options;
+
+  // Handle auth failure - redirect to login
+  const handleAuthFailure = useCallback(() => {
+    saveCurrentRouteAsIntended();
+    navigate("/login", { replace: true });
+  }, [navigate]);
 
   const [isInitialized, setIsInitialized] = useState(false);
   const [isOnline, setIsOnline] = useState(
@@ -265,7 +278,7 @@ export function useBackgroundSync(
           setQueue(existingQueue);
         }
       } catch (error) {
-        console.error("Failed to initialize background sync:", error);
+        logger.error("Failed to initialize background sync:", error);
       } finally {
         setIsInitialized(true);
       }
@@ -280,27 +293,20 @@ export function useBackgroundSync(
   const executeRequest = useCallback(
     async (request: QueuedRequest): Promise<boolean> => {
       try {
-        // Merge auth headers with request headers
-        const token = getAuthToken();
-        const headers: Record<string, string> = {
-          ...request.headers,
-          ...(token && { Authorization: `Bearer ${token}` }),
-        };
-
-        const response = await fetch(request.url, {
+        const response = await authenticatedFetch(request.url, {
           method: request.method,
-          headers,
+          headers: request.headers,
           body: request.body,
-          credentials: "include",
+          onAuthFailure: handleAuthFailure,
         });
 
         return response.ok;
       } catch (error) {
-        console.error("Request failed:", error);
+        logger.error("Request failed:", error);
         return false;
       }
     },
-    [],
+    [handleAuthFailure],
   );
 
   /**
@@ -335,7 +341,7 @@ export function useBackgroundSync(
             setLastError(new Error(`Failed to sync request to ${request.url}`));
           }
         } catch (error) {
-          console.error("Sync error:", error);
+          logger.error("Sync error:", error);
           setLastError(
             error instanceof Error ? error : new Error(String(error)),
           );
@@ -415,7 +421,7 @@ export function useBackgroundSync(
               await registration.sync.register("sync-requests");
             }
           } catch (error) {
-            console.error("Failed to register background sync:", error);
+            logger.error("Failed to register background sync:", error);
           }
         }
       }

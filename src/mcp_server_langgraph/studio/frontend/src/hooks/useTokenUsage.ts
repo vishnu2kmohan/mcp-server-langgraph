@@ -13,6 +13,9 @@
  */
 
 import { useState, useEffect, useCallback, useMemo } from "react";
+import { useNavigate } from "react-router";
+import { authenticatedFetch } from "../utils/authenticatedFetch";
+import { saveCurrentRouteAsIntended } from "../utils/intendedRoute";
 
 // ==============================================================================
 // Types
@@ -70,6 +73,7 @@ const CONTEXT_WINDOW_WARNING_THRESHOLD = 75; // Warn at 75% usage
 // ==============================================================================
 
 export function useTokenUsage(sessionId: string): TokenUsageState {
+  const navigate = useNavigate();
   const [data, setData] = useState<TokenUsageData>({
     inputTokens: 0,
     outputTokens: 0,
@@ -77,6 +81,12 @@ export function useTokenUsage(sessionId: string): TokenUsageState {
   });
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Handle auth failure - redirect to login
+  const handleAuthFailure = useCallback(() => {
+    saveCurrentRouteAsIntended();
+    navigate("/login", { replace: true });
+  }, [navigate]);
 
   // Fetch token usage data
   const fetchTokenUsage = useCallback(async () => {
@@ -86,7 +96,10 @@ export function useTokenUsage(sessionId: string): TokenUsageState {
     setError(null);
 
     try {
-      const response = await fetch(`${API_BASE}/${sessionId}/token-usage`);
+      const response = await authenticatedFetch(
+        `${API_BASE}/${sessionId}/token-usage`,
+        { onAuthFailure: handleAuthFailure },
+      );
 
       if (!response.ok) {
         throw new Error("Failed to fetch token usage");
@@ -104,7 +117,7 @@ export function useTokenUsage(sessionId: string): TokenUsageState {
     } finally {
       setIsLoading(false);
     }
-  }, [sessionId]);
+  }, [sessionId, handleAuthFailure]);
 
   // Fetch on mount and when session changes
   useEffect(() => {

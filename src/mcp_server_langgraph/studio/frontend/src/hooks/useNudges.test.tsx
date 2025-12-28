@@ -12,6 +12,17 @@ import { http, HttpResponse, delay } from "msw";
 import { server } from "../mocks/server";
 import { useNudges, type Nudge } from "./useNudges";
 
+// Mock react-router
+const mockNavigate = vi.fn();
+vi.mock("react-router", () => ({
+  useNavigate: () => mockNavigate,
+}));
+
+// Mock intendedRoute
+vi.mock("../utils/intendedRoute", () => ({
+  setIntendedRoute: vi.fn(),
+}));
+
 // Mock nudge data
 const mockKeyboardNudge: Nudge = {
   id: "keyboard-shortcuts",

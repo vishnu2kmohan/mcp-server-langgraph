@@ -13,6 +13,12 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { renderHook, act, waitFor } from "@testing-library/react";
 import { useTraceWebSocket } from "./useTraceWebSocket";
+import { createTestWrapper, authenticatedAuthState } from "../test/testStore";
+
+// Create a wrapper with authenticated state (hook requires authentication)
+const wrapper = createTestWrapper({
+  preloadedState: { auth: authenticatedAuthState },
+});
 
 // Mock WebSocket class
 let mockWebSocketInstances: MockWebSocket[] = [];
@@ -99,37 +105,37 @@ describe("useTraceWebSocket", () => {
 
   describe("Initial State", () => {
     it("should start with empty spans array", () => {
-      const { result } = renderHook(() => useTraceWebSocket());
+      const { result } = renderHook(() => useTraceWebSocket(), { wrapper });
 
       expect(result.current.spans).toEqual([]);
     });
 
     it("should start with empty events array", () => {
-      const { result } = renderHook(() => useTraceWebSocket());
+      const { result } = renderHook(() => useTraceWebSocket(), { wrapper });
 
       expect(result.current.events).toEqual([]);
     });
 
     it("should start disconnected", () => {
-      const { result } = renderHook(() => useTraceWebSocket());
+      const { result } = renderHook(() => useTraceWebSocket(), { wrapper });
 
       expect(result.current.isConnected).toBe(false);
     });
 
     it("should provide connect function", () => {
-      const { result } = renderHook(() => useTraceWebSocket());
+      const { result } = renderHook(() => useTraceWebSocket(), { wrapper });
 
       expect(typeof result.current.connect).toBe("function");
     });
 
     it("should provide disconnect function", () => {
-      const { result } = renderHook(() => useTraceWebSocket());
+      const { result } = renderHook(() => useTraceWebSocket(), { wrapper });
 
       expect(typeof result.current.disconnect).toBe("function");
     });
 
     it("should provide clearTraces function", () => {
-      const { result } = renderHook(() => useTraceWebSocket());
+      const { result } = renderHook(() => useTraceWebSocket(), { wrapper });
 
       expect(typeof result.current.clearTraces).toBe("function");
     });
@@ -137,7 +143,7 @@ describe("useTraceWebSocket", () => {
 
   describe("Connection", () => {
     it("should connect when connect() is called", () => {
-      const { result } = renderHook(() => useTraceWebSocket());
+      const { result } = renderHook(() => useTraceWebSocket(), { wrapper });
 
       act(() => {
         result.current.connect();
@@ -147,19 +153,20 @@ describe("useTraceWebSocket", () => {
     });
 
     it("should use default URL when not provided", () => {
-      const { result } = renderHook(() => useTraceWebSocket());
+      const { result } = renderHook(() => useTraceWebSocket(), { wrapper });
 
       act(() => {
         result.current.connect();
       });
 
       const ws = mockWebSocketInstances[0];
-      expect(ws.url).toContain("/api/v1/mcp/ws");
+      expect(ws.url).toContain("/api/v1/ws/mcp");
     });
 
     it("should use custom URL when provided", () => {
-      const { result } = renderHook(() =>
-        useTraceWebSocket({ url: "/custom/ws" }),
+      const { result } = renderHook(
+        () => useTraceWebSocket({ url: "/custom/ws" }),
+        { wrapper },
       );
 
       act(() => {
@@ -171,8 +178,9 @@ describe("useTraceWebSocket", () => {
     });
 
     it("should include session ID in URL when provided", () => {
-      const { result } = renderHook(() =>
-        useTraceWebSocket({ sessionId: "test-session" }),
+      const { result } = renderHook(
+        () => useTraceWebSocket({ sessionId: "test-session" }),
+        { wrapper },
       );
 
       act(() => {
@@ -184,7 +192,7 @@ describe("useTraceWebSocket", () => {
     });
 
     it("should set isConnected to true on connection open", async () => {
-      const { result } = renderHook(() => useTraceWebSocket());
+      const { result } = renderHook(() => useTraceWebSocket(), { wrapper });
 
       act(() => {
         result.current.connect();
@@ -202,7 +210,9 @@ describe("useTraceWebSocket", () => {
     });
 
     it("should auto-connect when autoConnect is true", () => {
-      renderHook(() => useTraceWebSocket({ autoConnect: true }));
+      renderHook(() => useTraceWebSocket({ autoConnect: true }), {
+        wrapper,
+      });
 
       expect(mockWebSocketInstances.length).toBe(1);
     });
@@ -210,7 +220,7 @@ describe("useTraceWebSocket", () => {
 
   describe("Disconnection", () => {
     it("should disconnect when disconnect() is called", async () => {
-      const { result } = renderHook(() => useTraceWebSocket());
+      const { result } = renderHook(() => useTraceWebSocket(), { wrapper });
 
       act(() => {
         result.current.connect();
@@ -230,7 +240,7 @@ describe("useTraceWebSocket", () => {
     });
 
     it("should set isConnected to false on disconnect", async () => {
-      const { result } = renderHook(() => useTraceWebSocket());
+      const { result } = renderHook(() => useTraceWebSocket(), { wrapper });
 
       act(() => {
         result.current.connect();
@@ -258,7 +268,7 @@ describe("useTraceWebSocket", () => {
 
   describe("Span Handling", () => {
     it("should add new span on $/trace/span message", async () => {
-      const { result } = renderHook(() => useTraceWebSocket());
+      const { result } = renderHook(() => useTraceWebSocket(), { wrapper });
 
       act(() => {
         result.current.connect();
@@ -294,7 +304,7 @@ describe("useTraceWebSocket", () => {
     });
 
     it("should update existing span when span with same ID received", async () => {
-      const { result } = renderHook(() => useTraceWebSocket());
+      const { result } = renderHook(() => useTraceWebSocket(), { wrapper });
 
       act(() => {
         result.current.connect();
@@ -345,7 +355,7 @@ describe("useTraceWebSocket", () => {
     });
 
     it("should handle parent-child span relationships", async () => {
-      const { result } = renderHook(() => useTraceWebSocket());
+      const { result } = renderHook(() => useTraceWebSocket(), { wrapper });
 
       act(() => {
         result.current.connect();
@@ -400,7 +410,7 @@ describe("useTraceWebSocket", () => {
 
   describe("Event Handling", () => {
     it("should add event on $/trace/event message", async () => {
-      const { result } = renderHook(() => useTraceWebSocket());
+      const { result } = renderHook(() => useTraceWebSocket(), { wrapper });
 
       act(() => {
         result.current.connect();
@@ -435,7 +445,7 @@ describe("useTraceWebSocket", () => {
 
   describe("Clear Traces", () => {
     it("should clear all spans and events when clearTraces() is called", async () => {
-      const { result } = renderHook(() => useTraceWebSocket());
+      const { result } = renderHook(() => useTraceWebSocket(), { wrapper });
 
       act(() => {
         result.current.connect();
@@ -487,7 +497,7 @@ describe("useTraceWebSocket", () => {
 
   describe("Error Handling", () => {
     it("should set isConnected to false on error", async () => {
-      const { result } = renderHook(() => useTraceWebSocket());
+      const { result } = renderHook(() => useTraceWebSocket(), { wrapper });
 
       const consoleSpy = vi
         .spyOn(console, "error")
@@ -519,7 +529,7 @@ describe("useTraceWebSocket", () => {
     });
 
     it("should handle malformed JSON messages gracefully", async () => {
-      const { result } = renderHook(() => useTraceWebSocket());
+      const { result } = renderHook(() => useTraceWebSocket(), { wrapper });
 
       const consoleSpy = vi
         .spyOn(console, "error")

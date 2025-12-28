@@ -28,11 +28,13 @@
  */
 
 import { useState, useCallback, useEffect, useRef, useMemo } from "react";
+import { useNavigate } from "react-router";
 import {
   useAISuggestionsCache,
   type CachedSuggestion,
 } from "./useAISuggestionsCache";
-import { getAuthToken } from "../utils/storage";
+import { authenticatedFetch } from "../utils/authenticatedFetch";
+import { saveCurrentRouteAsIntended } from "../utils/intendedRoute";
 import { devLogger } from "../utils/devLogger";
 
 // =============================================================================
@@ -87,6 +89,7 @@ const logger = devLogger.withPrefix("[useAISuggestionsFetch]");
 export function useAISuggestionsFetch(
   options: UseAISuggestionsFetchOptions,
 ): UseAISuggestionsFetchResult {
+  const navigate = useNavigate();
   const {
     artifactId,
     sessionId,
@@ -94,6 +97,12 @@ export function useAISuggestionsFetch(
     debounceMs = DEFAULT_DEBOUNCE_MS,
     ttlMs,
   } = options;
+
+  // Handle auth failure - redirect to login
+  const handleAuthFailure = useCallback(() => {
+    saveCurrentRouteAsIntended();
+    navigate("/login", { replace: true });
+  }, [navigate]);
 
   // Cache management
   const {
@@ -195,17 +204,13 @@ export function useAISuggestionsFetch(
     setError(null);
 
     try {
-      const token = getAuthToken();
-      const response = await fetch(
+      const response = await authenticatedFetch(
         `/api/v1/ai/suggestions?artifactId=${artifactId}`,
         {
           method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            ...(token && { Authorization: `Bearer ${token}` }),
-          },
           credentials: "include",
           signal: abortController.signal,
+          onAuthFailure: handleAuthFailure,
         },
       );
 
@@ -249,7 +254,14 @@ export function useAISuggestionsFetch(
         setIsLoading(false);
       }
     }
-  }, [artifactId, enabled, sessionId, cacheSuggestions, setContext]);
+  }, [
+    artifactId,
+    enabled,
+    sessionId,
+    cacheSuggestions,
+    setContext,
+    handleAuthFailure,
+  ]);
 
   /**
    * Force refresh suggestions (bypasses cache)

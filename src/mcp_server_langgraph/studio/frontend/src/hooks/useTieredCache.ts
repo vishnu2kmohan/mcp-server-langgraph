@@ -27,6 +27,7 @@
  */
 
 import { useState, useEffect, useCallback, useRef } from "react";
+import { authenticatedFetch } from "../utils/authenticatedFetch";
 
 // =============================================================================
 // Types
@@ -150,7 +151,9 @@ function deleteFromL2(key: string): void {
  */
 async function getFromRedisL2<T>(key: string): Promise<CacheEntry<T> | null> {
   try {
-    const response = await fetch(`/api/v1/cache/${encodeURIComponent(key)}`);
+    const response = await authenticatedFetch(
+      `/api/v1/cache/${encodeURIComponent(key)}`,
+    );
     if (!response.ok) return null;
     const data = await response.json();
     if (data.hit && data.value) {
@@ -172,9 +175,8 @@ async function setToRedisL2<T>(
   ttlMs: number,
 ): Promise<void> {
   try {
-    await fetch(`/api/v1/cache/${encodeURIComponent(key)}`, {
+    await authenticatedFetch(`/api/v1/cache/${encodeURIComponent(key)}`, {
       method: "PUT",
-      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         value: entry,
         ttl_seconds: Math.floor(ttlMs / 1000),
@@ -191,7 +193,7 @@ async function setToRedisL2<T>(
  */
 async function deleteFromRedisL2(key: string): Promise<void> {
   try {
-    await fetch(`/api/v1/cache/${encodeURIComponent(key)}`, {
+    await authenticatedFetch(`/api/v1/cache/${encodeURIComponent(key)}`, {
       method: "DELETE",
     });
   } catch {

@@ -26,6 +26,7 @@ let mockReconnectAttempts = 0;
 let mockOnMessage: ((data: unknown) => void) | undefined;
 let mockOnError: ((error: Error) => void) | undefined;
 let mockOnConnect: (() => void) | undefined;
+let capturedUrl: string | undefined;
 
 vi.mock("./useRealtimeSync", () => ({
   useRealtimeSync: (options: {
@@ -34,6 +35,7 @@ vi.mock("./useRealtimeSync", () => ({
     onError?: (error: Error) => void;
     onConnect?: () => void;
   }) => {
+    capturedUrl = options.url;
     mockOnMessage = options.onMessage;
     mockOnError = options.onError;
     mockOnConnect = options.onConnect;
@@ -76,11 +78,35 @@ describe("useAIRealTimeSuggestions", () => {
     mockOnMessage = undefined;
     mockOnError = undefined;
     mockOnConnect = undefined;
+    capturedUrl = undefined;
   });
 
   afterEach(() => {
     cleanup();
     vi.resetAllMocks();
+  });
+
+  describe("WebSocket URL Construction", () => {
+    it("should construct WebSocket URL with correct endpoint and user_id param", () => {
+      renderHook(() => useAIRealTimeSuggestions({ enabled: true }), {
+        wrapper,
+      });
+
+      // URL should use the AI suggestions endpoint, not just the userId
+      expect(capturedUrl).toBeDefined();
+      expect(capturedUrl).toMatch(/^wss?:\/\//); // Must start with ws:// or wss://
+      expect(capturedUrl).toContain("/api/v1/ws/ai/suggestions");
+      expect(capturedUrl).toContain("user_id=test-user-123");
+    });
+
+    it("should pass empty URL when disabled", () => {
+      mockStatus = "disconnected";
+      renderHook(() => useAIRealTimeSuggestions({ enabled: false }), {
+        wrapper,
+      });
+
+      expect(capturedUrl).toBe("");
+    });
   });
 
   describe("Connection Management", () => {

@@ -41,10 +41,14 @@
  */
 
 import { useState, useCallback, useEffect, useMemo, useRef } from "react";
+import { useNavigate } from "react-router";
 import type { MetricsSummary } from "../analytics/gsm";
-import { getAuthToken } from "../utils/storage";
 import { buildWebSocketUrl } from "../utils/websocket";
+import { authenticatedFetch } from "../utils/authenticatedFetch";
+import { saveCurrentRouteAsIntended } from "../utils/intendedRoute";
 import { useRealtimeSync } from "./useRealtimeSync";
+import { useAppDispatch } from "../store/hooks";
+import { logout } from "../store/slices/authSlice";
 import type {
   HeartMetricsSnapshot,
   ThresholdAlert,
@@ -210,12 +214,20 @@ type ServerMessage =
 export function useHeartDashboard(
   options: UseHeartDashboardOptions = {},
 ): UseHeartDashboardResult {
+  const navigate = useNavigate();
+  const dispatch = useAppDispatch();
   const {
     initialTimeRange = "30d",
     autoRefreshMs,
     enableRealtime = false,
     wsUrl,
   } = options;
+
+  // Handle auth failure - redirect to login
+  const handleAuthFailure = useCallback(() => {
+    saveCurrentRouteAsIntended();
+    navigate("/login", { replace: true });
+  }, [navigate]);
 
   // State
   const [timeRange, setTimeRange] = useState<TimeRange>(initialTimeRange);
@@ -244,13 +256,12 @@ export function useHeartDashboard(
     setError(null);
 
     try {
-      const token = getAuthToken();
-      const response = await fetch(`${API_ENDPOINT}?range=${timeRange}`, {
-        headers: {
-          ...(token && { Authorization: `Bearer ${token}` }),
+      const response = await authenticatedFetch(
+        `${API_ENDPOINT}?range=${timeRange}`,
+        {
+          onAuthFailure: handleAuthFailure,
         },
-        credentials: "include",
-      });
+      );
 
       if (!response.ok) {
         throw new Error(`Failed to fetch analytics: ${response.status}`);
@@ -272,7 +283,7 @@ export function useHeartDashboard(
         setLoading(false);
       }
     }
-  }, [timeRange]);
+  }, [timeRange, handleAuthFailure]);
 
   /**
    * Manual refresh function
@@ -345,8 +356,9 @@ export function useHeartDashboard(
       reconnectInterval: 1000,
       maxDelayMs: 30000,
       maxReconnectAttempts: 10,
+      onTokenExpired: () => dispatch(logout()),
     }),
-    [enableRealtime, websocketUrl, handleMessage],
+    [enableRealtime, websocketUrl, handleMessage, dispatch],
   );
 
   const {

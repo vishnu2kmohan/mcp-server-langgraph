@@ -8,22 +8,88 @@
  * - Cost estimation
  * - Context window usage
  * - Historical usage data
+ * - Authentication with authenticatedFetch
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { renderHook, act, waitFor } from "@testing-library/react";
+import { renderHook, act, waitFor, cleanup } from "@testing-library/react";
+
+// Mock dependencies
+const mockNavigate = vi.fn();
+const mockAuthenticatedFetch = vi.fn();
+const mockSetIntendedRoute = vi.fn();
+
+vi.mock("react-router", () => ({
+  useNavigate: () => mockNavigate,
+}));
+
+vi.mock("../utils/authenticatedFetch", () => ({
+  authenticatedFetch: (...args: unknown[]) => mockAuthenticatedFetch(...args),
+}));
+
+vi.mock("../utils/intendedRoute", () => ({
+  setIntendedRoute: (...args: unknown[]) => mockSetIntendedRoute(...args),
+}));
+
 import { useTokenUsage } from "./useTokenUsage";
 
 describe("useTokenUsage", () => {
-  let fetchSpy: ReturnType<typeof vi.spyOn>;
-
   beforeEach(() => {
-    vi.clearAllMocks();
-    fetchSpy = vi.spyOn(global, "fetch");
+    vi.resetAllMocks();
+    // Default successful response
+    mockAuthenticatedFetch.mockResolvedValue({
+      ok: true,
+      json: () =>
+        Promise.resolve({
+          inputTokens: 100,
+          outputTokens: 200,
+          totalTokens: 300,
+        }),
+    });
   });
 
   afterEach(() => {
-    fetchSpy.mockRestore();
+    cleanup();
+    vi.clearAllMocks();
+    vi.restoreAllMocks();
+  });
+
+  // ===========================================================================
+  // Authentication Tests
+  // ===========================================================================
+
+  describe("authentication", () => {
+    it("should use authenticatedFetch for API calls", async () => {
+      renderHook(() => useTokenUsage("session-1"));
+
+      await waitFor(() => {
+        expect(mockAuthenticatedFetch).toHaveBeenCalled();
+      });
+
+      expect(mockAuthenticatedFetch).toHaveBeenCalledWith(
+        "/api/v1/sessions/session-1/token-usage",
+        expect.objectContaining({
+          onAuthFailure: expect.any(Function),
+        }),
+      );
+    });
+
+    it("should navigate to login on auth failure", async () => {
+      mockAuthenticatedFetch.mockImplementationOnce(
+        async (_url: string, options: { onAuthFailure?: () => void }) => {
+          options.onAuthFailure?.();
+          return { ok: false, status: 401 };
+        },
+      );
+
+      renderHook(() => useTokenUsage("session-1"));
+
+      await waitFor(() => {
+        expect(mockSetIntendedRoute).toHaveBeenCalled();
+      });
+
+      expect(mockNavigate).toHaveBeenCalledWith("/login", { replace: true });
+    });
   });
 
   // ===========================================================================
@@ -32,23 +98,13 @@ describe("useTokenUsage", () => {
 
   describe("loading state", () => {
     it("should start with loading state when fetching", () => {
-      fetchSpy.mockImplementation(() => new Promise(() => {}));
+      mockAuthenticatedFetch.mockImplementation(() => new Promise(() => {}));
       const { result } = renderHook(() => useTokenUsage("session-1"));
 
       expect(result.current.isLoading).toBe(true);
     });
 
     it("should set loading to false after fetch completes", async () => {
-      fetchSpy.mockResolvedValueOnce({
-        ok: true,
-        json: () =>
-          Promise.resolve({
-            inputTokens: 100,
-            outputTokens: 200,
-            totalTokens: 300,
-          }),
-      } as Response);
-
       const { result } = renderHook(() => useTokenUsage("session-1"));
 
       await waitFor(() => {
@@ -63,7 +119,7 @@ describe("useTokenUsage", () => {
 
   describe("token data", () => {
     it("should fetch and return token usage data", async () => {
-      fetchSpy.mockResolvedValueOnce({
+      mockAuthenticatedFetch.mockResolvedValueOnce({
         ok: true,
         json: () =>
           Promise.resolve({
@@ -71,7 +127,7 @@ describe("useTokenUsage", () => {
             outputTokens: 3000,
             totalTokens: 4500,
           }),
-      } as Response);
+      });
 
       const { result } = renderHook(() => useTokenUsage("session-1"));
 
@@ -83,7 +139,7 @@ describe("useTokenUsage", () => {
     });
 
     it("should return zero values when no data", async () => {
-      fetchSpy.mockResolvedValueOnce({
+      mockAuthenticatedFetch.mockResolvedValueOnce({
         ok: true,
         json: () =>
           Promise.resolve({
@@ -91,7 +147,7 @@ describe("useTokenUsage", () => {
             outputTokens: 0,
             totalTokens: 0,
           }),
-      } as Response);
+      });
 
       const { result } = renderHook(() => useTokenUsage("session-1"));
 
@@ -109,7 +165,7 @@ describe("useTokenUsage", () => {
 
   describe("cost estimation", () => {
     it("should calculate estimated cost based on token usage", async () => {
-      fetchSpy.mockResolvedValueOnce({
+      mockAuthenticatedFetch.mockResolvedValueOnce({
         ok: true,
         json: () =>
           Promise.resolve({
@@ -119,7 +175,7 @@ describe("useTokenUsage", () => {
             inputCostPer1k: 0.003,
             outputCostPer1k: 0.015,
           }),
-      } as Response);
+      });
 
       const { result } = renderHook(() => useTokenUsage("session-1"));
 
@@ -132,7 +188,7 @@ describe("useTokenUsage", () => {
     });
 
     it("should return null cost when pricing not configured", async () => {
-      fetchSpy.mockResolvedValueOnce({
+      mockAuthenticatedFetch.mockResolvedValueOnce({
         ok: true,
         json: () =>
           Promise.resolve({
@@ -140,7 +196,7 @@ describe("useTokenUsage", () => {
             outputTokens: 2000,
             totalTokens: 3000,
           }),
-      } as Response);
+      });
 
       const { result } = renderHook(() => useTokenUsage("session-1"));
 
@@ -156,7 +212,7 @@ describe("useTokenUsage", () => {
 
   describe("context window", () => {
     it("should calculate context window usage percentage", async () => {
-      fetchSpy.mockResolvedValueOnce({
+      mockAuthenticatedFetch.mockResolvedValueOnce({
         ok: true,
         json: () =>
           Promise.resolve({
@@ -165,7 +221,7 @@ describe("useTokenUsage", () => {
             totalTokens: 3000,
             contextWindowSize: 128000,
           }),
-      } as Response);
+      });
 
       const { result } = renderHook(() => useTokenUsage("session-1"));
 
@@ -176,7 +232,7 @@ describe("useTokenUsage", () => {
     });
 
     it("should provide context window warning when usage is high", async () => {
-      fetchSpy.mockResolvedValueOnce({
+      mockAuthenticatedFetch.mockResolvedValueOnce({
         ok: true,
         json: () =>
           Promise.resolve({
@@ -185,7 +241,7 @@ describe("useTokenUsage", () => {
             totalTokens: 100000,
             contextWindowSize: 128000,
           }),
-      } as Response);
+      });
 
       const { result } = renderHook(() => useTokenUsage("session-1"));
 
@@ -202,7 +258,7 @@ describe("useTokenUsage", () => {
 
   describe("historical data", () => {
     it("should return historical usage data when available", async () => {
-      fetchSpy.mockResolvedValueOnce({
+      mockAuthenticatedFetch.mockResolvedValueOnce({
         ok: true,
         json: () =>
           Promise.resolve({
@@ -215,7 +271,7 @@ describe("useTokenUsage", () => {
               { timestamp: "2024-01-01T02:00:00Z", tokens: 3000 },
             ],
           }),
-      } as Response);
+      });
 
       const { result } = renderHook(() => useTokenUsage("session-1"));
 
@@ -232,7 +288,7 @@ describe("useTokenUsage", () => {
 
   describe("refresh", () => {
     it("should refresh token data", async () => {
-      fetchSpy.mockResolvedValue({
+      mockAuthenticatedFetch.mockResolvedValue({
         ok: true,
         json: () =>
           Promise.resolve({
@@ -240,7 +296,7 @@ describe("useTokenUsage", () => {
             outputTokens: 200,
             totalTokens: 300,
           }),
-      } as Response);
+      });
 
       const { result } = renderHook(() => useTokenUsage("session-1"));
 
@@ -252,7 +308,7 @@ describe("useTokenUsage", () => {
         await result.current.refresh();
       });
 
-      expect(fetchSpy).toHaveBeenCalledTimes(2);
+      expect(mockAuthenticatedFetch).toHaveBeenCalledTimes(2);
     });
   });
 
@@ -262,7 +318,7 @@ describe("useTokenUsage", () => {
 
   describe("error handling", () => {
     it("should handle fetch errors gracefully", async () => {
-      fetchSpy.mockRejectedValueOnce(new Error("Network error"));
+      mockAuthenticatedFetch.mockRejectedValueOnce(new Error("Network error"));
 
       const { result } = renderHook(() => useTokenUsage("session-1"));
 
@@ -273,10 +329,10 @@ describe("useTokenUsage", () => {
     });
 
     it("should handle non-OK responses", async () => {
-      fetchSpy.mockResolvedValueOnce({
+      mockAuthenticatedFetch.mockResolvedValueOnce({
         ok: false,
         status: 500,
-      } as Response);
+      });
 
       const { result } = renderHook(() => useTokenUsage("session-1"));
 
@@ -292,7 +348,7 @@ describe("useTokenUsage", () => {
 
   describe("session change", () => {
     it("should fetch new data when session ID changes", async () => {
-      fetchSpy.mockResolvedValue({
+      mockAuthenticatedFetch.mockResolvedValue({
         ok: true,
         json: () =>
           Promise.resolve({
@@ -300,7 +356,7 @@ describe("useTokenUsage", () => {
             outputTokens: 200,
             totalTokens: 300,
           }),
-      } as Response);
+      });
 
       const { result, rerender } = renderHook(
         ({ sessionId }) => useTokenUsage(sessionId),
@@ -314,7 +370,7 @@ describe("useTokenUsage", () => {
       rerender({ sessionId: "session-2" });
 
       await waitFor(() => {
-        expect(fetchSpy).toHaveBeenCalledTimes(2);
+        expect(mockAuthenticatedFetch).toHaveBeenCalledTimes(2);
       });
     });
   });

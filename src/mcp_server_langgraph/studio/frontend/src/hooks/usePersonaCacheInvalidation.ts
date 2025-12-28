@@ -12,8 +12,15 @@
  */
 
 import { useEffect, useRef, useState, useCallback } from "react";
+import { useNavigate } from "react-router";
 import { useAppSelector } from "../store/hooks";
 import { clearAllAICache } from "./useAICache";
+import { devLogger } from "../utils/devLogger";
+import { authenticatedFetch } from "../utils/authenticatedFetch";
+import { saveCurrentRouteAsIntended } from "../utils/intendedRoute";
+
+// Create prefixed logger for this hook
+const logger = devLogger.withPrefix("[PersonaCacheInvalidation]");
 
 // =============================================================================
 // Types
@@ -51,7 +58,14 @@ export interface UsePersonaCacheInvalidationResult {
 export function usePersonaCacheInvalidation(
   options: UsePersonaCacheInvalidationOptions = {},
 ): UsePersonaCacheInvalidationResult {
+  const navigate = useNavigate();
   const { enabled = true, invalidateBackend = false } = options;
+
+  // Handle auth failure - redirect to login
+  const handleAuthFailure = useCallback(() => {
+    saveCurrentRouteAsIntended();
+    navigate("/login", { replace: true });
+  }, [navigate]);
 
   // Track invalidation state
   const [isInvalidating, setIsInvalidating] = useState(false);
@@ -81,13 +95,11 @@ export function usePersonaCacheInvalidation(
         try {
           // Delete all cache entries for this user's prefix
           const userCachePrefix = `user:${userId}:`;
-          const response = await fetch(
+          const response = await authenticatedFetch(
             `/api/v1/cache/prefix/${encodeURIComponent(userCachePrefix)}`,
             {
               method: "DELETE",
-              headers: {
-                "Content-Type": "application/json",
-              },
+              onAuthFailure: handleAuthFailure,
             },
           );
 
@@ -96,14 +108,9 @@ export function usePersonaCacheInvalidation(
           }
 
           const result = await response.json();
-          console.debug(
-            `[PersonaCacheInvalidation] Cleared ${result.deleted_count} backend cache entries`,
-          );
+          logger.debug(`Cleared ${result.deleted_count} backend cache entries`);
         } catch (error) {
-          console.warn(
-            "[PersonaCacheInvalidation] Backend invalidation failed:",
-            error,
-          );
+          logger.warn("Backend invalidation failed:", error);
         }
       }
 
@@ -111,7 +118,7 @@ export function usePersonaCacheInvalidation(
     } finally {
       setIsInvalidating(false);
     }
-  }, [invalidateBackend, userId]);
+  }, [invalidateBackend, userId, handleAuthFailure]);
 
   /**
    * Manual invalidation function

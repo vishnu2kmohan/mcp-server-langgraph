@@ -17,13 +17,13 @@ import { useEffect, useCallback, useMemo, useRef } from "react";
 import { toast } from "sonner";
 import { useAppDispatch, useAppSelector } from "../store/hooks";
 import {
+  logout,
   selectIsAuthenticated,
   selectIsInitializing,
 } from "../store/slices/authSlice";
 import { addAlert, type Alert } from "../store/slices/alertSlice";
 import { useRealtimeSync, type ConnectionStatus } from "./useRealtimeSync";
-import { getAuthToken } from "../utils/storage";
-import { buildWebSocketUrl, API_ENDPOINTS } from "../config/api";
+import { buildWebSocketUrl, WS_ENDPOINTS } from "../utils/websocket";
 
 // =============================================================================
 // Types
@@ -135,14 +135,11 @@ export function parseAlertMessage(data: unknown): AlertWebSocketMessage | null {
 
 /**
  * Get the default WebSocket URL for alerts
- */
-/**
- * Get the default WebSocket URL for alerts
  *
- * Uses centralized config from src/config/api.ts
+ * Uses standardized WebSocket utilities from src/utils/websocket.ts
  */
-function getDefaultWebSocketUrl(token?: string): string {
-  return buildWebSocketUrl(API_ENDPOINTS.WS_ALERTS, window, token);
+function getDefaultWebSocketUrl(includeAuthToken: boolean = false): string {
+  return buildWebSocketUrl(WS_ENDPOINTS.ALERTS, {}, includeAuthToken);
 }
 
 // =============================================================================
@@ -193,15 +190,15 @@ export function useAlertWebSocket(
   // which can cause "connection interrupted" errors during page load
   const isAuthReady = isAuthenticated && !isInitializing;
 
-  // Get auth token when auth is ready - makes dependency explicit for React
-  // Convert null to undefined for type compatibility
-  const authToken = isAuthReady ? (getAuthToken() ?? undefined) : undefined;
-
   // Compute WebSocket URL - only generate URL when auth is ready
   // Passing empty string prevents connection attempt before auth is validated
+  // The buildWebSocketUrl utility fetches the auth token internally when includeAuthToken=true
   const wsUrl = useMemo(
-    () => (isAuthReady ? (url ?? getDefaultWebSocketUrl(authToken)) : ""),
-    [url, authToken, isAuthReady],
+    () =>
+      isAuthReady
+        ? (url ?? getDefaultWebSocketUrl(true /* includeAuthToken */))
+        : "",
+    [url, isAuthReady],
   );
 
   // Handle incoming messages
@@ -247,6 +244,7 @@ export function useAlertWebSocket(
     maxDelayMs: 30000, // Cap at 30 seconds
     backoffMultiplier: 2, // Double delay each attempt
     onMessage: handleMessage,
+    onTokenExpired: () => dispatch(logout()),
   });
 
   // Track if enabled - if not auth-ready or explicitly disabled, override status

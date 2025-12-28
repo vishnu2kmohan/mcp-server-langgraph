@@ -7,6 +7,10 @@
 
 import { useState, useCallback } from "react";
 import { useRegisterSW } from "virtual:pwa-register/react";
+import { devLogger } from "../utils/devLogger";
+
+// Create prefixed logger for this hook
+const logger = devLogger.withPrefix("[PWAUpdate]");
 
 export interface PWAUpdateState {
   /** Whether a new version is available */
@@ -74,7 +78,7 @@ export function usePWAUpdate(): UsePWAUpdateReturn {
     },
     onRegisterError(error: Error) {
       setRegistrationError(error);
-      console.error("Service worker registration error:", error);
+      logger.error("Service worker registration error:", error);
     },
   });
 
@@ -83,7 +87,7 @@ export function usePWAUpdate(): UsePWAUpdateReturn {
     try {
       await updateServiceWorker(true);
     } catch (error) {
-      console.error("Failed to update service worker:", error);
+      logger.error("Failed to update service worker:", error);
     } finally {
       setIsUpdating(false);
     }

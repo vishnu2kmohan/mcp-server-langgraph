@@ -23,7 +23,9 @@
  */
 
 import { useState, useCallback } from "react";
-import { getAuthToken } from "../utils/storage";
+import { useNavigate } from "react-router";
+import { authenticatedFetch } from "../utils/authenticatedFetch";
+import { saveCurrentRouteAsIntended } from "../utils/intendedRoute";
 
 // =============================================================================
 // Types
@@ -81,9 +83,16 @@ const API_BASE =
  * - `useBatchRejectRequestsMutation`
  */
 export function useBatchApprovals(): UseBatchApprovalsReturn {
+  const navigate = useNavigate();
   const [isApproving, setIsApproving] = useState(false);
   const [isRejecting, setIsRejecting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Handle auth failure - redirect to login
+  const handleAuthFailure = useCallback(() => {
+    saveCurrentRouteAsIntended();
+    navigate("/login", { replace: true });
+  }, [navigate]);
 
   /**
    * Make a batch operation request
@@ -99,21 +108,13 @@ export function useBatchApprovals(): UseBatchApprovalsReturn {
       setError(null);
 
       try {
-        const token = getAuthToken();
-        const headers: Record<string, string> = {
-          "Content-Type": "application/json",
-        };
-        if (token) {
-          headers["Authorization"] = `Bearer ${token}`;
-        }
-
-        const response = await fetch(`${API_BASE}${endpoint}`, {
+        const response = await authenticatedFetch(`${API_BASE}${endpoint}`, {
           method: "POST",
-          headers,
           body: JSON.stringify({
             request_ids: requestIds,
             reason: reason,
           }),
+          onAuthFailure: handleAuthFailure,
         });
 
         if (!response.ok) {
@@ -133,7 +134,7 @@ export function useBatchApprovals(): UseBatchApprovalsReturn {
         setLoading(false);
       }
     },
-    [],
+    [handleAuthFailure],
   );
 
   /**

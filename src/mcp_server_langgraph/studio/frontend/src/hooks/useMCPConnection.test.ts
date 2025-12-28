@@ -1,4 +1,7 @@
 /**
+ * @vitest-environment jsdom
+ */
+/**
  * useMCPConnection Hook Tests
  *
  * TDD tests for the MCP connection hook with WebSocket and REST fallback.
@@ -10,6 +13,32 @@
 
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { renderHook, act, waitFor } from "@testing-library/react";
+
+// Mock react-router
+const mockNavigate = vi.fn();
+vi.mock("react-router", () => ({
+  useNavigate: () => mockNavigate,
+}));
+
+// Mock authenticatedFetch
+const mockAuthenticatedFetch = vi.fn();
+vi.mock("../utils/authenticatedFetch", () => ({
+  authenticatedFetch: (...args: unknown[]) => mockAuthenticatedFetch(...args),
+}));
+
+// Mock intendedRoute
+const mockSetIntendedRoute = vi.fn();
+vi.mock("../utils/intendedRoute", () => ({
+  setIntendedRoute: (...args: unknown[]) => mockSetIntendedRoute(...args),
+}));
+
+// Mock Redux store hooks
+const mockDispatch = vi.fn();
+vi.mock("../store/hooks", () => ({
+  useAppDispatch: () => mockDispatch,
+  useAppSelector: () => null,
+}));
+
 import { useMCPConnection } from "./useMCPConnection";
 
 // Mock WebSocket
@@ -64,6 +93,12 @@ describe("useMCPConnection", () => {
     vi.clearAllMocks();
     mockWebSocket = null;
 
+    // Default successful response for authenticatedFetch
+    mockAuthenticatedFetch.mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve({ tools: [] }),
+    });
+
     // Mock WebSocket constructor with static constants using vi.stubGlobal
     // This works correctly in jsdom environment where WebSocket is read-only
     // Vitest 4 requires function syntax for constructor mocks (arrow functions don't work with `new`)
@@ -109,6 +144,136 @@ describe("useMCPConnection", () => {
     });
   });
 
+  describe("Authentication", () => {
+    it("should use authenticatedFetch for REST fallback", async () => {
+      const { result } = renderHook(() => useMCPConnection());
+
+      await act(async () => {
+        result.current.connect();
+      });
+
+      // Simulate WebSocket failure to trigger REST fallback
+      await act(async () => {
+        mockWebSocket?.simulateError();
+        mockWebSocket?.simulateClose(1006, "Connection failed");
+      });
+
+      await waitFor(() => {
+        expect(mockAuthenticatedFetch).toHaveBeenCalledWith(
+          "/api/v1/mcp/tools",
+          expect.objectContaining({
+            method: "GET",
+            onAuthFailure: expect.any(Function),
+          }),
+        );
+      });
+    });
+
+    it("should use authenticatedFetch for tool calls in REST mode", async () => {
+      const { result } = renderHook(() => useMCPConnection());
+
+      await act(async () => {
+        result.current.connect();
+      });
+
+      // Simulate WebSocket failure
+      await act(async () => {
+        mockWebSocket?.simulateError();
+        mockWebSocket?.simulateClose(1006, "Connection failed");
+      });
+
+      await waitFor(() => {
+        expect(result.current.connectionMode).toBe("rest");
+      });
+
+      // Now call a tool
+      mockAuthenticatedFetch.mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve({ result: "success" }),
+      });
+
+      await act(async () => {
+        await result.current.callTool("test-tool", { arg: "value" });
+      });
+
+      expect(mockAuthenticatedFetch).toHaveBeenCalledWith(
+        "/api/v1/mcp/tools/call",
+        expect.objectContaining({
+          method: "POST",
+          body: JSON.stringify({
+            name: "test-tool",
+            arguments: { arg: "value" },
+          }),
+          onAuthFailure: expect.any(Function),
+        }),
+      );
+    });
+
+    it("should navigate to login on auth failure during REST fallback", async () => {
+      mockAuthenticatedFetch.mockImplementationOnce(
+        async (_url: string, options: { onAuthFailure?: () => void }) => {
+          options.onAuthFailure?.();
+          return { ok: false, status: 401 };
+        },
+      );
+
+      const { result } = renderHook(() => useMCPConnection());
+
+      await act(async () => {
+        result.current.connect();
+      });
+
+      // Simulate WebSocket failure to trigger REST fallback
+      await act(async () => {
+        mockWebSocket?.simulateError();
+        mockWebSocket?.simulateClose(1006, "Connection failed");
+      });
+
+      await waitFor(() => {
+        expect(mockSetIntendedRoute).toHaveBeenCalled();
+      });
+
+      expect(mockNavigate).toHaveBeenCalledWith("/login", { replace: true });
+    });
+
+    it("should navigate to login on auth failure during tool call", async () => {
+      const { result } = renderHook(() => useMCPConnection());
+
+      await act(async () => {
+        result.current.connect();
+      });
+
+      // Simulate WebSocket failure to get to REST mode
+      await act(async () => {
+        mockWebSocket?.simulateError();
+        mockWebSocket?.simulateClose(1006, "Connection failed");
+      });
+
+      await waitFor(() => {
+        expect(result.current.connectionMode).toBe("rest");
+      });
+
+      // Now mock auth failure on tool call
+      mockAuthenticatedFetch.mockImplementationOnce(
+        async (_url: string, options: { onAuthFailure?: () => void }) => {
+          options.onAuthFailure?.();
+          return { ok: false, status: 401 };
+        },
+      );
+
+      await act(async () => {
+        try {
+          await result.current.callTool("test-tool", { arg: "value" });
+        } catch {
+          // Expected to fail
+        }
+      });
+
+      expect(mockSetIntendedRoute).toHaveBeenCalled();
+      expect(mockNavigate).toHaveBeenCalledWith("/login", { replace: true });
+    });
+  });
+
   describe("WebSocket Connection", () => {
     it("should connect via WebSocket when connect is called", async () => {
       const { result } = renderHook(() => useMCPConnection());
@@ -118,7 +283,7 @@ describe("useMCPConnection", () => {
       });
 
       expect(global.WebSocket).toHaveBeenCalledWith(
-        expect.stringContaining("/api/v1/mcp/ws"),
+        expect.stringContaining("/api/v1/ws/mcp"),
       );
     });
 
@@ -228,15 +393,6 @@ describe("useMCPConnection", () => {
 
   describe("REST Fallback", () => {
     it("should fall back to REST when WebSocket fails to connect", async () => {
-      // Mock fetch for REST fallback
-      vi.stubGlobal(
-        "fetch",
-        vi.fn().mockResolvedValue({
-          ok: true,
-          json: () => Promise.resolve({ tools: [] }),
-        }),
-      );
-
       const { result } = renderHook(() => useMCPConnection());
 
       await act(async () => {
@@ -256,14 +412,13 @@ describe("useMCPConnection", () => {
     });
 
     it("should fetch tools via REST when in REST mode", async () => {
-      const mockFetch = vi.fn().mockResolvedValue({
+      mockAuthenticatedFetch.mockResolvedValueOnce({
         ok: true,
         json: () =>
           Promise.resolve({
             tools: [{ name: "calculator", description: "Math operations" }],
           }),
       });
-      vi.stubGlobal("fetch", mockFetch);
 
       const { result } = renderHook(() => useMCPConnection());
 
@@ -278,8 +433,8 @@ describe("useMCPConnection", () => {
       });
 
       await waitFor(() => {
-        expect(mockFetch).toHaveBeenCalledWith(
-          expect.stringContaining("/api/v1/mcp/tools"),
+        expect(mockAuthenticatedFetch).toHaveBeenCalledWith(
+          "/api/v1/mcp/tools",
           expect.any(Object),
         );
       });
@@ -304,14 +459,6 @@ describe("useMCPConnection", () => {
     });
 
     it("should return rest status when using REST fallback", async () => {
-      vi.stubGlobal(
-        "fetch",
-        vi.fn().mockResolvedValue({
-          ok: true,
-          json: () => Promise.resolve({ tools: [] }),
-        }),
-      );
-
       const { result } = renderHook(() => useMCPConnection());
 
       await act(async () => {
@@ -337,8 +484,7 @@ describe("useMCPConnection", () => {
 
   describe("Error Handling", () => {
     it("should set error when WebSocket connection fails and REST fails", async () => {
-      const mockFetch = vi.fn().mockRejectedValue(new Error("Network error"));
-      vi.stubGlobal("fetch", mockFetch);
+      mockAuthenticatedFetch.mockRejectedValueOnce(new Error("Network error"));
 
       const { result } = renderHook(() => useMCPConnection());
 
@@ -435,7 +581,7 @@ describe("useMCPConnection", () => {
     });
 
     it("should attempt reconnection after WebSocket close when autoReconnect is enabled", async () => {
-      vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new Error("No REST")));
+      mockAuthenticatedFetch.mockRejectedValue(new Error("No REST"));
 
       const { result } = renderHook(() =>
         useMCPConnection({ autoReconnect: true }),
@@ -467,7 +613,7 @@ describe("useMCPConnection", () => {
     });
 
     it("should use exponential backoff for reconnection delays", async () => {
-      vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new Error("No REST")));
+      mockAuthenticatedFetch.mockRejectedValue(new Error("No REST"));
 
       const { result } = renderHook(() =>
         useMCPConnection({ autoReconnect: true, maxReconnectAttempts: 5 }),
@@ -508,7 +654,7 @@ describe("useMCPConnection", () => {
     });
 
     it("should stop reconnecting after maxReconnectAttempts", async () => {
-      vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new Error("No REST")));
+      mockAuthenticatedFetch.mockRejectedValue(new Error("No REST"));
 
       const { result } = renderHook(() =>
         useMCPConnection({ autoReconnect: true, maxReconnectAttempts: 2 }),
@@ -676,12 +822,12 @@ describe("useMCPConnection", () => {
     it("should not update state after unmount during REST fallback", async () => {
       vi.useFakeTimers();
 
-      // Mock fetch to delay and fail, simulating async operation after unmount
+      // Mock authenticatedFetch to delay and fail, simulating async operation after unmount
       const fetchPromise = new Promise<never>((_, reject) => {
         setTimeout(() => reject(new Error("Network error")), 100);
       });
 
-      vi.stubGlobal("fetch", vi.fn().mockReturnValue(fetchPromise));
+      mockAuthenticatedFetch.mockReturnValue(fetchPromise);
 
       const { result, unmount } = renderHook(() => useMCPConnection());
 

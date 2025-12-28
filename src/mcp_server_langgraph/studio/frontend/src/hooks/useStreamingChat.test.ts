@@ -16,6 +16,27 @@ vi.mock("../store/hooks", () => ({
   useAppSelector: vi.fn(),
 }));
 
+// Mock react-router navigate
+const mockNavigate = vi.fn();
+vi.mock("react-router", () => ({
+  useNavigate: () => mockNavigate,
+}));
+
+// Mock storage utilities
+vi.mock("../utils/storage", () => ({
+  getAuthToken: vi.fn(() => "mock-token"),
+  setAuthTokens: vi.fn(),
+  clearAuthTokens: vi.fn(),
+  STORAGE_KEYS: {
+    REFRESH_TOKEN: "refresh_token",
+  },
+}));
+
+// Mock intendedRoute
+vi.mock("../utils/intendedRoute", () => ({
+  setIntendedRoute: vi.fn(),
+}));
+
 // Helper to create a mock ReadableStream that yields SSE chunks
 function createMockSSEStream(chunks: string[]): ReadableStream<Uint8Array> {
   const encoder = new TextEncoder();
@@ -109,17 +130,19 @@ describe("useStreamingChat", () => {
         await vi.waitFor(() => expect(mockFetch).toHaveBeenCalled());
       });
 
+      // Verify fetch was called with the correct URL
       expect(mockFetch).toHaveBeenCalledWith(
         "/api/v1/chat/completions/stream",
         expect.objectContaining({
           method: "POST",
-          headers: expect.objectContaining({
-            "Content-Type": "application/json",
-          }),
           body: expect.any(String),
-          signal: expect.any(AbortSignal),
         }),
       );
+
+      // Verify headers include Content-Type (authenticatedFetch uses Headers object)
+      const [, options] = mockFetch.mock.calls[0]!;
+      const headers = (options as RequestInit).headers as Headers;
+      expect(headers.get("Content-Type")).toBe("application/json");
 
       // Verify the body structure
       const callArgs = mockFetch.mock.calls[0];

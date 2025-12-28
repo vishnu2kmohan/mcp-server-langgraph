@@ -31,7 +31,10 @@
  */
 
 import { useState, useCallback, useEffect, useRef } from "react";
+import { useNavigate } from "react-router";
 import { storage, STORAGE_KEYS } from "../utils/storage";
+import { authenticatedFetch } from "../utils/authenticatedFetch";
+import { saveCurrentRouteAsIntended } from "../utils/intendedRoute";
 
 // =============================================================================
 // Types
@@ -95,7 +98,14 @@ const STORAGE_KEY = STORAGE_KEYS.NUDGE_HISTORY;
  * Hook for contextual nudges and feature discovery prompts.
  */
 export function useNudges(options: UseNudgesOptions = {}): UseNudgesResult {
+  const navigate = useNavigate();
   const { enableAI = false, pageContext, maxPerSession = 5 } = options;
+
+  // Handle auth failure - redirect to login
+  const handleAuthFailure = useCallback(() => {
+    saveCurrentRouteAsIntended();
+    navigate("/login", { replace: true });
+  }, [navigate]);
 
   const [activeNudge, setActiveNudge] = useState<Nudge | null>(null);
   const [history, setHistory] = useState<NudgeHistory[]>(() => {
@@ -138,9 +148,8 @@ export function useNudges(options: UseNudgesOptions = {}): UseNudgesResult {
     }
 
     try {
-      const response = await fetch(NUDGE_RECOMMEND_ENDPOINT, {
+      const response = await authenticatedFetch(NUDGE_RECOMMEND_ENDPOINT, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           current_context: {
             page: pageContext,
@@ -151,6 +160,7 @@ export function useNudges(options: UseNudgesOptions = {}): UseNudgesResult {
             action: h.action,
           })),
         }),
+        onAuthFailure: handleAuthFailure,
       });
 
       if (!response.ok) {
@@ -188,7 +198,7 @@ export function useNudges(options: UseNudgesOptions = {}): UseNudgesResult {
     } catch {
       // Silently fail - nudges are not critical
     }
-  }, [enableAI, pageContext, maxPerSession, history]);
+  }, [enableAI, pageContext, maxPerSession, history, handleAuthFailure]);
 
   // Fetch nudge on mount when AI is enabled
   useEffect(() => {
