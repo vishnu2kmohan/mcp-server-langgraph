@@ -110,6 +110,32 @@ route:
       receiver: 'slack-platform-warnings'
 
     # ===========================================================================
+    # LLM Streaming SLA Alerts (TTFC, Inter-chunk latency, Error rate)
+    # ===========================================================================
+    # Critical streaming alerts -> PagerDuty + Slack
+    - match:
+        component: streaming
+        severity: critical
+      receiver: 'pagerduty-critical'
+      continue: true
+
+    - match:
+        component: streaming
+        severity: critical
+      receiver: 'slack-llm-alerts'
+      group_by: ['alertname', 'sla_metric', 'provider']
+
+    # Warning streaming alerts -> Slack LLM channel
+    - match:
+        component: streaming
+        severity: warning
+      receiver: 'slack-llm-alerts'
+      group_by: ['alertname', 'sla_metric', 'provider']
+      group_wait: 1m
+      group_interval: 5m
+      repeat_interval: 4h
+
+    # ===========================================================================
     # LLM Provider Alerts
     # ===========================================================================
     - match_re:

@@ -162,6 +162,58 @@ class TestLGTMConfiguration:
             if folders_from_structure:
                 assert dashboards_dir.exists(), f"Dashboard directory not found: {dashboards_dir}"
 
+    def test_llm_streaming_dashboard_valid(self) -> None:
+        """
+        Verify the LLM Streaming dashboard is correctly provisioned.
+
+        This test validates:
+        - Dashboard JSON is valid and parseable
+        - Required fields (title, uid, panels) are present
+        - Dashboard queries reference correct streaming metrics
+        - Templating variables are configured for datasource, provider, model
+        """
+        import json
+
+        dashboard_path = PROJECT_ROOT / "monitoring" / "grafana" / "dashboards" / "Application" / "llm-streaming.json"
+        helm_dashboard_path = (
+            PROJECT_ROOT / "deployments" / "helm" / "mcp-server-langgraph" / "dashboards" / "llm-streaming.json"
+        )
+
+        # Verify both locations have the dashboard
+        assert dashboard_path.exists(), f"Dashboard not found at {dashboard_path}"
+        assert helm_dashboard_path.exists(), f"Helm dashboard not found at {helm_dashboard_path}"
+
+        # Parse and validate dashboard structure
+        with open(dashboard_path) as f:
+            dashboard = json.load(f)
+
+        # Verify required fields
+        assert dashboard.get("title"), "Dashboard must have a title"
+        assert dashboard.get("uid") == "llm-streaming", f"UID should be 'llm-streaming', got {dashboard.get('uid')}"
+        assert dashboard.get("schemaVersion"), "Dashboard must have schemaVersion"
+
+        # Verify panels exist
+        panels = dashboard.get("panels", [])
+        assert len(panels) >= 10, f"Expected at least 10 panels, got {len(panels)}"
+
+        # Verify templating variables
+        templating = dashboard.get("templating", {}).get("list", [])
+        template_names = {t.get("name") for t in templating}
+        expected_vars = {"datasource", "provider", "model"}
+        missing_vars = expected_vars - template_names
+        assert not missing_vars, f"Missing template variables: {missing_vars}"
+
+        # Verify panels reference streaming metrics
+        dashboard_json = json.dumps(dashboard)
+        required_metrics = [
+            "llm_streaming_ttfc_seconds",
+            "llm_streaming_inter_chunk_latency_seconds",
+            "llm_streaming_duration_seconds",
+            "llm_streaming_chunks_total",
+        ]
+        for metric in required_metrics:
+            assert metric in dashboard_json, f"Dashboard should reference metric: {metric}"
+
     def test_grafana_datasources_yml_valid(self) -> None:
         """Verify datasources.yml is valid YAML with expected structure."""
         datasources_yml = PROJECT_ROOT / "monitoring" / "grafana" / "datasources.yml"

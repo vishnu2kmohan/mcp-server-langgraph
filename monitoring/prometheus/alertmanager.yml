@@ -89,6 +89,24 @@ route:
       repeat_interval: 1h
       continue: true
 
+    # Streaming SLA alerts - dedicated routing with faster response
+    - match:
+        component: streaming
+        severity: critical
+      receiver: slack-streaming-sla
+      group_wait: 0s
+      group_interval: 1m
+      repeat_interval: 2h
+      continue: true  # Also send to general SLA channel
+
+    - match:
+        component: streaming
+        severity: warning
+      receiver: slack-streaming-sla
+      group_wait: 30s
+      group_interval: 5m
+      repeat_interval: 4h
+
     # SLA alerts - dedicated routing
     - match_re:
         sla_metric: '.*'
@@ -203,6 +221,32 @@ receivers:
           *Dashboard:* {{ .CommonAnnotations.dashboard }}
         color: '{{ if eq .GroupLabels.severity "critical" }}danger{{ else }}warning{{ end }}'
         send_resolved: true
+
+  # Slack for Streaming SLA alerts (TTFC, inter-chunk latency, etc.)
+  - name: 'slack-streaming-sla'
+    slack_configs:
+      - api_url: 'http://example.com/slack'
+        channel: '#llm-streaming-alerts'
+        title: ':zap: Streaming SLA: {{ .GroupLabels.alertname }}'
+        text: |
+          *SLA Metric:* {{ .GroupLabels.sla_metric }}
+          *Component:* {{ .GroupLabels.component }}
+          {{ if .GroupLabels.provider }}*Provider:* {{ .GroupLabels.provider }}{{ end }}
+
+          *Summary:* {{ .CommonAnnotations.summary }}
+          *Description:* {{ .CommonAnnotations.description }}
+
+          *Dashboard:* {{ .CommonAnnotations.dashboard }}
+          *Runbook:* {{ .CommonAnnotations.runbook }}
+        color: '{{ if eq .GroupLabels.severity "critical" }}danger{{ else }}warning{{ end }}'
+        send_resolved: true
+        actions:
+          - type: button
+            text: 'View Dashboard'
+            url: '{{ .CommonAnnotations.dashboard }}'
+          - type: button
+            text: 'View Runbook'
+            url: '{{ .CommonAnnotations.runbook }}'
 
   # Email for info alerts
   - name: 'email'
