@@ -1193,6 +1193,10 @@ services:
       - FF_ENABLE_AI_METRICS_INSIGHTS=true # AI HEART metrics insights
       - FF_ENABLE_AI_PERSONA_ANALYSIS=true # AI persona behavior analysis
       # -----------------------------------------------------------------------
+      # LLM Factory Streaming (Production-Ready Resilient Streaming)
+      # -----------------------------------------------------------------------
+      - FF_ENABLE_LLM_FACTORY_STREAMING=true # Resilient streaming via LLMFactory (bulkhead, retry)
+      # -----------------------------------------------------------------------
       # Anthropic Best Practices (ADR-0072)
       # All flags enabled in test environment for comprehensive integration/e2e testing
       # -----------------------------------------------------------------------
