@@ -89,6 +89,7 @@ class MockWorkflowServiceAdapter:
         workflow = {
             "id": workflow_id,
             "name": workflow_data["name"],
+            "title": workflow_data.get("title", workflow_data["name"]),  # Default to name
             "description": workflow_data.get("description", ""),
             "nodes": workflow_data.get("nodes", []),
             "edges": workflow_data.get("edges", []),

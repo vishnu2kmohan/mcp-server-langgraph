@@ -993,10 +993,12 @@ class TestArtifactDescriptionField:
 
             with TestClient(test_app) as client:
                 response = client.post(
-                    f"/api/v1/sessions/{session_id}/artifacts",
+                    "/api/v1/artifacts",
                     json={
                         "type": "code",
                         "content": "function hello() { return 'world'; }",
+                        "content_type": "code",
+                        "session_id": session_id,
                         "title": "Hello Function",
                         "description": "A simple function that returns 'world'",
                     },
@@ -1033,10 +1035,12 @@ class TestArtifactDescriptionField:
 
             with TestClient(test_app) as client:
                 response = client.post(
-                    f"/api/v1/sessions/{session_id}/artifacts",
+                    "/api/v1/artifacts",
                     json={
                         "type": "code",
                         "content": "const x = 1;",
+                        "content_type": "code",
+                        "session_id": session_id,
                         "title": "Variable",
                     },
                 )
@@ -1134,40 +1138,45 @@ class TestArtifactDescriptionField:
 
         with patch("mcp_server_langgraph.api.v1.artifacts.get_artifacts_service") as mock_get_service:
             mock_service = AsyncMock()
-            mock_service.list_artifacts.return_value = [
-                {
-                    "id": "art-1",
-                    "type": "code",
-                    "session_id": session_id,
-                    "version": 1,
-                    "content": "# Code 1",
-                    "content_type": "code",
-                    "title": "Artifact 1",
-                    "description": "First artifact description",
-                    "user_id": "test-user-123",
-                    "created_at": "2025-01-01T00:00:00Z",
-                    "updated_at": "2025-01-01T00:00:00Z",
-                },
-                {
-                    "id": "art-2",
-                    "type": "code",
-                    "session_id": session_id,
-                    "version": 1,
-                    "content": "# Code 2",
-                    "content_type": "code",
-                    "title": "Artifact 2",
-                    "description": "Second artifact description",
-                    "user_id": "test-user-123",
-                    "created_at": "2025-01-01T00:00:00Z",
-                    "updated_at": "2025-01-01T00:00:00Z",
-                },
-            ]
+            # list_artifacts returns (items, next_cursor, has_more)
+            mock_service.list_artifacts.return_value = (
+                [
+                    {
+                        "id": "art-1",
+                        "type": "code",
+                        "session_id": session_id,
+                        "version": 1,
+                        "content": "# Code 1",
+                        "content_type": "code",
+                        "title": "Artifact 1",
+                        "description": "First artifact description",
+                        "user_id": "test-user-123",
+                        "created_at": "2025-01-01T00:00:00Z",
+                        "updated_at": "2025-01-01T00:00:00Z",
+                    },
+                    {
+                        "id": "art-2",
+                        "type": "code",
+                        "session_id": session_id,
+                        "version": 1,
+                        "content": "# Code 2",
+                        "content_type": "code",
+                        "title": "Artifact 2",
+                        "description": "Second artifact description",
+                        "user_id": "test-user-123",
+                        "created_at": "2025-01-01T00:00:00Z",
+                        "updated_at": "2025-01-01T00:00:00Z",
+                    },
+                ],
+                None,  # next_cursor
+                False,  # has_more
+            )
             mock_get_service.return_value = mock_service
 
             with TestClient(test_app) as client:
-                response = client.get(f"/api/v1/sessions/{session_id}/artifacts")
+                response = client.get(f"/api/v1/artifacts?session_id={session_id}")
                 assert response.status_code == 200
                 data = response.json()
-                descriptions = [a["description"] for a in data["artifacts"]]
+                descriptions = [a["description"] for a in data["items"]]
                 assert "First artifact description" in descriptions
                 assert "Second artifact description" in descriptions

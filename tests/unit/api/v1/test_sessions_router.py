@@ -729,12 +729,11 @@ class TestSessionRenameEndpoint:
         WHEN PATCH request with new name is made to /sessions/{id}
         THEN response should be 200 OK
         """
-        updated_session = {**sample_session, "name": "Renamed Session"}
+        updated_session = {**sample_session, "name": "Renamed Session", "description": ""}
 
         with patch("mcp_server_langgraph.api.v1.sessions.get_session_service") as mock_get_service:
             mock_service = AsyncMock()
-            mock_service.get_session.return_value = sample_session
-            mock_service.update_name.return_value = updated_session
+            mock_service.update_session.return_value = updated_session
             mock_get_service.return_value = mock_service
 
             client = TestClient(test_app)
@@ -752,12 +751,11 @@ class TestSessionRenameEndpoint:
         THEN response should contain updated session with new name
         """
         new_name = "My Updated Chat"
-        updated_session = {**sample_session, "name": new_name}
+        updated_session = {**sample_session, "name": new_name, "description": ""}
 
         with patch("mcp_server_langgraph.api.v1.sessions.get_session_service") as mock_get_service:
             mock_service = AsyncMock()
-            mock_service.get_session.return_value = sample_session
-            mock_service.update_name.return_value = updated_session
+            mock_service.update_session.return_value = updated_session
             mock_get_service.return_value = mock_service
 
             client = TestClient(test_app)
@@ -778,7 +776,7 @@ class TestSessionRenameEndpoint:
         """
         with patch("mcp_server_langgraph.api.v1.sessions.get_session_service") as mock_get_service:
             mock_service = AsyncMock()
-            mock_service.update_name.return_value = None
+            mock_service.update_session.return_value = None
             mock_get_service.return_value = mock_service
 
             client = TestClient(test_app)
@@ -836,12 +834,11 @@ class TestSessionRenameEndpoint:
         THEN session_id should remain unchanged (only name changes)
         """
         original_id = sample_session["id"]
-        updated_session = {**sample_session, "name": "Renamed Session"}
+        updated_session = {**sample_session, "name": "Renamed Session", "description": ""}
 
         with patch("mcp_server_langgraph.api.v1.sessions.get_session_service") as mock_get_service:
             mock_service = AsyncMock()
-            mock_service.get_session.return_value = sample_session
-            mock_service.update_name.return_value = updated_session
+            mock_service.update_session.return_value = updated_session
             mock_get_service.return_value = mock_service
 
             client = TestClient(test_app)
@@ -1022,20 +1019,17 @@ class TestSessionDescriptionField:
         session_id = str(uuid4())
         with patch("mcp_server_langgraph.api.v1.sessions.get_session_service") as mock_get_service:
             mock_service = AsyncMock()
-            mock_service.get_session.return_value = {
-                "id": session_id,
-                "name": "Original Session",
-                "description": "",
-                "user_id": "test-user-123",
-                "created_at": "2025-01-01T00:00:00Z",
-                "updated_at": "2025-01-01T00:00:00Z",
-                "status": "active",
-            }
-            mock_service.rename_session.return_value = {
+            mock_service.update_session.return_value = {
                 "id": session_id,
                 "name": "Original Session",
                 "description": "Updated session description with context",
                 "user_id": "test-user-123",
+                "config": {
+                    "model": "gpt-4o-mini",
+                    "temperature": 0.7,
+                    "max_tokens": 1000,
+                },
+                "messages": [],
                 "created_at": "2025-01-01T00:00:00Z",
                 "updated_at": "2025-01-01T00:00:00Z",
                 "status": "active",
