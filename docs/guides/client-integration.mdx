@@ -1,0 +1,172 @@
+---
+title: 'Client Integration Guide'
+description: 'Integrate MCP clients into your applications for tool and resource access'
+icon: 'plug'
+seoTitle: 'MCP Client Integration - MCP Server LangGraph'
+seoDescription: 'Complete guide to integrating MCP clients. Connect to MCP servers, discover tools, and invoke capabilities from your applications.'
+keywords:
+  - MCP client
+  - client integration
+  - tool discovery
+  - server connection
+  - Python client
+  - TypeScript client
+contentType: 'how-to'
+---
+
+# Client Integration Guide
+
+Connect your applications to MCP servers for tool discovery and invocation.
+
+## Overview
+
+MCP clients enable applications to:
+
+- **Discover** available tools, resources, and prompts
+- **Invoke** server capabilities with structured inputs
+- **Stream** responses for long-running operations
+- **Authenticate** with secure server connections
+
+---
+
+## Quick Start
+
+### Python Client
+
+```python
+from mcp import ClientSession, StdioServerParameters
+from mcp.client.stdio import stdio_client
+
+async def main():
+    # Connect to server via stdio
+    server_params = StdioServerParameters(
+        command="python",
+        args=["my_mcp_server.py"]
+    )
+
+    async with stdio_client(server_params) as (read, write):
+        async with ClientSession(read, write) as session:
+            # Initialize connection
+            await session.initialize()
+
+            # List available tools
+            tools = await session.list_tools()
+            print(f"Available tools: {[t.name for t in tools.tools]}")
+
+            # Call a tool
+            result = await session.call_tool(
+                "hello",
+                {"name": "World"}
+            )
+            print(f"Result: {result.content[0].text}")
+
+asyncio.run(main())
+```
+
+### TypeScript Client
+
+```typescript
+import { Client } from "@modelcontextprotocol/sdk/client/index.js";
+import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
+
+const transport = new StdioClientTransport({
+  command: "python",
+  args: ["my_mcp_server.py"],
+});
+
+const client = new Client({
+  name: "my-app",
+  version: "1.0.0",
+}, {
+  capabilities: {}
+});
+
+await client.connect(transport);
+
+// List tools
+const tools = await client.listTools();
+console.log("Tools:", tools.tools.map(t => t.name));
+
+// Call tool
+const result = await client.callTool({
+  name: "hello",
+  arguments: { name: "World" }
+});
+```
+
+---
+
+## Connection Transports
+
+| Transport | Use Case | Example |
+|-----------|----------|---------|
+| **stdio** | Local processes | Claude Desktop |
+| **SSE** | Web clients | Browser apps |
+| **WebSocket** | Bidirectional | Real-time apps |
+
+### SSE Client
+
+```python
+from mcp.client.sse import sse_client
+
+async with sse_client("http://localhost:8000/sse") as (read, write):
+    async with ClientSession(read, write) as session:
+        await session.initialize()
+        # Use session...
+```
+
+### WebSocket Client
+
+```typescript
+import { WebSocketClientTransport } from "@modelcontextprotocol/sdk/client/websocket.js";
+
+const transport = new WebSocketClientTransport(
+  new URL("ws://localhost:8000/ws")
+);
+await client.connect(transport);
+```
+
+---
+
+## Tool Discovery
+
+```python
+# List all tools with their schemas
+tools = await session.list_tools()
+
+for tool in tools.tools:
+    print(f"Tool: {tool.name}")
+    print(f"  Description: {tool.description}")
+    print(f"  Schema: {tool.inputSchema}")
+```
+
+---
+
+## Resource Access
+
+```python
+# List resources
+resources = await session.list_resources()
+
+# Read a resource
+content = await session.read_resource("file:///config.json")
+print(f"Content: {content.contents[0].text}")
+```
+
+---
+
+## Best Practices
+
+1. **Handle reconnection** - Implement retry logic for transient failures
+2. **Validate schemas** - Check tool inputs before calling
+3. **Use timeouts** - Set appropriate timeouts for operations
+4. **Log interactions** - Track tool calls for debugging
+
+---
+
+## Related Documentation
+
+- [MCP Server Guide](/guides/mcp-server)
+- [MCP Protocol Integration](/integrations/mcp-protocol)
+- [ADR-0082: MCP Client Capabilities](/architecture/adr-0082-mcp-client-capabilities)
+- [Tool Development Guide](/guides/tool-development)

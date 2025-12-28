@@ -5,7 +5,7 @@ icon: 'shield-halved'
 seoTitle: "ADR-0075: Prompt Injection Detection and Sanitization"
 seoDescription: "Architecture Decision Record for implementing prompt injection detection and sanitization to protect AI endpoints from malicious input."
 keywords: ["prompt injection", "security", "LLM safety", "input validation", "sanitization", "ADR"]
-contentType: "adr"
+contentType: "reference"
 ---
 
 # ADR-0075: Prompt Injection Detection and Sanitization
@@ -86,11 +86,11 @@ Each detection pattern contributes to a cumulative risk score:
 | Code Injection | 0.6 |
 
 Risk levels based on cumulative score:
-- **NONE**: score = 0
-- **LOW**: 0 < score < 0.3
-- **MEDIUM**: 0.3 <= score < 0.6
-- **HIGH**: 0.6 <= score < 0.8
-- **CRITICAL**: score >= 0.8
+- **NONE**: `score = 0`
+- **LOW**: `0 < score < 0.3`
+- **MEDIUM**: `0.3 ≤ score < 0.6`
+- **HIGH**: `0.6 ≤ score < 0.8`
+- **CRITICAL**: `score ≥ 0.8`
 
 ### Integration with AI Endpoints
 

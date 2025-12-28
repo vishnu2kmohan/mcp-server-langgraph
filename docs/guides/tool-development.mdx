@@ -1,0 +1,207 @@
+---
+title: 'Tool Development Guide'
+description: 'Create custom tools for MCP Server LangGraph agents with best practices for security, testing, and multi-framework compatibility'
+icon: 'screwdriver-wrench'
+seoTitle: 'Tool Development Guide - MCP Server LangGraph'
+seoDescription: 'Complete guide to developing custom tools for MCP Server LangGraph. Learn tool structure, security patterns, testing strategies, and multi-framework integration.'
+keywords:
+  - tool development
+  - custom tools
+  - MCP tools
+  - LangGraph tools
+  - agent tools
+  - function calling
+contentType: 'how-to'
+---
+
+# Tool Development Guide
+
+Create custom tools that extend agent capabilities while maintaining security and compatibility across frameworks.
+
+## Overview
+
+Tools are the primary way agents interact with external systems. MCP Server LangGraph supports multiple tool paradigms:
+
+| Framework | Tool Format | Use Case |
+|-----------|-------------|----------|
+| **LangGraph** | `@tool` decorator | Native Python tools |
+| **MCP** | JSON-RPC tools | Cross-platform interop |
+| **Claude SDK** | Tool definitions | Anthropic ecosystem |
+| **OpenAI** | Function calling | GPT integration |
+
+---
+
+## Quick Start
+
+### Basic Tool Structure
+
+```python
+from langchain_core.tools import tool
+from pydantic import BaseModel, Field
+
+class SearchInput(BaseModel):
+    """Input schema for web search tool."""
+    query: str = Field(description="Search query string")
+    max_results: int = Field(default=10, ge=1, le=100)
+
+@tool
+def web_search(query: str, max_results: int = 10) -> list[dict]:
+    """Search the web and return results.
+
+    Args:
+        query: The search query
+        max_results: Maximum number of results to return
+
+    Returns:
+        List of search results with title, url, and snippet
+    """
+    # Implementation here
+    return [{"title": "Result", "url": "https://example.com", "snippet": "..."}]
+```
+
+### MCP Tool Format
+
+```python
+from mcp.server import Server
+from mcp.types import Tool, TextContent
+
+app = Server("my-server")
+
+@app.list_tools()
+async def list_tools() -> list[Tool]:
+    return [
+        Tool(
+            name="web_search",
+            description="Search the web for information",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "query": {"type": "string", "description": "Search query"},
+                    "max_results": {"type": "integer", "default": 10}
+                },
+                "required": ["query"]
+            }
+        )
+    ]
+
+@app.call_tool()
+async def call_tool(name: str, arguments: dict) -> list[TextContent]:
+    if name == "web_search":
+        results = await perform_search(arguments["query"])
+        return [TextContent(type="text", text=str(results))]
+```
+
+---
+
+## Security Best Practices
+
+### Input Validation
+
+Always validate tool inputs before execution:
+
+```python
+from pydantic import BaseModel, Field, validator
+
+class FileReadInput(BaseModel):
+    path: str = Field(description="File path to read")
+
+    @validator("path")
+    def validate_path(cls, v):
+        # Prevent path traversal
+        if ".." in v or v.startswith("/"):
+            raise ValueError("Invalid path: must be relative without traversal")
+        return v
+```
+
+### Permission Checks
+
+Integrate with OpenFGA for authorization:
+
+```python
+from mcp_server_langgraph.auth.openfga import check_permission
+
+@tool
+async def sensitive_operation(resource_id: str, user_id: str) -> dict:
+    """Perform sensitive operation with authorization check."""
+
+    # Check permission before execution
+    allowed = await check_permission(
+        user=user_id,
+        relation="execute",
+        object=f"tool:sensitive_operation"
+    )
+
+    if not allowed:
+        raise PermissionError("User not authorized for this operation")
+
+    # Proceed with operation
+    return {"status": "completed"}
+```
+
+### Rate Limiting
+
+Apply rate limits to prevent abuse:
+
+```python
+from mcp_server_langgraph.resilience import rate_limiter
+
+@tool
+@rate_limiter(requests_per_minute=10)
+async def expensive_api_call(query: str) -> dict:
+    """Call external API with rate limiting."""
+    # Implementation
+    pass
+```
+
+---
+
+## Testing Tools
+
+### Unit Testing
+
+```python
+import pytest
+from your_module import web_search
+
+class TestWebSearch:
+    def test_returns_list_of_results(self):
+        results = web_search("python", max_results=5)
+        assert isinstance(results, list)
+        assert len(results) <= 5
+
+    def test_result_structure(self):
+        results = web_search("test")
+        for result in results:
+            assert "title" in result
+            assert "url" in result
+            assert "snippet" in result
+
+    def test_empty_query_raises(self):
+        with pytest.raises(ValueError):
+            web_search("")
+```
+
+### Integration Testing
+
+```python
+@pytest.mark.integration
+async def test_tool_with_agent():
+    """Test tool execution through agent."""
+    agent = create_test_agent(tools=[web_search])
+
+    result = await agent.invoke({
+        "messages": [{"role": "user", "content": "Search for Python tutorials"}]
+    })
+
+    # Verify tool was called
+    assert any("web_search" in str(msg) for msg in result["messages"])
+```
+
+---
+
+## Related Documentation
+
+- [ADR-0079: Multi-Framework Tool Parity](/architecture/adr-0079-multi-framework-tool-parity)
+- [MCP Protocol Integration](/integrations/mcp-protocol)
+- [Security Best Practices](/security/best-practices)
+- [SDK Hooks Guide](/guides/sdk-hooks)

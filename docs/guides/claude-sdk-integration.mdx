@@ -1,0 +1,158 @@
+---
+title: 'Claude Agent SDK Integration'
+description: 'Integrate Anthropic Claude Agent SDK with MCP Server LangGraph for sophisticated agent patterns'
+icon: 'robot'
+seoTitle: 'Claude Agent SDK Integration - MCP Server LangGraph'
+seoDescription: 'Complete guide to integrating Claude Agent SDK with MCP Server LangGraph. Leverage Anthropic patterns for multi-turn conversations and tool use.'
+keywords:
+  - Claude Agent SDK
+  - Anthropic
+  - agent integration
+  - tool use
+  - multi-turn
+  - computer use
+contentType: 'how-to'
+---
+
+# Claude Agent SDK Integration
+
+Leverage Anthropic's Claude Agent SDK patterns within MCP Server LangGraph for sophisticated agent behaviors.
+
+## Overview
+
+The Claude Agent SDK integration provides:
+
+- **Tool Use**: Native Claude tool_use blocks
+- **Computer Use**: Browser and desktop automation
+- **Multi-Turn**: Conversation memory and context
+- **Agentic Loops**: Autonomous task execution
+- **Streaming**: Real-time response streaming
+
+---
+
+## Quick Start
+
+### Installation
+
+```bash
+uv add anthropic-agent-sdk
+```
+
+### Basic Agent
+
+```python
+from mcp_server_langgraph.adapters.claude_sdk import ClaudeAgentAdapter
+from anthropic import Anthropic
+
+client = Anthropic()
+adapter = ClaudeAgentAdapter(client)
+
+# Register MCP tools
+adapter.register_mcp_tools(mcp_server)
+
+# Run agent
+result = await adapter.run(
+    model="claude-sonnet-4-20250514",
+    prompt="Research the latest AI developments",
+    max_turns=10
+)
+```
+
+### With Computer Use
+
+```python
+from anthropic_agent_sdk import ComputerTool, BashTool, TextEditorTool
+
+result = await adapter.run(
+    model="claude-sonnet-4-20250514",
+    prompt="Open a browser and search for Python tutorials",
+    tools=[
+        ComputerTool(),
+        BashTool(),
+        TextEditorTool()
+    ],
+    enable_computer_use=True
+)
+```
+
+---
+
+## Tool Conversion
+
+MCP tools are automatically converted to Claude tool_use format:
+
+```python
+# MCP Tool Definition
+mcp_tool = Tool(
+    name="web_search",
+    description="Search the web",
+    inputSchema={
+        "type": "object",
+        "properties": {
+            "query": {"type": "string"}
+        },
+        "required": ["query"]
+    }
+)
+
+# Converted to Claude format automatically
+# {
+#     "name": "web_search",
+#     "description": "Search the web",
+#     "input_schema": {...}
+# }
+```
+
+---
+
+## Agentic Patterns
+
+### Autonomous Loop
+
+```python
+async def autonomous_research(topic: str):
+    """Run autonomous research loop."""
+    adapter = ClaudeAgentAdapter(client)
+
+    result = await adapter.run_loop(
+        prompt=f"Research {topic} thoroughly. Use search tools, read articles, and compile a report.",
+        max_iterations=20,
+        stop_conditions=["report_complete", "max_iterations"]
+    )
+
+    return result.final_output
+```
+
+### Multi-Agent Handoff
+
+```python
+from mcp_server_langgraph.orchestration import AgentHandoff
+
+# Define specialist agents
+researcher = ClaudeAgentAdapter(client, role="researcher")
+writer = ClaudeAgentAdapter(client, role="writer")
+
+# Orchestrate handoff
+async def research_and_write(topic: str):
+    research = await researcher.run(f"Research {topic}")
+    article = await writer.run(f"Write article based on: {research}")
+    return article
+```
+
+---
+
+## Best Practices
+
+1. **Set reasonable max_turns** - Prevent runaway loops
+2. **Use streaming** - Better UX for long operations
+3. **Implement stop conditions** - Define clear completion criteria
+4. **Monitor costs** - Claude API calls add up
+
+---
+
+## Related Documentation
+
+- [ADR-0077: Claude Agent SDK Integration](/architecture/adr-0077-claude-agent-sdk-integration)
+- [Multi-Agent Orchestrators](/guides/multi-agent-orchestrators)
+- [Tool Development Guide](/guides/tool-development)
+- [SDK Hooks Guide](/guides/sdk-hooks)

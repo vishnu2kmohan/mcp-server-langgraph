@@ -116,6 +116,8 @@
           {
             "group": "Integrations",
             "pages": [
+              "integrations/langgraph",
+              "integrations/mcp-protocol",
               "integrations/gemini",
               "integrations/keycloak",
               "integrations/kong",
@@ -179,7 +181,9 @@
               "api-reference/mcp-endpoints",
               "api-reference/gdpr-endpoints",
               "api-reference/health-checks",
-              "api-reference/api-compliance-report"
+              "api-reference/api-compliance-report",
+              "api-reference/configuration",
+              "api-reference/skills"
             ]
           },
           {
@@ -321,6 +325,7 @@
           {
             "group": "Operations",
             "pages": [
+              "deployment/operations/orchestrator-runbook",
               "deployment/operations/gke-runbooks",
               "deployment/operations/eks-runbooks",
               "deployment/operations/issue-prevention",
@@ -343,7 +348,10 @@
               "guides/agent-hitl-approval",
               "guides/hitl-confidence",
               "guides/multi-agent-orchestrators",
-              "guides/sdk-hooks"
+              "guides/sdk-hooks",
+              "guides/tool-development",
+              "guides/multi-framework-integration",
+              "guides/claude-sdk-integration"
             ]
           },
           {
@@ -354,7 +362,15 @@
               "guides/keyboard-shortcuts",
               "guides/code-execution",
               "guides/devtools",
-              "guides/skills-marketplace"
+              "guides/skills-marketplace",
+              "guides/service-workers"
+            ]
+          },
+          {
+            "group": "MCP Development",
+            "pages": [
+              "guides/mcp-server",
+              "guides/client-integration"
             ]
           },
           {
@@ -389,6 +405,7 @@
           {
             "group": "Authorization",
             "pages": [
+              "guides/security",
               "guides/openfga-setup",
               "guides/permission-model",
               "guides/relationship-tuples",

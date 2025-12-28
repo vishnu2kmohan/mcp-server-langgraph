@@ -1,0 +1,162 @@
+---
+title: 'Security Guide'
+description: 'Security best practices and guidelines for MCP Server LangGraph deployments'
+icon: 'shield-halved'
+seoTitle: 'Security Guide - MCP Server LangGraph'
+seoDescription: 'Comprehensive security guide for MCP Server LangGraph. Authentication, authorization, input validation, and deployment security.'
+keywords:
+  - security
+  - authentication
+  - authorization
+  - best practices
+  - input validation
+  - deployment security
+contentType: 'guide'
+---
+
+# Security Guide
+
+Essential security practices for MCP Server LangGraph deployments.
+
+<Info>
+For comprehensive security documentation, see our [Security Best Practices](/security/best-practices) page.
+</Info>
+
+## Quick Reference
+
+| Topic | Description | Link |
+|-------|-------------|------|
+| **Authentication** | Keycloak SSO, JWT, OAuth2 | [Auth Guide](/getting-started/authentication) |
+| **Authorization** | OpenFGA, RBAC, permissions | [Auth Guide](/getting-started/authorization) |
+| **Best Practices** | Comprehensive security guide | [Best Practices](/security/best-practices) |
+| **Compliance** | SOC2, GDPR, HIPAA | [Compliance](/security/compliance) |
+| **Hardening** | Cloud-specific hardening | [GCP](/security/gcp-security-hardening), [AWS](/security/aws-security-hardening) |
+
+---
+
+## Core Security Principles
+
+### 1. Defense in Depth
+
+Apply multiple layers of security:
+
+```
+┌─────────────────────────────────────────┐
+│           Network Security              │
+│  ┌───────────────────────────────────┐  │
+│  │       API Gateway (Kong)          │  │
+│  │  ┌─────────────────────────────┐  │  │
+│  │  │    Authentication (JWT)     │  │  │
+│  │  │  ┌───────────────────────┐  │  │  │
+│  │  │  │  Authorization (FGA)  │  │  │  │
+│  │  │  │  ┌─────────────────┐  │  │  │  │
+│  │  │  │  │   Input Valid   │  │  │  │  │
+│  │  │  │  └─────────────────┘  │  │  │  │
+│  │  │  └───────────────────────┘  │  │  │
+│  │  └─────────────────────────────┘  │  │
+│  └───────────────────────────────────┘  │
+└─────────────────────────────────────────┘
+```
+
+### 2. Least Privilege
+
+Grant minimum permissions required:
+
+```python
+# Define granular permissions
+await openfga.write(
+    user="user:alice",
+    relation="viewer",  # Not "admin"
+    object="document:123"
+)
+```
+
+### 3. Input Validation
+
+Validate all user input:
+
+```python
+from pydantic import BaseModel, Field, validator
+
+class UserInput(BaseModel):
+    query: str = Field(max_length=1000)
+
+    @validator("query")
+    def sanitize_query(cls, v):
+        # Remove potential injection patterns
+        return sanitize_for_llm(v)
+```
+
+---
+
+## Authentication
+
+### Keycloak SSO
+
+```python
+# Verify JWT token
+from mcp_server_langgraph.auth import verify_token
+
+@app.middleware("http")
+async def auth_middleware(request, call_next):
+    token = request.headers.get("Authorization", "").replace("Bearer ", "")
+    user = await verify_token(token)
+    request.state.user = user
+    return await call_next(request)
+```
+
+### DPoP Token Binding
+
+```python
+# Enable DPoP for enhanced security
+from mcp_server_langgraph.auth.dpop import verify_dpop
+
+async def verify_request(request):
+    dpop_proof = request.headers.get("DPoP")
+    await verify_dpop(dpop_proof, request.method, request.url)
+```
+
+---
+
+## Authorization
+
+### OpenFGA Integration
+
+```python
+from mcp_server_langgraph.auth.openfga import check_permission
+
+async def require_permission(user: str, action: str, resource: str):
+    allowed = await check_permission(
+        user=user,
+        relation=action,
+        object=resource
+    )
+    if not allowed:
+        raise HTTPException(status_code=403, detail="Forbidden")
+```
+
+---
+
+## Prompt Injection Protection
+
+```python
+from mcp_server_langgraph.security.prompt_injection import analyze_content
+
+async def validate_user_input(content: str):
+    result = analyze_content(content)
+    if result.should_block:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Content blocked: {result.risk_level.value}"
+        )
+```
+
+---
+
+## Related Documentation
+
+- [Security Best Practices](/security/best-practices) - Comprehensive guide
+- [Compliance](/security/compliance) - Regulatory compliance
+- [GCP Security Hardening](/security/gcp-security-hardening)
+- [AWS Security Hardening](/security/aws-security-hardening)
+- [Prompt Injection Protection](/guides/prompt-injection-protection)

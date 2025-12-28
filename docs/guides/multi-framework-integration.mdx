@@ -1,0 +1,137 @@
+---
+title: 'Multi-Framework Integration Guide'
+description: 'Integrate LangGraph, Claude Agent SDK, OpenAI Agents, and CrewAI tools with MCP Server LangGraph'
+icon: 'puzzle-piece'
+seoTitle: 'Multi-Framework Integration - MCP Server LangGraph'
+seoDescription: 'Complete guide to integrating multiple agent frameworks with MCP Server LangGraph. Support LangGraph, Claude SDK, OpenAI, and CrewAI in unified workflows.'
+keywords:
+  - multi-framework
+  - integration
+  - LangGraph
+  - Claude SDK
+  - OpenAI
+  - CrewAI
+  - agent frameworks
+contentType: 'how-to'
+---
+
+# Multi-Framework Integration Guide
+
+Run agents from multiple frameworks side-by-side with unified tool access and observability.
+
+## Overview
+
+MCP Server LangGraph provides adapters for seamless integration across agent frameworks:
+
+| Framework | Adapter | Status |
+|-----------|---------|--------|
+| **LangGraph** | Native | Production |
+| **Claude Agent SDK** | `claude_sdk_adapter` | Production |
+| **OpenAI Agents** | `openai_adapter` | Production |
+| **CrewAI** | `crewai_adapter` | Beta |
+| **Google ADK** | `google_adk_adapter` | Planned |
+
+---
+
+## Architecture
+
+```
+┌─────────────────────────────────────────────────────────┐
+│                  MCP Server LangGraph                    │
+├─────────────────────────────────────────────────────────┤
+│                    Unified Tool Registry                 │
+├──────────┬──────────┬──────────┬──────────┬────────────┤
+│ LangGraph│Claude SDK│  OpenAI  │  CrewAI  │ Google ADK │
+│  Adapter │  Adapter │  Adapter │  Adapter │   Adapter  │
+└──────────┴──────────┴──────────┴──────────┴────────────┘
+```
+
+---
+
+## Quick Start
+
+### LangGraph (Native)
+
+```python
+from langgraph.prebuilt import create_react_agent
+from mcp_server_langgraph.tools import get_unified_tools
+
+tools = get_unified_tools()
+agent = create_react_agent(model, tools)
+```
+
+### Claude Agent SDK
+
+```python
+from mcp_server_langgraph.adapters import claude_sdk_adapter
+
+# Convert MCP tools to Claude SDK format
+claude_tools = claude_sdk_adapter.convert_tools(mcp_tools)
+
+# Use with Claude Agent SDK
+from anthropic_agent_sdk import Agent
+agent = Agent(tools=claude_tools)
+```
+
+### OpenAI Agents
+
+```python
+from mcp_server_langgraph.adapters import openai_adapter
+
+# Convert to OpenAI function calling format
+openai_functions = openai_adapter.convert_tools(mcp_tools)
+
+# Use with OpenAI
+response = client.chat.completions.create(
+    model="gpt-4",
+    messages=messages,
+    functions=openai_functions
+)
+```
+
+### CrewAI
+
+```python
+from mcp_server_langgraph.adapters import crewai_adapter
+from crewai import Agent, Task, Crew
+
+# Convert tools for CrewAI
+crewai_tools = crewai_adapter.convert_tools(mcp_tools)
+
+agent = Agent(
+    role="Researcher",
+    goal="Find information",
+    tools=crewai_tools
+)
+```
+
+---
+
+## Tool Format Conversion
+
+The adapter layer handles automatic conversion between tool formats:
+
+| Source Format | Target Format | Conversion |
+|--------------|---------------|------------|
+| MCP JSON-RPC | LangGraph `@tool` | Automatic |
+| MCP JSON-RPC | Claude tool_use | Automatic |
+| MCP JSON-RPC | OpenAI functions | Automatic |
+| LangGraph `@tool` | MCP JSON-RPC | Automatic |
+
+---
+
+## Best Practices
+
+1. **Use MCP as the canonical format** - Define tools once in MCP format
+2. **Test across frameworks** - Verify tool behavior in each target framework
+3. **Handle type differences** - Be aware of type system variations
+4. **Monitor performance** - Different frameworks have different overhead
+
+---
+
+## Related Documentation
+
+- [ADR-0079: Multi-Framework Tool Parity](/architecture/adr-0079-multi-framework-tool-parity)
+- [Tool Development Guide](/guides/tool-development)
+- [Claude SDK Integration](/guides/claude-sdk-integration)
+- [MCP Protocol Integration](/integrations/mcp-protocol)

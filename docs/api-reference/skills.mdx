@@ -1,0 +1,279 @@
+---
+title: 'Skills API Reference'
+description: 'API endpoints for skill discovery, installation, and management'
+icon: 'wand-magic-sparkles'
+seoTitle: 'Skills API Reference - MCP Server LangGraph'
+seoDescription: 'Complete API reference for skills endpoints. Discover, install, configure, and manage skills programmatically.'
+keywords:
+  - skills API
+  - skill marketplace
+  - skill installation
+  - skill management
+  - capabilities
+contentType: 'reference'
+---
+
+# Skills API Reference
+
+Discover, install, and manage skills for extending agent capabilities.
+
+## Base URL
+
+```
+/api/v1/skills
+```
+
+---
+
+## List Skills
+
+Retrieve available skills from the marketplace.
+
+<ParamField path="GET" type="/api/v1/skills">
+  List available skills
+</ParamField>
+
+**Query Parameters**
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `category` | string | Filter by category (optional) |
+| `search` | string | Search query (optional) |
+| `installed` | boolean | Show only installed skills (optional) |
+| `page` | integer | Page number (default: 1) |
+| `limit` | integer | Items per page (default: 20) |
+
+**Response**
+
+```json
+{
+  "skills": [
+    {
+      "id": "web-research",
+      "name": "Web Research",
+      "description": "Search and analyze web content",
+      "version": "1.2.0",
+      "author": "MCP Community",
+      "category": "research",
+      "installed": true,
+      "enabled": true,
+      "tools": ["web_search", "page_fetch", "content_extract"],
+      "icon": "globe"
+    },
+    {
+      "id": "code-analysis",
+      "name": "Code Analysis",
+      "description": "Analyze and review code",
+      "version": "2.0.0",
+      "author": "MCP Community",
+      "category": "development",
+      "installed": false,
+      "enabled": false,
+      "tools": ["code_review", "security_scan", "dependency_check"],
+      "icon": "code"
+    }
+  ],
+  "pagination": {
+    "page": 1,
+    "limit": 20,
+    "total": 45
+  }
+}
+```
+
+---
+
+## Get Skill Details
+
+Get detailed information about a specific skill.
+
+<ParamField path="GET" type="/api/v1/skills/{skill_id}">
+  Get skill details
+</ParamField>
+
+**Response**
+
+```json
+{
+  "id": "web-research",
+  "name": "Web Research",
+  "description": "Search and analyze web content with advanced extraction capabilities",
+  "version": "1.2.0",
+  "author": "MCP Community",
+  "license": "MIT",
+  "repository": "https://github.com/mcp-community/web-research",
+  "category": "research",
+  "installed": true,
+  "enabled": true,
+  "tools": [
+    {
+      "name": "web_search",
+      "description": "Search the web using multiple engines",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "query": {"type": "string"},
+          "max_results": {"type": "integer", "default": 10}
+        },
+        "required": ["query"]
+      }
+    },
+    {
+      "name": "page_fetch",
+      "description": "Fetch and parse web page content",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "url": {"type": "string", "format": "uri"}
+        },
+        "required": ["url"]
+      }
+    }
+  ],
+  "configuration": {
+    "search_engine": {
+      "type": "string",
+      "default": "google",
+      "options": ["google", "bing", "duckduckgo"]
+    },
+    "max_concurrent": {
+      "type": "integer",
+      "default": 5
+    }
+  }
+}
+```
+
+---
+
+## Install Skill
+
+Install a skill from the marketplace.
+
+<ParamField path="POST" type="/api/v1/skills/{skill_id}/install">
+  Install skill
+</ParamField>
+
+**Request Body** (optional configuration)
+
+```json
+{
+  "configuration": {
+    "search_engine": "duckduckgo",
+    "max_concurrent": 3
+  }
+}
+```
+
+**Response**
+
+```json
+{
+  "id": "web-research",
+  "status": "installed",
+  "enabled": true,
+  "installed_at": "2024-12-28T10:30:00Z",
+  "tools_registered": 3
+}
+```
+
+---
+
+## Uninstall Skill
+
+Remove an installed skill.
+
+<ParamField path="DELETE" type="/api/v1/skills/{skill_id}">
+  Uninstall skill
+</ParamField>
+
+**Response**
+
+```json
+{
+  "id": "web-research",
+  "status": "uninstalled",
+  "tools_removed": 3
+}
+```
+
+---
+
+## Enable/Disable Skill
+
+Toggle skill availability.
+
+<ParamField path="PATCH" type="/api/v1/skills/{skill_id}">
+  Update skill status
+</ParamField>
+
+**Request Body**
+
+```json
+{
+  "enabled": false
+}
+```
+
+**Response**
+
+```json
+{
+  "id": "web-research",
+  "enabled": false,
+  "updated_at": "2024-12-28T10:35:00Z"
+}
+```
+
+---
+
+## Configure Skill
+
+Update skill configuration.
+
+<ParamField path="PUT" type="/api/v1/skills/{skill_id}/config">
+  Update configuration
+</ParamField>
+
+**Request Body**
+
+```json
+{
+  "search_engine": "bing",
+  "max_concurrent": 10
+}
+```
+
+**Response**
+
+```json
+{
+  "id": "web-research",
+  "configuration": {
+    "search_engine": "bing",
+    "max_concurrent": 10
+  },
+  "updated_at": "2024-12-28T10:40:00Z"
+}
+```
+
+---
+
+## Skill Categories
+
+| Category | Description | Examples |
+|----------|-------------|----------|
+| `research` | Information gathering | Web search, Wikipedia |
+| `development` | Code tools | Code review, testing |
+| `productivity` | Task automation | Email, calendar |
+| `data` | Data processing | CSV, JSON, analytics |
+| `communication` | Messaging | Slack, Discord |
+
+---
+
+## Related Documentation
+
+- [Skills Marketplace Guide](/guides/skills-marketplace)
+- [Tool Development Guide](/guides/tool-development)
+- [Feature Flags Guide](/guides/feature-flags)
+- [Security Best Practices](/security/best-practices)

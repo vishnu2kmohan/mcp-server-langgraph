@@ -34,7 +34,7 @@ Document all deprecated compatibility shims and their replacements to:
 | `api.v1.alert_websocket` | `websocket.handlers.alert` | v4.0 |
 | `api.v1.audit_websocket` | `websocket.handlers.audit` | v4.0 |
 | `api.v1.mcp_task_websocket` | `websocket.handlers.mcp_task` | v4.0 |
-| `api.v1.notification_websocket` | `websocket.handlers.notification` | v4.0 |
+| `api.v1.notification_websocket` | `websocket.handlers.notifications` | **REMOVED** (2025-12-28) |
 | `api.v1.connection_health_ws` | `websocket.handlers.connection_health` | v4.0 |
 | `api.v1.workflow_execution_ws` | `websocket.handlers.workflow_execution` | v4.0 |
 
@@ -104,13 +104,40 @@ Each shim module re-exports symbols from new locations for backward compatibilit
 - get_connection_health_broadcaster
 ```
 
-### notification_websocket.py
-```python
-# From mcp_server_langgraph.notifications.broadcast:
-- NotificationBroadcaster
+### notification_websocket.py (**REMOVED** 2025-12-28)
 
-# From mcp_server_langgraph.websocket.registry:
-- get_notification_broadcaster
+> **This shim has been removed.** Use the new locations directly:
+>
+> ```python
+> from mcp_server_langgraph.notifications.broadcast import NotificationBroadcaster
+> from mcp_server_langgraph.websocket.registry import get_notification_broadcaster
+> ```
+
+### mcp_websocket.py (Partial Migration 2025-12-28)
+
+MCP-specific classes have been migrated to a new `mcp/websocket/` package:
+
+| Class | Old Location | New Location |
+|-------|--------------|--------------|
+| `ConnectionManager` | `api.v1.mcp_websocket` | `mcp.websocket.connection_manager` |
+| `StreamingToolCallHandler` | `api.v1.mcp_websocket` | `mcp.websocket.streaming` |
+| `StreamingMetricsCollector` | `api.v1.mcp_websocket` | `mcp.websocket.streaming` |
+| `MCPWebSocketLifecycleManager` | `api.v1.mcp_websocket` | `mcp.websocket.lifecycle` |
+| `OTelMCPMetrics` | `api.v1.mcp_websocket` | `mcp.websocket.metrics` |
+| `UserRateLimiterManager` | `api.v1.mcp_websocket` | `mcp.websocket.rate_limiter` |
+| `OutboundRateLimiter` | `api.v1.mcp_websocket` | `mcp.websocket.rate_limiter` |
+
+The `mcp_websocket.py` shim uses `__getattr__` for lazy imports with `DeprecationWarning`:
+
+```python
+from mcp_server_langgraph.api.v1.mcp_websocket import ConnectionManager  # Issues warning
+# DeprecationWarning: ConnectionManager has moved to mcp_server_langgraph.mcp.websocket.connection_manager
+```
+
+**New imports (preferred):**
+```python
+from mcp_server_langgraph.mcp.websocket import ConnectionManager
+from mcp_server_langgraph.mcp.websocket import StreamingToolCallHandler
 ```
 
 ### workflow_execution_ws.py
@@ -169,7 +196,7 @@ src/mcp_server_langgraph/api/v1/agent_request_websocket.py
 src/mcp_server_langgraph/api/v1/alert_websocket.py
 src/mcp_server_langgraph/api/v1/audit_websocket.py
 src/mcp_server_langgraph/api/v1/mcp_task_websocket.py
-src/mcp_server_langgraph/api/v1/notification_websocket.py
+# src/mcp_server_langgraph/api/v1/notification_websocket.py  # DELETED 2025-12-28
 src/mcp_server_langgraph/api/v1/connection_health_ws.py
 src/mcp_server_langgraph/api/v1/workflow_execution_ws.py
 ```
@@ -190,9 +217,86 @@ src/mcp_server_langgraph/api/v1/workflow_execution_ws.py
 - Shims will be completely removed in v4.0
 - No performance impact (shims are thin wrappers)
 
+## Test Namespace Collision Fix (2025-12-28)
+
+### Problem
+
+The `tests/unit/mcp/` directory name collides with the installed `mcp` SDK package (Model Context Protocol). When `tests/unit/mcp/__init__.py` exists, Python's import system may resolve `import mcp.server` to the test directory instead of the installed package, causing:
+
+- `ImportError: No module named 'mcp.server'`
+- Tests pass individually but fail when run together
+- Mock pollution from `conftest.py` affecting unrelated tests
+
+### Root Cause
+
+`tests/unit/mcp/client/conftest.py` injected mock modules into `sys.modules` at import time:
+
+```python
+# BEFORE (problematic)
+if "mcp" not in sys.modules:
+    sys.modules["mcp"] = _create_mcp_module()  # Pollutes when SDK not yet imported
+```
+
+Combined with `tests/unit/mcp/__init__.py`, this caused Python to treat the test directory as the `mcp` package.
+
+### Solution
+
+1. **Deleted `__init__.py` files** that caused namespace collision:
+   - `tests/unit/mcp/__init__.py`
+   - `tests/unit/mcp/client/__init__.py`
+
+2. **Added SDK availability check** in `tests/unit/mcp/client/conftest.py`:
+   ```python
+   # AFTER (safe)
+   try:
+       from mcp.types import TextContent
+       _MCP_SDK_AVAILABLE = True
+   except ImportError:
+       _MCP_SDK_AVAILABLE = False
+
+   if not _MCP_SDK_AVAILABLE:
+       if "mcp" not in sys.modules:
+           sys.modules["mcp"] = _create_mcp_module()
+   ```
+
+3. **Added validation hook** (`scripts/validators/check_mcp_namespace_collision.py`):
+   - Pre-commit hook blocks `__init__.py` in `tests/unit/mcp/`
+   - Provides clear error message explaining the issue
+
+4. **Added documentation**:
+   - `tests/unit/mcp/README.md` - Documents the issue and prevention
+   - `tests/unit/mcp/client/conftest.py` - Enhanced docstring explaining SDK Mock Pattern
+
+### Prevention
+
+The `check-mcp-namespace-collision` pre-commit hook prevents regression:
+
+```yaml
+- id: check-mcp-namespace-collision
+  name: Check MCP Namespace Collision
+  entry: uv run --frozen python -u scripts/validators/check_mcp_namespace_collision.py
+  files: ^tests/unit/mcp/.*__init__\.py$
+```
+
+### Directory Rename Evaluation
+
+We evaluated renaming `tests/unit/mcp/` to `tests/unit/mcp_pkg/` to eliminate collision entirely.
+
+**Decision: Keep `tests/unit/mcp/`**
+
+| Factor | Keep Current | Rename |
+|--------|--------------|--------|
+| Files affected | 0 | 46 test files |
+| Collision risk | Mitigated by hook | Eliminated |
+| Maintenance | Validation hook | None |
+
+The validation hook and SDK availability check provide sufficient protection without requiring a large refactor.
+
 ## References
 
 - [Python warnings module](https://docs.python.org/3/library/warnings.html)
 - [PEP 565 - DeprecationWarning visibility](https://peps.python.org/pep-0565/)
 - Project `websocket/` module structure
 - Project `hitl/` module structure
+- `scripts/validators/check_mcp_namespace_collision.py` - Validation hook
+- `tests/unit/mcp/README.md` - Test directory documentation

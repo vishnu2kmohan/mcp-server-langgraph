@@ -1,0 +1,264 @@
+---
+title: 'Orchestrator Runbook'
+description: 'Operational runbook for multi-agent orchestrator troubleshooting and maintenance'
+icon: 'book'
+seoTitle: 'Multi-Agent Orchestrator Runbook - MCP Server LangGraph'
+seoDescription: 'Operational runbook for multi-agent orchestrator. Troubleshooting, performance tuning, and maintenance procedures.'
+keywords:
+  - orchestrator
+  - runbook
+  - operations
+  - troubleshooting
+  - multi-agent
+  - maintenance
+contentType: 'how-to'
+---
+
+# Multi-Agent Orchestrator Runbook
+
+Operational procedures for managing the multi-agent orchestrator in production.
+
+## Overview
+
+The multi-agent orchestrator coordinates multiple AI agents for complex tasks. This runbook covers common operational scenarios.
+
+---
+
+## Health Checks
+
+### Check Orchestrator Status
+
+```bash
+# Via API
+curl -s https://api.example.com/api/v1/health/orchestrator | jq
+
+# Via kubectl
+kubectl get pods -l app=orchestrator -n mcp-server
+
+# Check logs
+kubectl logs -l app=orchestrator -n mcp-server --tail=100
+```
+
+### Expected Health Response
+
+```json
+{
+  "status": "healthy",
+  "agents": {
+    "active": 3,
+    "idle": 7,
+    "failed": 0
+  },
+  "tasks": {
+    "pending": 5,
+    "running": 2,
+    "completed_24h": 150
+  },
+  "latency_p95_ms": 250
+}
+```
+
+---
+
+## Common Issues
+
+### Issue: Agent Stuck in Running State
+
+**Symptoms:**
+- Agent shows "running" for extended period
+- No progress on task
+- High resource usage
+
+**Diagnosis:**
+
+```bash
+# Check agent details
+curl -s https://api.example.com/api/v1/orchestrator/agents/{agent_id}
+
+# Check task state
+curl -s https://api.example.com/api/v1/orchestrator/tasks/{task_id}
+
+# Check Redis for stuck state
+redis-cli HGETALL "agent:{agent_id}:state"
+```
+
+**Resolution:**
+
+1. Check for deadlock in agent graph
+2. Verify LLM provider connectivity
+3. Force terminate if necessary:
+
+```bash
+curl -X POST https://api.example.com/api/v1/orchestrator/agents/{agent_id}/terminate
+```
+
+### Issue: High Latency
+
+**Symptoms:**
+- P95 latency > 500ms
+- Slow task completion
+- User complaints
+
+**Diagnosis:**
+
+```bash
+# Check metrics
+curl -s https://api.example.com/metrics | grep orchestrator
+
+# Check LLM latency
+curl -s https://api.example.com/api/v1/health/llm
+
+# Check Redis latency
+redis-cli --latency
+```
+
+**Resolution:**
+
+1. Scale orchestrator pods:
+   ```bash
+   kubectl scale deployment orchestrator --replicas=5 -n mcp-server
+   ```
+
+2. Check LLM rate limits
+3. Optimize agent graph complexity
+4. Enable caching for repeated queries
+
+### Issue: Task Queue Backup
+
+**Symptoms:**
+- Growing pending task count
+- Delayed task execution
+- Memory pressure
+
+**Diagnosis:**
+
+```bash
+# Check queue depth
+redis-cli LLEN "orchestrator:task_queue"
+
+# Check consumer lag
+curl -s https://api.example.com/api/v1/orchestrator/queue/stats
+```
+
+**Resolution:**
+
+1. Scale workers:
+   ```bash
+   kubectl scale deployment orchestrator-worker --replicas=10 -n mcp-server
+   ```
+
+2. Prioritize critical tasks:
+   ```bash
+   curl -X POST https://api.example.com/api/v1/orchestrator/queue/prioritize \
+     -d '{"priority": "high", "task_ids": ["task-1", "task-2"]}'
+   ```
+
+3. Enable task shedding for non-critical work
+
+---
+
+## Performance Tuning
+
+### Concurrency Settings
+
+```yaml
+# values.yaml
+orchestrator:
+  maxConcurrentAgents: 50
+  maxConcurrentTasks: 100
+  taskTimeout: 300s
+  agentIdleTimeout: 60s
+```
+
+### Resource Allocation
+
+```yaml
+resources:
+  requests:
+    cpu: "500m"
+    memory: "1Gi"
+  limits:
+    cpu: "2"
+    memory: "4Gi"
+```
+
+### Redis Configuration
+
+```bash
+# Optimize for orchestrator workload
+redis-cli CONFIG SET maxmemory-policy allkeys-lru
+redis-cli CONFIG SET tcp-keepalive 300
+```
+
+---
+
+## Maintenance Procedures
+
+### Graceful Restart
+
+```bash
+# Drain active tasks
+curl -X POST https://api.example.com/api/v1/orchestrator/drain
+
+# Wait for completion
+watch "curl -s https://api.example.com/api/v1/orchestrator/status | jq .tasks.running"
+
+# Rolling restart
+kubectl rollout restart deployment orchestrator -n mcp-server
+```
+
+### Database Cleanup
+
+```bash
+# Archive completed tasks older than 30 days
+curl -X POST https://api.example.com/api/v1/orchestrator/maintenance/archive \
+  -d '{"older_than_days": 30}'
+
+# Clean up orphaned agent states
+curl -X POST https://api.example.com/api/v1/orchestrator/maintenance/cleanup
+```
+
+---
+
+## Monitoring
+
+### Key Metrics
+
+| Metric | Alert Threshold | Description |
+|--------|----------------|-------------|
+| `orchestrator_tasks_pending` | > 100 | Queue backup |
+| `orchestrator_agent_errors_total` | > 10/min | Agent failures |
+| `orchestrator_latency_p95` | > 500ms | Performance degradation |
+| `orchestrator_memory_usage_bytes` | > 80% limit | Memory pressure |
+
+### Grafana Dashboard
+
+```
+Dashboard: MCP Server / Orchestrator
+Panels:
+- Task throughput (tasks/min)
+- Active agents gauge
+- Error rate by type
+- Latency distribution
+- Resource usage
+```
+
+---
+
+## Escalation
+
+| Severity | Condition | Response Time | Contact |
+|----------|-----------|---------------|---------|
+| P1 | Orchestrator down | 15 min | On-call SRE |
+| P2 | > 50% error rate | 1 hour | Platform team |
+| P3 | High latency | 4 hours | Platform team |
+| P4 | Minor issues | Next business day | Platform team |
+
+---
+
+## Related Documentation
+
+- [Multi-Agent Orchestrators Guide](/guides/multi-agent-orchestrators)
+- [ADR-0078: Multi-Agent Orchestrator Patterns](/architecture/adr-0078-multi-agent-orchestrator-patterns)
+- [GKE Runbooks](/deployment/operations/gke-runbooks)
+- [EKS Runbooks](/deployment/operations/eks-runbooks)

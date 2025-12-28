@@ -1,6 +1,11 @@
 ---
 title: "Feature Flags Guide"
 description: "Configure feature flags for production deployments"
+icon: "toggle-on"
+seoTitle: "MCP Server LangGraph Feature Flags Configuration Guide"
+seoDescription: "Complete guide to configuring feature flags in MCP Server LangGraph for production deployments. Covers FF_ prefix environment variables and best practices."
+keywords: ["feature flags", "configuration", "deployment", "environment variables", "best practices"]
+contentType: "how-to"
 ---
 
 # Feature Flags Guide
@@ -219,7 +224,6 @@ histogram_quantile(0.95, mcp_feature_flag_check_duration_seconds_bucket)
 
 ## Related Documentation
 
-- [ADR-0072: Anthropic Best Practices](/architecture/adr-0072-anthropic-best-practices)
 - [ADR-0078: Multi-Agent Orchestrator Patterns](/architecture/adr-0078-multi-agent-orchestrator-patterns)
-- [Environment Configuration](/guides/environment-config)
+- [ADR-0085: Feature Flag Consolidation](/architecture/adr-0085-feature-flag-consolidation)
 - [Multi-Agent Orchestrators](/guides/multi-agent-orchestrators)

@@ -1,8 +1,8 @@
 # WebSocket Standardization
 
-**ADR Reference**: ADR-0068 WebSocket Standardization
+**ADR Reference**: ADR-0068 WebSocket Standardization, ADR-0074 WebSocket Token Expiration
 **Status**: Active
-**Last Updated**: 2025-12-26
+**Last Updated**: 2025-12-28
 **Owner**: Infrastructure Team
 
 ## Table of Contents
@@ -446,11 +446,12 @@ WebSocket errors use **application-defined close codes** (4000-4999) and **error
 | Code | Exception | Reason | Description |
 |------|-----------|--------|-------------|
 | `4000` | `WebSocketError` | Generic error | Generic application error |
-| `4001` | `AuthenticationError` | Authentication required | JWT token missing, invalid, or expired |
+| `4001` | `AuthenticationError` | Authentication required | JWT token missing, invalid, or initial auth failure |
 | `4002` | `ProtocolError` | Invalid message format | Message does not conform to `MessageEnvelope` schema |
 | `4003` | `AuthorizationError` | Authorization denied | OpenFGA check failed for resource access |
 | `4004` | `SubscriptionError` | Subscription failed | Failed to subscribe to resource (not found, authz denied) |
 | `4008` | `IdleTimeoutError`, `HeartbeatTimeoutError`, `ConnectionLimitError` | Timeout / Limit exceeded | Connection idle timeout, heartbeat timeout, or max connections exceeded |
+| `4010` | `TokenExpiredError` | Token expired | JWT token expired during active connection - client should refresh and reconnect (ADR-0074) |
 | `4013` | `MessageSizeError` | Message too large | Message exceeds `max_message_size` limit |
 | `4029` | `RateLimitError` | Rate limit exceeded | User exceeded `rate_limit_per_minute` quota |
 
@@ -480,6 +481,20 @@ WebSocket errors use **application-defined close codes** (4000-4999) and **error
   "timestamp": "2025-12-26T10:30:00.000Z"
 }
 // Connection closed with code 4001
+```
+
+#### Token Expired Error (ADR-0074)
+```json
+{
+  "type": "error",
+  "payload": {
+    "code": "token_expired",
+    "message": "Token expired. Please refresh and reconnect."
+  },
+  "timestamp": "2025-12-28T10:30:00.000Z"
+}
+// Connection closed with code 4010
+// Client should: 1) Refresh token, 2) Reconnect with new token
 ```
 
 #### Rate Limit Error
@@ -520,6 +535,7 @@ WebSocket errors use **application-defined close codes** (4000-4999) and **error
 ```
 WebSocketError
 ├── AuthenticationError (4001)
+│   └── TokenExpiredError (4010) - Token expired during active connection
 ├── AuthorizationError (4003)
 ├── ProtocolError (4002)
 ├── RateLimitError (4029)
@@ -856,7 +872,9 @@ logger.warning("Rate limit exceeded", extra={
 ### Authentication
 
 - **JWT Validation**: All tokens validated via Keycloak integration
-- **Token Expiry**: Expired tokens rejected with `4001` close code
+- **Initial Auth Failure**: Missing or invalid tokens rejected with `4001` close code
+- **Token Expiry During Connection**: Periodic validation detects expired tokens, closing with `4010` (ADR-0074)
+- **Client Recovery**: Clients receiving `4010` should refresh token and reconnect
 - **Anonymous Access**: Explicitly opt-in via `require_auth=False`
 
 ### Authorization

@@ -1,0 +1,227 @@
+---
+title: 'LangGraph Integration'
+description: 'Deep integration with LangGraph for stateful agent workflows and graph-based execution'
+icon: 'diagram-project'
+seoTitle: 'LangGraph Integration - MCP Server LangGraph'
+seoDescription: 'Complete guide to LangGraph integration. Build stateful agents with graph-based workflows, checkpointing, and human-in-the-loop patterns.'
+keywords:
+  - LangGraph
+  - agent workflows
+  - state management
+  - graph execution
+  - checkpointing
+  - human-in-the-loop
+contentType: 'how-to'
+---
+
+# LangGraph Integration
+
+Build sophisticated agent workflows with LangGraph's graph-based execution model.
+
+## Overview
+
+MCP Server LangGraph provides native LangGraph integration with:
+
+| Feature | Description |
+|---------|-------------|
+| **State Management** | Persistent agent state across turns |
+| **Graph Execution** | Visual workflow definition |
+| **Checkpointing** | Save/resume execution points |
+| **HITL Patterns** | Human-in-the-loop approvals |
+| **Multi-Agent** | Orchestrate multiple agents |
+
+---
+
+## Quick Start
+
+### Basic Agent Graph
+
+```python
+from langgraph.graph import StateGraph, END
+from langgraph.prebuilt import create_react_agent
+from langchain_openai import ChatOpenAI
+
+# Define state
+class AgentState(TypedDict):
+    messages: list
+    next_step: str
+
+# Create graph
+graph = StateGraph(AgentState)
+
+# Add nodes
+graph.add_node("agent", agent_node)
+graph.add_node("tools", tool_node)
+
+# Add edges
+graph.add_edge("agent", "tools")
+graph.add_conditional_edges(
+    "tools",
+    should_continue,
+    {"continue": "agent", "end": END}
+)
+
+# Compile
+app = graph.compile()
+```
+
+### With MCP Tools
+
+```python
+from mcp_server_langgraph.tools import get_mcp_tools
+from langgraph.prebuilt import create_react_agent
+
+# Get MCP tools
+tools = await get_mcp_tools()
+
+# Create agent with MCP tools
+agent = create_react_agent(
+    model=ChatOpenAI(model="gpt-4"),
+    tools=tools
+)
+
+# Run
+result = await agent.ainvoke({
+    "messages": [{"role": "user", "content": "Search for Python tutorials"}]
+})
+```
+
+---
+
+## State Persistence
+
+### Redis Checkpointing
+
+```python
+from langgraph.checkpoint.redis import RedisSaver
+
+# Configure Redis checkpointer
+checkpointer = RedisSaver.from_url("redis://localhost:6379")
+
+# Compile with checkpointing
+app = graph.compile(checkpointer=checkpointer)
+
+# Run with thread ID for persistence
+config = {"configurable": {"thread_id": "session-123"}}
+result = await app.ainvoke(input, config)
+```
+
+### PostgreSQL Checkpointing
+
+```python
+from langgraph.checkpoint.postgres import PostgresSaver
+
+checkpointer = PostgresSaver.from_conn_string(
+    "postgresql://user:pass@localhost/db"
+)
+
+app = graph.compile(checkpointer=checkpointer)
+```
+
+---
+
+## Human-in-the-Loop
+
+### Interrupt for Approval
+
+```python
+from langgraph.graph import StateGraph
+
+graph = StateGraph(AgentState)
+
+# Add interrupt before sensitive operations
+graph.add_node("check_approval", check_approval_node)
+graph.add_node("execute", execute_node)
+
+# Interrupt requires human approval
+graph.add_edge("check_approval", "execute", interrupt_before=["execute"])
+```
+
+### Resume After Approval
+
+```python
+# Get pending approval
+state = await app.aget_state(config)
+if state.next == ["execute"]:
+    # Human approves
+    await app.ainvoke(None, config)  # Resume execution
+```
+
+---
+
+## Multi-Agent Patterns
+
+### Supervisor Pattern
+
+```python
+from langgraph.graph import StateGraph
+
+class SupervisorState(TypedDict):
+    messages: list
+    next_agent: str
+
+def supervisor_node(state):
+    # Decide which agent to call
+    return {"next_agent": decide_next_agent(state)}
+
+graph = StateGraph(SupervisorState)
+graph.add_node("supervisor", supervisor_node)
+graph.add_node("researcher", researcher_agent)
+graph.add_node("writer", writer_agent)
+
+graph.add_conditional_edges(
+    "supervisor",
+    lambda s: s["next_agent"],
+    {"researcher": "researcher", "writer": "writer", "end": END}
+)
+```
+
+### Handoff Pattern
+
+```python
+from mcp_server_langgraph.orchestration import create_handoff_graph
+
+graph = create_handoff_graph(
+    agents={
+        "researcher": researcher_agent,
+        "writer": writer_agent,
+        "reviewer": reviewer_agent
+    },
+    handoff_order=["researcher", "writer", "reviewer"]
+)
+```
+
+---
+
+## Observability
+
+### LangSmith Tracing
+
+```python
+import os
+os.environ["LANGCHAIN_TRACING_V2"] = "true"
+os.environ["LANGCHAIN_API_KEY"] = "your-key"
+
+# Traces automatically captured
+result = await app.ainvoke(input)
+```
+
+### OpenTelemetry
+
+```python
+from mcp_server_langgraph.observability import setup_otel
+
+setup_otel()
+
+# Spans automatically created for graph execution
+result = await app.ainvoke(input)
+```
+
+---
+
+## Related Documentation
+
+- [ADR-0081: Handoff Pattern Multi-Agent](/architecture/adr-0081-handoff-pattern-multi-agent)
+- [Multi-Agent Orchestrators](/guides/multi-agent-orchestrators)
+- [HITL Confidence](/guides/hitl-confidence)
+- [Agent Architecture](/guides/agent-architecture)

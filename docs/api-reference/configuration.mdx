@@ -1,0 +1,225 @@
+---
+title: 'Configuration API Reference'
+description: 'API endpoints for runtime configuration, feature flags, and system settings'
+icon: 'sliders'
+seoTitle: 'Configuration API Reference - MCP Server LangGraph'
+seoDescription: 'Complete API reference for configuration endpoints. Manage feature flags, runtime settings, and system configuration programmatically.'
+keywords:
+  - configuration API
+  - feature flags
+  - settings
+  - runtime config
+  - environment variables
+contentType: 'reference'
+---
+
+# Configuration API Reference
+
+Manage runtime configuration, feature flags, and system settings.
+
+## Base URL
+
+```
+/api/v1/config
+```
+
+---
+
+## Feature Flags
+
+<a id="feature-flags"></a>
+
+### List Feature Flags
+
+Retrieve all feature flags and their current values.
+
+<ParamField path="GET" type="/api/v1/config/feature-flags">
+  List all feature flags
+</ParamField>
+
+**Response**
+
+```json
+{
+  "flags": {
+    "enable_ai_suggestions": true,
+    "enable_multi_agent_orchestration": true,
+    "enable_code_execution": false,
+    "enable_computer_use": false,
+    "enable_push_notifications": true,
+    "enable_websocket_streaming": true
+  },
+  "categories": {
+    "ai_features": ["enable_ai_suggestions", "enable_multi_agent_orchestration"],
+    "execution": ["enable_code_execution", "enable_computer_use"],
+    "notifications": ["enable_push_notifications"],
+    "streaming": ["enable_websocket_streaming"]
+  }
+}
+```
+
+### Get Feature Flag
+
+Get a specific feature flag value.
+
+<ParamField path="GET" type="/api/v1/config/feature-flags/{flag_name}">
+  Get specific feature flag
+</ParamField>
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `flag_name` | string | Feature flag name (e.g., `enable_ai_suggestions`) |
+
+**Response**
+
+```json
+{
+  "name": "enable_ai_suggestions",
+  "value": true,
+  "category": "ai_features",
+  "description": "Enable AI-powered suggestions in Agent Studio"
+}
+```
+
+### Update Feature Flag
+
+Update a feature flag value (admin only).
+
+<ParamField path="PUT" type="/api/v1/config/feature-flags/{flag_name}">
+  Update feature flag
+</ParamField>
+
+**Request Body**
+
+```json
+{
+  "value": false
+}
+```
+
+**Response**
+
+```json
+{
+  "name": "enable_ai_suggestions",
+  "value": false,
+  "updated_at": "2024-12-28T10:30:00Z",
+  "updated_by": "user:admin"
+}
+```
+
+---
+
+## Runtime Settings
+
+### Get Settings
+
+Retrieve current runtime settings.
+
+<ParamField path="GET" type="/api/v1/config/settings">
+  Get runtime settings
+</ParamField>
+
+**Response**
+
+```json
+{
+  "llm": {
+    "default_model": "gpt-4",
+    "max_tokens": 4096,
+    "temperature": 0.7,
+    "fallback_models": ["gpt-3.5-turbo", "claude-3-sonnet"]
+  },
+  "rate_limits": {
+    "requests_per_minute": 60,
+    "tokens_per_minute": 100000
+  },
+  "cache": {
+    "ttl_seconds": 300,
+    "max_size_mb": 100
+  }
+}
+```
+
+### Update Settings
+
+Update runtime settings (admin only).
+
+<ParamField path="PATCH" type="/api/v1/config/settings">
+  Update settings
+</ParamField>
+
+**Request Body**
+
+```json
+{
+  "llm": {
+    "temperature": 0.5
+  }
+}
+```
+
+---
+
+## Environment Info
+
+### Get Environment
+
+Get current environment information.
+
+<ParamField path="GET" type="/api/v1/config/environment">
+  Get environment info
+</ParamField>
+
+**Response**
+
+```json
+{
+  "environment": "production",
+  "version": "2.8.0",
+  "build_date": "2024-12-28T00:00:00Z",
+  "features": {
+    "keycloak_enabled": true,
+    "openfga_enabled": true,
+    "redis_enabled": true
+  }
+}
+```
+
+---
+
+## Feature Flag Categories
+
+| Category | Flags | Description |
+|----------|-------|-------------|
+| `ai_features` | AI suggestions, multi-agent | AI-powered features |
+| `execution` | Code execution, computer use | Sandboxed execution |
+| `authentication` | Keycloak, DPoP | Auth features |
+| `observability` | Tracing, metrics | Monitoring features |
+| `ui_components` | Devtools, skills | UI features |
+
+---
+
+## Environment Variables
+
+Feature flags can be set via environment variables with the `FF_` prefix:
+
+```bash
+# Enable AI suggestions
+FF_ENABLE_AI_SUGGESTIONS=true
+
+# Disable code execution
+FF_ENABLE_CODE_EXECUTION=false
+
+# Enable multi-agent orchestration
+FF_ENABLE_MULTI_AGENT_ORCHESTRATION=true
+```
+
+---
+
+## Related Documentation
+
+- [Feature Flags Guide](/guides/feature-flags)
+- [Studio Feature Flags](/guides/studio-feature-flags)
+- [Environment Configuration](/guides/environment-config)
+- [ADR-0085: Feature Flag Consolidation](/architecture/adr-0085-feature-flag-consolidation)

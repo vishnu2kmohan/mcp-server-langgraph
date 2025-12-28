@@ -1,0 +1,248 @@
+---
+title: 'MCP Protocol Integration'
+description: 'Model Context Protocol (MCP) integration for cross-platform tool and resource sharing'
+icon: 'link'
+seoTitle: 'MCP Protocol Integration - MCP Server LangGraph'
+seoDescription: 'Complete guide to MCP protocol integration. Connect to MCP servers, expose tools, and enable cross-platform AI interoperability.'
+keywords:
+  - MCP
+  - Model Context Protocol
+  - protocol integration
+  - tool sharing
+  - resources
+  - cross-platform
+contentType: 'how-to'
+---
+
+# MCP Protocol Integration
+
+Integrate with the Model Context Protocol for cross-platform AI tool and resource sharing.
+
+## Overview
+
+MCP (Model Context Protocol) is an open standard for AI-tool communication:
+
+| Component | Description |
+|-----------|-------------|
+| **Servers** | Expose tools, resources, prompts |
+| **Clients** | Consume server capabilities |
+| **Transports** | stdio, SSE, WebSocket |
+| **Protocol** | JSON-RPC 2.0 based |
+
+---
+
+## Protocol Architecture
+
+```
+┌─────────────────────────────────────────────────────────┐
+│                    AI Application                        │
+│  (Claude Desktop, Agent Studio, Custom Apps)            │
+└─────────────────────────┬───────────────────────────────┘
+                          │ MCP Protocol (JSON-RPC)
+┌─────────────────────────┴───────────────────────────────┐
+│                    MCP Client                            │
+│  - Tool discovery    - Resource access                   │
+│  - Prompt templates  - Sampling requests                 │
+└─────────────────────────┬───────────────────────────────┘
+                          │ Transport (stdio/SSE/WS)
+┌─────────────────────────┴───────────────────────────────┐
+│                    MCP Server                            │
+│  - Tools             - Resources                         │
+│  - Prompts           - Sampling handler                  │
+└─────────────────────────────────────────────────────────┘
+```
+
+---
+
+## MCP Capabilities
+
+### Tools
+
+Functions the AI can invoke:
+
+```json
+{
+  "name": "web_search",
+  "description": "Search the web for information",
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "query": {"type": "string"}
+    },
+    "required": ["query"]
+  }
+}
+```
+
+### Resources
+
+Data sources the AI can read:
+
+```json
+{
+  "uri": "file:///documents/report.pdf",
+  "name": "Quarterly Report",
+  "description": "Q4 2024 financial report",
+  "mimeType": "application/pdf"
+}
+```
+
+### Prompts
+
+Reusable prompt templates:
+
+```json
+{
+  "name": "summarize",
+  "description": "Summarize a document",
+  "arguments": [
+    {"name": "document", "required": true}
+  ]
+}
+```
+
+### Sampling
+
+Request LLM completions from the client:
+
+```python
+result = await session.create_message(
+    messages=[{"role": "user", "content": "Hello"}],
+    max_tokens=100
+)
+```
+
+---
+
+## Protocol Messages
+
+### Initialize
+
+```json
+// Request
+{
+  "jsonrpc": "2.0",
+  "method": "initialize",
+  "params": {
+    "protocolVersion": "2024-11-05",
+    "capabilities": {
+      "tools": {},
+      "resources": {}
+    },
+    "clientInfo": {"name": "my-app", "version": "1.0"}
+  },
+  "id": 1
+}
+
+// Response
+{
+  "jsonrpc": "2.0",
+  "result": {
+    "protocolVersion": "2024-11-05",
+    "capabilities": {"tools": {}, "resources": {}},
+    "serverInfo": {"name": "my-server", "version": "1.0"}
+  },
+  "id": 1
+}
+```
+
+### List Tools
+
+```json
+// Request
+{"jsonrpc": "2.0", "method": "tools/list", "id": 2}
+
+// Response
+{
+  "jsonrpc": "2.0",
+  "result": {
+    "tools": [
+      {"name": "web_search", "description": "...", "inputSchema": {...}}
+    ]
+  },
+  "id": 2
+}
+```
+
+### Call Tool
+
+```json
+// Request
+{
+  "jsonrpc": "2.0",
+  "method": "tools/call",
+  "params": {
+    "name": "web_search",
+    "arguments": {"query": "Python tutorials"}
+  },
+  "id": 3
+}
+
+// Response
+{
+  "jsonrpc": "2.0",
+  "result": {
+    "content": [{"type": "text", "text": "...results..."}]
+  },
+  "id": 3
+}
+```
+
+---
+
+## Transport Configuration
+
+### Stdio (Local)
+
+```json
+{
+  "mcpServers": {
+    "my-server": {
+      "command": "python",
+      "args": ["-m", "my_mcp_server"]
+    }
+  }
+}
+```
+
+### SSE (Remote)
+
+```json
+{
+  "mcpServers": {
+    "remote-server": {
+      "url": "https://api.example.com/mcp/sse"
+    }
+  }
+}
+```
+
+### WebSocket (Bidirectional)
+
+```json
+{
+  "mcpServers": {
+    "ws-server": {
+      "url": "wss://api.example.com/mcp/ws"
+    }
+  }
+}
+```
+
+---
+
+## Security Considerations
+
+1. **Authentication**: Use bearer tokens for remote connections
+2. **Authorization**: Validate permissions before tool execution
+3. **Input Validation**: Sanitize all tool arguments
+4. **Rate Limiting**: Prevent abuse of expensive operations
+
+---
+
+## Related Documentation
+
+- [MCP Server Guide](/guides/mcp-server)
+- [Client Integration Guide](/guides/client-integration)
+- [ADR-0082: MCP Client Capabilities](/architecture/adr-0082-mcp-client-capabilities)
+- [ADR-0069: MCP Specification Upgrade](/architecture/adr-0069-mcp-2025-11-25-upgrade)

@@ -1,0 +1,225 @@
+---
+title: 'Service Workers Guide'
+description: 'Implement service workers for PWA features, offline support, and push notifications'
+icon: 'gear'
+seoTitle: 'Service Workers for PWA - MCP Server LangGraph'
+seoDescription: 'Complete guide to service workers in Agent Studio. Enable offline support, push notifications, background sync, and caching strategies.'
+keywords:
+  - service workers
+  - PWA
+  - offline support
+  - push notifications
+  - caching
+  - background sync
+contentType: 'how-to'
+---
+
+# Service Workers Guide
+
+Enable Progressive Web App (PWA) features with service workers for offline support and push notifications.
+
+## Overview
+
+Service workers in Agent Studio provide:
+
+| Feature | Description |
+|---------|-------------|
+| **Offline Support** | Cache assets for offline use |
+| **Push Notifications** | Receive server-sent notifications |
+| **Background Sync** | Queue actions when offline |
+| **Caching Strategies** | Optimize load performance |
+
+---
+
+## Quick Start
+
+### Registration
+
+```typescript
+// src/utils/serviceWorker.ts
+export async function registerServiceWorker(): Promise<ServiceWorkerRegistration | null> {
+  if (!("serviceWorker" in navigator)) {
+    console.warn("Service workers not supported");
+    return null;
+  }
+
+  try {
+    const registration = await navigator.serviceWorker.register("/sw.js", {
+      scope: "/"
+    });
+
+    console.log("Service worker registered:", registration.scope);
+    return registration;
+  } catch (error) {
+    console.error("Service worker registration failed:", error);
+    return null;
+  }
+}
+```
+
+### Basic Service Worker
+
+```javascript
+// public/sw.js
+const CACHE_NAME = "agent-studio-v1";
+const STATIC_ASSETS = [
+  "/",
+  "/index.html",
+  "/manifest.json",
+  "/assets/app.js",
+  "/assets/app.css"
+];
+
+// Install event - cache static assets
+self.addEventListener("install", (event) => {
+  event.waitUntil(
+    caches.open(CACHE_NAME).then((cache) => {
+      return cache.addAll(STATIC_ASSETS);
+    })
+  );
+});
+
+// Fetch event - serve from cache, fallback to network
+self.addEventListener("fetch", (event) => {
+  event.respondWith(
+    caches.match(event.request).then((response) => {
+      return response || fetch(event.request);
+    })
+  );
+});
+```
+
+---
+
+## Caching Strategies
+
+### Cache First (Static Assets)
+
+```javascript
+async function cacheFirst(request) {
+  const cached = await caches.match(request);
+  if (cached) return cached;
+
+  const response = await fetch(request);
+  const cache = await caches.open(CACHE_NAME);
+  cache.put(request, response.clone());
+  return response;
+}
+```
+
+### Network First (API Calls)
+
+```javascript
+async function networkFirst(request) {
+  try {
+    const response = await fetch(request);
+    const cache = await caches.open(CACHE_NAME);
+    cache.put(request, response.clone());
+    return response;
+  } catch {
+    return caches.match(request);
+  }
+}
+```
+
+### Stale While Revalidate
+
+```javascript
+async function staleWhileRevalidate(request) {
+  const cached = await caches.match(request);
+
+  const fetchPromise = fetch(request).then((response) => {
+    caches.open(CACHE_NAME).then((cache) => {
+      cache.put(request, response.clone());
+    });
+    return response;
+  });
+
+  return cached || fetchPromise;
+}
+```
+
+---
+
+## Push Notifications
+
+### Subscribe to Push
+
+```typescript
+async function subscribeToPush(registration: ServiceWorkerRegistration) {
+  const subscription = await registration.pushManager.subscribe({
+    userVisibleOnly: true,
+    applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
+  });
+
+  // Send subscription to server
+  await fetch("/api/v1/push/subscribe", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(subscription)
+  });
+}
+```
+
+### Handle Push Events
+
+```javascript
+// sw.js
+self.addEventListener("push", (event) => {
+  const data = event.data?.json() ?? {};
+
+  event.waitUntil(
+    self.registration.showNotification(data.title, {
+      body: data.body,
+      icon: "/icon-192.png",
+      badge: "/badge-72.png",
+      data: data.url
+    })
+  );
+});
+
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+
+  if (event.notification.data) {
+    event.waitUntil(clients.openWindow(event.notification.data));
+  }
+});
+```
+
+---
+
+## Background Sync
+
+```javascript
+// Queue failed requests for retry
+self.addEventListener("sync", (event) => {
+  if (event.tag === "sync-messages") {
+    event.waitUntil(syncMessages());
+  }
+});
+
+async function syncMessages() {
+  const queue = await getQueuedMessages();
+
+  for (const message of queue) {
+    try {
+      await fetch("/api/v1/messages", {
+        method: "POST",
+        body: JSON.stringify(message)
+      });
+      await removeFromQueue(message.id);
+    } catch {
+      // Will retry on next sync
+    }
+  }
+}
+```
+
+---
+
+## Related Documentation
+
+- [Push Notifications Guide](/guides/push-notifications)
+- [Agent Studio Guide](/guides/studio)
+- [Security Best Practices](/security/best-practices)
