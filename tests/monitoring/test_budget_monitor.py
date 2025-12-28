@@ -33,10 +33,23 @@ pytestmark = pytest.mark.unit
 # ==============================================================================
 
 
+def _create_mock_cost_collector() -> MagicMock:
+    """Create a mock cost collector for testing BudgetMonitor without database."""
+    mock = MagicMock()  # noqa: async-mock-config (methods configured below)
+    mock.get_cost_summary = AsyncMock(return_value={"total_cost_usd": Decimal("0.00")})
+    return mock
+
+
 @pytest.fixture
-def budget_monitor():
-    """Create a fresh BudgetMonitor instance for testing."""
-    return BudgetMonitor()
+def mock_cost_collector() -> MagicMock:
+    """Fixture providing a mock cost collector for tests."""
+    return _create_mock_cost_collector()
+
+
+@pytest.fixture
+def budget_monitor(mock_cost_collector):
+    """Create a fresh BudgetMonitor instance for testing with mocked storage."""
+    return BudgetMonitor(cost_collector=mock_cost_collector)
 
 
 @pytest.fixture
@@ -403,6 +416,7 @@ class TestEmailAlerts:
             smtp_password="password",
             email_from="alerts@example.com",
             email_to=["recipient@example.com"],
+            cost_collector=_create_mock_cost_collector(),
         )
 
         with patch.object(monitor, "_send_smtp", new=MagicMock()) as mock_send_smtp:
@@ -424,7 +438,7 @@ class TestEmailAlerts:
     async def test_send_email_alert_skips_when_smtp_not_configured(self):
         """Test _send_email_alert() skips sending when SMTP not configured."""
         # Arrange
-        monitor = BudgetMonitor()  # No SMTP config
+        monitor = BudgetMonitor(cost_collector=_create_mock_cost_collector())  # No SMTP config
 
         with patch.object(monitor, "_send_smtp", new=MagicMock()) as mock_send_smtp:
             # Act
@@ -442,6 +456,7 @@ class TestEmailAlerts:
             smtp_host="smtp.example.com",
             email_from="alerts@example.com",
             email_to=["recipient@example.com"],
+            cost_collector=_create_mock_cost_collector(),
         )
 
         with patch.object(monitor, "_send_smtp", new=MagicMock()) as mock_send_smtp:
@@ -483,7 +498,10 @@ class TestWebhookAlerts:
         import httpx
 
         # Arrange
-        monitor = BudgetMonitor(webhook_url="https://hooks.slack.com/services/ABC123")
+        monitor = BudgetMonitor(
+            webhook_url="https://hooks.slack.com/services/ABC123",
+            cost_collector=_create_mock_cost_collector(),
+        )
 
         # Mock response - raise_for_status is sync in httpx
         mock_response = MagicMock(spec=httpx.Response)
@@ -523,7 +541,7 @@ class TestWebhookAlerts:
     async def test_send_webhook_alert_skips_when_webhook_not_configured(self):
         """Test _send_webhook_alert() skips sending when webhook URL not configured."""
         # Arrange
-        monitor = BudgetMonitor()  # No webhook URL
+        monitor = BudgetMonitor(cost_collector=_create_mock_cost_collector())  # No webhook URL
 
         # Create mock client with proper async context manager protocol
         mock_client = MagicMock()
@@ -547,7 +565,10 @@ class TestWebhookAlerts:
         Uses AsyncMock with proper context manager protocol for xdist isolation.
         """
         # Arrange
-        monitor = BudgetMonitor(webhook_url="https://example.com/webhook")
+        monitor = BudgetMonitor(
+            webhook_url="https://example.com/webhook",
+            cost_collector=_create_mock_cost_collector(),
+        )
 
         # Mock response - raise_for_status is sync in httpx
         mock_response = MagicMock()
@@ -714,3 +735,533 @@ async def test_get_alerts_filters_by_budget_id(budget_monitor):
             # Assert
             assert len(alerts) == 1
             assert alerts[0].budget_id == "budget_001"
+
+
+# ==============================================================================
+# Test Error Handling for SMTP and Webhook
+# ==============================================================================
+
+
+@pytest.mark.xdist_group(name="budget_error_handling_tests")
+class TestBudgetAlertErrorHandling:
+    """Test suite for error handling in SMTP and webhook alerts."""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers."""
+        gc.collect()
+
+    @pytest.mark.unit
+    @pytest.mark.asyncio
+    async def test_send_alert_catches_smtp_exception(self):
+        """
+        GIVEN SMTP configuration with a failing SMTP server
+        WHEN send_alert() is called
+        THEN SMTP exception is caught and logged (not propagated)
+        """
+        # Arrange - mock cost collector to avoid storage initialization
+        mock_cost_collector = MagicMock()
+        monitor = BudgetMonitor(
+            smtp_host="smtp.failing.com",
+            email_from="alerts@example.com",
+            email_to=["recipient@example.com"],
+            cost_collector=mock_cost_collector,
+        )
+
+        with (
+            patch.object(
+                monitor, "_send_email_alert", new_callable=AsyncMock, side_effect=Exception("SMTP connection refused")
+            ),
+            patch("mcp_server_langgraph.monitoring.budget_monitor.logger") as mock_logger,
+        ):
+            # Act - should NOT raise exception
+            await monitor.send_alert(level="critical", message="Budget exceeded", budget_id="budget_001", utilization=95.0)
+
+            # Assert - exception was logged
+            mock_logger.exception.assert_called_once()
+            assert "Failed to send email alert" in str(mock_logger.exception.call_args)
+
+    @pytest.mark.unit
+    @pytest.mark.asyncio
+    async def test_send_alert_catches_webhook_exception(self):
+        """
+        GIVEN webhook configuration with a failing webhook endpoint
+        WHEN send_alert() is called
+        THEN webhook exception is caught and logged (not propagated)
+        """
+        # Arrange - mock cost collector to avoid storage initialization
+        mock_cost_collector = MagicMock()
+        monitor = BudgetMonitor(
+            webhook_url="https://hooks.failing.com/webhook",
+            cost_collector=mock_cost_collector,
+        )
+
+        with (
+            patch.object(monitor, "_send_webhook_alert", new_callable=AsyncMock, side_effect=Exception("Connection timeout")),
+            patch("mcp_server_langgraph.monitoring.budget_monitor.logger") as mock_logger,
+        ):
+            # Act - should NOT raise exception
+            await monitor.send_alert(level="critical", message="Budget exceeded", budget_id="budget_001", utilization=95.0)
+
+            # Assert - exception was logged
+            mock_logger.exception.assert_called_once()
+            assert "Failed to send webhook alert" in str(mock_logger.exception.call_args)
+
+    @pytest.mark.unit
+    @pytest.mark.asyncio
+    async def test_send_alert_logging_succeeds_when_smtp_and_webhook_fail(self):
+        """
+        GIVEN both SMTP and webhook configured but failing
+        WHEN send_alert() is called
+        THEN logging alert still succeeds (fallback)
+        """
+        # Arrange - mock cost collector to avoid storage initialization
+        mock_cost_collector = MagicMock()
+        monitor = BudgetMonitor(
+            smtp_host="smtp.failing.com",
+            email_from="alerts@example.com",
+            email_to=["recipient@example.com"],
+            webhook_url="https://hooks.failing.com/webhook",
+            cost_collector=mock_cost_collector,
+        )
+
+        with (
+            patch.object(monitor, "_send_email_alert", new_callable=AsyncMock, side_effect=Exception("SMTP error")),
+            patch.object(monitor, "_send_webhook_alert", new_callable=AsyncMock, side_effect=Exception("Webhook error")),
+            patch("mcp_server_langgraph.monitoring.budget_monitor.logger") as mock_logger,
+        ):
+            # Act - should NOT raise exception
+            await monitor.send_alert(level="critical", message="Budget exceeded", budget_id="budget_001", utilization=95.0)
+
+            # Assert - both errors were logged, general alert log succeeded
+            assert mock_logger.exception.call_count == 2  # SMTP + webhook
+            mock_logger.log.assert_called()  # Alert logged via logger.log()
+
+    @pytest.mark.unit
+    @pytest.mark.asyncio
+    async def test_send_email_alert_handles_smtp_auth_error(self):
+        """
+        GIVEN SMTP with invalid credentials
+        WHEN _send_email_alert() is called
+        THEN authentication error is raised (caller handles it)
+        """
+        import smtplib
+
+        # Arrange - mock cost collector to avoid storage initialization
+        mock_cost_collector = MagicMock()
+        monitor = BudgetMonitor(
+            smtp_host="smtp.example.com",
+            smtp_username="invalid_user",
+            smtp_password="invalid_password",
+            email_from="alerts@example.com",
+            email_to=["recipient@example.com"],
+            cost_collector=mock_cost_collector,
+        )
+
+        with patch.object(monitor, "_send_smtp", side_effect=smtplib.SMTPAuthenticationError(535, b"Authentication failed")):
+            # Act & Assert - exception is raised (caught by send_alert)
+            with pytest.raises(smtplib.SMTPAuthenticationError):
+                await monitor._send_email_alert(
+                    level="warning", message="Budget alert", budget_id="budget_001", utilization=80.0
+                )
+
+    @pytest.mark.unit
+    @pytest.mark.asyncio
+    async def test_send_webhook_alert_handles_http_error(self):
+        """
+        GIVEN webhook endpoint returning HTTP 500
+        WHEN _send_webhook_alert() is called
+        THEN HTTP error is raised (caller handles it)
+        """
+        import httpx
+
+        # Arrange - mock cost collector to avoid storage initialization
+        mock_cost_collector = MagicMock()
+        monitor = BudgetMonitor(
+            webhook_url="https://hooks.example.com/webhook",
+            cost_collector=mock_cost_collector,
+        )
+
+        # Mock HTTP 500 response
+        mock_response = MagicMock(spec=httpx.Response)
+        mock_response.status_code = 500
+        mock_response.raise_for_status = MagicMock(
+            side_effect=httpx.HTTPStatusError("Server Error", request=MagicMock(), response=mock_response)
+        )
+
+        mock_client = MagicMock()
+        mock_client.post = AsyncMock(return_value=mock_response)
+
+        mock_async_client_class = MagicMock()
+        mock_async_client_class.return_value.__aenter__ = AsyncMock(return_value=mock_client)
+        mock_async_client_class.return_value.__aexit__ = AsyncMock(return_value=None)
+
+        with patch("mcp_server_langgraph.monitoring.budget_monitor.httpx.AsyncClient", mock_async_client_class):
+            # Act & Assert - exception is raised (caught by send_alert)
+            with pytest.raises(httpx.HTTPStatusError):
+                await monitor._send_webhook_alert(
+                    level="critical", message="Budget exceeded", budget_id="budget_001", utilization=95.0
+                )
+
+    @pytest.mark.unit
+    @pytest.mark.asyncio
+    async def test_send_webhook_alert_handles_connection_timeout(self):
+        """
+        GIVEN webhook endpoint with connection timeout
+        WHEN _send_webhook_alert() is called
+        THEN timeout error is raised (caller handles it)
+        """
+        import httpx
+
+        # Arrange - mock cost collector to avoid storage initialization
+        mock_cost_collector = MagicMock()
+        monitor = BudgetMonitor(
+            webhook_url="https://hooks.example.com/webhook",
+            cost_collector=mock_cost_collector,
+        )
+
+        mock_client = MagicMock()
+        mock_client.post = AsyncMock(side_effect=httpx.ConnectTimeout("Connection timeout"))
+
+        mock_async_client_class = MagicMock()
+        mock_async_client_class.return_value.__aenter__ = AsyncMock(return_value=mock_client)
+        mock_async_client_class.return_value.__aexit__ = AsyncMock(return_value=None)
+
+        with patch("mcp_server_langgraph.monitoring.budget_monitor.httpx.AsyncClient", mock_async_client_class):
+            # Act & Assert - exception is raised (caught by send_alert)
+            with pytest.raises(httpx.ConnectTimeout):
+                await monitor._send_webhook_alert(
+                    level="critical", message="Budget exceeded", budget_id="budget_001", utilization=95.0
+                )
+
+
+# ==============================================================================
+# Test Singleton Pattern for get_budget_monitor()
+# ==============================================================================
+
+
+@pytest.mark.xdist_group(name="budget_singleton_tests")
+class TestBudgetMonitorSingleton:
+    """Test suite for get_budget_monitor() singleton pattern."""
+
+    def teardown_method(self):
+        """Reset singleton and force GC after each test."""
+        from mcp_server_langgraph.monitoring.budget_monitor import _reset_budget_monitor
+
+        _reset_budget_monitor()
+        gc.collect()
+
+    @pytest.mark.unit
+    def test_get_budget_monitor_returns_same_instance(self):
+        """
+        GIVEN get_budget_monitor() is called multiple times
+        WHEN comparing returned instances
+        THEN they should be the same object (singleton)
+        """
+        with patch("mcp_server_langgraph.monitoring.cost_storage_factory.get_cost_storage_backend") as mock_storage:
+            mock_storage.return_value = MagicMock()
+
+            from mcp_server_langgraph.monitoring.budget_monitor import get_budget_monitor
+
+            # Act
+            instance1 = get_budget_monitor()
+            instance2 = get_budget_monitor()
+
+            # Assert - same object
+            assert instance1 is instance2
+
+    @pytest.mark.unit
+    def test_get_budget_monitor_returns_budget_monitor_instance(self):
+        """
+        GIVEN get_budget_monitor() is called
+        WHEN checking the return type
+        THEN it should be a BudgetMonitor instance
+        """
+        with patch("mcp_server_langgraph.monitoring.cost_storage_factory.get_cost_storage_backend") as mock_storage:
+            mock_storage.return_value = MagicMock()
+
+            from mcp_server_langgraph.monitoring.budget_monitor import get_budget_monitor
+
+            # Act
+            instance = get_budget_monitor()
+
+            # Assert
+            assert isinstance(instance, BudgetMonitor)
+
+    @pytest.mark.unit
+    def test_reset_budget_monitor_clears_singleton(self):
+        """
+        GIVEN a singleton BudgetMonitor exists
+        WHEN _reset_budget_monitor() is called
+        THEN subsequent get_budget_monitor() creates a new instance
+        """
+        with patch("mcp_server_langgraph.monitoring.cost_storage_factory.get_cost_storage_backend") as mock_storage:
+            mock_storage.return_value = MagicMock()
+
+            from mcp_server_langgraph.monitoring.budget_monitor import (
+                get_budget_monitor,
+                _reset_budget_monitor,
+            )
+
+            # Arrange - create initial instance
+            instance1 = get_budget_monitor()
+
+            # Act - reset and get new instance
+            _reset_budget_monitor()
+            instance2 = get_budget_monitor()
+
+            # Assert - different objects
+            assert instance1 is not instance2
+
+    @pytest.mark.unit
+    def test_singleton_preserves_budgets(self):
+        """
+        GIVEN a budget is created via the singleton
+        WHEN get_budget_monitor() is called again
+        THEN the budget should still exist
+        """
+        import asyncio
+
+        with patch("mcp_server_langgraph.monitoring.cost_storage_factory.get_cost_storage_backend") as mock_storage:
+            mock_storage.return_value = MagicMock()
+
+            from mcp_server_langgraph.monitoring.budget_monitor import get_budget_monitor
+
+            # Arrange - create a budget
+            monitor = get_budget_monitor()
+            asyncio.get_event_loop().run_until_complete(
+                monitor.create_budget(
+                    id="test_singleton_budget",
+                    name="Test Budget",
+                    limit_usd=Decimal("500.00"),
+                    period=BudgetPeriod.MONTHLY,
+                )
+            )
+
+            # Act - get singleton again
+            same_monitor = get_budget_monitor()
+
+            # Assert - budget still exists
+            budget = asyncio.get_event_loop().run_until_complete(same_monitor.get_budget("test_singleton_budget"))
+            assert budget is not None
+            assert budget.name == "Test Budget"
+
+
+# ==============================================================================
+# Test Concurrent Operations
+# ==============================================================================
+
+
+@pytest.mark.xdist_group(name="budget_concurrent_tests")
+class TestBudgetMonitorConcurrentOperations:
+    """Test suite for concurrent operations on BudgetMonitor.
+
+    Validates that asyncio.Lock correctly protects shared state when
+    multiple coroutines access the same BudgetMonitor instance concurrently.
+    """
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers."""
+        gc.collect()
+
+    @pytest.mark.unit
+    @pytest.mark.asyncio
+    async def test_concurrent_budget_creation(self):
+        """
+        GIVEN multiple coroutines creating budgets concurrently
+        WHEN all coroutines complete
+        THEN all budgets should be stored without data corruption
+        """
+        import asyncio
+
+        # Arrange - mock cost collector to avoid storage initialization
+        mock_cost_collector = MagicMock()
+        monitor = BudgetMonitor(cost_collector=mock_cost_collector)
+
+        async def create_budget(i: int):
+            return await monitor.create_budget(
+                id=f"concurrent_budget_{i}",
+                name=f"Concurrent Budget {i}",
+                limit_usd=Decimal(f"{100 + i}.00"),
+                period=BudgetPeriod.MONTHLY,
+            )
+
+        # Act - create 20 budgets concurrently
+        tasks = [create_budget(i) for i in range(20)]
+        budgets = await asyncio.gather(*tasks)
+
+        # Assert - all budgets created with correct data
+        assert len(budgets) == 20
+
+        all_budgets = await monitor.get_all_budgets()
+        assert len(all_budgets) == 20
+
+        for i in range(20):
+            budget = await monitor.get_budget(f"concurrent_budget_{i}")
+            assert budget is not None
+            assert budget.name == f"Concurrent Budget {i}"
+            assert budget.limit_usd == Decimal(f"{100 + i}.00")
+
+    @pytest.mark.unit
+    @pytest.mark.asyncio
+    async def test_concurrent_check_budget_calls(self):
+        """
+        GIVEN a budget exists and multiple check_budget calls run concurrently
+        WHEN all check_budget calls complete
+        THEN alerts are triggered correctly without duplicate alerting
+        """
+        import asyncio
+
+        # Arrange - mock cost collector to avoid storage initialization
+        mock_cost_collector = MagicMock()
+        monitor = BudgetMonitor(cost_collector=mock_cost_collector)
+
+        await monitor.create_budget(
+            id="concurrent_check_budget",
+            name="Concurrent Check Budget",
+            limit_usd=Decimal("1000.00"),
+            period=BudgetPeriod.MONTHLY,
+        )
+
+        with (
+            patch.object(monitor, "get_period_spend", new_callable=AsyncMock, return_value=Decimal("800.00")),
+            patch.object(monitor, "send_alert", new_callable=AsyncMock),
+        ):
+            # Act - 10 concurrent check_budget calls
+            tasks = [monitor.check_budget("concurrent_check_budget") for _ in range(10)]
+            results = await asyncio.gather(*tasks)
+
+            # Assert - only one alert triggered (threshold only fires once)
+            alerts_triggered = [r for r in results if r is not None]
+            assert len(alerts_triggered) == 1
+            assert alerts_triggered[0].budget_id == "concurrent_check_budget"
+
+    @pytest.mark.unit
+    @pytest.mark.asyncio
+    async def test_concurrent_get_budget_status(self):
+        """
+        GIVEN a budget exists and multiple get_budget_status calls run concurrently
+        WHEN all calls complete
+        THEN all return consistent budget status (no data races)
+        """
+        import asyncio
+
+        # Arrange - mock cost collector to avoid storage initialization
+        mock_cost_collector = MagicMock()
+        monitor = BudgetMonitor(cost_collector=mock_cost_collector)
+
+        await monitor.create_budget(
+            id="concurrent_status_budget",
+            name="Concurrent Status Budget",
+            limit_usd=Decimal("1000.00"),
+            period=BudgetPeriod.MONTHLY,
+        )
+
+        with patch.object(monitor, "get_period_spend", new_callable=AsyncMock, return_value=Decimal("500.00")):
+            # Act - 15 concurrent get_budget_status calls
+            tasks = [monitor.get_budget_status("concurrent_status_budget") for _ in range(15)]
+            statuses = await asyncio.gather(*tasks)
+
+            # Assert - all statuses consistent
+            assert all(s is not None for s in statuses)
+            assert all(s.spent_usd == Decimal("500.00") for s in statuses)
+            assert all(s.utilization == Decimal("0.5") for s in statuses)
+            assert all(s.remaining_usd == Decimal("500.00") for s in statuses)
+
+    @pytest.mark.unit
+    @pytest.mark.asyncio
+    async def test_concurrent_create_and_read_budgets(self):
+        """
+        GIVEN writers creating budgets and readers reading budgets concurrently
+        WHEN all operations complete
+        THEN no data races occur and all operations succeed
+        """
+        import asyncio
+
+        # Arrange - mock cost collector to avoid storage initialization
+        mock_cost_collector = MagicMock()
+        monitor = BudgetMonitor(cost_collector=mock_cost_collector)
+
+        results = {"reads_none": 0, "reads_found": 0, "creates_done": 0}
+
+        async def create_budget(i: int):
+            await monitor.create_budget(
+                id=f"mixed_budget_{i}",
+                name=f"Mixed Budget {i}",
+                limit_usd=Decimal("100.00"),
+                period=BudgetPeriod.DAILY,
+            )
+            results["creates_done"] += 1
+
+        async def read_budget(i: int):
+            budget = await monitor.get_budget(f"mixed_budget_{i}")
+            if budget is None:
+                results["reads_none"] += 1
+            else:
+                results["reads_found"] += 1
+
+        # Act - interleave creates and reads
+        tasks = []
+        for i in range(10):
+            tasks.append(create_budget(i))
+            tasks.append(read_budget(i))
+
+        await asyncio.gather(*tasks)
+
+        # Assert - all creates completed, no exceptions
+        assert results["creates_done"] == 10
+
+        # All budgets exist after completion
+        all_budgets = await monitor.get_all_budgets()
+        assert len(all_budgets) == 10
+
+    @pytest.mark.unit
+    @pytest.mark.asyncio
+    async def test_concurrent_reset_budget(self):
+        """
+        GIVEN a budget with alerted thresholds
+        WHEN reset_budget is called concurrently with check_budget
+        THEN no deadlock occurs and operations complete
+        """
+        import asyncio
+
+        # Arrange - mock cost collector to avoid storage initialization
+        mock_cost_collector = MagicMock()
+        monitor = BudgetMonitor(cost_collector=mock_cost_collector)
+
+        await monitor.create_budget(
+            id="reset_concurrent_budget",
+            name="Reset Concurrent Budget",
+            limit_usd=Decimal("1000.00"),
+            period=BudgetPeriod.MONTHLY,
+        )
+
+        # Trigger initial alert
+        with (
+            patch.object(monitor, "get_period_spend", new_callable=AsyncMock, return_value=Decimal("800.00")),
+            patch.object(monitor, "send_alert", new_callable=AsyncMock),
+        ):
+            await monitor.check_budget("reset_concurrent_budget")
+
+        async def reset_loop():
+            for _ in range(5):
+                await monitor.reset_budget("reset_concurrent_budget")
+                await asyncio.sleep(0.001)
+
+        async def check_loop():
+            with (
+                patch.object(monitor, "get_period_spend", new_callable=AsyncMock, return_value=Decimal("800.00")),
+                patch.object(monitor, "send_alert", new_callable=AsyncMock),
+            ):
+                for _ in range(5):
+                    await monitor.check_budget("reset_concurrent_budget")
+                    await asyncio.sleep(0.001)
+
+        # Act - run reset and check concurrently (should not deadlock)
+        await asyncio.wait_for(
+            asyncio.gather(reset_loop(), check_loop()),
+            timeout=5.0,  # Deadlock would timeout
+        )
+
+        # Assert - completed without deadlock (reaching this line is success)
+        budget = await monitor.get_budget("reset_concurrent_budget")
+        assert budget is not None

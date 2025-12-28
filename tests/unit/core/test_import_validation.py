@@ -136,11 +136,20 @@ def test_budget_monitor_accepts_none_cost_collector():
     FAILS when: Type annotations cause import errors
     PASSES when: Imports are correct and Optional works properly
     """
+    from unittest.mock import MagicMock, patch
+
     from mcp_server_langgraph.monitoring.budget_monitor import BudgetMonitor
 
-    # Should accept None (Optional parameter)
-    monitor = BudgetMonitor(cost_collector=None)
-    assert monitor is not None
+    # Mock CostMetricsCollector at the source (cost_tracker) to avoid database connection
+    mock_collector_class = MagicMock()
+    mock_collector_class.return_value = MagicMock()  # The instance returned when called
+    with patch(
+        "mcp_server_langgraph.monitoring.cost_tracker.CostMetricsCollector",
+        mock_collector_class,
+    ):
+        # Should accept None (Optional parameter) - fallback to mock collector
+        monitor = BudgetMonitor(cost_collector=None)
+        assert monitor is not None
 
 
 def test_all_critical_modules_import_without_errors():

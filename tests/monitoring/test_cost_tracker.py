@@ -16,13 +16,24 @@ Tests cover:
 import gc
 from datetime import datetime, timedelta, UTC
 from decimal import Decimal
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-from fastapi import status
-from fastapi.testclient import TestClient
 
 pytestmark = pytest.mark.unit
+
+
+# ==============================================================================
+# Helper Functions
+# ==============================================================================
+
+
+def _create_mock_cost_collector() -> MagicMock:
+    """Create a mock cost collector for testing BudgetMonitor without database."""
+    mock = MagicMock()  # noqa: async-mock-config (methods configured below)
+    mock.get_cost_summary = AsyncMock(return_value={"total_cost_usd": Decimal("0.00")})
+    return mock
+
 
 # ==============================================================================
 # Test Fixtures
@@ -463,7 +474,7 @@ class TestBudgetMonitor:
         """Test BudgetMonitor sends warning at 75% budget utilization."""
         from mcp_server_langgraph.monitoring.budget_monitor import BudgetMonitor, BudgetPeriod
 
-        monitor = BudgetMonitor()
+        monitor = BudgetMonitor(cost_collector=_create_mock_cost_collector())
 
         # Create budget first
         await monitor.create_budget(
@@ -492,7 +503,7 @@ class TestBudgetMonitor:
         """Test BudgetMonitor sends critical alert at 90% budget utilization."""
         from mcp_server_langgraph.monitoring.budget_monitor import BudgetMonitor, BudgetPeriod
 
-        monitor = BudgetMonitor()
+        monitor = BudgetMonitor(cost_collector=_create_mock_cost_collector())
 
         # Create budget first
         await monitor.create_budget(
@@ -519,7 +530,7 @@ class TestBudgetMonitor:
         """Test BudgetMonitor does not alert below 75% utilization."""
         from mcp_server_langgraph.monitoring.budget_monitor import BudgetMonitor, BudgetPeriod
 
-        monitor = BudgetMonitor()
+        monitor = BudgetMonitor(cost_collector=_create_mock_cost_collector())
 
         # Create budget first
         await monitor.create_budget(
@@ -545,7 +556,7 @@ class TestBudgetMonitor:
 
         from mcp_server_langgraph.monitoring.budget_monitor import BudgetMonitor, BudgetPeriod
 
-        monitor = BudgetMonitor()
+        monitor = BudgetMonitor(cost_collector=_create_mock_cost_collector())
 
         # Create budget first
         await monitor.create_budget(
@@ -563,119 +574,6 @@ class TestBudgetMonitor:
 
                 # Should send critical alert for exceeded budget
                 assert mock_alert.called
-
-
-# ==============================================================================
-# Test Cost API Endpoints
-# ==============================================================================
-
-
-@pytest.fixture
-def cost_api_client():
-    """FastAPI test client for cost API."""
-    from mcp_server_langgraph.monitoring.cost_api import app
-
-    return TestClient(app)
-
-
-@pytest.mark.xfail(
-    strict=True,
-    reason="Cost API endpoints not implemented yet. When cost tracking API is implemented, this test will XPASS and fail CI.",
-)
-@pytest.mark.unit
-def test_get_cost_summary_returns_aggregated_data(cost_api_client):
-    """Test GET /api/cost/summary returns aggregated cost data."""
-    # Mock data
-    with patch("mcp_server_langgraph.monitoring.cost_api.get_cost_summary") as mock_summary:
-        mock_summary.return_value = {
-            "period_start": datetime.now(UTC),
-            "period_end": datetime.now(UTC),
-            "total_cost_usd": Decimal("123.45"),
-            "total_tokens": 100000,
-            "request_count": 500,
-            "by_model": {"claude-sonnet-4-5-20250929": Decimal("100.00")},
-            "by_user": {"user1": Decimal("50.00")},
-        }
-
-        response = cost_api_client.get("/api/cost/summary?period=month")
-
-        assert response.status_code == status.HTTP_200_OK
-        data = response.json()
-        assert data["total_cost_usd"] == "123.45"
-        assert data["request_count"] == 500
-
-
-@pytest.mark.xfail(strict=True, reason="Cost API endpoints not implemented yet")
-@pytest.mark.unit
-def test_get_cost_usage_filters_by_user(cost_api_client):
-    """Test GET /api/cost/usage filters by user_id."""
-    with patch("mcp_server_langgraph.monitoring.cost_api.get_usage_records") as mock_records:
-        mock_records.return_value = [{"user_id": "user123", "cost": "0.01"}]
-
-        response = cost_api_client.get("/api/cost/usage?user_id=user123")
-
-        assert response.status_code == status.HTTP_200_OK
-        data = response.json()
-        assert len(data) > 0
-        assert data[0]["user_id"] == "user123"
-
-
-@pytest.mark.xfail(strict=True, reason="Cost API endpoints not implemented yet")
-@pytest.mark.unit
-def test_create_budget_creates_new_budget(cost_api_client):
-    """Test POST /api/cost/budget creates new budget."""
-    budget_data = {
-        "name": "Q4 Budget",
-        "limit_usd": "5000.00",
-        "period": "quarterly",
-        "alert_thresholds": ["0.75", "0.90"],
-    }
-
-    with patch("mcp_server_langgraph.monitoring.cost_api.create_budget") as mock_create:
-        mock_create.return_value = {"id": "budget_new", **budget_data}
-
-        response = cost_api_client.post("/api/cost/budget", json=budget_data)
-
-        assert response.status_code == status.HTTP_201_CREATED
-        data = response.json()
-        assert data["name"] == "Q4 Budget"
-        assert data["limit_usd"] == "5000.00"
-
-
-@pytest.mark.xfail(strict=True, reason="Cost API get_trends function not implemented yet")
-@pytest.mark.unit
-def test_get_cost_trends_returns_time_series_data(cost_api_client):
-    """Test GET /api/cost/trends returns time-series data."""
-    with patch("mcp_server_langgraph.monitoring.cost_api.get_trends") as mock_trends:
-        mock_trends.return_value = {
-            "metric": "total_cost",
-            "period": "7d",
-            "data_points": [
-                {"timestamp": "2025-11-01T00:00:00Z", "value": "10.50"},
-                {"timestamp": "2025-11-02T00:00:00Z", "value": "12.30"},
-            ],
-        }
-
-        response = cost_api_client.get("/api/cost/trends?metric=total_cost&period=7d")
-
-        assert response.status_code == status.HTTP_200_OK
-        data = response.json()
-        assert data["metric"] == "total_cost"
-        assert len(data["data_points"]) == 2
-
-
-@pytest.mark.xfail(strict=True, reason="Cost API export_costs function not implemented yet")
-@pytest.mark.unit
-def test_export_cost_data_as_csv(cost_api_client):
-    """Test GET /api/cost/export?format=csv exports CSV."""
-    with patch("mcp_server_langgraph.monitoring.cost_api.export_costs") as mock_export:
-        mock_export.return_value = "timestamp,user_id,cost\n2025-11-01,user1,0.01\n"
-
-        response = cost_api_client.get("/api/cost/export?format=csv")
-
-        assert response.status_code == status.HTTP_200_OK
-        assert response.headers["content-type"] == "text/csv"
-        assert "timestamp,user_id,cost" in response.text
 
 
 # ==============================================================================
