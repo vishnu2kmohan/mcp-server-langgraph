@@ -1716,3 +1716,67 @@ class TestFeatureFlagConsolidation:
         flags = FeatureFlags()
         # The deprecated flag should not exist
         assert not hasattr(flags, "enable_multi_agent_collaboration")
+
+    # =========================================================================
+    # Deprecation Warning Tests
+    # =========================================================================
+
+    @pytest.mark.unit
+    def test_deprecated_enable_llm_suggestions_false_emits_warning(self):
+        """Test that setting enable_llm_suggestions=False emits a deprecation warning."""
+        import warnings
+
+        from mcp_server_langgraph.core.feature_flags import FeatureFlags
+
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            FeatureFlags(enable_llm_suggestions=False)
+
+            # Should emit a deprecation warning
+            deprecation_warnings = [warning for warning in w if issubclass(warning.category, DeprecationWarning)]
+            assert len(deprecation_warnings) >= 1
+            assert "enable_llm_suggestions" in str(deprecation_warnings[0].message)
+            assert "suggestion_strategy" in str(deprecation_warnings[0].message)
+
+    @pytest.mark.unit
+    def test_deprecated_enable_llm_suggestions_true_does_not_emit_warning(self):
+        """Test that enable_llm_suggestions=True (default) does not emit a warning."""
+        import warnings
+
+        from mcp_server_langgraph.core.feature_flags import FeatureFlags
+
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            FeatureFlags(enable_llm_suggestions=True)
+
+            # Should NOT emit a deprecation warning for the default value
+            deprecation_warnings = [
+                warning
+                for warning in w
+                if issubclass(warning.category, DeprecationWarning) and "enable_llm_suggestions" in str(warning.message)
+            ]
+            assert len(deprecation_warnings) == 0
+
+    @pytest.mark.unit
+    def test_check_deprecation_warnings_method_returns_warnings(self):
+        """Test check_deprecation_warnings returns list of warning messages."""
+        from mcp_server_langgraph.core.feature_flags import FeatureFlags
+
+        flags = FeatureFlags(enable_llm_suggestions=False)
+        warnings_list = flags.check_deprecation_warnings()
+
+        assert isinstance(warnings_list, list)
+        assert len(warnings_list) >= 1
+        assert any("enable_llm_suggestions" in msg for msg in warnings_list)
+
+    @pytest.mark.unit
+    def test_check_deprecation_warnings_empty_for_non_deprecated_usage(self):
+        """Test check_deprecation_warnings returns empty list when no deprecated flags used."""
+        from mcp_server_langgraph.core.feature_flags import FeatureFlags
+
+        flags = FeatureFlags(suggestion_strategy="hybrid")
+        warnings_list = flags.check_deprecation_warnings()
+
+        assert isinstance(warnings_list, list)
+        # Should not have warnings for non-deprecated flag usage
+        assert not any("enable_llm_suggestions" in msg for msg in warnings_list)
