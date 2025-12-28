@@ -452,6 +452,63 @@ logging.getLogger("mcp_server_langgraph.websocket").setLevel(logging.DEBUG)
 
 The `/api/v1/ws/mcp/aggregated` endpoint provides real-time notifications when MCP server capabilities change.
 
+### Data Flow Sequence
+
+```
+┌──────────────┐     ┌─────────────────────┐     ┌────────────────────┐     ┌─────────────────┐     ┌────────────────┐
+│  MCP Server  │     │ CachedUnifiedRegistry│    │ MCPAggregated      │     │  WebSocket      │     │  React Frontend│
+│  (External)  │     │ (Cache + Broadcaster)│    │ Broadcaster        │     │  Connection     │     │  Hook          │
+└──────┬───────┘     └──────────┬───────────┘    └─────────┬──────────┘     └────────┬────────┘     └───────┬────────┘
+       │                        │                          │                         │                      │
+       │  Register/Update       │                          │                         │                      │
+       │───────────────────────>│                          │                         │                      │
+       │                        │                          │                         │                      │
+       │                        │  Invalidate Cache        │                         │                      │
+       │                        │─────────┐                │                         │                      │
+       │                        │         │                │                         │                      │
+       │                        │<────────┘                │                         │                      │
+       │                        │                          │                         │                      │
+       │                        │  broadcast_tools_changed │                         │                      │
+       │                        │────────────────────────>│                          │                      │
+       │                        │                          │                         │                      │
+       │                        │                          │  JSON-RPC 2.0 Message   │                      │
+       │                        │                          │  notifications/tools/   │                      │
+       │                        │                          │  list_changed           │                      │
+       │                        │                          │───────────────────────>│                       │
+       │                        │                          │                         │                      │
+       │                        │                          │                         │  WebSocket Message   │
+       │                        │                          │                         │─────────────────────>│
+       │                        │                          │                         │                      │
+       │                        │                          │                         │                      │  Update UI
+       │                        │                          │                         │                      │─────────┐
+       │                        │                          │                         │                      │         │
+       │                        │                          │                         │                      │<────────┘
+       │                        │                          │                         │                      │
+```
+
+**Flow Description:**
+
+1. **MCP Server Registration**: External MCP server registers or updates its capabilities
+2. **Cache Invalidation**: `CachedUnifiedRegistry` invalidates relevant cache entries
+3. **Broadcast Event**: Registry calls `broadcaster.broadcast_tools_changed()` (or resources/prompts)
+4. **JSON-RPC 2.0**: `MCPAggregatedBroadcaster` formats as MCP Protocol 2025-11-25 notification
+5. **WebSocket Delivery**: Message sent to all connected clients on `/ws/mcp/aggregated`
+6. **Frontend Update**: `useMCPAggregatedUpdates` hook receives and processes the event
+
+### Wiring at Application Startup
+
+The broadcaster is wired to the registry during FastAPI lifespan startup:
+
+```python
+# In app_factory.py create_lifespan()
+from mcp_server_langgraph.mcp.client.cached_unified_registry import get_cached_unified_registry
+from mcp_server_langgraph.websocket.registry import get_mcp_aggregated_broadcaster
+
+cached_registry = get_cached_unified_registry()
+mcp_broadcaster = get_mcp_aggregated_broadcaster()
+cached_registry.set_broadcaster(mcp_broadcaster)
+```
+
 ### Message Format
 
 All messages use **MCP JSON-RPC 2.0** format as per [MCP Protocol 2025-11-25](https://modelcontextprotocol.io/specification/2025-11-25):
