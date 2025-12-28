@@ -17,7 +17,7 @@ Reference: MCP Protocol 2025-11-25 capability aggregation
 from __future__ import annotations
 
 from dataclasses import asdict, is_dataclass
-from typing import TYPE_CHECKING, Any, Protocol, runtime_checkable
+from typing import TYPE_CHECKING, Any, Protocol, cast, runtime_checkable
 
 from mcp_server_langgraph.observability.telemetry import logger
 
@@ -290,7 +290,7 @@ class CachedUnifiedRegistry:
                     "Cache hit for tools",
                     extra={"cache_key": cache_key, "count": len(cached)},
                 )
-                return cached
+                return cast(list[dict[str, Any]], cached)
         except Exception as e:
             logger.warning(
                 "Cache get failed for tools, falling back to registry",
@@ -338,7 +338,7 @@ class CachedUnifiedRegistry:
                     "Cache hit for resources",
                     extra={"cache_key": cache_key, "count": len(cached)},
                 )
-                return cached
+                return cast(list[dict[str, Any]], cached)
         except Exception as e:
             logger.warning(
                 "Cache get failed for resources, falling back to registry",
@@ -386,7 +386,7 @@ class CachedUnifiedRegistry:
                     "Cache hit for prompts",
                     extra={"cache_key": cache_key, "count": len(cached)},
                 )
-                return cached
+                return cast(list[dict[str, Any]], cached)
         except Exception as e:
             logger.warning(
                 "Cache get failed for prompts, falling back to registry",
@@ -428,7 +428,7 @@ class CachedUnifiedRegistry:
                     "Cache hit for server names",
                     extra={"cache_key": cache_key, "count": len(cached)},
                 )
-                return cached
+                return cast(list[str], cached)
         except Exception as e:
             logger.warning(
                 "Cache get failed for server names, falling back to registry",
@@ -475,7 +475,7 @@ class CachedUnifiedRegistry:
                     "Cache hit for server capabilities",
                     extra={"cache_key": cache_key, "server_name": server_name},
                 )
-                return cached
+                return cast(dict[str, int], cached)
         except Exception as e:
             logger.warning(
                 "Cache get failed for server capabilities, falling back to registry",

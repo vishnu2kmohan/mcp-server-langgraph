@@ -278,6 +278,7 @@ class WorkflowServiceAdapter:
         return {
             "id": workflow.id,
             "name": workflow.name,
+            "title": workflow_data.get("title"),  # Pass through title from request
             "description": workflow.description,
             "nodes": workflow.nodes,
             "edges": workflow.edges,
@@ -313,6 +314,7 @@ class WorkflowServiceAdapter:
         return {
             "id": workflow.id,
             "name": workflow.name,
+            "title": workflow_data.get("title"),  # Pass through title from request
             "description": workflow.description,
             "nodes": workflow.nodes,
             "edges": workflow.edges,
