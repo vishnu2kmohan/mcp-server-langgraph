@@ -189,6 +189,7 @@ class ArtifactCreateResponse(BaseModel):
     id: str
     version: int
     created_at: str
+    description: str = ""
 
 
 class ArtifactUpdateResponse(BaseModel):
@@ -197,6 +198,7 @@ class ArtifactUpdateResponse(BaseModel):
     id: str
     version: int
     updated_at: str
+    description: str = ""
 
 
 class ArtifactForkResponse(BaseModel):
