@@ -115,6 +115,13 @@ class FeatureFlags(BaseSettings):
         description="Enable streaming responses for real-time output",
     )
 
+    enable_llm_factory_streaming: bool = Field(
+        default=False,
+        description="Use LLMFactory.astream() for streaming instead of direct litellm. "
+        "Provides resilience patterns (bulkhead, circuit breaker, retry). "
+        "Default False for gradual rollout.",
+    )
+
     llm_timeout_seconds: int = Field(
         default=60,
         ge=10,
@@ -1328,7 +1335,7 @@ class FeatureFlags(BaseSettings):
 
         return self.is_feature_enabled(feature_name)
 
-    def get_ui_features_for_role(self, role: str) -> dict[str, bool]:
+    def get_ui_features_for_role(self, role: str) -> dict[str, bool | str]:
         """
         Get UI feature availability based on user role.
 

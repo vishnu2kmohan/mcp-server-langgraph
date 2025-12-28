@@ -9,6 +9,15 @@ Usage:
     POST /api/v1/chat/completions - Create a chat completion
     POST /api/v1/chat/completions/stream - Create a streaming chat completion
     GET /api/v1/chat/{session_id}/history - Get chat history for a session
+
+LLM Integration:
+    This module supports both streaming methods:
+    - _stream_via_llm_factory(): Uses LLMFactory.astream() with resilience patterns
+      (bulkhead isolation, structured error handling, OTEL tracing)
+    - _stream_via_litellm(): Direct litellm.acompletion (legacy fallback)
+
+    Cost tracking is handled automatically via LiteLLM's CostTrackingCallback
+    registered in llm/factory.py.
 """
 
 from collections.abc import AsyncIterator
@@ -22,42 +31,14 @@ from opentelemetry import trace
 from pydantic import BaseModel, Field
 
 from mcp_server_langgraph.core.config import settings
-from mcp_server_langgraph.monitoring.cost_tracker import get_cost_collector
-from datetime import UTC
+from mcp_server_langgraph.core.feature_flags import feature_flags
 
 if TYPE_CHECKING:
     pass
 
-
-def _infer_provider_from_model(model_name: str) -> str:
-    """
-    Infer the LLM provider from the model name for cost tracking.
-
-    Args:
-        model_name: The model name to analyze
-
-    Returns:
-        Provider string: "openai", "anthropic", "google", "azure", or "unknown"
-    """
-    model_lower = model_name.lower()
-
-    # Azure models (prefixed with azure/) - check first since azure/gpt-4 contains "gpt-"
-    if model_lower.startswith("azure/"):
-        return "azure"
-
-    # OpenAI models
-    if any(prefix in model_lower for prefix in ["gpt-", "o1-", "chatgpt-", "text-davinci", "text-embedding"]):
-        return "openai"
-
-    # Anthropic models
-    if any(prefix in model_lower for prefix in ["claude-", "claude3"]):
-        return "anthropic"
-
-    # Google models
-    if any(prefix in model_lower for prefix in ["gemini-", "palm-", "bison", "gecko"]):
-        return "google"
-
-    return "unknown"
+# Note: Cost tracking is now handled automatically by CostTrackingCallback
+# registered in llm/factory.py. No manual record_usage() calls needed here.
+# The callback uses LiteLLM's response_cost as the authoritative source.
 
 
 chat_router = APIRouter(tags=["chat"])
@@ -252,6 +233,7 @@ class ChatServiceImpl(ChatService):
         session_storage: Any | None = None,
         mcp_bridge: Any | None = None,
         langgraph_agent: Any | None = None,
+        llm_factory: Any | None = None,
     ) -> None:
         """
         Initialize with optional dependencies.
@@ -263,10 +245,13 @@ class ChatServiceImpl(ChatService):
                         If None, uses LiteLLM as fallback.
             langgraph_agent: Optional compiled LangGraph agent for astream_events.
                              If provided, enables real-time node/edge streaming.
+            llm_factory: Optional LLMFactory instance for streaming via astream().
+                         If None, falls back to direct litellm.acompletion.
         """
         self._session_storage = session_storage
         self._mcp_bridge = mcp_bridge
         self._langgraph_agent = langgraph_agent
+        self._llm_factory = llm_factory
 
     @property
     def mcp_bridge(self) -> Any | None:
@@ -276,6 +261,15 @@ class ChatServiceImpl(ChatService):
 
             self._mcp_bridge = get_mcp_bridge()
         return self._mcp_bridge
+
+    @property
+    def llm_factory(self) -> Any | None:
+        """Get the LLM factory, lazily initializing if needed."""
+        if self._llm_factory is None:
+            from mcp_server_langgraph.llm.factory import create_llm_from_config
+
+            self._llm_factory = create_llm_from_config(settings)
+        return self._llm_factory
 
     def _get_current_trace_id(self) -> str | None:
         """Get the current OpenTelemetry trace ID for observability correlation.
@@ -448,6 +442,10 @@ class ChatServiceImpl(ChatService):
             user_id=kwargs.get("user_id"),
             request_id=kwargs.get("request_id"),
             feature="chat",
+            # Organizational hierarchy for cost attribution
+            organization_id=kwargs.get("organization_id"),
+            project_id=kwargs.get("project_id"),
+            team_id=kwargs.get("team_id"),
         )
 
         response = await acompletion(**completion_params)
@@ -466,43 +464,11 @@ class ChatServiceImpl(ChatService):
                 "total_tokens": getattr(response.usage, "total_tokens", None),
             }
 
-            # Record cost to CostMetricsCollector for /api/v1/cost endpoints
-            # This enables the /studio/cost page to display accurate usage data
-            try:
-                from datetime import datetime
-
-                user_id = kwargs.get("user_id", "anonymous")
-                actual_model = response.model or model
-                provider = _infer_provider_from_model(actual_model)
-
-                # Get trace context for cost attribution
-                trace_id = self._get_current_trace_id()
-                workflow_id = kwargs.get("workflow_id")
-                orchestrator_id = kwargs.get("orchestrator_id")
-                request_id = kwargs.get("request_id")
-
-                collector = get_cost_collector()
-                await collector.record_usage(
-                    timestamp=datetime.now(UTC),
-                    user_id=user_id,
-                    session_id=session_id,
-                    model=actual_model,
-                    provider=provider,
-                    prompt_tokens=response.usage.prompt_tokens,
-                    completion_tokens=response.usage.completion_tokens,
-                    feature="chat",
-                    # Distributed tracing fields for cost attribution
-                    trace_id=trace_id,
-                    workflow_id=workflow_id,
-                    orchestrator_id=orchestrator_id,
-                    request_id=request_id,
-                )
-            except Exception:
-                # Cost tracking errors should not fail the completion
-                # Log but continue - observability is best-effort
-                from mcp_server_langgraph.observability.telemetry import logger
-
-                logger.warning("Failed to record cost usage", exc_info=True)
+            # Cost tracking is now handled automatically by CostTrackingCallback
+            # registered in llm/factory.py. The callback uses LiteLLM's response_cost
+            # as the authoritative source and extracts organizational context from
+            # completion_params["metadata"] (built by build_otel_metadata above).
+            # Reference: Plan Phase 1 - LiteLLM Cost Integration via Custom Callback
 
         # Extract thinking content from response if available
         # LiteLLM returns thinking content in different ways:
@@ -597,13 +563,66 @@ class ChatServiceImpl(ChatService):
                     },
                 }
 
+    async def _stream_via_llm_factory(
+        self,
+        session_id: str,
+        messages: list[dict[str, Any]],
+        **kwargs: Any,
+    ) -> AsyncIterator[dict[str, Any]]:
+        """
+        Stream completion using LLMFactory.astream().
+
+        This uses the resilience-enhanced LLMFactory for streaming,
+        providing bulkhead isolation and structured error handling.
+
+        Args:
+            session_id: Session identifier for tracing
+            messages: List of chat messages
+            **kwargs: Additional parameters (temperature, max_tokens, etc.)
+
+        Yields:
+            dict: Delta content dictionaries with optional thinking
+        """
+        from langchain_core.messages import HumanMessage, SystemMessage
+
+        # Convert dict messages to LangChain messages
+        langchain_messages = []
+        for msg in messages:
+            role = msg.get("role", "user")
+            content = msg.get("content", "")
+            if role == "system":
+                langchain_messages.append(SystemMessage(content=content))
+            else:
+                langchain_messages.append(HumanMessage(content=content))
+
+        factory = self.llm_factory
+        if not factory:
+            # Fallback to litellm if factory not available
+            async for chunk in self._stream_via_litellm(session_id, messages, **kwargs):
+                yield chunk
+            return
+
+        async for chunk in factory.astream(langchain_messages, **kwargs):
+            # Only yield non-final chunks (final chunk typically has empty content)
+            chunk_data: dict[str, Any] = {
+                "delta": {
+                    "content": chunk.content,
+                },
+            }
+
+            # Include thinking content if present
+            if chunk.thinking:
+                chunk_data["delta"]["thinking"] = chunk.thinking
+
+            yield chunk_data
+
     async def _stream_via_litellm(
         self,
         session_id: str,
         messages: list[dict[str, Any]],
         **kwargs: Any,
     ) -> AsyncIterator[dict[str, Any]]:
-        """Stream completion using LiteLLM directly."""
+        """Stream completion using LiteLLM directly (legacy fallback)."""
         model = kwargs.get("model") or settings.model_name
         temperature = kwargs.get("temperature", 0.7)
         max_tokens = kwargs.get("max_tokens")
@@ -640,6 +659,10 @@ class ChatServiceImpl(ChatService):
             user_id=kwargs.get("user_id"),
             request_id=kwargs.get("request_id"),
             feature="chat_stream",
+            # Organizational hierarchy for cost attribution
+            organization_id=kwargs.get("organization_id"),
+            project_id=kwargs.get("project_id"),
+            team_id=kwargs.get("team_id"),
         )
 
         response = await acompletion(**completion_params)
@@ -830,9 +853,18 @@ class ChatServiceImpl(ChatService):
                     yield chunk
                 return
             except ChatError as e:
-                logger.warning(f"MCP streaming failed, falling back to LiteLLM: {e}")
+                logger.warning(f"MCP streaming failed, falling back: {e}")
 
-        # Fallback to LiteLLM
+        # Use LLMFactory streaming if feature flag enabled (provides resilience patterns)
+        if feature_flags.enable_llm_factory_streaming:
+            try:
+                async for chunk in self._stream_via_llm_factory(session_id, messages, **kwargs):
+                    yield chunk
+                return
+            except Exception as e:
+                logger.warning(f"LLMFactory streaming failed, falling back to LiteLLM: {e}")
+
+        # Fallback to direct LiteLLM (legacy path)
         async for chunk in self._stream_via_litellm(session_id, messages, **kwargs):
             yield chunk
 

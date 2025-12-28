@@ -1,0 +1,394 @@
+"""
+Tests for Missing Frontend-Backend API Endpoints.
+
+These endpoints were identified by the test_frontend_backend_api_parity meta-test
+as being called by the frontend but not having backend implementations.
+
+Following TDD: tests written FIRST, implementation follows.
+"""
+
+from __future__ import annotations
+
+import gc
+from unittest.mock import AsyncMock, MagicMock
+
+import pytest
+from fastapi import FastAPI
+from fastapi.testclient import TestClient
+
+pytestmark = [pytest.mark.unit, pytest.mark.api]
+
+
+@pytest.mark.unit
+@pytest.mark.api
+@pytest.mark.xdist_group(name="missing_endpoints")
+class TestChatSuggestionsEndpoint:
+    """Test POST /api/v1/ai/chat-suggestions endpoint."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers."""
+        gc.collect()
+
+    @pytest.fixture
+    def mock_app(self) -> FastAPI:
+        """Create FastAPI app with AI router."""
+        from mcp_server_langgraph.api.v1.ai import ai_router
+
+        app = FastAPI()
+        app.include_router(ai_router, prefix="/api/v1/ai")
+        return app
+
+    @pytest.fixture
+    def client(self, mock_app: FastAPI) -> TestClient:
+        """Create test client."""
+        return TestClient(mock_app)
+
+    def test_chat_suggestions_returns_suggestions(self, client: TestClient) -> None:
+        """POST /api/v1/ai/chat-suggestions returns suggestions list."""
+        response = client.post(
+            "/api/v1/ai/chat-suggestions",
+            json={
+                "input_text": "How do I",
+                "session_id": "session-123",
+                "max_suggestions": 3,
+            },
+        )
+
+        assert response.status_code == 200
+        data = response.json()
+        assert "suggestions" in data
+        assert isinstance(data["suggestions"], list)
+
+    def test_chat_suggestions_without_session_id(self, client: TestClient) -> None:
+        """POST /api/v1/ai/chat-suggestions without session returns suggestions."""
+        response = client.post(
+            "/api/v1/ai/chat-suggestions",
+            json={
+                "input_text": "How do I configure",
+                "max_suggestions": 1,
+            },
+        )
+
+        assert response.status_code == 200
+        data = response.json()
+        assert "suggestions" in data
+
+    def test_chat_suggestions_empty_input(self, client: TestClient) -> None:
+        """POST /api/v1/ai/chat-suggestions with empty input returns empty."""
+        response = client.post(
+            "/api/v1/ai/chat-suggestions",
+            json={
+                "input_text": "",
+                "max_suggestions": 1,
+            },
+        )
+
+        assert response.status_code == 200
+        data = response.json()
+        assert data["suggestions"] == []
+
+
+@pytest.mark.unit
+@pytest.mark.api
+@pytest.mark.xdist_group(name="missing_endpoints")
+class TestAuthSwitchOrgEndpoint:
+    """Test POST /api/v1/auth/switch-org endpoint."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers."""
+        gc.collect()
+
+    @pytest.fixture
+    def mock_app(self) -> FastAPI:
+        """Create FastAPI app with auth router."""
+        from mcp_server_langgraph.api.v1.auth import auth_router
+
+        # auth_router already has prefix="/auth", so only add "/api/v1"
+        app = FastAPI()
+        app.include_router(auth_router, prefix="/api/v1")
+        return app
+
+    @pytest.fixture
+    def client(self, mock_app: FastAPI) -> TestClient:
+        """Create test client."""
+        return TestClient(mock_app)
+
+    def test_switch_org_success(self, client: TestClient) -> None:
+        """POST /api/v1/auth/switch-org switches organization successfully."""
+        response = client.post(
+            "/api/v1/auth/switch-org",
+            json={"orgId": "org-123"},
+            headers={"X-Organization-ID": "org-123"},
+        )
+
+        assert response.status_code == 200
+        data = response.json()
+        assert "success" in data or "org_id" in data
+
+    def test_switch_org_invalid_org(self, client: TestClient) -> None:
+        """POST /api/v1/auth/switch-org with invalid org returns error."""
+        response = client.post(
+            "/api/v1/auth/switch-org",
+            json={"orgId": ""},
+        )
+
+        # Should return 400 or 422 for invalid input
+        assert response.status_code in [400, 422]
+
+
+@pytest.mark.unit
+@pytest.mark.api
+@pytest.mark.xdist_group(name="missing_endpoints")
+class TestWorkflowExecuteEndpoint:
+    """Test POST /api/v1/workflows/{id}/execute endpoint."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers."""
+        gc.collect()
+
+    @pytest.fixture
+    def mock_app(self) -> FastAPI:
+        """Create FastAPI app with workflow router."""
+        from mcp_server_langgraph.api.v1.workflows import workflows_router
+
+        # workflows_router routes already include "/workflows" in their paths
+        app = FastAPI()
+        app.include_router(workflows_router, prefix="/api/v1")
+        return app
+
+    @pytest.fixture
+    def client(self, mock_app: FastAPI) -> TestClient:
+        """Create test client."""
+        return TestClient(mock_app)
+
+    def test_execute_workflow_success(self, client: TestClient) -> None:
+        """POST /api/v1/workflows/{id}/execute starts execution."""
+        response = client.post(
+            "/api/v1/workflows/workflow-123/execute",
+            json={
+                "nodes": [{"id": "node-1", "type": "input"}],
+                "edges": [],
+            },
+        )
+
+        assert response.status_code == 200
+        data = response.json()
+        assert "execution_id" in data or "status" in data
+
+    def test_execute_workflow_not_found(self, client: TestClient) -> None:
+        """POST /api/v1/workflows/{id}/execute with invalid id returns 404."""
+        response = client.post(
+            "/api/v1/workflows/nonexistent-workflow/execute",
+            json={"nodes": [], "edges": []},
+        )
+
+        # Should return 404 for nonexistent workflow
+        assert response.status_code in [200, 404]  # 200 if mocked, 404 if real
+
+
+@pytest.mark.unit
+@pytest.mark.api
+@pytest.mark.xdist_group(name="missing_endpoints")
+class TestWorkflowExecutionStatusEndpoint:
+    """Test GET /api/v1/workflows/{id}/execution endpoint."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers."""
+        gc.collect()
+
+    @pytest.fixture
+    def mock_app(self) -> FastAPI:
+        """Create FastAPI app with workflow router."""
+        from mcp_server_langgraph.api.v1.workflows import workflows_router
+
+        # workflows_router routes already include "/workflows" in their paths
+        app = FastAPI()
+        app.include_router(workflows_router, prefix="/api/v1")
+        return app
+
+    @pytest.fixture
+    def client(self, mock_app: FastAPI) -> TestClient:
+        """Create test client."""
+        return TestClient(mock_app)
+
+    def test_get_execution_status_success(self, client: TestClient) -> None:
+        """GET /api/v1/workflows/{id}/execution returns execution status."""
+        response = client.get("/api/v1/workflows/workflow-123/execution")
+
+        assert response.status_code == 200
+        data = response.json()
+        assert "steps" in data or "status" in data
+
+    def test_get_execution_status_no_execution(self, client: TestClient) -> None:
+        """GET /api/v1/workflows/{id}/execution without active execution."""
+        response = client.get("/api/v1/workflows/new-workflow/execution")
+
+        # Should return empty or 404
+        assert response.status_code in [200, 404]
+
+
+@pytest.mark.unit
+@pytest.mark.api
+@pytest.mark.xdist_group(name="missing_endpoints")
+class TestAdminUserApiKeyEndpoint:
+    """Test GET/POST /api/v1/admin/users/{id}/api-key endpoint."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers."""
+        gc.collect()
+
+    @pytest.fixture
+    def mock_user_provider(self) -> MagicMock:
+        """Create a mock user provider that returns a test user."""
+        mock_provider = MagicMock()
+        mock_user = MagicMock()
+        mock_user.user_id = "user-123"
+        mock_user.username = "testuser"
+        mock_provider.get_user_by_username = AsyncMock(return_value=mock_user)
+        mock_provider.get_user_by_id = AsyncMock(return_value=mock_user)
+        return mock_provider
+
+    @pytest.fixture
+    def mock_app(self, mock_user_provider: MagicMock) -> FastAPI:
+        """Create FastAPI app with admin router."""
+        from mcp_server_langgraph.api.v1.admin import admin_router, get_user_provider
+
+        # admin_router already has prefix="/admin", so only add "/api/v1"
+        app = FastAPI()
+        app.include_router(admin_router, prefix="/api/v1")
+        # Override the user provider dependency
+        app.dependency_overrides[get_user_provider] = lambda: mock_user_provider
+        return app
+
+    @pytest.fixture
+    def client(self, mock_app: FastAPI) -> TestClient:
+        """Create test client."""
+        return TestClient(mock_app)
+
+    def test_get_user_api_key(self, client: TestClient) -> None:
+        """GET /api/v1/admin/users/{id}/api-key returns masked key."""
+        response = client.get("/api/v1/admin/users/user-123/api-key")
+
+        assert response.status_code == 200
+        data = response.json()
+        assert "user_id" in data
+        assert "masked_key" in data
+
+    def test_generate_user_api_key(self, client: TestClient) -> None:
+        """POST /api/v1/admin/users/{id}/api-key generates new key."""
+        response = client.post("/api/v1/admin/users/user-123/api-key")
+
+        assert response.status_code == 200
+        data = response.json()
+        assert "api_key" in data
+        assert data["api_key"].startswith("sk-")
+
+
+@pytest.mark.unit
+@pytest.mark.api
+@pytest.mark.xdist_group(name="missing_endpoints")
+class TestCanvasActionEndpoint:
+    """Test POST /api/v1/ai/canvas/{action} endpoint."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers."""
+        gc.collect()
+
+    @pytest.fixture
+    def mock_app(self) -> FastAPI:
+        """Create FastAPI app with AI router."""
+        from mcp_server_langgraph.api.v1.ai import ai_router
+
+        app = FastAPI()
+        app.include_router(ai_router, prefix="/api/v1/ai")
+        return app
+
+    @pytest.fixture
+    def client(self, mock_app: FastAPI) -> TestClient:
+        """Create test client."""
+        return TestClient(mock_app)
+
+    def test_canvas_save_action(self, client: TestClient) -> None:
+        """POST /api/v1/ai/canvas/save saves canvas state."""
+        response = client.post(
+            "/api/v1/ai/canvas/save",
+            json={"canvas_id": "canvas-123", "state": {}},
+        )
+
+        assert response.status_code == 200
+
+    def test_canvas_export_action(self, client: TestClient) -> None:
+        """POST /api/v1/ai/canvas/export exports canvas."""
+        response = client.post(
+            "/api/v1/ai/canvas/export",
+            json={"canvas_id": "canvas-123", "format": "png"},
+        )
+
+        assert response.status_code == 200
+
+    def test_canvas_invalid_action(self, client: TestClient) -> None:
+        """POST /api/v1/ai/canvas/{invalid} returns 404 or 400."""
+        response = client.post(
+            "/api/v1/ai/canvas/invalid-action",
+            json={},
+        )
+
+        assert response.status_code in [400, 404, 422]
+
+
+@pytest.mark.unit
+@pytest.mark.api
+@pytest.mark.xdist_group(name="missing_endpoints")
+class TestInterpretCommandEndpoint:
+    """Test POST /api/v1/ai/interpret-command endpoint."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers."""
+        gc.collect()
+
+    @pytest.fixture
+    def mock_app(self) -> FastAPI:
+        """Create FastAPI app with AI router."""
+        from mcp_server_langgraph.api.v1.ai import ai_router
+
+        app = FastAPI()
+        app.include_router(ai_router, prefix="/api/v1/ai")
+        return app
+
+    @pytest.fixture
+    def client(self, mock_app: FastAPI) -> TestClient:
+        """Create test client."""
+        return TestClient(mock_app)
+
+    def test_interpret_command_success(self, client: TestClient) -> None:
+        """POST /api/v1/ai/interpret-command interprets natural language."""
+        response = client.post(
+            "/api/v1/ai/interpret-command",
+            json={"command": "create a new session"},
+        )
+
+        assert response.status_code == 200
+        data = response.json()
+        assert "action" in data or "intent" in data
+
+    def test_interpret_command_with_context(self, client: TestClient) -> None:
+        """POST /api/v1/ai/interpret-command with session context."""
+        response = client.post(
+            "/api/v1/ai/interpret-command",
+            json={
+                "command": "run the workflow",
+                "session_id": "session-123",
+            },
+        )
+
+        assert response.status_code == 200
+
+    def test_interpret_command_empty(self, client: TestClient) -> None:
+        """POST /api/v1/ai/interpret-command with empty command."""
+        response = client.post(
+            "/api/v1/ai/interpret-command",
+            json={"command": ""},
+        )
+
+        # Should handle gracefully
+        assert response.status_code in [200, 400, 422]

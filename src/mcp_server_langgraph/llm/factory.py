@@ -16,6 +16,8 @@ from __future__ import annotations
 
 import asyncio
 import os
+from collections.abc import AsyncIterator
+from dataclasses import dataclass
 from enum import Enum
 from typing import TYPE_CHECKING, Any, assert_never
 
@@ -23,10 +25,17 @@ if TYPE_CHECKING:
     from mcp_server_langgraph.core.hook_registry import HookDispatcher
 
 from langchain_core.messages import AIMessage, BaseMessage, HumanMessage, SystemMessage
+import litellm
 from litellm import acompletion
 from litellm.utils import ModelResponse  # type: ignore[attr-defined]
 
 from mcp_server_langgraph.core.container import TelemetryProvider
+from mcp_server_langgraph.monitoring.litellm_cost_callback import CostTrackingCallback
+
+# Register LiteLLM cost tracking callback for automatic cost recording
+# Uses LiteLLM's response_cost as authoritative source (no manual pricing table needed)
+# Reference: Plan Phase 1 - LiteLLM Cost Integration via Custom Callback
+litellm.callbacks = [CostTrackingCallback()]
 from mcp_server_langgraph.core.exceptions import (
     LLMModelNotFoundError,
     LLMOverloadError,
@@ -47,6 +56,33 @@ from mcp_server_langgraph.resilience.retry import extract_retry_after_from_excep
 FALLBACK_BASE_DELAY_SECONDS = 1.0  # Initial delay between fallback attempts
 FALLBACK_DELAY_MULTIPLIER = 2.0  # Exponential multiplier
 FALLBACK_MAX_DELAY_SECONDS = 8.0  # Cap for fallback delays
+
+
+# ==============================================================================
+# StreamChunk Model for Streaming Responses
+# ==============================================================================
+
+
+@dataclass
+class StreamChunk:
+    """
+    A chunk from a streaming LLM response.
+
+    Used by LLMFactory.astream() to yield structured streaming data.
+
+    Attributes:
+        content: The text content of this chunk
+        chunk_index: Zero-based index of this chunk in the stream
+        is_final: Whether this is the final chunk in the stream
+        thinking: Optional reasoning/thinking content (for extended thinking models)
+        finish_reason: Optional finish reason (typically on final chunk)
+    """
+
+    content: str
+    chunk_index: int
+    is_final: bool
+    thinking: str | None = None
+    finish_reason: str | None = None
 
 
 # ==============================================================================
@@ -481,6 +517,10 @@ class LLMFactory:
             span.set_attribute("bulkhead.current_limit", adaptive_bulkhead.current_limit)
             span.set_attribute("bulkhead.error_rate", adaptive_bulkhead.get_error_rate())
 
+            # Extract known parameters with defaults
+            known_params = {"temperature", "max_tokens", "timeout", "hook_context"}
+            extra_kwargs = {k: v for k, v in kwargs.items() if k not in known_params}
+
             params = {
                 "model": self.model_name,
                 "messages": formatted_messages,
@@ -488,6 +528,7 @@ class LLMFactory:
                 "max_tokens": kwargs.get("max_tokens", self.max_tokens),
                 "timeout": kwargs.get("timeout", self.timeout),
                 **self.kwargs,
+                **extra_kwargs,  # Pass through additional kwargs (e.g., response_format)
             }
 
             # Use adaptive bulkhead semaphore to enforce concurrency limit
@@ -681,6 +722,229 @@ class LLMFactory:
 
         msg = "All async models failed including fallbacks"
         raise RuntimeError(msg)
+
+    async def astream(
+        self,
+        messages: list[BaseMessage | dict[str, Any]],
+        **kwargs: Any,
+    ) -> AsyncIterator[StreamChunk]:
+        """
+        Asynchronous streaming LLM invocation with resilience.
+
+        Phase 2 implementation (streaming-aware resilience):
+        - Yields StreamChunk objects with content, thinking, and metadata
+        - Uses bulkhead for concurrency control (held for entire stream)
+        - Pre-first-chunk retry: Retries on connection failure BEFORE first chunk
+        - No retry after first chunk (streaming semantics - caller may have consumed)
+        - First-chunk timeout: Configurable timeout for first chunk arrival
+        - Inter-chunk timeout: Configurable timeout between subsequent chunks
+        - Circuit breaker updated on connection failure only
+
+        Args:
+            messages: List of messages (LangChain BaseMessage or dict)
+            **kwargs: Additional parameters:
+                - temperature: Sampling temperature
+                - max_tokens: Maximum tokens to generate
+                - first_chunk_timeout: Timeout in seconds for first chunk (default: None)
+                - inter_chunk_timeout: Timeout in seconds between chunks (default: None)
+                - enable_retry: Enable pre-first-chunk retry (default: False)
+                - max_retries: Maximum retry attempts before first chunk (default: 3)
+
+        Yields:
+            StreamChunk: Structured streaming response chunks
+
+        Raises:
+            LLMProviderError: On connection or provider errors
+            TimeoutError: If first_chunk_timeout or inter_chunk_timeout is exceeded
+            CircuitBreakerOpenError: If circuit breaker is open
+            BulkheadRejectedError: If too many concurrent LLM calls
+        """
+        import asyncio
+        import time
+
+        # Extract resilience parameters from kwargs
+        first_chunk_timeout = kwargs.pop("first_chunk_timeout", None)
+        inter_chunk_timeout = kwargs.pop("inter_chunk_timeout", None)
+        enable_retry = kwargs.pop("enable_retry", False)
+        max_retries = kwargs.pop("max_retries", 3)
+
+        start_time = time.perf_counter()
+
+        with self.telemetry.tracer.start_as_current_span("llm.astream") as span:
+            # OTEL GenAI semantic conventions
+            span.set_attribute("gen_ai.system", self.provider)
+            span.set_attribute("gen_ai.request.model", self.model_name)
+            span.set_attribute("llm.streaming", True)
+
+            formatted_messages = self._format_messages(messages)
+
+            # Rate limiting
+            rate_limit_bucket = get_provider_token_bucket(self.provider)
+            await rate_limit_bucket.acquire(timeout=30.0)
+
+            # Get adaptive bulkhead
+            adaptive_bulkhead = get_provider_adaptive_bulkhead(self.provider)
+            semaphore = adaptive_bulkhead.get_semaphore()
+
+            # Build completion parameters
+            params = {
+                "model": self.model_name,
+                "messages": formatted_messages,
+                "temperature": kwargs.get("temperature", self.temperature),
+                "max_tokens": kwargs.get("max_tokens", self.max_tokens),
+                "timeout": kwargs.get("timeout", self.timeout),
+                "stream": True,
+                **self.kwargs,
+            }
+
+            try:
+                async with semaphore:
+                    # Retry logic: only retry BEFORE first chunk is yielded
+                    attempt = 0
+                    last_exception: Exception | None = None
+                    response = None
+
+                    while attempt <= max_retries if enable_retry else attempt == 0:
+                        try:
+                            response = await acompletion(**params)
+                            break  # Success, exit retry loop
+                        except Exception as e:
+                            last_exception = e
+                            attempt += 1
+                            if not enable_retry or attempt > max_retries:
+                                raise  # Re-raise if retry disabled or exhausted
+                            # Log retry attempt
+                            self.telemetry.logger.warning(
+                                f"Streaming connection attempt {attempt} failed, retrying: {e}",
+                                extra={"model": self.model_name, "provider": self.provider},
+                            )
+                            # Small backoff before retry
+                            await asyncio.sleep(0.1 * attempt)
+
+                    if response is None:
+                        raise last_exception or RuntimeError("Failed to get streaming response")
+
+                    chunk_index = 0
+                    first_chunk_received = False
+                    response_iter = response.__aiter__()
+
+                    while True:
+                        try:
+                            # Apply appropriate timeout based on whether we've received first chunk
+                            if not first_chunk_received and first_chunk_timeout is not None:
+                                chunk = await asyncio.wait_for(
+                                    response_iter.__anext__(),
+                                    timeout=first_chunk_timeout,
+                                )
+                            elif first_chunk_received and inter_chunk_timeout is not None:
+                                chunk = await asyncio.wait_for(
+                                    response_iter.__anext__(),
+                                    timeout=inter_chunk_timeout,
+                                )
+                            else:
+                                chunk = await response_iter.__anext__()
+
+                            first_chunk_received = True
+
+                        except StopAsyncIteration:
+                            break  # Stream complete
+                        except TimeoutError:
+                            # Re-raise as TimeoutError for cleaner API
+                            timeout_type = "first_chunk" if not first_chunk_received else "inter_chunk"
+                            raise TimeoutError(f"Streaming {timeout_type} timeout exceeded")
+
+                        if chunk.choices:
+                            delta = chunk.choices[0].delta
+                            finish_reason = chunk.choices[0].finish_reason
+
+                            # Extract content
+                            content = ""
+                            if hasattr(delta, "content") and delta.content:
+                                content = delta.content
+
+                            # Extract thinking/reasoning content
+                            thinking = None
+                            if hasattr(delta, "reasoning_content") and delta.reasoning_content:
+                                thinking = delta.reasoning_content
+                            elif hasattr(delta, "thinking") and delta.thinking:
+                                thinking = delta.thinking
+
+                            is_final = finish_reason is not None
+
+                            yield StreamChunk(
+                                content=content,
+                                chunk_index=chunk_index,
+                                is_final=is_final,
+                                thinking=thinking,
+                                finish_reason=finish_reason,
+                            )
+
+                            chunk_index += 1
+
+                    # Record success metrics
+                    duration_ms = (time.perf_counter() - start_time) * 1000
+                    record_llm_request_duration(self.model_name, duration_ms, self.provider)
+                    adaptive_bulkhead.record_success()
+                    self.telemetry.metrics.successful_calls.add(1, {"operation": "llm.astream", "model": self.model_name})
+
+            except Exception as e:
+                # Record failure for adaptive bulkhead
+                adaptive_bulkhead.record_error()
+
+                error_msg = str(e).lower()
+
+                # Convert to custom exceptions
+                if is_overload_error(e):
+                    retry_after = extract_retry_after_from_exception(e)
+                    raise LLMOverloadError(
+                        message=f"LLM provider overloaded: {e}",
+                        retry_after=retry_after,
+                        metadata={
+                            "model": self.model_name,
+                            "provider": self.provider,
+                            "streaming": True,
+                        },
+                        cause=e,
+                    )
+                elif "rate limit" in error_msg or "429" in error_msg:
+                    retry_after = extract_retry_after_from_exception(e)
+                    raise LLMRateLimitError(
+                        message=f"LLM provider rate limit exceeded: {e}",
+                        retry_after=retry_after,
+                        metadata={
+                            "model": self.model_name,
+                            "provider": self.provider,
+                            "streaming": True,
+                        },
+                        cause=e,
+                    )
+                elif "timeout" in error_msg or "timed out" in error_msg:
+                    raise LLMTimeoutError(
+                        message=f"LLM request timed out: {e}",
+                        metadata={
+                            "model": self.model_name,
+                            "provider": self.provider,
+                            "streaming": True,
+                        },
+                        cause=e,
+                    )
+                else:
+                    self.telemetry.logger.error(
+                        f"Streaming LLM invocation failed: {e}",
+                        extra={"model": self.model_name, "provider": self.provider},
+                        exc_info=True,
+                    )
+                    span.record_exception(e)
+
+                    raise LLMProviderError(
+                        message=f"LLM provider error: {e}",
+                        metadata={
+                            "model": self.model_name,
+                            "provider": self.provider,
+                            "streaming": True,
+                        },
+                        cause=e,
+                    )
 
 
 # ==============================================================================
