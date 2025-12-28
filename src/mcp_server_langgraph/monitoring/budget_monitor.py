@@ -705,3 +705,9 @@ def get_budget_monitor() -> BudgetMonitor:
     if _monitor_instance is None:
         _monitor_instance = BudgetMonitor()
     return _monitor_instance
+
+
+def _reset_budget_monitor() -> None:
+    """Reset singleton for testing. NOT for production use."""
+    global _monitor_instance
+    _monitor_instance = None

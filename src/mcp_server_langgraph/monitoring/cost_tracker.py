@@ -30,7 +30,7 @@ from typing import Any, cast
 
 from pydantic import BaseModel, ConfigDict, Field, field_serializer
 
-from .pricing import calculate_cost
+from .litellm_cost_callback import get_model_cost_from_litellm
 
 # ==============================================================================
 # Data Models
@@ -79,6 +79,30 @@ class TokenUsage(BaseModel):
     request_id: str | None = Field(
         default=None,
         description="Request tracking ID for individual request cost tracking",
+    )
+
+    # ==========================================================================
+    # Organizational Hierarchy Fields for Multi-Tenant Cost Attribution
+    # ==========================================================================
+    organization_id: str | None = Field(
+        default=None,
+        description="Organization ID for multi-tenant cost attribution (e.g., 'organization:acme')",
+    )
+    project_id: str | None = Field(
+        default=None,
+        description="Project ID for project-level cost breakdown (e.g., 'project:backend')",
+    )
+    team_id: str | None = Field(
+        default=None,
+        description="Team/group ID for team-level cost attribution (e.g., 'team:platform')",
+    )
+
+    # ==========================================================================
+    # Custom Cost Allocation Tags
+    # ==========================================================================
+    allocation_tags: dict[str, str] | None = Field(
+        default=None,
+        description="Custom key-value tags for cost allocation (e.g., {'environment': 'production', 'campaign': 'launch-2025'})",
     )
 
     model_config = ConfigDict()
@@ -219,30 +243,20 @@ class CostMetricsCollector:
         """
         # Phase 2.2 SRP: Delegate to specialized services
         from mcp_server_langgraph.monitoring.cost_retention import CostRetentionPolicy
-        from mcp_server_langgraph.monitoring.cost_storage import (
-            CostStorageBackend,
-            MemoryCostStorage,
-            PostgresCostStorage,
+        from mcp_server_langgraph.monitoring.cost_storage_factory import (
+            get_cost_storage_backend,
         )
 
-        # Determine storage backend from config if not explicitly provided
-        if storage_backend is None:
-            try:
-                from mcp_server_langgraph.core.config import settings
-
-                storage_backend = settings.cost_storage_backend
-            except Exception:
-                storage_backend = "memory"
-
-        # Create storage based on backend type
-        storage: CostStorageBackend
-        if storage_backend == "postgres" and database_url:  # noqa: SIM108
-            # PostgresCostStorage has slightly different method signatures (bucket_interval vs interval)
-            storage = PostgresCostStorage(database_url)  # type: ignore[assignment]
-        else:
-            storage = MemoryCostStorage()
-
-        self._storage = storage
+        # CRITICAL FIX: Use the shared storage backend from the factory
+        # This ensures CostMetricsCollector and CostServiceImpl use the same storage instance.
+        # Previously, the collector created its own MemoryCostStorage which caused cost recordings
+        # to be invisible to the cost API endpoints (they used a different storage instance).
+        #
+        # The storage_backend and database_url parameters are now deprecated (kept for backwards
+        # compatibility but ignored). Configuration should be done via environment variables:
+        # - COST_STORAGE_BACKEND: "memory" or "postgres"
+        # - DATABASE_URL: PostgreSQL connection string (for postgres backend)
+        self._storage = get_cost_storage_backend()
         self._retention_policy = CostRetentionPolicy(retention_days=retention_days)
         self._database_url = database_url
         self._retention_days = retention_days
@@ -272,6 +286,12 @@ class CostMetricsCollector:
         workflow_id: str | None = None,
         orchestrator_id: str | None = None,
         request_id: str | None = None,
+        # Organizational hierarchy for multi-tenant cost attribution
+        organization_id: str | None = None,
+        project_id: str | None = None,
+        team_id: str | None = None,
+        # Custom cost allocation tags
+        allocation_tags: dict[str, str] | None = None,
     ) -> TokenUsage:
         """
         Record token usage for an LLM call.
@@ -292,6 +312,10 @@ class CostMetricsCollector:
             workflow_id: Workflow ID for cost attribution (optional)
             orchestrator_id: Orchestrator/Agent ID for cost attribution (optional)
             request_id: Request tracking ID (optional)
+            organization_id: Organization ID for multi-tenant cost attribution (optional)
+            project_id: Project ID for project-level cost breakdown (optional)
+            team_id: Team/group ID for team-level cost attribution (optional)
+            allocation_tags: Custom key-value tags for cost allocation (optional)
 
         Returns:
             TokenUsage record
@@ -310,11 +334,10 @@ class CostMetricsCollector:
             ...     workflow_id="workflow-789",  # For workflow cost attribution
             ... )
         """
-        # Calculate cost if not provided
+        # Calculate cost if not provided using LiteLLM's pricing data
         if estimated_cost_usd is None:
-            estimated_cost_usd = calculate_cost(
+            estimated_cost_usd = get_model_cost_from_litellm(
                 model=model,
-                provider=provider,
                 prompt_tokens=prompt_tokens,
                 completion_tokens=completion_tokens,
             )
@@ -337,6 +360,12 @@ class CostMetricsCollector:
             workflow_id=workflow_id,
             orchestrator_id=orchestrator_id,
             request_id=request_id,
+            # Organizational hierarchy
+            organization_id=organization_id,
+            project_id=project_id,
+            team_id=team_id,
+            # Custom allocation tags
+            allocation_tags=allocation_tags,
         )
 
         # Phase 2.2 SRP: Delegate storage to storage backend
@@ -657,3 +686,9 @@ def get_cost_collector() -> CostMetricsCollector:
     if _collector_instance is None:
         _collector_instance = CostMetricsCollector()
     return _collector_instance
+
+
+def _reset_cost_collector() -> None:
+    """Reset the singleton collector instance (for testing only)."""
+    global _collector_instance
+    _collector_instance = None

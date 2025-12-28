@@ -304,3 +304,257 @@ class TestCostRetentionPolicyLogging:
 
             # Assert - should log cleanup info
             mock_logger.info.assert_called()
+
+
+# ==============================================================================
+# Performance Tests for Cost Retention Cleanup
+# ==============================================================================
+
+
+@pytest.mark.xdist_group(name="test_cost_retention_performance")
+class TestCostRetentionPerformance:
+    """Performance tests for CostRetentionPolicy cleanup operations.
+
+    These tests validate that cleanup operations complete within acceptable
+    time bounds for various record counts. Tests are skipped in pytest-xdist
+    parallel mode to avoid memory overhead.
+    """
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers."""
+        gc.collect()
+
+    @pytest.mark.asyncio
+    @pytest.mark.performance
+    async def test_cleanup_1000_records_completes_under_1_second(self):
+        """
+        GIVEN storage with 1000 old records
+        WHEN cleanup is executed
+        THEN it should complete in under 1 second
+        """
+        import time
+        from mcp_server_langgraph.monitoring.cost_retention import CostRetentionPolicy
+        from mcp_server_langgraph.monitoring.cost_storage import MemoryCostStorage
+
+        # Arrange - create storage with 1000 old records
+        storage = MemoryCostStorage()
+        now = datetime.now(UTC)
+
+        for i in range(1000):
+            usage = TokenUsage(
+                timestamp=now - timedelta(days=100 + (i % 30)),
+                user_id=f"user:perf_test_{i}",
+                session_id=f"session-perf-{i}",
+                model="gpt-4",
+                provider="openai",
+                prompt_tokens=100,
+                completion_tokens=50,
+                estimated_cost_usd=Decimal("0.01"),
+            )
+            await storage.store(usage)
+
+        assert storage.total_records == 1000
+
+        policy = CostRetentionPolicy(retention_days=90)
+
+        # Act - measure cleanup time
+        start_time = time.perf_counter()
+        deleted = await policy.cleanup(storage)
+        elapsed_time = time.perf_counter() - start_time
+
+        # Assert - should complete quickly and delete all records
+        assert deleted == 1000
+        assert elapsed_time < 1.0, f"Cleanup took {elapsed_time:.2f}s, expected < 1.0s"
+
+    @pytest.mark.asyncio
+    @pytest.mark.performance
+    async def test_cleanup_mixed_records_maintains_correct_count(self):
+        """
+        GIVEN storage with mix of old and new records
+        WHEN cleanup is executed
+        THEN correct number of records should be deleted and retained
+        """
+        import time
+        from mcp_server_langgraph.monitoring.cost_retention import CostRetentionPolicy
+        from mcp_server_langgraph.monitoring.cost_storage import MemoryCostStorage
+
+        # Arrange - 500 old records, 500 new records
+        storage = MemoryCostStorage()
+        now = datetime.now(UTC)
+
+        # Add old records (to be deleted)
+        for i in range(500):
+            usage = TokenUsage(
+                timestamp=now - timedelta(days=100 + (i % 30)),
+                user_id=f"user:old_{i}",
+                session_id=f"session-old-{i}",
+                model="gpt-4",
+                provider="openai",
+                prompt_tokens=100,
+                completion_tokens=50,
+                estimated_cost_usd=Decimal("0.01"),
+            )
+            await storage.store(usage)
+
+        # Add new records (to be kept)
+        for i in range(500):
+            usage = TokenUsage(
+                timestamp=now - timedelta(days=i % 30),
+                user_id=f"user:new_{i}",
+                session_id=f"session-new-{i}",
+                model="gpt-4",
+                provider="openai",
+                prompt_tokens=100,
+                completion_tokens=50,
+                estimated_cost_usd=Decimal("0.01"),
+            )
+            await storage.store(usage)
+
+        assert storage.total_records == 1000
+
+        policy = CostRetentionPolicy(retention_days=90)
+
+        # Act
+        start_time = time.perf_counter()
+        deleted = await policy.cleanup(storage)
+        elapsed_time = time.perf_counter() - start_time
+
+        # Assert
+        assert deleted == 500
+        assert storage.total_records == 500
+        assert elapsed_time < 1.0, f"Cleanup took {elapsed_time:.2f}s, expected < 1.0s"
+
+        # Verify remaining records are all new
+        remaining, _ = await storage.get_records()
+        for record in remaining:
+            assert "new" in record.session_id
+
+    @pytest.mark.asyncio
+    @pytest.mark.performance
+    async def test_cleanup_empty_storage_is_fast(self):
+        """
+        GIVEN empty storage
+        WHEN cleanup is executed
+        THEN it should complete almost instantaneously
+        """
+        import time
+        from mcp_server_langgraph.monitoring.cost_retention import CostRetentionPolicy
+        from mcp_server_langgraph.monitoring.cost_storage import MemoryCostStorage
+
+        # Arrange
+        storage = MemoryCostStorage()
+        policy = CostRetentionPolicy(retention_days=90)
+
+        # Act
+        start_time = time.perf_counter()
+        deleted = await policy.cleanup(storage)
+        elapsed_time = time.perf_counter() - start_time
+
+        # Assert - should be nearly instantaneous
+        assert deleted == 0
+        assert elapsed_time < 0.1, f"Empty cleanup took {elapsed_time:.4f}s, expected < 0.1s"
+
+    @pytest.mark.asyncio
+    @pytest.mark.performance
+    async def test_multiple_cleanup_cycles_are_consistent(self):
+        """
+        GIVEN storage with records that span multiple retention periods
+        WHEN multiple cleanup cycles are executed
+        THEN each cycle should maintain consistent performance
+        """
+        import time
+        from mcp_server_langgraph.monitoring.cost_retention import CostRetentionPolicy
+        from mcp_server_langgraph.monitoring.cost_storage import MemoryCostStorage
+
+        # Arrange
+        storage = MemoryCostStorage()
+        now = datetime.now(UTC)
+        policy = CostRetentionPolicy(retention_days=30)
+
+        cycle_times = []
+
+        # Run 3 cleanup cycles, adding records before each
+        for cycle in range(3):
+            # Add 200 old records for this cycle
+            for i in range(200):
+                usage = TokenUsage(
+                    timestamp=now - timedelta(days=40 + (i % 10)),
+                    user_id=f"user:cycle_{cycle}_{i}",
+                    session_id=f"session-cycle-{cycle}-{i}",
+                    model="gpt-4",
+                    provider="openai",
+                    prompt_tokens=100,
+                    completion_tokens=50,
+                    estimated_cost_usd=Decimal("0.01"),
+                )
+                await storage.store(usage)
+
+            # Run cleanup
+            start_time = time.perf_counter()
+            deleted = await policy.cleanup(storage)
+            elapsed_time = time.perf_counter() - start_time
+
+            cycle_times.append(elapsed_time)
+            assert deleted == 200, f"Cycle {cycle}: Expected 200 deleted, got {deleted}"
+
+        # Assert - all cycles should complete quickly
+        for i, cycle_time in enumerate(cycle_times):
+            assert cycle_time < 0.5, f"Cycle {i} took {cycle_time:.4f}s, expected < 0.5s"
+
+        # Cycle times should be roughly consistent (no memory leaks)
+        if len(cycle_times) > 1:
+            max_ratio = max(cycle_times) / min(cycle_times)
+            assert max_ratio < 3.0, f"Cycle time ratio {max_ratio:.2f} too high, possible performance degradation"
+
+    @pytest.mark.asyncio
+    @pytest.mark.performance
+    async def test_cleanup_scales_linearly_with_record_count(self):
+        """
+        GIVEN storage with increasing record counts
+        WHEN cleanup is executed for each size
+        THEN cleanup time should scale roughly linearly
+        """
+        import time
+        from mcp_server_langgraph.monitoring.cost_retention import CostRetentionPolicy
+        from mcp_server_langgraph.monitoring.cost_storage import MemoryCostStorage
+
+        results = []
+
+        for count in [100, 500, 1000]:
+            # Fresh storage for each test
+            storage = MemoryCostStorage()
+            now = datetime.now(UTC)
+
+            # Add old records
+            for i in range(count):
+                usage = TokenUsage(
+                    timestamp=now - timedelta(days=100),
+                    user_id=f"user:scale_{i}",
+                    session_id=f"session-scale-{i}",
+                    model="gpt-4",
+                    provider="openai",
+                    prompt_tokens=100,
+                    completion_tokens=50,
+                    estimated_cost_usd=Decimal("0.01"),
+                )
+                await storage.store(usage)
+
+            policy = CostRetentionPolicy(retention_days=90)
+
+            # Measure cleanup time
+            start_time = time.perf_counter()
+            deleted = await policy.cleanup(storage)
+            elapsed_time = time.perf_counter() - start_time
+
+            assert deleted == count
+            results.append({"count": count, "time": elapsed_time})
+
+        # Assert - time should scale roughly linearly (not exponentially)
+        # Allow 5x increase from 100 to 1000 records (would be ~10x for quadratic)
+        time_100 = results[0]["time"]
+        time_1000 = results[2]["time"]
+
+        if time_100 > 0.0001:  # Avoid division by tiny numbers
+            ratio = time_1000 / time_100
+            # Should scale at most 15x (linear with some overhead)
+            assert ratio < 15, f"Cleanup scaled {ratio:.1f}x from 100 to 1000 records, expected < 15x"

@@ -65,6 +65,39 @@ class ModelCost:
     request_count: int
 
 
+@dataclass
+class OrganizationCost:
+    """Per-organization cost aggregation."""
+
+    organization_id: str
+    total_cost: Decimal
+    total_tokens: int
+    request_count: int
+
+
+@dataclass
+class ProjectCost:
+    """Per-project cost aggregation."""
+
+    project_id: str
+    organization_id: str | None
+    total_cost: Decimal
+    total_tokens: int
+    request_count: int
+
+
+@dataclass
+class TeamCost:
+    """Per-team cost aggregation."""
+
+    team_id: str
+    organization_id: str | None
+    project_id: str | None
+    total_cost: Decimal
+    total_tokens: int
+    request_count: int
+
+
 @runtime_checkable
 class CostStorageBackend(Protocol):
     """
@@ -191,6 +224,63 @@ class CostStorageBackend(Protocol):
         """
         ...
 
+    async def get_cost_by_organization(
+        self,
+        start_date: datetime | None = None,
+        end_date: datetime | None = None,
+    ) -> Any:
+        """
+        Get cost breakdown by organization.
+
+        Args:
+            start_date: Start of period (inclusive)
+            end_date: End of period (inclusive)
+
+        Returns:
+            List of OrganizationCost entries
+        """
+        ...
+
+    async def get_cost_by_project(
+        self,
+        organization_id: str | None = None,
+        start_date: datetime | None = None,
+        end_date: datetime | None = None,
+    ) -> Any:
+        """
+        Get cost breakdown by project.
+
+        Args:
+            organization_id: Optional organization filter
+            start_date: Start of period (inclusive)
+            end_date: End of period (inclusive)
+
+        Returns:
+            List of ProjectCost entries
+        """
+        ...
+
+    async def get_cost_by_team(
+        self,
+        organization_id: str | None = None,
+        project_id: str | None = None,
+        start_date: datetime | None = None,
+        end_date: datetime | None = None,
+    ) -> Any:
+        """
+        Get cost breakdown by team.
+
+        Args:
+            organization_id: Optional organization filter
+            project_id: Optional project filter
+            start_date: Start of period (inclusive)
+            end_date: End of period (inclusive)
+
+        Returns:
+            List of TeamCost entries
+        """
+        ...
+
 
 class MemoryCostStorage:
     """
@@ -236,6 +326,11 @@ class MemoryCostStorage:
         - model: Filter by model name
         - provider: Filter by provider name
         - session_id: Filter by session identifier
+        - organization_id: Filter by organization
+        - project_id: Filter by project
+        - team_id: Filter by team
+        - start_date: Filter by timestamp >= start_date
+        - end_date: Filter by timestamp <= end_date
 
         Args:
             filters: Optional filters dictionary
@@ -253,7 +348,13 @@ class MemoryCostStorage:
         # Apply filters
         if filters:
             for field, value in filters.items():
-                records = [r for r in records if getattr(r, field, None) == value]
+                # Handle date range filters specially
+                if field == "start_date":
+                    records = [r for r in records if r.timestamp >= value]
+                elif field == "end_date":
+                    records = [r for r in records if r.timestamp <= value]
+                else:
+                    records = [r for r in records if getattr(r, field, None) == value]
 
         # Sort records
         reverse = sort_order.lower() == "desc"
@@ -472,6 +573,171 @@ class MemoryCostStorage:
             for d in sorted_days
         ]
 
+    async def get_cost_by_organization(
+        self,
+        start_date: datetime | None = None,
+        end_date: datetime | None = None,
+    ) -> list[OrganizationCost]:
+        """
+        Get cost breakdown by organization.
+
+        Args:
+            start_date: Start of period (inclusive)
+            end_date: End of period (inclusive)
+
+        Returns:
+            List of OrganizationCost entries
+        """
+        async with self._lock:
+            records = self._records.copy()
+
+        # Apply date filters
+        if start_date:
+            records = [r for r in records if r.timestamp >= start_date]
+        if end_date:
+            records = [r for r in records if r.timestamp <= end_date]
+
+        # Group by organization
+        org_costs: dict[str, dict[str, Any]] = {}
+        for r in records:
+            org_id = r.organization_id or "unassigned"
+            if org_id not in org_costs:
+                org_costs[org_id] = {
+                    "organization_id": org_id,
+                    "total_cost": Decimal("0"),
+                    "total_tokens": 0,
+                    "request_count": 0,
+                }
+            org_costs[org_id]["total_cost"] += r.estimated_cost_usd
+            org_costs[org_id]["total_tokens"] += r.total_tokens
+            org_costs[org_id]["request_count"] += 1
+
+        return [
+            OrganizationCost(
+                organization_id=c["organization_id"],
+                total_cost=c["total_cost"],
+                total_tokens=c["total_tokens"],
+                request_count=c["request_count"],
+            )
+            for c in sorted(org_costs.values(), key=lambda x: x["total_cost"], reverse=True)
+        ]
+
+    async def get_cost_by_project(
+        self,
+        organization_id: str | None = None,
+        start_date: datetime | None = None,
+        end_date: datetime | None = None,
+    ) -> list[ProjectCost]:
+        """
+        Get cost breakdown by project.
+
+        Args:
+            organization_id: Optional organization filter
+            start_date: Start of period (inclusive)
+            end_date: End of period (inclusive)
+
+        Returns:
+            List of ProjectCost entries
+        """
+        async with self._lock:
+            records = self._records.copy()
+
+        # Apply filters
+        if organization_id:
+            records = [r for r in records if r.organization_id == organization_id]
+        if start_date:
+            records = [r for r in records if r.timestamp >= start_date]
+        if end_date:
+            records = [r for r in records if r.timestamp <= end_date]
+
+        # Group by project
+        proj_costs: dict[str, dict[str, Any]] = {}
+        for r in records:
+            proj_id = r.project_id or "unassigned"
+            if proj_id not in proj_costs:
+                proj_costs[proj_id] = {
+                    "project_id": proj_id,
+                    "organization_id": r.organization_id,
+                    "total_cost": Decimal("0"),
+                    "total_tokens": 0,
+                    "request_count": 0,
+                }
+            proj_costs[proj_id]["total_cost"] += r.estimated_cost_usd
+            proj_costs[proj_id]["total_tokens"] += r.total_tokens
+            proj_costs[proj_id]["request_count"] += 1
+
+        return [
+            ProjectCost(
+                project_id=c["project_id"],
+                organization_id=c["organization_id"],
+                total_cost=c["total_cost"],
+                total_tokens=c["total_tokens"],
+                request_count=c["request_count"],
+            )
+            for c in sorted(proj_costs.values(), key=lambda x: x["total_cost"], reverse=True)
+        ]
+
+    async def get_cost_by_team(
+        self,
+        organization_id: str | None = None,
+        project_id: str | None = None,
+        start_date: datetime | None = None,
+        end_date: datetime | None = None,
+    ) -> list[TeamCost]:
+        """
+        Get cost breakdown by team.
+
+        Args:
+            organization_id: Optional organization filter
+            project_id: Optional project filter
+            start_date: Start of period (inclusive)
+            end_date: End of period (inclusive)
+
+        Returns:
+            List of TeamCost entries
+        """
+        async with self._lock:
+            records = self._records.copy()
+
+        # Apply filters
+        if organization_id:
+            records = [r for r in records if r.organization_id == organization_id]
+        if project_id:
+            records = [r for r in records if r.project_id == project_id]
+        if start_date:
+            records = [r for r in records if r.timestamp >= start_date]
+        if end_date:
+            records = [r for r in records if r.timestamp <= end_date]
+
+        # Group by team
+        team_costs: dict[str, dict[str, Any]] = {}
+        for r in records:
+            team_id = r.team_id or "unassigned"
+            if team_id not in team_costs:
+                team_costs[team_id] = {
+                    "team_id": team_id,
+                    "organization_id": r.organization_id,
+                    "project_id": r.project_id,
+                    "total_cost": Decimal("0"),
+                    "total_tokens": 0,
+                    "request_count": 0,
+                }
+            team_costs[team_id]["total_cost"] += r.estimated_cost_usd
+            team_costs[team_id]["total_tokens"] += r.total_tokens
+            team_costs[team_id]["request_count"] += 1
+
+        return [
+            TeamCost(
+                team_id=c["team_id"],
+                organization_id=c["organization_id"],
+                project_id=c["project_id"],
+                total_cost=c["total_cost"],
+                total_tokens=c["total_tokens"],
+                request_count=c["request_count"],
+            )
+            for c in sorted(team_costs.values(), key=lambda x: x["total_cost"], reverse=True)
+        ]
+
 
 class PostgresCostStorage:
     """
@@ -529,6 +795,10 @@ class PostgresCostStorage:
                 estimated_cost_usd=record.estimated_cost_usd,
                 feature=record.feature,
                 metadata_=record.metadata,
+                # Organizational hierarchy for cost attribution
+                organization_id=record.organization_id,
+                project_id=record.project_id,
+                team_id=record.team_id,
             )
             session.add(db_record)
             # Session commits automatically via context manager
@@ -551,10 +821,15 @@ class PostgresCostStorage:
         - model: Filter by model name
         - provider: Filter by provider name
         - session_id: Filter by session identifier
+        - organization_id: Filter by organization
+        - project_id: Filter by project
+        - team_id: Filter by team
+        - start_date: Filter by timestamp >= start_date
+        - end_date: Filter by timestamp <= end_date
 
         Args:
             filters: Optional filters dictionary
-            cursor: Pagination cursor (timestamp ISO string)
+            cursor: Pagination cursor (offset as string, e.g., "100")
             limit: Maximum records to return
             sort_by: Field to sort by (timestamp, total_tokens, estimated_cost_usd)
             sort_order: Sort order (asc, desc)
@@ -580,15 +855,24 @@ class PostgresCostStorage:
             # Apply filters
             if filters:
                 for field, value in filters.items():
-                    if hasattr(TokenUsageRecord, field):
+                    # Handle date range filters specially
+                    if field == "start_date":
+                        from datetime import datetime as dt
+
+                        start_dt = dt.fromisoformat(value) if isinstance(value, str) else value
+                        stmt = stmt.where(TokenUsageRecord.timestamp >= start_dt)
+                    elif field == "end_date":
+                        from datetime import datetime as dt
+
+                        end_dt = dt.fromisoformat(value) if isinstance(value, str) else value
+                        stmt = stmt.where(TokenUsageRecord.timestamp <= end_dt)
+                    elif hasattr(TokenUsageRecord, field):
                         stmt = stmt.where(getattr(TokenUsageRecord, field) == value)
 
-            # Apply cursor (timestamp-based)
-            if cursor:
-                from datetime import datetime as dt
-
-                cursor_time = dt.fromisoformat(cursor)
-                stmt = stmt.where(sort_column < cursor_time) if reverse else stmt.where(sort_column > cursor_time)
+            # Apply cursor (offset-based pagination for consistent behavior across sort columns)
+            start_index = int(cursor) if cursor else 0
+            if start_index > 0:
+                stmt = stmt.offset(start_index)
 
             # Fetch one extra to check for more
             stmt = stmt.limit(limit + 1)
@@ -604,9 +888,8 @@ class PostgresCostStorage:
             records = [self._to_token_usage(r) for r in db_records]
 
             next_cursor = None
-            if has_more and records:
-                last_record = records[-1]
-                next_cursor = last_record.timestamp.isoformat()
+            if has_more:
+                next_cursor = str(start_index + limit)
 
             return records, next_cursor
 
@@ -680,6 +963,10 @@ class PostgresCostStorage:
             estimated_cost_usd=db_record.estimated_cost_usd,
             feature=db_record.feature,
             metadata=db_record.metadata_ or {},
+            # Organizational hierarchy for cost attribution
+            organization_id=db_record.organization_id,
+            project_id=db_record.project_id,
+            team_id=db_record.team_id,
         )
 
     # =========================================================================
@@ -984,6 +1271,208 @@ class PostgresCostStorage:
                     total_cost=Decimal(str(row[2])),
                     total_prompt_tokens=int(row[3]),
                     total_completion_tokens=int(row[4]),
+                    request_count=int(row[5]),
+                )
+                for row in rows
+            ]
+
+    # =========================================================================
+    # Organizational Cost Aggregation Methods
+    # =========================================================================
+
+    async def get_cost_by_organization(
+        self,
+        start_date: datetime | None = None,
+        end_date: datetime | None = None,
+    ) -> list[OrganizationCost]:
+        """
+        Get cost breakdown by organization using database-level aggregation.
+
+        Uses SQL GROUP BY for efficient aggregation rather than Python-level
+        iteration. Supports TimescaleDB continuous aggregates when available.
+
+        Args:
+            start_date: Start of period (inclusive)
+            end_date: End of period (inclusive)
+
+        Returns:
+            List of OrganizationCost entries ordered by total cost (descending)
+        """
+        from sqlalchemy import text
+
+        from mcp_server_langgraph.database import get_async_session
+
+        async with get_async_session(self._database_url) as session:
+            query = """
+                SELECT
+                    COALESCE(organization_id, 'unassigned') AS organization_id,
+                    SUM(estimated_cost_usd) AS total_cost,
+                    SUM(total_tokens) AS total_tokens,
+                    COUNT(*) AS request_count
+                FROM token_usage_records
+                WHERE 1=1
+            """
+
+            params: dict[str, Any] = {}
+
+            if start_date:
+                query += " AND timestamp >= :start_date"
+                params["start_date"] = start_date
+
+            if end_date:
+                query += " AND timestamp <= :end_date"
+                params["end_date"] = end_date
+
+            query += " GROUP BY COALESCE(organization_id, 'unassigned') ORDER BY total_cost DESC"
+
+            result = await session.execute(text(query), params)
+            rows = result.fetchall()
+
+            return [
+                OrganizationCost(
+                    organization_id=row[0],
+                    total_cost=Decimal(str(row[1])),
+                    total_tokens=int(row[2]),
+                    request_count=int(row[3]),
+                )
+                for row in rows
+            ]
+
+    async def get_cost_by_project(
+        self,
+        organization_id: str | None = None,
+        start_date: datetime | None = None,
+        end_date: datetime | None = None,
+    ) -> list[ProjectCost]:
+        """
+        Get cost breakdown by project using database-level aggregation.
+
+        Uses SQL GROUP BY for efficient aggregation. Optionally filters
+        by organization to get project breakdown within an org.
+
+        Args:
+            organization_id: Optional organization filter
+            start_date: Start of period (inclusive)
+            end_date: End of period (inclusive)
+
+        Returns:
+            List of ProjectCost entries ordered by total cost (descending)
+        """
+        from sqlalchemy import text
+
+        from mcp_server_langgraph.database import get_async_session
+
+        async with get_async_session(self._database_url) as session:
+            query = """
+                SELECT
+                    COALESCE(project_id, 'unassigned') AS project_id,
+                    organization_id,
+                    SUM(estimated_cost_usd) AS total_cost,
+                    SUM(total_tokens) AS total_tokens,
+                    COUNT(*) AS request_count
+                FROM token_usage_records
+                WHERE 1=1
+            """
+
+            params: dict[str, Any] = {}
+
+            if organization_id:
+                query += " AND organization_id = :organization_id"
+                params["organization_id"] = organization_id
+
+            if start_date:
+                query += " AND timestamp >= :start_date"
+                params["start_date"] = start_date
+
+            if end_date:
+                query += " AND timestamp <= :end_date"
+                params["end_date"] = end_date
+
+            query += " GROUP BY COALESCE(project_id, 'unassigned'), organization_id ORDER BY total_cost DESC"
+
+            result = await session.execute(text(query), params)
+            rows = result.fetchall()
+
+            return [
+                ProjectCost(
+                    project_id=row[0],
+                    organization_id=row[1],
+                    total_cost=Decimal(str(row[2])),
+                    total_tokens=int(row[3]),
+                    request_count=int(row[4]),
+                )
+                for row in rows
+            ]
+
+    async def get_cost_by_team(
+        self,
+        organization_id: str | None = None,
+        project_id: str | None = None,
+        start_date: datetime | None = None,
+        end_date: datetime | None = None,
+    ) -> list[TeamCost]:
+        """
+        Get cost breakdown by team using database-level aggregation.
+
+        Uses SQL GROUP BY for efficient aggregation. Optionally filters
+        by organization and/or project.
+
+        Args:
+            organization_id: Optional organization filter
+            project_id: Optional project filter
+            start_date: Start of period (inclusive)
+            end_date: End of period (inclusive)
+
+        Returns:
+            List of TeamCost entries ordered by total cost (descending)
+        """
+        from sqlalchemy import text
+
+        from mcp_server_langgraph.database import get_async_session
+
+        async with get_async_session(self._database_url) as session:
+            query = """
+                SELECT
+                    COALESCE(team_id, 'unassigned') AS team_id,
+                    organization_id,
+                    project_id,
+                    SUM(estimated_cost_usd) AS total_cost,
+                    SUM(total_tokens) AS total_tokens,
+                    COUNT(*) AS request_count
+                FROM token_usage_records
+                WHERE 1=1
+            """
+
+            params: dict[str, Any] = {}
+
+            if organization_id:
+                query += " AND organization_id = :organization_id"
+                params["organization_id"] = organization_id
+
+            if project_id:
+                query += " AND project_id = :project_id"
+                params["project_id"] = project_id
+
+            if start_date:
+                query += " AND timestamp >= :start_date"
+                params["start_date"] = start_date
+
+            if end_date:
+                query += " AND timestamp <= :end_date"
+                params["end_date"] = end_date
+
+            query += " GROUP BY COALESCE(team_id, 'unassigned'), organization_id, project_id ORDER BY total_cost DESC"
+
+            result = await session.execute(text(query), params)
+            rows = result.fetchall()
+
+            return [
+                TeamCost(
+                    team_id=row[0],
+                    organization_id=row[1],
+                    project_id=row[2],
+                    total_cost=Decimal(str(row[3])),
+                    total_tokens=int(row[4]),
                     request_count=int(row[5]),
                 )
                 for row in rows
