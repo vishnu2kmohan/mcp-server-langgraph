@@ -27,9 +27,9 @@ vi.mock("../utils/authenticatedFetch", () => ({
 }));
 
 // Mock intendedRoute
-const mockSetIntendedRoute = vi.fn();
+const mockSaveCurrentRouteAsIntended = vi.fn();
 vi.mock("../utils/intendedRoute", () => ({
-  setIntendedRoute: (...args: unknown[]) => mockSetIntendedRoute(...args),
+  saveCurrentRouteAsIntended: () => mockSaveCurrentRouteAsIntended(),
 }));
 
 // Mock Redux store hooks
@@ -230,7 +230,7 @@ describe("useMCPConnection", () => {
       });
 
       await waitFor(() => {
-        expect(mockSetIntendedRoute).toHaveBeenCalled();
+        expect(mockSaveCurrentRouteAsIntended).toHaveBeenCalled();
       });
 
       expect(mockNavigate).toHaveBeenCalledWith("/login", { replace: true });
@@ -269,7 +269,7 @@ describe("useMCPConnection", () => {
         }
       });
 
-      expect(mockSetIntendedRoute).toHaveBeenCalled();
+      expect(mockSaveCurrentRouteAsIntended).toHaveBeenCalled();
       expect(mockNavigate).toHaveBeenCalledWith("/login", { replace: true });
     });
   });
