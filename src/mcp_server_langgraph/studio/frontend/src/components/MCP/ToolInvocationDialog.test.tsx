@@ -397,4 +397,105 @@ describe("ToolInvocationDialog", () => {
       ).not.toBeInTheDocument();
     });
   });
+
+  // ==========================================================================
+  // TDD: Pre-selection Feature (RED phase)
+  // When opening dialog from ToolExplorer, pre-select the clicked tool
+  // ==========================================================================
+  describe("pre-selection", () => {
+    it("pre-selects tool when preselectedToolName prop is provided", async () => {
+      renderWithProvider(
+        <ToolInvocationDialog
+          open={true}
+          onClose={mockOnClose}
+          preselectedToolName="read_file"
+        />,
+      );
+
+      // Should show the tool description indicating it's selected
+      await waitFor(() => {
+        expect(screen.getByText("Read contents of a file")).toBeInTheDocument();
+      });
+
+      // Should show the argument form for the selected tool
+      expect(screen.getByLabelText(/path/i)).toBeInTheDocument();
+    });
+
+    it("allows user to change pre-selected tool", async () => {
+      const user = userEvent.setup();
+
+      renderWithProvider(
+        <ToolInvocationDialog
+          open={true}
+          onClose={mockOnClose}
+          preselectedToolName="read_file"
+        />,
+      );
+
+      // Initially should show read_file description
+      await waitFor(() => {
+        expect(screen.getByText("Read contents of a file")).toBeInTheDocument();
+      });
+
+      // User can select a different tool
+      const toolSelect = screen.getByLabelText(/select tool/i);
+      await user.selectOptions(toolSelect, "write_file");
+
+      await waitFor(() => {
+        expect(screen.getByText("Write content to a file")).toBeInTheDocument();
+      });
+    });
+
+    it("ignores invalid preselectedToolName", async () => {
+      renderWithProvider(
+        <ToolInvocationDialog
+          open={true}
+          onClose={mockOnClose}
+          preselectedToolName="nonexistent_tool"
+        />,
+      );
+
+      // Should not show any tool selected
+      expect(
+        screen.queryByText("Read contents of a file"),
+      ).not.toBeInTheDocument();
+      expect(
+        screen.queryByText("Write content to a file"),
+      ).not.toBeInTheDocument();
+    });
+
+    it("clears pre-selection when dialog is closed and reopened without preselectedToolName", async () => {
+      const { rerender } = renderWithProvider(
+        <ToolInvocationDialog
+          open={true}
+          onClose={mockOnClose}
+          preselectedToolName="read_file"
+        />,
+      );
+
+      // Initially pre-selected
+      await waitFor(() => {
+        expect(screen.getByText("Read contents of a file")).toBeInTheDocument();
+      });
+
+      // Close dialog
+      rerender(
+        <Provider store={createTestStore()}>
+          <ToolInvocationDialog open={false} onClose={mockOnClose} />
+        </Provider>,
+      );
+
+      // Reopen without preselectedToolName
+      rerender(
+        <Provider store={createTestStore()}>
+          <ToolInvocationDialog open={true} onClose={mockOnClose} />
+        </Provider>,
+      );
+
+      // Should not have any tool selected
+      expect(
+        screen.queryByText("Read contents of a file"),
+      ).not.toBeInTheDocument();
+    });
+  });
 });

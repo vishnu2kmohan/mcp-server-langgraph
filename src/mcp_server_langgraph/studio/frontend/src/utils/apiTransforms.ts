@@ -13,10 +13,11 @@
  * }
  * ```
  */
-import type {
-  ClientSession,
-  SessionConfig,
-  ChatMessage,
+import {
+  DEFAULT_SESSION_CONFIG,
+  type ClientSession,
+  type SessionConfig,
+  type ChatMessage,
 } from "../types/session";
 import { devLogger } from "./devLogger";
 
@@ -90,15 +91,9 @@ export type ValidationResult<T> =
 // Constants
 // =============================================================================
 
-/**
- * Default session config
- */
-export const DEFAULT_SESSION_CONFIG: SessionConfig = {
-  modelName: "gpt-4",
-  modelProvider: "openai",
-  temperature: 0.7,
-  maxTokens: 4096,
-};
+// DEFAULT_SESSION_CONFIG is imported from types/session.ts (Single Source of Truth)
+// Re-export for backwards compatibility with existing imports from this module
+export { DEFAULT_SESSION_CONFIG };
 
 // =============================================================================
 // Type Guards

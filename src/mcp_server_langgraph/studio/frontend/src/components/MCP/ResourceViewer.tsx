@@ -20,6 +20,8 @@ import {
 export interface ResourceViewerProps {
   open: boolean;
   onClose: () => void;
+  /** Optional resource URI to pre-select when dialog opens */
+  preselectedResourceUri?: string;
 }
 
 interface ResourceContent {
@@ -29,7 +31,11 @@ interface ResourceContent {
   blob: string | null;
 }
 
-export function ResourceViewer({ open, onClose }: ResourceViewerProps) {
+export function ResourceViewer({
+  open,
+  onClose,
+  preselectedResourceUri,
+}: ResourceViewerProps) {
   const {
     data: resourcesData,
     isLoading: isLoadingResources,
@@ -41,6 +47,7 @@ export function ResourceViewer({ open, onClose }: ResourceViewerProps) {
   const [selectedUri, setSelectedUri] = useState<string | null>(null);
   const [content, setContent] = useState<ResourceContent | null>(null);
   const [readError, setReadError] = useState<string | null>(null);
+  const [hasPreselected, setHasPreselected] = useState(false);
 
   // Reset state when dialog closes
   useEffect(() => {
@@ -48,6 +55,7 @@ export function ResourceViewer({ open, onClose }: ResourceViewerProps) {
       setSelectedUri(null);
       setContent(null);
       setReadError(null);
+      setHasPreselected(false);
     }
   }, [open]);
 
@@ -83,6 +91,31 @@ export function ResourceViewer({ open, onClose }: ResourceViewerProps) {
     },
     [readResource],
   );
+
+  // Pre-select resource when preselectedResourceUri is provided
+  useEffect(() => {
+    if (
+      open &&
+      preselectedResourceUri &&
+      resourcesData?.resources &&
+      !hasPreselected
+    ) {
+      // Validate the resource exists
+      const resourceExists = resourcesData.resources.some(
+        (r) => r.uri === preselectedResourceUri,
+      );
+      if (resourceExists) {
+        setHasPreselected(true);
+        handleResourceSelect(preselectedResourceUri);
+      }
+    }
+  }, [
+    open,
+    preselectedResourceUri,
+    resourcesData?.resources,
+    hasPreselected,
+    handleResourceSelect,
+  ]);
 
   // Handle copy to clipboard
   const handleCopy = useCallback(async () => {

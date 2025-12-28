@@ -2,10 +2,16 @@
  * CodeArtifact Component
  *
  * Displays code with syntax highlighting, line numbers, and copy functionality.
+ * Uses react-syntax-highlighter with Prism for rich code coloring.
  */
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { Copy, Check, Download } from "lucide-react";
+import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
+import {
+  oneDark,
+  oneLight,
+} from "react-syntax-highlighter/dist/esm/styles/prism";
 import type { CodeArtifact as CodeArtifactType } from "../../types/artifacts";
 
 export interface CodeArtifactProps {
@@ -94,9 +100,39 @@ export function CodeArtifact({ artifact }: CodeArtifactProps) {
   }, [data, title, language, getFileExtension]);
 
   /**
-   * Split code into lines for line number display
+   * Map language names to Prism-supported language identifiers
    */
-  const lines = data.split("\n");
+  const getPrismLanguage = useCallback((lang: string): string => {
+    const languageMap: Record<string, string> = {
+      js: "javascript",
+      ts: "typescript",
+      py: "python",
+      rb: "ruby",
+      sh: "bash",
+      yml: "yaml",
+      md: "markdown",
+      cs: "csharp",
+      kt: "kotlin",
+      rs: "rust",
+    };
+    return languageMap[lang.toLowerCase()] || lang.toLowerCase();
+  }, []);
+
+  /**
+   * Get the syntax theme based on the theme prop
+   */
+  const syntaxTheme = useMemo(
+    () => (theme === "dark" ? oneDark : oneLight),
+    [theme],
+  );
+
+  /**
+   * Prism language for syntax highlighting
+   */
+  const prismLanguage = useMemo(
+    () => getPrismLanguage(language),
+    [language, getPrismLanguage],
+  );
 
   const containerStyle = maxHeight
     ? { maxHeight: `${maxHeight}px` }
@@ -170,45 +206,30 @@ export function CodeArtifact({ artifact }: CodeArtifactProps) {
         </div>
       </div>
 
-      {/* Code Content */}
+      {/* Code Content with Syntax Highlighting */}
       <div className="overflow-auto" style={containerStyle}>
-        <div className="relative">
-          {showLineNumbers ? (
-            <table className="w-full border-collapse">
-              <tbody>
-                {lines.map((line, index) => (
-                  <tr key={index} className="hover:bg-opacity-50">
-                    <td
-                      className={`select-none text-right px-4 py-1 font-mono text-xs ${
-                        theme === "dark"
-                          ? "text-gray-500 border-r border-gray-700"
-                          : "text-gray-400 border-r border-gray-300"
-                      }`}
-                      style={{ width: "1%", whiteSpace: "nowrap" }}
-                    >
-                      {index + 1}
-                    </td>
-                    <td
-                      className={`px-4 py-1 font-mono text-sm ${
-                        wrapLines ? "whitespace-pre-wrap" : "whitespace-pre"
-                      }`}
-                    >
-                      {line || "\n"}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          ) : (
-            <pre
-              className={`p-4 font-mono text-sm ${
-                wrapLines ? "whitespace-pre-wrap" : "whitespace-pre"
-              }`}
-            >
-              {data}
-            </pre>
-          )}
-        </div>
+        <SyntaxHighlighter
+          language={prismLanguage}
+          style={syntaxTheme}
+          showLineNumbers={showLineNumbers}
+          wrapLines={wrapLines}
+          wrapLongLines={wrapLines}
+          customStyle={{
+            margin: 0,
+            borderRadius: 0,
+            fontSize: "0.875rem",
+            background: "transparent",
+          }}
+          lineNumberStyle={{
+            minWidth: "2.5em",
+            paddingRight: "1em",
+            textAlign: "right",
+            userSelect: "none",
+            opacity: 0.5,
+          }}
+        >
+          {data}
+        </SyntaxHighlighter>
       </div>
     </div>
   );

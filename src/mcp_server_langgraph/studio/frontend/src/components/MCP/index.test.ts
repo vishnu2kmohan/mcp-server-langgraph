@@ -61,6 +61,33 @@ describe("MCP Module Exports", () => {
     });
   });
 
+  describe("Aggregated Capabilities Components (MCP 2025-11-25)", () => {
+    it("should export AggregatedCapabilitiesPanel", () => {
+      expect(mcpModule.AggregatedCapabilitiesPanel).toBeDefined();
+      expect(typeof mcpModule.AggregatedCapabilitiesPanel).toBe("function");
+    });
+
+    it("should export MCPServerCard", () => {
+      expect(mcpModule.MCPServerCard).toBeDefined();
+      expect(typeof mcpModule.MCPServerCard).toBe("function");
+    });
+
+    it("should export ToolExplorer", () => {
+      expect(mcpModule.ToolExplorer).toBeDefined();
+      expect(typeof mcpModule.ToolExplorer).toBe("function");
+    });
+
+    it("should export ResourceBrowser", () => {
+      expect(mcpModule.ResourceBrowser).toBeDefined();
+      expect(typeof mcpModule.ResourceBrowser).toBe("function");
+    });
+
+    it("should export PromptLibrary", () => {
+      expect(mcpModule.PromptLibrary).toBeDefined();
+      expect(typeof mcpModule.PromptLibrary).toBe("function");
+    });
+  });
+
   describe("Module Completeness", () => {
     it("should export all expected components", () => {
       const expectedExports = [
@@ -70,12 +97,24 @@ describe("MCP Module Exports", () => {
         "ResourceViewer",
         "PromptTester",
         "ElicitationDialog",
+        // Aggregated capabilities (MCP 2025-11-25)
+        "AggregatedCapabilitiesPanel",
+        "MCPServerCard",
+        "ToolExplorer",
+        "ResourceBrowser",
+        "PromptLibrary",
         // Lazy exports
         "LazyAddConnectionDialog",
         "LazyToolInvocationDialog",
         "LazyResourceViewer",
         "LazyPromptTester",
         "LazyElicitationDialog",
+        // Lazy aggregated capabilities (MCP 2025-11-25)
+        "LazyAggregatedCapabilitiesPanel",
+        "LazyMCPServerCard",
+        "LazyToolExplorer",
+        "LazyResourceBrowser",
+        "LazyPromptLibrary",
       ];
 
       for (const name of expectedExports) {
@@ -83,9 +122,9 @@ describe("MCP Module Exports", () => {
       }
     });
 
-    it("should have stable public API with 10 exports", () => {
+    it("should have stable public API with 20 exports", () => {
       const exportCount = Object.keys(mcpModule).length;
-      expect(exportCount).toBe(10);
+      expect(exportCount).toBe(20);
     });
   });
 });

@@ -17,6 +17,8 @@ import { useListMcpToolsQuery, useInvokeMcpToolMutation } from "../../api";
 export interface ToolInvocationDialogProps {
   open: boolean;
   onClose: () => void;
+  /** Optional tool name to pre-select when dialog opens */
+  preselectedToolName?: string;
 }
 
 interface ToolArgument {
@@ -39,6 +41,7 @@ interface ToolResult {
 export function ToolInvocationDialog({
   open,
   onClose,
+  preselectedToolName,
 }: ToolInvocationDialogProps) {
   const {
     data: toolsData,
@@ -61,6 +64,19 @@ export function ToolInvocationDialog({
       setResult(null);
     }
   }, [open]);
+
+  // Pre-select tool when preselectedToolName is provided
+  useEffect(() => {
+    if (open && preselectedToolName && toolsData?.tools) {
+      // Validate the tool exists
+      const toolExists = toolsData.tools.some(
+        (t) => t.name === preselectedToolName,
+      );
+      if (toolExists) {
+        setSelectedToolName(preselectedToolName);
+      }
+    }
+  }, [open, preselectedToolName, toolsData?.tools]);
 
   // Get selected tool details
   const selectedTool = useMemo(() => {

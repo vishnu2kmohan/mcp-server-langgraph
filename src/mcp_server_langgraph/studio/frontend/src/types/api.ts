@@ -222,8 +222,12 @@ export interface FeatureFlags {
   code_export?: boolean;
   /** Enable AI suggestions */
   ai_suggestions?: boolean;
-  /** Enable LLM suggestions */
+  /** Enable LLM suggestions (DEPRECATED: use suggestion_strategy) */
   llm_suggestions?: boolean;
+  /** Suggestion generation strategy: "llm" | "heuristic" | "hybrid" (Sprint Block 5) */
+  suggestion_strategy?: "llm" | "heuristic" | "hybrid";
+  /** Multi-agent coordination strategy: "orchestrator" | "peer" | "hybrid" (Sprint Block 5) */
+  multi_agent_strategy?: "orchestrator" | "peer" | "hybrid";
   /** Enable notification preferences */
   notification_preferences?: boolean;
   /** Enable MCP WebSocket connections */
@@ -277,8 +281,15 @@ export interface FeatureFlags {
   /** Enable in-app help pane (Phase 6) */
   canvas_help?: boolean;
 
-  // Allow dynamic flag access
-  [key: string]: boolean | undefined;
+  // Allow dynamic flag access (includes strategy string literals)
+  [key: string]:
+    | boolean
+    | "llm"
+    | "heuristic"
+    | "hybrid"
+    | "orchestrator"
+    | "peer"
+    | undefined;
 }
 
 // =============================================================================

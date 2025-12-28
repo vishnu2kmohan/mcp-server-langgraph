@@ -11,9 +11,11 @@ import {
   safeTransformToClientSession,
   transformApiMessageToClient,
   isApiMessage,
+  DEFAULT_SESSION_CONFIG,
   type ApiSession,
   type ApiMessage,
 } from "./apiTransforms";
+import { DEFAULT_SESSION_CONFIG as CANONICAL_SESSION_CONFIG } from "../types/session";
 
 // =============================================================================
 // Test Data
@@ -47,6 +49,36 @@ const minimalApiSession: ApiSession = {
 describe("apiTransforms", () => {
   afterEach(() => {
     vi.clearAllMocks();
+  });
+
+  // ===========================================================================
+  // DRY Principle: Single Source of Truth for Configuration
+  // ===========================================================================
+
+  describe("DEFAULT_SESSION_CONFIG (Single Source of Truth)", () => {
+    it("should re-export the canonical DEFAULT_SESSION_CONFIG from types/session.ts", () => {
+      // DRY Principle: Configuration should have a single source of truth
+      // apiTransforms should re-export from types/session.ts, not define its own
+      expect(DEFAULT_SESSION_CONFIG).toBe(CANONICAL_SESSION_CONFIG);
+    });
+
+    it("should have modelName matching canonical config", () => {
+      expect(DEFAULT_SESSION_CONFIG.modelName).toBe(
+        CANONICAL_SESSION_CONFIG.modelName,
+      );
+    });
+
+    it("should have maxTokens matching canonical config", () => {
+      expect(DEFAULT_SESSION_CONFIG.maxTokens).toBe(
+        CANONICAL_SESSION_CONFIG.maxTokens,
+      );
+    });
+
+    it("should have modelProvider matching canonical config", () => {
+      expect(DEFAULT_SESSION_CONFIG.modelProvider).toBe(
+        CANONICAL_SESSION_CONFIG.modelProvider,
+      );
+    });
   });
 
   describe("isApiSession (Type Guard)", () => {
@@ -199,10 +231,15 @@ describe("apiTransforms", () => {
     it("should use default config for missing fields", () => {
       const result = transformApiSessionToClient(minimalApiSession, []);
 
-      expect(result.config.modelName).toBe("gpt-4");
-      expect(result.config.modelProvider).toBe("openai");
-      expect(result.config.temperature).toBe(0.7);
-      expect(result.config.maxTokens).toBe(4096);
+      // Should use canonical DEFAULT_SESSION_CONFIG from types/session.ts
+      expect(result.config.modelName).toBe(CANONICAL_SESSION_CONFIG.modelName);
+      expect(result.config.modelProvider).toBe(
+        CANONICAL_SESSION_CONFIG.modelProvider,
+      );
+      expect(result.config.temperature).toBe(
+        CANONICAL_SESSION_CONFIG.temperature,
+      );
+      expect(result.config.maxTokens).toBe(CANONICAL_SESSION_CONFIG.maxTokens);
     });
 
     it("should include messages in result", () => {

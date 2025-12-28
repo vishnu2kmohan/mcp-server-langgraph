@@ -6,7 +6,14 @@
  */
 
 import { useState } from "react";
-import { Play, Loader2, Terminal, Clock, Box } from "lucide-react";
+import {
+  Play,
+  Loader2,
+  Terminal,
+  Clock,
+  Box,
+  AlertTriangle,
+} from "lucide-react";
 import type { ExecutableConfig, ExecutionResult } from "../../types/artifacts";
 
 export interface ExecutableArtifactProps {
@@ -15,6 +22,8 @@ export interface ExecutableArtifactProps {
   config: ExecutableConfig;
   result?: ExecutionResult;
   onExecute?: (code: string, config: ExecutableConfig) => void;
+  /** Whether to show confirmation dialog before execution (default: true) */
+  requireConfirmation?: boolean;
 }
 
 const runtimeLabels: Record<string, string> = {
@@ -37,8 +46,10 @@ export function ExecutableArtifact({
   config,
   result,
   onExecute,
+  requireConfirmation = true,
 }: ExecutableArtifactProps) {
   const [isRunning, setIsRunning] = useState(false);
+  const [showConfirmation, setShowConfirmation] = useState(false);
 
   if (!data || data.trim() === "") {
     return (
@@ -53,8 +64,12 @@ export function ExecutableArtifact({
     );
   }
 
-  const handleRun = () => {
+  const runtime = config.runtime || "docker";
+  const runtimeLabel = runtimeLabels[runtime] || runtime;
+
+  const executeCode = () => {
     setIsRunning(true);
+    setShowConfirmation(false);
     if (onExecute) {
       onExecute(data, config);
     }
@@ -65,12 +80,70 @@ export function ExecutableArtifact({
     }
   };
 
-  const runtime = config.runtime || "docker";
-  const runtimeLabel = runtimeLabels[runtime] || runtime;
+  const handleRun = () => {
+    if (requireConfirmation) {
+      setShowConfirmation(true);
+    } else {
+      executeCode();
+    }
+  };
+
+  const handleConfirm = () => {
+    executeCode();
+  };
+
+  const handleCancel = () => {
+    setShowConfirmation(false);
+  };
+
   const runtimeIcon = runtimeIcons[runtime] || <Terminal size={14} />;
 
   return (
-    <div className="bg-gray-50 dark:bg-gray-800 rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700">
+    <div className="relative bg-gray-50 dark:bg-gray-800 rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700">
+      {/* Confirmation Dialog */}
+      {showConfirmation && (
+        <div
+          data-testid="execution-confirmation"
+          className="absolute inset-0 z-10 bg-gray-900/80 backdrop-blur-sm flex items-center justify-center p-4"
+        >
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full p-6 border border-gray-200 dark:border-gray-700">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="p-2 bg-amber-100 dark:bg-amber-900/30 rounded-full">
+                <AlertTriangle
+                  size={24}
+                  className="text-amber-600 dark:text-amber-400"
+                />
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                Execute Code?
+              </h3>
+            </div>
+            <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+              This will execute code in a sandbox using{" "}
+              <span className="font-medium text-gray-900 dark:text-gray-100">
+                {runtimeLabel}
+              </span>
+              . Make sure you trust the source before running.
+            </p>
+            <div className="flex items-center gap-3 justify-end">
+              <button
+                onClick={handleCancel}
+                className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleConfirm}
+                className="px-4 py-2 text-sm font-medium text-white bg-green-600 hover:bg-green-700 rounded-lg transition-colors flex items-center gap-2"
+              >
+                <Play size={14} />
+                Confirm
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Header */}
       <div className="px-4 py-2 bg-gray-100 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
         <div className="flex items-center gap-2">

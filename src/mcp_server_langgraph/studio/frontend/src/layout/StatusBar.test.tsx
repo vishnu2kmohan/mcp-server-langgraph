@@ -156,6 +156,84 @@ describe("StatusBar", () => {
 
       expect(screen.queryByTestId("token-count")).not.toBeInTheDocument();
     });
+
+    it("should display cost when costBreakdown is provided", () => {
+      render(
+        <StatusBar
+          tokenCount={1500}
+          costBreakdown={{ estimatedCostUsd: 0.0234 }}
+        />,
+      );
+
+      expect(screen.getByTestId("token-count")).toBeInTheDocument();
+      // Costs >= 0.01 are formatted with 2 decimal places
+      expect(screen.getByText(/\$0\.02/)).toBeInTheDocument();
+    });
+
+    it("should format low costs with 4 decimal places", () => {
+      render(
+        <StatusBar
+          tokenCount={100}
+          costBreakdown={{ estimatedCostUsd: 0.0001 }}
+        />,
+      );
+
+      expect(screen.getByText(/\$0\.0001/)).toBeInTheDocument();
+    });
+
+    it("should include token breakdown in title attribute", () => {
+      render(
+        <StatusBar
+          tokenCount={1500}
+          tokenBreakdown={{
+            promptTokens: 1000,
+            completionTokens: 500,
+            totalTokens: 1500,
+          }}
+        />,
+      );
+
+      const tokenElement = screen.getByTestId("token-count");
+      expect(tokenElement.getAttribute("title")).toContain(
+        "Input: 1,000 tokens",
+      );
+      expect(tokenElement.getAttribute("title")).toContain(
+        "Output: 500 tokens",
+      );
+      expect(tokenElement.getAttribute("title")).toContain(
+        "Total: 1,500 tokens",
+      );
+    });
+  });
+
+  describe("model provider", () => {
+    it("should apply provider color class for openai", () => {
+      render(<StatusBar modelName="gpt-4" modelProvider="openai" />);
+
+      const indicator = screen.getByTestId("model-indicator");
+      expect(indicator).toHaveClass("text-green-600");
+    });
+
+    it("should apply provider color class for anthropic", () => {
+      render(<StatusBar modelName="claude-3" modelProvider="anthropic" />);
+
+      const indicator = screen.getByTestId("model-indicator");
+      expect(indicator).toHaveClass("text-orange-600");
+    });
+
+    it("should apply provider color class for google", () => {
+      render(<StatusBar modelName="gemini-2.5" modelProvider="google" />);
+
+      const indicator = screen.getByTestId("model-indicator");
+      expect(indicator).toHaveClass("text-blue-600");
+    });
+
+    it("should include provider in title", () => {
+      render(<StatusBar modelName="gpt-4" modelProvider="openai" />);
+
+      const indicator = screen.getByTestId("model-indicator");
+      expect(indicator.getAttribute("title")).toBe("Model: gpt-4 (openai)");
+    });
   });
 
   describe("user indicator", () => {

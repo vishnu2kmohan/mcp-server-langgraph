@@ -12,6 +12,7 @@ import {
   waitFor,
   act,
   cleanup,
+  within,
 } from "@testing-library/react";
 import { axe, toHaveNoViolations } from "jest-axe";
 
@@ -1128,6 +1129,268 @@ describe("CanvasWorkspace", () => {
       await waitFor(() => {
         expect(screen.getByTestId("ai-edit-overlay")).toBeInTheDocument();
       });
+    });
+  });
+
+  describe("Artifact Renaming", () => {
+    it("should display artifact titles in tabs", () => {
+      renderWithProviders(<CanvasWorkspace artifacts={mockArtifacts} />);
+
+      // Use testid to find artifact tabs
+      const tab1 = screen.getByTestId("artifact-tab-artifact-1");
+      const tab2 = screen.getByTestId("artifact-tab-artifact-2");
+
+      expect(tab1).toHaveTextContent("Hello World");
+      expect(tab2).toHaveTextContent("README");
+    });
+
+    it("should enable inline editing when enableArtifactEdit prop is true", () => {
+      renderWithProviders(
+        <CanvasWorkspace artifacts={mockArtifacts} enableArtifactEdit />,
+      );
+
+      // Should show artifact tabs with titles
+      const tab = screen.getByTestId("artifact-tab-artifact-1");
+      expect(tab).toHaveTextContent("Hello World");
+    });
+
+    it("should call onRenameArtifact when artifact title is changed", async () => {
+      const onRenameArtifact = vi.fn();
+      renderWithProviders(
+        <CanvasWorkspace
+          artifacts={mockArtifacts}
+          enableArtifactEdit
+          onRenameArtifact={onRenameArtifact}
+        />,
+      );
+
+      // Scope search to just the artifact tab
+      const tab = screen.getByTestId("artifact-tab-artifact-1");
+      const editableTitle = within(tab).getByText("Hello World");
+      fireEvent.click(editableTitle);
+
+      // Type new name and submit
+      const input = within(tab).getByRole("textbox");
+      fireEvent.change(input, { target: { value: "New Title" } });
+      fireEvent.keyDown(input, { key: "Enter" });
+
+      expect(onRenameArtifact).toHaveBeenCalledWith("artifact-1", "New Title");
+    });
+
+    it("should not trigger rename on Escape key", async () => {
+      const onRenameArtifact = vi.fn();
+      renderWithProviders(
+        <CanvasWorkspace
+          artifacts={mockArtifacts}
+          enableArtifactEdit
+          onRenameArtifact={onRenameArtifact}
+        />,
+      );
+
+      // Scope search to just the artifact tab
+      const tab = screen.getByTestId("artifact-tab-artifact-1");
+      const editableTitle = within(tab).getByText("Hello World");
+      fireEvent.click(editableTitle);
+
+      // Type new name and press Escape
+      const input = within(tab).getByRole("textbox");
+      fireEvent.change(input, { target: { value: "Changed Title" } });
+      fireEvent.keyDown(input, { key: "Escape" });
+
+      // Should not have called onRenameArtifact
+      expect(onRenameArtifact).not.toHaveBeenCalled();
+    });
+  });
+
+  // ===========================================================================
+  // Artifact Hover Details Tests (Sprint Block 4)
+  // ===========================================================================
+
+  describe("Artifact Hover Details", () => {
+    beforeEach(() => {
+      vi.useFakeTimers({ shouldAdvanceTime: true });
+    });
+
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    it("should show hover tooltip when enableArtifactHover prop is true", async () => {
+      renderWithProviders(
+        <CanvasWorkspace artifacts={mockArtifacts} enableArtifactHover />,
+      );
+
+      // Hover over an artifact tab
+      const tab = screen.getByTestId("artifact-tab-artifact-1");
+      fireEvent.mouseEnter(tab);
+
+      // Wait for tooltip delay
+      await act(async () => {
+        vi.advanceTimersByTime(300);
+      });
+
+      // Tooltip should appear
+      expect(screen.getByRole("tooltip")).toBeInTheDocument();
+    });
+
+    it("should display artifact type in hover tooltip", async () => {
+      renderWithProviders(
+        <CanvasWorkspace artifacts={mockArtifacts} enableArtifactHover />,
+      );
+
+      const tab = screen.getByTestId("artifact-tab-artifact-1");
+      fireEvent.mouseEnter(tab);
+      await act(async () => {
+        vi.advanceTimersByTime(300);
+      });
+
+      const tooltip = screen.getByRole("tooltip");
+      expect(tooltip).toHaveTextContent(/code/i);
+    });
+
+    it("should display language in hover tooltip when available", async () => {
+      renderWithProviders(
+        <CanvasWorkspace artifacts={mockArtifacts} enableArtifactHover />,
+      );
+
+      const tab = screen.getByTestId("artifact-tab-artifact-1");
+      fireEvent.mouseEnter(tab);
+      await act(async () => {
+        vi.advanceTimersByTime(300);
+      });
+
+      const tooltip = screen.getByRole("tooltip");
+      expect(tooltip).toHaveTextContent(/javascript/i);
+    });
+
+    it("should display line count in hover tooltip", async () => {
+      renderWithProviders(
+        <CanvasWorkspace artifacts={mockArtifacts} enableArtifactHover />,
+      );
+
+      const tab = screen.getByTestId("artifact-tab-artifact-1");
+      fireEvent.mouseEnter(tab);
+      await act(async () => {
+        vi.advanceTimersByTime(300);
+      });
+
+      const tooltip = screen.getByRole("tooltip");
+      expect(tooltip).toHaveTextContent(/1 line/i);
+    });
+
+    it("should display creation timestamp in hover tooltip", async () => {
+      renderWithProviders(
+        <CanvasWorkspace artifacts={mockArtifacts} enableArtifactHover />,
+      );
+
+      const tab = screen.getByTestId("artifact-tab-artifact-1");
+      fireEvent.mouseEnter(tab);
+      await act(async () => {
+        vi.advanceTimersByTime(300);
+      });
+
+      const tooltip = screen.getByRole("tooltip");
+      expect(tooltip).toHaveTextContent(/created/i);
+    });
+
+    it("should display AI badge indicator in hover tooltip for AI-generated artifacts", async () => {
+      renderWithProviders(
+        <CanvasWorkspace artifacts={mockArtifacts} enableArtifactHover />,
+      );
+
+      const tab = screen.getByTestId("artifact-tab-artifact-2");
+      fireEvent.mouseEnter(tab);
+      await act(async () => {
+        vi.advanceTimersByTime(300);
+      });
+
+      const tooltip = screen.getByRole("tooltip");
+      expect(tooltip).toHaveTextContent(/ai generated/i);
+    });
+
+    it("should display user edited indicator in hover tooltip for user-edited artifacts", async () => {
+      renderWithProviders(
+        <CanvasWorkspace artifacts={mockArtifacts} enableArtifactHover />,
+      );
+
+      const tab = screen.getByTestId("artifact-tab-artifact-1");
+      fireEvent.mouseEnter(tab);
+      await act(async () => {
+        vi.advanceTimersByTime(300);
+      });
+
+      const tooltip = screen.getByRole("tooltip");
+      expect(tooltip).toHaveTextContent(/user/i);
+    });
+
+    it("should hide hover tooltip when mouse leaves", async () => {
+      renderWithProviders(
+        <CanvasWorkspace artifacts={mockArtifacts} enableArtifactHover />,
+      );
+
+      const tab = screen.getByTestId("artifact-tab-artifact-1");
+      fireEvent.mouseEnter(tab);
+      await act(async () => {
+        vi.advanceTimersByTime(300);
+      });
+
+      expect(screen.getByRole("tooltip")).toBeInTheDocument();
+
+      fireEvent.mouseLeave(tab);
+
+      await waitFor(() => {
+        expect(screen.queryByRole("tooltip")).not.toBeInTheDocument();
+      });
+    });
+
+    it("should not show hover tooltip when enableArtifactHover is false", async () => {
+      renderWithProviders(
+        <CanvasWorkspace
+          artifacts={mockArtifacts}
+          enableArtifactHover={false}
+        />,
+      );
+
+      const tab = screen.getByTestId("artifact-tab-artifact-1");
+      fireEvent.mouseEnter(tab);
+      await act(async () => {
+        vi.advanceTimersByTime(300);
+      });
+
+      expect(screen.queryByRole("tooltip")).not.toBeInTheDocument();
+    });
+
+    it("should show correct line count for multi-line artifacts", async () => {
+      const multiLineArtifacts: CanvasArtifact[] = [
+        {
+          id: "multi-line",
+          type: "code",
+          sessionId: "session-1",
+          version: 1,
+          content: "line1\nline2\nline3\nline4\nline5",
+          contentType: "code",
+          title: "Multi-Line",
+          createdAt: "2024-01-01T00:00:00Z",
+          updatedAt: "2024-01-01T00:00:00Z",
+          editMetadata: {
+            editedBy: "user",
+            language: "text",
+          },
+        },
+      ];
+
+      renderWithProviders(
+        <CanvasWorkspace artifacts={multiLineArtifacts} enableArtifactHover />,
+      );
+
+      const tab = screen.getByTestId("artifact-tab-multi-line");
+      fireEvent.mouseEnter(tab);
+      await act(async () => {
+        vi.advanceTimersByTime(300);
+      });
+
+      const tooltip = screen.getByRole("tooltip");
+      expect(tooltip).toHaveTextContent(/5 lines/i);
     });
   });
 });

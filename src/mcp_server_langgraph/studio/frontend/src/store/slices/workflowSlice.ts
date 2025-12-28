@@ -165,6 +165,38 @@ export const saveWorkflow = createAsyncThunk<
   }
 });
 
+/**
+ * Rename a workflow (updates only the name, not the full workflow)
+ */
+export const renameWorkflow = createAsyncThunk<
+  { name: string },
+  { workflowId: string; name: string },
+  { state: RootState; rejectValue: string }
+>(
+  "workflow/renameWorkflow",
+  async ({ workflowId, name }, { rejectWithValue }) => {
+    try {
+      const response = await fetch(`/api/v1/workflows/${workflowId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name }),
+        credentials: "include",
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.detail || "Failed to rename workflow");
+      }
+
+      return { name };
+    } catch (error) {
+      return rejectWithValue(
+        error instanceof Error ? error.message : "Failed to rename workflow",
+      );
+    }
+  },
+);
+
 export const executeWorkflow = createAsyncThunk<
   void,
   void,
@@ -608,6 +640,25 @@ export const workflowSlice = createSlice({
       .addCase(executeWorkflow.rejected, (state, action) => {
         state.executionState = "error";
         state.error = action.payload || "Failed to execute workflow";
+      });
+
+    // renameWorkflow
+    builder
+      .addCase(renameWorkflow.pending, (state) => {
+        state.isSaving = true;
+        state.error = null;
+      })
+      .addCase(renameWorkflow.fulfilled, (state, action) => {
+        if (state.metadata) {
+          state.metadata.name = action.payload.name;
+          state.metadata.updatedAt = Date.now();
+        }
+        state.isSaving = false;
+        state.error = null;
+      })
+      .addCase(renameWorkflow.rejected, (state, action) => {
+        state.isSaving = false;
+        state.error = action.payload || "Failed to rename workflow";
       });
   },
 });

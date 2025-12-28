@@ -12,6 +12,12 @@ import {
   extractCodeBlocks,
   detectArtifactType,
   parseChartConfig,
+  extractCodeName,
+  extractMermaidName,
+  extractSVGName,
+  extractChartName,
+  extractJSONName,
+  detectSVGContent,
 } from "./artifactParser";
 
 describe("Artifact Parser", () => {
@@ -346,6 +352,435 @@ export default function App() {
       const artifactSegment = segments.find((s) => s.type === "artifact");
 
       expect(artifactSegment?.artifact?.type).toBe("executable");
+    });
+  });
+
+  // =========================================================================
+  // Smart Name Extraction Tests (Sprint Block 4)
+  // =========================================================================
+
+  describe("extractCodeName", () => {
+    it("should extract exported function name", () => {
+      const code = `export function calculateTotal(items) {
+  return items.reduce((sum, item) => sum + item.price, 0);
+}`;
+      expect(extractCodeName(code, "javascript")).toBe("calculateTotal");
+    });
+
+    it("should extract exported class name", () => {
+      const code = `export class UserAuthenticationService {
+  constructor() {}
+  login(email, password) {}
+}`;
+      expect(extractCodeName(code, "javascript")).toBe(
+        "UserAuthenticationService",
+      );
+    });
+
+    it("should extract default export function name", () => {
+      const code = `export default function DataProcessor() {
+  return null;
+}`;
+      expect(extractCodeName(code, "javascript")).toBe("DataProcessor");
+    });
+
+    it("should extract Python class name", () => {
+      const code = `class DatabaseConnection:
+    def __init__(self):
+        pass`;
+      expect(extractCodeName(code, "python")).toBe("DatabaseConnection");
+    });
+
+    it("should extract Python function name", () => {
+      const code = `def process_payment(amount, currency):
+    return {"status": "success"}`;
+      expect(extractCodeName(code, "python")).toBe("process_payment");
+    });
+
+    it("should extract const arrow function name", () => {
+      const code = `export const fetchUserData = async (userId) => {
+  return await api.get(\`/users/\${userId}\`);
+};`;
+      expect(extractCodeName(code, "typescript")).toBe("fetchUserData");
+    });
+
+    it("should return null when no extractable name found", () => {
+      const code = `console.log("hello world");`;
+      expect(extractCodeName(code, "javascript")).toBeNull();
+    });
+
+    it("should prefer exported declarations over non-exported", () => {
+      const code = `function helper() {}
+export function mainFunction() {}`;
+      expect(extractCodeName(code, "javascript")).toBe("mainFunction");
+    });
+  });
+
+  describe("extractMermaidName", () => {
+    it("should extract title directive", () => {
+      const code = `---
+title: User Authentication Flow
+---
+graph TD
+    A[Start] --> B[Login]`;
+      expect(extractMermaidName(code)).toBe("User Authentication Flow");
+    });
+
+    it("should extract pie chart title", () => {
+      const code = `pie title Market Share Analysis
+    "Chrome" : 62.85
+    "Safari" : 19.25`;
+      expect(extractMermaidName(code)).toBe("Market Share Analysis");
+    });
+
+    it("should describe flowchart type", () => {
+      const code = `flowchart LR
+    A --> B --> C`;
+      expect(extractMermaidName(code)).toBe("Flowchart");
+    });
+
+    it("should describe sequence diagram", () => {
+      const code = `sequenceDiagram
+    participant A
+    A->>B: Hello`;
+      expect(extractMermaidName(code)).toBe("Sequence Diagram");
+    });
+
+    it("should describe class diagram", () => {
+      const code = `classDiagram
+    class Animal {
+      +name: string
+    }`;
+      expect(extractMermaidName(code)).toBe("Class Diagram");
+    });
+
+    it("should describe ER diagram", () => {
+      const code = `erDiagram
+    CUSTOMER ||--o{ ORDER : places`;
+      expect(extractMermaidName(code)).toBe("ER Diagram");
+    });
+
+    it("should describe state diagram", () => {
+      const code = `stateDiagram-v2
+    [*] --> Active`;
+      expect(extractMermaidName(code)).toBe("State Diagram");
+    });
+
+    it("should describe gantt chart", () => {
+      const code = `gantt
+    title Project Timeline
+    section Phase 1`;
+      expect(extractMermaidName(code)).toBe("Project Timeline");
+    });
+
+    it("should describe journey diagram", () => {
+      const code = `journey
+    title My working day`;
+      expect(extractMermaidName(code)).toBe("My working day");
+    });
+
+    it("should fallback to Diagram for unknown types", () => {
+      const code = `unknownDiagram
+    something --> else`;
+      expect(extractMermaidName(code)).toBe("Diagram");
+    });
+  });
+
+  describe("extractSVGName", () => {
+    it("should extract title element", () => {
+      const code = `<svg viewBox="0 0 100 100">
+  <title>Company Logo</title>
+  <circle cx="50" cy="50" r="40" />
+</svg>`;
+      expect(extractSVGName(code)).toBe("Company Logo");
+    });
+
+    it("should extract aria-label attribute", () => {
+      const code = `<svg aria-label="Navigation Icon" viewBox="0 0 24 24">
+  <path d="M12 2L2 22h20L12 2z" />
+</svg>`;
+      expect(extractSVGName(code)).toBe("Navigation Icon");
+    });
+
+    it("should extract aria-labelledby referenced title", () => {
+      const code = `<svg aria-labelledby="iconTitle" viewBox="0 0 100 100">
+  <title id="iconTitle">Settings Gear</title>
+  <path d="..." />
+</svg>`;
+      expect(extractSVGName(code)).toBe("Settings Gear");
+    });
+
+    it("should extract id attribute as fallback", () => {
+      const code = `<svg id="heroIllustration" viewBox="0 0 800 600">
+  <rect width="800" height="600" fill="blue" />
+</svg>`;
+      expect(extractSVGName(code)).toBe("heroIllustration");
+    });
+
+    it("should return null when no name found", () => {
+      const code = `<svg viewBox="0 0 100 100">
+  <circle cx="50" cy="50" r="40" />
+</svg>`;
+      expect(extractSVGName(code)).toBeNull();
+    });
+
+    it("should prefer title over aria-label", () => {
+      const code = `<svg aria-label="Alt Name" viewBox="0 0 100 100">
+  <title>Primary Title</title>
+</svg>`;
+      expect(extractSVGName(code)).toBe("Primary Title");
+    });
+  });
+
+  describe("extractChartName", () => {
+    it("should extract title from chart config", () => {
+      const code = `{
+  "title": "Monthly Revenue",
+  "type": "line",
+  "data": []
+}`;
+      expect(extractChartName(code)).toBe("Monthly Revenue");
+    });
+
+    it("should extract nested title from config", () => {
+      const code = `{
+  "type": "bar",
+  "config": { "title": "Sales by Region" },
+  "data": []
+}`;
+      expect(extractChartName(code)).toBe("Sales by Region");
+    });
+
+    it("should describe chart type when no title", () => {
+      const code = `{
+  "type": "pie",
+  "data": [{"label": "A", "value": 30}]
+}`;
+      expect(extractChartName(code)).toBe("Pie Chart");
+    });
+
+    it("should return null for invalid JSON", () => {
+      const code = `not valid json`;
+      expect(extractChartName(code)).toBeNull();
+    });
+
+    it("should capitalize chart type", () => {
+      const code = `{
+  "type": "scatter",
+  "data": []
+}`;
+      expect(extractChartName(code)).toBe("Scatter Chart");
+    });
+  });
+
+  describe("extractJSONName", () => {
+    it("should use name field if present", () => {
+      const code = `{
+  "name": "user-config",
+  "version": "1.0.0"
+}`;
+      expect(extractJSONName(code)).toBe("user-config");
+    });
+
+    it("should use title field if present", () => {
+      const code = `{
+  "title": "API Response",
+  "data": {}
+}`;
+      expect(extractJSONName(code)).toBe("API Response");
+    });
+
+    it("should describe by root type for arrays", () => {
+      const code = `[
+  {"id": 1, "name": "Item 1"},
+  {"id": 2, "name": "Item 2"}
+]`;
+      expect(extractJSONName(code)).toBe("Array (2 items)");
+    });
+
+    it("should describe by first key for objects", () => {
+      const code = `{
+  "users": [{"id": 1}],
+  "total": 1
+}`;
+      expect(extractJSONName(code)).toBe("users Object");
+    });
+
+    it("should return null for invalid JSON", () => {
+      const code = `not valid json`;
+      expect(extractJSONName(code)).toBeNull();
+    });
+
+    it("should prefer name over title", () => {
+      const code = `{
+  "name": "config-name",
+  "title": "Config Title"
+}`;
+      expect(extractJSONName(code)).toBe("config-name");
+    });
+  });
+
+  describe("detectSVGContent", () => {
+    it("should detect SVG starting with <svg tag", () => {
+      const code = `<svg viewBox="0 0 100 100">
+  <circle cx="50" cy="50" r="40" />
+</svg>`;
+      expect(detectSVGContent(code)).toBe(true);
+    });
+
+    it("should detect SVG with XML declaration", () => {
+      const code = `<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg">
+  <rect width="100" height="100" />
+</svg>`;
+      expect(detectSVGContent(code)).toBe(true);
+    });
+
+    it("should return false for non-SVG content", () => {
+      const code = `function hello() {
+  console.log("hello");
+}`;
+      expect(detectSVGContent(code)).toBe(false);
+    });
+
+    it("should return false for HTML that mentions svg but is not SVG", () => {
+      const code = `<div class="svg-container">
+  <p>This mentions svg but is not SVG</p>
+</div>`;
+      expect(detectSVGContent(code)).toBe(false);
+    });
+
+    it("should handle whitespace before SVG tag", () => {
+      const code = `
+  <svg viewBox="0 0 100 100">
+    <circle cx="50" cy="50" r="40" />
+  </svg>`;
+      expect(detectSVGContent(code)).toBe(true);
+    });
+  });
+
+  describe("parseArtifacts with SVG auto-detection", () => {
+    it("should auto-detect SVG in code block without language", () => {
+      const content = `Here is an SVG:
+
+\`\`\`
+<svg viewBox="0 0 100 100">
+  <circle cx="50" cy="50" r="40" fill="blue" />
+</svg>
+\`\`\``;
+
+      const segments = parseArtifacts(content);
+      const artifactSegment = segments.find((s) => s.type === "artifact");
+      expect(artifactSegment?.artifact?.type).toBe("svg");
+    });
+
+    it("should auto-detect SVG with XML declaration", () => {
+      const content = `
+\`\`\`
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <rect width="100" height="100" fill="red" />
+</svg>
+\`\`\``;
+
+      const segments = parseArtifacts(content);
+      const artifactSegment = segments.find((s) => s.type === "artifact");
+      expect(artifactSegment?.artifact?.type).toBe("svg");
+    });
+
+    it("should not auto-detect SVG when language is explicitly set", () => {
+      const content = `
+\`\`\`xml
+<svg viewBox="0 0 100 100">
+  <circle cx="50" cy="50" r="40" />
+</svg>
+\`\`\``;
+
+      const segments = parseArtifacts(content);
+      const artifactSegment = segments.find((s) => s.type === "artifact");
+      // xml is a code artifact, not svg
+      expect(artifactSegment?.artifact?.type).toBe("code");
+    });
+  });
+
+  describe("parseArtifacts with smart naming", () => {
+    it("should use extracted function name for code artifact", () => {
+      const content = `Here is some code:
+
+\`\`\`typescript
+export function validateEmail(email: string): boolean {
+  return /^[^@]+@[^@]+\\.[^@]+$/.test(email);
+}
+\`\`\``;
+
+      const segments = parseArtifacts(content);
+      const artifactSegment = segments.find((s) => s.type === "artifact");
+      expect(artifactSegment?.artifact?.title).toBe("validateEmail");
+    });
+
+    it("should use extracted title for mermaid diagram", () => {
+      const content = `
+\`\`\`mermaid
+---
+title: Database Schema
+---
+erDiagram
+    USER ||--o{ ORDER : places
+\`\`\``;
+
+      const segments = parseArtifacts(content);
+      const artifactSegment = segments.find((s) => s.type === "artifact");
+      expect(artifactSegment?.artifact?.title).toBe("Database Schema");
+    });
+
+    it("should use extracted title for SVG", () => {
+      const content = `
+\`\`\`svg
+<svg viewBox="0 0 100 100">
+  <title>Loading Spinner</title>
+  <circle cx="50" cy="50" r="40" />
+</svg>
+\`\`\``;
+
+      const segments = parseArtifacts(content);
+      const artifactSegment = segments.find((s) => s.type === "artifact");
+      expect(artifactSegment?.artifact?.title).toBe("Loading Spinner");
+    });
+
+    it("should use extracted name for JSON", () => {
+      const content = `
+\`\`\`json
+{
+  "name": "package-config",
+  "version": "2.0.0"
+}
+\`\`\``;
+
+      const segments = parseArtifacts(content);
+      const artifactSegment = segments.find((s) => s.type === "artifact");
+      expect(artifactSegment?.artifact?.title).toBe("package-config");
+    });
+
+    it("should fallback to generic name when extraction fails", () => {
+      const content = `
+\`\`\`javascript
+console.log("no function here");
+\`\`\``;
+
+      const segments = parseArtifacts(content);
+      const artifactSegment = segments.find((s) => s.type === "artifact");
+      expect(artifactSegment?.artifact?.title).toBe("javascript code");
+    });
+
+    it("should prefer meta title over extracted name", () => {
+      const content = `
+\`\`\`typescript User Validation Helper
+export function validateUser() {}
+\`\`\``;
+
+      const segments = parseArtifacts(content);
+      const artifactSegment = segments.find((s) => s.type === "artifact");
+      expect(artifactSegment?.artifact?.title).toBe("User Validation Helper");
     });
   });
 });

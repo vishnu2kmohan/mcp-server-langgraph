@@ -410,4 +410,113 @@ describe("PromptTester", () => {
       expect(screen.getByText(/no prompts/i)).toBeInTheDocument();
     });
   });
+
+  // ==========================================================================
+  // TDD: Pre-selection Feature (RED phase)
+  // When opening tester from PromptLibrary, pre-select the clicked prompt
+  // ==========================================================================
+  describe("pre-selection", () => {
+    it("pre-selects prompt when preselectedPromptName prop is provided", async () => {
+      renderWithProvider(
+        <PromptTester
+          open={true}
+          onClose={mockOnClose}
+          preselectedPromptName="summarize"
+        />,
+      );
+
+      // Should show the prompt description indicating it's selected
+      await waitFor(() => {
+        expect(
+          screen.getByText("Summarize the given text"),
+        ).toBeInTheDocument();
+      });
+
+      // Should show the argument form for the selected prompt
+      expect(screen.getByLabelText(/text/i)).toBeInTheDocument();
+    });
+
+    it("allows user to change pre-selected prompt", async () => {
+      const user = userEvent.setup();
+
+      renderWithProvider(
+        <PromptTester
+          open={true}
+          onClose={mockOnClose}
+          preselectedPromptName="summarize"
+        />,
+      );
+
+      // Initially should show summarize description
+      await waitFor(() => {
+        expect(
+          screen.getByText("Summarize the given text"),
+        ).toBeInTheDocument();
+      });
+
+      // User can select a different prompt
+      const promptSelect = screen.getByLabelText(/select prompt/i);
+      await user.selectOptions(promptSelect, "translate");
+
+      await waitFor(() => {
+        expect(
+          screen.getByText("Translate text to another language"),
+        ).toBeInTheDocument();
+      });
+    });
+
+    it("ignores invalid preselectedPromptName", async () => {
+      renderWithProvider(
+        <PromptTester
+          open={true}
+          onClose={mockOnClose}
+          preselectedPromptName="nonexistent_prompt"
+        />,
+      );
+
+      // Should not show any prompt selected
+      expect(
+        screen.queryByText("Summarize the given text"),
+      ).not.toBeInTheDocument();
+      expect(
+        screen.queryByText("Translate text to another language"),
+      ).not.toBeInTheDocument();
+    });
+
+    it("clears pre-selection when dialog is closed and reopened without preselectedPromptName", async () => {
+      const { rerender } = renderWithProvider(
+        <PromptTester
+          open={true}
+          onClose={mockOnClose}
+          preselectedPromptName="summarize"
+        />,
+      );
+
+      // Initially pre-selected
+      await waitFor(() => {
+        expect(
+          screen.getByText("Summarize the given text"),
+        ).toBeInTheDocument();
+      });
+
+      // Close dialog
+      rerender(
+        <Provider store={createTestStore()}>
+          <PromptTester open={false} onClose={mockOnClose} />
+        </Provider>,
+      );
+
+      // Reopen without preselectedPromptName
+      rerender(
+        <Provider store={createTestStore()}>
+          <PromptTester open={true} onClose={mockOnClose} />
+        </Provider>,
+      );
+
+      // Should not have any prompt selected
+      expect(
+        screen.queryByText("Summarize the given text"),
+      ).not.toBeInTheDocument();
+    });
+  });
 });

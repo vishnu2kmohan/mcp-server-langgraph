@@ -36,6 +36,32 @@ export type ConnectionStatus =
   | "connecting"
   | "error";
 
+/** Token usage breakdown by type */
+export interface TokenBreakdown {
+  /** Input/prompt tokens */
+  promptTokens: number;
+  /** Output/completion tokens */
+  completionTokens: number;
+  /** Total tokens (promptTokens + completionTokens) */
+  totalTokens: number;
+}
+
+/** Cost breakdown information */
+export interface CostBreakdown {
+  /** Estimated cost in USD */
+  estimatedCostUsd: number;
+  /** Cost by model (for multi-model sessions) */
+  byModel?: Record<string, { tokens: number; cost: number }>;
+}
+
+/** Model provider type */
+export type ModelProvider =
+  | "openai"
+  | "anthropic"
+  | "google"
+  | "azure"
+  | "unknown";
+
 export interface StatusBarProps {
   /** Current status message (default: "Ready") */
   status?: string;
@@ -45,8 +71,14 @@ export interface StatusBarProps {
   agentStatus?: string;
   /** Model name (e.g., "claude-3-opus") */
   modelName?: string;
+  /** Model provider for icon display */
+  modelProvider?: ModelProvider;
   /** Token count for current session */
   tokenCount?: number;
+  /** Token breakdown (input/output) for enhanced display */
+  tokenBreakdown?: TokenBreakdown;
+  /** Cost breakdown for estimated cost display */
+  costBreakdown?: CostBreakdown;
   /** Current user name */
   userName?: string;
   /** Error message to display (shows in red) */
@@ -77,12 +109,80 @@ export interface StatusBarProps {
 // Component
 // =============================================================================
 
+/**
+ * Format cost for display
+ */
+function formatCost(costUsd: number): string {
+  if (costUsd < 0.01) {
+    return `$${costUsd.toFixed(4)}`;
+  }
+  return `$${costUsd.toFixed(2)}`;
+}
+
+/**
+ * Build token breakdown tooltip content
+ */
+function buildTokenTooltip(
+  tokenCount: number,
+  tokenBreakdown?: TokenBreakdown,
+  costBreakdown?: CostBreakdown,
+): string {
+  const lines: string[] = [];
+
+  if (tokenBreakdown) {
+    lines.push(`Input: ${tokenBreakdown.promptTokens.toLocaleString()} tokens`);
+    lines.push(
+      `Output: ${tokenBreakdown.completionTokens.toLocaleString()} tokens`,
+    );
+    lines.push(`Total: ${tokenBreakdown.totalTokens.toLocaleString()} tokens`);
+  } else {
+    lines.push(`Session tokens: ${tokenCount.toLocaleString()}`);
+  }
+
+  if (costBreakdown) {
+    lines.push(`Estimated cost: ${formatCost(costBreakdown.estimatedCostUsd)}`);
+
+    if (costBreakdown.byModel) {
+      lines.push("");
+      lines.push("By model:");
+      for (const [model, data] of Object.entries(costBreakdown.byModel)) {
+        lines.push(
+          `  ${model}: ${data.tokens.toLocaleString()} tokens (${formatCost(data.cost)})`,
+        );
+      }
+    }
+  }
+
+  return lines.join("\n");
+}
+
+/**
+ * Get provider-specific color class
+ */
+function getProviderColorClass(provider: ModelProvider): string {
+  switch (provider) {
+    case "openai":
+      return "text-green-600 dark:text-green-400";
+    case "anthropic":
+      return "text-orange-600 dark:text-orange-400";
+    case "google":
+      return "text-blue-600 dark:text-blue-400";
+    case "azure":
+      return "text-sky-600 dark:text-sky-400";
+    default:
+      return "";
+  }
+}
+
 export function StatusBar({
   status = "Ready",
   connectionStatus,
   agentStatus,
   modelName,
+  modelProvider,
   tokenCount,
+  tokenBreakdown,
+  costBreakdown,
   userName,
   errorMessage,
   agentCount,
@@ -144,27 +244,37 @@ export function StatusBar({
           </span>
         )}
 
-        {/* Model indicator */}
+        {/* Model indicator with provider color */}
         {modelName && (
           <span
             data-testid="model-indicator"
-            title={`Model: ${modelName}`}
-            className="flex items-center gap-1 cursor-help"
+            title={`Model: ${modelName}${modelProvider ? ` (${modelProvider})` : ""}`}
+            className={cn(
+              "flex items-center gap-1 cursor-help",
+              modelProvider && getProviderColorClass(modelProvider),
+            )}
           >
             <Cpu size={12} aria-hidden="true" />
             <span>{modelName}</span>
           </span>
         )}
 
-        {/* Token count */}
+        {/* Token count with breakdown and cost tooltip */}
         {tokenCount !== undefined && (
           <span
             data-testid="token-count"
-            title={`Session token count: ${tokenCount.toLocaleString()}`}
+            title={buildTokenTooltip(tokenCount, tokenBreakdown, costBreakdown)}
             className="flex items-center gap-1 cursor-help"
           >
             <Hash size={12} aria-hidden="true" />
-            <span>{tokenCount.toLocaleString()} tokens</span>
+            <span>
+              {tokenCount.toLocaleString()} tokens
+              {costBreakdown && (
+                <span className="ml-1 text-gray-400 dark:text-gray-500">
+                  ({formatCost(costBreakdown.estimatedCostUsd)})
+                </span>
+              )}
+            </span>
           </span>
         )}
 

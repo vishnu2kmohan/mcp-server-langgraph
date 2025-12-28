@@ -72,9 +72,68 @@ export const LazyElicitationDialog = lazy(() =>
   })),
 );
 
+// =============================================================================
+// Aggregated Capabilities Components (MCP 2025-11-25)
+// =============================================================================
+
+/**
+ * Lazy-loaded AggregatedCapabilitiesPanel component.
+ * Only loaded when user views aggregated capabilities from external MCP servers.
+ */
+export const LazyAggregatedCapabilitiesPanel = lazy(() =>
+  import("./AggregatedCapabilities").then((module) => ({
+    default: module.AggregatedCapabilitiesPanel,
+  })),
+);
+
+/**
+ * Lazy-loaded MCPServerCard component.
+ * Only loaded when displaying server capability summaries.
+ */
+export const LazyMCPServerCard = lazy(() =>
+  import("./MCPServerCard").then((module) => ({
+    default: module.MCPServerCard,
+  })),
+);
+
+/**
+ * Lazy-loaded ToolExplorer component.
+ * Only loaded when browsing aggregated tools.
+ */
+export const LazyToolExplorer = lazy(() =>
+  import("./ToolExplorer").then((module) => ({
+    default: module.ToolExplorer,
+  })),
+);
+
+/**
+ * Lazy-loaded ResourceBrowser component.
+ * Only loaded when browsing aggregated resources.
+ */
+export const LazyResourceBrowser = lazy(() =>
+  import("./ResourceBrowser").then((module) => ({
+    default: module.ResourceBrowser,
+  })),
+);
+
+/**
+ * Lazy-loaded PromptLibrary component.
+ * Only loaded when browsing aggregated prompts.
+ */
+export const LazyPromptLibrary = lazy(() =>
+  import("./PromptLibrary").then((module) => ({
+    default: module.PromptLibrary,
+  })),
+);
+
 // Re-export types that consumers need (types don't affect bundle size)
 export type { AddConnectionDialogProps } from "./AddConnectionDialog";
 export type { ToolInvocationDialogProps } from "./ToolInvocationDialog";
 export type { ResourceViewerProps } from "./ResourceViewer";
 export type { PromptTesterProps } from "./PromptTester";
 export type { ElicitationDialogProps } from "./ElicitationDialog";
+export type { AggregatedCapabilitiesPanelProps } from "./AggregatedCapabilities";
+export type { MCPServerCardProps } from "./MCPServerCard";
+export type { ToolExplorerProps } from "./ToolExplorer";
+export type { ResourceBrowserProps } from "./ResourceBrowser";
+export type { PromptLibraryProps } from "./PromptLibrary";

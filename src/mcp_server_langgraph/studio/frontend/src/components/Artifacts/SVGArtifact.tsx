@@ -14,6 +14,7 @@ import { useMemo, useState, useCallback } from "react";
 import { Copy, Check } from "lucide-react";
 import { ArtifactExporter } from "./ArtifactExporter";
 import type { ExportFormat } from "./ArtifactExporter";
+import { CodePreviewToggle, type ViewMode } from "./CodePreviewToggle";
 import type { SVGConfig } from "../../types/artifacts";
 
 export interface SVGArtifactProps {
@@ -104,6 +105,7 @@ function extractSvgContent(data: string): string {
 
 export function SVGArtifact({ data, title, config }: SVGArtifactProps) {
   const [copied, setCopied] = useState(false);
+  const [viewMode, setViewMode] = useState<ViewMode>("preview");
 
   const { sanitizedSvg, error } = useMemo(() => {
     if (!data || data.trim() === "") {
@@ -180,9 +182,16 @@ export function SVGArtifact({ data, title, config }: SVGArtifactProps) {
     <div className="bg-gray-50 dark:bg-gray-800 rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700">
       {/* Header with title and actions */}
       <div className="px-4 py-2 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
-        <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300">
-          {title || "SVG"}
-        </h4>
+        <div className="flex items-center gap-3">
+          <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300">
+            {title || "SVG"}
+          </h4>
+          <CodePreviewToggle
+            mode={viewMode}
+            onModeChange={setViewMode}
+            previewSupported={!error}
+          />
+        </div>
         <div className="flex items-center gap-1">
           <button
             onClick={handleCopy}
@@ -204,13 +213,24 @@ export function SVGArtifact({ data, title, config }: SVGArtifactProps) {
         </div>
       </div>
 
-      {/* SVG Content */}
-      <div
-        data-testid="svg-container"
-        className="p-4 flex items-center justify-center"
-        style={containerStyle}
-        dangerouslySetInnerHTML={{ __html: sanitizedSvg || "" }}
-      />
+      {/* SVG Content - Preview Mode */}
+      {viewMode === "preview" && (
+        <div
+          data-testid="svg-container"
+          className="p-4 flex items-center justify-center"
+          style={containerStyle}
+          dangerouslySetInnerHTML={{ __html: sanitizedSvg || "" }}
+        />
+      )}
+
+      {/* SVG Source Code - Code Mode */}
+      {viewMode === "code" && (
+        <div data-testid="svg-source-code" className="p-4">
+          <pre className="bg-gray-900 dark:bg-gray-950 text-gray-100 p-4 rounded-lg overflow-x-auto text-sm font-mono">
+            <code>{data}</code>
+          </pre>
+        </div>
+      )}
     </div>
   );
 }

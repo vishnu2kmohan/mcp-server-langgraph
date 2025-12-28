@@ -47,7 +47,13 @@ describe("ExecutableArtifact", () => {
 
   describe("execution", () => {
     it("should show loading state when running", () => {
-      render(<ExecutableArtifact data={pythonCode} config={defaultConfig} />);
+      render(
+        <ExecutableArtifact
+          data={pythonCode}
+          config={defaultConfig}
+          requireConfirmation={false}
+        />,
+      );
       const runButton = screen.getByRole("button", { name: /run/i });
       fireEvent.click(runButton);
       expect(screen.getByText(/running/i)).toBeInTheDocument();
@@ -130,13 +136,14 @@ describe("ExecutableArtifact", () => {
   });
 
   describe("callback", () => {
-    it("should call onExecute when run button clicked", () => {
+    it("should call onExecute when run button clicked (with confirmation disabled)", () => {
       const onExecute = vi.fn();
       render(
         <ExecutableArtifact
           data={pythonCode}
           config={defaultConfig}
           onExecute={onExecute}
+          requireConfirmation={false}
         />,
       );
       const runButton = screen.getByRole("button", { name: /run/i });
@@ -149,6 +156,99 @@ describe("ExecutableArtifact", () => {
     it("should show error for empty code", () => {
       render(<ExecutableArtifact data="" config={defaultConfig} />);
       expect(screen.getByText(/no code provided/i)).toBeInTheDocument();
+    });
+  });
+
+  // =========================================================================
+  // HITL Confirmation Dialog Tests (Sprint Block 4)
+  // =========================================================================
+
+  describe("execution confirmation (HITL)", () => {
+    it("should show confirmation dialog by default before execution", () => {
+      render(<ExecutableArtifact data={pythonCode} config={defaultConfig} />);
+      const runButton = screen.getByRole("button", { name: /run/i });
+      fireEvent.click(runButton);
+      // Confirmation dialog should appear
+      expect(screen.getByTestId("execution-confirmation")).toBeInTheDocument();
+    });
+
+    it("should display warning message in confirmation dialog", () => {
+      render(<ExecutableArtifact data={pythonCode} config={defaultConfig} />);
+      const runButton = screen.getByRole("button", { name: /run/i });
+      fireEvent.click(runButton);
+      expect(
+        screen.getByText(/this will execute code in a sandbox/i),
+      ).toBeInTheDocument();
+    });
+
+    it("should show runtime type in confirmation dialog", () => {
+      render(
+        <ExecutableArtifact
+          data={pythonCode}
+          config={{ ...defaultConfig, runtime: "docker" }}
+        />,
+      );
+      const runButton = screen.getByRole("button", { name: /run/i });
+      fireEvent.click(runButton);
+      // Confirmation dialog should show "Docker" in the warning message
+      const dialog = screen.getByTestId("execution-confirmation");
+      expect(dialog).toHaveTextContent(/Docker/);
+    });
+
+    it("should execute code when Confirm button clicked", () => {
+      const onExecute = vi.fn();
+      render(
+        <ExecutableArtifact
+          data={pythonCode}
+          config={defaultConfig}
+          onExecute={onExecute}
+        />,
+      );
+      const runButton = screen.getByRole("button", { name: /run/i });
+      fireEvent.click(runButton);
+      // Click Confirm button
+      const confirmButton = screen.getByRole("button", { name: /confirm/i });
+      fireEvent.click(confirmButton);
+      expect(onExecute).toHaveBeenCalledWith(pythonCode, defaultConfig);
+    });
+
+    it("should close dialog and not execute when Cancel clicked", () => {
+      const onExecute = vi.fn();
+      render(
+        <ExecutableArtifact
+          data={pythonCode}
+          config={defaultConfig}
+          onExecute={onExecute}
+        />,
+      );
+      const runButton = screen.getByRole("button", { name: /run/i });
+      fireEvent.click(runButton);
+      // Click Cancel button
+      const cancelButton = screen.getByRole("button", { name: /cancel/i });
+      fireEvent.click(cancelButton);
+      expect(onExecute).not.toHaveBeenCalled();
+      expect(
+        screen.queryByTestId("execution-confirmation"),
+      ).not.toBeInTheDocument();
+    });
+
+    it("should skip confirmation when requireConfirmation prop is false", () => {
+      const onExecute = vi.fn();
+      render(
+        <ExecutableArtifact
+          data={pythonCode}
+          config={defaultConfig}
+          onExecute={onExecute}
+          requireConfirmation={false}
+        />,
+      );
+      const runButton = screen.getByRole("button", { name: /run/i });
+      fireEvent.click(runButton);
+      // Should execute immediately without confirmation
+      expect(
+        screen.queryByTestId("execution-confirmation"),
+      ).not.toBeInTheDocument();
+      expect(onExecute).toHaveBeenCalledWith(pythonCode, defaultConfig);
     });
   });
 });

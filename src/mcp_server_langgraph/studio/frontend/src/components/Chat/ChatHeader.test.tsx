@@ -209,4 +209,79 @@ describe("ChatHeader", () => {
       expect(clearButton).toBeInTheDocument();
     });
   });
+
+  describe("Inline Editing", () => {
+    it("should display session name as plain text when enableEdit is false", () => {
+      renderWithProvider(
+        <ChatHeader {...defaultProps} sessionName="Test Session" />,
+      );
+      // Session name should be in an h1 element
+      expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent(
+        "Test Session",
+      );
+    });
+
+    it("should display editable session name when enableEdit is true", () => {
+      const onRenameSession = vi.fn();
+      renderWithProvider(
+        <ChatHeader
+          {...defaultProps}
+          sessionName="Test Session"
+          enableEdit={true}
+          onRenameSession={onRenameSession}
+        />,
+      );
+      // Should have the InlineEdit component with the session name
+      expect(screen.getByText("Test Session")).toBeInTheDocument();
+    });
+
+    it("should call onRenameSession when session name is changed", async () => {
+      const onRenameSession = vi.fn();
+      renderWithProvider(
+        <ChatHeader
+          {...defaultProps}
+          sessionId="session-123"
+          sessionName="Old Name"
+          enableEdit={true}
+          onRenameSession={onRenameSession}
+        />,
+      );
+
+      // Click to enter edit mode
+      const sessionName = screen.getByText("Old Name");
+      fireEvent.click(sessionName);
+
+      // Type new name and submit
+      const input = screen.getByRole("textbox");
+      fireEvent.change(input, { target: { value: "New Name" } });
+      fireEvent.keyDown(input, { key: "Enter" });
+
+      expect(onRenameSession).toHaveBeenCalledWith("session-123", "New Name");
+    });
+
+    it("should not trigger rename on Escape key", async () => {
+      const onRenameSession = vi.fn();
+      renderWithProvider(
+        <ChatHeader
+          {...defaultProps}
+          sessionId="session-123"
+          sessionName="Test Session"
+          enableEdit={true}
+          onRenameSession={onRenameSession}
+        />,
+      );
+
+      // Click to enter edit mode
+      const sessionName = screen.getByText("Test Session");
+      fireEvent.click(sessionName);
+
+      // Type new name and press Escape
+      const input = screen.getByRole("textbox");
+      fireEvent.change(input, { target: { value: "Changed Name" } });
+      fireEvent.keyDown(input, { key: "Escape" });
+
+      // Should not have called onRenameSession
+      expect(onRenameSession).not.toHaveBeenCalled();
+    });
+  });
 });

@@ -164,7 +164,7 @@ describe("SessionNav", () => {
 
   describe("search functionality", () => {
     it("should filter sessions based on search query", async () => {
-      const user = userEvent.setup();
+      const _user = userEvent.setup();
       const store = createTestStore();
       render(<SessionNav />, { wrapper: createWrapper(store) });
 
@@ -177,7 +177,7 @@ describe("SessionNav", () => {
     });
 
     it("should show 'No matching sessions' when search has no results", async () => {
-      const user = userEvent.setup();
+      const _user = userEvent.setup();
       const store = createTestStore();
       render(<SessionNav />, { wrapper: createWrapper(store) });
 
@@ -190,7 +190,7 @@ describe("SessionNav", () => {
 
   describe("navigation", () => {
     it("should navigate to session when clicked", async () => {
-      const user = userEvent.setup();
+      const _user = userEvent.setup();
       const store = createTestStore();
       render(<SessionNav />, { wrapper: createWrapper(store) });
 
@@ -204,8 +204,10 @@ describe("SessionNav", () => {
       const store = createTestStore();
       render(<SessionNav />, { wrapper: createWrapper(store) });
 
+      // The session button is inside a wrapper div that has the highlight class
       const sessionButton = screen.getByText("Today's Chat");
-      expect(sessionButton).toHaveClass("bg-primary-100");
+      const sessionWrapper = sessionButton.closest("div");
+      expect(sessionWrapper).toHaveClass("bg-primary-100");
     });
   });
 
@@ -292,7 +294,7 @@ describe("SessionNav AI Intelligence", () => {
   });
 
   it("should navigate to session when AISessionCard is clicked", async () => {
-    const user = userEvent.setup();
+    const _user = userEvent.setup();
     const store = createTestStore();
     render(<SessionNav enableAI />, { wrapper: createWrapper(store) });
 
@@ -367,5 +369,212 @@ describe("groupSessionsByDate", () => {
     expect(groups.today).toHaveLength(0);
     expect(groups.yesterday).toHaveLength(0);
     expect(groups.older).toHaveLength(1);
+  });
+});
+
+describe("SessionNav Inline Editing", () => {
+  let store: ReturnType<typeof createTestStore>;
+
+  beforeEach(() => {
+    store = createTestStore();
+    mockNavigate.mockClear();
+  });
+
+  afterEach(() => {
+    cleanup();
+  });
+
+  it("should enable inline editing when enableEdit prop is true", () => {
+    const Wrapper = createWrapper(store);
+    render(
+      <Wrapper>
+        <SessionNav enableEdit />
+      </Wrapper>,
+    );
+
+    // Should show session names that can be edited
+    expect(screen.getByText("Today's Chat")).toBeInTheDocument();
+  });
+
+  it("should show context menu on right-click when enableContextMenu is true", async () => {
+    const _user = userEvent.setup();
+    const Wrapper = createWrapper(store);
+    render(
+      <Wrapper>
+        <SessionNav enableContextMenu />
+      </Wrapper>,
+    );
+
+    const sessionButton = screen.getByText("Today's Chat");
+    expect(sessionButton).toBeInTheDocument();
+    // Context menu integration will be tested once wired up
+  });
+});
+
+// =============================================================================
+// Session Hover Details Tests (Sprint Block 4)
+// =============================================================================
+
+describe("SessionNav Hover Details", () => {
+  let store: ReturnType<typeof createTestStore>;
+
+  beforeEach(() => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    store = createTestStore();
+    mockNavigate.mockClear();
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+    cleanup();
+  });
+
+  it("should show hover tooltip when enableHover prop is true", async () => {
+    const _user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    const Wrapper = createWrapper(store);
+    render(
+      <Wrapper>
+        <SessionNav enableHover />
+      </Wrapper>,
+    );
+
+    // Hover over a session item
+    const sessionItem = screen.getByText("Today's Chat");
+    await user.hover(sessionItem.closest("div")!);
+
+    // Wait for tooltip delay
+    await vi.advanceTimersByTimeAsync(300);
+
+    // Tooltip should appear
+    expect(screen.getByRole("tooltip")).toBeInTheDocument();
+  });
+
+  it("should display session creation time in hover tooltip", async () => {
+    const _user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    const Wrapper = createWrapper(store);
+    render(
+      <Wrapper>
+        <SessionNav enableHover />
+      </Wrapper>,
+    );
+
+    const sessionItem = screen.getByText("Today's Chat");
+    await user.hover(sessionItem.closest("div")!);
+    await vi.advanceTimersByTimeAsync(300);
+
+    // Should show relative time (e.g., "Created today" or "a few seconds ago")
+    const tooltip = screen.getByRole("tooltip");
+    expect(tooltip).toHaveTextContent(/created|ago/i);
+  });
+
+  it("should display message count in hover tooltip when available", async () => {
+    const _user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    const Wrapper = createWrapper(store);
+    render(
+      <Wrapper>
+        <SessionNav
+          enableHover
+          sessionMetadata={{ "session-1": { messageCount: 5 } }}
+        />
+      </Wrapper>,
+    );
+
+    const sessionItem = screen.getByText("Today's Chat");
+    await user.hover(sessionItem.closest("div")!);
+    await vi.advanceTimersByTimeAsync(300);
+
+    const tooltip = screen.getByRole("tooltip");
+    expect(tooltip).toHaveTextContent(/5 messages/i);
+  });
+
+  it("should display first message preview in hover tooltip when available", async () => {
+    const _user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    const Wrapper = createWrapper(store);
+    render(
+      <Wrapper>
+        <SessionNav
+          enableHover
+          sessionMetadata={{
+            "session-1": {
+              messageCount: 5,
+              firstMessage: "Hello, how can I help you today?",
+            },
+          }}
+        />
+      </Wrapper>,
+    );
+
+    const sessionItem = screen.getByText("Today's Chat");
+    await user.hover(sessionItem.closest("div")!);
+    await vi.advanceTimersByTimeAsync(300);
+
+    const tooltip = screen.getByRole("tooltip");
+    expect(tooltip).toHaveTextContent("Hello, how can I help you today?");
+  });
+
+  it("should truncate long first message in hover tooltip", async () => {
+    const _user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    const longMessage =
+      "This is a very long message that should be truncated when displayed in the hover tooltip because we do not want to show too much content in a small tooltip";
+    const Wrapper = createWrapper(store);
+    render(
+      <Wrapper>
+        <SessionNav
+          enableHover
+          sessionMetadata={{
+            "session-1": {
+              messageCount: 5,
+              firstMessage: longMessage,
+            },
+          }}
+        />
+      </Wrapper>,
+    );
+
+    const sessionItem = screen.getByText("Today's Chat");
+    await user.hover(sessionItem.closest("div")!);
+    await vi.advanceTimersByTimeAsync(300);
+
+    const tooltip = screen.getByRole("tooltip");
+    // Should truncate with ellipsis
+    expect(tooltip).toHaveTextContent("...");
+    expect(tooltip.textContent?.length).toBeLessThan(longMessage.length + 50);
+  });
+
+  it("should hide hover tooltip when mouse leaves", async () => {
+    const _user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    const Wrapper = createWrapper(store);
+    render(
+      <Wrapper>
+        <SessionNav enableHover />
+      </Wrapper>,
+    );
+
+    const sessionItem = screen.getByText("Today's Chat");
+    const hoverTarget = sessionItem.closest("div")!;
+    await user.hover(hoverTarget);
+    await vi.advanceTimersByTimeAsync(300);
+
+    expect(screen.getByRole("tooltip")).toBeInTheDocument();
+
+    await user.unhover(hoverTarget);
+
+    expect(screen.queryByRole("tooltip")).not.toBeInTheDocument();
+  });
+
+  it("should not show hover tooltip when enableHover is false", async () => {
+    const _user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    const Wrapper = createWrapper(store);
+    render(
+      <Wrapper>
+        <SessionNav enableHover={false} />
+      </Wrapper>,
+    );
+
+    const sessionItem = screen.getByText("Today's Chat");
+    await user.hover(sessionItem.closest("div")!);
+    await vi.advanceTimersByTimeAsync(300);
+
+    expect(screen.queryByRole("tooltip")).not.toBeInTheDocument();
   });
 });

@@ -14,12 +14,25 @@
 /* eslint-disable react-refresh/only-export-components -- Exports groupSessionsByDate utility alongside component */
 import { useCallback, useMemo, useState } from "react";
 import { useNavigate, useRouteLoaderData, useParams } from "react-router";
-import { Plus, Search } from "lucide-react";
+import {
+  Plus,
+  Search,
+  Trash2,
+  Edit2,
+  MessageSquare,
+  Clock,
+} from "lucide-react";
 import type { SessionsLoaderData } from "../router/loaders";
 import type { Session } from "../types";
 import { cn } from "../utils/cn";
 import { useNewChat } from "../hooks/useNewChat";
 import { AISessionCard } from "./AISessionCard";
+import { InlineEdit } from "../components/UI/InlineEdit";
+import {
+  ContextMenu,
+  type ContextMenuItem,
+} from "../components/UI/ContextMenu";
+import { Tooltip } from "../components/UI/Tooltip";
 
 // =============================================================================
 // Types
@@ -30,6 +43,15 @@ export interface GroupedSessions {
   yesterday: Session[];
   older: Session[];
 }
+
+/** Metadata for session hover details */
+export interface SessionMetadata {
+  messageCount?: number;
+  firstMessage?: string;
+}
+
+/** Map of session IDs to their metadata */
+export type SessionMetadataMap = Record<string, SessionMetadata>;
 
 // =============================================================================
 // Utility Functions
@@ -79,6 +101,41 @@ export interface SessionNavProps {
   showTopics?: boolean;
   /** User ID for AI features */
   userId?: string;
+  /** Enable inline editing of session names */
+  enableEdit?: boolean;
+  /** Enable context menu on right-click */
+  enableContextMenu?: boolean;
+  /** Callback when session is renamed */
+  onRenameSession?: (sessionId: string, name: string) => void;
+  /** Callback when session is deleted */
+  onDeleteSession?: (sessionId: string) => void;
+  /** Enable hover tooltip with session details */
+  enableHover?: boolean;
+  /** Session metadata for hover details */
+  sessionMetadata?: SessionMetadataMap;
+}
+
+/** Helper to format relative time */
+function formatRelativeTime(date: Date): string {
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffMins = Math.floor(diffMs / 60000);
+  const diffHours = Math.floor(diffMs / 3600000);
+  const diffDays = Math.floor(diffMs / 86400000);
+
+  if (diffMins < 1) return "just now";
+  if (diffMins < 60)
+    return `${diffMins} minute${diffMins === 1 ? "" : "s"} ago`;
+  if (diffHours < 24)
+    return `${diffHours} hour${diffHours === 1 ? "" : "s"} ago`;
+  if (diffDays === 1) return "yesterday";
+  return `${diffDays} days ago`;
+}
+
+/** Truncate message with ellipsis */
+function truncateMessage(message: string, maxLength = 80): string {
+  if (message.length <= maxLength) return message;
+  return message.slice(0, maxLength).trim() + "...";
 }
 
 export function SessionNav({
@@ -87,6 +144,12 @@ export function SessionNav({
   showSummary = false,
   showTopics = false,
   userId = "default-user",
+  enableEdit = false,
+  enableContextMenu = false,
+  onRenameSession,
+  onDeleteSession,
+  enableHover = false,
+  sessionMetadata = {},
 }: SessionNavProps) {
   const navigate = useNavigate();
   const { sessionId: currentSessionId } = useParams();
@@ -163,22 +226,112 @@ export function SessionNav({
       );
     }
 
-    // Standard session button (when AI is disabled)
+    // Build context menu items if enabled
+    const contextMenuItems: ContextMenuItem[] = enableContextMenu
+      ? [
+          {
+            id: "rename",
+            label: "Rename",
+            icon: <Edit2 size={14} />,
+            action: () => {
+              // Trigger inline edit mode (handled by InlineEdit click)
+            },
+          },
+          { id: "divider-1", type: "divider" },
+          {
+            id: "delete",
+            label: "Delete",
+            icon: <Trash2 size={14} />,
+            action: () => onDeleteSession?.(session.id),
+          },
+        ]
+      : [];
+
+    // Session display name
+    const displayName = session.name || `Session ${session.id.slice(0, 8)}`;
+
+    // Handle session rename
+    const handleRename = (newName: string) => {
+      onRenameSession?.(session.id, newName);
+    };
+
+    // Get session metadata for hover tooltip
+    const metadata = sessionMetadata[session.id];
+    const createdAt = new Date(session.created_at);
+
+    // Build hover tooltip content
+    const hoverContent = (
+      <div className="space-y-1.5 min-w-48 max-w-64">
+        <div className="flex items-center gap-1.5 text-xs text-gray-400">
+          <Clock size={12} />
+          <span>Created {formatRelativeTime(createdAt)}</span>
+        </div>
+        {metadata?.messageCount !== undefined && (
+          <div className="flex items-center gap-1.5 text-xs text-gray-400">
+            <MessageSquare size={12} />
+            <span>
+              {metadata.messageCount} message
+              {metadata.messageCount === 1 ? "" : "s"}
+            </span>
+          </div>
+        )}
+        {metadata?.firstMessage && (
+          <p className="text-xs text-gray-300 italic border-t border-gray-600 pt-1.5 mt-1.5">
+            {truncateMessage(metadata.firstMessage)}
+          </p>
+        )}
+      </div>
+    );
+
+    // Standard session item with optional inline edit and context menu
+    const sessionContent = (
+      <div
+        className={cn(
+          "w-full text-left px-3 py-2 rounded-lg text-sm",
+          "transition-colors",
+          session.id === currentSessionId
+            ? "bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300"
+            : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700",
+        )}
+      >
+        {enableEdit ? (
+          <InlineEdit
+            value={displayName}
+            onSave={handleRename}
+            placeholder="Session name"
+            aria-label={`Rename session ${displayName}`}
+            className="w-full"
+          />
+        ) : (
+          <button
+            type="button"
+            onClick={() => handleSessionClick(session)}
+            className="w-full text-left truncate"
+          >
+            {displayName}
+          </button>
+        )}
+      </div>
+    );
+
+    // Wrap with Tooltip if hover is enabled
+    const sessionWithHover = enableHover ? (
+      <Tooltip content={hoverContent} position="right" delay={200}>
+        {sessionContent}
+      </Tooltip>
+    ) : (
+      sessionContent
+    );
+
     return (
       <li key={session.id}>
-        <button
-          type="button"
-          onClick={() => handleSessionClick(session)}
-          className={cn(
-            "w-full text-left px-3 py-2 rounded-lg text-sm truncate",
-            "transition-colors",
-            session.id === currentSessionId
-              ? "bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300"
-              : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700",
-          )}
-        >
-          {session.name || `Session ${session.id.slice(0, 8)}`}
-        </button>
+        {enableContextMenu ? (
+          <ContextMenu items={contextMenuItems} aria-label="Session actions">
+            {sessionWithHover}
+          </ContextMenu>
+        ) : (
+          sessionWithHover
+        )}
       </li>
     );
   };

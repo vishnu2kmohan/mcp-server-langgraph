@@ -16,6 +16,8 @@ import { useListMcpPromptsQuery, useGetMcpPromptMutation } from "../../api";
 export interface PromptTesterProps {
   open: boolean;
   onClose: () => void;
+  /** Optional prompt name to pre-select when dialog opens */
+  preselectedPromptName?: string;
 }
 
 interface PromptArgument {
@@ -33,7 +35,11 @@ interface PromptResult {
   messages: PromptMessage[];
 }
 
-export function PromptTester({ open, onClose }: PromptTesterProps) {
+export function PromptTester({
+  open,
+  onClose,
+  preselectedPromptName,
+}: PromptTesterProps) {
   const {
     data: promptsData,
     isLoading: isLoadingPrompts,
@@ -57,6 +63,19 @@ export function PromptTester({ open, onClose }: PromptTesterProps) {
       setError(null);
     }
   }, [open]);
+
+  // Pre-select prompt when preselectedPromptName is provided
+  useEffect(() => {
+    if (open && preselectedPromptName && promptsData?.prompts) {
+      // Validate the prompt exists
+      const promptExists = promptsData.prompts.some(
+        (p) => p.name === preselectedPromptName,
+      );
+      if (promptExists) {
+        setSelectedPromptName(preselectedPromptName);
+      }
+    }
+  }, [open, preselectedPromptName, promptsData?.prompts]);
 
   // Get selected prompt details
   const selectedPrompt = useMemo(() => {

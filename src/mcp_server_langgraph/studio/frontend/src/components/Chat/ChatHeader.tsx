@@ -11,6 +11,7 @@ import { Wifi, WifiOff, Radio, RefreshCw, Trash2 } from "lucide-react";
 import { SaveAsWorkflowButton } from "./SaveAsWorkflowButton";
 import { ExportButton } from "./ExportButton";
 import { useFeatureFlag } from "../../contexts/FeatureFlagContext";
+import { InlineEdit } from "../UI/InlineEdit";
 
 export type ConnectionMode = "websocket" | "rest" | "disconnected";
 
@@ -64,6 +65,10 @@ export interface ChatHeaderProps {
   onConnect: () => void;
   onClear: () => void;
   onClearError?: () => void;
+  /** Enable inline editing of session name */
+  enableEdit?: boolean;
+  /** Callback when session is renamed */
+  onRenameSession?: (sessionId: string, name: string) => void;
 }
 
 export function ChatHeader({
@@ -78,6 +83,8 @@ export function ChatHeader({
   onConnect,
   onClear,
   onClearError,
+  enableEdit = false,
+  onRenameSession,
 }: ChatHeaderProps) {
   const messageLabel =
     messageCount === 1 ? "1 message" : `${messageCount} messages`;
@@ -122,9 +129,23 @@ export function ChatHeader({
             {/* Session Name */}
             {sessionName && (
               <div>
-                <h1 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-                  {sessionName}
-                </h1>
+                {enableEdit && sessionId ? (
+                  <InlineEdit
+                    value={sessionName}
+                    onSave={(newName) => {
+                      if (onRenameSession && sessionId) {
+                        onRenameSession(sessionId, newName);
+                      }
+                    }}
+                    placeholder="Session name"
+                    aria-label={`Rename session ${sessionName}`}
+                    className="text-lg font-semibold text-gray-900 dark:text-gray-100"
+                  />
+                ) : (
+                  <h1 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                    {sessionName}
+                  </h1>
+                )}
                 <p className="text-sm text-gray-500 dark:text-gray-400">
                   {messageLabel}
                 </p>

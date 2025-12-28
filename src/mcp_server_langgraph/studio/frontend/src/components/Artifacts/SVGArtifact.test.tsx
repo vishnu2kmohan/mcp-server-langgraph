@@ -169,4 +169,75 @@ describe("SVGArtifact", () => {
       URL.revokeObjectURL = originalRevokeObjectURL;
     });
   });
+
+  // =========================================================================
+  // Code/Preview Toggle Tests (Sprint Block 4)
+  // =========================================================================
+
+  describe("Code/Preview toggle", () => {
+    it("should render Code/Preview toggle buttons", () => {
+      render(<SVGArtifact data={simpleSvg} />);
+      expect(screen.getByRole("button", { name: /code/i })).toBeInTheDocument();
+      expect(
+        screen.getByRole("button", { name: /preview/i }),
+      ).toBeInTheDocument();
+    });
+
+    it("should default to preview mode", () => {
+      render(<SVGArtifact data={simpleSvg} />);
+      const previewButton = screen.getByRole("button", { name: /preview/i });
+      expect(previewButton).toHaveAttribute("aria-pressed", "true");
+    });
+
+    it("should show rendered SVG in preview mode", () => {
+      render(<SVGArtifact data={simpleSvg} />);
+      // In preview mode, the SVG should be rendered
+      const svg = document.querySelector("svg");
+      expect(svg).toBeInTheDocument();
+    });
+
+    it("should switch to code mode when Code button clicked", () => {
+      render(<SVGArtifact data={simpleSvg} />);
+      const codeButton = screen.getByRole("button", { name: /code/i });
+      fireEvent.click(codeButton);
+      expect(codeButton).toHaveAttribute("aria-pressed", "true");
+    });
+
+    it("should show source code in code mode", () => {
+      render(<SVGArtifact data={simpleSvg} />);
+      const codeButton = screen.getByRole("button", { name: /code/i });
+      fireEvent.click(codeButton);
+      // Source code should be visible in a code block
+      expect(screen.getByTestId("svg-source-code")).toBeInTheDocument();
+    });
+
+    it("should hide rendered SVG in code mode", () => {
+      render(<SVGArtifact data={simpleSvg} />);
+      const codeButton = screen.getByRole("button", { name: /code/i });
+      fireEvent.click(codeButton);
+      // The svg-container should not be visible in code mode
+      expect(screen.queryByTestId("svg-container")).not.toBeInTheDocument();
+    });
+
+    it("should switch back to preview mode", () => {
+      render(<SVGArtifact data={simpleSvg} />);
+      // Switch to code mode
+      const codeButton = screen.getByRole("button", { name: /code/i });
+      fireEvent.click(codeButton);
+      // Switch back to preview mode
+      const previewButton = screen.getByRole("button", { name: /preview/i });
+      fireEvent.click(previewButton);
+      expect(previewButton).toHaveAttribute("aria-pressed", "true");
+      expect(screen.getByTestId("svg-container")).toBeInTheDocument();
+    });
+
+    it("should not render toggle when SVG is invalid (shows error state)", () => {
+      render(<SVGArtifact data="invalid svg" />);
+      // When error, component shows error state without toggle
+      expect(screen.getByRole("alert")).toBeInTheDocument();
+      expect(
+        screen.queryByRole("button", { name: /preview/i }),
+      ).not.toBeInTheDocument();
+    });
+  });
 });

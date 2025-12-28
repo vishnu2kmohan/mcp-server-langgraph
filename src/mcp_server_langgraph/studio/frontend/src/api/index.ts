@@ -181,6 +181,7 @@ import type {
   AggregatedResource,
   AggregatedPrompt,
 } from "../types/connection";
+import type { ServerConfig } from "../types/session";
 
 // Re-export types for backward compatibility
 export type {
@@ -189,6 +190,7 @@ export type {
   Session,
   Message,
   FeatureFlags,
+  ServerConfig,
   CostSummary,
   ModelCostData,
   TraceSpan,
@@ -341,6 +343,15 @@ export const api = createApi({
       }),
       providesTags: ["FeatureFlags"],
       keepUnusedDataFor: 600, // 10 minutes - feature flags rarely change
+    }),
+
+    // Server Configuration (12-Factor App - frontend hydration)
+    // Fetches backend-configured defaults (model, max_tokens, etc.)
+    // to ensure frontend reflects the actual backend configuration.
+    getServerConfig: builder.query<ServerConfig, void>({
+      query: () => "/config/defaults",
+      // Keep cached for 30 minutes - server config rarely changes at runtime
+      keepUnusedDataFor: 1800,
     }),
 
     // Workflows
@@ -3090,6 +3101,8 @@ export const api = createApi({
 export const {
   // Feature Flags
   useGetFeatureFlagsQuery,
+  // Server Configuration (12-Factor App)
+  useGetServerConfigQuery,
   // Workflows
   useListWorkflowsQuery,
   useGetWorkflowQuery,

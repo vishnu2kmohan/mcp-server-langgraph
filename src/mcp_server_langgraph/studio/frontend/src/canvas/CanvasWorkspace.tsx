@@ -6,7 +6,7 @@
  */
 import { useState, useCallback, useMemo, useEffect, Suspense } from "react";
 import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
-import { FileCode2 } from "lucide-react";
+import { FileCode2, Clock, Code, User, Bot } from "lucide-react";
 import { useAppDispatch, useAppSelector } from "../store/hooks";
 import {
   selectSelectedArtifactId,
@@ -18,6 +18,8 @@ import { ArtifactActions } from "./ArtifactActions";
 import type { CanvasArtifact as CanvasArtifactType } from "../types/artifacts";
 import { cn } from "../utils/cn";
 import { useFeatureFlag } from "../contexts/FeatureFlagContext";
+import { InlineEdit } from "../components/UI/InlineEdit";
+import { Tooltip } from "../components/UI/Tooltip";
 
 // AI Components (Phase 4) - lazy-loaded for reduced bundle size
 import { LazyAIEditOverlay, type Selection } from "../ai/lazy";
@@ -37,6 +39,12 @@ export interface CanvasWorkspaceProps {
   onSave?: (artifactId: string, content: string) => void;
   /** Additional class name */
   className?: string;
+  /** Enable inline editing of artifact titles */
+  enableArtifactEdit?: boolean;
+  /** Callback when artifact is renamed */
+  onRenameArtifact?: (artifactId: string, title: string) => void;
+  /** Enable hover tooltip with artifact details */
+  enableArtifactHover?: boolean;
 }
 
 // =============================================================================
@@ -47,12 +55,39 @@ interface ArtifactTabBarProps {
   artifacts: CanvasArtifactType[];
   selectedId: string | null;
   onSelect: (artifact: CanvasArtifactType) => void;
+  enableEdit?: boolean;
+  onRename?: (artifactId: string, title: string) => void;
+  enableHover?: boolean;
+}
+
+/** Format date to relative time */
+function formatArtifactDate(dateStr: string): string {
+  const date = new Date(dateStr);
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffMins = Math.floor(diffMs / 60000);
+  const diffHours = Math.floor(diffMs / 3600000);
+  const diffDays = Math.floor(diffMs / 86400000);
+
+  if (diffMins < 1) return "just now";
+  if (diffMins < 60) return `${diffMins}m ago`;
+  if (diffHours < 24) return `${diffHours}h ago`;
+  if (diffDays === 1) return "yesterday";
+  return date.toLocaleDateString();
+}
+
+/** Get line count from content */
+function getLineCount(content: string): number {
+  return content.split("\n").length;
 }
 
 function ArtifactTabBar({
   artifacts,
   selectedId,
   onSelect,
+  enableEdit = false,
+  onRename,
+  enableHover = false,
 }: ArtifactTabBarProps) {
   return (
     <div className="flex gap-1 p-2 border-b border-gray-200 dark:border-gray-700 overflow-x-auto">
@@ -61,8 +96,58 @@ function ArtifactTabBar({
         const isAI =
           artifact.editMetadata?.editedBy === "ai-generation" ||
           artifact.editMetadata?.editedBy === "ai-suggestion";
+        const displayTitle =
+          artifact.title || `Artifact ${artifact.id.slice(0, 6)}`;
 
-        return (
+        const handleRename = (newTitle: string) => {
+          if (onRename) {
+            onRename(artifact.id, newTitle);
+          }
+        };
+
+        // Build hover tooltip content
+        const lineCount = getLineCount(artifact.content);
+        const language =
+          artifact.editMetadata?.language || artifact.contentType;
+        const hoverContent = (
+          <div className="space-y-1.5 min-w-40 max-w-56">
+            <div className="flex items-center gap-1.5 text-xs text-gray-400">
+              <Code size={12} />
+              <span className="capitalize">{artifact.type}</span>
+              {language && (
+                <>
+                  <span className="text-gray-600">•</span>
+                  <span className="capitalize">{language}</span>
+                </>
+              )}
+            </div>
+            <div className="flex items-center gap-1.5 text-xs text-gray-400">
+              <FileCode2 size={12} />
+              <span>
+                {lineCount} line{lineCount === 1 ? "" : "s"}
+              </span>
+            </div>
+            <div className="flex items-center gap-1.5 text-xs text-gray-400">
+              <Clock size={12} />
+              <span>Created {formatArtifactDate(artifact.createdAt)}</span>
+            </div>
+            <div className="flex items-center gap-1.5 text-xs text-gray-400">
+              {isAI ? (
+                <>
+                  <Bot size={12} className="text-purple-400" />
+                  <span className="text-purple-400">AI Generated</span>
+                </>
+              ) : (
+                <>
+                  <User size={12} />
+                  <span>User Created</span>
+                </>
+              )}
+            </div>
+          </div>
+        );
+
+        const tabButton = (
           <button
             key={artifact.id}
             data-testid={`artifact-tab-${artifact.id}`}
@@ -78,9 +163,17 @@ function ArtifactTabBar({
             )}
           >
             <FileCode2 size={14} />
-            <span className="max-w-32 truncate">
-              {artifact.title || `Artifact ${artifact.id.slice(0, 6)}`}
-            </span>
+            {enableEdit ? (
+              <InlineEdit
+                value={displayTitle}
+                onSave={handleRename}
+                placeholder="Artifact title"
+                aria-label={`Rename artifact ${displayTitle}`}
+                className="max-w-32"
+              />
+            ) : (
+              <span className="max-w-32 truncate">{displayTitle}</span>
+            )}
             {isAI && (
               <span
                 data-testid="ai-badge"
@@ -88,6 +181,19 @@ function ArtifactTabBar({
               />
             )}
           </button>
+        );
+
+        return enableHover ? (
+          <Tooltip
+            key={artifact.id}
+            content={hoverContent}
+            position="bottom"
+            delay={200}
+          >
+            {tabButton}
+          </Tooltip>
+        ) : (
+          tabButton
         );
       })}
     </div>
@@ -121,6 +227,9 @@ export function CanvasWorkspace({
   onContentChange,
   onSave,
   className,
+  enableArtifactEdit = false,
+  onRenameArtifact,
+  enableArtifactHover = false,
 }: CanvasWorkspaceProps) {
   const dispatch = useAppDispatch();
   const selectedArtifactId = useAppSelector(selectSelectedArtifactId);
@@ -272,6 +381,9 @@ export function CanvasWorkspace({
         artifacts={artifacts}
         selectedId={selectedArtifactId}
         onSelect={handleArtifactSelect}
+        enableEdit={enableArtifactEdit}
+        onRename={onRenameArtifact}
+        enableHover={enableArtifactHover}
       />
 
       {/* Main workspace area */}

@@ -43,6 +43,37 @@ describe("Lazy MCP Components", () => {
     expect(typeof lazyModule.LazyElicitationDialog).toBe("object");
   });
 
+  // Aggregated Capabilities Components (MCP 2025-11-25)
+  it("exports LazyAggregatedCapabilitiesPanel", async () => {
+    const lazyModule = await import("./lazy");
+    expect(lazyModule.LazyAggregatedCapabilitiesPanel).toBeDefined();
+    expect(typeof lazyModule.LazyAggregatedCapabilitiesPanel).toBe("object");
+  });
+
+  it("exports LazyMCPServerCard", async () => {
+    const lazyModule = await import("./lazy");
+    expect(lazyModule.LazyMCPServerCard).toBeDefined();
+    expect(typeof lazyModule.LazyMCPServerCard).toBe("object");
+  });
+
+  it("exports LazyToolExplorer", async () => {
+    const lazyModule = await import("./lazy");
+    expect(lazyModule.LazyToolExplorer).toBeDefined();
+    expect(typeof lazyModule.LazyToolExplorer).toBe("object");
+  });
+
+  it("exports LazyResourceBrowser", async () => {
+    const lazyModule = await import("./lazy");
+    expect(lazyModule.LazyResourceBrowser).toBeDefined();
+    expect(typeof lazyModule.LazyResourceBrowser).toBe("object");
+  });
+
+  it("exports LazyPromptLibrary", async () => {
+    const lazyModule = await import("./lazy");
+    expect(lazyModule.LazyPromptLibrary).toBeDefined();
+    expect(typeof lazyModule.LazyPromptLibrary).toBe("object");
+  });
+
   it("lazy components can be dynamically imported", async () => {
     // Verify the underlying components can be imported
     const addConnectionModule = await import("./AddConnectionDialog");
@@ -59,5 +90,24 @@ describe("Lazy MCP Components", () => {
 
     const elicitationModule = await import("./ElicitationDialog");
     expect(elicitationModule.ElicitationDialog).toBeDefined();
+
+    // Aggregated Capabilities Components (MCP 2025-11-25)
+    const aggregatedCapabilitiesModule =
+      await import("./AggregatedCapabilities");
+    expect(
+      aggregatedCapabilitiesModule.AggregatedCapabilitiesPanel,
+    ).toBeDefined();
+
+    const mcpServerCardModule = await import("./MCPServerCard");
+    expect(mcpServerCardModule.MCPServerCard).toBeDefined();
+
+    const toolExplorerModule = await import("./ToolExplorer");
+    expect(toolExplorerModule.ToolExplorer).toBeDefined();
+
+    const resourceBrowserModule = await import("./ResourceBrowser");
+    expect(resourceBrowserModule.ResourceBrowser).toBeDefined();
+
+    const promptLibraryModule = await import("./PromptLibrary");
+    expect(promptLibraryModule.PromptLibrary).toBeDefined();
   });
 });

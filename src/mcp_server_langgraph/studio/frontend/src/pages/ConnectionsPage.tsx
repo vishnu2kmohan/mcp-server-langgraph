@@ -46,6 +46,9 @@ import {
   ConnectionTemplateSelector,
   ConnectionAuditLog,
 } from "../components/Connection";
+import { AggregatedCapabilitiesPanel } from "../components/MCP";
+import { useAppSelector } from "../store/hooks";
+import { selectPersona } from "../store/slices/personaSlice";
 import type {
   MCPConnectionSummary,
   MCPConnection,
@@ -98,6 +101,10 @@ const POLLING_INTERVALS = {
 type PollingSpeed = keyof typeof POLLING_INTERVALS;
 
 export function ConnectionsPage() {
+  // Persona for admin-only actions
+  const persona = useAppSelector(selectPersona);
+  const isAdmin = persona === "admin";
+
   // Filter/sort state
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<ConnectionStatus | "">("");
@@ -708,6 +715,27 @@ export function ConnectionsPage() {
               </div>
             </div>
           ))}
+        </div>
+      )}
+
+      {/* Aggregated Capabilities Panel - Shows tools/resources/prompts from all connected servers */}
+      {connections.length > 0 && (
+        <div className="mt-8">
+          <AggregatedCapabilitiesPanel
+            showAdminActions={isAdmin}
+            onToolInvoke={(qualifiedName) => {
+              console.log("Tool invoke requested:", qualifiedName);
+              // TODO: Open ToolInvocationDialog with the selected tool
+            }}
+            onResourceView={(qualifiedName) => {
+              console.log("Resource view requested:", qualifiedName);
+              // TODO: Open ResourceViewer with the selected resource
+            }}
+            onPromptTest={(qualifiedName) => {
+              console.log("Prompt test requested:", qualifiedName);
+              // TODO: Open PromptTester with the selected prompt
+            }}
+          />
         </div>
       )}
 

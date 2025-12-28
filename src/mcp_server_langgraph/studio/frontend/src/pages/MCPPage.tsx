@@ -51,14 +51,21 @@ import {
   LazyResourceViewer,
   LazyPromptTester,
   LazyElicitationDialog,
+  AggregatedCapabilitiesPanel,
 } from "../components/MCP";
+import { selectPersona } from "../store/slices/personaSlice";
 import { useMCPKeyboardShortcuts } from "../hooks";
 import { useMCPWebSocket } from "../hooks/useMCPWebSocket";
 import { useMCPTaskWebSocket } from "../hooks/useMCPTaskWebSocket";
+import { Layers } from "lucide-react";
 
-type MCPTab = "tools" | "resources" | "prompts" | "servers";
+type MCPTab = "tools" | "resources" | "prompts" | "servers" | "aggregated";
 
 export function MCPPage() {
+  // Persona for admin-only actions in aggregated panel
+  const persona = useAppSelector(selectPersona);
+  const isAdmin = persona === "admin";
+
   const [activeTab, setActiveTab] = useState<MCPTab>("tools");
   const [searchQuery, setSearchQuery] = useState("");
   const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
@@ -70,6 +77,28 @@ export function MCPPage() {
   const [isResourceViewerOpen, setIsResourceViewerOpen] = useState(false);
   const [isPromptTesterOpen, setIsPromptTesterOpen] = useState(false);
   const [isElicitationOpen, setIsElicitationOpen] = useState(false);
+
+  // Pre-selected items from aggregated capabilities panel
+  const [preselectedToolName, setPreselectedToolName] = useState<
+    string | undefined
+  >(undefined);
+  const [preselectedResourceUri, setPreselectedResourceUri] = useState<
+    string | undefined
+  >(undefined);
+  const [preselectedPromptName, setPreselectedPromptName] = useState<
+    string | undefined
+  >(undefined);
+
+  /**
+   * Extract item name from qualified name.
+   * Format: "server_name:item_name" -> "item_name"
+   */
+  const extractItemName = (qualifiedName: string): string => {
+    const colonIndex = qualifiedName.indexOf(":");
+    return colonIndex >= 0
+      ? qualifiedName.slice(colonIndex + 1)
+      : qualifiedName;
+  };
 
   // Close whichever MCP dialog is currently open
   const handleCloseActiveDialog = useCallback(() => {
@@ -198,6 +227,12 @@ export function MCPPage() {
       label: "Servers",
       icon: Server,
       count: serverList.length,
+    },
+    {
+      id: "aggregated" as const,
+      label: "Aggregated",
+      icon: Layers,
+      count: undefined, // Count shown in panel header
     },
   ];
 
@@ -336,22 +371,24 @@ export function MCPPage() {
             >
               <tab.icon size={16} />
               {tab.label}
-              <span
-                className={`px-2 py-0.5 text-xs rounded-full ${
-                  activeTab === tab.id
-                    ? "bg-blue-200 dark:bg-blue-800"
-                    : "bg-gray-200 dark:bg-gray-600"
-                }`}
-              >
-                {tab.count}
-              </span>
+              {tab.count !== undefined && (
+                <span
+                  className={`px-2 py-0.5 text-xs rounded-full ${
+                    activeTab === tab.id
+                      ? "bg-blue-200 dark:bg-blue-800"
+                      : "bg-gray-200 dark:bg-gray-600"
+                  }`}
+                >
+                  {tab.count}
+                </span>
+              )}
             </button>
           ))}
         </div>
       </div>
 
-      {/* Search */}
-      {activeTab !== "servers" && (
+      {/* Search - hide for servers and aggregated tabs */}
+      {activeTab !== "servers" && activeTab !== "aggregated" && (
         <div className="px-6 py-4 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
           <div className="relative">
             <Search
@@ -588,6 +625,30 @@ export function MCPPage() {
                 )}
               </>
             )}
+
+            {/* Aggregated Tab - Shows capabilities from all external MCP connections */}
+            {activeTab === "aggregated" && (
+              <AggregatedCapabilitiesPanel
+                showAdminActions={isAdmin}
+                onToolInvoke={(qualifiedName) => {
+                  const toolName = extractItemName(qualifiedName);
+                  setPreselectedToolName(toolName);
+                  setIsToolInvocationOpen(true);
+                }}
+                onResourceView={(qualifiedName) => {
+                  // For resources, use the URI which is the qualified_name
+                  // but the dialogs use simple URIs, so extract the name part
+                  const resourceName = extractItemName(qualifiedName);
+                  setPreselectedResourceUri(resourceName);
+                  setIsResourceViewerOpen(true);
+                }}
+                onPromptTest={(qualifiedName) => {
+                  const promptName = extractItemName(qualifiedName);
+                  setPreselectedPromptName(promptName);
+                  setIsPromptTesterOpen(true);
+                }}
+              />
+            )}
           </div>
         )}
       </div>
@@ -616,19 +677,31 @@ export function MCPPage() {
         {isToolInvocationOpen && (
           <LazyToolInvocationDialog
             open={isToolInvocationOpen}
-            onClose={() => setIsToolInvocationOpen(false)}
+            onClose={() => {
+              setIsToolInvocationOpen(false);
+              setPreselectedToolName(undefined);
+            }}
+            preselectedToolName={preselectedToolName}
           />
         )}
         {isResourceViewerOpen && (
           <LazyResourceViewer
             open={isResourceViewerOpen}
-            onClose={() => setIsResourceViewerOpen(false)}
+            onClose={() => {
+              setIsResourceViewerOpen(false);
+              setPreselectedResourceUri(undefined);
+            }}
+            preselectedResourceUri={preselectedResourceUri}
           />
         )}
         {isPromptTesterOpen && (
           <LazyPromptTester
             open={isPromptTesterOpen}
-            onClose={() => setIsPromptTesterOpen(false)}
+            onClose={() => {
+              setIsPromptTesterOpen(false);
+              setPreselectedPromptName(undefined);
+            }}
+            preselectedPromptName={preselectedPromptName}
           />
         )}
         {isElicitationOpen && (

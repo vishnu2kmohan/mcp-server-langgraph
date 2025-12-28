@@ -391,4 +391,119 @@ describe("ResourceViewer", () => {
       expect(screen.getByText(/no resources/i)).toBeInTheDocument();
     });
   });
+
+  // ==========================================================================
+  // TDD: Pre-selection Feature (RED phase)
+  // When opening viewer from ResourceBrowser, pre-select the clicked resource
+  // ==========================================================================
+  describe("pre-selection", () => {
+    it("pre-selects resource when preselectedResourceUri prop is provided", async () => {
+      mockReadResource.mockReturnValue({
+        unwrap: () => Promise.resolve(MOCK_TEXT_CONTENT),
+      });
+
+      renderWithProvider(
+        <ResourceViewer
+          open={true}
+          onClose={mockOnClose}
+          preselectedResourceUri="file:///project/README.md"
+        />,
+      );
+
+      // Should show the resource as selected (highlighted or content loaded)
+      await waitFor(() => {
+        expect(
+          screen.getByText(/This is the project documentation/),
+        ).toBeInTheDocument();
+      });
+    });
+
+    it("allows user to select different resource after pre-selection", async () => {
+      const user = userEvent.setup();
+      mockReadResource.mockReturnValue({
+        unwrap: () => Promise.resolve(MOCK_TEXT_CONTENT),
+      });
+
+      renderWithProvider(
+        <ResourceViewer
+          open={true}
+          onClose={mockOnClose}
+          preselectedResourceUri="file:///project/README.md"
+        />,
+      );
+
+      // Initially shows pre-selected resource content
+      await waitFor(() => {
+        expect(
+          screen.getByText(/This is the project documentation/),
+        ).toBeInTheDocument();
+      });
+
+      // User can select a different resource
+      const mainTsItem = screen.getByText("main.ts");
+      await user.click(mainTsItem);
+
+      // Should trigger read for new resource
+      await waitFor(() => {
+        expect(mockReadResource).toHaveBeenCalledWith({
+          uri: "file:///project/src/main.ts",
+        });
+      });
+    });
+
+    it("ignores invalid preselectedResourceUri", async () => {
+      renderWithProvider(
+        <ResourceViewer
+          open={true}
+          onClose={mockOnClose}
+          preselectedResourceUri="file:///nonexistent/file.txt"
+        />,
+      );
+
+      // Should not show any content (invalid URI not in resources list)
+      expect(
+        screen.queryByText(/This is the project documentation/),
+      ).not.toBeInTheDocument();
+    });
+
+    it("clears pre-selection when dialog is closed and reopened without preselectedResourceUri", async () => {
+      mockReadResource.mockReturnValue({
+        unwrap: () => Promise.resolve(MOCK_TEXT_CONTENT),
+      });
+
+      const { rerender } = renderWithProvider(
+        <ResourceViewer
+          open={true}
+          onClose={mockOnClose}
+          preselectedResourceUri="file:///project/README.md"
+        />,
+      );
+
+      // Initially pre-selected
+      await waitFor(() => {
+        expect(
+          screen.getByText(/This is the project documentation/),
+        ).toBeInTheDocument();
+      });
+
+      // Close dialog
+      rerender(
+        <Provider store={createTestStore()}>
+          <ResourceViewer open={false} onClose={mockOnClose} />
+        </Provider>,
+      );
+
+      // Reopen without preselectedResourceUri
+      rerender(
+        <Provider store={createTestStore()}>
+          <ResourceViewer open={true} onClose={mockOnClose} />
+        </Provider>,
+      );
+
+      // Should not have any content loaded
+      expect(
+        screen.queryByText(/This is the project documentation/),
+      ).not.toBeInTheDocument();
+    });
+  });
 });

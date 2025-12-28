@@ -24,12 +24,31 @@ export interface SessionConfig {
   systemPrompt?: string;
 }
 
-/** Default session configuration - aligned with backend SessionConfigResponse */
+/**
+ * Server configuration response from /api/v1/config/defaults
+ * Used for frontend hydration of backend-configured defaults.
+ */
+export interface ServerConfig {
+  model_name: string;
+  model_provider: ModelProvider | "unknown";
+  max_tokens: number;
+  temperature: number;
+}
+
+/**
+ * Default session configuration - FALLBACK ONLY
+ *
+ * NOTE: This is a fallback for when the server config endpoint is unavailable.
+ * The frontend should prefer using the ServerConfig from /api/v1/config/defaults
+ * to ensure the UI reflects the backend-configured model.
+ *
+ * @deprecated Prefer using useGetServerConfigQuery() and apply server defaults
+ */
 export const DEFAULT_SESSION_CONFIG: SessionConfig = {
-  modelProvider: "openai",
-  modelName: "gpt-4o-mini", // Match backend default
+  modelProvider: "google", // Fallback - actual default is set in backend
+  modelName: "gemini-2.5-flash", // Fallback - actual default comes from server
   temperature: 0.7,
-  maxTokens: 1000, // Match backend default
+  maxTokens: 8192, // Fallback - actual default comes from server
 };
 
 // ==============================================================================

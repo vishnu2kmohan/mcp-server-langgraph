@@ -18,6 +18,12 @@ export {
 export { useMCPWebSocket } from "./useMCPWebSocket";
 
 export {
+  useMCPAggregatedUpdates,
+  type UseMCPAggregatedUpdatesOptions,
+  type UseMCPAggregatedUpdatesReturn,
+} from "./useMCPAggregatedUpdates";
+
+export {
   useMCPTaskWebSocket,
   type MCPTask,
   type MCPTaskStatus,

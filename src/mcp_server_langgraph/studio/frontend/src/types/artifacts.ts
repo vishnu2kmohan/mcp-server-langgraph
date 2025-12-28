@@ -32,7 +32,10 @@ export type ChartType = "line" | "bar" | "pie" | "area" | "scatter";
 export interface BaseArtifact {
   id: string;
   type: ArtifactType;
+  /** Human-friendly display name (editable in UI) */
   title?: string;
+  /** Machine-friendly programmatic identifier (for code/API references) */
+  name?: string;
   metadata?: Record<string, unknown>;
   timestamp?: number;
 }
@@ -427,7 +430,11 @@ export interface ListArtifactsResponse {
  * Request to update an artifact
  */
 export interface UpdateArtifactRequest {
-  content: string;
+  content?: string;
+  /** Human-friendly display name */
+  title?: string;
+  /** Machine-friendly programmatic identifier */
+  name?: string;
   editedBy?: "user" | "ai-suggestion" | "ai-generation";
   aiConfidence?: number;
 }

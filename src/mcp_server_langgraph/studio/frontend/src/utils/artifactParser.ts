@@ -114,6 +114,245 @@ function generateArtifactId(): string {
 }
 
 // ============================================================================
+// Smart Name Extraction Functions (Sprint Block 4)
+// ============================================================================
+
+/**
+ * Extract a descriptive name from code content.
+ * Looks for exported functions, classes, and const declarations.
+ */
+export function extractCodeName(code: string, language: string): string | null {
+  const lang = language.toLowerCase();
+
+  // JavaScript/TypeScript patterns
+  if (
+    ["javascript", "typescript", "js", "ts", "jsx", "tsx"].includes(lang) ||
+    lang === ""
+  ) {
+    // export function name() or export default function name()
+    const exportFuncMatch = code.match(
+      /export\s+(?:default\s+)?function\s+(\w+)/,
+    );
+    if (exportFuncMatch?.[1]) return exportFuncMatch[1];
+
+    // export class Name
+    const exportClassMatch = code.match(
+      /export\s+(?:default\s+)?class\s+(\w+)/,
+    );
+    if (exportClassMatch?.[1]) return exportClassMatch[1];
+
+    // export const name = (arrow function)
+    const exportConstMatch = code.match(
+      /export\s+const\s+(\w+)\s*=\s*(?:async\s+)?\(/,
+    );
+    if (exportConstMatch?.[1]) return exportConstMatch[1];
+
+    // Non-exported function (fallback) - require parenthesis to avoid false positives
+    const funcMatch = code.match(/function\s+(\w+)\s*\(/);
+    if (funcMatch?.[1]) return funcMatch[1];
+
+    // Non-exported class (fallback)
+    const classMatch = code.match(/class\s+(\w+)/);
+    if (classMatch?.[1]) return classMatch[1];
+  }
+
+  // Python patterns
+  if (lang === "python" || lang === "py") {
+    // class ClassName:
+    const classMatch = code.match(/^class\s+(\w+)\s*[:(]/m);
+    if (classMatch?.[1]) return classMatch[1];
+
+    // def function_name(
+    const funcMatch = code.match(/^def\s+(\w+)\s*\(/m);
+    if (funcMatch?.[1]) return funcMatch[1];
+  }
+
+  // Go patterns
+  if (lang === "go") {
+    // func FunctionName(
+    const funcMatch = code.match(/func\s+(\w+)\s*\(/);
+    if (funcMatch?.[1]) return funcMatch[1];
+
+    // type TypeName struct
+    const typeMatch = code.match(/type\s+(\w+)\s+struct/);
+    if (typeMatch?.[1]) return typeMatch[1];
+  }
+
+  // Rust patterns
+  if (lang === "rust" || lang === "rs") {
+    // fn function_name(
+    const funcMatch = code.match(/(?:pub\s+)?fn\s+(\w+)/);
+    if (funcMatch?.[1]) return funcMatch[1];
+
+    // struct StructName
+    const structMatch = code.match(/(?:pub\s+)?struct\s+(\w+)/);
+    if (structMatch?.[1]) return structMatch[1];
+  }
+
+  return null;
+}
+
+/**
+ * Extract a descriptive name from Mermaid diagram content.
+ * Looks for title directives and diagram type labels.
+ */
+export function extractMermaidName(code: string): string {
+  // Check for YAML frontmatter title
+  const frontmatterMatch = code.match(/---\s*\n[\s\S]*?title:\s*(.+?)\n/);
+  if (frontmatterMatch?.[1]) return frontmatterMatch[1].trim();
+
+  // Check for inline title (gantt, journey, pie)
+  const inlineTitleMatch = code.match(/(?:gantt|journey|pie)\s+title\s+(.+)/i);
+  if (inlineTitleMatch?.[1]) return inlineTitleMatch[1].trim();
+
+  // Detect diagram type and return descriptive name
+  const firstLine = code.trim().split("\n")[0]?.toLowerCase() || "";
+
+  if (firstLine.startsWith("graph") || firstLine.startsWith("flowchart")) {
+    return "Flowchart";
+  }
+  if (firstLine.startsWith("sequencediagram")) {
+    return "Sequence Diagram";
+  }
+  if (firstLine.startsWith("classdiagram")) {
+    return "Class Diagram";
+  }
+  if (firstLine.startsWith("erdiagram")) {
+    return "ER Diagram";
+  }
+  if (firstLine.startsWith("statediagram")) {
+    return "State Diagram";
+  }
+  if (firstLine.startsWith("gantt")) {
+    return "Gantt Chart";
+  }
+  if (firstLine.startsWith("pie")) {
+    return "Pie Chart";
+  }
+  if (firstLine.startsWith("journey")) {
+    return "Journey Diagram";
+  }
+  if (firstLine.startsWith("gitgraph")) {
+    return "Git Graph";
+  }
+  if (firstLine.startsWith("mindmap")) {
+    return "Mind Map";
+  }
+  if (firstLine.startsWith("timeline")) {
+    return "Timeline";
+  }
+
+  return "Diagram";
+}
+
+/**
+ * Extract a descriptive name from SVG content.
+ * Looks for title element, aria-label, or id attribute.
+ */
+export function extractSVGName(code: string): string | null {
+  // Extract <title> element content
+  const titleMatch = code.match(/<title[^>]*>([^<]+)<\/title>/i);
+  if (titleMatch?.[1]) return titleMatch[1].trim();
+
+  // Extract aria-label attribute
+  const ariaLabelMatch = code.match(/aria-label=["']([^"']+)["']/i);
+  if (ariaLabelMatch?.[1]) return ariaLabelMatch[1].trim();
+
+  // Extract id attribute from <svg> tag as fallback
+  const svgIdMatch = code.match(/<svg[^>]*\sid=["']([^"']+)["']/i);
+  if (svgIdMatch?.[1]) return svgIdMatch[1];
+
+  return null;
+}
+
+/**
+ * Extract a descriptive name from chart configuration.
+ * Looks for title field or describes chart type.
+ */
+export function extractChartName(code: string): string | null {
+  try {
+    const parsed = JSON.parse(code);
+
+    // Check for title at root level
+    if (parsed.title && typeof parsed.title === "string") {
+      return parsed.title;
+    }
+
+    // Check for title in config object
+    if (parsed.config?.title && typeof parsed.config.title === "string") {
+      return parsed.config.title;
+    }
+
+    // Describe by chart type
+    if (parsed.type && typeof parsed.type === "string") {
+      const type = parsed.type.charAt(0).toUpperCase() + parsed.type.slice(1);
+      return `${type} Chart`;
+    }
+
+    return "Chart";
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Extract a descriptive name from JSON content.
+ * Looks for name/title fields or describes by structure.
+ */
+export function extractJSONName(code: string): string | null {
+  try {
+    const parsed = JSON.parse(code);
+
+    // Check for name field (prefer over title)
+    if (parsed.name && typeof parsed.name === "string") {
+      return parsed.name;
+    }
+
+    // Check for title field
+    if (parsed.title && typeof parsed.title === "string") {
+      return parsed.title;
+    }
+
+    // Describe arrays by length
+    if (Array.isArray(parsed)) {
+      return `Array (${parsed.length} items)`;
+    }
+
+    // Describe objects by first key
+    if (typeof parsed === "object" && parsed !== null) {
+      const keys = Object.keys(parsed);
+      if (keys.length > 0) {
+        return `${keys[0]} Object`;
+      }
+    }
+
+    return "JSON";
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Detect if code content is SVG.
+ * Used for auto-detecting SVG in code blocks without explicit language.
+ */
+export function detectSVGContent(code: string): boolean {
+  const trimmed = code.trim();
+
+  // Check for direct <svg tag
+  if (trimmed.startsWith("<svg")) {
+    return true;
+  }
+
+  // Check for XML declaration followed by SVG
+  if (trimmed.startsWith("<?xml")) {
+    return trimmed.includes("<svg");
+  }
+
+  return false;
+}
+
+// ============================================================================
 // Code Block Extraction
 // ============================================================================
 
@@ -204,10 +443,13 @@ function createChartArtifact(
   const config = parseChartConfig(code);
   if (!config) return null;
 
+  // Smart naming: use meta > extracted chart name > fallback
+  const smartName = meta || extractChartName(code) || "Chart";
+
   return {
     id: generateArtifactId(),
     type: "chart",
-    title: meta || "Chart",
+    title: smartName,
     data: config.data as Array<
       Record<string, string | number | boolean | null>
     >,
@@ -219,10 +461,13 @@ function createChartArtifact(
 }
 
 function createMermaidArtifact(code: string, meta?: string): MermaidArtifact {
+  // Smart naming: use meta > extracted mermaid name
+  const smartName = meta || extractMermaidName(code);
+
   return {
     id: generateArtifactId(),
     type: "mermaid",
-    title: meta || "Diagram",
+    title: smartName,
     data: code,
   };
 }
@@ -232,10 +477,14 @@ function createCodeArtifact(
   language: string,
   meta?: string,
 ): CodeArtifact {
+  // Smart naming: use meta > extracted code name > fallback
+  const smartName =
+    meta || extractCodeName(code, language) || `${language} code`;
+
   return {
     id: generateArtifactId(),
     type: "code",
-    title: meta || `${language} code`,
+    title: smartName,
     data: code,
     config: {
       language,
@@ -252,19 +501,25 @@ function createJSONArtifact(code: string, meta?: string): JSONArtifact {
     data = code;
   }
 
+  // Smart naming: use meta > extracted JSON name > fallback
+  const smartName = meta || extractJSONName(code) || "JSON";
+
   return {
     id: generateArtifactId(),
     type: "json",
-    title: meta || "JSON",
+    title: smartName,
     data,
   };
 }
 
 function createSVGArtifact(code: string, meta?: string): SVGArtifact {
+  // Smart naming: use meta > extracted SVG name > fallback
+  const smartName = meta || extractSVGName(code) || "SVG";
+
   return {
     id: generateArtifactId(),
     type: "svg",
-    title: meta || "SVG",
+    title: smartName,
     data: code,
   };
 }
@@ -339,7 +594,14 @@ export function parseArtifacts(content: string): ParsedSegment[] {
     }
 
     // Create artifact from code block
-    const artifactType = detectArtifactType(block.language);
+    // First, detect artifact type from language
+    let artifactType = detectArtifactType(block.language);
+
+    // Auto-detect SVG in code blocks without explicit language
+    if (artifactType === "text" && detectSVGContent(block.code)) {
+      artifactType = "svg";
+    }
+
     let artifact: Artifact | null = null;
 
     switch (artifactType) {

@@ -46,9 +46,18 @@ const getBaseUrl = (): string => {
       process.env.NODE_ENV === "test" ||
       process.env.JEST_WORKER_ID !== undefined)
   ) {
-    return "http://localhost:3000/api/v1";
+    // Use TEST_API_URL env var if set, otherwise default for test environment
+    // This follows 12-Factor App principle: config from environment
+    return process.env.TEST_API_URL ?? "http://127.0.0.1:3000/api/v1";
   }
-  // In browser, relative URLs work fine
+  // In browser, use Vite env var if available, otherwise relative URL
+  if (
+    typeof import.meta !== "undefined" &&
+    import.meta.env?.VITE_API_BASE_URL
+  ) {
+    return import.meta.env.VITE_API_BASE_URL;
+  }
+  // Relative URLs work fine for same-origin deployments
   return "/api/v1";
 };
 

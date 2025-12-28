@@ -35,6 +35,7 @@ import {
   useUpdateProjectMutation,
   useDeleteProjectMutation,
   useGetFeatureFlagsQuery,
+  useGetServerConfigQuery,
   // Admin User hooks
   useListAdminUsersQuery,
   useGetAdminUserQuery,
@@ -217,6 +218,17 @@ describe("RTK Query API", () => {
     it("should export useGetFeatureFlagsQuery", () => {
       expect(useGetFeatureFlagsQuery).toBeDefined();
       expect(typeof useGetFeatureFlagsQuery).toBe("function");
+    });
+  });
+
+  describe("Server Configuration Hooks Export", () => {
+    it("should export useGetServerConfigQuery", () => {
+      expect(useGetServerConfigQuery).toBeDefined();
+      expect(typeof useGetServerConfigQuery).toBe("function");
+    });
+
+    it("should have getServerConfig endpoint defined", () => {
+      expect(api.endpoints.getServerConfig).toBeDefined();
     });
   });
 
