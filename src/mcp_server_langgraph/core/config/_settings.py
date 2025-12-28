@@ -67,8 +67,18 @@ class Settings(BaseSettings):
 
     # Prometheus (for SLA monitoring and compliance metrics)
     prometheus_url: str = "http://prometheus:9090"
-    prometheus_timeout: int = 30  # Query timeout in seconds
-    prometheus_retry_attempts: int = 3  # Number of retry attempts
+    prometheus_timeout: int = Field(
+        default=30,
+        ge=1,
+        le=300,
+        description="Prometheus query timeout in seconds (1-300)",
+    )
+    prometheus_retry_attempts: int = Field(
+        default=3,
+        ge=0,
+        le=10,
+        description="Number of Prometheus retry attempts (0-10)",
+    )
 
     # Alerting Configuration (PagerDuty, Slack, OpsGenie, Email)
     pagerduty_integration_key: str | None = None  # PagerDuty Events API v2 integration key
@@ -84,7 +94,7 @@ class Settings(BaseSettings):
     # Required for browser push notifications (critical alerts, etc.)
     vapid_public_key: str | None = None  # VAPID public key (base64-encoded)
     vapid_private_key: str | None = None  # VAPID private key (base64-encoded)
-    vapid_claims_email: str = "admin@example.com"  # Contact email for VAPID claims
+    vapid_claims_email: str = ""  # Contact email for VAPID claims (set via VAPID_CLAIMS_EMAIL env var)
 
     # Web Search API Configuration (for search_tools.py)
     tavily_api_key: str | None = None  # Tavily API key (recommended for AI)
@@ -176,7 +186,12 @@ class Settings(BaseSettings):
     model_name: str = "gemini-2.5-flash"  # Default: Gemini 2.5 Flash (balanced cost/performance)
     model_temperature: float = 0.7
     model_max_tokens: int = 8192
-    model_timeout: int = 60
+    model_timeout: int = Field(
+        default=60,
+        ge=1,
+        le=600,
+        description="LLM request timeout in seconds (1-600)",
+    )
 
     # Dedicated Models for Cost/Performance Optimization
     # Summarization Model (lighter/cheaper model for context compaction)
@@ -382,7 +397,12 @@ class Settings(BaseSettings):
     keycloak_admin_client_id: str = "admin-cli"  # Service account for IdP discovery
     keycloak_admin_client_secret: str | None = None  # Set via KEYCLOAK_ADMIN_CLIENT_SECRET
     keycloak_verify_ssl: bool = True
-    keycloak_timeout: int = 30  # HTTP timeout in seconds
+    keycloak_timeout: int = Field(
+        default=30,
+        ge=1,
+        le=120,
+        description="Keycloak HTTP timeout in seconds (1-120)",
+    )
 
     # Frontend URL for OAuth2 callbacks and redirects
     frontend_url: str = "http://localhost:5173"
@@ -414,7 +434,12 @@ class Settings(BaseSettings):
     redis_ssl: bool = False
     redis_rate_limit_db: int = 5  # Redis database for WebSocket rate limiting
     session_ttl_seconds: int = 86400  # 24 hours (absolute maximum)
-    session_idle_seconds: int = 1800  # 30 minutes (OWASP recommendation for idle timeout)
+    session_idle_seconds: int = Field(
+        default=1800,
+        ge=60,
+        le=86400,
+        description="Session idle timeout in seconds (60-86400, OWASP recommendation: 1800)",
+    )
     session_sliding_window: bool = True
     session_max_concurrent: int = 5  # Max concurrent sessions per user
 

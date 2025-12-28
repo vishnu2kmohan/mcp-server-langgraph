@@ -161,7 +161,12 @@ async def create_lifespan(container: ApplicationContainer | None = None) -> Asyn
 
         # Initialize Push Notification Sender (optional, only if VAPID keys configured)
         # ADR-0026: Web Push API for critical alerts
-        if container.settings.vapid_public_key and container.settings.vapid_private_key:
+        vapid_keys_configured = (
+            container.settings.vapid_public_key
+            and container.settings.vapid_private_key
+            and container.settings.vapid_claims_email  # Also require email for valid VAPID claims
+        )
+        if vapid_keys_configured:
             from mcp_server_langgraph.websocket.registry import get_alert_broadcaster
             from mcp_server_langgraph.api.v1.notifications import set_push_subscription_store
             from mcp_server_langgraph.notifications.push_sender import PushNotificationSender

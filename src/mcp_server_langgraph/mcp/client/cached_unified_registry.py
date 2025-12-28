@@ -9,6 +9,7 @@ Features:
 - TTL-based expiration (30 minutes default)
 - Cache invalidation on server registration/unregistration
 - Graceful degradation on cache failures
+- Optional real-time capability broadcasting via WebSocket
 
 Reference: MCP Protocol 2025-11-25 capability aggregation
 """
@@ -16,7 +17,7 @@ Reference: MCP Protocol 2025-11-25 capability aggregation
 from __future__ import annotations
 
 from dataclasses import asdict, is_dataclass
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Protocol, runtime_checkable
 
 from mcp_server_langgraph.observability.telemetry import logger
 
@@ -30,6 +31,48 @@ MCP_CACHE_TTL = 1800
 
 # Cache key prefixes
 CACHE_PREFIX = "mcp:"
+
+
+# =============================================================================
+# Capability Broadcaster Protocol
+# =============================================================================
+
+
+@runtime_checkable
+class CapabilityBroadcasterProtocol(Protocol):
+    """Protocol for capability change broadcasters.
+
+    Defines the interface for broadcasting MCP capability changes
+    to connected WebSocket clients.
+
+    Reference: MCP Protocol 2025-11-25 notifications
+    """
+
+    async def broadcast_server_registered(
+        self,
+        server_name: str,
+        tool_count: int,
+        resource_count: int,
+        prompt_count: int,
+    ) -> None:
+        """Broadcast server registration event."""
+        ...
+
+    async def broadcast_server_unregistered(self, server_name: str) -> None:
+        """Broadcast server unregistration event."""
+        ...
+
+    async def broadcast_tools_changed(self, server_name: str, count: int) -> None:
+        """Broadcast tools list changed event."""
+        ...
+
+    async def broadcast_resources_changed(self, server_name: str, count: int) -> None:
+        """Broadcast resources list changed event."""
+        ...
+
+    async def broadcast_prompts_changed(self, server_name: str, count: int) -> None:
+        """Broadcast prompts list changed event."""
+        ...
 
 
 # =============================================================================
@@ -152,6 +195,7 @@ class CachedUnifiedRegistry:
     - Check cache first
     - On miss, fetch from registry and populate cache
     - On update, invalidate relevant cache keys
+    - Optionally broadcast capability changes via WebSocket
 
     Example:
         from mcp_server_langgraph.core.cache import get_cache
@@ -180,6 +224,7 @@ class CachedUnifiedRegistry:
         registry: MCPUnifiedRegistry,
         cache: CacheService,
         ttl: int = MCP_CACHE_TTL,
+        broadcaster: CapabilityBroadcasterProtocol | None = None,
     ) -> None:
         """Initialize cached registry.
 
@@ -187,10 +232,12 @@ class CachedUnifiedRegistry:
             registry: The underlying unified registry
             cache: Cache service (L1 + L2)
             ttl: Time-to-live for cached items in seconds (default: 30 minutes)
+            broadcaster: Optional broadcaster for real-time WebSocket notifications
         """
         self._registry = registry
         self._cache = cache
         self._ttl = ttl
+        self._broadcaster = broadcaster
 
     # =========================================================================
     # Cache-Aside Read Methods
@@ -509,6 +556,21 @@ class CachedUnifiedRegistry:
             extra={"server_name": config.name, **result},
         )
 
+        # Broadcast server registration event
+        if self._broadcaster is not None:
+            try:
+                await self._broadcaster.broadcast_server_registered(
+                    server_name=config.name,
+                    tool_count=result.get("tool_count", 0),
+                    resource_count=result.get("resource_count", 0),
+                    prompt_count=result.get("prompt_count", 0),
+                )
+            except Exception as e:
+                logger.warning(
+                    "Failed to broadcast server registered event",
+                    extra={"server_name": config.name, "error": str(e)},
+                )
+
         return result
 
     async def unregister_server(self, name: str) -> None:
@@ -527,6 +589,16 @@ class CachedUnifiedRegistry:
             "Unregistered server via cached registry",
             extra={"server_name": name},
         )
+
+        # Broadcast server unregistration event
+        if self._broadcaster is not None:
+            try:
+                await self._broadcaster.broadcast_server_unregistered(server_name=name)
+            except Exception as e:
+                logger.warning(
+                    "Failed to broadcast server unregistered event",
+                    extra={"server_name": name, "error": str(e)},
+                )
 
     async def refresh_all(self, server_name: str) -> dict[str, int]:
         """Refresh capabilities from a server and invalidate cache.
@@ -547,6 +619,20 @@ class CachedUnifiedRegistry:
             "Refreshed server via cached registry",
             extra={"server_name": server_name, **result},
         )
+
+        # Broadcast capability changed events
+        if self._broadcaster is not None:
+            try:
+                await self._broadcaster.broadcast_tools_changed(server_name=server_name, count=result.get("tool_count", 0))
+                await self._broadcaster.broadcast_resources_changed(
+                    server_name=server_name, count=result.get("resource_count", 0)
+                )
+                await self._broadcaster.broadcast_prompts_changed(server_name=server_name, count=result.get("prompt_count", 0))
+            except Exception as e:
+                logger.warning(
+                    "Failed to broadcast capability changed events",
+                    extra={"server_name": server_name, "error": str(e)},
+                )
 
         return result
 

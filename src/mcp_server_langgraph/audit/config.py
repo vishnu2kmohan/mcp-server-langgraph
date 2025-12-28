@@ -126,9 +126,21 @@ class EmailConfig(BaseModel):
     smtp_port: int = 587
     smtp_user: str = ""
     smtp_password: str = ""
-    from_address: str = "audit@example.com"
+    from_address: str = Field(
+        default="",
+        description="From email address for audit notifications (set via AUDIT_FROM_EMAIL env var)",
+    )
     to_addresses: list[str] = Field(default_factory=list)
     min_severity: str = "error"
+
+    def __init__(self, **data: Any) -> None:
+        """Initialize EmailConfig with environment variable support."""
+        # Support AUDIT_FROM_EMAIL environment variable override
+        if "from_address" not in data:
+            env_from = os.environ.get("AUDIT_FROM_EMAIL")
+            if env_from:
+                data["from_address"] = env_from
+        super().__init__(**data)
 
 
 class WebhookConfig(BaseModel):

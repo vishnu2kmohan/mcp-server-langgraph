@@ -7,10 +7,11 @@ All flags are configurable via environment variables for different environments.
 
 import functools
 import os
+import warnings
 from collections.abc import Callable
 from typing import Any, ParamSpec, TypeVar
 
-from pydantic import Field
+from pydantic import Field, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 P = ParamSpec("P")
@@ -1222,6 +1223,40 @@ class FeatureFlags(BaseSettings):
             "openfga": self.openfga_cache_ttl_seconds,
         }
         return cache_ttl_map.get(feature, self.default_cache_ttl_seconds) if feature else self.default_cache_ttl_seconds
+
+    def check_deprecation_warnings(self) -> list[str]:
+        """
+        Check for usage of deprecated feature flags and return warning messages.
+
+        This method identifies deprecated flags that are being used with non-default
+        values and returns appropriate warning messages for each.
+
+        Returns:
+            List of deprecation warning messages
+        """
+        warning_messages: list[str] = []
+
+        # Check enable_llm_suggestions (deprecated in favor of suggestion_strategy)
+        if not self.enable_llm_suggestions:
+            warning_messages.append(
+                "enable_llm_suggestions is deprecated. "
+                "Use suggestion_strategy='heuristic' instead. "
+                "This flag will be removed in a future version."
+            )
+
+        return warning_messages
+
+    @model_validator(mode="after")
+    def _emit_deprecation_warnings(self) -> "FeatureFlags":
+        """
+        Emit deprecation warnings for deprecated flag usage after model initialization.
+
+        This validator runs after the model is created and emits Python warnings
+        for any deprecated flags that are being used with non-default values.
+        """
+        for message in self.check_deprecation_warnings():
+            warnings.warn(message, DeprecationWarning, stacklevel=4)
+        return self
 
     def is_feature_enabled(self, feature_name: str) -> bool:
         """
