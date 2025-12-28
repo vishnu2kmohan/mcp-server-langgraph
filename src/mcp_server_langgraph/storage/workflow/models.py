@@ -27,6 +27,7 @@ class StoredWorkflow(BaseModel):
 
     id: str
     name: str
+    title: str | None = None  # Human-friendly display name (defaults to name if None)
     description: str = ""
     nodes: list[dict[str, Any]] = Field(default_factory=list)
     edges: list[dict[str, Any]] = Field(default_factory=list)
@@ -46,6 +47,7 @@ class WorkflowSummary(BaseModel):
 
     id: str
     name: str
+    title: str | None = None  # Human-friendly display name (defaults to name if None)
     description: str = ""
     node_count: int = 0
     edge_count: int = 0

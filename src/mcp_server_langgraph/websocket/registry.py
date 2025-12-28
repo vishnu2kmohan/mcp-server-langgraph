@@ -22,6 +22,9 @@ if TYPE_CHECKING:
     from mcp_server_langgraph.hitl.broadcast import AgentRequestBroadcaster
     from mcp_server_langgraph.notifications.broadcast import NotificationBroadcaster
     from mcp_server_langgraph.observability.trace_broadcaster import TraceBroadcaster
+    from mcp_server_langgraph.websocket.handlers.mcp_aggregated import (
+        MCPAggregatedBroadcaster,
+    )
 
 logger = logging.getLogger(__name__)
 
@@ -145,6 +148,31 @@ def set_trace_broadcaster(broadcaster: TraceBroadcaster | None) -> None:
     _trace_broadcaster = broadcaster
 
 
+# =============================================================================
+# MCP Aggregated Broadcaster
+# =============================================================================
+
+_mcp_aggregated_broadcaster: MCPAggregatedBroadcaster | None = None
+
+
+def get_mcp_aggregated_broadcaster() -> MCPAggregatedBroadcaster:
+    """Get the MCP aggregated capability broadcaster instance."""
+    global _mcp_aggregated_broadcaster
+    if _mcp_aggregated_broadcaster is None:
+        from mcp_server_langgraph.websocket.handlers.mcp_aggregated import (
+            MCPAggregatedBroadcaster,
+        )
+
+        _mcp_aggregated_broadcaster = MCPAggregatedBroadcaster()
+    return _mcp_aggregated_broadcaster
+
+
+def set_mcp_aggregated_broadcaster(broadcaster: MCPAggregatedBroadcaster | None) -> None:
+    """Set the MCP aggregated broadcaster instance (for app initialization or testing)."""
+    global _mcp_aggregated_broadcaster
+    _mcp_aggregated_broadcaster = broadcaster
+
+
 __all__ = [
     # Notification
     "get_notification_broadcaster",
@@ -162,4 +190,7 @@ __all__ = [
     # Trace
     "get_trace_broadcaster",
     "set_trace_broadcaster",
+    # MCP Aggregated
+    "get_mcp_aggregated_broadcaster",
+    "set_mcp_aggregated_broadcaster",
 ]

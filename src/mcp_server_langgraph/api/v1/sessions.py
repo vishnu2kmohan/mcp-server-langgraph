@@ -152,6 +152,7 @@ class SessionCreateRequest(BaseModel):
     """Request body for creating a session."""
 
     name: str | None = Field(default=None, description="Session name", max_length=255)
+    description: str | None = Field(default=None, description="Session description or context")
     workflow_id: str | None = Field(default=None, description="Associated workflow ID")
     # Deprecated: use 'name' instead. Kept for backward compatibility.
     title: str | None = Field(default=None, description="Session title (deprecated, use 'name')", max_length=255)
@@ -210,16 +211,21 @@ class SessionConfigUpdateRequest(BaseModel):
 
 
 class SessionUpdateRequest(BaseModel):
-    """Request body for updating session metadata (rename).
+    """Request body for updating session metadata (rename and description).
 
-    Used by PATCH /sessions/{session_id} for renaming sessions.
-    Preserves the session_id while updating the display name.
+    Used by PATCH /sessions/{session_id} for updating session metadata.
+    Preserves the session_id while updating the display name or description.
     """
 
-    name: str = Field(
+    name: str | None = Field(
+        default=None,
         description="New session name",
         min_length=1,
         max_length=255,
+    )
+    description: str | None = Field(
+        default=None,
+        description="Session description or context",
     )
 
 
@@ -228,6 +234,7 @@ class SessionResponse(BaseModel):
 
     id: str = Field(description="Session ID")
     name: str | None = Field(default=None, description="Session name")
+    description: str = Field(default="", description="Session description or context")
     workflow_id: str | None = Field(default=None, description="Associated workflow ID")
     config: SessionConfigResponse | None = Field(default=None, description="Session LLM configuration")
     messages: list[dict[str, Any]] = Field(default_factory=list, description="Session messages")

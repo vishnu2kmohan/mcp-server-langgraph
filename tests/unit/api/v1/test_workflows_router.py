@@ -1028,3 +1028,138 @@ class TestWorkflowsListCombined:
         # Sorted by name ascending
         assert data["data"][0]["name"] == "Test Alpha"
         assert data["data"][1]["name"] == "Test Zebra"
+
+
+@pytest.mark.xdist_group(name="test_workflows_router")
+class TestWorkflowTitleField:
+    """Tests for workflow title field (TDD RED phase)."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers."""
+        gc.collect()
+
+    def test_create_workflow_with_title_returns_title(self, client: TestClient) -> None:
+        """
+        GIVEN valid workflow data with title
+        WHEN POST request is made
+        THEN response should include the title field
+        """
+        response = client.post(
+            "/api/v1/workflows",
+            json={
+                "name": "data-pipeline-v1",
+                "title": "Customer Data Pipeline",
+                "description": "ETL pipeline for customer data",
+            },
+        )
+        assert response.status_code == 201
+        data = response.json()
+        assert data["title"] == "Customer Data Pipeline"
+        assert data["name"] == "data-pipeline-v1"
+
+    def test_create_workflow_without_title_uses_name_as_title(self, client: TestClient) -> None:
+        """
+        GIVEN workflow data without title
+        WHEN POST request is made
+        THEN title should default to name value
+        """
+        response = client.post(
+            "/api/v1/workflows",
+            json={
+                "name": "my-workflow",
+                "description": "A workflow without explicit title",
+            },
+        )
+        assert response.status_code == 201
+        data = response.json()
+        assert data["title"] == "my-workflow"
+
+    def test_update_workflow_title(self, client: TestClient, mock_workflow_service: MockWorkflowServiceAdapter) -> None:
+        """
+        GIVEN a workflow exists
+        WHEN PUT request updates the title
+        THEN response should show updated title
+        """
+        workflow_id = str(uuid4())
+        mock_workflow_service._workflows[workflow_id] = {
+            "id": workflow_id,
+            "name": "original-name",
+            "title": "Original Title",
+            "description": "",
+            "nodes": [],
+            "edges": [],
+            "status": "active",
+            "created_at": "2025-01-01T00:00:00Z",
+            "updated_at": "2025-01-01T00:00:00Z",
+        }
+
+        response = client.put(
+            f"/api/v1/workflows/{workflow_id}",
+            json={"title": "Updated Display Title"},
+        )
+        assert response.status_code == 200
+        data = response.json()
+        assert data["title"] == "Updated Display Title"
+        assert data["name"] == "original-name"
+
+    def test_get_workflow_returns_title(self, client: TestClient, mock_workflow_service: MockWorkflowServiceAdapter) -> None:
+        """
+        GIVEN a workflow with title exists
+        WHEN GET request is made
+        THEN response should include title field
+        """
+        workflow_id = str(uuid4())
+        mock_workflow_service._workflows[workflow_id] = {
+            "id": workflow_id,
+            "name": "api-workflow",
+            "title": "API Integration Workflow",
+            "description": "Handles API calls",
+            "nodes": [],
+            "edges": [],
+            "status": "active",
+            "created_at": "2025-01-01T00:00:00Z",
+            "updated_at": "2025-01-01T00:00:00Z",
+        }
+
+        response = client.get(f"/api/v1/workflows/{workflow_id}")
+        assert response.status_code == 200
+        data = response.json()
+        assert data["title"] == "API Integration Workflow"
+
+    def test_list_workflows_includes_title(
+        self, client: TestClient, mock_workflow_service: MockWorkflowServiceAdapter
+    ) -> None:
+        """
+        GIVEN workflows with titles exist
+        WHEN GET list request is made
+        THEN response should include title in each workflow
+        """
+        mock_workflow_service._workflows["1"] = {
+            "id": "1",
+            "name": "workflow-1",
+            "title": "First Workflow",
+            "description": "",
+            "nodes": [],
+            "edges": [],
+            "status": "active",
+            "created_at": "2025-01-01T00:00:00Z",
+            "updated_at": "2025-01-01T00:00:00Z",
+        }
+        mock_workflow_service._workflows["2"] = {
+            "id": "2",
+            "name": "workflow-2",
+            "title": "Second Workflow",
+            "description": "",
+            "nodes": [],
+            "edges": [],
+            "status": "active",
+            "created_at": "2025-01-01T00:00:00Z",
+            "updated_at": "2025-01-01T00:00:00Z",
+        }
+
+        response = client.get("/api/v1/workflows")
+        assert response.status_code == 200
+        data = response.json()
+        titles = [w["title"] for w in data["data"]]
+        assert "First Workflow" in titles
+        assert "Second Workflow" in titles

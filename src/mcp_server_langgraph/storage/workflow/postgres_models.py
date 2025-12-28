@@ -45,6 +45,8 @@ class WorkflowModel(WorkflowBase):
 
     id: Mapped[str] = mapped_column(String(36), primary_key=True)
     name: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    # Title: Human-friendly display name (defaults to name if not set)
+    title: Mapped[str | None] = mapped_column(String(255), nullable=True)
     description: Mapped[str] = mapped_column(Text, nullable=False, default="")
     nodes: Mapped[list[dict[str, Any]]] = mapped_column(JSON, nullable=False, default=list)
     edges: Mapped[list[dict[str, Any]]] = mapped_column(JSON, nullable=False, default=list)

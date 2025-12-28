@@ -22,7 +22,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Annotated, Any, Literal
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 from mcp_server_langgraph.api.pagination import (
     CursorPaginatedResponse,
@@ -72,6 +72,7 @@ class WorkflowCreateRequest(BaseModel):
     """Request body for creating a workflow."""
 
     name: str = Field(description="Workflow name", min_length=1, max_length=255)
+    title: str | None = Field(default=None, description="Human-friendly display title (defaults to name)")
     description: str | None = Field(default=None, description="Workflow description")
     nodes: list[WorkflowNode] = Field(default_factory=list, description="Workflow nodes")
     edges: list[WorkflowEdge] = Field(default_factory=list, description="Workflow edges")
@@ -81,6 +82,7 @@ class WorkflowUpdateRequest(BaseModel):
     """Request body for updating a workflow."""
 
     name: str | None = Field(default=None, description="Workflow name", max_length=255)
+    title: str | None = Field(default=None, description="Human-friendly display title")
     description: str | None = Field(default=None, description="Workflow description")
     nodes: list[WorkflowNode] | None = Field(default=None, description="Workflow nodes")
     edges: list[WorkflowEdge] | None = Field(default=None, description="Workflow edges")
@@ -91,11 +93,20 @@ class WorkflowResponse(BaseModel):
 
     id: str = Field(description="Workflow ID")
     name: str = Field(description="Workflow name")
+    title: str = Field(default="", description="Human-friendly display title")
     description: str | None = Field(default=None, description="Workflow description")
     nodes: list[dict[str, Any]] = Field(default_factory=list, description="Workflow nodes")
     edges: list[dict[str, Any]] = Field(default_factory=list, description="Workflow edges")
     created_at: str | None = Field(default=None, description="Creation timestamp")
     updated_at: str | None = Field(default=None, description="Last update timestamp")
+
+    @model_validator(mode="before")
+    @classmethod
+    def set_title_from_name(cls, data: dict[str, Any]) -> dict[str, Any]:
+        """Set title to name if not provided."""
+        if isinstance(data, dict) and not data.get("title"):
+            data["title"] = data.get("name", "")
+        return data
 
 
 # ==============================================================================
