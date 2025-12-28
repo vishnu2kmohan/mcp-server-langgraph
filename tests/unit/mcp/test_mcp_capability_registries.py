@@ -567,9 +567,8 @@ class TestMCPCapabilityAPIEndpoints:
     @pytest.mark.asyncio
     async def test_list_aggregated_tools_endpoint(self) -> None:
         """Verify /api/v1/mcp/aggregated/tools returns tools from all servers."""
-
-        from mcp_server_langgraph.api.v1.mcp_aggregated import (
-            aggregated_router,
+        from mcp_server_langgraph.api.v1.mcp_aggregated import aggregated_router
+        from mcp_server_langgraph.mcp.client.unified_registry import (
             get_unified_registry,
         )
 

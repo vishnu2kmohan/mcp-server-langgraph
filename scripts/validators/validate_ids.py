@@ -144,8 +144,7 @@ EXEMPT_FILES = [
     # Cost storage tests (InMemory/mock backends)
     "test_cost_storage_multicloud.py",  # Multi-cloud cost storage tests with mocked backends
     # WebSocket/Notification tests (unit tests with mocked auth middleware)
-    "test_notification_websocket.py",  # WebSocket auth tests with InMemory user provider
-    "test_notification_websocket_integration.py",  # WebSocket integration tests with mocked auth
+    "test_notification_websocket.py",  # NotificationBroadcaster tests with mock websockets
     # Plugin mock fixtures (example data for plugin tests)
     "mock_fixtures_plugin.py",  # Mock fixtures with example user IDs for plugin testing
 ]
