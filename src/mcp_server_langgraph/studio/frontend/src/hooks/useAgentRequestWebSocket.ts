@@ -20,6 +20,7 @@ import { useEffect, useCallback, useMemo, useRef, useState } from "react";
 import { useAppSelector } from "../store/hooks";
 import { selectIsAuthenticated } from "../store/slices/authSlice";
 import { getAuthToken } from "../utils/storage";
+import { buildWebSocketUrl, API_ENDPOINTS } from "../config/api";
 import type {
   ApprovalRequiredPayload,
   ClarificationRequiredPayload,
@@ -204,26 +205,42 @@ export function parseAgentRequestMessage(
 // URL Construction
 // =============================================================================
 
+/**
+ * Get the default WebSocket URL for agent requests
+ *
+ * Uses centralized config from src/config/api.ts for base URL,
+ * with custom query param handling for sessionId and token.
+ */
 function getDefaultWebSocketUrl(sessionId?: string, token?: string): string {
-  if (typeof window === "undefined") {
-    return "ws://localhost:8000/api/v1/ws/agents/requests";
-  }
+  // Build base URL from centralized config (handles env vars and SSR)
+  const baseUrl = buildWebSocketUrl(
+    API_ENDPOINTS.WS_AGENT_REQUESTS,
+    typeof window !== "undefined" ? window : undefined,
+  );
 
-  const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-  const host = window.location.host;
-
-  // Build query params
-  const params = new URLSearchParams();
-
-  if (token) {
-    params.set("token", token);
-  }
+  // Add session_id to query params if provided
   if (sessionId) {
-    params.set("session_id", sessionId);
+    const url = new URL(baseUrl, "ws://localhost");
+    url.searchParams.set("session_id", sessionId);
+    if (token) {
+      url.searchParams.set("token", token);
+    }
+    // Return just pathname + search (relative) or full URL
+    return baseUrl.includes("://")
+      ? `${baseUrl.split("?")[0]}?${url.searchParams.toString()}`
+      : `${baseUrl.split("?")[0]}?${url.searchParams.toString()}`;
   }
 
-  const queryString = params.toString();
-  return `${protocol}//${host}/api/v1/ws/agents/requests${queryString ? `?${queryString}` : ""}`;
+  // If only token, use the URL from centralized config which handles token
+  if (token) {
+    return buildWebSocketUrl(
+      API_ENDPOINTS.WS_AGENT_REQUESTS,
+      typeof window !== "undefined" ? window : undefined,
+      token,
+    );
+  }
+
+  return baseUrl;
 }
 
 // =============================================================================

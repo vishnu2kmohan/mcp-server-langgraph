@@ -239,6 +239,31 @@ class CachedUnifiedRegistry:
         self._ttl = ttl
         self._broadcaster = broadcaster
 
+    def set_broadcaster(
+        self,
+        broadcaster: CapabilityBroadcasterProtocol | None,
+    ) -> None:
+        """Set or replace the capability broadcaster.
+
+        Enables runtime wiring of the broadcaster during application startup,
+        avoiding circular import issues.
+
+        Args:
+            broadcaster: The broadcaster to use, or None to disable broadcasting
+
+        Example:
+            # In app startup:
+            from mcp_server_langgraph.websocket.registry import get_mcp_aggregated_broadcaster
+
+            cached_registry = get_cached_unified_registry()
+            cached_registry.set_broadcaster(get_mcp_aggregated_broadcaster())
+        """
+        self._broadcaster = broadcaster
+        logger.debug(
+            "Broadcaster updated",
+            extra={"has_broadcaster": broadcaster is not None},
+        )
+
     # =========================================================================
     # Cache-Aside Read Methods
     # =========================================================================

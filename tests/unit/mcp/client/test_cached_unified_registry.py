@@ -812,3 +812,124 @@ class TestCachedUnifiedRegistryBroadcasterIntegration:
 
         # Assert
         assert result["tool_count"] == 1
+
+
+class TestCachedUnifiedRegistrySetBroadcaster:
+    """Tests for the set_broadcaster() method.
+
+    Tests the ability to set a broadcaster after construction,
+    enabling runtime wiring during application startup.
+    """
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers."""
+        import gc
+
+        gc.collect()
+
+    @pytest.mark.asyncio
+    async def test_set_broadcaster_enables_broadcasting(self) -> None:
+        """Test that set_broadcaster enables broadcasting for subsequent operations."""
+        from mcp_server_langgraph.mcp.client.cached_unified_registry import (
+            CachedUnifiedRegistry,
+        )
+
+        mock_registry = MagicMock()
+        mock_registry.register_server = AsyncMock(return_value={"tool_count": 5, "resource_count": 2, "prompt_count": 1})
+        mock_cache = MagicMock()
+        mock_cache.adelete_pattern = AsyncMock(return_value=0)
+
+        # Create without broadcaster
+        service = CachedUnifiedRegistry(
+            registry=mock_registry,
+            cache=mock_cache,
+            ttl=CACHE_TTL,
+        )
+
+        # Add broadcaster after construction
+        mock_broadcaster = MagicMock()
+        mock_broadcaster.broadcast_server_registered = AsyncMock(return_value=None)
+        service.set_broadcaster(mock_broadcaster)
+
+        # Act
+        mock_config = MagicMock()
+        mock_config.name = TEST_SERVER_NAME
+        await service.register_server(mock_config)
+
+        # Assert - broadcaster should have been called
+        mock_broadcaster.broadcast_server_registered.assert_awaited_once_with(
+            server_name=TEST_SERVER_NAME,
+            tool_count=5,
+            resource_count=2,
+            prompt_count=1,
+        )
+
+    @pytest.mark.asyncio
+    async def test_set_broadcaster_replaces_existing_broadcaster(self) -> None:
+        """Test that set_broadcaster replaces an existing broadcaster."""
+        from mcp_server_langgraph.mcp.client.cached_unified_registry import (
+            CachedUnifiedRegistry,
+        )
+
+        mock_registry = MagicMock()
+        mock_registry.register_server = AsyncMock(return_value={"tool_count": 3, "resource_count": 1, "prompt_count": 0})
+        mock_cache = MagicMock()
+        mock_cache.adelete_pattern = AsyncMock(return_value=0)
+
+        # Create with initial broadcaster
+        old_broadcaster = MagicMock()
+        old_broadcaster.broadcast_server_registered = AsyncMock(return_value=None)
+        service = CachedUnifiedRegistry(
+            registry=mock_registry,
+            cache=mock_cache,
+            ttl=CACHE_TTL,
+            broadcaster=old_broadcaster,
+        )
+
+        # Replace with new broadcaster
+        new_broadcaster = MagicMock()
+        new_broadcaster.broadcast_server_registered = AsyncMock(return_value=None)
+        service.set_broadcaster(new_broadcaster)
+
+        # Act
+        mock_config = MagicMock()
+        mock_config.name = TEST_SERVER_NAME
+        await service.register_server(mock_config)
+
+        # Assert - new broadcaster called, old not called
+        new_broadcaster.broadcast_server_registered.assert_awaited_once()
+        old_broadcaster.broadcast_server_registered.assert_not_awaited()
+
+    @pytest.mark.asyncio
+    async def test_set_broadcaster_to_none_disables_broadcasting(self) -> None:
+        """Test that set_broadcaster(None) disables broadcasting."""
+        from mcp_server_langgraph.mcp.client.cached_unified_registry import (
+            CachedUnifiedRegistry,
+        )
+
+        mock_registry = MagicMock()
+        mock_registry.register_server = AsyncMock(return_value={"tool_count": 1, "resource_count": 0, "prompt_count": 0})
+        mock_cache = MagicMock()
+        mock_cache.adelete_pattern = AsyncMock(return_value=0)
+
+        # Create with broadcaster
+        mock_broadcaster = MagicMock()
+        mock_broadcaster.broadcast_server_registered = AsyncMock(return_value=None)
+        service = CachedUnifiedRegistry(
+            registry=mock_registry,
+            cache=mock_cache,
+            ttl=CACHE_TTL,
+            broadcaster=mock_broadcaster,
+        )
+
+        # Disable broadcaster
+        service.set_broadcaster(None)
+
+        # Act - should not raise
+        mock_config = MagicMock()
+        mock_config.name = TEST_SERVER_NAME
+        result = await service.register_server(mock_config)
+
+        # Assert - broadcaster not called, operation succeeded
+        mock_broadcaster.broadcast_server_registered.assert_not_awaited()
+        assert result["tool_count"] == 1

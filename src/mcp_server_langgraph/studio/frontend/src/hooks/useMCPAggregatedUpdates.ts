@@ -18,6 +18,7 @@ import { useRealtimeSync, type ConnectionStatus } from "./useRealtimeSync";
 import { useAppSelector } from "../store/hooks";
 import { selectIsAuthenticated } from "../store/slices/authSlice";
 import { getAuthToken } from "../utils/storage";
+import { buildWebSocketUrl, API_ENDPOINTS } from "../config/api";
 
 // ============================================================================
 // Types
@@ -75,17 +76,11 @@ export interface UseMCPAggregatedUpdatesReturn {
 
 /**
  * Get default MCP aggregated updates WebSocket URL
+ *
+ * Uses centralized config from src/config/api.ts
  */
 function getDefaultWebSocketUrl(token?: string): string {
-  if (typeof window === "undefined") {
-    return "ws://localhost:8000/api/v1/ws/mcp/aggregated";
-  }
-
-  const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-  const host = window.location.host;
-  const tokenParam = token ? `?token=${encodeURIComponent(token)}` : "";
-
-  return `${protocol}//${host}/api/v1/ws/mcp/aggregated${tokenParam}`;
+  return buildWebSocketUrl(API_ENDPOINTS.WS_MCP_AGGREGATED, window, token);
 }
 
 /**

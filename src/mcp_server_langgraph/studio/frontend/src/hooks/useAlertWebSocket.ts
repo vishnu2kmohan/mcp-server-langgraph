@@ -23,6 +23,7 @@ import {
 import { addAlert, type Alert } from "../store/slices/alertSlice";
 import { useRealtimeSync, type ConnectionStatus } from "./useRealtimeSync";
 import { getAuthToken } from "../utils/storage";
+import { buildWebSocketUrl, API_ENDPOINTS } from "../config/api";
 
 // =============================================================================
 // Types
@@ -135,18 +136,13 @@ export function parseAlertMessage(data: unknown): AlertWebSocketMessage | null {
 /**
  * Get the default WebSocket URL for alerts
  */
+/**
+ * Get the default WebSocket URL for alerts
+ *
+ * Uses centralized config from src/config/api.ts
+ */
 function getDefaultWebSocketUrl(token?: string): string {
-  if (typeof window === "undefined") {
-    return "ws://localhost:8000/api/v1/ws/alerts";
-  }
-
-  const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-  const host = window.location.host;
-
-  // Build URL with token if provided
-  const tokenParam = token ? `?token=${encodeURIComponent(token)}` : "";
-
-  return `${protocol}//${host}/api/v1/ws/alerts${tokenParam}`;
+  return buildWebSocketUrl(API_ENDPOINTS.WS_ALERTS, window, token);
 }
 
 // =============================================================================

@@ -19,6 +19,7 @@ import { addNotification } from "../store/slices/notificationSlice";
 import type { AddNotificationPayload } from "../store/slices/notificationSlice";
 import { useRealtimeSync, type ConnectionStatus } from "./useRealtimeSync";
 import { getAuthToken } from "../utils/storage";
+import { buildWebSocketUrl, API_ENDPOINTS } from "../config/api";
 
 /**
  * Options for useNotificationWebSocket hook
@@ -68,27 +69,14 @@ function isNotificationMessage(data: unknown): data is NotificationMessage {
 
 /**
  * Get the default WebSocket URL for notifications
+ *
+ * Uses centralized config from src/config/api.ts for:
+ * - Environment variable support (VITE_WS_BASE_URL)
+ * - Protocol detection (wss:// for https://)
+ * - SSR-safe defaults
  */
 function getDefaultWebSocketUrl(token?: string): string {
-  if (typeof window === "undefined") {
-    return "ws://localhost:8000/api/v1/ws/notifications";
-  }
-
-  const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-
-  // WebSocket URL routing:
-  // - Vite dev server (localhost:5175): Use Vite proxy (configured in vite.config.ts)
-  // - Gateway (localhost or localhost:80): Use gateway URL (Traefik routes /api/v1/ws/* to backend)
-  // - Production: Use same origin (frontend and backend on same host)
-  const host = window.location.host;
-  // When running behind Vite dev server, the proxy handles routing to backend
-  // No need to change the host - just use the same origin
-  // For gateway (localhost, localhost:80) and production, use the same host
-
-  // Build URL with token if provided
-  const tokenParam = token ? `?token=${encodeURIComponent(token)}` : "";
-
-  return `${protocol}//${host}/api/v1/ws/notifications${tokenParam}`;
+  return buildWebSocketUrl(API_ENDPOINTS.WS_NOTIFICATIONS, window, token);
 }
 
 /**

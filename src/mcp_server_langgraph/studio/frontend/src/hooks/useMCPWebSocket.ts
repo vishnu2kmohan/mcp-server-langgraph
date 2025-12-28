@@ -16,6 +16,7 @@ import { useRealtimeSync, type ConnectionStatus } from "./useRealtimeSync";
 import { useAppSelector } from "../store/hooks";
 import { selectIsAuthenticated } from "../store/slices/authSlice";
 import { getAuthToken } from "../utils/storage";
+import { buildWebSocketUrl, API_ENDPOINTS } from "../config/api";
 
 // ============================================================================
 // MCP Protocol Types
@@ -212,25 +213,19 @@ export interface UseMCPWebSocketReturn {
 /**
  * Get default MCP WebSocket URL
  */
+/**
+ * Get default MCP WebSocket URL
+ *
+ * Uses centralized config from src/config/api.ts
+ */
 function getDefaultMCPWebSocketUrl(
   authenticated: boolean,
   token?: string,
 ): string {
-  if (typeof window === "undefined") {
-    return authenticated
-      ? "ws://localhost:8000/api/v1/ws/mcp/auth"
-      : "ws://localhost:8000/api/v1/ws/mcp";
-  }
-
-  const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-  const host = window.location.host;
-
-  // Build URL with endpoint and optional token
-  const endpoint = authenticated ? "/api/v1/ws/mcp/auth" : "/api/v1/ws/mcp";
-  const tokenParam =
-    authenticated && token ? `?token=${encodeURIComponent(token)}` : "";
-
-  return `${protocol}//${host}${endpoint}${tokenParam}`;
+  const endpoint = authenticated
+    ? API_ENDPOINTS.WS_MCP_AUTH
+    : API_ENDPOINTS.WS_MCP;
+  return buildWebSocketUrl(endpoint, window, authenticated ? token : undefined);
 }
 
 /**

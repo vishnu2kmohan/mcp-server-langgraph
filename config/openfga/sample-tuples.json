@@ -472,6 +472,22 @@
       "user": "user:bob",
       "relation": "viewer",
       "object": "cost:usage"
+    },
+    {
+      "_comment": "MCP Aggregated Capabilities WebSocket (/api/v1/ws/mcp/aggregated) - viewers can monitor capability changes",
+      "user": "user:admin",
+      "relation": "viewer",
+      "object": "mcp:aggregated-capabilities"
+    },
+    {
+      "user": "user:alice",
+      "relation": "viewer",
+      "object": "mcp:aggregated-capabilities"
+    },
+    {
+      "user": "user:bob",
+      "relation": "viewer",
+      "object": "mcp:aggregated-capabilities"
     }
   ]
 }

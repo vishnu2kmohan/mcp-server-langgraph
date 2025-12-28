@@ -496,6 +496,79 @@ pytest --cov-report=html                       # HTML report
 pytest --cov-report=term-missing               # Terminal with missing lines
 ```
 
+## Feature Flag Testing
+
+### Overview
+
+The project uses 164+ feature flags organized into 12 categories. Tests for feature flags are located in `tests/unit/core/test_feature_flags.py`.
+
+### Testing Feature Flag Consolidation (Sprint Block 5)
+
+Sprint Block 5 introduced several improvements to feature flag management:
+
+1. **Deprecated Flags**:
+   - `enable_multi_agent_collaboration` → Use `enable_multi_agent_orchestration` + `multi_agent_strategy`
+   - `enable_llm_suggestions` → Use `suggestion_strategy` property
+
+2. **Strategy Enums** (replace boolean pairs):
+   ```python
+   multi_agent_strategy: str = "orchestrator"  # orchestrator | peer | hybrid
+   suggestion_strategy: str = "llm"            # llm | heuristic | hybrid
+   ```
+
+3. **Unified Helper Methods**:
+   ```python
+   # Rate limiting with feature-specific overrides
+   flags.get_rate_limit("suggestions")  # Returns suggestion_rate_limit_per_minute
+   flags.get_rate_limit("websocket")    # Returns websocket_rate_limit_per_minute
+   flags.get_rate_limit("api")          # Returns rate_limit_requests_per_minute
+
+   # Cache TTL with feature-specific overrides
+   flags.get_cache_ttl("llm")           # Returns cache_ttl_seconds
+   flags.get_cache_ttl("openfga")       # Returns openfga_cache_ttl_seconds
+   ```
+
+4. **Backward Compatibility**:
+   ```python
+   # This property respects legacy enable_llm_suggestions flag
+   strategy = flags.effective_suggestion_strategy
+   ```
+
+### Running Feature Flag Tests
+
+```bash
+# All feature flag tests (149 tests)
+uv run pytest tests/unit/core/test_feature_flags.py -v
+
+# Sprint Block 5 consolidation tests only
+uv run pytest tests/unit/core/test_feature_flags.py -k "consolidation" -v
+
+# Helper method tests
+uv run pytest tests/unit/core/test_feature_flags.py -k "get_rate_limit or get_cache_ttl" -v
+```
+
+### Feature Flag Test Structure
+
+```
+tests/unit/core/test_feature_flags.py
+├── TestFeatureFlagsInit           # Basic initialization
+├── TestFeatureFlagsEnvironment    # Environment variable handling
+├── TestFeatureFlagsValidation     # Value constraints
+├── TestFeatureFlagsCategories     # Category organization
+├── TestFeatureFlagConsolidation   # Sprint Block 5 (27 tests)
+│   ├── get_rate_limit tests
+│   ├── get_cache_ttl tests
+│   ├── effective_suggestion_strategy tests
+│   └── deprecated flag tests
+└── TestFeatureFlagDecorators      # @feature_gated decorator
+```
+
+### Documentation
+
+- **ADR-0085**: Feature Flag Consolidation decision record
+- **Feature Flag Catalog**: `docs-internal/FEATURE_FLAG_CATALOG.md`
+- **Environment Variables**: `.env.test` (FF_* prefix)
+
 ## Additional Resources
 
 - [pytest Documentation](https://docs.pytest.org/)
@@ -503,10 +576,12 @@ pytest --cov-report=term-missing               # Terminal with missing lines
 - [Coverage.py Documentation](https://coverage.readthedocs.io/)
 - [Project README](../../README.md)
 - [Contributing Guide](../../.github/CONTRIBUTING.md)
+- [Feature Flag Catalog](../FEATURE_FLAG_CATALOG.md)
+- [ADR-0085: Feature Flag Consolidation](../../adr/adr-0085-feature-flag-consolidation.md)
 
 ---
 
-**Last Updated**: 2025-10-15
+**Last Updated**: 2025-12-27
 **Python Version**: 3.12
 **pytest Version**: 8.2.0+
-**Coverage Target**: 70%+ (Current: 86%)
+**Coverage Target**: 70%+ (Current: 75%)

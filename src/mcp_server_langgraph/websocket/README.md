@@ -37,6 +37,8 @@ This module provides a unified WebSocket infrastructure that ensures consistent 
 │  │  MCP        │ Notification│   Alert     │   Audit    │  │
 │  ├─────────────┼─────────────┼─────────────┼─────────────┤  │
 │  │  Workflow   │  Connection │   HEART     │   Cost     │  │
+│  ├─────────────┼─────────────┼─────────────┼─────────────┤  │
+│  │ MCP Aggr.   │   Trace     │  AI Suggest │             │  │
 │  └─────────────┴─────────────┴─────────────┴─────────────┘  │
 └─────────────────────────────────────────────────────────────┘
 ```
@@ -228,6 +230,7 @@ With `authz_fail_closed=True` (default):
 | `/ws/agents/requests` | workflow:hitl | editor |
 | `/ws/mcp` | - | (no auth required) |
 | `/ws/mcp/auth` | mcp:websocket | user |
+| `/ws/mcp/aggregated` | mcp:aggregated-capabilities | viewer |
 
 ## Message Format
 
@@ -312,6 +315,7 @@ from mcp_server_langgraph.websocket.exceptions import (
 |-----|---------|------|-------------|
 | `/api/v1/ws/mcp` | MCPWebSocketHandler | Optional | MCP protocol |
 | `/api/v1/ws/mcp/auth` | MCPWebSocketHandler | Required | Authenticated MCP |
+| `/api/v1/ws/mcp/aggregated` | MCPAggregatedHandler | Required | Real-time MCP capability changes |
 | `/api/v1/ws/notifications` | NotificationHandler | Required | User notifications |
 | `/api/v1/ws/alerts` | AlertHandler | Admin | Infrastructure alerts |
 | `/api/v1/ws/audit` | AuditHandler | Required | Audit events |
@@ -444,9 +448,84 @@ import logging
 logging.getLogger("mcp_server_langgraph.websocket").setLevel(logging.DEBUG)
 ```
 
+## MCP Aggregated Capabilities Endpoint
+
+The `/api/v1/ws/mcp/aggregated` endpoint provides real-time notifications when MCP server capabilities change.
+
+### Message Format
+
+All messages use **MCP JSON-RPC 2.0** format as per [MCP Protocol 2025-11-25](https://modelcontextprotocol.io/specification/2025-11-25):
+
+```json
+{
+  "jsonrpc": "2.0",
+  "method": "notifications/tools/list_changed",
+  "params": {
+    "serverName": "example-server",
+    "count": 5
+  }
+}
+```
+
+### Client → Server Messages
+
+| Type | Description |
+|------|-------------|
+| `subscribe` | Subscribe to capability change events |
+| `unsubscribe` | Unsubscribe from capability change events |
+| `get_counts` | Request current capability counts |
+
+### Server → Client Messages
+
+| Method | Description |
+|--------|-------------|
+| `notifications/tools/list_changed` | Tools list changed for a server |
+| `notifications/resources/list_changed` | Resources list changed for a server |
+| `notifications/prompts/list_changed` | Prompts list changed for a server |
+| `notifications/server/registered` | New MCP server registered |
+| `notifications/server/unregistered` | MCP server unregistered |
+
+### Example Usage
+
+```typescript
+const ws = new WebSocket('/api/v1/ws/mcp/aggregated?token=' + jwt);
+
+ws.onopen = () => {
+  // Subscribe to capability events
+  ws.send(JSON.stringify({ type: 'subscribe', id: 'sub-1' }));
+};
+
+ws.onmessage = (event) => {
+  const msg = JSON.parse(event.data);
+
+  if (msg.jsonrpc === '2.0') {
+    // MCP JSON-RPC 2.0 notification
+    switch (msg.method) {
+      case 'notifications/tools/list_changed':
+        console.log(`Tools changed: ${msg.params.serverName} has ${msg.params.count} tools`);
+        break;
+      case 'notifications/server/registered':
+        console.log(`Server registered: ${msg.params.serverName}`);
+        break;
+    }
+  } else if (msg.type === 'capability_counts') {
+    // Response to get_counts
+    console.log(`Total: ${msg.payload.total_tools} tools, ${msg.payload.total_resources} resources`);
+  }
+};
+```
+
+### Authorization
+
+- **Resource**: `mcp:aggregated-capabilities`
+- **Relation**: `viewer`
+
+All authenticated users with viewer relation can subscribe to capability change events.
+
 ## References
 
 - [OpenFGA Documentation](https://openfga.dev/docs)
 - [FastAPI WebSockets](https://fastapi.tiangolo.com/advanced/websockets/)
 - [OpenTelemetry Python](https://opentelemetry.io/docs/languages/python/)
 - [MCP Protocol Specification](https://modelcontextprotocol.io/)
+- [MCP Protocol 2025-11-25](https://modelcontextprotocol.io/specification/2025-11-25)

@@ -296,6 +296,22 @@ async def create_lifespan(container: ApplicationContainer | None = None) -> Asyn
             logger.warning(f"Observability query clients initialization failed: {e}")
             # Non-fatal: observability endpoints will fail gracefully
 
+        # Wire MCP aggregated broadcaster to cached unified registry
+        # Enables real-time capability change notifications via WebSocket
+        from mcp_server_langgraph.mcp.client.cached_unified_registry import (
+            get_cached_unified_registry,
+        )
+        from mcp_server_langgraph.websocket.registry import get_mcp_aggregated_broadcaster
+
+        try:
+            cached_registry = get_cached_unified_registry()
+            mcp_broadcaster = get_mcp_aggregated_broadcaster()
+            cached_registry.set_broadcaster(mcp_broadcaster)
+            logger.info("MCP aggregated broadcaster wired to cached registry")
+        except Exception as e:
+            logger.warning(f"MCP aggregated broadcaster wiring failed: {e}")
+            # Non-fatal: capability changes won't be broadcast to WebSocket clients
+
     yield
 
     # Shutdown
@@ -313,6 +329,15 @@ async def create_lifespan(container: ApplicationContainer | None = None) -> Asyn
         set_artifacts_service(None)
         reset_gdpr_storage()
 
+        # Reset MCP aggregated broadcaster
+        from mcp_server_langgraph.mcp.client.cached_unified_registry import (
+            reset_cached_unified_registry,
+        )
+        from mcp_server_langgraph.websocket.registry import set_mcp_aggregated_broadcaster
+
+        set_mcp_aggregated_broadcaster(None)
+        reset_cached_unified_registry()
+
         # Close observability query clients
         from mcp_server_langgraph.observability.query.factory import close_query_clients
 
@@ -322,7 +347,7 @@ async def create_lifespan(container: ApplicationContainer | None = None) -> Asyn
         except Exception as e:
             logger.warning(f"Error closing observability query clients: {e}")
 
-        logger.info("Stores reset (push subscriptions, feedback, artifacts, GDPR, observability)")
+        logger.info("Stores reset (push subscriptions, feedback, artifacts, GDPR, observability, MCP broadcaster)")
 
 
 def customize_openapi(app: FastAPI) -> dict[str, Any]:

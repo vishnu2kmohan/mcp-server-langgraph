@@ -327,6 +327,23 @@ class SessionService(ABC):
         ...
 
     @abstractmethod
+    async def update_session(
+        self, session_id: str, user_id: str, name: str | None = None, description: str | None = None
+    ) -> dict[str, Any] | None:
+        """Update session metadata (name and/or description).
+
+        Args:
+            session_id: Session ID to update
+            user_id: User ID making the request (for ownership check)
+            name: New session name (optional)
+            description: New session description (optional)
+
+        Returns:
+            Updated session dict, or None if session not found or not owned
+        """
+        ...
+
+    @abstractmethod
     async def rate_message(
         self,
         session_id: str,
@@ -536,6 +553,32 @@ class InMemorySessionService(SessionService):
             return None
 
         session["name"] = name
+        session["updated_at"] = datetime.now(UTC).isoformat()
+        return session
+
+    async def update_session(
+        self, session_id: str, user_id: str, name: str | None = None, description: str | None = None
+    ) -> dict[str, Any] | None:
+        """Update session metadata (name and/or description). Only owner can update.
+
+        Args:
+            session_id: Session ID to update
+            user_id: User ID making the request (for ownership check)
+            name: New session name (optional)
+            description: New session description (optional)
+
+        Returns:
+            Updated session dict, or None if session not found or not owned
+        """
+        session = self._sessions.get(session_id)
+        # SECURITY: Verify ownership before update
+        if session is None or session.get("user_id") != user_id:
+            return None
+
+        if name is not None:
+            session["name"] = name
+        if description is not None:
+            session["description"] = description
         session["updated_at"] = datetime.now(UTC).isoformat()
         return session
 
@@ -826,6 +869,49 @@ class RedisSessionService(SessionService):
         return {
             "id": updated_session.session_id,
             "name": updated_session.name,
+            "user_id": updated_session.user_id,
+            "workflow_id": None,
+            "config": {
+                "model": updated_session.config.model if updated_session.config else "gpt-4o-mini",
+                "temperature": updated_session.config.temperature if updated_session.config else 0.7,
+                "max_tokens": updated_session.config.max_tokens if updated_session.config else 1000,
+            },
+            "messages": [
+                {
+                    "message_id": m.message_id,
+                    "role": m.role,
+                    "content": m.content,
+                    "timestamp": m.timestamp.isoformat(),
+                }
+                for m in updated_session.messages
+            ],
+            "created_at": updated_session.created_at.isoformat() if updated_session.created_at else None,
+            "updated_at": updated_session.updated_at.isoformat() if updated_session.updated_at else None,
+            "status": SessionStatus.active,
+        }
+
+    async def update_session(
+        self, session_id: str, user_id: str, name: str | None = None, description: str | None = None
+    ) -> dict[str, Any] | None:
+        """Update session metadata (name and/or description) with persistence."""
+        session = await self._manager.get_session(session_id)
+        if session is None or session.user_id != user_id:
+            return None
+
+        # Persist via manager (name updates supported, description needs storage model update)
+        updated_session = await self._manager.update_session(
+            session_id=session_id,
+            name=name if name is not None else session.name,
+        )
+
+        if updated_session is None:
+            return None
+
+        # Return updated session as dict (description stored in-memory for now)
+        return {
+            "id": updated_session.session_id,
+            "name": updated_session.name,
+            "description": description if description is not None else "",
             "user_id": updated_session.user_id,
             "workflow_id": None,
             "config": {
