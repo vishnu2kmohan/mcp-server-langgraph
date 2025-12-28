@@ -6,6 +6,7 @@
 import { useState, useEffect, useCallback } from "react";
 
 import type { AgentExecutionTrace } from "../../../types/chat";
+import { authenticatedFetch } from "../../../utils/authenticatedFetch";
 
 // =============================================================================
 // Types
@@ -53,7 +54,9 @@ export function useAgentTrace(
     try {
       // In a real implementation, this would call an API endpoint
       // For now, we'll simulate fetching from the session state
-      const response = await fetch(`/api/v1/sessions/${sessionId}/trace`);
+      const response = await authenticatedFetch(
+        `/api/v1/sessions/${sessionId}/trace`,
+      );
 
       if (!response.ok) {
         throw new Error(`Failed to fetch trace: ${response.statusText}`);

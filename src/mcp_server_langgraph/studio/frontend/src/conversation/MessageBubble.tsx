@@ -32,8 +32,13 @@ function formatTime(timestamp: number): string {
 }
 
 function parseCodeBlocks(
-  content: string,
+  content: string | null | undefined,
 ): Array<{ type: "text" | "code"; content: string; language?: string }> {
+  // Handle null/undefined content gracefully
+  if (!content) {
+    return [{ type: "text", content: "" }];
+  }
+
   const codeBlockRegex = /```(\w+)?\n([\s\S]*?)```/g;
   const parts: Array<{
     type: "text" | "code";

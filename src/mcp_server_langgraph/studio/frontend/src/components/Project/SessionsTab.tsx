@@ -5,11 +5,12 @@
  * and bulk selection with BulkActionBar.
  */
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { useNavigate } from "react-router";
 import { Plus, MessageSquare, Trash2, X } from "lucide-react";
 import { BulkActionBar } from "../UI/BulkActionBar";
-import { getAuthToken } from "../../utils/storage";
+import { authenticatedFetch } from "../../utils/authenticatedFetch";
+import { saveCurrentRouteAsIntended } from "../../utils/intendedRoute";
 
 // ============================================================================
 // Types
@@ -141,18 +142,18 @@ export function SessionsTab({
     new Set(),
   );
 
-  const handleCreateSession = async (name: string) => {
-    const token = getAuthToken();
+  const handleAuthFailure = useCallback(() => {
+    saveCurrentRouteAsIntended();
+    navigate("/login", { replace: true });
+  }, [navigate]);
 
+  const handleCreateSession = async (name: string) => {
     // Step 1: Create the session in global storage first
-    const createResponse = await fetch("/api/v1/sessions", {
+    const createResponse = await authenticatedFetch("/api/v1/sessions", {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        ...(token && { Authorization: `Bearer ${token}` }),
-      },
-      credentials: "include",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ name }),
+      onAuthFailure: handleAuthFailure,
     });
 
     if (!createResponse.ok) {
@@ -164,15 +165,12 @@ export function SessionsTab({
     const sessionId = session.session_id || session.id;
 
     // Step 2: Add the session to the project
-    const addResponse = await fetch(
+    const addResponse = await authenticatedFetch(
       `/api/v1/projects/${projectId}/sessions?session_id=${sessionId}&session_name=${encodeURIComponent(name)}`,
       {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          ...(token && { Authorization: `Bearer ${token}` }),
-        },
-        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        onAuthFailure: handleAuthFailure,
       },
     );
 
@@ -186,16 +184,12 @@ export function SessionsTab({
     e: React.MouseEvent,
   ) => {
     e.stopPropagation(); // Prevent navigation
-    const token = getAuthToken();
-    const response = await fetch(
+    const response = await authenticatedFetch(
       `/api/v1/projects/${projectId}/sessions/${sessionId}`,
       {
         method: "DELETE",
-        headers: {
-          "Content-Type": "application/json",
-          ...(token && { Authorization: `Bearer ${token}` }),
-        },
-        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        onAuthFailure: handleAuthFailure,
       },
     );
     if (response.ok) {
@@ -231,18 +225,14 @@ export function SessionsTab({
 
   const handleBulkDelete = async () => {
     // Delete each selected session
-    const token = getAuthToken();
     const deletePromises = Array.from(selectedSessions).map(
       async (sessionId) => {
-        const response = await fetch(
+        const response = await authenticatedFetch(
           `/api/v1/projects/${projectId}/sessions/${sessionId}`,
           {
             method: "DELETE",
-            headers: {
-              "Content-Type": "application/json",
-              ...(token && { Authorization: `Bearer ${token}` }),
-            },
-            credentials: "include",
+            headers: { "Content-Type": "application/json" },
+            onAuthFailure: handleAuthFailure,
           },
         );
         return response.ok;

@@ -6,7 +6,7 @@
  */
 
 import { useState, useEffect, useCallback } from "react";
-import { getAuthToken } from "../../utils/storage";
+import { authenticatedFetch } from "../../utils/authenticatedFetch";
 
 // ============================================================================
 // Types
@@ -104,17 +104,9 @@ export function ConnectionTemplateSelector({
 
       const templateUrl = `/api/v1/connection-templates${params.toString() ? `?${params.toString()}` : ""}`;
 
-      const token = getAuthToken();
-      const fetchOptions: RequestInit = {
-        headers: {
-          ...(token && { Authorization: `Bearer ${token}` }),
-        },
-        credentials: "include",
-      };
-
       const [templatesRes, categoriesRes] = await Promise.all([
-        fetch(templateUrl, fetchOptions),
-        fetch("/api/v1/connection-templates/categories", fetchOptions),
+        authenticatedFetch(templateUrl),
+        authenticatedFetch("/api/v1/connection-templates/categories"),
       ]);
 
       if (!templatesRes.ok || !categoriesRes.ok) {

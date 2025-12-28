@@ -6,7 +6,7 @@
  * Wired to the artifacts API via React Router loader.
  */
 import { useState, useMemo, useCallback } from "react";
-import { useRouteLoaderData, useRevalidator } from "react-router";
+import { useRouteLoaderData, useRevalidator, useNavigate } from "react-router";
 import {
   FileText,
   FileCode,
@@ -23,7 +23,8 @@ import {
   X,
 } from "lucide-react";
 import { cn } from "../utils/cn";
-import { getAuthToken } from "../utils/storage";
+import { authenticatedFetch } from "../utils/authenticatedFetch";
+import { saveCurrentRouteAsIntended } from "../utils/intendedRoute";
 import { devLogger } from "../utils/devLogger";
 import { sessionTelemetry } from "../utils/sessionTelemetry";
 import type { FilesLoaderData } from "../router/loaders";
@@ -307,6 +308,13 @@ export function FilesPage() {
   // Get artifacts from the router loader
   const loaderData = useRouteLoaderData("files") as FilesLoaderData | undefined;
   const revalidator = useRevalidator();
+  const navigate = useNavigate();
+
+  // Auth failure handler for authenticatedFetch
+  const handleAuthFailure = useCallback(() => {
+    saveCurrentRouteAsIntended();
+    navigate("/login", { replace: true });
+  }, [navigate]);
 
   // Keep track of artifacts for preview lookup
   const artifactsMap = useMemo(() => {
@@ -412,14 +420,13 @@ export function FilesPage() {
     setDeleteConfirmFile(null); // Close dialog immediately
 
     try {
-      const token = getAuthToken();
-      const response = await fetch(`/api/v1/artifacts/${fileToDelete.id}`, {
-        method: "DELETE",
-        headers: {
-          ...(token && { Authorization: `Bearer ${token}` }),
+      const response = await authenticatedFetch(
+        `/api/v1/artifacts/${fileToDelete.id}`,
+        {
+          method: "DELETE",
+          onAuthFailure: handleAuthFailure,
         },
-        credentials: "include",
-      });
+      );
 
       if (response.ok) {
         logger.debug("Deleted file:", fileToDelete.name);
@@ -492,7 +499,7 @@ export function FilesPage() {
     } finally {
       setIsDeleting(false);
     }
-  }, [deleteConfirmFile, revalidator]);
+  }, [deleteConfirmFile, revalidator, handleAuthFailure]);
 
   // Show error state if loader failed
   if (loaderData?.error) {

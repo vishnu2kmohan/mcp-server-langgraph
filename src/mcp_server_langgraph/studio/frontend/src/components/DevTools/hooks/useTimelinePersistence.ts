@@ -7,6 +7,10 @@
 import { useState, useCallback, useEffect } from "react";
 
 import { storage } from "../../../utils/storage";
+import { devLogger } from "../../../utils/devLogger";
+
+// Create prefixed logger for this hook
+const logger = devLogger.withPrefix("[TimelinePersistence]");
 
 // =============================================================================
 // Types
@@ -88,7 +92,7 @@ function saveToStorage(sessionId: string, state: PersistedTimelineState): void {
     storage.set(key, state);
   } catch {
     // Handle storage quota exceeded or other errors
-    console.warn("Failed to persist timeline state to localStorage");
+    logger.warn("Failed to persist timeline state to localStorage");
   }
 }
 

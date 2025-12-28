@@ -163,6 +163,24 @@ export function getWebSocketBaseUrl(windowRef?: WindowLike): string {
 /**
  * Build a complete WebSocket URL with optional token.
  *
+ * @deprecated Use `buildWebSocketUrl` from `src/utils/websocket.ts` instead.
+ * The new function provides:
+ * - Centralized `WS_ENDPOINTS` registry for endpoint paths
+ * - Automatic auth token integration from Redux store
+ * - Optional URL parameter support
+ * - Better SSR/test support with optional window reference
+ *
+ * Migration example:
+ * ```typescript
+ * // Old (deprecated):
+ * import { buildWebSocketUrl, API_ENDPOINTS } from '../config/api';
+ * const url = buildWebSocketUrl(API_ENDPOINTS.WS_ALERTS, window, authToken);
+ *
+ * // New (preferred):
+ * import { buildWebSocketUrl, WS_ENDPOINTS } from '../utils/websocket';
+ * const url = buildWebSocketUrl(WS_ENDPOINTS.ALERTS, {}, true);
+ * ```
+ *
  * @param endpoint - WebSocket endpoint path (e.g., API_ENDPOINTS.WS_NOTIFICATIONS)
  * @param windowRef - Optional window reference (for testing/SSR)
  * @param token - Optional auth token to append as query parameter
@@ -205,3 +223,17 @@ export function buildApiUrl(endpoint: string): string {
   const baseUrl = getApiBaseUrl();
   return `${baseUrl}${endpoint}`;
 }
+
+// =============================================================================
+// Re-exports for Migration Convenience
+// =============================================================================
+
+/**
+ * Re-export WS_ENDPOINTS from websocket.ts for migration convenience.
+ *
+ * New code should import directly from '../utils/websocket':
+ * ```typescript
+ * import { buildWebSocketUrl, WS_ENDPOINTS } from '../utils/websocket';
+ * ```
+ */
+export { WS_ENDPOINTS } from "../utils/websocket";

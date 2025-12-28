@@ -15,6 +15,7 @@ import { configureStore } from "@reduxjs/toolkit";
 import { LoginPage } from "./LoginPage";
 import authSliceReducer from "../store/slices/authSlice";
 import personaSliceReducer from "../store/slices/personaSlice";
+import { INTENDED_ROUTE_KEY } from "../utils/intendedRoute";
 
 import * as apiModule from "../api";
 
@@ -119,6 +120,36 @@ const renderWithProviders = (
   };
 };
 
+// Helper to render with location state (for testing intended route persistence)
+const renderWithLocationState = (
+  component: React.ReactNode,
+  locationState?: {
+    from?: { pathname: string; search?: string; hash?: string };
+  },
+) => {
+  const store = createTestStore({});
+  return {
+    ...render(
+      <Provider store={store}>
+        <MemoryRouter
+          initialEntries={[
+            {
+              pathname: "/login",
+              state: locationState,
+            },
+          ]}
+        >
+          <Routes>
+            <Route path="/login" element={component} />
+            <Route path="/studio" element={<div>Studio Page</div>} />
+          </Routes>
+        </MemoryRouter>
+      </Provider>,
+    ),
+    store,
+  };
+};
+
 describe("LoginPage", () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -133,6 +164,7 @@ describe("LoginPage", () => {
   afterEach(() => {
     cleanup();
     localStorage.clear();
+    sessionStorage.clear();
   });
 
   describe("Rendering", () => {
@@ -552,6 +584,131 @@ describe("LoginPage", () => {
 
       const button = screen.getByRole("link", { name: /custom provider/i });
       expect(button.querySelector("svg")).toBeInTheDocument();
+    });
+  });
+
+  describe("Intended Route Persistence (OAuth2 Flow)", () => {
+    beforeEach(() => {
+      sessionStorage.clear();
+    });
+
+    describe("when navigated from AuthGuard with 'from' state", () => {
+      it("should save the intended route to sessionStorage", async () => {
+        renderWithLocationState(<LoginPage />, {
+          from: {
+            pathname: "/studio/chat/123",
+          },
+        });
+
+        await waitFor(() => {
+          expect(sessionStorage.getItem(INTENDED_ROUTE_KEY)).toBe(
+            "/studio/chat/123",
+          );
+        });
+      });
+
+      it("should save the intended route with query string", async () => {
+        renderWithLocationState(<LoginPage />, {
+          from: {
+            pathname: "/studio/canvas",
+            search: "?artifact=abc&version=1",
+          },
+        });
+
+        await waitFor(() => {
+          expect(sessionStorage.getItem(INTENDED_ROUTE_KEY)).toBe(
+            "/studio/canvas?artifact=abc&version=1",
+          );
+        });
+      });
+
+      it("should save the intended route with hash", async () => {
+        renderWithLocationState(<LoginPage />, {
+          from: {
+            pathname: "/studio/settings",
+            hash: "#notifications",
+          },
+        });
+
+        await waitFor(() => {
+          expect(sessionStorage.getItem(INTENDED_ROUTE_KEY)).toBe(
+            "/studio/settings#notifications",
+          );
+        });
+      });
+
+      it("should save the intended route with query string and hash", async () => {
+        renderWithLocationState(<LoginPage />, {
+          from: {
+            pathname: "/studio/workflow",
+            search: "?id=456",
+            hash: "#step-3",
+          },
+        });
+
+        await waitFor(() => {
+          expect(sessionStorage.getItem(INTENDED_ROUTE_KEY)).toBe(
+            "/studio/workflow?id=456#step-3",
+          );
+        });
+      });
+    });
+
+    describe("when navigated without 'from' state", () => {
+      it("should not save anything to sessionStorage", async () => {
+        renderWithLocationState(<LoginPage />);
+
+        // Wait for page to render
+        await waitFor(() => {
+          expect(screen.getByText("Sign in to continue")).toBeInTheDocument();
+        });
+
+        expect(sessionStorage.getItem(INTENDED_ROUTE_KEY)).toBeNull();
+      });
+    });
+
+    describe("excluded paths", () => {
+      it("should not save /login as intended route", async () => {
+        renderWithLocationState(<LoginPage />, {
+          from: {
+            pathname: "/login",
+          },
+        });
+
+        await waitFor(() => {
+          expect(screen.getByText("Sign in to continue")).toBeInTheDocument();
+        });
+
+        expect(sessionStorage.getItem(INTENDED_ROUTE_KEY)).toBeNull();
+      });
+
+      it("should not save /auth/callback as intended route", async () => {
+        renderWithLocationState(<LoginPage />, {
+          from: {
+            pathname: "/auth/callback",
+          },
+        });
+
+        await waitFor(() => {
+          expect(screen.getByText("Sign in to continue")).toBeInTheDocument();
+        });
+
+        expect(sessionStorage.getItem(INTENDED_ROUTE_KEY)).toBeNull();
+      });
+
+      it("should not save root path as intended route", async () => {
+        renderWithLocationState(<LoginPage />, {
+          from: {
+            pathname: "/",
+          },
+        });
+
+        await waitFor(() => {
+          expect(screen.getByText("Sign in to continue")).toBeInTheDocument();
+        });
+
+        expect(sessionStorage.getItem(INTENDED_ROUTE_KEY)).toBeNull();
+      });
     });
   });
 });

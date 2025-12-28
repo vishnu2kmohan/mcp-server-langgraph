@@ -6,7 +6,7 @@
  */
 
 import { useCallback, useState, useEffect } from "react";
-import { useSearchParams } from "react-router";
+import { useSearchParams, useNavigate } from "react-router";
 import { ReactFlowProvider } from "reactflow";
 import { useAppDispatch, useAppSelector } from "../store/hooks";
 import {
@@ -64,7 +64,8 @@ import {
   Lightbulb,
   History,
 } from "lucide-react";
-import { getAuthToken } from "../utils/storage";
+import { authenticatedFetch } from "../utils/authenticatedFetch";
+import { saveCurrentRouteAsIntended } from "../utils/intendedRoute";
 
 export function WorkflowsPage() {
   const [isGeneratingCode, setIsGeneratingCode] = useState(false);
@@ -89,6 +90,13 @@ export function WorkflowsPage() {
   const workflowIdFromUrl = searchParams.get("id");
   const suggestionsFromUrl = searchParams.get("suggestions") === "true";
   const dispatch = useAppDispatch();
+  const navigate = useNavigate();
+
+  // Auth failure handler for authenticatedFetch
+  const handleAuthFailure = useCallback(() => {
+    saveCurrentRouteAsIntended();
+    navigate("/login", { replace: true });
+  }, [navigate]);
 
   // AI Suggestions mutation
   const [getSuggestions, { isLoading: isLoadingSuggestions }] =
@@ -289,19 +297,14 @@ export function WorkflowsPage() {
         return;
       }
 
-      const token = getAuthToken();
-      const response = await fetch("/api/v1/workflows/generate", {
+      const response = await authenticatedFetch("/api/v1/workflows/generate", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          ...(token && { Authorization: `Bearer ${token}` }),
-        },
         body: JSON.stringify({
           name: metadata?.name || "Workflow",
           nodes,
           edges,
         }),
-        credentials: "include",
+        onAuthFailure: handleAuthFailure,
       });
 
       if (response.ok) {
@@ -320,7 +323,7 @@ export function WorkflowsPage() {
     } finally {
       setIsGeneratingCode(false);
     }
-  }, [dispatch, metadata, nodes, edges, validation.isValid]);
+  }, [dispatch, metadata, nodes, edges, validation.isValid, handleAuthFailure]);
 
   const handleExportJSON = useCallback(() => {
     const data = {

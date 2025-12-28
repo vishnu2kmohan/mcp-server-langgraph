@@ -28,7 +28,7 @@ import { CanvasWorkspace } from "./CanvasWorkspace";
 import type { ChatLoaderData } from "../router/loaders";
 import type { CanvasArtifact } from "../types/artifacts";
 import { cn } from "../utils/cn";
-import { getAuthToken } from "../utils/storage";
+import { authenticatedFetch } from "../utils/authenticatedFetch";
 import { devLogger } from "../utils/devLogger";
 import { sessionTelemetry } from "../utils/sessionTelemetry";
 import { useFeatureFlag } from "../contexts/FeatureFlagContext";
@@ -201,19 +201,17 @@ export function ConnectedCanvasPanel({ className }: ConnectedCanvasPanelProps) {
       setSaveError(null);
 
       try {
-        const token = getAuthToken();
-        const response = await fetch(`/api/v1/artifacts/${artifactId}`, {
-          method: "PATCH",
-          headers: {
-            "Content-Type": "application/json",
-            ...(token && { Authorization: `Bearer ${token}` }),
+        const response = await authenticatedFetch(
+          `/api/v1/artifacts/${artifactId}`,
+          {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              content,
+              editedBy: "user",
+            }),
           },
-          credentials: "include",
-          body: JSON.stringify({
-            content,
-            editedBy: "user",
-          }),
-        });
+        );
 
         if (response.ok) {
           logger.debug("Saved artifact:", artifactId);
@@ -373,22 +371,20 @@ export function ConnectedCanvasPanel({ className }: ConnectedCanvasPanelProps) {
       setShortcutActionLoading(true);
 
       try {
-        const token = getAuthToken();
-        const response = await fetch(`/api/v1/ai/canvas/${action}`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            ...(token && { Authorization: `Bearer ${token}` }),
+        const response = await authenticatedFetch(
+          `/api/v1/ai/canvas/${action}`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              artifact_id: selectedArtifactId,
+              content: selectedArtifact.content,
+              content_type: selectedArtifact.contentType,
+              language: selectedArtifact.editMetadata?.language,
+              session_id: sessionId,
+            }),
           },
-          credentials: "include",
-          body: JSON.stringify({
-            artifact_id: selectedArtifactId,
-            content: selectedArtifact.content,
-            content_type: selectedArtifact.contentType,
-            language: selectedArtifact.editMetadata?.language,
-            session_id: sessionId,
-          }),
-        });
+        );
 
         if (response.ok) {
           const result = await response.json();

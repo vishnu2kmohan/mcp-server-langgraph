@@ -15,6 +15,7 @@ import { configureStore } from "@reduxjs/toolkit";
 import { AuthCallbackPage } from "./AuthCallbackPage";
 import authReducer, { initialAuthState } from "../store/slices/authSlice";
 import personaReducer from "../store/slices/personaSlice";
+import { INTENDED_ROUTE_KEY } from "../utils/intendedRoute";
 
 // Mock react-router navigate
 const mockNavigate = vi.fn();
@@ -130,6 +131,7 @@ describe("AuthCallbackPage", () => {
   afterEach(() => {
     cleanup();
     vi.useRealTimers();
+    sessionStorage.clear();
   });
 
   describe("Initial Rendering", () => {
@@ -526,6 +528,129 @@ describe("AuthCallbackPage", () => {
       const button = screen.getByRole("button", { name: /Try again/i });
       expect(button).toBeInTheDocument();
       expect(button).toBeVisible();
+    });
+  });
+
+  describe("Intended Route Restoration (OAuth2 Flow)", () => {
+    beforeEach(() => {
+      sessionStorage.clear();
+    });
+
+    describe("when intended route is saved in sessionStorage", () => {
+      it("should redirect to the saved intended route instead of /studio", async () => {
+        // Set up intended route in sessionStorage (as if LoginPage saved it)
+        sessionStorage.setItem(INTENDED_ROUTE_KEY, "/studio/chat/123");
+
+        const mockToken = createMockJWT(mockUserPayload);
+        const hash = `#access_token=${mockToken}`;
+
+        renderWithProviders(hash);
+
+        await waitFor(() => {
+          expect(screen.getByText(/Sign in successful/i)).toBeInTheDocument();
+        });
+
+        // Advance timer to trigger redirect
+        vi.advanceTimersByTime(1000);
+
+        await waitFor(() => {
+          expect(mockNavigate).toHaveBeenCalledWith("/studio/chat/123", {
+            replace: true,
+          });
+        });
+      });
+
+      it("should redirect to intended route with query string", async () => {
+        sessionStorage.setItem(
+          INTENDED_ROUTE_KEY,
+          "/studio/canvas?artifact=abc&version=1",
+        );
+
+        const mockToken = createMockJWT(mockUserPayload);
+        const hash = `#access_token=${mockToken}`;
+
+        renderWithProviders(hash);
+
+        await waitFor(() => {
+          expect(screen.getByText(/Sign in successful/i)).toBeInTheDocument();
+        });
+
+        vi.advanceTimersByTime(1000);
+
+        await waitFor(() => {
+          expect(mockNavigate).toHaveBeenCalledWith(
+            "/studio/canvas?artifact=abc&version=1",
+            { replace: true },
+          );
+        });
+      });
+
+      it("should redirect to intended route with hash", async () => {
+        sessionStorage.setItem(
+          INTENDED_ROUTE_KEY,
+          "/studio/settings#notifications",
+        );
+
+        const mockToken = createMockJWT(mockUserPayload);
+        const hash = `#access_token=${mockToken}`;
+
+        renderWithProviders(hash);
+
+        await waitFor(() => {
+          expect(screen.getByText(/Sign in successful/i)).toBeInTheDocument();
+        });
+
+        vi.advanceTimersByTime(1000);
+
+        await waitFor(() => {
+          expect(mockNavigate).toHaveBeenCalledWith(
+            "/studio/settings#notifications",
+            { replace: true },
+          );
+        });
+      });
+
+      it("should clear the intended route after reading it", async () => {
+        sessionStorage.setItem(INTENDED_ROUTE_KEY, "/studio/workflow/456");
+
+        const mockToken = createMockJWT(mockUserPayload);
+        const hash = `#access_token=${mockToken}`;
+
+        renderWithProviders(hash);
+
+        await waitFor(() => {
+          expect(screen.getByText(/Sign in successful/i)).toBeInTheDocument();
+        });
+
+        // The intended route should be cleared after it's read
+        await waitFor(() => {
+          expect(sessionStorage.getItem(INTENDED_ROUTE_KEY)).toBeNull();
+        });
+      });
+    });
+
+    describe("when no intended route is saved", () => {
+      it("should redirect to /studio by default", async () => {
+        // Ensure no intended route is saved
+        expect(sessionStorage.getItem(INTENDED_ROUTE_KEY)).toBeNull();
+
+        const mockToken = createMockJWT(mockUserPayload);
+        const hash = `#access_token=${mockToken}`;
+
+        renderWithProviders(hash);
+
+        await waitFor(() => {
+          expect(screen.getByText(/Sign in successful/i)).toBeInTheDocument();
+        });
+
+        vi.advanceTimersByTime(1000);
+
+        await waitFor(() => {
+          expect(mockNavigate).toHaveBeenCalledWith("/studio", {
+            replace: true,
+          });
+        });
+      });
     });
   });
 });

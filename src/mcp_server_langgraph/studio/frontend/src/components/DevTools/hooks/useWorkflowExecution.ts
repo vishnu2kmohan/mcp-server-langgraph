@@ -4,6 +4,7 @@
  * Fetches and manages workflow execution step data.
  */
 import { useState, useEffect, useCallback } from "react";
+import { authenticatedFetch } from "../../../utils/authenticatedFetch";
 
 // =============================================================================
 // Types
@@ -75,7 +76,9 @@ export function useWorkflowExecution(
     setError(null);
 
     try {
-      const response = await fetch(`/api/v1/workflows/${workflowId}/execution`);
+      const response = await authenticatedFetch(
+        `/api/v1/workflows/${workflowId}/execution`,
+      );
 
       if (!response.ok) {
         throw new Error(`Failed to fetch execution: ${response.statusText}`);

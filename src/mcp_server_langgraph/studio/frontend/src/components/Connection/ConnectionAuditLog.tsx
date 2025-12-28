@@ -15,7 +15,7 @@ import {
   FileText,
   Filter,
 } from "lucide-react";
-import { getAuthToken } from "../../utils/storage";
+import { authenticatedFetch } from "../../utils/authenticatedFetch";
 
 interface AuditLogEntry {
   id: string;
@@ -69,13 +69,7 @@ export function ConnectionAuditLog({ connectionId }: ConnectionAuditLogProps) {
         url = `/api/v1/connections/audit/logs?resource_id=${connectionId}&event_type=${eventTypeFilter}`;
       }
 
-      const token = getAuthToken();
-      const response = await fetch(url, {
-        headers: {
-          ...(token && { Authorization: `Bearer ${token}` }),
-        },
-        credentials: "include",
-      });
+      const response = await authenticatedFetch(url);
       if (!response.ok) {
         throw new Error("Failed to fetch audit logs");
       }

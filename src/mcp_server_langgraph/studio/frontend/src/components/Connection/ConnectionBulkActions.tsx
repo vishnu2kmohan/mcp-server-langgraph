@@ -8,7 +8,7 @@
 import { useState } from "react";
 import { Trash2, Zap, X, AlertCircle, Loader2 } from "lucide-react";
 import { Dialog } from "../UI/Dialog";
-import { getAuthToken } from "../../utils/storage";
+import { authenticatedFetch } from "../../utils/authenticatedFetch";
 
 interface Connection {
   id: string;
@@ -61,16 +61,14 @@ export function ConnectionBulkActions({
     setError(null);
 
     try {
-      const token = getAuthToken();
-      const response = await fetch("/api/v1/connections/bulk/delete", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          ...(token && { Authorization: `Bearer ${token}` }),
+      const response = await authenticatedFetch(
+        "/api/v1/connections/bulk/delete",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ connection_ids: selectedIds }),
         },
-        body: JSON.stringify({ connection_ids: selectedIds }),
-        credentials: "include",
-      });
+      );
 
       if (!response.ok) {
         throw new Error("Failed to delete connections");
@@ -95,16 +93,14 @@ export function ConnectionBulkActions({
     setError(null);
 
     try {
-      const token = getAuthToken();
-      const response = await fetch("/api/v1/connections/bulk/test", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          ...(token && { Authorization: `Bearer ${token}` }),
+      const response = await authenticatedFetch(
+        "/api/v1/connections/bulk/test",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ connection_ids: selectedIds }),
         },
-        body: JSON.stringify({ connection_ids: selectedIds }),
-        credentials: "include",
-      });
+      );
 
       if (!response.ok) {
         throw new Error("Failed to test connections");

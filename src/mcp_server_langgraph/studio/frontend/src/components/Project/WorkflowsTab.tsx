@@ -5,11 +5,12 @@
  * and bulk selection with BulkActionBar.
  */
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { useNavigate } from "react-router";
 import { Plus, GitBranch, Trash2, X, Search } from "lucide-react";
 import { BulkActionBar } from "../UI/BulkActionBar";
-import { getAuthToken } from "../../utils/storage";
+import { authenticatedFetch } from "../../utils/authenticatedFetch";
+import { saveCurrentRouteAsIntended } from "../../utils/intendedRoute";
 
 // ============================================================================
 // Sort Types
@@ -147,6 +148,11 @@ export function WorkflowsTab({
     new Set(),
   );
 
+  const handleAuthFailure = useCallback(() => {
+    saveCurrentRouteAsIntended();
+    navigate("/login", { replace: true });
+  }, [navigate]);
+
   // Search and sort state
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState<SortField>("created_at");
@@ -203,15 +209,12 @@ export function WorkflowsTab({
 
   const handleCreateWorkflow = async (name: string) => {
     const workflowId = crypto.randomUUID();
-    const token = getAuthToken();
-    const response = await fetch(
+    const response = await authenticatedFetch(
       `/api/v1/projects/${projectId}/workflows?workflow_id=${workflowId}&workflow_name=${encodeURIComponent(name)}`,
       {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          ...(token && { Authorization: `Bearer ${token}` }),
-        },
+        headers: { "Content-Type": "application/json" },
+        onAuthFailure: handleAuthFailure,
         credentials: "include",
       },
     );
@@ -225,16 +228,11 @@ export function WorkflowsTab({
     e: React.MouseEvent,
   ) => {
     e.stopPropagation(); // Prevent navigation
-    const token = getAuthToken();
-    const response = await fetch(
+    const response = await authenticatedFetch(
       `/api/v1/projects/${projectId}/workflows/${workflowId}`,
       {
         method: "DELETE",
-        headers: {
-          "Content-Type": "application/json",
-          ...(token && { Authorization: `Bearer ${token}` }),
-        },
-        credentials: "include",
+        onAuthFailure: handleAuthFailure,
       },
     );
     if (response.ok) {
@@ -270,17 +268,13 @@ export function WorkflowsTab({
 
   const handleBulkDelete = async () => {
     // Delete each selected workflow
-    const token = getAuthToken();
     const deletePromises = Array.from(selectedWorkflows).map(
       async (workflowId) => {
-        const response = await fetch(
+        const response = await authenticatedFetch(
           `/api/v1/projects/${projectId}/workflows/${workflowId}`,
           {
             method: "DELETE",
-            headers: {
-              "Content-Type": "application/json",
-              ...(token && { Authorization: `Bearer ${token}` }),
-            },
+            onAuthFailure: handleAuthFailure,
             credentials: "include",
           },
         );

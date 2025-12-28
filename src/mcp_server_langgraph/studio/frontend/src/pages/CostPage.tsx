@@ -7,7 +7,7 @@
  * Supports real-time WebSocket updates for live cost tracking.
  */
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo, Suspense } from "react";
 import {
   DollarSign,
   TrendingUp,
@@ -15,14 +15,25 @@ import {
   Wifi,
   WifiOff,
   X,
+  Building2,
+  Calendar,
 } from "lucide-react";
 import { Skeleton, SkeletonCard, ErrorState } from "../components/UI";
+import { OrganizationCostDashboard } from "../components/Cost";
+import {
+  LazyBudgetStatusCard,
+  LazyBudgetForecastChart,
+} from "../components/Cost/lazy";
+import type { BudgetStatus, CostForecast } from "../components/Cost";
 import {
   useGetCostSummaryQuery,
   useGetCostByModelQuery,
   useGetCostHistoryQuery,
+  useGetBudgetStatusQuery,
+  useGetCostForecastQuery,
 } from "../api";
 import { useCostTrackingWebSocket } from "../hooks/useCostTrackingWebSocket";
+import { usePersonaContext } from "../persona/PersonaContext";
 
 type Period = "day" | "week" | "month";
 
@@ -35,12 +46,52 @@ interface CostPageProps {
   sessionId?: string;
 }
 
+type DashboardView = "personal" | "organizational";
+
+// Helper function to get date range for preset periods
+function getDateRangeForPeriod(period: Period): { start: string; end: string } {
+  const end = new Date();
+  const start = new Date();
+
+  switch (period) {
+    case "day":
+      start.setDate(start.getDate() - 1);
+      break;
+    case "week":
+      start.setDate(start.getDate() - 7);
+      break;
+    case "month":
+      start.setMonth(start.getMonth() - 1);
+      break;
+  }
+
+  return {
+    start: start.toISOString().split("T")[0],
+    end: end.toISOString().split("T")[0],
+  };
+}
+
 export function CostPage({
   enableRealtime = true,
   userId,
   sessionId,
 }: CostPageProps = {}) {
   const [period, setPeriod] = useState<Period>("week");
+  const [dashboardView, setDashboardView] = useState<DashboardView>("personal");
+  const [useCustomDateRange, setUseCustomDateRange] = useState(false);
+  const [startDate, setStartDate] = useState<string>("");
+  const [endDate, setEndDate] = useState<string>("");
+
+  // Calculate effective date range based on period or custom range
+  const effectiveDateRange = useMemo(() => {
+    if (useCustomDateRange && startDate && endDate) {
+      return { start: startDate, end: endDate };
+    }
+    return getDateRangeForPeriod(period);
+  }, [useCustomDateRange, startDate, endDate, period]);
+
+  // Get persona context to determine if user is admin
+  const { isAdmin } = usePersonaContext();
 
   // RTK Query hooks for cost data
   const {
@@ -63,11 +114,50 @@ export function CostPage({
     refetch: refetchHistory,
   } = useGetCostHistoryQuery({ period });
 
+  // Budget status and forecast hooks (skip if no userId)
+  const { data: budgetStatusData, isLoading: budgetStatusLoading } =
+    useGetBudgetStatusQuery(
+      { entity_type: "user", entity_id: userId ?? "" },
+      { skip: !userId },
+    );
+
+  const { data: forecastData, isLoading: forecastLoading } =
+    useGetCostForecastQuery(
+      { entity_type: "user", entity_id: userId ?? "" },
+      { skip: !userId },
+    );
+
+  // Transform API response to component props format
+  const budgetStatus: BudgetStatus | null = budgetStatusData
+    ? {
+        entityType: budgetStatusData.entity_type,
+        entityId: budgetStatusData.entity_id,
+        status: budgetStatusData.status,
+        percentUsed: budgetStatusData.percent_used,
+        currentSpend: budgetStatusData.current_spend.toString(),
+        remaining: budgetStatusData.remaining.toString(),
+        monthlyLimitUsd: budgetStatusData.monthly_limit.toString(),
+        message: budgetStatusData.message,
+      }
+    : null;
+
+  const costForecast: CostForecast | null = forecastData
+    ? {
+        projectedTotal: forecastData.projected_total.toString(),
+        confidenceLow: forecastData.confidence_low.toString(),
+        confidenceHigh: forecastData.confidence_high.toString(),
+        trend: forecastData.trend,
+        daysAnalyzed: forecastData.days_analyzed,
+        message: forecastData.message,
+        monthlyLimit: forecastData.monthly_limit.toString(),
+      }
+    : null;
+
   // Real-time WebSocket for cost tracking
   const {
     status: wsStatus,
     sessionCosts,
-    userBudget,
+    userBudget: _userBudget,
     budgetWarnings,
     error: _wsError,
     subscribeSession,
@@ -195,19 +285,101 @@ export function CostPage({
                 </span>
               </div>
             )}
-            {/* Period Selector */}
-            <select
-              value={period}
-              onChange={(e) => handlePeriodChange(e.target.value as Period)}
-              className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
-            >
-              <option value="day">Day</option>
-              <option value="week">Week</option>
-              <option value="month">Month</option>
-            </select>
+            {/* Date Range Controls */}
+            <div className="flex items-center gap-2">
+              {/* Period Selector (preset ranges) */}
+              {!useCustomDateRange && (
+                <select
+                  value={period}
+                  onChange={(e) => handlePeriodChange(e.target.value as Period)}
+                  className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                >
+                  <option value="day">Day</option>
+                  <option value="week">Week</option>
+                  <option value="month">Month</option>
+                </select>
+              )}
+
+              {/* Custom Date Range Inputs */}
+              {useCustomDateRange && (
+                <div className="flex items-center gap-2">
+                  <input
+                    type="date"
+                    value={startDate}
+                    onChange={(e) => setStartDate(e.target.value)}
+                    className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                    aria-label="Start date"
+                  />
+                  <span className="text-gray-500">to</span>
+                  <input
+                    type="date"
+                    value={endDate}
+                    onChange={(e) => setEndDate(e.target.value)}
+                    className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                    aria-label="End date"
+                  />
+                </div>
+              )}
+
+              {/* Toggle Custom Date Range */}
+              <button
+                onClick={() => {
+                  setUseCustomDateRange(!useCustomDateRange);
+                  if (!useCustomDateRange) {
+                    // Initialize with current period's range
+                    const range = getDateRangeForPeriod(period);
+                    setStartDate(range.start);
+                    setEndDate(range.end);
+                  }
+                }}
+                className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  useCustomDateRange
+                    ? "bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400"
+                    : "text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300 border border-gray-300 dark:border-gray-600"
+                }`}
+                aria-label={
+                  useCustomDateRange
+                    ? "Use preset periods"
+                    : "Use custom date range"
+                }
+              >
+                <Calendar size={16} />
+                {useCustomDateRange ? "Preset" : "Custom"}
+              </button>
+            </div>
           </div>
         </div>
       </header>
+
+      {/* Admin View Toggle */}
+      {isAdmin && (
+        <div className="px-6 py-2 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setDashboardView("personal")}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                dashboardView === "personal"
+                  ? "bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400"
+                  : "text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
+              }`}
+            >
+              <DollarSign size={16} />
+              Personal Costs
+            </button>
+            <button
+              onClick={() => setDashboardView("organizational")}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                dashboardView === "organizational"
+                  ? "bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400"
+                  : "text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
+              }`}
+            >
+              <Building2 size={16} />
+              Organizational View
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Budget Warnings */}
       {enableRealtime && budgetWarnings.length > 0 && (
@@ -241,7 +413,41 @@ export function CostPage({
 
       {/* Content */}
       <div className="flex-1 overflow-y-auto p-6">
-        {isLoading ? (
+        {/* Organizational View for Admins */}
+        {isAdmin && dashboardView === "organizational" ? (
+          <div className="space-y-6">
+            {/* Budget Status in Org View */}
+            {userId && (
+              <Suspense
+                fallback={
+                  <div
+                    data-testid="budget-status-skeleton"
+                    className="p-4 rounded-lg border border-gray-200 dark:border-gray-700"
+                  >
+                    <div className="flex items-center gap-3 mb-3">
+                      <Skeleton className="w-5 h-5 rounded" />
+                      <Skeleton className="w-24 h-4" />
+                    </div>
+                    <Skeleton className="w-full h-2 mb-2" />
+                    <div className="flex justify-between">
+                      <Skeleton className="w-16 h-4" />
+                      <Skeleton className="w-16 h-4" />
+                    </div>
+                  </div>
+                }
+              >
+                <LazyBudgetStatusCard
+                  status={budgetStatus}
+                  loading={budgetStatusLoading}
+                />
+              </Suspense>
+            )}
+            <OrganizationCostDashboard
+              startDate={effectiveDateRange.start}
+              endDate={effectiveDateRange.end}
+            />
+          </div>
+        ) : isLoading ? (
           <div className="space-y-6">
             {/* Skeleton for Cost Summary Cards */}
             <div className="grid gap-4 md:grid-cols-3">
@@ -336,40 +542,59 @@ export function CostPage({
               </div>
             )}
 
-            {/* User Budget Progress */}
-            {enableRealtime && userBudget && (
-              <div
-                data-testid="budget-progress-bar"
-                className="p-6 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700"
-              >
-                <div className="flex items-center justify-between mb-2">
-                  <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">
-                    Budget Usage
-                  </h3>
-                  <span className="text-sm text-gray-500 dark:text-gray-400">
-                    {formatCurrency(userBudget.remaining)} remaining
-                  </span>
-                </div>
-                <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3">
+            {/* Budget Status Card (replaces old User Budget Progress) */}
+            {userId && (
+              <Suspense
+                fallback={
                   <div
-                    className={`h-3 rounded-full transition-all ${
-                      userBudget.current_usage / userBudget.budget_limit > 0.9
-                        ? "bg-red-500"
-                        : userBudget.current_usage / userBudget.budget_limit >
-                            0.75
-                          ? "bg-amber-500"
-                          : "bg-green-500"
-                    }`}
-                    style={{
-                      width: `${Math.min(100, (userBudget.current_usage / userBudget.budget_limit) * 100)}%`,
-                    }}
-                  />
-                </div>
-                <div className="flex items-center justify-between mt-2 text-xs text-gray-500 dark:text-gray-400">
-                  <span>{formatCurrency(userBudget.current_usage)} used</span>
-                  <span>{formatCurrency(userBudget.budget_limit)} limit</span>
-                </div>
-              </div>
+                    data-testid="budget-status-skeleton"
+                    className="p-4 rounded-lg border border-gray-200 dark:border-gray-700"
+                  >
+                    <div className="flex items-center gap-3 mb-3">
+                      <Skeleton className="w-5 h-5 rounded" />
+                      <Skeleton className="w-24 h-4" />
+                    </div>
+                    <Skeleton className="w-full h-2 mb-2" />
+                    <div className="flex justify-between">
+                      <Skeleton className="w-16 h-4" />
+                      <Skeleton className="w-16 h-4" />
+                    </div>
+                  </div>
+                }
+              >
+                <LazyBudgetStatusCard
+                  status={budgetStatus}
+                  loading={budgetStatusLoading}
+                />
+              </Suspense>
+            )}
+
+            {/* Budget Forecast Chart (below budget status) */}
+            {userId && (
+              <Suspense
+                fallback={
+                  <div
+                    data-testid="budget-forecast-skeleton"
+                    className="p-6 rounded-lg border border-gray-200 dark:border-gray-700"
+                  >
+                    <div className="space-y-4">
+                      <Skeleton className="w-32 h-6" />
+                      <Skeleton className="w-full h-4" />
+                      <div className="flex justify-between">
+                        <Skeleton className="w-20 h-8" />
+                        <Skeleton className="w-20 h-8" />
+                        <Skeleton className="w-20 h-8" />
+                      </div>
+                      <Skeleton className="w-full h-8" />
+                    </div>
+                  </div>
+                }
+              >
+                <LazyBudgetForecastChart
+                  forecast={costForecast}
+                  loading={forecastLoading}
+                />
+              </Suspense>
             )}
 
             {/* Live Session Costs */}

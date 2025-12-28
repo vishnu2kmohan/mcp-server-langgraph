@@ -46,8 +46,9 @@ import { useNudges } from "../hooks/useNudges";
 import { useAIPersonaAnalysis } from "../hooks/useAIPersonaAnalysis";
 import { useCrossInsightsPanel } from "../hooks/useCrossInsightsPanel";
 import { useHITLDialogs } from "../hooks/useHITLDialogs";
+import { useIsChatRoute } from "../hooks/useIsChatRoute";
 import { useFeatureFlag } from "../contexts/FeatureFlagContext";
-import type { ConnectionStatus } from "./StatusBar";
+import type { ConnectionStatus, TokenBreakdown } from "./StatusBar";
 import { NudgeTooltip } from "../components/Nudge";
 import { CrossInsightsPanel } from "../components/Analytics/CrossInsightsPanel";
 import { AgentApprovalDialog } from "../components/Admin/AgentApprovalDialog";
@@ -83,7 +84,7 @@ import {
   selectDevToolsHeight,
   toggleDevTools,
 } from "../store/slices/devToolsSlice";
-import { getAuthToken } from "../utils/storage";
+import { authenticatedFetch } from "../utils/authenticatedFetch";
 
 const logger = devLogger.withPrefix("[StudioShell]");
 
@@ -200,42 +201,7 @@ export function StudioShellLayout() {
   // or the outlet for full-page routes like Observability, Workflows, Cost, etc.
   // Only /studio/chat and /studio/chat/:sessionId use the 3-panel canvas layout.
   // All other /studio/* routes use the Outlet for full-page rendering.
-  //
-  // NOTE: We use location.pathname from useLocation() as the primary source because:
-  // 1. It's reactive - changes trigger re-renders automatically
-  // 2. It's the canonical source from React Router
-  // We also check window.location.pathname as a fallback for edge cases with empty fragments.
-  const routerPath = location.pathname;
-  const windowPath = window.location.pathname;
-
-  // Determine if current route is a chat route
-  // A route is a chat route if EITHER React Router OR the browser URL indicates chat.
-  // This handles edge cases where one might be out of sync with the other.
-  const isRouterChatRoute =
-    routerPath === "/studio/chat" || routerPath.startsWith("/studio/chat/");
-  const isWindowChatRoute =
-    windowPath === "/studio/chat" || windowPath.startsWith("/studio/chat/");
-
-  // Use window.location.pathname as the source of truth because React Router's
-  // location can be stale for empty fragment routes. But if they disagree and
-  // the router says it's NOT a chat route, trust the router (we're navigating away).
-  const isChatRoute =
-    isRouterChatRoute && isWindowChatRoute
-      ? true // Both agree: chat route
-      : !isRouterChatRoute
-        ? false // Router says NOT chat: trust it (navigating away from chat)
-        : isWindowChatRoute; // Router says chat but window might be more up-to-date
-
-  // Log for debugging navigation issues (dev mode only)
-  if (import.meta.env.DEV) {
-    logger.debug("Route detection:", {
-      routerPath,
-      windowPath,
-      isRouterChatRoute,
-      isWindowChatRoute,
-      isChatRoute,
-    });
-  }
+  const isChatRoute = useIsChatRoute();
 
   // AI-powered nudges (Phase 1.3 + 6.3)
   const { activeNudge, dismiss, trackAcceptance } = useNudges({
@@ -342,6 +308,32 @@ export function StudioShellLayout() {
       0,
     );
     return Math.round(totalChars / 4);
+  }, [currentSession?.messages]);
+
+  // Compute token breakdown (promptTokens and completionTokens) for StatusBar tooltip
+  const tokenBreakdown = useMemo((): TokenBreakdown | undefined => {
+    if (!currentSession?.messages?.length) return undefined;
+
+    let promptTokens = 0;
+    let completionTokens = 0;
+    let hasUsageData = false;
+
+    for (const msg of currentSession.messages) {
+      if (msg.usage) {
+        promptTokens += msg.usage.promptTokens ?? 0;
+        completionTokens += msg.usage.completionTokens ?? 0;
+        hasUsageData = true;
+      }
+    }
+
+    // Only return breakdown if we have actual usage data from backend
+    if (!hasUsageData) return undefined;
+
+    return {
+      promptTokens,
+      completionTokens,
+      totalTokens: promptTokens + completionTokens,
+    };
   }, [currentSession?.messages]);
 
   // Handle panel resize
@@ -545,16 +537,14 @@ export function StudioShellLayout() {
       logger.debug("AI interpretation requested:", query);
 
       try {
-        const token = getAuthToken();
-        const response = await fetch("/api/v1/ai/interpret-command", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            ...(token && { Authorization: `Bearer ${token}` }),
+        const response = await authenticatedFetch(
+          "/api/v1/ai/interpret-command",
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ query }),
           },
-          credentials: "include",
-          body: JSON.stringify({ query }),
-        });
+        );
 
         if (response.ok) {
           const interpretation: AIInterpretation = await response.json();
@@ -765,6 +755,7 @@ export function StudioShellLayout() {
           connectionStatus={connectionStatus}
           modelName={modelName ?? undefined}
           tokenCount={tokenCount > 0 ? tokenCount : undefined}
+          tokenBreakdown={tokenBreakdown}
           userName={username ?? undefined}
           agentCount={backgroundAgents.length}
           onAgentQueueToggle={handleAgentQueueToggle}

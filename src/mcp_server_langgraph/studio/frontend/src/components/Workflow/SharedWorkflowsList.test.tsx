@@ -383,7 +383,7 @@ describe("SharedWorkflowsList", () => {
 
       await waitFor(() => {
         expect(global.fetch).toHaveBeenCalledWith(
-          "/api/v1/workflows/shared",
+          "/api/v1/workflows/shared-with-me",
           expect.any(Object),
         );
       });

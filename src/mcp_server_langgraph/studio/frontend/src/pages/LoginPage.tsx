@@ -14,11 +14,12 @@
  */
 
 import { useEffect } from "react";
-import { useNavigate } from "react-router";
+import { useNavigate, useLocation } from "react-router";
 import { ExternalLink, Key, Shield, LogIn, Loader2 } from "lucide-react";
 import { useGetIdentityProvidersQuery } from "../api";
 import { useAppSelector } from "../store/hooks";
 import { selectIsAuthenticated } from "../store/slices/authSlice";
+import { setIntendedRoute } from "../utils/intendedRoute";
 
 // Provider icon mapping - returns appropriate Lucide icon or SVG for known providers
 function getProviderIcon(icon: string) {
@@ -85,11 +86,28 @@ function getProviderIcon(icon: string) {
 
 export function LoginPage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const isAuthenticated = useAppSelector(selectIsAuthenticated);
 
   // Fetch SSO identity providers from Keycloak
   const { data: idpData, isLoading: idpLoading } =
     useGetIdentityProvidersQuery();
+
+  // Save intended route from AuthGuard's location state
+  // This persists the route before OAuth redirect to external IdP
+  useEffect(() => {
+    // AuthGuard passes the protected route as state.from
+    const from = (
+      location.state as {
+        from?: { pathname: string; search?: string; hash?: string };
+      }
+    )?.from;
+    if (from?.pathname) {
+      // Build the full route including query string and hash
+      const fullRoute = `${from.pathname}${from.search || ""}${from.hash || ""}`;
+      setIntendedRoute(fullRoute);
+    }
+  }, [location.state]);
 
   // Redirect to studio if already authenticated
   // Note: Dark mode is now handled globally by useTheme hook in App.tsx

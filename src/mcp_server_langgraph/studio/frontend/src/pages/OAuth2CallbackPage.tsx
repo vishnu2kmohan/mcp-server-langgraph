@@ -17,7 +17,8 @@ import {
   RefreshCw,
   ArrowLeft,
 } from "lucide-react";
-import { getAuthToken } from "../utils/storage";
+import { authenticatedFetch } from "../utils/authenticatedFetch";
+import { saveCurrentRouteAsIntended } from "../utils/intendedRoute";
 
 type CallbackState = "processing" | "success" | "error";
 
@@ -35,6 +36,11 @@ interface CallbackError {
 export function OAuth2CallbackPage() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+
+  const handleAuthFailure = useCallback(() => {
+    saveCurrentRouteAsIntended();
+    navigate("/login", { replace: true });
+  }, [navigate]);
 
   const [state, setState] = useState<CallbackState>("processing");
   const [error, setError] = useState<CallbackError | null>(null);
@@ -87,19 +93,17 @@ export function OAuth2CallbackPage() {
 
     // Call backend API
     try {
-      const token = getAuthToken();
-      const response = await fetch("/api/v1/connections/oauth/callback", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          ...(token && { Authorization: `Bearer ${token}` }),
+      const response = await authenticatedFetch(
+        "/api/v1/connections/oauth/callback",
+        {
+          method: "POST",
+          body: JSON.stringify({
+            code,
+            state: oauthState,
+          }),
+          onAuthFailure: handleAuthFailure,
         },
-        body: JSON.stringify({
-          code,
-          state: oauthState,
-        }),
-        credentials: "include",
-      });
+      );
 
       if (!response.ok) {
         const errorData = await response
@@ -131,7 +135,14 @@ export function OAuth2CallbackPage() {
           err instanceof Error ? err.message : "Failed to connect to server",
       });
     }
-  }, [code, oauthState, oauthError, oauthErrorDescription, navigate]);
+  }, [
+    code,
+    oauthState,
+    oauthError,
+    oauthErrorDescription,
+    navigate,
+    handleAuthFailure,
+  ]);
 
   // Process callback on mount
   useEffect(() => {

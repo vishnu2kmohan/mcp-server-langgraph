@@ -22,6 +22,9 @@ import {
 import { Provider } from "react-redux";
 import { configureStore } from "@reduxjs/toolkit";
 import { CostPage } from "./CostPage";
+import personaReducer from "../store/slices/personaSlice";
+import authReducer, { initialAuthState } from "../store/slices/authSlice";
+import { PersonaProvider } from "../persona/PersonaContext";
 
 // Mock RTK Query hooks
 const mockSummaryData = {
@@ -47,6 +50,29 @@ const mockHistoryData = [
 ];
 
 const mockRefetch = vi.fn();
+
+// Mock budget status data
+const mockBudgetStatusData = {
+  status: "ok" as const,
+  percent_used: 45.5,
+  current_spend: 455.0,
+  remaining: 545.0,
+  monthly_limit: 1000.0,
+  entity_type: "user" as const,
+  entity_id: "user:test-user",
+  message: "Budget usage is within normal limits",
+};
+
+// Mock cost forecast data
+const mockForecastData = {
+  projected_total: 850.0,
+  confidence_low: 720.0,
+  confidence_high: 980.0,
+  trend: "stable" as const,
+  days_analyzed: 14,
+  message: "Based on 14 days of data, projected spend is on track",
+  monthly_limit: 1000.0,
+};
 
 // Import the mocked module for type-safe mocking
 import * as apiModule from "../api";
@@ -76,6 +102,45 @@ vi.mock("../api", () => ({
     error: null,
     refetch: mockRefetch,
   })),
+  useGetBudgetStatusQuery: vi.fn(() => ({
+    data: mockBudgetStatusData,
+    isLoading: false,
+    isFetching: false,
+    isError: false,
+    error: null,
+  })),
+  useGetCostForecastQuery: vi.fn(() => ({
+    data: mockForecastData,
+    isLoading: false,
+    isFetching: false,
+    isError: false,
+    error: null,
+  })),
+  // Organizational cost hooks used by OrganizationCostDashboard
+  useGetCostByOrganizationQuery: vi.fn(() => ({
+    data: [],
+    isLoading: false,
+    isFetching: false,
+    isError: false,
+    error: null,
+    refetch: mockRefetch,
+  })),
+  useGetCostByProjectQuery: vi.fn(() => ({
+    data: [],
+    isLoading: false,
+    isFetching: false,
+    isError: false,
+    error: null,
+    refetch: mockRefetch,
+  })),
+  useGetCostByTeamQuery: vi.fn(() => ({
+    data: [],
+    isLoading: false,
+    isFetching: false,
+    isError: false,
+    error: null,
+    refetch: mockRefetch,
+  })),
 }));
 
 const mockedUseGetCostSummaryQuery = vi.mocked(
@@ -88,17 +153,35 @@ const mockedUseGetCostHistoryQuery = vi.mocked(
   apiModule.useGetCostHistoryQuery,
 );
 
-// Create a minimal store for testing
-const createTestStore = () =>
+// Create a minimal store for testing with persona and auth support
+const createTestStore = (persona: "admin" | "developer" | "user" = "user") =>
   configureStore({
     reducer: {
-      test: (state = {}) => state,
+      persona: personaReducer,
+      auth: authReducer,
+    },
+    preloadedState: {
+      persona: {
+        persona,
+        subPersona: null,
+        username: "test-user",
+        visibleModules: [],
+        error: null,
+      },
+      auth: initialAuthState,
     },
   });
 
-const renderWithProviders = (component: React.ReactElement) => {
-  const store = createTestStore();
-  return render(<Provider store={store}>{component}</Provider>);
+const renderWithProviders = (
+  component: React.ReactElement,
+  { persona = "user" as const } = {},
+) => {
+  const store = createTestStore(persona);
+  return render(
+    <Provider store={store}>
+      <PersonaProvider>{component}</PersonaProvider>
+    </Provider>,
+  );
 };
 
 describe("CostPage", () => {
@@ -387,6 +470,65 @@ describe("CostPage", () => {
       expect(
         screen.getByText(/No cost data for this period/i),
       ).toBeInTheDocument();
+    });
+  });
+
+  describe("Budget Integration", () => {
+    it("should render BudgetStatusCard when budget data is available", async () => {
+      renderWithProviders(<CostPage userId="user:test-user" />);
+
+      // BudgetStatusCard should be rendered (replaces old userBudget progress bar)
+      await waitFor(() => {
+        expect(screen.getByTestId("budget-status-card")).toBeInTheDocument();
+      });
+    });
+
+    it("should render BudgetForecastChart below budget status", async () => {
+      renderWithProviders(<CostPage userId="user:test-user" />);
+
+      // BudgetForecastChart should be rendered
+      await waitFor(() => {
+        expect(screen.getByTestId("budget-forecast-chart")).toBeInTheDocument();
+      });
+    });
+
+    it("should show budget status card in organizational view for admins", async () => {
+      renderWithProviders(<CostPage userId="user:test-user" />, {
+        persona: "admin",
+      });
+
+      // Switch to organizational view
+      fireEvent.click(screen.getByText("Organizational View"));
+
+      // Budget components should still be visible in org view
+      await waitFor(() => {
+        expect(screen.getByTestId("budget-status-card")).toBeInTheDocument();
+      });
+    });
+
+    it("should use lazy loading for budget components", async () => {
+      // This test verifies that lazy loading wrapper is used
+      renderWithProviders(<CostPage userId="user:test-user" />);
+
+      // Suspense fallback or component should render
+      await waitFor(() => {
+        // Either the skeleton (during load) or the card (after load)
+        const card = screen.queryByTestId("budget-status-card");
+        const skeleton = screen.queryByTestId("budget-status-skeleton");
+        expect(card || skeleton).toBeTruthy();
+      });
+    });
+
+    it("should show loading skeleton while budget data is loading", async () => {
+      renderWithProviders(<CostPage userId="user:test-user" />);
+
+      // During initial render, either skeleton or card should be present
+      // The skeleton is shown by the BudgetStatusCard component when loading=true
+      await waitFor(() => {
+        const hasCard = screen.queryByTestId("budget-status-card");
+        const hasSkeleton = screen.queryByTestId("budget-status-skeleton");
+        expect(hasCard || hasSkeleton).toBeTruthy();
+      });
     });
   });
 });

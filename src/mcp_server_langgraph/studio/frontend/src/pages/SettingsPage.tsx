@@ -5,7 +5,8 @@
  * API keys, and application behavior.
  */
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
+import { useNavigate } from "react-router";
 import { useAppDispatch, useAppSelector } from "../store/hooks";
 import { selectUser } from "../store/slices/authSlice";
 import { selectPersona, setPersona } from "../store/slices/personaSlice";
@@ -33,7 +34,8 @@ import {
   ScrollText,
 } from "lucide-react";
 import { AuditEventPanel } from "../components/Settings/AuditEventPanel";
-import { getAuthToken } from "../utils/storage";
+import { authenticatedFetch } from "../utils/authenticatedFetch";
+import { saveCurrentRouteAsIntended } from "../utils/intendedRoute";
 
 type SettingsTab =
   | "profile"
@@ -56,9 +58,15 @@ export function SettingsPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
 
+  const navigate = useNavigate();
   const user = useAppSelector(selectUser);
   const persona = useAppSelector(selectPersona);
   const dispatch = useAppDispatch();
+
+  const handleAuthFailure = useCallback(() => {
+    saveCurrentRouteAsIntended();
+    navigate("/login", { replace: true });
+  }, [navigate]);
 
   // Form state
   const [displayName, setDisplayName] = useState(
@@ -96,18 +104,13 @@ export function SettingsPage() {
   );
 
   // Fetch users for admin key management
-  const loadManagedUsers = async () => {
+  const loadManagedUsers = useCallback(async () => {
     setIsLoadingUsers(true);
     setAdminError(null);
     try {
-      const token = getAuthToken();
-      const response = await fetch("/api/v1/admin/users", {
+      const response = await authenticatedFetch("/api/v1/admin/users", {
         method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          ...(token && { Authorization: `Bearer ${token}` }),
-        },
-        credentials: "include",
+        onAuthFailure: handleAuthFailure,
       });
       if (response.ok) {
         const data = await response.json();
@@ -120,57 +123,59 @@ export function SettingsPage() {
     } finally {
       setIsLoadingUsers(false);
     }
-  };
+  }, [handleAuthFailure]);
 
   useEffect(() => {
     if (isAdmin && activeTab === "manage-keys") {
       loadManagedUsers();
     }
-  }, [isAdmin, activeTab]);
+  }, [isAdmin, activeTab, loadManagedUsers]);
 
-  const handleRevokeKey = async (userId: string) => {
-    setAdminError(null);
-    try {
-      const token = getAuthToken();
-      const response = await fetch(`/api/v1/admin/users/${userId}/api-key`, {
-        method: "DELETE",
-        headers: {
-          "Content-Type": "application/json",
-          ...(token && { Authorization: `Bearer ${token}` }),
-        },
-        credentials: "include",
-      });
-      if (!response.ok) {
+  const handleRevokeKey = useCallback(
+    async (userId: string) => {
+      setAdminError(null);
+      try {
+        const response = await authenticatedFetch(
+          `/api/v1/admin/users/${userId}/api-key`,
+          {
+            method: "DELETE",
+            onAuthFailure: handleAuthFailure,
+          },
+        );
+        if (!response.ok) {
+          setAdminError("Failed to revoke API key");
+          return;
+        }
+        await loadManagedUsers();
+      } catch {
         setAdminError("Failed to revoke API key");
-        return;
       }
-      await loadManagedUsers();
-    } catch {
-      setAdminError("Failed to revoke API key");
-    }
-  };
+    },
+    [handleAuthFailure, loadManagedUsers],
+  );
 
-  const handleGenerateKey = async (userId: string) => {
-    setAdminError(null);
-    try {
-      const token = getAuthToken();
-      const response = await fetch(`/api/v1/admin/users/${userId}/api-key`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          ...(token && { Authorization: `Bearer ${token}` }),
-        },
-        credentials: "include",
-      });
-      if (!response.ok) {
+  const handleGenerateKey = useCallback(
+    async (userId: string) => {
+      setAdminError(null);
+      try {
+        const response = await authenticatedFetch(
+          `/api/v1/admin/users/${userId}/api-key`,
+          {
+            method: "POST",
+            onAuthFailure: handleAuthFailure,
+          },
+        );
+        if (!response.ok) {
+          setAdminError("Failed to generate API key");
+          return;
+        }
+        await loadManagedUsers();
+      } catch {
         setAdminError("Failed to generate API key");
-        return;
       }
-      await loadManagedUsers();
-    } catch {
-      setAdminError("Failed to generate API key");
-    }
-  };
+    },
+    [handleAuthFailure, loadManagedUsers],
+  );
 
   const baseTabs = [
     { id: "profile" as const, label: "Profile", icon: User },

@@ -26,7 +26,7 @@ import { InteractiveMermaidDiagram } from "../components/Chat/InteractiveMermaid
 import { SandpackExecutor } from "../components/Artifacts/SandpackExecutor";
 import { JSONArtifact } from "../components/Artifacts/JSONArtifact";
 import type { JSONArtifact as JSONArtifactType } from "../types/artifacts";
-import { getAuthToken } from "../utils/storage";
+import { authenticatedFetch } from "../utils/authenticatedFetch";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import {
   duotoneLight,
@@ -278,14 +278,9 @@ export function CanvasArtifact({
     setSandboxError(null);
     setSandboxResult(null);
     try {
-      const token = getAuthToken();
-      const response = await fetch("/api/v1/code/execute", {
+      const response = await authenticatedFetch("/api/v1/code/execute", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          ...(token && { Authorization: `Bearer ${token}` }),
-        },
-        credentials: "include",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           language: language ?? "python",
           code: isEditing ? editContent : artifact.content,

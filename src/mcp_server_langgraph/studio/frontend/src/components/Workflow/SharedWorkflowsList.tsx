@@ -7,6 +7,7 @@
  */
 
 import { useState, useEffect, useCallback, useMemo } from "react";
+import { useNavigate } from "react-router";
 import {
   RefreshCw,
   Eye,
@@ -20,7 +21,8 @@ import {
   Lock,
   Edit3,
 } from "lucide-react";
-import { getAuthToken } from "../../utils/storage";
+import { authenticatedFetch } from "../../utils/authenticatedFetch";
+import { saveCurrentRouteAsIntended } from "../../utils/intendedRoute";
 
 interface SharedWorkflow {
   id: string;
@@ -42,6 +44,7 @@ export function SharedWorkflowsList({
   onExecute,
   onEdit,
 }: SharedWorkflowsListProps) {
+  const navigate = useNavigate();
   const [workflows, setWorkflows] = useState<SharedWorkflow[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -51,19 +54,21 @@ export function SharedWorkflowsList({
   const [permissionFilter, setPermissionFilter] = useState("");
   const [sharedByFilter, setSharedByFilter] = useState("");
 
+  const handleAuthFailure = useCallback(() => {
+    saveCurrentRouteAsIntended();
+    navigate("/login", { replace: true });
+  }, [navigate]);
+
   const fetchSharedWorkflows = useCallback(async () => {
     setIsLoading(true);
     setError(null);
     try {
-      const token = getAuthToken();
-      const response = await fetch("/api/v1/workflows/shared", {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          ...(token && { Authorization: `Bearer ${token}` }),
+      const response = await authenticatedFetch(
+        "/api/v1/workflows/shared-with-me",
+        {
+          onAuthFailure: handleAuthFailure,
         },
-        credentials: "include",
-      });
+      );
 
       if (!response.ok) {
         const data = await response.json();
@@ -79,7 +84,7 @@ export function SharedWorkflowsList({
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [handleAuthFailure]);
 
   useEffect(() => {
     fetchSharedWorkflows();

@@ -51,10 +51,18 @@ import personaReducer, {
   type Persona,
 } from "../store/slices/personaSlice";
 import authReducer, { initialAuthState } from "../store/slices/authSlice";
-import sessionReducer from "../store/slices/sessionSlice";
+import sessionReducer, {
+  initialSessionState,
+} from "../store/slices/sessionSlice";
 import backgroundAgentReducer from "../store/slices/backgroundAgentSlice";
 import devToolsReducer from "../store/slices/devToolsSlice";
 import type { User } from "../types/auth";
+import type {
+  ClientSession,
+  ChatMessage,
+  SessionConfig,
+  SessionState,
+} from "../types/session";
 
 // =============================================================================
 // MOCKS - Define all mocks BEFORE importing components that depend on them
@@ -347,6 +355,12 @@ vi.mock("../hooks/useHITLDialogs", () => ({
   }),
 }));
 
+// Mock useSessionSync to prevent loader data from overwriting preloaded Redux state
+// This allows tests to control session state via preloadedState without it being reset
+vi.mock("../hooks/useSessionSync", () => ({
+  useSessionSync: vi.fn(),
+}));
+
 // Mock react-resizable-panels to avoid layout calculation issues in tests
 // Use unique testids based on direction prop to avoid "multiple elements" errors
 let panelGroupCounter = 0;
@@ -379,6 +393,9 @@ vi.mock("react-resizable-panels", () => ({
   ),
 }));
 
+// Mock navigate function - shared across all tests for verification
+const mockNavigate = vi.fn();
+
 // Mock react-router hooks that need loader data
 // Using sync mock to avoid module loading issues - provide all needed exports
 vi.mock("react-router", () => {
@@ -395,7 +412,7 @@ vi.mock("react-router", () => {
       hash: "",
       state: null,
     }),
-    useNavigate: () => vi.fn(),
+    useNavigate: () => mockNavigate,
     useParams: () => ({}),
     useRouteLoaderData: (id: string) => {
       if (id === "studio") {
@@ -532,6 +549,57 @@ const flushPromises = () =>
   new Promise<void>((resolve) => setTimeout(resolve, 10));
 
 /**
+ * Create a valid session config with all required fields.
+ */
+const createTestSessionConfig = (
+  overrides: Partial<SessionConfig> = {},
+): SessionConfig => ({
+  modelProvider: "openai",
+  modelName: "gpt-4-turbo",
+  temperature: 0.7,
+  maxTokens: 8192,
+  ...overrides,
+});
+
+/**
+ * Create a valid chat message with proper types.
+ */
+const createTestMessage = (
+  overrides: Partial<ChatMessage> & { id: string; role: ChatMessage["role"] },
+): ChatMessage => ({
+  id: overrides.id,
+  role: overrides.role,
+  content: overrides.content ?? "Test message",
+  timestamp: overrides.timestamp ?? Date.now(),
+  ...overrides,
+});
+
+/**
+ * Create a valid client session with proper types.
+ */
+const createTestSession = (
+  overrides: Partial<ClientSession> = {},
+): ClientSession => ({
+  id: overrides.id ?? "test-session-1",
+  name: overrides.name ?? "Test Session",
+  config: createTestSessionConfig(overrides.config),
+  messages: overrides.messages ?? [],
+  createdAt: overrides.createdAt ?? Date.now(),
+  updatedAt: overrides.updatedAt ?? Date.now(),
+  ...overrides,
+});
+
+/**
+ * Create valid session state matching SessionState interface.
+ */
+const createTestSessionState = (
+  overrides: Partial<SessionState> = {},
+): SessionState => ({
+  ...initialSessionState,
+  ...overrides,
+});
+
+/**
  * Helper to render with all required providers.
  * Returns the render result plus a settle() function for async effects.
  */
@@ -576,10 +644,28 @@ const dispatchKeyboardEvent = async (
   });
 };
 
+// Store original location for restoration
+const originalLocation = window.location;
+
 describe("StudioShellLayout", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     localStorage.clear();
+
+    // Mock window.location.pathname to match router path for route detection
+    // The component checks BOTH useLocation().pathname AND window.location.pathname
+    // @ts-expect-error - window.location is read-only but we need to mock it
+    delete window.location;
+    window.location = {
+      ...originalLocation,
+      pathname: "/studio/chat",
+      href: "",
+    } as Location;
+  });
+
+  afterEach(() => {
+    // Restore original window.location
+    window.location = originalLocation;
   });
 
   afterEach(async () => {
@@ -1005,6 +1091,10 @@ describe("StudioShellLayout", () => {
   // =============================================================================
 
   describe("Navigation Interactivity (Phase 7)", () => {
+    beforeEach(() => {
+      mockNavigate.mockClear();
+    });
+
     it("navigates to workflows when workflows icon is clicked", async () => {
       const user = userEvent.setup();
 
@@ -1013,9 +1103,8 @@ describe("StudioShellLayout", () => {
       const workflowsButton = screen.getByLabelText(/workflows/i);
       await user.click(workflowsButton);
 
-      // Should set active nav item (navigation happens via navigate())
-      // Test that button becomes active
-      expect(workflowsButton).toHaveClass("bg-primary-100");
+      // Should call navigate with the workflows path
+      expect(mockNavigate).toHaveBeenCalledWith("/studio/workflows");
     });
 
     it("navigates to observability when observability icon is clicked", async () => {
@@ -1026,8 +1115,8 @@ describe("StudioShellLayout", () => {
       const observabilityButton = screen.getByLabelText(/observability/i);
       await user.click(observabilityButton);
 
-      // Should set active nav item
-      expect(observabilityButton).toHaveClass("bg-primary-100");
+      // Should call navigate with the observability path
+      expect(mockNavigate).toHaveBeenCalledWith("/studio/observability");
     });
 
     it("navigates to admin when admin icon is clicked", async () => {
@@ -1038,8 +1127,8 @@ describe("StudioShellLayout", () => {
       const adminButton = screen.getByLabelText(/admin/i);
       await user.click(adminButton);
 
-      // Should set active nav item
-      expect(adminButton).toHaveClass("bg-primary-100");
+      // Should call navigate with the admin path
+      expect(mockNavigate).toHaveBeenCalledWith("/studio/admin");
     });
 
     it("navigates to settings when settings icon is clicked", async () => {
@@ -1050,8 +1139,8 @@ describe("StudioShellLayout", () => {
       const settingsButton = screen.getByLabelText(/settings/i);
       await user.click(settingsButton);
 
-      // Should set active nav item
-      expect(settingsButton).toHaveClass("bg-primary-100");
+      // Should call navigate with the settings path
+      expect(mockNavigate).toHaveBeenCalledWith("/studio/settings");
     });
   });
 
@@ -1110,7 +1199,7 @@ describe("StudioShellLayout", () => {
       render(
         <TelemetryProvider>
           <Provider store={store}>
-            <MemoryRouter initialEntries={["/"]}>
+            <MemoryRouter initialEntries={["/studio/chat"]}>
               <StudioShellLayout />
             </MemoryRouter>
           </Provider>
@@ -1151,7 +1240,7 @@ describe("StudioShellLayout", () => {
       render(
         <TelemetryProvider>
           <Provider store={store}>
-            <MemoryRouter initialEntries={["/"]}>
+            <MemoryRouter initialEntries={["/studio/chat"]}>
               <StudioShellLayout />
             </MemoryRouter>
           </Provider>
@@ -1192,7 +1281,7 @@ describe("StudioShellLayout", () => {
       render(
         <TelemetryProvider>
           <Provider store={store}>
-            <MemoryRouter initialEntries={["/"]}>
+            <MemoryRouter initialEntries={["/studio/chat"]}>
               <StudioShellLayout />
             </MemoryRouter>
           </Provider>
@@ -1281,24 +1370,14 @@ describe("StudioShellLayout", () => {
           devTools: devToolsReducer,
         },
         preloadedState: {
-          session: {
-            currentSessionId: "session-1",
-            currentSession: {
+          session: createTestSessionState({
+            currentSession: createTestSession({
               id: "session-1",
               name: "Test Session",
-              created_at: new Date().toISOString(),
-              updated_at: new Date().toISOString(),
-              status: "active" as const,
+              config: createTestSessionConfig({ modelName: "gpt-4-turbo" }),
               messages: [],
-              config: {
-                modelName: "gpt-4-turbo",
-              },
-            },
-            sessions: [],
-            isCreating: false,
-            isDeleting: false,
-            error: null,
-          },
+            }),
+          }),
           auth: {
             ...initialAuthState,
             user: defaultTestUser,
@@ -1307,15 +1386,17 @@ describe("StudioShellLayout", () => {
         } as Record<string, unknown>,
       });
 
-      render(
-        <TelemetryProvider>
-          <Provider store={store}>
-            <MemoryRouter initialEntries={["/"]}>
-              <StudioShellLayout />
-            </MemoryRouter>
-          </Provider>
-        </TelemetryProvider>,
-      );
+      act(() => {
+        render(
+          <TelemetryProvider>
+            <Provider store={store}>
+              <MemoryRouter initialEntries={["/studio/chat"]}>
+                <StudioShellLayout />
+              </MemoryRouter>
+            </Provider>
+          </TelemetryProvider>,
+        );
+      });
 
       const statusBar = screen.getByTestId("status-bar");
       expect(statusBar).toBeInTheDocument();
@@ -1334,45 +1415,35 @@ describe("StudioShellLayout", () => {
           devTools: devToolsReducer,
         },
         preloadedState: {
-          session: {
-            currentSessionId: "session-1",
-            currentSession: {
+          session: createTestSessionState({
+            currentSession: createTestSession({
               id: "session-1",
               name: "Test Session",
-              created_at: new Date().toISOString(),
-              updated_at: new Date().toISOString(),
-              status: "active" as const,
+              config: createTestSessionConfig({ modelName: "gpt-4" }),
               messages: [
-                {
+                createTestMessage({
                   id: "msg-1",
-                  role: "user" as const,
+                  role: "user",
                   content: "Hello",
-                  timestamp: new Date().toISOString(),
                   usage: {
                     totalTokens: 100,
                     promptTokens: 50,
                     completionTokens: 50,
                   },
-                },
-                {
+                }),
+                createTestMessage({
                   id: "msg-2",
-                  role: "assistant" as const,
+                  role: "assistant",
                   content: "Hi there!",
-                  timestamp: new Date().toISOString(),
                   usage: {
                     totalTokens: 200,
                     promptTokens: 100,
                     completionTokens: 100,
                   },
-                },
+                }),
               ],
-              config: { modelName: "gpt-4" },
-            },
-            sessions: [],
-            isCreating: false,
-            isDeleting: false,
-            error: null,
-          },
+            }),
+          }),
           auth: {
             ...initialAuthState,
             user: defaultTestUser,
@@ -1384,7 +1455,7 @@ describe("StudioShellLayout", () => {
       render(
         <TelemetryProvider>
           <Provider store={store}>
-            <MemoryRouter initialEntries={["/"]}>
+            <MemoryRouter initialEntries={["/studio/chat"]}>
               <StudioShellLayout />
             </MemoryRouter>
           </Provider>
@@ -1408,35 +1479,29 @@ describe("StudioShellLayout", () => {
           devTools: devToolsReducer,
         },
         preloadedState: {
-          session: {
-            currentSessionId: "session-1",
-            currentSession: {
+          session: createTestSessionState({
+            currentSession: createTestSession({
               id: "session-1",
               name: "Test Session",
-              created_at: new Date().toISOString(),
-              updated_at: new Date().toISOString(),
-              status: "active" as const,
+              config: createTestSessionConfig({
+                modelProvider: "anthropic",
+                modelName: "claude-3",
+              }),
               messages: [
-                {
+                createTestMessage({
                   id: "msg-1",
-                  role: "assistant" as const,
+                  role: "assistant",
                   content: "Let me think...",
-                  timestamp: new Date().toISOString(),
                   thinkingTokens: 500,
                   usage: {
                     totalTokens: 100,
                     promptTokens: 50,
                     completionTokens: 50,
                   },
-                },
+                }),
               ],
-              config: { modelName: "claude-3" },
-            },
-            sessions: [],
-            isCreating: false,
-            isDeleting: false,
-            error: null,
-          },
+            }),
+          }),
           auth: {
             ...initialAuthState,
             user: defaultTestUser,
@@ -1448,7 +1513,7 @@ describe("StudioShellLayout", () => {
       render(
         <TelemetryProvider>
           <Provider store={store}>
-            <MemoryRouter initialEntries={["/"]}>
+            <MemoryRouter initialEntries={["/studio/chat"]}>
               <StudioShellLayout />
             </MemoryRouter>
           </Provider>
@@ -1472,30 +1537,21 @@ describe("StudioShellLayout", () => {
           devTools: devToolsReducer,
         },
         preloadedState: {
-          session: {
-            currentSessionId: "session-1",
-            currentSession: {
+          session: createTestSessionState({
+            currentSession: createTestSession({
               id: "session-1",
               name: "Test Session",
-              created_at: new Date().toISOString(),
-              updated_at: new Date().toISOString(),
-              status: "active" as const,
+              config: createTestSessionConfig({ modelName: "gpt-4" }),
               messages: [
-                {
+                createTestMessage({
                   id: "msg-1",
-                  role: "user" as const,
+                  role: "user",
                   content: "This is a message with forty characters!", // 40 chars
-                  timestamp: new Date().toISOString(),
                   // No usage data
-                },
+                }),
               ],
-              config: { modelName: "gpt-4" },
-            },
-            sessions: [],
-            isCreating: false,
-            isDeleting: false,
-            error: null,
-          },
+            }),
+          }),
           auth: {
             ...initialAuthState,
             user: defaultTestUser,
@@ -1507,7 +1563,7 @@ describe("StudioShellLayout", () => {
       render(
         <TelemetryProvider>
           <Provider store={store}>
-            <MemoryRouter initialEntries={["/"]}>
+            <MemoryRouter initialEntries={["/studio/chat"]}>
               <StudioShellLayout />
             </MemoryRouter>
           </Provider>
@@ -1518,6 +1574,80 @@ describe("StudioShellLayout", () => {
       expect(statusBar).toBeInTheDocument();
       // Should show approximate token count (40 chars / 4 = 10 tokens)
       expect(statusBar).toHaveTextContent(/10/);
+    });
+
+    it("computes token breakdown (promptTokens and completionTokens) from messages", () => {
+      const store = configureStore({
+        reducer: {
+          canvas: canvasReducer,
+          persona: personaReducer,
+          auth: authReducer,
+          session: sessionReducer,
+          backgroundAgent: backgroundAgentReducer,
+          devTools: devToolsReducer,
+        },
+        preloadedState: {
+          session: createTestSessionState({
+            currentSession: createTestSession({
+              id: "session-1",
+              name: "Test Session",
+              config: createTestSessionConfig({ modelName: "gpt-4" }),
+              messages: [
+                createTestMessage({
+                  id: "msg-1",
+                  role: "user",
+                  content: "Hello",
+                  usage: {
+                    totalTokens: 100,
+                    promptTokens: 80,
+                    completionTokens: 20,
+                  },
+                }),
+                createTestMessage({
+                  id: "msg-2",
+                  role: "assistant",
+                  content: "Hi there!",
+                  usage: {
+                    totalTokens: 200,
+                    promptTokens: 50,
+                    completionTokens: 150,
+                  },
+                }),
+              ],
+            }),
+          }),
+          auth: {
+            ...initialAuthState,
+            user: defaultTestUser,
+            isInitializing: false,
+          },
+        } as Record<string, unknown>,
+      });
+
+      render(
+        <TelemetryProvider>
+          <Provider store={store}>
+            <MemoryRouter initialEntries={["/studio/chat"]}>
+              <StudioShellLayout />
+            </MemoryRouter>
+          </Provider>
+        </TelemetryProvider>,
+      );
+
+      const statusBar = screen.getByTestId("status-bar");
+      expect(statusBar).toBeInTheDocument();
+      // StatusBar should display token breakdown tooltip with Input/Output breakdown
+      // promptTokens: 80 + 50 = 130
+      // completionTokens: 20 + 150 = 170
+      // Total: 300
+      // When tokenBreakdown is passed, StatusBar shows "Input: X" and "Output: Y" in tooltip
+      const tokenDisplay = screen.getByTestId("token-count");
+      expect(tokenDisplay).toHaveAttribute("title");
+      const title = tokenDisplay.getAttribute("title") ?? "";
+      expect(title).toContain("Input:");
+      expect(title).toContain("Output:");
+      expect(title).toContain("130");
+      expect(title).toContain("170");
     });
   });
 
@@ -1551,7 +1681,7 @@ describe("StudioShellLayout", () => {
       render(
         <TelemetryProvider>
           <Provider store={store}>
-            <MemoryRouter initialEntries={["/"]}>
+            <MemoryRouter initialEntries={["/studio/chat"]}>
               <StudioShellLayout />
             </MemoryRouter>
           </Provider>
@@ -1591,7 +1721,7 @@ describe("StudioShellLayout", () => {
       render(
         <TelemetryProvider>
           <Provider store={store}>
-            <MemoryRouter initialEntries={["/"]}>
+            <MemoryRouter initialEntries={["/studio/chat"]}>
               <StudioShellLayout />
             </MemoryRouter>
           </Provider>
@@ -1753,7 +1883,7 @@ describe("StudioShellLayout", () => {
       render(
         <TelemetryProvider>
           <Provider store={store}>
-            <MemoryRouter initialEntries={["/"]}>
+            <MemoryRouter initialEntries={["/studio/chat"]}>
               <StudioShellLayout />
             </MemoryRouter>
           </Provider>
@@ -1808,7 +1938,7 @@ describe("StudioShellLayout", () => {
       render(
         <TelemetryProvider>
           <Provider store={store}>
-            <MemoryRouter initialEntries={["/"]}>
+            <MemoryRouter initialEntries={["/studio/chat"]}>
               <StudioShellLayout />
             </MemoryRouter>
           </Provider>
@@ -1860,7 +1990,7 @@ describe("StudioShellLayout", () => {
       render(
         <TelemetryProvider>
           <Provider store={store}>
-            <MemoryRouter initialEntries={["/"]}>
+            <MemoryRouter initialEntries={["/studio/chat"]}>
               <StudioShellLayout />
             </MemoryRouter>
           </Provider>
@@ -1909,7 +2039,7 @@ describe("StudioShellLayout", () => {
       render(
         <TelemetryProvider>
           <Provider store={store}>
-            <MemoryRouter initialEntries={["/"]}>
+            <MemoryRouter initialEntries={["/studio/chat"]}>
               <StudioShellLayout />
             </MemoryRouter>
           </Provider>
@@ -1930,7 +2060,13 @@ describe("StudioShellLayout", () => {
     beforeEach(() => {
       // @ts-expect-error - window.location is read-only
       delete window.location;
-      window.location = { ...originalLocation, href: "" };
+      // Must set pathname to /studio/chat so StudioShellLayout's route detection
+      // sees both routerPath (from MemoryRouter) and windowPath (from window.location) as chat routes
+      window.location = {
+        ...originalLocation,
+        href: "",
+        pathname: "/studio/chat",
+      };
     });
 
     afterEach(() => {
@@ -1944,7 +2080,7 @@ describe("StudioShellLayout", () => {
       render(
         <TelemetryProvider>
           <Provider store={store}>
-            <MemoryRouter initialEntries={["/"]}>
+            <MemoryRouter initialEntries={["/studio/chat"]}>
               <StudioShellLayout />
             </MemoryRouter>
           </Provider>
@@ -1989,14 +2125,14 @@ describe("StudioShellLayout", () => {
       render(
         <TelemetryProvider>
           <Provider store={store}>
-            <MemoryRouter initialEntries={["/"]}>
+            <MemoryRouter initialEntries={["/studio/chat"]}>
               <StudioShellLayout />
             </MemoryRouter>
           </Provider>
         </TelemetryProvider>,
       );
 
-      // Canvas should be visible initially
+      // Canvas should be visible initially (Panel id="canvas" maps to data-testid="canvas-panel")
       expect(screen.getByTestId("canvas-panel")).toBeInTheDocument();
 
       // Open command palette
@@ -2037,7 +2173,7 @@ describe("StudioShellLayout", () => {
       render(
         <TelemetryProvider>
           <Provider store={store}>
-            <MemoryRouter initialEntries={["/"]}>
+            <MemoryRouter initialEntries={["/studio/chat"]}>
               <StudioShellLayout />
             </MemoryRouter>
           </Provider>
@@ -2308,7 +2444,7 @@ describe("StudioShellLayout", () => {
       render(
         <TelemetryProvider>
           <Provider store={store}>
-            <MemoryRouter initialEntries={["/"]}>
+            <MemoryRouter initialEntries={["/studio/chat"]}>
               <StudioShellLayout />
             </MemoryRouter>
           </Provider>
@@ -2371,7 +2507,7 @@ describe("StudioShellLayout", () => {
       render(
         <TelemetryProvider>
           <Provider store={store}>
-            <MemoryRouter initialEntries={["/"]}>
+            <MemoryRouter initialEntries={["/studio/chat"]}>
               <StudioShellLayout />
             </MemoryRouter>
           </Provider>
@@ -2481,7 +2617,7 @@ describe("StudioShellLayout", () => {
       render(
         <TelemetryProvider>
           <Provider store={store}>
-            <MemoryRouter initialEntries={["/"]}>
+            <MemoryRouter initialEntries={["/studio/chat"]}>
               <StudioShellLayout />
             </MemoryRouter>
           </Provider>
@@ -2526,7 +2662,7 @@ describe("StudioShellLayout", () => {
       render(
         <TelemetryProvider>
           <Provider store={store}>
-            <MemoryRouter initialEntries={["/"]}>
+            <MemoryRouter initialEntries={["/studio/chat"]}>
               <StudioShellLayout />
             </MemoryRouter>
           </Provider>
@@ -2634,35 +2770,27 @@ describe("StudioShellLayout", () => {
           devTools: devToolsReducer,
         },
         preloadedState: {
-          session: {
-            currentSessionId: "session-1",
-            currentSession: {
+          session: createTestSessionState({
+            currentSession: createTestSession({
               id: "session-1",
               name: "Test Session",
-              created_at: new Date().toISOString(),
-              updated_at: new Date().toISOString(),
-              status: "active" as const,
+              config: createTestSessionConfig({ modelName: "gpt-4" }),
               messages: [
+                // Test null content handling (simulates malformed backend data)
                 {
                   id: "msg-1",
                   role: "user" as const,
-                  content: null, // null content
-                  timestamp: new Date().toISOString(),
+                  content: null as unknown as string, // Cast to bypass type check for edge case test
+                  timestamp: Date.now(),
                 },
-                {
+                createTestMessage({
                   id: "msg-2",
-                  role: "assistant" as const,
+                  role: "assistant",
                   content: "Response",
-                  timestamp: new Date().toISOString(),
-                },
+                }),
               ],
-              config: { modelName: "gpt-4" },
-            },
-            sessions: [],
-            isCreating: false,
-            isDeleting: false,
-            error: null,
-          },
+            }),
+          }),
           auth: {
             ...initialAuthState,
             user: defaultTestUser,
@@ -2674,7 +2802,7 @@ describe("StudioShellLayout", () => {
       render(
         <TelemetryProvider>
           <Provider store={store}>
-            <MemoryRouter initialEntries={["/"]}>
+            <MemoryRouter initialEntries={["/studio/chat"]}>
               <StudioShellLayout />
             </MemoryRouter>
           </Provider>
@@ -3685,13 +3813,15 @@ describe("StudioShellLayout", () => {
       // Open command palette with Cmd+K
       await user.keyboard("{Meta>}k{/Meta}");
 
-      // Wait for command palette to open
+      // Wait for command palette to open (uses ai-command-palette test id)
       await waitFor(() => {
-        expect(screen.getByTestId("command-palette")).toBeInTheDocument();
+        expect(screen.getByTestId("ai-command-palette")).toBeInTheDocument();
       });
 
-      // Type "focus" to search
-      await user.type(screen.getByRole("textbox"), "focus");
+      // Type "focus" to search within the command palette
+      // Use the command-search testid (not role="textbox" which doesn't exist in command palette)
+      const searchInput = screen.getByTestId("command-search");
+      await user.type(searchInput, "focus");
 
       // Focus mode command should appear
       expect(screen.getByText(/focus mode/i)).toBeInTheDocument();

@@ -6,6 +6,10 @@
  */
 
 import { useCallback, useMemo, useRef, useState, useEffect } from "react";
+import { devLogger } from "../../../utils/devLogger";
+
+// Create prefixed logger for DevTools performance
+const logger = devLogger.withPrefix("[DevTools]");
 
 // =============================================================================
 // Batched Updates
@@ -216,9 +220,7 @@ export function useRenderCount(componentName: string): void {
   useEffect(() => {
     renderCount.current += 1;
     if (process.env.NODE_ENV === "development") {
-      console.debug(
-        `[DevTools] ${componentName} rendered: ${renderCount.current}`,
-      );
+      logger.debug(`${componentName} rendered: ${renderCount.current}`);
     }
   });
 }
@@ -234,7 +236,7 @@ export function measureTime<T>(operation: () => T, label: string): T {
   const start = performance.now();
   const result = operation();
   const end = performance.now();
-  console.debug(`[DevTools] ${label}: ${(end - start).toFixed(2)}ms`);
+  logger.debug(`${label}: ${(end - start).toFixed(2)}ms`);
   return result;
 }
 

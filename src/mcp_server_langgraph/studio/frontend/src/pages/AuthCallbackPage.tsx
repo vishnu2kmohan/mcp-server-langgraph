@@ -15,6 +15,7 @@ import { useAppDispatch } from "../store/hooks";
 import { setUser } from "../store/slices/authSlice";
 import { setUserInfo } from "../store/slices/personaSlice";
 import { setAuthTokens } from "../utils/storage";
+import { getIntendedRoute, clearIntendedRoute } from "../utils/intendedRoute";
 
 // Parse URL fragment into key-value pairs
 function parseFragment(fragment: string): Record<string, string> {
@@ -135,11 +136,15 @@ export function AuthCallbackPage() {
         // Clear fragment from URL for security
         window.history.replaceState(null, "", window.location.pathname);
 
+        // Get the intended route saved by LoginPage (if any)
+        const intendedRoute = getIntendedRoute();
+        clearIntendedRoute(); // Clear immediately (one-time use)
+
         setStatus("success");
 
-        // Redirect to studio after a brief success display
+        // Redirect to intended route or /studio after a brief success display
         setTimeout(() => {
-          navigate("/studio", { replace: true });
+          navigate(intendedRoute || "/studio", { replace: true });
         }, 1000);
       } catch (err) {
         setStatus("error");

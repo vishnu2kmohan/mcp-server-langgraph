@@ -6,7 +6,10 @@
  */
 
 import { useState, useCallback, Suspense } from "react";
+import { useNavigate } from "react-router";
 import { useAppDispatch, useAppSelector } from "../store/hooks";
+import { authenticatedFetch } from "../utils/authenticatedFetch";
+import { saveCurrentRouteAsIntended } from "../utils/intendedRoute";
 import {
   removeServer,
   clearMCPError,
@@ -62,6 +65,14 @@ import { Layers } from "lucide-react";
 type MCPTab = "tools" | "resources" | "prompts" | "servers" | "aggregated";
 
 export function MCPPage() {
+  const navigate = useNavigate();
+
+  // Auth failure handler for authenticatedFetch
+  const handleAuthFailure = useCallback(() => {
+    saveCurrentRouteAsIntended();
+    navigate("/login", { replace: true });
+  }, [navigate]);
+
   // Persona for admin-only actions in aggregated panel
   const persona = useAppSelector(selectPersona);
   const isAdmin = persona === "admin";
@@ -172,12 +183,10 @@ export function MCPPage() {
       setIsCreating(true);
       try {
         // Call the backend API to create the connection
-        const response = await fetch("/api/v1/connections", {
+        const response = await authenticatedFetch("/api/v1/connections", {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
           body: JSON.stringify(data),
+          onAuthFailure: handleAuthFailure,
         });
 
         if (!response.ok) {
@@ -188,8 +197,9 @@ export function MCPPage() {
         const connection = await response.json();
 
         // Test the connection after creation
-        await fetch(`/api/v1/connections/${connection.id}/test`, {
+        await authenticatedFetch(`/api/v1/connections/${connection.id}/test`, {
           method: "POST",
+          onAuthFailure: handleAuthFailure,
         });
 
         // Close dialog on success
@@ -205,7 +215,7 @@ export function MCPPage() {
         setIsCreating(false);
       }
     },
-    [],
+    [handleAuthFailure],
   );
 
   const tabs = [
@@ -268,6 +278,17 @@ export function MCPPage() {
             </p>
           </div>
           <div className="flex items-center gap-4">
+            {/* Add Server Button - always visible for discoverability */}
+            <button
+              onClick={handleOpenAddDialog}
+              disabled={isConnecting}
+              className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors"
+              aria-label="Add MCP Server"
+            >
+              <Plus size={16} />
+              <span className="hidden sm:inline">Add Server</span>
+            </button>
+
             {/* MCP Action Buttons */}
             <div className="flex items-center gap-2">
               <button
