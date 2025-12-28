@@ -133,6 +133,11 @@ class ArtifactCreateRequest(BaseModel):
         max_length=255,
         description="Machine-friendly programmatic name (separate from display title)",
     )
+    description: str | None = Field(
+        default=None,
+        max_length=2000,
+        description="Description explaining the artifact purpose or context",
+    )
     edit_metadata: EditMetadata | None = Field(default=None)
 
 
@@ -145,6 +150,11 @@ class ArtifactUpdateRequest(BaseModel):
         default=None,
         max_length=255,
         description="Machine-friendly programmatic name (separate from display title)",
+    )
+    description: str | None = Field(
+        default=None,
+        max_length=2000,
+        description="Description explaining the artifact purpose or context",
     )
     edit_metadata: EditMetadata | None = Field(default=None)
 
@@ -168,6 +178,7 @@ class ArtifactResponse(BaseModel):
     updated_at: str
     title: str
     name: str | None = None
+    description: str = ""
     user_id: str
     edit_metadata: EditMetadata | None = None
 
