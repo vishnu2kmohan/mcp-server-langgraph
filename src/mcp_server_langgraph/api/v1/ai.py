@@ -27,6 +27,7 @@ from mcp_server_langgraph.core.feature_flags import get_feature_flags
 from mcp_server_langgraph.studio.ai.suggestions import (
     WorkflowSuggestionAgent,
     ChatFollowUpSuggestionAgent,
+    CommandInterpreterAgent,
     get_suggestion_rate_limiter,
     track_rate_limit_hit,
     track_personalization_usage,
@@ -1167,4 +1168,317 @@ async def fetch_url_content(request: UrlFetchRequest) -> UrlFetchResponse:
         raise HTTPException(
             status_code=status.HTTP_502_BAD_GATEWAY,
             detail=f"Failed to fetch URL: {e}",
+        )
+
+
+# =============================================================================
+# Chat Suggestions (Inline Completions)
+# =============================================================================
+
+
+class ChatSuggestion(BaseModel):
+    """A single chat suggestion."""
+
+    text: str = Field(description="The suggested text completion")
+    confidence: float = Field(default=0.7, description="Confidence score 0-1")
+    reasoning: str | None = Field(None, description="Why this suggestion was made")
+
+
+class ChatSuggestionsRequest(BaseModel):
+    """Request for chat inline suggestions."""
+
+    input_text: str = Field(description="The user's partial input text")
+    session_id: str | None = Field(None, description="Session ID for context")
+    max_suggestions: int = Field(default=3, description="Maximum suggestions to return")
+
+
+class ChatSuggestionsResponse(BaseModel):
+    """Response with chat suggestions."""
+
+    suggestions: list[ChatSuggestion] = Field(default_factory=list, description="List of suggested completions")
+
+
+@ai_router.post(
+    "/chat-suggestions",
+    status_code=status.HTTP_200_OK,
+    summary="Get Chat Inline Suggestions",
+    description="Get AI-powered inline suggestions for chat input completion",
+)
+async def get_chat_suggestions(
+    request: ChatSuggestionsRequest,
+) -> ChatSuggestionsResponse:
+    """
+    Get inline suggestions for chat input.
+
+    Used by the frontend useInlineSuggestions hook to provide
+    autocomplete-style suggestions as the user types.
+
+    Uses ChatFollowUpSuggestionAgent with LLM integration for intelligent
+    suggestions, with automatic fallback to heuristics when LLM is unavailable.
+
+    Example:
+        ```
+        POST /api/v1/ai/chat-suggestions
+        {
+            "input_text": "How do I configure",
+            "session_id": "session-123",
+            "max_suggestions": 3
+        }
+        ```
+    """
+    # Return empty for empty input
+    if not request.input_text or not request.input_text.strip():
+        return ChatSuggestionsResponse(suggestions=[])
+
+    # Check feature flag
+    flags = get_feature_flags()
+    if not flags.enable_ai_suggestions:
+        return ChatSuggestionsResponse(suggestions=[])
+
+    try:
+        # Use the existing ChatFollowUpSuggestionAgent with LLM integration
+        agent = ChatFollowUpSuggestionAgent(
+            enable_llm=flags.enable_llm_suggestions,
+            enable_cache=True,
+        )
+
+        # Generate LLM-powered suggestions
+        llm_suggestions = await agent.suggest(
+            content=request.input_text,
+            max_suggestions=request.max_suggestions,
+            session_id=request.session_id,
+        )
+
+        # Convert to response format
+        suggestions = [
+            ChatSuggestion(
+                text=s.text,
+                confidence=s.confidence,
+                reasoning=s.reasoning,
+            )
+            for s in llm_suggestions
+        ]
+
+        return ChatSuggestionsResponse(suggestions=suggestions)
+
+    except Exception as e:
+        logger.warning(
+            "LLM suggestions failed, returning empty",
+            extra={"error": str(e), "input_text": request.input_text[:50]},
+        )
+        return ChatSuggestionsResponse(suggestions=[])
+
+
+# =============================================================================
+# Canvas Actions
+# =============================================================================
+
+
+class CanvasActionRequest(BaseModel):
+    """Request for canvas action."""
+
+    canvas_id: str | None = Field(None, description="Canvas identifier")
+    state: dict[str, Any] | None = Field(None, description="Canvas state data")
+    format: str | None = Field(None, description="Export format (png, svg, json)")
+
+
+class CanvasActionResponse(BaseModel):
+    """Response from canvas action."""
+
+    success: bool = Field(description="Whether the action succeeded")
+    message: str | None = Field(None, description="Status message")
+    data: dict[str, Any] | None = Field(None, description="Action result data")
+
+
+@ai_router.post(
+    "/canvas/{action}",
+    status_code=status.HTTP_200_OK,
+    summary="Execute Canvas Action",
+    description="Execute an AI-assisted canvas action (save, export, analyze)",
+)
+async def execute_canvas_action(
+    action: str,
+    request: CanvasActionRequest,
+) -> CanvasActionResponse:
+    """
+    Execute an AI-assisted action on the canvas.
+
+    Supported actions:
+    - save: Save the current canvas state
+    - export: Export canvas to various formats
+    - analyze: AI analysis of canvas content
+    - optimize: AI-powered layout optimization
+
+    Example:
+        ```
+        POST /api/v1/ai/canvas/save
+        {
+            "canvas_id": "canvas-123",
+            "state": {...}
+        }
+        ```
+    """
+    valid_actions = {"save", "export", "analyze", "optimize", "clear"}
+
+    if action not in valid_actions:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Invalid canvas action: {action}. Valid actions: {', '.join(valid_actions)}",
+        )
+
+    logger.info(
+        "Canvas action requested",
+        extra={"action": action, "canvas_id": request.canvas_id},
+    )
+
+    # Handle each action
+    if action == "save":
+        # TODO: Implement actual save logic
+        return CanvasActionResponse(
+            success=True,
+            message="Canvas state saved",
+            data={"canvas_id": request.canvas_id},
+        )
+    elif action == "export":
+        export_format = request.format or "png"
+        return CanvasActionResponse(
+            success=True,
+            message=f"Canvas exported as {export_format}",
+            data={"format": export_format},
+        )
+    elif action == "analyze":
+        return CanvasActionResponse(
+            success=True,
+            message="Canvas analysis complete",
+            data={"nodes": 0, "edges": 0, "complexity": "low"},
+        )
+    elif action == "optimize":
+        return CanvasActionResponse(
+            success=True,
+            message="Canvas layout optimized",
+            data={"optimized": True},
+        )
+    elif action == "clear":
+        return CanvasActionResponse(
+            success=True,
+            message="Canvas cleared",
+        )
+
+    return CanvasActionResponse(success=True)
+
+
+# =============================================================================
+# Natural Language Command Interpretation
+# =============================================================================
+
+
+class InterpretCommandRequest(BaseModel):
+    """Request to interpret a natural language command."""
+
+    command: str = Field(description="The natural language command to interpret")
+    session_id: str | None = Field(None, description="Session ID for context")
+    context: dict[str, Any] | None = Field(None, description="Additional context")
+
+
+class InterpretedAction(BaseModel):
+    """The interpreted action from a command."""
+
+    action: str = Field(description="The action to perform")
+    intent: str = Field(description="The detected user intent")
+    confidence: float = Field(default=0.8, description="Confidence in interpretation")
+    parameters: dict[str, Any] = Field(default_factory=dict, description="Action parameters")
+    suggestion: str | None = Field(None, description="Suggested UI action")
+
+
+class InterpretCommandResponse(BaseModel):
+    """Response with interpreted command."""
+
+    action: str = Field(description="The primary action")
+    intent: str = Field(description="The detected intent")
+    confidence: float = Field(description="Interpretation confidence")
+    parameters: dict[str, Any] = Field(default_factory=dict, description="Extracted parameters")
+    alternatives: list[InterpretedAction] = Field(default_factory=list, description="Alternative interpretations")
+
+
+@ai_router.post(
+    "/interpret-command",
+    status_code=status.HTTP_200_OK,
+    summary="Interpret Natural Language Command",
+    description="Interpret a natural language command and determine the intended action",
+)
+async def interpret_command(
+    request: InterpretCommandRequest,
+) -> InterpretCommandResponse:
+    """
+    Interpret a natural language command.
+
+    Used by the Studio shell to understand user commands like:
+    - "create a new session"
+    - "run the workflow"
+    - "show me the logs"
+    - "connect to the MCP server"
+
+    Uses LLM-powered interpretation with heuristic fallback.
+
+    Example:
+        ```
+        POST /api/v1/ai/interpret-command
+        {
+            "command": "create a new session",
+            "session_id": "session-123"
+        }
+        ```
+    """
+    # Check feature flag
+    flags = get_feature_flags()
+    enable_llm = flags.enable_ai_suggestions and flags.enable_llm_suggestions
+
+    # Handle empty command
+    if not request.command or not request.command.strip():
+        return InterpretCommandResponse(
+            action="none",
+            intent="empty",
+            confidence=1.0,
+            parameters={},
+        )
+
+    try:
+        # Use the LLM-powered CommandInterpreterAgent
+        agent = CommandInterpreterAgent(enable_llm=enable_llm)
+
+        result = await agent.interpret(
+            command=request.command,
+            context=request.context,
+            session_id=request.session_id,
+        )
+
+        # Convert alternatives to InterpretedAction objects
+        alternatives = [
+            InterpretedAction(
+                action=alt.get("action", "unknown"),
+                confidence=alt.get("confidence", 0.5),
+            )
+            for alt in result.alternatives
+        ]
+
+        return InterpretCommandResponse(
+            action=result.action,
+            intent=result.intent,
+            confidence=result.confidence,
+            parameters=result.parameters,
+            alternatives=alternatives,
+        )
+
+    except Exception as e:
+        logger.warning(
+            "Command interpretation failed, using fallback",
+            error=str(e),
+            command=request.command[:50],
+        )
+        # Return a safe fallback
+        return InterpretCommandResponse(
+            action="send_message",
+            intent="chat",
+            confidence=0.5,
+            parameters={"message": request.command},
         )

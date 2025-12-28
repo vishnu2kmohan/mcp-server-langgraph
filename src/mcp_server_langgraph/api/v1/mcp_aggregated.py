@@ -14,13 +14,6 @@ from typing import Any
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 
-from mcp_server_langgraph.mcp.client.cached_unified_registry import (
-    get_cached_unified_registry,
-)
-from mcp_server_langgraph.mcp.client.unified_registry import (
-    get_unified_registry,
-)
-
 # Router for aggregated MCP capabilities
 aggregated_router = APIRouter(prefix="/mcp", tags=["MCP Aggregated"])
 
@@ -124,6 +117,10 @@ async def list_aggregated_tools(
     Returns:
         List of tool definitions with total count
     """
+    from mcp_server_langgraph.mcp.client.cached_unified_registry import (
+        get_cached_unified_registry,
+    )
+
     cached_registry = get_cached_unified_registry()
     tools = await cached_registry.get_tools(server_name)
 
@@ -158,6 +155,8 @@ async def get_aggregated_tool(qualified_name: str) -> ToolResponse:
     Raises:
         HTTPException: If tool not found
     """
+    from mcp_server_langgraph.mcp.client.unified_registry import get_unified_registry
+
     registry = get_unified_registry()
     tool = registry.get_tool(qualified_name)
 
@@ -196,6 +195,10 @@ async def list_aggregated_resources(
     Returns:
         List of resource definitions with total count
     """
+    from mcp_server_langgraph.mcp.client.cached_unified_registry import (
+        get_cached_unified_registry,
+    )
+
     cached_registry = get_cached_unified_registry()
     resources = await cached_registry.get_resources(server_name)
 
@@ -231,6 +234,8 @@ async def get_aggregated_resource(qualified_name: str) -> ResourceResponse:
     Raises:
         HTTPException: If resource not found
     """
+    from mcp_server_langgraph.mcp.client.unified_registry import get_unified_registry
+
     registry = get_unified_registry()
     resource = registry.get_resource(qualified_name)
 
@@ -270,6 +275,10 @@ async def list_aggregated_prompts(
     Returns:
         List of prompt definitions with total count
     """
+    from mcp_server_langgraph.mcp.client.cached_unified_registry import (
+        get_cached_unified_registry,
+    )
+
     cached_registry = get_cached_unified_registry()
     prompts = await cached_registry.get_prompts(server_name)
 
@@ -304,6 +313,8 @@ async def get_aggregated_prompt(qualified_name: str) -> PromptResponse:
     Raises:
         HTTPException: If prompt not found
     """
+    from mcp_server_langgraph.mcp.client.unified_registry import get_unified_registry
+
     registry = get_unified_registry()
     prompt = registry.get_prompt(qualified_name)
 
@@ -337,6 +348,10 @@ async def list_aggregated_servers() -> AllServersResponse:
     Returns:
         Summary of all servers with total counts
     """
+    from mcp_server_langgraph.mcp.client.cached_unified_registry import (
+        get_cached_unified_registry,
+    )
+
     cached_registry = get_cached_unified_registry()
     server_names = await cached_registry.get_server_names()
 
@@ -387,6 +402,10 @@ async def get_server_capabilities(server_name: str) -> ServerCapabilitiesRespons
     Raises:
         HTTPException: If server not found
     """
+    from mcp_server_langgraph.mcp.client.cached_unified_registry import (
+        get_cached_unified_registry,
+    )
+
     cached_registry = get_cached_unified_registry()
     server_names = await cached_registry.get_server_names()
 

@@ -19,6 +19,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from mcp_server_langgraph.core.config import Settings
 from mcp_server_langgraph.core.container import ApplicationContainer, create_test_container
+from mcp_server_langgraph.llm.otel_integration import configure_litellm_cost_tracking
 
 logger = logging.getLogger(__name__)
 
@@ -129,6 +130,12 @@ async def create_lifespan(container: ApplicationContainer | None = None) -> Asyn
         app = FastAPI(lifespan=lifespan)
     """
     # Startup
+
+    # Configure LiteLLM cost tracking callback (idempotent, safe to call multiple times)
+    # This enables automatic cost recording on every LLM call via LiteLLM's callback system
+    configure_litellm_cost_tracking()
+    logger.info("LiteLLM cost tracking callback registered")
+
     if container:
         _telemetry = container.get_telemetry()  # noqa: F841
         logger.info(f"Application starting (environment: {container.settings.environment})")
@@ -245,6 +252,34 @@ async def create_lifespan(container: ApplicationContainer | None = None) -> Asyn
             logger.warning(f"Feedback store initialization failed: {e}")
             # Non-fatal: remediations will work but AI learning will be disabled
 
+        # Initialize Budget Storage for cost management
+        # Uses PostgreSQL in production/staging, in-memory for development/test
+        from mcp_server_langgraph.monitoring.budget_storage import (
+            MemoryBudgetStorage,
+            PostgresBudgetStorage,
+            set_budget_storage,
+        )
+
+        try:
+            is_production = container.settings.environment in ("production", "staging")
+            has_database = bool(container.settings.database_url)
+
+            if is_production and has_database:
+                from mcp_server_langgraph.database.session import get_session_maker
+
+                session_maker = get_session_maker(container.settings.database_url)
+                budget_store = PostgresBudgetStorage(session_maker)
+                logger.info("Using PostgreSQL budget storage (production)")
+            else:
+                budget_store = MemoryBudgetStorage()
+                logger.info("Using in-memory budget storage (development/test)")
+
+            set_budget_storage(budget_store)
+            logger.info("Budget storage initialized successfully")
+        except Exception as e:
+            logger.warning(f"Budget storage initialization failed: {e}")
+            # Non-fatal: budget endpoints will use default in-memory storage
+
         # Initialize Artifacts Service (optional, feature-flagged)
         # ADR: Multi-layer storage for Canvas artifacts (PostgreSQL + Redis + Cloud + Qdrant)
         from mcp_server_langgraph.core.feature_flags import get_feature_flags
@@ -312,6 +347,17 @@ async def create_lifespan(container: ApplicationContainer | None = None) -> Asyn
             logger.warning(f"MCP aggregated broadcaster wiring failed: {e}")
             # Non-fatal: capability changes won't be broadcast to WebSocket clients
 
+        # Configure LiteLLM OTEL callback (cost tracking already configured above)
+        # Uses LiteLLM's response_cost as authoritative source for cost calculation
+        from mcp_server_langgraph.llm.otel_integration import configure_litellm_otel
+
+        try:
+            configure_litellm_otel()
+            logger.info("LiteLLM OTEL callback configured")
+        except Exception as e:
+            logger.warning(f"LiteLLM OTEL callback configuration failed: {e}")
+            # Non-fatal: tracing will be disabled
+
     yield
 
     # Shutdown
@@ -323,10 +369,12 @@ async def create_lifespan(container: ApplicationContainer | None = None) -> Asyn
         from mcp_server_langgraph.api.v1.notifications import set_push_subscription_store
         from mcp_server_langgraph.api.v1.remediation_approvals import set_feedback_store
         from mcp_server_langgraph.compliance.gdpr.factory import reset_gdpr_storage
+        from mcp_server_langgraph.monitoring.budget_storage import set_budget_storage
 
         set_push_subscription_store(None)
         set_feedback_store(None)
         set_artifacts_service(None)
+        set_budget_storage(None)
         reset_gdpr_storage()
 
         # Reset MCP aggregated broadcaster
@@ -347,7 +395,18 @@ async def create_lifespan(container: ApplicationContainer | None = None) -> Asyn
         except Exception as e:
             logger.warning(f"Error closing observability query clients: {e}")
 
-        logger.info("Stores reset (push subscriptions, feedback, artifacts, GDPR, observability, MCP broadcaster)")
+        # Reset LiteLLM callbacks
+        from mcp_server_langgraph.llm.otel_integration import (
+            reset_cost_tracking_configuration,
+            reset_otel_configuration,
+        )
+
+        reset_cost_tracking_configuration()
+        reset_otel_configuration()
+
+        logger.info(
+            "Stores reset (push subscriptions, feedback, artifacts, budget, GDPR, observability, MCP broadcaster, LiteLLM callbacks)"
+        )
 
 
 def customize_openapi(app: FastAPI) -> dict[str, Any]:

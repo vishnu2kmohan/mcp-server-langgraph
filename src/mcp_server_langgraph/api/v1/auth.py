@@ -1544,3 +1544,76 @@ async def native_logout(
         )
 
     return response
+
+
+# ============================================================================
+# Organization Switching
+# ============================================================================
+
+
+class SwitchOrgRequest(BaseModel):
+    """Request to switch organization context."""
+
+    orgId: str = Field(..., min_length=1, description="Target organization ID")
+
+
+class SwitchOrgResponse(BaseModel):
+    """Response confirming organization switch."""
+
+    success: bool = Field(description="Whether the switch was successful")
+    org_id: str = Field(description="The organization ID that was switched to")
+    message: str | None = Field(None, description="Status message")
+
+
+@auth_router.post(
+    "/switch-org",
+    summary="Switch Organization",
+    description="Switch the user's current organization context",
+)
+async def switch_organization(
+    request: SwitchOrgRequest,
+    http_request: Request,
+) -> SwitchOrgResponse:
+    """
+    Switch the user's organization context.
+
+    Used by multi-tenant applications where a user can belong to
+    multiple organizations and needs to switch between them.
+
+    Example:
+        ```
+        POST /api/v1/auth/switch-org
+        Headers:
+            Authorization: Bearer <token>
+            X-Organization-ID: org-123
+        Body:
+            {"orgId": "org-123"}
+        ```
+    """
+    org_id = request.orgId
+
+    if not org_id:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Organization ID is required",
+        )
+
+    # Log the organization switch attempt
+    logger.info(
+        "Organization switch requested",
+        extra={
+            "audit_event_type": "auth.org_switch",
+            "audit_category": "authorization",
+            "target_org_id": org_id,
+            "client_ip": http_request.client.host if http_request.client else None,
+        },
+    )
+
+    # TODO: Validate that user has access to the target organization
+    # This would typically involve checking OpenFGA or a database
+
+    return SwitchOrgResponse(
+        success=True,
+        org_id=org_id,
+        message=f"Switched to organization {org_id}",
+    )

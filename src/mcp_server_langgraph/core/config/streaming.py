@@ -82,5 +82,11 @@ class StreamingSettings(DomainSettings):
         description="Idle connection timeout in seconds before automatic disconnect",
     )
 
+    # Token validation
+    streaming_token_validation_interval: int = Field(
+        default=300,  # 5 minutes
+        description="Interval in seconds for JWT token validation during active connections",
+    )
+
 
 __all__ = ["StreamingSettings"]

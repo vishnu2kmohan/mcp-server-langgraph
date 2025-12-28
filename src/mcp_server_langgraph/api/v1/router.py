@@ -32,6 +32,7 @@ from mcp_server_langgraph.api.v1.cost import cost_router
 from mcp_server_langgraph.api.v1.features import features_router
 from mcp_server_langgraph.api.v1.identity_providers import router as identity_providers_router
 from mcp_server_langgraph.api.v1.mcp import mcp_router
+from mcp_server_langgraph.api.v1.mcp_aggregated import aggregated_router as mcp_aggregated_router
 from mcp_server_langgraph.api.v1.mcp_websocket import mcp_websocket_router
 from mcp_server_langgraph.api.v1.observability import observability_router
 from mcp_server_langgraph.api.v1.projects import projects_router
@@ -52,6 +53,20 @@ from mcp_server_langgraph.api.v1.code_execution import router as code_execution_
 from mcp_server_langgraph.api.v1.alertmanager_webhook import alertmanager_webhook_router
 from mcp_server_langgraph.api.v1.remediation_approvals import remediation_approval_router
 from mcp_server_langgraph.api.v1.alert_recommendations import alert_recommendation_router
+
+# UX measurement and feedback endpoints
+from mcp_server_langgraph.api.v1.analytics import router as analytics_router
+from mcp_server_langgraph.api.v1.feedback import router as feedback_router
+from mcp_server_langgraph.api.v1.surveys import router as surveys_router
+
+# Frontend infrastructure endpoints
+from mcp_server_langgraph.api.v1.frontend_cache import frontend_cache_router
+
+# Session control endpoints
+from mcp_server_langgraph.api.v1.interrupt import router as interrupt_router
+
+# Note: marketplace_admin uses factory pattern (create_marketplace_router) requiring DI
+# It is registered separately during application bootstrap if marketplace feature is enabled
 
 # Main v1 router that includes all sub-routers
 v1_router = APIRouter()
@@ -102,6 +117,10 @@ v1_router.include_router(mcp_websocket_router)
 
 # Include MCP REST endpoints (MCP Protocol 2025-11-25 features)
 v1_router.include_router(mcp_router, prefix="/mcp")
+
+# Include MCP aggregated capabilities REST endpoints (MCP Protocol 2025-11-25)
+# Provides /mcp/aggregated/tools, /mcp/aggregated/resources, /mcp/aggregated/prompts, /mcp/aggregated/servers
+v1_router.include_router(mcp_aggregated_router)
 
 # Note: MCP task status WebSocket moved to consolidated ws_router (ADR-0068)
 
@@ -188,6 +207,33 @@ v1_router.include_router(alert_recommendation_router, tags=["alerts"])
 from mcp_server_langgraph.api.v1.skills import router as skills_router
 
 v1_router.include_router(skills_router, tags=["skills"])
+
+# =============================================================================
+# UX Measurement & Feedback Endpoints
+# =============================================================================
+# HEART analytics for UX measurement (Happiness, Engagement, Adoption, Retention, Task Success)
+v1_router.include_router(analytics_router, prefix="/analytics", tags=["analytics"])
+
+# User feedback collection (hallucination reports, message ratings)
+v1_router.include_router(feedback_router, prefix="/feedback", tags=["feedback"])
+
+# SUS (System Usability Scale) surveys
+v1_router.include_router(surveys_router, prefix="/surveys", tags=["surveys"])
+
+# =============================================================================
+# Frontend Infrastructure Endpoints
+# =============================================================================
+# Redis L2 cache for frontend useTieredCache hook (cross-tab sharing)
+v1_router.include_router(frontend_cache_router, tags=["frontend-cache"])
+
+# =============================================================================
+# Session Control Endpoints
+# =============================================================================
+# Session interrupt control (Claude Agent SDK pattern)
+v1_router.include_router(interrupt_router, tags=["interrupt"])
+
+# Note: Admin marketplace management (marketplace_admin) uses factory pattern
+# It is registered separately during application bootstrap if marketplace feature is enabled
 
 # =============================================================================
 # Consolidated WebSocket Router (ADR-0068 - WebSocket Standardization)

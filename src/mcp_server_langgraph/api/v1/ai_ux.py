@@ -18,6 +18,7 @@ LLM Integration:
 Reference: UX Audit Plan - Phase 6 AI-Native Integration
 """
 
+import warnings
 from enum import Enum
 from typing import TYPE_CHECKING, Any
 
@@ -746,6 +747,10 @@ async def websocket_suggestions(
     """
     WebSocket endpoint for real-time AI suggestions.
 
+    .. deprecated:: 3.0.0
+       Use /api/v1/ws/ai/suggestions instead (via ws_router.py).
+       This endpoint will be removed in v4.0.0.
+
     Maintains a persistent connection for streaming suggestions
     based on user context updates.
 
@@ -753,6 +758,14 @@ async def websocket_suggestions(
     - Client sends: {"type": "request_suggestions", "context": {...}}
     - Server sends: {"type": "suggestions", "data": [...]}
     """
+    # Emit deprecation warning at runtime
+    warnings.warn(
+        "The /api/v1/ai/ws/suggestions endpoint is deprecated. "
+        "Use /api/v1/ws/ai/suggestions instead. "
+        "This endpoint will be removed in v4.0.0.",
+        DeprecationWarning,
+        stacklevel=2,
+    )
 
     # Accept the WebSocket connection
     await websocket.accept()

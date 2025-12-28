@@ -243,6 +243,36 @@ class SessionResponse(BaseModel):
     status: SessionStatus = Field(default=SessionStatus.active, description="Session status")
 
 
+class TraceStep(BaseModel):
+    """A single step in an agent execution trace."""
+
+    name: str = Field(description="Step name (e.g., node name in LangGraph)")
+    status: str = Field(description="Step status (pending, running, completed, failed)")
+    duration: int | None = Field(default=None, description="Duration in milliseconds")
+
+
+class TraceTokenUsage(BaseModel):
+    """Token usage statistics for a trace."""
+
+    input: int = Field(default=0, description="Input tokens consumed")
+    output: int = Field(default=0, description="Output tokens generated")
+
+
+class SessionTraceResponse(BaseModel):
+    """Response model for session execution trace (GET /sessions/{id}/trace).
+
+    Matches frontend's AgentExecutionTrace type for compatibility.
+    Used by DevTools AgentTraceTab for debugging and monitoring.
+    """
+
+    raw_output: str | None = Field(default=None, description="Raw output from last execution")
+    steps: list[TraceStep] = Field(default_factory=list, description="Execution steps")
+    tokens: TraceTokenUsage | None = Field(default=None, description="Token usage statistics")
+    current_node: str | None = Field(default=None, description="Currently executing node ID")
+    start_time: int | None = Field(default=None, description="Trace start timestamp (epoch ms)")
+    end_time: int | None = Field(default=None, description="Trace end timestamp (epoch ms)")
+
+
 # Service Interface (ABC for proper typing)
 
 
@@ -1799,4 +1829,48 @@ async def rate_message(
         rating=RatingValue(result["rating"]),
         message_id=message_id,
         feedback=result.get("feedback"),
+    )
+
+
+@sessions_router.get("/sessions/{session_id}/trace")
+async def get_session_trace(
+    session_id: str,
+    current_user: CurrentUser,
+) -> SessionTraceResponse:
+    """
+    Get the execution trace for a session.
+
+    Returns trace data for debugging and monitoring agent execution.
+    Used by DevTools AgentTraceTab in the frontend.
+
+    Note: Currently returns empty trace data as trace persistence is not yet implemented.
+    Future implementation will retrieve trace data from Redis/PostgreSQL.
+
+    Args:
+        session_id: The session to get trace for
+
+    Returns:
+        Execution trace data (empty if no trace available)
+    """
+    user_id = _get_user_id(current_user)
+    service = get_session_service()
+
+    # SECURITY: Verify session ownership first
+    session = await service.get_session(session_id, user_id)
+    if session is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Session {session_id} not found",
+        )
+
+    # TODO: Implement trace retrieval from storage
+    # For now, return empty trace to prevent 404 errors from frontend
+    # Future: Retrieve from Redis (real-time) or PostgreSQL (persisted)
+    return SessionTraceResponse(
+        raw_output=None,
+        steps=[],
+        tokens=None,
+        current_node=None,
+        start_time=None,
+        end_time=None,
     )

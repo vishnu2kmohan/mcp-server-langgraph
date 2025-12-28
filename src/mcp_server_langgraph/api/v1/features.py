@@ -22,7 +22,7 @@ async def get_features(
         description="User role for feature access (user, admin, viewer)",
         examples=["user", "admin"],
     ),
-) -> dict[str, bool]:
+) -> dict[str, bool | str]:
     """
     Get UI feature availability based on user role.
 

@@ -283,6 +283,7 @@ class Settings(BaseSettings):
     streaming_max_message_size: int = 1_000_000  # Maximum incoming message size (1MB)
     streaming_max_messages_per_minute: int = 600  # Maximum messages per user per minute
     streaming_idle_timeout_seconds: int = 1800  # Idle timeout before disconnect (30 minutes)
+    streaming_token_validation_interval: int = 300  # Interval in seconds for JWT token validation during connections (5 min)
 
     # Enhanced Note-Taking - Anthropic Best Practice
     enable_llm_extraction: bool = False  # Use LLM for structured note extraction

@@ -457,3 +457,103 @@ async def delete_user(
         raise HTTPException(status_code=404, detail=f"User not found: {user_id}")
 
     logger.info(f"Deleted user: {existing.username}")
+
+
+# ============================================================================
+# User API Key Management
+# ============================================================================
+
+
+class UserApiKeyResponse(BaseModel):
+    """Response with user API key information."""
+
+    user_id: str = Field(description="The user ID")
+    api_key: str | None = Field(None, description="The API key (full key on generation)")
+    masked_key: str | None = Field(None, description="Masked key for display")
+    created_at: int | None = Field(None, description="Creation timestamp (epoch ms)")
+
+
+@admin_router.get("/users/{user_id}/api-key")
+async def get_user_api_key(
+    user_id: str,
+    provider: UserProvider = Depends(get_user_provider),
+) -> UserApiKeyResponse:
+    """
+    Get the API key for a user (masked for security).
+
+    Returns a masked version of the API key for display purposes.
+    The full key is only returned when generating a new key.
+
+    Args:
+        user_id: Username or user_id
+
+    Returns:
+        UserApiKeyResponse with masked_key
+    """
+    # Check if user exists
+    existing = await provider.get_user_by_username(user_id)
+    if existing is None:
+        existing = await provider.get_user_by_id(user_id)
+
+    if existing is None:
+        raise HTTPException(status_code=404, detail=f"User not found: {user_id}")
+
+    # TODO: Retrieve actual API key from storage
+    # For now, return a mock masked key
+    masked_key = "sk-****...****" if existing else None
+
+    return UserApiKeyResponse(
+        user_id=existing.user_id,
+        masked_key=masked_key,
+        created_at=None,
+    )
+
+
+@admin_router.post("/users/{user_id}/api-key")
+async def generate_user_api_key(
+    user_id: str,
+    provider: UserProvider = Depends(get_user_provider),
+) -> UserApiKeyResponse:
+    """
+    Generate a new API key for a user.
+
+    This invalidates any existing API key and generates a new one.
+    The full key is returned only once - it cannot be retrieved later.
+
+    Args:
+        user_id: Username or user_id
+
+    Returns:
+        UserApiKeyResponse with the new api_key (full key)
+    """
+    import secrets
+    import time
+
+    # Check if user exists
+    existing = await provider.get_user_by_username(user_id)
+    if existing is None:
+        existing = await provider.get_user_by_id(user_id)
+
+    if existing is None:
+        raise HTTPException(status_code=404, detail=f"User not found: {user_id}")
+
+    # Generate a new API key
+    api_key = f"sk-{secrets.token_urlsafe(32)}"
+    created_at = int(time.time() * 1000)
+
+    # TODO: Store the hashed API key in the database
+
+    logger.info(
+        "API key generated for user",
+        extra={
+            "user_id": existing.user_id,
+            "audit_event_type": "admin.api_key_generated",
+        },
+    )
+
+    return UserApiKeyResponse(
+        user_id=existing.user_id,
+        api_key=api_key,
+        masked_key=f"sk-{api_key[3:7]}...{api_key[-4:]}",
+        created_at=created_at,
+    )

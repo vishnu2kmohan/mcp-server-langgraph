@@ -21,7 +21,6 @@ import time
 from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException
-from litellm import acompletion
 from pydantic import BaseModel, Field
 from typing import Literal
 
@@ -136,7 +135,8 @@ class RecommendationLLM:
     """
     LLM wrapper for AI recommendations.
 
-    Implements LLMFactoryProtocol using LiteLLM for flexible provider support.
+    Uses LLMFactory for resilient LLM calls with circuit breaker, retry,
+    timeout, and bulkhead patterns (SOLID compliance - ADR-0026).
     """
 
     def __init__(
@@ -145,6 +145,7 @@ class RecommendationLLM:
         temperature: float = 0.3,
         max_tokens: int = 2048,
         timeout: int = 60,
+        llm_factory: Any | None = None,
     ) -> None:
         """
         Initialize the recommendation LLM wrapper.
@@ -154,11 +155,21 @@ class RecommendationLLM:
             temperature: Sampling temperature (lower for consistency).
             max_tokens: Maximum tokens for response.
             timeout: Request timeout in seconds.
+            llm_factory: Optional LLMFactory for dependency injection.
         """
         self.model_name = model_name
         self.temperature = temperature
         self.max_tokens = max_tokens
         self.timeout = timeout
+        self._llm_factory = llm_factory
+
+    def _get_llm_factory(self) -> Any:
+        """Get or create the LLM factory (lazy initialization)."""
+        if self._llm_factory is None:
+            from mcp_server_langgraph.llm.factory import create_llm_from_config
+
+            self._llm_factory = create_llm_from_config(settings)
+        return self._llm_factory
 
     async def acompletion(
         self,
@@ -166,22 +177,50 @@ class RecommendationLLM:
         **kwargs: Any,
     ) -> Any:
         """
-        Generate completion from LLM.
+        Generate completion from LLM via LLMFactory with resilience patterns.
 
         Args:
             messages: List of message dicts with role and content.
-            **kwargs: Additional parameters for LiteLLM.
+            **kwargs: Additional parameters.
 
         Returns:
-            LiteLLM ModelResponse with choices.
+            Response object with content attribute (compatible with AIMessage).
         """
-        return await acompletion(
-            model=self.model_name,
-            messages=messages,
+        from langchain_core.messages import HumanMessage, SystemMessage
+
+        # Convert dict messages to LangChain format
+        langchain_messages = []
+        for msg in messages:
+            role = msg.get("role", "user")
+            content = msg.get("content", "")
+            if role == "system":
+                langchain_messages.append(SystemMessage(content=content))
+            else:
+                langchain_messages.append(HumanMessage(content=content))
+
+        factory = self._get_llm_factory()
+        response = await factory.ainvoke(
+            langchain_messages,
             temperature=kwargs.get("temperature", self.temperature),
             max_tokens=kwargs.get("max_tokens", self.max_tokens),
-            timeout=kwargs.get("timeout", self.timeout),
         )
+
+        # Wrap response in compatible format for AIRecommendationService
+        # AIMessage has .content, we need to match the expected interface
+        class CompatibleResponse:
+            class Choice:
+                class Message:
+                    def __init__(self, content: str) -> None:
+                        self.content = content
+                        self.role = "assistant"
+
+                def __init__(self, content: str) -> None:
+                    self.message = self.Message(content)
+
+            def __init__(self, content: str) -> None:
+                self.choices = [self.Choice(content)]
+
+        return CompatibleResponse(response.content)
 
 
 def create_recommendation_llm() -> RecommendationLLM:

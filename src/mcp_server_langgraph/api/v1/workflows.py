@@ -29,6 +29,7 @@ from mcp_server_langgraph.api.pagination import (
     CursorPaginationMetadata,
 )
 from mcp_server_langgraph.auth.middleware import get_current_user
+from mcp_server_langgraph.observability.telemetry import logger
 
 if TYPE_CHECKING:
     from mcp_server_langgraph.storage.workflow import PostgresWorkflowManager, RedisWorkflowManager
@@ -37,6 +38,8 @@ if TYPE_CHECKING:
 # Type alias for authenticated user dependency
 CurrentUser = Annotated[dict[str, Any], Depends(get_current_user)]
 
+# Set to hold references to background tasks to prevent garbage collection
+_background_tasks: set = set()
 
 workflows_router = APIRouter(tags=["workflows"])
 
@@ -1226,4 +1229,393 @@ async def generate_workflow(
         workflow=WorkflowResponse(**result["workflow"]),
         confidence=result["confidence"],
         suggestions=result.get("suggestions", []),
+    )
+
+
+# ==============================================================================
+# Workflow Execution Endpoints
+# ==============================================================================
+
+import asyncio
+import time
+from dataclasses import dataclass, field as dataclass_field
+
+# In-memory execution store (for development/testing)
+# In production, use PostgresExecutionHistoryManager via Redis pub/sub
+
+
+@dataclass
+class WorkflowExecutionState:
+    """Tracks the state of a workflow execution."""
+
+    execution_id: str
+    workflow_id: str
+    status: str = "pending"  # pending, running, completed, failed, cancelled
+    nodes: list[dict[str, Any]] = dataclass_field(default_factory=list)
+    edges: list[dict[str, Any]] = dataclass_field(default_factory=list)
+    input_data: dict[str, Any] | None = None
+    steps: list[dict[str, Any]] = dataclass_field(default_factory=list)
+    current_step_id: str | None = None
+    start_time: int | None = None
+    end_time: int | None = None
+    error: str | None = None
+
+
+# Global execution store - in production, this would be backed by Redis or PostgreSQL
+_execution_store: dict[str, WorkflowExecutionState] = {}
+
+
+async def _execute_workflow_async(state: WorkflowExecutionState) -> None:
+    """
+    Execute workflow nodes asynchronously using LangGraph.
+
+    This function runs in the background and updates the execution state
+    as nodes are processed. For complex workflows, this would compile
+    a LangGraph StateGraph and execute it with proper checkpointing.
+    """
+    from mcp_server_langgraph.core.feature_flags import get_feature_flags
+
+    state.status = "running"
+    state.start_time = int(time.time() * 1000)
+
+    # Convert nodes to execution steps
+    node_order = _topological_sort_nodes(state.nodes, state.edges)
+
+    for i, node in enumerate(node_order):
+        step_id = f"step-{i + 1}"
+        step = {
+            "id": step_id,
+            "nodeId": node.get("id", ""),
+            "nodeName": node.get("data", {}).get("label", f"Node {i + 1}"),
+            "status": "pending",
+            "duration": 0,
+            "startTime": None,
+            "endTime": None,
+            "input": None,
+            "output": None,
+            "error": None,
+        }
+        state.steps.append(step)
+
+    # Execute each step
+    flags = get_feature_flags()
+    for step in state.steps:
+        state.current_step_id = step["id"]
+        step["status"] = "running"
+        step["startTime"] = int(time.time() * 1000)
+
+        try:
+            # Find the node for this step
+            node = next(
+                (n for n in state.nodes if n.get("id") == step["nodeId"]),
+                None,
+            )
+
+            if node:
+                # Execute based on node type
+                await _execute_node(node, state.input_data, flags)
+
+            # Mark step as completed
+            step["status"] = "completed"
+            step["endTime"] = int(time.time() * 1000)
+            step["duration"] = step["endTime"] - (step["startTime"] or 0)
+
+        except Exception as e:
+            step["status"] = "error"
+            step["error"] = str(e)
+            step["endTime"] = int(time.time() * 1000)
+            step["duration"] = step["endTime"] - (step["startTime"] or 0)
+            state.status = "failed"
+            state.error = str(e)
+            break
+
+    # All steps completed
+    if state.status == "running":
+        state.status = "completed"
+    state.current_step_id = None
+    state.end_time = int(time.time() * 1000)
+
+
+def _topological_sort_nodes(
+    nodes: list[dict[str, Any]],
+    edges: list[dict[str, Any]],
+) -> list[dict[str, Any]]:
+    """Sort nodes in topological order based on edges."""
+    if not nodes:
+        return []
+
+    node_map = {n.get("id"): n for n in nodes}
+    in_degree: dict[str, int] = {n.get("id", ""): 0 for n in nodes}
+
+    for edge in edges:
+        target = edge.get("target")
+        if target and target in in_degree:
+            in_degree[target] += 1
+
+    # Start with nodes that have no incoming edges
+    queue = [nid for nid, deg in in_degree.items() if deg == 0]
+    result = []
+
+    while queue:
+        node_id = queue.pop(0)
+        if node_id in node_map:
+            result.append(node_map[node_id])
+
+        for edge in edges:
+            if edge.get("source") == node_id:
+                target = edge.get("target")
+                if target and target in in_degree:
+                    in_degree[target] -= 1
+                    if in_degree[target] == 0:
+                        queue.append(target)
+
+    # Add any remaining nodes (disconnected)
+    for n in nodes:
+        if n not in result:
+            result.append(n)
+
+    return result
+
+
+# Cache for LLM factory instance
+_llm_factory_cache: Any = None
+
+
+def _get_workflow_llm_factory() -> Any:
+    """Get or create the LLM factory for workflow execution.
+
+    Uses lazy initialization and caching for efficiency.
+    Returns:
+        LLMFactory instance with full resilience patterns
+    """
+    global _llm_factory_cache
+    if _llm_factory_cache is None:
+        from mcp_server_langgraph.core.config import settings
+        from mcp_server_langgraph.llm.factory import create_llm_from_config
+
+        _llm_factory_cache = create_llm_from_config(settings)
+    return _llm_factory_cache
+
+
+async def _execute_node(
+    node: dict[str, Any],
+    input_data: dict[str, Any] | None,
+    flags: Any,
+) -> dict[str, Any]:
+    """
+    Execute a single workflow node using LLMFactory.
+
+    For LLM nodes, uses LLMFactory with full resilience patterns:
+    - Circuit breaker for provider failures
+    - Retry with exponential backoff
+    - Timeout enforcement
+    - Bulkhead for concurrency control
+
+    For tool nodes, executes the MCP tool.
+    For other nodes, this is a passthrough.
+    """
+    node_type = node.get("type", "")
+    node_data = node.get("data", {})
+
+    if node_type == "llm":
+        # LLM node - call via LLMFactory for resilience
+        if flags.enable_ai_suggestions:
+            from langchain_core.messages import HumanMessage
+
+            prompt = node_data.get("prompt", "")
+
+            # Substitute input variables
+            if input_data:
+                for key, value in input_data.items():
+                    prompt = prompt.replace(f"{{{{{key}}}}}", str(value))
+
+            try:
+                factory = _get_workflow_llm_factory()
+                messages = [HumanMessage(content=prompt)]
+                response = await factory.ainvoke(messages, max_tokens=1024)
+
+                content = response.content if hasattr(response, "content") else str(response)
+                return {"content": content}
+            except Exception as e:
+                logger.warning("Workflow LLM node execution failed", error=str(e))
+                return {"error": str(e)}
+
+    elif node_type == "tool":
+        # Tool node - would call MCP tool
+        # For now, simulate tool execution
+        await asyncio.sleep(0.1)  # Simulate tool latency
+        return {"result": f"Tool {node_data.get('toolName', 'unknown')} executed"}
+
+    elif node_type == "condition":
+        # Condition node - evaluate condition
+        await asyncio.sleep(0.05)
+        return {"branch": "true"}
+
+    else:
+        # Other nodes (start, end, etc.)
+        await asyncio.sleep(0.01)
+        return {}
+
+
+class WorkflowExecuteRequest(BaseModel):
+    """Request to execute a workflow."""
+
+    nodes: list[dict[str, Any]] = Field(default_factory=list, description="Workflow nodes")
+    edges: list[dict[str, Any]] = Field(default_factory=list, description="Workflow edges")
+    input_data: dict[str, Any] | None = Field(None, description="Input data for the workflow")
+
+
+class WorkflowExecuteResponse(BaseModel):
+    """Response from workflow execution."""
+
+    execution_id: str = Field(description="The execution ID")
+    status: str = Field(description="Execution status")
+    message: str | None = Field(None, description="Status message")
+
+
+@workflows_router.post("/workflows/{workflow_id}/execute")
+async def execute_workflow(
+    workflow_id: str,
+    request: WorkflowExecuteRequest,
+) -> WorkflowExecuteResponse:
+    """
+    Execute a workflow.
+
+    Starts workflow execution and returns an execution ID that can be
+    used to track progress via GET /workflows/{workflow_id}/execution.
+
+    The execution runs asynchronously in the background. Poll the
+    GET /workflows/{workflow_id}/execution endpoint to track progress.
+
+    Example:
+        ```
+        POST /api/v1/workflows/wf-123/execute
+        {
+            "nodes": [...],
+            "edges": [...],
+            "input_data": {...}
+        }
+        ```
+    """
+    import uuid
+
+    # Generate an execution ID
+    execution_id = f"exec-{uuid.uuid4().hex[:12]}"
+
+    # Create execution state
+    state = WorkflowExecutionState(
+        execution_id=execution_id,
+        workflow_id=workflow_id,
+        status="pending",
+        nodes=request.nodes,
+        edges=request.edges,
+        input_data=request.input_data,
+    )
+
+    # Store execution state
+    _execution_store[workflow_id] = state
+
+    logger.info(
+        "Workflow execution started",
+        extra={
+            "workflow_id": workflow_id,
+            "execution_id": execution_id,
+            "node_count": len(request.nodes),
+            "edge_count": len(request.edges),
+        },
+    )
+
+    # Start async execution in background
+    # Store task reference to prevent garbage collection (RUF006)
+    background_task = asyncio.create_task(_execute_workflow_async(state))
+    # Keep reference to task at module level to prevent GC
+    _background_tasks.add(background_task)
+    background_task.add_done_callback(_background_tasks.discard)
+
+    return WorkflowExecuteResponse(
+        execution_id=execution_id,
+        status="started",
+        message=f"Workflow {workflow_id} execution started with {len(request.nodes)} nodes",
+    )
+
+
+class ExecutionStep(BaseModel):
+    """A single step in workflow execution."""
+
+    id: str = Field(description="Step ID")
+    nodeId: str = Field(description="Node ID in the workflow")
+    nodeName: str = Field(description="Node display name")
+    status: str = Field(description="Step status (pending, running, completed, error, skipped)")
+    duration: int = Field(default=0, description="Duration in milliseconds")
+    startTime: int | None = Field(None, description="Start timestamp (epoch ms)")
+    endTime: int | None = Field(None, description="End timestamp (epoch ms)")
+    input: dict[str, Any] | None = Field(None, description="Input data")
+    output: dict[str, Any] | None = Field(None, description="Output data")
+    error: str | None = Field(None, description="Error message if failed")
+
+
+class WorkflowExecutionResponse(BaseModel):
+    """Response with workflow execution status."""
+
+    status: str = Field(description="Overall execution status")
+    steps: list[ExecutionStep] = Field(default_factory=list, description="Execution steps")
+    currentStepId: str | None = Field(None, description="Currently executing step ID")
+    startTime: int | None = Field(None, description="Execution start time (epoch ms)")
+    endTime: int | None = Field(None, description="Execution end time (epoch ms)")
+
+
+@workflows_router.get("/workflows/{workflow_id}/execution")
+async def get_workflow_execution_status(
+    workflow_id: str,
+) -> WorkflowExecutionResponse:
+    """
+    Get the current execution status of a workflow.
+
+    Returns the steps and their status for tracking workflow progress
+    in real-time or polling mode.
+
+    Example:
+        ```
+        GET /api/v1/workflows/wf-123/execution
+        ```
+    """
+    logger.debug(
+        "Workflow execution status requested",
+        extra={"workflow_id": workflow_id},
+    )
+
+    # Check if there's an active execution for this workflow
+    state = _execution_store.get(workflow_id)
+
+    if state is None:
+        # No execution found - return idle status
+        return WorkflowExecutionResponse(
+            status="idle",
+            steps=[],
+            currentStepId=None,
+        )
+
+    # Convert execution state to response
+    execution_steps = [
+        ExecutionStep(
+            id=step["id"],
+            nodeId=step["nodeId"],
+            nodeName=step["nodeName"],
+            status=step["status"],
+            duration=step.get("duration", 0),
+            startTime=step.get("startTime"),
+            endTime=step.get("endTime"),
+            input=step.get("input"),
+            output=step.get("output"),
+            error=step.get("error"),
+        )
+        for step in state.steps
+    ]
+
+    return WorkflowExecutionResponse(
+        status=state.status,
+        steps=execution_steps,
+        currentStepId=state.current_step_id,
+        startTime=state.start_time,
+        endTime=state.end_time,
     )

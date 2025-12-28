@@ -46,6 +46,7 @@ from mcp_server_langgraph.websocket.handlers.agent_request import AgentRequestHa
 from mcp_server_langgraph.websocket.handlers.mcp import MCPWebSocketHandler
 from mcp_server_langgraph.websocket.handlers.mcp_aggregated import MCPAggregatedHandler
 from mcp_server_langgraph.websocket.handlers.ai_suggestions import AISuggestionsHandler
+from mcp_server_langgraph.websocket.handlers.budget_alerts import BudgetAlertsHandler
 from mcp_server_langgraph.websocket.handlers.trace import TraceHandler
 
 # Create the main WebSocket router
@@ -733,6 +734,57 @@ async def traces_websocket(websocket: WebSocket) -> None:
             message_timeout=30,
         ),
         broadcaster=get_trace_broadcaster(),
+    )
+    await handler.run(websocket)
+
+
+# =============================================================================
+# Budget Alerts WebSocket Endpoint
+# =============================================================================
+
+
+@ws_router.websocket("/budget/alerts")
+async def budget_alerts_websocket(websocket: WebSocket) -> None:
+    """
+    WebSocket endpoint for real-time budget alert notifications.
+
+    URL: /api/v1/ws/budget/alerts
+
+    Provides real-time budget alerts for cost management:
+    - Subscribe to specific entity budget alerts (organization, project, team, user)
+    - Subscribe to all budget alerts (admin mode)
+    - Receive real-time budget status changes (warning, critical, exceeded)
+
+    Message Types (Client -> Server):
+        - subscribe_entities: Subscribe to alerts for specific entity IDs
+        - subscribe_all: Subscribe to all budget alerts
+        - unsubscribe: Unsubscribe from alerts
+
+    Response Types (Server -> Client):
+        - subscription_confirmed: Successfully subscribed
+        - budget_alert: Real-time budget status update
+        - error: Error message
+
+    Uses the standardized WebSocketBase infrastructure with:
+    - JWT authentication required
+    - OpenFGA authorization (requires 'viewer' relation on cost:budget)
+    - OpenTelemetry tracing
+    - Metrics collection
+    - Standard message envelope
+    """
+    from mcp_server_langgraph.websocket.registry import get_budget_alert_broadcaster
+
+    handler = BudgetAlertsHandler(
+        config=WebSocketConfig(
+            endpoint_name="budget-alerts",
+            require_auth=True,
+            authz_resource_type="cost",
+            authz_resource_id="budget",
+            authz_required_relation="viewer",
+            rate_limit_per_minute=200,
+            message_timeout=30,
+        ),
+        broadcaster=get_budget_alert_broadcaster(),
     )
     await handler.run(websocket)
 
