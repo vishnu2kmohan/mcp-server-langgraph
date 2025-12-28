@@ -20,6 +20,28 @@ from mcp_server_langgraph.llm.metrics import get_model_family, normalize_status
 
 logger = logging.getLogger(__name__)
 
+
+# =============================================================================
+# Feature Flag Check
+# =============================================================================
+
+
+def _is_streaming_metrics_enabled() -> bool:
+    """
+    Check if streaming metrics are enabled via feature flag.
+
+    Returns:
+        True if enable_streaming_metrics feature flag is True, False otherwise.
+    """
+    try:
+        from mcp_server_langgraph.core.feature_flags import get_feature_flags
+
+        return get_feature_flags().enable_streaming_metrics
+    except Exception:
+        # If feature flags unavailable, default to enabled
+        return True
+
+
 # =============================================================================
 # Prometheus Metrics (Lazy Initialization)
 # =============================================================================
@@ -105,7 +127,7 @@ def record_ttfc(model: str, ttfc_seconds: float, provider: str = "unknown") -> N
         ttfc_seconds: Time to first chunk in seconds
         provider: LLM provider (e.g., "openai", "anthropic", "google")
     """
-    if not _metrics_available:
+    if not _metrics_available or not _is_streaming_metrics_enabled():
         return
 
     try:
@@ -125,7 +147,7 @@ def record_inter_chunk_latency(model: str, latency_seconds: float, provider: str
         latency_seconds: Latency between chunks in seconds
         provider: LLM provider
     """
-    if not _metrics_available:
+    if not _metrics_available or not _is_streaming_metrics_enabled():
         return
 
     try:
@@ -151,7 +173,7 @@ def record_streaming_duration(
         provider: LLM provider
         status: Streaming status ("success", "error", "timeout", "cancelled")
     """
-    if not _metrics_available:
+    if not _metrics_available or not _is_streaming_metrics_enabled():
         return
 
     try:
@@ -176,7 +198,7 @@ def record_chunk_count(model: str, count: int, provider: str = "unknown") -> Non
         count: Number of chunks emitted
         provider: LLM provider
     """
-    if not _metrics_available:
+    if not _metrics_available or not _is_streaming_metrics_enabled():
         return
 
     try:

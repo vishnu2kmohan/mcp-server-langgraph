@@ -191,6 +191,13 @@ class FeatureFlags(BaseSettings):
         description="Percentage of traces to sample when sampling enabled (0.0-1.0)",
     )
 
+    enable_streaming_metrics: bool = Field(
+        default=True,
+        description="Enable Prometheus metrics for LLM streaming operations (TTFC, inter-chunk latency, duration). "
+        "Metrics are scraped by Alloy and displayed in LLM Streaming Grafana dashboard. "
+        "Set FF_ENABLE_STREAMING_METRICS=false to disable in low-overhead environments.",
+    )
+
     # Performance Optimizations
     enable_response_caching: bool = Field(
         default=False,

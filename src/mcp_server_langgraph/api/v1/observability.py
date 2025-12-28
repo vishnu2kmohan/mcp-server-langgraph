@@ -177,6 +177,68 @@ class UserMetricsResponse(BaseModel):
     avg_latency_ms: float = Field(description="Average latency in milliseconds")
 
 
+class LLMStreamingMetricsResponse(BaseModel):
+    """Response model for LLM streaming metrics.
+
+    Provides aggregated metrics for LLM streaming operations including
+    Time To First Chunk (TTFC), inter-chunk latency, and streaming duration.
+
+    These metrics are collected via Prometheus and can be used to:
+    - Monitor streaming SLA compliance
+    - Compare provider performance
+    - Identify degradation patterns
+    """
+
+    ttfc_p50_seconds: float | None = Field(
+        default=None,
+        description="P50 (median) Time To First Chunk in seconds",
+    )
+    ttfc_p95_seconds: float | None = Field(
+        default=None,
+        description="P95 Time To First Chunk in seconds (SLA threshold: 2s)",
+    )
+    ttfc_p99_seconds: float | None = Field(
+        default=None,
+        description="P99 Time To First Chunk in seconds",
+    )
+    inter_chunk_latency_p50_seconds: float | None = Field(
+        default=None,
+        description="P50 inter-chunk latency in seconds",
+    )
+    inter_chunk_latency_p95_seconds: float | None = Field(
+        default=None,
+        description="P95 inter-chunk latency in seconds (SLA threshold: 0.25s)",
+    )
+    duration_avg_seconds: float | None = Field(
+        default=None,
+        description="Average streaming duration in seconds",
+    )
+    total_streams: int = Field(
+        default=0,
+        description="Total number of streaming operations",
+    )
+    success_rate: float | None = Field(
+        default=None,
+        description="Streaming success rate (0.0-1.0)",
+    )
+    total_chunks: int = Field(
+        default=0,
+        description="Total chunks emitted across all streams",
+    )
+    provider: str | None = Field(
+        default=None,
+        description="LLM provider filter (openai, anthropic, google, etc.)",
+    )
+    model: str | None = Field(
+        default=None,
+        description="Model filter (gpt-4, claude-3-opus, etc.)",
+    )
+    feature_enabled: bool = Field(
+        default=True,
+        description="Whether streaming metrics feature flag is enabled",
+    )
+
+
 # Service Interface
 
 
@@ -819,6 +881,122 @@ class ObservabilityServiceImpl(ObservabilityService):
             "avg_latency_ms": sum(durations) / len(durations) if durations else 0.0,
         }
 
+    async def get_llm_streaming_metrics(
+        self,
+        provider: str | None = None,
+        model: str | None = None,
+        time_range: str = "1h",
+    ) -> dict[str, Any]:
+        """
+        Get aggregated LLM streaming metrics from Prometheus.
+
+        Queries histogram metrics for TTFC, inter-chunk latency, and duration.
+        Returns computed percentiles and aggregated stats.
+        """
+        # Build label matcher for provider/model filters
+        label_filter = ""
+        if provider:
+            label_filter += f'provider="{provider}"'
+        if model:
+            label_filter += f'{", " if label_filter else ""}model="{model}"'
+        if label_filter:
+            label_filter = f"{{{label_filter}}}"
+
+        # Default empty result
+        result: dict[str, Any] = {
+            "ttfc_p50_seconds": None,
+            "ttfc_p95_seconds": None,
+            "ttfc_p99_seconds": None,
+            "inter_chunk_latency_p50_seconds": None,
+            "inter_chunk_latency_p95_seconds": None,
+            "duration_avg_seconds": None,
+            "total_streams": 0,
+            "success_rate": None,
+            "total_chunks": 0,
+        }
+
+        try:
+            # Query TTFC p95
+            ttfc_p95_query = (
+                f"histogram_quantile(0.95, sum(rate(llm_streaming_ttfc_seconds_bucket{label_filter}[{time_range}])) by (le))"
+            )
+            ttfc_p95_result = await self.metrics.query_instant(ttfc_p95_query)
+            if ttfc_p95_result.series:
+                val = ttfc_p95_result.series[0].latest_value
+                if val is not None:
+                    result["ttfc_p95_seconds"] = float(val)
+        except Exception as e:
+            logger.debug("Failed to query TTFC p95: %s", e)
+
+        try:
+            # Query TTFC p50
+            ttfc_p50_query = (
+                f"histogram_quantile(0.50, sum(rate(llm_streaming_ttfc_seconds_bucket{label_filter}[{time_range}])) by (le))"
+            )
+            ttfc_p50_result = await self.metrics.query_instant(ttfc_p50_query)
+            if ttfc_p50_result.series:
+                val = ttfc_p50_result.series[0].latest_value
+                if val is not None:
+                    result["ttfc_p50_seconds"] = float(val)
+        except Exception as e:
+            logger.debug("Failed to query TTFC p50: %s", e)
+
+        try:
+            # Query inter-chunk latency p95
+            icl_p95_query = f"histogram_quantile(0.95, sum(rate(llm_streaming_inter_chunk_latency_seconds_bucket{label_filter}[{time_range}])) by (le))"
+            icl_p95_result = await self.metrics.query_instant(icl_p95_query)
+            if icl_p95_result.series:
+                val = icl_p95_result.series[0].latest_value
+                if val is not None:
+                    result["inter_chunk_latency_p95_seconds"] = float(val)
+        except Exception as e:
+            logger.debug("Failed to query inter-chunk latency p95: %s", e)
+
+        try:
+            # Query total streams (sum of duration counts)
+            streams_query = f"sum(llm_streaming_duration_seconds_count{label_filter})"
+            streams_result = await self.metrics.query_instant(streams_query)
+            if streams_result.series:
+                val = streams_result.series[0].latest_value
+                if val is not None:
+                    result["total_streams"] = int(val)
+        except Exception as e:
+            logger.debug("Failed to query total streams: %s", e)
+
+        try:
+            # Query total chunks
+            chunks_query = f"sum(llm_streaming_chunks_total{label_filter})"
+            chunks_result = await self.metrics.query_instant(chunks_query)
+            if chunks_result.series:
+                val = chunks_result.series[0].latest_value
+                if val is not None:
+                    result["total_chunks"] = int(val)
+        except Exception as e:
+            logger.debug("Failed to query total chunks: %s", e)
+
+        try:
+            # Query success rate
+            success_filter = label_filter.rstrip("}") if label_filter.endswith("}") else label_filter
+            success_filter = success_filter + ', status="success"}' if success_filter else '{status="success"}'
+
+            success_query = f"sum(rate(llm_streaming_duration_seconds_count{success_filter}[{time_range}]))"
+            total_query = (
+                f"sum(rate(llm_streaming_duration_seconds_count{label_filter if label_filter else ''}[{time_range}]))"
+            )
+
+            success_result = await self.metrics.query_instant(success_query)
+            total_result = await self.metrics.query_instant(total_query)
+
+            if success_result.series and total_result.series:
+                success_val = success_result.series[0].latest_value
+                total_val = total_result.series[0].latest_value
+                if success_val is not None and total_val is not None and total_val > 0:
+                    result["success_rate"] = float(success_val) / float(total_val)
+        except Exception as e:
+            logger.debug("Failed to query success rate: %s", e)
+
+        return result
+
     async def get_alert(self, alert_id: str) -> dict[str, Any] | None:
         """
         Get an alert by ID.
@@ -1153,3 +1331,62 @@ async def get_metrics_by_user(user_id: str) -> UserMetricsResponse:
     service = get_observability_service()
     metrics = await service.get_metrics_by_user(user_id)
     return UserMetricsResponse(**metrics)
+
+
+@observability_router.get("/observability/metrics/llm-streaming")
+async def get_llm_streaming_metrics(
+    provider: str | None = Query(default=None, description="Filter by provider (openai, anthropic, google)"),
+    model: str | None = Query(default=None, description="Filter by model family"),
+    time_range: Literal["5m", "15m", "1h", "6h", "24h"] = Query(
+        default="1h", description="Time range for metrics aggregation"
+    ),
+) -> LLMStreamingMetricsResponse:
+    """
+    Get aggregated LLM streaming metrics.
+
+    Returns metrics for LLM streaming operations including:
+    - Time To First Chunk (TTFC) percentiles
+    - Inter-chunk latency percentiles
+    - Streaming duration and success rate
+    - Total chunks emitted
+
+    These metrics are collected via Prometheus histograms and support
+    SLA monitoring (TTFC p95 < 2s, inter-chunk p95 < 250ms).
+
+    Metrics require the `FF_ENABLE_STREAMING_METRICS=true` feature flag.
+    """
+    from mcp_server_langgraph.core.feature_flags import get_feature_flags
+
+    flags = get_feature_flags()
+    feature_enabled = flags.enable_streaming_metrics
+
+    # If metrics are disabled, return empty response with feature_enabled=False
+    if not feature_enabled:
+        return LLMStreamingMetricsResponse(
+            feature_enabled=False,
+            provider=provider,
+            model=model,
+        )
+
+    # Query Prometheus/Mimir for streaming metrics
+    service = get_observability_service()
+    try:
+        metrics_data = await service.get_llm_streaming_metrics(
+            provider=provider,
+            model=model,
+            time_range=time_range,
+        )
+        return LLMStreamingMetricsResponse(
+            feature_enabled=True,
+            provider=provider,
+            model=model,
+            **metrics_data,
+        )
+    except Exception as e:
+        logger.warning("Failed to fetch LLM streaming metrics: %s", e)
+        # Return empty response on error
+        return LLMStreamingMetricsResponse(
+            feature_enabled=feature_enabled,
+            provider=provider,
+            model=model,
+        )
