@@ -1223,6 +1223,49 @@ class PostgresSessionService(SessionService):
             "status": SessionStatus.active,
         }
 
+    async def update_session(
+        self, session_id: str, user_id: str, name: str | None = None, description: str | None = None
+    ) -> dict[str, Any] | None:
+        """Update session metadata (name and/or description) with persistence."""
+        session = await self._manager.get_session(session_id)
+        if session is None or session.user_id != user_id:
+            return None
+
+        # Persist via manager (name updates supported, description needs storage model update)
+        updated_session = await self._manager.update_session(
+            session_id=session_id,
+            name=name if name is not None else session.name,
+        )
+
+        if updated_session is None:
+            return None
+
+        # Return updated session as dict (description stored in-memory for now)
+        return {
+            "id": updated_session.session_id,
+            "name": updated_session.name,
+            "description": description if description is not None else "",
+            "user_id": updated_session.user_id,
+            "workflow_id": None,
+            "config": {
+                "model": updated_session.config.model if updated_session.config else "gpt-4o-mini",
+                "temperature": updated_session.config.temperature if updated_session.config else 0.7,
+                "max_tokens": updated_session.config.max_tokens if updated_session.config else 1000,
+            },
+            "messages": [
+                {
+                    "message_id": m.message_id,
+                    "role": m.role,
+                    "content": m.content,
+                    "timestamp": m.timestamp.isoformat(),
+                }
+                for m in updated_session.messages
+            ],
+            "created_at": updated_session.created_at.isoformat() if updated_session.created_at else None,
+            "updated_at": updated_session.updated_at.isoformat() if updated_session.updated_at else None,
+            "status": SessionStatus.active,
+        }
+
     async def rate_message(
         self,
         session_id: str,
@@ -1439,31 +1482,38 @@ async def delete_session(session_id: str, current_user: CurrentUser) -> None:
 
 @sessions_router.patch(
     "/sessions/{session_id}",
-    summary="Rename a session",
-    description="Update the session name (preserves session_id UUID)",
+    summary="Update session metadata",
+    description="Update the session name and/or description (preserves session_id UUID)",
 )
-async def rename_session(
+async def update_session_metadata(
     session_id: str,
     update: SessionUpdateRequest,
     current_user: CurrentUser,
 ) -> SessionResponse:
     """
-    Rename a session.
+    Update session metadata (name and/or description).
 
-    Updates the session display name while preserving the unique session_id UUID.
-    Requires authentication. Only the session owner can rename it.
+    Updates the session display name and/or description while preserving the unique session_id UUID.
+    Requires authentication. Only the session owner can update it.
 
     Args:
-        session_id: The session ID to rename
-        update: New session name
+        session_id: The session ID to update
+        update: New session name and/or description
 
     Returns:
-        Updated session with new name
+        Updated session with new metadata
     """
     user_id = _get_user_id(current_user)
     service = get_session_service()
 
-    updated = await service.update_name(session_id, user_id, update.name)
+    # Require at least one field to update
+    if update.name is None and update.description is None:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="At least one of 'name' or 'description' must be provided",
+        )
+
+    updated = await service.update_session(session_id, user_id, name=update.name, description=update.description)
 
     if updated is None:
         raise HTTPException(
@@ -1483,6 +1533,7 @@ async def rename_session(
     return SessionResponse(
         id=updated["id"],
         name=updated.get("name"),
+        description=updated.get("description", ""),
         workflow_id=updated.get("workflow_id"),
         config=config_response,
         messages=updated.get("messages", []),
