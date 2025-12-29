@@ -83,14 +83,14 @@ def sample_info_alert() -> Alert:
 def mock_websocket() -> MagicMock:
     """Create a mock WebSocket connection."""
     ws = MagicMock()
-    ws.send_json = AsyncMock()
+    ws.send_json = AsyncMock(return_value=None)  # send_json returns None on success
     return ws
 
 
 @pytest.fixture
 def mock_push_sender() -> AsyncMock:
     """Create a mock push notification sender."""
-    sender = AsyncMock()
+    sender = AsyncMock()  # noqa: async-mock-config (configured via send_critical_alert below)
     sender.send_critical_alert = AsyncMock(return_value=5)  # 5 notifications sent
     return sender
 
@@ -235,8 +235,10 @@ class TestBroadcasterPushErrorHandling:
 
         import logging
 
-        with caplog.at_level(logging.INFO):
-            await broadcaster.broadcast_alert(sample_critical_alert)
+        caplog.clear()  # Clear any logs from xdist parallel test pollution
+        # Explicitly capture logs from the AlertBroadcaster module in xdist workers
+        caplog.set_level(logging.INFO, logger="mcp_server_langgraph.alerts.broadcaster")
+        await broadcaster.broadcast_alert(sample_critical_alert)
 
         # Check that success was logged
         assert any("push notification" in record.message.lower() and "5" in record.message for record in caplog.records)
@@ -254,8 +256,10 @@ class TestBroadcasterPushErrorHandling:
 
         import logging
 
-        with caplog.at_level(logging.WARNING):
-            await broadcaster.broadcast_alert(sample_critical_alert)
+        caplog.clear()  # Clear any logs from xdist parallel test pollution
+        # Explicitly capture logs from the AlertBroadcaster module in xdist workers
+        caplog.set_level(logging.WARNING, logger="mcp_server_langgraph.alerts.broadcaster")
+        await broadcaster.broadcast_alert(sample_critical_alert)
 
         # Check that failure was logged as warning
         assert any("failed" in record.message.lower() and "push" in record.message.lower() for record in caplog.records)
