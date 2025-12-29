@@ -22,15 +22,7 @@ import pytest
 pytestmark = pytest.mark.unit
 
 
-@pytest.fixture(autouse=True)
-def reset_ai_circuit_breakers():
-    """Reset all AI UX circuit breakers before each test to ensure clean state."""
-    from mcp_server_langgraph.resilience.circuit_breaker import reset_circuit_breaker
-
-    reset_circuit_breaker("ai_ux_llm")
-    yield
-    # Clean up after test
-    reset_circuit_breaker("ai_ux_llm")
+# Note: reset_ai_circuit_breakers fixture is defined in conftest.py
 
 
 @pytest.mark.ai
@@ -413,7 +405,7 @@ class TestRedisCaching:
         service = AIUXService(llm_factory=mock_llm, settings=MagicMock())
         service.redis_cache = MagicMock()
         service.redis_cache.get = AsyncMock(return_value=None)  # Cache miss
-        service.redis_cache.set = AsyncMock()
+        service.redis_cache.set = AsyncMock(return_value=None)
 
         request = PersonaAnalyzeRequest(
             user_id="test-user",
@@ -437,7 +429,7 @@ class TestRedisCaching:
         # Mock Redis cache
         service.redis_cache = MagicMock()
         service.redis_cache.get = AsyncMock(return_value=None)
-        service.redis_cache.setex = AsyncMock()
+        service.redis_cache.setex = AsyncMock(return_value=None)
 
         # Test get_cached_response
         result = await service.get_cached_response("test_key")

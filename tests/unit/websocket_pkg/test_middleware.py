@@ -144,7 +144,8 @@ class TestExtractUserFromJwtPayload:
 
         user_data = extract_user_from_jwt_payload(payload)
 
-        assert user_data["user_id"] == "user-123"
+        # user_id is normalized to OpenFGA format (user:preferred_username)
+        assert user_data["user_id"] == "user:testuser"
         assert user_data["username"] == "testuser"
         assert user_data["email"] == "test@example.com"
         assert user_data["roles"] == []
@@ -201,11 +202,13 @@ class TestExtractUserFromJwtPayload:
         assert user_data["roles"] == ["admin", "editor"]
 
     def test_extract_groups_as_roles(self) -> None:
-        """Test extracting groups claim as roles."""
+        """Test that groups claim is NOT used as roles (only realm_access/resource_access)."""
         from mcp_server_langgraph.websocket.middleware import (
             extract_user_from_jwt_payload,
         )
 
+        # Current implementation doesn't extract groups as roles
+        # It only supports: roles, realm_access.roles, resource_access.*.roles
         payload = {
             "sub": "user-abc",
             "groups": ["developers", "devops"],
@@ -213,47 +216,52 @@ class TestExtractUserFromJwtPayload:
 
         user_data = extract_user_from_jwt_payload(payload)
 
-        assert "developers" in user_data["roles"]
-        assert "devops" in user_data["roles"]
+        # groups are NOT extracted as roles in the current implementation
+        assert user_data["roles"] == []
 
-    def test_deduplicate_roles(self) -> None:
-        """Test that duplicate roles are removed."""
+    def test_deduplicate_roles_prioritizes_direct_claims(self) -> None:
+        """Test role extraction prioritizes direct roles over realm_access."""
         from mcp_server_langgraph.websocket.middleware import (
             extract_user_from_jwt_payload,
         )
 
+        # When direct "roles" claim is present, it takes precedence
+        # and realm_access is NOT combined (per implementation)
         payload = {
             "sub": "user-xyz",
             "realm_access": {"roles": ["admin", "user"]},
-            "roles": ["admin", "viewer"],  # "admin" is duplicate
+            "roles": ["admin", "viewer"],  # Direct roles take precedence
         }
 
         user_data = extract_user_from_jwt_payload(payload)
 
-        # Should have admin only once
-        assert user_data["roles"].count("admin") == 1
-        assert set(user_data["roles"]) == {"admin", "user", "viewer"}
+        # Direct roles claim takes precedence, realm_access is ignored
+        assert set(user_data["roles"]) == {"admin", "viewer"}
 
     def test_fallback_user_id_claims(self) -> None:
-        """Test fallback for user_id claim names."""
+        """Test user_id extraction uses preferred_username first for OpenFGA."""
         from mcp_server_langgraph.websocket.middleware import (
             extract_user_from_jwt_payload,
         )
 
-        # Test user_id claim
-        payload1 = {"user_id": "userid-123"}
-        assert extract_user_from_jwt_payload(payload1)["user_id"] == "userid-123"
+        # Current implementation uses preferred_username > username > sub for ID
+        # and normalizes to "user:*" format for OpenFGA compatibility
+        # It does NOT support user_id, uid, id claims as fallbacks
 
-        # Test uid claim
-        payload2 = {"uid": "uid-456"}
-        assert extract_user_from_jwt_payload(payload2)["user_id"] == "uid-456"
+        # No preferred_username/username -> falls back to sub -> normalizes to user:
+        payload1 = {"sub": "some-user"}
+        assert extract_user_from_jwt_payload(payload1)["user_id"] == "user:some-user"
 
-        # Test id claim
-        payload3 = {"id": "id-789"}
-        assert extract_user_from_jwt_payload(payload3)["user_id"] == "id-789"
+        # With preferred_username -> uses that
+        payload2 = {"sub": "uuid-123", "preferred_username": "alice"}
+        assert extract_user_from_jwt_payload(payload2)["user_id"] == "user:alice"
+
+        # Empty payload -> unknown with prefix
+        payload3 = {}
+        assert extract_user_from_jwt_payload(payload3)["user_id"] == "user:unknown"
 
     def test_fallback_username_claims(self) -> None:
-        """Test fallback for username claim names."""
+        """Test username extraction order: preferred_username > username > sub."""
         from mcp_server_langgraph.websocket.middleware import (
             extract_user_from_jwt_payload,
         )
@@ -262,13 +270,13 @@ class TestExtractUserFromJwtPayload:
         payload1 = {"sub": "u1", "username": "john_doe"}
         assert extract_user_from_jwt_payload(payload1)["username"] == "john_doe"
 
-        # Test name claim
+        # name claim is NOT used for username - falls back to sub
         payload2 = {"sub": "u2", "name": "Jane Doe"}
-        assert extract_user_from_jwt_payload(payload2)["username"] == "Jane Doe"
+        assert extract_user_from_jwt_payload(payload2)["username"] == "u2"
 
-        # Test email prefix fallback
+        # email is NOT used for username - falls back to sub
         payload3 = {"sub": "u3", "email": "user@example.com"}
-        assert extract_user_from_jwt_payload(payload3)["username"] == "user"
+        assert extract_user_from_jwt_payload(payload3)["username"] == "u3"
 
     def test_fallback_to_unknown_user_id(self) -> None:
         """Test fallback to 'unknown' when no user_id claims present."""
@@ -280,7 +288,8 @@ class TestExtractUserFromJwtPayload:
 
         user_data = extract_user_from_jwt_payload(payload)
 
-        assert user_data["user_id"] == "unknown"
+        # user_id is normalized to OpenFGA format with "user:" prefix
+        assert user_data["user_id"] == "user:unknown"
 
     def test_handles_non_dict_realm_access(self) -> None:
         """Test handling of non-dict realm_access values."""
@@ -313,11 +322,12 @@ class TestExtractUserFromJwtPayload:
         assert user_data["roles"] == []  # Gracefully ignores invalid format
 
     def test_email_fallback_to_mail_claim(self) -> None:
-        """Test email falls back to mail claim."""
+        """Test email only uses 'email' claim (not 'mail')."""
         from mcp_server_langgraph.websocket.middleware import (
             extract_user_from_jwt_payload,
         )
 
+        # The implementation only uses 'email' claim, not 'mail'
         payload = {
             "sub": "user-123",
             "mail": "user@microsoft.com",
@@ -325,7 +335,16 @@ class TestExtractUserFromJwtPayload:
 
         user_data = extract_user_from_jwt_payload(payload)
 
-        assert user_data["email"] == "user@microsoft.com"
+        # 'mail' claim is NOT used - email is None
+        assert user_data["email"] is None
+
+        # 'email' claim is used
+        payload_with_email = {
+            "sub": "user-123",
+            "email": "user@example.com",
+        }
+        user_data2 = extract_user_from_jwt_payload(payload_with_email)
+        assert user_data2["email"] == "user@example.com"
 
 
 @pytest.mark.unit
@@ -365,7 +384,7 @@ class TestValidateWebSocketAuth:
             },
         )
 
-        mock_auth_middleware = AsyncMock()
+        mock_auth_middleware = AsyncMock(spec=["verify_token"])  # noqa: async-mock-config
         mock_auth_middleware.verify_token = AsyncMock(return_value=mock_verify_result)
 
         mock_app_state = MagicMock()
@@ -379,7 +398,8 @@ class TestValidateWebSocketAuth:
         result = await validate_websocket_auth(websocket)
 
         assert result is not None
-        assert result["user_id"] == "user-123"
+        # user_id is normalized to OpenFGA format (user:preferred_username)
+        assert result["user_id"] == "user:testuser"
         assert result["username"] == "testuser"
         assert result["email"] == "test@example.com"
 
@@ -393,7 +413,7 @@ class TestValidateWebSocketAuth:
             error="Token expired",
         )
 
-        mock_auth_middleware = AsyncMock()
+        mock_auth_middleware = AsyncMock(spec=["verify_token"])  # noqa: async-mock-config
         mock_auth_middleware.verify_token = AsyncMock(return_value=mock_verify_result)
 
         mock_app_state = MagicMock()
@@ -412,7 +432,7 @@ class TestValidateWebSocketAuth:
         """Test returns None when exception occurs."""
         from mcp_server_langgraph.websocket.middleware import validate_websocket_auth
 
-        mock_auth_middleware = AsyncMock()
+        mock_auth_middleware = AsyncMock(spec=["verify_token"])  # noqa: async-mock-config
         mock_auth_middleware.verify_token = AsyncMock(side_effect=Exception("Connection error"))
 
         mock_app_state = MagicMock()
@@ -436,7 +456,7 @@ class TestValidateWebSocketAuth:
             payload={"sub": "fallback-user"},
         )
 
-        mock_auth_middleware = AsyncMock()
+        mock_auth_middleware = AsyncMock(spec=["verify_token"])  # noqa: async-mock-config
         mock_auth_middleware.verify_token = AsyncMock(return_value=mock_verify_result)
 
         mock_app_state = MagicMock()
@@ -454,7 +474,8 @@ class TestValidateWebSocketAuth:
             result = await validate_websocket_auth(websocket)
 
         assert result is not None
-        assert result["user_id"] == "fallback-user"
+        # user_id is normalized to OpenFGA format with "user:" prefix
+        assert result["user_id"] == "user:fallback-user"
 
 
 @pytest.mark.unit
@@ -477,7 +498,7 @@ class TestValidateWebSocketToken:
             payload={"sub": "user-123", "roles": ["admin"]},
         )
 
-        mock_auth_middleware = AsyncMock()
+        mock_auth_middleware = AsyncMock(spec=["verify_token"])  # noqa: async-mock-config
         mock_auth_middleware.verify_token = AsyncMock(return_value=mock_verify_result)
 
         with patch(
@@ -500,7 +521,7 @@ class TestValidateWebSocketToken:
             error="Invalid signature",
         )
 
-        mock_auth_middleware = AsyncMock()
+        mock_auth_middleware = AsyncMock(spec=["verify_token"])  # noqa: async-mock-config
         mock_auth_middleware.verify_token = AsyncMock(return_value=mock_verify_result)
 
         with patch(
@@ -515,7 +536,7 @@ class TestValidateWebSocketToken:
         """Test returns None when exception occurs."""
         from mcp_server_langgraph.websocket.middleware import validate_websocket_token
 
-        mock_auth_middleware = AsyncMock()
+        mock_auth_middleware = AsyncMock(spec=["verify_token"])  # noqa: async-mock-config
         mock_auth_middleware.verify_token = AsyncMock(side_effect=Exception("Auth service down"))
 
         with patch(

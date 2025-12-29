@@ -245,6 +245,13 @@ class TestRegistryExports:
             "get_agent_request_broadcaster",
             "set_agent_request_broadcaster",
             "get_broadcaster",
+            # New broadcasters for budget, trace, and MCP aggregated
+            "get_budget_alert_broadcaster",
+            "set_budget_alert_broadcaster",
+            "get_trace_broadcaster",
+            "set_trace_broadcaster",
+            "get_mcp_aggregated_broadcaster",
+            "set_mcp_aggregated_broadcaster",
         ]
 
         for export in expected_exports:
@@ -264,6 +271,13 @@ class TestRegistryExports:
             "get_agent_request_broadcaster",
             "set_agent_request_broadcaster",
             "get_broadcaster",
+            # New broadcasters for budget, trace, and MCP aggregated
+            "get_budget_alert_broadcaster",
+            "set_budget_alert_broadcaster",
+            "get_trace_broadcaster",
+            "set_trace_broadcaster",
+            "get_mcp_aggregated_broadcaster",
+            "set_mcp_aggregated_broadcaster",
         }
 
         assert set(registry.__all__) == expected_exports

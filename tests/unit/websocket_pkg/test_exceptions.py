@@ -317,6 +317,73 @@ class TestSubscriptionError:
 
 
 @pytest.mark.xdist_group(name="websocket_exceptions")
+class TestTokenExpiredError:
+    """Tests for TokenExpiredError class."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers."""
+        gc.collect()
+
+    def test_token_expired_error_has_code_4010(self) -> None:
+        """GIVEN TokenExpiredError WHEN instantiated THEN code is 4010."""
+        from mcp_server_langgraph.websocket.exceptions import TokenExpiredError
+
+        error = TokenExpiredError()
+
+        assert error.code == 4010
+
+    def test_token_expired_error_with_defaults(self) -> None:
+        """GIVEN no custom values WHEN creating error THEN uses defaults."""
+        from mcp_server_langgraph.websocket.exceptions import TokenExpiredError
+
+        error = TokenExpiredError()
+
+        assert str(error) == "Token expired"
+        assert error.code == 4010
+        assert error.reason == "Token expired. Please refresh and reconnect."
+
+    def test_token_expired_error_inherits_from_authentication_error(self) -> None:
+        """GIVEN TokenExpiredError WHEN checking inheritance THEN is AuthenticationError."""
+        from mcp_server_langgraph.websocket.exceptions import (
+            AuthenticationError,
+            TokenExpiredError,
+        )
+
+        error = TokenExpiredError()
+
+        assert isinstance(error, AuthenticationError)
+
+    def test_token_expired_error_with_custom_message(self) -> None:
+        """GIVEN custom message WHEN creating error THEN uses provided message."""
+        from mcp_server_langgraph.websocket.exceptions import TokenExpiredError
+
+        error = TokenExpiredError("Access token has expired")
+
+        assert str(error) == "Access token has expired"
+        assert error.code == 4010
+
+    def test_token_expired_error_with_custom_reason(self) -> None:
+        """GIVEN custom reason WHEN creating error THEN uses provided reason."""
+        from mcp_server_langgraph.websocket.exceptions import TokenExpiredError
+
+        error = TokenExpiredError(reason="Session expired after 30 minutes")
+
+        assert error.reason == "Session expired after 30 minutes"
+
+    def test_token_expired_error_can_be_caught_as_websocket_error(self) -> None:
+        """GIVEN TokenExpiredError WHEN raised THEN can be caught as WebSocketError."""
+        from mcp_server_langgraph.websocket.exceptions import (
+            TokenExpiredError,
+            WebSocketError,
+        )
+
+        with pytest.raises(WebSocketError) as exc_info:
+            raise TokenExpiredError()
+
+        assert exc_info.value.code == 4010
+
+
+@pytest.mark.xdist_group(name="websocket_exceptions")
 class TestExceptionHierarchy:
     """Tests for exception class hierarchy."""
 
@@ -336,6 +403,7 @@ class TestExceptionHierarchy:
             ProtocolError,
             RateLimitError,
             SubscriptionError,
+            TokenExpiredError,
             WebSocketError,
         )
 
@@ -349,6 +417,7 @@ class TestExceptionHierarchy:
             IdleTimeoutError,
             HeartbeatTimeoutError,
             SubscriptionError,
+            TokenExpiredError,
         ]
 
         for cls in exception_classes:

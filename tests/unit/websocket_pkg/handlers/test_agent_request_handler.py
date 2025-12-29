@@ -72,19 +72,20 @@ class TestAgentRequestHandlerLifecycle:
         from mcp_server_langgraph.websocket.types import AuthUser, WebSocketConfig
 
         config = WebSocketConfig(endpoint_name="agent-request")
-        mock_broadcaster = AsyncMock()
+        mock_broadcaster = AsyncMock()  # noqa: async-mock-config
 
         with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
             handler = AgentRequestHandler(config=config, broadcaster=mock_broadcaster, session_id="sess-123")
 
-        mock_ws = AsyncMock()
+        mock_ws = AsyncMock()  # noqa: async-mock-config
         handler._websocket = mock_ws
         user = AuthUser(id="user-123", username="testuser")
 
         await handler.on_connect(user)
 
         assert handler._user_id == "user-123"
-        mock_broadcaster.connect.assert_called_once_with(mock_ws, "sess-123", "user-123")
+        # accept=False because WebSocketBase already accepted the connection
+        mock_broadcaster.connect.assert_called_once_with(mock_ws, "sess-123", "user-123", accept=False)
 
     @pytest.mark.asyncio
     async def test_on_disconnect_unregisters(self) -> None:
@@ -98,7 +99,7 @@ class TestAgentRequestHandlerLifecycle:
         with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
             handler = AgentRequestHandler(config=config, broadcaster=mock_broadcaster)
 
-        mock_ws = AsyncMock()
+        mock_ws = AsyncMock()  # noqa: async-mock-config
         handler._websocket = mock_ws
         handler._subscribed = True
         handler._user_id = "user-123"
@@ -124,7 +125,7 @@ class TestAgentRequestHandlerMessages:
         from mcp_server_langgraph.websocket.types import MessageEnvelope, WebSocketConfig
 
         config = WebSocketConfig(endpoint_name="agent-request")
-        mock_broadcaster = AsyncMock()
+        mock_broadcaster = AsyncMock()  # noqa: async-mock-config
 
         with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
             handler = AgentRequestHandler(config=config, broadcaster=mock_broadcaster)
@@ -143,7 +144,7 @@ class TestAgentRequestHandlerMessages:
         from mcp_server_langgraph.websocket.types import MessageEnvelope, WebSocketConfig
 
         config = WebSocketConfig(endpoint_name="agent-request")
-        mock_broadcaster = AsyncMock()
+        mock_broadcaster = AsyncMock()  # noqa: async-mock-config
 
         with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
             handler = AgentRequestHandler(config=config, broadcaster=mock_broadcaster)
@@ -162,7 +163,7 @@ class TestAgentRequestHandlerMessages:
         from mcp_server_langgraph.websocket.types import MessageEnvelope, WebSocketConfig
 
         config = WebSocketConfig(endpoint_name="agent-request")
-        mock_broadcaster = AsyncMock()
+        mock_broadcaster = AsyncMock()  # noqa: async-mock-config
 
         with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
             handler = AgentRequestHandler(config=config, broadcaster=mock_broadcaster)
@@ -183,7 +184,7 @@ class TestAgentRequestHandlerMessages:
         from mcp_server_langgraph.websocket.types import MessageEnvelope, WebSocketConfig
 
         config = WebSocketConfig(endpoint_name="agent-request")
-        mock_broadcaster = AsyncMock()
+        mock_broadcaster = AsyncMock()  # noqa: async-mock-config
 
         with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
             handler = AgentRequestHandler(config=config, broadcaster=mock_broadcaster)
@@ -211,12 +212,12 @@ class TestAgentRequestHandlerPush:
         from mcp_server_langgraph.websocket.types import WebSocketConfig
 
         config = WebSocketConfig(endpoint_name="agent-request")
-        mock_broadcaster = AsyncMock()
+        mock_broadcaster = AsyncMock()  # noqa: async-mock-config
 
         with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
             handler = AgentRequestHandler(config=config, broadcaster=mock_broadcaster)
 
-        mock_ws = AsyncMock()
+        mock_ws = AsyncMock()  # noqa: async-mock-config
         handler._websocket = mock_ws
         handler._subscribed = True
 
@@ -235,12 +236,12 @@ class TestAgentRequestHandlerPush:
         from mcp_server_langgraph.websocket.types import WebSocketConfig
 
         config = WebSocketConfig(endpoint_name="agent-request")
-        mock_broadcaster = AsyncMock()
+        mock_broadcaster = AsyncMock()  # noqa: async-mock-config
 
         with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
             handler = AgentRequestHandler(config=config, broadcaster=mock_broadcaster)
 
-        mock_ws = AsyncMock()
+        mock_ws = AsyncMock()  # noqa: async-mock-config
         handler._websocket = mock_ws
         handler._subscribed = False
 
@@ -255,12 +256,12 @@ class TestAgentRequestHandlerPush:
         from mcp_server_langgraph.websocket.types import WebSocketConfig
 
         config = WebSocketConfig(endpoint_name="agent-request")
-        mock_broadcaster = AsyncMock()
+        mock_broadcaster = AsyncMock()  # noqa: async-mock-config
 
         with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
             handler = AgentRequestHandler(config=config, broadcaster=mock_broadcaster)
 
-        mock_ws = AsyncMock()
+        mock_ws = AsyncMock()  # noqa: async-mock-config
         handler._websocket = mock_ws
         handler._subscribed = True
 
@@ -278,12 +279,12 @@ class TestAgentRequestHandlerPush:
         from mcp_server_langgraph.websocket.types import WebSocketConfig
 
         config = WebSocketConfig(endpoint_name="agent-request")
-        mock_broadcaster = AsyncMock()
+        mock_broadcaster = AsyncMock()  # noqa: async-mock-config
 
         with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
             handler = AgentRequestHandler(config=config, broadcaster=mock_broadcaster)
 
-        mock_ws = AsyncMock()
+        mock_ws = AsyncMock()  # noqa: async-mock-config
         handler._websocket = mock_ws
         handler._subscribed = True
 
@@ -307,12 +308,12 @@ class TestAgentRequestHandlerPush:
         from mcp_server_langgraph.websocket.types import WebSocketConfig
 
         config = WebSocketConfig(endpoint_name="agent-request")
-        mock_broadcaster = AsyncMock()
+        mock_broadcaster = AsyncMock()  # noqa: async-mock-config
 
         with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
             handler = AgentRequestHandler(config=config, broadcaster=mock_broadcaster)
 
-        mock_ws = AsyncMock()
+        mock_ws = AsyncMock()  # noqa: async-mock-config
         handler._websocket = mock_ws
         handler._subscribed = True
 

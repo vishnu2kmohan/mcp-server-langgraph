@@ -264,7 +264,7 @@ class TestAuthUser:
         assert user.raw_claims == {"custom": "claim"}
 
     def test_from_jwt_payload_with_sub(self) -> None:
-        """GIVEN JWT with sub claim WHEN from_jwt_payload THEN uses sub as id."""
+        """GIVEN JWT with sub and preferred_username WHEN from_jwt_payload THEN uses preferred_username for OpenFGA."""
         from mcp_server_langgraph.websocket.types import AuthUser
 
         payload = {
@@ -276,7 +276,8 @@ class TestAuthUser:
         }
         user = AuthUser.from_jwt_payload(payload)
 
-        assert user.id == "user-123"
+        # AuthUser.from_jwt_payload uses preferred_username first for OpenFGA compatibility
+        assert user.id == "testuser"
         assert user.username == "testuser"
         assert user.email == "test@example.com"
         assert user.roles == ["admin", "user"]

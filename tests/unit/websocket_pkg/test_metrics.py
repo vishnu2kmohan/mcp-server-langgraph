@@ -72,8 +72,8 @@ class TestWebSocketMetricsRecording:
         """Force GC to prevent mock accumulation in xdist workers."""
         gc.collect()
 
-    def test_record_connection(self) -> None:
-        """Test recording a new connection."""
+    def test_record_connection_increments_active_and_total_counts(self) -> None:
+        """Test recording a new connection increments counters."""
         from mcp_server_langgraph.websocket.metrics import WebSocketMetrics
 
         metrics = WebSocketMetrics(endpoint_name="test")
@@ -96,8 +96,8 @@ class TestWebSocketMetricsRecording:
         assert metrics.active_connections == 3
         assert metrics.total_connections == 3
 
-    def test_record_disconnect(self) -> None:
-        """Test recording a disconnection."""
+    def test_record_disconnect_decrements_active_connection_count(self) -> None:
+        """Test recording a disconnection decrements active count."""
         from mcp_server_langgraph.websocket.metrics import WebSocketMetrics
 
         metrics = WebSocketMetrics(endpoint_name="test")
@@ -144,8 +144,8 @@ class TestWebSocketMetricsRecording:
 
         assert metrics.messages_sent == 3
 
-    def test_record_error(self) -> None:
-        """Test recording errors."""
+    def test_record_error_increments_error_counter(self) -> None:
+        """Test recording errors increments the error count."""
         from mcp_server_langgraph.websocket.metrics import WebSocketMetrics
 
         metrics = WebSocketMetrics(endpoint_name="test")
@@ -177,6 +177,27 @@ class TestWebSocketMetricsRecording:
 
         assert metrics.connections_rejected == 2
 
+    def test_record_token_expired(self) -> None:
+        """Test recording token expiration events (close code 4010)."""
+        from mcp_server_langgraph.websocket.metrics import WebSocketMetrics
+
+        metrics = WebSocketMetrics(endpoint_name="test")
+
+        metrics.record_token_expired(user_id="user-1")
+        metrics.record_token_expired(user_id="user-2")
+
+        assert metrics.token_expirations == 2
+
+    def test_record_token_expired_without_user_id(self) -> None:
+        """Test recording token expiration without user ID."""
+        from mcp_server_langgraph.websocket.metrics import WebSocketMetrics
+
+        metrics = WebSocketMetrics(endpoint_name="test")
+
+        metrics.record_token_expired()
+
+        assert metrics.token_expirations == 1
+
 
 @pytest.mark.unit
 @pytest.mark.websocket
@@ -188,8 +209,8 @@ class TestWebSocketMetricsLatency:
         """Force GC to prevent mock accumulation in xdist workers."""
         gc.collect()
 
-    def test_record_latency(self) -> None:
-        """Test recording message latency."""
+    def test_record_latency_updates_average_calculation(self) -> None:
+        """Test recording message latency updates average."""
         from mcp_server_langgraph.websocket.metrics import WebSocketMetrics
 
         metrics = WebSocketMetrics(endpoint_name="test")
@@ -244,8 +265,8 @@ class TestWebSocketMetricsStats:
         """Force GC to prevent mock accumulation in xdist workers."""
         gc.collect()
 
-    def test_get_stats(self) -> None:
-        """Test getting all metrics as a dictionary."""
+    def test_get_stats_returns_complete_metrics_dictionary(self) -> None:
+        """Test getting all metrics returns complete dictionary."""
         from mcp_server_langgraph.websocket.metrics import WebSocketMetrics
 
         metrics = WebSocketMetrics(endpoint_name="notifications")
@@ -254,6 +275,7 @@ class TestWebSocketMetricsStats:
         metrics.record_message_sent()
         metrics.record_error()
         metrics.record_latency(50.0)
+        metrics.record_token_expired()
 
         stats = metrics.get_stats()
 
@@ -265,10 +287,11 @@ class TestWebSocketMetricsStats:
         assert stats["errors"] == 1
         assert stats["rate_limit_exceeded"] == 0
         assert stats["connections_rejected"] == 0
+        assert stats["token_expirations"] == 1
         assert stats["average_latency_ms"] == 50.0
 
-    def test_reset(self) -> None:
-        """Test resetting all metrics to zero."""
+    def test_reset_clears_all_metrics_to_zero(self) -> None:
+        """Test resetting clears all metrics to initial values."""
         from mcp_server_langgraph.websocket.metrics import WebSocketMetrics
 
         metrics = WebSocketMetrics(endpoint_name="test")
@@ -276,6 +299,7 @@ class TestWebSocketMetricsStats:
         metrics.record_message_received()
         metrics.record_error()
         metrics.record_latency(100.0)
+        metrics.record_token_expired()
 
         metrics.reset()
 
@@ -284,6 +308,7 @@ class TestWebSocketMetricsStats:
         assert metrics.messages_received == 0
         assert metrics.messages_sent == 0
         assert metrics.errors == 0
+        assert metrics.token_expirations == 0
         assert metrics.average_latency == 0.0
 
 
@@ -351,6 +376,19 @@ class TestWebSocketMetricsOTel:
         metrics.record_latency(latency_ms=25.5, message_type="data")
 
         metrics._otel_latency.record.assert_called_once_with(25.5, {"endpoint": "test", "type": "data"})
+
+    def test_otel_token_expiration_counter(self) -> None:
+        """Test that OTel counter is called for token expirations (close code 4010)."""
+        from mcp_server_langgraph.websocket.metrics import WebSocketMetrics
+
+        metrics = WebSocketMetrics(endpoint_name="test", enable_otel=True)
+
+        # Mock the counter
+        metrics._otel_token_expirations = MagicMock()
+
+        metrics.record_token_expired(user_id="user-1")
+
+        metrics._otel_token_expirations.add.assert_called_once_with(1, {"endpoint": "test", "user_id": "user-1"})
 
 
 @pytest.mark.unit
