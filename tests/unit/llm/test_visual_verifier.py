@@ -75,9 +75,12 @@ class TestVisualVerificationToolRegistration:
         from mcp_server_langgraph.tools import get_all_tools
 
         # Create mock settings with visual verification enabled
+        # Note: Visual verification requires BOTH sandbox_tools_enabled AND enable_visual_verification
+        # sandbox_tools_enabled is true when environment is "test"/"sandbox" OR enable_sandbox_tools is True
         mock_settings = MagicMock()
         mock_settings.enable_visual_verification = True
         mock_settings.enable_code_execution = False
+        mock_settings.environment = "test"  # Required to enable sandbox tools
 
         tools = get_all_tools(settings_override=mock_settings)
         tool_names = [t.name for t in tools]
@@ -88,9 +91,11 @@ class TestVisualVerificationToolRegistration:
         from mcp_server_langgraph.tools import get_tool_by_name
 
         # Create mock settings with visual verification enabled
+        # Note: Visual verification requires BOTH sandbox_tools_enabled AND enable_visual_verification
         mock_settings = MagicMock()
         mock_settings.enable_visual_verification = True
         mock_settings.enable_code_execution = False
+        mock_settings.environment = "test"  # Required to enable sandbox tools
 
         tool = get_tool_by_name("capture_screenshot", settings_override=mock_settings)
         assert tool is not None
@@ -293,7 +298,7 @@ def visual_verifier():
 
     verifier = OutputVerifier(settings=mock_settings)
     # Mock the LLM
-    verifier.llm = AsyncMock()
+    verifier.llm = AsyncMock()  # noqa: async-mock-config
 
     return verifier
 
@@ -521,7 +526,7 @@ class TestVisualVerificationMethod:
             # Mock cache to return None (cache miss) - forces screenshot capture
             mock_cache = MagicMock()
             mock_cache.aget = AsyncMock(return_value=None)
-            mock_cache.aset = AsyncMock()
+            mock_cache.aset = AsyncMock()  # noqa: async-mock-config
             mock_get_cache.return_value = mock_cache
 
             await visual_verifier.verify_with_visual(
@@ -549,7 +554,7 @@ class TestVisualVerificationMethod:
             # Mock cache to return None (cache miss) - forces screenshot capture
             mock_cache = MagicMock()
             mock_cache.aget = AsyncMock(return_value=None)
-            mock_cache.aset = AsyncMock()
+            mock_cache.aset = AsyncMock()  # noqa: async-mock-config
             mock_get_cache.return_value = mock_cache
 
             await visual_verifier.verify_with_visual(
@@ -802,7 +807,7 @@ class TestVisualVerificationMetricsIntegration:
             # Mock cache to return None (cache miss) - forces screenshot capture
             mock_cache = MagicMock()
             mock_cache.aget = AsyncMock(return_value=None)
-            mock_cache.aset = AsyncMock()
+            mock_cache.aset = AsyncMock()  # noqa: async-mock-config
             mock_get_cache.return_value = mock_cache
 
             with patch("mcp_server_langgraph.llm.verifier.record_visual_verification_request") as mock_record:
@@ -903,7 +908,7 @@ class TestVisualVerificationMetricsIntegration:
             # Mock cache to return None (cache miss) - forces screenshot capture
             mock_cache = MagicMock()
             mock_cache.aget = AsyncMock(return_value=None)
-            mock_cache.aset = AsyncMock()
+            mock_cache.aset = AsyncMock()  # noqa: async-mock-config
             mock_get_cache.return_value = mock_cache
 
             with patch("mcp_server_langgraph.llm.verifier.record_visual_verification_request") as mock_record:

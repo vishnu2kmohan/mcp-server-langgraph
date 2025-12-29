@@ -155,7 +155,8 @@ class TestLifecycleManagerMaxAge:
         )
 
         # Call cleanup and verify max_age is used
-        with patch("mcp_server_langgraph.api.v1.mcp_websocket.streaming_metrics_collector") as mock_collector:
+        # Patch the module where lifecycle.py imports streaming_metrics_collector from
+        with patch("mcp_server_langgraph.mcp.websocket.lifecycle.streaming_metrics_collector") as mock_collector:
             mock_collector.cleanup_old_streams.return_value = 5
             removed = await manager.cleanup_stream_metrics()
 

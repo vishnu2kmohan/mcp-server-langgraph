@@ -216,3 +216,177 @@ class TestStreamingSettingsIntegration:
         assert s.streaming_max_age_seconds == 3600
         assert s.streaming_idle_cleanup_interval == 60
         assert s.streaming_enabled is True
+
+
+@pytest.mark.xdist_group(name="test_streaming_config")
+class TestTokenValidationIntervalConfig:
+    """Tests for token validation interval configuration."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers."""
+        gc.collect()
+
+    def test_streaming_token_validation_interval_default(self) -> None:
+        """
+        GIVEN StreamingSettings with no overrides
+        WHEN checking streaming_token_validation_interval
+        THEN should default to 300 seconds (5 minutes).
+        """
+        from mcp_server_langgraph.core.config.streaming import StreamingSettings
+
+        settings = StreamingSettings()
+        assert settings.streaming_token_validation_interval == 300
+
+    def test_streaming_token_validation_interval_from_env(self, monkeypatch) -> None:
+        """
+        GIVEN STREAMING_TOKEN_VALIDATION_INTERVAL env var
+        WHEN creating StreamingSettings
+        THEN should use the env var value.
+        """
+        monkeypatch.setenv("STREAMING_TOKEN_VALIDATION_INTERVAL", "120")
+
+        from mcp_server_langgraph.core.config.streaming import StreamingSettings
+
+        settings = StreamingSettings()
+        assert settings.streaming_token_validation_interval == 120
+
+    def test_main_settings_has_token_validation_interval(self) -> None:
+        """
+        GIVEN the main Settings class
+        WHEN checking for token_validation_interval attribute
+        THEN should have the field.
+        """
+        from mcp_server_langgraph.core.config import Settings
+
+        s = Settings()
+        assert hasattr(s, "streaming_token_validation_interval")
+        assert s.streaming_token_validation_interval == 300
+
+
+@pytest.mark.xdist_group(name="test_streaming_config")
+class TestTokenValidationIntervalGlobal:
+    """Tests for global token validation interval getter/setter."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers."""
+        gc.collect()
+
+    def test_get_token_validation_interval_default(self) -> None:
+        """
+        GIVEN no explicit configuration
+        WHEN getting token_validation_interval
+        THEN should return default (300 seconds).
+        """
+        from mcp_server_langgraph.mcp.websocket.config import (
+            get_token_validation_interval,
+        )
+
+        # Default should be 300 seconds
+        assert get_token_validation_interval() == 300
+
+    def test_set_token_validation_interval(self) -> None:
+        """
+        GIVEN a custom interval value
+        WHEN setting token_validation_interval
+        THEN get should return the custom value.
+        """
+        from mcp_server_langgraph.mcp.websocket.config import (
+            get_token_validation_interval,
+            set_token_validation_interval,
+        )
+
+        # Set custom value
+        set_token_validation_interval(120)
+
+        try:
+            assert get_token_validation_interval() == 120
+        finally:
+            # Reset to default
+            set_token_validation_interval(300)
+
+    def test_set_token_validation_interval_zero_disables(self) -> None:
+        """
+        GIVEN interval set to 0
+        WHEN getting token_validation_interval
+        THEN should return 0 (disabled).
+        """
+        from mcp_server_langgraph.mcp.websocket.config import (
+            get_token_validation_interval,
+            set_token_validation_interval,
+        )
+
+        set_token_validation_interval(0)
+
+        try:
+            assert get_token_validation_interval() == 0
+        finally:
+            # Reset to default
+            set_token_validation_interval(300)
+
+
+@pytest.mark.xdist_group(name="test_streaming_config")
+class TestCreateWebSocketConfigFactory:
+    """Tests for create_websocket_config factory function."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers."""
+        gc.collect()
+
+    def test_create_websocket_config_uses_global_interval(self) -> None:
+        """
+        GIVEN global token_validation_interval set to 120
+        WHEN creating WebSocketConfig via factory
+        THEN should use the global value.
+        """
+        from mcp_server_langgraph.mcp.websocket.config import (
+            create_websocket_config,
+            set_token_validation_interval,
+        )
+
+        set_token_validation_interval(120)
+
+        try:
+            config = create_websocket_config(endpoint_name="test")
+            assert config.token_validation_interval == 120
+        finally:
+            set_token_validation_interval(300)
+
+    def test_create_websocket_config_allows_override(self) -> None:
+        """
+        GIVEN explicit token_validation_interval
+        WHEN creating WebSocketConfig via factory
+        THEN should use the explicit value.
+        """
+        from mcp_server_langgraph.mcp.websocket.config import (
+            create_websocket_config,
+            set_token_validation_interval,
+        )
+
+        set_token_validation_interval(120)
+
+        try:
+            config = create_websocket_config(
+                endpoint_name="test",
+                token_validation_interval=60,  # Explicit override
+            )
+            assert config.token_validation_interval == 60
+        finally:
+            set_token_validation_interval(300)
+
+    def test_create_websocket_config_sets_other_fields(self) -> None:
+        """
+        GIVEN create_websocket_config call
+        WHEN specifying custom fields
+        THEN should set them correctly.
+        """
+        from mcp_server_langgraph.mcp.websocket.config import create_websocket_config
+
+        config = create_websocket_config(
+            endpoint_name="notifications",
+            require_auth=True,
+            rate_limit_per_minute=300,
+        )
+
+        assert config.endpoint_name == "notifications"
+        assert config.require_auth is True
+        assert config.rate_limit_per_minute == 300

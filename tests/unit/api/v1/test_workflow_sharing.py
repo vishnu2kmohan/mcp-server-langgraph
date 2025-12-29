@@ -392,13 +392,12 @@ class TestWorkflowShareNotifications:
         request = AddWorkflowShareRequest(email="bob@example.com", permission="edit")
 
         # Mock the notification broadcaster
-        # Implementation uses notify_user(), not broadcast_to_user()
-        # Import is local in _notify_workflow_shared, so patch at source module
+        # Implementation uses notify_user(), imported from websocket.registry
         mock_broadcaster = AsyncMock()  # async-mock-configured
         mock_broadcaster.notify_user = AsyncMock()  # async-mock-configured
 
         with patch(
-            "mcp_server_langgraph.api.v1.notification_websocket.get_notification_broadcaster",
+            "mcp_server_langgraph.websocket.registry.get_notification_broadcaster",
             return_value=mock_broadcaster,
         ):
             result = await add_workflow_share_authorized(
@@ -440,13 +439,12 @@ class TestWorkflowShareNotifications:
         request = AddWorkflowShareRequest(email="bob@example.com", permission="view")
 
         # Mock broadcaster that raises exception
-        # Implementation uses notify_user(), not broadcast_to_user()
-        # Import is local in _notify_workflow_shared, so patch at source module
+        # Implementation uses notify_user(), imported from websocket.registry
         mock_broadcaster = AsyncMock()  # async-mock-configured
         mock_broadcaster.notify_user = AsyncMock(side_effect=Exception("WebSocket error"))
 
         with patch(
-            "mcp_server_langgraph.api.v1.notification_websocket.get_notification_broadcaster",
+            "mcp_server_langgraph.websocket.registry.get_notification_broadcaster",
             return_value=mock_broadcaster,
         ):
             # Should not raise
@@ -487,13 +485,12 @@ class TestWorkflowShareNotifications:
         )
 
         request = AddWorkflowShareRequest(email="carol@example.com", permission="execute")
-        # Implementation uses notify_user(), not broadcast_to_user()
-        # Import is local in _notify_workflow_shared, so patch at source module
+        # Implementation uses notify_user(), imported from websocket.registry
         mock_broadcaster = AsyncMock()  # async-mock-configured
         mock_broadcaster.notify_user = AsyncMock()  # async-mock-configured
 
         with patch(
-            "mcp_server_langgraph.api.v1.notification_websocket.get_notification_broadcaster",
+            "mcp_server_langgraph.websocket.registry.get_notification_broadcaster",
             return_value=mock_broadcaster,
         ):
             await add_workflow_share_authorized(

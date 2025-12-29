@@ -489,37 +489,47 @@ class TestCreateHandlerWithSessionId:
         """Force GC to prevent mock accumulation in xdist workers."""
         gc.collect()
 
-    def test_create_handler_from_token_accepts_session_id(self) -> None:
+    @pytest.mark.asyncio
+    async def test_create_handler_from_token_accepts_session_id(self) -> None:
         """
         GIVEN create_handler_from_token function
-        WHEN called with session_id parameter
+        WHEN called with websocket and session_id parameter
         THEN should return handler with session_id set.
         """
+        from unittest.mock import AsyncMock, MagicMock
         from mcp_server_langgraph.api.v1.mcp_websocket import create_handler_from_token
 
-        token_payload = {
-            "preferred_username": "testuser",
-            "sub": "user-123",
-        }
+        # Create mock WebSocket
+        mock_websocket = MagicMock()
+        mock_websocket.send_json = AsyncMock()  # noqa: async-mock-config
 
-        handler = create_handler_from_token(
-            token_payload,
+        # Call the async function without a token (anonymous handler)
+        handler = await create_handler_from_token(
+            websocket=mock_websocket,
             session_id="factory-session-id",
+            token=None,
         )
 
         assert handler.session_id == "factory-session-id"
 
-    def test_create_anonymous_streaming_handler_sets_session_id(self) -> None:
+    @pytest.mark.asyncio
+    async def test_create_anonymous_streaming_handler_sets_session_id(self) -> None:
         """
         GIVEN create_anonymous_streaming_handler function
-        WHEN called
+        WHEN called with websocket and session_id
         THEN should set session_id on the handler.
         """
+        from unittest.mock import AsyncMock, MagicMock
         from mcp_server_langgraph.api.v1.mcp_websocket import (
             create_anonymous_streaming_handler,
         )
 
-        handler = create_anonymous_streaming_handler(
+        # Create mock WebSocket
+        mock_websocket = MagicMock()
+        mock_websocket.send_json = AsyncMock()  # noqa: async-mock-config
+
+        handler = await create_anonymous_streaming_handler(
+            websocket=mock_websocket,
             session_id="anon-session-123",
         )
 

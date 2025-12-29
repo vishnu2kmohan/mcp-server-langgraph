@@ -450,16 +450,18 @@ class TestSessionConfigResponseContract:
 
     @pytest.mark.unit
     def test_session_config_response_defaults(self) -> None:
-        """SessionConfigResponse should have sensible defaults."""
+        """SessionConfigResponse should have sensible defaults from settings."""
         from mcp_server_langgraph.api.v1.sessions import SessionConfigResponse
+        from mcp_server_langgraph.core.config import settings
 
         # WHEN creating with no arguments (uses defaults)
         config = SessionConfigResponse()
 
-        # THEN defaults should match backend configuration
-        assert config.model == "gpt-4o-mini"
+        # THEN defaults should match backend configuration from settings
+        # Note: Defaults come from environment settings, not hardcoded values
+        assert config.model == settings.model_name
         assert config.temperature == 0.7
-        assert config.max_tokens == 1000
+        assert config.max_tokens == settings.model_max_tokens
 
     @pytest.mark.unit
     def test_session_config_response_accepts_custom_values(self) -> None:
@@ -827,3 +829,49 @@ class TestPostgresSessionConfigPersistence:
         assert call_args[1]["session_id"] == "test-session"
         assert call_args[1]["config"].model == "claude-3-opus"
         assert call_args[1]["config"].max_tokens == 4000
+
+
+@pytest.mark.xdist_group(name="test_session_trace_response_contract")
+class TestSessionTraceResponseContract:
+    """Tests for SessionTraceResponse model contract (GET /sessions/{id}/trace)."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers."""
+        gc.collect()
+
+    @pytest.mark.unit
+    def test_session_trace_response_model_exists(self) -> None:
+        """SessionTraceResponse model should exist."""
+        from mcp_server_langgraph.api.v1.sessions import SessionTraceResponse
+
+        # GIVEN the model exists
+        # THEN it should be importable
+        assert SessionTraceResponse is not None
+
+    @pytest.mark.unit
+    def test_session_trace_response_has_expected_fields(self) -> None:
+        """SessionTraceResponse should have expected trace fields."""
+        from mcp_server_langgraph.api.v1.sessions import SessionTraceResponse
+
+        schema = SessionTraceResponse.model_json_schema()
+        properties = schema.get("properties", {})
+
+        # THEN it should have all expected trace fields
+        expected_fields = ["steps", "tokens", "raw_output", "start_time", "end_time"]
+        for field in expected_fields:
+            assert field in properties, f"Missing field: {field}"
+
+    @pytest.mark.unit
+    def test_session_trace_response_allows_empty_trace(self) -> None:
+        """SessionTraceResponse should allow empty/minimal trace data."""
+        from mcp_server_langgraph.api.v1.sessions import SessionTraceResponse
+
+        # GIVEN empty trace data
+        trace_data: dict = {}
+
+        # WHEN creating a SessionTraceResponse
+        response = SessionTraceResponse(**trace_data)
+
+        # THEN it should succeed with default empty values
+        assert response.steps == []
+        assert response.raw_output is None

@@ -190,9 +190,10 @@ class TestFeaturesResponseModel:
         response = client.get("/api/v1/features")
         data = response.json()
 
-        # All values should be booleans
+        # All values should be booleans or strings (for strategy enums)
+        allowed_types = (bool, str)
         for key, value in data.items():
-            assert isinstance(value, bool), f"{key} should be boolean, got {type(value)}"
+            assert isinstance(value, allowed_types), f"{key} should be bool or str, got {type(value)}"
 
     def test_response_includes_content_type_json(self, client: TestClient) -> None:
         """

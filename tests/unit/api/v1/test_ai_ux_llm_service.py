@@ -165,15 +165,7 @@ SAMPLE_METRICS_INSIGHTS_LLM_RESPONSE = """
 # =============================================================================
 
 
-@pytest.fixture(autouse=True)
-def reset_ai_circuit_breakers():
-    """Reset all AI UX circuit breakers before each test to ensure clean state."""
-    from mcp_server_langgraph.resilience.circuit_breaker import reset_circuit_breaker
-
-    reset_circuit_breaker("ai_ux_llm")
-    yield
-    # Clean up after test
-    reset_circuit_breaker("ai_ux_llm")
+# Note: reset_ai_circuit_breakers fixture is defined in conftest.py
 
 
 @pytest.fixture

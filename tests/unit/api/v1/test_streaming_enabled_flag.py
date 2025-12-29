@@ -81,14 +81,14 @@ class TestStreamingDisabledBehavior:
             notification_callback=capture,
         )
 
-        # Disable streaming globally
+        # Disable streaming globally - patch the NEW location that the handler imports from
         with patch.object(
             handler,
             "execute_tool",
             return_value=[{"type": "text", "text": "Non-streaming result"}],
         ):
             with patch(
-                "mcp_server_langgraph.api.v1.mcp_websocket.is_streaming_enabled",
+                "mcp_server_langgraph.mcp.websocket.config.is_streaming_enabled",
                 return_value=False,
             ):
                 message = {
@@ -254,15 +254,17 @@ class TestMetricsEndpointWithStreamingDisabled:
         app = FastAPI()
         app.include_router(mcp_websocket_router, prefix="/api/v1")
 
+        # Patch the package namespace where the endpoint imports from
+        # The endpoint does: from mcp_server_langgraph.mcp.websocket import is_streaming_enabled
         with patch(
-            "mcp_server_langgraph.api.v1.mcp_websocket.is_streaming_enabled",
+            "mcp_server_langgraph.mcp.websocket.is_streaming_enabled",
             return_value=False,
         ):
             client = TestClient(app)
             response = client.get("/api/v1/mcp/metrics/streams")
 
-        data = response.json()
+            data = response.json()
 
-        # Should include streaming_enabled status
-        assert "streaming_enabled" in data
-        assert data["streaming_enabled"] is False
+            # Should include streaming_enabled status
+            assert "streaming_enabled" in data
+            assert data["streaming_enabled"] is False

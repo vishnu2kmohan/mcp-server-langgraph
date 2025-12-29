@@ -113,7 +113,7 @@ class TestMCPWebSocketLifespanIntegration:
         manager = MCPWebSocketLifecycleManager()
 
         with patch(
-            "mcp_server_langgraph.api.v1.mcp_websocket.graceful_shutdown",
+            "mcp_server_langgraph.mcp.websocket.lifecycle.graceful_shutdown",
             new_callable=AsyncMock,
         ) as mock_graceful_shutdown:
             await manager.startup()
@@ -244,7 +244,7 @@ class TestMCPWebSocketCleanupTaskBehavior:
         manager = MCPWebSocketLifecycleManager(cleanup_interval=0.1)
 
         with patch(
-            "mcp_server_langgraph.api.v1.mcp_websocket.cleanup_idle_connections",
+            "mcp_server_langgraph.mcp.websocket.lifecycle.cleanup_idle_connections",
             new_callable=AsyncMock,
             return_value=0,
         ) as mock_cleanup:

@@ -204,3 +204,181 @@ class TestExtractUserFromJWTPayload:
         result = extract_user_from_jwt_payload(payload)
 
         assert result["roles"] == []
+
+
+@pytest.mark.unit
+@pytest.mark.auth
+@pytest.mark.xdist_group(name="jwt_utils_tests")
+class TestOrganizationalHierarchyExtraction:
+    """Test organization, project, team extraction from JWT payload."""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers."""
+        gc.collect()
+
+    def test_extract_organization_from_direct_claim(self):
+        """
+        GIVEN: JWT payload with organization_id claim
+        WHEN: Extracting user from payload
+        THEN: organization_id should be in the result
+        """
+        from mcp_server_langgraph.auth.jwt_utils import extract_user_from_jwt_payload
+
+        payload = {
+            "sub": "uuid-123",
+            "preferred_username": "alice",
+            "organization_id": "acme-corp",
+        }
+
+        result = extract_user_from_jwt_payload(payload)
+
+        assert result["organization_id"] == "organization:acme-corp"
+
+    def test_extract_organization_from_org_id_claim(self):
+        """
+        GIVEN: JWT payload with org_id claim (alternate naming)
+        WHEN: Extracting user from payload
+        THEN: organization_id should be normalized from org_id
+        """
+        from mcp_server_langgraph.auth.jwt_utils import extract_user_from_jwt_payload
+
+        payload = {
+            "sub": "uuid-123",
+            "preferred_username": "bob",
+            "org_id": "contoso",
+        }
+
+        result = extract_user_from_jwt_payload(payload)
+
+        assert result["organization_id"] == "organization:contoso"
+
+    def test_extract_organization_from_groups(self):
+        """
+        GIVEN: JWT payload with Keycloak groups containing org path
+        WHEN: Extracting user from payload
+        THEN: organization_id should be parsed from groups
+        """
+        from mcp_server_langgraph.auth.jwt_utils import extract_user_from_jwt_payload
+
+        payload = {
+            "sub": "uuid-123",
+            "preferred_username": "charlie",
+            "groups": ["/org/acme", "/teams/platform", "/projects/backend"],
+        }
+
+        result = extract_user_from_jwt_payload(payload)
+
+        assert result["organization_id"] == "organization:acme"
+
+    def test_extract_organization_from_groups_alternate_format(self):
+        """
+        GIVEN: JWT payload with groups using 'organization/' prefix
+        WHEN: Extracting user from payload
+        THEN: organization_id should be extracted correctly
+        """
+        from mcp_server_langgraph.auth.jwt_utils import extract_user_from_jwt_payload
+
+        payload = {
+            "sub": "uuid-123",
+            "preferred_username": "david",
+            "groups": ["/organization/contoso", "/team/engineering"],
+        }
+
+        result = extract_user_from_jwt_payload(payload)
+
+        assert result["organization_id"] == "organization:contoso"
+
+    def test_extract_organization_preserves_prefix_if_already_present(self):
+        """
+        GIVEN: JWT payload with organization_id already prefixed
+        WHEN: Extracting user from payload
+        THEN: organization_id should not be double-prefixed
+        """
+        from mcp_server_langgraph.auth.jwt_utils import extract_user_from_jwt_payload
+
+        payload = {
+            "sub": "uuid-123",
+            "preferred_username": "eve",
+            "organization_id": "organization:already-prefixed",
+        }
+
+        result = extract_user_from_jwt_payload(payload)
+
+        assert result["organization_id"] == "organization:already-prefixed"
+
+    def test_extract_organization_none_when_not_present(self):
+        """
+        GIVEN: JWT payload without organization info
+        WHEN: Extracting user from payload
+        THEN: organization_id should be None
+        """
+        from mcp_server_langgraph.auth.jwt_utils import extract_user_from_jwt_payload
+
+        payload = {
+            "sub": "uuid-123",
+            "preferred_username": "frank",
+        }
+
+        result = extract_user_from_jwt_payload(payload)
+
+        assert result["organization_id"] is None
+
+    def test_extract_project_and_team_from_claims(self):
+        """
+        GIVEN: JWT payload with project_id and team_id claims
+        WHEN: Extracting user from payload
+        THEN: project_id and team_id should be in the result
+        """
+        from mcp_server_langgraph.auth.jwt_utils import extract_user_from_jwt_payload
+
+        payload = {
+            "sub": "uuid-123",
+            "preferred_username": "grace",
+            "project_id": "backend-api",
+            "team_id": "platform-engineering",
+        }
+
+        result = extract_user_from_jwt_payload(payload)
+
+        assert result["project_id"] == "project:backend-api"
+        assert result["team_id"] == "team:platform-engineering"
+
+    def test_extract_project_and_team_from_groups(self):
+        """
+        GIVEN: JWT payload with Keycloak groups containing project and team paths
+        WHEN: Extracting user from payload
+        THEN: project_id and team_id should be parsed from groups
+        """
+        from mcp_server_langgraph.auth.jwt_utils import extract_user_from_jwt_payload
+
+        payload = {
+            "sub": "uuid-123",
+            "preferred_username": "henry",
+            "groups": ["/org/acme", "/project/frontend", "/team/ui-ux"],
+        }
+
+        result = extract_user_from_jwt_payload(payload)
+
+        assert result["organization_id"] == "organization:acme"
+        assert result["project_id"] == "project:frontend"
+        assert result["team_id"] == "team:ui-ux"
+
+    def test_direct_claims_take_precedence_over_groups(self):
+        """
+        GIVEN: JWT payload with both direct claims and groups
+        WHEN: Extracting user from payload
+        THEN: Direct claims should take precedence over groups
+        """
+        from mcp_server_langgraph.auth.jwt_utils import extract_user_from_jwt_payload
+
+        payload = {
+            "sub": "uuid-123",
+            "preferred_username": "ivy",
+            "organization_id": "direct-org",
+            "groups": ["/org/group-org"],  # Should be ignored
+        }
+
+        result = extract_user_from_jwt_payload(payload)
+
+        # Direct claim wins
+        assert result["organization_id"] == "organization:direct-org"

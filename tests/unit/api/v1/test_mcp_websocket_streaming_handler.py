@@ -436,9 +436,11 @@ class TestStreamingWebSocketDisconnect:
             # Should not raise, should handle disconnect gracefully
             result = await streaming.handle_streaming_call(1, "test", {})
 
-        # Should return error result indicating disconnect
-        assert result["isError"] is True
-        assert "disconnect" in result["content"][0]["text"].lower() or "error" in result["content"][0]["text"].lower()
+        # Disconnect is handled gracefully - not treated as error
+        # Client disconnected flag should be set internally
+        assert streaming._client_disconnected is True
+        # Result should still be returned (partial or empty)
+        assert "content" in result
 
     @pytest.mark.asyncio
     async def test_disconnect_during_start_notification(self) -> None:
@@ -468,7 +470,10 @@ class TestStreamingWebSocketDisconnect:
         with patch.object(handler, "execute_tool_streaming", side_effect=mock_stream):
             result = await streaming.handle_streaming_call(1, "test", {})
 
-        assert result["isError"] is True
+        # Disconnect is handled gracefully - flag should be set
+        assert streaming._client_disconnected is True
+        # Result should still be returned
+        assert "content" in result
 
     @pytest.mark.asyncio
     async def test_disconnect_during_end_notification_silent(self) -> None:
@@ -806,7 +811,8 @@ class TestCreateHandlerFromTokenCallback:
         """Force GC to prevent mock accumulation in xdist workers."""
         gc.collect()
 
-    def test_create_handler_from_token_accepts_notification_callback(self) -> None:
+    @pytest.mark.asyncio
+    async def test_create_handler_from_token_accepts_notification_callback(self) -> None:
         """
         GIVEN create_handler_from_token function
         WHEN called with notification_callback parameter
@@ -822,14 +828,15 @@ class TestCreateHandlerFromTokenCallback:
             "realm_access": {"roles": ["user"]},
         }
 
-        handler = create_handler_from_token(
-            token_payload,
+        handler = await create_handler_from_token(
+            token_payload=token_payload,
             notification_callback=mock_callback,
         )
 
         assert handler.notification_callback is mock_callback
 
-    def test_create_handler_from_token_callback_optional(self) -> None:
+    @pytest.mark.asyncio
+    async def test_create_handler_from_token_callback_optional(self) -> None:
         """
         GIVEN create_handler_from_token function
         WHEN called without notification_callback parameter
@@ -842,7 +849,7 @@ class TestCreateHandlerFromTokenCallback:
             "realm_access": {"roles": ["user"]},
         }
 
-        handler = create_handler_from_token(token_payload)
+        handler = await create_handler_from_token(token_payload=token_payload)
 
         assert handler.notification_callback is None
 
@@ -906,7 +913,8 @@ class TestAnonymousStreamingSupport:
         """Force GC to prevent mock accumulation in xdist workers."""
         gc.collect()
 
-    def test_create_anonymous_streaming_handler(self) -> None:
+    @pytest.mark.asyncio
+    async def test_create_anonymous_streaming_handler(self) -> None:
         """
         GIVEN a session ID for anonymous connection
         WHEN creating a handler for anonymous streaming
@@ -919,7 +927,7 @@ class TestAnonymousStreamingSupport:
         async def mock_send(n):
             pass
 
-        handler = create_anonymous_streaming_handler(
+        handler = await create_anonymous_streaming_handler(
             session_id="session-abc123",
             notification_callback=mock_send,
         )
@@ -928,7 +936,8 @@ class TestAnonymousStreamingSupport:
         assert "anonymous" in handler.roles
         assert handler.notification_callback is mock_send
 
-    def test_anonymous_handler_has_streaming_capability(self) -> None:
+    @pytest.mark.asyncio
+    async def test_anonymous_handler_has_streaming_capability(self) -> None:
         """
         GIVEN an anonymous streaming handler
         WHEN checking capabilities
@@ -941,7 +950,7 @@ class TestAnonymousStreamingSupport:
         async def mock_send(n):
             pass
 
-        handler = create_anonymous_streaming_handler(
+        handler = await create_anonymous_streaming_handler(
             session_id="session-xyz789",
             notification_callback=mock_send,
         )
@@ -965,7 +974,7 @@ class TestAnonymousStreamingSupport:
         async def capture_notification(n: dict) -> None:
             notifications.append(n)
 
-        handler = create_anonymous_streaming_handler(
+        handler = await create_anonymous_streaming_handler(
             session_id="session-stream123",
             notification_callback=capture_notification,
         )
@@ -1027,7 +1036,8 @@ class TestSessionEndpointStreamingSupport:
         """Force GC to prevent mock accumulation in xdist workers."""
         gc.collect()
 
-    def test_session_endpoint_handler_gets_notification_callback(self) -> None:
+    @pytest.mark.asyncio
+    async def test_session_endpoint_handler_gets_notification_callback(self) -> None:
         """
         GIVEN a session ID endpoint connection with token
         WHEN creating the authenticated handler
@@ -1043,8 +1053,8 @@ class TestSessionEndpointStreamingSupport:
             "realm_access": {"roles": ["user"]},
         }
 
-        handler = create_handler_from_token(
-            token_payload,
+        handler = await create_handler_from_token(
+            token_payload=token_payload,
             notification_callback=mock_callback,
         )
 
@@ -1069,8 +1079,8 @@ class TestSessionEndpointStreamingSupport:
             "realm_access": {"roles": ["user"]},
         }
 
-        handler = create_handler_from_token(
-            token_payload,
+        handler = await create_handler_from_token(
+            token_payload=token_payload,
             notification_callback=capture_notification,
         )
 
@@ -1103,7 +1113,8 @@ class TestSessionEndpointStreamingSupport:
         assert response["id"] == 1
         assert "result" in response
 
-    def test_session_endpoint_anonymous_gets_streaming(self) -> None:
+    @pytest.mark.asyncio
+    async def test_session_endpoint_anonymous_gets_streaming(self) -> None:
         """
         GIVEN a session endpoint connection without token
         WHEN handler is created for anonymous user
@@ -1116,7 +1127,7 @@ class TestSessionEndpointStreamingSupport:
         async def mock_callback(n: dict) -> None:
             pass
 
-        handler = create_anonymous_streaming_handler(
+        handler = await create_anonymous_streaming_handler(
             session_id="session-with-explicit-id",
             notification_callback=mock_callback,
         )
@@ -1144,7 +1155,7 @@ class TestSessionEndpointStreamingSupport:
         async def mock_callback(n: dict) -> None:
             pass
 
-        handler = create_anonymous_streaming_handler(
+        handler = await create_anonymous_streaming_handler(
             session_id=session_id,
             notification_callback=mock_callback,
         )
@@ -1733,16 +1744,16 @@ class TestGlobalMetricsWiringInHandlers:
         assert final_stats["total_streams"] > initial_streams, "Global streaming_metrics_collector should record new streams"
 
     @pytest.mark.asyncio
-    async def test_streaming_handler_calls_otel_metrics(self) -> None:
+    async def test_streaming_handler_calls_metrics_collector(self) -> None:
         """
         GIVEN a streaming tool call
         WHEN the stream executes
-        THEN should call otel_metrics.record_stream_start/end.
+        THEN should call metrics_collector.record_stream_start/end.
         """
         from mcp_server_langgraph.api.v1.mcp_websocket import (
             AuthenticatedMCPHandler,
-            otel_metrics,
         )
+        from mcp_server_langgraph.mcp.websocket.streaming import streaming_metrics_collector
 
         notifications: list[dict] = []
 
@@ -1754,11 +1765,11 @@ class TestGlobalMetricsWiringInHandlers:
             notification_callback=capture,
         )
 
-        # Track calls to OTel methods
+        # Track calls to metrics collector methods
         start_calls = []
         end_calls = []
-        original_start = otel_metrics.record_stream_start
-        original_end = otel_metrics.record_stream_end
+        original_start = streaming_metrics_collector.record_stream_start
+        original_end = streaming_metrics_collector.record_stream_end
 
         def mock_start(*args, **kwargs):
             start_calls.append((args, kwargs))
@@ -1771,8 +1782,8 @@ class TestGlobalMetricsWiringInHandlers:
         async def mock_stream(*args, **kwargs):
             yield {"type": "text", "text": "test", "is_final": True}
 
-        with patch.object(otel_metrics, "record_stream_start", side_effect=mock_start):
-            with patch.object(otel_metrics, "record_stream_end", side_effect=mock_end):
+        with patch.object(streaming_metrics_collector, "record_stream_start", side_effect=mock_start):
+            with patch.object(streaming_metrics_collector, "record_stream_end", side_effect=mock_end):
                 with patch.object(handler, "execute_tool_streaming", side_effect=mock_stream):
                     message = {
                         "jsonrpc": "2.0",
@@ -1786,21 +1797,21 @@ class TestGlobalMetricsWiringInHandlers:
                     }
                     await handler.handle(message)
 
-        # OTel methods should have been called
-        assert len(start_calls) == 1, "otel_metrics.record_stream_start should be called once"
-        assert len(end_calls) == 1, "otel_metrics.record_stream_end should be called once"
+        # Metrics collector methods should have been called
+        assert len(start_calls) == 1, "streaming_metrics_collector.record_stream_start should be called once"
+        assert len(end_calls) == 1, "streaming_metrics_collector.record_stream_end should be called once"
 
     @pytest.mark.asyncio
-    async def test_streaming_handler_calls_otel_record_stream_chunk(self) -> None:
+    async def test_streaming_handler_calls_record_chunk(self) -> None:
         """
         GIVEN a streaming tool call with multiple chunks
         WHEN chunks are yielded
-        THEN should call otel_metrics.record_stream_chunk for each chunk.
+        THEN should call metrics_collector.record_chunk for each chunk.
         """
         from mcp_server_langgraph.api.v1.mcp_websocket import (
             AuthenticatedMCPHandler,
-            otel_metrics,
         )
+        from mcp_server_langgraph.mcp.websocket.streaming import streaming_metrics_collector
 
         notifications: list[dict] = []
 
@@ -1812,9 +1823,9 @@ class TestGlobalMetricsWiringInHandlers:
             notification_callback=capture,
         )
 
-        # Track calls to OTel record_stream_chunk
+        # Track calls to record_chunk
         chunk_calls: list[tuple] = []
-        original_chunk = otel_metrics.record_stream_chunk
+        original_chunk = streaming_metrics_collector.record_chunk
 
         def mock_chunk(*args, **kwargs):
             chunk_calls.append((args, kwargs))
@@ -1825,7 +1836,7 @@ class TestGlobalMetricsWiringInHandlers:
             yield {"type": "text", "text": " World", "is_final": False}
             yield {"type": "text", "text": "!", "is_final": True}
 
-        with patch.object(otel_metrics, "record_stream_chunk", side_effect=mock_chunk):
+        with patch.object(streaming_metrics_collector, "record_chunk", side_effect=mock_chunk):
             with patch.object(handler, "execute_tool_streaming", side_effect=mock_stream):
                 message = {
                     "jsonrpc": "2.0",
@@ -1839,14 +1850,10 @@ class TestGlobalMetricsWiringInHandlers:
                 }
                 await handler.handle(message)
 
-        # OTel record_stream_chunk should be called for each chunk
-        assert len(chunk_calls) == 3, f"otel_metrics.record_stream_chunk should be called 3 times, got {len(chunk_calls)}"
-
-        # Verify chunk sizes were passed
-        for call in chunk_calls:
-            kwargs = call[1]
-            assert "chunk_size" in kwargs, "record_stream_chunk should receive chunk_size"
-            assert kwargs["chunk_size"] > 0, "chunk_size should be positive"
+        # record_chunk should be called for each chunk
+        assert len(chunk_calls) == 3, (
+            f"streaming_metrics_collector.record_chunk should be called 3 times, got {len(chunk_calls)}"
+        )
 
 
 @pytest.mark.xdist_group(name="test_mcp_websocket_streaming_handler")

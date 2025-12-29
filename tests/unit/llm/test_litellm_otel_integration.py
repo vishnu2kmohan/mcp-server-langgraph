@@ -248,15 +248,10 @@ class TestChatOTelMetadataIntegration:
 
         service = ChatServiceImpl()
 
-        with (
-            patch("mcp_server_langgraph.api.v1.chat.acompletion", new_callable=AsyncMock) as mock_acompletion,
-            patch("mcp_server_langgraph.api.v1.chat.get_cost_collector") as mock_get_collector,
-        ):
+        # Note: get_cost_collector was removed from chat.py as cost tracking
+        # is now handled automatically by CostTrackingCallback in llm/factory.py
+        with patch("mcp_server_langgraph.api.v1.chat.acompletion", new_callable=AsyncMock) as mock_acompletion:
             mock_acompletion.return_value = mock_response
-
-            mock_collector = MagicMock()
-            mock_collector.record_usage = AsyncMock(return_value=None)
-            mock_get_collector.return_value = mock_collector
 
             messages = [{"role": "user", "content": "Hello"}]
             await service._create_completion_via_litellm(
@@ -288,15 +283,10 @@ class TestChatOTelMetadataIntegration:
 
         service = ChatServiceImpl()
 
-        with (
-            patch("mcp_server_langgraph.api.v1.chat.acompletion", new_callable=AsyncMock) as mock_acompletion,
-            patch("mcp_server_langgraph.api.v1.chat.get_cost_collector") as mock_get_collector,
-        ):
+        # Note: get_cost_collector was removed from chat.py as cost tracking
+        # is now handled automatically by CostTrackingCallback in llm/factory.py
+        with patch("mcp_server_langgraph.api.v1.chat.acompletion", new_callable=AsyncMock) as mock_acompletion:
             mock_acompletion.return_value = mock_response
-
-            mock_collector = MagicMock()
-            mock_collector.record_usage = AsyncMock(return_value=None)
-            mock_get_collector.return_value = mock_collector
 
             messages = [{"role": "user", "content": "Hello"}]
             await service._create_completion_via_litellm(

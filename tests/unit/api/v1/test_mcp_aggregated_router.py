@@ -216,7 +216,7 @@ class TestListAggregatedToolsEndpoint:
         WHEN GET request is made
         THEN response should be 200 OK with tools list
         """
-        with patch("mcp_server_langgraph.api.v1.mcp_aggregated.get_cached_unified_registry") as mock_get_registry:
+        with patch("mcp_server_langgraph.mcp.client.cached_unified_registry.get_cached_unified_registry") as mock_get_registry:
             mock_get_registry.return_value = mock_cached_registry
 
             response = client.get("/api/v1/mcp/aggregated/tools")
@@ -237,7 +237,7 @@ class TestListAggregatedToolsEndpoint:
         WHEN tools are requested
         THEN the cached registry get_tools method should be called
         """
-        with patch("mcp_server_langgraph.api.v1.mcp_aggregated.get_cached_unified_registry") as mock_get_registry:
+        with patch("mcp_server_langgraph.mcp.client.cached_unified_registry.get_cached_unified_registry") as mock_get_registry:
             mock_get_registry.return_value = mock_cached_registry
 
             client.get("/api/v1/mcp/aggregated/tools")
@@ -254,7 +254,7 @@ class TestListAggregatedToolsEndpoint:
         WHEN tools are requested
         THEN the cached registry should be called with the filter
         """
-        with patch("mcp_server_langgraph.api.v1.mcp_aggregated.get_cached_unified_registry") as mock_get_registry:
+        with patch("mcp_server_langgraph.mcp.client.cached_unified_registry.get_cached_unified_registry") as mock_get_registry:
             mock_get_registry.return_value = mock_cached_registry
 
             client.get("/api/v1/mcp/aggregated/tools?server_name=test-server")
@@ -286,7 +286,7 @@ class TestListAggregatedResourcesEndpoint:
         WHEN GET request is made
         THEN response should be 200 OK with resources list
         """
-        with patch("mcp_server_langgraph.api.v1.mcp_aggregated.get_cached_unified_registry") as mock_get_registry:
+        with patch("mcp_server_langgraph.mcp.client.cached_unified_registry.get_cached_unified_registry") as mock_get_registry:
             mock_get_registry.return_value = mock_cached_registry
 
             response = client.get("/api/v1/mcp/aggregated/resources")
@@ -307,7 +307,7 @@ class TestListAggregatedResourcesEndpoint:
         WHEN resources are requested
         THEN the cached registry get_resources method should be called
         """
-        with patch("mcp_server_langgraph.api.v1.mcp_aggregated.get_cached_unified_registry") as mock_get_registry:
+        with patch("mcp_server_langgraph.mcp.client.cached_unified_registry.get_cached_unified_registry") as mock_get_registry:
             mock_get_registry.return_value = mock_cached_registry
 
             client.get("/api/v1/mcp/aggregated/resources")
@@ -339,7 +339,7 @@ class TestListAggregatedPromptsEndpoint:
         WHEN GET request is made
         THEN response should be 200 OK with prompts list
         """
-        with patch("mcp_server_langgraph.api.v1.mcp_aggregated.get_cached_unified_registry") as mock_get_registry:
+        with patch("mcp_server_langgraph.mcp.client.cached_unified_registry.get_cached_unified_registry") as mock_get_registry:
             mock_get_registry.return_value = mock_cached_registry
 
             response = client.get("/api/v1/mcp/aggregated/prompts")
@@ -360,7 +360,7 @@ class TestListAggregatedPromptsEndpoint:
         WHEN prompts are requested
         THEN the cached registry get_prompts method should be called
         """
-        with patch("mcp_server_langgraph.api.v1.mcp_aggregated.get_cached_unified_registry") as mock_get_registry:
+        with patch("mcp_server_langgraph.mcp.client.cached_unified_registry.get_cached_unified_registry") as mock_get_registry:
             mock_get_registry.return_value = mock_cached_registry
 
             client.get("/api/v1/mcp/aggregated/prompts")
@@ -391,7 +391,7 @@ class TestListAggregatedServersEndpoint:
         WHEN GET request is made
         THEN response should be 200 OK with servers summary
         """
-        with patch("mcp_server_langgraph.api.v1.mcp_aggregated.get_cached_unified_registry") as mock_get_registry:
+        with patch("mcp_server_langgraph.mcp.client.cached_unified_registry.get_cached_unified_registry") as mock_get_registry:
             mock_get_registry.return_value = mock_cached_registry
 
             response = client.get("/api/v1/mcp/aggregated/servers")
@@ -415,7 +415,7 @@ class TestListAggregatedServersEndpoint:
         WHEN servers are requested
         THEN the cached registry methods should be called
         """
-        with patch("mcp_server_langgraph.api.v1.mcp_aggregated.get_cached_unified_registry") as mock_get_registry:
+        with patch("mcp_server_langgraph.mcp.client.cached_unified_registry.get_cached_unified_registry") as mock_get_registry:
             mock_get_registry.return_value = mock_cached_registry
 
             client.get("/api/v1/mcp/aggregated/servers")
@@ -447,7 +447,7 @@ class TestGetServerCapabilitiesEndpoint:
         WHEN GET request is made
         THEN response should be 200 OK with capabilities
         """
-        with patch("mcp_server_langgraph.api.v1.mcp_aggregated.get_cached_unified_registry") as mock_get_registry:
+        with patch("mcp_server_langgraph.mcp.client.cached_unified_registry.get_cached_unified_registry") as mock_get_registry:
             mock_get_registry.return_value = mock_cached_registry
 
             response = client.get("/api/v1/mcp/aggregated/servers/test-server")
@@ -471,7 +471,7 @@ class TestGetServerCapabilitiesEndpoint:
         """
         mock_cached_registry.get_server_names = AsyncMock(return_value=[])
 
-        with patch("mcp_server_langgraph.api.v1.mcp_aggregated.get_cached_unified_registry") as mock_get_registry:
+        with patch("mcp_server_langgraph.mcp.client.cached_unified_registry.get_cached_unified_registry") as mock_get_registry:
             mock_get_registry.return_value = mock_cached_registry
 
             response = client.get("/api/v1/mcp/aggregated/servers/unknown-server")

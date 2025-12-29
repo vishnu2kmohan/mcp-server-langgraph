@@ -62,7 +62,7 @@ class TestInitWebSocketLifecycleWithSettings:
 
         # Reset singleton for test isolation
         with patch(
-            "mcp_server_langgraph.api.v1.mcp_websocket._lifecycle_manager",
+            "mcp_server_langgraph.mcp.websocket.lifecycle._lifecycle_manager",
             None,
         ):
             state = await init_websocket_lifecycle(streaming_settings=settings)
@@ -88,7 +88,7 @@ class TestInitWebSocketLifecycleWithSettings:
         )
 
         with patch(
-            "mcp_server_langgraph.api.v1.mcp_websocket._lifecycle_manager",
+            "mcp_server_langgraph.mcp.websocket.lifecycle._lifecycle_manager",
             None,
         ):
             state = await init_websocket_lifecycle(streaming_settings=settings)
@@ -114,7 +114,7 @@ class TestInitWebSocketLifecycleWithSettings:
         )
 
         with patch(
-            "mcp_server_langgraph.api.v1.mcp_websocket._lifecycle_manager",
+            "mcp_server_langgraph.mcp.websocket.lifecycle._lifecycle_manager",
             None,
         ):
             state = await init_websocket_lifecycle(streaming_settings=settings)
@@ -135,7 +135,7 @@ class TestInitWebSocketLifecycleWithSettings:
         from mcp_server_langgraph.bootstrap.websocket import init_websocket_lifecycle
 
         with patch(
-            "mcp_server_langgraph.api.v1.mcp_websocket._lifecycle_manager",
+            "mcp_server_langgraph.mcp.websocket.lifecycle._lifecycle_manager",
             None,
         ):
             state = await init_websocket_lifecycle()
@@ -251,7 +251,7 @@ class TestAppLifespanUsesStreamingSettings:
         )
 
         with patch(
-            "mcp_server_langgraph.api.v1.mcp_websocket._lifecycle_manager",
+            "mcp_server_langgraph.mcp.websocket.lifecycle._lifecycle_manager",
             None,
         ):
             state = await init_websocket_lifecycle(streaming_settings=settings)

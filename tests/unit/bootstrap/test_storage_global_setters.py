@@ -126,7 +126,7 @@ class TestStorageBootstrapGlobalSetters:
         mock_settings.partition_retention_enabled = False
 
         with patch("mcp_server_langgraph.audit.repository.create_audit_repository") as mock_repo:
-            with patch("mcp_server_langgraph.api.v1.notification_websocket.set_notification_broadcaster") as mock_setter:
+            with patch("mcp_server_langgraph.websocket.registry.set_notification_broadcaster") as mock_setter:
                 mock_repo.return_value = MagicMock()
 
                 from mcp_server_langgraph.bootstrap.storage import init_storage

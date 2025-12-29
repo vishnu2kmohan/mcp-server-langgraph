@@ -14,7 +14,7 @@ Tests verify:
 
 import gc
 from decimal import Decimal
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
@@ -149,13 +149,10 @@ class TestAlertOrchestratorBatchAnalysis:
                 label_key="service",
             )
 
-            # With orchestrator enabled, it should be used
-            with patch("mcp_server_langgraph.api.v1.alert_recommendations.feature_flags") as mock_flags:
-                mock_flags.enable_orchestrated_alert_analysis = True
-
-                # Should not raise - correlate should work
-                result = await correlate_alerts(request, alert_store=mock_store)
-                assert result is not None
+            # With orchestrator set and enabled, it should be used
+            # Note: The orchestrator is controlled via set_alert_orchestrator, not feature flags
+            result = await correlate_alerts(request, alert_store=mock_store)
+            assert result is not None
 
         finally:
             set_alert_orchestrator(None)
