@@ -23,6 +23,7 @@ if TYPE_CHECKING:
     from mcp_server_langgraph.monitoring.cost_budget import BudgetAlertBroadcaster
     from mcp_server_langgraph.notifications.broadcast import NotificationBroadcaster
     from mcp_server_langgraph.observability.trace_broadcaster import TraceBroadcaster
+    from mcp_server_langgraph.websocket.handlers.devtools import DevToolsBroadcaster
     from mcp_server_langgraph.websocket.handlers.mcp_aggregated import (
         MCPAggregatedBroadcaster,
     )
@@ -199,6 +200,29 @@ def set_budget_alert_broadcaster(broadcaster: BudgetAlertBroadcaster | None) -> 
     _budget_alert_broadcaster = broadcaster
 
 
+# =============================================================================
+# DevTools Broadcaster
+# =============================================================================
+
+_devtools_broadcaster: DevToolsBroadcaster | None = None
+
+
+def get_devtools_broadcaster() -> DevToolsBroadcaster:
+    """Get the DevTools broadcaster instance."""
+    global _devtools_broadcaster
+    if _devtools_broadcaster is None:
+        from mcp_server_langgraph.websocket.handlers.devtools import DevToolsBroadcaster
+
+        _devtools_broadcaster = DevToolsBroadcaster()
+    return _devtools_broadcaster
+
+
+def set_devtools_broadcaster(broadcaster: DevToolsBroadcaster | None) -> None:
+    """Set the DevTools broadcaster instance (for app initialization or testing)."""
+    global _devtools_broadcaster
+    _devtools_broadcaster = broadcaster
+
+
 __all__ = [
     # Notification
     "get_notification_broadcaster",
@@ -222,4 +246,7 @@ __all__ = [
     # Budget Alert
     "get_budget_alert_broadcaster",
     "set_budget_alert_broadcaster",
+    # DevTools
+    "get_devtools_broadcaster",
+    "set_devtools_broadcaster",
 ]

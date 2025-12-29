@@ -47,6 +47,7 @@ from mcp_server_langgraph.websocket.handlers.mcp import MCPWebSocketHandler
 from mcp_server_langgraph.websocket.handlers.mcp_aggregated import MCPAggregatedHandler
 from mcp_server_langgraph.websocket.handlers.ai_suggestions import AISuggestionsHandler
 from mcp_server_langgraph.websocket.handlers.budget_alerts import BudgetAlertsHandler
+from mcp_server_langgraph.websocket.handlers.devtools import DevToolsHandler
 from mcp_server_langgraph.websocket.handlers.trace import TraceHandler
 
 # Create the main WebSocket router
@@ -785,6 +786,60 @@ async def budget_alerts_websocket(websocket: WebSocket) -> None:
             message_timeout=30,
         ),
         broadcaster=get_budget_alert_broadcaster(),
+    )
+    await handler.run(websocket)
+
+
+# =============================================================================
+# DevTools WebSocket Endpoint
+# =============================================================================
+
+
+@ws_router.websocket("/devtools")
+async def devtools_websocket(websocket: WebSocket) -> None:
+    """
+    WebSocket endpoint for DevTools console and network events.
+
+    URL: /api/v1/ws/devtools
+
+    Provides real-time DevTools events for the frontend DevTools panel:
+    - Console log entries (info, warning, error, debug)
+    - Network request events (start, update, complete)
+    - Context-aware filtering by session/workflow ID
+
+    Message Types (Client -> Server):
+        - subscribe: Subscribe to DevTools events
+        - unsubscribe: Unsubscribe from events
+        - set_context: Update context filter (session/workflow ID)
+
+    Response Types (Server -> Client):
+        - subscribed: Successfully subscribed
+        - unsubscribed: Successfully unsubscribed
+        - context_updated: Context filter updated
+        - console: Console log entry
+        - network: Network request start
+        - network_update: Network request update/completion
+
+    Uses the standardized WebSocketBase infrastructure with:
+    - JWT authentication required
+    - OpenFGA authorization (requires 'viewer' relation on dashboard:devtools)
+    - OpenTelemetry tracing
+    - Metrics collection
+    - Standard message envelope
+    """
+    from mcp_server_langgraph.websocket.registry import get_devtools_broadcaster
+
+    handler = DevToolsHandler(
+        config=WebSocketConfig(
+            endpoint_name="devtools",
+            require_auth=True,
+            authz_resource_type="dashboard",
+            authz_resource_id="devtools",
+            authz_required_relation="viewer",
+            rate_limit_per_minute=300,
+            message_timeout=30,
+        ),
+        broadcaster=get_devtools_broadcaster(),
     )
     await handler.run(websocket)
 
