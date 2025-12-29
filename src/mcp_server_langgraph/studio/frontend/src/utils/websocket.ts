@@ -51,31 +51,34 @@ export function getWsProtocol(): "ws:" | "wss:" {
 /**
  * Build a WebSocket URL for an API endpoint
  *
+ * IMPORTANT: The includeAuthToken parameter is REQUIRED to prevent authentication bugs.
+ * Most WebSocket endpoints require authentication (require_auth=True in backend).
+ * See: ws_router.py for backend auth requirements.
+ *
  * @param endpoint - The API endpoint path (e.g., "/api/v1/ws/notifications")
- * @param params - Optional query parameters to append
- * @param includeAuthToken - Whether to include auth token in params (default: false)
+ * @param params - Query parameters to append (use {} for no params)
+ * @param includeAuthToken - Whether to include auth token in params (REQUIRED - no default)
  * @returns Full WebSocket URL
  *
  * @example
  * ```ts
- * // Basic usage
- * buildWebSocketUrl("/api/v1/ws/notifications")
- * // => "ws://localhost:5175/api/v1/ws/notifications" (dev)
- * // => "wss://app.example.com/api/v1/ws/notifications" (prod)
+ * // Authenticated endpoint (most endpoints)
+ * buildWebSocketUrl("/api/v1/ws/notifications", {}, true)
+ * // => "wss://app.example.com/api/v1/ws/notifications?token=eyJ..."
+ *
+ * // Unauthenticated endpoint (rare - e.g., /ws/mcp for anonymous connections)
+ * buildWebSocketUrl("/api/v1/ws/mcp", {}, false)
+ * // => "wss://app.example.com/api/v1/ws/mcp"
  *
  * // With parameters
- * buildWebSocketUrl("/api/v1/ws/agents", { session_id: "123" })
- * // => "ws://localhost:5175/api/v1/ws/agents?session_id=123"
- *
- * // With auth token
- * buildWebSocketUrl("/api/v1/ws/mcp/auth", {}, true)
- * // => "wss://app.example.com/api/v1/ws/mcp/auth?token=eyJ..."
+ * buildWebSocketUrl("/api/v1/ws/agents", { session_id: "123" }, true)
+ * // => "wss://app.example.com/api/v1/ws/agents?session_id=123&token=eyJ..."
  * ```
  */
 export function buildWebSocketUrl(
   endpoint: string,
-  params?: Record<string, string>,
-  includeAuthToken = false,
+  params: Record<string, string>,
+  includeAuthToken: boolean,
 ): string {
   const protocol = getWsProtocol();
   const host = getApiHost();
@@ -165,10 +168,12 @@ export type WsEndpoint = (typeof WS_ENDPOINTS)[keyof typeof WS_ENDPOINTS];
  *
  * Use this for endpoints with dynamic path segments (e.g., `:workflowId`).
  *
+ * IMPORTANT: The includeAuthToken parameter is REQUIRED. See buildWebSocketUrl docs.
+ *
  * @param endpoint - The endpoint template with :param placeholders
  * @param pathParams - Object mapping param names to values
- * @param queryParams - Optional query parameters
- * @param includeAuthToken - Whether to include auth token
+ * @param queryParams - Query parameters (use {} for no params)
+ * @param includeAuthToken - Whether to include auth token (REQUIRED)
  * @returns Full WebSocket URL with substituted path parameters
  *
  * @example
@@ -176,16 +181,17 @@ export type WsEndpoint = (typeof WS_ENDPOINTS)[keyof typeof WS_ENDPOINTS];
  * buildWebSocketUrlWithPath(
  *   WS_ENDPOINTS.WORKFLOW_EXECUTION,
  *   { workflowId: "abc-123" },
- *   { debug: "true" }
+ *   { debug: "true" },
+ *   true
  * )
- * // => "wss://app.example.com/api/v1/ws/workflows/abc-123?debug=true"
+ * // => "wss://app.example.com/api/v1/ws/workflows/abc-123?debug=true&token=eyJ..."
  * ```
  */
 export function buildWebSocketUrlWithPath(
   endpoint: string,
   pathParams: Record<string, string>,
-  queryParams?: Record<string, string>,
-  includeAuthToken = false,
+  queryParams: Record<string, string>,
+  includeAuthToken: boolean,
 ): string {
   // Replace path parameters (e.g., :workflowId -> actual value)
   let resolvedEndpoint = endpoint;

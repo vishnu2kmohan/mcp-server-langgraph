@@ -8,6 +8,7 @@
  * - Message handling
  * - Connection status tracking
  * - Token expiration handling (4010 close code)
+ * - Reconnection metrics for observability
  */
 
 import { useState, useCallback, useRef, useEffect } from "react";
@@ -15,6 +16,14 @@ import {
   WS_CLOSE_TOKEN_EXPIRED,
   ensureValidTokenForWebSocket,
 } from "../utils/websocketAuth";
+import {
+  type ReconnectionMetrics,
+  type ReconnectionAttempt,
+  createInitialReconnectionMetrics,
+  classifyCloseCode,
+  calculateSuccessRate,
+  calculateAvgDuration,
+} from "../types/websocket-metrics";
 
 /**
  * Connection status type
@@ -79,7 +88,14 @@ export interface UseRealtimeSyncReturn {
   disconnect: () => void;
   /** Manually reconnect */
   reconnect: () => void;
+  /** Reconnection metrics for observability */
+  metrics: ReconnectionMetrics;
+  /** Reset all reconnection metrics to initial state */
+  resetMetrics: () => void;
 }
+
+// Re-export metrics types for consumers
+export type { ReconnectionMetrics, ReconnectionAttempt };
 
 /**
  * Real-time sync hook using WebSocket
@@ -138,6 +154,11 @@ export function useRealtimeSync(
   const [reconnectAttempts, setReconnectAttempts] = useState(0);
   const [lastMessageTime, setLastMessageTime] = useState<number | null>(null);
 
+  // Reconnection metrics state for observability
+  const [metrics, setMetrics] = useState<ReconnectionMetrics>(
+    createInitialReconnectionMetrics,
+  );
+
   // Refs for WebSocket and state that needs to be accessed in callbacks
   const wsRef = useRef<WebSocket | null>(null);
   const messageQueueRef = useRef<unknown[]>([]);
@@ -148,6 +169,11 @@ export function useRealtimeSync(
   const reconnectAttemptsRef = useRef(0);
   // Ref to store createConnection for use in actuallyCreateConnection without circular deps
   const createConnectionRef = useRef<() => void>(() => {});
+
+  // Track reconnection timing
+  const reconnectionStartTimeRef = useRef<number | null>(null);
+  const lastCloseCodeRef = useRef<number | null>(null);
+  const maxRecentAttempts = 10;
 
   // Keep ref in sync with state
   reconnectAttemptsRef.current = reconnectAttempts;
@@ -182,6 +208,141 @@ export function useRealtimeSync(
   }, []);
 
   /**
+   * Record a reconnection attempt in metrics.
+   */
+  const recordReconnectionAttempt = useCallback(
+    (closeCode: number | null, isStarting: boolean) => {
+      const now = Date.now();
+
+      if (isStarting) {
+        // Starting a reconnection attempt
+        reconnectionStartTimeRef.current = now;
+        lastCloseCodeRef.current = closeCode;
+
+        setMetrics((prev) => {
+          const failureReason = closeCode
+            ? classifyCloseCode(closeCode)
+            : "unknown";
+
+          // Create new attempt record
+          const newAttempt: ReconnectionAttempt = {
+            timestamp: now,
+            attemptNumber: prev.totalAttempts + 1,
+            succeeded: false, // Will be updated on success
+            durationMs: null,
+            failureReason,
+            triggerCloseCode: closeCode,
+          };
+
+          // Keep only recent attempts
+          const recentAttempts = [
+            newAttempt,
+            ...prev.recentAttempts.slice(0, maxRecentAttempts - 1),
+          ];
+
+          // Update failure counts
+          const failuresByReason = { ...prev.failuresByReason };
+          if (failureReason !== "manual_disconnect") {
+            failuresByReason[failureReason] =
+              (failuresByReason[failureReason] || 0) + 1;
+          }
+
+          return {
+            ...prev,
+            totalAttempts: prev.totalAttempts + 1,
+            consecutiveFailures: prev.consecutiveFailures + 1,
+            lastDisconnectionTime: now,
+            failuresByReason,
+            recentAttempts,
+            successRate: calculateSuccessRate(
+              prev.totalReconnections,
+              prev.totalAttempts + 1,
+            ),
+          };
+        });
+      }
+    },
+    [],
+  );
+
+  /**
+   * Record a successful reconnection in metrics.
+   */
+  const recordReconnectionSuccess = useCallback(() => {
+    const now = Date.now();
+    const startTime = reconnectionStartTimeRef.current;
+    const durationMs = startTime ? now - startTime : 0;
+
+    setMetrics((prev) => {
+      // Update the most recent attempt to show success
+      const recentAttempts = [...prev.recentAttempts];
+      if (recentAttempts.length > 0) {
+        recentAttempts[0] = {
+          ...recentAttempts[0],
+          succeeded: true,
+          durationMs,
+          failureReason: null,
+        };
+      }
+
+      const newTotalReconnections = prev.totalReconnections + 1;
+      const newTotalTime = prev.totalReconnectionTimeMs + durationMs;
+
+      return {
+        ...prev,
+        totalReconnections: newTotalReconnections,
+        consecutiveFailures: 0,
+        lastReconnectionTime: now,
+        totalReconnectionTimeMs: newTotalTime,
+        avgReconnectionDurationMs: calculateAvgDuration(
+          newTotalTime,
+          newTotalReconnections,
+        ),
+        recentAttempts,
+        successRate: calculateSuccessRate(
+          newTotalReconnections,
+          prev.totalAttempts,
+        ),
+      };
+    });
+
+    reconnectionStartTimeRef.current = null;
+  }, []);
+
+  /**
+   * Record max attempts exceeded failure.
+   */
+  const recordMaxAttemptsExceeded = useCallback(() => {
+    setMetrics((prev) => {
+      const failuresByReason = { ...prev.failuresByReason };
+      failuresByReason.max_attempts_exceeded =
+        (failuresByReason.max_attempts_exceeded || 0) + 1;
+      return { ...prev, failuresByReason };
+    });
+  }, []);
+
+  /**
+   * Record token refresh failure.
+   */
+  const recordTokenRefreshFailed = useCallback(() => {
+    setMetrics((prev) => {
+      const failuresByReason = { ...prev.failuresByReason };
+      failuresByReason.token_refresh_failed =
+        (failuresByReason.token_refresh_failed || 0) + 1;
+      return { ...prev, failuresByReason };
+    });
+  }, []);
+
+  /**
+   * Reset all metrics to initial state.
+   */
+  const resetMetrics = useCallback(() => {
+    setMetrics(createInitialReconnectionMetrics());
+    reconnectionStartTimeRef.current = null;
+    lastCloseCodeRef.current = null;
+  }, []);
+
+  /**
    * Internal function that actually creates the WebSocket connection.
    * Called after proactive token validation in createConnection.
    */
@@ -200,6 +361,10 @@ export function useRealtimeSync(
 
     ws.onopen = () => {
       setStatus("connected");
+      // If this was a reconnection (not initial connection), record success
+      if (reconnectionStartTimeRef.current !== null) {
+        recordReconnectionSuccess();
+      }
       setReconnectAttempts(0);
       reconnectAttemptsRef.current = 0;
       flushMessageQueue();
@@ -240,12 +405,15 @@ export function useRealtimeSync(
           const refreshed = await ensureValidTokenForWebSocket();
           if (refreshed) {
             // Token refreshed successfully - reconnect immediately
+            // Record this as a reconnection attempt starting
+            recordReconnectionAttempt(event.code, true);
             // Use actuallyCreateConnection directly since we just validated
             setReconnectAttempts(0);
             reconnectAttemptsRef.current = 0;
             actuallyCreateConnection();
           } else {
             // Refresh failed - notify and disconnect
+            recordTokenRefreshFailed();
             setStatus("disconnected");
             callbacksRef.current.onTokenExpired?.();
             callbacksRef.current.onDisconnect?.();
@@ -261,6 +429,9 @@ export function useRealtimeSync(
         const nextAttempts = currentAttempts + 1;
         setReconnectAttempts(nextAttempts);
         reconnectAttemptsRef.current = nextAttempts;
+
+        // Record reconnection attempt in metrics
+        recordReconnectionAttempt(event.code, true);
 
         // Calculate delay with optional exponential backoff
         const delay = calculateReconnectDelay(
@@ -279,6 +450,8 @@ export function useRealtimeSync(
           createConnectionRef.current();
         }, delay);
       } else {
+        // Max attempts exceeded
+        recordMaxAttemptsExceeded();
         setStatus("disconnected");
         callbacksRef.current.onDisconnect?.();
       }
@@ -291,6 +464,10 @@ export function useRealtimeSync(
     maxDelayMs,
     backoffMultiplier,
     flushMessageQueue,
+    recordReconnectionAttempt,
+    recordReconnectionSuccess,
+    recordTokenRefreshFailed,
+    recordMaxAttemptsExceeded,
   ]);
 
   /**
@@ -402,5 +579,7 @@ export function useRealtimeSync(
     send,
     disconnect,
     reconnect,
+    metrics,
+    resetMetrics,
   };
 }

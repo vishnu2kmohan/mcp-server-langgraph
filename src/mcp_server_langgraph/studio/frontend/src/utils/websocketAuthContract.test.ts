@@ -256,8 +256,9 @@ describe("WebSocket Authentication Contract", () => {
       expect(url).not.toContain("token=");
     });
 
-    it("should NOT include token when includeAuthToken is omitted (default false)", () => {
-      const url = buildWebSocketUrl(WS_ENDPOINTS.MCP);
+    it("should NOT include token when includeAuthToken is false", () => {
+      // Note: includeAuthToken is now REQUIRED, so we explicitly pass false
+      const url = buildWebSocketUrl(WS_ENDPOINTS.MCP, {}, false);
       expect(url).not.toContain("token=");
     });
 
