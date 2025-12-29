@@ -7,6 +7,8 @@
  * - Dispatch notifications to Redux store
  * - Connection status tracking
  * - Automatic reconnection
+ *
+ * Note: This test mocks useRealtimeSync since the hook uses that for WebSocket management.
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
@@ -21,60 +23,36 @@ import notificationReducer, {
 import authReducer from "../store/slices/authSlice";
 import type { ReactNode } from "react";
 
-// Mock WebSocket class
-class MockWebSocket {
-  static instances: MockWebSocket[] = [];
+// Mock useRealtimeSync (the hook uses this, not native WebSocket)
+const mockSend = vi.fn();
+const mockDisconnect = vi.fn();
+const mockReconnect = vi.fn();
+let mockOnMessage: ((data: unknown) => void) | undefined;
+let _mockOnConnect: (() => void) | undefined;
+let _mockOnDisconnect: (() => void) | undefined;
+let _mockOnError: ((error: Error) => void) | undefined;
+let mockStatus:
+  | "connecting"
+  | "connected"
+  | "disconnected"
+  | "reconnecting"
+  | "error" = "connecting";
 
-  url: string;
-  readyState: number = 0; // CONNECTING
-  onopen: (() => void) | null = null;
-  onclose: ((event: { code: number; reason: string }) => void) | null = null;
-  onmessage: ((event: { data: string }) => void) | null = null;
-  onerror: ((event: Event) => void) | null = null;
-
-  constructor(url: string) {
-    this.url = url;
-    MockWebSocket.instances.push(this);
-    // Simulate connection delay
-    setTimeout(() => {
-      if (this.readyState === 0) {
-        this.readyState = 1; // OPEN
-        this.onopen?.();
-      }
-    }, 10);
-  }
-
-  send = vi.fn();
-  close = vi.fn(() => {
-    this.readyState = 3; // CLOSED
-    this.onclose?.({ code: 1000, reason: "Normal closure" });
-  });
-
-  // Helper to simulate receiving a message
-  simulateMessage(data: unknown) {
-    this.onmessage?.({ data: JSON.stringify(data) });
-  }
-
-  // Helper to simulate an error
-  simulateError(error: Error) {
-    this.onerror?.(error as unknown as Event);
-  }
-
-  // Helper to simulate closing
-  simulateClose(code: number, reason: string) {
-    this.readyState = 3;
-    this.onclose?.({ code, reason });
-  }
-
-  static clearInstances() {
-    MockWebSocket.instances = [];
-  }
-
-  static readonly CONNECTING = 0;
-  static readonly OPEN = 1;
-  static readonly CLOSING = 2;
-  static readonly CLOSED = 3;
-}
+vi.mock("./useRealtimeSync", () => ({
+  useRealtimeSync: vi.fn((options) => {
+    mockOnMessage = options.onMessage;
+    _mockOnConnect = options.onConnect;
+    _mockOnDisconnect = options.onDisconnect;
+    _mockOnError = options.onError;
+    return {
+      status: mockStatus,
+      send: mockSend,
+      disconnect: mockDisconnect,
+      reconnect: mockReconnect,
+      metrics: { totalAttempts: 0 },
+    };
+  }),
+}));
 
 // Create test store with auth and notifications slices
 interface TestStoreOptions {
@@ -122,30 +100,35 @@ describe("useNotificationWebSocket", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    MockWebSocket.clearInstances();
-    vi.useFakeTimers();
-    vi.stubGlobal("WebSocket", MockWebSocket);
+    mockStatus = "connecting";
+    mockOnMessage = undefined;
+    mockOnConnect = undefined;
+    mockOnDisconnect = undefined;
+    mockOnError = undefined;
     store = createTestStore();
   });
 
   afterEach(() => {
     cleanup();
-    vi.restoreAllMocks();
-    vi.useRealTimers();
-    vi.unstubAllGlobals();
+    vi.clearAllMocks();
   });
 
   describe("Connection", () => {
-    it("should connect to the notifications WebSocket endpoint", () => {
+    it("should connect to the notifications WebSocket endpoint", async () => {
       renderHook(() => useNotificationWebSocket(), {
         wrapper: createWrapper(store),
       });
 
-      expect(MockWebSocket.instances.length).toBe(1);
-      expect(MockWebSocket.instances[0].url).toContain("/ws/notifications");
+      const { useRealtimeSync } = await import("./useRealtimeSync");
+      expect(useRealtimeSync).toHaveBeenCalledWith(
+        expect.objectContaining({
+          url: expect.stringContaining("/ws/notifications"),
+        }),
+      );
     });
 
     it("should return connecting status initially", () => {
+      mockStatus = "connecting";
       const { result } = renderHook(() => useNotificationWebSocket(), {
         wrapper: createWrapper(store),
       });
@@ -154,61 +137,48 @@ describe("useNotificationWebSocket", () => {
     });
 
     it("should return connected status after WebSocket opens", () => {
+      mockStatus = "connected";
       const { result } = renderHook(() => useNotificationWebSocket(), {
         wrapper: createWrapper(store),
-      });
-
-      act(() => {
-        vi.advanceTimersByTime(20);
       });
 
       expect(result.current.status).toBe("connected");
     });
 
     it("should return disconnected status after WebSocket closes", () => {
+      mockStatus = "disconnected";
       const { result } = renderHook(() => useNotificationWebSocket(), {
         wrapper: createWrapper(store),
-      });
-
-      act(() => {
-        vi.advanceTimersByTime(20);
-      });
-
-      act(() => {
-        MockWebSocket.instances[0].simulateClose(1000, "Normal");
       });
 
       expect(result.current.status).toBe("disconnected");
     });
 
-    it("should close WebSocket on unmount", () => {
-      const { unmount } = renderHook(() => useNotificationWebSocket(), {
+    it("should expose disconnect function for cleanup", () => {
+      mockStatus = "connected";
+      const { result } = renderHook(() => useNotificationWebSocket(), {
         wrapper: createWrapper(store),
       });
 
-      act(() => {
-        vi.advanceTimersByTime(20);
-      });
+      // Verify disconnect function is exposed
+      expect(typeof result.current.disconnect).toBe("function");
 
-      unmount();
-
-      expect(MockWebSocket.instances[0].close).toHaveBeenCalled();
+      // Calling disconnect should call the underlying useRealtimeSync disconnect
+      result.current.disconnect();
+      expect(mockDisconnect).toHaveBeenCalled();
     });
   });
 
   describe("Notification Dispatch", () => {
     it("should dispatch addNotification when receiving a notification message", () => {
+      mockStatus = "connected";
       renderHook(() => useNotificationWebSocket(), {
         wrapper: createWrapper(store),
       });
 
+      // Simulate receiving a notification via the onMessage callback
       act(() => {
-        vi.advanceTimersByTime(20);
-      });
-
-      // Simulate receiving a notification
-      act(() => {
-        MockWebSocket.instances[0].simulateMessage({
+        mockOnMessage?.({
           type: "notification",
           payload: {
             type: "info",
@@ -226,16 +196,13 @@ describe("useNotificationWebSocket", () => {
     });
 
     it("should dispatch success notification", () => {
+      mockStatus = "connected";
       renderHook(() => useNotificationWebSocket(), {
         wrapper: createWrapper(store),
       });
 
       act(() => {
-        vi.advanceTimersByTime(20);
-      });
-
-      act(() => {
-        MockWebSocket.instances[0].simulateMessage({
+        mockOnMessage?.({
           type: "notification",
           payload: {
             type: "success",
@@ -250,16 +217,13 @@ describe("useNotificationWebSocket", () => {
     });
 
     it("should dispatch warning notification", () => {
+      mockStatus = "connected";
       renderHook(() => useNotificationWebSocket(), {
         wrapper: createWrapper(store),
       });
 
       act(() => {
-        vi.advanceTimersByTime(20);
-      });
-
-      act(() => {
-        MockWebSocket.instances[0].simulateMessage({
+        mockOnMessage?.({
           type: "notification",
           payload: {
             type: "warning",
@@ -274,16 +238,13 @@ describe("useNotificationWebSocket", () => {
     });
 
     it("should dispatch error notification", () => {
+      mockStatus = "connected";
       renderHook(() => useNotificationWebSocket(), {
         wrapper: createWrapper(store),
       });
 
       act(() => {
-        vi.advanceTimersByTime(20);
-      });
-
-      act(() => {
-        MockWebSocket.instances[0].simulateMessage({
+        mockOnMessage?.({
           type: "notification",
           payload: {
             type: "error",
@@ -298,16 +259,13 @@ describe("useNotificationWebSocket", () => {
     });
 
     it("should dispatch notification with action", () => {
+      mockStatus = "connected";
       renderHook(() => useNotificationWebSocket(), {
         wrapper: createWrapper(store),
       });
 
       act(() => {
-        vi.advanceTimersByTime(20);
-      });
-
-      act(() => {
-        MockWebSocket.instances[0].simulateMessage({
+        mockOnMessage?.({
           type: "notification",
           payload: {
             type: "info",
@@ -328,18 +286,15 @@ describe("useNotificationWebSocket", () => {
     });
 
     it("should update unread count when receiving notifications", () => {
+      mockStatus = "connected";
       renderHook(() => useNotificationWebSocket(), {
         wrapper: createWrapper(store),
-      });
-
-      act(() => {
-        vi.advanceTimersByTime(20);
       });
 
       expect(selectUnreadCount(store.getState())).toBe(0);
 
       act(() => {
-        MockWebSocket.instances[0].simulateMessage({
+        mockOnMessage?.({
           type: "notification",
           payload: {
             type: "info",
@@ -352,7 +307,7 @@ describe("useNotificationWebSocket", () => {
       expect(selectUnreadCount(store.getState())).toBe(1);
 
       act(() => {
-        MockWebSocket.instances[0].simulateMessage({
+        mockOnMessage?.({
           type: "notification",
           payload: {
             type: "info",
@@ -366,16 +321,13 @@ describe("useNotificationWebSocket", () => {
     });
 
     it("should ignore non-notification messages", () => {
+      mockStatus = "connected";
       renderHook(() => useNotificationWebSocket(), {
         wrapper: createWrapper(store),
       });
 
       act(() => {
-        vi.advanceTimersByTime(20);
-      });
-
-      act(() => {
-        MockWebSocket.instances[0].simulateMessage({
+        mockOnMessage?.({
           type: "heartbeat",
           payload: { ts: Date.now() },
         });
@@ -386,17 +338,14 @@ describe("useNotificationWebSocket", () => {
     });
 
     it("should handle malformed messages gracefully", () => {
+      mockStatus = "connected";
       renderHook(() => useNotificationWebSocket(), {
         wrapper: createWrapper(store),
       });
 
-      act(() => {
-        vi.advanceTimersByTime(20);
-      });
-
       // Send malformed message (missing payload)
       act(() => {
-        MockWebSocket.instances[0].simulateMessage({
+        mockOnMessage?.({
           type: "notification",
         });
       });
@@ -407,82 +356,34 @@ describe("useNotificationWebSocket", () => {
   });
 
   describe("Reconnection", () => {
-    it("should attempt to reconnect on abnormal close", () => {
-      renderHook(() => useNotificationWebSocket(), {
-        wrapper: createWrapper(store),
-      });
-
-      act(() => {
-        vi.advanceTimersByTime(20);
-      });
-
-      act(() => {
-        MockWebSocket.instances[0].simulateClose(1006, "Abnormal");
-      });
-
-      // Advance time to trigger reconnect
-      act(() => {
-        vi.advanceTimersByTime(5100);
-      });
-
-      expect(MockWebSocket.instances.length).toBeGreaterThan(1);
-    });
-
-    it("should provide reconnect function", () => {
+    it("should expose disconnect function that calls useRealtimeSync disconnect", () => {
+      mockStatus = "connected";
       const { result } = renderHook(() => useNotificationWebSocket(), {
         wrapper: createWrapper(store),
       });
 
-      act(() => {
-        vi.advanceTimersByTime(20);
-      });
+      result.current.disconnect();
 
-      act(() => {
-        MockWebSocket.instances[0].simulateClose(1000, "Normal");
-      });
-
-      expect(result.current.status).toBe("disconnected");
-
-      act(() => {
-        result.current.reconnect();
-      });
-
-      expect(MockWebSocket.instances.length).toBe(2);
+      expect(mockDisconnect).toHaveBeenCalled();
     });
 
-    it("should provide disconnect function", () => {
+    it("should expose reconnect function that calls useRealtimeSync reconnect", () => {
+      mockStatus = "disconnected";
       const { result } = renderHook(() => useNotificationWebSocket(), {
         wrapper: createWrapper(store),
       });
 
-      act(() => {
-        vi.advanceTimersByTime(20);
-      });
+      result.current.reconnect();
 
-      expect(result.current.status).toBe("connected");
-
-      act(() => {
-        result.current.disconnect();
-      });
-
-      expect(MockWebSocket.instances[0].close).toHaveBeenCalled();
+      expect(mockReconnect).toHaveBeenCalled();
     });
   });
 
   describe("Error Handling", () => {
     it("should return error status on WebSocket error", () => {
+      mockStatus = "error";
       const { result } = renderHook(() => useNotificationWebSocket(), {
         wrapper: createWrapper(store),
-      });
-
-      act(() => {
-        vi.advanceTimersByTime(20);
-      });
-
-      act(() => {
-        MockWebSocket.instances[0].simulateError(
-          new Error("Connection failed"),
-        );
       });
 
       expect(result.current.status).toBe("error");
@@ -490,8 +391,9 @@ describe("useNotificationWebSocket", () => {
   });
 
   describe("Options", () => {
-    it("should allow custom WebSocket URL", () => {
-      // Test uses mock WebSocket - insecure protocol is intentional for unit testing
+    it("should allow custom WebSocket URL", async () => {
+      mockStatus = "connected";
+      // Test uses mock - insecure protocol is intentional for unit testing
       renderHook(
         () =>
           // nosemgrep: javascript.lang.security.detect-insecure-websocket.detect-insecure-websocket
@@ -501,13 +403,19 @@ describe("useNotificationWebSocket", () => {
         },
       );
 
-      expect(MockWebSocket.instances[0].url).toBe(
-        // nosemgrep: javascript.lang.security.detect-insecure-websocket.detect-insecure-websocket
-        "ws://custom.host/notifications",
+      const { useRealtimeSync } = await import("./useRealtimeSync");
+      expect(useRealtimeSync).toHaveBeenCalledWith(
+        expect.objectContaining({
+          // nosemgrep: javascript.lang.security.detect-insecure-websocket.detect-insecure-websocket
+          url: "ws://custom.host/notifications",
+        }),
       );
     });
 
     it("should support enabled option to control connection", () => {
+      mockStatus = "connected";
+
+      // Start disabled - status should be "disconnected" regardless of underlying connection
       const { result, rerender } = renderHook(
         ({ enabled }) => useNotificationWebSocket({ enabled }),
         {
@@ -516,92 +424,98 @@ describe("useNotificationWebSocket", () => {
         },
       );
 
-      // When disabled, status should be 'disconnected' regardless of internal connection
-      // Note: Due to hooks rules, the underlying WebSocket may still be created but
-      // the hook reports 'disconnected' status and closes the connection
+      // When disabled, status is overridden to "disconnected"
       expect(result.current.status).toBe("disconnected");
 
       // Enable connection
       rerender({ enabled: true });
 
       // After enabling, status should reflect actual connection status
-      act(() => {
-        vi.advanceTimersByTime(20);
-      });
       expect(result.current.status).toBe("connected");
     });
   });
 
   describe("Auth Initialization", () => {
-    it("should not connect when auth is still initializing", () => {
+    it("should not connect when auth is still initializing", async () => {
       // Create store with isInitializing=true (tokens exist but auth not validated)
       const initializingStore = createTestStore({
         isAuthenticated: true,
         isInitializing: true,
       });
 
+      mockStatus = "connected";
       const { result } = renderHook(() => useNotificationWebSocket(), {
         wrapper: createWrapper(initializingStore),
       });
 
-      // Should not attempt WebSocket connection during auth initialization
-      expect(MockWebSocket.instances.length).toBe(0);
+      // Should report disconnected during initialization
       expect(result.current.status).toBe("disconnected");
+
+      // Verify empty URL passed to prevent connection
+      const { useRealtimeSync } = await import("./useRealtimeSync");
+      expect(useRealtimeSync).toHaveBeenCalledWith(
+        expect.objectContaining({
+          url: "", // Empty URL prevents connection
+        }),
+      );
     });
 
-    it("should connect after auth initialization completes", () => {
+    it("should connect after auth initialization completes", async () => {
       // Start with initializing state
       const initializingStore = createTestStore({
         isAuthenticated: true,
         isInitializing: true,
       });
 
-      const { result, rerender: _rerender } = renderHook(
-        () => useNotificationWebSocket(),
-        {
-          wrapper: createWrapper(initializingStore),
-        },
-      );
+      mockStatus = "connected";
+      const { result } = renderHook(() => useNotificationWebSocket(), {
+        wrapper: createWrapper(initializingStore),
+      });
 
-      // No connection during initialization
-      expect(MockWebSocket.instances.length).toBe(0);
+      // During initialization, status is disconnected
       expect(result.current.status).toBe("disconnected");
 
-      // Simulate auth initialization completing
-      // In real app, initializeAuth.fulfilled sets isInitializing=false
+      // Now test with a ready store
+      cleanup();
       const readyStore = createTestStore({
         isAuthenticated: true,
         isInitializing: false,
       });
 
-      // Re-render with updated store (simulates Redux state change)
-      cleanup();
       const { result: result2 } = renderHook(() => useNotificationWebSocket(), {
         wrapper: createWrapper(readyStore),
       });
 
-      // Now should connect
-      expect(MockWebSocket.instances.length).toBe(1);
-
-      act(() => {
-        vi.advanceTimersByTime(20);
-      });
-
+      // Now should be connected
       expect(result2.current.status).toBe("connected");
+
+      // Verify non-empty URL passed
+      const { useRealtimeSync } = await import("./useRealtimeSync");
+      // Last call should have a non-empty URL
+      const lastCall = vi.mocked(useRealtimeSync).mock.calls.at(-1)?.[0];
+      expect(lastCall?.url).toContain("/ws/notifications");
     });
 
-    it("should stay disconnected when not authenticated even after initialization", () => {
+    it("should stay disconnected when not authenticated even after initialization", async () => {
       const unauthenticatedStore = createTestStore({
         isAuthenticated: false,
         isInitializing: false,
       });
 
+      mockStatus = "connected";
       const { result } = renderHook(() => useNotificationWebSocket(), {
         wrapper: createWrapper(unauthenticatedStore),
       });
 
-      expect(MockWebSocket.instances.length).toBe(0);
       expect(result.current.status).toBe("disconnected");
+
+      // Verify empty URL passed
+      const { useRealtimeSync } = await import("./useRealtimeSync");
+      expect(useRealtimeSync).toHaveBeenCalledWith(
+        expect.objectContaining({
+          url: "",
+        }),
+      );
     });
   });
 });

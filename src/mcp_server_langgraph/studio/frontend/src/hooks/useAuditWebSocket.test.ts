@@ -13,6 +13,14 @@ import {
   type AuditFilter,
 } from "./useAuditWebSocket";
 
+// Mock Redux hooks to avoid needing Provider wrapper
+const mockDispatch = vi.fn();
+vi.mock("../store/hooks", () => ({
+  useAppDispatch: () => mockDispatch,
+  // Return true for selectIsAuthenticated (this hook only uses this selector)
+  useAppSelector: () => true,
+}));
+
 // Mock useRealtimeSync
 const mockSend = vi.fn();
 const mockDisconnect = vi.fn();
@@ -32,6 +40,7 @@ vi.mock("./useRealtimeSync", () => ({
       send: mockSend,
       disconnect: mockDisconnect,
       reconnect: mockReconnect,
+      metrics: { totalAttempts: 0 },
     };
   }),
 }));
@@ -295,7 +304,8 @@ describe("useAuditWebSocket", () => {
       const { useRealtimeSync } = await import("./useRealtimeSync");
       expect(useRealtimeSync).toHaveBeenCalledWith(
         expect.objectContaining({
-          url: expect.stringContaining("/audit/stream"),
+          // Uses WS_ENDPOINTS.AUDIT which resolves to /ws/audit
+          url: expect.stringContaining("/ws/audit"),
         }),
       );
     });
