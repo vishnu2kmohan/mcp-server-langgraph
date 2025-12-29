@@ -1,0 +1,425 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": { "type": "grafana", "uid": "-- Grafana --" },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "description": "WebSocket Connection Telemetry Dashboard - Real-time monitoring of all WebSocket endpoints including connections, message rates, errors, and latency. Tracks metrics from WebSocketMetrics class with OpenTelemetry integration.",
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "id": null,
+  "links": [
+    { "asDropdown": false, "icon": "external link", "includeVars": true, "keepTime": true, "tags": [], "targetBlank": false, "title": "Overview", "tooltip": "View LangGraph Agent Overview", "type": "link", "url": "/d/langgraph-agent-overview/langgraph-agent-overview" },
+    { "asDropdown": false, "icon": "external link", "includeVars": true, "keepTime": true, "tags": [], "targetBlank": false, "title": "Unified API", "tooltip": "View Unified API Dashboard", "type": "link", "url": "/d/unified-api/unified-api" }
+  ],
+  "liveNow": false,
+  "panels": [
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 },
+      "id": 100,
+      "panels": [],
+      "title": "WebSocket Overview",
+      "type": "row"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "description": "Total active WebSocket connections across all endpoints.",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "mappings": [],
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "yellow", "value": 100 }, { "color": "red", "value": 500 }] },
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 4, "w": 6, "x": 0, "y": 1 },
+      "id": 1,
+      "options": { "colorMode": "value", "graphMode": "area", "justifyMode": "auto", "orientation": "auto", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "textMode": "auto" },
+      "pluginVersion": "10.0.0",
+      "targets": [{ "datasource": { "type": "prometheus", "uid": "${datasource}" }, "expr": "sum(websocket_active_connections)", "refId": "A" }],
+      "title": "Active Connections",
+      "type": "stat"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "description": "Messages received per second across all WebSocket endpoints.",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "mappings": [],
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "yellow", "value": 1000 }, { "color": "red", "value": 5000 }] },
+          "unit": "reqps"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 4, "w": 6, "x": 6, "y": 1 },
+      "id": 2,
+      "options": { "colorMode": "value", "graphMode": "area", "justifyMode": "auto", "orientation": "auto", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "textMode": "auto" },
+      "pluginVersion": "10.0.0",
+      "targets": [{ "datasource": { "type": "prometheus", "uid": "${datasource}" }, "expr": "sum(rate(websocket_messages_received_total[5m]))", "refId": "A" }],
+      "title": "Messages Received/s",
+      "type": "stat"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "description": "Total WebSocket errors across all endpoints.",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "mappings": [],
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "yellow", "value": 10 }, { "color": "red", "value": 50 }] },
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 4, "w": 6, "x": 12, "y": 1 },
+      "id": 3,
+      "options": { "colorMode": "value", "graphMode": "area", "justifyMode": "auto", "orientation": "auto", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "textMode": "auto" },
+      "pluginVersion": "10.0.0",
+      "targets": [{ "datasource": { "type": "prometheus", "uid": "${datasource}" }, "expr": "sum(increase(websocket_errors_total[1h]))", "refId": "A" }],
+      "title": "Errors (1h)",
+      "type": "stat"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "description": "P95 message processing latency in milliseconds.",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "mappings": [],
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "yellow", "value": 100 }, { "color": "red", "value": 500 }] },
+          "unit": "ms"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 4, "w": 6, "x": 18, "y": 1 },
+      "id": 4,
+      "options": { "colorMode": "value", "graphMode": "area", "justifyMode": "auto", "orientation": "auto", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "textMode": "auto" },
+      "pluginVersion": "10.0.0",
+      "targets": [{ "datasource": { "type": "prometheus", "uid": "${datasource}" }, "expr": "histogram_quantile(0.95, sum(rate(websocket_latency_ms_bucket[5m])) by (le))", "refId": "A" }],
+      "title": "P95 Latency",
+      "type": "stat"
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 5 },
+      "id": 101,
+      "panels": [],
+      "title": "Connection Metrics",
+      "type": "row"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "description": "Active WebSocket connections by endpoint.",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": { "axisBorderShow": false, "axisCenteredZero": false, "axisColorMode": "text", "axisLabel": "", "axisPlacement": "auto", "barAlignment": 0, "drawStyle": "line", "fillOpacity": 10, "gradientMode": "none", "hideFrom": { "legend": false, "tooltip": false, "viz": false }, "insertNulls": false, "lineInterpolation": "linear", "lineWidth": 1, "pointSize": 5, "scaleDistribution": { "type": "linear" }, "showPoints": "auto", "spanNulls": false, "stacking": { "group": "A", "mode": "none" }, "thresholdsStyle": { "mode": "off" } },
+          "mappings": [],
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }] },
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 6 },
+      "id": 5,
+      "options": { "legend": { "calcs": ["mean", "max"], "displayMode": "table", "placement": "bottom", "showLegend": true }, "tooltip": { "mode": "multi", "sort": "desc" } },
+      "pluginVersion": "10.0.0",
+      "targets": [{ "datasource": { "type": "prometheus", "uid": "${datasource}" }, "expr": "websocket_active_connections", "legendFormat": "{{endpoint}}", "refId": "A" }],
+      "title": "Active Connections by Endpoint",
+      "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "description": "New connections per minute by endpoint.",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": { "axisBorderShow": false, "axisCenteredZero": false, "axisColorMode": "text", "axisLabel": "", "axisPlacement": "auto", "barAlignment": 0, "drawStyle": "line", "fillOpacity": 10, "gradientMode": "none", "hideFrom": { "legend": false, "tooltip": false, "viz": false }, "insertNulls": false, "lineInterpolation": "linear", "lineWidth": 1, "pointSize": 5, "scaleDistribution": { "type": "linear" }, "showPoints": "auto", "spanNulls": false, "stacking": { "group": "A", "mode": "none" }, "thresholdsStyle": { "mode": "off" } },
+          "mappings": [],
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }] },
+          "unit": "cpm"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 6 },
+      "id": 6,
+      "options": { "legend": { "calcs": ["mean", "max"], "displayMode": "table", "placement": "bottom", "showLegend": true }, "tooltip": { "mode": "multi", "sort": "desc" } },
+      "pluginVersion": "10.0.0",
+      "targets": [{ "datasource": { "type": "prometheus", "uid": "${datasource}" }, "expr": "rate(websocket_connections_total[1m]) * 60", "legendFormat": "{{endpoint}}", "refId": "A" }],
+      "title": "Connection Rate by Endpoint",
+      "type": "timeseries"
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 14 },
+      "id": 102,
+      "panels": [],
+      "title": "Message Metrics",
+      "type": "row"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "description": "Messages received per second by endpoint and type.",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": { "axisBorderShow": false, "axisCenteredZero": false, "axisColorMode": "text", "axisLabel": "", "axisPlacement": "auto", "barAlignment": 0, "drawStyle": "line", "fillOpacity": 10, "gradientMode": "none", "hideFrom": { "legend": false, "tooltip": false, "viz": false }, "insertNulls": false, "lineInterpolation": "linear", "lineWidth": 1, "pointSize": 5, "scaleDistribution": { "type": "linear" }, "showPoints": "auto", "spanNulls": false, "stacking": { "group": "A", "mode": "normal" }, "thresholdsStyle": { "mode": "off" } },
+          "mappings": [],
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }] },
+          "unit": "reqps"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 15 },
+      "id": 7,
+      "options": { "legend": { "calcs": ["mean", "max"], "displayMode": "table", "placement": "bottom", "showLegend": true }, "tooltip": { "mode": "multi", "sort": "desc" } },
+      "pluginVersion": "10.0.0",
+      "targets": [{ "datasource": { "type": "prometheus", "uid": "${datasource}" }, "expr": "rate(websocket_messages_received_total[5m])", "legendFormat": "{{endpoint}} - {{type}}", "refId": "A" }],
+      "title": "Messages Received/s by Endpoint",
+      "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "description": "Messages sent per second by endpoint and type.",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": { "axisBorderShow": false, "axisCenteredZero": false, "axisColorMode": "text", "axisLabel": "", "axisPlacement": "auto", "barAlignment": 0, "drawStyle": "line", "fillOpacity": 10, "gradientMode": "none", "hideFrom": { "legend": false, "tooltip": false, "viz": false }, "insertNulls": false, "lineInterpolation": "linear", "lineWidth": 1, "pointSize": 5, "scaleDistribution": { "type": "linear" }, "showPoints": "auto", "spanNulls": false, "stacking": { "group": "A", "mode": "normal" }, "thresholdsStyle": { "mode": "off" } },
+          "mappings": [],
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }] },
+          "unit": "reqps"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 15 },
+      "id": 8,
+      "options": { "legend": { "calcs": ["mean", "max"], "displayMode": "table", "placement": "bottom", "showLegend": true }, "tooltip": { "mode": "multi", "sort": "desc" } },
+      "pluginVersion": "10.0.0",
+      "targets": [{ "datasource": { "type": "prometheus", "uid": "${datasource}" }, "expr": "rate(websocket_messages_sent_total[5m])", "legendFormat": "{{endpoint}} - {{type}}", "refId": "A" }],
+      "title": "Messages Sent/s by Endpoint",
+      "type": "timeseries"
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 23 },
+      "id": 103,
+      "panels": [],
+      "title": "Error & Security Metrics",
+      "type": "row"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "description": "Error rates by endpoint and error type.",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": { "axisBorderShow": false, "axisCenteredZero": false, "axisColorMode": "text", "axisLabel": "", "axisPlacement": "auto", "barAlignment": 0, "drawStyle": "line", "fillOpacity": 10, "gradientMode": "none", "hideFrom": { "legend": false, "tooltip": false, "viz": false }, "insertNulls": false, "lineInterpolation": "linear", "lineWidth": 1, "pointSize": 5, "scaleDistribution": { "type": "linear" }, "showPoints": "auto", "spanNulls": false, "stacking": { "group": "A", "mode": "none" }, "thresholdsStyle": { "mode": "off" } },
+          "mappings": [],
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "red", "value": 1 }] },
+          "unit": "cpm"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 8, "x": 0, "y": 24 },
+      "id": 9,
+      "options": { "legend": { "calcs": ["mean", "max"], "displayMode": "table", "placement": "bottom", "showLegend": true }, "tooltip": { "mode": "multi", "sort": "desc" } },
+      "pluginVersion": "10.0.0",
+      "targets": [{ "datasource": { "type": "prometheus", "uid": "${datasource}" }, "expr": "rate(websocket_errors_total[1m]) * 60", "legendFormat": "{{endpoint}} - {{error_type}}", "refId": "A" }],
+      "title": "Errors/min by Endpoint",
+      "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "description": "Rate limit exceeded events by endpoint.",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": { "axisBorderShow": false, "axisCenteredZero": false, "axisColorMode": "text", "axisLabel": "", "axisPlacement": "auto", "barAlignment": 0, "drawStyle": "line", "fillOpacity": 10, "gradientMode": "none", "hideFrom": { "legend": false, "tooltip": false, "viz": false }, "insertNulls": false, "lineInterpolation": "linear", "lineWidth": 1, "pointSize": 5, "scaleDistribution": { "type": "linear" }, "showPoints": "auto", "spanNulls": false, "stacking": { "group": "A", "mode": "none" }, "thresholdsStyle": { "mode": "off" } },
+          "mappings": [],
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "orange", "value": 1 }] },
+          "unit": "cpm"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 8, "x": 8, "y": 24 },
+      "id": 10,
+      "options": { "legend": { "calcs": ["mean", "max"], "displayMode": "table", "placement": "bottom", "showLegend": true }, "tooltip": { "mode": "multi", "sort": "desc" } },
+      "pluginVersion": "10.0.0",
+      "targets": [{ "datasource": { "type": "prometheus", "uid": "${datasource}" }, "expr": "rate(websocket_rate_limit_exceeded_total[1m]) * 60", "legendFormat": "{{endpoint}} - {{user_id}}", "refId": "A" }],
+      "title": "Rate Limit Exceeded/min",
+      "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "description": "Token expiration events (close code 4010) by endpoint.",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": { "axisBorderShow": false, "axisCenteredZero": false, "axisColorMode": "text", "axisLabel": "", "axisPlacement": "auto", "barAlignment": 0, "drawStyle": "line", "fillOpacity": 10, "gradientMode": "none", "hideFrom": { "legend": false, "tooltip": false, "viz": false }, "insertNulls": false, "lineInterpolation": "linear", "lineWidth": 1, "pointSize": 5, "scaleDistribution": { "type": "linear" }, "showPoints": "auto", "spanNulls": false, "stacking": { "group": "A", "mode": "none" }, "thresholdsStyle": { "mode": "off" } },
+          "mappings": [],
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "yellow", "value": 1 }] },
+          "unit": "cpm"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 8, "x": 16, "y": 24 },
+      "id": 11,
+      "options": { "legend": { "calcs": ["mean", "max"], "displayMode": "table", "placement": "bottom", "showLegend": true }, "tooltip": { "mode": "multi", "sort": "desc" } },
+      "pluginVersion": "10.0.0",
+      "targets": [{ "datasource": { "type": "prometheus", "uid": "${datasource}" }, "expr": "rate(websocket_token_expirations_total[1m]) * 60", "legendFormat": "{{endpoint}}", "refId": "A" }],
+      "title": "Token Expirations/min",
+      "type": "timeseries"
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 32 },
+      "id": 104,
+      "panels": [],
+      "title": "Latency Metrics",
+      "type": "row"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "description": "Message processing latency percentiles (P50, P95, P99) by endpoint.",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": { "axisBorderShow": false, "axisCenteredZero": false, "axisColorMode": "text", "axisLabel": "", "axisPlacement": "auto", "barAlignment": 0, "drawStyle": "line", "fillOpacity": 10, "gradientMode": "none", "hideFrom": { "legend": false, "tooltip": false, "viz": false }, "insertNulls": false, "lineInterpolation": "linear", "lineWidth": 1, "pointSize": 5, "scaleDistribution": { "type": "linear" }, "showPoints": "auto", "spanNulls": false, "stacking": { "group": "A", "mode": "none" }, "thresholdsStyle": { "mode": "off" } },
+          "mappings": [],
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }] },
+          "unit": "ms"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 33 },
+      "id": 12,
+      "options": { "legend": { "calcs": ["mean", "max"], "displayMode": "table", "placement": "bottom", "showLegend": true }, "tooltip": { "mode": "multi", "sort": "desc" } },
+      "pluginVersion": "10.0.0",
+      "targets": [
+        { "datasource": { "type": "prometheus", "uid": "${datasource}" }, "expr": "histogram_quantile(0.50, sum(rate(websocket_latency_ms_bucket[5m])) by (le, endpoint))", "legendFormat": "{{endpoint}} P50", "refId": "A" },
+        { "datasource": { "type": "prometheus", "uid": "${datasource}" }, "expr": "histogram_quantile(0.95, sum(rate(websocket_latency_ms_bucket[5m])) by (le, endpoint))", "legendFormat": "{{endpoint}} P95", "refId": "B" },
+        { "datasource": { "type": "prometheus", "uid": "${datasource}" }, "expr": "histogram_quantile(0.99, sum(rate(websocket_latency_ms_bucket[5m])) by (le, endpoint))", "legendFormat": "{{endpoint}} P99", "refId": "C" }
+      ],
+      "title": "Latency Percentiles by Endpoint",
+      "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "description": "Latency distribution heatmap across all WebSocket endpoints.",
+      "fieldConfig": {
+        "defaults": {
+          "custom": { "hideFrom": { "legend": false, "tooltip": false, "viz": false }, "scaleDistribution": { "type": "linear" } },
+          "mappings": []
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 33 },
+      "id": 13,
+      "options": { "calculate": false, "cellGap": 1, "color": { "exponent": 0.5, "fill": "dark-orange", "mode": "scheme", "reverse": false, "scale": "exponential", "scheme": "Oranges", "steps": 64 }, "exemplars": { "color": "rgba(255,0,255,0.7)" }, "filterValues": { "le": 1e-9 }, "legend": { "show": true }, "rowsFrame": { "layout": "auto" }, "tooltip": { "show": true, "yHistogram": true }, "yAxis": { "axisPlacement": "left", "reverse": false, "unit": "ms" } },
+      "pluginVersion": "10.0.0",
+      "targets": [{ "datasource": { "type": "prometheus", "uid": "${datasource}" }, "expr": "sum(increase(websocket_latency_ms_bucket[5m])) by (le)", "format": "heatmap", "legendFormat": "{{le}}", "refId": "A" }],
+      "title": "Latency Distribution Heatmap",
+      "type": "heatmap"
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 41 },
+      "id": 105,
+      "panels": [],
+      "title": "Endpoint Status Table",
+      "type": "row"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "description": "Summary table of all WebSocket endpoints with key metrics.",
+      "fieldConfig": {
+        "defaults": {
+          "custom": { "align": "auto", "cellOptions": { "type": "auto" }, "inspect": false },
+          "mappings": [],
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }] }
+        },
+        "overrides": [
+          { "matcher": { "id": "byName", "options": "Active Connections" }, "properties": [{ "id": "custom.cellOptions", "value": { "type": "color-background", "mode": "gradient" } }, { "id": "color", "value": { "mode": "continuous-BlYlRd" } }] },
+          { "matcher": { "id": "byName", "options": "Errors (1h)" }, "properties": [{ "id": "custom.cellOptions", "value": { "type": "color-background", "mode": "gradient" } }, { "id": "color", "value": { "mode": "continuous-RdYlGr" } }, { "id": "thresholds", "value": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "yellow", "value": 5 }, { "color": "red", "value": 20 }] } }] },
+          { "matcher": { "id": "byName", "options": "P95 Latency" }, "properties": [{ "id": "unit", "value": "ms" }] }
+        ]
+      },
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 42 },
+      "id": 14,
+      "options": { "cellHeight": "sm", "footer": { "countRows": false, "fields": "", "reducer": ["sum"], "show": false }, "showHeader": true },
+      "pluginVersion": "10.0.0",
+      "targets": [
+        { "datasource": { "type": "prometheus", "uid": "${datasource}" }, "expr": "websocket_active_connections", "format": "table", "instant": true, "refId": "A" },
+        { "datasource": { "type": "prometheus", "uid": "${datasource}" }, "expr": "sum(increase(websocket_connections_total[1h])) by (endpoint)", "format": "table", "instant": true, "refId": "B" },
+        { "datasource": { "type": "prometheus", "uid": "${datasource}" }, "expr": "sum(rate(websocket_messages_received_total[5m])) by (endpoint)", "format": "table", "instant": true, "refId": "C" },
+        { "datasource": { "type": "prometheus", "uid": "${datasource}" }, "expr": "sum(increase(websocket_errors_total[1h])) by (endpoint)", "format": "table", "instant": true, "refId": "D" },
+        { "datasource": { "type": "prometheus", "uid": "${datasource}" }, "expr": "histogram_quantile(0.95, sum(rate(websocket_latency_ms_bucket[5m])) by (le, endpoint))", "format": "table", "instant": true, "refId": "E" }
+      ],
+      "title": "Endpoint Status Summary",
+      "transformations": [
+        { "id": "seriesToColumns", "options": { "byField": "endpoint" } },
+        { "id": "organize", "options": { "excludeByName": { "Time": true, "Time 1": true, "Time 2": true, "Time 3": true, "Time 4": true, "Time 5": true }, "indexByName": {}, "renameByName": { "Value #A": "Active Connections", "Value #B": "Connections (1h)", "Value #C": "Messages/s", "Value #D": "Errors (1h)", "Value #E": "P95 Latency", "endpoint": "Endpoint" } } }
+      ],
+      "type": "table"
+    }
+  ],
+  "refresh": "30s",
+  "schemaVersion": 38,
+  "style": "dark",
+  "tags": ["websocket", "realtime", "mcp", "telemetry"],
+  "templating": {
+    "list": [
+      {
+        "current": { "selected": false, "text": "Prometheus", "value": "prometheus" },
+        "hide": 0,
+        "includeAll": false,
+        "label": "Data Source",
+        "multi": false,
+        "name": "datasource",
+        "options": [],
+        "query": "prometheus",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "type": "datasource"
+      },
+      {
+        "allValue": ".*",
+        "current": { "selected": true, "text": "All", "value": "$__all" },
+        "datasource": { "type": "prometheus", "uid": "${datasource}" },
+        "definition": "label_values(websocket_active_connections, endpoint)",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Endpoint",
+        "multi": true,
+        "name": "endpoint",
+        "options": [],
+        "query": { "query": "label_values(websocket_active_connections, endpoint)", "refId": "StandardVariableQuery" },
+        "refresh": 2,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 1,
+        "type": "query"
+      }
+    ]
+  },
+  "time": { "from": "now-1h", "to": "now" },
+  "timepicker": {},
+  "timezone": "browser",
+  "title": "WebSocket Telemetry",
+  "uid": "websocket-telemetry",
+  "version": 1,
+  "weekStart": ""
+}
