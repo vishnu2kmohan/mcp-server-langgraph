@@ -18,6 +18,8 @@ Test Approach:
 - Uses websockets library for real WebSocket connections
 - Tests each endpoint from the frontend WS_ENDPOINTS constant
 - Parameterized tests for comprehensive coverage
+
+Note: Uses websockets >= 15.0 API with State enum instead of .open attribute.
 """
 
 from __future__ import annotations
@@ -26,9 +28,26 @@ import asyncio
 import gc
 import json
 import os
+from typing import TYPE_CHECKING
 
 import pytest
 import requests
+
+if TYPE_CHECKING:
+    from websockets import ClientConnection
+
+
+def _is_ws_open(websocket: ClientConnection) -> bool:
+    """Check if websocket connection is open (compatible with websockets >= 15.0)."""
+    try:
+        # websockets >= 15.0 uses State enum
+        from websockets import State
+
+        return websocket.state == State.OPEN
+    except (ImportError, AttributeError):
+        # Fallback for older versions (< 11.0)
+        return getattr(websocket, "open", False)
+
 
 pytestmark = [
     pytest.mark.e2e,
@@ -173,7 +192,7 @@ class TestWebSocketSmoke:
                 open_timeout=10,
                 close_timeout=5,
             ) as websocket:
-                assert websocket.open, f"Connection to {endpoint_name} failed"
+                assert _is_ws_open(websocket), f"Connection to {endpoint_name} failed"
         except Exception as e:
             pytest.fail(f"Failed to connect to {endpoint_name} ({endpoint_path}): {e}")
 
@@ -210,7 +229,7 @@ class TestWebSocketSmoke:
                 # Wait briefly for potential close
                 await asyncio.sleep(0.5)
                 # If still open without auth, that's a problem for auth-required endpoints
-                if websocket.open:
+                if _is_ws_open(websocket):
                     # Try to receive any auth-required message
                     try:
                         response = await asyncio.wait_for(
@@ -261,7 +280,7 @@ class TestWebSocketSmoke:
                 open_timeout=10,
                 close_timeout=5,
             ) as websocket:
-                assert websocket.open, f"Connection to {endpoint_name} failed"
+                assert _is_ws_open(websocket), f"Connection to {endpoint_name} failed"
 
                 # Send a basic subscribe message to verify two-way communication
                 subscribe_msg = {
@@ -495,7 +514,7 @@ class TestWebSocketMessageFormat:
 
                 # context_update doesn't return a response, just verify connection is open
                 await asyncio.sleep(0.5)
-                assert websocket.open, "Connection should remain open after context_update"
+                assert _is_ws_open(websocket), "Connection should remain open after context_update"
         except websockets.ConnectionClosedError as e:
             if e.code == 4003:  # Forbidden (authz failure)
                 pytest.skip("User doesn't have permission for AI suggestions endpoint")

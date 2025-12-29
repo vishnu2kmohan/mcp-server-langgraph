@@ -404,7 +404,8 @@ class TestValidateWebSocketAuth:
         result = await validate_websocket_auth(mock_ws)
 
         assert result is not None
-        assert result["user_id"] == "user-123"
+        # user_id is normalized to OpenFGA format using username from preferred_username
+        assert result["user_id"] == "user:testuser"
         assert result["username"] == "testuser"
         assert result["email"] == "test@example.com"
         assert "user" in result["roles"]
@@ -460,7 +461,8 @@ class TestValidateWebSocketAuth:
             result = await validate_websocket_auth(mock_ws)
 
         assert result is not None
-        assert result["user_id"] == "global-user"
+        # user_id is normalized to OpenFGA format: "user:<sub>"
+        assert result["user_id"] == "user:global-user"
 
     @pytest.mark.asyncio
     async def test_returns_none_on_verification_exception(self) -> None:
