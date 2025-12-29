@@ -4,10 +4,13 @@
  * TDD tests for the trace WebSocket hook.
  * Tests cover:
  * - Connection management
- * - Message handling
+ * - Message handling (MessageEnvelope format with trace_span type)
  * - Span updates
  * - Event processing
  * - Reconnection logic
+ *
+ * Message Format:
+ * Uses MessageEnvelope format: { type: "trace_span", id: "...", payload: {...} }
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
@@ -160,7 +163,7 @@ describe("useTraceWebSocket", () => {
       });
 
       const ws = mockWebSocketInstances[0];
-      expect(ws.url).toContain("/api/v1/ws/mcp");
+      expect(ws.url).toContain("/api/v1/ws/traces");
     });
 
     it("should use custom URL when provided", () => {
@@ -267,7 +270,7 @@ describe("useTraceWebSocket", () => {
   });
 
   describe("Span Handling", () => {
-    it("should add new span on $/trace/span message", async () => {
+    it("should add new span on trace_span message (MessageEnvelope format)", async () => {
       const { result } = renderHook(() => useTraceWebSocket(), { wrapper });
 
       act(() => {
@@ -280,13 +283,15 @@ describe("useTraceWebSocket", () => {
         ws.simulateOpen();
       });
 
+      // MessageEnvelope format: { type, id, payload }
       const spanMessage = {
-        method: "$/trace/span",
-        params: {
-          traceId: "trace-1",
-          spanId: "span-1",
+        type: "trace_span",
+        id: "msg-1",
+        payload: {
+          trace_id: "trace-1",
+          span_id: "span-1",
           name: "Test Span",
-          startTime: "2024-01-15T10:00:00Z",
+          start_time: "2024-01-15T10:00:00Z",
           status: "UNSET",
           attributes: {},
         },
@@ -316,15 +321,16 @@ describe("useTraceWebSocket", () => {
         ws.simulateOpen();
       });
 
-      // Add initial span
+      // Add initial span using MessageEnvelope format
       act(() => {
         ws.simulateMessage({
-          method: "$/trace/span",
-          params: {
-            traceId: "trace-1",
-            spanId: "span-1",
+          type: "trace_span",
+          id: "msg-1",
+          payload: {
+            trace_id: "trace-1",
+            span_id: "span-1",
             name: "Test Span",
-            startTime: "2024-01-15T10:00:00Z",
+            start_time: "2024-01-15T10:00:00Z",
             status: "UNSET",
             attributes: {},
           },
@@ -334,13 +340,14 @@ describe("useTraceWebSocket", () => {
       // Update the span
       act(() => {
         ws.simulateMessage({
-          method: "$/trace/span",
-          params: {
-            traceId: "trace-1",
-            spanId: "span-1",
+          type: "trace_span",
+          id: "msg-2",
+          payload: {
+            trace_id: "trace-1",
+            span_id: "span-1",
             name: "Test Span",
-            startTime: "2024-01-15T10:00:00Z",
-            endTime: "2024-01-15T10:00:05Z",
+            start_time: "2024-01-15T10:00:00Z",
+            end_time: "2024-01-15T10:00:05Z",
             status: "OK",
             attributes: {},
           },
@@ -367,15 +374,16 @@ describe("useTraceWebSocket", () => {
         ws.simulateOpen();
       });
 
-      // Add parent span
+      // Add parent span using MessageEnvelope format
       act(() => {
         ws.simulateMessage({
-          method: "$/trace/span",
-          params: {
-            traceId: "trace-1",
-            spanId: "parent-span",
+          type: "trace_span",
+          id: "msg-1",
+          payload: {
+            trace_id: "trace-1",
+            span_id: "parent-span",
             name: "Parent",
-            startTime: "2024-01-15T10:00:00Z",
+            start_time: "2024-01-15T10:00:00Z",
             status: "UNSET",
             attributes: {},
           },
@@ -385,13 +393,14 @@ describe("useTraceWebSocket", () => {
       // Add child span
       act(() => {
         ws.simulateMessage({
-          method: "$/trace/span",
-          params: {
-            traceId: "trace-1",
-            spanId: "child-span",
-            parentSpanId: "parent-span",
+          type: "trace_span",
+          id: "msg-2",
+          payload: {
+            trace_id: "trace-1",
+            span_id: "child-span",
+            parent_span_id: "parent-span",
             name: "Child",
-            startTime: "2024-01-15T10:00:01Z",
+            start_time: "2024-01-15T10:00:01Z",
             status: "UNSET",
             attributes: {},
           },
@@ -409,7 +418,7 @@ describe("useTraceWebSocket", () => {
   });
 
   describe("Event Handling", () => {
-    it("should add event on $/trace/event message", async () => {
+    it("should add event on trace_event message (MessageEnvelope format)", async () => {
       const { result } = renderHook(() => useTraceWebSocket(), { wrapper });
 
       act(() => {
@@ -422,10 +431,12 @@ describe("useTraceWebSocket", () => {
         ws.simulateOpen();
       });
 
+      // MessageEnvelope format for trace events
       const eventMessage = {
-        method: "$/trace/event",
-        params: {
-          spanId: "span-1",
+        type: "trace_event",
+        id: "msg-1",
+        payload: {
+          span_id: "span-1",
           name: "Log Event",
           timestamp: "2024-01-15T10:00:02Z",
           attributes: { message: "Something happened" },
@@ -457,23 +468,25 @@ describe("useTraceWebSocket", () => {
         ws.simulateOpen();
       });
 
-      // Add some data
+      // Add some data using MessageEnvelope format
       act(() => {
         ws.simulateMessage({
-          method: "$/trace/span",
-          params: {
-            traceId: "trace-1",
-            spanId: "span-1",
+          type: "trace_span",
+          id: "msg-1",
+          payload: {
+            trace_id: "trace-1",
+            span_id: "span-1",
             name: "Test",
-            startTime: "2024-01-15T10:00:00Z",
+            start_time: "2024-01-15T10:00:00Z",
             status: "OK",
             attributes: {},
           },
         });
         ws.simulateMessage({
-          method: "$/trace/event",
-          params: {
-            spanId: "span-1",
+          type: "trace_event",
+          id: "msg-2",
+          payload: {
+            span_id: "span-1",
             name: "Event",
             timestamp: "2024-01-15T10:00:01Z",
             attributes: {},

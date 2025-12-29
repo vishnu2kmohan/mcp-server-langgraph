@@ -1,8 +1,20 @@
 /**
  * useTraceWebSocket Hook
  *
- * WebSocket hook for receiving real-time trace events from the MCP server.
- * Connects to the MCP WebSocket endpoint and subscribes to trace extensions.
+ * WebSocket hook for receiving real-time trace events from the trace service.
+ * Connects to the /api/v1/ws/traces WebSocket endpoint.
+ *
+ * Features:
+ * - Automatic subscription on connect
+ * - Real-time trace span updates
+ * - Real-time trace event updates
+ *
+ * Message Format (MessageEnvelope):
+ * - trace_span: { type: "trace_span", id: "...", payload: { trace_id, span_id, name, ... } }
+ * - trace_event: { type: "trace_event", id: "...", payload: { span_id, name, timestamp, ... } }
+ *
+ * Uses typed protocols from @/types/websocket-protocols for type-safe
+ * message handling and validation.
  */
 
 import { useCallback, useEffect, useRef, useState, useMemo } from "react";
@@ -16,8 +28,22 @@ import {
   ensureValidTokenForWebSocket,
 } from "../utils/websocketAuth";
 
+// Import typed protocols for type-safe WebSocket message handling
+import {
+  isTraceSpanEntry,
+  isTraceEventEntry,
+} from "../types/websocket-protocols";
+import type {
+  TraceSpanEntry,
+  TraceEventEntry,
+  TracesMessage,
+} from "../types/websocket-protocols";
+
 // Create prefixed logger for this hook
 const logger = devLogger.withPrefix("[TraceWebSocket]");
+
+// Re-export protocol types for consumers
+export type { TraceSpanEntry, TraceEventEntry, TracesMessage };
 
 export interface TraceSpan {
   traceId: string;
@@ -55,7 +81,7 @@ interface UseTraceWebSocketReturn {
 export function useTraceWebSocket(
   options: UseTraceWebSocketOptions = {},
 ): UseTraceWebSocketReturn {
-  const { url = "/api/v1/ws/mcp", sessionId, autoConnect = false } = options;
+  const { url = WS_ENDPOINTS.TRACES, sessionId, autoConnect = false } = options;
 
   // Redux dispatch for token expiration handling
   const dispatch = useAppDispatch();
@@ -74,19 +100,22 @@ export function useTraceWebSocket(
 
   const handleMessage = useCallback((event: MessageEvent) => {
     try {
-      const data = JSON.parse(event.data);
+      const data: unknown = JSON.parse(event.data);
 
-      // Handle trace span notifications
-      if (data.method === "$/trace/span") {
+      // Use centralized type guards for type-safe message handling
+      if (isTraceSpanEntry(data)) {
+        const payload = data.payload;
         const span: TraceSpan = {
-          traceId: data.params.traceId,
-          spanId: data.params.spanId,
-          parentSpanId: data.params.parentSpanId,
-          name: data.params.name,
-          startTime: data.params.startTime,
-          endTime: data.params.endTime,
-          status: data.params.status || "UNSET",
-          attributes: data.params.attributes || {},
+          traceId: payload.trace_id,
+          spanId: payload.span_id,
+          parentSpanId: payload.parent_span_id ?? undefined,
+          name: payload.name,
+          startTime: String(payload.start_time),
+          endTime: payload.end_time ? String(payload.end_time) : undefined,
+          status:
+            (payload.status?.toUpperCase() as "OK" | "ERROR" | "UNSET") ||
+            "UNSET",
+          attributes: payload.attributes || {},
         };
 
         setSpans((prev) => {
@@ -99,15 +128,14 @@ export function useTraceWebSocket(
           }
           return [...prev, span];
         });
-      }
-
-      // Handle trace event notifications
-      if (data.method === "$/trace/event") {
+      } else if (isTraceEventEntry(data)) {
+        // Use centralized type guard for trace events
+        const payload = data.payload;
         const traceEvent: TraceEvent = {
-          spanId: data.params.spanId,
-          name: data.params.name,
-          timestamp: data.params.timestamp,
-          attributes: data.params.attributes || {},
+          spanId: payload.span_id,
+          name: payload.name,
+          timestamp: payload.timestamp,
+          attributes: payload.attributes || {},
         };
 
         setEvents((prev) => [...prev, traceEvent]);
@@ -128,10 +156,7 @@ export function useTraceWebSocket(
     }
 
     // Build WebSocket URL using standardized utilities
-    // Use custom url if provided, otherwise use MCP endpoint (default for trace subscriptions)
-    const endpoint = sessionId
-      ? `${url || WS_ENDPOINTS.MCP}/${sessionId}`
-      : url || WS_ENDPOINTS.MCP;
+    const endpoint = sessionId ? `${url}/${sessionId}` : url;
     const fullUrl = buildWebSocketUrl(endpoint, {}, !!authToken);
 
     const ws = new WebSocket(fullUrl);
@@ -139,17 +164,12 @@ export function useTraceWebSocket(
     ws.onopen = () => {
       setIsConnected(true);
 
-      // Send initialize message
+      // Send subscribe message (MessageEnvelope format for /traces endpoint)
       ws.send(
         JSON.stringify({
-          jsonrpc: "2.0",
-          id: 1,
-          method: "initialize",
-          params: {
-            protocolVersion: "2025-11-25",
-            capabilities: {},
-            clientInfo: { name: "studio-frontend", version: "1.0.0" },
-          },
+          type: "subscribe",
+          id: crypto.randomUUID(),
+          payload: {},
         }),
       );
     };
