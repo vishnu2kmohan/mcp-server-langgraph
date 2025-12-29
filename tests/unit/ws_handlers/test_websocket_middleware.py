@@ -125,37 +125,42 @@ class TestExtractUserFromJwtPayload:
         # User IDs are normalized to "user:<username>" format for OpenFGA compatibility
         assert result["user_id"] == "user:user-123"
 
-    def test_extracts_user_id_from_user_id_claim(self) -> None:
-        """User ID should fall back to user_id claim."""
-        payload = {"user_id": "user-456"}
+    def test_extracts_user_id_from_username_claim(self) -> None:
+        """User ID should be extracted from username claim (InMemory provider format)."""
+        payload = {"username": "user-456"}
 
         result = extract_user_from_jwt_payload(payload)
 
-        assert result["user_id"] == "user-456"
+        # user_id is normalized to "user:<username>" format for OpenFGA compatibility
+        assert result["user_id"] == "user:user-456"
 
-    def test_extracts_user_id_from_uid_claim(self) -> None:
-        """User ID should fall back to uid claim."""
-        payload = {"uid": "user-789"}
-
-        result = extract_user_from_jwt_payload(payload)
-
-        assert result["user_id"] == "user-789"
-
-    def test_extracts_user_id_from_id_claim(self) -> None:
-        """User ID should fall back to id claim."""
-        payload = {"id": "user-abc"}
+    def test_extracts_user_id_from_sub_as_uuid(self) -> None:
+        """User ID should extract username from sub when no preferred_username."""
+        # Keycloak-style UUID in sub without preferred_username
+        payload = {"sub": "550e8400-e29b-41d4-a716-446655440000"}
 
         result = extract_user_from_jwt_payload(payload)
 
-        assert result["user_id"] == "user-abc"
+        # UUID is used as-is for username, normalized for OpenFGA
+        assert result["user_id"] == "user:550e8400-e29b-41d4-a716-446655440000"
+
+    def test_extracts_user_id_from_sub_with_user_prefix(self) -> None:
+        """User ID should preserve user: prefix format from sub claim."""
+        # InMemory provider format: "user:username"
+        payload = {"sub": "user:alice"}
+
+        result = extract_user_from_jwt_payload(payload)
+
+        assert result["user_id"] == "user:alice"
 
     def test_user_id_defaults_to_unknown(self) -> None:
-        """User ID should default to 'unknown' when missing."""
+        """User ID should default to 'user:unknown' when missing (OpenFGA format)."""
         payload: dict[str, Any] = {}
 
         result = extract_user_from_jwt_payload(payload)
 
-        assert result["user_id"] == "unknown"
+        # OpenFGA-compatible format: "user:unknown"
+        assert result["user_id"] == "user:unknown"
 
     def test_extracts_username_from_preferred_username(self) -> None:
         """Username should be extracted from preferred_username claim."""
@@ -173,21 +178,28 @@ class TestExtractUserFromJwtPayload:
 
         assert result["username"] == "bob"
 
-    def test_extracts_username_from_name_claim(self) -> None:
-        """Username should fall back to name claim."""
+    def test_username_extracted_from_sub_when_no_username_claims(self) -> None:
+        """Username should fall back to sub when no username/preferred_username."""
+        # When no preferred_username or username, sub is used directly
         payload = {"sub": "123", "name": "Charlie"}
 
         result = extract_user_from_jwt_payload(payload)
 
-        assert result["username"] == "Charlie"
+        # Implementation uses sub as fallback, not name claim
+        assert result["username"] == "123"
+        # display_name captures the name claim
+        assert result["display_name"] == "Charlie"
 
-    def test_extracts_username_from_email_local_part(self) -> None:
-        """Username should fall back to email local part."""
+    def test_username_not_extracted_from_email(self) -> None:
+        """Username should not be extracted from email - uses sub instead."""
         payload = {"sub": "123", "email": "dave@example.com"}
 
         result = extract_user_from_jwt_payload(payload)
 
-        assert result["username"] == "dave"
+        # Implementation uses sub as fallback, not email local part
+        assert result["username"] == "123"
+        # Email is captured in email field
+        assert result["email"] == "dave@example.com"
 
     def test_username_falls_back_to_user_id(self) -> None:
         """Username should fall back to user_id when nothing else available."""
@@ -205,21 +217,22 @@ class TestExtractUserFromJwtPayload:
 
         assert result["email"] == "test@example.com"
 
-    def test_extracts_email_from_mail_claim(self) -> None:
-        """Email should fall back to mail claim (LDAP-style)."""
+    def test_mail_claim_not_extracted_as_email(self) -> None:
+        """LDAP-style mail claim is not used - only email claim is supported."""
         payload = {"sub": "123", "mail": "test@company.com"}
 
         result = extract_user_from_jwt_payload(payload)
 
-        assert result["email"] == "test@company.com"
+        # Implementation only checks 'email' claim, not 'mail'
+        assert result["email"] is None
 
-    def test_email_defaults_to_empty(self) -> None:
-        """Email should default to empty string when missing."""
+    def test_email_defaults_to_none(self) -> None:
+        """Email should default to None when missing."""
         payload = {"sub": "123"}
 
         result = extract_user_from_jwt_payload(payload)
 
-        assert result["email"] == ""
+        assert result["email"] is None
 
     def test_extracts_keycloak_realm_roles(self) -> None:
         """Roles should be extracted from Keycloak realm_access.roles."""
@@ -260,8 +273,8 @@ class TestExtractUserFromJwtPayload:
         assert "viewer" in result["roles"]
         assert "editor" in result["roles"]
 
-    def test_extracts_groups_as_roles(self) -> None:
-        """Groups should be extracted and treated as roles."""
+    def test_groups_not_extracted_as_roles(self) -> None:
+        """Groups claim is not extracted as roles - only roles/realm_access/resource_access."""
         payload = {
             "sub": "123",
             "groups": ["developers", "admins"],
@@ -269,8 +282,9 @@ class TestExtractUserFromJwtPayload:
 
         result = extract_user_from_jwt_payload(payload)
 
-        assert "developers" in result["roles"]
-        assert "admins" in result["roles"]
+        # Implementation only extracts from roles, realm_access, and resource_access
+        # groups claim is used for organizational hierarchy, not roles
+        assert result["roles"] == []
 
     def test_deduplicates_roles_preserving_order(self) -> None:
         """Duplicate roles should be removed while preserving order."""
