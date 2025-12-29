@@ -10,6 +10,11 @@ from unittest.mock import patch
 
 import pytest
 
+# Check if infisical-python is available
+import importlib.util
+
+INFISICAL_AVAILABLE = importlib.util.find_spec("infisical_client") is not None
+
 pytestmark = pytest.mark.unit
 
 
@@ -249,6 +254,10 @@ class TestSecretsManagerRepr:
 
         assert "disconnected" in result
 
+    @pytest.mark.skipif(
+        not INFISICAL_AVAILABLE,
+        reason="infisical-python not installed",
+    )
     @patch("mcp_server_langgraph.secret_providers.manager.InfisicalClient")
     def test_repr_shows_connected_when_client_available(self, mock_client) -> None:
         """GIVEN a SecretsManager with working client
