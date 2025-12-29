@@ -1022,10 +1022,7 @@ def record_parallel_speedup(
         parallel_duration_ms: Actual parallel execution duration
         estimated_sequential_ms: Estimated sequential duration
     """
-    if parallel_duration_ms > 0:
-        speedup_ratio = estimated_sequential_ms / parallel_duration_ms
-    else:
-        speedup_ratio = 1.0
+    speedup_ratio = estimated_sequential_ms / parallel_duration_ms if parallel_duration_ms > 0 else 1.0
 
     parallel_speedup_histogram.record(
         speedup_ratio,

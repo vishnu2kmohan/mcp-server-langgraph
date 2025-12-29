@@ -84,18 +84,13 @@ class ToolDescription:
         Returns:
             Description text at the requested level.
         """
-        if level == "minimal":
-            # For minimal, just return name as description
-            return self.name
-        elif level == "short":
-            return self.description_short
-        elif level == "medium":
-            return self.description_medium
-        elif level == "full":
-            return self.description_full
-        else:
-            # Default to short for unknown levels
-            return self.description_short  # type: ignore[unreachable]
+        descriptions: dict[str, str] = {
+            "minimal": self.name,
+            "short": self.description_short,
+            "medium": self.description_medium,
+            "full": self.description_full,
+        }
+        return descriptions.get(level, self.description_short)
 
     def estimate_tokens(self, level: DescriptionLevel = "short") -> int:
         """Estimate token count for description at level.

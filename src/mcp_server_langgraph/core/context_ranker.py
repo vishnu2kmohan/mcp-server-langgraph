@@ -203,7 +203,7 @@ def cosine_similarity(vec1: list[float], vec2: list[float]) -> float:
         raise ValueError(msg)
 
     # Dot product
-    dot = sum(a * b for a, b in zip(vec1, vec2))
+    dot = sum(a * b for a, b in zip(vec1, vec2, strict=True))
 
     # Magnitudes
     mag1 = math.sqrt(sum(a * a for a in vec1))

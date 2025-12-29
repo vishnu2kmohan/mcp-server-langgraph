@@ -163,10 +163,7 @@ def get_event_description(event: HookEvent | str) -> str:
     Returns:
         Description string for the event
     """
-    if isinstance(event, HookEvent):
-        event_name = event.name
-    else:
-        event_name = str(event)
+    event_name = event.name if isinstance(event, HookEvent) else str(event)
     return EVENT_DESCRIPTIONS.get(event_name, f"Hook event: {event_name}")
 
 

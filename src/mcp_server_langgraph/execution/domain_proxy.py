@@ -124,10 +124,7 @@ class DomainMatcher:
             return False  # Empty allowlist blocks all
 
         domain = domain.lower().strip()
-        for pattern in self._patterns:
-            if pattern.match(domain):
-                return True
-        return False
+        return any(pattern.match(domain) for pattern in self._patterns)
 
 
 # =============================================================================

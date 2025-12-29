@@ -171,10 +171,7 @@ class ContextManager:
         total_tokens = sum(count_tokens(self._message_to_text(msg), model=self.model_name) for msg in messages)
 
         # Determine threshold based on feature flag
-        if feature_flags.enable_model_aware_compaction:
-            threshold = self.get_dynamic_threshold()
-        else:
-            threshold = self.compaction_threshold
+        threshold = self.get_dynamic_threshold() if feature_flags.enable_model_aware_compaction else self.compaction_threshold
 
         with tracer.start_as_current_span("context.check_compaction") as span:
             span.set_attribute("message.count", len(messages))

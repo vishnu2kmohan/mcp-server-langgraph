@@ -204,10 +204,7 @@ class DisclaimerGuardrail:
         if context.get("skip_disclaimer"):
             return GuardrailResult(allowed=True)
 
-        if self.position == "prefix":
-            modified = self.disclaimer + output
-        else:
-            modified = output + "\n\n" + self.disclaimer
+        modified = self.disclaimer + output if self.position == "prefix" else output + "\n\n" + self.disclaimer
 
         return GuardrailResult(
             allowed=True,
@@ -261,9 +258,9 @@ class FormatGuardrail:
             )
 
     async def _validate_xml(self, output: str) -> GuardrailResult:
-        """Validate XML format."""
+        """Validate XML format using defusedxml for security."""
         try:
-            import xml.etree.ElementTree as ET
+            import defusedxml.ElementTree as ET
 
             ET.fromstring(output.strip())
             return GuardrailResult(allowed=True)

@@ -413,10 +413,7 @@ def record_pool_metrics(
     http_pool_max_connections_gauge.set(max_connections)
 
     # Calculate utilization (0.0 to 1.0)
-    if max_connections > 0:
-        utilization = active_connections / max_connections
-    else:
-        utilization = 0.0
+    utilization = active_connections / max_connections if max_connections > 0 else 0.0
 
     http_pool_utilization_gauge.set(utilization)
 

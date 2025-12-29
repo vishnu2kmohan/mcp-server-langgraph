@@ -461,7 +461,7 @@ class AlertCorrelationEngine:
 
         # Check for different services with increasing time
         services = [a.labels.get("service") for a in sorted_alerts]
-        unique_services = set(s for s in services if s)
+        unique_services = {s for s in services if s}
 
         if len(unique_services) < 2:
             return PatternResult(
@@ -478,10 +478,8 @@ class AlertCorrelationEngine:
         # Cascading failures typically have similar time gaps
         if time_diffs:
             avg_diff = sum(time_diffs) / len(time_diffs)
-            if avg_diff < 600:  # Within 10 minutes between alerts
-                confidence = 0.6 + min(0.3, 0.1 * len(unique_services))
-            else:
-                confidence = 0.4
+            # Within 10 minutes between alerts indicates cascading pattern
+            confidence = 0.6 + min(0.3, 0.1 * len(unique_services)) if avg_diff < 600 else 0.4
         else:
             confidence = 0.3
 
