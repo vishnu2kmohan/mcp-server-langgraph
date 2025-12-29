@@ -10,6 +10,11 @@
 /secrets_manager.py @vishnu2kmohan
 /setup_openfga.py @vishnu2kmohan
 
+# Frontend WebSocket Authentication (prevents user=None auth bugs)
+# Changes to this file should be reviewed carefully as it affects all WebSocket connections
+/src/mcp_server_langgraph/studio/frontend/src/utils/websocket.ts @vishnu2kmohan
+/src/mcp_server_langgraph/studio/frontend/src/utils/websocketAuth.ts @vishnu2kmohan
+
 # Infrastructure and DevOps
 /.github/ @vishnu2kmohan
 /kubernetes/ @vishnu2kmohan
