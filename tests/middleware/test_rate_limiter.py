@@ -408,7 +408,7 @@ class TestRedisStorageURI:
             uri = get_redis_storage_uri()
             assert uri is not None
             assert uri.startswith("redis://")
-            assert "/3" in uri  # Default DB 3 for rate limiting
+            assert "/5" in uri  # Default DB 5 for rate limiting (matches redis_rate_limit_db setting)
 
     def test_get_redis_storage_uri_format(self):
         """Test Redis URI format with custom settings"""

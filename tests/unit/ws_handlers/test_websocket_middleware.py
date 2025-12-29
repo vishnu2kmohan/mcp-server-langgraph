@@ -117,12 +117,13 @@ class TestExtractUserFromJwtPayload:
         gc.collect()
 
     def test_extracts_user_id_from_sub_claim(self) -> None:
-        """User ID should be extracted from sub claim."""
+        """User ID should be extracted from sub claim with OpenFGA user: prefix."""
         payload = {"sub": "user-123"}
 
         result = extract_user_from_jwt_payload(payload)
 
-        assert result["user_id"] == "user-123"
+        # User IDs are normalized to "user:<username>" format for OpenFGA compatibility
+        assert result["user_id"] == "user:user-123"
 
     def test_extracts_user_id_from_user_id_claim(self) -> None:
         """User ID should fall back to user_id claim."""
@@ -196,7 +197,7 @@ class TestExtractUserFromJwtPayload:
 
         assert result["username"] == "123"
 
-    def test_extracts_email(self) -> None:
+    def test_extracts_email_from_email_claim(self) -> None:
         """Email should be extracted from email claim."""
         payload = {"sub": "123", "email": "test@example.com"}
 
@@ -271,7 +272,7 @@ class TestExtractUserFromJwtPayload:
         assert "developers" in result["roles"]
         assert "admins" in result["roles"]
 
-    def test_deduplicates_roles(self) -> None:
+    def test_deduplicates_roles_preserving_order(self) -> None:
         """Duplicate roles should be removed while preserving order."""
         payload = {
             "sub": "123",
@@ -369,7 +370,7 @@ class TestValidateWebSocketAuth:
         mock_ws.query_params = {"token": "valid-token"}
         mock_ws.headers = {}
 
-        mock_auth = AsyncMock()
+        mock_auth = AsyncMock()  # noqa: async-mock-config - configured below
         mock_auth.verify_token = AsyncMock(
             return_value=MagicMock(
                 valid=True,
@@ -401,7 +402,7 @@ class TestValidateWebSocketAuth:
         mock_ws.query_params = {"token": "invalid-token"}
         mock_ws.headers = {}
 
-        mock_auth = AsyncMock()
+        mock_auth = AsyncMock()  # noqa: async-mock-config - configured below
         mock_auth.verify_token = AsyncMock(
             return_value=MagicMock(
                 valid=False,
@@ -427,7 +428,7 @@ class TestValidateWebSocketAuth:
         mock_ws.app.state = MagicMock()
         mock_ws.app.state.auth_middleware = None
 
-        mock_global_auth = AsyncMock()
+        mock_global_auth = AsyncMock()  # noqa: async-mock-config - configured below
         mock_global_auth.verify_token = AsyncMock(
             return_value=MagicMock(
                 valid=True,
@@ -454,7 +455,7 @@ class TestValidateWebSocketAuth:
         mock_ws.query_params = {"token": "valid-token"}
         mock_ws.headers = {}
 
-        mock_auth = AsyncMock()
+        mock_auth = AsyncMock()  # noqa: async-mock-config - configured below
         mock_auth.verify_token = AsyncMock(side_effect=Exception("Network error"))
         mock_ws.app = MagicMock()
         mock_ws.app.state = MagicMock()
@@ -476,7 +477,7 @@ class TestValidateWebSocketToken:
     @pytest.mark.asyncio
     async def test_returns_payload_for_valid_token(self) -> None:
         """Should return payload for valid token."""
-        mock_auth = AsyncMock()
+        mock_auth = AsyncMock()  # noqa: async-mock-config - configured below
         mock_auth.verify_token = AsyncMock(
             return_value=MagicMock(
                 valid=True,
@@ -497,7 +498,7 @@ class TestValidateWebSocketToken:
     @pytest.mark.asyncio
     async def test_returns_none_for_invalid_token(self) -> None:
         """Should return None for invalid token."""
-        mock_auth = AsyncMock()
+        mock_auth = AsyncMock()  # noqa: async-mock-config - configured below
         mock_auth.verify_token = AsyncMock(
             return_value=MagicMock(
                 valid=False,
@@ -517,7 +518,7 @@ class TestValidateWebSocketToken:
     @pytest.mark.asyncio
     async def test_returns_none_on_exception(self) -> None:
         """Should return None when verification raises exception."""
-        mock_auth = AsyncMock()
+        mock_auth = AsyncMock()  # noqa: async-mock-config - configured below
         mock_auth.verify_token = AsyncMock(side_effect=Exception("Auth service down"))
 
         with patch(
