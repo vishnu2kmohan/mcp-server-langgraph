@@ -8,7 +8,7 @@
  * Requires admin or compliance_officer role.
  */
 
-import { useState, useCallback, useRef, useMemo } from "react";
+import { useState, useCallback, useRef, useMemo, useEffect } from "react";
 import { useRealtimeSync } from "./useRealtimeSync";
 import { useAppDispatch, useAppSelector } from "../store/hooks";
 import { logout, selectIsAuthenticated } from "../store/slices/authSlice";
@@ -215,7 +215,7 @@ export function useAuditWebSocket(
 
   // Use the realtime sync hook for WebSocket management
   // Enable exponential backoff for better reconnection behavior
-  const { status, send, disconnect, reconnect } = useRealtimeSync({
+  const { status, send, disconnect, reconnect, metrics } = useRealtimeSync({
     url,
     onMessage: handleMessage,
     onConnect: handleConnect,
@@ -226,6 +226,17 @@ export function useAuditWebSocket(
     maxReconnectAttempts: 10, // Try up to 10 times
     onTokenExpired: () => dispatch(logout()),
   });
+
+  // Report WebSocket metrics for observability
+  useEffect(() => {
+    if (isAuthenticated && metrics.totalAttempts > 0) {
+      import("../utils/websocketTelemetry").then(
+        ({ reportWebSocketMetrics }) => {
+          reportWebSocketMetrics("audit", metrics);
+        },
+      );
+    }
+  }, [isAuthenticated, metrics]);
 
   // Keep sendRef in sync for use in handleConnect
   sendRef.current = send;

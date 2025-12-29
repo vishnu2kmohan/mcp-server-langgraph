@@ -7,7 +7,7 @@
  * Based on backend endpoint: /api/v1/ws/connections/realtime
  */
 
-import { useState, useCallback, useRef, useMemo } from "react";
+import { useState, useCallback, useRef, useMemo, useEffect } from "react";
 import { useRealtimeSync } from "./useRealtimeSync";
 import { useAppDispatch, useAppSelector } from "../store/hooks";
 import { logout, selectIsAuthenticated } from "../store/slices/authSlice";
@@ -285,7 +285,7 @@ export function useConnectionsRealtimeWebSocket(
   }, []);
 
   // Use the realtime sync hook for WebSocket management
-  const { status, send, disconnect, reconnect } = useRealtimeSync({
+  const { status, send, disconnect, reconnect, metrics } = useRealtimeSync({
     url,
     onMessage: handleMessage,
     onConnect: handleConnect,
@@ -295,6 +295,17 @@ export function useConnectionsRealtimeWebSocket(
     maxReconnectAttempts: 10,
     onTokenExpired: () => dispatch(logout()),
   });
+
+  // Report WebSocket metrics for observability
+  useEffect(() => {
+    if (isAuthenticated && metrics.totalAttempts > 0) {
+      import("../utils/websocketTelemetry").then(
+        ({ reportWebSocketMetrics }) => {
+          reportWebSocketMetrics("connections_realtime", metrics);
+        },
+      );
+    }
+  }, [isAuthenticated, metrics]);
 
   // Commands
   const subscribeConnection = useCallback(

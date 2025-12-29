@@ -183,7 +183,7 @@ export function useAIRealTimeSuggestions(
     : "";
 
   // Use the realtime sync hook
-  const { status, reconnectAttempts, send } = useRealtimeSync({
+  const { status, reconnectAttempts, send, metrics } = useRealtimeSync({
     url: wsUrl,
     reconnectInterval,
     maxReconnectAttempts,
@@ -195,6 +195,17 @@ export function useAIRealTimeSuggestions(
 
   // Determine if connected
   const isConnected = status === "connected";
+
+  // Report WebSocket metrics for observability
+  useEffect(() => {
+    if (enabled && metrics.totalAttempts > 0) {
+      import("../utils/websocketTelemetry").then(
+        ({ reportWebSocketMetrics }) => {
+          reportWebSocketMetrics("ai_realtime_suggestions", metrics);
+        },
+      );
+    }
+  }, [enabled, metrics]);
 
   /**
    * Start heartbeat interval

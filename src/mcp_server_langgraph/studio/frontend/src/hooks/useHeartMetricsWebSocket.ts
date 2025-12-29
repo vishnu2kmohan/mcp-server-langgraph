@@ -7,7 +7,7 @@
  * Based on backend endpoint: /api/v1/ws/metrics/heart
  */
 
-import { useState, useCallback, useRef, useMemo } from "react";
+import { useState, useCallback, useRef, useMemo, useEffect } from "react";
 import { useRealtimeSync } from "./useRealtimeSync";
 import { useAppDispatch, useAppSelector } from "../store/hooks";
 import { logout, selectIsAuthenticated } from "../store/slices/authSlice";
@@ -275,7 +275,7 @@ export function useHeartMetricsWebSocket(
   }, [timeRange]);
 
   // Use the realtime sync hook for WebSocket management
-  const { status, send, disconnect, reconnect } = useRealtimeSync({
+  const { status, send, disconnect, reconnect, metrics } = useRealtimeSync({
     url,
     onMessage: handleMessage,
     onConnect: handleConnect,
@@ -285,6 +285,17 @@ export function useHeartMetricsWebSocket(
     maxReconnectAttempts: 10,
     onTokenExpired: () => dispatch(logout()),
   });
+
+  // Report WebSocket metrics for observability
+  useEffect(() => {
+    if (isAuthenticated && metrics.totalAttempts > 0) {
+      import("../utils/websocketTelemetry").then(
+        ({ reportWebSocketMetrics }) => {
+          reportWebSocketMetrics("heart_metrics", metrics);
+        },
+      );
+    }
+  }, [isAuthenticated, metrics]);
 
   // Keep sendRef in sync
   sendRef.current = send;

@@ -379,6 +379,7 @@ export function useMCPWebSocket(
     send,
     disconnect,
     reconnect,
+    metrics,
   } = useRealtimeSync({
     url: wsUrl,
     exponentialBackoff: true,
@@ -398,6 +399,17 @@ export function useMCPWebSocket(
     },
     onTokenExpired: () => dispatch(logout()),
   });
+
+  // Report WebSocket metrics for observability
+  useEffect(() => {
+    if (effectiveEnabled && metrics.totalAttempts > 0) {
+      import("../utils/websocketTelemetry").then(
+        ({ reportWebSocketMetrics }) => {
+          reportWebSocketMetrics("mcp", metrics);
+        },
+      );
+    }
+  }, [effectiveEnabled, metrics]);
 
   // Track if enabled - if not authenticated or explicitly disabled, override status
   // WebSocket requires valid auth token, so we only connect when authenticated

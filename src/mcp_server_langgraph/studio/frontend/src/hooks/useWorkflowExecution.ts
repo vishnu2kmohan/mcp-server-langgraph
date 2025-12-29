@@ -8,7 +8,7 @@
  * - Execution control (start, stop)
  */
 
-import { useCallback, useMemo } from "react";
+import { useCallback, useMemo, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useRealtimeSync } from "./useRealtimeSync";
 import { logout } from "../store/slices/authSlice";
@@ -208,7 +208,7 @@ export function useWorkflowExecution(
   );
 
   // Use the realtime sync hook
-  const { status, reconnectAttempts, send, disconnect, reconnect } =
+  const { status, reconnectAttempts, send, disconnect, reconnect, metrics } =
     useRealtimeSync({
       url: wsUrl,
       onMessage: handleMessage,
@@ -217,6 +217,17 @@ export function useWorkflowExecution(
       onError: handleError,
       onTokenExpired: () => dispatch(logout()),
     });
+
+  // Report WebSocket metrics for observability
+  useEffect(() => {
+    if (autoConnect && workflowId && metrics.totalAttempts > 0) {
+      import("../utils/websocketTelemetry").then(
+        ({ reportWebSocketMetrics }) => {
+          reportWebSocketMetrics("workflow_execution", metrics);
+        },
+      );
+    }
+  }, [autoConnect, workflowId, metrics]);
 
   // Start execution
   const startExecution = useCallback(

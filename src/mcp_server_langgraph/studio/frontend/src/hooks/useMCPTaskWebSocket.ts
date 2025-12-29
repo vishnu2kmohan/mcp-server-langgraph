@@ -8,7 +8,7 @@
  * Based on backend endpoint: /api/v1/mcp/tasks/ws
  */
 
-import { useState, useCallback, useRef, useMemo } from "react";
+import { useState, useCallback, useRef, useMemo, useEffect } from "react";
 import { useRealtimeSync } from "./useRealtimeSync";
 import { useAppDispatch, useAppSelector } from "../store/hooks";
 import { logout, selectIsAuthenticated } from "../store/slices/authSlice";
@@ -219,7 +219,7 @@ export function useMCPTaskWebSocket(
 
   // Use the realtime sync hook for WebSocket management
   // Enable exponential backoff for better reconnection behavior
-  const { status, send, disconnect, reconnect } = useRealtimeSync({
+  const { status, send, disconnect, reconnect, metrics } = useRealtimeSync({
     url,
     onMessage: handleMessage,
     onConnect: handleConnect,
@@ -233,6 +233,17 @@ export function useMCPTaskWebSocket(
 
   // Keep sendRef in sync for use in handleConnect
   sendRef.current = send;
+
+  // Report WebSocket metrics for observability
+  useEffect(() => {
+    if (isAuthenticated && metrics.totalAttempts > 0) {
+      import("../utils/websocketTelemetry").then(
+        ({ reportWebSocketMetrics }) => {
+          reportWebSocketMetrics("mcp_tasks", metrics);
+        },
+      );
+    }
+  }, [isAuthenticated, metrics]);
 
   // Commands
   const sendPing = useCallback(() => {

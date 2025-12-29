@@ -8,7 +8,7 @@
  * Based on backend endpoint: /api/v1/ws/connections/health (ADR-0068 consolidated WebSocket URLs)
  */
 
-import { useState, useCallback, useRef, useMemo } from "react";
+import { useState, useCallback, useRef, useMemo, useEffect } from "react";
 import { useRealtimeSync } from "./useRealtimeSync";
 import { useAppDispatch, useAppSelector } from "../store/hooks";
 import { logout, selectIsAuthenticated } from "../store/slices/authSlice";
@@ -302,7 +302,7 @@ export function useConnectionHealthWebSocket(
 
   // Use the realtime sync hook for WebSocket management
   // Enable exponential backoff for better reconnection behavior
-  const { status, send, disconnect, reconnect } = useRealtimeSync({
+  const { status, send, disconnect, reconnect, metrics } = useRealtimeSync({
     url,
     onMessage: handleMessage,
     onConnect: handleConnect,
@@ -313,6 +313,17 @@ export function useConnectionHealthWebSocket(
     maxReconnectAttempts: 10, // Try up to 10 times
     onTokenExpired: () => dispatch(logout()),
   });
+
+  // Report WebSocket metrics for observability
+  useEffect(() => {
+    if (isAuthenticated && metrics.totalAttempts > 0) {
+      import("../utils/websocketTelemetry").then(
+        ({ reportWebSocketMetrics }) => {
+          reportWebSocketMetrics("connection_health", metrics);
+        },
+      );
+    }
+  }, [isAuthenticated, metrics]);
 
   // Keep sendRef in sync for use in handleConnect
   sendRef.current = send;

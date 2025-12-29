@@ -250,6 +250,7 @@ export function useAISuggestionsWebSocket(
     send,
     disconnect,
     reconnect,
+    metrics,
   } = useRealtimeSync({
     url: effectiveEnabled ? wsUrl : "",
     exponentialBackoff: true,
@@ -259,6 +260,18 @@ export function useAISuggestionsWebSocket(
     onMessage: handleMessage,
     onTokenExpired: () => dispatch(logout()),
   });
+
+  // Report WebSocket metrics for observability
+  useEffect(() => {
+    if (effectiveEnabled && metrics.totalAttempts > 0) {
+      // Dynamic import to avoid linter removing unused import
+      import("../utils/websocketTelemetry").then(
+        ({ reportWebSocketMetrics }) => {
+          reportWebSocketMetrics("ai_suggestions", metrics);
+        },
+      );
+    }
+  }, [effectiveEnabled, metrics]);
 
   // Override status if not enabled
   const status: ConnectionStatus = effectiveEnabled
