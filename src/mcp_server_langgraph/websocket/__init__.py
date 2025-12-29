@@ -40,8 +40,10 @@ from mcp_server_langgraph.websocket.exceptions import (
     IdleTimeoutError,
     MessageSizeError,
     ProtocolError,
+    ProtocolVersionError,
     RateLimitError,
     SubscriptionError,
+    TokenExpiredError,
     WebSocketError,
 )
 from mcp_server_langgraph.websocket.types import (
@@ -142,6 +144,23 @@ def __getattr__(name: str) -> Any:
         from mcp_server_langgraph.websocket.middleware import validate_websocket_token
 
         return validate_websocket_token
+    # Protocol version validation
+    if name == "extract_protocol_version":
+        from mcp_server_langgraph.websocket.protocols import extract_protocol_version
+
+        return extract_protocol_version
+    if name == "validate_protocol_version":
+        from mcp_server_langgraph.websocket.protocols import validate_protocol_version
+
+        return validate_protocol_version
+    if name == "is_version_compatible":
+        from mcp_server_langgraph.websocket.protocols import is_version_compatible
+
+        return is_version_compatible
+    if name == "PROTOCOL_VERSION":
+        from mcp_server_langgraph.websocket.protocols import PROTOCOL_VERSION
+
+        return PROTOCOL_VERSION
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
 
 
@@ -179,10 +198,12 @@ __all__ = [
     "RateLimitError",
     "MessageSizeError",
     "ProtocolError",
+    "ProtocolVersionError",
     "ConnectionLimitError",
     "IdleTimeoutError",
     "HeartbeatTimeoutError",
     "SubscriptionError",
+    "TokenExpiredError",
     # Resilience
     "with_circuit_breaker",
     "get_circuit_breaker_state",
@@ -193,4 +214,9 @@ __all__ = [
     "validate_websocket_auth",
     "extract_user_from_jwt_payload",
     "validate_websocket_token",
+    # Protocol Version Validation
+    "extract_protocol_version",
+    "validate_protocol_version",
+    "is_version_compatible",
+    "PROTOCOL_VERSION",
 ]

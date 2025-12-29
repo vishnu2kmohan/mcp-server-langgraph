@@ -28,6 +28,93 @@ from pydantic import BaseModel, Field
 PROTOCOL_VERSION = "1.0.0"
 
 
+def extract_protocol_version(version_string: str | None) -> tuple[int, int, int] | None:
+    """
+    Extract semantic version components from a version string.
+
+    Args:
+        version_string: Version string like "1.0.0" or "2.1.3"
+
+    Returns:
+        Tuple of (major, minor, patch) or None if invalid
+    """
+    if not version_string:
+        return None
+
+    try:
+        parts = version_string.split(".")
+        if len(parts) != 3:
+            return None
+        return (int(parts[0]), int(parts[1]), int(parts[2]))
+    except (ValueError, IndexError):
+        return None
+
+
+def is_version_compatible(client_version: str | None, server_version: str = PROTOCOL_VERSION) -> bool:
+    """
+    Check if client version is compatible with server version.
+
+    Compatibility rules:
+    - Major version must match exactly (breaking changes)
+    - Minor version: server >= client (backwards compatible features)
+    - Patch version: any (bug fixes only)
+
+    Args:
+        client_version: Client's protocol version string
+        server_version: Server's protocol version (defaults to PROTOCOL_VERSION)
+
+    Returns:
+        True if versions are compatible, False otherwise
+    """
+    client = extract_protocol_version(client_version)
+    server = extract_protocol_version(server_version)
+
+    if not client or not server:
+        return False
+
+    # Major version must match exactly
+    if client[0] != server[0]:
+        return False
+
+    # Server can support higher minor versions (backwards compatible)
+    # Client can't require features from a newer server
+    return client[1] <= server[1]
+
+
+def validate_protocol_version(client_version: str | None) -> tuple[bool, str]:
+    """
+    Validate client protocol version against server.
+
+    Args:
+        client_version: The protocol version from client (from ?v= query param)
+
+    Returns:
+        Tuple of (is_valid, error_message)
+        - (True, "") if valid
+        - (False, reason) if invalid
+    """
+    if not client_version:
+        return (False, "Missing protocol version. Add ?v=1.0.0 to WebSocket URL.")
+
+    client = extract_protocol_version(client_version)
+    if not client:
+        return (False, f"Invalid protocol version format: {client_version}. Expected semver like '1.0.0'.")
+
+    server = extract_protocol_version(PROTOCOL_VERSION)
+    if not server:
+        # Should never happen with a valid PROTOCOL_VERSION constant
+        return (False, "Server protocol version misconfigured.")
+
+    if not is_version_compatible(client_version, PROTOCOL_VERSION):
+        return (
+            False,
+            f"Protocol version mismatch. Client: {client_version}, Server: {PROTOCOL_VERSION}. "
+            f"Please refresh the page or update your client.",
+        )
+
+    return (True, "")
+
+
 # =============================================================================
 # Base Message Types
 # =============================================================================

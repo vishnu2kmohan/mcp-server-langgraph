@@ -175,6 +175,27 @@ class SubscriptionError(WebSocketError):
         self.resource_id = resource_id
 
 
+class ProtocolVersionError(WebSocketError):
+    """Raised when WebSocket protocol version is incompatible.
+
+    This error uses close code 4009 to indicate that the client's
+    protocol version is not compatible with the server version.
+    Clients receiving this error should upgrade their client library.
+    """
+
+    def __init__(
+        self,
+        message: str = "Protocol version not supported",
+        code: int = 4009,
+        reason: str | None = None,
+        client_version: str | None = None,
+        server_version: str | None = None,
+    ) -> None:
+        super().__init__(message, code, reason or "Protocol version not supported. Please upgrade client.")
+        self.client_version = client_version
+        self.server_version = server_version
+
+
 # WebSocket close codes reference:
 # 1000 - Normal closure
 # 1001 - Going away
@@ -196,7 +217,8 @@ class SubscriptionError(WebSocketError):
 # 4002 - Invalid message format
 # 4003 - Authorization denied
 # 4004 - Resource not found / subscription failed
-# 4008 - Timeout (idle or heartbeat)
+# 4008 - Timeout (idle, heartbeat, or connection limit)
+# 4009 - Protocol version not supported (upgrade client)
 # 4010 - Token expired (can refresh and reconnect)
 # 4013 - Message too large
 # 4029 - Rate limit exceeded (matches HTTP 429)
