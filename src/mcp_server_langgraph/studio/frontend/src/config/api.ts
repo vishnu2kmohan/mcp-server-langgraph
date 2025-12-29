@@ -100,6 +100,9 @@ interface WindowLike {
   };
 }
 
+// Track if deprecation warning has been shown (to avoid console spam)
+let _deprecationWarningShown = false;
+
 /**
  * Get the API base URL.
  *
@@ -197,6 +200,16 @@ export function buildWebSocketUrl(
   windowRef?: WindowLike,
   token?: string,
 ): string {
+  // Emit deprecation warning once per session
+  if (!_deprecationWarningShown) {
+    _deprecationWarningShown = true;
+    console.warn(
+      `[DEPRECATED] buildWebSocketUrl from config/api.ts is deprecated. ` +
+        `Use buildWebSocketUrl from utils/websocket.ts instead.\n` +
+        `Migration: import { buildWebSocketUrl, WS_ENDPOINTS } from '../utils/websocket';`,
+    );
+  }
+
   const baseUrl = getWebSocketBaseUrl(windowRef);
   const fullUrl = `${baseUrl}${endpoint}`;
 

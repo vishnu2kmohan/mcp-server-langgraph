@@ -245,3 +245,67 @@ describe("Environment Variable Documentation", () => {
     expect(supportedEnvVars).toContain("VITE_WS_BASE_URL");
   });
 });
+
+describe("Deprecation Warnings", () => {
+  it("should emit deprecation warning when buildWebSocketUrl is called", async () => {
+    // Spy on console.warn
+    const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+
+    // Dynamically import to get fresh module (bypasses vi.mock caching)
+    vi.resetModules();
+    const { buildWebSocketUrl } =
+      await vi.importActual<typeof import("./api")>("./api");
+
+    const mockWindow = {
+      location: { protocol: "https:", host: "app.example.com" },
+    };
+
+    // @ts-expect-error - accessing with mock window
+    buildWebSocketUrl("/ws/test", mockWindow);
+
+    // Should have warned about deprecation
+    expect(warnSpy).toHaveBeenCalledWith(
+      expect.stringContaining("[DEPRECATED]"),
+    );
+    expect(warnSpy).toHaveBeenCalledWith(
+      expect.stringContaining("buildWebSocketUrl"),
+    );
+    expect(warnSpy).toHaveBeenCalledWith(
+      expect.stringContaining("utils/websocket.ts"),
+    );
+
+    // Cleanup
+    warnSpy.mockRestore();
+  });
+
+  it("should only emit deprecation warning once per session", async () => {
+    // Spy on console.warn
+    const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+
+    // Reset modules to get fresh state
+    vi.resetModules();
+    const { buildWebSocketUrl } =
+      await vi.importActual<typeof import("./api")>("./api");
+
+    const mockWindow = {
+      location: { protocol: "https:", host: "app.example.com" },
+    };
+
+    // Call multiple times
+    // @ts-expect-error - accessing with mock window
+    buildWebSocketUrl("/ws/test1", mockWindow);
+    // @ts-expect-error - accessing with mock window
+    buildWebSocketUrl("/ws/test2", mockWindow);
+    // @ts-expect-error - accessing with mock window
+    buildWebSocketUrl("/ws/test3", mockWindow);
+
+    // Should have warned only once (to avoid console spam)
+    const deprecationWarnings = warnSpy.mock.calls.filter((call) =>
+      call[0]?.includes?.("[DEPRECATED]"),
+    );
+    expect(deprecationWarnings.length).toBe(1);
+
+    // Cleanup
+    warnSpy.mockRestore();
+  });
+});

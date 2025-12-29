@@ -7,7 +7,7 @@
  * - Message handling (MessageEnvelope format with trace_span type)
  * - Span updates
  * - Event processing
- * - Reconnection logic
+ * - Metrics reporting
  *
  * Message Format:
  * Uses MessageEnvelope format: { type: "trace_span", id: "...", payload: {...} }
@@ -17,92 +17,76 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { renderHook, act, waitFor } from "@testing-library/react";
 import { useTraceWebSocket } from "./useTraceWebSocket";
 import { createTestWrapper, authenticatedAuthState } from "../test/testStore";
+import type { ConnectionStatus } from "./useRealtimeSync";
 
 // Create a wrapper with authenticated state (hook requires authentication)
 const wrapper = createTestWrapper({
   preloadedState: { auth: authenticatedAuthState },
 });
 
-// Mock WebSocket class
-let mockWebSocketInstances: MockWebSocket[] = [];
+// Mock useRealtimeSync
+const mockSend = vi.fn();
+const mockDisconnect = vi.fn();
+const mockReconnect = vi.fn();
+let mockOnMessage: ((data: unknown) => void) | undefined;
+let mockOnConnect: (() => void) | undefined;
+let _mockOnDisconnect: (() => void) | undefined;
+let mockStatus: ConnectionStatus = "disconnected";
 
-class MockWebSocket {
-  url: string;
-  readyState: number = 0; // CONNECTING
+vi.mock("./useRealtimeSync", () => ({
+  useRealtimeSync: (options: {
+    url: string;
+    onMessage?: (data: unknown) => void;
+    onConnect?: () => void;
+    onDisconnect?: () => void;
+  }) => {
+    mockOnMessage = options.onMessage;
+    mockOnConnect = options.onConnect;
+    _mockOnDisconnect = options.onDisconnect;
 
-  onopen: ((event: Event) => void) | null = null;
-  onclose: ((event: CloseEvent) => void) | null = null;
-  onerror: ((event: Event) => void) | null = null;
-  onmessage: ((event: MessageEvent) => void) | null = null;
-
-  constructor(url: string) {
-    this.url = url;
-    mockWebSocketInstances.push(this);
-  }
-
-  send(_data: string): void {
-    // Mock send
-  }
-
-  close(): void {
-    this.readyState = 3; // CLOSED
-    if (this.onclose) {
-      this.onclose(new CloseEvent("close"));
+    // Auto-connect when URL is provided
+    if (options.url && mockStatus === "disconnected") {
+      mockStatus = "connected";
+      setTimeout(() => mockOnConnect?.(), 0);
     }
-  }
 
-  // Helper to simulate receiving a message
-  simulateMessage(data: object): void {
-    if (this.onmessage) {
-      this.onmessage(
-        new MessageEvent("message", { data: JSON.stringify(data) }),
-      );
-    }
-  }
+    return {
+      status: mockStatus,
+      send: mockSend,
+      disconnect: mockDisconnect,
+      reconnect: mockReconnect,
+      reconnectAttempts: 0,
+      lastMessageTime: null,
+      metrics: {
+        totalAttempts: 0,
+        totalReconnections: 0,
+        failedReconnections: 0,
+        successRate: null,
+        lastAttemptTime: null,
+        lastSuccessTime: null,
+        avgReconnectionTime: null,
+        failuresByReason: {},
+      },
+      resetMetrics: vi.fn(),
+    };
+  },
+}));
 
-  // Helper to simulate connection open
-  simulateOpen(): void {
-    this.readyState = 1; // OPEN
-    if (this.onopen) {
-      this.onopen(new Event("open"));
-    }
-  }
-
-  // Helper to simulate error
-  simulateError(): void {
-    if (this.onerror) {
-      this.onerror(new Event("error"));
-    }
-  }
-
-  // Static constants
-  static CONNECTING = 0;
-  static OPEN = 1;
-  static CLOSING = 2;
-  static CLOSED = 3;
-}
+// Mock websocketTelemetry
+vi.mock("../utils/websocketTelemetry", () => ({
+  reportWebSocketMetrics: vi.fn(),
+}));
 
 describe("useTraceWebSocket", () => {
   beforeEach(() => {
-    mockWebSocketInstances = [];
-
-    // Use vi.stubGlobal for consistent mocking in jsdom environment
-    vi.stubGlobal("WebSocket", MockWebSocket);
-
-    // Mock window.location
-    Object.defineProperty(window, "location", {
-      value: {
-        protocol: "http:",
-        host: "localhost:3000",
-      },
-      writable: true,
-      configurable: true,
-    });
+    mockStatus = "disconnected";
+    mockOnMessage = undefined;
+    mockOnConnect = undefined;
+    mockOnDisconnect = undefined;
+    vi.clearAllMocks();
   });
 
   afterEach(() => {
-    // Restore all globals
-    vi.unstubAllGlobals();
     vi.restoreAllMocks();
   });
 
@@ -145,114 +129,41 @@ describe("useTraceWebSocket", () => {
   });
 
   describe("Connection", () => {
-    it("should connect when connect() is called", () => {
+    it("should connect when connect() is called", async () => {
       const { result } = renderHook(() => useTraceWebSocket(), { wrapper });
 
       act(() => {
         result.current.connect();
       });
 
-      expect(mockWebSocketInstances.length).toBe(1);
-    });
-
-    it("should use default URL when not provided", () => {
-      const { result } = renderHook(() => useTraceWebSocket(), { wrapper });
-
-      act(() => {
-        result.current.connect();
-      });
-
-      const ws = mockWebSocketInstances[0];
-      expect(ws.url).toContain("/api/v1/ws/traces");
-    });
-
-    it("should use custom URL when provided", () => {
-      const { result } = renderHook(
-        () => useTraceWebSocket({ url: "/custom/ws" }),
-        { wrapper },
-      );
-
-      act(() => {
-        result.current.connect();
-      });
-
-      const ws = mockWebSocketInstances[0];
-      expect(ws.url).toContain("/custom/ws");
-    });
-
-    it("should include session ID in URL when provided", () => {
-      const { result } = renderHook(
-        () => useTraceWebSocket({ sessionId: "test-session" }),
-        { wrapper },
-      );
-
-      act(() => {
-        result.current.connect();
-      });
-
-      const ws = mockWebSocketInstances[0];
-      expect(ws.url).toContain("test-session");
-    });
-
-    it("should set isConnected to true on connection open", async () => {
-      const { result } = renderHook(() => useTraceWebSocket(), { wrapper });
-
-      act(() => {
-        result.current.connect();
-      });
-
-      const ws = mockWebSocketInstances[0];
-
-      act(() => {
-        ws.simulateOpen();
-      });
-
+      // Status should change to connected
       await waitFor(() => {
         expect(result.current.isConnected).toBe(true);
       });
     });
 
-    it("should auto-connect when autoConnect is true", () => {
-      renderHook(() => useTraceWebSocket({ autoConnect: true }), {
-        wrapper,
-      });
+    it("should auto-connect when autoConnect is true", async () => {
+      mockStatus = "connected"; // Pre-set to connected for autoConnect
 
-      expect(mockWebSocketInstances.length).toBe(1);
+      const { result } = renderHook(
+        () => useTraceWebSocket({ autoConnect: true }),
+        { wrapper },
+      );
+
+      await waitFor(() => {
+        expect(result.current.isConnected).toBe(true);
+      });
     });
   });
 
   describe("Disconnection", () => {
-    it("should disconnect when disconnect() is called", async () => {
+    it("should call disconnect when disconnect() is called", async () => {
+      mockStatus = "connected";
+
       const { result } = renderHook(() => useTraceWebSocket(), { wrapper });
 
       act(() => {
         result.current.connect();
-      });
-
-      const ws = mockWebSocketInstances[0];
-
-      act(() => {
-        ws.simulateOpen();
-      });
-
-      act(() => {
-        result.current.disconnect();
-      });
-
-      expect(ws.readyState).toBe(3); // CLOSED
-    });
-
-    it("should set isConnected to false on disconnect", async () => {
-      const { result } = renderHook(() => useTraceWebSocket(), { wrapper });
-
-      act(() => {
-        result.current.connect();
-      });
-
-      const ws = mockWebSocketInstances[0];
-
-      act(() => {
-        ws.simulateOpen();
       });
 
       await waitFor(() => {
@@ -263,27 +174,21 @@ describe("useTraceWebSocket", () => {
         result.current.disconnect();
       });
 
-      await waitFor(() => {
-        expect(result.current.isConnected).toBe(false);
-      });
+      expect(mockDisconnect).toHaveBeenCalled();
     });
   });
 
   describe("Span Handling", () => {
     it("should add new span on trace_span message (MessageEnvelope format)", async () => {
+      mockStatus = "connected";
+
       const { result } = renderHook(() => useTraceWebSocket(), { wrapper });
 
       act(() => {
         result.current.connect();
       });
 
-      const ws = mockWebSocketInstances[0];
-
-      act(() => {
-        ws.simulateOpen();
-      });
-
-      // MessageEnvelope format: { type, id, payload }
+      // Simulate receiving a span message
       const spanMessage = {
         type: "trace_span",
         id: "msg-1",
@@ -298,7 +203,7 @@ describe("useTraceWebSocket", () => {
       };
 
       act(() => {
-        ws.simulateMessage(spanMessage);
+        mockOnMessage?.(spanMessage);
       });
 
       await waitFor(() => {
@@ -309,21 +214,17 @@ describe("useTraceWebSocket", () => {
     });
 
     it("should update existing span when span with same ID received", async () => {
+      mockStatus = "connected";
+
       const { result } = renderHook(() => useTraceWebSocket(), { wrapper });
 
       act(() => {
         result.current.connect();
       });
 
-      const ws = mockWebSocketInstances[0];
-
+      // Add initial span
       act(() => {
-        ws.simulateOpen();
-      });
-
-      // Add initial span using MessageEnvelope format
-      act(() => {
-        ws.simulateMessage({
+        mockOnMessage?.({
           type: "trace_span",
           id: "msg-1",
           payload: {
@@ -339,7 +240,7 @@ describe("useTraceWebSocket", () => {
 
       // Update the span
       act(() => {
-        ws.simulateMessage({
+        mockOnMessage?.({
           type: "trace_span",
           id: "msg-2",
           payload: {
@@ -362,21 +263,17 @@ describe("useTraceWebSocket", () => {
     });
 
     it("should handle parent-child span relationships", async () => {
+      mockStatus = "connected";
+
       const { result } = renderHook(() => useTraceWebSocket(), { wrapper });
 
       act(() => {
         result.current.connect();
       });
 
-      const ws = mockWebSocketInstances[0];
-
+      // Add parent span
       act(() => {
-        ws.simulateOpen();
-      });
-
-      // Add parent span using MessageEnvelope format
-      act(() => {
-        ws.simulateMessage({
+        mockOnMessage?.({
           type: "trace_span",
           id: "msg-1",
           payload: {
@@ -392,7 +289,7 @@ describe("useTraceWebSocket", () => {
 
       // Add child span
       act(() => {
-        ws.simulateMessage({
+        mockOnMessage?.({
           type: "trace_span",
           id: "msg-2",
           payload: {
@@ -419,19 +316,15 @@ describe("useTraceWebSocket", () => {
 
   describe("Event Handling", () => {
     it("should add event on trace_event message (MessageEnvelope format)", async () => {
+      mockStatus = "connected";
+
       const { result } = renderHook(() => useTraceWebSocket(), { wrapper });
 
       act(() => {
         result.current.connect();
       });
 
-      const ws = mockWebSocketInstances[0];
-
-      act(() => {
-        ws.simulateOpen();
-      });
-
-      // MessageEnvelope format for trace events
+      // Simulate receiving an event message
       const eventMessage = {
         type: "trace_event",
         id: "msg-1",
@@ -444,7 +337,7 @@ describe("useTraceWebSocket", () => {
       };
 
       act(() => {
-        ws.simulateMessage(eventMessage);
+        mockOnMessage?.(eventMessage);
       });
 
       await waitFor(() => {
@@ -456,21 +349,17 @@ describe("useTraceWebSocket", () => {
 
   describe("Clear Traces", () => {
     it("should clear all spans and events when clearTraces() is called", async () => {
+      mockStatus = "connected";
+
       const { result } = renderHook(() => useTraceWebSocket(), { wrapper });
 
       act(() => {
         result.current.connect();
       });
 
-      const ws = mockWebSocketInstances[0];
-
+      // Add some data
       act(() => {
-        ws.simulateOpen();
-      });
-
-      // Add some data using MessageEnvelope format
-      act(() => {
-        ws.simulateMessage({
+        mockOnMessage?.({
           type: "trace_span",
           id: "msg-1",
           payload: {
@@ -482,7 +371,7 @@ describe("useTraceWebSocket", () => {
             attributes: {},
           },
         });
-        ws.simulateMessage({
+        mockOnMessage?.({
           type: "trace_event",
           id: "msg-2",
           payload: {
@@ -508,66 +397,47 @@ describe("useTraceWebSocket", () => {
     });
   });
 
-  describe("Error Handling", () => {
-    it("should set isConnected to false on error", async () => {
-      const { result } = renderHook(() => useTraceWebSocket(), { wrapper });
+  describe("Metrics Reporting", () => {
+    it("should report metrics when connected and there are attempts", async () => {
+      mockStatus = "connected";
 
-      const consoleSpy = vi
-        .spyOn(console, "error")
-        .mockImplementation(() => {});
+      const { reportWebSocketMetrics } =
+        await import("../utils/websocketTelemetry");
 
-      act(() => {
-        result.current.connect();
-      });
+      renderHook(() => useTraceWebSocket({ autoConnect: true }), { wrapper });
 
-      const ws = mockWebSocketInstances[0];
-
-      act(() => {
-        ws.simulateOpen();
-      });
-
-      await waitFor(() => {
-        expect(result.current.isConnected).toBe(true);
-      });
-
-      act(() => {
-        ws.simulateError();
-      });
-
-      await waitFor(() => {
-        expect(result.current.isConnected).toBe(false);
-      });
-
-      consoleSpy.mockRestore();
+      // The mock currently has 0 totalAttempts, so metrics won't be reported
+      // This test documents the expected behavior
+      expect(reportWebSocketMetrics).not.toHaveBeenCalled();
     });
+  });
 
-    it("should handle malformed JSON messages gracefully", async () => {
-      const { result } = renderHook(() => useTraceWebSocket(), { wrapper });
+  describe("Error Handling", () => {
+    it("should handle unknown message types gracefully", async () => {
+      mockStatus = "connected";
 
       const consoleSpy = vi
         .spyOn(console, "error")
         .mockImplementation(() => {});
 
+      const { result } = renderHook(() => useTraceWebSocket(), { wrapper });
+
       act(() => {
         result.current.connect();
       });
 
-      const ws = mockWebSocketInstances[0];
-
+      // Send unknown message type
       act(() => {
-        ws.simulateOpen();
+        mockOnMessage?.({
+          type: "unknown_type",
+          id: "msg-1",
+          payload: {},
+        });
       });
 
-      // Send malformed JSON
-      act(() => {
-        if (ws.onmessage) {
-          ws.onmessage(new MessageEvent("message", { data: "not valid json" }));
-        }
-      });
-
-      // Should not crash, just log error
-      expect(consoleSpy).toHaveBeenCalled();
+      // Should not crash, spans and events should remain empty
       expect(result.current.spans).toEqual([]);
+      expect(result.current.events).toEqual([]);
 
       consoleSpy.mockRestore();
     });

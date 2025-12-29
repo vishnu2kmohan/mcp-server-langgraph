@@ -8,6 +8,8 @@
  * - Automatic subscription on connect
  * - Real-time trace span updates
  * - Real-time trace event updates
+ * - Automatic reconnection with exponential backoff (via useRealtimeSync)
+ * - Reconnection metrics for observability
  *
  * Message Format (MessageEnvelope):
  * - trace_span: { type: "trace_span", id: "...", payload: { trace_id, span_id, name, ... } }
@@ -17,16 +19,13 @@
  * message handling and validation.
  */
 
-import { useCallback, useEffect, useRef, useState, useMemo } from "react";
+import { useCallback, useEffect, useState, useMemo, useRef } from "react";
 import { useAppDispatch, useAppSelector } from "../store/hooks";
 import { logout, selectIsAuthenticated } from "../store/slices/authSlice";
-import { getAuthToken } from "../utils/storage";
 import { devLogger } from "../utils/devLogger";
 import { buildWebSocketUrl, WS_ENDPOINTS } from "../utils/websocket";
-import {
-  WS_CLOSE_TOKEN_EXPIRED,
-  ensureValidTokenForWebSocket,
-} from "../utils/websocketAuth";
+import { useRealtimeSync } from "./useRealtimeSync";
+import { reportWebSocketMetrics } from "../utils/websocketTelemetry";
 
 // Import typed protocols for type-safe WebSocket message handling
 import {
@@ -86,22 +85,27 @@ export function useTraceWebSocket(
   // Redux dispatch for token expiration handling
   const dispatch = useAppDispatch();
 
-  // Get auth state and token for WebSocket authentication
+  // Get auth state for WebSocket authentication
   const isAuthenticated = useAppSelector(selectIsAuthenticated);
-  const authToken = useMemo(
-    () => (isAuthenticated ? (getAuthToken() ?? undefined) : undefined),
-    [isAuthenticated],
-  );
 
-  const wsRef = useRef<WebSocket | null>(null);
-  const [isConnected, setIsConnected] = useState(false);
+  // State for spans and events
   const [spans, setSpans] = useState<TraceSpan[]>([]);
   const [events, setEvents] = useState<TraceEvent[]>([]);
 
-  const handleMessage = useCallback((event: MessageEvent) => {
-    try {
-      const data: unknown = JSON.parse(event.data);
+  // Track whether we should be connected (for manual connect/disconnect)
+  const [shouldConnect, setShouldConnect] = useState(autoConnect);
+  const hasSentSubscribeRef = useRef(false);
 
+  // Build WebSocket URL
+  const wsUrl = useMemo(() => {
+    if (!shouldConnect || !isAuthenticated) return "";
+    const endpoint = sessionId ? `${url}/${sessionId}` : url;
+    return buildWebSocketUrl(endpoint, {}, true);
+  }, [url, sessionId, shouldConnect, isAuthenticated]);
+
+  // Message handler
+  const handleMessage = useCallback((data: unknown) => {
+    try {
       // Use centralized type guards for type-safe message handling
       if (isTraceSpanEntry(data)) {
         const payload = data.payload;
@@ -145,87 +149,101 @@ export function useTraceWebSocket(
     }
   }, []);
 
+  // Connection callbacks
+  const handleConnect = useCallback(() => {
+    logger.log("Connected to trace WebSocket");
+  }, []);
+
+  const handleDisconnect = useCallback(() => {
+    logger.log("Disconnected from trace WebSocket");
+    hasSentSubscribeRef.current = false;
+  }, []);
+
+  const handleError = useCallback((error: Error) => {
+    logger.error("WebSocket error:", error);
+  }, []);
+
+  const handleTokenExpired = useCallback(() => {
+    logger.error("Token expired, logging out...");
+    dispatch(logout());
+  }, [dispatch]);
+
+  // Use the centralized realtime sync hook
+  const {
+    status,
+    send,
+    disconnect: wsDisconnect,
+    reconnect: _wsReconnect,
+    metrics,
+  } = useRealtimeSync({
+    url: wsUrl,
+    onMessage: handleMessage,
+    onConnect: handleConnect,
+    onDisconnect: handleDisconnect,
+    onError: handleError,
+    onTokenExpired: handleTokenExpired,
+    exponentialBackoff: true,
+    reconnectInterval: 1000,
+    maxReconnectAttempts: 10,
+    maxDelayMs: 30000,
+  });
+
+  // Report metrics for observability
+  useEffect(() => {
+    if (isAuthenticated && metrics.totalAttempts > 0) {
+      reportWebSocketMetrics("traces", metrics);
+    }
+  }, [isAuthenticated, metrics]);
+
+  // Send subscribe message when connected
+  useEffect(() => {
+    if (status === "connected" && !hasSentSubscribeRef.current) {
+      // Send subscribe message (MessageEnvelope format for /traces endpoint)
+      send({
+        type: "subscribe",
+        id: crypto.randomUUID(),
+        payload: {},
+      });
+      hasSentSubscribeRef.current = true;
+    }
+  }, [status, send]);
+
+  // Derive isConnected from status
+  const isConnected = status === "connected";
+
+  // Manual connect function
   const connect = useCallback(() => {
-    // Don't attempt connection before authentication is complete
     if (!isAuthenticated) {
       return;
     }
+    setShouldConnect(true);
+  }, [isAuthenticated]);
 
-    if (wsRef.current?.readyState === WebSocket.OPEN) {
-      return;
-    }
-
-    // Build WebSocket URL using standardized utilities
-    const endpoint = sessionId ? `${url}/${sessionId}` : url;
-    const fullUrl = buildWebSocketUrl(endpoint, {}, !!authToken);
-
-    const ws = new WebSocket(fullUrl);
-
-    ws.onopen = () => {
-      setIsConnected(true);
-
-      // Send subscribe message (MessageEnvelope format for /traces endpoint)
-      ws.send(
-        JSON.stringify({
-          type: "subscribe",
-          id: crypto.randomUUID(),
-          payload: {},
-        }),
-      );
-    };
-
-    ws.onclose = async (event) => {
-      setIsConnected(false);
-
-      // Handle token expiration close code (4010)
-      if (event.code === WS_CLOSE_TOKEN_EXPIRED) {
-        logger.warn("Token expired, attempting refresh...");
-        const refreshed = await ensureValidTokenForWebSocket();
-        if (refreshed) {
-          // Token refreshed successfully - reconnect
-          logger.log("Token refreshed, reconnecting...");
-          setTimeout(() => connect(), 100);
-        } else {
-          // Refresh failed - logout
-          logger.error("Token refresh failed, logging out...");
-          dispatch(logout());
-        }
-      }
-    };
-
-    ws.onerror = (error) => {
-      logger.error("WebSocket error:", error);
-      setIsConnected(false);
-    };
-
-    ws.onmessage = handleMessage;
-
-    wsRef.current = ws;
-  }, [url, sessionId, authToken, isAuthenticated, handleMessage, dispatch]);
-
+  // Manual disconnect function
   const disconnect = useCallback(() => {
-    if (wsRef.current) {
-      wsRef.current.close();
-      wsRef.current = null;
-      setIsConnected(false);
-    }
-  }, []);
+    setShouldConnect(false);
+    wsDisconnect();
+  }, [wsDisconnect]);
 
+  // Clear traces function
   const clearTraces = useCallback(() => {
     setSpans([]);
     setEvents([]);
   }, []);
 
-  // Auto-connect on mount if enabled and authenticated
+  // Handle autoConnect changes
   useEffect(() => {
     if (autoConnect && isAuthenticated) {
-      connect();
+      setShouldConnect(true);
     }
+  }, [autoConnect, isAuthenticated]);
 
+  // Cleanup on unmount
+  useEffect(() => {
     return () => {
-      disconnect();
+      wsDisconnect();
     };
-  }, [autoConnect, isAuthenticated, connect, disconnect]);
+  }, [wsDisconnect]);
 
   return {
     spans,
