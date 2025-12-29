@@ -68,6 +68,8 @@ export interface UseDevToolsWebSocketReturn {
   clearNetworkEntries: () => void;
   /** Manually reconnect */
   reconnect: () => void;
+  /** Number of reconnection attempts (for dashboard visibility) */
+  reconnectAttempts: number;
 }
 
 // =============================================================================
@@ -231,6 +233,7 @@ export function useDevToolsWebSocket(
     status,
     disconnect,
     reconnect: wsReconnect,
+    reconnectAttempts,
     metrics,
   } = useRealtimeSync({
     url: wsUrl,
@@ -292,6 +295,7 @@ export function useDevToolsWebSocket(
     clearConsoleEntries,
     clearNetworkEntries,
     reconnect: wsReconnect,
+    reconnectAttempts,
   };
 }
 

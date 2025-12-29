@@ -221,10 +221,12 @@ export function DevToolsPanel({ className }: DevToolsPanelProps) {
 
   // DevTools WebSocket - auto-connect for console and network data
   const {
+    status: devToolsWsStatus,
     consoleEntries: wsConsoleEntries,
     networkEntries: wsNetworkEntries,
     clearConsoleEntries: clearWsConsoleEntries,
     clearNetworkEntries: clearWsNetworkEntries,
+    reconnectAttempts: devToolsReconnectAttempts,
   } = useDevToolsWebSocket({
     enabled: !collapsed,
     contextEntityId: entityId,
@@ -423,11 +425,40 @@ export function DevToolsPanel({ className }: DevToolsPanelProps) {
             "border-b border-gray-200 dark:border-gray-700",
           )}
         >
-          {/* Context Indicator */}
-          <div className="flex items-center gap-2">
+          {/* Context Indicator + WebSocket Status */}
+          <div className="flex items-center gap-3">
             <span className="text-xs font-medium text-gray-600 dark:text-gray-300">
               {contextLabel}
             </span>
+
+            {/* WebSocket Reconnection Status */}
+            {devToolsWsStatus === "connecting" &&
+              devToolsReconnectAttempts > 0 && (
+                <div
+                  data-testid="devtools-reconnecting-indicator"
+                  className="flex items-center gap-1 text-yellow-600 dark:text-yellow-400 text-xs"
+                >
+                  <Loader2 className="w-3 h-3 animate-spin" />
+                  <span>Reconnecting ({devToolsReconnectAttempts})...</span>
+                </div>
+              )}
+            {devToolsWsStatus === "error" && (
+              <div
+                data-testid="devtools-error-indicator"
+                className="flex items-center gap-1 text-red-600 dark:text-red-400 text-xs"
+              >
+                <AlertTriangle className="w-3 h-3" />
+                <span>Connection error</span>
+              </div>
+            )}
+            {devToolsWsStatus === "connected" && (
+              <div
+                data-testid="devtools-connected-indicator"
+                className="flex items-center gap-1 text-green-600 dark:text-green-400 text-xs"
+              >
+                <Wifi className="w-3 h-3" />
+              </div>
+            )}
           </div>
 
           {/* Action Buttons */}

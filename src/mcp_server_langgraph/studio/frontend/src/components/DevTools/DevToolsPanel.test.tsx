@@ -35,16 +35,19 @@ vi.mock("./hooks/useDevToolsContext", () => ({
   }),
 }));
 
-// Mock the useDevToolsWebSocket hook
+// Mock the useDevToolsWebSocket hook with configurable return values
+let mockDevToolsWsState = {
+  status: "connected" as "connected" | "connecting" | "disconnected" | "error",
+  consoleEntries: [] as unknown[],
+  networkEntries: [] as unknown[],
+  clearConsoleEntries: vi.fn(),
+  clearNetworkEntries: vi.fn(),
+  reconnect: vi.fn(),
+  reconnectAttempts: 0,
+};
+
 vi.mock("./hooks/useDevToolsWebSocket", () => ({
-  useDevToolsWebSocket: () => ({
-    status: "connected",
-    consoleEntries: [],
-    networkEntries: [],
-    clearConsoleEntries: vi.fn(),
-    clearNetworkEntries: vi.fn(),
-    reconnect: vi.fn(),
-  }),
+  useDevToolsWebSocket: () => mockDevToolsWsState,
 }));
 
 // Mock the useTraceWebSocket hook
@@ -110,6 +113,16 @@ describe("DevToolsPanel", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    // Reset mock state to defaults
+    mockDevToolsWsState = {
+      status: "connected",
+      consoleEntries: [],
+      networkEntries: [],
+      clearConsoleEntries: vi.fn(),
+      clearNetworkEntries: vi.fn(),
+      reconnect: vi.fn(),
+      reconnectAttempts: 0,
+    };
   });
 
   afterEach(() => {
@@ -367,6 +380,47 @@ describe("DevToolsPanel", () => {
       renderWithProviders(<DevToolsPanel />);
       const panel = screen.getByTestId("devtools-panel");
       expect(panel).toHaveClass("dark:bg-gray-900");
+    });
+  });
+
+  // ===========================================================================
+  // WebSocket Status Indicators
+  // ===========================================================================
+
+  describe("websocket status indicators", () => {
+    it("should show connected indicator when WebSocket is connected", () => {
+      renderWithProviders(<DevToolsPanel />);
+      expect(
+        screen.getByTestId("devtools-connected-indicator"),
+      ).toBeInTheDocument();
+    });
+
+    it("should show reconnecting indicator with attempt count", () => {
+      // Override the mock state for this test
+      mockDevToolsWsState = {
+        ...mockDevToolsWsState,
+        status: "connecting",
+        reconnectAttempts: 3,
+      };
+
+      renderWithProviders(<DevToolsPanel />);
+      const indicator = screen.getByTestId("devtools-reconnecting-indicator");
+      expect(indicator).toBeInTheDocument();
+      expect(indicator).toHaveTextContent("Reconnecting (3)...");
+    });
+
+    it("should show error indicator when WebSocket has error", () => {
+      // Override the mock state for this test
+      mockDevToolsWsState = {
+        ...mockDevToolsWsState,
+        status: "error",
+        reconnectAttempts: 5,
+      };
+
+      renderWithProviders(<DevToolsPanel />);
+      const indicator = screen.getByTestId("devtools-error-indicator");
+      expect(indicator).toBeInTheDocument();
+      expect(indicator).toHaveTextContent("Connection error");
     });
   });
 });

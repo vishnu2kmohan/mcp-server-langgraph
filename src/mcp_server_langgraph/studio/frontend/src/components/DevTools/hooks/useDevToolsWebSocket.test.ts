@@ -574,5 +574,14 @@ describe("useDevToolsWebSocket", () => {
 
       expect(mockReconnect).toHaveBeenCalled();
     });
+
+    it("should expose reconnectAttempts for dashboard visibility", () => {
+      const { result } = renderHook(() =>
+        useDevToolsWebSocket({ enabled: true }),
+      );
+
+      expect(typeof result.current.reconnectAttempts).toBe("number");
+      expect(result.current.reconnectAttempts).toBe(0);
+    });
   });
 });
