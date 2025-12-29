@@ -299,7 +299,7 @@ Applied to 3 slow tests:
 - Removed hardcoded `@retry_with_backoff(max_attempts=3)` parameters
 - Changed to `@retry_with_backoff()` to respect global config
 - Now `fast_retry_config` fixture works correctly
-- See: `docs-internal/ADR-RESILIENCE-DECORATOR-PARAMETERS.md` for prevention strategy
+- See: `docs-internal/INTERNAL-RESILIENCE-DECORATOR-PARAMETERS.md` for prevention strategy
 
 #### 3.2 Agent Test Optimization (Priority 2) ⏳ PENDING
 

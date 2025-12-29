@@ -200,5 +200,5 @@ Import `remediation-dashboard.json` for:
 ## Related Documentation
 
 - [Resilience Operations Runbook](../../docs-internal/runbooks/RESILIENCE_OPERATIONS.md)
-- [ADR-0026: Resilience Patterns](../../docs-internal/ADR-0026-RESILIENCE-PATTERNS.md)
+- [Internal: Resilience Patterns](../../docs-internal/INTERNAL-0026-RESILIENCE-PATTERNS.md)
 - [Alertmanager Configuration](../monitoring/alertmanager/alertmanager-config.yaml)

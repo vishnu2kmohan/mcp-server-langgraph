@@ -801,7 +801,7 @@ The `/health/ready` endpoint includes real-time resilience stats:
 - **Alerts**: Circuit breaker open, retry exhaustion, pool saturation
 - **SLO Integration**: Resilience health score correlates with error budget burn
 
-**See**: [ADR-0026: Resilience Patterns](docs-internal/ADR-0026-RESILIENCE-PATTERNS.md) | [Operations Runbook](docs-internal/runbooks/RESILIENCE_OPERATIONS.md)
+**See**: [Internal: Resilience Patterns](docs-internal/INTERNAL-0026-RESILIENCE-PATTERNS.md) | [Operations Runbook](docs-internal/runbooks/RESILIENCE_OPERATIONS.md)
 
 ## Security Considerations
 

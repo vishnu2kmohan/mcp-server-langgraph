@@ -8,7 +8,7 @@ These tests ensure:
 4. No strict xfail markers on placeholder tests
 
 Reference: Codex Integration Failures Analysis (2025-11-13)
-ADR: docs-internal/ADR-0053-codex-findings-validation.md
+Internal Doc: docs-internal/INTERNAL-0053-codex-findings-validation.md
 """
 
 import ast

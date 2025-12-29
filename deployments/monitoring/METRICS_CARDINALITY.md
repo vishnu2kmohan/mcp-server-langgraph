@@ -258,6 +258,6 @@ The resilience metrics have **acceptable cardinality** with proper usage pattern
 
 ## Related Documents
 
-- [ADR-0026: Resilience Patterns](../docs-internal/ADR-0026-RESILIENCE-PATTERNS.md)
+- [Internal: Resilience Patterns](../docs-internal/INTERNAL-0026-RESILIENCE-PATTERNS.md)
 - [Alerting Rules](alerting-rules/resilience-alerts.yaml)
 - [Operations Runbook](../docs-internal/runbooks/RESILIENCE_OPERATIONS.md)

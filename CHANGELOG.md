@@ -255,7 +255,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - **Integration Tests** (`tests/integration/test_feature_flag_sync.py`):
     - `TestADR0072FeatureFlags` - Feature flag definition and behavior tests
     - `TestADR0072ModuleIntegration` - Module-level feature flag enforcement
-  - ADR Document: `docs-internal/ADR-0072-ANTHROPIC-BEST-PRACTICES.md`
+  - Internal Document: `docs-internal/INTERNAL-0072-ANTHROPIC-BEST-PRACTICES.md`
 
 - **Storage Layer Consolidation** - Unified repository pattern:
   - `src/mcp_server_langgraph/storage/` - New storage directory:

@@ -297,8 +297,8 @@ Unimplemented observability backend integrations.
 - `validate-docs` hook: Consolidated documentation validators (7 → 1)
 
 **References:**
-- `docs-internal/ADR-0052-GIT-HOOKS-CI-PARITY.md`
-- `docs-internal/ADR-0053-MAKEFILE-PREPUSH-PARITY-ENFORCEMENT.md`
+- `docs-internal/INTERNAL-0052-GIT-HOOKS-CI-PARITY.md`
+- `docs-internal/INTERNAL-0053-MAKEFILE-PREPUSH-PARITY-ENFORCEMENT.md`
 - `.pre-commit-config.yaml` hook: `run-pre-push-tests`
 
 #### 7. Makefile Pattern Standardization
@@ -315,7 +315,7 @@ Unimplemented observability backend integrations.
 
 **References:**
 - `.claude/memory/make-targets.md`
-- `docs-internal/ADR-0053-MAKEFILE-PREPUSH-PARITY-ENFORCEMENT.md`
+- `docs-internal/INTERNAL-0053-MAKEFILE-PREPUSH-PARITY-ENFORCEMENT.md`
 
 ### Code Quality Debt
 
@@ -578,11 +578,11 @@ Unimplemented observability backend integrations.
 
 ### Internal Documentation
 
-**Architecture Decision Records:**
-- `docs-internal/ADR-0052-GIT-HOOKS-CI-PARITY.md` - Hook consolidation
-- `docs-internal/ADR-0053-codex-findings-validation.md` - Codex findings validation
-- `docs-internal/ADR-0053-MAKEFILE-PREPUSH-PARITY-ENFORCEMENT.md` - Makefile standardization
-- `docs-internal/ADR-0054-CODEX-INFRASTRUCTURE-DEPENDENCY-FINDINGS.md` - Infrastructure findings
+**Internal Working Documents:**
+- `docs-internal/INTERNAL-0052-GIT-HOOKS-CI-PARITY.md` - Hook consolidation
+- `docs-internal/INTERNAL-0053-codex-findings-validation.md` - Codex findings validation
+- `docs-internal/INTERNAL-0053-MAKEFILE-PREPUSH-PARITY-ENFORCEMENT.md` - Makefile standardization
+- `docs-internal/INTERNAL-0054-CODEX-INFRASTRUCTURE-DEPENDENCY-FINDINGS.md` - Infrastructure findings
 
 **Remediation Guides:**
 - `docs-internal/ASYNC_MOCK_REMEDIATION_GUIDE.md` - AsyncMock security fixes

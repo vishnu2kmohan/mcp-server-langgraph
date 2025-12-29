@@ -287,4 +287,4 @@ When releasing new versions:
 
 - [Claude Desktop Extensions](https://docs.anthropic.com/claude-desktop/extensions)
 - [MCP Protocol Specification](https://modelcontextprotocol.io)
-- [Skills System](../docs-internal/ADR-0072-ANTHROPIC-BEST-PRACTICES.md)
+- [Skills System](../docs-internal/INTERNAL-0072-ANTHROPIC-BEST-PRACTICES.md)

@@ -1198,7 +1198,7 @@ await websocket_manager.broadcast(
 
 | Document | Path | Content |
 |----------|------|---------|
-| **ADR-0072** | `docs-internal/ADR-0072-ANTHROPIC-BEST-PRACTICES.md` | Phase 3: Skills System |
+| **INTERNAL-0072** | `docs-internal/INTERNAL-0072-ANTHROPIC-BEST-PRACTICES.md` | Phase 3: Skills System |
 | **Feature Flag Catalog** | `docs-internal/FEATURE_FLAG_CATALOG.md` | `enable_skills_system`, `enable_skills_marketplace` |
 
 ---

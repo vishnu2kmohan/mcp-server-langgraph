@@ -496,7 +496,7 @@ graph LR
 - [Plan File](.claude/plans/zany-exploring-flame.md) - Original implementation plan
 - [Alert Management Guide](docs/guides/alert-management.mdx) - User-facing documentation
 - [Push Notifications Guide](docs/guides/push-notifications.mdx) - Push setup guide
-- [ADR-0026](docs-internal/ADR-0026-RESILIENCE-PATTERNS.md) - Resilience patterns
+- [INTERNAL-0026](docs-internal/INTERNAL-0026-RESILIENCE-PATTERNS.md) - Resilience patterns
 
 ---
 

@@ -454,7 +454,7 @@ class TestADR0072FeatureFlags:
             f"Missing ADR-0072 flags in backend FeatureFlags class:\n"
             f"  {missing}\n\n"
             f"Add these to src/mcp_server_langgraph/core/feature_flags.py\n"
-            f"See: docs-internal/ADR-0072-ANTHROPIC-BEST-PRACTICES.md"
+            f"See: docs-internal/INTERNAL-0072-ANTHROPIC-BEST-PRACTICES.md"
         )
 
         print(f"✅ All {len(expected_adr0072_flags)} ADR-0072 flags present in backend")
@@ -497,7 +497,7 @@ class TestADR0072FeatureFlags:
             f"ADR-0072 flags not enabled in test environment:\n"
             f"  {missing_or_disabled}\n\n"
             f"Add these to docker-compose.test.yml with value 'true'\n"
-            f"See: docs-internal/ADR-0072-ANTHROPIC-BEST-PRACTICES.md"
+            f"See: docs-internal/INTERNAL-0072-ANTHROPIC-BEST-PRACTICES.md"
         )
 
         print(f"✅ All {len(expected_adr0072_flags)} ADR-0072 flags enabled in test environment")

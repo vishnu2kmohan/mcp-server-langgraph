@@ -45,7 +45,7 @@ The hook runs 4 phases of validation matching CI/CD exactly:
 - **Hook Tests**: `tests/meta/test_local_ci_parity.py`
 - **Parity Tests**: `tests/meta/test_makefile_prepush_parity.py`
 - **Validator Script**: `scripts/validate_pre_push_hook.py`
-- **ADR**: `docs-internal/ADR-00XX-git-hooks-parity.md` (documents 2025-11-13 fixes)
+- **Internal Doc**: `docs-internal/INTERNAL-00XX-git-hooks-parity.md` (documents 2025-11-13 fixes)
 
 ### Historical Value
 
