@@ -10,6 +10,7 @@
  */
 
 import { getAuthToken } from "./storage";
+import { PROTOCOL_VERSION } from "../types/websocket-protocols";
 
 /**
  * Get API host from environment or window.location
@@ -82,6 +83,9 @@ export function buildWebSocketUrl(
   // Build query parameters
   const urlParams = new URLSearchParams();
 
+  // Always include protocol version for compatibility checking
+  urlParams.set("v", PROTOCOL_VERSION);
+
   // Add auth token if requested
   if (includeAuthToken) {
     const token = getAuthToken();
@@ -133,7 +137,6 @@ export const WS_ENDPOINTS = {
   AI_SUGGESTIONS: "/api/v1/ws/ai/suggestions",
 
   // Workflow WebSocket endpoints
-  WORKFLOWS: "/api/v1/ws/workflows",
   WORKFLOW_EXECUTION: "/api/v1/ws/workflows/:workflowId",
 
   // Monitoring WebSocket endpoints

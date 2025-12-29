@@ -117,18 +117,22 @@ describe("websocket utilities", () => {
       });
     });
 
-    it("should build URL with endpoint only", () => {
+    it("should build URL with endpoint and protocol version", () => {
       const url = buildWebSocketUrl("/api/v1/ws/notifications");
-      expect(url).toBe("wss://app.example.com/api/v1/ws/notifications");
+      expect(url).toBe("wss://app.example.com/api/v1/ws/notifications?v=1.0.0");
     });
 
-    it("should include query parameters", () => {
+    it("should include protocol version in all URLs", () => {
+      const url = buildWebSocketUrl("/api/v1/ws/notifications");
+      expect(url).toContain("v=1.0.0");
+    });
+
+    it("should include query parameters with protocol version", () => {
       const url = buildWebSocketUrl("/api/v1/ws/agents/requests", {
         session_id: "123",
       });
-      expect(url).toBe(
-        "wss://app.example.com/api/v1/ws/agents/requests?session_id=123",
-      );
+      expect(url).toContain("v=1.0.0");
+      expect(url).toContain("session_id=123");
     });
 
     it("should include auth token when requested", async () => {
@@ -137,12 +141,11 @@ describe("websocket utilities", () => {
       vi.mocked(getAuthToken).mockReturnValue("test-token-xyz");
 
       const url = buildWebSocketUrl("/api/v1/ws/mcp/auth", {}, true);
-      expect(url).toBe(
-        "wss://app.example.com/api/v1/ws/mcp/auth?token=test-token-xyz",
-      );
+      expect(url).toContain("v=1.0.0");
+      expect(url).toContain("token=test-token-xyz");
     });
 
-    it("should combine token and other params", async () => {
+    it("should combine token and other params with protocol version", async () => {
       const { getAuthToken } = await import("./storage");
       vi.mocked(getAuthToken).mockReturnValue("my-token");
 
@@ -151,6 +154,7 @@ describe("websocket utilities", () => {
         { session_id: "456" },
         true,
       );
+      expect(url).toContain("v=1.0.0");
       expect(url).toContain("token=my-token");
       expect(url).toContain("session_id=456");
     });
@@ -174,7 +178,6 @@ describe("websocket utilities", () => {
       expect(WS_ENDPOINTS.AI_SUGGESTIONS).toBe("/api/v1/ws/ai/suggestions");
 
       // Workflow endpoints
-      expect(WS_ENDPOINTS.WORKFLOWS).toBe("/api/v1/ws/workflows");
       expect(WS_ENDPOINTS.WORKFLOW_EXECUTION).toBe(
         "/api/v1/ws/workflows/:workflowId",
       );
@@ -226,28 +229,31 @@ describe("websocket utilities", () => {
       });
     });
 
-    it("should replace single path parameter", () => {
+    it("should replace single path parameter with protocol version", () => {
       const url = buildWebSocketUrlWithPath(WS_ENDPOINTS.WORKFLOW_EXECUTION, {
         workflowId: "abc-123",
       });
-      expect(url).toBe("wss://app.example.com/api/v1/ws/workflows/abc-123");
+      expect(url).toBe(
+        "wss://app.example.com/api/v1/ws/workflows/abc-123?v=1.0.0",
+      );
     });
 
-    it("should replace multiple path parameters", () => {
+    it("should replace multiple path parameters with protocol version", () => {
       const url = buildWebSocketUrlWithPath("/api/v1/ws/:foo/:bar", {
         foo: "value1",
         bar: "value2",
       });
-      expect(url).toBe("wss://app.example.com/api/v1/ws/value1/value2");
+      expect(url).toBe("wss://app.example.com/api/v1/ws/value1/value2?v=1.0.0");
     });
 
-    it("should include query parameters", () => {
+    it("should include query parameters with protocol version", () => {
       const url = buildWebSocketUrlWithPath(
         WS_ENDPOINTS.WORKFLOW_EXECUTION,
         { workflowId: "abc-123" },
         { debug: "true", verbose: "1" },
       );
       expect(url).toContain("/api/v1/ws/workflows/abc-123");
+      expect(url).toContain("v=1.0.0");
       expect(url).toContain("debug=true");
       expect(url).toContain("verbose=1");
     });
