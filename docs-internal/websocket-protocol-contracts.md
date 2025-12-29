@@ -316,10 +316,53 @@ Aggregated updates from all connected MCP servers.
 
 ## Authentication
 
-All WebSocket connections require authentication via:
+### Authentication Requirements by Endpoint
+
+| Endpoint | Requires Auth | Backend Config |
+|----------|---------------|----------------|
+| `/api/v1/ws/notifications` | ✅ Yes | `ws_router.py:177` |
+| `/api/v1/ws/agents/requests` | ✅ Yes | `ws_router.py:515` |
+| `/api/v1/ws/alerts` | ✅ Yes | `ws_router.py:426` |
+| `/api/v1/ws/mcp` | ❌ No | `ws_router.py:557` |
+| `/api/v1/ws/mcp/auth` | ✅ Yes | `ws_router.py:588` |
+| `/api/v1/ws/mcp/aggregated` | ✅ Yes | `ws_router.py:140` |
+| `/api/v1/ws/mcp/tasks` | ✅ Yes | `ws_router.py:81` |
+| `/api/v1/ws/ai/suggestions` | ✅ Yes | `ws_router.py:673` |
+| `/api/v1/ws/metrics/heart` | ✅ Yes | `ws_router.py:248` |
+| `/api/v1/ws/usage/cost` | ✅ Yes | `ws_router.py:281` |
+| `/api/v1/ws/budget/alerts` | ✅ Yes | `ws_router.py:781` |
+| `/api/v1/ws/connections/realtime` | ✅ Yes | `ws_router.py:215` |
+| `/api/v1/ws/connections/health` | ✅ Yes | `ws_router.py:383` |
+| `/api/v1/ws/devtools` | ✅ Yes | `ws_router.py:835` |
+| `/api/v1/ws/audit` | ✅ Yes | `ws_router.py:467` |
+| `/api/v1/ws/traces` | ✅ Yes | `ws_router.py:730` |
+
+### Authentication Method
+
+All WebSocket connections requiring auth use:
 
 1. **Query Parameter**: `?token=<jwt_token>`
 2. **DPoP Token Binding** (when enabled)
+
+### Frontend Implementation Pattern
+
+**CRITICAL**: The `buildWebSocketUrl` function requires explicit `includeAuthToken` parameter.
+
+```typescript
+// ✅ CORRECT - Explicitly include token for authenticated endpoints
+const wsUrl = buildWebSocketUrl(WS_ENDPOINTS.NOTIFICATIONS, {}, true);
+
+// ✅ CORRECT - Explicitly exclude token for anonymous endpoints
+const wsUrl = buildWebSocketUrl(WS_ENDPOINTS.MCP, {}, false);
+
+// ❌ ERROR - TypeScript requires all parameters (no default)
+// const wsUrl = buildWebSocketUrl(WS_ENDPOINTS.NOTIFICATIONS); // TS Error
+```
+
+**Why required parameter?**
+- Prevents the `user=None` bug where connections silently fail
+- Forces developers to consciously decide on auth requirements
+- Caught by TypeScript at compile time
 
 ### Token Expiration Handling
 
@@ -340,6 +383,26 @@ The client should:
 1. Close the WebSocket connection
 2. Refresh the authentication token
 3. Reconnect with the new token
+
+### Contract Testing
+
+Frontend-backend auth requirements are validated by contract tests:
+
+**Frontend Contract Test**: `src/utils/websocketAuthContract.test.ts`
+- Validates all `WS_ENDPOINTS` exist in backend
+- Validates `includeAuthToken` matches backend `require_auth`
+- Runs in CI via `npm test`
+
+**Backend Contract Test**: `tests/contract/test_websocket_endpoint_parity.py`
+- Parses frontend `WS_ENDPOINTS` from TypeScript
+- Parses backend `@ws_router.websocket` decorators
+- Validates all frontend endpoints have backend handlers
+- Validates auth requirements match
+
+These tests run on every PR and prevent:
+- Missing backend handlers for frontend endpoints
+- Authentication mismatches causing `user=None` bugs
+- Broken WebSocket connections at runtime
 
 ---
 
