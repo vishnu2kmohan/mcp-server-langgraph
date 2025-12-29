@@ -78,7 +78,7 @@ import { ResizeHandle } from "./ResizeHandle";
 import { ConnectedCanvasPanel } from "../canvas/ConnectedCanvasPanel";
 import { TelemetryViewer } from "../devtools";
 import { devLogger } from "../utils/devLogger";
-import { DevToolsPanel } from "../components/DevTools";
+import { LazyDevToolsPanel } from "../components/DevTools";
 import {
   selectDevToolsCollapsed,
   selectDevToolsHeight,
@@ -743,7 +743,7 @@ export function StudioShellLayout() {
                   </div>
                 }
               >
-                <DevToolsPanel />
+                <LazyDevToolsPanel />
               </Suspense>
             </Panel>
           </>

@@ -19,11 +19,11 @@ import {
   Calendar,
 } from "lucide-react";
 import { Skeleton, SkeletonCard, ErrorState } from "../components/UI";
-import { OrganizationCostDashboard } from "../components/Cost";
 import {
+  LazyOrganizationCostDashboard,
   LazyBudgetStatusCard,
   LazyBudgetForecastChart,
-} from "../components/Cost/lazy";
+} from "../components/Cost";
 import type { BudgetStatus, CostForecast } from "../components/Cost";
 import {
   useGetCostSummaryQuery,
@@ -578,10 +578,20 @@ export function CostPage({
                 />
               </Suspense>
             )}
-            <OrganizationCostDashboard
-              startDate={effectiveDateRange.start}
-              endDate={effectiveDateRange.end}
-            />
+            <Suspense
+              fallback={
+                <div className="space-y-4">
+                  <SkeletonCard />
+                  <SkeletonCard />
+                  <SkeletonCard />
+                </div>
+              }
+            >
+              <LazyOrganizationCostDashboard
+                startDate={effectiveDateRange.start}
+                endDate={effectiveDateRange.end}
+              />
+            </Suspense>
           </div>
         ) : isLoading ? (
           <div className="space-y-6">

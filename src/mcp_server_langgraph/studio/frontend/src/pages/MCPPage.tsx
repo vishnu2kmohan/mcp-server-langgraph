@@ -49,12 +49,12 @@ import type {
 } from "../types/mcp";
 import type { MCPConnectionCreate } from "../types/connection";
 import {
-  AddConnectionDialog,
+  LazyAddConnectionDialog,
   LazyToolInvocationDialog,
   LazyResourceViewer,
   LazyPromptTester,
   LazyElicitationDialog,
-  AggregatedCapabilitiesPanel,
+  LazyAggregatedCapabilitiesPanel,
 } from "../components/MCP";
 import { selectPersona } from "../store/slices/personaSlice";
 import { useMCPKeyboardShortcuts } from "../hooks";
@@ -649,38 +649,62 @@ export function MCPPage() {
 
             {/* Aggregated Tab - Shows capabilities from all external MCP connections */}
             {activeTab === "aggregated" && (
-              <AggregatedCapabilitiesPanel
-                showAdminActions={isAdmin}
-                onToolInvoke={(qualifiedName) => {
-                  const toolName = extractItemName(qualifiedName);
-                  setPreselectedToolName(toolName);
-                  setIsToolInvocationOpen(true);
-                }}
-                onResourceView={(qualifiedName) => {
-                  // For resources, use the URI which is the qualified_name
-                  // but the dialogs use simple URIs, so extract the name part
-                  const resourceName = extractItemName(qualifiedName);
-                  setPreselectedResourceUri(resourceName);
-                  setIsResourceViewerOpen(true);
-                }}
-                onPromptTest={(qualifiedName) => {
-                  const promptName = extractItemName(qualifiedName);
-                  setPreselectedPromptName(promptName);
-                  setIsPromptTesterOpen(true);
-                }}
-              />
+              <Suspense
+                fallback={
+                  <div className="p-8 flex items-center justify-center">
+                    <Loader2 className="w-5 h-5 animate-spin text-blue-500 mr-2" />
+                    <span className="text-gray-500 dark:text-gray-400">
+                      Loading capabilities...
+                    </span>
+                  </div>
+                }
+              >
+                <LazyAggregatedCapabilitiesPanel
+                  showAdminActions={isAdmin}
+                  onToolInvoke={(qualifiedName) => {
+                    const toolName = extractItemName(qualifiedName);
+                    setPreselectedToolName(toolName);
+                    setIsToolInvocationOpen(true);
+                  }}
+                  onResourceView={(qualifiedName) => {
+                    // For resources, use the URI which is the qualified_name
+                    // but the dialogs use simple URIs, so extract the name part
+                    const resourceName = extractItemName(qualifiedName);
+                    setPreselectedResourceUri(resourceName);
+                    setIsResourceViewerOpen(true);
+                  }}
+                  onPromptTest={(qualifiedName) => {
+                    const promptName = extractItemName(qualifiedName);
+                    setPreselectedPromptName(promptName);
+                    setIsPromptTesterOpen(true);
+                  }}
+                />
+              </Suspense>
             )}
           </div>
         )}
       </div>
 
       {/* Add Connection Dialog */}
-      <AddConnectionDialog
-        isOpen={isAddDialogOpen}
-        onClose={handleCloseAddDialog}
-        onSubmit={handleCreateConnection}
-        isLoading={isCreating}
-      />
+      <Suspense
+        fallback={
+          <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-50">
+            <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-xl flex items-center gap-3">
+              <Loader2 className="w-5 h-5 animate-spin text-blue-500" />
+              <span className="text-gray-700 dark:text-gray-300">
+                Loading...
+              </span>
+            </div>
+          </div>
+        }
+      >
+        <LazyAddConnectionDialog
+          isOpen={isAddDialogOpen}
+          onClose={handleCloseAddDialog}
+          onSubmit={handleCreateConnection}
+          isLoading={isCreating}
+        />
+      </Suspense>
 
       {/* MCP Action Dialogs - Lazy loaded for bundle optimization */}
       <Suspense

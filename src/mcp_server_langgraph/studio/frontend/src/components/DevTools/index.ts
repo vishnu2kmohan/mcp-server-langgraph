@@ -2,11 +2,14 @@
  * DevTools Component Exports
  *
  * Chrome DevTools-like debugging panel for Agent Studio.
+ *
+ * NOTE: DevToolsPanel is only available via lazy export to enable
+ * code-splitting. Import LazyDevToolsPanel for component usage:
+ *
+ * ```tsx
+ * import { LazyDevToolsPanel } from "../components/DevTools";
+ * ```
  */
-
-// Main component
-export { DevToolsPanel } from "./DevToolsPanel";
-export { default } from "./DevToolsPanel";
 
 // Timeline Bar
 export { TimelineBar } from "./TimelineBar";

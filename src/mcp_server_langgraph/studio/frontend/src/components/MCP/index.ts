@@ -2,21 +2,28 @@
  * MCP Components
  *
  * Components for MCP (Model Context Protocol) connection management.
+ *
+ * NOTE: Component implementations are only available via lazy exports to enable
+ * code-splitting. Import lazy components from this file:
+ *
+ * ```tsx
+ * import { LazyToolInvocationDialog } from "../components/MCP";
+ * ```
+ *
+ * Type exports are available directly from this file.
  */
 
-// Regular exports (synchronous)
-export { AddConnectionDialog } from "./AddConnectionDialog";
-export { ToolInvocationDialog } from "./ToolInvocationDialog";
-export { ResourceViewer } from "./ResourceViewer";
-export { PromptTester } from "./PromptTester";
-export { ElicitationDialog } from "./ElicitationDialog";
-
-// Aggregated capabilities components (MCP 2025-11-25)
-export { AggregatedCapabilitiesPanel } from "./AggregatedCapabilities";
-export { MCPServerCard } from "./MCPServerCard";
-export { ToolExplorer } from "./ToolExplorer";
-export { ResourceBrowser } from "./ResourceBrowser";
-export { PromptLibrary } from "./PromptLibrary";
+// Type-only exports (don't affect bundle size)
+export type { AddConnectionDialogProps } from "./AddConnectionDialog";
+export type { ToolInvocationDialogProps } from "./ToolInvocationDialog";
+export type { ResourceViewerProps } from "./ResourceViewer";
+export type { PromptTesterProps } from "./PromptTester";
+export type { ElicitationDialogProps } from "./ElicitationDialog";
+export type { AggregatedCapabilitiesPanelProps } from "./AggregatedCapabilities";
+export type { MCPServerCardProps } from "./MCPServerCard";
+export type { ToolExplorerProps } from "./ToolExplorer";
+export type { ResourceBrowserProps } from "./ResourceBrowser";
+export type { PromptLibraryProps } from "./PromptLibrary";
 
 // Lazy exports (code-split, loaded on demand)
 export {

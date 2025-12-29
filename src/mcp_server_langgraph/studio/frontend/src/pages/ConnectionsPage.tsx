@@ -11,7 +11,7 @@
  * - Real-time status polling (configurable interval)
  */
 
-import { useState, useCallback, useMemo, useRef } from "react";
+import { useState, useCallback, useMemo, useRef, Suspense } from "react";
 import {
   Plus,
   Search,
@@ -46,7 +46,7 @@ import {
   ConnectionTemplateSelector,
   ConnectionAuditLog,
 } from "../components/Connection";
-import { AggregatedCapabilitiesPanel } from "../components/MCP";
+import { LazyAggregatedCapabilitiesPanel } from "../components/MCP";
 import { useAppSelector } from "../store/hooks";
 import { selectPersona } from "../store/slices/personaSlice";
 import type {
@@ -721,21 +721,32 @@ export function ConnectionsPage() {
       {/* Aggregated Capabilities Panel - Shows tools/resources/prompts from all connected servers */}
       {connections.length > 0 && (
         <div className="mt-8">
-          <AggregatedCapabilitiesPanel
-            showAdminActions={isAdmin}
-            onToolInvoke={(qualifiedName) => {
-              console.log("Tool invoke requested:", qualifiedName);
-              // TODO: Open ToolInvocationDialog with the selected tool
-            }}
-            onResourceView={(qualifiedName) => {
-              console.log("Resource view requested:", qualifiedName);
-              // TODO: Open ResourceViewer with the selected resource
-            }}
-            onPromptTest={(qualifiedName) => {
-              console.log("Prompt test requested:", qualifiedName);
-              // TODO: Open PromptTester with the selected prompt
-            }}
-          />
+          <Suspense
+            fallback={
+              <div className="p-8 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+                <div className="flex items-center justify-center gap-3 text-gray-500 dark:text-gray-400">
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                  <span>Loading capabilities...</span>
+                </div>
+              </div>
+            }
+          >
+            <LazyAggregatedCapabilitiesPanel
+              showAdminActions={isAdmin}
+              onToolInvoke={(qualifiedName) => {
+                console.log("Tool invoke requested:", qualifiedName);
+                // TODO: Open ToolInvocationDialog with the selected tool
+              }}
+              onResourceView={(qualifiedName) => {
+                console.log("Resource view requested:", qualifiedName);
+                // TODO: Open ResourceViewer with the selected resource
+              }}
+              onPromptTest={(qualifiedName) => {
+                console.log("Prompt test requested:", qualifiedName);
+                // TODO: Open PromptTester with the selected prompt
+              }}
+            />
+          </Suspense>
         </div>
       )}
 

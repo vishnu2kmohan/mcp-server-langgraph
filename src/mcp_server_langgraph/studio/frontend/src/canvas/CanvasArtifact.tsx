@@ -9,7 +9,14 @@
  * - Inline editing with save/cancel
  * - AI-powered code analysis (Sprint 4)
  */
-import { useState, useCallback, useMemo, useEffect } from "react";
+import {
+  useState,
+  useCallback,
+  useMemo,
+  useEffect,
+  lazy,
+  Suspense,
+} from "react";
 import {
   Edit2,
   Save,
@@ -22,8 +29,6 @@ import {
 import type { CanvasArtifact as CanvasArtifactType } from "../types/artifacts";
 import { cn } from "../utils/cn";
 import { useCodeAnalysis } from "../hooks";
-import { InteractiveMermaidDiagram } from "../components/Chat/InteractiveMermaidDiagram";
-import { SandpackExecutor } from "../components/Artifacts/SandpackExecutor";
 import { JSONArtifact } from "../components/Artifacts/JSONArtifact";
 import type { JSONArtifact as JSONArtifactType } from "../types/artifacts";
 import { authenticatedFetch } from "../utils/authenticatedFetch";
@@ -32,6 +37,14 @@ import {
   duotoneLight,
   duotoneDark,
 } from "react-syntax-highlighter/dist/esm/styles/prism";
+
+// Lazy load heavy components for better code splitting
+const InteractiveMermaidDiagram = lazy(
+  () => import("../components/Chat/InteractiveMermaidDiagram"),
+);
+const SandpackExecutor = lazy(
+  () => import("../components/Artifacts/SandpackExecutor"),
+);
 
 // =============================================================================
 // Types
@@ -465,10 +478,22 @@ base64.b64encode(buf.read()).decode("utf-8")
       case "mermaid":
         return (
           <div data-testid="mermaid-content" className="w-full">
-            <InteractiveMermaidDiagram
-              code={artifact.content}
-              className="rounded-lg border border-gray-200 dark:border-gray-700"
-            />
+            <Suspense
+              fallback={
+                <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 animate-pulse">
+                  <div className="flex items-center gap-2 text-gray-500 dark:text-gray-400">
+                    <Loader2 size={16} className="animate-spin" />
+                    <span className="text-sm">Loading diagram...</span>
+                  </div>
+                  <div className="mt-3 h-32 bg-gray-200 dark:bg-gray-700 rounded" />
+                </div>
+              }
+            >
+              <InteractiveMermaidDiagram
+                code={artifact.content}
+                className="rounded-lg border border-gray-200 dark:border-gray-700"
+              />
+            </Suspense>
           </div>
         );
 
@@ -496,15 +521,39 @@ base64.b64encode(buf.read()).decode("utf-8")
         // JSX artifacts are rendered with SandpackExecutor for live preview
         return (
           <div data-testid="jsx-content" className="w-full">
-            <SandpackExecutor
-              code={artifact.content}
-              language="jsx"
-              title={artifact.title ?? "JSX Preview"}
-              showRunButton={true}
-              showEditor={true}
-              readOnly={!editable}
-              theme="dark"
-            />
+            <Suspense
+              fallback={
+                <div className="bg-gray-900 rounded-lg overflow-hidden animate-pulse border border-gray-700">
+                  <div className="flex items-center gap-2 p-3 bg-gray-800 border-b border-gray-700">
+                    <div className="h-4 bg-gray-700 rounded w-32" />
+                    <div className="ml-auto h-6 w-16 bg-gray-700 rounded" />
+                  </div>
+                  <div className="p-4 space-y-2">
+                    <div className="h-3 bg-gray-800 rounded w-2/3" />
+                    <div className="h-3 bg-gray-800 rounded w-1/2" />
+                    <div className="h-3 bg-gray-800 rounded w-3/4" />
+                  </div>
+                  <div className="p-4 bg-gray-800 border-t border-gray-700">
+                    <div className="flex items-center gap-2 text-gray-500">
+                      <Loader2 size={14} className="animate-spin" />
+                      <span className="text-xs">
+                        Loading interactive editor...
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              }
+            >
+              <SandpackExecutor
+                code={artifact.content}
+                language="jsx"
+                title={artifact.title ?? "JSX Preview"}
+                showRunButton={true}
+                showEditor={true}
+                readOnly={!editable}
+                theme="dark"
+              />
+            </Suspense>
           </div>
         );
 
