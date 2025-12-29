@@ -13,6 +13,7 @@
  * 3. If refresh fails, trigger logout
  */
 
+import { toast } from "sonner";
 import { getAuthToken } from "./storage";
 import { refreshAccessToken } from "./authenticatedFetch";
 
@@ -157,6 +158,25 @@ export async function ensureValidTokenForWebSocket(): Promise<boolean> {
 }
 
 /**
+ * Show immediate toast notification for protocol version mismatch.
+ *
+ * This provides transient feedback that appears immediately when the mismatch
+ * is detected. Use alongside PROTOCOL_VERSION_MISMATCH_NOTIFICATION for
+ * persistent notification center entry.
+ */
+export function showProtocolVersionMismatchToast(): void {
+  toast.error("Application Update Required", {
+    description:
+      "Your application version is incompatible with the server. Please refresh.",
+    duration: 15000, // Keep visible longer for user action
+    action: {
+      label: "Refresh",
+      onClick: () => window.location.reload(),
+    },
+  });
+}
+
+/**
  * Standard notification payload for protocol version mismatch.
  * Use this with your notification dispatch to show a consistent message.
  */
@@ -177,5 +197,6 @@ export default {
   isTokenExpiringSoon,
   ensureValidTokenForWebSocket,
   resetWebSocketAuthState,
+  showProtocolVersionMismatchToast,
   PROTOCOL_VERSION_MISMATCH_NOTIFICATION,
 };

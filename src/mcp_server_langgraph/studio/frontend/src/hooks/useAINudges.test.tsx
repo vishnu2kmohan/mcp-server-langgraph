@@ -79,7 +79,8 @@ function createWrapper(store: ReturnType<typeof createTestStore>) {
 function createNudgeHandler(
   response: typeof mockNudgeRecommendation | typeof mockNoNudgeRecommendation,
 ) {
-  return http.post("/api/v1/ai/nudges/recommend", async () => {
+  // Use wildcard prefix to match any origin (RTK Query uses full URL like http://127.0.0.1:3000/...)
+  return http.post("*/api/v1/ai/nudges/recommend", async () => {
     return HttpResponse.json(response);
   });
 }
@@ -88,14 +89,14 @@ function _createDelayedHandler(
   response: typeof mockNudgeRecommendation,
   delayMs: number,
 ) {
-  return http.post("/api/v1/ai/nudges/recommend", async () => {
+  return http.post("*/api/v1/ai/nudges/recommend", async () => {
     await delay(delayMs);
     return HttpResponse.json(response);
   });
 }
 
 function createErrorHandler(status: number) {
-  return http.post("/api/v1/ai/nudges/recommend", async () => {
+  return http.post("*/api/v1/ai/nudges/recommend", async () => {
     return new HttpResponse(null, { status });
   });
 }
@@ -287,7 +288,7 @@ describe("useAINudges", () => {
     it("refetches when pageContext changes", async () => {
       let fetchCount = 0;
       server.use(
-        http.post("/api/v1/ai/nudges/recommend", async () => {
+        http.post("*/api/v1/ai/nudges/recommend", async () => {
           fetchCount++;
           return HttpResponse.json(mockNudgeRecommendation);
         }),
@@ -405,7 +406,7 @@ describe("useAINudges", () => {
       // The original motivation/ability fields are mapped to persona
       let capturedBody: Record<string, unknown> | null = null;
       server.use(
-        http.post("/api/v1/ai/nudges/recommend", async ({ request }) => {
+        http.post("*/api/v1/ai/nudges/recommend", async ({ request }) => {
           capturedBody = (await request.json()) as Record<string, unknown>;
           return HttpResponse.json(mockNudgeRecommendation);
         }),

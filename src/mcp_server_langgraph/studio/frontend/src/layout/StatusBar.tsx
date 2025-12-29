@@ -67,6 +67,8 @@ export interface StatusBarProps {
   status?: string;
   /** Connection status for WebSocket/API */
   connectionStatus?: ConnectionStatus;
+  /** Number of reconnection attempts (for showing reconnection progress) */
+  reconnectAttempts?: number;
   /** Agent status message (e.g., "Thinking...") */
   agentStatus?: string;
   /** Model name (e.g., "claude-3-opus") */
@@ -177,6 +179,7 @@ function getProviderColorClass(provider: ModelProvider): string {
 export function StatusBar({
   status = "Ready",
   connectionStatus,
+  reconnectAttempts,
   agentStatus,
   modelName,
   modelProvider,
@@ -230,6 +233,20 @@ export function StatusBar({
             aria-label={`Connection status: ${connectionStatus}`}
           />
         )}
+
+        {/* Reconnection indicator - shows when reconnecting with attempt count */}
+        {connectionStatus === "connecting" &&
+          reconnectAttempts !== undefined &&
+          reconnectAttempts > 0 && (
+            <span
+              data-testid="reconnecting-indicator"
+              role="status"
+              aria-label={`Reconnecting, attempt ${reconnectAttempts}`}
+              className="flex items-center gap-1 text-yellow-600 dark:text-yellow-400 animate-pulse"
+            >
+              <span>Reconnecting ({reconnectAttempts})...</span>
+            </span>
+          )}
 
         {/* Status text */}
         <span>{status}</span>

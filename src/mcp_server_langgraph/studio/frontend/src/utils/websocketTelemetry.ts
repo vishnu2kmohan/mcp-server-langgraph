@@ -39,6 +39,42 @@ export interface WebSocketConnectionInfo {
 }
 
 /**
+ * Protocol version mismatch event.
+ */
+export interface ProtocolVersionMismatchEvent {
+  /** Endpoint identifier */
+  endpointId: string;
+  /** Client's protocol version */
+  clientVersion: string;
+  /** Server's protocol version */
+  serverVersion: string;
+  /** Event timestamp */
+  timestamp: number;
+}
+
+/**
+ * Version pair count for statistics.
+ */
+export interface VersionPairCount {
+  /** Client version */
+  clientVersion: string;
+  /** Server version */
+  serverVersion: string;
+  /** Number of occurrences */
+  count: number;
+}
+
+/**
+ * Protocol version statistics.
+ */
+export interface ProtocolVersionStats {
+  /** Total number of version mismatches */
+  totalMismatches: number;
+  /** Breakdown by version pairs */
+  uniqueVersionPairs: VersionPairCount[];
+}
+
+/**
  * Aggregated WebSocket metrics across all connections.
  */
 export interface AggregatedWebSocketMetrics {
@@ -62,6 +98,7 @@ export interface AggregatedWebSocketMetrics {
 export interface WebSocketTelemetryExportPayload {
   metrics: AggregatedWebSocketMetrics;
   connections: WebSocketConnectionInfo[];
+  protocolVersionStats: ProtocolVersionStats;
   metadata: {
     clientVersion?: string;
     timestamp: number;
@@ -95,6 +132,7 @@ export class WebSocketTelemetry {
     clientVersion?: string;
   };
   private connections: Map<string, WebSocketConnectionInfo> = new Map();
+  private protocolVersionEvents: ProtocolVersionMismatchEvent[] = [];
 
   constructor(options: WebSocketTelemetryOptions = {}) {
     this.options = {
@@ -202,12 +240,79 @@ export class WebSocketTelemetry {
   }
 
   /**
+   * Track a protocol version mismatch event.
+   */
+  trackProtocolVersionMismatch(
+    endpointId: string,
+    clientVersion: string,
+    serverVersion: string,
+  ): void {
+    const event: ProtocolVersionMismatchEvent = {
+      endpointId,
+      clientVersion,
+      serverVersion,
+      timestamp: Date.now(),
+    };
+
+    this.protocolVersionEvents.push(event);
+    this.log(`Protocol version mismatch for ${endpointId}`, {
+      clientVersion,
+      serverVersion,
+    });
+  }
+
+  /**
+   * Get all protocol version mismatch events.
+   */
+  getProtocolVersionEvents(): ProtocolVersionMismatchEvent[] {
+    return [...this.protocolVersionEvents];
+  }
+
+  /**
+   * Get protocol version statistics.
+   */
+  getProtocolVersionStats(): ProtocolVersionStats {
+    const events = this.protocolVersionEvents;
+
+    if (events.length === 0) {
+      return {
+        totalMismatches: 0,
+        uniqueVersionPairs: [],
+      };
+    }
+
+    // Count occurrences of each version pair
+    const pairCounts = new Map<string, VersionPairCount>();
+
+    for (const event of events) {
+      const key = `${event.clientVersion}:${event.serverVersion}`;
+      const existing = pairCounts.get(key);
+
+      if (existing) {
+        existing.count += 1;
+      } else {
+        pairCounts.set(key, {
+          clientVersion: event.clientVersion,
+          serverVersion: event.serverVersion,
+          count: 1,
+        });
+      }
+    }
+
+    return {
+      totalMismatches: events.length,
+      uniqueVersionPairs: Array.from(pairCounts.values()),
+    };
+  }
+
+  /**
    * Get exportable payload containing all metrics.
    */
   getExportPayload(): WebSocketTelemetryExportPayload {
     return {
       metrics: this.getAggregatedMetrics(),
       connections: this.getConnections(),
+      protocolVersionStats: this.getProtocolVersionStats(),
       metadata: {
         clientVersion: this.options.clientVersion,
         timestamp: Date.now(),
@@ -237,11 +342,12 @@ export class WebSocketTelemetry {
   }
 
   /**
-   * Reset all tracked connections.
+   * Reset all tracked connections and events.
    */
   reset(): void {
     this.connections.clear();
-    this.log("Reset all connections");
+    this.protocolVersionEvents = [];
+    this.log("Reset all connections and events");
   }
 
   /**

@@ -17,7 +17,10 @@ import { useAppDispatch, useAppSelector } from "../store/hooks";
 import { logout, selectIsAuthenticated } from "../store/slices/authSlice";
 import { addNotification } from "../store/slices/notificationSlice";
 import { buildWebSocketUrl, WS_ENDPOINTS } from "../utils/websocket";
-import { PROTOCOL_VERSION_MISMATCH_NOTIFICATION } from "../utils/websocketAuth";
+import {
+  PROTOCOL_VERSION_MISMATCH_NOTIFICATION,
+  showProtocolVersionMismatchToast,
+} from "../utils/websocketAuth";
 
 // ============================================================================
 // MCP Protocol Types
@@ -402,6 +405,7 @@ export function useMCPWebSocket(
     onTokenExpired: () => dispatch(logout()),
     onProtocolVersionMismatch: () => {
       dispatch(addNotification(PROTOCOL_VERSION_MISMATCH_NOTIFICATION));
+      showProtocolVersionMismatchToast();
     },
   });
 

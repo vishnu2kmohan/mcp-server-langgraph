@@ -27,7 +27,10 @@ import { devLogger } from "../utils/devLogger";
 import { buildWebSocketUrl, WS_ENDPOINTS } from "../utils/websocket";
 import { useRealtimeSync } from "./useRealtimeSync";
 import { reportWebSocketMetrics } from "../utils/websocketTelemetry";
-import { PROTOCOL_VERSION_MISMATCH_NOTIFICATION } from "../utils/websocketAuth";
+import {
+  PROTOCOL_VERSION_MISMATCH_NOTIFICATION,
+  showProtocolVersionMismatchToast,
+} from "../utils/websocketAuth";
 
 // Import typed protocols for type-safe WebSocket message handling
 import {
@@ -77,6 +80,8 @@ interface UseTraceWebSocketReturn {
   connect: () => void;
   disconnect: () => void;
   clearTraces: () => void;
+  /** Number of reconnection attempts (for dashboard visibility) */
+  reconnectAttempts: number;
 }
 
 export function useTraceWebSocket(
@@ -176,6 +181,7 @@ export function useTraceWebSocket(
     send,
     disconnect: wsDisconnect,
     reconnect: _wsReconnect,
+    reconnectAttempts,
     metrics,
   } = useRealtimeSync({
     url: wsUrl,
@@ -186,6 +192,7 @@ export function useTraceWebSocket(
     onTokenExpired: handleTokenExpired,
     onProtocolVersionMismatch: () => {
       dispatch(addNotification(PROTOCOL_VERSION_MISMATCH_NOTIFICATION));
+      showProtocolVersionMismatchToast();
     },
     exponentialBackoff: true,
     reconnectInterval: 1000,
@@ -257,6 +264,7 @@ export function useTraceWebSocket(
     connect,
     disconnect,
     clearTraces,
+    reconnectAttempts,
   };
 }
 

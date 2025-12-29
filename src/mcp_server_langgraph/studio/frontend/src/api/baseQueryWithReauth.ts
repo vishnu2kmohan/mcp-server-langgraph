@@ -48,7 +48,9 @@ const getBaseUrl = (): string => {
   ) {
     // Use TEST_API_URL env var if set, otherwise default for test environment
     // This follows 12-Factor App principle: config from environment
-    return process.env.TEST_API_URL ?? "http://127.0.0.1:3000/api/v1";
+    // Uses http://localhost:3000 to match jsdom's origin (vitest.config.ts:
+    // environmentOptions.jsdom.url) so MSW relative path handlers match correctly
+    return process.env.TEST_API_URL ?? "http://localhost:3000/api/v1";
   }
   // In browser, use Vite env var if available, otherwise relative URL
   if (

@@ -282,3 +282,99 @@ describe("reportWebSocketMetrics helper", () => {
     expect(tracked?.totalAttempts).toBe(10);
   });
 });
+
+describe("Protocol Version Tracking", () => {
+  let telemetry: WebSocketTelemetry;
+
+  beforeEach(() => {
+    telemetry = new WebSocketTelemetry({ debug: false });
+  });
+
+  describe("trackProtocolVersionMismatch", () => {
+    it("should record protocol version mismatch event", () => {
+      telemetry.trackProtocolVersionMismatch("notifications", "2.0.0", "1.0.0");
+
+      const events = telemetry.getProtocolVersionEvents();
+      expect(events).toHaveLength(1);
+      expect(events[0].clientVersion).toBe("2.0.0");
+      expect(events[0].serverVersion).toBe("1.0.0");
+      expect(events[0].endpointId).toBe("notifications");
+    });
+
+    it("should accumulate multiple mismatch events", () => {
+      telemetry.trackProtocolVersionMismatch("notifications", "2.0.0", "1.0.0");
+      telemetry.trackProtocolVersionMismatch("traces", "3.0.0", "1.0.0");
+
+      const events = telemetry.getProtocolVersionEvents();
+      expect(events).toHaveLength(2);
+    });
+
+    it("should include timestamp in events", () => {
+      const before = Date.now();
+      telemetry.trackProtocolVersionMismatch("notifications", "2.0.0", "1.0.0");
+      const after = Date.now();
+
+      const events = telemetry.getProtocolVersionEvents();
+      expect(events[0].timestamp).toBeGreaterThanOrEqual(before);
+      expect(events[0].timestamp).toBeLessThanOrEqual(after);
+    });
+  });
+
+  describe("getProtocolVersionStats", () => {
+    it("should return empty stats when no events", () => {
+      const stats = telemetry.getProtocolVersionStats();
+
+      expect(stats.totalMismatches).toBe(0);
+      expect(stats.uniqueVersionPairs).toHaveLength(0);
+    });
+
+    it("should count total mismatches", () => {
+      telemetry.trackProtocolVersionMismatch("ep1", "2.0.0", "1.0.0");
+      telemetry.trackProtocolVersionMismatch("ep2", "2.0.0", "1.0.0");
+
+      const stats = telemetry.getProtocolVersionStats();
+      expect(stats.totalMismatches).toBe(2);
+    });
+
+    it("should identify unique version pairs", () => {
+      telemetry.trackProtocolVersionMismatch("ep1", "2.0.0", "1.0.0");
+      telemetry.trackProtocolVersionMismatch("ep2", "2.0.0", "1.0.0");
+      telemetry.trackProtocolVersionMismatch("ep3", "3.0.0", "1.0.0");
+
+      const stats = telemetry.getProtocolVersionStats();
+      expect(stats.uniqueVersionPairs).toHaveLength(2);
+      expect(stats.uniqueVersionPairs).toContainEqual({
+        clientVersion: "2.0.0",
+        serverVersion: "1.0.0",
+        count: 2,
+      });
+      expect(stats.uniqueVersionPairs).toContainEqual({
+        clientVersion: "3.0.0",
+        serverVersion: "1.0.0",
+        count: 1,
+      });
+    });
+  });
+
+  describe("reset", () => {
+    it("should clear protocol version events", () => {
+      telemetry.trackProtocolVersionMismatch("ep1", "2.0.0", "1.0.0");
+      expect(telemetry.getProtocolVersionEvents()).toHaveLength(1);
+
+      telemetry.reset();
+
+      expect(telemetry.getProtocolVersionEvents()).toHaveLength(0);
+    });
+  });
+
+  describe("getExportPayload", () => {
+    it("should include protocol version stats in export", () => {
+      telemetry.trackProtocolVersionMismatch("ep1", "2.0.0", "1.0.0");
+
+      const payload = telemetry.getExportPayload();
+
+      expect(payload.protocolVersionStats).toBeDefined();
+      expect(payload.protocolVersionStats?.totalMismatches).toBe(1);
+    });
+  });
+});

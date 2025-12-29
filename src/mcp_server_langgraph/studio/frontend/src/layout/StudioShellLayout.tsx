@@ -243,7 +243,8 @@ export function StudioShellLayout() {
   usePersonaRouting();
 
   // Get real-time connection health status
-  const { status: wsStatus } = useConnectionHealthWebSocket();
+  const { status: wsStatus, reconnectAttempts: wsReconnectAttempts } =
+    useConnectionHealthWebSocket();
 
   // Map WebSocket status to StatusBar connection status
   const connectionStatus: ConnectionStatus = useMemo(() => {
@@ -753,6 +754,7 @@ export function StudioShellLayout() {
       {!focusModeEnabled && (
         <StatusBar
           connectionStatus={connectionStatus}
+          reconnectAttempts={wsReconnectAttempts}
           modelName={modelName ?? undefined}
           tokenCount={tokenCount > 0 ? tokenCount : undefined}
           tokenBreakdown={tokenBreakdown}

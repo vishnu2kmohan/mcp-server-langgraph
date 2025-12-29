@@ -17,7 +17,10 @@ import { logout } from "../store/slices/authSlice";
 import { addNotification } from "../store/slices/notificationSlice";
 import { buildWebSocketUrl, WS_ENDPOINTS } from "../utils/websocket";
 import { useRealtimeSync } from "./useRealtimeSync";
-import { PROTOCOL_VERSION_MISMATCH_NOTIFICATION } from "../utils/websocketAuth";
+import {
+  PROTOCOL_VERSION_MISMATCH_NOTIFICATION,
+  showProtocolVersionMismatchToast,
+} from "../utils/websocketAuth";
 
 /** Suggestion type from the AI UX backend */
 export interface Suggestion {
@@ -195,6 +198,7 @@ export function useAIRealTimeSuggestions(
     onTokenExpired: () => dispatch(logout()),
     onProtocolVersionMismatch: () => {
       dispatch(addNotification(PROTOCOL_VERSION_MISMATCH_NOTIFICATION));
+      showProtocolVersionMismatchToast();
     },
   });
 

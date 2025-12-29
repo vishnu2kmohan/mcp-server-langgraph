@@ -26,7 +26,10 @@ import { addNotification } from "../store/slices/notificationSlice";
 import { useRealtimeSync, type ConnectionStatus } from "./useRealtimeSync";
 import { buildWebSocketUrl, WS_ENDPOINTS } from "../utils/websocket";
 import { reportWebSocketMetrics } from "../utils/websocketTelemetry";
-import { PROTOCOL_VERSION_MISMATCH_NOTIFICATION } from "../utils/websocketAuth";
+import {
+  PROTOCOL_VERSION_MISMATCH_NOTIFICATION,
+  showProtocolVersionMismatchToast,
+} from "../utils/websocketAuth";
 
 // =============================================================================
 // Types
@@ -251,6 +254,7 @@ export function useAlertWebSocket(
     onTokenExpired: () => dispatch(logout()),
     onProtocolVersionMismatch: () => {
       dispatch(addNotification(PROTOCOL_VERSION_MISMATCH_NOTIFICATION));
+      showProtocolVersionMismatchToast();
     },
   });
 

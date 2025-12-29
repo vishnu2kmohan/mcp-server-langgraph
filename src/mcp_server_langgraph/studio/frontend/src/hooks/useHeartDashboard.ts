@@ -55,7 +55,10 @@ import type {
   ThresholdAlert,
   DimensionMetrics,
 } from "./useHeartMetricsWebSocket";
-import { PROTOCOL_VERSION_MISMATCH_NOTIFICATION } from "../utils/websocketAuth";
+import {
+  PROTOCOL_VERSION_MISMATCH_NOTIFICATION,
+  showProtocolVersionMismatchToast,
+} from "../utils/websocketAuth";
 
 // =============================================================================
 // Local Types for WebSocket dimension data
@@ -362,6 +365,7 @@ export function useHeartDashboard(
       onTokenExpired: () => dispatch(logout()),
       onProtocolVersionMismatch: () => {
         dispatch(addNotification(PROTOCOL_VERSION_MISMATCH_NOTIFICATION));
+        showProtocolVersionMismatchToast();
       },
     }),
     [enableRealtime, websocketUrl, handleMessage, dispatch],

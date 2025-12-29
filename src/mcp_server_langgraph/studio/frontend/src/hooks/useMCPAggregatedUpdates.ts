@@ -20,7 +20,10 @@ import { logout, selectIsAuthenticated } from "../store/slices/authSlice";
 import { addNotification } from "../store/slices/notificationSlice";
 import { buildWebSocketUrl, WS_ENDPOINTS } from "../utils/websocket";
 import { reportWebSocketMetrics } from "../utils/websocketTelemetry";
-import { PROTOCOL_VERSION_MISMATCH_NOTIFICATION } from "../utils/websocketAuth";
+import {
+  PROTOCOL_VERSION_MISMATCH_NOTIFICATION,
+  showProtocolVersionMismatchToast,
+} from "../utils/websocketAuth";
 
 // ============================================================================
 // Types
@@ -207,6 +210,7 @@ export function useMCPAggregatedUpdates(
     onTokenExpired: () => dispatch(logout()),
     onProtocolVersionMismatch: () => {
       dispatch(addNotification(PROTOCOL_VERSION_MISMATCH_NOTIFICATION));
+      showProtocolVersionMismatchToast();
     },
   });
 

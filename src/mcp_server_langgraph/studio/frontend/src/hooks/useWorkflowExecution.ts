@@ -20,7 +20,10 @@ import {
 } from "../store/slices/workflowSlice";
 import type { RootState } from "../store";
 import type { NodeStatus } from "../types/workflow";
-import { PROTOCOL_VERSION_MISMATCH_NOTIFICATION } from "../utils/websocketAuth";
+import {
+  PROTOCOL_VERSION_MISMATCH_NOTIFICATION,
+  showProtocolVersionMismatchToast,
+} from "../utils/websocketAuth";
 
 // WebSocket message types
 interface ExecutionStartedMessage {
@@ -220,6 +223,7 @@ export function useWorkflowExecution(
       onTokenExpired: () => dispatch(logout()),
       onProtocolVersionMismatch: () => {
         dispatch(addNotification(PROTOCOL_VERSION_MISMATCH_NOTIFICATION));
+        showProtocolVersionMismatchToast();
       },
     });
 

@@ -584,6 +584,52 @@ describe("StatusBar", () => {
   });
 
   // =============================================================================
+  // Reconnection Status (WebSocket reconnection visibility)
+  // =============================================================================
+  describe("reconnection status", () => {
+    it("should show reconnecting indicator when status is connecting and reconnectAttempts > 0", () => {
+      render(<StatusBar connectionStatus="connecting" reconnectAttempts={3} />);
+
+      const indicator = screen.getByTestId("reconnecting-indicator");
+      expect(indicator).toBeInTheDocument();
+      expect(indicator).toHaveTextContent("Reconnecting (3)...");
+    });
+
+    it("should not show reconnecting indicator when reconnectAttempts is 0", () => {
+      render(<StatusBar connectionStatus="connecting" reconnectAttempts={0} />);
+
+      expect(
+        screen.queryByTestId("reconnecting-indicator"),
+      ).not.toBeInTheDocument();
+    });
+
+    it("should not show reconnecting indicator when status is not connecting", () => {
+      render(<StatusBar connectionStatus="connected" reconnectAttempts={3} />);
+
+      expect(
+        screen.queryByTestId("reconnecting-indicator"),
+      ).not.toBeInTheDocument();
+    });
+
+    it("should have pulsing animation on reconnecting indicator", () => {
+      render(<StatusBar connectionStatus="connecting" reconnectAttempts={2} />);
+
+      const indicator = screen.getByTestId("reconnecting-indicator");
+      expect(indicator).toHaveClass("animate-pulse");
+    });
+
+    it("should have accessible aria-label for reconnecting status", () => {
+      render(<StatusBar connectionStatus="connecting" reconnectAttempts={5} />);
+
+      const indicator = screen.getByTestId("reconnecting-indicator");
+      expect(indicator).toHaveAttribute(
+        "aria-label",
+        "Reconnecting, attempt 5",
+      );
+    });
+  });
+
+  // =============================================================================
   // Tooltips (TDD RED - Tests should FAIL initially)
   // =============================================================================
   describe("tooltips", () => {

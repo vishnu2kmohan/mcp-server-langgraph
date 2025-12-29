@@ -14,7 +14,10 @@ import { useAppDispatch, useAppSelector } from "../store/hooks";
 import { logout, selectIsAuthenticated } from "../store/slices/authSlice";
 import { addNotification } from "../store/slices/notificationSlice";
 import { buildWebSocketUrl, WS_ENDPOINTS } from "../utils/websocket";
-import { PROTOCOL_VERSION_MISMATCH_NOTIFICATION } from "../utils/websocketAuth";
+import {
+  PROTOCOL_VERSION_MISMATCH_NOTIFICATION,
+  showProtocolVersionMismatchToast,
+} from "../utils/websocketAuth";
 
 // =============================================================================
 // Types
@@ -161,6 +164,8 @@ export interface UseConnectionHealthWebSocketReturn {
   disconnect: () => void;
   /** Manually reconnect to WebSocket */
   reconnect: () => void;
+  /** Number of reconnection attempts (for dashboard visibility) */
+  reconnectAttempts: number;
 }
 
 // =============================================================================
@@ -304,20 +309,22 @@ export function useConnectionHealthWebSocket(
 
   // Use the realtime sync hook for WebSocket management
   // Enable exponential backoff for better reconnection behavior
-  const { status, send, disconnect, reconnect, metrics } = useRealtimeSync({
-    url,
-    onMessage: handleMessage,
-    onConnect: handleConnect,
-    onDisconnect: handleDisconnect,
-    exponentialBackoff: true,
-    reconnectInterval: 1000, // Start with 1 second
-    maxDelayMs: 30000, // Max 30 seconds between attempts
-    maxReconnectAttempts: 10, // Try up to 10 times
-    onTokenExpired: () => dispatch(logout()),
-    onProtocolVersionMismatch: () => {
-      dispatch(addNotification(PROTOCOL_VERSION_MISMATCH_NOTIFICATION));
-    },
-  });
+  const { status, send, disconnect, reconnect, reconnectAttempts, metrics } =
+    useRealtimeSync({
+      url,
+      onMessage: handleMessage,
+      onConnect: handleConnect,
+      onDisconnect: handleDisconnect,
+      exponentialBackoff: true,
+      reconnectInterval: 1000, // Start with 1 second
+      maxDelayMs: 30000, // Max 30 seconds between attempts
+      maxReconnectAttempts: 10, // Try up to 10 times
+      onTokenExpired: () => dispatch(logout()),
+      onProtocolVersionMismatch: () => {
+        dispatch(addNotification(PROTOCOL_VERSION_MISMATCH_NOTIFICATION));
+        showProtocolVersionMismatchToast();
+      },
+    });
 
   // Report WebSocket metrics for observability
   useEffect(() => {
@@ -419,6 +426,7 @@ export function useConnectionHealthWebSocket(
     getConnection,
     disconnect,
     reconnect,
+    reconnectAttempts,
   };
 }
 

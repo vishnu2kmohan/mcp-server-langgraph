@@ -14,7 +14,10 @@ import { logout, selectIsAuthenticated } from "../store/slices/authSlice";
 import { addNotification } from "../store/slices/notificationSlice";
 import { getAuthToken } from "../utils/storage";
 import { buildWebSocketUrl, WS_ENDPOINTS } from "../utils/websocket";
-import { PROTOCOL_VERSION_MISMATCH_NOTIFICATION } from "../utils/websocketAuth";
+import {
+  PROTOCOL_VERSION_MISMATCH_NOTIFICATION,
+  showProtocolVersionMismatchToast,
+} from "../utils/websocketAuth";
 
 // =============================================================================
 // Types
@@ -288,6 +291,7 @@ export function useHeartMetricsWebSocket(
     onTokenExpired: () => dispatch(logout()),
     onProtocolVersionMismatch: () => {
       dispatch(addNotification(PROTOCOL_VERSION_MISMATCH_NOTIFICATION));
+      showProtocolVersionMismatchToast();
     },
   });
 
