@@ -13,9 +13,12 @@ Following TDD RED-GREEN-REFACTOR cycle:
 from __future__ import annotations
 
 import gc
+from typing import Any
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
+
+from mcp_server_langgraph.websocket.types import MessageEnvelope
 
 # Mark all tests in this module
 pytestmark = [
@@ -24,6 +27,11 @@ pytestmark = [
     pytest.mark.mcp,
     pytest.mark.xdist_group(name="mcp_websocket_handler"),
 ]
+
+
+def make_mcp_message(payload: dict[str, Any], msg_id: str = "test-req") -> MessageEnvelope:
+    """Create a MessageEnvelope wrapping an MCP/JSON-RPC payload."""
+    return MessageEnvelope(type="mcp_request", payload=payload, id=msg_id)
 
 
 class TestMCPWebSocketHandlerConstruction:
@@ -92,23 +100,29 @@ class TestMCPMessageHandling:
         handler = MCPWebSocketHandler()
 
         # Mock the internal MCP handler
-        mock_mcp_handler = AsyncMock()
+        mock_mcp_handler = AsyncMock()  # noqa: async-mock-config - configured below
         mock_mcp_handler.handle = AsyncMock(return_value={"jsonrpc": "2.0", "id": 1, "result": {"initialized": True}})
         handler._mcp_handler = mock_mcp_handler
 
-        message = {
+        # Create a MessageEnvelope with the JSON-RPC message as payload
+        json_rpc_payload = {
             "jsonrpc": "2.0",
             "id": 1,
             "method": "initialize",
             "params": {"protocolVersion": "2025-11-25"},
         }
+        message = make_mcp_message(json_rpc_payload, msg_id="req-1")
 
         response = await handler.handle_message(message)
 
-        mock_mcp_handler.handle.assert_called_once_with(message)
-        assert response["jsonrpc"] == "2.0"
-        assert response["id"] == 1
-        assert "result" in response
+        mock_mcp_handler.handle.assert_called_once_with(json_rpc_payload)
+        # Response is a MessageEnvelope - check its payload
+        assert response is not None
+        assert response.type == "mcp_response"
+        assert response.payload is not None
+        assert response.payload["jsonrpc"] == "2.0"
+        assert response.payload["id"] == 1
+        assert "result" in response.payload
 
     @pytest.mark.asyncio
     async def test_handle_tools_list_returns_tools(self) -> None:
@@ -117,14 +131,17 @@ class TestMCPMessageHandling:
 
         handler = MCPWebSocketHandler()
 
-        message = {"jsonrpc": "2.0", "id": 1, "method": "tools/list", "params": {}}
+        payload = {"jsonrpc": "2.0", "id": 1, "method": "tools/list", "params": {}}
+        message = make_mcp_message(payload)
 
         response = await handler.handle_message(message)
 
-        assert response["jsonrpc"] == "2.0"
-        assert response["id"] == 1
-        assert "result" in response
-        assert "tools" in response["result"]
+        assert response is not None
+        assert response.payload is not None
+        assert response.payload["jsonrpc"] == "2.0"
+        assert response.payload["id"] == 1
+        assert "result" in response.payload
+        assert "tools" in response.payload["result"]
 
     @pytest.mark.asyncio
     async def test_handle_resources_list_returns_resources(self) -> None:
@@ -133,14 +150,17 @@ class TestMCPMessageHandling:
 
         handler = MCPWebSocketHandler()
 
-        message = {"jsonrpc": "2.0", "id": 1, "method": "resources/list", "params": {}}
+        payload = {"jsonrpc": "2.0", "id": 1, "method": "resources/list", "params": {}}
+        message = make_mcp_message(payload)
 
         response = await handler.handle_message(message)
 
-        assert response["jsonrpc"] == "2.0"
-        assert response["id"] == 1
-        assert "result" in response
-        assert "resources" in response["result"]
+        assert response is not None
+        assert response.payload is not None
+        assert response.payload["jsonrpc"] == "2.0"
+        assert response.payload["id"] == 1
+        assert "result" in response.payload
+        assert "resources" in response.payload["result"]
 
     @pytest.mark.asyncio
     async def test_handle_prompts_list_returns_prompts(self) -> None:
@@ -149,14 +169,17 @@ class TestMCPMessageHandling:
 
         handler = MCPWebSocketHandler()
 
-        message = {"jsonrpc": "2.0", "id": 1, "method": "prompts/list", "params": {}}
+        payload = {"jsonrpc": "2.0", "id": 1, "method": "prompts/list", "params": {}}
+        message = make_mcp_message(payload)
 
         response = await handler.handle_message(message)
 
-        assert response["jsonrpc"] == "2.0"
-        assert response["id"] == 1
-        assert "result" in response
-        assert "prompts" in response["result"]
+        assert response is not None
+        assert response.payload is not None
+        assert response.payload["jsonrpc"] == "2.0"
+        assert response.payload["id"] == 1
+        assert "result" in response.payload
+        assert "prompts" in response.payload["result"]
 
     @pytest.mark.asyncio
     async def test_handle_unknown_method_returns_error(self) -> None:
@@ -165,14 +188,17 @@ class TestMCPMessageHandling:
 
         handler = MCPWebSocketHandler()
 
-        message = {"jsonrpc": "2.0", "id": 1, "method": "unknown/method", "params": {}}
+        payload = {"jsonrpc": "2.0", "id": 1, "method": "unknown/method", "params": {}}
+        message = make_mcp_message(payload)
 
         response = await handler.handle_message(message)
 
-        assert response["jsonrpc"] == "2.0"
-        assert response["id"] == 1
-        assert "error" in response
-        assert response["error"]["code"] == -32601  # METHOD_NOT_FOUND
+        assert response is not None
+        assert response.payload is not None
+        assert response.payload["jsonrpc"] == "2.0"
+        assert response.payload["id"] == 1
+        assert "error" in response.payload
+        assert response.payload["error"]["code"] == -32601  # METHOD_NOT_FOUND
 
 
 class TestMCPPingPong:
@@ -191,13 +217,17 @@ class TestMCPPingPong:
 
         # Ping is handled at the base class level before handle_message
         # The handle_message should not receive ping messages
-        message = {"type": "ping"}
+        # Create an invalid MCP message (no jsonrpc field)
+        payload = {"type": "ping"}
+        message = make_mcp_message(payload)
 
         # This should not be a valid MCP message
         response = await handler.handle_message(message)
 
         # Should return parse error since it's not valid JSON-RPC
-        assert "error" in response
+        assert response is not None
+        assert response.payload is not None
+        assert "error" in response.payload
 
 
 class TestMCPAuthenticationContext:
@@ -284,7 +314,7 @@ class TestMCPStreamingSupport:
         from mcp_server_langgraph.websocket.handlers.mcp import MCPWebSocketHandler
 
         handler = MCPWebSocketHandler()
-        handler._websocket = AsyncMock()  # Mock websocket for notifications
+        handler._websocket = AsyncMock()  # noqa: async-mock-config - mock websocket for notifications
 
         # Mock user to enable authenticated features
         mock_user = MagicMock()
@@ -292,7 +322,7 @@ class TestMCPStreamingSupport:
         mock_user.roles = []
         await handler.on_connect(mock_user)
 
-        message = {
+        payload = {
             "jsonrpc": "2.0",
             "id": 1,
             "method": "tools/call",
@@ -302,11 +332,13 @@ class TestMCPStreamingSupport:
                 "_meta": {"streaming": True},
             },
         }
+        message = make_mcp_message(payload)
 
         # Should handle streaming tool call (actual behavior depends on implementation)
         response = await handler.handle_message(message)
         assert response is not None
-        assert response["jsonrpc"] == "2.0"
+        assert response.payload is not None
+        assert response.payload["jsonrpc"] == "2.0"
 
     @pytest.mark.asyncio
     async def test_non_streaming_tool_call(self) -> None:
@@ -315,18 +347,20 @@ class TestMCPStreamingSupport:
 
         handler = MCPWebSocketHandler()
 
-        message = {
+        payload = {
             "jsonrpc": "2.0",
             "id": 1,
             "method": "tools/call",
             "params": {"name": "test_tool", "arguments": {}},
         }
+        message = make_mcp_message(payload)
 
         response = await handler.handle_message(message)
 
         assert response is not None
-        assert response["jsonrpc"] == "2.0"
-        assert response["id"] == 1
+        assert response.payload is not None
+        assert response.payload["jsonrpc"] == "2.0"
+        assert response.payload["id"] == 1
 
 
 class TestMCPMetricsIntegration:
@@ -343,14 +377,17 @@ class TestMCPMetricsIntegration:
 
         handler = MCPWebSocketHandler()
 
-        message = {"jsonrpc": "2.0", "id": 1, "method": "tools/list", "params": {}}
+        payload = {"jsonrpc": "2.0", "id": 1, "method": "tools/list", "params": {}}
+        message = make_mcp_message(payload)
 
         response = await handler.handle_message(message)
 
         # Message should be handled successfully
-        assert response["jsonrpc"] == "2.0"
-        assert response["id"] == 1
-        assert "result" in response
+        assert response is not None
+        assert response.payload is not None
+        assert response.payload["jsonrpc"] == "2.0"
+        assert response.payload["id"] == 1
+        assert "result" in response.payload
         # Metrics recording happens at a higher level (in ws_router)
 
 
@@ -391,12 +428,15 @@ class TestMCPErrorHandling:
         handler = MCPWebSocketHandler()
 
         # Missing jsonrpc version
-        message = {"id": 1, "method": "test"}
+        payload = {"id": 1, "method": "test"}
+        message = make_mcp_message(payload)
 
         response = await handler.handle_message(message)
 
-        assert "error" in response
-        assert response["error"]["code"] == -32600  # INVALID_REQUEST
+        assert response is not None
+        assert response.payload is not None
+        assert "error" in response.payload
+        assert response.payload["error"]["code"] == -32600  # INVALID_REQUEST
 
     @pytest.mark.asyncio
     async def test_missing_method_returns_invalid_request(self) -> None:
@@ -405,12 +445,15 @@ class TestMCPErrorHandling:
 
         handler = MCPWebSocketHandler()
 
-        message = {"jsonrpc": "2.0", "id": 1, "params": {}}
+        payload = {"jsonrpc": "2.0", "id": 1, "params": {}}
+        message = make_mcp_message(payload)
 
         response = await handler.handle_message(message)
 
-        assert "error" in response
-        assert response["error"]["code"] == -32600  # INVALID_REQUEST
+        assert response is not None
+        assert response.payload is not None
+        assert "error" in response.payload
+        assert response.payload["error"]["code"] == -32600  # INVALID_REQUEST
 
     @pytest.mark.asyncio
     async def test_exception_in_handler_returns_internal_error(self) -> None:
@@ -420,16 +463,19 @@ class TestMCPErrorHandling:
         handler = MCPWebSocketHandler()
 
         # Mock internal handler to raise exception
-        mock_mcp_handler = AsyncMock()
+        mock_mcp_handler = AsyncMock()  # noqa: async-mock-config - configured below
         mock_mcp_handler.handle = AsyncMock(side_effect=Exception("Internal failure"))
         handler._mcp_handler = mock_mcp_handler
 
-        message = {"jsonrpc": "2.0", "id": 1, "method": "tools/list", "params": {}}
+        payload = {"jsonrpc": "2.0", "id": 1, "method": "tools/list", "params": {}}
+        message = make_mcp_message(payload)
 
         response = await handler.handle_message(message)
 
-        assert "error" in response
-        assert response["error"]["code"] == -32603  # INTERNAL_ERROR
+        assert response is not None
+        assert response.payload is not None
+        assert "error" in response.payload
+        assert response.payload["error"]["code"] == -32603  # INTERNAL_ERROR
 
 
 class TestMCPWebSocketHandlerProtocol:
@@ -446,7 +492,7 @@ class TestMCPWebSocketHandlerProtocol:
 
         handler = MCPWebSocketHandler()
 
-        message = {
+        payload = {
             "jsonrpc": "2.0",
             "id": 1,
             "method": "initialize",
@@ -456,13 +502,16 @@ class TestMCPWebSocketHandlerProtocol:
                 "clientInfo": {"name": "test-client", "version": "1.0.0"},
             },
         }
+        message = make_mcp_message(payload)
 
         response = await handler.handle_message(message)
 
-        assert response["jsonrpc"] == "2.0"
-        assert response["id"] == 1
-        assert "result" in response
-        result = response["result"]
+        assert response is not None
+        assert response.payload is not None
+        assert response.payload["jsonrpc"] == "2.0"
+        assert response.payload["id"] == 1
+        assert "result" in response.payload
+        result = response.payload["result"]
         assert "protocolVersion" in result
         assert "capabilities" in result
         assert "serverInfo" in result
@@ -474,11 +523,14 @@ class TestMCPWebSocketHandlerProtocol:
 
         handler = MCPWebSocketHandler()
 
-        message = {"jsonrpc": "2.0", "id": 1, "method": "tools/list", "params": {}}
+        payload = {"jsonrpc": "2.0", "id": 1, "method": "tools/list", "params": {}}
+        message = make_mcp_message(payload)
 
         response = await handler.handle_message(message)
 
-        assert response["jsonrpc"] == "2.0"
+        assert response is not None
+        assert response.payload is not None
+        assert response.payload["jsonrpc"] == "2.0"
 
     @pytest.mark.asyncio
     async def test_notification_handling_does_not_crash(self) -> None:
@@ -489,7 +541,8 @@ class TestMCPWebSocketHandlerProtocol:
 
         # Notification - no id field
         # Note: The base MCPMessageHandler may not recognize all notifications
-        message = {"jsonrpc": "2.0", "method": "notifications/initialized"}
+        payload = {"jsonrpc": "2.0", "method": "notifications/initialized"}
+        message = make_mcp_message(payload)
 
         # Should not raise an exception
         response = await handler.handle_message(message)
@@ -497,7 +550,8 @@ class TestMCPWebSocketHandlerProtocol:
         # Response should be valid JSON-RPC (either success or error)
         # The key is that handling doesn't crash
         assert response is not None
-        assert response["jsonrpc"] == "2.0"
+        assert response.payload is not None
+        assert response.payload["jsonrpc"] == "2.0"
 
 
 class TestMCPWebSocketHandlerLifecycle:
