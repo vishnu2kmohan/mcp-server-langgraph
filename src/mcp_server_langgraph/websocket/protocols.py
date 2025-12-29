@@ -106,10 +106,13 @@ def validate_protocol_version(client_version: str | None) -> tuple[bool, str]:
         return (False, "Server protocol version misconfigured.")
 
     if not is_version_compatible(client_version, PROTOCOL_VERSION):
+        # Extract major version for clearer error message
+        server = extract_protocol_version(PROTOCOL_VERSION)
+        major_version = server[0] if server else 1
         return (
             False,
             f"Protocol version mismatch. Client: {client_version}, Server: {PROTOCOL_VERSION}. "
-            f"Please refresh the page or update your client.",
+            f"Server supports versions {major_version}.x.x. Please refresh the page or update your client.",
         )
 
     return (True, "")

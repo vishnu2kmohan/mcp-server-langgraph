@@ -384,6 +384,88 @@ class TestTokenExpiredError:
 
 
 @pytest.mark.xdist_group(name="websocket_exceptions")
+class TestProtocolVersionError:
+    """Tests for ProtocolVersionError class (close code 4009)."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers."""
+        gc.collect()
+
+    def test_protocol_version_error_has_code_4009(self) -> None:
+        """GIVEN ProtocolVersionError WHEN instantiated THEN code is 4009."""
+        from mcp_server_langgraph.websocket.exceptions import ProtocolVersionError
+
+        error = ProtocolVersionError()
+
+        assert error.code == 4009
+
+    def test_protocol_version_error_with_defaults(self) -> None:
+        """GIVEN no custom values WHEN creating error THEN uses defaults."""
+        from mcp_server_langgraph.websocket.exceptions import ProtocolVersionError
+
+        error = ProtocolVersionError()
+
+        assert str(error) == "Protocol version not supported"
+        assert error.code == 4009
+        assert error.reason == "Protocol version not supported. Please upgrade client."
+        assert error.client_version is None
+        assert error.server_version is None
+
+    def test_protocol_version_error_inherits_from_websocket_error(self) -> None:
+        """GIVEN ProtocolVersionError WHEN checking inheritance THEN is WebSocketError."""
+        from mcp_server_langgraph.websocket.exceptions import (
+            ProtocolVersionError,
+            WebSocketError,
+        )
+
+        error = ProtocolVersionError()
+
+        assert isinstance(error, WebSocketError)
+
+    def test_protocol_version_error_with_version_info(self) -> None:
+        """GIVEN version info WHEN creating error THEN stores version info."""
+        from mcp_server_langgraph.websocket.exceptions import ProtocolVersionError
+
+        error = ProtocolVersionError(
+            client_version="2.0.0",
+            server_version="1.0.0",
+        )
+
+        assert error.client_version == "2.0.0"
+        assert error.server_version == "1.0.0"
+        assert error.code == 4009
+
+    def test_protocol_version_error_with_custom_message(self) -> None:
+        """GIVEN custom message WHEN creating error THEN uses provided message."""
+        from mcp_server_langgraph.websocket.exceptions import ProtocolVersionError
+
+        error = ProtocolVersionError("Client version 2.0.0 not compatible with server 1.0.0")
+
+        assert str(error) == "Client version 2.0.0 not compatible with server 1.0.0"
+        assert error.code == 4009
+
+    def test_protocol_version_error_with_custom_reason(self) -> None:
+        """GIVEN custom reason WHEN creating error THEN uses provided reason."""
+        from mcp_server_langgraph.websocket.exceptions import ProtocolVersionError
+
+        error = ProtocolVersionError(reason="Please update your client application")
+
+        assert error.reason == "Please update your client application"
+
+    def test_protocol_version_error_can_be_caught_as_websocket_error(self) -> None:
+        """GIVEN ProtocolVersionError WHEN raised THEN can be caught as WebSocketError."""
+        from mcp_server_langgraph.websocket.exceptions import (
+            ProtocolVersionError,
+            WebSocketError,
+        )
+
+        with pytest.raises(WebSocketError) as exc_info:
+            raise ProtocolVersionError()
+
+        assert exc_info.value.code == 4009
+
+
+@pytest.mark.xdist_group(name="websocket_exceptions")
 class TestExceptionHierarchy:
     """Tests for exception class hierarchy."""
 
@@ -407,12 +489,15 @@ class TestExceptionHierarchy:
             WebSocketError,
         )
 
+        from mcp_server_langgraph.websocket.exceptions import ProtocolVersionError
+
         exception_classes = [
             AuthenticationError,
             AuthorizationError,
             RateLimitError,
             MessageSizeError,
             ProtocolError,
+            ProtocolVersionError,
             ConnectionLimitError,
             IdleTimeoutError,
             HeartbeatTimeoutError,

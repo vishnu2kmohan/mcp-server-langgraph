@@ -297,3 +297,106 @@ groups:
           severity: warning
           correlation: pool-timeout
           team: platform
+
+  # =============================================================================
+  # WebSocket Protocol Version Drift Alerting
+  # =============================================================================
+  # Detects when client-server protocol version mismatches occur, indicating
+  # deployment issues or outdated client caching.
+  #
+  # Reference: ADR-0076 - WebSocket Protocol Versioning Strategy
+  # =============================================================================
+  - orgId: 1
+    name: WebSocket Protocol Version
+    folder: WebSocket
+    interval: 1m
+    rules:
+      # -------------------------------------------------------------------------
+      # Protocol Version Mismatch Rate Alert
+      # -------------------------------------------------------------------------
+      - uid: ws-protocol-version-mismatch
+        title: WebSocket Protocol Version Mismatch Detected
+        condition: A
+        data:
+          # A: Protocol version mismatch rate per minute
+          - refId: A
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: mimir
+            model:
+              expr: |
+                sum(rate({__name__=~"websocket_.*_connections_rejected_total", reason="protocol_version_mismatch"}[5m])) * 60 > 5
+              instant: true
+              refId: A
+        noDataState: OK
+        execErrState: OK
+        for: 2m
+        annotations:
+          summary: WebSocket protocol version mismatches detected
+          description: |
+            **Protocol Version Drift Detected**: {{ $values.A.Value | printf "%.1f" }} mismatches/min
+
+            Clients are connecting with incompatible protocol versions and being rejected
+            with close code 4009. This typically indicates:
+
+            1. **Recent deployment**: Server updated but clients have cached old version
+            2. **CDN caching**: Static assets not invalidated after deployment
+            3. **Browser caching**: Users need to refresh the page
+
+            **Recommended Actions**:
+            1. Check recent deployments for protocol version changes
+            2. Verify CDN cache invalidation for frontend assets
+            3. Review client version distribution in logs
+            4. Consider prompting users to refresh via notification
+          runbook_url: https://docs/runbooks/WEBSOCKET_OPERATIONS.md#protocol-version-mismatch
+          dashboard_url: /d/websocket-telemetry/websocket-telemetry
+        labels:
+          severity: warning
+          component: websocket
+          team: platform
+
+      # -------------------------------------------------------------------------
+      # Sustained Protocol Version Mismatch Alert (Critical)
+      # -------------------------------------------------------------------------
+      - uid: ws-protocol-version-mismatch-critical
+        title: Sustained WebSocket Protocol Version Mismatch
+        condition: A
+        data:
+          # A: Sustained mismatch rate indicating broader issue
+          - refId: A
+            relativeTimeRange:
+              from: 900
+              to: 0
+            datasourceUid: mimir
+            model:
+              expr: |
+                sum(rate({__name__=~"websocket_.*_connections_rejected_total", reason="protocol_version_mismatch"}[15m])) * 60 > 10
+              instant: true
+              refId: A
+        noDataState: OK
+        execErrState: OK
+        for: 10m
+        annotations:
+          summary: Sustained WebSocket protocol version mismatches - deployment issue likely
+          description: |
+            **Critical Protocol Drift**: {{ $values.A.Value | printf "%.1f" }} mismatches/min sustained for 10+ minutes
+
+            This sustained rate indicates a deployment or configuration issue that is
+            preventing users from connecting to the application.
+
+            **Immediate Actions Required**:
+            1. **Verify deployment status**: Check if recent deployment completed successfully
+            2. **Check rollback options**: Consider rolling back if mismatch started with deployment
+            3. **Force cache invalidation**: Invalidate CDN and instruct users to hard refresh
+            4. **Monitor user impact**: Check for elevated support tickets or error reports
+
+            **Root Cause Investigation**:
+            - Query: `{job="websocket"} |= "protocol_version_mismatch"`
+            - Dashboard: /d/websocket-telemetry/websocket-telemetry
+          runbook_url: https://docs/runbooks/WEBSOCKET_OPERATIONS.md#critical-protocol-version-drift
+          dashboard_url: /d/websocket-telemetry/websocket-telemetry
+        labels:
+          severity: critical
+          component: websocket
+          team: platform

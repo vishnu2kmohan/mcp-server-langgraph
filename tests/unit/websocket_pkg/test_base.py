@@ -1532,3 +1532,187 @@ class TestWebSocketBaseTokenValidation:
 
         # Verify close was called with 4010
         assert 4010 in close_code_used
+
+
+@pytest.mark.xdist_group(name="websocket_base_protocol_version")
+class TestWebSocketBaseProtocolVersion:
+    """Tests for WebSocketBase protocol version validation."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers."""
+        gc.collect()
+
+    @pytest.mark.asyncio
+    async def test_closes_connection_with_4009_when_version_incompatible(self) -> None:
+        """GIVEN incompatible protocol version WHEN connecting THEN closes with 4009."""
+        from mcp_server_langgraph.websocket.base import WebSocketBase
+        from mcp_server_langgraph.websocket.types import MessageEnvelope, WebSocketConfig
+
+        class TestHandler(WebSocketBase):
+            async def handle_message(self, message: MessageEnvelope) -> MessageEnvelope | None:
+                return None
+
+        config = WebSocketConfig(
+            endpoint_name="test",
+            require_auth=False,  # Skip auth for this test
+            validate_protocol_version=True,
+        )
+
+        with patch(
+            RATE_LIMITER_PATCH,
+            return_value=MagicMock(),
+        ):
+            handler = TestHandler(config)
+
+        mock_ws = AsyncMock(spec_set=["query_params", "headers", "client_state", "close", "accept"])
+        # Client sends incompatible major version
+        mock_ws.query_params = {"v": "2.0.0"}
+        mock_ws.headers = {}
+        mock_ws.client_state = None
+        mock_ws.accept = AsyncMock(return_value=None)
+
+        # Track close calls to verify 4009
+        close_code_used = []
+
+        async def track_close(**kwargs):
+            close_code_used.append(kwargs.get("code"))
+
+        mock_ws.close = AsyncMock(side_effect=track_close)
+
+        # Patch validate_protocol_version to return invalid
+        with patch(
+            "mcp_server_langgraph.websocket.base.validate_protocol_version",
+            return_value=(False, "Major version mismatch"),
+        ):
+            await handler.run(mock_ws)
+
+        # Verify close was called with 4009
+        assert 4009 in close_code_used
+
+    @pytest.mark.asyncio
+    async def test_records_metrics_when_protocol_version_rejected(self) -> None:
+        """GIVEN incompatible version WHEN connecting THEN records rejection metric."""
+        from mcp_server_langgraph.websocket.base import WebSocketBase
+        from mcp_server_langgraph.websocket.types import MessageEnvelope, WebSocketConfig
+
+        class TestHandler(WebSocketBase):
+            async def handle_message(self, message: MessageEnvelope) -> MessageEnvelope | None:
+                return None
+
+        config = WebSocketConfig(
+            endpoint_name="test",
+            require_auth=False,
+            validate_protocol_version=True,
+        )
+
+        mock_metrics = MagicMock()
+
+        with patch(
+            RATE_LIMITER_PATCH,
+            return_value=MagicMock(),
+        ):
+            handler = TestHandler(config, metrics=mock_metrics)
+
+        mock_ws = AsyncMock(spec_set=["query_params", "headers", "client_state", "close", "accept"])
+        mock_ws.query_params = {"v": "2.0.0"}
+        mock_ws.headers = {}
+        mock_ws.client_state = None
+        mock_ws.accept = AsyncMock(return_value=None)
+        mock_ws.close = AsyncMock(return_value=None)
+
+        with patch(
+            "mcp_server_langgraph.websocket.base.validate_protocol_version",
+            return_value=(False, "Major version mismatch"),
+        ):
+            await handler.run(mock_ws)
+
+        # Verify metrics recorded rejection
+        mock_metrics.record_connection_rejected.assert_called_once_with(reason="protocol_version_mismatch")
+
+    @pytest.mark.asyncio
+    async def test_accepts_connection_when_version_compatible(self) -> None:
+        """GIVEN compatible protocol version WHEN connecting THEN proceeds."""
+        from starlette.websockets import WebSocketDisconnect
+
+        from mcp_server_langgraph.websocket.base import WebSocketBase
+        from mcp_server_langgraph.websocket.types import MessageEnvelope, WebSocketConfig
+
+        class TestHandler(WebSocketBase):
+            async def handle_message(self, message: MessageEnvelope) -> MessageEnvelope | None:
+                return None
+
+        config = WebSocketConfig(
+            endpoint_name="test",
+            require_auth=False,
+            validate_protocol_version=True,
+        )
+
+        with patch(
+            RATE_LIMITER_PATCH,
+            return_value=MagicMock(),
+        ):
+            handler = TestHandler(config)
+
+        mock_ws = AsyncMock(spec_set=["query_params", "headers", "client_state", "close", "accept", "receive_json"])
+        mock_ws.query_params = {"v": "1.0.0"}
+        mock_ws.headers = {}
+        mock_ws.client_state = None
+        mock_ws.accept = AsyncMock(return_value=None)
+        mock_ws.close = AsyncMock(return_value=None)
+
+        # Simulate immediate disconnect after version check
+        mock_ws.receive_json = AsyncMock(side_effect=WebSocketDisconnect())
+
+        with patch(
+            "mcp_server_langgraph.websocket.base.validate_protocol_version",
+            return_value=(True, ""),
+        ):
+            await handler.run(mock_ws)
+
+        # Verify close was NOT called with 4009 (connection was accepted)
+        close_calls = mock_ws.close.call_args_list
+        for call in close_calls:
+            kwargs = call.kwargs if call.kwargs else {}
+            assert kwargs.get("code") != 4009
+
+    @pytest.mark.asyncio
+    async def test_skips_version_validation_when_disabled(self) -> None:
+        """GIVEN validation disabled WHEN connecting THEN skips check."""
+        from starlette.websockets import WebSocketDisconnect
+
+        from mcp_server_langgraph.websocket.base import WebSocketBase
+        from mcp_server_langgraph.websocket.types import MessageEnvelope, WebSocketConfig
+
+        class TestHandler(WebSocketBase):
+            async def handle_message(self, message: MessageEnvelope) -> MessageEnvelope | None:
+                return None
+
+        config = WebSocketConfig(
+            endpoint_name="test",
+            require_auth=False,
+            validate_protocol_version=False,  # Disabled
+        )
+
+        with patch(
+            RATE_LIMITER_PATCH,
+            return_value=MagicMock(),
+        ):
+            handler = TestHandler(config)
+
+        mock_ws = AsyncMock(spec_set=["query_params", "headers", "client_state", "close", "accept", "receive_json"])
+        mock_ws.query_params = {"v": "99.0.0"}  # Would fail if validated
+        mock_ws.headers = {}
+        mock_ws.client_state = None
+        mock_ws.accept = AsyncMock(return_value=None)
+        mock_ws.close = AsyncMock(return_value=None)
+
+        mock_ws.receive_json = AsyncMock(side_effect=WebSocketDisconnect())
+
+        # Mock validation - should NOT be called
+        with patch(
+            "mcp_server_langgraph.websocket.base.validate_protocol_version",
+        ) as mock_validate:
+            await handler.run(mock_ws)
+
+            # Validation should not have been called
+            mock_validate.assert_not_called()

@@ -297,6 +297,17 @@ class WebSocketBase(ABC):
                 # Call on_connect hook
                 await self.on_connect(user)
 
+                # Log successful connection with client version for debugging
+                client_version = websocket.query_params.get("v", "unknown")
+                logger.info(
+                    f"WebSocket connected: {self.config.endpoint_name}",
+                    extra={
+                        "endpoint": self.config.endpoint_name,
+                        "client_version": client_version,
+                        "user_id": user.id if user else None,
+                    },
+                )
+
                 # Start server-initiated heartbeat if configured
                 if self._heartbeat:
                     await self._heartbeat.start(websocket)

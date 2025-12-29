@@ -513,7 +513,38 @@ export const PROTOCOL_VERSION_MISMATCH_NOTIFICATION = {
     onClick: () => window.location.reload(),
   },
 };
+
+/**
+ * Show immediate toast notification for protocol version mismatch.
+ */
+export function showProtocolVersionMismatchToast(): void {
+  toast.error("Application Update Required", {
+    description: "Your application version is incompatible with the server. Please refresh.",
+    duration: 15000,
+    action: {
+      label: "Refresh",
+      onClick: () => window.location.reload(),
+    },
+  });
+}
 ```
+
+### Dual Notification Pattern
+
+For critical errors like protocol version mismatch, use both:
+1. **Sonner toast** - Immediate transient feedback (appears instantly, disappears after 15s)
+2. **Redux notification** - Persistent entry in notification center
+
+```typescript
+onProtocolVersionMismatch: () => {
+  // Persistent notification for notification center
+  dispatch(addNotification(PROTOCOL_VERSION_MISMATCH_NOTIFICATION));
+  // Immediate toast for instant user feedback
+  showProtocolVersionMismatchToast();
+},
+```
+
+This dual approach ensures users see the error immediately while also having a persistent record in the notification center.
 
 ## Files Reference
 

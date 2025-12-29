@@ -28,11 +28,29 @@ vi.mock("./authenticatedFetch", () => ({
   resetRefreshState: vi.fn(),
 }));
 
+// Mock sonner toast
+const mockToastError = vi.fn();
+vi.mock("sonner", () => ({
+  toast: {
+    error: (...args: unknown[]) => mockToastError(...args),
+  },
+}));
+
+// Mock window.location.reload
+const mockReload = vi.fn();
+Object.defineProperty(window, "location", {
+  value: { reload: mockReload },
+  writable: true,
+});
+
 import {
   WS_CLOSE_TOKEN_EXPIRED,
+  WS_CLOSE_PROTOCOL_VERSION,
   isTokenExpiringSoon,
   ensureValidTokenForWebSocket,
   resetWebSocketAuthState,
+  showProtocolVersionMismatchToast,
+  PROTOCOL_VERSION_MISMATCH_NOTIFICATION,
 } from "./websocketAuth";
 
 describe("WS_CLOSE_TOKEN_EXPIRED constant", () => {
@@ -216,5 +234,101 @@ describe("ensureValidTokenForWebSocket", () => {
     // Invalid token is treated as expiring, so should attempt refresh
     expect(mockRefreshAccessToken).toHaveBeenCalled();
     expect(result).toBe(false);
+  });
+});
+
+describe("WS_CLOSE_PROTOCOL_VERSION constant", () => {
+  it("should be 4009", () => {
+    expect(WS_CLOSE_PROTOCOL_VERSION).toBe(4009);
+  });
+});
+
+describe("showProtocolVersionMismatchToast", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("should call toast.error with correct title", () => {
+    showProtocolVersionMismatchToast();
+
+    expect(mockToastError).toHaveBeenCalledTimes(1);
+    expect(mockToastError).toHaveBeenCalledWith(
+      "Application Update Required",
+      expect.any(Object),
+    );
+  });
+
+  it("should include description in toast options", () => {
+    showProtocolVersionMismatchToast();
+
+    const options = mockToastError.mock.calls[0][1];
+    expect(options.description).toContain("incompatible with the server");
+    expect(options.description).toContain("refresh");
+  });
+
+  it("should set 15 second duration for user action", () => {
+    showProtocolVersionMismatchToast();
+
+    const options = mockToastError.mock.calls[0][1];
+    expect(options.duration).toBe(15000);
+  });
+
+  it("should include Refresh action button", () => {
+    showProtocolVersionMismatchToast();
+
+    const options = mockToastError.mock.calls[0][1];
+    expect(options.action).toBeDefined();
+    expect(options.action.label).toBe("Refresh");
+    expect(typeof options.action.onClick).toBe("function");
+  });
+
+  it("should reload page when Refresh action is clicked", () => {
+    showProtocolVersionMismatchToast();
+
+    const options = mockToastError.mock.calls[0][1];
+    options.action.onClick();
+
+    expect(mockReload).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("PROTOCOL_VERSION_MISMATCH_NOTIFICATION", () => {
+  it("should have error type", () => {
+    expect(PROTOCOL_VERSION_MISMATCH_NOTIFICATION.type).toBe("error");
+  });
+
+  it("should have correct title", () => {
+    expect(PROTOCOL_VERSION_MISMATCH_NOTIFICATION.title).toBe(
+      "Application Update Required",
+    );
+  });
+
+  it("should have descriptive message", () => {
+    expect(PROTOCOL_VERSION_MISMATCH_NOTIFICATION.message).toContain(
+      "incompatible with the server",
+    );
+    expect(PROTOCOL_VERSION_MISMATCH_NOTIFICATION.message).toContain(
+      "refresh the page",
+    );
+  });
+
+  it("should have Refresh action", () => {
+    expect(PROTOCOL_VERSION_MISMATCH_NOTIFICATION.action).toBeDefined();
+    expect(PROTOCOL_VERSION_MISMATCH_NOTIFICATION.action.label).toBe("Refresh");
+    expect(typeof PROTOCOL_VERSION_MISMATCH_NOTIFICATION.action.onClick).toBe(
+      "function",
+    );
+  });
+
+  it("should reload page when action is clicked", () => {
+    vi.clearAllMocks();
+
+    PROTOCOL_VERSION_MISMATCH_NOTIFICATION.action.onClick();
+
+    expect(mockReload).toHaveBeenCalledTimes(1);
   });
 });
