@@ -249,6 +249,103 @@ class TestCostTrackingCallback:
             assert call_kwargs["team_id"] is None
 
     @pytest.mark.asyncio
+    async def test_callback_handles_none_metadata(self):
+        """
+        GIVEN: CostTrackingCallback and kwargs with metadata=None
+        WHEN: async_log_success_event is called
+        THEN: Should use sensible defaults without raising AttributeError
+
+        Regression test for: AttributeError: 'NoneType' object has no attribute 'get'
+        This occurs when LiteLLM passes metadata=None instead of an empty dict.
+        """
+        from mcp_server_langgraph.monitoring.litellm_cost_callback import (
+            CostTrackingCallback,
+        )
+
+        # Arrange
+        callback = CostTrackingCallback()
+
+        response_obj = MagicMock()
+        response_obj.usage = MagicMock()
+        response_obj.usage.prompt_tokens = 100
+        response_obj.usage.completion_tokens = 50
+
+        # metadata is explicitly None (not missing, but None)
+        kwargs = {
+            "response_cost": 0.005,
+            "model": "gpt-4",
+            "custom_llm_provider": "openai",
+            "litellm_params": {"metadata": None},  # Explicitly None
+        }
+
+        start_time = datetime.now(UTC)
+        end_time = datetime.now(UTC)
+
+        mock_collector = AsyncMock()  # noqa: async-mock-config
+        with patch(
+            "mcp_server_langgraph.monitoring.cost_tracker.get_cost_collector",
+            return_value=mock_collector,
+        ):
+            # Act - should not raise AttributeError
+            await callback.async_log_success_event(kwargs, response_obj, start_time, end_time)
+
+            # Assert - should use defaults
+            mock_collector.record_usage.assert_called_once()
+            call_kwargs = mock_collector.record_usage.call_args.kwargs
+
+            assert call_kwargs["user_id"] == "anonymous"
+            assert call_kwargs["session_id"] == "unknown"
+            assert call_kwargs["feature"] == "chat"
+
+    @pytest.mark.asyncio
+    async def test_callback_handles_none_litellm_params(self):
+        """
+        GIVEN: CostTrackingCallback and kwargs with litellm_params=None
+        WHEN: async_log_success_event is called
+        THEN: Should use sensible defaults without raising AttributeError
+
+        Regression test for: AttributeError: 'NoneType' object has no attribute 'get'
+        """
+        from mcp_server_langgraph.monitoring.litellm_cost_callback import (
+            CostTrackingCallback,
+        )
+
+        # Arrange
+        callback = CostTrackingCallback()
+
+        response_obj = MagicMock()
+        response_obj.usage = MagicMock()
+        response_obj.usage.prompt_tokens = 100
+        response_obj.usage.completion_tokens = 50
+
+        # litellm_params is explicitly None
+        kwargs = {
+            "response_cost": 0.005,
+            "model": "gpt-4",
+            "custom_llm_provider": "openai",
+            "litellm_params": None,  # Explicitly None
+        }
+
+        start_time = datetime.now(UTC)
+        end_time = datetime.now(UTC)
+
+        mock_collector = AsyncMock()  # noqa: async-mock-config
+        with patch(
+            "mcp_server_langgraph.monitoring.cost_tracker.get_cost_collector",
+            return_value=mock_collector,
+        ):
+            # Act - should not raise AttributeError
+            await callback.async_log_success_event(kwargs, response_obj, start_time, end_time)
+
+            # Assert - should use defaults
+            mock_collector.record_usage.assert_called_once()
+            call_kwargs = mock_collector.record_usage.call_args.kwargs
+
+            assert call_kwargs["user_id"] == "anonymous"
+            assert call_kwargs["session_id"] == "unknown"
+            assert call_kwargs["feature"] == "chat"
+
+    @pytest.mark.asyncio
     async def test_callback_handles_missing_response_cost(self):
         """
         GIVEN: CostTrackingCallback and kwargs without response_cost

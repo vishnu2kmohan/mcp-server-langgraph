@@ -87,8 +87,9 @@ class CostTrackingCallback(CustomLogger):
         response_cost = kwargs.get("response_cost", 0)
 
         # Extract metadata from litellm_params
-        litellm_params = kwargs.get("litellm_params", {})
-        metadata = litellm_params.get("metadata", {})
+        # Use `or {}` to handle None values (LiteLLM may pass None instead of {})
+        litellm_params = kwargs.get("litellm_params") or {}
+        metadata = litellm_params.get("metadata") or {}
 
         # Get collector and record usage
         collector = get_cost_collector()
