@@ -205,10 +205,16 @@ class TestSampleTuplesStructure:
         GIVEN: Valid sample-tuples.json
         WHEN: Checking each tuple
         THEN: Each tuple should have user, relation, object fields
+
+        NOTE: Section header entries (with _section field) are skipped as they
+        are documentation dividers, not actual tuples.
         """
         tuples = tuples_data["tuples"]
 
         for i, t in enumerate(tuples):
+            # Skip section header entries (documentation dividers, not tuples)
+            if "_section" in t:
+                continue
             assert "user" in t, f"Tuple {i} missing 'user' field"
             assert "relation" in t, f"Tuple {i} missing 'relation' field"
             assert "object" in t, f"Tuple {i} missing 'object' field"
@@ -250,6 +256,7 @@ class TestTupleModelCrossValidation:
         THEN: All object types in tuples should exist in model
 
         This prevents configuration drift where tuples reference undefined types.
+        NOTE: Section header entries (with _section field) are skipped.
         """
         type_relations = self._get_model_types_and_relations(model_data)
         valid_types = set(type_relations.keys())
@@ -258,6 +265,9 @@ class TestTupleModelCrossValidation:
         errors = []
 
         for t in tuples:
+            # Skip section header entries (documentation dividers, not tuples)
+            if "_section" in t:
+                continue
             obj_type = self._extract_object_type(t["object"])
             if obj_type not in valid_types:
                 errors.append(f"Object '{t['object']}' references undefined type '{obj_type}'")
@@ -271,12 +281,16 @@ class TestTupleModelCrossValidation:
         THEN: All relations should be valid for the object's type
 
         This prevents configuration drift where tuples use undefined relations.
+        NOTE: Section header entries (with _section field) are skipped.
         """
         type_relations = self._get_model_types_and_relations(model_data)
         tuples = tuples_data["tuples"]
         errors = []
 
         for t in tuples:
+            # Skip section header entries (documentation dividers, not tuples)
+            if "_section" in t:
+                continue
             obj_type = self._extract_object_type(t["object"])
             relation = t["relation"]
 
@@ -298,6 +312,7 @@ class TestTupleModelCrossValidation:
         THEN: All user types should exist in model (user, organization, etc.)
 
         Some relations allow organization members, so organization is valid.
+        NOTE: Section header entries (with _section field) are skipped.
         """
         type_relations = self._get_model_types_and_relations(model_data)
         valid_types = set(type_relations.keys())
@@ -306,6 +321,9 @@ class TestTupleModelCrossValidation:
         errors = []
 
         for t in tuples:
+            # Skip section header entries (documentation dividers, not tuples)
+            if "_section" in t:
+                continue
             user_type = self._extract_user_type(t["user"])
             if user_type not in valid_types:
                 errors.append(f"User '{t['user']}' references undefined type '{user_type}'")
@@ -322,8 +340,11 @@ class TestRequiredTestUserPermissions:
         gc.collect()
 
     def _has_tuple(self, tuples: list, user: str, relation: str, obj: str) -> bool:
-        """Check if a specific tuple exists in the list."""
-        return any(t["user"] == user and t["relation"] == relation and t["object"] == obj for t in tuples)
+        """Check if a specific tuple exists in the list (skips section headers)."""
+        return any(
+            "_section" not in t and t.get("user") == user and t.get("relation") == relation and t.get("object") == obj
+            for t in tuples
+        )
 
     def test_admin_has_owner_on_vector_store(self, tuples_data: dict):
         """admin should have owner on vector_store:default."""
