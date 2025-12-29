@@ -1,0 +1,108 @@
+{
+  "$defs": {
+    "TraceSpanPayload": {
+      "description": "Trace span entry payload.",
+      "properties": {
+        "span_id": {
+          "description": "Span ID",
+          "title": "Span Id",
+          "type": "string"
+        },
+        "trace_id": {
+          "description": "Trace ID",
+          "title": "Trace Id",
+          "type": "string"
+        },
+        "parent_span_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Parent span ID",
+          "title": "Parent Span Id"
+        },
+        "name": {
+          "description": "Span name",
+          "title": "Name",
+          "type": "string"
+        },
+        "start_time": {
+          "description": "Start time in milliseconds",
+          "title": "Start Time",
+          "type": "integer"
+        },
+        "end_time": {
+          "description": "End time in milliseconds",
+          "title": "End Time",
+          "type": "integer"
+        },
+        "duration_ms": {
+          "description": "Duration in milliseconds",
+          "title": "Duration Ms",
+          "type": "integer"
+        },
+        "status": {
+          "$ref": "#/$defs/TraceSpanStatus",
+          "default": "unset",
+          "description": "Span status"
+        },
+        "service_name": {
+          "description": "Service name",
+          "title": "Service Name",
+          "type": "string"
+        },
+        "attributes": {
+          "additionalProperties": true,
+          "description": "Span attributes",
+          "title": "Attributes",
+          "type": "object"
+        }
+      },
+      "required": [
+        "span_id",
+        "trace_id",
+        "name",
+        "start_time",
+        "end_time",
+        "duration_ms",
+        "service_name"
+      ],
+      "title": "TraceSpanPayload",
+      "type": "object"
+    },
+    "TraceSpanStatus": {
+      "description": "Trace span status.",
+      "enum": [
+        "ok",
+        "error",
+        "unset"
+      ],
+      "title": "TraceSpanStatus",
+      "type": "string"
+    }
+  },
+  "description": "Trace span entry message (Server -> Client).",
+  "properties": {
+    "type": {
+      "const": "trace_span",
+      "default": "trace_span",
+      "title": "Type",
+      "type": "string"
+    },
+    "payload": {
+      "$ref": "#/$defs/TraceSpanPayload"
+    }
+  },
+  "required": [
+    "payload"
+  ],
+  "title": "TraceSpanEntry",
+  "type": "object",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://mcp-server-langgraph/schemas/websocket/traces/trace-span-entry.json"
+}

@@ -1,0 +1,69 @@
+{
+  "$defs": {
+    "SuggestionRequestPayload": {
+      "description": "AI suggestion request payload.",
+      "properties": {
+        "session_id": {
+          "description": "Session ID for context",
+          "title": "Session Id",
+          "type": "string"
+        },
+        "input_text": {
+          "description": "Current input text",
+          "title": "Input Text",
+          "type": "string"
+        },
+        "cursor_position": {
+          "description": "Cursor position in text",
+          "title": "Cursor Position",
+          "type": "integer"
+        },
+        "context_window": {
+          "default": 500,
+          "description": "Context window size",
+          "title": "Context Window",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "session_id",
+        "input_text",
+        "cursor_position"
+      ],
+      "title": "SuggestionRequestPayload",
+      "type": "object"
+    }
+  },
+  "description": "Request AI suggestion (Client -> Server).",
+  "properties": {
+    "type": {
+      "const": "suggestion_request",
+      "default": "suggestion_request",
+      "title": "Type",
+      "type": "string"
+    },
+    "id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Message correlation ID",
+      "title": "Id"
+    },
+    "payload": {
+      "$ref": "#/$defs/SuggestionRequestPayload"
+    }
+  },
+  "required": [
+    "payload"
+  ],
+  "title": "SuggestionRequestMessage",
+  "type": "object",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://mcp-server-langgraph/schemas/websocket/ai-suggestions/suggestion-request-message.json"
+}

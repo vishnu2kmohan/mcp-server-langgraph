@@ -1,0 +1,112 @@
+{
+  "$defs": {
+    "MCPToolCallPayload": {
+      "description": "MCP tool call payload.",
+      "properties": {
+        "call_id": {
+          "description": "Tool call ID",
+          "title": "Call Id",
+          "type": "string"
+        },
+        "server_id": {
+          "description": "MCP server ID",
+          "title": "Server Id",
+          "type": "string"
+        },
+        "tool_name": {
+          "description": "Tool name",
+          "title": "Tool Name",
+          "type": "string"
+        },
+        "arguments": {
+          "additionalProperties": true,
+          "description": "Tool arguments",
+          "title": "Arguments",
+          "type": "object"
+        },
+        "status": {
+          "default": "pending",
+          "description": "Call status",
+          "title": "Status",
+          "type": "string"
+        },
+        "result": {
+          "anyOf": [
+            {},
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Call result",
+          "title": "Result"
+        },
+        "error": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Error message if failed",
+          "title": "Error"
+        },
+        "started_at": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Start timestamp",
+          "title": "Started At"
+        },
+        "completed_at": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Completion timestamp",
+          "title": "Completed At"
+        }
+      },
+      "required": [
+        "call_id",
+        "server_id",
+        "tool_name"
+      ],
+      "title": "MCPToolCallPayload",
+      "type": "object"
+    }
+  },
+  "description": "MCP tool call update (Server -> Client).",
+  "properties": {
+    "type": {
+      "const": "tool_call",
+      "default": "tool_call",
+      "title": "Type",
+      "type": "string"
+    },
+    "payload": {
+      "$ref": "#/$defs/MCPToolCallPayload"
+    }
+  },
+  "required": [
+    "payload"
+  ],
+  "title": "MCPToolCallEntry",
+  "type": "object",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://mcp-server-langgraph/schemas/websocket/mcp-aggregated/mcp-tool-call-entry.json"
+}

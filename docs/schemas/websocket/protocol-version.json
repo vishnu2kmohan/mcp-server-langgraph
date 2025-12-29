@@ -1,0 +1,23 @@
+{
+  "version": "1.0.0",
+  "schemas": [
+    "devtools/console-log-entry.json",
+    "devtools/network-request-entry.json",
+    "devtools/network-update-entry.json",
+    "traces/trace-span-entry.json",
+    "traces/trace-event-entry.json",
+    "traces/trace-subscribe-message.json",
+    "budget-alerts/budget-alert-entry.json",
+    "budget-alerts/budget-subscribed-response.json",
+    "budget-alerts/budget-subscribe-entities-message.json",
+    "budget-alerts/budget-subscribe-all-message.json",
+    "ai-suggestions/suggestion-response-entry.json",
+    "ai-suggestions/suggestion-request-message.json",
+    "ai-suggestions/suggestion-accept-message.json",
+    "ai-suggestions/suggestion-reject-message.json",
+    "ai-suggestions/context-update-message.json",
+    "mcp-aggregated/mcp-server-status-entry.json",
+    "mcp-aggregated/mcp-tool-call-entry.json",
+    "common/websocket-error.json"
+  ]
+}

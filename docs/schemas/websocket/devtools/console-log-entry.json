@@ -1,0 +1,94 @@
+{
+  "$defs": {
+    "ConsoleLevel": {
+      "description": "Console log level.",
+      "enum": [
+        "log",
+        "info",
+        "warn",
+        "error",
+        "debug"
+      ],
+      "title": "ConsoleLevel",
+      "type": "string"
+    },
+    "ConsoleLogPayload": {
+      "description": "Console log entry payload.",
+      "properties": {
+        "level": {
+          "$ref": "#/$defs/ConsoleLevel",
+          "description": "Log level"
+        },
+        "message": {
+          "description": "Log message",
+          "title": "Message",
+          "type": "string"
+        },
+        "timestamp": {
+          "description": "ISO timestamp",
+          "title": "Timestamp",
+          "type": "string"
+        },
+        "source": {
+          "default": "system",
+          "description": "Log source",
+          "title": "Source",
+          "type": "string"
+        },
+        "id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Entry ID",
+          "title": "Id"
+        },
+        "data": {
+          "anyOf": [
+            {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Additional data",
+          "title": "Data"
+        }
+      },
+      "required": [
+        "level",
+        "message",
+        "timestamp"
+      ],
+      "title": "ConsoleLogPayload",
+      "type": "object"
+    }
+  },
+  "description": "Console log entry message (Server -> Client).",
+  "properties": {
+    "type": {
+      "const": "console",
+      "default": "console",
+      "title": "Type",
+      "type": "string"
+    },
+    "payload": {
+      "$ref": "#/$defs/ConsoleLogPayload"
+    }
+  },
+  "required": [
+    "payload"
+  ],
+  "title": "ConsoleLogEntry",
+  "type": "object",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://mcp-server-langgraph/schemas/websocket/devtools/console-log-entry.json"
+}

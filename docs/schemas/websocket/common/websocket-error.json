@@ -1,0 +1,64 @@
+{
+  "$defs": {
+    "WebSocketErrorPayload": {
+      "description": "WebSocket error payload.",
+      "properties": {
+        "code": {
+          "description": "Error code",
+          "title": "Code",
+          "type": "string"
+        },
+        "message": {
+          "description": "Error message",
+          "title": "Message",
+          "type": "string"
+        },
+        "details": {
+          "anyOf": [
+            {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Additional error details",
+          "title": "Details"
+        },
+        "retryable": {
+          "default": false,
+          "description": "Whether client should retry",
+          "title": "Retryable",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "code",
+        "message"
+      ],
+      "title": "WebSocketErrorPayload",
+      "type": "object"
+    }
+  },
+  "description": "Error message (Server -> Client).",
+  "properties": {
+    "type": {
+      "const": "error",
+      "default": "error",
+      "title": "Type",
+      "type": "string"
+    },
+    "payload": {
+      "$ref": "#/$defs/WebSocketErrorPayload"
+    }
+  },
+  "required": [
+    "payload"
+  ],
+  "title": "WebSocketError",
+  "type": "object",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://mcp-server-langgraph/schemas/websocket/common/websocket-error.json"
+}

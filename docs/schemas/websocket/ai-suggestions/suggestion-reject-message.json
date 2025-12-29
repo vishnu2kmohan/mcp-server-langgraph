@@ -1,0 +1,64 @@
+{
+  "$defs": {
+    "SuggestionRejectPayload": {
+      "description": "Suggestion reject payload.",
+      "properties": {
+        "suggestion_id": {
+          "description": "Rejected suggestion ID",
+          "title": "Suggestion Id",
+          "type": "string"
+        },
+        "reason": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Rejection reason",
+          "title": "Reason"
+        }
+      },
+      "required": [
+        "suggestion_id"
+      ],
+      "title": "SuggestionRejectPayload",
+      "type": "object"
+    }
+  },
+  "description": "Reject a suggestion (Client -> Server).",
+  "properties": {
+    "type": {
+      "const": "suggestion_reject",
+      "default": "suggestion_reject",
+      "title": "Type",
+      "type": "string"
+    },
+    "id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Message correlation ID",
+      "title": "Id"
+    },
+    "payload": {
+      "$ref": "#/$defs/SuggestionRejectPayload"
+    }
+  },
+  "required": [
+    "payload"
+  ],
+  "title": "SuggestionRejectMessage",
+  "type": "object",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://mcp-server-langgraph/schemas/websocket/ai-suggestions/suggestion-reject-message.json"
+}

@@ -1,0 +1,57 @@
+{
+  "$defs": {
+    "ContextUpdatePayload": {
+      "description": "Context update payload.",
+      "properties": {
+        "session_id": {
+          "description": "Session ID",
+          "title": "Session Id",
+          "type": "string"
+        },
+        "context": {
+          "description": "Context string",
+          "title": "Context",
+          "type": "string"
+        }
+      },
+      "required": [
+        "session_id",
+        "context"
+      ],
+      "title": "ContextUpdatePayload",
+      "type": "object"
+    }
+  },
+  "description": "Update session context (Client -> Server).",
+  "properties": {
+    "type": {
+      "const": "context_update",
+      "default": "context_update",
+      "title": "Type",
+      "type": "string"
+    },
+    "id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Message correlation ID",
+      "title": "Id"
+    },
+    "payload": {
+      "$ref": "#/$defs/ContextUpdatePayload"
+    }
+  },
+  "required": [
+    "payload"
+  ],
+  "title": "ContextUpdateMessage",
+  "type": "object",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://mcp-server-langgraph/schemas/websocket/ai-suggestions/context-update-message.json"
+}

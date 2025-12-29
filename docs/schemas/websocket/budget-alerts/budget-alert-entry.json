@@ -1,0 +1,100 @@
+{
+  "$defs": {
+    "BudgetAlertPayload": {
+      "description": "Budget alert entry payload.",
+      "properties": {
+        "entity_type": {
+          "$ref": "#/$defs/BudgetEntityType",
+          "description": "Entity type"
+        },
+        "entity_id": {
+          "description": "Entity ID",
+          "title": "Entity Id",
+          "type": "string"
+        },
+        "status": {
+          "$ref": "#/$defs/BudgetAlertStatus",
+          "description": "Alert status"
+        },
+        "percent_used": {
+          "description": "Percentage of budget used",
+          "title": "Percent Used",
+          "type": "number"
+        },
+        "current_spend": {
+          "description": "Current spend amount",
+          "title": "Current Spend",
+          "type": "string"
+        },
+        "remaining": {
+          "description": "Remaining budget",
+          "title": "Remaining",
+          "type": "string"
+        },
+        "monthly_limit_usd": {
+          "description": "Monthly limit in USD",
+          "title": "Monthly Limit Usd",
+          "type": "string"
+        },
+        "message": {
+          "default": "",
+          "description": "Alert message",
+          "title": "Message",
+          "type": "string"
+        }
+      },
+      "required": [
+        "entity_type",
+        "entity_id",
+        "status",
+        "percent_used",
+        "current_spend",
+        "remaining",
+        "monthly_limit_usd"
+      ],
+      "title": "BudgetAlertPayload",
+      "type": "object"
+    },
+    "BudgetAlertStatus": {
+      "description": "Budget alert status levels.",
+      "enum": [
+        "ok",
+        "warning",
+        "critical",
+        "exceeded"
+      ],
+      "title": "BudgetAlertStatus",
+      "type": "string"
+    },
+    "BudgetEntityType": {
+      "description": "Budget entity types.",
+      "enum": [
+        "organization",
+        "project",
+        "team",
+        "user"
+      ],
+      "title": "BudgetEntityType",
+      "type": "string"
+    }
+  },
+  "description": "Budget alert entry message (Server -> Client).",
+  "properties": {
+    "type": {
+      "const": "budget_alert",
+      "default": "budget_alert",
+      "title": "Type",
+      "type": "string"
+    },
+    "payload": {
+      "$ref": "#/$defs/BudgetAlertPayload"
+    }
+  },
+  "required": [
+    "payload"
+  ],
+  "title": "BudgetAlertEntry",
+  "type": "object",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://mcp-server-langgraph/schemas/websocket/budget-alerts/budget-alert-entry.json"
+}

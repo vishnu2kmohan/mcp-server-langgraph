@@ -1,0 +1,33 @@
+{
+  "description": "Subscribe to all alerts (Client -> Server).",
+  "properties": {
+    "type": {
+      "const": "subscribe_all",
+      "default": "subscribe_all",
+      "title": "Type",
+      "type": "string"
+    },
+    "id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Message correlation ID",
+      "title": "Id"
+    },
+    "payload": {
+      "additionalProperties": true,
+      "title": "Payload",
+      "type": "object"
+    }
+  },
+  "title": "BudgetSubscribeAllMessage",
+  "type": "object",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://mcp-server-langgraph/schemas/websocket/budget-alerts/budget-subscribe-all-message.json"
+}

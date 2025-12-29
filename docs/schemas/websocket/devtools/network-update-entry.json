@@ -1,0 +1,115 @@
+{
+  "$defs": {
+    "NetworkStatus": {
+      "description": "Network request status.",
+      "enum": [
+        "pending",
+        "complete",
+        "error"
+      ],
+      "title": "NetworkStatus",
+      "type": "string"
+    },
+    "NetworkUpdatePayload": {
+      "description": "Network update payload for existing requests.",
+      "properties": {
+        "id": {
+          "description": "Request ID to update",
+          "title": "Id",
+          "type": "string"
+        },
+        "status": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/NetworkStatus"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Updated status"
+        },
+        "status_code": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "HTTP status code",
+          "title": "Status Code"
+        },
+        "duration_ms": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Duration in milliseconds",
+          "title": "Duration Ms"
+        },
+        "response_headers": {
+          "anyOf": [
+            {
+              "additionalProperties": {
+                "type": "string"
+              },
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Response headers",
+          "title": "Response Headers"
+        },
+        "error": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Error message if failed",
+          "title": "Error"
+        }
+      },
+      "required": [
+        "id"
+      ],
+      "title": "NetworkUpdatePayload",
+      "type": "object"
+    }
+  },
+  "description": "Network update message for existing requests (Server -> Client).",
+  "properties": {
+    "type": {
+      "const": "network_update",
+      "default": "network_update",
+      "title": "Type",
+      "type": "string"
+    },
+    "payload": {
+      "$ref": "#/$defs/NetworkUpdatePayload"
+    }
+  },
+  "required": [
+    "payload"
+  ],
+  "title": "NetworkUpdateEntry",
+  "type": "object",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://mcp-server-langgraph/schemas/websocket/devtools/network-update-entry.json"
+}

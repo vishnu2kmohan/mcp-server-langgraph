@@ -1,0 +1,74 @@
+{
+  "$defs": {
+    "TraceSubscribePayload": {
+      "description": "Trace subscribe payload (Client -> Server).",
+      "properties": {
+        "service_filter": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Service name filter",
+          "title": "Service Filter"
+        },
+        "trace_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Specific trace ID to follow",
+          "title": "Trace Id"
+        }
+      },
+      "title": "TraceSubscribePayload",
+      "type": "object"
+    }
+  },
+  "description": "Trace subscribe message (Client -> Server).",
+  "properties": {
+    "type": {
+      "const": "subscribe",
+      "default": "subscribe",
+      "title": "Type",
+      "type": "string"
+    },
+    "id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Message correlation ID",
+      "title": "Id"
+    },
+    "payload": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/TraceSubscribePayload"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    }
+  },
+  "title": "TraceSubscribeMessage",
+  "type": "object",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://mcp-server-langgraph/schemas/websocket/traces/trace-subscribe-message.json"
+}

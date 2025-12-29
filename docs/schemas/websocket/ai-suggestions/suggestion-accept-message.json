@@ -1,0 +1,51 @@
+{
+  "$defs": {
+    "SuggestionAcceptPayload": {
+      "description": "Suggestion accept payload.",
+      "properties": {
+        "suggestion_id": {
+          "description": "Accepted suggestion ID",
+          "title": "Suggestion Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "suggestion_id"
+      ],
+      "title": "SuggestionAcceptPayload",
+      "type": "object"
+    }
+  },
+  "description": "Accept a suggestion (Client -> Server).",
+  "properties": {
+    "type": {
+      "const": "suggestion_accept",
+      "default": "suggestion_accept",
+      "title": "Type",
+      "type": "string"
+    },
+    "id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Message correlation ID",
+      "title": "Id"
+    },
+    "payload": {
+      "$ref": "#/$defs/SuggestionAcceptPayload"
+    }
+  },
+  "required": [
+    "payload"
+  ],
+  "title": "SuggestionAcceptMessage",
+  "type": "object",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://mcp-server-langgraph/schemas/websocket/ai-suggestions/suggestion-accept-message.json"
+}

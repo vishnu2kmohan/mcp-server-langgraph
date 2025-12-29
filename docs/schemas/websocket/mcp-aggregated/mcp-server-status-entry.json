@@ -1,0 +1,79 @@
+{
+  "$defs": {
+    "MCPServerState": {
+      "description": "MCP server connection states.",
+      "enum": [
+        "connected",
+        "disconnected",
+        "error",
+        "initializing"
+      ],
+      "title": "MCPServerState",
+      "type": "string"
+    },
+    "MCPServerStatusPayload": {
+      "description": "MCP server status payload.",
+      "properties": {
+        "server_id": {
+          "description": "MCP server ID",
+          "title": "Server Id",
+          "type": "string"
+        },
+        "name": {
+          "description": "Server name",
+          "title": "Name",
+          "type": "string"
+        },
+        "status": {
+          "$ref": "#/$defs/MCPServerState",
+          "description": "Connection status"
+        },
+        "tools_count": {
+          "default": 0,
+          "description": "Number of available tools",
+          "title": "Tools Count",
+          "type": "integer"
+        },
+        "last_seen": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Last seen timestamp",
+          "title": "Last Seen"
+        }
+      },
+      "required": [
+        "server_id",
+        "name",
+        "status"
+      ],
+      "title": "MCPServerStatusPayload",
+      "type": "object"
+    }
+  },
+  "description": "MCP server status update (Server -> Client).",
+  "properties": {
+    "type": {
+      "const": "server_status",
+      "default": "server_status",
+      "title": "Type",
+      "type": "string"
+    },
+    "payload": {
+      "$ref": "#/$defs/MCPServerStatusPayload"
+    }
+  },
+  "required": [
+    "payload"
+  ],
+  "title": "MCPServerStatusEntry",
+  "type": "object",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://mcp-server-langgraph/schemas/websocket/mcp-aggregated/mcp-server-status-entry.json"
+}

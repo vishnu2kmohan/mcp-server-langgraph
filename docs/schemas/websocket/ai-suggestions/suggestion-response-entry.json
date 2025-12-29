@@ -1,0 +1,63 @@
+{
+  "$defs": {
+    "SuggestionResponsePayload": {
+      "description": "AI suggestion response payload.",
+      "properties": {
+        "suggestion_id": {
+          "description": "Suggestion ID",
+          "title": "Suggestion Id",
+          "type": "string"
+        },
+        "text": {
+          "description": "Suggestion text",
+          "title": "Text",
+          "type": "string"
+        },
+        "confidence": {
+          "description": "Confidence score 0-1",
+          "title": "Confidence",
+          "type": "number"
+        },
+        "reasoning": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Reasoning explanation",
+          "title": "Reasoning"
+        }
+      },
+      "required": [
+        "suggestion_id",
+        "text",
+        "confidence"
+      ],
+      "title": "SuggestionResponsePayload",
+      "type": "object"
+    }
+  },
+  "description": "AI suggestion response (Server -> Client).",
+  "properties": {
+    "type": {
+      "const": "suggestion_response",
+      "default": "suggestion_response",
+      "title": "Type",
+      "type": "string"
+    },
+    "payload": {
+      "$ref": "#/$defs/SuggestionResponsePayload"
+    }
+  },
+  "required": [
+    "payload"
+  ],
+  "title": "SuggestionResponseEntry",
+  "type": "object",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://mcp-server-langgraph/schemas/websocket/ai-suggestions/suggestion-response-entry.json"
+}

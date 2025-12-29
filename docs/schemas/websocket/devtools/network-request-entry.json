@@ -1,0 +1,142 @@
+{
+  "$defs": {
+    "NetworkRequestPayload": {
+      "description": "Network request entry payload.",
+      "properties": {
+        "id": {
+          "description": "Request ID",
+          "title": "Id",
+          "type": "string"
+        },
+        "url": {
+          "description": "Request URL",
+          "title": "Url",
+          "type": "string"
+        },
+        "method": {
+          "description": "HTTP method",
+          "title": "Method",
+          "type": "string"
+        },
+        "status": {
+          "$ref": "#/$defs/NetworkStatus",
+          "default": "pending",
+          "description": "Request status"
+        },
+        "status_code": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "HTTP status code",
+          "title": "Status Code"
+        },
+        "duration_ms": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Duration in milliseconds",
+          "title": "Duration Ms"
+        },
+        "timestamp": {
+          "description": "ISO timestamp",
+          "title": "Timestamp",
+          "type": "string"
+        },
+        "request_headers": {
+          "anyOf": [
+            {
+              "additionalProperties": {
+                "type": "string"
+              },
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Request headers",
+          "title": "Request Headers"
+        },
+        "response_headers": {
+          "anyOf": [
+            {
+              "additionalProperties": {
+                "type": "string"
+              },
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Response headers",
+          "title": "Response Headers"
+        },
+        "error": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Error message if failed",
+          "title": "Error"
+        }
+      },
+      "required": [
+        "id",
+        "url",
+        "method",
+        "timestamp"
+      ],
+      "title": "NetworkRequestPayload",
+      "type": "object"
+    },
+    "NetworkStatus": {
+      "description": "Network request status.",
+      "enum": [
+        "pending",
+        "complete",
+        "error"
+      ],
+      "title": "NetworkStatus",
+      "type": "string"
+    }
+  },
+  "description": "Network request entry message (Server -> Client).",
+  "properties": {
+    "type": {
+      "const": "network",
+      "default": "network",
+      "title": "Type",
+      "type": "string"
+    },
+    "payload": {
+      "$ref": "#/$defs/NetworkRequestPayload"
+    }
+  },
+  "required": [
+    "payload"
+  ],
+  "title": "NetworkRequestEntry",
+  "type": "object",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://mcp-server-langgraph/schemas/websocket/devtools/network-request-entry.json"
+}

@@ -1,0 +1,44 @@
+{
+  "$defs": {
+    "BudgetSubscribedPayload": {
+      "description": "Subscription confirmation payload.",
+      "properties": {
+        "entity_ids": {
+          "description": "Subscribed entity IDs",
+          "items": {
+            "type": "string"
+          },
+          "title": "Entity Ids",
+          "type": "array"
+        },
+        "subscribe_all": {
+          "default": false,
+          "description": "Whether subscribed to all",
+          "title": "Subscribe All",
+          "type": "boolean"
+        }
+      },
+      "title": "BudgetSubscribedPayload",
+      "type": "object"
+    }
+  },
+  "description": "Subscription confirmation (Server -> Client).",
+  "properties": {
+    "type": {
+      "const": "subscribed",
+      "default": "subscribed",
+      "title": "Type",
+      "type": "string"
+    },
+    "payload": {
+      "$ref": "#/$defs/BudgetSubscribedPayload"
+    }
+  },
+  "required": [
+    "payload"
+  ],
+  "title": "BudgetSubscribedResponse",
+  "type": "object",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://mcp-server-langgraph/schemas/websocket/budget-alerts/budget-subscribed-response.json"
+}
