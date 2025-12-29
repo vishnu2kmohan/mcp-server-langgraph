@@ -112,7 +112,7 @@ def get_all_tools(settings_override: Any | None = None) -> list[BaseTool]:
             # Mark execute_python as requiring HITL approval in downstream agents
             # Handle case where metadata is None (not just missing)
             existing_metadata = getattr(execute_python, "metadata", None) or {}
-            execute_python.metadata = {**existing_metadata, "requires_hitl": True}  # type: ignore[attr-defined]
+            execute_python.metadata = {**existing_metadata, "requires_hitl": True}
             tools.append(execute_python)
         except ImportError:
             # Code execution dependencies not installed - silently skip

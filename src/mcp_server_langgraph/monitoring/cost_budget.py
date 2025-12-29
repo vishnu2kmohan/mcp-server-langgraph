@@ -36,7 +36,7 @@ import logging
 import statistics
 from dataclasses import dataclass, field
 from decimal import Decimal
-from typing import Literal
+from typing import Any, Literal
 
 logger = logging.getLogger(__name__)
 
@@ -480,7 +480,7 @@ class CostForecaster:
 class WebSocketConnection:
     """Protocol for WebSocket connections (duck-typed)."""
 
-    async def send_json(self, data: dict) -> None:
+    async def send_json(self, data: dict[str, Any]) -> None:
         """Send JSON data to the WebSocket."""
         ...
 
@@ -494,7 +494,7 @@ class BudgetSubscriber:
     entity_filters: list[str] = field(default_factory=list)
 
 
-def budget_status_to_message(status: BudgetStatus) -> dict:
+def budget_status_to_message(status: BudgetStatus) -> dict[str, Any]:
     """
     Convert a BudgetStatus to WebSocket message format.
 
@@ -546,7 +546,7 @@ class BudgetAlertBroadcaster:
         }
     """
 
-    def __init__(self, push_sender=None) -> None:
+    def __init__(self, push_sender: Any | None = None) -> None:
         """
         Initialize the broadcaster.
 

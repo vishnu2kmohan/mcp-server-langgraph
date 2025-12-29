@@ -18,6 +18,11 @@ from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel, Field
 
 if TYPE_CHECKING:
+    from mcp_server_langgraph.monitoring.cost_budget import (
+        BudgetChecker,
+        CostAnomalyDetector,
+        CostForecaster,
+    )
     from mcp_server_langgraph.monitoring.cost_storage import CostStorageBackend
 
 from mcp_server_langgraph.monitoring.budget_storage import get_budget_storage
@@ -737,21 +742,21 @@ class BudgetListResponse(BaseModel):
     budgets: list[BudgetResponse] = Field(description="List of budgets")
 
 
-def get_budget_checker():
+def get_budget_checker() -> "BudgetChecker":
     """Get the singleton BudgetChecker instance."""
     from mcp_server_langgraph.monitoring.cost_budget import get_budget_checker as _get
 
     return _get()
 
 
-def get_anomaly_detector():
+def get_anomaly_detector() -> "CostAnomalyDetector":
     """Get the singleton CostAnomalyDetector instance."""
     from mcp_server_langgraph.monitoring.cost_budget import get_anomaly_detector as _get
 
     return _get()
 
 
-def get_forecaster():
+def get_forecaster() -> "CostForecaster":
     """Get the singleton CostForecaster instance."""
     from mcp_server_langgraph.monitoring.cost_budget import get_forecaster as _get
 
@@ -804,7 +809,7 @@ async def get_budget_status(
     # Load budget from storage, fall back to default if not found
     storage = get_budget_storage()
     stored_budget = await storage.get_budget(
-        entity_type=entity_type,  # type: ignore[arg-type]
+        entity_type=entity_type,
         entity_id=entity_id,
     )
 
@@ -813,7 +818,7 @@ async def get_budget_status(
     else:
         # Fall back to default budget for new entities
         budget = Budget(
-            entity_type=entity_type,  # type: ignore[arg-type]
+            entity_type=entity_type,
             entity_id=entity_id,
             monthly_limit_usd=Decimal("1000.00"),  # Default limit
         )
@@ -942,7 +947,7 @@ async def list_budgets(
     Optionally filter by entity type.
     """
     storage = get_budget_storage()
-    budgets = await storage.list_budgets(entity_type=entity_type)  # type: ignore[arg-type]
+    budgets = await storage.list_budgets(entity_type=entity_type)
 
     return BudgetListResponse(
         budgets=[
@@ -975,7 +980,7 @@ async def create_budget(request: BudgetCreateRequest) -> BudgetResponse:
 
     # Check if budget already exists
     existing = await storage.get_budget(
-        entity_type=request.entity_type,  # type: ignore[arg-type]
+        entity_type=request.entity_type,
         entity_id=request.entity_id,
     )
     if existing is not None:
@@ -986,7 +991,7 @@ async def create_budget(request: BudgetCreateRequest) -> BudgetResponse:
 
     # Create and save budget
     budget = Budget(
-        entity_type=request.entity_type,  # type: ignore[arg-type]
+        entity_type=request.entity_type,
         entity_id=request.entity_id,
         monthly_limit_usd=Decimal(request.monthly_limit_usd),
         warning_threshold=request.warning_threshold,
@@ -1024,7 +1029,7 @@ async def update_budget(
 
     # Get existing budget
     existing = await storage.get_budget(
-        entity_type=entity_type,  # type: ignore[arg-type]
+        entity_type=entity_type,
         entity_id=entity_id,
     )
     if existing is None:
@@ -1070,7 +1075,7 @@ async def delete_budget(
     """
     storage = get_budget_storage()
     deleted = await storage.delete_budget(
-        entity_type=entity_type,  # type: ignore[arg-type]
+        entity_type=entity_type,
         entity_id=entity_id,
     )
 

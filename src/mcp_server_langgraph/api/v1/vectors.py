@@ -146,7 +146,7 @@ def get_embedding_model() -> Any:
             # Vertex AI uses GCP project from environment
             project_id = os.getenv("GOOGLE_CLOUD_PROJECT") or os.getenv("GCP_PROJECT_ID")
             # model_name is a valid pydantic field but type stubs don't include it
-            return VertexAIEmbeddings(model_name=model_name, project=project_id)  # type: ignore[call-arg]
+            return VertexAIEmbeddings(model_name=model_name, project=project_id)
         except ImportError:
             raise ValueError(
                 "Vertex AI embeddings require 'langchain-google-vertexai' package. "

@@ -10,6 +10,10 @@ Migrated from: api.v1.mcp_websocket
 from __future__ import annotations
 
 import logging
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from mcp_server_langgraph.websocket.types import WebSocketConfig
 
 logger = logging.getLogger(__name__)
 
@@ -123,8 +127,8 @@ def create_websocket_config(
     idle_timeout: int = 1800,
     max_message_size: int = 1_000_000,
     token_validation_interval: int | None = None,
-    **kwargs,
-):
+    **kwargs: object,
+) -> WebSocketConfig:
     """
     Create a WebSocketConfig with global settings applied.
 
