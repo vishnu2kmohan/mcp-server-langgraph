@@ -33,25 +33,19 @@ pytestmark = pytest.mark.integration
 
 
 @pytest.fixture(scope="module")
-def keycloak_test_realm_available(keycloak_direct_available: bool) -> bool:
-    """Check if Keycloak test-realm is available on direct port.
-
-    Uses the centralized keycloak_direct_available fixture as a base check,
-    then verifies the specific test realm is accessible.
+def keycloak_available() -> bool:
+    """Check if Keycloak test instance is available.
 
     Uses the OIDC well-known endpoint for health check because:
     1. It works with KC_HTTP_RELATIVE_PATH=/authn configuration
     2. It proves the realm is fully imported and ready
     3. It's more reliable than the management port health endpoint in CI
     """
-    if not keycloak_direct_available:
-        return False
-
     import asyncio
 
     async def _check():
         try:
-            # Use OIDC well-known endpoint for health check
+            # Use OIDC well-known endpoint for health check (same as docker_fixtures.py)
             # KEYCLOAK_TEST_URL already includes /authn prefix
             wellknown_url = f"{KEYCLOAK_TEST_URL}/realms/{KEYCLOAK_TEST_REALM}/.well-known/openid-configuration"
             async with httpx.AsyncClient() as client:
@@ -64,33 +58,12 @@ def keycloak_test_realm_available(keycloak_direct_available: bool) -> bool:
 
 
 @pytest.fixture(scope="module")
-def skip_if_no_keycloak_test_realm(keycloak_test_realm_available: bool, request: FixtureRequest) -> None:
-    """Skip tests if Keycloak test-realm is not available on direct port."""
-    if not keycloak_test_realm_available:
+def skip_if_no_keycloak(keycloak_available: bool, request: FixtureRequest) -> None:
+    """Skip tests if Keycloak is not available"""
+    if not keycloak_available:
         pytest.skip(
-            "Keycloak test-realm not available on port 9082. "
-            "Start with: docker-compose -f docker-compose.keycloak-test.yml up -d"
+            "Keycloak test instance not available. Start with: docker-compose -f docker-compose.keycloak-test.yml up -d"
         )
-
-
-# Alias for backward compatibility
-@pytest.fixture(scope="module")
-def keycloak_available(keycloak_test_realm_available: bool) -> bool:
-    """Alias for keycloak_test_realm_available for backward compatibility."""
-    return keycloak_test_realm_available
-
-
-# Local skip_if_no_keycloak that shadows the centralized one from tool_fixtures.py
-# This version checks the direct port (9082) and test-realm instead of gateway (80) and default realm
-@pytest.fixture(scope="module")
-def skip_if_no_keycloak(skip_if_no_keycloak_test_realm: None) -> None:
-    """Skip tests if Keycloak test-realm is not available.
-
-    This shadows the centralized skip_if_no_keycloak from tool_fixtures.py
-    because these tests need direct port access (9082) with test-realm,
-    not gateway access (80) with default realm.
-    """
-    pass
 
 
 @pytest.fixture(scope="module")

@@ -2,46 +2,15 @@
   "id": "default",
   "realm": "default",
   "enabled": true,
-  "displayName": "Agent Studio - Default Realm",
+  "displayName": "MCP Server LangGraph - Test Realm",
   "accessTokenLifespan": 3600,
   "refreshTokenMaxReuse": 0,
   "ssoSessionIdleTimeout": 1800,
   "ssoSessionMaxLifespan": 36000,
   "clients": [
     {
-      "clientId": "grafana",
-      "name": "Grafana Dashboards",
-      "description": "OAuth2 client for Grafana dashboard access with Keycloak SSO",
-      "enabled": true,
-      "publicClient": false,
-      "clientAuthenticatorType": "client-secret",
-      "secret": "test-grafana-secret",
-      "directAccessGrantsEnabled": false,
-      "standardFlowEnabled": true,
-      "implicitFlowEnabled": false,
-      "serviceAccountsEnabled": false,
-      "protocol": "openid-connect",
-      "redirectUris": [
-        "http://localhost/dashboards/*",
-        "http://localhost:13001/*"
-      ],
-      "webOrigins": [
-        "http://localhost"
-      ],
-      "defaultClientScopes": [
-        "openid",
-        "email",
-        "profile",
-        "roles"
-      ],
-      "optionalClientScopes": [
-        "offline_access"
-      ]
-    },
-    {
       "clientId": "mcp-server",
       "name": "MCP Server Test Client",
-      "description": "OAuth2 client for MCP Server with Token Exchange (RFC 8693), Device Authorization Grant (RFC 8628), and PKCE. ROPC enabled for E2E testing only (get real user tokens).",
       "enabled": true,
       "publicClient": false,
       "clientAuthenticatorType": "client-secret",
@@ -50,18 +19,13 @@
       "standardFlowEnabled": true,
       "implicitFlowEnabled": false,
       "serviceAccountsEnabled": true,
-      "authorizationServicesEnabled": true,
       "protocol": "openid-connect",
       "redirectUris": [
-        "http://localhost/*",
-        "http://localhost:*/*",
-        "http://127.0.0.1/*",
-        "http://127.0.0.1:*/*"
+        "http://localhost:*",
+        "http://127.0.0.1:*"
       ],
       "webOrigins": [
-        "http://localhost",
         "http://localhost:*",
-        "http://127.0.0.1",
         "http://127.0.0.1:*"
       ],
       "defaultClientScopes": [
@@ -77,57 +41,6 @@
         "offline_access",
         "microprofile-jwt"
       ],
-      "attributes": {
-        "oauth2.device.authorization.grant.enabled": "true",
-        "oauth2.device.polling.interval": "5",
-        "oidc.ciba.grant.enabled": "false",
-        "backchannel.logout.session.required": "true",
-        "backchannel.logout.revoke.offline.tokens": "false",
-        "post.logout.redirect.uris": "http://localhost/*##http://127.0.0.1/*"
-      },
-      "authorizationSettings": {
-        "allowRemoteResourceManagement": true,
-        "policyEnforcementMode": "ENFORCING",
-        "decisionStrategy": "AFFIRMATIVE",
-        "resources": [
-          {
-            "name": "Users Resource",
-            "type": "urn:mcp-server:resources:users",
-            "ownerManagedAccess": false,
-            "scopes": [
-              {"name": "token-exchange"},
-              {"name": "impersonate"}
-            ]
-          }
-        ],
-        "policies": [
-          {
-            "name": "Service Account Policy",
-            "description": "Policy for service account clients to perform token exchange",
-            "type": "client",
-            "logic": "POSITIVE",
-            "decisionStrategy": "UNANIMOUS",
-            "config": {
-              "clients": "[\"mcp-server\"]"
-            }
-          },
-          {
-            "name": "Token Exchange Permission",
-            "description": "Permission for token exchange (RFC 8693)",
-            "type": "scope",
-            "logic": "POSITIVE",
-            "decisionStrategy": "UNANIMOUS",
-            "config": {
-              "scopes": "[\"token-exchange\"]",
-              "applyPolicies": "[\"Service Account Policy\"]"
-            }
-          }
-        ],
-        "scopes": [
-          {"name": "token-exchange"},
-          {"name": "impersonate"}
-        ]
-      },
       "protocolMappers": [
         {
           "name": "Client Audience",
@@ -167,88 +80,11 @@
             "claim.name": "username",
             "jsonType.label": "String"
           }
-        },
-        {
-          "name": "realm-roles",
-          "protocol": "openid-connect",
-          "protocolMapper": "oidc-usermodel-realm-role-mapper",
-          "consentRequired": false,
-          "config": {
-            "userinfo.token.claim": "true",
-            "id.token.claim": "true",
-            "access.token.claim": "true",
-            "claim.name": "roles",
-            "multivalued": "true"
-          }
-        }
-      ]
-    },
-    {
-      "clientId": "openfga-server",
-      "name": "OpenFGA Server",
-      "description": "Service account for OpenFGA server OIDC authentication (client credentials grant)",
-      "enabled": true,
-      "publicClient": false,
-      "clientAuthenticatorType": "client-secret",
-      "secret": "test-openfga-server-secret",
-      "directAccessGrantsEnabled": false,
-      "standardFlowEnabled": false,
-      "implicitFlowEnabled": false,
-      "serviceAccountsEnabled": true,
-      "protocol": "openid-connect",
-      "attributes": {
-        "access.token.lifespan": "3600",
-        "client.secret.creation.time": "1702000000"
-      },
-      "defaultClientScopes": [
-        "openid",
-        "email",
-        "profile"
-      ],
-      "optionalClientScopes": [],
-      "protocolMappers": [
-        {
-          "name": "aud-mapper-openfga-server",
-          "protocol": "openid-connect",
-          "protocolMapper": "oidc-audience-mapper",
-          "consentRequired": false,
-          "config": {
-            "included.client.audience": "openfga-server",
-            "id.token.claim": "false",
-            "access.token.claim": "true"
-          }
         }
       ]
     }
   ],
   "users": [
-    {
-      "username": "admin",
-      "enabled": true,
-      "emailVerified": true,
-      "firstName": "Admin",
-      "lastName": "User",
-      "email": "admin@example.com",
-      "credentials": [
-        {
-          "type": "password",
-          "value": "admin123",
-          "temporary": false
-        }
-      ],
-      "realmRoles": [
-        "offline_access",
-        "uma_authorization",
-        "user",
-        "admin"
-      ],
-      "clientRoles": {
-        "account": [
-          "view-profile",
-          "manage-account"
-        ]
-      }
-    },
     {
       "username": "alice",
       "enabled": true,
@@ -265,9 +101,7 @@
       ],
       "realmRoles": [
         "offline_access",
-        "uma_authorization",
-        "user",
-        "developer"
+        "uma_authorization"
       ],
       "clientRoles": {
         "account": [
@@ -292,8 +126,7 @@
       ],
       "realmRoles": [
         "offline_access",
-        "uma_authorization",
-        "user"
+        "uma_authorization"
       ],
       "clientRoles": {
         "account": [
@@ -316,161 +149,12 @@
         "description": "UMA authorization",
         "composite": false,
         "clientRole": false
-      },
-      {
-        "name": "user",
-        "description": "Standard user role for tool access",
-        "composite": false,
-        "clientRole": false
-      },
-      {
-        "name": "premium",
-        "description": "Premium user role with enhanced access",
-        "composite": false,
-        "clientRole": false
-      },
-      {
-        "name": "admin",
-        "description": "Administrator role with full access",
-        "composite": false,
-        "clientRole": false
-      },
-      {
-        "name": "developer",
-        "description": "Developer role with access to build and workflow features",
-        "composite": false,
-        "clientRole": false
       }
     ]
   },
-  "identityProviders": [
-    {
-      "alias": "github",
-      "displayName": "GitHub",
-      "providerId": "github",
-      "enabled": true,
-      "updateProfileFirstLoginMode": "on",
-      "trustEmail": true,
-      "storeToken": true,
-      "addReadTokenRoleOnCreate": false,
-      "authenticateByDefault": false,
-      "linkOnly": false,
-      "firstBrokerLoginFlowAlias": "first broker login",
-      "config": {
-        "syncMode": "IMPORT",
-        "clientId": "placeholder-github-client-id",
-        "clientSecret": "placeholder-github-client-secret",
-        "defaultScope": "user:email read:user",
-        "hideOnLoginPage": "false"
-      }
-    },
-    {
-      "alias": "google",
-      "displayName": "Google",
-      "providerId": "google",
-      "enabled": true,
-      "updateProfileFirstLoginMode": "on",
-      "trustEmail": true,
-      "storeToken": false,
-      "addReadTokenRoleOnCreate": false,
-      "authenticateByDefault": false,
-      "linkOnly": false,
-      "firstBrokerLoginFlowAlias": "first broker login",
-      "config": {
-        "syncMode": "IMPORT",
-        "clientId": "placeholder-google-client-id",
-        "clientSecret": "placeholder-google-client-secret",
-        "defaultScope": "openid email profile",
-        "hideOnLoginPage": "false"
-      }
-    },
-    {
-      "alias": "microsoft",
-      "displayName": "Microsoft",
-      "providerId": "microsoft",
-      "enabled": true,
-      "updateProfileFirstLoginMode": "on",
-      "trustEmail": true,
-      "storeToken": false,
-      "addReadTokenRoleOnCreate": false,
-      "authenticateByDefault": false,
-      "linkOnly": false,
-      "firstBrokerLoginFlowAlias": "first broker login",
-      "config": {
-        "syncMode": "IMPORT",
-        "clientId": "placeholder-microsoft-client-id",
-        "clientSecret": "placeholder-microsoft-client-secret",
-        "defaultScope": "openid email profile",
-        "hideOnLoginPage": "false"
-      }
-    }
-  ],
-  "identityProviderMappers": [
-    {
-      "name": "github-username-mapper",
-      "identityProviderAlias": "github",
-      "identityProviderMapper": "github-user-attribute-idp-mapper",
-      "config": {
-        "syncMode": "INHERIT",
-        "jsonField": "login",
-        "userAttribute": "username"
-      }
-    },
-    {
-      "name": "github-email-mapper",
-      "identityProviderAlias": "github",
-      "identityProviderMapper": "github-user-attribute-idp-mapper",
-      "config": {
-        "syncMode": "INHERIT",
-        "jsonField": "email",
-        "userAttribute": "email"
-      }
-    },
-    {
-      "name": "google-email-mapper",
-      "identityProviderAlias": "google",
-      "identityProviderMapper": "oidc-user-attribute-idp-mapper",
-      "config": {
-        "syncMode": "INHERIT",
-        "claim": "email",
-        "user.attribute": "email"
-      }
-    },
-    {
-      "name": "google-name-mapper",
-      "identityProviderAlias": "google",
-      "identityProviderMapper": "oidc-user-attribute-idp-mapper",
-      "config": {
-        "syncMode": "INHERIT",
-        "claim": "name",
-        "user.attribute": "firstName"
-      }
-    },
-    {
-      "name": "microsoft-email-mapper",
-      "identityProviderAlias": "microsoft",
-      "identityProviderMapper": "oidc-user-attribute-idp-mapper",
-      "config": {
-        "syncMode": "INHERIT",
-        "claim": "email",
-        "user.attribute": "email"
-      }
-    },
-    {
-      "name": "microsoft-name-mapper",
-      "identityProviderAlias": "microsoft",
-      "identityProviderMapper": "oidc-user-attribute-idp-mapper",
-      "config": {
-        "syncMode": "INHERIT",
-        "claim": "name",
-        "user.attribute": "firstName"
-      }
-    }
-  ],
   "defaultRoles": [
     "offline_access",
-    "uma_authorization",
-    "user"
+    "uma_authorization"
   ],
   "requiredCredentials": [
     "password"

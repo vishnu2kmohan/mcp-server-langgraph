@@ -38,26 +38,23 @@ def repo_root() -> Path:
 
 def test_keycloak_realm_import_file_exists(repo_root: Path):
     """
-    Verify that default-realm.json exists in tests/e2e/.
+    Verify that mcp-test-realm.json exists in tests/e2e/.
 
     This file should contain the realm configuration with pre-configured
     client and test users for E2E testing.
-
-    NOTE: Keycloak 26.x --import-realm requires the filename to match the realm name.
-    The realm name in the JSON is "default", so the file must be "default-realm.json".
     """
-    realm_file = repo_root / "tests" / "e2e" / "default-realm.json"
+    realm_file = repo_root / "tests" / "e2e" / "mcp-test-realm.json"
 
     assert realm_file.exists(), (
         f"Keycloak realm import file not found: {realm_file}\n"
         "\n"
-        "Expected file: tests/e2e/default-realm.json\n"
+        "Expected file: tests/e2e/mcp-test-realm.json\n"
         "This file should contain:\n"
-        "  - Realm: default (NOT master - --import-realm only creates new realms)\n"
+        "  - Realm: mcp-test (NOT master - --import-realm only creates new realms)\n"
         "  - Client: mcp-server (publicClient, directAccessGrants enabled)\n"
         "  - User: alice with password alice123\n"
         "\n"
-        "Fix: Create tests/e2e/default-realm.json with realm configuration"
+        "Fix: Create tests/e2e/mcp-test-realm.json with realm configuration"
     )
 
     # Verify it's valid JSON
@@ -80,7 +77,7 @@ def test_realm_json_has_mcp_server_client(repo_root: Path):
     - publicClient: true
     - directAccessGrantsEnabled: true (for password grant flow)
     """
-    realm_file = repo_root / "tests" / "e2e" / "default-realm.json"
+    realm_file = repo_root / "tests" / "e2e" / "mcp-test-realm.json"
 
     with open(realm_file) as f:
         realm_config = json.load(f)
@@ -127,73 +124,6 @@ def test_realm_json_has_mcp_server_client(repo_root: Path):
     )
 
 
-def test_realm_json_has_grafana_client(repo_root: Path):
-    """
-    Verify that the realm configuration includes the 'grafana' client.
-
-    The E2E tests expect a client named 'grafana' with:
-    - enabled: true
-    - publicClient: false (confidential client with secret)
-    - secret: test-grafana-secret
-    - standardFlowEnabled: true (for authorization code flow with Grafana OAuth2)
-
-    Reference: ADR-0068 - Gateway-Level Authentication (Grafana uses native OAuth2)
-    """
-    realm_file = repo_root / "tests" / "e2e" / "default-realm.json"
-
-    with open(realm_file) as f:
-        realm_config = json.load(f)
-
-    # Check for clients array
-    clients = realm_config.get("clients", [])
-    assert isinstance(clients, list), f"Realm 'clients' must be an array, got: {type(clients)}"
-
-    # Find grafana client
-    grafana_client = None
-    for client in clients:
-        if client.get("clientId") == "grafana":
-            grafana_client = client
-            break
-
-    assert grafana_client is not None, (
-        "Client 'grafana' not found in realm configuration.\n"
-        "\n"
-        "Expected client configuration:\n"
-        "{\n"
-        '  "clientId": "grafana",\n'
-        '  "enabled": true,\n'
-        '  "publicClient": false,\n'
-        '  "secret": "test-grafana-secret",\n'
-        '  "standardFlowEnabled": true\n'
-        "}\n"
-        "\n"
-        f"Found clients: {[c.get('clientId') for c in clients]}\n"
-        "\n"
-        "This client is required for Grafana OAuth2 SSO integration.\n"
-        "See: ADR-0068 - Gateway-Level Authentication"
-    )
-
-    # Validate client configuration
-    assert grafana_client.get("enabled") is True, "Client 'grafana' must be enabled"
-
-    # Grafana client must be confidential (not public) with a secret
-    assert grafana_client.get("publicClient") is False, "Client 'grafana' must be a confidential client (publicClient: false)"
-
-    assert grafana_client.get("secret") is not None, (
-        "Client 'grafana' must have a secret configured for confidential client flow"
-    )
-
-    # Grafana uses standard authorization code flow
-    assert grafana_client.get("standardFlowEnabled") is True, (
-        "Client 'grafana' must have standardFlowEnabled for OAuth2 authorization code flow"
-    )
-
-    # Validate redirect URIs include Grafana dashboard paths
-    redirect_uris = grafana_client.get("redirectUris", [])
-    has_dashboard_redirect = any("/dashboards" in uri for uri in redirect_uris)
-    assert has_dashboard_redirect, f"Client 'grafana' must have redirect URI containing '/dashboards', got: {redirect_uris}"
-
-
 def test_realm_json_has_test_users(repo_root: Path):
     """
     Verify that the realm configuration includes test user 'alice'.
@@ -203,7 +133,7 @@ def test_realm_json_has_test_users(repo_root: Path):
     - enabled: true
     - credentials: password = alice123
     """
-    realm_file = repo_root / "tests" / "e2e" / "default-realm.json"
+    realm_file = repo_root / "tests" / "e2e" / "mcp-test-realm.json"
 
     with open(realm_file) as f:
         realm_config = json.load(f)
@@ -286,18 +216,16 @@ def test_docker_compose_imports_realm(repo_root: Path):
     assert isinstance(volumes, list), f"Service 'keycloak-test' volumes must be an array, got: {type(volumes)}"
 
     # Look for realm import volume mount
-    # NOTE: Keycloak 26.x --import-realm requires the filename to match the realm name.
-    # The realm name in the JSON is "default", so the file must be "default-realm.json".
     realm_volume_found = False
     for volume in volumes:
         if isinstance(volume, str):
             # Simple string format
-            if "default-realm.json" in volume and "/opt/keycloak/data/import" in volume:
+            if "mcp-test-realm.json" in volume and "/opt/keycloak/data/import" in volume:
                 realm_volume_found = True
                 break
         elif isinstance(volume, dict):
             # Dict format with source/target
-            if volume.get("source") and "default-realm.json" in str(volume.get("source")):
+            if volume.get("source") and "mcp-test-realm.json" in str(volume.get("source")):
                 realm_volume_found = True
                 break
 
@@ -305,7 +233,7 @@ def test_docker_compose_imports_realm(repo_root: Path):
         "Volume mount for realm import not found in keycloak-test service.\n"
         "\n"
         "Expected volume mount:\n"
-        "  ./tests/e2e/default-realm.json:/opt/keycloak/data/import/default-realm.json\n"
+        "  ./tests/e2e/mcp-test-realm.json:/opt/keycloak/data/import/mcp-test-realm.json\n"
         "\n"
         f"Current volumes: {volumes}\n"
         "\n"
@@ -313,7 +241,7 @@ def test_docker_compose_imports_realm(repo_root: Path):
         "services:\n"
         "  keycloak-test:\n"
         "    volumes:\n"
-        "      - ./tests/e2e/default-realm.json:/opt/keycloak/data/import/default-realm.json:ro"
+        "      - ./tests/e2e/mcp-test-realm.json:/opt/keycloak/data/import/mcp-test-realm.json:ro"
     )
 
     # Check for import-realm command
@@ -335,151 +263,4 @@ def test_docker_compose_imports_realm(repo_root: Path):
         f"Current command: {command}\n"
         "\n"
         "This flag tells Keycloak to import realm configuration from /opt/keycloak/data/import/"
-    )
-
-
-def test_realm_json_has_sso_identity_providers(repo_root: Path):
-    """
-    Verify that the realm configuration includes SSO identity providers.
-
-    The E2E tests expect identity providers for:
-    - GitHub (social login)
-    - Google (social login)
-    - Microsoft (enterprise SSO)
-
-    These are configured with placeholder values that are replaced at runtime
-    by the keycloak-init-test service if real credentials are provided.
-    """
-    realm_file = repo_root / "tests" / "e2e" / "default-realm.json"
-
-    with open(realm_file) as f:
-        realm_config = json.load(f)
-
-    # Check for identityProviders array
-    idps = realm_config.get("identityProviders", [])
-    assert isinstance(idps, list), f"Realm 'identityProviders' must be an array, got: {type(idps)}"
-
-    # Verify expected IdPs exist
-    idp_aliases = {idp.get("alias") for idp in idps}
-    expected_idps = {"github", "google", "microsoft"}
-
-    for expected_alias in expected_idps:
-        assert expected_alias in idp_aliases, (
-            f"Identity provider '{expected_alias}' not found in realm configuration.\n\nFound IdPs: {idp_aliases}"
-        )
-
-    # Verify each IdP has required fields
-    for idp in idps:
-        alias = idp.get("alias")
-        if alias not in expected_idps:
-            continue
-
-        assert idp.get("enabled") is True, f"IdP '{alias}' must be enabled (disabled at runtime if no credentials)"
-        assert idp.get("providerId") is not None, f"IdP '{alias}' must have a providerId"
-        assert idp.get("displayName") is not None, f"IdP '{alias}' must have a displayName"
-
-        # Config must have placeholder values
-        config = idp.get("config", {})
-        client_id = config.get("clientId", "")
-        _client_secret = config.get("clientSecret", "")
-
-        # Placeholders should be clearly identifiable
-        assert "placeholder" in client_id.lower() or client_id == "", (
-            f"IdP '{alias}' clientId should be a placeholder value (e.g., 'placeholder-{alias}-client-id'), got: '{client_id}'"
-        )
-
-
-def test_docker_compose_has_sso_env_file(repo_root: Path):
-    """
-    Verify that docker-compose.test.yml keycloak-init-test service
-    loads SSO credentials from env files.
-
-    The keycloak-init-test service should:
-    - Load .env.local for SSO credentials (GITHUB_CLIENT_ID, etc.)
-    - NOT have environment: block that overrides env_file values
-    """
-    docker_compose_file = repo_root / "docker-compose.test.yml"
-
-    with open(docker_compose_file) as f:
-        compose_config: dict = yaml.safe_load(f)
-
-    services = compose_config.get("services", {})
-    keycloak_init_service = services.get("keycloak-init-test")
-
-    assert keycloak_init_service is not None, "Service 'keycloak-init-test' not found in docker-compose.test.yml"
-
-    # Check for env_file directive
-    env_files = keycloak_init_service.get("env_file", [])
-    assert isinstance(env_files, list), f"env_file must be a list, got: {type(env_files)}"
-
-    # Look for .env.local
-    has_env_local = any(
-        (".env.local" in str(ef) if isinstance(ef, str) else ".env.local" in str(ef.get("path", ""))) for ef in env_files
-    )
-    assert has_env_local, (
-        f"keycloak-init-test must include .env.local in env_file for SSO credentials.\n\nCurrent env_files: {env_files}"
-    )
-
-    # Verify environment: block does NOT contain SSO credentials
-    # (they should come from env_file, not be overridden with empty fallbacks)
-    environment = keycloak_init_service.get("environment", [])
-
-    sso_env_vars = [
-        "GITHUB_CLIENT_ID",
-        "GITHUB_CLIENT_SECRET",
-        "GOOGLE_CLIENT_ID",
-        "GOOGLE_CLIENT_SECRET",
-        "MICROSOFT_CLIENT_ID",
-        "MICROSOFT_CLIENT_SECRET",
-    ]
-
-    for env_entry in environment:
-        if isinstance(env_entry, str):
-            for sso_var in sso_env_vars:
-                if env_entry.startswith(f"{sso_var}="):
-                    pytest.fail(
-                        f"SSO credential '{sso_var}' should NOT be in environment: block.\n"
-                        "\nDocker Compose resolves environment: before env_file:, so empty fallbacks "
-                        "like '${GITHUB_CLIENT_ID:-}' override values from .env.local.\n"
-                        "\nFix: Remove SSO credentials from environment: block, they're loaded via env_file."
-                    )
-
-
-def test_keycloak_init_script_disables_placeholder_idps(repo_root: Path):
-    """
-    Verify that the keycloak-init-test command script disables IdPs
-    that have placeholder credentials.
-
-    The script should:
-    - Check if credentials are real (not placeholder-* or empty)
-    - Enable IdPs with real credentials
-    - Disable IdPs that still have placeholders
-    """
-    docker_compose_file = repo_root / "docker-compose.test.yml"
-
-    with open(docker_compose_file) as f:
-        compose_config: dict = yaml.safe_load(f)
-
-    services = compose_config.get("services", {})
-    keycloak_init_service = services.get("keycloak-init-test")
-
-    assert keycloak_init_service is not None
-
-    # Get the command script
-    command = keycloak_init_service.get("command")
-    assert command is not None, "keycloak-init-test must have a command"
-
-    # Command can be string or list
-    command_str = command[0] if isinstance(command, list) else command
-
-    # Verify the script contains logic to disable IdPs with placeholders
-    assert "is_placeholder" in command_str or "placeholder" in command_str.lower(), (
-        "keycloak-init-test command must check for placeholder values.\n"
-        "\nExpected: Script should detect placeholder-* values and disable those IdPs."
-    )
-
-    # Verify the script can disable IdPs
-    assert "enabled=false" in command_str or '"enabled"=false' in command_str, (
-        "keycloak-init-test command must be able to disable IdPs.\n"
-        "\nExpected: kcadm.sh update with -s 'enabled=false' for IdPs without real credentials."
     )

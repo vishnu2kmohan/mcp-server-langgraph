@@ -1,0 +1,11 @@
+# Playground frontend gitignore
+# Overrides root .gitignore for this directory
+
+# Keep package-lock.json tracked (required for npm ci in Docker builds)
+!package-lock.json
+
+# Ignore build artifacts and dependencies
+node_modules/
+dist/
+coverage/
+*.log
