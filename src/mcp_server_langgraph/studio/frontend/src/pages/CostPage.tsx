@@ -33,6 +33,10 @@ import {
   useGetCostForecastQuery,
 } from "../api";
 import { useCostTrackingWebSocket } from "../hooks/useCostTrackingWebSocket";
+import {
+  useBudgetAlertsWebSocket,
+  type BudgetAlert,
+} from "../hooks/useBudgetAlertsWebSocket";
 import { usePersonaContext } from "../persona/PersonaContext";
 
 type Period = "day" | "week" | "month";
@@ -157,7 +161,7 @@ export function CostPage({
   const {
     status: wsStatus,
     sessionCosts,
-    userBudget: _userBudget,
+    userBudget,
     budgetWarnings,
     error: _wsError,
     subscribeSession,
@@ -172,6 +176,21 @@ export function CostPage({
         }
       : undefined,
   );
+
+  // Dedicated Budget Alerts WebSocket for comprehensive budget monitoring
+  // This provides more detailed budget threshold alerts beyond session-level cost tracking
+  const {
+    alerts: budgetAlerts,
+    subscribeToAll: _subscribeToBudgetAlerts,
+    clearAlerts: clearBudgetAlerts,
+  } = useBudgetAlertsWebSocket({
+    enabled: enableRealtime,
+    subscribeAll: isAdmin, // Admins subscribe to all org/project budget alerts
+    onAlert: (alert: BudgetAlert) => {
+      // Log budget alerts for monitoring
+      console.log("Budget alert received:", alert.status, alert.message);
+    },
+  });
 
   // Subscribe to session and user when connected
   useEffect(() => {
@@ -381,7 +400,7 @@ export function CostPage({
         </div>
       )}
 
-      {/* Budget Warnings */}
+      {/* Budget Warnings (from Cost Tracking WebSocket) */}
       {enableRealtime && budgetWarnings.length > 0 && (
         <div
           data-testid="budget-warning-banner"
@@ -407,6 +426,123 @@ export function CostPage({
             >
               <X size={16} />
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* Budget Alerts (from dedicated Budget Alerts WebSocket) */}
+      {enableRealtime && budgetAlerts.length > 0 && (
+        <div
+          data-testid="budget-alerts-banner"
+          className={`mx-6 mt-4 p-4 rounded-lg border ${
+            budgetAlerts[budgetAlerts.length - 1].status === "exceeded"
+              ? "bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800"
+              : budgetAlerts[budgetAlerts.length - 1].status === "critical"
+                ? "bg-orange-50 dark:bg-orange-900/20 border-orange-200 dark:border-orange-800"
+                : "bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800"
+          }`}
+        >
+          <div className="flex items-start gap-3">
+            <AlertTriangle
+              size={20}
+              className={`flex-shrink-0 mt-0.5 ${
+                budgetAlerts[budgetAlerts.length - 1].status === "exceeded"
+                  ? "text-red-500"
+                  : budgetAlerts[budgetAlerts.length - 1].status === "critical"
+                    ? "text-orange-500"
+                    : "text-amber-500"
+              }`}
+            />
+            <div className="flex-1">
+              <h3
+                className={`text-sm font-medium ${
+                  budgetAlerts[budgetAlerts.length - 1].status === "exceeded"
+                    ? "text-red-800 dark:text-red-200"
+                    : budgetAlerts[budgetAlerts.length - 1].status ===
+                        "critical"
+                      ? "text-orange-800 dark:text-orange-200"
+                      : "text-amber-800 dark:text-amber-200"
+                }`}
+              >
+                Budget Alert (
+                {budgetAlerts[budgetAlerts.length - 1].status.toUpperCase()})
+              </h3>
+              <p
+                className={`text-sm mt-1 ${
+                  budgetAlerts[budgetAlerts.length - 1].status === "exceeded"
+                    ? "text-red-700 dark:text-red-300"
+                    : budgetAlerts[budgetAlerts.length - 1].status ===
+                        "critical"
+                      ? "text-orange-700 dark:text-orange-300"
+                      : "text-amber-700 dark:text-amber-300"
+                }`}
+              >
+                {budgetAlerts[budgetAlerts.length - 1].message}
+              </p>
+              <p
+                className={`text-xs mt-1 ${
+                  budgetAlerts[budgetAlerts.length - 1].status === "exceeded"
+                    ? "text-red-600 dark:text-red-400"
+                    : budgetAlerts[budgetAlerts.length - 1].status ===
+                        "critical"
+                      ? "text-orange-600 dark:text-orange-400"
+                      : "text-amber-600 dark:text-amber-400"
+                }`}
+              >
+                {budgetAlerts[budgetAlerts.length - 1].entityType}:{" "}
+                {budgetAlerts[budgetAlerts.length - 1].percentUsed}% used
+              </p>
+            </div>
+            <button
+              onClick={clearBudgetAlerts}
+              className={`${
+                budgetAlerts[budgetAlerts.length - 1].status === "exceeded"
+                  ? "text-red-500 hover:text-red-700 dark:hover:text-red-300"
+                  : budgetAlerts[budgetAlerts.length - 1].status === "critical"
+                    ? "text-orange-500 hover:text-orange-700 dark:hover:text-orange-300"
+                    : "text-amber-500 hover:text-amber-700 dark:hover:text-amber-300"
+              }`}
+              aria-label="Dismiss alert"
+            >
+              <X size={16} />
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* User Budget Progress Bar (from Cost Tracking WebSocket) */}
+      {enableRealtime && userBudget && (
+        <div
+          data-testid="budget-progress-bar"
+          className="mx-6 mt-4 p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg"
+        >
+          <div className="flex items-center justify-between mb-2">
+            <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300">
+              Your Budget
+            </h3>
+            <span className="text-sm text-gray-500 dark:text-gray-400">
+              ${userBudget.remaining.toFixed(2)} remaining
+            </span>
+          </div>
+          <div className="relative h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+            <div
+              className={`absolute left-0 top-0 h-full rounded-full transition-all ${
+                (userBudget.current_usage / userBudget.budget_limit) * 100 >= 90
+                  ? "bg-red-500"
+                  : (userBudget.current_usage / userBudget.budget_limit) *
+                        100 >=
+                      75
+                    ? "bg-amber-500"
+                    : "bg-blue-500"
+              }`}
+              style={{
+                width: `${Math.min(100, (userBudget.current_usage / userBudget.budget_limit) * 100)}%`,
+              }}
+            />
+          </div>
+          <div className="flex items-center justify-between mt-2 text-xs text-gray-500 dark:text-gray-400">
+            <span>${userBudget.current_usage.toFixed(2)} used</span>
+            <span>${userBudget.budget_limit.toFixed(2)} limit</span>
           </div>
         </div>
       )}

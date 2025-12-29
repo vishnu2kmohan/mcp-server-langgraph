@@ -39,6 +39,14 @@ vi.mock("../api", () => ({
     isLoading: false,
     refetch: vi.fn(),
   })),
+  useGetBudgetStatusQuery: vi.fn(() => ({
+    data: null,
+    isLoading: false,
+  })),
+  useGetCostForecastQuery: vi.fn(() => ({
+    data: null,
+    isLoading: false,
+  })),
 }));
 
 // Mock useCostTrackingWebSocket
@@ -63,6 +71,37 @@ vi.mock("../hooks/useCostTrackingWebSocket", () => ({
     clearBudgetWarnings: mockClearBudgetWarnings,
     disconnect: vi.fn(),
     reconnect: vi.fn(),
+  })),
+}));
+
+// Mock useBudgetAlertsWebSocket
+const mockSubscribeToAll = vi.fn();
+const mockClearAlerts = vi.fn();
+
+vi.mock("../hooks/useBudgetAlertsWebSocket", () => ({
+  useBudgetAlertsWebSocket: vi.fn(() => ({
+    status: "connected" as const,
+    alerts: [],
+    isSubscribed: true,
+    subscribedEntityIds: [],
+    isSubscribedToAll: true,
+    subscribeToEntities: vi.fn(),
+    subscribeToAll: mockSubscribeToAll,
+    unsubscribe: vi.fn(),
+    clearAlerts: mockClearAlerts,
+    disconnect: vi.fn(),
+    reconnect: vi.fn(),
+  })),
+}));
+
+// Mock PersonaContext
+vi.mock("../persona/PersonaContext", () => ({
+  usePersonaContext: vi.fn(() => ({
+    isAdmin: false,
+    currentPersona: "user",
+    personaId: "user-1",
+    permissions: [],
+    hasPermission: vi.fn(() => false),
   })),
 }));
 
@@ -312,6 +351,70 @@ describe("CostPage Real-time Integration", () => {
       // Base functionality should work
       await waitFor(() => {
         expect(screen.getByText("Cost Dashboard")).toBeInTheDocument();
+      });
+    });
+  });
+
+  describe("Budget Alerts WebSocket Integration", () => {
+    it("should integrate useBudgetAlertsWebSocket for comprehensive budget monitoring", async () => {
+      const { useBudgetAlertsWebSocket } =
+        await import("../hooks/useBudgetAlertsWebSocket");
+
+      // Verify the hook is called when CostPage mounts
+      const store = createMockStore();
+
+      render(
+        <Provider store={store}>
+          <CostPage />
+        </Provider>,
+      );
+
+      await waitFor(() => {
+        expect(useBudgetAlertsWebSocket).toHaveBeenCalled();
+      });
+    });
+
+    it("should display alerts from useBudgetAlertsWebSocket", async () => {
+      const { useBudgetAlertsWebSocket } =
+        await import("../hooks/useBudgetAlertsWebSocket");
+      vi.mocked(useBudgetAlertsWebSocket).mockReturnValue({
+        status: "connected" as const,
+        alerts: [
+          {
+            entityType: "organization",
+            entityId: "org-1",
+            status: "critical" as const,
+            percentUsed: 95,
+            currentSpend: "950",
+            remaining: "50",
+            monthlyLimitUsd: "1000",
+            message: "Organization budget at 95% - critical threshold",
+          },
+        ],
+        isSubscribed: true,
+        subscribedEntityIds: [],
+        isSubscribedToAll: true,
+        subscribeToEntities: vi.fn(),
+        subscribeToAll: mockSubscribeToAll,
+        unsubscribe: vi.fn(),
+        clearAlerts: mockClearAlerts,
+        disconnect: vi.fn(),
+        reconnect: vi.fn(),
+      });
+
+      const store = createMockStore();
+
+      render(
+        <Provider store={store}>
+          <CostPage />
+        </Provider>,
+      );
+
+      await waitFor(() => {
+        // Should display the budget alert from useBudgetAlertsWebSocket
+        expect(
+          screen.getByText(/Organization budget at 95%/i),
+        ).toBeInTheDocument();
       });
     });
   });
