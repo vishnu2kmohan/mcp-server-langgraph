@@ -144,6 +144,45 @@ describe("useMCPConnection", () => {
     });
   });
 
+  describe("Protocol Version in URL", () => {
+    it("should append protocol version as query parameter", async () => {
+      const { result } = renderHook(() => useMCPConnection());
+
+      await act(async () => {
+        result.current.connect();
+      });
+
+      expect(mockWebSocket?.url).toContain("v=");
+      expect(mockWebSocket?.url).toMatch(/v=\d+\.\d+\.\d+/);
+    });
+
+    it("should preserve session parameter when adding version", async () => {
+      const { result } = renderHook(() =>
+        useMCPConnection({ sessionId: "test-session-123" }),
+      );
+
+      await act(async () => {
+        result.current.connect();
+      });
+
+      expect(mockWebSocket?.url).toContain("session=test-session-123");
+      expect(mockWebSocket?.url).toContain("v=");
+    });
+
+    it("should use ampersand for version when session exists", async () => {
+      const { result } = renderHook(() =>
+        useMCPConnection({ sessionId: "test-session" }),
+      );
+
+      await act(async () => {
+        result.current.connect();
+      });
+
+      // URL should have session first, then version
+      expect(mockWebSocket?.url).toMatch(/\?session=test-session&v=/);
+    });
+  });
+
   describe("Authentication", () => {
     it("should use authenticatedFetch for REST fallback", async () => {
       const { result } = renderHook(() => useMCPConnection());

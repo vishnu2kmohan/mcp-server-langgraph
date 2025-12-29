@@ -161,6 +161,58 @@ describe("useRealtimeSync", () => {
     });
   });
 
+  describe("Protocol Version in URL", () => {
+    it("should append protocol version as query parameter", async () => {
+      mockEnsureValidTokenForWebSocket.mockResolvedValue(true);
+
+      renderHook(() => useRealtimeSync({ url: "ws://test.com/realtime" }));
+
+      await waitForTokenValidation();
+      const ws = MockWebSocket.getLastInstance();
+
+      expect(ws?.url).toContain("v=");
+      expect(ws?.url).toMatch(/v=\d+\.\d+\.\d+/);
+    });
+
+    it("should preserve existing query parameters", async () => {
+      mockEnsureValidTokenForWebSocket.mockResolvedValue(true);
+
+      renderHook(() =>
+        useRealtimeSync({ url: "ws://test.com/realtime?token=abc123" }),
+      );
+
+      await waitForTokenValidation();
+      const ws = MockWebSocket.getLastInstance();
+
+      expect(ws?.url).toContain("token=abc123");
+      expect(ws?.url).toContain("v=");
+    });
+
+    it("should use ampersand for version param when URL has existing params", async () => {
+      mockEnsureValidTokenForWebSocket.mockResolvedValue(true);
+
+      renderHook(() =>
+        useRealtimeSync({ url: "ws://test.com/realtime?existing=param" }),
+      );
+
+      await waitForTokenValidation();
+      const ws = MockWebSocket.getLastInstance();
+
+      expect(ws?.url).toMatch(/\?existing=param&v=/);
+    });
+
+    it("should use question mark for version param when URL has no params", async () => {
+      mockEnsureValidTokenForWebSocket.mockResolvedValue(true);
+
+      renderHook(() => useRealtimeSync({ url: "ws://test.com/realtime" }));
+
+      await waitForTokenValidation();
+      const ws = MockWebSocket.getLastInstance();
+
+      expect(ws?.url).toMatch(/realtime\?v=/);
+    });
+  });
+
   describe("Message Handling", () => {
     it("should call onMessage with parsed JSON data", async () => {
       const onMessage = vi.fn();

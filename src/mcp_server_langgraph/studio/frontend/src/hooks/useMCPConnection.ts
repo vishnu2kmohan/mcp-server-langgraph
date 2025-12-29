@@ -19,6 +19,7 @@ import {
   WS_CLOSE_TOKEN_EXPIRED,
   ensureValidTokenForWebSocket,
 } from "../utils/websocketAuth";
+import { PROTOCOL_VERSION } from "../config/version";
 import { reportWebSocketMetrics } from "../utils/websocketTelemetry";
 import {
   createInitialReconnectionMetrics,
@@ -254,11 +255,13 @@ export function useMCPConnection(
       reconnectionStartTimeRef.current = Date.now();
     }
 
-    // Build WebSocket URL
+    // Build WebSocket URL with session and protocol version
     const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
     let wsUrl = `${protocol}//${window.location.host}/api/v1/ws/mcp`;
     if (sessionId) {
-      wsUrl += `?session=${sessionId}`;
+      wsUrl += `?session=${sessionId}&v=${PROTOCOL_VERSION}`;
+    } else {
+      wsUrl += `?v=${PROTOCOL_VERSION}`;
     }
 
     try {

@@ -18,6 +18,7 @@ import {
   WS_CLOSE_PROTOCOL_VERSION,
   ensureValidTokenForWebSocket,
 } from "../utils/websocketAuth";
+import { PROTOCOL_VERSION } from "../config/version";
 import {
   type ReconnectionMetrics,
   type ReconnectionAttempt,
@@ -104,6 +105,17 @@ export interface UseRealtimeSyncReturn {
 
 // Re-export metrics types for consumers
 export type { ReconnectionMetrics, ReconnectionAttempt };
+
+/**
+ * Append protocol version as query parameter to WebSocket URL.
+ *
+ * @param url - The base WebSocket URL
+ * @returns URL with protocol version query parameter (e.g., "ws://host/path?v=1.0.0")
+ */
+function appendProtocolVersion(url: string): string {
+  const separator = url.includes("?") ? "&" : "?";
+  return `${url}${separator}v=${PROTOCOL_VERSION}`;
+}
 
 /**
  * Real-time sync hook using WebSocket
@@ -379,7 +391,9 @@ export function useRealtimeSync(
     manualCloseRef.current = false;
     setStatus("connecting");
 
-    const ws = new WebSocket(url);
+    // Append protocol version to URL for server compatibility checking
+    const wsUrl = appendProtocolVersion(url);
+    const ws = new WebSocket(wsUrl);
     wsRef.current = ws;
 
     ws.onopen = () => {
