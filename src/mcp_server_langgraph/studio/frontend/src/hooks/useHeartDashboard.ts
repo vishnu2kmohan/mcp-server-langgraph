@@ -342,8 +342,9 @@ export function useHeartDashboard(
   }, []);
 
   // WebSocket connection (only when enableRealtime is true)
+  // Include auth token since backend requires authentication
   const websocketUrl = useMemo(
-    () => (enableRealtime && wsUrl ? buildWebSocketUrl(wsUrl) : ""),
+    () => (enableRealtime && wsUrl ? buildWebSocketUrl(wsUrl, {}, true) : ""),
     [enableRealtime, wsUrl],
   );
 

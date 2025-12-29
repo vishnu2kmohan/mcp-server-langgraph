@@ -166,6 +166,12 @@ export async function authenticatedFetch(
     }
   }
 
+  // Automatically add Content-Type: application/json for requests with JSON body
+  // This prevents 422 errors from FastAPI when Content-Type is missing
+  if (fetchOptions.body && !headers.has("Content-Type")) {
+    headers.set("Content-Type", "application/json");
+  }
+
   // Make the request
   const response = await fetch(url, {
     ...fetchOptions,

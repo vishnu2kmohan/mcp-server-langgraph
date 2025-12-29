@@ -175,9 +175,11 @@ export function useAIRealTimeSuggestions(
     setError(null);
   }, []);
 
-  // Build WebSocket URL with proper endpoint and user_id param
+  // Build WebSocket URL with proper endpoint and auth token
+  // NOTE: user_id is still passed as a fallback identifier but the JWT token
+  // (via includeAuthToken=true) is what the backend uses for authentication
   const wsUrl = enabled
-    ? buildWebSocketUrl(WS_ENDPOINTS.AI_SUGGESTIONS, { user_id: userId })
+    ? buildWebSocketUrl(WS_ENDPOINTS.AI_SUGGESTIONS, { user_id: userId }, true)
     : "";
 
   // Use the realtime sync hook

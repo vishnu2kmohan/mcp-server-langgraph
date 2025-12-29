@@ -187,7 +187,8 @@ export function useConnectionHealth(
     }
 
     // Use standardized WebSocket URL (ADR-0068 consolidated WebSocket URLs)
-    const url = buildWebSocketUrl(WS_ENDPOINTS.CONNECTIONS_HEALTH);
+    // Include auth token since backend requires authentication
+    const url = buildWebSocketUrl(WS_ENDPOINTS.CONNECTIONS_HEALTH, {}, true);
 
     const ws = new WebSocket(url);
     wsRef.current = ws;

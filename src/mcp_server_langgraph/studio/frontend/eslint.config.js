@@ -80,6 +80,16 @@ export default tseslint.config(
             'Use the storage utility from utils/storage.ts instead for consistent storage abstraction.',
         },
       ],
+      // Enforce explicit includeAuthToken parameter in buildWebSocketUrl calls
+      // Backend endpoints with require_auth=True need the token, defaulting to false causes auth failures
+      'no-restricted-syntax': [
+        'warn',
+        {
+          selector: 'CallExpression[callee.name="buildWebSocketUrl"][arguments.length<3]',
+          message:
+            'buildWebSocketUrl should explicitly set includeAuthToken (3rd param). Most endpoints require auth (require_auth=True in ws_router.py). Use buildWebSocketUrl(endpoint, params, true) for authenticated endpoints.',
+        },
+      ],
     },
   },
   // Override for storage utility - it legitimately needs direct localStorage access
@@ -94,6 +104,15 @@ export default tseslint.config(
     files: ['**/*.test.ts', '**/*.test.tsx', '**/*.spec.ts', '**/*.spec.tsx'],
     rules: {
       'no-restricted-globals': 'off',
+      // Tests may intentionally test buildWebSocketUrl with various argument counts
+      'no-restricted-syntax': 'off',
+    },
+  },
+  // Override for websocket utility - it defines buildWebSocketUrl and uses it internally
+  {
+    files: ['**/utils/websocket.ts'],
+    rules: {
+      'no-restricted-syntax': 'off',
     },
   },
 );
