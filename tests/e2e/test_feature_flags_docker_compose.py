@@ -17,6 +17,8 @@ from pathlib import Path
 
 import pytest
 
+from tests.helpers.path_helpers import get_repo_root
+
 # Module-level pytest marker
 pytestmark = pytest.mark.e2e
 
@@ -24,7 +26,7 @@ pytestmark = pytest.mark.e2e
 # Test Configuration
 # =============================================================================
 
-PROJECT_ROOT = Path(__file__).parent.parent.parent
+PROJECT_ROOT = get_repo_root()
 ENV_TEST_FILE = PROJECT_ROOT / ".env.test"
 DOCKER_COMPOSE_FILE = PROJECT_ROOT / "docker-compose.test.yml"
 
