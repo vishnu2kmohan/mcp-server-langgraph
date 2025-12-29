@@ -12,7 +12,10 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { renderHook, act } from "@testing-library/react";
 import { useRealtimeSync } from "./useRealtimeSync";
-import { WS_CLOSE_TOKEN_EXPIRED } from "../utils/websocketAuth";
+import {
+  WS_CLOSE_TOKEN_EXPIRED,
+  WS_CLOSE_PROTOCOL_VERSION,
+} from "../utils/websocketAuth";
 
 // Mock websocketAuth
 const mockEnsureValidTokenForWebSocket = vi.fn();
@@ -1304,6 +1307,151 @@ describe("useRealtimeSync", () => {
 
       expect(result.current.metrics.avgReconnectionDurationMs).not.toBeNull();
       expect(result.current.metrics.totalReconnectionTimeMs).toBeGreaterThan(0);
+    });
+  });
+
+  describe("Protocol Version Mismatch Handling (4009)", () => {
+    it("should NOT attempt reconnection on close code 4009", async () => {
+      mockEnsureValidTokenForWebSocket.mockResolvedValue(true);
+
+      const { result } = renderHook(() =>
+        useRealtimeSync({
+          url: "ws://test.com",
+          reconnectInterval: 100,
+          maxReconnectAttempts: 5,
+        }),
+      );
+
+      await waitForTokenValidation();
+      const ws = MockWebSocket.getLastInstance();
+      await act(async () => {
+        ws?.simulateOpen();
+      });
+
+      expect(result.current.status).toBe("connected");
+      const instanceCountBefore = MockWebSocket.instances.length;
+
+      // Simulate protocol version mismatch close
+      await act(async () => {
+        ws?.simulateClose(WS_CLOSE_PROTOCOL_VERSION);
+      });
+
+      // Should NOT have created a new WebSocket connection
+      expect(MockWebSocket.instances.length).toBe(instanceCountBefore);
+
+      // Should NOT be in reconnecting state
+      expect(result.current.status).not.toBe("reconnecting");
+
+      // Wait for what would be reconnection time
+      await act(async () => {
+        vi.advanceTimersByTime(1000);
+      });
+
+      // Still should not have reconnected
+      expect(MockWebSocket.instances.length).toBe(instanceCountBefore);
+    });
+
+    it("should set status to error on close code 4009", async () => {
+      mockEnsureValidTokenForWebSocket.mockResolvedValue(true);
+
+      const { result } = renderHook(() =>
+        useRealtimeSync({
+          url: "ws://test.com",
+        }),
+      );
+
+      await waitForTokenValidation();
+      const ws = MockWebSocket.getLastInstance();
+      await act(async () => {
+        ws?.simulateOpen();
+      });
+
+      // Simulate protocol version mismatch close
+      await act(async () => {
+        ws?.simulateClose(WS_CLOSE_PROTOCOL_VERSION);
+      });
+
+      // Should be in error state (not disconnected - indicates action needed)
+      expect(result.current.status).toBe("error");
+    });
+
+    it("should call onProtocolVersionMismatch callback on 4009", async () => {
+      mockEnsureValidTokenForWebSocket.mockResolvedValue(true);
+      const onProtocolVersionMismatch = vi.fn();
+      const onDisconnect = vi.fn();
+
+      renderHook(() =>
+        useRealtimeSync({
+          url: "ws://test.com",
+          onProtocolVersionMismatch,
+          onDisconnect,
+        }),
+      );
+
+      await waitForTokenValidation();
+      const ws = MockWebSocket.getLastInstance();
+      await act(async () => {
+        ws?.simulateOpen();
+      });
+
+      // Simulate protocol version mismatch close
+      await act(async () => {
+        ws?.simulateClose(WS_CLOSE_PROTOCOL_VERSION);
+      });
+
+      expect(onProtocolVersionMismatch).toHaveBeenCalledTimes(1);
+      // onDisconnect should also be called
+      expect(onDisconnect).toHaveBeenCalledTimes(1);
+    });
+
+    it("should track protocol_version_mismatch in failure metrics", async () => {
+      mockEnsureValidTokenForWebSocket.mockResolvedValue(true);
+
+      const { result } = renderHook(() =>
+        useRealtimeSync({
+          url: "ws://test.com",
+        }),
+      );
+
+      await waitForTokenValidation();
+      const ws = MockWebSocket.getLastInstance();
+      await act(async () => {
+        ws?.simulateOpen();
+      });
+
+      // Simulate protocol version mismatch close
+      await act(async () => {
+        ws?.simulateClose(WS_CLOSE_PROTOCOL_VERSION);
+      });
+
+      expect(
+        result.current.metrics.failuresByReason.protocol_version_mismatch,
+      ).toBe(1);
+    });
+
+    it("should not count 4009 as a normal reconnection attempt", async () => {
+      mockEnsureValidTokenForWebSocket.mockResolvedValue(true);
+
+      const { result } = renderHook(() =>
+        useRealtimeSync({
+          url: "ws://test.com",
+          maxReconnectAttempts: 5,
+        }),
+      );
+
+      await waitForTokenValidation();
+      const ws = MockWebSocket.getLastInstance();
+      await act(async () => {
+        ws?.simulateOpen();
+      });
+
+      // Simulate protocol version mismatch close
+      await act(async () => {
+        ws?.simulateClose(WS_CLOSE_PROTOCOL_VERSION);
+      });
+
+      // Should not have incremented reconnect attempts (not applicable for 4009)
+      expect(result.current.reconnectAttempts).toBe(0);
     });
   });
 });

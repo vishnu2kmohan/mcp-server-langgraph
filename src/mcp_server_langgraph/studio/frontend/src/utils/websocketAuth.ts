@@ -32,6 +32,20 @@ import { refreshAccessToken } from "./authenticatedFetch";
 export const WS_CLOSE_TOKEN_EXPIRED = 4010;
 
 /**
+ * WebSocket close code for protocol version mismatch.
+ *
+ * When backend detects client's protocol version is incompatible with server,
+ * it closes the connection with this code. Frontend should:
+ * 1. Show user-friendly message indicating client needs update
+ * 2. NOT attempt to reconnect (version mismatch is not recoverable)
+ * 3. Suggest refreshing the page or updating the application
+ *
+ * This code indicates a breaking change between client and server versions.
+ * Major version differences (e.g., v1.x vs v2.x) are considered incompatible.
+ */
+export const WS_CLOSE_PROTOCOL_VERSION = 4009;
+
+/**
  * Buffer time before token expiration to consider as "expiring soon".
  * Matches TOKEN_REFRESH_BUFFER_MS in authSlice.ts (5 minutes).
  */
@@ -142,9 +156,26 @@ export async function ensureValidTokenForWebSocket(): Promise<boolean> {
   return true;
 }
 
+/**
+ * Standard notification payload for protocol version mismatch.
+ * Use this with your notification dispatch to show a consistent message.
+ */
+export const PROTOCOL_VERSION_MISMATCH_NOTIFICATION = {
+  type: "error" as const,
+  title: "Application Update Required",
+  message:
+    "Your application version is incompatible with the server. Please refresh the page to get the latest version.",
+  action: {
+    label: "Refresh",
+    onClick: () => window.location.reload(),
+  },
+};
+
 export default {
   WS_CLOSE_TOKEN_EXPIRED,
+  WS_CLOSE_PROTOCOL_VERSION,
   isTokenExpiringSoon,
   ensureValidTokenForWebSocket,
   resetWebSocketAuthState,
+  PROTOCOL_VERSION_MISMATCH_NOTIFICATION,
 };

@@ -49,11 +49,13 @@ import { saveCurrentRouteAsIntended } from "../utils/intendedRoute";
 import { useRealtimeSync } from "./useRealtimeSync";
 import { useAppDispatch } from "../store/hooks";
 import { logout } from "../store/slices/authSlice";
+import { addNotification } from "../store/slices/notificationSlice";
 import type {
   HeartMetricsSnapshot,
   ThresholdAlert,
   DimensionMetrics,
 } from "./useHeartMetricsWebSocket";
+import { PROTOCOL_VERSION_MISMATCH_NOTIFICATION } from "../utils/websocketAuth";
 
 // =============================================================================
 // Local Types for WebSocket dimension data
@@ -358,6 +360,9 @@ export function useHeartDashboard(
       maxDelayMs: 30000,
       maxReconnectAttempts: 10,
       onTokenExpired: () => dispatch(logout()),
+      onProtocolVersionMismatch: () => {
+        dispatch(addNotification(PROTOCOL_VERSION_MISMATCH_NOTIFICATION));
+      },
     }),
     [enableRealtime, websocketUrl, handleMessage, dispatch],
   );

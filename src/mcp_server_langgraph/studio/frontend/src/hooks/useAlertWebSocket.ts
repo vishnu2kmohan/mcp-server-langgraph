@@ -22,9 +22,11 @@ import {
   selectIsInitializing,
 } from "../store/slices/authSlice";
 import { addAlert, type Alert } from "../store/slices/alertSlice";
+import { addNotification } from "../store/slices/notificationSlice";
 import { useRealtimeSync, type ConnectionStatus } from "./useRealtimeSync";
 import { buildWebSocketUrl, WS_ENDPOINTS } from "../utils/websocket";
 import { reportWebSocketMetrics } from "../utils/websocketTelemetry";
+import { PROTOCOL_VERSION_MISMATCH_NOTIFICATION } from "../utils/websocketAuth";
 
 // =============================================================================
 // Types
@@ -247,6 +249,9 @@ export function useAlertWebSocket(
     backoffMultiplier: 2, // Double delay each attempt
     onMessage: handleMessage,
     onTokenExpired: () => dispatch(logout()),
+    onProtocolVersionMismatch: () => {
+      dispatch(addNotification(PROTOCOL_VERSION_MISMATCH_NOTIFICATION));
+    },
   });
 
   // Track if enabled - if not auth-ready or explicitly disabled, override status

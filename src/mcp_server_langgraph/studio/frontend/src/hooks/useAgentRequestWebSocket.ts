@@ -19,12 +19,12 @@
 import { useEffect, useCallback, useMemo, useRef, useState } from "react";
 import { useAppDispatch, useAppSelector } from "../store/hooks";
 import { logout, selectIsAuthenticated } from "../store/slices/authSlice";
+import { addNotification } from "../store/slices/notificationSlice";
 import { buildWebSocketUrl, WS_ENDPOINTS } from "../utils/websocket";
-import {
-  WS_CLOSE_TOKEN_EXPIRED,
-  ensureValidTokenForWebSocket,
-} from "../utils/websocketAuth";
+import { PROTOCOL_VERSION_MISMATCH_NOTIFICATION } from "../utils/websocketAuth";
 import { devLogger } from "../utils/devLogger";
+import { useRealtimeSync, type ConnectionStatus } from "./useRealtimeSync";
+import { reportWebSocketMetrics } from "../utils/websocketTelemetry";
 import type {
   ApprovalRequiredPayload,
   ClarificationRequiredPayload,
@@ -43,11 +43,8 @@ export type {
   ClarificationRequiredPayload,
 } from "../types/hitl";
 
-export type ConnectionStatus =
-  | "connecting"
-  | "connected"
-  | "disconnected"
-  | "error";
+// Re-export ConnectionStatus from useRealtimeSync for backwards compatibility
+export type { ConnectionStatus } from "./useRealtimeSync";
 
 // Note: ApprovalUpdatedPayload and ExecutionResumedPayload are WebSocket-specific
 // and not in the canonical hitl.ts types (they represent server-to-client events)
@@ -257,7 +254,6 @@ export function useAgentRequestWebSocket(
   const dispatch = useAppDispatch();
 
   const isAuthenticated = useAppSelector(selectIsAuthenticated);
-  const [status, setStatus] = useState<ConnectionStatus>("disconnected");
   const [pendingApprovals, setPendingApprovals] = useState<
     ApprovalRequiredPayload[]
   >([]);
@@ -265,17 +261,13 @@ export function useAgentRequestWebSocket(
     ClarificationRequiredPayload[]
   >([]);
 
-  const wsRef = useRef<WebSocket | null>(null);
-  const pingIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const reconnectTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
-    null,
-  );
-  const isReconnectRef = useRef(false);
-  const manualCloseRef = useRef(false);
+  // Refs for session tracking and ping interval
   const sessionIdRef = useRef(sessionId);
   sessionIdRef.current = sessionId;
+  const pingIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const sendRef = useRef<(data: unknown) => void>(() => {});
 
-  // Store callbacks in refs to avoid reconnecting on callback change
+  // Store callbacks in refs to avoid stale closures
   const callbacksRef = useRef({
     onApprovalRequired,
     onClarificationRequired,
@@ -291,10 +283,13 @@ export function useAgentRequestWebSocket(
 
   // Compute WebSocket URL - recalculates when auth state changes
   // The buildWebSocketUrl utility fetches the auth token internally when includeAuthToken=true
+  // Pass empty string when not authenticated to prevent connection attempt
   const wsUrl = useMemo(
     () =>
-      url ??
-      getDefaultWebSocketUrl(sessionId, isAuthenticated /* includeAuthToken */),
+      isAuthenticated
+        ? (url ??
+          getDefaultWebSocketUrl(sessionId, true /* includeAuthToken */))
+        : "",
     [url, sessionId, isAuthenticated],
   );
 
@@ -302,241 +297,148 @@ export function useAgentRequestWebSocket(
   // WebSocket requires valid auth token, so we only connect when authenticated
   const effectiveEnabled = enabled && isAuthenticated;
 
-  // Track previous effective enabled state to detect changes
-  // Initialize to undefined to detect first render
-  const prevEnabledRef = useRef<boolean | undefined>(undefined);
+  // Handle incoming messages (receives parsed data from useRealtimeSync)
+  const handleMessage = useCallback((data: unknown) => {
+    const message = parseAgentRequestMessage(data);
 
-  // Handle incoming messages
-  const handleMessage = useCallback((event: MessageEvent) => {
-    try {
-      const data = JSON.parse(event.data);
-      const message = parseAgentRequestMessage(data);
+    if (!message) {
+      return;
+    }
 
-      if (!message) {
-        return;
-      }
+    switch (message.type) {
+      case "approval_required":
+        setPendingApprovals((prev) => [...prev, message.payload]);
+        callbacksRef.current.onApprovalRequired?.(message.payload);
+        break;
 
-      switch (message.type) {
-        case "approval_required":
-          setPendingApprovals((prev) => [...prev, message.payload]);
-          callbacksRef.current.onApprovalRequired?.(message.payload);
-          break;
+      case "clarification_required":
+        setPendingClarifications((prev) => [...prev, message.payload]);
+        callbacksRef.current.onClarificationRequired?.(message.payload);
+        break;
 
-        case "clarification_required":
-          setPendingClarifications((prev) => [...prev, message.payload]);
-          callbacksRef.current.onClarificationRequired?.(message.payload);
-          break;
+      case "approval_updated":
+        // Remove from pending
+        setPendingApprovals((prev) =>
+          prev.filter((a) => a.request_id !== message.payload.request_id),
+        );
+        callbacksRef.current.onApprovalUpdated?.(message.payload);
+        break;
 
-        case "approval_updated":
-          // Remove from pending
-          setPendingApprovals((prev) =>
-            prev.filter((a) => a.request_id !== message.payload.request_id),
-          );
-          callbacksRef.current.onApprovalUpdated?.(message.payload);
-          break;
+      case "execution_resumed":
+        callbacksRef.current.onExecutionResumed?.(message.payload);
+        break;
 
-        case "execution_resumed":
-          callbacksRef.current.onExecutionResumed?.(message.payload);
-          break;
+      case "pong":
+        // Keepalive response - no action needed
+        break;
 
-        case "pong":
-          // Keepalive response - no action needed
-          break;
-
-        case "error":
-          logger.error("Error:", message.payload.message);
-          break;
-      }
-    } catch (err) {
-      logger.error("Failed to parse message:", err);
+      case "error":
+        logger.error("Error:", message.payload.message);
+        break;
     }
   }, []);
 
-  // Start ping interval
-  const startPingInterval = useCallback(() => {
+  // Handle connection established - send subscribe message and start ping
+  const handleConnect = useCallback(() => {
+    // Send subscribe message if sessionId is provided
+    if (sessionIdRef.current) {
+      sendRef.current({
+        type: "subscribe",
+        session_id: sessionIdRef.current,
+      });
+    }
+
+    // Request pending items to sync state on connect/reconnect
+    sendRef.current({ type: "get_pending" });
+
+    // Start ping interval for keepalive
     if (pingIntervalRef.current) {
       clearInterval(pingIntervalRef.current);
     }
-
     pingIntervalRef.current = setInterval(() => {
-      if (wsRef.current?.readyState === WebSocket.OPEN) {
-        wsRef.current.send(JSON.stringify({ type: "ping" }));
-      }
+      sendRef.current({ type: "ping" });
     }, pingInterval);
   }, [pingInterval]);
 
-  // Stop ping interval
-  const stopPingInterval = useCallback(() => {
+  // Handle disconnection - clean up ping interval
+  const handleDisconnect = useCallback(() => {
     if (pingIntervalRef.current) {
       clearInterval(pingIntervalRef.current);
       pingIntervalRef.current = null;
     }
   }, []);
 
-  // Connect to WebSocket
-  const connect = useCallback(() => {
-    if (wsRef.current?.readyState === WebSocket.OPEN) {
-      return;
-    }
+  // Use the underlying realtimeSync hook with exponential backoff
+  const {
+    status: realtimeStatus,
+    send,
+    disconnect: realtimeDisconnect,
+    reconnect: realtimeReconnect,
+    metrics,
+  } = useRealtimeSync({
+    url: wsUrl,
+    onMessage: handleMessage,
+    onConnect: handleConnect,
+    onDisconnect: handleDisconnect,
+    exponentialBackoff: true,
+    reconnectInterval: 1000,
+    maxDelayMs: 30000,
+    maxReconnectAttempts: 10,
+    onTokenExpired: () => dispatch(logout()),
+    onProtocolVersionMismatch: () => {
+      dispatch(addNotification(PROTOCOL_VERSION_MISMATCH_NOTIFICATION));
+    },
+  });
 
-    // Clean up existing connection without triggering onclose
-    if (wsRef.current) {
-      wsRef.current.onclose = null;
-      wsRef.current.close();
-    }
+  // Keep sendRef in sync for use in handleConnect
+  sendRef.current = send;
 
-    manualCloseRef.current = false;
-    setStatus("connecting");
-
-    try {
-      const ws = new WebSocket(wsUrl);
-
-      ws.onopen = () => {
-        setStatus("connected");
-        startPingInterval();
-
-        // Send subscribe message if sessionId is provided
-        if (sessionIdRef.current) {
-          ws.send(
-            JSON.stringify({
-              type: "subscribe",
-              session_id: sessionIdRef.current,
-            }),
-          );
-        }
-
-        // On reconnect, request pending items to sync state
-        if (isReconnectRef.current) {
-          ws.send(JSON.stringify({ type: "get_pending" }));
-        }
-      };
-
-      ws.onclose = async (event) => {
-        stopPingInterval();
-
-        // Handle token expiration close code (4010)
-        if (event.code === WS_CLOSE_TOKEN_EXPIRED) {
-          logger.warn("Token expired, attempting refresh...");
-          const refreshed = await ensureValidTokenForWebSocket();
-          if (refreshed) {
-            // Token refreshed successfully - reconnect
-            logger.log("Token refreshed, reconnecting...");
-            isReconnectRef.current = true;
-            // Small delay before reconnecting
-            reconnectTimeoutRef.current = setTimeout(() => {
-              connect();
-            }, 100);
-          } else {
-            // Refresh failed - logout
-            logger.error("Token refresh failed, logging out...");
-            dispatch(logout());
-          }
-          return;
-        }
-
-        // Only set status if not a manual/cleanup close
-        if (!manualCloseRef.current) {
-          setStatus("disconnected");
-        }
-      };
-
-      ws.onerror = () => {
-        setStatus("error");
-        stopPingInterval();
-      };
-
-      ws.onmessage = handleMessage;
-
-      wsRef.current = ws;
-    } catch (err) {
-      logger.error("Failed to connect:", err);
-      setStatus("error");
-    }
-  }, [wsUrl, handleMessage, startPingInterval, stopPingInterval, dispatch]);
-
-  // Disconnect from WebSocket
-  const disconnect = useCallback(() => {
-    manualCloseRef.current = true;
-
-    if (reconnectTimeoutRef.current) {
-      clearTimeout(reconnectTimeoutRef.current);
-      reconnectTimeoutRef.current = null;
-    }
-
-    stopPingInterval();
-
-    if (wsRef.current) {
-      wsRef.current.close();
-      wsRef.current = null;
-    }
-
-    // Status will be set by onclose handler (but blocked by manualCloseRef)
-    // For explicit disconnect calls, we still want to show disconnected status
-    setStatus("disconnected");
-  }, [stopPingInterval]);
-
-  // Reconnect to WebSocket
-  const reconnect = useCallback(() => {
-    disconnect();
-    // Mark as reconnection to trigger get_pending on connect
-    isReconnectRef.current = true;
-    // Small delay before reconnecting
-    reconnectTimeoutRef.current = setTimeout(() => {
-      connect();
-    }, 100);
-  }, [disconnect, connect]);
-
-  // Connect on mount, disconnect on unmount
-  // Handle auth state transitions to reconnect when user authenticates
+  // Report WebSocket metrics for observability
   useEffect(() => {
-    const isFirstRender = prevEnabledRef.current === undefined;
-    const wasEnabled = prevEnabledRef.current === true;
+    if (effectiveEnabled && metrics.totalAttempts > 0) {
+      reportWebSocketMetrics("agent_requests", metrics);
+    }
+  }, [effectiveEnabled, metrics]);
+
+  // Determine effective status - override to disconnected if not enabled
+  const status: ConnectionStatus = effectiveEnabled
+    ? realtimeStatus
+    : "disconnected";
+
+  // Track previous effective enabled state to detect changes
+  const prevEnabledRef = useRef(effectiveEnabled);
+
+  // Handle enable/disable state transitions
+  useEffect(() => {
+    const wasDisabled = !prevEnabledRef.current;
     const isNowEnabled = effectiveEnabled;
 
-    if (!isNowEnabled) {
-      // Currently disabled - disconnect if we were previously enabled
-      if (wasEnabled) {
-        manualCloseRef.current = true;
-        if (reconnectTimeoutRef.current) {
-          clearTimeout(reconnectTimeoutRef.current);
-          reconnectTimeoutRef.current = null;
-        }
-        stopPingInterval();
-        if (wsRef.current) {
-          wsRef.current.close();
-          wsRef.current = null;
-        }
-        setStatus("disconnected");
-      }
-    } else if (isFirstRender || (!wasEnabled && isNowEnabled)) {
-      // First render with enabled=true, OR transitioning from disabled to enabled
-      connect();
+    if (!effectiveEnabled) {
+      // Currently disabled - disconnect
+      realtimeDisconnect();
+    } else if (wasDisabled && isNowEnabled) {
+      // Transitioning from disabled to enabled - reconnect
+      realtimeReconnect();
     }
 
     prevEnabledRef.current = effectiveEnabled;
+  }, [effectiveEnabled, realtimeDisconnect, realtimeReconnect]);
 
-    // Cleanup on unmount - close WebSocket without triggering status updates
+  // Clean up ping interval on unmount
+  useEffect(() => {
     return () => {
-      manualCloseRef.current = true;
-      if (reconnectTimeoutRef.current) {
-        clearTimeout(reconnectTimeoutRef.current);
-        reconnectTimeoutRef.current = null;
-      }
-      stopPingInterval();
-      if (wsRef.current) {
-        // Set onclose to null before closing to prevent any state updates during unmount
-        wsRef.current.onclose = null;
-        wsRef.current.close();
-        wsRef.current = null;
+      if (pingIntervalRef.current) {
+        clearInterval(pingIntervalRef.current);
+        pingIntervalRef.current = null;
       }
     };
-  }, [effectiveEnabled, connect, stopPingInterval]);
+  }, []);
 
   return {
     status,
     pendingApprovals,
     pendingClarifications,
-    disconnect,
-    reconnect,
+    disconnect: realtimeDisconnect,
+    reconnect: realtimeReconnect,
   };
 }

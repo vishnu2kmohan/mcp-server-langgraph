@@ -43,8 +43,10 @@ from mcp_server_langgraph.websocket.authz import WebSocketAuthorizationMiddlewar
 from mcp_server_langgraph.websocket.exceptions import (
     AuthenticationError,
     AuthorizationError,
+    ProtocolVersionError,
     TokenExpiredError,
 )
+from mcp_server_langgraph.websocket.protocols import validate_protocol_version
 from mcp_server_langgraph.websocket.token_validation import is_token_expired
 from mcp_server_langgraph.websocket.heartbeat import HeartbeatManager
 from mcp_server_langgraph.websocket.types import (
@@ -241,6 +243,29 @@ class WebSocketBase(ABC):
                 # Record connection in metrics
                 if self._metrics:
                     self._metrics.record_connection()
+
+                # Validate protocol version if enabled
+                if self.config.validate_protocol_version:
+                    client_version = websocket.query_params.get("v")
+                    is_valid, error_msg = validate_protocol_version(client_version)
+                    if not is_valid:
+                        if self._metrics:
+                            self._metrics.record_connection_rejected(reason="protocol_version_mismatch")
+                        logger.warning(
+                            f"Protocol version mismatch: {error_msg}",
+                            extra={
+                                "endpoint": self.config.endpoint_name,
+                                "client_version": client_version,
+                            },
+                        )
+                        await self._close_with_error(
+                            websocket,
+                            ProtocolVersionError(
+                                message=error_msg,
+                                client_version=client_version,
+                            ),
+                        )
+                        return
 
                 # Authenticate
                 self._state = ConnectionState.AUTHENTICATING

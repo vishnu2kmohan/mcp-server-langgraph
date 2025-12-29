@@ -14,8 +14,10 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import { useAppDispatch, useAppSelector } from "../store/hooks";
 import { logout } from "../store/slices/authSlice";
+import { addNotification } from "../store/slices/notificationSlice";
 import { buildWebSocketUrl, WS_ENDPOINTS } from "../utils/websocket";
 import { useRealtimeSync } from "./useRealtimeSync";
+import { PROTOCOL_VERSION_MISMATCH_NOTIFICATION } from "../utils/websocketAuth";
 
 /** Suggestion type from the AI UX backend */
 export interface Suggestion {
@@ -191,6 +193,9 @@ export function useAIRealTimeSuggestions(
     onError: handleError,
     onConnect: handleConnect,
     onTokenExpired: () => dispatch(logout()),
+    onProtocolVersionMismatch: () => {
+      dispatch(addNotification(PROTOCOL_VERSION_MISMATCH_NOTIFICATION));
+    },
   });
 
   // Determine if connected

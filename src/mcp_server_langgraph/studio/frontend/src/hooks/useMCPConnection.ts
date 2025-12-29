@@ -19,6 +19,12 @@ import {
   WS_CLOSE_TOKEN_EXPIRED,
   ensureValidTokenForWebSocket,
 } from "../utils/websocketAuth";
+import { reportWebSocketMetrics } from "../utils/websocketTelemetry";
+import {
+  createInitialReconnectionMetrics,
+  type ReconnectionMetrics,
+  type ReconnectionAttempt,
+} from "../types/websocket-metrics";
 
 export interface Tool {
   name: string;
@@ -82,9 +88,86 @@ export function useMCPConnection(
   const inReconnectSequenceRef = useRef(false);
   const isMountedRef = useRef(true);
 
+  // Metrics tracking for observability
+  const metricsRef = useRef<ReconnectionMetrics>(
+    createInitialReconnectionMetrics(),
+  );
+  const reconnectionStartTimeRef = useRef<number | null>(null);
+  const reconnectionTimesRef = useRef<number[]>([]);
+
   const getNextMessageId = useCallback(() => {
     messageIdRef.current += 1;
     return messageIdRef.current;
+  }, []);
+
+  // Update and report metrics
+  const updateMetrics = useCallback((success: boolean, reason?: string) => {
+    const now = Date.now();
+    const metrics = metricsRef.current;
+
+    metrics.totalAttempts += 1;
+
+    // Calculate reconnection duration
+    let durationMs: number | null = null;
+    if (reconnectionStartTimeRef.current) {
+      durationMs = now - reconnectionStartTimeRef.current;
+    }
+
+    // Create attempt record
+    const attempt: ReconnectionAttempt = {
+      timestamp: now,
+      attemptNumber: metrics.totalAttempts,
+      succeeded: success,
+      durationMs,
+      failureReason: success
+        ? null
+        : ((reason as ReconnectionAttempt["failureReason"]) ?? "unknown"),
+      triggerCloseCode: null,
+    };
+
+    // Add to recent attempts (keep last 10)
+    metrics.recentAttempts.push(attempt);
+    if (metrics.recentAttempts.length > 10) {
+      metrics.recentAttempts.shift();
+    }
+
+    if (success) {
+      metrics.totalReconnections += 1;
+      metrics.lastReconnectionTime = now;
+      metrics.consecutiveFailures = 0;
+
+      // Calculate average reconnection duration
+      if (durationMs !== null) {
+        reconnectionTimesRef.current.push(durationMs);
+        // Keep only last 10 durations for average
+        if (reconnectionTimesRef.current.length > 10) {
+          reconnectionTimesRef.current.shift();
+        }
+        metrics.avgReconnectionDurationMs =
+          reconnectionTimesRef.current.reduce((a, b) => a + b, 0) /
+          reconnectionTimesRef.current.length;
+        metrics.totalReconnectionTimeMs += durationMs;
+        reconnectionStartTimeRef.current = null;
+      }
+    } else {
+      metrics.consecutiveFailures += 1;
+      if (reason) {
+        const failureKey = reason as keyof typeof metrics.failuresByReason;
+        metrics.failuresByReason[failureKey] =
+          (metrics.failuresByReason[failureKey] || 0) + 1;
+      }
+    }
+
+    // Calculate success rate
+    if (metrics.totalAttempts > 0) {
+      metrics.successRate =
+        (metrics.totalReconnections / metrics.totalAttempts) * 100;
+    }
+
+    // Report metrics
+    if (metrics.totalAttempts > 0) {
+      reportWebSocketMetrics("mcp_connection", metrics);
+    }
   }, []);
 
   // Handle auth failure - redirect to login
@@ -166,6 +249,11 @@ export function useMCPConnection(
     setError(null);
     manualDisconnectRef.current = false;
 
+    // Track reconnection attempt start time for metrics
+    if (inReconnectSequenceRef.current && !reconnectionStartTimeRef.current) {
+      reconnectionStartTimeRef.current = Date.now();
+    }
+
     // Build WebSocket URL
     const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
     let wsUrl = `${protocol}//${window.location.host}/api/v1/ws/mcp`;
@@ -178,6 +266,12 @@ export function useMCPConnection(
       wsRef.current = ws;
 
       ws.onopen = () => {
+        // Track successful reconnection for metrics
+        const wasReconnecting = inReconnectSequenceRef.current;
+        if (wasReconnecting) {
+          updateMetrics(true);
+        }
+
         wasConnectedRef.current = true;
         // Only update state if still mounted
         if (!isMountedRef.current) return;
@@ -262,6 +356,9 @@ export function useMCPConnection(
             inReconnectSequenceRef.current
           ) {
             // This is a failed reconnection attempt - increment counter
+            // Track failed attempt in metrics
+            updateMetrics(false, "handshake_failed");
+
             setReconnectAttempts((prev) => {
               const newAttempts = prev + 1;
               if (newAttempts < maxReconnectAttempts) {
@@ -275,6 +372,8 @@ export function useMCPConnection(
                 // Max attempts reached
                 inReconnectSequenceRef.current = false;
                 if (isMountedRef.current) setIsReconnecting(false);
+                // Reset reconnection start time since we're giving up
+                reconnectionStartTimeRef.current = null;
               }
               return newAttempts;
             });
@@ -310,6 +409,7 @@ export function useMCPConnection(
     autoReconnect,
     maxReconnectAttempts,
     dispatch,
+    updateMetrics,
   ]);
 
   const disconnect = useCallback(() => {

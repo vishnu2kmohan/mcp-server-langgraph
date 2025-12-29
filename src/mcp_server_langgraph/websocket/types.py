@@ -293,6 +293,9 @@ class WebSocketConfig:
     # Token validation
     token_validation_interval: int = 300  # Seconds between token expiration checks (5 min)
 
+    # Protocol version validation
+    validate_protocol_version: bool = True  # Validate client protocol version on connect
+
     # Metrics
     endpoint_name: str = "unknown"
     enable_tracing: bool = True  # Enable OpenTelemetry tracing

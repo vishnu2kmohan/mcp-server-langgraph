@@ -92,6 +92,10 @@ describe("websocket-metrics", () => {
       expect(classifyCloseCode(1015)).toBe("network_error");
     });
 
+    it("should classify code 4009 as protocol_version_mismatch", () => {
+      expect(classifyCloseCode(4009)).toBe("protocol_version_mismatch");
+    });
+
     it("should classify code 4010 as token_expired", () => {
       expect(classifyCloseCode(4010)).toBe("token_expired");
     });

@@ -4,15 +4,19 @@
  * WebSocket integration for DevTools console and network tabs.
  * Receives real-time log and network entries from the backend.
  *
- * Uses centralized WebSocket URL construction from @/utils/websocket
- * to ensure consistent URL building and authentication handling.
+ * Uses useRealtimeSync for centralized WebSocket management with:
+ * - Automatic reconnection with exponential backoff
+ * - Metrics reporting to websocketTelemetry
+ * - Consistent connection state management
  *
  * Uses typed protocols from @/types/websocket-protocols for type-safe
  * message handling and validation.
  */
 import { useState, useCallback, useEffect, useRef } from "react";
 
+import { useRealtimeSync } from "../../../hooks/useRealtimeSync";
 import { buildWebSocketUrl, WS_ENDPOINTS } from "../../../utils/websocket";
+import { reportWebSocketMetrics } from "../../../utils/websocketTelemetry";
 import type { ConsoleEntry, NetworkEntry } from "../types";
 
 // Import typed protocols for type-safe WebSocket message handling
@@ -72,6 +76,7 @@ export interface UseDevToolsWebSocketReturn {
 
 const DEFAULT_MAX_CONSOLE_ENTRIES = 1000;
 const DEFAULT_MAX_NETWORK_ENTRIES = 500;
+const ENDPOINT_NAME = "devtools";
 
 // Re-export protocol types for consumers (backwards compatibility)
 export type {
@@ -118,13 +123,16 @@ export function useDevToolsWebSocket(
     contextEntityId,
   } = options;
 
-  const [status, setStatus] = useState<DevToolsWebSocketStatus>("disconnected");
   const [consoleEntries, setConsoleEntries] = useState<ConsoleEntry[]>([]);
   const [networkEntries, setNetworkEntries] = useState<NetworkEntry[]>([]);
+  const [connectionStatus, setConnectionStatus] =
+    useState<DevToolsWebSocketStatus>("disconnected");
 
-  const wsRef = useRef<WebSocket | null>(null);
   const contextEntityIdRef = useRef(contextEntityId);
   contextEntityIdRef.current = contextEntityId;
+
+  // Compute WebSocket URL (empty string if disabled, hook handles empty URL by not connecting)
+  const wsUrl = enabled ? (url ?? getDefaultWebSocketUrl(contextEntityId)) : "";
 
   /**
    * Check if an entry should be included based on context filtering.
@@ -153,105 +161,115 @@ export function useDevToolsWebSocket(
    * type-safe message validation and handling.
    */
   const handleMessage = useCallback(
-    (event: MessageEvent) => {
-      try {
-        const data: unknown = JSON.parse(event.data);
+    (data: unknown) => {
+      // Use centralized type guards for type-safe message handling
+      if (isConsoleLogEntry(data)) {
+        const entry: ConsoleEntry = {
+          ...data.payload,
+          id: data.payload.id ?? generateId(),
+        } as ConsoleEntry;
 
-        // Use centralized type guards for type-safe message handling
-        if (isConsoleLogEntry(data)) {
-          const entry: ConsoleEntry = {
-            ...data.payload,
-            id: data.payload.id ?? generateId(),
-          } as ConsoleEntry;
-
-          // Filter by context
-          if (shouldIncludeEntry(entry.data as Record<string, unknown>)) {
-            setConsoleEntries((prev) => {
-              const newEntries = [...prev, entry];
-              if (newEntries.length > maxConsoleEntries) {
-                return newEntries.slice(-maxConsoleEntries);
-              }
-              return newEntries;
-            });
-          }
-        } else if (isNetworkRequestEntry(data)) {
-          const entry: NetworkEntry = {
-            ...data.payload,
-            id: data.payload.id ?? generateId(),
-          } as NetworkEntry;
-
-          setNetworkEntries((prev) => {
+        // Filter by context
+        if (shouldIncludeEntry(entry.data as Record<string, unknown>)) {
+          setConsoleEntries((prev) => {
             const newEntries = [...prev, entry];
-            if (newEntries.length > maxNetworkEntries) {
-              return newEntries.slice(-maxNetworkEntries);
+            if (newEntries.length > maxConsoleEntries) {
+              return newEntries.slice(-maxConsoleEntries);
             }
             return newEntries;
           });
-        } else if (isNetworkUpdateEntry(data)) {
-          setNetworkEntries((prev) =>
-            prev.map((entry) =>
-              entry.id === data.payload.id
-                ? { ...entry, ...data.payload }
-                : entry,
-            ),
-          );
         }
-      } catch {
-        // Ignore parse errors
+      } else if (isNetworkRequestEntry(data)) {
+        const entry: NetworkEntry = {
+          ...data.payload,
+          id: data.payload.id ?? generateId(),
+        } as NetworkEntry;
+
+        setNetworkEntries((prev) => {
+          const newEntries = [...prev, entry];
+          if (newEntries.length > maxNetworkEntries) {
+            return newEntries.slice(-maxNetworkEntries);
+          }
+          return newEntries;
+        });
+      } else if (isNetworkUpdateEntry(data)) {
+        setNetworkEntries((prev) =>
+          prev.map((entry) =>
+            entry.id === data.payload.id
+              ? { ...entry, ...data.payload }
+              : entry,
+          ),
+        );
       }
     },
     [maxConsoleEntries, maxNetworkEntries, shouldIncludeEntry],
   );
 
   /**
-   * Connect to WebSocket.
+   * Handle connection established.
    */
-  const connect = useCallback(() => {
-    if (!enabled) return;
-
-    const wsUrl = url ?? getDefaultWebSocketUrl(contextEntityId);
-
-    try {
-      setStatus("connecting");
-      const ws = new WebSocket(wsUrl);
-      wsRef.current = ws;
-
-      ws.onopen = () => {
-        setStatus("connected");
-      };
-
-      ws.onmessage = handleMessage;
-
-      ws.onerror = () => {
-        setStatus("error");
-      };
-
-      ws.onclose = () => {
-        setStatus("disconnected");
-        wsRef.current = null;
-      };
-    } catch {
-      setStatus("error");
-    }
-  }, [enabled, url, contextEntityId, handleMessage]);
-
-  /**
-   * Disconnect from WebSocket.
-   */
-  const disconnect = useCallback(() => {
-    if (wsRef.current) {
-      wsRef.current.close();
-      wsRef.current = null;
-    }
+  const handleConnect = useCallback(() => {
+    setConnectionStatus("connected");
   }, []);
 
   /**
-   * Reconnect to WebSocket.
+   * Handle disconnection.
    */
-  const reconnect = useCallback(() => {
-    disconnect();
-    connect();
-  }, [disconnect, connect]);
+  const handleDisconnect = useCallback(() => {
+    setConnectionStatus("disconnected");
+  }, []);
+
+  /**
+   * Handle connection errors.
+   */
+  const handleError = useCallback(() => {
+    setConnectionStatus("error");
+  }, []);
+
+  // Use centralized useRealtimeSync hook
+  const {
+    status,
+    disconnect,
+    reconnect: wsReconnect,
+    metrics,
+  } = useRealtimeSync({
+    url: wsUrl,
+    onMessage: handleMessage,
+    onConnect: handleConnect,
+    onDisconnect: handleDisconnect,
+    onError: handleError,
+    exponentialBackoff: true,
+    reconnectInterval: 1000,
+    maxReconnectAttempts: 10,
+    maxDelayMs: 30000,
+  });
+
+  // Update connection status based on useRealtimeSync status
+  useEffect(() => {
+    if (status === "connecting") {
+      setConnectionStatus("connecting");
+    } else if (status === "connected") {
+      setConnectionStatus("connected");
+    } else if (status === "error") {
+      setConnectionStatus("error");
+    } else if (status === "disconnected") {
+      setConnectionStatus("disconnected");
+    }
+  }, [status]);
+
+  // Report metrics for observability
+  useEffect(() => {
+    if (enabled && metrics.totalAttempts > 0) {
+      reportWebSocketMetrics(ENDPOINT_NAME, metrics);
+    }
+  }, [enabled, metrics]);
+
+  // Disconnect on unmount
+  useEffect(() => {
+    return () => {
+      disconnect();
+    };
+  }, [disconnect]);
 
   /**
    * Clear console entries.
@@ -267,24 +285,13 @@ export function useDevToolsWebSocket(
     setNetworkEntries([]);
   }, []);
 
-  // Connect on mount, disconnect on unmount
-  useEffect(() => {
-    if (enabled) {
-      connect();
-    }
-
-    return () => {
-      disconnect();
-    };
-  }, [enabled, connect, disconnect]);
-
   return {
-    status,
+    status: connectionStatus,
     consoleEntries,
     networkEntries,
     clearConsoleEntries,
     clearNetworkEntries,
-    reconnect,
+    reconnect: wsReconnect,
   };
 }
 

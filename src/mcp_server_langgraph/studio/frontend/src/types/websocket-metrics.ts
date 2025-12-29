@@ -12,6 +12,7 @@ export type ReconnectionFailureReason =
   | "max_attempts_exceeded" // Exceeded maxReconnectAttempts
   | "token_expired" // Authentication token expired (4010)
   | "token_refresh_failed" // Token refresh after 4010 failed
+  | "protocol_version_mismatch" // Protocol version incompatible (4009)
   | "network_error" // Network-level failures
   | "server_error" // Server-side close (5xx equivalent)
   | "invalid_url" // Invalid WebSocket URL
@@ -51,6 +52,8 @@ export const WS_CLOSE_CODE_CATEGORIES: Record<
   "1011": "server_error",
   // TLS handshake failure
   "1015": "network_error",
+  // Protocol version not supported (custom code)
+  "4009": "protocol_version_mismatch",
   // Token expired (custom code)
   "4010": "token_expired",
 };
@@ -142,6 +145,7 @@ export function createInitialReconnectionMetrics(): ReconnectionMetrics {
       max_attempts_exceeded: 0,
       token_expired: 0,
       token_refresh_failed: 0,
+      protocol_version_mismatch: 0,
       network_error: 0,
       server_error: 0,
       invalid_url: 0,

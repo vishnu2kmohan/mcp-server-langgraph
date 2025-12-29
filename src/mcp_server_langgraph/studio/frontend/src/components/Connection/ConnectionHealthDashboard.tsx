@@ -22,8 +22,8 @@ import {
   Activity,
   Zap,
 } from "lucide-react";
-import { useConnectionHealth } from "../../hooks/useConnectionHealth";
-import type { ConnectionHealthStatus } from "../../hooks/useConnectionHealth";
+import { useConnectionHealthWebSocket } from "../../hooks/useConnectionHealthWebSocket";
+import type { ConnectionHealth } from "../../hooks/useConnectionHealthWebSocket";
 
 // Status colors for badges
 const statusColors: Record<string, string> = {
@@ -53,20 +53,25 @@ export function ConnectionHealthDashboard({
   compact = false,
 }: ConnectionHealthDashboardProps) {
   const {
-    isConnected,
+    status,
     connections,
     error,
     lastPong,
     summary,
-    connect,
+    reconnect,
     refresh,
     checkHealth,
-  } = useConnectionHealth({ autoConnect: true });
+  } = useConnectionHealthWebSocket();
+
+  // Derive isConnected from status for backwards compatibility
+  const isConnected = status === "connected";
 
   // Format last heartbeat time
   const lastHeartbeatText = useMemo(() => {
     if (!lastPong) return "Never";
-    const seconds = Math.floor((Date.now() - lastPong.getTime()) / 1000);
+    // lastPong is now a string timestamp from useConnectionHealthWebSocket
+    const pongDate = new Date(lastPong);
+    const seconds = Math.floor((Date.now() - pongDate.getTime()) / 1000);
     if (seconds < 60) return `${seconds}s ago`;
     const minutes = Math.floor(seconds / 60);
     return `${minutes}m ago`;
@@ -117,7 +122,7 @@ export function ConnectionHealthDashboard({
             </button>
           ) : (
             <button
-              onClick={connect}
+              onClick={reconnect}
               className="px-3 py-1 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700"
               aria-label="Reconnect"
             >
@@ -223,7 +228,7 @@ export function ConnectionHealthDashboard({
 }
 
 interface ConnectionHealthItemProps {
-  connection: ConnectionHealthStatus;
+  connection: ConnectionHealth;
   onCheckHealth: (id: string) => void;
 }
 

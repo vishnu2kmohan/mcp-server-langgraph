@@ -108,7 +108,8 @@ export { useAlertSoundIntegration } from "./useAlertSoundIntegration";
 
 export { useMCPConnection } from "./useMCPConnection";
 
-export { useConnectionHealth } from "./useConnectionHealth";
+// useConnectionHealth is DEPRECATED - use useConnectionHealthWebSocket instead
+// (exported in WebSocket Hooks section above)
 
 export {
   useMCPKeyboardShortcuts,

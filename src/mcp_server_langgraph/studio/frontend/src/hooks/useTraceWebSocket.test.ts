@@ -30,7 +30,8 @@ const mockDisconnect = vi.fn();
 const mockReconnect = vi.fn();
 let mockOnMessage: ((data: unknown) => void) | undefined;
 let mockOnConnect: (() => void) | undefined;
-let _mockOnDisconnect: (() => void) | undefined;
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+let mockOnDisconnect: (() => void) | undefined;
 let mockStatus: ConnectionStatus = "disconnected";
 
 vi.mock("./useRealtimeSync", () => ({
@@ -42,7 +43,7 @@ vi.mock("./useRealtimeSync", () => ({
   }) => {
     mockOnMessage = options.onMessage;
     mockOnConnect = options.onConnect;
-    _mockOnDisconnect = options.onDisconnect;
+    mockOnDisconnect = options.onDisconnect;
 
     // Auto-connect when URL is provided
     if (options.url && mockStatus === "disconnected") {

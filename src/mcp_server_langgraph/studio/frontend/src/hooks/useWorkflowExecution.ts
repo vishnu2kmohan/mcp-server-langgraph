@@ -12,6 +12,7 @@ import { useCallback, useMemo, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useRealtimeSync } from "./useRealtimeSync";
 import { logout } from "../store/slices/authSlice";
+import { addNotification } from "../store/slices/notificationSlice";
 import {
   setExecutionState,
   updateNodeStatus,
@@ -19,6 +20,7 @@ import {
 } from "../store/slices/workflowSlice";
 import type { RootState } from "../store";
 import type { NodeStatus } from "../types/workflow";
+import { PROTOCOL_VERSION_MISMATCH_NOTIFICATION } from "../utils/websocketAuth";
 
 // WebSocket message types
 interface ExecutionStartedMessage {
@@ -216,6 +218,9 @@ export function useWorkflowExecution(
       onDisconnect: handleDisconnect,
       onError: handleError,
       onTokenExpired: () => dispatch(logout()),
+      onProtocolVersionMismatch: () => {
+        dispatch(addNotification(PROTOCOL_VERSION_MISMATCH_NOTIFICATION));
+      },
     });
 
   // Report WebSocket metrics for observability

@@ -21,6 +21,7 @@ import type { AddNotificationPayload } from "../store/slices/notificationSlice";
 import { useRealtimeSync, type ConnectionStatus } from "./useRealtimeSync";
 import { buildWebSocketUrl, WS_ENDPOINTS } from "../utils/websocket";
 import { reportWebSocketMetrics } from "../utils/websocketTelemetry";
+import { PROTOCOL_VERSION_MISMATCH_NOTIFICATION } from "../utils/websocketAuth";
 
 /**
  * Options for useNotificationWebSocket hook
@@ -146,6 +147,9 @@ export function useNotificationWebSocket(
     maxReconnectAttempts: 10, // Try up to 10 times
     onMessage: handleMessage,
     onTokenExpired: () => dispatch(logout()),
+    onProtocolVersionMismatch: () => {
+      dispatch(addNotification(PROTOCOL_VERSION_MISMATCH_NOTIFICATION));
+    },
   });
 
   // Track if enabled - if not auth-ready or explicitly disabled, override status

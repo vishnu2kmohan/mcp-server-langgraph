@@ -22,10 +22,12 @@
 import { useCallback, useEffect, useState, useMemo, useRef } from "react";
 import { useAppDispatch, useAppSelector } from "../store/hooks";
 import { logout, selectIsAuthenticated } from "../store/slices/authSlice";
+import { addNotification } from "../store/slices/notificationSlice";
 import { devLogger } from "../utils/devLogger";
 import { buildWebSocketUrl, WS_ENDPOINTS } from "../utils/websocket";
 import { useRealtimeSync } from "./useRealtimeSync";
 import { reportWebSocketMetrics } from "../utils/websocketTelemetry";
+import { PROTOCOL_VERSION_MISMATCH_NOTIFICATION } from "../utils/websocketAuth";
 
 // Import typed protocols for type-safe WebSocket message handling
 import {
@@ -182,6 +184,9 @@ export function useTraceWebSocket(
     onDisconnect: handleDisconnect,
     onError: handleError,
     onTokenExpired: handleTokenExpired,
+    onProtocolVersionMismatch: () => {
+      dispatch(addNotification(PROTOCOL_VERSION_MISMATCH_NOTIFICATION));
+    },
     exponentialBackoff: true,
     reconnectInterval: 1000,
     maxReconnectAttempts: 10,

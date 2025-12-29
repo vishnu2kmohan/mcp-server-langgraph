@@ -4,16 +4,18 @@
  * Custom hook for real-time data synchronization using WebSocket.
  * Features:
  * - WebSocket connection management
- * - Automatic reconnection
+ * - Automatic reconnection with exponential backoff
  * - Message handling
  * - Connection status tracking
  * - Token expiration handling (4010 close code)
+ * - Protocol version mismatch handling (4009 close code)
  * - Reconnection metrics for observability
  */
 
 import { useState, useCallback, useRef, useEffect } from "react";
 import {
   WS_CLOSE_TOKEN_EXPIRED,
+  WS_CLOSE_PROTOCOL_VERSION,
   ensureValidTokenForWebSocket,
 } from "../utils/websocketAuth";
 import {
@@ -64,6 +66,12 @@ export interface UseRealtimeSyncOptions {
    * Use this to redirect to login.
    */
   onTokenExpired?: () => void;
+  /**
+   * Callback when protocol version mismatch is detected (close code 4009).
+   * This is NOT recoverable - reconnection will NOT be attempted.
+   * Use this to show user-friendly message suggesting page refresh or app update.
+   */
+  onProtocolVersionMismatch?: () => void;
   /**
    * Enable proactive token refresh before connecting.
    * When true, validates and refreshes token before WebSocket connection.
@@ -146,6 +154,7 @@ export function useRealtimeSync(
     onConnect,
     onDisconnect,
     onTokenExpired,
+    onProtocolVersionMismatch,
   } = options;
 
   const [status, setStatus] = useState<ConnectionStatus>(
@@ -185,6 +194,7 @@ export function useRealtimeSync(
     onConnect,
     onDisconnect,
     onTokenExpired,
+    onProtocolVersionMismatch,
   });
   callbacksRef.current = {
     onMessage,
@@ -192,6 +202,7 @@ export function useRealtimeSync(
     onConnect,
     onDisconnect,
     onTokenExpired,
+    onProtocolVersionMismatch,
   };
 
   /**
@@ -334,6 +345,18 @@ export function useRealtimeSync(
   }, []);
 
   /**
+   * Record protocol version mismatch failure.
+   */
+  const recordProtocolVersionMismatch = useCallback(() => {
+    setMetrics((prev) => {
+      const failuresByReason = { ...prev.failuresByReason };
+      failuresByReason.protocol_version_mismatch =
+        (failuresByReason.protocol_version_mismatch || 0) + 1;
+      return { ...prev, failuresByReason };
+    });
+  }, []);
+
+  /**
    * Reset all metrics to initial state.
    */
   const resetMetrics = useCallback(() => {
@@ -422,6 +445,16 @@ export function useRealtimeSync(
         return;
       }
 
+      // Protocol version mismatch (4009) - NOT recoverable, do NOT reconnect
+      // Client needs to refresh page or update application to get compatible version
+      if (event.code === WS_CLOSE_PROTOCOL_VERSION) {
+        recordProtocolVersionMismatch();
+        setStatus("error"); // Use 'error' to indicate user action required
+        callbacksRef.current.onProtocolVersionMismatch?.();
+        callbacksRef.current.onDisconnect?.();
+        return;
+      }
+
       // Abnormal close - attempt reconnection using ref for current value
       const currentAttempts = reconnectAttemptsRef.current;
       if (currentAttempts < maxReconnectAttempts) {
@@ -467,6 +500,7 @@ export function useRealtimeSync(
     recordReconnectionAttempt,
     recordReconnectionSuccess,
     recordTokenRefreshFailed,
+    recordProtocolVersionMismatch,
     recordMaxAttemptsExceeded,
   ]);
 

@@ -10,13 +10,17 @@
  *
  * Usage:
  * ```typescript
- * import { API_ENDPOINTS, getApiBaseUrl, buildWebSocketUrl } from '../config/api';
+ * import { API_ENDPOINTS, getApiBaseUrl, buildApiUrl } from '../config/api';
+ * import { buildWebSocketUrl, WS_ENDPOINTS } from '../utils/websocket';
  *
  * // Get API base URL
  * const apiUrl = getApiBaseUrl();
  *
- * // Build WebSocket URL with token
- * const wsUrl = buildWebSocketUrl(API_ENDPOINTS.WS_NOTIFICATIONS, window, token);
+ * // Build API URL for an endpoint
+ * const url = buildApiUrl(API_ENDPOINTS.SESSIONS);
+ *
+ * // Build WebSocket URL (use utils/websocket.ts)
+ * const wsUrl = buildWebSocketUrl(WS_ENDPOINTS.NOTIFICATIONS, {}, true);
  * ```
  */
 
@@ -100,9 +104,6 @@ interface WindowLike {
   };
 }
 
-// Track if deprecation warning has been shown (to avoid console spam)
-let _deprecationWarningShown = false;
-
 /**
  * Get the API base URL.
  *
@@ -161,63 +162,6 @@ export function getWebSocketBaseUrl(windowRef?: WindowLike): string {
   const host = win.location.host;
 
   return `${protocol}//${host}/api/v1`;
-}
-
-/**
- * Build a complete WebSocket URL with optional token.
- *
- * @deprecated Use `buildWebSocketUrl` from `src/utils/websocket.ts` instead.
- * The new function provides:
- * - Centralized `WS_ENDPOINTS` registry for endpoint paths
- * - Automatic auth token integration from Redux store
- * - Optional URL parameter support
- * - Better SSR/test support with optional window reference
- *
- * Migration example:
- * ```typescript
- * // Old (deprecated):
- * import { buildWebSocketUrl, API_ENDPOINTS } from '../config/api';
- * const url = buildWebSocketUrl(API_ENDPOINTS.WS_ALERTS, window, authToken);
- *
- * // New (preferred):
- * import { buildWebSocketUrl, WS_ENDPOINTS } from '../utils/websocket';
- * const url = buildWebSocketUrl(WS_ENDPOINTS.ALERTS, {}, true);
- * ```
- *
- * @param endpoint - WebSocket endpoint path (e.g., API_ENDPOINTS.WS_NOTIFICATIONS)
- * @param windowRef - Optional window reference (for testing/SSR)
- * @param token - Optional auth token to append as query parameter
- * @returns Complete WebSocket URL
- *
- * @example
- * ```typescript
- * const url = buildWebSocketUrl(API_ENDPOINTS.WS_ALERTS, window, authToken);
- * // Returns: "wss://app.example.com/api/v1/ws/alerts?token=..."
- * ```
- */
-export function buildWebSocketUrl(
-  endpoint: string,
-  windowRef?: WindowLike,
-  token?: string,
-): string {
-  // Emit deprecation warning once per session
-  if (!_deprecationWarningShown) {
-    _deprecationWarningShown = true;
-    console.warn(
-      `[DEPRECATED] buildWebSocketUrl from config/api.ts is deprecated. ` +
-        `Use buildWebSocketUrl from utils/websocket.ts instead.\n` +
-        `Migration: import { buildWebSocketUrl, WS_ENDPOINTS } from '../utils/websocket';`,
-    );
-  }
-
-  const baseUrl = getWebSocketBaseUrl(windowRef);
-  const fullUrl = `${baseUrl}${endpoint}`;
-
-  if (token) {
-    return `${fullUrl}?token=${encodeURIComponent(token)}`;
-  }
-
-  return fullUrl;
 }
 
 /**

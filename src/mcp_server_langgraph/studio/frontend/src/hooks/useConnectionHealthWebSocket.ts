@@ -12,7 +12,9 @@ import { useState, useCallback, useRef, useMemo, useEffect } from "react";
 import { useRealtimeSync } from "./useRealtimeSync";
 import { useAppDispatch, useAppSelector } from "../store/hooks";
 import { logout, selectIsAuthenticated } from "../store/slices/authSlice";
+import { addNotification } from "../store/slices/notificationSlice";
 import { buildWebSocketUrl, WS_ENDPOINTS } from "../utils/websocket";
+import { PROTOCOL_VERSION_MISMATCH_NOTIFICATION } from "../utils/websocketAuth";
 
 // =============================================================================
 // Types
@@ -312,6 +314,9 @@ export function useConnectionHealthWebSocket(
     maxDelayMs: 30000, // Max 30 seconds between attempts
     maxReconnectAttempts: 10, // Try up to 10 times
     onTokenExpired: () => dispatch(logout()),
+    onProtocolVersionMismatch: () => {
+      dispatch(addNotification(PROTOCOL_VERSION_MISMATCH_NOTIFICATION));
+    },
   });
 
   // Report WebSocket metrics for observability

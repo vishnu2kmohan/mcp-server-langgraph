@@ -13,7 +13,6 @@ from pydantic import ValidationError
 from mcp_server_langgraph.websocket.protocols import (
     # Protocol version
     PROTOCOL_VERSION,
-    # DevTools
     ConsoleLevel,
     ConsoleLogEntry,
     ConsoleLogPayload,

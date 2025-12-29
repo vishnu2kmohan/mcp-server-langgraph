@@ -9,15 +9,15 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render, screen, fireEvent, cleanup } from "@testing-library/react";
 import { ConnectionHealthDashboard } from "./ConnectionHealthDashboard";
 
-// Mock the useConnectionHealth hook
-const mockConnect = vi.fn();
+// Mock the useConnectionHealthWebSocket hook
+const mockReconnect = vi.fn();
 const mockDisconnect = vi.fn();
 const mockRefresh = vi.fn();
 const mockCheckHealth = vi.fn();
 
-vi.mock("../../hooks/useConnectionHealth", () => ({
-  useConnectionHealth: vi.fn(() => ({
-    isConnected: true,
+vi.mock("../../hooks/useConnectionHealthWebSocket", () => ({
+  useConnectionHealthWebSocket: vi.fn(() => ({
+    status: "connected",
     connections: [
       {
         id: "1",
@@ -52,7 +52,7 @@ vi.mock("../../hooks/useConnectionHealth", () => ({
       },
     ],
     error: null,
-    lastPong: new Date(),
+    lastPong: new Date().toISOString(),
     summary: {
       total: 3,
       connected: 1,
@@ -61,17 +61,17 @@ vi.mock("../../hooks/useConnectionHealth", () => ({
       error: 1,
       auth_required: 0,
     },
-    connect: mockConnect,
+    reconnect: mockReconnect,
     disconnect: mockDisconnect,
     refresh: mockRefresh,
     checkHealth: mockCheckHealth,
-    subscribe: vi.fn(),
-    unsubscribe: vi.fn(),
   })),
 }));
 
-import { useConnectionHealth } from "../../hooks/useConnectionHealth";
-const mockedUseConnectionHealth = vi.mocked(useConnectionHealth);
+import { useConnectionHealthWebSocket } from "../../hooks/useConnectionHealthWebSocket";
+const mockedUseConnectionHealthWebSocket = vi.mocked(
+  useConnectionHealthWebSocket,
+);
 
 describe("ConnectionHealthDashboard", () => {
   beforeEach(() => {
@@ -181,8 +181,8 @@ describe("ConnectionHealthDashboard", () => {
 
   describe("Disconnected State", () => {
     it("should show disconnected status when WebSocket not connected", () => {
-      mockedUseConnectionHealth.mockReturnValueOnce({
-        isConnected: false,
+      mockedUseConnectionHealthWebSocket.mockReturnValueOnce({
+        status: "disconnected",
         connections: [],
         error: null,
         lastPong: null,
@@ -194,12 +194,10 @@ describe("ConnectionHealthDashboard", () => {
           error: 0,
           auth_required: 0,
         },
-        connect: mockConnect,
+        reconnect: mockReconnect,
         disconnect: mockDisconnect,
         refresh: mockRefresh,
         checkHealth: mockCheckHealth,
-        subscribe: vi.fn(),
-        unsubscribe: vi.fn(),
       });
 
       render(<ConnectionHealthDashboard />);
@@ -209,8 +207,8 @@ describe("ConnectionHealthDashboard", () => {
     });
 
     it("should show reconnect button when disconnected", () => {
-      mockedUseConnectionHealth.mockReturnValueOnce({
-        isConnected: false,
+      mockedUseConnectionHealthWebSocket.mockReturnValueOnce({
+        status: "disconnected",
         connections: [],
         error: null,
         lastPong: null,
@@ -222,12 +220,10 @@ describe("ConnectionHealthDashboard", () => {
           error: 0,
           auth_required: 0,
         },
-        connect: mockConnect,
+        reconnect: mockReconnect,
         disconnect: mockDisconnect,
         refresh: mockRefresh,
         checkHealth: mockCheckHealth,
-        subscribe: vi.fn(),
-        unsubscribe: vi.fn(),
       });
 
       render(<ConnectionHealthDashboard />);
@@ -236,9 +232,9 @@ describe("ConnectionHealthDashboard", () => {
       ).toBeInTheDocument();
     });
 
-    it("should call connect when reconnect clicked", () => {
-      mockedUseConnectionHealth.mockReturnValueOnce({
-        isConnected: false,
+    it("should call reconnect when reconnect clicked", () => {
+      mockedUseConnectionHealthWebSocket.mockReturnValueOnce({
+        status: "disconnected",
         connections: [],
         error: null,
         lastPong: null,
@@ -250,25 +246,23 @@ describe("ConnectionHealthDashboard", () => {
           error: 0,
           auth_required: 0,
         },
-        connect: mockConnect,
+        reconnect: mockReconnect,
         disconnect: mockDisconnect,
         refresh: mockRefresh,
         checkHealth: mockCheckHealth,
-        subscribe: vi.fn(),
-        unsubscribe: vi.fn(),
       });
 
       render(<ConnectionHealthDashboard />);
       fireEvent.click(screen.getByRole("button", { name: /reconnect/i }));
 
-      expect(mockConnect).toHaveBeenCalled();
+      expect(mockReconnect).toHaveBeenCalled();
     });
   });
 
   describe("Error State", () => {
     it("should show error message when hook has error", () => {
-      mockedUseConnectionHealth.mockReturnValueOnce({
-        isConnected: false,
+      mockedUseConnectionHealthWebSocket.mockReturnValueOnce({
+        status: "error",
         connections: [],
         error: "WebSocket connection failed",
         lastPong: null,
@@ -280,12 +274,10 @@ describe("ConnectionHealthDashboard", () => {
           error: 0,
           auth_required: 0,
         },
-        connect: mockConnect,
+        reconnect: mockReconnect,
         disconnect: mockDisconnect,
         refresh: mockRefresh,
         checkHealth: mockCheckHealth,
-        subscribe: vi.fn(),
-        unsubscribe: vi.fn(),
       });
 
       render(<ConnectionHealthDashboard />);
@@ -298,20 +290,18 @@ describe("ConnectionHealthDashboard", () => {
   describe("Auto-connect", () => {
     it("should auto-connect on mount by default", () => {
       render(<ConnectionHealthDashboard />);
-      // The hook should be called with autoConnect: true
-      expect(mockedUseConnectionHealth).toHaveBeenCalledWith({
-        autoConnect: true,
-      });
+      // useConnectionHealthWebSocket auto-connects by default (no options needed)
+      expect(mockedUseConnectionHealthWebSocket).toHaveBeenCalled();
     });
   });
 
   describe("Empty State", () => {
     it("should show empty message when no connections", () => {
-      mockedUseConnectionHealth.mockReturnValueOnce({
-        isConnected: true,
+      mockedUseConnectionHealthWebSocket.mockReturnValueOnce({
+        status: "connected",
         connections: [],
         error: null,
-        lastPong: new Date(),
+        lastPong: new Date().toISOString(),
         summary: {
           total: 0,
           connected: 0,
@@ -320,12 +310,10 @@ describe("ConnectionHealthDashboard", () => {
           error: 0,
           auth_required: 0,
         },
-        connect: mockConnect,
+        reconnect: mockReconnect,
         disconnect: mockDisconnect,
         refresh: mockRefresh,
         checkHealth: mockCheckHealth,
-        subscribe: vi.fn(),
-        unsubscribe: vi.fn(),
       });
 
       render(<ConnectionHealthDashboard />);

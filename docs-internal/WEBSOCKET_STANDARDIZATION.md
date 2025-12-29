@@ -2,7 +2,7 @@
 
 **ADR Reference**: ADR-0068 WebSocket Standardization, ADR-0074 WebSocket Token Expiration
 **Status**: Active
-**Last Updated**: 2025-12-28
+**Last Updated**: 2025-12-29
 **Owner**: Infrastructure Team
 
 ## Table of Contents
@@ -451,6 +451,7 @@ WebSocket errors use **application-defined close codes** (4000-4999) and **error
 | `4003` | `AuthorizationError` | Authorization denied | OpenFGA check failed for resource access |
 | `4004` | `SubscriptionError` | Subscription failed | Failed to subscribe to resource (not found, authz denied) |
 | `4008` | `IdleTimeoutError`, `HeartbeatTimeoutError`, `ConnectionLimitError` | Timeout / Limit exceeded | Connection idle timeout, heartbeat timeout, or max connections exceeded |
+| `4009` | `ProtocolVersionError` | Protocol version mismatch | Client protocol version incompatible with server - client must refresh page or update (NOT recoverable) |
 | `4010` | `TokenExpiredError` | Token expired | JWT token expired during active connection - client should refresh and reconnect (ADR-0074) |
 | `4013` | `MessageSizeError` | Message too large | Message exceeds `max_message_size` limit |
 | `4029` | `RateLimitError` | Rate limit exceeded | User exceeded `rate_limit_per_minute` quota |
@@ -497,6 +498,21 @@ WebSocket errors use **application-defined close codes** (4000-4999) and **error
 // Client should: 1) Refresh token, 2) Reconnect with new token
 ```
 
+#### Protocol Version Mismatch Error
+```json
+{
+  "type": "error",
+  "payload": {
+    "code": "protocol_version_mismatch",
+    "message": "Protocol version mismatch. Client: 2.0.0, Server: 1.0.0. Please refresh the page or update your client."
+  },
+  "timestamp": "2025-12-28T10:30:00.000Z"
+}
+// Connection closed with code 4009
+// NOT RECOVERABLE - Client should: 1) Show user-friendly message, 2) Suggest page refresh or app update
+// DO NOT attempt reconnection (version mismatch will persist)
+```
+
 #### Rate Limit Error
 ```json
 {
@@ -538,6 +554,7 @@ WebSocketError
 │   └── TokenExpiredError (4010) - Token expired during active connection
 ├── AuthorizationError (4003)
 ├── ProtocolError (4002)
+├── ProtocolVersionError (4009) - Client/server version incompatible (not recoverable)
 ├── RateLimitError (4029)
 ├── MessageSizeError (4013)
 ├── ConnectionLimitError (4008)
@@ -876,6 +893,16 @@ logger.warning("Rate limit exceeded", extra={
 - **Token Expiry During Connection**: Periodic validation detects expired tokens, closing with `4010` (ADR-0074)
 - **Client Recovery**: Clients receiving `4010` should refresh token and reconnect
 - **Anonymous Access**: Explicitly opt-in via `require_auth=False`
+
+### Protocol Version Validation
+
+- **Semver-Based**: Protocol version uses semantic versioning (e.g., `1.0.0`)
+- **Version Query Param**: Clients must include `?v=1.0.0` in WebSocket URL
+- **Major Version Match**: Major versions must match exactly (breaking changes)
+- **Minor Version Compatibility**: Server can support higher minor versions (backwards compatible)
+- **Version Mismatch**: Incompatible versions rejected with `4009` close code (NOT recoverable)
+- **Client Recovery**: Clients receiving `4009` should show user-friendly message suggesting page refresh
+- **Configurable**: Enable/disable via `WebSocketConfig.validate_protocol_version`
 
 ### Authorization
 
