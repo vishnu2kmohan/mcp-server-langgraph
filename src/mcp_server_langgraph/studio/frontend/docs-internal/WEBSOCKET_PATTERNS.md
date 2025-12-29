@@ -357,6 +357,164 @@ mockOnDisconnect?.();
 | useAuditWebSocket | 2000ms | 60000ms | 10 | Yes |
 | useAgentRequestWebSocket | 1000ms | 30000ms | 10 | Yes |
 
+## WebSocket Close Codes
+
+The application uses custom WebSocket close codes in the 4000-4999 range for application-specific errors. These codes are defined in `utils/websocketAuth.ts` and handled by `useRealtimeSync`.
+
+### Close Code Reference
+
+| Code | Name | Description | Recovery Action |
+|------|------|-------------|-----------------|
+| 1000 | Normal Closure | Clean disconnect | None needed |
+| 1001 | Going Away | Server shutting down | Reconnect with backoff |
+| 1006 | Abnormal Closure | Connection lost | Reconnect with backoff |
+| **4001** | Authentication Failed | Invalid/missing token on connect | Redirect to login |
+| **4002** | Protocol Error | Malformed message format | Log error, reconnect |
+| **4003** | Authorization Denied | Valid token, insufficient permissions | Show permission error |
+| **4008** | Timeout | Idle/heartbeat timeout | Reconnect with backoff |
+| **4009** | Protocol Version Mismatch | Client version incompatible | **DO NOT reconnect** - prompt refresh |
+| **4010** | Token Expired | Token expired during connection | Refresh token, reconnect |
+| **4013** | Message Too Large | Message exceeds size limit | Reduce payload, retry |
+| **4029** | Rate Limited | Too many requests | Wait, reconnect with backoff |
+
+### Close Code 4009: Protocol Version Mismatch
+
+When the server detects an incompatible client protocol version, it closes with code 4009.
+
+**Frontend Handling:**
+
+```typescript
+import { WS_CLOSE_PROTOCOL_VERSION, PROTOCOL_VERSION_MISMATCH_NOTIFICATION } from '../utils/websocketAuth';
+
+// In useRealtimeSync onclose handler:
+if (event.code === WS_CLOSE_PROTOCOL_VERSION) {
+  // 1. DO NOT attempt to reconnect - version mismatch is not recoverable
+  setStatus("error");
+
+  // 2. Show user notification
+  dispatch(showNotification(PROTOCOL_VERSION_MISMATCH_NOTIFICATION));
+
+  // 3. Log telemetry for monitoring
+  reportWebSocketMetrics({
+    endpoint: "websocket",
+    event: "protocol_version_error",
+    clientVersion: PROTOCOL_VERSION,
+  });
+
+  return; // Exit without scheduling reconnect
+}
+```
+
+**When This Occurs:**
+- Client sends version incompatible with server (e.g., v2.0.0 vs v1.x.x)
+- Major version mismatch indicates breaking protocol changes
+- Client requires features server doesn't support
+
+**User Experience:**
+```
+┌─────────────────────────────────────────────────────┐
+│ ⚠️ Application Update Required                      │
+│                                                     │
+│ Your application version is incompatible with the  │
+│ server. Please refresh the page to get the latest  │
+│ version.                                            │
+│                                                     │
+│                              [Refresh]              │
+└─────────────────────────────────────────────────────┘
+```
+
+### Close Code 4010: Token Expired
+
+When the server detects a token has expired during an active WebSocket connection, it closes with code 4010.
+
+**Frontend Handling:**
+
+```typescript
+import { WS_CLOSE_TOKEN_EXPIRED, ensureValidTokenForWebSocket } from '../utils/websocketAuth';
+
+// In useRealtimeSync onclose handler:
+if (event.code === WS_CLOSE_TOKEN_EXPIRED) {
+  // 1. Attempt to refresh the token
+  const refreshed = await ensureValidTokenForWebSocket();
+
+  if (refreshed) {
+    // 2a. Token refreshed successfully - reconnect
+    scheduleReconnect();
+  } else {
+    // 2b. Token refresh failed - logout
+    dispatch(logout());
+  }
+
+  return;
+}
+```
+
+**When This Occurs:**
+- Long-lived WebSocket connection outlives JWT token validity
+- Token expiration detected during periodic server-side validation
+- Refresh token may still be valid for token renewal
+
+**Recovery Flow:**
+```
+┌─────────────┐    4010     ┌─────────────────┐   success   ┌─────────────┐
+│  Connected  │ ─────────▶ │  Refresh Token  │ ──────────▶ │  Reconnect  │
+└─────────────┘            └─────────────────┘             └─────────────┘
+                                    │
+                                    │ failure
+                                    ▼
+                           ┌─────────────────┐
+                           │    Logout       │
+                           └─────────────────┘
+```
+
+### Implementing Close Code Handling
+
+For domain-specific hooks, pass the `onTokenExpired` callback to enable token refresh handling:
+
+```typescript
+export function useMyWebSocket(options) {
+  const dispatch = useAppDispatch();
+
+  const handleTokenExpired = useCallback(async () => {
+    const refreshed = await ensureValidTokenForWebSocket();
+    if (!refreshed) {
+      dispatch(logout());
+    }
+    return refreshed;
+  }, [dispatch]);
+
+  return useRealtimeSync({
+    url: options.url,
+    exponentialBackoff: true,
+    onTokenExpired: handleTokenExpired,
+    onProtocolVersionError: () => {
+      dispatch(showNotification(PROTOCOL_VERSION_MISMATCH_NOTIFICATION));
+    },
+    // ... other options
+  });
+}
+```
+
+### Constants Location
+
+Close code constants are defined in `src/utils/websocketAuth.ts`:
+
+```typescript
+export const WS_CLOSE_TOKEN_EXPIRED = 4010;
+export const WS_CLOSE_PROTOCOL_VERSION = 4009;
+
+export const PROTOCOL_VERSION_MISMATCH_NOTIFICATION = {
+  type: "error" as const,
+  title: "Application Update Required",
+  message: "Your application version is incompatible with the server. " +
+           "Please refresh the page to get the latest version.",
+  action: {
+    label: "Refresh",
+    onClick: () => window.location.reload(),
+  },
+};
+```
+
 ## Files Reference
 
 - `src/hooks/useRealtimeSync.ts` - Foundation hook
