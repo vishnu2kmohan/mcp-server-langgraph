@@ -12,7 +12,6 @@
  */
 
 import { useEffect, useRef, useState, useCallback } from "react";
-import { useNavigate } from "react-router";
 import { useAppSelector } from "../store/hooks";
 import { clearAllAICache } from "./useAICache";
 import { devLogger } from "../utils/devLogger";
@@ -58,14 +57,16 @@ export interface UsePersonaCacheInvalidationResult {
 export function usePersonaCacheInvalidation(
   options: UsePersonaCacheInvalidationOptions = {},
 ): UsePersonaCacheInvalidationResult {
-  const navigate = useNavigate();
   const { enabled = true, invalidateBackend = false } = options;
 
   // Handle auth failure - redirect to login
+  // NOTE: Uses window.location.href instead of useNavigate() because this hook
+  // may be used in components outside Router context (e.g., ConnectedAIIntelligenceProvider
+  // in main.tsx). Full page navigation is appropriate for auth failure anyway.
   const handleAuthFailure = useCallback(() => {
     saveCurrentRouteAsIntended();
-    navigate("/login", { replace: true });
-  }, [navigate]);
+    window.location.href = "/login";
+  }, []);
 
   // Track invalidation state
   const [isInvalidating, setIsInvalidating] = useState(false);

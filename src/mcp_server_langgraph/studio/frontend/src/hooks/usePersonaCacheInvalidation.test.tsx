@@ -259,11 +259,12 @@ describe("usePersonaCacheInvalidation", () => {
         await result.current.invalidateNow();
       });
 
+      // authenticatedFetch uses Headers object and includes credentials
       expect(mockFetch).toHaveBeenCalledWith(
         expect.stringContaining("/api/v1/cache/prefix/"),
         expect.objectContaining({
           method: "DELETE",
-          headers: { "Content-Type": "application/json" },
+          credentials: "include",
         }),
       );
     });
