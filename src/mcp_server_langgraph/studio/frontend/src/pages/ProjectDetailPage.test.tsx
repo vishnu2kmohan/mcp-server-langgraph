@@ -401,7 +401,9 @@ describe("ProjectDetailPage", () => {
       renderWithRouter();
 
       await waitFor(() => {
-        expect(screen.getByTitle("Refresh")).toBeInTheDocument();
+        expect(
+          screen.getByTestId("project-refresh-button"),
+        ).toBeInTheDocument();
       });
     });
 
@@ -1438,7 +1440,7 @@ describe("ProjectDetailPage", () => {
       mockRefetch.mockClear();
 
       // Click refresh
-      fireEvent.click(screen.getByTitle("Refresh"));
+      fireEvent.click(screen.getByTestId("project-refresh-button"));
 
       expect(mockRefetch).toHaveBeenCalled();
     });
@@ -2537,7 +2539,7 @@ describe("ProjectDetailPage", () => {
         expect(screen.getByText("Test Project")).toBeInTheDocument();
       });
 
-      fireEvent.click(screen.getByTitle("Refresh"));
+      fireEvent.click(screen.getByTestId("project-refresh-button"));
 
       expect(mockRefetch).toHaveBeenCalled();
     });
@@ -2558,7 +2560,7 @@ describe("ProjectDetailPage", () => {
       });
 
       // Refresh button should show spinning indicator
-      const refreshButton = screen.getByTitle("Refresh");
+      const refreshButton = screen.getByTestId("project-refresh-button");
       expect(refreshButton.querySelector(".animate-spin")).toBeInTheDocument();
     });
 

@@ -279,6 +279,9 @@ export function ProjectDetailPage() {
     refetch,
   } = useGetProjectQuery(projectId ?? "", {
     skip: !projectId,
+    // Poll every 30 seconds for near-real-time updates
+    // This keeps project members, connections, and sessions fresh
+    pollingInterval: 30000,
   });
 
   // Convert RTK Query error to string for display
@@ -410,7 +413,8 @@ export function ProjectDetailPage() {
           <button
             onClick={() => refetch()}
             className="p-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
-            title="Refresh"
+            title={isFetching ? "Syncing..." : "Refresh (auto-syncs every 30s)"}
+            data-testid="project-refresh-button"
           >
             <RefreshCw
               className={`w-5 h-5 ${isFetching ? "animate-spin" : ""}`}
