@@ -142,11 +142,11 @@ class TestRateLimitExceededMetrics:
         from mcp_server_langgraph.api.v1.mcp_websocket import MCPWebSocketMetrics
 
         metrics = MCPWebSocketMetrics()
-        initial = metrics.rate_limit_exceeded.get()
+        initial = metrics.rate_limit_exceeded
 
         metrics.record_rate_limit_exceeded(user_id="user:test")
 
-        assert metrics.rate_limit_exceeded.get() == initial + 1
+        assert metrics.rate_limit_exceeded == initial + 1
 
 
 @pytest.mark.xdist_group(name="test_limit_violation_metrics")
