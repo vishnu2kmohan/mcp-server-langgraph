@@ -166,6 +166,37 @@ describe("websocket utilities", () => {
       expect(url).toContain("token=my-token");
       expect(url).toContain("session_id=456");
     });
+
+    it("should warn in development when includeAuthToken=true but no token available", async () => {
+      // Mock development environment
+      const originalNodeEnv = process.env.NODE_ENV;
+      process.env.NODE_ENV = "development";
+
+      // Mock getAuthToken to return null (no token)
+      const { getAuthToken } = await import("./storage");
+      vi.mocked(getAuthToken).mockReturnValue(null);
+
+      // Spy on console.warn
+      const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+
+      // Call with includeAuthToken=true but no token available
+      buildWebSocketUrl("/api/v1/ws/notifications", {}, true);
+
+      // Should have warned about missing token
+      expect(warnSpy).toHaveBeenCalledWith(
+        expect.stringContaining("[WebSocket Auth Warning]"),
+      );
+      expect(warnSpy).toHaveBeenCalledWith(
+        expect.stringContaining("includeAuthToken=true"),
+      );
+      expect(warnSpy).toHaveBeenCalledWith(
+        expect.stringContaining("/api/v1/ws/notifications"),
+      );
+
+      // Cleanup
+      warnSpy.mockRestore();
+      process.env.NODE_ENV = originalNodeEnv;
+    });
   });
 
   describe("WS_ENDPOINTS", () => {

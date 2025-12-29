@@ -94,6 +94,17 @@ export function buildWebSocketUrl(
     const token = getAuthToken();
     if (token) {
       urlParams.set("token", token);
+    } else if (
+      typeof process !== "undefined" &&
+      process.env?.NODE_ENV === "development"
+    ) {
+      // Development warning: auth token was requested but none available
+      // This often causes "user=None" errors in backend WebSocket handlers
+      console.warn(
+        `[WebSocket Auth Warning] buildWebSocketUrl called with includeAuthToken=true for ${endpoint}, ` +
+          `but no auth token is available. This will likely cause authentication failures. ` +
+          `Check if the user is logged in or if getAuthToken() is returning the expected value.`,
+      );
     }
   }
 
@@ -116,11 +127,14 @@ export function buildWebSocketUrl(
  *
  * @example
  * ```ts
- * // Static endpoint
- * buildWebSocketUrl(WS_ENDPOINTS.NOTIFICATIONS)
+ * // Static endpoint (authenticated - most endpoints)
+ * buildWebSocketUrl(WS_ENDPOINTS.NOTIFICATIONS, {}, true)
+ *
+ * // Static endpoint (anonymous - only /ws/mcp)
+ * buildWebSocketUrl(WS_ENDPOINTS.MCP, {}, false)
  *
  * // Dynamic endpoint with path parameter
- * buildWebSocketUrlWithPath(WS_ENDPOINTS.WORKFLOW_EXECUTION, { workflowId: "123" })
+ * buildWebSocketUrlWithPath(WS_ENDPOINTS.WORKFLOW_EXECUTION, { workflowId: "123" }, {}, true)
  * ```
  */
 export const WS_ENDPOINTS = {
