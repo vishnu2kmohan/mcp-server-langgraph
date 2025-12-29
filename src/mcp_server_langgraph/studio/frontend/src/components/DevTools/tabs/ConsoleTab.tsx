@@ -230,11 +230,55 @@ export function ConsoleTab({
   filter,
   onFilterChange,
   contextEntityId,
+  externalEntries = [],
+  onClearExternal,
 }: ConsoleTabProps) {
-  const { entries, filteredEntries, clearConsole } = useConsoleEntries({
+  const {
+    entries: localEntries,
+    filteredEntries: _localFilteredEntries,
+    clearConsole,
+  } = useConsoleEntries({
     filter,
     contextEntityId,
   });
+
+  /**
+   * Merge and deduplicate local and external entries, sorted by timestamp.
+   */
+  const mergedEntries = useMemo(() => {
+    // Create a map for deduplication by ID
+    const entryMap = new Map<string, ConsoleEntry>();
+
+    // Add local entries first
+    for (const entry of localEntries) {
+      entryMap.set(entry.id, entry);
+    }
+
+    // Add external entries (will overwrite duplicates)
+    for (const entry of externalEntries) {
+      if (!entryMap.has(entry.id)) {
+        entryMap.set(entry.id, entry);
+      }
+    }
+
+    // Convert to array and sort by timestamp
+    return Array.from(entryMap.values()).sort(
+      (a, b) => a.timestamp - b.timestamp,
+    );
+  }, [localEntries, externalEntries]);
+
+  /**
+   * Filter merged entries by level.
+   */
+  const filteredEntries = useMemo(() => {
+    if (filter === "all") {
+      return mergedEntries;
+    }
+    return mergedEntries.filter((entry) => entry.level === filter);
+  }, [mergedEntries, filter]);
+
+  // Use merged entries for display
+  const entries = mergedEntries;
 
   // Timeline integration for time-travel debugging
   const timeline = useTimelineContext();
@@ -285,6 +329,14 @@ export function ConsoleTab({
       listRef.current.scrollTop = listRef.current.scrollHeight;
     }
   }, []);
+
+  /**
+   * Handle clearing both local and external entries.
+   */
+  const handleClearConsole = useCallback(() => {
+    clearConsole();
+    onClearExternal?.();
+  }, [clearConsole, onClearExternal]);
 
   /**
    * Handle keyboard navigation.
@@ -442,7 +494,7 @@ export function ConsoleTab({
         <button
           data-testid="clear-console-button"
           type="button"
-          onClick={clearConsole}
+          onClick={handleClearConsole}
           aria-label="Clear console"
           className="p-1 hover:bg-gray-200 dark:hover:bg-gray-700 rounded text-gray-500 hover:text-red-500"
         >

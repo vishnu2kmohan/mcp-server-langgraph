@@ -308,13 +308,19 @@ function RequestDetails({ entry }: RequestDetailsProps) {
 export function NetworkTab({
   contextEntityId,
   showMCPCalls = true,
+  externalEntries = [],
+  onClearExternal,
 }: NetworkTabProps) {
   const [filter, setFilter] = useState<FilterType>("all");
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedEntryId, setSelectedEntryId] = useState<string | null>(null);
 
-  const { entries, isRecording, toggleRecording, clearEntries } =
-    useNetworkEntries({ contextEntityId, includeMCP: showMCPCalls });
+  const {
+    entries: localEntries,
+    isRecording,
+    toggleRecording,
+    clearEntries,
+  } = useNetworkEntries({ contextEntityId, includeMCP: showMCPCalls });
 
   // Timeline integration for time-travel debugging
   const timeline = useTimelineContext();
@@ -324,6 +330,39 @@ export function NetworkTab({
 
   // Create stable callbacks for row selection
   const _stableSetSelectedEntryId = useStableCallback(setSelectedEntryId);
+
+  /**
+   * Merge and deduplicate local and external entries, sorted by startTime.
+   */
+  const entries = useMemo(() => {
+    // Create a map for deduplication by ID
+    const entryMap = new Map<string, NetworkEntry>();
+
+    // Add local entries first
+    for (const entry of localEntries) {
+      entryMap.set(entry.id, entry);
+    }
+
+    // Add external entries (will overwrite duplicates)
+    for (const entry of externalEntries) {
+      if (!entryMap.has(entry.id)) {
+        entryMap.set(entry.id, entry);
+      }
+    }
+
+    // Convert to array and sort by startTime
+    return Array.from(entryMap.values()).sort(
+      (a, b) => a.startTime - b.startTime,
+    );
+  }, [localEntries, externalEntries]);
+
+  /**
+   * Handle clearing both local and external entries.
+   */
+  const handleClearEntries = useCallback(() => {
+    clearEntries();
+    onClearExternal?.();
+  }, [clearEntries, onClearExternal]);
 
   // Filter entries
   const filteredEntries = useMemo(() => {
@@ -429,7 +468,7 @@ export function NetworkTab({
         <button
           data-testid="clear-network-button"
           type="button"
-          onClick={clearEntries}
+          onClick={handleClearEntries}
           className="p-1 hover:bg-gray-200 dark:hover:bg-gray-700 rounded text-gray-500"
           aria-label="Clear network log"
         >

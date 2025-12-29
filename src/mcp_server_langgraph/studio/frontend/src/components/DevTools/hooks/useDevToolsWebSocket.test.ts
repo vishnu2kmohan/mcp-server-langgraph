@@ -55,6 +55,19 @@ class MockWebSocket {
 // Tests
 // =============================================================================
 
+// Mock the websocket utility module
+vi.mock("../../../utils/websocket", () => ({
+  buildWebSocketUrl: vi.fn(
+    (endpoint: string, _params?: Record<string, string>, includeAuth = false) =>
+      `wss://test-host${endpoint}${includeAuth ? "?token=test-token" : ""}`,
+  ),
+  WS_ENDPOINTS: {
+    DEVTOOLS: "/api/v1/ws/devtools",
+  },
+}));
+
+import { buildWebSocketUrl, WS_ENDPOINTS } from "../../../utils/websocket";
+
 describe("useDevToolsWebSocket", () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -65,6 +78,26 @@ describe("useDevToolsWebSocket", () => {
   afterEach(() => {
     vi.restoreAllMocks();
     vi.unstubAllGlobals();
+  });
+
+  describe("URL construction", () => {
+    it("should use centralized buildWebSocketUrl utility", () => {
+      renderHook(() => useDevToolsWebSocket({ enabled: true }));
+
+      expect(buildWebSocketUrl).toHaveBeenCalledWith(
+        WS_ENDPOINTS.DEVTOOLS,
+        expect.any(Object),
+        true, // includeAuthToken should be true
+      );
+    });
+
+    it("should connect to the URL returned by buildWebSocketUrl", () => {
+      renderHook(() => useDevToolsWebSocket({ enabled: true }));
+
+      expect(MockWebSocket.instances).toHaveLength(1);
+      expect(MockWebSocket.instances[0].url).toContain("/api/v1/ws/devtools");
+      expect(MockWebSocket.instances[0].url).toContain("token=");
+    });
   });
 
   describe("connection", () => {

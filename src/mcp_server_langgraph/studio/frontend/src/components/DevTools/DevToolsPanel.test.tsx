@@ -35,6 +35,28 @@ vi.mock("./hooks/useDevToolsContext", () => ({
   }),
 }));
 
+// Mock the useDevToolsWebSocket hook
+vi.mock("./hooks/useDevToolsWebSocket", () => ({
+  useDevToolsWebSocket: () => ({
+    status: "connected",
+    consoleEntries: [],
+    networkEntries: [],
+    clearConsoleEntries: vi.fn(),
+    clearNetworkEntries: vi.fn(),
+    reconnect: vi.fn(),
+  }),
+}));
+
+// Mock the useTraceWebSocket hook
+vi.mock("../../hooks/useTraceWebSocket", () => ({
+  useTraceWebSocket: () => ({
+    spans: [],
+    isConnected: false,
+    reconnect: vi.fn(),
+    disconnect: vi.fn(),
+  }),
+}));
+
 describe("DevToolsPanel", () => {
   // Create a test store
   function createTestStore(

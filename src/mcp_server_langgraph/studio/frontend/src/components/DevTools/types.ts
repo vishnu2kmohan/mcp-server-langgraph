@@ -203,6 +203,10 @@ export interface ConsoleTabProps {
   onFilterChange: (filter: "all" | "info" | "warning" | "error") => void;
   /** Context entity ID for filtering */
   contextEntityId?: string | null;
+  /** External entries from WebSocket (merged with local entries) */
+  externalEntries?: ConsoleEntry[];
+  /** Callback when clearing console (to also clear external entries) */
+  onClearExternal?: () => void;
 }
 
 /** Props for StateTab */
@@ -235,6 +239,10 @@ export interface NetworkTabProps {
   contextEntityId?: string | null;
   /** Whether to show MCP tool calls */
   showMCPCalls?: boolean;
+  /** External entries from WebSocket (merged with local entries) */
+  externalEntries?: NetworkEntry[];
+  /** Callback when clearing network log (to also clear external entries) */
+  onClearExternal?: () => void;
 }
 
 /** Props for ProblemsTab */

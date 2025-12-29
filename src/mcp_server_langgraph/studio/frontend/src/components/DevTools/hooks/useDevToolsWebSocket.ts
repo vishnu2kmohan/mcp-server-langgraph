@@ -3,10 +3,30 @@
  *
  * WebSocket integration for DevTools console and network tabs.
  * Receives real-time log and network entries from the backend.
+ *
+ * Uses centralized WebSocket URL construction from @/utils/websocket
+ * to ensure consistent URL building and authentication handling.
+ *
+ * Uses typed protocols from @/types/websocket-protocols for type-safe
+ * message handling and validation.
  */
 import { useState, useCallback, useEffect, useRef } from "react";
 
+import { buildWebSocketUrl, WS_ENDPOINTS } from "../../../utils/websocket";
 import type { ConsoleEntry, NetworkEntry } from "../types";
+
+// Import typed protocols for type-safe WebSocket message handling
+import {
+  isConsoleLogEntry,
+  isNetworkRequestEntry,
+  isNetworkUpdateEntry,
+} from "../../../types/websocket-protocols";
+import type {
+  ConsoleLogEntry,
+  NetworkRequestEntry,
+  NetworkUpdateEntry,
+  DevToolsMessage,
+} from "../../../types/websocket-protocols";
 
 // =============================================================================
 // Types
@@ -53,66 +73,30 @@ export interface UseDevToolsWebSocketReturn {
 const DEFAULT_MAX_CONSOLE_ENTRIES = 1000;
 const DEFAULT_MAX_NETWORK_ENTRIES = 500;
 
-// =============================================================================
-// Message Types
-// =============================================================================
+// Re-export protocol types for consumers (backwards compatibility)
+export type {
+  ConsoleLogEntry,
+  NetworkRequestEntry,
+  NetworkUpdateEntry,
+  DevToolsMessage,
+};
 
-interface ConsoleMessage {
-  type: "console";
-  payload: Omit<ConsoleEntry, "id"> & { id?: string };
-}
-
-interface NetworkMessage {
-  type: "network";
-  payload: Omit<NetworkEntry, "id"> & { id?: string };
-}
-
-interface NetworkUpdateMessage {
-  type: "network_update";
-  payload: {
-    id: string;
-    status?: NetworkEntry["status"];
-    statusCode?: number;
-    duration?: number;
-    responseSize?: number;
-    responseBody?: unknown;
-    endTime?: number;
-  };
-}
-
-type _DevToolsMessage = ConsoleMessage | NetworkMessage | NetworkUpdateMessage;
-
-// =============================================================================
-// Helper Functions
-// =============================================================================
-
-function isConsoleMessage(data: unknown): data is ConsoleMessage {
-  if (typeof data !== "object" || data === null) return false;
-  const msg = data as Record<string, unknown>;
-  return msg.type === "console" && typeof msg.payload === "object";
-}
-
-function isNetworkMessage(data: unknown): data is NetworkMessage {
-  if (typeof data !== "object" || data === null) return false;
-  const msg = data as Record<string, unknown>;
-  return msg.type === "network" && typeof msg.payload === "object";
-}
-
-function isNetworkUpdateMessage(data: unknown): data is NetworkUpdateMessage {
-  if (typeof data !== "object" || data === null) return false;
-  const msg = data as Record<string, unknown>;
-  return msg.type === "network_update" && typeof msg.payload === "object";
-}
-
-function getDefaultWebSocketUrl(): string {
-  if (typeof window === "undefined") {
-    return "ws://localhost:8000/api/v1/ws/devtools";
+/**
+ * Get WebSocket URL for DevTools endpoint using centralized utility.
+ *
+ * Uses buildWebSocketUrl from @/utils/websocket for consistent URL construction
+ * and proper authentication handling (includes auth token in query params).
+ *
+ * @param contextEntityId - Optional session or workflow ID for context filtering
+ * @returns Full WebSocket URL with auth token
+ */
+function getDefaultWebSocketUrl(contextEntityId?: string | null): string {
+  const params: Record<string, string> = {};
+  if (contextEntityId) {
+    params.context_id = contextEntityId;
   }
-
-  const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-  const host = window.location.host;
-
-  return `${protocol}//${host}/api/v1/ws/devtools`;
+  // Use centralized URL builder with auth token included
+  return buildWebSocketUrl(WS_ENDPOINTS.DEVTOOLS, params, true);
 }
 
 function generateId(): string {
@@ -164,13 +148,17 @@ export function useDevToolsWebSocket(
 
   /**
    * Handle incoming WebSocket messages.
+   *
+   * Uses centralized type guards from websocket-protocols.ts for
+   * type-safe message validation and handling.
    */
   const handleMessage = useCallback(
     (event: MessageEvent) => {
       try {
         const data: unknown = JSON.parse(event.data);
 
-        if (isConsoleMessage(data)) {
+        // Use centralized type guards for type-safe message handling
+        if (isConsoleLogEntry(data)) {
           const entry: ConsoleEntry = {
             ...data.payload,
             id: data.payload.id ?? generateId(),
@@ -186,7 +174,7 @@ export function useDevToolsWebSocket(
               return newEntries;
             });
           }
-        } else if (isNetworkMessage(data)) {
+        } else if (isNetworkRequestEntry(data)) {
           const entry: NetworkEntry = {
             ...data.payload,
             id: data.payload.id ?? generateId(),
@@ -199,7 +187,7 @@ export function useDevToolsWebSocket(
             }
             return newEntries;
           });
-        } else if (isNetworkUpdateMessage(data)) {
+        } else if (isNetworkUpdateEntry(data)) {
           setNetworkEntries((prev) =>
             prev.map((entry) =>
               entry.id === data.payload.id
@@ -221,7 +209,7 @@ export function useDevToolsWebSocket(
   const connect = useCallback(() => {
     if (!enabled) return;
 
-    const wsUrl = url ?? getDefaultWebSocketUrl();
+    const wsUrl = url ?? getDefaultWebSocketUrl(contextEntityId);
 
     try {
       setStatus("connecting");
@@ -245,7 +233,7 @@ export function useDevToolsWebSocket(
     } catch {
       setStatus("error");
     }
-  }, [enabled, url, handleMessage]);
+  }, [enabled, url, contextEntityId, handleMessage]);
 
   /**
    * Disconnect from WebSocket.

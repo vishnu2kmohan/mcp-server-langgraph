@@ -12,7 +12,7 @@
  * - Dark mode support
  */
 
-import { useCallback, Suspense, lazy } from "react";
+import { useCallback, Suspense, lazy, useMemo } from "react";
 import {
   ChevronDown,
   Maximize2,
@@ -52,7 +52,10 @@ import { useDevToolsContext } from "./hooks/useDevToolsContext";
 import { TimelineBar } from "./TimelineBar";
 import { DevToolsTimelineProvider } from "./context/DevToolsTimelineProvider";
 import { DevToolsWebSocketObserver } from "./components/DevToolsWebSocketObserver";
+import { useTraceWebSocket } from "../../hooks/useTraceWebSocket";
+import { useDevToolsWebSocket } from "./hooks/useDevToolsWebSocket";
 import type { DevToolsPanelProps } from "./types";
+import type { TraceSpan } from "./tabs/TracesTab";
 
 // =============================================================================
 // Utility
@@ -203,6 +206,40 @@ export function DevToolsPanel({ className }: DevToolsPanelProps) {
   // Context detection
   const { contextLabel, context, entityId } = useDevToolsContext();
 
+  // Trace WebSocket - auto-connect when DevTools is open and traces tab available
+  const { spans: rawSpans, isConnected: traceConnected } = useTraceWebSocket({
+    autoConnect: !collapsed && availableTabs.includes("traces"),
+  });
+
+  // DevTools WebSocket - auto-connect for console and network data
+  const {
+    consoleEntries: wsConsoleEntries,
+    networkEntries: wsNetworkEntries,
+    clearConsoleEntries: clearWsConsoleEntries,
+    clearNetworkEntries: clearWsNetworkEntries,
+  } = useDevToolsWebSocket({
+    enabled: !collapsed,
+    contextEntityId: entityId,
+  });
+
+  // Transform spans to TracesTab format
+  const traceSpans: TraceSpan[] = useMemo(() => {
+    return rawSpans.map((span) => ({
+      span_id: span.spanId,
+      trace_id: span.traceId,
+      parent_span_id: span.parentSpanId ?? null,
+      name: span.name,
+      start_time: new Date(span.startTime).getTime(),
+      duration_ms: span.endTime
+        ? new Date(span.endTime).getTime() - new Date(span.startTime).getTime()
+        : 0,
+      status: span.status.toLowerCase() as "ok" | "error" | "unset",
+      service_name: (span.attributes?.service_name as string) || undefined,
+      depth: 0, // Will be calculated by TracesTab based on parent_span_id
+      attributes: span.attributes,
+    }));
+  }, [rawSpans]);
+
   // Handlers
   const handleCollapse = useCallback(() => {
     dispatch(toggleDevTools());
@@ -246,6 +283,8 @@ export function DevToolsPanel({ className }: DevToolsPanelProps) {
                 filter={consoleFilter}
                 onFilterChange={handleFilterChange}
                 contextEntityId={entityId}
+                externalEntries={wsConsoleEntries}
+                onClearExternal={clearWsConsoleEntries}
               />
             </Suspense>
           </div>
@@ -254,7 +293,11 @@ export function DevToolsPanel({ className }: DevToolsPanelProps) {
         return (
           <div data-testid="devtools-tab-content-network">
             <Suspense fallback={<TabContentLoader />}>
-              <NetworkTabContent contextEntityId={entityId} />
+              <NetworkTabContent
+                contextEntityId={entityId}
+                externalEntries={wsNetworkEntries}
+                onClearExternal={clearWsNetworkEntries}
+              />
             </Suspense>
           </div>
         );
@@ -306,7 +349,10 @@ export function DevToolsPanel({ className }: DevToolsPanelProps) {
         return (
           <div data-testid="devtools-tab-content-traces">
             <Suspense fallback={<TabContentLoader />}>
-              <TracesTabContent />
+              <TracesTabContent
+                spans={traceSpans}
+                isLoading={!traceConnected && traceSpans.length === 0}
+              />
             </Suspense>
           </div>
         );
