@@ -19,6 +19,7 @@ import {
   AlertTriangle,
   Bell,
   ExternalLink,
+  Wifi,
 } from "lucide-react";
 import {
   useListTracesQuery,
@@ -30,6 +31,7 @@ import {
 } from "../api";
 import { SkeletonList, ErrorState } from "../components/UI";
 import { TraceViewer } from "../components/Observability/TraceViewer";
+import { WebSocketMetricsPanel } from "../components/WebSocketMetrics/WebSocketMetricsPanel";
 import type { Trace, Span, SpanEvent } from "../components/Observability/types";
 import { useAppDispatch, useAppSelector } from "../store/hooks";
 import {
@@ -51,10 +53,16 @@ import {
   selectSelectedTraceId,
 } from "../store/slices/observabilitySlice";
 
-type ObservabilityTab = "traces" | "logs" | "metrics" | "alerts";
+type ObservabilityTab = "traces" | "logs" | "metrics" | "alerts" | "ws-metrics";
 
 // Valid tab values
-const VALID_TABS = ["traces", "logs", "metrics", "alerts"] as const;
+const VALID_TABS = [
+  "traces",
+  "logs",
+  "metrics",
+  "alerts",
+  "ws-metrics",
+] as const;
 
 // Extract tab from URL path
 function getTabFromPath(pathname: string): ObservabilityTab {
@@ -273,6 +281,7 @@ export function ObservabilityPage() {
     { id: "logs" as const, label: "Logs", icon: FileText },
     { id: "metrics" as const, label: "Metrics", icon: BarChart3 },
     { id: "alerts" as const, label: "Alerts", icon: Bell },
+    { id: "ws-metrics" as const, label: "WS Metrics", icon: Wifi },
   ];
 
   const getLogLevelColor = (level: "info" | "warn" | "error" | "debug") => {
@@ -720,6 +729,13 @@ export function ObservabilityPage() {
             {activeTab === "metrics" && !metrics && !isMetricsLoading && (
               <div className="text-center py-12 text-gray-500 dark:text-gray-400">
                 No metrics data available
+              </div>
+            )}
+
+            {/* WS Metrics Tab */}
+            {activeTab === "ws-metrics" && (
+              <div className="h-full -m-6">
+                <WebSocketMetricsPanel className="h-full" />
               </div>
             )}
 

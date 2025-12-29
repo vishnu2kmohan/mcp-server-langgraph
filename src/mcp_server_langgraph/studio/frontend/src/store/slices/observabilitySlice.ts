@@ -7,7 +7,7 @@
 
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
-type ObservabilityTab = "traces" | "logs" | "metrics" | "alerts";
+type ObservabilityTab = "traces" | "logs" | "metrics" | "alerts" | "ws-metrics";
 
 export interface ObservabilityState {
   // Filter state
