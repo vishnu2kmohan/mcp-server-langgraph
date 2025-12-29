@@ -84,6 +84,22 @@ export default tseslint.config(
       // This rule is no longer needed since TypeScript will error on missing params.
       // Keeping as documentation of the pattern that led to this change.
       // See: websocketAuthContract.test.ts for the contract tests that validate auth requirements.
+
+      // Block imports of deprecated buildWebSocketUrl from config/api.ts
+      // Use the new version from utils/websocket.ts which has required auth parameter
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              group: ['**/config/api'],
+              importNames: ['buildWebSocketUrl'],
+              message:
+                'buildWebSocketUrl from config/api.ts is deprecated. Import from utils/websocket.ts instead: import { buildWebSocketUrl } from "../utils/websocket"',
+            },
+          ],
+        },
+      ],
     },
   },
   // Override for storage utility - it legitimately needs direct localStorage access
@@ -100,6 +116,13 @@ export default tseslint.config(
       'no-restricted-globals': 'off',
       // Tests may intentionally test buildWebSocketUrl with various argument counts
       'no-restricted-syntax': 'off',
+    },
+  },
+  // Override for api.ts and its tests - they define/test the deprecated function
+  {
+    files: ['**/config/api.ts', '**/config/api.test.ts'],
+    rules: {
+      'no-restricted-imports': 'off',
     },
   },
   // Override for websocket utility - it defines buildWebSocketUrl and uses it internally
