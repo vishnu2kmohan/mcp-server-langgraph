@@ -7,12 +7,13 @@
  * Based on backend endpoint: /api/v1/ws/usage/cost
  */
 
-import { useState, useCallback, useRef, useMemo } from "react";
+import { useState, useCallback, useRef, useMemo, useEffect } from "react";
 import { useRealtimeSync } from "./useRealtimeSync";
 import { useAppDispatch, useAppSelector } from "../store/hooks";
 import { logout, selectIsAuthenticated } from "../store/slices/authSlice";
 import { getAuthToken } from "../utils/storage";
 import { buildWebSocketUrl, WS_ENDPOINTS } from "../utils/websocket";
+import { reportWebSocketMetrics } from "../utils/websocketTelemetry";
 
 // =============================================================================
 // Types
@@ -314,7 +315,7 @@ export function useCostTrackingWebSocket(
   }, []);
 
   // Use the realtime sync hook for WebSocket management
-  const { status, send, disconnect, reconnect } = useRealtimeSync({
+  const { status, send, disconnect, reconnect, metrics } = useRealtimeSync({
     url,
     onMessage: handleMessage,
     onConnect: handleConnect,
@@ -324,6 +325,13 @@ export function useCostTrackingWebSocket(
     maxReconnectAttempts: 10,
     onTokenExpired: () => dispatch(logout()),
   });
+
+  // Report WebSocket metrics for observability
+  useEffect(() => {
+    if (isAuthenticated && metrics.totalAttempts > 0) {
+      reportWebSocketMetrics("cost_tracking", metrics);
+    }
+  }, [isAuthenticated, metrics]);
 
   // Commands
   const subscribeSession = useCallback(

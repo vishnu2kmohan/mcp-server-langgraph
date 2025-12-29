@@ -20,6 +20,7 @@ import { useRealtimeSync, type ConnectionStatus } from "./useRealtimeSync";
 import { useAppDispatch, useAppSelector } from "../store/hooks";
 import { logout, selectIsAuthenticated } from "../store/slices/authSlice";
 import { buildWebSocketUrl, WS_ENDPOINTS } from "../utils/websocket";
+import { reportWebSocketMetrics } from "../utils/websocketTelemetry";
 
 // Import typed protocols for type-safe WebSocket message handling
 import { isBudgetAlertEntry } from "../types/websocket-protocols";
@@ -239,6 +240,7 @@ export function useBudgetAlertsWebSocket(
     send,
     disconnect,
     reconnect,
+    metrics,
   } = useRealtimeSync({
     url: effectiveEnabled ? wsUrl : "",
     exponentialBackoff: true,
@@ -260,6 +262,13 @@ export function useBudgetAlertsWebSocket(
       }
     },
   });
+
+  // Report WebSocket metrics for observability
+  useEffect(() => {
+    if (effectiveEnabled && metrics.totalAttempts > 0) {
+      reportWebSocketMetrics("budget_alerts", metrics);
+    }
+  }, [effectiveEnabled, metrics]);
 
   // Override status if not enabled
   const status: ConnectionStatus = effectiveEnabled

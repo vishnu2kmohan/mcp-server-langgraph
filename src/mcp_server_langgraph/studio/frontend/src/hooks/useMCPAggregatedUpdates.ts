@@ -18,6 +18,7 @@ import { useRealtimeSync, type ConnectionStatus } from "./useRealtimeSync";
 import { useAppDispatch, useAppSelector } from "../store/hooks";
 import { logout, selectIsAuthenticated } from "../store/slices/authSlice";
 import { buildWebSocketUrl, WS_ENDPOINTS } from "../utils/websocket";
+import { reportWebSocketMetrics } from "../utils/websocketTelemetry";
 
 // ============================================================================
 // Types
@@ -193,6 +194,7 @@ export function useMCPAggregatedUpdates(
     status: realtimeStatus,
     disconnect,
     reconnect,
+    metrics,
   } = useRealtimeSync({
     url: wsUrl,
     exponentialBackoff: true,
@@ -202,6 +204,13 @@ export function useMCPAggregatedUpdates(
     onMessage: handleMessage,
     onTokenExpired: () => dispatch(logout()),
   });
+
+  // Report WebSocket metrics for observability
+  useEffect(() => {
+    if (effectiveEnabled && metrics.totalAttempts > 0) {
+      reportWebSocketMetrics("mcp_aggregated", metrics);
+    }
+  }, [effectiveEnabled, metrics]);
 
   // Override status if not enabled
   const status: ConnectionStatus = effectiveEnabled

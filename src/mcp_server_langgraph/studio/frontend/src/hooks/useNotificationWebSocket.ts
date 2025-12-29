@@ -20,6 +20,7 @@ import { addNotification } from "../store/slices/notificationSlice";
 import type { AddNotificationPayload } from "../store/slices/notificationSlice";
 import { useRealtimeSync, type ConnectionStatus } from "./useRealtimeSync";
 import { buildWebSocketUrl, WS_ENDPOINTS } from "../utils/websocket";
+import { reportWebSocketMetrics } from "../utils/websocketTelemetry";
 
 /**
  * Options for useNotificationWebSocket hook
@@ -136,6 +137,7 @@ export function useNotificationWebSocket(
     status: realtimeStatus,
     disconnect: realtimeDisconnect,
     reconnect: realtimeReconnect,
+    metrics,
   } = useRealtimeSync({
     url: wsUrl,
     exponentialBackoff: true,
@@ -149,6 +151,13 @@ export function useNotificationWebSocket(
   // Track if enabled - if not auth-ready or explicitly disabled, override status
   // WebSocket requires valid auth token and completed auth initialization
   const effectiveEnabled = enabled && isAuthReady;
+
+  // Report WebSocket metrics for observability
+  useEffect(() => {
+    if (effectiveEnabled && metrics.totalAttempts > 0) {
+      reportWebSocketMetrics("notifications", metrics);
+    }
+  }, [effectiveEnabled, metrics]);
   const status: ConnectionStatus = effectiveEnabled
     ? realtimeStatus
     : "disconnected";

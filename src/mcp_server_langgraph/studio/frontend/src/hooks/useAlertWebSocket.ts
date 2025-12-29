@@ -24,6 +24,7 @@ import {
 import { addAlert, type Alert } from "../store/slices/alertSlice";
 import { useRealtimeSync, type ConnectionStatus } from "./useRealtimeSync";
 import { buildWebSocketUrl, WS_ENDPOINTS } from "../utils/websocket";
+import { reportWebSocketMetrics } from "../utils/websocketTelemetry";
 
 // =============================================================================
 // Types
@@ -236,6 +237,7 @@ export function useAlertWebSocket(
     status: realtimeStatus,
     disconnect: realtimeDisconnect,
     reconnect: realtimeReconnect,
+    metrics,
   } = useRealtimeSync({
     url: wsUrl,
     reconnectInterval: 1000, // Base delay for first attempt
@@ -250,6 +252,13 @@ export function useAlertWebSocket(
   // Track if enabled - if not auth-ready or explicitly disabled, override status
   // WebSocket requires valid auth token and completed auth initialization
   const effectiveEnabled = enabled && isAuthReady;
+
+  // Report WebSocket metrics for observability
+  useEffect(() => {
+    if (effectiveEnabled && metrics.totalAttempts > 0) {
+      reportWebSocketMetrics("alerts", metrics);
+    }
+  }, [effectiveEnabled, metrics]);
   const status: ConnectionStatus = effectiveEnabled
     ? realtimeStatus
     : "disconnected";
