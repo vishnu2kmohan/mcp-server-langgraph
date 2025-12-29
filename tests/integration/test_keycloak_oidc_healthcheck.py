@@ -273,7 +273,7 @@ class TestKeycloakHealthcheckLive:
                 ["docker", "ps", "--filter", "name=keycloak-test", "--format", "{{.Names}}"],
                 capture_output=True,
                 text=True,
-                timeout=5,
+                timeout=30,
             )
             return "keycloak-test" in result.stdout
         except (subprocess.SubprocessError, FileNotFoundError):
@@ -297,7 +297,7 @@ class TestKeycloakHealthcheckLive:
             ["docker", "ps", "--filter", "name=keycloak-test", "--format", "{{.Names}}"],
             capture_output=True,
             text=True,
-            timeout=5,
+            timeout=30,
         )
         container_name = result.stdout.strip().split("\n")[0]
 
@@ -317,7 +317,7 @@ class TestKeycloakHealthcheckLive:
             ],
             capture_output=True,
             text=True,
-            timeout=10,
+            timeout=30,
         )
         elapsed = time.time() - start_time
 
@@ -349,7 +349,7 @@ class TestKeycloakHealthcheckLive:
             ["docker", "ps", "--filter", "name=keycloak-test", "--format", "{{.Names}}"],
             capture_output=True,
             text=True,
-            timeout=5,
+            timeout=30,
         )
         container_name = result.stdout.strip().split("\n")[0]
 
@@ -369,7 +369,7 @@ class TestKeycloakHealthcheckLive:
             ],
             capture_output=True,
             text=True,
-            timeout=10,
+            timeout=30,
         )
         elapsed = time.time() - start_time
 
@@ -401,7 +401,7 @@ class TestKeycloakHealthcheckLive:
             ["docker", "ps", "--filter", "name=keycloak-test", "--format", "{{.Names}}"],
             capture_output=True,
             text=True,
-            timeout=5,
+            timeout=30,
         )
         container_name = result.stdout.strip().split("\n")[0]
 
@@ -424,7 +424,7 @@ class TestKeycloakHealthcheckLive:
             ],
             capture_output=True,
             text=True,
-            timeout=10,
+            timeout=30,
         )
         elapsed = time.time() - start_time
 

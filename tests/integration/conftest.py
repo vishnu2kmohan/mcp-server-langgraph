@@ -13,10 +13,61 @@ from typing import TYPE_CHECKING
 
 import pytest
 
+from tests.constants import TEST_OPENFGA_HTTP_PORT
 from tests.fixtures.feature_flags_fixtures import MockFeatureFlags
 
 if TYPE_CHECKING:
     pass
+
+
+def _openfga_available() -> bool:
+    """Check if real OpenFGA is available."""
+    import requests
+
+    try:
+        response = requests.get(
+            f"http://localhost:{TEST_OPENFGA_HTTP_PORT}/healthz",
+            timeout=5,
+        )
+        return response.status_code == 200
+    except Exception:
+        return False
+
+
+@pytest.fixture(autouse=True)
+def skip_if_openfga_unavailable(request) -> None:
+    """Skip OpenFGA-dependent tests if OpenFGA is not available.
+
+    Only applies to tests in files that need OpenFGA. Uses request.fspath
+    to determine which tests need this check.
+
+    Consolidated fixture per tests/meta/test_fixture_organization.py requirements.
+    """
+    # Files in tests/integration/ that require OpenFGA
+    openfga_files = [
+        "test_openfga_real_infrastructure.py",
+    ]
+
+    test_file = request.fspath.basename if hasattr(request.fspath, "basename") else str(request.fspath).split("/")[-1]
+
+    if test_file in openfga_files:
+        if not _openfga_available():
+            pytest.skip(
+                f"OpenFGA not available at localhost:{TEST_OPENFGA_HTTP_PORT}. "
+                "Run: docker compose -f docker-compose.test.yml up -d"
+            )
+
+
+@pytest.fixture(autouse=True)
+def reset_breakers() -> None:
+    """Reset all circuit breakers before each test.
+
+    Consolidated fixture for integration tests requiring circuit breaker isolation.
+    Per tests/meta/test_fixture_organization.py requirements.
+    """
+    from mcp_server_langgraph.resilience.circuit_breaker import reset_all_circuit_breakers
+
+    reset_all_circuit_breakers()
 
 
 @pytest.fixture(scope="session", autouse=True)

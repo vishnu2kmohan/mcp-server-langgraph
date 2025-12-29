@@ -21,33 +21,9 @@ import os
 
 import pytest
 
-from tests.constants import TEST_OPENFGA_HTTP_PORT
-
 pytestmark = pytest.mark.integration
 
-
-def _openfga_available() -> bool:
-    """Check if real OpenFGA is available."""
-    import requests
-
-    try:
-        response = requests.get(
-            f"http://localhost:{TEST_OPENFGA_HTTP_PORT}/healthz",
-            timeout=5,
-        )
-        return response.status_code == 200
-    except Exception:
-        return False
-
-
-@pytest.fixture(autouse=True)
-def skip_if_openfga_unavailable():
-    """Skip tests if OpenFGA infrastructure is not available."""
-    if not _openfga_available():
-        pytest.skip(
-            f"OpenFGA not available at localhost:{TEST_OPENFGA_HTTP_PORT}. "
-            "Run: docker compose -f docker-compose.test.yml up -d"
-        )
+# Note: skip_if_openfga_unavailable fixture is defined in tests/integration/conftest.py
 
 
 @pytest.mark.integration

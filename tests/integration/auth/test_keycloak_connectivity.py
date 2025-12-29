@@ -27,7 +27,7 @@ def _is_docker_available() -> bool:
         result = subprocess.run(
             ["docker", "version"],
             capture_output=True,
-            timeout=5,
+            timeout=30,
         )
         return result.returncode == 0
     except (FileNotFoundError, subprocess.TimeoutExpired):
@@ -41,7 +41,7 @@ def _is_keycloak_container_running() -> bool:
             ["docker", "ps", "--filter", "name=keycloak", "--format", "{{.Names}}"],
             capture_output=True,
             text=True,
-            timeout=5,
+            timeout=30,
         )
         return "keycloak" in result.stdout.lower()
     except (FileNotFoundError, subprocess.TimeoutExpired):
@@ -79,7 +79,7 @@ class TestKeycloakConnectivity:
             ["docker", "ps", "--filter", "name=keycloak", "--format", "{{.Names}}\t{{.Status}}"],
             capture_output=True,
             text=True,
-            timeout=10,
+            timeout=30,
         )
 
         if "keycloak" not in result.stdout.lower():
