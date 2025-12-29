@@ -130,6 +130,14 @@ export default defineConfig({
   build: {
     outDir: 'dist',
     sourcemap: true,
+    // Increase chunk size warning limit to 700KB
+    // Large vendor chunks are expected for:
+    // - vendor-sandpack (612KB) - Codesandbox interactive code execution
+    // - vendor-syntax (618KB) - React syntax highlighter with all language grammars
+    // - vendor-mermaid (483KB) - Mermaid diagram rendering library
+    // - vendor-cytoscape (442KB) - Cytoscape graph visualization
+    // These are all properly code-split and lazily loaded, so the warning is informational only
+    chunkSizeWarningLimit: 700,
     rollupOptions: {
       output: {
         manualChunks: {
@@ -149,12 +157,14 @@ export default defineConfig({
           'vendor-mermaid': ['mermaid'],
           // Flow diagram library
           'vendor-flow': ['reactflow'],
-          // Syntax highlighting
+          // Syntax highlighting (large due to all language grammars)
           'vendor-syntax': ['react-syntax-highlighter'],
           // Code sandbox (very large, split separately)
           'vendor-sandpack': ['@codesandbox/sandpack-react'],
           // Math rendering (katex)
           'vendor-math': ['katex'],
+          // Graph visualization (cytoscape)
+          'vendor-cytoscape': ['cytoscape'],
         },
       },
     },
