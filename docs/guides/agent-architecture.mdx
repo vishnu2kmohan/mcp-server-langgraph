@@ -89,6 +89,54 @@ flowchart TD
 
 ## LangGraph Agent
 
+### State Machine Flow
+
+```mermaid
+flowchart TB
+    subgraph Entry["Entry Point"]
+        Start[User Message]
+    end
+
+    subgraph Agent["Agent Node"]
+        LLM[LLM Invocation<br/>+ Message History]
+        Response[AI Response]
+    end
+
+    subgraph Routing["Conditional Routing"]
+        Check{Tool Calls<br/>in Response?}
+    end
+
+    subgraph Tools["Tool Node"]
+        Exec[Execute Tools<br/>in Parallel]
+        Results[Tool Results<br/>as Messages]
+    end
+
+    subgraph End["End"]
+        Final[Final Response<br/>to User]
+    end
+
+    Start --> LLM
+    LLM --> Response
+    Response --> Check
+    Check -->|Yes| Exec
+    Exec --> Results
+    Results --> LLM
+    Check -->|No| Final
+
+    %% ColorBrewer2 Set3 palette
+    classDef entryStyle fill:#8dd3c7,stroke:#2a9d8f,stroke-width:2px,color:#333
+    classDef agentStyle fill:#b3de69,stroke:#7cb342,stroke-width:2px,color:#333
+    classDef routingStyle fill:#ffffb3,stroke:#f1c40f,stroke-width:2px,color:#333
+    classDef toolsStyle fill:#fdb462,stroke:#e67e22,stroke-width:2px,color:#333
+    classDef endStyle fill:#bebada,stroke:#7e5eb0,stroke-width:2px,color:#333
+
+    class Start entryStyle
+    class LLM,Response agentStyle
+    class Check routingStyle
+    class Exec,Results toolsStyle
+    class Final endStyle
+```
+
 ### Core Components
 
 Located in: `src/mcp_server_langgraph/core/agent.py`
@@ -152,6 +200,37 @@ def should_continue(state: AgentState) -> str:
 ### Stateful Conversation
 
 LangGraph maintains conversation state through **checkpointing**:
+
+```mermaid
+flowchart LR
+    subgraph Dev["Development"]
+        Memory[MemorySaver<br/>In-Memory]
+        MemProps["Fast startup<br/>No persistence<br/>Single process"]
+    end
+
+    subgraph Prod["Production"]
+        Postgres[PostgresSaver<br/>PostgreSQL]
+        PgProps["Persistent state<br/>Multi-replica<br/>Crash recovery"]
+    end
+
+    subgraph Redis["Alternative"]
+        RedisCP[RedisSaver<br/>Redis Cluster]
+        RedisProps["Fast reads<br/>Distributed<br/>TTL support"]
+    end
+
+    Memory --> MemProps
+    Postgres --> PgProps
+    RedisCP --> RedisProps
+
+    %% ColorBrewer2 Set3 palette
+    classDef devStyle fill:#b3de69,stroke:#7cb342,stroke-width:2px,color:#333
+    classDef prodStyle fill:#80b1d3,stroke:#3498db,stroke-width:2px,color:#333
+    classDef redisStyle fill:#fdb462,stroke:#e67e22,stroke-width:2px,color:#333
+
+    class Memory,MemProps devStyle
+    class Postgres,PgProps prodStyle
+    class RedisCP,RedisProps redisStyle
+```
 
 ```python
 from langgraph.checkpoint.memory import MemorySaver

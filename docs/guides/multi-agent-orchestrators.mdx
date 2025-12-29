@@ -116,10 +116,11 @@ flowchart TD
     R3 --> SYNTH
     SYNTH --> FINAL
 
-    classDef taskStyle fill:#b3de69,stroke:#7cb342,stroke-width:2px
-    classDef gatherStyle fill:#8dd3c7,stroke:#2a9d8f,stroke-width:2px
-    classDef resultStyle fill:#fdb462,stroke:#e67e22,stroke-width:2px
-    classDef synthStyle fill:#bebada,stroke:#7e5eb0,stroke-width:2px
+    %% ColorBrewer2 Set3 palette
+    classDef taskStyle fill:#b3de69,stroke:#7cb342,stroke-width:2px,color:#333
+    classDef gatherStyle fill:#8dd3c7,stroke:#2a9d8f,stroke-width:2px,color:#333
+    classDef resultStyle fill:#fdb462,stroke:#e67e22,stroke-width:2px,color:#333
+    classDef synthStyle fill:#bebada,stroke:#7e5eb0,stroke-width:2px,color:#333
 
     class T1,T2,T3 taskStyle
     class GATHER gatherStyle
@@ -132,6 +133,41 @@ flowchart TD
 ### Purpose
 
 Orchestrates parallel AI UX analysis for composite user experience insights.
+
+```mermaid
+flowchart LR
+    subgraph Input["Request"]
+        Req[Composite<br/>Analysis Request]
+    end
+
+    subgraph Parallel["Parallel Analysis (asyncio.gather)"]
+        P1[Persona<br/>Analysis]
+        P2[Disclosure<br/>Analysis]
+        P3[Error<br/>Analysis]
+    end
+
+    subgraph Synthesis["Synthesis"]
+        Cross[Cross-Insights<br/>Generation]
+        Final[Composite<br/>Response]
+    end
+
+    Req --> P1
+    Req --> P2
+    Req --> P3
+    P1 --> Cross
+    P2 --> Cross
+    P3 --> Cross
+    Cross --> Final
+
+    %% ColorBrewer2 Set3 palette
+    classDef inputStyle fill:#8dd3c7,stroke:#2a9d8f,stroke-width:2px,color:#333
+    classDef parallelStyle fill:#b3de69,stroke:#7cb342,stroke-width:2px,color:#333
+    classDef synthStyle fill:#bebada,stroke:#7e5eb0,stroke-width:2px,color:#333
+
+    class Req inputStyle
+    class P1,P2,P3 parallelStyle
+    class Cross,Final synthStyle
+```
 
 ### Analysis Types
 
@@ -233,6 +269,44 @@ When disabled, the sequential AI UX Service is used as fallback.
 
 Orchestrates parallel alert analysis for multi-alert correlation and root cause detection.
 
+```mermaid
+flowchart LR
+    subgraph Input["Alert Input"]
+        Alerts[Alert IDs<br/>1, 2, 3...]
+    end
+
+    subgraph Parallel["Parallel Analysis"]
+        A1[Correlation<br/>No LLM]
+        A2[Root Cause<br/>LLM]
+        A3[Remediation<br/>LLM]
+        A4[Pattern Detection<br/>No LLM]
+    end
+
+    subgraph Output["Correlation Summary"]
+        Summary[Alert Groups<br/>+ Patterns<br/>+ Remediations]
+    end
+
+    Alerts --> A1
+    Alerts --> A2
+    Alerts --> A3
+    Alerts --> A4
+    A1 --> Summary
+    A2 --> Summary
+    A3 --> Summary
+    A4 --> Summary
+
+    %% ColorBrewer2 Set3 palette
+    classDef inputStyle fill:#8dd3c7,stroke:#2a9d8f,stroke-width:2px,color:#333
+    classDef llmStyle fill:#fdb462,stroke:#e67e22,stroke-width:2px,color:#333
+    classDef noLlmStyle fill:#b3de69,stroke:#7cb342,stroke-width:2px,color:#333
+    classDef outputStyle fill:#bebada,stroke:#7e5eb0,stroke-width:2px,color:#333
+
+    class Alerts inputStyle
+    class A2,A3 llmStyle
+    class A1,A4 noLlmStyle
+    class Summary outputStyle
+```
+
 ### Analysis Types
 
 | Type | Description | LLM Required |
@@ -325,6 +399,59 @@ enable_orchestrated_alert_analysis: bool = True
 ### Purpose
 
 The LoopAgent pattern (from Google ADK) enables iterative task execution until a termination condition is met. Useful for workflows requiring refinement, retries, or progressive processing.
+
+```mermaid
+flowchart TB
+    subgraph Init["Initialization"]
+        Start[Initial State]
+        Config[Loop Config<br/>max_iterations, delay]
+    end
+
+    subgraph Loop["Iteration Loop"]
+        Exec[Execute Task]
+        Check{Termination<br/>Condition?}
+        Delay[Optional<br/>Delay]
+        Inc[Increment<br/>Iteration]
+    end
+
+    subgraph Exit["Exit Conditions"]
+        Done[Task Complete<br/>done=true]
+        MaxIter[Max Iterations<br/>Reached]
+        Timeout[Timeout<br/>Exceeded]
+    end
+
+    subgraph Result["Result"]
+        History[Iteration<br/>History]
+        Final[Final<br/>Result]
+    end
+
+    Start --> Config
+    Config --> Exec
+    Exec --> Check
+    Check -->|No| Delay
+    Delay --> Inc
+    Inc --> Exec
+    Check -->|Yes: done| Done
+    Check -->|Yes: max| MaxIter
+    Check -->|Yes: timeout| Timeout
+    Done --> History
+    MaxIter --> History
+    Timeout --> History
+    History --> Final
+
+    %% ColorBrewer2 Set3 palette
+    classDef initStyle fill:#8dd3c7,stroke:#2a9d8f,stroke-width:2px,color:#333
+    classDef loopStyle fill:#b3de69,stroke:#7cb342,stroke-width:2px,color:#333
+    classDef exitStyle fill:#fdb462,stroke:#e67e22,stroke-width:2px,color:#333
+    classDef resultStyle fill:#bebada,stroke:#7e5eb0,stroke-width:2px,color:#333
+    classDef decisionStyle fill:#ffffb3,stroke:#f1c40f,stroke-width:2px,color:#333
+
+    class Start,Config initStyle
+    class Exec,Delay,Inc loopStyle
+    class Done,MaxIter,Timeout exitStyle
+    class History,Final resultStyle
+    class Check decisionStyle
+```
 
 ### Feature Flag
 

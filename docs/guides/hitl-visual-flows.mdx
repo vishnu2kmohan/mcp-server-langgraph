@@ -1,0 +1,560 @@
+---
+title: "HITL Visual Flow Diagrams"
+description: 'Comprehensive visual diagrams depicting Human-in-the-Loop (HITL) flows in chat sessions'
+icon: 'diagram-project'
+seoTitle: "HITL Visual Flows - Agent Development Guide"
+seoDescription: "Visual diagrams showing Human-in-the-Loop approval, clarification, and checkpoint flows in chat sessions for the MCP Server LangGraph platform"
+keywords:
+  - "HITL"
+  - "human-in-the-loop"
+  - "approval"
+  - "clarification"
+  - "diagrams"
+  - "flows"
+  - "WebSocket"
+  - "checkpoint"
+contentType: "guide"
+---
+
+# HITL Visual Flow Diagrams
+
+<Info>
+**Last Updated**: December 2025
+
+This guide provides comprehensive visual representations of Human-in-the-Loop (HITL) flows in chat sessions. The HITL system enables agents to pause execution, request human approval or clarification, and resume after receiving input.
+</Info>
+
+## Overview
+
+The HITL system consists of three main flow types:
+
+1. **Approval Flow** - Agent pauses for human approval before executing risky actions
+2. **Clarification Flow** - Agent requests additional input (text, choice, or confirmation)
+3. **Resume Flow** - Execution continues after human decision with checkpoint restoration
+
+---
+
+## 1. High-Level HITL Architecture
+
+```mermaid
+flowchart TB
+    subgraph Frontend["Frontend Layer"]
+        UI[React UI<br/>Agent Studio]
+        Dialogs[HITL Dialogs<br/>Approval/Clarify]
+    end
+
+    subgraph API["API Layer"]
+        REST[REST API<br/>/agents/requests/]
+        WS[WebSocket<br/>Broadcast Layer]
+    end
+
+    subgraph Backend["Backend Layer"]
+        Agent[Agent<br/>Execution]
+        Checkpoint[LangGraph<br/>Checkpoint]
+        Session[Session-Scoped<br/>Messaging]
+    end
+
+    subgraph Storage["Storage Layer"]
+        Redis[(Redis<br/>State Store)]
+    end
+
+    UI <--> REST
+    UI --> Dialogs
+    WS --> UI
+    Agent --> WS
+    Agent --> Checkpoint
+    Checkpoint --> Redis
+    WS --> Session
+
+    %% ColorBrewer2 Set3 palette - each component type uniquely colored
+    classDef frontendStyle fill:#8dd3c7,stroke:#2a9d8f,stroke-width:2px,color:#333
+    classDef apiStyle fill:#fdb462,stroke:#e67e22,stroke-width:2px,color:#333
+    classDef backendStyle fill:#b3de69,stroke:#7cb342,stroke-width:2px,color:#333
+    classDef storageStyle fill:#80b1d3,stroke:#3498db,stroke-width:2px,color:#333
+
+    class UI,Dialogs frontendStyle
+    class REST,WS apiStyle
+    class Agent,Checkpoint,Session backendStyle
+    class Redis storageStyle
+```
+
+### Component Descriptions
+
+| Component | Purpose |
+|-----------|---------|
+| **React UI** | Agent Studio frontend for chat interactions |
+| **HITL Dialogs** | Modal dialogs for approval/clarification requests |
+| **REST API** | Endpoints for approve/reject/respond actions |
+| **WebSocket** | Real-time broadcast of HITL events |
+| **Agent Execution** | LangGraph agent processing |
+| **Checkpoint** | State persistence for interrupt/resume |
+| **Redis** | Distributed checkpoint storage (7-day TTL) |
+
+---
+
+## 2. Complete Chat Session with HITL Flow
+
+```mermaid
+flowchart TD
+    subgraph User["User Actions"]
+        U1[Type Message]
+        U2[See Tokens]
+        U3[HITL Dialog]
+        U4[Click Approve]
+        U5[Final Response]
+    end
+
+    subgraph Frontend["Frontend"]
+        F1[POST /chat/completions/stream]
+        F2[SSE Stream]
+        F3[WS: approval_required]
+        F4[POST /agents/requests/approve]
+        F5[WS: execution_resumed]
+    end
+
+    subgraph Backend["Backend"]
+        B1[ainvoke]
+        B2[Running]
+        B3[Confidence Check]
+        B4[INTERRUPT BEFORE]
+        B5[Checkpoint Saved]
+        B6[Resume Execution]
+        B7[Complete]
+    end
+
+    U1 --> F1
+    F1 --> B1
+    B1 --> B2
+    B2 --> F2
+    F2 --> U2
+    B2 --> B3
+    B3 -->|conf < 0.7| B4
+    B4 --> B5
+    B5 -->|broadcast| F3
+    F3 --> U3
+    U3 --> U4
+    U4 --> F4
+    F4 --> B6
+    B6 --> F5
+    B6 --> B7
+    B7 --> U5
+
+    %% ColorBrewer2 Set3 palette - each component type uniquely colored
+    classDef userStyle fill:#8dd3c7,stroke:#2a9d8f,stroke-width:2px,color:#333
+    classDef frontendStyle fill:#fdb462,stroke:#e67e22,stroke-width:2px,color:#333
+    classDef backendStyle fill:#b3de69,stroke:#7cb342,stroke-width:2px,color:#333
+    classDef interruptStyle fill:#fb8072,stroke:#e74c3c,stroke-width:2px,color:#333
+
+    class U1,U2,U3,U4,U5 userStyle
+    class F1,F2,F3,F4,F5 frontendStyle
+    class B1,B2,B3,B6,B7 backendStyle
+    class B4,B5 interruptStyle
+```
+
+---
+
+## 3. Approval Flow (Confidence-Based)
+
+The approval flow triggers when agent confidence drops below the configured threshold (default: 0.7).
+
+```mermaid
+flowchart TB
+    subgraph Graph["Agent Graph Execution"]
+        Input[INPUT NODE]
+        Analyze[ANALYZE NODE]
+        Confidence[CONFIDENCE<br/>APPROVAL NODE]
+        Action[ACTION NODE]
+    end
+
+    subgraph Interrupt["Interrupt Handling"]
+        IntBefore{Interrupt<br/>Before?}
+        Save[Checkpoint<br/>Saved to Redis]
+        Broadcast[WebSocket<br/>Broadcast]
+    end
+
+    subgraph Dialog["Frontend Dialog"]
+        DTitle["APPROVAL REQUIRED"]
+        DAgent[Agent: AnalysisAgent]
+        DConf[Confidence: 45%<br/>Threshold: 70%]
+        DAction[Proposed Action:<br/>Execute database transaction]
+        DExplain[AI Explanation]
+        DButtons[Approve / Reject]
+    end
+
+    Input --> Analyze
+    Analyze --> Confidence
+    Confidence -->|conf >= threshold| Action
+    Confidence -->|conf < threshold| IntBefore
+    IntBefore -->|yes| Save
+    Save --> Broadcast
+    Broadcast --> DTitle
+    DTitle --> DAgent
+    DAgent --> DConf
+    DConf --> DAction
+    DAction --> DExplain
+    DExplain --> DButtons
+
+    %% ColorBrewer2 Set3 palette - each component type uniquely colored
+    classDef graphStyle fill:#b3de69,stroke:#7cb342,stroke-width:2px,color:#333
+    classDef interruptStyle fill:#fb8072,stroke:#e74c3c,stroke-width:2px,color:#333
+    classDef dialogStyle fill:#8dd3c7,stroke:#2a9d8f,stroke-width:2px,color:#333
+    classDef decisionStyle fill:#ffffb3,stroke:#f1c40f,stroke-width:2px,color:#333
+
+    class Input,Analyze,Confidence,Action graphStyle
+    class Save,Broadcast interruptStyle
+    class DTitle,DAgent,DConf,DAction,DExplain,DButtons dialogStyle
+    class IntBefore decisionStyle
+```
+
+### Checkpoint State Structure
+
+```json
+{
+  "thread_id": "session-123",
+  "state": {
+    "pending_approval": true,
+    "current_approval_id": "approval-456",
+    "routing_confidence": 0.45,
+    "approval_requests": [{
+      "approval_id": "approval-456",
+      "risk_level": "medium",
+      "action_description": "Execute database transaction"
+    }]
+  }
+}
+```
+
+---
+
+## 4. Clarification Flow
+
+Three types of clarification requests are supported:
+
+```mermaid
+flowchart LR
+    subgraph Types["Clarification Types"]
+        Text[TEXT INPUT<br/>Free-form text]
+        Choice[CHOICE<br/>Select from options]
+        Confirm[CONFIRMATION<br/>Yes/No decision]
+    end
+
+    subgraph Examples["Example Usage"]
+        TextEx["API key?<br/>placeholder: sk-xxx"]
+        ChoiceEx["Format?<br/>CSV / JSON / XML"]
+        ConfirmEx["Delete 150 records?<br/>Yes / No"]
+    end
+
+    Text --> TextEx
+    Choice --> ChoiceEx
+    Confirm --> ConfirmEx
+
+    %% ColorBrewer2 Set3 palette - each component type uniquely colored
+    classDef typeStyle fill:#80b1d3,stroke:#3498db,stroke-width:2px,color:#333
+    classDef exampleStyle fill:#ccebc5,stroke:#82c99a,stroke-width:2px,color:#333
+
+    class Text,Choice,Confirm typeStyle
+    class TextEx,ChoiceEx,ConfirmEx exampleStyle
+```
+
+### Clarification API Endpoints
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/agents/requests/{id}/respond` | Submit clarification response |
+
+**Request Body:**
+```json
+{
+  "response_type": "text" | "choice" | "confirm",
+  "value": "user-entered-text",           // For text
+  "selected_option_id": "json",           // For choice
+  "confirmed": true                       // For confirmation
+}
+```
+
+---
+
+## 5. State Machine: HITL Request Lifecycle
+
+```mermaid
+stateDiagram-v2
+    [*] --> Created: Agent triggers HITL
+
+    Created --> Pending: WebSocket broadcast
+
+    Pending --> Approved: User approves
+    Pending --> Rejected: User rejects
+    Pending --> Responded: User provides input
+    Pending --> Timeout: TTL expires
+
+    Approved --> Resumed: Load checkpoint
+    Rejected --> Resumed: Load checkpoint
+    Responded --> Resumed: Load checkpoint
+
+    Timeout --> Pending: Optional retry
+
+    Resumed --> [*]: Execution complete
+
+    note right of Pending
+        Waiting for human decision
+        State persisted in Redis
+    end note
+
+    note right of Resumed
+        Checkpoint loaded
+        Graph continues from interrupt
+        execution_resumed broadcast
+    end note
+```
+
+### State Descriptions
+
+| State | Description |
+|-------|-------------|
+| **Created** | HITL request generated by agent |
+| **Pending** | Waiting for human decision |
+| **Approved** | User approved the action |
+| **Rejected** | User rejected the action |
+| **Responded** | User provided clarification input |
+| **Timeout** | Request expired (configurable TTL) |
+| **Resumed** | Execution continued with checkpoint |
+
+---
+
+## 6. WebSocket Message Protocol
+
+```mermaid
+%%{init: {'theme':'base', 'themeVariables': {
+  'primaryColor':'#8dd3c7',
+  'primaryTextColor':'#333',
+  'primaryBorderColor':'#2a9d8f',
+  'lineColor':'#fb8072',
+  'secondaryColor':'#fdb462',
+  'tertiaryColor':'#b3de69'
+}}}%%
+sequenceDiagram
+    autonumber
+    participant C as Client (Frontend)
+    participant S as Server (Backend)
+
+    C->>S: CONNECT ws://host/ws/agents/requests?session_id=xxx
+    S-->>C: CONNECTION ACCEPTED
+
+    C->>S: { type: "subscribe", session_id: "xxx" }
+    C->>S: { type: "get_pending" }
+    S-->>C: [ pending_requests... ]
+
+    loop Keepalive (every 30s)
+        C->>S: { type: "ping" }
+        S-->>C: { type: "pong" }
+    end
+
+    Note over S: Agent triggers approval
+    S-->>C: { type: "approval_required", payload: {...} }
+
+    Note over C: User approves via REST
+    C->>S: POST /agents/requests/{id}/approve
+
+    S-->>C: { type: "approval_updated", payload: {...} }
+    S-->>C: { type: "execution_resumed", payload: {...} }
+
+    C->>S: { type: "unsubscribe" }
+    C->>S: DISCONNECT
+```
+
+### Message Types
+
+| Type | Direction | Description |
+|------|-----------|-------------|
+| `approval_required` | Server → Client | New approval request |
+| `clarification_required` | Server → Client | New clarification request |
+| `approval_updated` | Server → Client | Decision made on request |
+| `execution_resumed` | Server → Client | Agent execution resumed |
+| `ping` | Client → Server | Keepalive ping |
+| `pong` | Server → Client | Keepalive response |
+| `error` | Server → Client | Error notification |
+
+---
+
+## 7. Multi-Replica HITL with Redis Checkpointing
+
+```mermaid
+flowchart TB
+    subgraph Ingress["Load Balancer"]
+        LB[Ingress]
+    end
+
+    subgraph Pods["Kubernetes Pods"]
+        Pod1[Pod 1<br/>Agent Graph + WS]
+        Pod2[Pod 2<br/>Agent Graph + WS]
+        Pod3[Pod 3<br/>Agent Graph + WS]
+    end
+
+    subgraph Redis["Redis Checkpoint Store"]
+        R1["thread-123: pending_approval=true"]
+        R2["thread-456: messages=[...]"]
+        R3["thread-789: clarification_request={...}"]
+        TTL["TTL: 7 days"]
+    end
+
+    LB --> Pod1
+    LB --> Pod2
+    LB --> Pod3
+    Pod1 --> R1
+    Pod2 --> R2
+    Pod3 --> R3
+
+    %% ColorBrewer2 Set3 palette - each component type uniquely colored
+    classDef ingressStyle fill:#fdb462,stroke:#e67e22,stroke-width:2px,color:#333
+    classDef podStyle fill:#b3de69,stroke:#7cb342,stroke-width:2px,color:#333
+    classDef redisStyle fill:#80b1d3,stroke:#3498db,stroke-width:2px,color:#333
+
+    class LB ingressStyle
+    class Pod1,Pod2,Pod3 podStyle
+    class R1,R2,R3,TTL redisStyle
+```
+
+### Distributed Execution Flow
+
+1. **User sends chat** → Pod 1 receives
+2. **Agent runs** → Confidence low → INTERRUPT
+3. **Pod 1 saves checkpoint** to Redis
+4. **Pod 1 broadcasts** `approval_required` via WebSocket
+5. *...time passes (user is thinking)...*
+6. **User approves** → Request hits Pod 3 (different pod!)
+7. **Pod 3 loads checkpoint** from Redis
+8. **Pod 3 resumes** agent execution
+9. **Pod 3 broadcasts** `execution_resumed`
+10. **Agent completes** on Pod 3
+
+<Note>
+Redis checkpointing enables true horizontal scaling - execution can resume on any replica with full state fidelity.
+</Note>
+
+---
+
+## 8. Frontend Hook Architecture
+
+```mermaid
+flowchart TB
+    subgraph useHITLDialogs["useHITLDialogs() Hook"]
+        enabled[enabled: boolean]
+        showApproval[showApprovalDialog: boolean]
+        showClarify[showClarificationDialog: boolean]
+        activeApproval[activeApproval: Payload | null]
+        activeClarify[activeClarification: Payload | null]
+        pending[pendingApprovals: Payload[]]
+        actions[handleApprove / handleReject]
+    end
+
+    subgraph useAgentRequestWebSocket["useAgentRequestWebSocket() Hook"]
+        connect[Connection Management]
+        messages[Message Handling]
+        reconnect[Reconnection Strategy]
+    end
+
+    subgraph useRealtimeSync["useRealtimeSync() Hook"]
+        ws[WebSocket Management]
+        backoff[Exponential Backoff]
+        codes[Token Expiry: 4010<br/>Protocol Mismatch: 4009]
+    end
+
+    useHITLDialogs --> useAgentRequestWebSocket
+    useAgentRequestWebSocket --> useRealtimeSync
+
+    %% ColorBrewer2 Set3 palette - each component type uniquely colored
+    classDef hookStyle fill:#8dd3c7,stroke:#2a9d8f,stroke-width:2px,color:#333
+    classDef wsStyle fill:#fdb462,stroke:#e67e22,stroke-width:2px,color:#333
+    classDef lowStyle fill:#bebada,stroke:#7e5eb0,stroke-width:2px,color:#333
+
+    class enabled,showApproval,showClarify,activeApproval,activeClarify,pending,actions hookStyle
+    class connect,messages,reconnect wsStyle
+    class ws,backoff,codes lowStyle
+```
+
+---
+
+## 9. End-to-End Sequence Diagram
+
+```mermaid
+%%{init: {'theme':'base', 'themeVariables': {
+  'primaryColor':'#8dd3c7',
+  'primaryTextColor':'#333',
+  'primaryBorderColor':'#2a9d8f',
+  'lineColor':'#fb8072',
+  'secondaryColor':'#fdb462',
+  'tertiaryColor':'#b3de69'
+}}}%%
+sequenceDiagram
+    autonumber
+    participant U as User
+    participant F as Frontend
+    participant H as useHITL<br/>Dialogs
+    participant W as WebSocket
+    participant R as REST API
+    participant A as Agent
+    participant C as Checkpoint<br/>(Redis)
+
+    U->>R: Send message (POST /chat)
+    R->>A: ainvoke(state, config)
+
+    Note over A: Confidence < 0.7
+    A->>C: Save checkpoint
+    A->>W: broadcast approval_required
+
+    W->>H: onMessage(approval_required)
+    H->>F: showApprovalDialog()
+    F->>U: Dialog appears
+
+    U->>F: Click [Approve]
+    F->>H: handleApprove()
+    H->>R: POST /agents/requests/{id}/approve
+
+    R->>C: Load checkpoint
+    C-->>R: State restored
+    R->>A: Resume execution
+
+    A->>W: broadcast execution_resumed
+    W->>H: onMessage(execution_resumed)
+    H->>F: closeDialog()
+
+    A-->>R: Execution complete
+    R-->>F: SSE stream response
+    F-->>U: Final response displayed
+```
+
+---
+
+## 10. Key Files Reference
+
+| Component | File Path | Description |
+|-----------|-----------|-------------|
+| **Approval Node** | `src/mcp_server_langgraph/core/interrupts/approval.py` | Creates approval requests |
+| **Confidence Check** | `src/mcp_server_langgraph/core/interrupts/confidence.py` | Auto-triggers based on confidence |
+| **Clarification** | `src/mcp_server_langgraph/core/interrupts/clarification.py` | User input requests |
+| **AI Explanation** | `src/mcp_server_langgraph/core/interrupts/ai_explanation.py` | Rich context for decisions |
+| **WS Broadcaster** | `src/mcp_server_langgraph/hitl/broadcast.py` | Real-time notifications |
+| **REST Endpoints** | `src/mcp_server_langgraph/api/v1/agent_requests.py` | Approve/reject/respond |
+| **WS Handler** | `src/mcp_server_langgraph/websocket/handlers/agent_request.py` | WebSocket protocol |
+| **Frontend Hook** | `studio/frontend/src/hooks/useAgentRequestWebSocket.ts` | WS client |
+| **HITL Types** | `studio/frontend/src/types/hitl.ts` | TypeScript definitions |
+| **Checkpointer** | `src/mcp_server_langgraph/core/agent.py` | Redis/Memory checkpoint |
+
+---
+
+## Related Documentation
+
+<CardGroup cols={2}>
+  <Card title="HITL Approval Guide" icon="check" href="/guides/agent-hitl-approval">
+    Implementing human approval workflows
+  </Card>
+  <Card title="Confidence Thresholds" icon="gauge" href="/guides/hitl-confidence">
+    Configuring confidence-based approvals
+  </Card>
+  <Card title="WebSocket Reference" icon="plug" href="/api-reference/websockets">
+    WebSocket API documentation
+  </Card>
+  <Card title="Agent Architecture" icon="sitemap" href="/guides/agent-architecture">
+    LangGraph agent patterns
+  </Card>
+</CardGroup>

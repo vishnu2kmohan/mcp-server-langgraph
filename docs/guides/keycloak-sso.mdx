@@ -228,6 +228,34 @@ If you prefer to configure Keycloak manually via the admin console:
 
 ### Token Flow
 
+```mermaid
+flowchart LR
+    subgraph AuthCode["Authorization Code Flow"]
+        A1[User] -->|1. Login| A2[Keycloak]
+        A2 -->|2. Code| A3[Callback]
+        A3 -->|3. Exchange| A4[Token]
+    end
+
+    subgraph Direct["Direct Grant (Testing)"]
+        D1[App] -->|Username/Password| D2[Keycloak]
+        D2 -->|Token| D3[Response]
+    end
+
+    subgraph Refresh["Token Refresh"]
+        R1[Refresh Token] -->|Request| R2[Keycloak]
+        R2 -->|New Tokens| R3[Rotated]
+    end
+
+    %% ColorBrewer2 Set3 palette
+    classDef authStyle fill:#8dd3c7,stroke:#2a9d8f,stroke-width:2px,color:#333
+    classDef directStyle fill:#fb8072,stroke:#e74c3c,stroke-width:2px,color:#333
+    classDef refreshStyle fill:#b3de69,stroke:#7cb342,stroke-width:2px,color:#333
+
+    class A1,A2,A3,A4 authStyle
+    class D1,D2,D3 directStyle
+    class R1,R2,R3 refreshStyle
+```
+
 #### Authorization Code Flow (Recommended)
 
 For web applications:
@@ -297,6 +325,49 @@ new_refresh_token = new_tokens['refresh_token']  # Rotated!
 ### Role Mapping to OpenFGA
 
 **NEW v2.1.0**: Automatic synchronization of Keycloak roles/groups to OpenFGA.
+
+```mermaid
+flowchart TB
+    subgraph Keycloak["Keycloak Identity"]
+        User[User: alice]
+        Roles[Roles: admin, user]
+        Groups[Groups: /admins]
+    end
+
+    subgraph Mapping["Role Mapping Engine"]
+        Simple[Simple Mappings<br/>admin → admin]
+        Regex[Regex Groups<br/>/admins → admin]
+        Cond[Conditional<br/>email_verified → member]
+        Hier[Hierarchies<br/>admin → member → viewer]
+    end
+
+    subgraph OpenFGA["OpenFGA Tuples"]
+        T1["user:alice#admin"]
+        T2["user:alice#member"]
+        T3["user:alice#viewer"]
+    end
+
+    User --> Roles
+    User --> Groups
+    Roles --> Simple
+    Groups --> Regex
+    User --> Cond
+    Simple --> Hier
+    Regex --> Hier
+    Cond --> Hier
+    Hier --> T1
+    Hier --> T2
+    Hier --> T3
+
+    %% ColorBrewer2 Set3 palette
+    classDef kcStyle fill:#8dd3c7,stroke:#2a9d8f,stroke-width:2px,color:#333
+    classDef mapStyle fill:#fdb462,stroke:#e67e22,stroke-width:2px,color:#333
+    classDef fgaStyle fill:#b3de69,stroke:#7cb342,stroke-width:2px,color:#333
+
+    class User,Roles,Groups kcStyle
+    class Simple,Regex,Cond,Hier mapStyle
+    class T1,T2,T3 fgaStyle
+```
 
 #### Configuration
 

@@ -101,6 +101,41 @@ DPOP_REQUIRED=true
 
 ### Enforcement Modes
 
+```mermaid
+flowchart LR
+    subgraph Token["Access Token"]
+        T{Has cnf.jkt<br/>claim?}
+    end
+
+    subgraph Optional["Optional Mode (Default)"]
+        O1{DPoP Header<br/>Present?}
+        O2[Validate<br/>DPoP Proof]
+        O3[No DPoP<br/>Required]
+    end
+
+    subgraph Required["Required Mode"]
+        R1{DPoP Header<br/>Present?}
+        R2[Validate<br/>DPoP Proof]
+        R3[401<br/>Reject]
+    end
+
+    T -->|Yes| O1
+    T -->|No| O3
+    O1 -->|Yes| O2
+    O1 -->|No| R3
+
+    %% ColorBrewer2 Set3 palette
+    classDef tokenStyle fill:#ffffb3,stroke:#f1c40f,stroke-width:2px,color:#333
+    classDef optionalStyle fill:#b3de69,stroke:#7cb342,stroke-width:2px,color:#333
+    classDef requiredStyle fill:#fdb462,stroke:#e67e22,stroke-width:2px,color:#333
+    classDef rejectStyle fill:#fb8072,stroke:#e74c3c,stroke-width:2px,color:#333
+
+    class T tokenStyle
+    class O1,O2,O3 optionalStyle
+    class R1,R2 requiredStyle
+    class R3 rejectStyle
+```
+
 | Mode | Behavior | Use Case |
 |------|----------|----------|
 | **Optional** (default) | DPoP-bound tokens require proof, others don't | Gradual rollout, backward compatibility |
@@ -288,6 +323,68 @@ async with httpx.AsyncClient() as http:
 ```
 
 ## Server Validation Flow
+
+```mermaid
+flowchart TB
+    subgraph Request["Incoming Request"]
+        Req[HTTP Request<br/>+ DPoP Header]
+    end
+
+    subgraph Validation["Validation Pipeline"]
+        Extract[Extract DPoP<br/>Proof JWT]
+        Sig{Verify ES256<br/>Signature?}
+        Claims{Validate<br/>Claims?}
+        Replay{Check Replay<br/>Cache?}
+        Binding{Token Binding<br/>Match?}
+    end
+
+    subgraph Claims_Check["Claim Validation"]
+        Typ["typ = dpop+jwt"]
+        Htm["htm = HTTP method"]
+        Htu["htu = HTTP URI"]
+        Iat["iat < 300s old"]
+        Ath["ath = token hash"]
+    end
+
+    subgraph Result["Result"]
+        Success[Request<br/>Authorized]
+        Fail[401<br/>Unauthorized]
+    end
+
+    Req --> Extract
+    Extract --> Sig
+    Sig -->|Invalid| Fail
+    Sig -->|Valid| Claims
+    Claims --> Typ
+    Claims --> Htm
+    Claims --> Htu
+    Claims --> Iat
+    Claims --> Ath
+    Typ --> Replay
+    Htm --> Replay
+    Htu --> Replay
+    Iat --> Replay
+    Ath --> Replay
+    Replay -->|Used| Fail
+    Replay -->|Fresh| Binding
+    Binding -->|Mismatch| Fail
+    Binding -->|Match| Success
+
+    %% ColorBrewer2 Set3 palette
+    classDef requestStyle fill:#8dd3c7,stroke:#2a9d8f,stroke-width:2px,color:#333
+    classDef validationStyle fill:#fdb462,stroke:#e67e22,stroke-width:2px,color:#333
+    classDef claimsStyle fill:#b3de69,stroke:#7cb342,stroke-width:2px,color:#333
+    classDef successStyle fill:#80b1d3,stroke:#3498db,stroke-width:2px,color:#333
+    classDef failStyle fill:#fb8072,stroke:#e74c3c,stroke-width:2px,color:#333
+    classDef decisionStyle fill:#ffffb3,stroke:#f1c40f,stroke-width:2px,color:#333
+
+    class Req requestStyle
+    class Extract validationStyle
+    class Typ,Htm,Htu,Iat,Ath claimsStyle
+    class Success successStyle
+    class Fail failStyle
+    class Sig,Claims,Replay,Binding decisionStyle
+```
 
 The server automatically validates DPoP proofs via middleware:
 

@@ -21,6 +21,72 @@ The MCP Server provides a secure code execution engine that runs Python code in 
 Code execution is **disabled by default** for security. Enable it only after understanding the security implications and configuring appropriate limits.
 </Warning>
 
+### Execution Flow
+
+```mermaid
+flowchart TB
+    subgraph Client["Client Layer"]
+        API[API Request<br/>POST /sandbox/run]
+    end
+
+    subgraph Validation["Validation Layer"]
+        Auth[JWT Auth<br/>+ OpenFGA Check]
+        AST[AST Analysis<br/>Code Validation]
+        Limits[Resource<br/>Limit Check]
+    end
+
+    subgraph Execution["Execution Layer"]
+        Backend{Backend<br/>Selection}
+        Docker[Docker Engine<br/>Container]
+        K8s[Kubernetes<br/>Job/Pod]
+    end
+
+    subgraph Isolation["Isolation Layer"]
+        Container[Isolated<br/>Container]
+        Network[Network<br/>Isolation]
+        FS[Read-Only<br/>Filesystem]
+    end
+
+    subgraph Response["Response Layer"]
+        Result[Collect<br/>stdout/stderr]
+        Cleanup[Container<br/>Cleanup]
+        Return[Return<br/>Result]
+    end
+
+    API --> Auth
+    Auth --> AST
+    AST -->|Blocked| Reject[Reject<br/>Dangerous Code]
+    AST -->|Allowed| Limits
+    Limits --> Backend
+    Backend -->|docker-engine| Docker
+    Backend -->|kubernetes| K8s
+    Docker --> Container
+    K8s --> Container
+    Container --> Network
+    Container --> FS
+    Network --> Result
+    FS --> Result
+    Result --> Cleanup
+    Cleanup --> Return
+
+    %% ColorBrewer2 Set3 palette
+    classDef clientStyle fill:#8dd3c7,stroke:#2a9d8f,stroke-width:2px,color:#333
+    classDef validationStyle fill:#fdb462,stroke:#e67e22,stroke-width:2px,color:#333
+    classDef executionStyle fill:#b3de69,stroke:#7cb342,stroke-width:2px,color:#333
+    classDef isolationStyle fill:#80b1d3,stroke:#3498db,stroke-width:2px,color:#333
+    classDef responseStyle fill:#bebada,stroke:#7e5eb0,stroke-width:2px,color:#333
+    classDef rejectStyle fill:#fb8072,stroke:#e74c3c,stroke-width:2px,color:#333
+    classDef decisionStyle fill:#ffffb3,stroke:#f1c40f,stroke-width:2px,color:#333
+
+    class API clientStyle
+    class Auth,AST,Limits validationStyle
+    class Docker,K8s executionStyle
+    class Container,Network,FS isolationStyle
+    class Result,Cleanup,Return responseStyle
+    class Reject rejectStyle
+    class Backend decisionStyle
+```
+
 ---
 
 ## Quick Start
@@ -63,6 +129,42 @@ curl -X POST http://localhost:8000/api/v1/sandbox/run \
 ---
 
 ## Backends
+
+```mermaid
+flowchart LR
+    subgraph Decision["Backend Selection"]
+        Start[Code Execution<br/>Request]
+        Q1{Deployment<br/>Type?}
+        Q2{Multi-Node<br/>Scaling?}
+    end
+
+    subgraph DockerPath["Docker Engine"]
+        Docker[Docker Engine<br/>Backend]
+        DockerReqs["Requirements:<br/>• Docker daemon<br/>• Socket access<br/>• Image pull"]
+    end
+
+    subgraph K8sPath["Kubernetes"]
+        K8s[Kubernetes<br/>Backend]
+        K8sReqs["Requirements:<br/>• Valid kubeconfig<br/>• Job RBAC<br/>• Namespace"]
+    end
+
+    Start --> Q1
+    Q1 -->|Single Node| Docker
+    Q1 -->|Multi-Node| Q2
+    Q2 -->|No| Docker
+    Q2 -->|Yes| K8s
+    Docker --> DockerReqs
+    K8s --> K8sReqs
+
+    %% ColorBrewer2 Set3 palette
+    classDef decisionStyle fill:#ffffb3,stroke:#f1c40f,stroke-width:2px,color:#333
+    classDef dockerStyle fill:#80b1d3,stroke:#3498db,stroke-width:2px,color:#333
+    classDef k8sStyle fill:#b3de69,stroke:#7cb342,stroke-width:2px,color:#333
+
+    class Start,Q1,Q2 decisionStyle
+    class Docker,DockerReqs dockerStyle
+    class K8s,K8sReqs k8sStyle
+```
 
 ### Docker Engine (Recommended)
 
@@ -146,6 +248,77 @@ Configure execution constraints to prevent resource exhaustion:
 ## Security Model
 
 The code execution engine uses **defense-in-depth** with multiple security layers:
+
+```mermaid
+flowchart TB
+    subgraph Input["Incoming Code"]
+        Code[Python Code<br/>from Agent/User]
+    end
+
+    subgraph Layer1["Layer 1: Code Validation"]
+        AST[AST Parser]
+        ModuleCheck{Blocked<br/>Module?}
+        BuiltinCheck{Blocked<br/>Builtin?}
+        PatternCheck{Dangerous<br/>Pattern?}
+    end
+
+    subgraph Layer2["Layer 2: Container Security"]
+        NonRoot[Non-Root User<br/>nobody/1000]
+        ReadOnly[Read-Only<br/>Root FS]
+        NoCaps[Drop ALL<br/>Capabilities]
+        NoPriv[No Privilege<br/>Escalation]
+    end
+
+    subgraph Layer3["Layer 3: Network Isolation"]
+        NetMode{Network<br/>Mode?}
+        None[No Network<br/>Access]
+        Allowlist[Domain<br/>Allowlist]
+        Unrestricted[Full Network<br/>Dev Only]
+    end
+
+    subgraph Output["Execution Result"]
+        Safe[Safe Execution<br/>stdout/stderr]
+    end
+
+    Code --> AST
+    AST --> ModuleCheck
+    ModuleCheck -->|Yes| Reject1[Block: os, sys,<br/>subprocess, etc.]
+    ModuleCheck -->|No| BuiltinCheck
+    BuiltinCheck -->|Yes| Reject2[Block: eval, exec,<br/>open, etc.]
+    BuiltinCheck -->|No| PatternCheck
+    PatternCheck -->|Yes| Reject3[Block: __import__,<br/>globals(), etc.]
+    PatternCheck -->|No| NonRoot
+
+    NonRoot --> ReadOnly
+    ReadOnly --> NoCaps
+    NoCaps --> NoPriv
+    NoPriv --> NetMode
+
+    NetMode -->|none| None
+    NetMode -->|allowlist| Allowlist
+    NetMode -->|unrestricted| Unrestricted
+
+    None --> Safe
+    Allowlist --> Safe
+    Unrestricted --> Safe
+
+    %% ColorBrewer2 Set3 palette
+    classDef inputStyle fill:#8dd3c7,stroke:#2a9d8f,stroke-width:2px,color:#333
+    classDef layer1Style fill:#fdb462,stroke:#e67e22,stroke-width:2px,color:#333
+    classDef layer2Style fill:#b3de69,stroke:#7cb342,stroke-width:2px,color:#333
+    classDef layer3Style fill:#80b1d3,stroke:#3498db,stroke-width:2px,color:#333
+    classDef outputStyle fill:#bebada,stroke:#7e5eb0,stroke-width:2px,color:#333
+    classDef rejectStyle fill:#fb8072,stroke:#e74c3c,stroke-width:2px,color:#333
+    classDef decisionStyle fill:#ffffb3,stroke:#f1c40f,stroke-width:2px,color:#333
+
+    class Code inputStyle
+    class AST layer1Style
+    class NonRoot,ReadOnly,NoCaps,NoPriv layer2Style
+    class None,Allowlist,Unrestricted layer3Style
+    class Safe outputStyle
+    class Reject1,Reject2,Reject3 rejectStyle
+    class ModuleCheck,BuiltinCheck,PatternCheck,NetMode decisionStyle
+```
 
 ### Layer 1: Code Validation
 

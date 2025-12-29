@@ -347,6 +347,7 @@
               "guides/agent-architecture",
               "guides/agent-hitl-approval",
               "guides/hitl-confidence",
+              "guides/hitl-visual-flows",
               "guides/multi-agent-orchestrators",
               "guides/sdk-hooks",
               "guides/tool-development",
