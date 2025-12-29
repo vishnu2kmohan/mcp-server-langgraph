@@ -80,16 +80,10 @@ export default tseslint.config(
             'Use the storage utility from utils/storage.ts instead for consistent storage abstraction.',
         },
       ],
-      // Enforce explicit includeAuthToken parameter in buildWebSocketUrl calls
-      // Backend endpoints with require_auth=True need the token, defaulting to false causes auth failures
-      'no-restricted-syntax': [
-        'warn',
-        {
-          selector: 'CallExpression[callee.name="buildWebSocketUrl"][arguments.length<3]',
-          message:
-            'buildWebSocketUrl should explicitly set includeAuthToken (3rd param). Most endpoints require auth (require_auth=True in ws_router.py). Use buildWebSocketUrl(endpoint, params, true) for authenticated endpoints.',
-        },
-      ],
+      // Note: buildWebSocketUrl now requires all 3 parameters (TypeScript enforced as of 2024-12)
+      // This rule is no longer needed since TypeScript will error on missing params.
+      // Keeping as documentation of the pattern that led to this change.
+      // See: websocketAuthContract.test.ts for the contract tests that validate auth requirements.
     },
   },
   // Override for storage utility - it legitimately needs direct localStorage access
