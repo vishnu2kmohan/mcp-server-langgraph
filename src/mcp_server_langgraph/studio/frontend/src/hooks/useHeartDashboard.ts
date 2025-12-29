@@ -367,7 +367,19 @@ export function useHeartDashboard(
     send: wsSend,
     disconnect: _wsDisconnect,
     reconnect: _wsReconnect,
+    metrics: wsMetrics,
   } = useRealtimeSync(wsOptions);
+
+  // Report WebSocket metrics for observability
+  useEffect(() => {
+    if (enableRealtime && wsMetrics.totalAttempts > 0) {
+      import("../utils/websocketTelemetry").then(
+        ({ reportWebSocketMetrics }) => {
+          reportWebSocketMetrics("heart_dashboard", wsMetrics);
+        },
+      );
+    }
+  }, [enableRealtime, wsMetrics]);
 
   // Map WebSocket status to our WsStatus type
   const wsStatus = useMemo<WsStatus | undefined>(() => {

@@ -32,7 +32,8 @@ export type DevToolsTabId =
   | "traces"
   | "metrics"
   | "alerts"
-  | "logs";
+  | "logs"
+  | "ws-metrics";
 
 export type DevToolsContext = "session" | "workflow" | "global";
 
@@ -83,6 +84,7 @@ const TABS_BY_CONTEXT: Record<DevToolsContext, DevToolsTabId[]> = {
     "metrics",
     "alerts",
     "logs",
+    "ws-metrics",
   ],
   session: [
     "console",
@@ -94,6 +96,7 @@ const TABS_BY_CONTEXT: Record<DevToolsContext, DevToolsTabId[]> = {
     "metrics",
     "alerts",
     "logs",
+    "ws-metrics",
   ],
   workflow: [
     "console",
@@ -105,6 +108,7 @@ const TABS_BY_CONTEXT: Record<DevToolsContext, DevToolsTabId[]> = {
     "metrics",
     "alerts",
     "logs",
+    "ws-metrics",
   ],
 };
 

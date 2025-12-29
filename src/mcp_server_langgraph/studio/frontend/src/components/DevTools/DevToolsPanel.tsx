@@ -32,6 +32,7 @@ import {
   BarChart3,
   Bell,
   FileText,
+  Wifi,
 } from "lucide-react";
 import { useAppDispatch, useAppSelector } from "../../store/hooks";
 import {
@@ -82,6 +83,7 @@ const TAB_ICONS: Record<DevToolsTabId, typeof Terminal> = {
   metrics: BarChart3,
   alerts: Bell,
   logs: FileText,
+  "ws-metrics": Wifi,
 };
 
 const TAB_LABELS: Record<DevToolsTabId, string> = {
@@ -97,6 +99,7 @@ const TAB_LABELS: Record<DevToolsTabId, string> = {
   metrics: "Metrics",
   alerts: "Alerts",
   logs: "Logs",
+  "ws-metrics": "WS Metrics",
 };
 
 // =============================================================================
@@ -139,6 +142,11 @@ const AlertsTabContent = lazy(() =>
 );
 const LogsTabContent = lazy(() =>
   import("./tabs/LogsTab").then((m) => ({ default: m.LogsTab })),
+);
+const WsMetricsTabContent = lazy(() =>
+  import("../WebSocketMetrics/WebSocketMetricsPanel").then((m) => ({
+    default: m.WebSocketMetricsPanel,
+  })),
 );
 
 // =============================================================================
@@ -377,6 +385,14 @@ export function DevToolsPanel({ className }: DevToolsPanelProps) {
           <div data-testid="devtools-tab-content-logs">
             <Suspense fallback={<TabContentLoader />}>
               <LogsTabContent />
+            </Suspense>
+          </div>
+        );
+      case "ws-metrics":
+        return (
+          <div data-testid="devtools-tab-content-ws-metrics">
+            <Suspense fallback={<TabContentLoader />}>
+              <WsMetricsTabContent />
             </Suspense>
           </div>
         );
