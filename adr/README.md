@@ -1,7 +1,7 @@
 # Architecture Decision Records (ADRs)
 
-**Last Updated**: 2025-12-19
-**Total ADRs**: 73
+**Last Updated**: 2025-12-28
+**Total ADRs**: 82
 
 ## Overview
 
@@ -19,6 +19,44 @@ Each ADR follows this structure:
 - **Consequences**: Positive and negative outcomes
 
 ## Index
+
+### Architecture & AI Intelligence Systems
+
+| ADR | Title | Status | Date |
+|-----|-------|--------|------|
+| [ADR-0084](adr-0084-studio-orchestrator-unified-ai.md) | 84. StudioOrchestrator - Unified AI Intelligence Pattern | Accepted | 2025-12-22 |
+
+### Architecture & Integration
+
+| ADR | Title | Status | Date |
+|-----|-------|--------|------|
+| [ADR-0077](adr-0077-claude-agent-sdk-integration.md) | 77. Claude Agent SDK Integration Pattern | Accepted | 2025-12-21 |
+| [ADR-0079](adr-0079-multi-framework-tool-parity.md) | 79. Multi-Framework Tool Parity | Proposed | 2025-12-21 |
+| [ADR-0080](adr-0080-llm-level-callback-system.md) | 80. LLM-Level Callback System | Proposed | 2025-12-21 |
+
+### Architecture & Integration (CRITICAL)
+
+| ADR | Title | Status | Date |
+|-----|-------|--------|------|
+| [ADR-0082](adr-0082-mcp-client-capabilities.md) | 82. MCP Client Capabilities | Proposed | 2025-12-21 |
+
+### Architecture & Multi-Agent
+
+| ADR | Title | Status | Date |
+|-----|-------|--------|------|
+| [ADR-0081](adr-0081-handoff-pattern-multi-agent.md) | 81. Handoff Pattern for Multi-Agent Systems | Proposed | 2025-12-21 |
+
+### Architecture & Multi-Agent Orchestration
+
+| ADR | Title | Status | Date |
+|-----|-------|--------|------|
+| [ADR-0083](adr-0083-confidence-based-hitl-system.md) | 83. Confidence-Based Human-in-the-Loop (HITL) System | Accepted | 2025-12-21 |
+
+### Architecture & Multi-Agent Systems
+
+| ADR | Title | Status | Date |
+|-----|-------|--------|------|
+| [ADR-0078](adr-0078-multi-agent-orchestrator-patterns.md) | 78. Multi-Agent Orchestrator Patterns | Accepted | 2025-12-21 |
 
 ### Authentication & Authorization
 
@@ -61,10 +99,7 @@ Each ADR follows this structure:
 | [ADR-0050](adr-0050-dependency-singleton-pattern-justification.md) | 50. Dependency Singleton Pattern Justification | Accepted | 2025-11-10 |
 | [ADR-0061](adr-0061-fastapi-web-framework.md) | 61. FastAPI as Web Framework | Accepted | 2025-11-29 |
 | [ADR-0069](adr-0069-mcp-2025-11-25-upgrade.md) | MCP Specification Upgrade to 2025-11-25 | Accepted | Unknown |
-| [ADR-0071](adr-0071-compile-time-graph-composition.md) | Compile-Time Graph Composition | Accepted | 2025-12-18 |
-| [ADR-0072](adr-0072-bootstrap-phase-architecture.md) | Bootstrap Phase Architecture | Accepted | 2025-12-18 |
-| [ADR-0073](adr-0073-configuration-domain-decomposition.md) | Configuration Domain Decomposition | Accepted | 2025-12-18 |
-| [ADR-0074](adr-0074-ai-suggestions-streaming-cost-tracking.md) | AI Suggestions with Streaming and Cost Tracking | Accepted | 2025-12-19 |
+| [ADR-0072](adr-0072-bootstrap-phase-architecture.md) | Bootstrap Phase Architecture | Accepted | Unknown |
 
 ### Data & Storage
 
@@ -106,6 +141,17 @@ Each ADR follows this structure:
 | [ADR-0053](adr-0053-ci-cd-failure-prevention-framework.md) | 53. CI/CD Failure Prevention Framework | Accepted | 2025-11-12 |
 | [ADR-0054](adr-0054-pod-failure-prevention-framework.md) | 54. Pod Failure Prevention Framework | Accepted | 2025-11-12 |
 
+### Other
+
+| ADR | Title | Status | Date |
+|-----|-------|--------|------|
+| [ADR-0071](adr-0071-compile-time-graph-composition.md) | Compile-Time Graph Composition | Accepted | Unknown |
+| [ADR-0073](adr-0073-configuration-domain-decomposition.md) | Configuration Domain Decomposition | Accepted | Unknown |
+| [ADR-0074](adr-0074-ai-suggestions-streaming-cost-tracking.md) | AI Suggestions with Streaming and Cost Tracking | Accepted | Unknown |
+| [ADR-0075](adr-0075-prompt-injection-detection.md) | Prompt Injection Detection and Sanitization | Accepted | Unknown |
+| [ADR-0076](adr-0076-sandpack-jsdom-27-mock.md) | Sandpack Mock for jsdom 27 Compatibility | Accepted | Unknown |
+| [ADR-0085](adr-0085-feature-flag-consolidation.md) | Feature Flag Consolidation (Sprint Block 5) | Accepted | 2025-12-27 |
+
 ### Performance & Resilience
 
 | ADR | Title | Status | Date |
@@ -123,7 +169,6 @@ Each ADR follows this structure:
 | [ADR-0041](adr-0041-postgresql-gdpr-storage.md) | 41. Pure PostgreSQL for GDPR/HIPAA/SOC2 Compliance Storage | Accepted | 2025-11-02 |
 | [ADR-0056](adr-0056-asyncmock-configuration-prevention.md) | 56. AsyncMock Configuration Prevention Mechanisms | Accepted | 2025-11-13 |
 | [ADR-0066](adr-0066-helm-chart-security-risk-acceptance.md) | 66. Helm Chart Security Risk Acceptance | Accepted | 2025-11-29 |
-| [ADR-0075](adr-0075-prompt-injection-detection.md) | Prompt Injection Detection and Sanitization | Accepted | 2025-12-19 |
 
 ### Testing & Quality
 
@@ -136,7 +181,6 @@ Each ADR follows this structure:
 | [ADR-0048](adr-0048-postgres-storage-integration-tests.md) | 48. PostgreSQL Storage Integration Tests | Accepted | 2025-11-06 |
 | [ADR-0049](adr-0049-pytest-fixture-consolidation.md) | Pytest Fixture Consolidation and Organization | Accepted | 2025-11-07 |
 | [ADR-0052](adr-0052-pytest-xdist-isolation-strategy.md) | Pytest-xdist Isolation Strategy | Accepted | 2025-01-11 |
-| [ADR-0076](adr-0076-sandpack-jsdom-27-mock.md) | Sandpack Mock for jsdom 27 Compatibility | Accepted | 2025-12-19 |
 
 ## Creating a New ADR
 
@@ -165,16 +209,6 @@ Each ADR follows this structure:
    python scripts/generate_adr_index.py
    ```
 
-## Numbering Gaps
-
-The ADR sequence contains intentional gaps where numbers were skipped during the evolution of the documentation:
-
-| Gap | Reason | Details |
-|-----|--------|---------|
-| **ADR-0057, ADR-0058, ADR-0059** | Removed during repository consolidation | **2025-11-16** - Three ADRs were initially created with duplicate numbers in commit `d10b29b5`:<br>• ADR-0053 (AsyncMock Configuration Prevention)<br>• ADR-0053 (Pytest-xdist State Pollution Prevention)<br>• ADR-0054 (Circuit Breaker Decorator Closure Isolation)<br><br>**2025-11-16** - Renumbered in commit `d35b5ea7` to resolve conflicts:<br>• ADR-0056 (AsyncMock Configuration Prevention)<br>• ADR-0057 (Circuit Breaker Decorator Closure Isolation)<br>• ADR-0058 (Pytest-xdist State Pollution Prevention)<br><br>**2025-11-18** - ADR-0056 (Database Architecture) created, then renumbered to ADR-0060 in commit `0c14018a`<br><br>**2025-11-29** - ADRs 0057 and 0058 were deleted in commit `e4c6cf3e` during codebase consolidation<br><br>**Result**: ADR-0057, ADR-0058, and ADR-0059 remain permanently unassigned. The content from the deleted ADRs may have been merged into other ADRs or deemed unnecessary. |
-
-These gaps are **intentional** and serve as a historical record of the ADR numbering evolution. They do not indicate missing documentation.
-
 ## Validation
 
 To validate ADR numbering and sync status:
@@ -189,8 +223,6 @@ python scripts/docs/sync-adrs.py --check
 # Validate this index is up-to-date
 python scripts/generate_adr_index.py --check
 ```
-
-**Note:** The validator will report gaps at ADR-0057, ADR-0058, and ADR-0059 as informational warnings. This is expected and does not indicate a validation failure.
 
 ## Related Documentation
 

@@ -591,7 +591,13 @@
               "architecture/adr-0080-llm-level-callback-system",
               "architecture/adr-0081-handoff-pattern-multi-agent",
               "architecture/adr-0083-confidence-based-hitl-system",
-              "architecture/adr-0084-studio-orchestrator-unified-ai"
+              "architecture/adr-0084-studio-orchestrator-unified-ai",
+              "architecture/adr-0071-compile-time-graph-composition",
+              "architecture/adr-0072-bootstrap-phase-architecture",
+              "architecture/adr-0073-configuration-domain-decomposition",
+              "architecture/adr-0074-ai-suggestions-streaming-cost-tracking",
+              "architecture/adr-0075-prompt-injection-detection",
+              "architecture/adr-0076-sandpack-jsdom-27-mock"
             ]
           },
           {
@@ -628,7 +634,8 @@
               "architecture/adr-0061-fastapi-web-framework",
               "architecture/adr-0062-uv-package-management",
               "architecture/adr-0063-mintlify-documentation-platform",
-              "architecture/adr-0065-ruff-code-quality"
+              "architecture/adr-0065-ruff-code-quality",
+              "architecture/adr-0085-feature-flag-consolidation"
             ]
           },
           {
