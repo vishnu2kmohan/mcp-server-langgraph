@@ -18,6 +18,7 @@ import {
   PROTOCOL_VERSION_MISMATCH_NOTIFICATION,
   showProtocolVersionMismatchToast,
 } from "../utils/websocketAuth";
+import { reportWebSocketMetrics } from "../utils/websocketTelemetry";
 
 // =============================================================================
 // Types
@@ -298,11 +299,7 @@ export function useHeartMetricsWebSocket(
   // Report WebSocket metrics for observability
   useEffect(() => {
     if (isAuthenticated && metrics.totalAttempts > 0) {
-      import("../utils/websocketTelemetry").then(
-        ({ reportWebSocketMetrics }) => {
-          reportWebSocketMetrics("heart_metrics", metrics);
-        },
-      );
+      reportWebSocketMetrics("heart_metrics", metrics);
     }
   }, [isAuthenticated, metrics]);
 

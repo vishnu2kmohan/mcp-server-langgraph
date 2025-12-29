@@ -24,6 +24,7 @@ import {
   PROTOCOL_VERSION_MISMATCH_NOTIFICATION,
   showProtocolVersionMismatchToast,
 } from "../utils/websocketAuth";
+import { reportWebSocketMetrics } from "../utils/websocketTelemetry";
 
 // WebSocket message types
 interface ExecutionStartedMessage {
@@ -230,11 +231,7 @@ export function useWorkflowExecution(
   // Report WebSocket metrics for observability
   useEffect(() => {
     if (autoConnect && workflowId && metrics.totalAttempts > 0) {
-      import("../utils/websocketTelemetry").then(
-        ({ reportWebSocketMetrics }) => {
-          reportWebSocketMetrics("workflow_execution", metrics);
-        },
-      );
+      reportWebSocketMetrics("workflow_execution", metrics);
     }
   }, [autoConnect, workflowId, metrics]);
 

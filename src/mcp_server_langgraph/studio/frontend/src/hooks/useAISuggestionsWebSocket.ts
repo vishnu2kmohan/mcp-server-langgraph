@@ -26,6 +26,7 @@ import {
   PROTOCOL_VERSION_MISMATCH_NOTIFICATION,
   showProtocolVersionMismatchToast,
 } from "../utils/websocketAuth";
+import { reportWebSocketMetrics } from "../utils/websocketTelemetry";
 
 // Import typed protocols for type-safe WebSocket message handling
 import {
@@ -273,12 +274,7 @@ export function useAISuggestionsWebSocket(
   // Report WebSocket metrics for observability
   useEffect(() => {
     if (effectiveEnabled && metrics.totalAttempts > 0) {
-      // Dynamic import to avoid linter removing unused import
-      import("../utils/websocketTelemetry").then(
-        ({ reportWebSocketMetrics }) => {
-          reportWebSocketMetrics("ai_suggestions", metrics);
-        },
-      );
+      reportWebSocketMetrics("ai_suggestions", metrics);
     }
   }, [effectiveEnabled, metrics]);
 

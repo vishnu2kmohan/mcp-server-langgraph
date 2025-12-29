@@ -59,6 +59,7 @@ import {
   PROTOCOL_VERSION_MISMATCH_NOTIFICATION,
   showProtocolVersionMismatchToast,
 } from "../utils/websocketAuth";
+import { reportWebSocketMetrics } from "../utils/websocketTelemetry";
 
 // =============================================================================
 // Local Types for WebSocket dimension data
@@ -382,11 +383,7 @@ export function useHeartDashboard(
   // Report WebSocket metrics for observability
   useEffect(() => {
     if (enableRealtime && wsMetrics.totalAttempts > 0) {
-      import("../utils/websocketTelemetry").then(
-        ({ reportWebSocketMetrics }) => {
-          reportWebSocketMetrics("heart_dashboard", wsMetrics);
-        },
-      );
+      reportWebSocketMetrics("heart_dashboard", wsMetrics);
     }
   }, [enableRealtime, wsMetrics]);
 

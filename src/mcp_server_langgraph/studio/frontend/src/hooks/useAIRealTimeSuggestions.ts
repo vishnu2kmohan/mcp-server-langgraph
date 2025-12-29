@@ -21,6 +21,7 @@ import {
   PROTOCOL_VERSION_MISMATCH_NOTIFICATION,
   showProtocolVersionMismatchToast,
 } from "../utils/websocketAuth";
+import { reportWebSocketMetrics } from "../utils/websocketTelemetry";
 
 /** Suggestion type from the AI UX backend */
 export interface Suggestion {
@@ -208,11 +209,7 @@ export function useAIRealTimeSuggestions(
   // Report WebSocket metrics for observability
   useEffect(() => {
     if (enabled && metrics.totalAttempts > 0) {
-      import("../utils/websocketTelemetry").then(
-        ({ reportWebSocketMetrics }) => {
-          reportWebSocketMetrics("ai_realtime_suggestions", metrics);
-        },
-      );
+      reportWebSocketMetrics("ai_realtime_suggestions", metrics);
     }
   }, [enabled, metrics]);
 

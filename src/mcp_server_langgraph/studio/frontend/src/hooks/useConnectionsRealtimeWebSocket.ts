@@ -18,6 +18,7 @@ import {
   PROTOCOL_VERSION_MISMATCH_NOTIFICATION,
   showProtocolVersionMismatchToast,
 } from "../utils/websocketAuth";
+import { reportWebSocketMetrics } from "../utils/websocketTelemetry";
 
 // =============================================================================
 // Types
@@ -308,11 +309,7 @@ export function useConnectionsRealtimeWebSocket(
   // Report WebSocket metrics for observability
   useEffect(() => {
     if (isAuthenticated && metrics.totalAttempts > 0) {
-      import("../utils/websocketTelemetry").then(
-        ({ reportWebSocketMetrics }) => {
-          reportWebSocketMetrics("connections_realtime", metrics);
-        },
-      );
+      reportWebSocketMetrics("connections_realtime", metrics);
     }
   }, [isAuthenticated, metrics]);
 

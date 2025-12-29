@@ -21,6 +21,7 @@ import {
   PROTOCOL_VERSION_MISMATCH_NOTIFICATION,
   showProtocolVersionMismatchToast,
 } from "../utils/websocketAuth";
+import { reportWebSocketMetrics } from "../utils/websocketTelemetry";
 
 // ============================================================================
 // MCP Protocol Types
@@ -412,11 +413,7 @@ export function useMCPWebSocket(
   // Report WebSocket metrics for observability
   useEffect(() => {
     if (effectiveEnabled && metrics.totalAttempts > 0) {
-      import("../utils/websocketTelemetry").then(
-        ({ reportWebSocketMetrics }) => {
-          reportWebSocketMetrics("mcp", metrics);
-        },
-      );
+      reportWebSocketMetrics("mcp", metrics);
     }
   }, [effectiveEnabled, metrics]);
 
