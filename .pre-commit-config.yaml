@@ -1825,6 +1825,30 @@ repos:
       Created: 2025-12-15 (E2E test validation improvements)
 
       '
+  - id: check-websocket-parity
+    name: Check WebSocket Endpoint Parity (Frontend ↔ Backend)
+    entry: uv run --frozen python -u scripts/validation/check_websocket_parity.py
+    language: system
+    pass_filenames: false
+    files: ^(src/mcp_server_langgraph/studio/frontend/src/utils/websocket\.ts|src/mcp_server_langgraph/api/v1/ws_router\.py)$
+    always_run: false
+    stages:
+    - pre-commit
+    description: 'Validates that all frontend WS_ENDPOINTS have backend WebSocket handlers.
+
+      Prevents integration gaps like:
+      - Frontend expects: /api/v1/ws/devtools
+      - Backend ws_router.py: missing @ws_router.websocket("/devtools")
+
+      Scans:
+      - Frontend websocket.ts for WS_ENDPOINTS constant
+      - Backend ws_router.py for @ws_router.websocket decorators
+
+      Exit code 1 if missing endpoints detected.
+
+      Created: 2025-12-28 (DevTools integration gap audit)
+
+      '
 
 - repo: https://github.com/antonbabenko/pre-commit-terraform
   rev: v1.96.2
