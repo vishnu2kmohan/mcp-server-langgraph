@@ -97,9 +97,9 @@ class TestCodeExecutionSettings:
         """Test default Docker image"""
         settings = Settings()
         assert hasattr(settings, "code_execution_docker_image")
+        # Image should be Python-capable (contains "python" in path)
+        # Note: Playwright images bundle Python without version in tag (e.g., v1.42.0-jammy)
         assert "python" in settings.code_execution_docker_image.lower()
-        # Should use a specific Python version
-        assert "3.12" in settings.code_execution_docker_image or "3.11" in settings.code_execution_docker_image
 
     def test_docker_socket_path_default(self):
         """Test default Docker socket path"""
