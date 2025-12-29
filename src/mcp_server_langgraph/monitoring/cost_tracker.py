@@ -429,6 +429,10 @@ class CostMetricsCollector:
                 estimated_cost_usd=usage.estimated_cost_usd,
                 feature=usage.feature,
                 metadata_=usage.metadata,
+                # Organizational hierarchy for cost attribution
+                organization_id=usage.organization_id,
+                project_id=usage.project_id,
+                team_id=usage.team_id,
             )
 
             session.add(db_record)
