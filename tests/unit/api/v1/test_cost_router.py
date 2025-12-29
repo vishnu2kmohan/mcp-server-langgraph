@@ -841,13 +841,15 @@ class TestEntityTypeValidation:
                 mock_service.get_summary.return_value = {"total_cost": 0}
                 mock_get_service.return_value = mock_service
 
-                mock_checker = AsyncMock(spec=["check"])
-                mock_checker.check.return_value = MagicMock(
-                    status="ok",
-                    percent_used=0.0,
-                    current_spend=0.0,
-                    remaining=1000.0,
-                    message="Under budget",
+                mock_checker = AsyncMock()  # noqa: async-mock-config - check method configured below
+                mock_checker.check = AsyncMock(
+                    return_value=MagicMock(
+                        status="ok",
+                        percent_used=0.0,
+                        current_spend=0.0,
+                        remaining=1000.0,
+                        message="Under budget",
+                    )
                 )
                 mock_get_checker.return_value = mock_checker
 
