@@ -252,6 +252,9 @@ class TestRegistryExports:
             "set_trace_broadcaster",
             "get_mcp_aggregated_broadcaster",
             "set_mcp_aggregated_broadcaster",
+            # DevTools broadcaster
+            "get_devtools_broadcaster",
+            "set_devtools_broadcaster",
         ]
 
         for export in expected_exports:
@@ -278,6 +281,9 @@ class TestRegistryExports:
             "set_trace_broadcaster",
             "get_mcp_aggregated_broadcaster",
             "set_mcp_aggregated_broadcaster",
+            # DevTools broadcaster
+            "get_devtools_broadcaster",
+            "set_devtools_broadcaster",
         }
 
         assert set(registry.__all__) == expected_exports
