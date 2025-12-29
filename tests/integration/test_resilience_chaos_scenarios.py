@@ -14,6 +14,7 @@ For full chaos testing, use a chaos engineering tool like Litmus or Chaos Monkey
 """
 
 import gc
+import os
 from unittest.mock import AsyncMock, patch
 
 import httpx
@@ -214,8 +215,9 @@ class TestPostgreSQLChaosScenario:
             patch("asyncio.sleep", new_callable=AsyncMock),
         ):
             # Trigger enough failures to trip circuit breaker
+            postgres_port = os.getenv("POSTGRES_PORT", "9432")
             for _ in range(6):
-                await check_database_connectivity("postgresql://test:test@localhost:5432/test")
+                await check_database_connectivity(f"postgresql://test:test@localhost:{postgres_port}/test")
 
             # Verify circuit breaker is OPEN
             breaker = get_circuit_breaker("postgres")
@@ -253,7 +255,8 @@ class TestPostgreSQLChaosScenario:
         assert breaker.current_state == pybreaker.STATE_OPEN
 
         # Check should fail fast with circuit breaker message
-        is_healthy, message = await check_database_connectivity("postgresql://test:test@localhost:5432/test")
+        postgres_port = os.getenv("POSTGRES_PORT", "9432")
+        is_healthy, message = await check_database_connectivity(f"postgresql://test:test@localhost:{postgres_port}/test")
 
         assert is_healthy is False
         assert "circuit breaker" in message.lower()
@@ -301,7 +304,7 @@ class TestPrometheusChaosScenario:
         async def mock_get_always_fails(*args, **kwargs):
             raise httpx.ConnectError("Prometheus unavailable")
 
-        mock_http_client = AsyncMock()
+        mock_http_client = AsyncMock()  # noqa: async-mock-config (configured via get below)
         mock_http_client.get = mock_get_always_fails
         client.client = mock_http_client
         client._initialized = True
