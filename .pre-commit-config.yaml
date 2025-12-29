@@ -11,7 +11,7 @@ repos:
   - id: check-added-large-files
     args:
     - --maxkb=500
-    exclude: ^uv\.lock$
+    exclude: ^(uv\.lock|.*package-lock\.json)$
   - id: check-merge-conflict
   - id: detect-private-key
     # Exclude secrets obfuscation test file which intentionally contains fake/truncated test keys
