@@ -24,8 +24,8 @@ const mockDisconnect = vi.fn();
 const mockReconnect = vi.fn();
 let mockOnMessage: ((data: unknown) => void) | undefined;
 let mockOnConnect: (() => void) | undefined;
-let __mockOnDisconnect: (() => void) | undefined;
-let __mockOnError: ((error: Error) => void) | undefined;
+let _mockOnDisconnect: (() => void) | undefined;
+let _mockOnError: ((error: Error) => void) | undefined;
 let mockStatus: ConnectionStatus = "disconnected";
 let mockUrl: string | null = null;
 
@@ -174,7 +174,8 @@ describe("useDevToolsWebSocket", () => {
     it("should not connect when disabled", () => {
       renderHook(() => useDevToolsWebSocket({ enabled: false }));
 
-      expect(mockUrl).toBeNull();
+      // When disabled, hook passes empty string to useRealtimeSync which prevents connection
+      expect(mockUrl).toBe("");
     });
 
     it("should track connection status", async () => {

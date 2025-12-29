@@ -21,6 +21,30 @@ let mockOnConnect: (() => void) | undefined;
 let mockOnDisconnect: (() => void) | undefined;
 let mockStatus = "connected" as const;
 
+// Default metrics matching ReconnectionMetrics interface
+const createMockMetrics = () => ({
+  totalReconnections: 0,
+  totalAttempts: 0,
+  consecutiveFailures: 0,
+  lastReconnectionTime: null,
+  lastDisconnectionTime: null,
+  avgReconnectionDurationMs: null,
+  totalReconnectionTimeMs: 0,
+  failuresByReason: {
+    max_attempts_exceeded: 0,
+    token_expired: 0,
+    token_refresh_failed: 0,
+    protocol_version_mismatch: 0,
+    network_error: 0,
+    server_error: 0,
+    invalid_url: 0,
+    manual_disconnect: 0,
+    unknown: 0,
+  },
+  successRate: null,
+  recentAttempts: [],
+});
+
 vi.mock("./useRealtimeSync", () => ({
   useRealtimeSync: vi.fn((options) => {
     mockOnMessage = options.onMessage;
@@ -31,6 +55,9 @@ vi.mock("./useRealtimeSync", () => ({
       send: mockSend,
       disconnect: mockDisconnect,
       reconnect: mockReconnect,
+      reconnectAttempts: 0,
+      lastMessageTime: null,
+      metrics: createMockMetrics(),
     };
   }),
 }));
