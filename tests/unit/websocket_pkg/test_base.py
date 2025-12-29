@@ -1472,7 +1472,7 @@ class TestWebSocketBaseTokenValidation:
         config = WebSocketConfig(
             endpoint_name="test",
             require_auth=True,
-            token_validation_interval=1,  # 1 second for fast testing
+            token_validation_interval=0.05,  # 50ms for fast testing
         )
 
         with patch(
@@ -1513,8 +1513,8 @@ class TestWebSocketBaseTokenValidation:
         async def receive_or_hang():
             receive_count[0] += 1
             if receive_count[0] == 1:
-                # First call: wait briefly then raise disconnect (simulating close)
-                await asyncio.sleep(0.1)  # noqa: sleep-duration - testing async behavior
+                # First call: wait for validation task to run (must exceed token_validation_interval)
+                await asyncio.sleep(0.15)  # noqa: sleep-duration - testing async behavior
                 raise WebSocketDisconnect()
             raise WebSocketDisconnect()
 
