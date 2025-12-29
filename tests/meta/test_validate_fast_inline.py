@@ -9,6 +9,7 @@ Reference: Codex Audit - Subprocess overhead in validate_fast.py
 
 import gc
 import importlib
+import os
 import time
 from io import StringIO
 from unittest.mock import patch
@@ -120,6 +121,10 @@ class TestValidateFastInlineRunner:
         # In a healthy repo, all validators should pass
         assert result == 0, "All validators should pass in a healthy repo"
 
+    @pytest.mark.skipif(
+        os.getenv("PYTEST_XDIST_WORKER") is not None,
+        reason="Performance tests skipped in parallel mode due to timing unreliability",
+    )
     def test_inline_mode_faster_than_subprocess(self) -> None:
         """Test that inline mode has less overhead than subprocess mode."""
         from scripts.validators.validate_fast import run_validators_inline, run_validators_subprocess
