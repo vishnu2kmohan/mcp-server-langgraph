@@ -32,7 +32,8 @@ class TestFallbackModelValidation:
     def test_validate_fallback_credentials_all_present(self, caplog):
         """Test that validation passes when all credentials are present."""
         caplog.clear()  # Clear any logs from xdist parallel test pollution
-        caplog.set_level(logging.WARNING)  # Ensure WARNING logs are captured in xdist
+        # Explicitly capture logs from the Settings module in xdist workers
+        caplog.set_level(logging.WARNING, logger="mcp_server_langgraph.core.config._settings")
         settings = Settings(
             # Anthropic
             anthropic_api_key="test-anthropic-key",
@@ -54,7 +55,8 @@ class TestFallbackModelValidation:
     def test_validate_fallback_credentials_missing_anthropic(self, caplog):
         """Test that missing Anthropic credentials are detected."""
         caplog.clear()  # Clear any logs from xdist parallel test pollution
-        caplog.set_level(logging.WARNING)  # Ensure WARNING logs are captured in xdist
+        # Explicitly capture logs from the Settings module in xdist workers
+        caplog.set_level(logging.WARNING, logger="mcp_server_langgraph.core.config._settings")
         settings = Settings(
             # Missing anthropic_api_key
             anthropic_api_key=None,
@@ -73,7 +75,8 @@ class TestFallbackModelValidation:
     def test_validate_fallback_credentials_missing_openai(self, caplog):
         """Test that missing OpenAI credentials are detected."""
         caplog.clear()  # Clear any logs from xdist parallel test pollution
-        caplog.set_level(logging.WARNING)  # Ensure WARNING logs are captured in xdist
+        # Explicitly capture logs from the Settings module in xdist workers
+        caplog.set_level(logging.WARNING, logger="mcp_server_langgraph.core.config._settings")
         settings = Settings(
             anthropic_api_key="test-anthropic-key",
             openai_api_key=None,  # Missing
@@ -91,7 +94,8 @@ class TestFallbackModelValidation:
     def test_validate_fallback_credentials_no_fallback_enabled(self, caplog):
         """Test that validation is skipped when fallback is disabled."""
         caplog.clear()  # Clear any logs from xdist parallel test pollution
-        caplog.set_level(logging.WARNING)  # Ensure WARNING logs are captured in xdist
+        # Explicitly capture logs from the Settings module in xdist workers
+        caplog.set_level(logging.WARNING, logger="mcp_server_langgraph.core.config._settings")
         settings = Settings(
             enable_fallback=False,  # Disabled
             fallback_models=["claude-3-haiku-20240307"],
@@ -107,7 +111,8 @@ class TestFallbackModelValidation:
     def test_validate_fallback_credentials_empty_list(self, caplog):
         """Test that validation is skipped with empty fallback list."""
         caplog.clear()  # Clear any logs from xdist parallel test pollution
-        caplog.set_level(logging.WARNING)  # Ensure WARNING logs are captured in xdist
+        # Explicitly capture logs from the Settings module in xdist workers
+        caplog.set_level(logging.WARNING, logger="mcp_server_langgraph.core.config._settings")
         settings = Settings(
             enable_fallback=True,
             fallback_models=[],  # Empty list
@@ -123,7 +128,8 @@ class TestFallbackModelValidation:
     def test_validate_fallback_credentials_multiple_missing(self, caplog):
         """Test detection of multiple missing credentials."""
         caplog.clear()  # Clear any logs from xdist parallel test pollution
-        caplog.set_level(logging.WARNING)  # Ensure WARNING logs are captured in xdist
+        # Explicitly capture logs from the Settings module in xdist workers
+        caplog.set_level(logging.WARNING, logger="mcp_server_langgraph.core.config._settings")
         settings = Settings(
             # All missing
             anthropic_api_key=None,
@@ -208,7 +214,8 @@ class TestCORSValidation:
     def test_cors_validation_wildcard_in_development(self, caplog):
         """Test that wildcard CORS is allowed but warned in development."""
         caplog.clear()  # Clear any logs from xdist parallel test pollution
-        caplog.set_level(logging.WARNING)  # Ensure WARNING logs are captured in xdist
+        # Explicitly capture logs from the Settings module in xdist workers
+        caplog.set_level(logging.WARNING, logger="mcp_server_langgraph.core.config._settings")
         settings = Settings(
             environment="development",
             cors_allowed_origins=["*"],
