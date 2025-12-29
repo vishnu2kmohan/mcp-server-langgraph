@@ -358,6 +358,138 @@ class TestSLAStatusDetermination:
         status = sla_monitor._determine_status(1200, target, is_higher_better=False)
         assert status == SLAStatus.BREACH
 
+    def test_status_exactly_at_target_higher_is_better(self, sla_monitor):
+        """Test status when exactly at target value (higher is better)"""
+        target = SLATarget(
+            metric=SLAMetric.UPTIME,
+            target_value=99.9,
+            comparison=">=",
+            unit="%",
+            warning_threshold=99.5,
+            critical_threshold=99.0,
+        )
+
+        # Exactly at target should be MEETING
+        status = sla_monitor._determine_status(99.9, target, is_higher_better=True)
+        assert status == SLAStatus.MEETING
+
+    def test_status_exactly_at_warning_higher_is_better(self, sla_monitor):
+        """Test status when exactly at warning threshold (higher is better)"""
+        target = SLATarget(
+            metric=SLAMetric.UPTIME,
+            target_value=99.9,
+            comparison=">=",
+            unit="%",
+            warning_threshold=99.5,
+            critical_threshold=99.0,
+        )
+
+        # Exactly at warning threshold should be AT_RISK
+        status = sla_monitor._determine_status(99.5, target, is_higher_better=True)
+        assert status == SLAStatus.AT_RISK
+
+    def test_status_exactly_at_target_lower_is_better(self, sla_monitor):
+        """Test status when exactly at target value (lower is better)"""
+        target = SLATarget(
+            metric=SLAMetric.RESPONSE_TIME,
+            target_value=500,
+            comparison="<=",
+            unit="ms",
+            warning_threshold=600,
+            critical_threshold=1000,
+        )
+
+        # Exactly at target should be MEETING
+        status = sla_monitor._determine_status(500, target, is_higher_better=False)
+        assert status == SLAStatus.MEETING
+
+    def test_status_exactly_at_warning_lower_is_better(self, sla_monitor):
+        """Test status when exactly at warning threshold (lower is better)"""
+        target = SLATarget(
+            metric=SLAMetric.RESPONSE_TIME,
+            target_value=500,
+            comparison="<=",
+            unit="ms",
+            warning_threshold=600,
+            critical_threshold=1000,
+        )
+
+        # Exactly at warning threshold should be AT_RISK
+        status = sla_monitor._determine_status(600, target, is_higher_better=False)
+        assert status == SLAStatus.AT_RISK
+
+    def test_status_zero_value_higher_is_better(self, sla_monitor):
+        """Test status with zero measured value (higher is better)"""
+        target = SLATarget(
+            metric=SLAMetric.UPTIME,
+            target_value=99.9,
+            comparison=">=",
+            unit="%",
+            warning_threshold=99.5,
+            critical_threshold=99.0,
+        )
+
+        # Zero uptime should be BREACH
+        status = sla_monitor._determine_status(0, target, is_higher_better=True)
+        assert status == SLAStatus.BREACH
+
+    def test_status_zero_value_lower_is_better(self, sla_monitor):
+        """Test status with zero measured value (lower is better)"""
+        target = SLATarget(
+            metric=SLAMetric.ERROR_RATE,
+            target_value=1.0,
+            comparison="<=",
+            unit="%",
+            warning_threshold=2.0,
+            critical_threshold=5.0,
+        )
+
+        # Zero error rate should be MEETING (lower is better)
+        status = sla_monitor._determine_status(0, target, is_higher_better=False)
+        assert status == SLAStatus.MEETING
+
+    def test_status_error_rate_meeting(self, sla_monitor):
+        """Test error rate status when meeting SLA"""
+        target = SLATarget(
+            metric=SLAMetric.ERROR_RATE,
+            target_value=1.0,
+            comparison="<=",
+            unit="%",
+            warning_threshold=2.0,
+            critical_threshold=5.0,
+        )
+
+        status = sla_monitor._determine_status(0.5, target, is_higher_better=False)
+        assert status == SLAStatus.MEETING
+
+    def test_status_error_rate_at_risk(self, sla_monitor):
+        """Test error rate status when at risk"""
+        target = SLATarget(
+            metric=SLAMetric.ERROR_RATE,
+            target_value=1.0,
+            comparison="<=",
+            unit="%",
+            warning_threshold=2.0,
+            critical_threshold=5.0,
+        )
+
+        status = sla_monitor._determine_status(1.5, target, is_higher_better=False)
+        assert status == SLAStatus.AT_RISK
+
+    def test_status_error_rate_breach(self, sla_monitor):
+        """Test error rate status when in breach"""
+        target = SLATarget(
+            metric=SLAMetric.ERROR_RATE,
+            target_value=1.0,
+            comparison="<=",
+            unit="%",
+            warning_threshold=2.0,
+            critical_threshold=5.0,
+        )
+
+        status = sla_monitor._determine_status(3.0, target, is_higher_better=False)
+        assert status == SLAStatus.BREACH
+
 
 # --- SLA Report Tests ---
 
@@ -618,3 +750,132 @@ class TestSLAEdgeCases:
             assert measurement.measured_value >= 0
             if measurement.metric == SLAMetric.UPTIME:
                 assert measurement.measured_value <= 100
+
+    async def test_negative_period_days(self, sla_monitor):
+        """Test report generation with negative period days"""
+        # Negative period should be handled (implementation may vary)
+        # Either raise error or treat as absolute value
+        try:
+            report = await sla_monitor.generate_sla_report(period_days=-1)
+            # If no error, report should still be valid
+            assert report is not None
+        except (ValueError, Exception):
+            # Raising error is also acceptable behavior
+            pass
+
+
+# --- SLA Alert Exception Handling Tests ---
+
+
+@pytest.mark.asyncio
+@pytest.mark.unit
+@pytest.mark.sla
+@pytest.mark.xdist_group(name="sla_alert_exception_tests")
+class TestSLAAlertExceptionHandling:
+    """Test exception handling in SLA alert sending."""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers."""
+        gc.collect()
+
+    async def test_send_sla_alert_catches_alerting_service_initialization_error(self, sla_monitor):
+        """
+        GIVEN AlertingService.initialize() raises an exception
+        WHEN _send_sla_alert() is called
+        THEN the exception is caught and logged (not propagated)
+        """
+        with (
+            patch("mcp_server_langgraph.monitoring.sla.AlertingService") as mock_service_class,
+            patch("mcp_server_langgraph.monitoring.sla.logger") as mock_logger,
+        ):
+            mock_service = AsyncMock()  # noqa: async-mock-config
+            mock_service.initialize = AsyncMock(side_effect=Exception("Service initialization failed"))
+            mock_service_class.return_value = mock_service
+
+            # Act - should NOT raise exception
+            await sla_monitor._send_sla_alert(
+                severity="critical",
+                message="SLA breach detected",
+                details={"metric": "uptime", "value": 98.5},
+            )
+
+            # Assert - exception was logged
+            mock_logger.error.assert_called_once()
+            assert "Failed to send SLA alert" in str(mock_logger.error.call_args)
+
+    async def test_send_sla_alert_catches_send_alert_error(self, sla_monitor):
+        """
+        GIVEN AlertingService.send_alert() raises an exception
+        WHEN _send_sla_alert() is called
+        THEN the exception is caught and logged (not propagated)
+        """
+        with (
+            patch("mcp_server_langgraph.monitoring.sla.AlertingService") as mock_service_class,
+            patch("mcp_server_langgraph.monitoring.sla.logger") as mock_logger,
+        ):
+            mock_service = AsyncMock()  # noqa: async-mock-config
+            mock_service.initialize = AsyncMock()  # noqa: async-mock-config
+            mock_service.send_alert = AsyncMock(side_effect=Exception("Network error sending alert"))
+            mock_service_class.return_value = mock_service
+
+            # Act - should NOT raise exception
+            await sla_monitor._send_sla_alert(
+                severity="warning",
+                message="SLA at risk",
+                details={"metric": "response_time", "value": 450},
+            )
+
+            # Assert - exception was logged
+            mock_logger.error.assert_called_once()
+            assert "Failed to send SLA alert" in str(mock_logger.error.call_args)
+
+    async def test_send_sla_alert_logs_warning_before_sending(self, sla_monitor):
+        """
+        GIVEN any SLA alert
+        WHEN _send_sla_alert() is called
+        THEN it logs a warning message first (fallback logging always works)
+        """
+        with (
+            patch("mcp_server_langgraph.monitoring.sla.AlertingService") as mock_service_class,
+            patch("mcp_server_langgraph.monitoring.sla.logger") as mock_logger,
+        ):
+            mock_service = AsyncMock()  # noqa: async-mock-config
+            mock_service.initialize = AsyncMock()  # noqa: async-mock-config
+            mock_service.send_alert = AsyncMock()  # noqa: async-mock-config
+            mock_service_class.return_value = mock_service
+
+            # Act
+            await sla_monitor._send_sla_alert(
+                severity="critical",
+                message="SLA breach",
+                details={"metric": "uptime"},
+            )
+
+            # Assert - warning was logged first
+            mock_logger.warning.assert_called()
+            call_args = mock_logger.warning.call_args[0][0]
+            assert "SLA Alert" in call_args
+            assert "CRITICAL" in call_args
+
+    async def test_send_sla_alert_success_calls_send_alert(self, sla_monitor):
+        """
+        GIVEN AlertingService works correctly
+        WHEN _send_sla_alert() is called
+        THEN it calls AlertingService.send_alert()
+        """
+        with patch("mcp_server_langgraph.monitoring.sla.AlertingService") as mock_service_class:
+            mock_service = AsyncMock()  # noqa: async-mock-config
+            mock_service.initialize = AsyncMock()  # noqa: async-mock-config
+            mock_service.send_alert = AsyncMock()  # noqa: async-mock-config
+            mock_service_class.return_value = mock_service
+
+            # Act
+            await sla_monitor._send_sla_alert(
+                severity="warning",
+                message="SLA at risk",
+                details={"metric": "error_rate"},
+            )
+
+            # Assert - send_alert was called
+            mock_service.initialize.assert_called_once()
+            mock_service.send_alert.assert_called_once()

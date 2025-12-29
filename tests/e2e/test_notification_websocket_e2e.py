@@ -126,7 +126,7 @@ class TestNotificationWebSocketE2E:
         except ImportError:
             pytest.skip("websockets library not installed")
 
-        ws_url = f"{E2E_WS_BASE_URL}/ws/notifications?token={alice_token}"
+        ws_url = f"{E2E_WS_BASE_URL}/api/v1/ws/notifications?token={alice_token}"
 
         async with websockets.connect(ws_url, open_timeout=10) as websocket:
             assert websocket.open
@@ -145,7 +145,7 @@ class TestNotificationWebSocketE2E:
         except ImportError:
             pytest.skip("websockets library not installed")
 
-        ws_url = f"{E2E_WS_BASE_URL}/ws/notifications"
+        ws_url = f"{E2E_WS_BASE_URL}/api/v1/ws/notifications"
 
         with pytest.raises((InvalidStatusCode, asyncio.TimeoutError, ConnectionRefusedError)):
             async with websockets.connect(ws_url, open_timeout=5) as _websocket:
@@ -169,7 +169,7 @@ class TestNotificationWebSocketE2E:
         except ImportError:
             pytest.skip("websockets library not installed")
 
-        ws_url = f"{E2E_WS_BASE_URL}/ws/notifications?token={alice_token}"
+        ws_url = f"{E2E_WS_BASE_URL}/api/v1/ws/notifications?token={alice_token}"
         received_messages: list[dict[str, Any]] = []
 
         async def receive_notifications():
@@ -212,8 +212,8 @@ class TestNotificationWebSocketE2E:
         except ImportError:
             pytest.skip("websockets library not installed")
 
-        alice_ws_url = f"{E2E_WS_BASE_URL}/ws/notifications?token={alice_token}"
-        bob_ws_url = f"{E2E_WS_BASE_URL}/ws/notifications?token={bob_token}"
+        alice_ws_url = f"{E2E_WS_BASE_URL}/api/v1/ws/notifications?token={alice_token}"
+        bob_ws_url = f"{E2E_WS_BASE_URL}/api/v1/ws/notifications?token={bob_token}"
 
         async def connect_alice():
             async with websockets.connect(alice_ws_url, open_timeout=10) as ws:
@@ -248,7 +248,7 @@ class TestNotificationWebSocketE2E:
         except ImportError:
             pytest.skip("websockets library not installed")
 
-        ws_url = f"{E2E_WS_BASE_URL}/ws/notifications?token={alice_token}"
+        ws_url = f"{E2E_WS_BASE_URL}/api/v1/ws/notifications?token={alice_token}"
 
         # First connection
         async with websockets.connect(ws_url, open_timeout=10) as websocket1:
@@ -275,7 +275,7 @@ class TestNotificationWebSocketE2E:
 
         # Use an obviously invalid token
         invalid_token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.invalid.token"
-        ws_url = f"{E2E_WS_BASE_URL}/ws/notifications?token={invalid_token}"
+        ws_url = f"{E2E_WS_BASE_URL}/api/v1/ws/notifications?token={invalid_token}"
 
         with pytest.raises((InvalidStatusCode, asyncio.TimeoutError, ConnectionRefusedError)):
             async with websockets.connect(ws_url, open_timeout=5) as _websocket:
@@ -296,7 +296,7 @@ class TestNotificationWebSocketE2E:
         except ImportError:
             pytest.skip("websockets library not installed")
 
-        ws_url = f"{E2E_WS_BASE_URL}/ws/notifications?token={admin_token}"
+        ws_url = f"{E2E_WS_BASE_URL}/api/v1/ws/notifications?token={admin_token}"
 
         async with websockets.connect(ws_url, open_timeout=10) as websocket:
             assert websocket.open

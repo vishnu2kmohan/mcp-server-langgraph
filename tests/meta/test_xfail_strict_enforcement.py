@@ -50,7 +50,6 @@ XFAIL_STRICT_EXEMPT_FILES: set[str] = {
     "tests/integration/auth/test_oauth2_e2e.py",  # OAuth2 E2E requires full auth stack - infra-dependent
     "tests/integration/auth/test_openfga_oidc.py",  # OpenFGA OIDC requires infrastructure that may not be available
     "tests/integration/observability/test_lgtm_client_integration.py",  # LGTM stack requires infrastructure
-    "tests/integration/test_notification_websocket_integration.py",  # WebSocket tests with xdist instability
 }
 
 

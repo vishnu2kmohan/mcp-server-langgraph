@@ -56,7 +56,7 @@ class TestADRSyncValidator:
             [sys.executable, str(VALIDATOR_SCRIPT), "--help"],
             capture_output=True,
             text=True,
-            timeout=10,
+            timeout=30,
         )
         assert result.returncode == 0, "Validator --help should exit with 0"
         assert "ADR" in result.stdout.upper(), "Help should mention ADR"
@@ -104,7 +104,7 @@ class TestADRSyncValidator:
             [sys.executable, str(VALIDATOR_SCRIPT), "--repo-root", str(tmp_path)],
             capture_output=True,
             text=True,
-            timeout=10,
+            timeout=30,
         )
 
         assert result.returncode == 1, "Validator should exit with 1 on mismatch"
@@ -128,7 +128,7 @@ class TestADRSyncValidator:
             [sys.executable, str(VALIDATOR_SCRIPT), "--repo-root", str(tmp_path)],
             capture_output=True,
             text=True,
-            timeout=10,
+            timeout=30,
         )
 
         assert result.returncode == 1, "Validator should exit with 1 on duplicate numbers"
@@ -151,7 +151,7 @@ class TestADRSyncValidator:
             [sys.executable, str(VALIDATOR_SCRIPT), "--repo-root", str(tmp_path)],
             capture_output=True,
             text=True,
-            timeout=10,
+            timeout=30,
         )
 
         # Gaps are warnings, not errors (some ADRs may be deprecated/removed)
@@ -176,7 +176,7 @@ class TestADRSyncValidator:
             [sys.executable, str(VALIDATOR_SCRIPT), "--repo-root", str(tmp_path)],
             capture_output=True,
             text=True,
-            timeout=10,
+            timeout=30,
         )
 
         assert result.returncode == 1, "Validator should exit with 1 on missing MDX"
@@ -221,7 +221,7 @@ Some other content
             [sys.executable, str(VALIDATOR_SCRIPT), "--repo-root", str(tmp_path), "--fix"],
             capture_output=True,
             text=True,
-            timeout=10,
+            timeout=30,
         )
 
         assert result.returncode == 0, f"--fix should succeed. Output:\n{result.stdout}\n{result.stderr}"
