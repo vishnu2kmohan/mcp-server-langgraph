@@ -506,6 +506,39 @@ Be specific about what changed and why it matters.
 
 Respond ONLY with valid JSON. Do not include any other text."""
 
+DIAGRAM_ANALYZE_SYSTEM_PROMPT = """You are an AI assistant that analyzes Mermaid diagrams.
+
+Analyze the provided Mermaid diagram code for structure, validity, and complexity.
+
+Return a JSON response with:
+- diagram_type: One of "flowchart", "sequence", "class", "state", "er", "gantt", "unknown"
+- is_valid: Boolean indicating if the diagram syntax is valid
+- node_count: Number of nodes/entities in the diagram
+- edge_count: Number of connections/relationships
+- complexity_score: Float between 0 and 1 (higher = more complex)
+- issues: List of syntax or structural issues found
+- suggestions: List of improvement suggestions
+- description: Brief natural language description of what the diagram represents
+
+Be specific about any syntax errors or structural improvements.
+
+Respond ONLY with valid JSON. Do not include any other text."""
+
+DIAGRAM_TO_CODE_SYSTEM_PROMPT = """You are an AI assistant that generates code from Mermaid diagrams.
+
+Convert the provided Mermaid diagram into executable code in the specified target language.
+
+Return a JSON response with:
+- code: The generated code as a string (use \\n for newlines)
+- language: The target programming language
+- confidence: Float between 0 and 1 indicating confidence in the generated code
+- explanation: Brief explanation of the generated code structure
+
+Generate idiomatic code for the target language. Handle flowcharts as control flow,
+sequence diagrams as function calls, class diagrams as type definitions.
+
+Respond ONLY with valid JSON. Do not include any other text."""
+
 
 # =============================================================================
 # LLMWithFallback Base Class
@@ -3463,24 +3496,16 @@ Explain the changes in natural language."""
     # Diagram Intelligence Methods (Sprint 4)
     # =========================================================================
 
-    async def analyze_diagram(
-        self,
-        diagram_code: str,
-        user_id: str = "",
-        session_id: str | None = None,
-        **kwargs: Any,
-    ) -> dict[str, Any]:
-        """Validate and analyze Mermaid diagrams.
+    def _is_diagram_intelligence_enabled(self) -> bool:
+        """Check if diagram intelligence LLM calls are enabled."""
+        return (
+            self.llm_enabled
+            and self.llm_factory is not None
+            and getattr(self.settings, "ff_enable_diagram_intelligence", True)
+        )
 
-        Args:
-            diagram_code: Mermaid diagram code
-            user_id: User identifier
-            session_id: Optional session identifier
-            **kwargs: Additional parameters
-
-        Returns:
-            Diagram analysis with validation and metrics
-        """
+    def _heuristic_analyze_diagram(self, diagram_code: str) -> dict[str, Any]:
+        """Heuristic-based diagram analysis fallback."""
         diagram_lower = diagram_code.lower()
 
         # Detect diagram type
@@ -3524,27 +3549,8 @@ Explain the changes in natural language."""
             "suggestions": suggestions,
         }
 
-    async def diagram_to_code(
-        self,
-        diagram_code: str,
-        target_language: str = "typescript",
-        user_id: str = "",
-        session_id: str | None = None,
-        **kwargs: Any,
-    ) -> dict[str, Any]:
-        """Generate code from flowchart/sequence diagrams.
-
-        Args:
-            diagram_code: Mermaid diagram code
-            target_language: Target programming language
-            user_id: User identifier
-            session_id: Optional session identifier
-            **kwargs: Additional parameters
-
-        Returns:
-            Generated code with explanation
-        """
-        # Placeholder code generation
+    def _heuristic_diagram_to_code(self, diagram_code: str, target_language: str) -> dict[str, Any]:
+        """Heuristic-based code generation fallback."""
         if target_language == "typescript":
             generated_code = """async function process(input: unknown): Promise<unknown> {
   // Generated from diagram
@@ -3565,6 +3571,116 @@ Explain the changes in natural language."""
             "confidence": 0.75,
             "explanation": f"Generated {target_language} code based on diagram structure",
         }
+
+    async def analyze_diagram(
+        self,
+        diagram_code: str,
+        user_id: str = "",
+        session_id: str | None = None,
+        **kwargs: Any,
+    ) -> dict[str, Any]:
+        """Validate and analyze Mermaid diagrams.
+
+        Args:
+            diagram_code: Mermaid diagram code
+            user_id: User identifier
+            session_id: Optional session identifier
+            **kwargs: Additional parameters
+
+        Returns:
+            Diagram analysis with validation and metrics
+        """
+        fallback = self._heuristic_analyze_diagram(diagram_code)
+
+        if not self._is_diagram_intelligence_enabled():
+            return fallback
+
+        try:
+            user_prompt = f"""Analyze the following Mermaid diagram:
+
+```mermaid
+{diagram_code[:2000]}
+```
+
+Provide detailed analysis of this diagram."""
+
+            messages = [
+                SystemMessage(content=DIAGRAM_ANALYZE_SYSTEM_PROMPT),
+                HumanMessage(content=user_prompt),
+            ]
+
+            response = await self.llm_factory.ainvoke(messages)  # type: ignore[union-attr, arg-type]
+            result_content = response.content if hasattr(response, "content") else str(response)
+            parsed = self._parse_json_response(result_content)
+
+            return {
+                "diagram_type": parsed.get("diagram_type", fallback["diagram_type"]),
+                "is_valid": parsed.get("is_valid", fallback["is_valid"]),
+                "node_count": parsed.get("node_count", fallback["node_count"]),
+                "edge_count": parsed.get("edge_count", fallback["edge_count"]),
+                "complexity_score": parsed.get("complexity_score", fallback["complexity_score"]),
+                "issues": parsed.get("issues", fallback["issues"]),
+                "suggestions": parsed.get("suggestions", fallback["suggestions"]),
+                "description": parsed.get("description", ""),
+            }
+
+        except Exception as e:
+            logger.warning(f"Diagram analysis LLM call failed: {e}, using heuristics")
+            return fallback
+
+    async def diagram_to_code(
+        self,
+        diagram_code: str,
+        target_language: str = "typescript",
+        user_id: str = "",
+        session_id: str | None = None,
+        **kwargs: Any,
+    ) -> dict[str, Any]:
+        """Generate code from flowchart/sequence diagrams.
+
+        Args:
+            diagram_code: Mermaid diagram code
+            target_language: Target programming language
+            user_id: User identifier
+            session_id: Optional session identifier
+            **kwargs: Additional parameters
+
+        Returns:
+            Generated code with explanation
+        """
+        fallback = self._heuristic_diagram_to_code(diagram_code, target_language)
+
+        if not self._is_diagram_intelligence_enabled():
+            return fallback
+
+        try:
+            user_prompt = f"""Generate {target_language} code from this Mermaid diagram:
+
+```mermaid
+{diagram_code[:2000]}
+```
+
+Generate production-quality {target_language} code that implements the logic shown in the diagram."""
+
+            messages = [
+                SystemMessage(content=DIAGRAM_TO_CODE_SYSTEM_PROMPT),
+                HumanMessage(content=user_prompt),
+            ]
+
+            response = await self.llm_factory.ainvoke(messages)  # type: ignore[union-attr, arg-type]
+            result_content = response.content if hasattr(response, "content") else str(response)
+            parsed = self._parse_json_response(result_content)
+
+            return {
+                "code": parsed.get("code", fallback["code"]),
+                "language": parsed.get("language", target_language),
+                "confidence": parsed.get("confidence", fallback["confidence"]),
+                "explanation": parsed.get("explanation", fallback["explanation"]),
+            }
+
+        except Exception as e:
+            logger.warning(f"Diagram to code LLM call failed: {e}, using heuristics")
+            return fallback
 
     # =========================================================================
     # Trace Intelligence Methods (Sprint 5)
