@@ -400,3 +400,184 @@ groups:
           severity: critical
           component: websocket
           team: platform
+
+  # =============================================================================
+  # AI Orchestrator Status Alert Rules
+  # =============================================================================
+  # These alerts monitor orchestrator queue depth, task failures, and health.
+  # Reference: docs/guides/orchestrator-status-websocket.mdx
+  # =============================================================================
+  - orgId: 1
+    name: Orchestrator Status
+    folder: AI
+    interval: 1m
+    rules:
+      # -------------------------------------------------------------------------
+      # High Queue Depth Warning
+      # -------------------------------------------------------------------------
+      - uid: orchestrator-queue-depth-warning
+        title: Orchestrator Queue Depth Elevated
+        condition: A
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: mimir
+            model:
+              expr: orchestrator_queue_depth > 10
+              instant: true
+              refId: A
+        noDataState: OK
+        execErrState: OK
+        for: 5m
+        annotations:
+          summary: Orchestrator task queue depth is elevated
+          description: |
+            **Queue Depth Warning**: The orchestrator queue has {{ $values.A.Value }} tasks waiting.
+
+            This indicates that tasks are being queued faster than they can be processed.
+
+            **Recommended Actions**:
+            1. Check active task count: `orchestrator_active_tasks`
+            2. Investigate slow tasks: Check LLM latency metrics
+            3. Consider scaling orchestrator resources
+            4. Review task timeout settings
+
+            **Impact**: Users may experience delays in AI-powered features.
+          runbook_url: https://docs/runbooks/ORCHESTRATOR_OPERATIONS.md#high-queue-depth
+          dashboard_url: /d/orchestrator-status/orchestrator-status
+        labels:
+          severity: warning
+          component: orchestrator
+          team: ai
+
+      # -------------------------------------------------------------------------
+      # Critical Queue Depth
+      # -------------------------------------------------------------------------
+      - uid: orchestrator-queue-depth-critical
+        title: Orchestrator Queue Depth Critical
+        condition: A
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: mimir
+            model:
+              expr: orchestrator_queue_depth > 50
+              instant: true
+              refId: A
+        noDataState: OK
+        execErrState: OK
+        for: 2m
+        annotations:
+          summary: Orchestrator queue depth is critically high
+          description: |
+            **Critical Queue Depth**: {{ $values.A.Value }} tasks waiting in queue.
+
+            The orchestrator is severely backed up. Immediate action required.
+
+            **Immediate Actions**:
+            1. **Scale up**: Increase orchestrator resources immediately
+            2. **Investigate blockers**: Check for stuck tasks or LLM outages
+            3. **Circuit breaker**: Consider enabling request limiting
+            4. **Communication**: Notify users of potential delays
+
+            **Root Cause Investigation**:
+            - Check LLM provider status
+            - Review recent deployments
+            - Check for memory/CPU constraints
+          runbook_url: https://docs/runbooks/ORCHESTRATOR_OPERATIONS.md#critical-queue-depth
+          dashboard_url: /d/orchestrator-status/orchestrator-status
+        labels:
+          severity: critical
+          component: orchestrator
+          team: ai
+
+      # -------------------------------------------------------------------------
+      # High Task Failure Rate
+      # -------------------------------------------------------------------------
+      - uid: orchestrator-high-failure-rate
+        title: Orchestrator High Task Failure Rate
+        condition: A
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: mimir
+            model:
+              expr: |
+                (sum(rate(orchestrator_tasks_failed_total[5m])) /
+                 (sum(rate(orchestrator_tasks_completed_total[5m])) + sum(rate(orchestrator_tasks_failed_total[5m])))) > 0.1
+              instant: true
+              refId: A
+        noDataState: OK
+        execErrState: OK
+        for: 5m
+        annotations:
+          summary: Orchestrator task failure rate exceeds 10%
+          description: |
+            **High Failure Rate**: Task failure rate is {{ $values.A.Value | printf "%.1f" }}%
+
+            More than 10% of orchestrator tasks are failing.
+
+            **Recommended Actions**:
+            1. Check failure reasons: `orchestrator_tasks_failed_total{reason=~".*"}`
+            2. Review recent changes to LLM prompts or models
+            3. Check external service health (LLM providers)
+            4. Review error logs for patterns
+
+            **Common Causes**:
+            - LLM rate limiting
+            - Prompt injection detection
+            - Timeout issues
+            - Model unavailability
+          runbook_url: https://docs/runbooks/ORCHESTRATOR_OPERATIONS.md#high-failure-rate
+          dashboard_url: /d/orchestrator-status/orchestrator-status
+        labels:
+          severity: warning
+          component: orchestrator
+          team: ai
+
+      # -------------------------------------------------------------------------
+      # No Active Subscribers (Potential Issue)
+      # -------------------------------------------------------------------------
+      - uid: orchestrator-no-subscribers
+        title: No Orchestrator Status Subscribers
+        condition: A
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: mimir
+            model:
+              expr: orchestrator_ws_subscribers == 0 and orchestrator_active_tasks > 0
+              instant: true
+              refId: A
+        noDataState: OK
+        execErrState: OK
+        for: 10m
+        annotations:
+          summary: No WebSocket subscribers but orchestrator has active tasks
+          description: |
+            **Subscriber Disconnect**: There are no WebSocket subscribers receiving orchestrator
+            status updates, but {{ $values.A.Value }} tasks are active.
+
+            This could indicate:
+            - All users have disconnected
+            - WebSocket connection issues
+            - Frontend deployment issue
+
+            **Recommended Actions**:
+            1. Check WebSocket connection health
+            2. Verify frontend deployment status
+            3. Review network/load balancer logs
+          runbook_url: https://docs/runbooks/ORCHESTRATOR_OPERATIONS.md#subscriber-disconnect
+          dashboard_url: /d/orchestrator-status/orchestrator-status
+        labels:
+          severity: info
+          component: orchestrator
+          team: ai
