@@ -38,6 +38,10 @@ from mcp_server_langgraph.auth.dependencies import get_current_user
 # Type alias for current user
 CurrentUser = Annotated[dict[str, Any], Depends(get_current_user)]
 
+from mcp_server_langgraph.agents.genui_orchestrator import (
+    GenUIOrchestrator,
+    GenUITask,
+)
 from mcp_server_langgraph.agents.studio_orchestrator import (
     StudioOrchestrator,
 )
@@ -107,6 +111,36 @@ class StudioAnalyzeResponse(BaseModel):
     )
 
 
+class GenUIRequest(BaseModel):
+    """Request model for GenUI widget generation."""
+
+    tasks: list[dict[str, Any]] = Field(
+        default_factory=list,
+        description="List of GenUI tasks (generate_widget, render_data, execute_form)",
+    )
+
+
+class GenUIResponse(BaseModel):
+    """Response model for GenUI widget generation."""
+
+    widgets: list[dict[str, Any]] = Field(
+        default_factory=list,
+        description="Generated widget configurations",
+    )
+    layout: str = Field(
+        default="single",
+        description="Suggested layout for widgets",
+    )
+    total_count: int = Field(
+        default=0,
+        description="Total number of widgets generated",
+    )
+    errors: list[str] | None = Field(
+        default=None,
+        description="Errors encountered during generation",
+    )
+
+
 # =============================================================================
 # Dependencies
 # =============================================================================
@@ -124,6 +158,19 @@ def get_studio_orchestrator() -> StudioOrchestrator:
         llm_factory=None,
         enable_metrics=True,
         status_broadcaster=get_orchestrator_status_broadcaster(),
+    )
+
+
+def get_genui_orchestrator() -> GenUIOrchestrator:
+    """Get or create GenUIOrchestrator instance.
+
+    Returns:
+        GenUIOrchestrator configured for request handling
+    """
+    # TODO: In production, inject LLMFactory via proper DI
+    return GenUIOrchestrator(
+        llm_factory=None,
+        enable_metrics=True,
     )
 
 
@@ -228,4 +275,74 @@ async def analyze(
         raise HTTPException(
             status_code=500,
             detail=f"Analysis failed: {str(e)}",
+        ) from e
+
+
+@studio_ai_router.post(
+    "/genui",
+    response_model=GenUIResponse,
+    summary="Generate dynamic UI widgets using AI",
+    description="""
+    Generate dynamic UI widgets based on prompts and data.
+
+    Supports task types:
+    - generate_widget: Create chart/table/text widgets from prompts
+    - render_data: Transform raw data into widget format
+    - execute_form: Handle form submission with AI validation
+
+    Returns synthesized widget layout.
+    """,
+)
+async def generate_ui(
+    request: GenUIRequest,
+    current_user: CurrentUser,
+) -> dict[str, Any]:
+    """Generate dynamic UI widgets.
+
+    Args:
+        request: GenUI request with tasks to execute
+        current_user: Authenticated user context
+
+    Returns:
+        Generated widgets with layout suggestion
+
+    Raises:
+        HTTPException: 503 if feature flag is disabled
+    """
+    # Check feature flag - graceful degradation if disabled
+    if not feature_flags.enable_genui:
+        logger.info("GenUI feature disabled, returning fallback")
+        # Return empty but valid response
+        return {
+            "widgets": [],
+            "layout": "single",
+            "total_count": 0,
+            "errors": None,
+        }
+
+    try:
+        orchestrator = get_genui_orchestrator()
+
+        # Convert request tasks to GenUITask objects
+        tasks = [
+            GenUITask(
+                task_type=task.get("task_type", "generate_widget"),
+                data=task.get("data", {}),
+            )
+            for task in request.tasks
+        ]
+
+        # Execute tasks
+        results = await orchestrator.execute(tasks)
+
+        # Synthesize results into layout
+        synthesized = orchestrator.synthesize(results)
+
+        return synthesized
+
+    except Exception as e:
+        logger.exception(f"Error in GenUI generation: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Generation failed: {str(e)}",
         ) from e
