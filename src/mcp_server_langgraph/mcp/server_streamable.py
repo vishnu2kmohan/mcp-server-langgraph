@@ -66,6 +66,56 @@ from mcp_server_langgraph.observability.telemetry import logger, metrics, tracer
 from mcp_server_langgraph.utils.response_optimizer import format_response
 
 
+# ============================================================================
+# Defer Loading Support (Anthropic Advanced Tool Use pattern)
+# ============================================================================
+
+
+def is_defer_loading_enabled() -> bool:
+    """Check if defer_loading feature is enabled.
+
+    Returns:
+        True if defer_loading feature flag is enabled, False otherwise.
+    """
+    try:
+        return feature_flags.enable_defer_loading
+    except Exception:
+        return False
+
+
+def is_tool_deferred(tool_name: str) -> bool:
+    """Check if a specific tool is marked as deferred.
+
+    Args:
+        tool_name: Name of the tool to check.
+
+    Returns:
+        True if the tool is deferred, False otherwise.
+    """
+    from mcp_server_langgraph.tools.defer_loading import is_tool_deferred as _is_tool_deferred
+
+    return _is_tool_deferred(tool_name)
+
+
+def filter_deferred_tools(tools: list[Tool]) -> list[Tool]:
+    """Filter out deferred tools from the tools list.
+
+    When defer_loading is enabled, this removes tools that are registered
+    as deferred from the initial tools/list response. Deferred tools can
+    still be discovered via search_tools or accessed by name.
+
+    Args:
+        tools: List of MCP Tool objects.
+
+    Returns:
+        Filtered list with deferred tools removed (if feature enabled).
+    """
+    if not is_defer_loading_enabled():
+        return tools
+
+    return [tool for tool in tools if not is_tool_deferred(tool.name)]
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     """
@@ -1040,7 +1090,9 @@ class MCPAgentStreamableServer:
                     )
                 )
 
-            return tools
+            # Apply defer_loading filter (Anthropic Advanced Tool Use pattern)
+            # Deferred tools are excluded from initial listing but discoverable via search
+            return filter_deferred_tools(tools)
 
         # Store reference to handler for public API
         self._list_tools_handler = list_tools
