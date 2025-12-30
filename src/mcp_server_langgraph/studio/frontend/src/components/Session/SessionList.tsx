@@ -31,8 +31,15 @@ import {
   Trash2,
   Edit2,
   MessageSquare,
+  FolderOpen,
+  Loader2,
+  AlertCircle,
 } from "lucide-react";
 import { usePreferences } from "../../contexts/PreferencesContext";
+import {
+  useSessionGroups,
+  type SessionGroup,
+} from "../../hooks/useSessionIntelligence";
 import type { SessionSummary } from "../../types/session";
 
 // ==============================================================================
@@ -48,6 +55,10 @@ export interface SessionListProps {
   isLoading?: boolean;
   /** Additional CSS classes */
   className?: string;
+  /** Enable AI-powered session grouping */
+  enableAIGrouping?: boolean;
+  /** User ID for AI grouping (required when enableAIGrouping is true) */
+  userId?: string;
   /** Callback when a session is selected */
   onSelect?: (sessionId: string) => void;
   /** Callback when a session is deleted */
@@ -67,6 +78,8 @@ export function SessionList({
   selectedId,
   isLoading = false,
   className = "",
+  enableAIGrouping = false,
+  userId,
   onSelect,
   onDelete,
   onRename,
@@ -82,6 +95,26 @@ export function SessionList({
 
   const { preferences, pinSession, unpinSession } = usePreferences();
   const pinnedSessionIds = preferences.session.pinnedSessions;
+
+  // AI-powered session grouping
+  const sessionIds = useMemo(() => sessions.map((s) => s.id), [sessions]);
+  const {
+    groups: aiGroups,
+    ungrouped: ungroupedIds,
+    isLoading: isGroupsLoading,
+    error: groupsError,
+  } = useSessionGroups({
+    userId: userId ?? "",
+    sessionIds: enableAIGrouping && userId ? sessionIds : [],
+    enabled: enableAIGrouping && !!userId,
+  });
+
+  // Create a session lookup map for group rendering
+  const sessionMap = useMemo(() => {
+    const map = new Map<string, SessionSummary>();
+    sessions.forEach((s) => map.set(s.id, s));
+    return map;
+  }, [sessions]);
 
   // ---------------------------------------------------------------------------
   // Filter and sort sessions
@@ -266,6 +299,279 @@ export function SessionList({
   };
 
   // ---------------------------------------------------------------------------
+  // Render session item
+  // ---------------------------------------------------------------------------
+  const renderSessionItem = (session: SessionSummary) => {
+    const isPinned = pinnedSessionIds.includes(session.id);
+    const isSelected = session.id === selectedId;
+    const isEditing = session.id === editingId;
+
+    return (
+      <li
+        key={session.id}
+        aria-current={isSelected ? "true" : undefined}
+        className={`group relative px-3 py-2 cursor-pointer border-b border-gray-100 dark:border-gray-800 ${
+          isSelected
+            ? "bg-blue-50 dark:bg-blue-900/30"
+            : "hover:bg-gray-50 dark:hover:bg-gray-800/50"
+        }`}
+        onClick={() => !isEditing && onSelect?.(session.id)}
+      >
+        <div className="flex items-start justify-between gap-2">
+          <div className="flex-1 min-w-0">
+            {isEditing ? (
+              <input
+                type="text"
+                value={editName}
+                onChange={(e) => setEditName(e.target.value)}
+                onKeyDown={(e) => handleRenameKeyDown(e, session.id)}
+                onBlur={() => handleRenameSubmit(session.id)}
+                autoFocus
+                className="w-full px-1 py-0.5 text-sm rounded border border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 bg-white dark:bg-gray-800"
+              />
+            ) : (
+              <div className="flex items-center gap-1.5">
+                {isPinned && (
+                  <Pin
+                    size={12}
+                    className="text-blue-500 flex-shrink-0"
+                    aria-label="Pinned"
+                  />
+                )}
+                <span className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
+                  {session.name}
+                </span>
+              </div>
+            )}
+            <div className="flex items-center gap-2 mt-0.5 text-xs text-gray-500 dark:text-gray-400">
+              <span>{session.messageCount} messages</span>
+              <span>•</span>
+              <span>{formatRelativeTime(session.updatedAt)}</span>
+            </div>
+          </div>
+
+          {/* Actions button */}
+          <div
+            className={`flex-shrink-0 ${
+              activeMenuId === session.id
+                ? "opacity-100"
+                : "opacity-0 group-hover:opacity-100"
+            }`}
+          >
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setActiveMenuId(
+                  activeMenuId === session.id ? null : session.id,
+                );
+              }}
+              aria-label="Session actions"
+              aria-haspopup="menu"
+              aria-expanded={activeMenuId === session.id}
+              className="p-1 rounded hover:bg-gray-200 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <MoreVertical size={14} />
+            </button>
+
+            {/* Actions menu */}
+            {activeMenuId === session.id && (
+              <div
+                ref={menuRef}
+                role="menu"
+                className="absolute right-2 top-10 z-10 w-36 rounded-md bg-white dark:bg-gray-900 shadow-lg ring-1 ring-black/5 dark:ring-white/10"
+              >
+                <div className="py-1">
+                  <button
+                    role="menuitem"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handlePin(session.id);
+                    }}
+                    className="w-full flex items-center gap-2 px-3 py-1.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
+                  >
+                    {isPinned ? (
+                      <>
+                        <PinOff size={14} />
+                        Unpin
+                      </>
+                    ) : (
+                      <>
+                        <Pin size={14} />
+                        Pin
+                      </>
+                    )}
+                  </button>
+                  <button
+                    role="menuitem"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleStartRename(session);
+                    }}
+                    className="w-full flex items-center gap-2 px-3 py-1.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
+                  >
+                    <Edit2 size={14} />
+                    Rename
+                  </button>
+                  <button
+                    role="menuitem"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleDelete(session.id);
+                    }}
+                    className="w-full flex items-center gap-2 px-3 py-1.5 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20"
+                  >
+                    <Trash2 size={14} />
+                    Delete
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </li>
+    );
+  };
+
+  // ---------------------------------------------------------------------------
+  // Render group header
+  // ---------------------------------------------------------------------------
+  const renderGroupHeader = (group: SessionGroup) => (
+    <li
+      key={`group-${group.topic}`}
+      className="px-3 py-2 bg-gray-50 dark:bg-gray-800/50 border-b border-gray-200 dark:border-gray-700"
+      role="presentation"
+      data-testid={`group-header-${group.topic.toLowerCase().replace(/\s+/g, "-")}`}
+    >
+      <div className="flex items-center gap-2">
+        <FolderOpen size={14} className="text-gray-500 dark:text-gray-400" />
+        <span className="text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wide">
+          {group.topic}
+        </span>
+        <span className="text-xs text-gray-400 dark:text-gray-500">
+          ({group.session_ids.length})
+        </span>
+      </div>
+    </li>
+  );
+
+  // ---------------------------------------------------------------------------
+  // Render sessions content (grouped or flat)
+  // ---------------------------------------------------------------------------
+  const renderSessionsContent = () => {
+    // Show loading indicator for AI grouping
+    if (enableAIGrouping && isGroupsLoading) {
+      return (
+        <li
+          className="p-4 text-center"
+          data-testid="ai-grouping-loading"
+          role="status"
+        >
+          <Loader2 className="mx-auto h-5 w-5 animate-spin text-blue-500" />
+          <span className="sr-only">Loading AI groups...</span>
+        </li>
+      );
+    }
+
+    // Show error state for AI grouping
+    if (enableAIGrouping && groupsError) {
+      return (
+        <li
+          className="p-4 text-center text-sm text-amber-600 dark:text-amber-400"
+          data-testid="ai-grouping-error"
+          role="alert"
+        >
+          <AlertCircle className="mx-auto h-5 w-5 mb-1" aria-hidden="true" />
+          <span>Failed to load AI groups. Showing default order.</span>
+        </li>
+      );
+    }
+
+    // If AI grouping is enabled and we have groups, render grouped view
+    if (
+      enableAIGrouping &&
+      aiGroups.length > 0 &&
+      !isGroupsLoading &&
+      !groupsError
+    ) {
+      const elements: React.ReactNode[] = [];
+
+      // Render each group with its sessions
+      aiGroups.forEach((group) => {
+        elements.push(renderGroupHeader(group));
+        group.session_ids.forEach((sessionId) => {
+          const session = sessionMap.get(sessionId);
+          if (session) {
+            // Apply search filter
+            if (
+              searchQuery.trim() &&
+              !session.name.toLowerCase().includes(searchQuery.toLowerCase())
+            ) {
+              return;
+            }
+            elements.push(renderSessionItem(session));
+          }
+        });
+      });
+
+      // Render ungrouped sessions
+      if (ungroupedIds.length > 0) {
+        elements.push(
+          <li
+            key="group-ungrouped"
+            className="px-3 py-2 bg-gray-50 dark:bg-gray-800/50 border-b border-gray-200 dark:border-gray-700"
+            role="presentation"
+          >
+            <div className="flex items-center gap-2">
+              <MessageSquare
+                size={14}
+                className="text-gray-500 dark:text-gray-400"
+              />
+              <span className="text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wide">
+                Other
+              </span>
+              <span className="text-xs text-gray-400 dark:text-gray-500">
+                ({ungroupedIds.length})
+              </span>
+            </div>
+          </li>,
+        );
+        ungroupedIds.forEach((sessionId) => {
+          const session = sessionMap.get(sessionId);
+          if (session) {
+            // Apply search filter
+            if (
+              searchQuery.trim() &&
+              !session.name.toLowerCase().includes(searchQuery.toLowerCase())
+            ) {
+              return;
+            }
+            elements.push(renderSessionItem(session));
+          }
+        });
+      }
+
+      return elements.length > 0 ? (
+        elements
+      ) : (
+        <li className="p-4 text-center text-sm text-gray-500 dark:text-gray-400">
+          No sessions found
+        </li>
+      );
+    }
+
+    // Default: render flat list (filteredSessions)
+    if (filteredSessions.length === 0) {
+      return (
+        <li className="p-4 text-center text-sm text-gray-500 dark:text-gray-400">
+          No sessions found
+        </li>
+      );
+    }
+
+    return filteredSessions.map((session) => renderSessionItem(session));
+  };
+
+  // ---------------------------------------------------------------------------
   // Render loading state
   // ---------------------------------------------------------------------------
   if (isLoading) {
@@ -372,142 +678,7 @@ export function SessionList({
         className="flex-1 overflow-y-auto"
         aria-label="Chat sessions"
       >
-        {filteredSessions.length === 0 ? (
-          <li className="p-4 text-center text-sm text-gray-500 dark:text-gray-400">
-            No sessions found
-          </li>
-        ) : (
-          filteredSessions.map((session) => {
-            const isPinned = pinnedSessionIds.includes(session.id);
-            const isSelected = session.id === selectedId;
-            const isEditing = session.id === editingId;
-
-            return (
-              <li
-                key={session.id}
-                aria-current={isSelected ? "true" : undefined}
-                className={`group relative px-3 py-2 cursor-pointer border-b border-gray-100 dark:border-gray-800 ${
-                  isSelected
-                    ? "bg-blue-50 dark:bg-blue-900/30"
-                    : "hover:bg-gray-50 dark:hover:bg-gray-800/50"
-                }`}
-                onClick={() => !isEditing && onSelect?.(session.id)}
-              >
-                <div className="flex items-start justify-between gap-2">
-                  <div className="flex-1 min-w-0">
-                    {isEditing ? (
-                      <input
-                        type="text"
-                        value={editName}
-                        onChange={(e) => setEditName(e.target.value)}
-                        onKeyDown={(e) => handleRenameKeyDown(e, session.id)}
-                        onBlur={() => handleRenameSubmit(session.id)}
-                        autoFocus
-                        className="w-full px-1 py-0.5 text-sm rounded border border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 bg-white dark:bg-gray-800"
-                      />
-                    ) : (
-                      <div className="flex items-center gap-1.5">
-                        {isPinned && (
-                          <Pin
-                            size={12}
-                            className="text-blue-500 flex-shrink-0"
-                            aria-label="Pinned"
-                          />
-                        )}
-                        <span className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
-                          {session.name}
-                        </span>
-                      </div>
-                    )}
-                    <div className="flex items-center gap-2 mt-0.5 text-xs text-gray-500 dark:text-gray-400">
-                      <span>{session.messageCount} messages</span>
-                      <span>•</span>
-                      <span>{formatRelativeTime(session.updatedAt)}</span>
-                    </div>
-                  </div>
-
-                  {/* Actions button */}
-                  <div
-                    className={`flex-shrink-0 ${
-                      activeMenuId === session.id
-                        ? "opacity-100"
-                        : "opacity-0 group-hover:opacity-100"
-                    }`}
-                  >
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setActiveMenuId(
-                          activeMenuId === session.id ? null : session.id,
-                        );
-                      }}
-                      aria-label="Session actions"
-                      aria-haspopup="menu"
-                      aria-expanded={activeMenuId === session.id}
-                      className="p-1 rounded hover:bg-gray-200 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    >
-                      <MoreVertical size={14} />
-                    </button>
-
-                    {/* Actions menu */}
-                    {activeMenuId === session.id && (
-                      <div
-                        ref={menuRef}
-                        role="menu"
-                        className="absolute right-2 top-10 z-10 w-36 rounded-md bg-white dark:bg-gray-900 shadow-lg ring-1 ring-black/5 dark:ring-white/10"
-                      >
-                        <div className="py-1">
-                          <button
-                            role="menuitem"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handlePin(session.id);
-                            }}
-                            className="w-full flex items-center gap-2 px-3 py-1.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
-                          >
-                            {isPinned ? (
-                              <>
-                                <PinOff size={14} />
-                                Unpin
-                              </>
-                            ) : (
-                              <>
-                                <Pin size={14} />
-                                Pin
-                              </>
-                            )}
-                          </button>
-                          <button
-                            role="menuitem"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleStartRename(session);
-                            }}
-                            className="w-full flex items-center gap-2 px-3 py-1.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
-                          >
-                            <Edit2 size={14} />
-                            Rename
-                          </button>
-                          <button
-                            role="menuitem"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleDelete(session.id);
-                            }}
-                            className="w-full flex items-center gap-2 px-3 py-1.5 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20"
-                          >
-                            <Trash2 size={14} />
-                            Delete
-                          </button>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </li>
-            );
-          })
-        )}
+        {renderSessionsContent()}
       </ul>
     </div>
   );

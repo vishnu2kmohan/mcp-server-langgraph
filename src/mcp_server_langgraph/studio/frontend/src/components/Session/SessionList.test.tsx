@@ -8,6 +8,7 @@
  * - Session actions (pin, delete, rename)
  * - Keyboard navigation
  * - Loading and empty states
+ * - AI session grouping
  * - WCAG 2.1 AA accessibility requirements
  */
 
@@ -20,6 +21,23 @@ import { SessionList } from "./SessionList";
 import { PreferencesProvider } from "../../contexts/PreferencesContext";
 import { STORAGE_KEYS } from "../../utils/storage";
 import type { SessionSummary } from "../../types/session";
+
+// Mock the useSessionGroups hook
+vi.mock("../../hooks/useSessionIntelligence", () => ({
+  useSessionGroups: vi.fn(() => ({
+    groups: [],
+    ungrouped: [],
+    isLoading: false,
+    error: null,
+    refetch: vi.fn(),
+  })),
+  // Re-export the type for type checking
+  SessionGroup: {},
+}));
+
+// Import the mocked hook for test manipulation
+import { useSessionGroups } from "../../hooks/useSessionIntelligence";
+const mockUseSessionGroups = useSessionGroups as ReturnType<typeof vi.fn>;
 
 expect.extend(toHaveNoViolations);
 
@@ -455,6 +473,144 @@ describe("SessionList", () => {
 
       const searchInput = screen.getByPlaceholderText(/search sessions/i);
       expect(searchInput).toHaveAttribute("aria-label");
+    });
+  });
+
+  // ===========================================================================
+  // AI Session Grouping Tests
+  // ===========================================================================
+
+  describe("AI session grouping", () => {
+    beforeEach(() => {
+      // Reset the mock before each test
+      mockUseSessionGroups.mockReturnValue({
+        groups: [],
+        ungrouped: [],
+        isLoading: false,
+        error: null,
+        refetch: vi.fn(),
+      });
+    });
+
+    it("should accept enableAIGrouping and userId props", () => {
+      renderWithProvider(
+        <SessionList
+          sessions={mockSessions}
+          enableAIGrouping={true}
+          userId="user-123"
+        />,
+      );
+
+      expect(screen.getByRole("list")).toBeInTheDocument();
+    });
+
+    it("should display group headers when AI grouping is enabled", () => {
+      mockUseSessionGroups.mockReturnValue({
+        groups: [
+          {
+            topic: "Development",
+            session_ids: ["session-1", "session-2"],
+            confidence: 0.9,
+          },
+        ],
+        ungrouped: ["session-3"],
+        isLoading: false,
+        error: null,
+        refetch: vi.fn(),
+      });
+
+      renderWithProvider(
+        <SessionList
+          sessions={mockSessions}
+          enableAIGrouping={true}
+          userId="user-123"
+        />,
+      );
+
+      expect(
+        screen.getByTestId("group-header-development"),
+      ).toBeInTheDocument();
+      expect(screen.getByText("Development")).toBeInTheDocument();
+    });
+
+    it("should fall back to default sorting when AI grouping is disabled", () => {
+      renderWithProvider(
+        <SessionList sessions={mockSessions} enableAIGrouping={false} />,
+      );
+
+      // Should still render all sessions without group headers
+      expect(screen.getByText("First Session")).toBeInTheDocument();
+      expect(screen.getByText("Second Session")).toBeInTheDocument();
+      expect(screen.getByText("Third Session")).toBeInTheDocument();
+      expect(screen.queryByTestId(/group-header/)).not.toBeInTheDocument();
+    });
+
+    it("should show loading indicator when fetching AI groups", () => {
+      mockUseSessionGroups.mockReturnValue({
+        groups: [],
+        ungrouped: [],
+        isLoading: true,
+        error: null,
+        refetch: vi.fn(),
+      });
+
+      renderWithProvider(
+        <SessionList
+          sessions={mockSessions}
+          enableAIGrouping={true}
+          userId="user-123"
+        />,
+      );
+
+      expect(screen.getByTestId("ai-grouping-loading")).toBeInTheDocument();
+    });
+
+    it("should gracefully handle grouping errors", () => {
+      mockUseSessionGroups.mockReturnValue({
+        groups: [],
+        ungrouped: [],
+        isLoading: false,
+        error: new Error("Failed to group sessions"),
+        refetch: vi.fn(),
+      });
+
+      renderWithProvider(
+        <SessionList
+          sessions={mockSessions}
+          enableAIGrouping={true}
+          userId="user-123"
+        />,
+      );
+
+      expect(screen.getByTestId("ai-grouping-error")).toBeInTheDocument();
+      expect(screen.getByText(/failed to load ai groups/i)).toBeInTheDocument();
+    });
+
+    it("should render ungrouped sessions in Other category", () => {
+      mockUseSessionGroups.mockReturnValue({
+        groups: [
+          {
+            topic: "Development",
+            session_ids: ["session-1"],
+            confidence: 0.9,
+          },
+        ],
+        ungrouped: ["session-2", "session-3"],
+        isLoading: false,
+        error: null,
+        refetch: vi.fn(),
+      });
+
+      renderWithProvider(
+        <SessionList
+          sessions={mockSessions}
+          enableAIGrouping={true}
+          userId="user-123"
+        />,
+      );
+
+      expect(screen.getByText("Other")).toBeInTheDocument();
+      expect(screen.getByText("(2)")).toBeInTheDocument(); // Count of ungrouped
     });
   });
 });
