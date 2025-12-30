@@ -1,0 +1,454 @@
+# ADR-0086: Security Audit - Keycloak and OpenFGA Hardening
+
+**Status**: Accepted
+**Date**: 2025-12-29
+**Deciders**: Architecture Team
+**Related**: ADR-0002 (OpenFGA Authorization), ADR-0068 (Gateway-Level Authentication), ADR-0070 (OpenFGA OIDC)
+
+## Context
+
+A comprehensive security audit was conducted to evaluate the authentication (Keycloak) and authorization (OpenFGA) configuration against modern security best practices. The audit covered:
+
+- Keycloak realm configuration
+- OpenFGA authorization model (33 resource types)
+- Backend REST API (`/api/v1`) authorization
+- WebSocket authorization
+- User journeys for admin, alice, bob, and 8 sub-personas
+
+### Audit Findings Summary
+
+| Area | Score | Status |
+|------|-------|--------|
+| Keycloak Configuration | 8/10 | Good, needs hardening |
+| OpenFGA Model | 9/10 | Excellent design |
+| Backend Integration | 9/10 | Production-ready |
+| Frontend Integration | 8/10 | Well-integrated |
+| User Journey Coverage | 8/10 | Complete for test users |
+
+### Issues Identified
+
+1. **Access token lifetime too long** (3600s/1 hour) - Should be 300-900s
+2. **ROPC (Resource Owner Password Credentials) enabled** - Deprecated per RFC 9700
+3. **PKCE not enforced** - Should require S256 algorithm
+4. **SSL not required** for all connections
+5. **Event logging disabled** - Needed for audit trail
+6. **Brute force protection disabled**
+7. **Session type missing `editor` relation** - Needed for collaborative editing
+8. **Bob cannot execute workflows he can view** - Missing executor tuple
+9. **Sub-persona role tuples missing** - 8 sub-personas not fully configured
+
+## Decision
+
+Implement comprehensive security hardening across Keycloak and OpenFGA configuration.
+
+### Phase 1: Keycloak High-Priority Fixes
+
+#### 1.1 Token Lifetime Reduction
+```diff
+- "accessTokenLifespan": 3600
++ "accessTokenLifespan": 900
+```
+
+Reduced from 1 hour to 15 minutes to minimize exposure window for compromised tokens.
+
+#### 1.2 Disable ROPC (RFC 9700 Compliance)
+```diff
+- "directAccessGrantsEnabled": true
++ "directAccessGrantsEnabled": false
+```
+
+ROPC is deprecated per RFC 9700. Applications should use:
+- **Authorization Code + PKCE** for user authentication
+- **Client Credentials** for service-to-service authentication
+- **Token Exchange (RFC 8693)** for user impersonation
+
+#### 1.3 Enforce PKCE with S256
+```json
+"attributes": {
+  "pkce.code.challenge.method": "S256"
+}
+```
+
+Prevents authorization code interception attacks.
+
+#### 1.4 SSL Required for All Connections
+```diff
+- "sslRequired": "external"
++ "sslRequired": "all"
+```
+
+#### 1.5 Enable Event Logging
+```json
+"eventsEnabled": true,
+"adminEventsEnabled": true,
+"adminEventsDetailsEnabled": true
+```
+
+Required for security audit trail and compliance.
+
+#### 1.6 Enable Brute Force Protection
+```json
+"bruteForceProtected": true,
+"permanentLockout": false,
+"maxFailureWaitSeconds": 900,
+"failureFactor": 5,
+"maxTemporaryLockouts": 3
+```
+
+Protects against credential stuffing and password guessing attacks.
+
+#### 1.7 Add Sub-Persona JWT Claim
+```json
+{
+  "name": "sub_persona",
+  "protocol": "openid-connect",
+  "protocolMapper": "oidc-usermodel-attribute-mapper",
+  "config": {
+    "claim.name": "sub_persona",
+    "access.token.claim": "true"
+  }
+}
+```
+
+Enables backend validation of sub-persona context.
+
+### Phase 2: OpenFGA Model Improvements
+
+#### 2.1 Add Session Editor Relation
+```json
+"editor": {
+  "union": {
+    "child": [
+      {"this": {}},
+      {"computedUserset": {"relation": "owner"}},
+      {
+        "tupleToUserset": {
+          "tupleset": {"relation": "project"},
+          "computedUserset": {"relation": "editor"}
+        }
+      }
+    ]
+  }
+}
+```
+
+Enables collaborative session editing with proper permission inheritance.
+
+### Phase 3: OpenFGA Tuples
+
+#### 3.1 Bob Executor Permission
+```json
+{
+  "user": "user:bob",
+  "relation": "executor",
+  "object": "workflow:alice_workflow"
+}
+```
+
+Allows Bob to execute workflows he can view.
+
+#### 3.2 Sub-Persona Role Tuples
+```json
+{"user": "user:admin", "relation": "assignee", "object": "role:security"},
+{"user": "user:admin", "relation": "assignee", "object": "role:audit"},
+{"user": "user:alice", "relation": "assignee", "object": "role:analyst"},
+{"user": "user:alice", "relation": "assignee", "object": "role:devops"},
+{"user": "user:alice", "relation": "assignee", "object": "role:compliance"}
+```
+
+Enables 8 sub-persona variants:
+1. admin - Full system access
+2. security-admin - Admin + security role
+3. auditor - Viewer + audit role
+4. alice-builder - Developer workflow access
+5. alice-analyst - Developer + analyst role
+6. alice-devops - Developer + devops role
+7. compliance-officer - Developer + compliance role
+8. bob - Standard user access
+
+### Phase 4: Test Migration
+
+Migrated test fixtures from ROPC to modern auth methods:
+
+1. **Service Account Tokens** (`client_credentials` grant) - For tests needing authentication
+2. **Token Exchange** (RFC 8693) - For tests needing user-specific context
+3. **Updated helper functions** in `tests/integration/auth/conftest.py`
+
+## Consequences
+
+### Positive
+
+1. **RFC 9700 Compliance** - ROPC deprecated, using modern OAuth 2.0 flows
+2. **Reduced Attack Surface** - Shorter token lifetime, brute force protection
+3. **Better Audit Trail** - Event logging enabled
+4. **Complete Sub-Persona Coverage** - All 8 variants have proper authorization
+5. **Improved Test Reliability** - Tests use service account tokens, not ROPC
+
+### Negative
+
+1. **Token Exchange Configuration** - Requires additional Keycloak setup for full user impersonation
+2. **Test Migration Effort** - Some E2E tests needed updates for ROPC removal
+3. **Concurrent Session Limits** - Requires custom authenticator (not implemented)
+
+### Risks
+
+1. **Infrastructure Tests** - Tests running against real Keycloak may fail if Token Exchange not fully configured
+2. **Legacy Integrations** - Any external systems using ROPC will break
+
+## Token Exchange Configuration (RFC 8693)
+
+Token Exchange enables user impersonation without ROPC. Configuration:
+
+### Prerequisites (Already Configured)
+
+1. **KC_FEATURES=token-exchange,admin-fine-grained-authz** - In `docker/Dockerfile.keycloak`
+2. **authorizationServicesEnabled: true** - In `tests/e2e/default-realm.json` on mcp-server client
+
+### Runtime Configuration
+
+The `keycloak-init-test` service in `docker-compose.test.yml` configures:
+
+1. Creates `token-exchange` scope on mcp-server client authorization settings
+2. Grants admin role to service-account-mcp-server for impersonation
+
+### Usage Pattern
+
+```python
+# Step 1: Get service account token
+sa_token = get_client_credentials_token()
+
+# Step 2: Exchange for user-specific token (RFC 8693)
+user_token = exchange_token(
+    subject_token=sa_token,
+    subject_token_type="urn:ietf:params:oauth:token-type:access_token",
+    requested_subject="alice",  # User to impersonate
+    requested_token_type="urn:ietf:params:oauth:token-type:access_token",
+)
+```
+
+### Login Methods Summary
+
+| Method | Password Entry | Use Case |
+|--------|----------------|----------|
+| Authorization Code + PKCE | Browser (Keycloak login page) | User login |
+| Client Credentials | None (client secret) | Service-to-service |
+| Token Exchange | None (impersonation) | E2E tests, user context |
+
+## Implementation
+
+### Files Modified
+
+| File | Changes |
+|------|---------|
+| `tests/e2e/default-realm.json` | Token lifetime, SSL, events, ROPC, PKCE, brute force, sub_persona mapper |
+| `tests/fixtures/keycloak-realm-test.json` | SSL, brute force, ROPC disabled, PKCE, events |
+| `config/openfga/model.json` | Add session.editor relation |
+| `config/openfga/sample-tuples.json` | Add bob executor, sub-persona role tuples |
+| `src/mcp_server_langgraph/auth/dependencies.py` | Add require_session_editor |
+| `src/mcp_server_langgraph/auth/resource_registry.py` | Add session.editor to valid relations |
+| `tests/integration/auth/conftest.py` | Migrate from ROPC to service account tokens |
+| `tests/integration/auth/test_oauth2_e2e.py` | Update get_user_tokens() |
+| `tests/integration/auth/test_qdrant_auth.py` | Update authenticated_session fixture, token endpoint check |
+| `tests/integration/auth/test_grafana_oauth2.py` | Migrate to Token Exchange / client_credentials |
+| `tests/integration/auth/test_openfga_playground_proxy.py` | Migrate to Token Exchange / client_credentials |
+| `tests/integration/vectors/test_vectors_api_integration.py` | Migrate to Token Exchange / client_credentials |
+| `tests/integration/gateway/test_traefik_auth_middleware.py` | Update authenticated_session fixture |
+| `tests/e2e/test_admin_user_journey.py` | Update to use helper functions |
+| `tests/e2e/test_bob_user_journey.py` | Update to use helper functions |
+| `tests/e2e/test_websocket_smoke.py` | Migrate _get_keycloak_token to modern auth |
+| `tests/e2e/test_notification_websocket_e2e.py` | Migrate _get_keycloak_token to modern auth |
+| `tests/e2e/test_mcp_websocket_e2e.py` | Migrate _get_keycloak_token to modern auth |
+| `tests/e2e/real_clients.py` | Migrate RealKeycloakAuth.login() to modern auth |
+| `tests/e2e/test_real_clients.py` | Update test assertions for modern auth |
+| `tests/e2e/journeys/test_keycloak_openfga_auth_flow.py` | Migrate to Token Exchange / client_credentials |
+| `docker-compose.test.yml` | Add Token Exchange configuration in keycloak-init-test |
+| `tests/integration/auth/test_token_exchange.py` | New: Token Exchange integration tests |
+
+### Verification
+
+- 770 auth unit tests pass
+- 73 contract tests pass
+- 29 sub-persona integration tests ready (skip without infrastructure)
+
+## WebAuthn/Passkey Configuration (Keycloak 26.4+)
+
+Passkeys provide passwordless authentication using FIDO2/WebAuthn standards.
+
+### Realm Configuration
+
+Added to `tests/e2e/default-realm.json`:
+
+```json
+{
+  "webAuthnPolicyPasswordlessRpEntityName": "MCP Server LangGraph",
+  "webAuthnPolicyPasswordlessSignatureAlgorithms": ["ES256", "RS256"],
+  "webAuthnPolicyPasswordlessRequireResidentKey": "Yes",
+  "webAuthnPolicyPasswordlessUserVerificationRequirement": "preferred",
+  "requiredActions": [
+    {
+      "alias": "webauthn-register-passwordless",
+      "name": "Webauthn Register Passwordless",
+      "providerId": "webauthn-register-passwordless",
+      "enabled": true,
+      "defaultAction": false,
+      "priority": 70
+    }
+  ]
+}
+```
+
+### Key Settings
+
+| Setting | Value | Description |
+|---------|-------|-------------|
+| `webAuthnPolicyPasswordlessRpEntityName` | "MCP Server LangGraph" | Relying party name shown to users |
+| `webAuthnPolicyPasswordlessSignatureAlgorithms` | ["ES256", "RS256"] | Supported cryptographic algorithms |
+| `webAuthnPolicyPasswordlessRequireResidentKey` | "Yes" | Enables discoverable credentials (passkeys) |
+| `webAuthnPolicyPasswordlessUserVerificationRequirement` | "preferred" | User verification (biometric/PIN) preferred |
+
+### User Registration Flow
+
+1. User logs in with password (first time)
+2. User navigates to Account Console → Security → Passkeys
+3. User registers passkey (biometric or security key)
+4. Future logins can use passkey instead of password
+
+### Benefits
+
+- **Phishing-resistant**: Passkeys are bound to specific domains
+- **Passwordless**: No password to remember or steal
+- **Multi-device**: Passkeys can sync across devices (platform authenticators)
+- **Standards-based**: FIDO2/WebAuthn W3C standard
+
+## Argon2id Password Hashing
+
+Updated password policy from PBKDF2-SHA512 to Argon2id.
+
+### Configuration
+
+```json
+{
+  "passwordPolicy": "hashAlgorithm(argon2)"
+}
+```
+
+### Benefits
+
+| Feature | PBKDF2-SHA512 | Argon2id |
+|---------|---------------|----------|
+| Memory-hard | No | Yes (7MB per hash) |
+| GPU-resistant | Limited | Strong |
+| OWASP Recommended | Legacy | Current |
+| CPU overhead | Higher (210K iterations) | Lower |
+
+### Migration Notes
+
+- Existing password hashes remain unchanged until user logs in
+- New passwords use Argon2id automatically
+- Keycloak 25+ includes native Argon2 support
+
+## FAPI 2.0 Client Policies
+
+Added Financial-grade API 2.0 security profile for high-security APIs.
+
+### Configuration
+
+```json
+{
+  "clientPolicies": {
+    "policies": [
+      {
+        "name": "fapi-2-dpop-policy",
+        "description": "FAPI 2.0 Security Profile with DPoP sender-constraint",
+        "enabled": true,
+        "conditions": [
+          {
+            "condition": "client-roles",
+            "configuration": {
+              "roles": ["fapi-client"]
+            }
+          }
+        ],
+        "profiles": ["fapi-2-dpop-security-profile"]
+      }
+    ]
+  }
+}
+```
+
+### FAPI 2.0 Requirements Enforced
+
+| Requirement | Description |
+|-------------|-------------|
+| DPoP sender-constraint | Tokens bound to client's proof-of-possession key |
+| PAR (Pushed Authorization Requests) | Authorization parameters sent via backchannel |
+| JARM | JWT-secured authorization responses |
+| Stricter redirect URI validation | Exact URI matching required |
+| mTLS or DPoP | Client authentication via certificate or DPoP |
+
+### Activation
+
+Clients requiring FAPI 2.0 compliance should be assigned the `fapi-client` role.
+
+## HttpOnly Cookies (Future Enhancement)
+
+Currently, tokens are stored in localStorage which is vulnerable to XSS attacks.
+
+### Current Architecture (localStorage)
+
+```
+Frontend (localStorage) ←→ Backend API
+     ↓
+  Access Token stored in memory/localStorage
+  Refresh Token stored in localStorage
+```
+
+### Proposed Architecture (HttpOnly Cookies)
+
+```
+Frontend ←→ Backend API (sets HttpOnly cookies)
+                ↓
+  Access Token: Short-lived, in-memory only
+  Refresh Token: HttpOnly + Secure + SameSite=Strict cookie
+```
+
+### Implementation Requirements
+
+1. **Backend Changes**:
+   - Add `/api/v1/auth/token` endpoint that sets HttpOnly cookies
+   - Add `/api/v1/auth/refresh` endpoint for silent refresh
+   - Configure CORS with `credentials: include`
+
+2. **Frontend Changes**:
+   - Remove localStorage token storage (75 files affected)
+   - Update `authenticatedFetch` to use `credentials: 'include'`
+   - Implement silent refresh via iframe or background request
+
+3. **Security Configuration**:
+   - `SameSite=Strict` for CSRF protection
+   - `Secure` flag for HTTPS-only
+   - `HttpOnly` to prevent JavaScript access
+   - `Path=/api` to limit cookie scope
+
+### Status
+
+This is a significant architectural change requiring:
+- Backend API changes
+- Frontend refactoring (75+ files)
+- CORS configuration updates
+- Testing infrastructure updates
+
+**Recommendation**: Implement as a separate PR/sprint.
+
+## References
+
+- [RFC 9700: OAuth 2.0 Security Best Current Practice](https://datatracker.ietf.org/doc/html/rfc9700)
+- [RFC 8693: OAuth 2.0 Token Exchange](https://datatracker.ietf.org/doc/html/rfc8693)
+- [RFC 7636: PKCE](https://datatracker.ietf.org/doc/html/rfc7636)
+- [WebAuthn W3C Specification](https://www.w3.org/TR/webauthn-2/)
+- [OWASP Password Storage Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html)
+- [Keycloak 25 Argon2 Default](https://www.keycloak.org/2024/06/keycloak-2500-released)
+- [Keycloak 26 Release Notes](https://www.keycloak.org/docs/latest/release_notes/)
+- [Keycloak 26.4 Passkeys Support](https://www.keycloak.org/2025/09/passkeys-support-26-4)
+- [Keycloak 26.4 FAPI 2.0 Final](https://www.keycloak.org/2025/09/keycloak-2640-released)
+- [OpenFGA Best Practices](https://openfga.dev/docs/best-practices)
