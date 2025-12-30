@@ -200,19 +200,20 @@ describe("CanvasWorkspace", () => {
   });
 
   describe("Layout", () => {
-    it("should render preview panel", () => {
+    it("should render code view in single pane layout", () => {
       renderWithProviders(<CanvasWorkspace artifacts={mockArtifacts} />);
-      expect(screen.getByTestId("panel-preview")).toBeInTheDocument();
+      // Single pane layout - code view is shown by default
+      expect(screen.getByTestId("code-view")).toBeInTheDocument();
     });
 
-    it("should render editor panel", () => {
+    it("should render canvas tabs", () => {
       renderWithProviders(<CanvasWorkspace artifacts={mockArtifacts} />);
-      expect(screen.getByTestId("panel-editor")).toBeInTheDocument();
+      expect(screen.getByTestId("canvas-tabs")).toBeInTheDocument();
     });
 
-    it("should render resize handle between panels", () => {
+    it("should render artifact actions", () => {
       renderWithProviders(<CanvasWorkspace artifacts={mockArtifacts} />);
-      expect(screen.getByTestId("resize-handle")).toBeInTheDocument();
+      expect(screen.getByTestId("artifact-actions")).toBeInTheDocument();
     });
   });
 
@@ -238,9 +239,11 @@ describe("CanvasWorkspace", () => {
         store,
       });
 
-      // Multiple instances due to editor + preview panels
-      const elements = screen.getAllByText(/console\.log\("Hello, World!"\)/);
-      expect(elements.length).toBeGreaterThan(0);
+      // Single pane layout - content shown in code view
+      const codeView = screen.getByTestId("code-view");
+      expect(codeView).toBeInTheDocument();
+      // Content should be inside the code view
+      expect(codeView).toHaveTextContent(/console\.log/);
     });
 
     it("should show AI badge for AI-generated artifacts", () => {
@@ -506,6 +509,262 @@ describe("CanvasWorkspace", () => {
       // CanvasTabs should receive disabledTabs=['preview', 'data']
       // This is verified by the component internals - if tabs are disabled, they're not clickable
       expect(screen.getByTestId("content-editor")).toBeInTheDocument();
+    });
+  });
+
+  describe("Tab Content Switching", () => {
+    it("should show syntax-highlighted code when Code tab is active", async () => {
+      const store = createTestStore({
+        canvas: {
+          panelSizes: { sessionNav: 20, conversation: 40, canvas: 40 },
+          sessionNavCollapsed: false,
+          canvasCollapsed: false,
+          activeNavItem: "chat",
+          selectedArtifactId: "artifact-1",
+          preferences: {
+            showTimestamps: true,
+            compactMode: false,
+            showLineNumbers: true,
+            codeTheme: "auto",
+          },
+        },
+      });
+
+      renderWithProviders(<CanvasWorkspace artifacts={mockArtifacts} />, {
+        store,
+      });
+
+      // Code tab is active by default
+      const codeTab = screen.getByRole("tab", { name: /code/i });
+      expect(codeTab).toHaveAttribute("aria-selected", "true");
+
+      // Should show code content with syntax highlighting
+      await waitFor(() => {
+        expect(screen.getByTestId("code-view")).toBeInTheDocument();
+      });
+    });
+
+    it("should switch to Preview view when Preview tab is clicked", async () => {
+      const mermaidArtifact: CanvasArtifact[] = [
+        {
+          id: "mermaid-1",
+          type: "code",
+          sessionId: "session-1",
+          version: 1,
+          content: "graph TD\n  A --> B",
+          contentType: "mermaid",
+          title: "Mermaid Diagram",
+          createdAt: "2024-01-01T00:00:00Z",
+          updatedAt: "2024-01-01T00:00:00Z",
+        },
+      ];
+
+      const store = createTestStore({
+        canvas: {
+          panelSizes: { sessionNav: 20, conversation: 40, canvas: 40 },
+          sessionNavCollapsed: false,
+          canvasCollapsed: false,
+          activeNavItem: "chat",
+          selectedArtifactId: "mermaid-1",
+          preferences: {
+            showTimestamps: true,
+            compactMode: false,
+            showLineNumbers: true,
+            codeTheme: "auto",
+          },
+        },
+      });
+
+      renderWithProviders(<CanvasWorkspace artifacts={mermaidArtifact} />, {
+        store,
+      });
+
+      // Click Preview tab
+      const previewTab = screen.getByRole("tab", { name: /preview/i });
+      fireEvent.click(previewTab);
+
+      // Should show rendered preview
+      await waitFor(() => {
+        expect(screen.getByTestId("preview-view")).toBeInTheDocument();
+      });
+    });
+
+    it("should switch to Data view when Data tab is clicked for JSON content", async () => {
+      const jsonArtifact: CanvasArtifact[] = [
+        {
+          id: "json-1",
+          type: "code",
+          sessionId: "session-1",
+          version: 1,
+          content: '{"name": "test", "value": 123}',
+          contentType: "json",
+          title: "JSON Data",
+          createdAt: "2024-01-01T00:00:00Z",
+          updatedAt: "2024-01-01T00:00:00Z",
+        },
+      ];
+
+      const store = createTestStore({
+        canvas: {
+          panelSizes: { sessionNav: 20, conversation: 40, canvas: 40 },
+          sessionNavCollapsed: false,
+          canvasCollapsed: false,
+          activeNavItem: "chat",
+          selectedArtifactId: "json-1",
+          preferences: {
+            showTimestamps: true,
+            compactMode: false,
+            showLineNumbers: true,
+            codeTheme: "auto",
+          },
+        },
+      });
+
+      renderWithProviders(<CanvasWorkspace artifacts={jsonArtifact} />, {
+        store,
+      });
+
+      // Click Data tab
+      const dataTab = screen.getByRole("tab", { name: /data/i });
+      fireEvent.click(dataTab);
+
+      // Should show data view with interactive JSON tree
+      await waitFor(() => {
+        expect(screen.getByTestId("data-view")).toBeInTheDocument();
+      });
+    });
+  });
+
+  describe("Tab Visibility Based on Content Type", () => {
+    it("should only show Code tab for plain code artifacts", () => {
+      const store = createTestStore({
+        canvas: {
+          panelSizes: { sessionNav: 20, conversation: 40, canvas: 40 },
+          sessionNavCollapsed: false,
+          canvasCollapsed: false,
+          activeNavItem: "chat",
+          selectedArtifactId: "artifact-1",
+          preferences: {
+            showTimestamps: true,
+            compactMode: false,
+            showLineNumbers: true,
+            codeTheme: "auto",
+          },
+        },
+      });
+
+      renderWithProviders(<CanvasWorkspace artifacts={mockArtifacts} />, {
+        store,
+      });
+
+      // Code tab should be visible
+      expect(screen.getByRole("tab", { name: /code/i })).toBeInTheDocument();
+
+      // Preview tab should be hidden for plain code
+      expect(
+        screen.queryByRole("tab", { name: /preview/i }),
+      ).not.toBeInTheDocument();
+
+      // Data tab should be hidden for plain code
+      expect(
+        screen.queryByRole("tab", { name: /data/i }),
+      ).not.toBeInTheDocument();
+    });
+
+    it("should show Code and Preview tabs for mermaid artifacts", () => {
+      const mermaidArtifact: CanvasArtifact[] = [
+        {
+          id: "mermaid-1",
+          type: "code",
+          sessionId: "session-1",
+          version: 1,
+          content: "graph TD\n  A --> B",
+          contentType: "mermaid",
+          title: "Mermaid Diagram",
+          createdAt: "2024-01-01T00:00:00Z",
+          updatedAt: "2024-01-01T00:00:00Z",
+        },
+      ];
+
+      const store = createTestStore({
+        canvas: {
+          panelSizes: { sessionNav: 20, conversation: 40, canvas: 40 },
+          sessionNavCollapsed: false,
+          canvasCollapsed: false,
+          activeNavItem: "chat",
+          selectedArtifactId: "mermaid-1",
+          preferences: {
+            showTimestamps: true,
+            compactMode: false,
+            showLineNumbers: true,
+            codeTheme: "auto",
+          },
+        },
+      });
+
+      renderWithProviders(<CanvasWorkspace artifacts={mermaidArtifact} />, {
+        store,
+      });
+
+      // Both Code and Preview tabs should be visible
+      expect(screen.getByRole("tab", { name: /code/i })).toBeInTheDocument();
+      expect(screen.getByRole("tab", { name: /preview/i })).toBeInTheDocument();
+    });
+
+    it("should show Code and Data tabs for JSON artifacts", () => {
+      const jsonArtifact: CanvasArtifact[] = [
+        {
+          id: "json-1",
+          type: "code",
+          sessionId: "session-1",
+          version: 1,
+          content: '{"name": "test"}',
+          contentType: "json",
+          title: "JSON Data",
+          createdAt: "2024-01-01T00:00:00Z",
+          updatedAt: "2024-01-01T00:00:00Z",
+        },
+      ];
+
+      const store = createTestStore({
+        canvas: {
+          panelSizes: { sessionNav: 20, conversation: 40, canvas: 40 },
+          sessionNavCollapsed: false,
+          canvasCollapsed: false,
+          activeNavItem: "chat",
+          selectedArtifactId: "json-1",
+          preferences: {
+            showTimestamps: true,
+            compactMode: false,
+            showLineNumbers: true,
+            codeTheme: "auto",
+          },
+        },
+      });
+
+      renderWithProviders(<CanvasWorkspace artifacts={jsonArtifact} />, {
+        store,
+      });
+
+      // Code and Data tabs should be visible
+      expect(screen.getByRole("tab", { name: /code/i })).toBeInTheDocument();
+      expect(screen.getByRole("tab", { name: /data/i })).toBeInTheDocument();
+    });
+  });
+
+  describe("Single Pane Layout", () => {
+    it("should not render separate preview panel", () => {
+      renderWithProviders(<CanvasWorkspace artifacts={mockArtifacts} />);
+
+      // The separate preview panel should not exist
+      expect(screen.queryByTestId("panel-preview")).not.toBeInTheDocument();
+    });
+
+    it("should not render resize handle", () => {
+      renderWithProviders(<CanvasWorkspace artifacts={mockArtifacts} />);
+
+      // No resize handle since there's only one panel
+      expect(screen.queryByTestId("resize-handle")).not.toBeInTheDocument();
     });
   });
 

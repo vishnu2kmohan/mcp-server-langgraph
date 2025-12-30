@@ -617,6 +617,7 @@ export function ConnectedCanvasPanel({ className }: ConnectedCanvasPanelProps) {
         onArtifactSelect={handleArtifactSelect}
         onContentChange={handleContentChange}
         onSave={handleSave}
+        enableArtifactHover
         className="h-full"
       />
       {/* Note: No <Outlet /> needed - chat routes don't render components.

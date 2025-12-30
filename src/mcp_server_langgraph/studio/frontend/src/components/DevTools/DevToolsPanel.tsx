@@ -55,8 +55,14 @@ import { DevToolsTimelineProvider } from "./context/DevToolsTimelineProvider";
 import { DevToolsWebSocketObserver } from "./components/DevToolsWebSocketObserver";
 import { useTraceWebSocket } from "../../hooks/useTraceWebSocket";
 import { useDevToolsWebSocket } from "./hooks/useDevToolsWebSocket";
+import {
+  useListTracesQuery,
+  useListLogsQuery,
+  useGetMetricsQuery,
+  useListAlertsQuery,
+} from "../../api";
 import type { DevToolsPanelProps } from "./types";
-import type { TraceSpan } from "./tabs/TracesTab";
+import type { TraceSpan, TraceListItem } from "./tabs/TracesTab";
 
 // =============================================================================
 // Utility
@@ -232,6 +238,43 @@ export function DevToolsPanel({ className }: DevToolsPanelProps) {
     contextEntityId: entityId,
   });
 
+  // RTK Query hooks for OTEL tabs - skip when collapsed or tab not active
+  // These provide real-time API data to the observability tabs
+  const {
+    data: tracesData,
+    isLoading: isTracesLoading,
+    error: tracesError,
+  } = useListTracesQuery(
+    { limit: 50 },
+    { skip: collapsed || activeTab !== "traces" },
+  );
+
+  const {
+    data: metricsData,
+    isLoading: isMetricsLoading,
+    error: metricsError,
+  } = useGetMetricsQuery(undefined, {
+    skip: collapsed || activeTab !== "metrics",
+  });
+
+  const {
+    data: alertsData,
+    isLoading: isAlertsLoading,
+    error: alertsError,
+  } = useListAlertsQuery(
+    { limit: 50 },
+    { skip: collapsed || activeTab !== "alerts" },
+  );
+
+  const {
+    data: logsData,
+    isLoading: isLogsLoading,
+    error: logsError,
+  } = useListLogsQuery(
+    { limit: 100 },
+    { skip: collapsed || activeTab !== "logs" },
+  );
+
   // Transform spans to TracesTab format
   const traceSpans: TraceSpan[] = useMemo(() => {
     return rawSpans.map((span) => ({
@@ -249,6 +292,111 @@ export function DevToolsPanel({ className }: DevToolsPanelProps) {
       attributes: span.attributes,
     }));
   }, [rawSpans]);
+
+  // Transform API traces to TracesTab format
+  const traceList: TraceListItem[] = useMemo(() => {
+    if (!tracesData?.items) return [];
+    return tracesData.items.map((trace) => ({
+      trace_id: trace.trace_id,
+      name: trace.name || "Unknown",
+      start_time: trace.start_time ? new Date(trace.start_time).getTime() : 0,
+      duration_ms: trace.duration_ms ?? 0,
+      span_count: trace.span_count ?? 0,
+      status: (trace.status as "ok" | "error" | "unset") ?? "unset",
+    }));
+  }, [tracesData]);
+
+  // Transform API alerts to DevTools AlertsTab format
+  const alertsList = useMemo(() => {
+    if (!alertsData?.items) return [];
+    return alertsData.items.map((alert) => ({
+      id: alert.alert_id,
+      name: alert.name,
+      state: alert.state as "firing" | "pending" | "resolved" | "silenced",
+      severity: (alert.severity === "error" ? "critical" : alert.severity) as
+        | "critical"
+        | "warning"
+        | "info",
+      service: alert.labels?.service || "unknown",
+      message: alert.message,
+      started_at: alert.started_at || new Date().toISOString(),
+      resolved_at: alert.ended_at ?? undefined,
+      generator_url: alert.generator_url ?? undefined,
+      labels: alert.labels,
+    }));
+  }, [alertsData]);
+
+  // Transform API logs to DevTools LogsTab format
+  const logsList = useMemo(() => {
+    if (!logsData?.items) return [];
+    return logsData.items.map((log) => ({
+      id: log.id,
+      timestamp: log.timestamp,
+      level: (log.level === "warn" ? "warning" : log.level) as
+        | "debug"
+        | "info"
+        | "warning"
+        | "error",
+      service: log.service || "unknown",
+      message: log.message,
+    }));
+  }, [logsData]);
+
+  // Transform API metrics to DevTools MetricsTab format
+  const metricsList = useMemo(() => {
+    if (!metricsData) return [];
+    return [
+      {
+        name: "requests_total",
+        value: metricsData.requests_total,
+        unit: "req",
+        trend: "stable" as const,
+        change: 0,
+        sparkline: [metricsData.requests_total],
+      },
+      {
+        name: "errors_total",
+        value: metricsData.errors_total,
+        unit: "err",
+        trend:
+          metricsData.errors_total > 0 ? ("up" as const) : ("stable" as const),
+        change: 0,
+        sparkline: [metricsData.errors_total],
+      },
+      {
+        name: "avg_latency",
+        value: Math.round(metricsData.avg_latency_ms),
+        unit: "ms",
+        trend: "stable" as const,
+        change: 0,
+        sparkline: [metricsData.avg_latency_ms],
+      },
+      {
+        name: "p99_latency",
+        value: Math.round(metricsData.p99_latency_ms),
+        unit: "ms",
+        trend: "stable" as const,
+        change: 0,
+        sparkline: [metricsData.p99_latency_ms],
+      },
+      {
+        name: "tokens_used",
+        value: metricsData.tokens_used,
+        unit: "tokens",
+        trend: "stable" as const,
+        change: 0,
+        sparkline: [metricsData.tokens_used],
+      },
+      {
+        name: "active_sessions",
+        value: metricsData.active_sessions,
+        unit: "sessions",
+        trend: "stable" as const,
+        change: 0,
+        sparkline: [metricsData.active_sessions],
+      },
+    ];
+  }, [metricsData]);
 
   // Handlers
   const handleCollapse = useCallback(() => {
@@ -354,14 +502,19 @@ export function DevToolsPanel({ className }: DevToolsPanelProps) {
             </Suspense>
           </div>
         );
-      // OTEL Observability tabs
+      // OTEL Observability tabs - wired to RTK Query hooks
       case "traces":
         return (
           <div data-testid="devtools-tab-content-traces">
             <Suspense fallback={<TabContentLoader />}>
               <TracesTabContent
+                traces={traceList}
                 spans={traceSpans}
-                isLoading={!traceConnected && traceSpans.length === 0}
+                isLoading={
+                  isTracesLoading ||
+                  (!traceConnected && traceSpans.length === 0)
+                }
+                error={tracesError ? String(tracesError) : undefined}
               />
             </Suspense>
           </div>
@@ -370,7 +523,11 @@ export function DevToolsPanel({ className }: DevToolsPanelProps) {
         return (
           <div data-testid="devtools-tab-content-metrics">
             <Suspense fallback={<TabContentLoader />}>
-              <MetricsTabContent />
+              <MetricsTabContent
+                metrics={metricsList}
+                isLoading={isMetricsLoading}
+                error={metricsError ? String(metricsError) : undefined}
+              />
             </Suspense>
           </div>
         );
@@ -378,7 +535,11 @@ export function DevToolsPanel({ className }: DevToolsPanelProps) {
         return (
           <div data-testid="devtools-tab-content-alerts">
             <Suspense fallback={<TabContentLoader />}>
-              <AlertsTabContent />
+              <AlertsTabContent
+                alerts={alertsList}
+                isLoading={isAlertsLoading}
+                error={alertsError ? String(alertsError) : undefined}
+              />
             </Suspense>
           </div>
         );
@@ -386,7 +547,11 @@ export function DevToolsPanel({ className }: DevToolsPanelProps) {
         return (
           <div data-testid="devtools-tab-content-logs">
             <Suspense fallback={<TabContentLoader />}>
-              <LogsTabContent />
+              <LogsTabContent
+                logs={logsList}
+                isLoading={isLogsLoading}
+                error={logsError ? String(logsError) : undefined}
+              />
             </Suspense>
           </div>
         );

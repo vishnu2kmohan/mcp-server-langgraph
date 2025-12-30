@@ -23,6 +23,8 @@ export interface CanvasTabsProps {
   disabled?: boolean;
   /** Specific tabs to disable */
   disabledTabs?: TabType[];
+  /** Which tabs to show (defaults to all) */
+  visibleTabs?: TabType[];
   /** Additional class name */
   className?: string;
 }
@@ -51,9 +53,15 @@ export function CanvasTabs({
   onTabChange,
   disabled = false,
   disabledTabs = [],
+  visibleTabs,
   className,
 }: CanvasTabsProps) {
   const tabRefs = useRef<Map<TabType, HTMLButtonElement | null>>(new Map());
+
+  // Filter tabs to only show visible ones
+  const displayedTabs = visibleTabs
+    ? TAB_ORDER.filter((tab) => visibleTabs.includes(tab))
+    : TAB_ORDER;
 
   const isTabDisabled = useCallback(
     (tab: TabType) => disabled || disabledTabs.includes(tab),
@@ -71,29 +79,30 @@ export function CanvasTabs({
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent, currentTab: TabType) => {
-      const currentIndex = TAB_ORDER.indexOf(currentTab);
+      const currentIndex = displayedTabs.indexOf(currentTab);
       let nextIndex: number;
 
       switch (e.key) {
         case "ArrowRight":
           e.preventDefault();
-          nextIndex = (currentIndex + 1) % TAB_ORDER.length;
+          nextIndex = (currentIndex + 1) % displayedTabs.length;
           break;
         case "ArrowLeft":
           e.preventDefault();
-          nextIndex = (currentIndex - 1 + TAB_ORDER.length) % TAB_ORDER.length;
+          nextIndex =
+            (currentIndex - 1 + displayedTabs.length) % displayedTabs.length;
           break;
         default:
           return;
       }
 
-      const nextTab = TAB_ORDER[nextIndex];
+      const nextTab = displayedTabs[nextIndex];
       if (nextTab && !isTabDisabled(nextTab)) {
         onTabChange(nextTab);
         tabRefs.current.get(nextTab)?.focus();
       }
     },
-    [onTabChange, isTabDisabled],
+    [displayedTabs, onTabChange, isTabDisabled],
   );
 
   return (
@@ -107,7 +116,7 @@ export function CanvasTabs({
         className,
       )}
     >
-      {TAB_ORDER.map((tab) => {
+      {displayedTabs.map((tab) => {
         const config = TAB_CONFIG[tab];
         const Icon = config.icon;
         const isActive = tab === activeTab;

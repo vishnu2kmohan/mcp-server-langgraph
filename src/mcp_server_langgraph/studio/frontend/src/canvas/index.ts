@@ -18,3 +18,4 @@ export {
   ConnectedCanvasPanel,
   type ConnectedCanvasPanelProps,
 } from "./ConnectedCanvasPanel";
+export { getVisibleTabs } from "./canvasUtils";

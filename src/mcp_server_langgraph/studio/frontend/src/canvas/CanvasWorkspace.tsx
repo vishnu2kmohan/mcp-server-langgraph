@@ -4,8 +4,14 @@
  * Main Canvas workspace component that manages the artifact display area
  * with resizable panels for preview and editing.
  */
-import { useState, useCallback, useMemo, useEffect, Suspense } from "react";
-import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
+import {
+  useState,
+  useCallback,
+  useMemo,
+  useEffect,
+  Suspense,
+  lazy,
+} from "react";
 import { FileCode2, Clock, Code, User, Bot } from "lucide-react";
 import { useAppDispatch, useAppSelector } from "../store/hooks";
 import {
@@ -14,6 +20,7 @@ import {
 } from "../store/slices/canvasSlice";
 import { CanvasArtifact } from "./CanvasArtifact";
 import { CanvasTabs, type TabType } from "./CanvasTabs";
+import { getVisibleTabs } from "./canvasUtils";
 import { ArtifactActions } from "./ArtifactActions";
 import type { CanvasArtifact as CanvasArtifactType } from "../types/artifacts";
 import { cn } from "../utils/cn";
@@ -23,6 +30,16 @@ import { Tooltip } from "../components/UI/Tooltip";
 
 // AI Components (Phase 4) - lazy-loaded for reduced bundle size
 import { LazyAIEditOverlay, type Selection } from "../ai/lazy";
+
+// Lazy-loaded preview components for different content types
+const InteractiveMermaidDiagram = lazy(
+  () => import("../components/Chat/InteractiveMermaidDiagram"),
+);
+const JSONArtifact = lazy(() =>
+  import("../components/Artifacts/JSONArtifact").then((mod) => ({
+    default: mod.JSONArtifact,
+  })),
+);
 
 // =============================================================================
 // Types
@@ -61,8 +78,15 @@ interface ArtifactTabBarProps {
 }
 
 /** Format date to relative time */
-function formatArtifactDate(dateStr: string): string {
+function formatArtifactDate(dateStr: string | undefined): string {
+  // Handle undefined or invalid date strings
+  if (!dateStr) return "Unknown";
+
   const date = new Date(dateStr);
+
+  // Check for invalid date (NaN)
+  if (isNaN(date.getTime())) return "Unknown";
+
   const now = new Date();
   const diffMs = now.getTime() - date.getTime();
   const diffMins = Math.floor(diffMs / 60000);
@@ -201,23 +225,6 @@ function ArtifactTabBar({
 }
 
 // =============================================================================
-// Resize Handle Component
-// =============================================================================
-
-function ResizeHandle() {
-  return (
-    <PanelResizeHandle
-      data-testid="resize-handle"
-      className={cn(
-        "w-1 hover:w-2 transition-all",
-        "bg-transparent hover:bg-primary-500/30",
-        "cursor-col-resize",
-      )}
-    />
-  );
-}
-
-// =============================================================================
 // Component
 // =============================================================================
 
@@ -252,6 +259,12 @@ export function CanvasWorkspace({
     () => artifacts.find((a) => a.id === selectedArtifactId),
     [artifacts, selectedArtifactId],
   );
+
+  // Determine which tabs to show based on content type
+  const visibleTabs = useMemo((): TabType[] => {
+    if (!selectedArtifact) return ["code"];
+    return getVisibleTabs(selectedArtifact.contentType);
+  }, [selectedArtifact]);
 
   // Auto-select first artifact if none selected
   useEffect(() => {
@@ -386,69 +399,56 @@ export function CanvasWorkspace({
         enableHover={enableArtifactHover}
       />
 
-      {/* Main workspace area */}
-      <div className="flex-1 overflow-hidden">
-        <PanelGroup data-testid="panel-group" direction="horizontal">
-          {/* Preview/Editor panel */}
-          <Panel
-            id="editor"
-            data-testid="panel-editor"
-            defaultSize={60}
-            minSize={30}
-          >
-            <div className="flex flex-col h-full">
-              {/* Toolbar */}
-              <div className="flex items-center justify-between px-4 py-2 border-b border-gray-200 dark:border-gray-700">
-                <CanvasTabs
-                  activeTab={activeTab}
-                  onTabChange={setActiveTab}
-                  disabledTabs={isEditing ? ["preview", "data"] : []}
-                />
-                {selectedArtifact && (
-                  <ArtifactActions
-                    artifact={selectedArtifact}
-                    compact
-                    disabled={isEditing}
-                  />
-                )}
-              </div>
+      {/* Main workspace area - single pane layout */}
+      <div className="flex-1 overflow-hidden flex flex-col">
+        {/* Toolbar */}
+        <div className="flex items-center justify-between px-4 py-2 border-b border-gray-200 dark:border-gray-700">
+          <CanvasTabs
+            activeTab={activeTab}
+            onTabChange={setActiveTab}
+            visibleTabs={visibleTabs}
+            disabledTabs={isEditing ? ["preview", "data"] : []}
+          />
+          {selectedArtifact && (
+            <ArtifactActions
+              artifact={selectedArtifact}
+              compact
+              disabled={isEditing}
+            />
+          )}
+        </div>
 
-              {/* Content area */}
-              <div className="flex-1 overflow-auto p-4">
-                {selectedArtifact && (
-                  <CanvasArtifact
-                    artifact={selectedArtifact}
-                    editable
-                    isEditing={isEditing}
-                    showLineNumbers
-                    onChange={handleContentChange}
-                    onSave={handleSave}
-                    onCancel={handleCancel}
-                    onEdit={handleEdit}
-                    ariaLabel={`${selectedArtifact.title || "Artifact"} - Editor`}
-                  />
-                )}
-              </div>
+        {/* Content area - switches based on active tab */}
+        <div className="flex-1 overflow-auto p-4">
+          {selectedArtifact && activeTab === "code" && (
+            <div data-testid="code-view">
+              <CanvasArtifact
+                artifact={selectedArtifact}
+                editable
+                isEditing={isEditing}
+                showLineNumbers
+                onChange={handleContentChange}
+                onSave={handleSave}
+                onCancel={handleCancel}
+                onEdit={handleEdit}
+                ariaLabel={`${selectedArtifact.title || "Artifact"} - Code`}
+              />
             </div>
-          </Panel>
+          )}
 
-          <ResizeHandle />
-
-          {/* Preview panel (for split view) */}
-          <Panel
-            id="preview"
-            data-testid="panel-preview"
-            defaultSize={40}
-            minSize={20}
-          >
-            <div className="flex flex-col h-full bg-gray-50 dark:bg-gray-900">
-              <div className="px-4 py-2 border-b border-gray-200 dark:border-gray-700">
-                <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                  Preview
-                </span>
-              </div>
-              <div className="flex-1 overflow-auto p-4">
-                {selectedArtifact && (
+          {selectedArtifact && activeTab === "preview" && (
+            <div data-testid="preview-view">
+              <Suspense
+                fallback={
+                  <div className="text-gray-400 text-sm">
+                    Loading preview...
+                  </div>
+                }
+              >
+                {selectedArtifact.contentType === "mermaid" && (
+                  <InteractiveMermaidDiagram code={selectedArtifact.content} />
+                )}
+                {selectedArtifact.contentType === "markdown" && (
                   <CanvasArtifact
                     artifact={selectedArtifact}
                     editable={false}
@@ -456,10 +456,49 @@ export function CanvasWorkspace({
                     ariaLabel={`${selectedArtifact.title || "Artifact"} - Preview`}
                   />
                 )}
-              </div>
+                {(selectedArtifact.contentType === "html" ||
+                  selectedArtifact.contentType === "jsx") && (
+                  <div
+                    className="prose dark:prose-invert max-w-none"
+                    dangerouslySetInnerHTML={{
+                      __html: selectedArtifact.content,
+                    }}
+                  />
+                )}
+              </Suspense>
             </div>
-          </Panel>
-        </PanelGroup>
+          )}
+
+          {selectedArtifact && activeTab === "data" && (
+            <div data-testid="data-view">
+              <Suspense
+                fallback={
+                  <div className="text-gray-400 text-sm">
+                    Loading data view...
+                  </div>
+                }
+              >
+                <JSONArtifact
+                  artifact={{
+                    id: selectedArtifact.id,
+                    type: "json",
+                    title: selectedArtifact.title || "JSON Data",
+                    data: (() => {
+                      try {
+                        return JSON.parse(selectedArtifact.content);
+                      } catch {
+                        return {
+                          error: "Invalid JSON",
+                          raw: selectedArtifact.content,
+                        };
+                      }
+                    })(),
+                  }}
+                />
+              </Suspense>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* AI Edit Overlay (Phase 4) - gated by canvas_ai_palette feature flag */}
