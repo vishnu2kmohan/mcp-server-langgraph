@@ -416,6 +416,43 @@ Rank sessions by relevance. Include sessions that share topics, code patterns, o
 
 Respond ONLY with valid JSON. Do not include any other text."""
 
+TRACE_SUMMARIZE_SYSTEM_PROMPT = """You are an AI assistant that generates concise summaries of agent execution traces.
+
+Given trace data including step durations, tool calls, and execution flow, generate a summary.
+
+Return a JSON response with:
+- summary: A 1-2 sentence summary of what the agent accomplished
+- total_duration_ms: Total execution time in milliseconds
+- step_count: Number of steps in the trace
+- tool_call_count: Number of tool calls made
+- success: Boolean indicating if the trace completed successfully
+- key_actions: List of 3-5 key actions performed (e.g., "Fetched user data", "Processed results")
+- confidence: Float between 0 and 1 indicating confidence in the summary
+
+Focus on the main workflow outcome and any notable events.
+
+Respond ONLY with valid JSON. Do not include any other text."""
+
+TRACE_ANOMALIES_SYSTEM_PROMPT = """You are an AI assistant that detects anomalies and bottlenecks in agent execution traces.
+
+Analyze the trace data to identify performance issues, errors, and optimization opportunities.
+
+Return a JSON response with:
+- anomalies: List of detected anomalies, each with:
+  - type: Anomaly type (e.g., "timeout", "error", "retry", "unexpected_state")
+  - description: Brief description of the anomaly
+  - severity: One of "info", "warning", "error", "critical"
+- bottlenecks: List of performance bottlenecks, each with:
+  - step: Step or action name
+  - duration_ms: Duration in milliseconds
+  - recommendation: Suggested optimization
+- health_score: Float between 0 and 1 indicating overall trace health
+- optimization_suggestions: List of general optimization recommendations
+
+Prioritize actionable findings. Be specific about which steps have issues.
+
+Respond ONLY with valid JSON. Do not include any other text."""
+
 
 # =============================================================================
 # LLMWithFallback Base Class
@@ -3390,6 +3427,12 @@ Return up to {limit} similar sessions with similarity scores and common topics."
     # Trace Intelligence Methods (Sprint 5)
     # =========================================================================
 
+    def _is_trace_intelligence_enabled(self) -> bool:
+        """Check if trace intelligence LLM calls are enabled."""
+        return (
+            self.llm_enabled and self.llm_factory is not None and getattr(self.settings, "ff_enable_trace_intelligence", True)
+        )
+
     async def summarize_trace(
         self,
         trace_id: str,
@@ -3408,8 +3451,8 @@ Return up to {limit} similar sessions with similarity scores and common topics."
         Returns:
             Trace summary with key metrics
         """
-        # Placeholder implementation - would query actual trace data
-        return {
+        # Fallback response for when LLM is disabled
+        fallback = {
             "summary": f"Agent completed workflow trace {trace_id[:8]}... with multiple tool calls",
             "total_duration_ms": 2500,
             "step_count": 5,
@@ -3421,6 +3464,40 @@ Return up to {limit} similar sessions with similarity scores and common topics."
                 "Generated response",
             ],
         }
+
+        if not self._is_trace_intelligence_enabled():
+            return fallback
+
+        try:
+            user_prompt = f"""Summarize the execution trace with ID: {trace_id}
+
+Session ID: {session_id or "N/A"}
+User ID: {user_id or "anonymous"}
+
+Provide a concise summary of what was accomplished in this trace."""
+
+            messages = [
+                SystemMessage(content=TRACE_SUMMARIZE_SYSTEM_PROMPT),
+                HumanMessage(content=user_prompt),
+            ]
+
+            response = await self.llm_factory.ainvoke(messages)  # type: ignore[union-attr, arg-type]
+            content = response.content if hasattr(response, "content") else str(response)
+            parsed = self._parse_json_response(content)
+
+            return {
+                "summary": parsed.get("summary", fallback["summary"]),
+                "total_duration_ms": parsed.get("total_duration_ms", fallback["total_duration_ms"]),
+                "step_count": parsed.get("step_count", fallback["step_count"]),
+                "tool_call_count": parsed.get("tool_call_count", fallback["tool_call_count"]),
+                "success": parsed.get("success", fallback["success"]),
+                "key_actions": parsed.get("key_actions", fallback["key_actions"]),
+                "confidence": parsed.get("confidence", 0.8),
+            }
+
+        except Exception as e:
+            logger.warning(f"Trace summarize LLM call failed: {e}, using fallback")
+            return fallback
 
     async def detect_trace_anomalies(
         self,
@@ -3440,8 +3517,8 @@ Return up to {limit} similar sessions with similarity scores and common topics."
         Returns:
             Anomaly detection results with suggestions
         """
-        # Placeholder implementation
-        return {
+        # Fallback response for when LLM is disabled
+        fallback = {
             "anomalies": [],
             "bottlenecks": [],
             "health_score": 0.85,
@@ -3449,6 +3526,37 @@ Return up to {limit} similar sessions with similarity scores and common topics."
                 "Consider caching frequently accessed data",
             ],
         }
+
+        if not self._is_trace_intelligence_enabled():
+            return fallback
+
+        try:
+            user_prompt = f"""Analyze the execution trace with ID: {trace_id}
+
+Session ID: {session_id or "N/A"}
+User ID: {user_id or "anonymous"}
+
+Detect any anomalies, bottlenecks, or performance issues in this trace."""
+
+            messages = [
+                SystemMessage(content=TRACE_ANOMALIES_SYSTEM_PROMPT),
+                HumanMessage(content=user_prompt),
+            ]
+
+            response = await self.llm_factory.ainvoke(messages)  # type: ignore[union-attr, arg-type]
+            content = response.content if hasattr(response, "content") else str(response)
+            parsed = self._parse_json_response(content)
+
+            return {
+                "anomalies": parsed.get("anomalies", fallback["anomalies"]),
+                "bottlenecks": parsed.get("bottlenecks", fallback["bottlenecks"]),
+                "health_score": parsed.get("health_score", fallback["health_score"]),
+                "optimization_suggestions": parsed.get("optimization_suggestions", fallback["optimization_suggestions"]),
+            }
+
+        except Exception as e:
+            logger.warning(f"Trace anomaly detection LLM call failed: {e}, using fallback")
+            return fallback
 
     async def project_cost(
         self,
