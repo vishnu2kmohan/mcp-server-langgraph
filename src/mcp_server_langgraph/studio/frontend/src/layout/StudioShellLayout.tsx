@@ -48,6 +48,7 @@ import { useCrossInsightsPanel } from "../hooks/useCrossInsightsPanel";
 import { useHITLDialogs } from "../hooks/useHITLDialogs";
 import { useIsChatRoute } from "../hooks/useIsChatRoute";
 import { useFeatureFlag } from "../contexts/FeatureFlagContext";
+import { useAIOrchestratorStatus } from "../hooks/useAIOrchestratorStatus";
 import type { ConnectionStatus, TokenBreakdown } from "./StatusBar";
 import { NudgeTooltip } from "../components/Nudge";
 import { CrossInsightsPanel } from "../components/Analytics/CrossInsightsPanel";
@@ -245,6 +246,10 @@ export function StudioShellLayout() {
   // Get real-time connection health status
   const { status: wsStatus, reconnectAttempts: wsReconnectAttempts } =
     useConnectionHealthWebSocket();
+
+  // Get AI orchestrator status for StatusBar (context-aware display)
+  const { statusForStatusBar: aiOrchestratorStatus } =
+    useAIOrchestratorStatus();
 
   // Map WebSocket status to StatusBar connection status
   const connectionStatus: ConnectionStatus = useMemo(() => {
@@ -750,15 +755,16 @@ export function StudioShellLayout() {
         )}
       </PanelGroup>
 
-      {/* StatusBar - connection status, model, tokens, user, DevTools toggle (hidden in focus mode) */}
+      {/* StatusBar - context-aware status, connection, model, tokens, DevTools (hidden in focus mode) */}
       {!focusModeEnabled && (
         <StatusBar
           connectionStatus={connectionStatus}
           reconnectAttempts={wsReconnectAttempts}
+          agentStatus={aiOrchestratorStatus}
           modelName={modelName ?? undefined}
           tokenCount={tokenCount > 0 ? tokenCount : undefined}
           tokenBreakdown={tokenBreakdown}
-          userName={username ?? undefined}
+          // userName removed - redundant with top-bar user display
           agentCount={backgroundAgents.length}
           onAgentQueueToggle={handleAgentQueueToggle}
           agentQueueOpen={showAgentPanel}

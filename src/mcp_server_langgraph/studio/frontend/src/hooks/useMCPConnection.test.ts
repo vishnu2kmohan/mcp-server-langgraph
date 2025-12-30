@@ -954,4 +954,149 @@ describe("useMCPConnection", () => {
       vi.useRealTimers();
     });
   });
+
+  describe("Protocol Version Mismatch Handling (4009)", () => {
+    const WS_CLOSE_PROTOCOL_VERSION = 4009;
+
+    it("should NOT attempt reconnection on close code 4009", async () => {
+      vi.useFakeTimers();
+
+      const { result } = renderHook(() =>
+        useMCPConnection({ autoReconnect: true, maxReconnectAttempts: 5 }),
+      );
+
+      await act(async () => {
+        result.current.connect();
+      });
+
+      await act(async () => {
+        mockWebSocket?.simulateOpen();
+      });
+
+      expect(result.current.isConnected).toBe(true);
+
+      // Track WebSocket instance count before close
+      const initialCallCount = (
+        global.WebSocket as unknown as { mock: { calls: unknown[] } }
+      ).mock.calls.length;
+
+      // Simulate protocol version mismatch close
+      await act(async () => {
+        mockWebSocket?.simulateClose(WS_CLOSE_PROTOCOL_VERSION);
+      });
+
+      // Advance time past what would be reconnection delay
+      await act(async () => {
+        vi.advanceTimersByTime(10000);
+      });
+
+      // Should NOT have created a new WebSocket connection
+      const finalCallCount = (
+        global.WebSocket as unknown as { mock: { calls: unknown[] } }
+      ).mock.calls.length;
+      expect(finalCallCount).toBe(initialCallCount);
+
+      // Should NOT be in reconnecting state
+      expect(result.current.isReconnecting).toBe(false);
+
+      vi.useRealTimers();
+    });
+
+    it("should set isConnected to false on close code 4009", async () => {
+      const { result } = renderHook(() => useMCPConnection());
+
+      await act(async () => {
+        result.current.connect();
+      });
+
+      await act(async () => {
+        mockWebSocket?.simulateOpen();
+      });
+
+      expect(result.current.isConnected).toBe(true);
+
+      // Simulate protocol version mismatch close
+      await act(async () => {
+        mockWebSocket?.simulateClose(WS_CLOSE_PROTOCOL_VERSION);
+      });
+
+      expect(result.current.isConnected).toBe(false);
+      expect(result.current.connectionMode).toBe("disconnected");
+    });
+
+    it("should set error message on close code 4009", async () => {
+      const { result } = renderHook(() => useMCPConnection());
+
+      await act(async () => {
+        result.current.connect();
+      });
+
+      await act(async () => {
+        mockWebSocket?.simulateOpen();
+      });
+
+      // Simulate protocol version mismatch close
+      await act(async () => {
+        mockWebSocket?.simulateClose(
+          WS_CLOSE_PROTOCOL_VERSION,
+          "Protocol version mismatch",
+        );
+      });
+
+      // Should have an error indicating protocol version issue
+      expect(result.current.error).not.toBeNull();
+      expect(result.current.error?.toLowerCase()).toContain("protocol");
+    });
+
+    it("should call onProtocolVersionMismatch callback on 4009", async () => {
+      const onProtocolVersionMismatch = vi.fn();
+
+      const { result } = renderHook(() =>
+        useMCPConnection({ onProtocolVersionMismatch }),
+      );
+
+      await act(async () => {
+        result.current.connect();
+      });
+
+      await act(async () => {
+        mockWebSocket?.simulateOpen();
+      });
+
+      // Simulate protocol version mismatch close
+      await act(async () => {
+        mockWebSocket?.simulateClose(WS_CLOSE_PROTOCOL_VERSION);
+      });
+
+      expect(onProtocolVersionMismatch).toHaveBeenCalledTimes(1);
+    });
+
+    it("should not increment reconnectAttempts on 4009", async () => {
+      vi.useFakeTimers();
+
+      const { result } = renderHook(() =>
+        useMCPConnection({ autoReconnect: true, maxReconnectAttempts: 5 }),
+      );
+
+      await act(async () => {
+        result.current.connect();
+      });
+
+      await act(async () => {
+        mockWebSocket?.simulateOpen();
+      });
+
+      expect(result.current.reconnectAttempts).toBe(0);
+
+      // Simulate protocol version mismatch close
+      await act(async () => {
+        mockWebSocket?.simulateClose(WS_CLOSE_PROTOCOL_VERSION);
+      });
+
+      // Should not have incremented reconnect attempts
+      expect(result.current.reconnectAttempts).toBe(0);
+
+      vi.useRealTimers();
+    });
+  });
 });

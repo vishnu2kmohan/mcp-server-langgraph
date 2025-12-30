@@ -15,14 +15,7 @@
  * - Keyboard shortcut hints
  * - Feature flag toggle (dev mode)
  */
-import {
-  Cpu,
-  Hash,
-  User,
-  ListTodo,
-  AlertTriangle,
-  Terminal,
-} from "lucide-react";
+import { Cpu, Hash, ListTodo, AlertTriangle, Terminal } from "lucide-react";
 import { cn } from "../utils/cn";
 import { FeatureFlagToggle } from "./FeatureFlagToggle";
 
@@ -63,13 +56,19 @@ export type ModelProvider =
   | "unknown";
 
 export interface StatusBarProps {
-  /** Current status message (default: "Ready") */
+  /**
+   * Override status message (optional).
+   * If not provided, status is derived from context:
+   * - agentStatus takes priority if present
+   * - Otherwise derived from connectionStatus + activity
+   * @deprecated Prefer letting StatusBar derive context automatically
+   */
   status?: string;
   /** Connection status for WebSocket/API */
   connectionStatus?: ConnectionStatus;
   /** Number of reconnection attempts (for showing reconnection progress) */
   reconnectAttempts?: number;
-  /** Agent status message (e.g., "Thinking...") */
+  /** Agent status message (e.g., "Thinking...") - takes priority over derived status */
   agentStatus?: string;
   /** Model name (e.g., "claude-3-opus") */
   modelName?: string;
@@ -81,7 +80,10 @@ export interface StatusBarProps {
   tokenBreakdown?: TokenBreakdown;
   /** Cost breakdown for estimated cost display */
   costBreakdown?: CostBreakdown;
-  /** Current user name */
+  /**
+   * Current user name
+   * @deprecated User info is displayed in the top-bar - this is redundant
+   */
   userName?: string;
   /** Error message to display (shows in red) */
   errorMessage?: string;
@@ -176,8 +178,62 @@ function getProviderColorClass(provider: ModelProvider): string {
   }
 }
 
+/**
+ * Derive contextual status based on current activity.
+ * Priority order:
+ * 1. agentStatus (if provided) - e.g., "Thinking...", "Analyzing..."
+ * 2. Activity-based status (agents running, approvals pending)
+ * 3. Connection-derived status
+ * 4. "Idle" as fallback
+ */
+function deriveContextualStatus(
+  connectionStatus?: ConnectionStatus,
+  agentStatus?: string,
+  agentCount?: number,
+  pendingApprovals?: number,
+): string {
+  // Priority 1: Agent status takes precedence
+  if (agentStatus) {
+    return agentStatus;
+  }
+
+  // Priority 2: Activity-based status
+  const activities: string[] = [];
+
+  if (agentCount && agentCount > 0) {
+    activities.push(
+      `${agentCount} agent${agentCount === 1 ? "" : "s"} running`,
+    );
+  }
+
+  if (pendingApprovals && pendingApprovals > 0) {
+    activities.push(
+      `${pendingApprovals} approval${pendingApprovals === 1 ? "" : "s"} needed`,
+    );
+  }
+
+  if (activities.length > 0) {
+    return activities.join(" · ");
+  }
+
+  // Priority 3: Connection-derived status
+  switch (connectionStatus) {
+    case "connected":
+      return "Connected";
+    case "connecting":
+      return "Connecting...";
+    case "disconnected":
+      return "Disconnected";
+    case "error":
+      return "Connection Error";
+    default:
+      // Priority 4: Fallback
+      return "Idle";
+  }
+}
+
 export function StatusBar({
-  status = "Ready",
+  status,
   connectionStatus,
   reconnectAttempts,
   agentStatus,
@@ -186,7 +242,7 @@ export function StatusBar({
   tokenCount,
   tokenBreakdown,
   costBreakdown,
-  userName,
+  userName: _userName, // Deprecated - ignored, user info is in top-bar
   errorMessage,
   agentCount,
   onAgentQueueToggle,
@@ -201,6 +257,16 @@ export function StatusBar({
 }: StatusBarProps) {
   // Check if we're in dev mode
   const isDev = import.meta.env.DEV;
+
+  // Derive contextual status from activity (ignore deprecated static status prop)
+  const displayStatus =
+    status ??
+    deriveContextualStatus(
+      connectionStatus,
+      agentStatus,
+      agentCount,
+      pendingApprovals,
+    );
 
   return (
     <div
@@ -248,18 +314,8 @@ export function StatusBar({
             </span>
           )}
 
-        {/* Status text */}
-        <span>{status}</span>
-
-        {/* Agent status */}
-        {agentStatus && (
-          <span
-            data-testid="agent-status"
-            className="text-primary-600 dark:text-primary-400"
-          >
-            {agentStatus}
-          </span>
-        )}
+        {/* Status text - context-aware, derived from activity */}
+        <span data-testid="status-text">{displayStatus}</span>
 
         {/* Model indicator with provider color */}
         {modelName && (
@@ -295,17 +351,7 @@ export function StatusBar({
           </span>
         )}
 
-        {/* User indicator */}
-        {userName && (
-          <span
-            data-testid="user-indicator"
-            title={`Current user: ${userName}`}
-            className="flex items-center gap-1 cursor-help"
-          >
-            <User size={12} aria-hidden="true" />
-            <span>{userName}</span>
-          </span>
-        )}
+        {/* User indicator REMOVED - redundant with top-bar (userName prop deprecated) */}
 
         {/* Error message */}
         {errorMessage && (

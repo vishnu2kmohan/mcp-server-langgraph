@@ -37,10 +37,11 @@ describe("StatusBar", () => {
       expect(screen.getByTestId("status-bar")).toBeInTheDocument();
     });
 
-    it("should display Ready status", () => {
+    it("should display Idle status by default (context-aware)", () => {
+      // StatusBar now derives status from context instead of static "Ready"
       render(<StatusBar />);
 
-      expect(screen.getByText("Ready")).toBeInTheDocument();
+      expect(screen.getByText("Idle")).toBeInTheDocument();
     });
 
     it("should render FeatureFlagToggle", () => {
@@ -236,18 +237,110 @@ describe("StatusBar", () => {
     });
   });
 
-  describe("user indicator", () => {
-    it("should display user name when provided", () => {
-      render(<StatusBar userName="alice" />);
+  // =============================================================================
+  // Context-Aware Status (NEW - TDD RED Phase)
+  // ADR: StatusBar should not show static "Ready" but derive context from activity
+  // =============================================================================
+  describe("context-aware status", () => {
+    it("should NOT display static 'Ready' by default - derive from connection state", () => {
+      render(<StatusBar connectionStatus="connected" />);
 
-      expect(screen.getByTestId("user-indicator")).toBeInTheDocument();
-      expect(screen.getByText("alice")).toBeInTheDocument();
+      // When connected with no activity, show "Connected" not "Ready"
+      expect(screen.queryByText("Ready")).not.toBeInTheDocument();
+      expect(screen.getByText("Connected")).toBeInTheDocument();
     });
 
-    it("should not display user indicator when not provided", () => {
+    it("should show 'Connecting...' when connection status is connecting", () => {
+      render(<StatusBar connectionStatus="connecting" />);
+
+      expect(screen.getByText("Connecting...")).toBeInTheDocument();
+    });
+
+    it("should show 'Disconnected' when connection status is disconnected", () => {
+      render(<StatusBar connectionStatus="disconnected" />);
+
+      expect(screen.getByText("Disconnected")).toBeInTheDocument();
+    });
+
+    it("should show 'Connection Error' when connection status is error", () => {
+      render(<StatusBar connectionStatus="error" />);
+
+      expect(screen.getByText("Connection Error")).toBeInTheDocument();
+    });
+
+    it("should prioritize agentStatus over connection-derived status", () => {
+      render(
+        <StatusBar connectionStatus="connected" agentStatus="Analyzing..." />,
+      );
+
+      // Agent status should replace connection status text
+      expect(screen.queryByText("Connected")).not.toBeInTheDocument();
+      expect(screen.getByText("Analyzing...")).toBeInTheDocument();
+    });
+
+    it("should show pending approvals count in status when pendingApprovals > 0", () => {
+      render(
+        <StatusBar
+          connectionStatus="connected"
+          pendingApprovals={3}
+          onPendingApprovalsClick={() => {}}
+        />,
+      );
+
+      // Context-aware: Show that action is needed
+      expect(screen.getByText(/3 approvals needed/i)).toBeInTheDocument();
+    });
+
+    it("should show agent count in status when agents are running", () => {
+      render(
+        <StatusBar
+          connectionStatus="connected"
+          agentCount={2}
+          onAgentQueueToggle={() => {}}
+        />,
+      );
+
+      // Context-aware: Show running agents info
+      expect(screen.getByText(/2 agents running/i)).toBeInTheDocument();
+    });
+
+    it("should show combined context when multiple activities are happening", () => {
+      render(
+        <StatusBar
+          connectionStatus="connected"
+          agentCount={2}
+          pendingApprovals={1}
+          onAgentQueueToggle={() => {}}
+          onPendingApprovalsClick={() => {}}
+        />,
+      );
+
+      // Should indicate both agents running and approval needed
+      const statusBar = screen.getByTestId("status-bar");
+      expect(statusBar.textContent).toMatch(/agent/i);
+      expect(statusBar.textContent).toMatch(/approval/i);
+    });
+
+    it("should show 'Idle' when connected with no activity (fallback from Ready)", () => {
+      // When no specific activity, "Idle" is clearer than "Ready"
       render(<StatusBar />);
 
+      // Default state without connection info should show Idle
+      expect(screen.queryByText("Ready")).not.toBeInTheDocument();
+      expect(screen.getByText("Idle")).toBeInTheDocument();
+    });
+  });
+
+  // =============================================================================
+  // User Indicator REMOVED - Redundant with top-bar
+  // =============================================================================
+  describe("user indicator (DEPRECATED)", () => {
+    it("should NOT display user indicator - redundant with top-bar", () => {
+      // userName prop is deprecated - user info is in the top-bar
+      render(<StatusBar userName="alice" />);
+
       expect(screen.queryByTestId("user-indicator")).not.toBeInTheDocument();
+      expect(screen.queryByText("alice")).not.toBeInTheDocument();
     });
   });
 
@@ -668,15 +761,8 @@ describe("StatusBar", () => {
       );
     });
 
-    it("should have tooltip on user indicator", () => {
-      render(<StatusBar userName="testuser" />);
-
-      const indicator = screen.getByTestId("user-indicator");
-      expect(indicator).toHaveAttribute(
-        "title",
-        expect.stringContaining("user"),
-      );
-    });
+    // User indicator has been removed (redundant with top-bar)
+    // This test is intentionally removed as userName prop is deprecated
 
     it("should have tooltip on agent queue toggle", () => {
       render(<StatusBar agentCount={3} onAgentQueueToggle={() => {}} />);

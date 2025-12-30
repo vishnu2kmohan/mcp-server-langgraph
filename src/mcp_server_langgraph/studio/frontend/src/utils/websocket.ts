@@ -152,6 +152,7 @@ export const WS_ENDPOINTS = {
 
   // AI/UX WebSocket endpoints
   AI_SUGGESTIONS: "/api/v1/ws/ai/suggestions",
+  ORCHESTRATOR_STATUS: "/api/v1/ws/orchestrator/status",
 
   // Workflow WebSocket endpoints
   WORKFLOW_EXECUTION: "/api/v1/ws/workflows/:workflowId",

@@ -17,6 +17,7 @@ import { authenticatedFetch } from "../utils/authenticatedFetch";
 import { saveCurrentRouteAsIntended } from "../utils/intendedRoute";
 import {
   WS_CLOSE_TOKEN_EXPIRED,
+  WS_CLOSE_PROTOCOL_VERSION,
   ensureValidTokenForWebSocket,
 } from "../utils/websocketAuth";
 import { PROTOCOL_VERSION } from "../config/version";
@@ -40,6 +41,12 @@ export interface MCPConnectionOptions {
   autoReconnect?: boolean;
   maxReconnectAttempts?: number;
   sessionId?: string;
+  /**
+   * Callback when protocol version mismatch is detected (close code 4009).
+   * This is NOT recoverable - reconnection will NOT be attempted.
+   * Use this to show user-friendly message suggesting page refresh or app update.
+   */
+  onProtocolVersionMismatch?: () => void;
 }
 
 export interface MCPConnectionState {
@@ -65,6 +72,7 @@ export function useMCPConnection(
     autoReconnect = false,
     maxReconnectAttempts = 5,
     sessionId,
+    onProtocolVersionMismatch,
   } = options;
 
   const [isConnected, setIsConnected] = useState(false);
@@ -332,6 +340,21 @@ export function useMCPConnection(
         // Only update state if still mounted
         if (!isMountedRef.current) return;
 
+        // Handle protocol version mismatch close code (4009)
+        // This is NOT recoverable - do NOT attempt reconnection
+        if (event.code === WS_CLOSE_PROTOCOL_VERSION) {
+          setIsConnected(false);
+          setConnectionMode("disconnected");
+          setError(
+            event.reason ||
+              "Protocol version mismatch. Please refresh the page or update your client.",
+          );
+          setIsReconnecting(false);
+          inReconnectSequenceRef.current = false;
+          onProtocolVersionMismatch?.();
+          return;
+        }
+
         // Handle token expiration close code (4010)
         if (event.code === WS_CLOSE_TOKEN_EXPIRED) {
           const refreshed = await ensureValidTokenForWebSocket();
@@ -413,6 +436,7 @@ export function useMCPConnection(
     maxReconnectAttempts,
     dispatch,
     updateMetrics,
+    onProtocolVersionMismatch,
   ]);
 
   const disconnect = useCallback(() => {
