@@ -240,12 +240,13 @@ describe("AIIntelligenceContext", () => {
       expect(result.current.webSocket.enabled).toBe(true);
     });
 
-    it("should default WebSocket to disabled", () => {
+    it("should default WebSocket to enabled for real-time AI suggestions", () => {
       const { result } = renderHook(() => useAIIntelligence(), {
         wrapper: createWrapper({ enabled: true }),
       });
 
-      expect(result.current.webSocket.enabled).toBe(false);
+      // WebSocket is enabled by default for real-time AI suggestions
+      expect(result.current.webSocket.enabled).toBe(true);
     });
   });
 

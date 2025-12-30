@@ -160,7 +160,7 @@ const DEFAULT_CACHE_CONFIG: Required<AICacheConfig> = {
 };
 
 const DEFAULT_WEBSOCKET_CONFIG: Required<AIWebSocketConfig> = {
-  enabled: false,
+  enabled: true, // Enable WebSocket by default for real-time AI suggestions
   endpoint: "/ws/ai/suggestions",
 };
 
