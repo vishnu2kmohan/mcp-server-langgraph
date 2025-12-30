@@ -30,6 +30,7 @@ import {
   saveAssistantMessage,
 } from "../store/slices/sessionSlice";
 import { useMessageRevalidation } from "../hooks/useMessageRevalidation";
+import { useSessionAutoName } from "../hooks/useSessionAutoName";
 import { useStreamingChat } from "../hooks/useStreamingChat";
 import { useSessionSync } from "../hooks/useSessionSync";
 import {
@@ -274,6 +275,20 @@ export function ConnectedConversationPanel({
     isStreaming,
     streamingContent,
   ]);
+
+  // =============================================================================
+  // Session Auto-Naming
+  // =============================================================================
+
+  // Automatically generate a session title when the first message is sent
+  // This provides ChatGPT/Claude-like behavior where sessions are named
+  // based on their content instead of staying "New Chat"
+  useSessionAutoName({
+    sessionId: sessionId ?? currentSession?.id,
+    messages: messages.map((m) => ({ role: m.role, content: m.content })),
+    currentName: currentSession?.name,
+    enabled: true,
+  });
 
   // =============================================================================
   // Streaming Completion Effects

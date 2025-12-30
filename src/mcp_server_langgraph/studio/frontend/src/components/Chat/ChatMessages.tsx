@@ -295,6 +295,7 @@ export function ChatMessages({
                 <MarkdownContent
                   content={streamingContent}
                   enableInteractiveArtifacts={enableInteractiveArtifacts}
+                  isStreaming={true}
                 />
                 <span className="inline-block w-2 h-4 ml-1 bg-blue-500 animate-pulse align-middle" />
               </div>

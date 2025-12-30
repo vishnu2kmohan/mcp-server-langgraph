@@ -236,4 +236,197 @@ describe("MarkdownContent", () => {
       });
     });
   });
+
+  describe("streaming behavior", () => {
+    it("should show placeholder for mermaid during streaming with incomplete code", async () => {
+      // Incomplete mermaid - no closing ```
+      const incompleteMermaid = "```mermaid\ngraph TD\n  A --";
+      render(
+        <MarkdownContent
+          content={incompleteMermaid}
+          isStreaming={true}
+          enableInteractiveArtifacts
+        />,
+      );
+
+      await waitFor(() => {
+        // Should show streaming placeholder, not the mermaid diagram
+        expect(
+          screen.getByTestId("streaming-artifact-placeholder"),
+        ).toBeInTheDocument();
+        expect(screen.queryByTestId("mermaid-diagram")).not.toBeInTheDocument();
+      });
+    });
+
+    it("should render mermaid diagram when streaming is false", async () => {
+      const completeMermaid = "```mermaid\ngraph TD\n  A --> B\n```";
+      render(
+        <MarkdownContent
+          content={completeMermaid}
+          isStreaming={false}
+          enableInteractiveArtifacts
+        />,
+      );
+
+      await waitFor(() => {
+        expect(screen.getByTestId("mermaid-diagram")).toBeInTheDocument();
+        expect(
+          screen.queryByTestId("streaming-artifact-placeholder"),
+        ).not.toBeInTheDocument();
+      });
+    });
+
+    it("should show placeholder for mermaid during streaming even if code block looks complete", async () => {
+      // Even with closing ```, show placeholder during streaming
+      // Mermaid internal syntax (like dates in gantt charts) can be malformed during streaming
+      // so we rely entirely on isStreaming flag rather than content heuristics
+      const completeMermaid = "```mermaid\ngraph TD\n  A --> B\n```";
+      render(
+        <MarkdownContent
+          content={completeMermaid}
+          isStreaming={true}
+          enableInteractiveArtifacts
+        />,
+      );
+
+      await waitFor(() => {
+        // Should show placeholder even though code block looks complete
+        // because Mermaid syntax errors can't be detected by content heuristics
+        expect(
+          screen.getByTestId("streaming-artifact-placeholder"),
+        ).toBeInTheDocument();
+      });
+    });
+
+    it("should show placeholder for chart during streaming", async () => {
+      // Chart artifacts always show placeholder during streaming
+      // to avoid JSON parse errors from incomplete content
+      const chartContent = '```chart\n{"type": "bar", "data": [1, 2, 3]}\n```';
+      render(
+        <MarkdownContent
+          content={chartContent}
+          isStreaming={true}
+          enableInteractiveArtifacts
+        />,
+      );
+
+      await waitFor(() => {
+        expect(
+          screen.getByTestId("streaming-artifact-placeholder"),
+        ).toBeInTheDocument();
+      });
+    });
+
+    it("should show placeholder for SVG during streaming", async () => {
+      // SVG artifacts always show placeholder during streaming
+      // to avoid DOMParser errors from incomplete content
+      const svgContent =
+        '```svg\n<svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="40"/></svg>\n```';
+      render(
+        <MarkdownContent
+          content={svgContent}
+          isStreaming={true}
+          enableInteractiveArtifacts
+        />,
+      );
+
+      await waitFor(() => {
+        expect(
+          screen.getByTestId("streaming-artifact-placeholder"),
+        ).toBeInTheDocument();
+      });
+    });
+
+    it("should transition from placeholder to rendered artifact when streaming completes", async () => {
+      const incompleteMermaid = "```mermaid\ngraph TD\n  A --";
+      const { rerender } = render(
+        <MarkdownContent
+          content={incompleteMermaid}
+          isStreaming={true}
+          enableInteractiveArtifacts
+        />,
+      );
+
+      // Initially shows placeholder
+      await waitFor(() => {
+        expect(
+          screen.getByTestId("streaming-artifact-placeholder"),
+        ).toBeInTheDocument();
+      });
+
+      // Rerender with complete content and streaming=false
+      const completeMermaid = "```mermaid\ngraph TD\n  A --> B\n```";
+      rerender(
+        <MarkdownContent
+          content={completeMermaid}
+          isStreaming={false}
+          enableInteractiveArtifacts
+        />,
+      );
+
+      // Now should show the diagram
+      await waitFor(() => {
+        expect(screen.getByTestId("mermaid-diagram")).toBeInTheDocument();
+        expect(
+          screen.queryByTestId("streaming-artifact-placeholder"),
+        ).not.toBeInTheDocument();
+      });
+    });
+
+    it("should not affect non-parse-prone artifacts like audio during streaming", async () => {
+      // Audio URLs don't need parsing, should render immediately
+      const audioCode = "```audio\nhttps://example.com/audio.mp3\n```";
+      render(
+        <MarkdownContent
+          content={audioCode}
+          isStreaming={true}
+          enableInteractiveArtifacts
+        />,
+      );
+
+      // Audio should render without placeholder (it's not parse-prone)
+      await waitFor(() => {
+        expect(
+          screen.queryByTestId("streaming-artifact-placeholder"),
+        ).not.toBeInTheDocument();
+      });
+    });
+
+    it("should handle multiple code blocks where only one is incomplete", async () => {
+      // First block is complete (multi-line so it renders as CodeBlock), second is incomplete
+      const mixedContent =
+        "```javascript\nconst x = 1;\nconst y = 2;\n```\n\nSome text\n\n```mermaid\ngraph TD";
+      render(
+        <MarkdownContent
+          content={mixedContent}
+          isStreaming={true}
+          enableInteractiveArtifacts
+        />,
+      );
+
+      await waitFor(() => {
+        // First code block should render normally (it's complete with multi-line content)
+        expect(screen.getByTestId("code-block")).toBeInTheDocument();
+        // Second (mermaid) should show placeholder since it's incomplete
+        expect(
+          screen.getByTestId("streaming-artifact-placeholder"),
+        ).toBeInTheDocument();
+      });
+    });
+
+    it("should default isStreaming to false", async () => {
+      const completeMermaid = "```mermaid\ngraph TD\n  A --> B\n```";
+      render(
+        <MarkdownContent
+          content={completeMermaid}
+          enableInteractiveArtifacts
+        />,
+      );
+
+      await waitFor(() => {
+        // Should render diagram since isStreaming defaults to false
+        expect(screen.getByTestId("mermaid-diagram")).toBeInTheDocument();
+      });
+    });
+  });
 });

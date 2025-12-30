@@ -18,7 +18,7 @@
  * ```
  */
 import { useState, useCallback } from "react";
-import { useNavigate } from "react-router";
+import { useNavigate, useRevalidator } from "react-router";
 import { useSessionTelemetry } from "../contexts/TelemetryContext";
 import { authenticatedFetch } from "../utils/authenticatedFetch";
 import { setIntendedRoute } from "../utils/intendedRoute";
@@ -59,6 +59,7 @@ interface UseNewChatResult {
 export function useNewChat(options: UseNewChatOptions = {}): UseNewChatResult {
   const { basePath = "/studio/chat" } = options;
   const navigate = useNavigate();
+  const revalidator = useRevalidator();
 
   const [isCreating, setIsCreating] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -106,6 +107,9 @@ export function useNewChat(options: UseNewChatOptions = {}): UseNewChatResult {
           durationMs: Date.now() - startTime,
         });
 
+        // Revalidate route data to update session list in nav
+        revalidator.revalidate();
+
         // Navigate to the new session
         navigate(`${basePath}/${session.id}`);
       } catch (err) {
@@ -124,7 +128,7 @@ export function useNewChat(options: UseNewChatOptions = {}): UseNewChatResult {
         setIsCreating(false);
       }
     },
-    [basePath, navigate, sessionTelemetry, handleAuthFailure],
+    [basePath, navigate, revalidator, sessionTelemetry, handleAuthFailure],
   );
 
   return {

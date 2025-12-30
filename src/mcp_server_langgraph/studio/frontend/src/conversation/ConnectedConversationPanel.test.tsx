@@ -64,6 +64,31 @@ vi.mock("../hooks/useMessageRevalidation", () => ({
   }),
 }));
 
+// Mock useSessionAutoName hook for auto-naming tests
+const mockUseSessionAutoName = vi.fn();
+vi.mock("../hooks/useSessionAutoName", () => ({
+  useSessionAutoName: (options: unknown) => {
+    mockUseSessionAutoName(options);
+    return {
+      isGenerating: false,
+      isSuccess: false,
+      generatedTitle: undefined,
+      hasDefaultName: true,
+      error: undefined,
+    };
+  },
+  default: (options: unknown) => {
+    mockUseSessionAutoName(options);
+    return {
+      isGenerating: false,
+      isSuccess: false,
+      generatedTitle: undefined,
+      hasDefaultName: true,
+      error: undefined,
+    };
+  },
+}));
+
 // Mock conversation intelligence hooks (Sprint 3)
 vi.mock("../hooks/useConversationIntelligence", () => ({
   useIntentDetection: vi.fn(() => ({
@@ -758,6 +783,102 @@ describe("ConnectedConversationPanel", () => {
 
         expect(screen.queryByTestId("goal-tracker")).not.toBeInTheDocument();
       });
+    });
+  });
+
+  describe("Session Auto-Naming", () => {
+    it("should call useSessionAutoName hook with session and message data", () => {
+      const store = createTestStore({
+        session: {
+          currentSession: {
+            id: "session-123",
+            name: "New Chat",
+            messages: [{ id: "msg-1", role: "user", content: "Hello world" }],
+            config: {},
+            createdAt: Date.now(),
+            updatedAt: Date.now(),
+          },
+          sessions: [],
+          loading: false,
+          error: null,
+          hasPendingMutation: true,
+        },
+      });
+
+      mockSessionLoaderData.sessionId = "session-123";
+      mockSessionLoaderData.messages = [
+        createMockMessage({ id: "msg-1", content: "Hello world" }),
+      ];
+
+      render(<ConnectedConversationPanel />, { wrapper: createWrapper(store) });
+
+      // The hook should be called with session info
+      expect(mockUseSessionAutoName).toHaveBeenCalled();
+      const callArgs = mockUseSessionAutoName.mock.calls[0][0];
+      expect(callArgs).toHaveProperty("sessionId");
+      expect(callArgs).toHaveProperty("messages");
+      expect(callArgs).toHaveProperty("currentName");
+    });
+
+    it("should pass current session name to auto-naming hook", () => {
+      const store = createTestStore({
+        session: {
+          currentSession: {
+            id: "session-456",
+            name: "My Custom Chat",
+            messages: [],
+            config: {},
+            createdAt: Date.now(),
+            updatedAt: Date.now(),
+          },
+          sessions: [],
+          loading: false,
+          error: null,
+          hasPendingMutation: true,
+        },
+      });
+
+      mockSessionLoaderData.sessionId = "session-456";
+      mockSessionLoaderData.messages = [];
+
+      render(<ConnectedConversationPanel />, { wrapper: createWrapper(store) });
+
+      expect(mockUseSessionAutoName).toHaveBeenCalled();
+      const callArgs = mockUseSessionAutoName.mock.calls[0][0];
+      expect(callArgs.currentName).toBe("My Custom Chat");
+    });
+
+    it("should pass messages array to auto-naming hook for title generation", () => {
+      const store = createTestStore({
+        session: {
+          currentSession: {
+            id: "session-789",
+            name: "New Chat",
+            messages: [
+              {
+                id: "msg-1",
+                role: "user",
+                content: "Help me build a REST API",
+              },
+              { id: "msg-2", role: "assistant", content: "Sure, I can help!" },
+            ],
+            config: {},
+            createdAt: Date.now(),
+            updatedAt: Date.now(),
+          },
+          sessions: [],
+          loading: false,
+          error: null,
+          hasPendingMutation: true,
+        },
+      });
+
+      render(<ConnectedConversationPanel />, { wrapper: createWrapper(store) });
+
+      expect(mockUseSessionAutoName).toHaveBeenCalled();
+      const callArgs = mockUseSessionAutoName.mock.calls[0][0];
+      expect(Array.isArray(callArgs.messages)).toBe(true);
+      expect(callArgs.messages.length).toBeGreaterThan(0);
     });
   });
 });

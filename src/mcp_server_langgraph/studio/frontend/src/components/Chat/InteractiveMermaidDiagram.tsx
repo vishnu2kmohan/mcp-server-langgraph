@@ -70,6 +70,14 @@ export function InteractiveMermaidDiagram({
     const renderDiagram = async () => {
       if (!containerRef.current) return;
 
+      // Defense-in-depth: Skip render if code is clearly incomplete
+      // This prevents error flashing if upstream streaming detection fails
+      const trimmedCode = code?.trim() ?? "";
+      if (!trimmedCode || trimmedCode.length < 10) {
+        // Code too short to be valid mermaid - likely still streaming
+        return;
+      }
+
       // Ensure mermaid is initialized (supports lazy loading)
       ensureMermaidInitialized();
 
@@ -79,6 +87,8 @@ export function InteractiveMermaidDiagram({
         setSvg(renderedSvg);
         setError(null);
       } catch (err) {
+        // Code that reaches this point has passed the length check (>= 10 chars)
+        // so it should show errors for debugging/user feedback
         console.error("Mermaid rendering error:", err);
         setError(
           err instanceof Error ? err.message : "Failed to render diagram",

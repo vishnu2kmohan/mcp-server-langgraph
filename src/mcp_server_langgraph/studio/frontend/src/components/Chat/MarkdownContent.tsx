@@ -106,6 +106,43 @@ export function SandpackLoadingFallback() {
 }
 
 // =============================================================================
+// Streaming Placeholder Component
+// =============================================================================
+
+/**
+ * Placeholder shown while artifact content is streaming
+ */
+function StreamingArtifactPlaceholder({ language }: { language?: string }) {
+  const getLabel = () => {
+    switch (language) {
+      case "mermaid":
+        return "Mermaid diagram";
+      case "chart":
+        return "Chart";
+      case "svg":
+        return "SVG graphic";
+      case "json":
+        return "JSON data";
+      default:
+        return "Content";
+    }
+  };
+
+  return (
+    <div
+      data-testid="streaming-artifact-placeholder"
+      className="my-2 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700"
+    >
+      <div className="flex items-center gap-2 text-gray-500 dark:text-gray-400">
+        <Loader2 size={16} className="animate-spin" />
+        <span className="text-sm">Generating {getLabel()}...</span>
+      </div>
+      <div className="mt-3 h-24 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
+    </div>
+  );
+}
+
+// =============================================================================
 // Chart Code Block
 // =============================================================================
 
@@ -161,6 +198,8 @@ export interface MarkdownContentProps {
   content: string;
   /** Enable interactive artifact rendering. Default: true */
   enableInteractiveArtifacts?: boolean;
+  /** Whether content is actively streaming. Default: false */
+  isStreaming?: boolean;
 }
 
 /**
@@ -169,6 +208,7 @@ export interface MarkdownContentProps {
 export function MarkdownContent({
   content,
   enableInteractiveArtifacts = true,
+  isStreaming = false,
 }: MarkdownContentProps) {
   const components = useMemo(
     () => ({
@@ -189,6 +229,21 @@ export function MarkdownContent({
 
         // Interactive artifacts - only render when enabled
         if (enableInteractiveArtifacts) {
+          // Parse-prone artifacts: Always defer during streaming (LLM done signal)
+          // Content heuristics can't reliably detect incomplete syntax, so we rely
+          // entirely on the isStreaming flag for robustness. This prevents:
+          // - Mermaid: incomplete dates/task definitions in gantt charts
+          // - Chart: incomplete JSON causing parse errors
+          // - SVG: unclosed tags causing DOMParser errors
+          const isParseProneArtifact =
+            language === "mermaid" ||
+            language === "chart" ||
+            language === "svg";
+
+          if (isParseProneArtifact && isStreaming && !inline) {
+            return <StreamingArtifactPlaceholder language={language} />;
+          }
+
           // Handle mermaid diagrams (lazy loaded for bundle optimization)
           if (language === "mermaid" && !inline) {
             return (
@@ -396,7 +451,7 @@ export function MarkdownContent({
         <hr className="my-4 border-gray-300 dark:border-gray-600" {...props} />
       ),
     }),
-    [enableInteractiveArtifacts],
+    [enableInteractiveArtifacts, isStreaming],
   );
 
   return (

@@ -538,7 +538,7 @@ describe("InteractiveMermaidDiagram", () => {
         "string error message",
       );
 
-      render(<InteractiveMermaidDiagram code="invalid" />);
+      render(<InteractiveMermaidDiagram code="invalid mermaid syntax here" />);
 
       await waitFor(() => {
         expect(screen.getByText(/diagram error/i)).toBeInTheDocument();
@@ -554,7 +554,7 @@ describe("InteractiveMermaidDiagram", () => {
         new Error("Syntax error at line 1"),
       );
 
-      render(<InteractiveMermaidDiagram code="bad" />);
+      render(<InteractiveMermaidDiagram code="bad mermaid syntax" />);
 
       await waitFor(() => {
         expect(screen.getByText("Syntax error at line 1")).toBeInTheDocument();
