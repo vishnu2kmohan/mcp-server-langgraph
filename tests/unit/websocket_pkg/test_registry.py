@@ -284,6 +284,9 @@ class TestRegistryExports:
             # DevTools broadcaster
             "get_devtools_broadcaster",
             "set_devtools_broadcaster",
+            # Orchestrator status broadcaster
+            "get_orchestrator_status_broadcaster",
+            "set_orchestrator_status_broadcaster",
         }
 
         assert set(registry.__all__) == expected_exports
