@@ -19,9 +19,21 @@ pytestmark = [pytest.mark.unit, pytest.mark.api]
 def app():
     """Create a test FastAPI app with the AI router."""
     from mcp_server_langgraph.api.v1.ai import ai_router
+    from mcp_server_langgraph.auth.dependencies import get_current_user
 
     app = FastAPI()
     app.include_router(ai_router, prefix="/api/v1/ai")
+
+    # Mock authentication for tests
+    mock_user = {
+        "sub": "test-user-123",
+        "user_id": "test-user-123",
+        "username": "testuser",
+        "email": "test@example.com",
+        "roles": ["user"],
+    }
+    app.dependency_overrides[get_current_user] = lambda: mock_user
+
     return app
 
 
