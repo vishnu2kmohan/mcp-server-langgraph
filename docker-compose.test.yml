@@ -1205,6 +1205,11 @@ services:
       - GRAFANA_URL=http://grafana-test:3000
       # GCP credentials for Vertex AI (mounted from host for local development)
       - GOOGLE_APPLICATION_CREDENTIALS=/app/.config/gcloud/application_default_credentials.json
+      # GCP Project ID required for google-genai SDK (pydantic-ai) when using ADC
+      # GOOGLE_CLOUD_PROJECT is the standard GCP env var read by google-genai SDK
+      - GOOGLE_CLOUD_PROJECT=${GOOGLE_CLOUD_PROJECT:-}
+      # Also set GOOGLE_PROJECT_ID for mcp-server-langgraph settings compatibility
+      - GOOGLE_PROJECT_ID=${GOOGLE_CLOUD_PROJECT:-}
       # Feature Flags for AI Suggestions (ADR-xxxx)
       # Enable Redis-backed distributed rate limiting for multi-instance deployments
       - FF_ENABLE_DISTRIBUTED_RATE_LIMITING=true

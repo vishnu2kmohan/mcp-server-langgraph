@@ -305,25 +305,10 @@ export const router = createBrowserRouter(
                 },
               ],
             },
-            // Traces - observability traces view (ActivityBar points here)
-            // Renders ObservabilityPage with traces tab - admin/developer only
+            // Traces - redirect to observability (consolidated in Sprint 7)
             {
               path: "traces",
-              element: (
-                <PersonaGuard allowedPersonas={["admin", "developer"]}>
-                  <Outlet />
-                </PersonaGuard>
-              ),
-              children: [
-                {
-                  index: true,
-                  lazy: async () => {
-                    const { ObservabilityPage } =
-                      await import("../pages/ObservabilityPage");
-                    return { Component: ObservabilityPage };
-                  },
-                },
-              ],
+              element: <Navigate to="/studio/observability/traces" replace />,
             },
             // Vectors - standalone route (ActivityBar points here)
             // Renders VectorsPage directly - admin/developer only

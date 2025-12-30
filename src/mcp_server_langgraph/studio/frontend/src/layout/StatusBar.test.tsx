@@ -205,6 +205,54 @@ describe("StatusBar", () => {
         "Total: 1,500 tokens",
       );
     });
+
+    it("should include per-model breakdown in title attribute when costBreakdown.byModel is provided", () => {
+      render(
+        <StatusBar
+          tokenCount={2500}
+          tokenBreakdown={{
+            promptTokens: 1500,
+            completionTokens: 1000,
+            totalTokens: 2500,
+          }}
+          costBreakdown={{
+            estimatedCostUsd: 0.0345,
+            byModel: {
+              "claude-3-opus": { tokens: 1500, cost: 0.025 },
+              "claude-3-sonnet": { tokens: 1000, cost: 0.0095 },
+            },
+          }}
+        />,
+      );
+
+      const tokenElement = screen.getByTestId("token-count");
+      const title = tokenElement.getAttribute("title") ?? "";
+
+      // Should include per-model breakdown section
+      expect(title).toContain("By model:");
+      expect(title).toContain("claude-3-opus");
+      expect(title).toContain("1,500 tokens");
+      expect(title).toContain("$0.03"); // cost for opus (rounded from 0.025)
+      expect(title).toContain("claude-3-sonnet");
+      expect(title).toContain("1,000 tokens");
+    });
+
+    it("should show estimated cost in title when costBreakdown is provided", () => {
+      render(
+        <StatusBar
+          tokenCount={1000}
+          costBreakdown={{
+            estimatedCostUsd: 0.0156,
+          }}
+        />,
+      );
+
+      const tokenElement = screen.getByTestId("token-count");
+      const title = tokenElement.getAttribute("title") ?? "";
+
+      expect(title).toContain("Estimated cost:");
+      expect(title).toContain("$0.02"); // rounded from 0.0156
+    });
   });
 
   describe("model provider", () => {

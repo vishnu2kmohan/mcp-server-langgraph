@@ -34,6 +34,7 @@ import {
 import {
   selectCurrentSession,
   createSession,
+  renameSession,
 } from "../store/slices/sessionSlice";
 import { selectUsername } from "../store/slices/personaSlice";
 import {
@@ -49,7 +50,11 @@ import { useHITLDialogs } from "../hooks/useHITLDialogs";
 import { useIsChatRoute } from "../hooks/useIsChatRoute";
 import { useFeatureFlag } from "../contexts/FeatureFlagContext";
 import { useAIOrchestratorStatus } from "../hooks/useAIOrchestratorStatus";
-import type { ConnectionStatus, TokenBreakdown } from "./StatusBar";
+import type {
+  ConnectionStatus,
+  TokenBreakdown,
+  CostBreakdown,
+} from "./StatusBar";
 import { NudgeTooltip } from "../components/Nudge";
 import { CrossInsightsPanel } from "../components/Analytics/CrossInsightsPanel";
 import { AgentApprovalDialog } from "../components/Admin/AgentApprovalDialog";
@@ -342,6 +347,50 @@ export function StudioShellLayout() {
     };
   }, [currentSession?.messages]);
 
+  // Compute cost breakdown with per-model usage for StatusBar tooltip
+  // Aggregates tokens by model name from messages to show multi-model usage
+  const costBreakdown = useMemo((): CostBreakdown | undefined => {
+    if (!currentSession?.messages?.length) return undefined;
+
+    // Aggregate usage by model
+    const byModel: Record<string, { tokens: number; cost: number }> = {};
+    let totalTokensFromUsage = 0;
+    let hasUsageData = false;
+
+    for (const msg of currentSession.messages) {
+      if (msg.usage) {
+        const modelKey = msg.modelName ?? "unknown";
+        const msgTokens =
+          (msg.usage.promptTokens ?? 0) + (msg.usage.completionTokens ?? 0);
+
+        if (!byModel[modelKey]) {
+          byModel[modelKey] = { tokens: 0, cost: 0 };
+        }
+        byModel[modelKey].tokens += msgTokens;
+        totalTokensFromUsage += msgTokens;
+        hasUsageData = true;
+      }
+    }
+
+    // Only return breakdown if we have actual usage data with model info
+    if (!hasUsageData) return undefined;
+
+    // Only include byModel if there's meaningful data (more than one model or known model)
+    const modelKeys = Object.keys(byModel);
+    const hasMeaningfulModelData =
+      modelKeys.length > 1 ||
+      (modelKeys.length === 1 && modelKeys[0] !== "unknown");
+
+    // Estimate cost (rough approximation based on average token pricing)
+    // This is a simple estimate - actual costs would come from backend
+    const estimatedCostUsd = totalTokensFromUsage * 0.000003; // ~$3/1M tokens average
+
+    return {
+      estimatedCostUsd,
+      byModel: hasMeaningfulModelData ? byModel : undefined,
+    };
+  }, [currentSession?.messages]);
+
   // Handle panel resize
   const handlePanelResize = useCallback(
     (sizes: number[]) => {
@@ -516,6 +565,15 @@ export function StudioShellLayout() {
     [dispatch],
   );
 
+  // Handler for session rename (from SessionNav inline editing or context menu)
+  const handleRenameSession = useCallback(
+    (sessionId: string, name: string) => {
+      logger.debug("Renaming session:", sessionId, "to:", name);
+      dispatch(renameSession({ sessionId, name }));
+    },
+    [dispatch],
+  );
+
   // Handler for user menu click (dropdown is managed by TopBar component)
   const handleUserMenuClick = useCallback(() => {
     logger.debug("User menu clicked");
@@ -666,7 +724,12 @@ export function StudioShellLayout() {
                       minSize={15}
                       maxSize={35}
                     >
-                      <SessionNav />
+                      <SessionNav
+                        enableEdit
+                        enableContextMenu
+                        enableHover
+                        onRenameSession={handleRenameSession}
+                      />
                     </Panel>
                     <ResizeHandle />
                   </>
@@ -764,6 +827,7 @@ export function StudioShellLayout() {
           modelName={modelName ?? undefined}
           tokenCount={tokenCount > 0 ? tokenCount : undefined}
           tokenBreakdown={tokenBreakdown}
+          costBreakdown={costBreakdown}
           // userName removed - redundant with top-bar user display
           agentCount={backgroundAgents.length}
           onAgentQueueToggle={handleAgentQueueToggle}

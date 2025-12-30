@@ -97,6 +97,11 @@ def create_app(
         allow_headers=["*"],
     )
 
+    # Add DevTools network event middleware for real-time debugging
+    from mcp_server_langgraph.middleware.devtools_emitter import DevToolsNetworkMiddleware
+
+    app.add_middleware(DevToolsNetworkMiddleware)
+
     # Add health check endpoint
     @app.get("/health")
     async def health_check() -> dict[str, str]:

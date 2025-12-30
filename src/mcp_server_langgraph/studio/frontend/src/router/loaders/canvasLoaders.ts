@@ -29,6 +29,7 @@ import {
   transformApiMessageToClient,
   isApiMessage,
   type ApiMessage,
+  transformApiArtifactsToClient,
 } from "../../utils/apiTransforms";
 
 const logger = devLogger.withPrefix("[canvasLoaders]");
@@ -278,11 +279,16 @@ export async function chatLoader({
     }
   }
 
+  // Transform artifacts from snake_case (API) to camelCase (client)
+  const artifacts = artifactsResult?.items
+    ? transformApiArtifactsToClient(artifactsResult.items)
+    : [];
+
   return {
     sessionId,
     session: validatedSession,
     messages,
-    artifacts: artifactsResult?.items ?? [],
+    artifacts,
     error: !validatedSession ? "Session not found" : undefined,
   };
 }
@@ -395,9 +401,14 @@ export async function filesLoader(
     };
   }
 
+  // Transform artifacts from snake_case (API) to camelCase (client)
+  const artifacts = result.items
+    ? transformApiArtifactsToClient(result.items)
+    : [];
+
   return {
-    artifacts: result.items ?? [],
-    total: result.total ?? result.items?.length ?? 0,
+    artifacts,
+    total: result.total ?? artifacts.length,
   };
 }
 

@@ -347,3 +347,118 @@ export function transformApiMessageToClient(
     modelName: apiMessage.model_name ?? undefined,
   };
 }
+
+// =============================================================================
+// Artifact Type Guards and Transforms
+// =============================================================================
+
+import type { CanvasArtifact } from "../types/artifacts";
+
+/**
+ * API Artifact format (snake_case from backend)
+ */
+export interface ApiArtifact {
+  id: string;
+  type: string;
+  title?: string;
+  name?: string;
+  description?: string;
+  session_id: string;
+  version: number;
+  content: string;
+  content_type: string;
+  created_at: string;
+  updated_at: string;
+  edit_metadata?: {
+    edited_by?: string;
+    ai_confidence?: number;
+    language?: string;
+  };
+  metadata?: Record<string, unknown>;
+}
+
+/**
+ * Type guard to check if a value is a valid ApiArtifact
+ */
+export function isApiArtifact(value: unknown): value is ApiArtifact {
+  if (value === null || value === undefined) {
+    return false;
+  }
+
+  if (typeof value !== "object" || Array.isArray(value)) {
+    return false;
+  }
+
+  const obj = value as Record<string, unknown>;
+
+  // Required fields
+  if (typeof obj.id !== "string") return false;
+  if (typeof obj.content !== "string") return false;
+
+  return true;
+}
+
+/**
+ * Transform API artifact (snake_case) to client artifact (camelCase)
+ * Handles both snake_case API responses and camelCase (pass-through)
+ */
+export function transformApiArtifactToClient(
+  apiArtifact: ApiArtifact | Record<string, unknown>,
+): CanvasArtifact {
+  const artifact = apiArtifact as Record<string, unknown>;
+
+  // Support both snake_case (API) and camelCase (already transformed)
+  const sessionId =
+    (artifact.session_id as string) ?? (artifact.sessionId as string) ?? "";
+  const contentType =
+    (artifact.content_type as string) ??
+    (artifact.contentType as string) ??
+    "code";
+  const createdAt =
+    (artifact.created_at as string) ?? (artifact.createdAt as string) ?? "";
+  const updatedAt =
+    (artifact.updated_at as string) ?? (artifact.updatedAt as string) ?? "";
+
+  // Transform edit_metadata
+  const editMeta =
+    (artifact.edit_metadata as Record<string, unknown>) ??
+    (artifact.editMetadata as Record<string, unknown>);
+  const editMetadata = editMeta
+    ? {
+        editedBy: ((editMeta.edited_by as string) ??
+          (editMeta.editedBy as string) ??
+          "user") as "user" | "ai-suggestion" | "ai-generation",
+        aiConfidence:
+          (editMeta.ai_confidence as number) ??
+          (editMeta.aiConfidence as number),
+        language: (editMeta.language as string) ?? undefined,
+      }
+    : undefined;
+
+  return {
+    id: artifact.id as string,
+    type: (artifact.type as CanvasArtifact["type"]) ?? "code",
+    title: artifact.title as string | undefined,
+    name: artifact.name as string | undefined,
+    description: artifact.description as string | undefined,
+    sessionId,
+    version: (artifact.version as number) ?? 1,
+    content: (artifact.content as string) ?? "",
+    contentType: contentType as CanvasArtifact["contentType"],
+    createdAt,
+    updatedAt,
+    editMetadata,
+    metadata: artifact.metadata as Record<string, unknown> | undefined,
+  };
+}
+
+/**
+ * Transform array of API artifacts to client artifacts
+ */
+export function transformApiArtifactsToClient(
+  apiArtifacts: unknown[],
+): CanvasArtifact[] {
+  return apiArtifacts
+    .filter(isApiArtifact)
+    .map((artifact) => transformApiArtifactToClient(artifact));
+}

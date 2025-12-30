@@ -7,6 +7,26 @@
  * - MSW server for realistic API mocking
  * - Memory monitoring for leak detection
  * - Global test utilities
+ *
+ * =============================================================================
+ * BEST PRACTICES FOR MOCKING GLOBAL FUNCTIONS (fetch, etc.)
+ * =============================================================================
+ *
+ * When testing code that uses global functions like `fetch`, prefer vi.spyOn
+ * over direct assignment to properly intercept calls:
+ *
+ * PREFERRED (works with wrappers like authenticatedFetch):
+ *   const fetchSpy = vi.spyOn(global, "fetch").mockResolvedValue({...} as Response);
+ *
+ * AVOID (may not intercept if module captures reference at import time):
+ *   global.fetch = vi.fn().mockResolvedValue({...});
+ *
+ * Why: Modules like `authenticatedFetch` may capture the reference to `fetch`
+ * at import time. Direct assignment after module load doesn't intercept these.
+ * vi.spyOn properly intercepts the function regardless of when it was imported.
+ *
+ * See: StudioShellLayout.test.tsx "AI Interpretation Fetch Verification" tests
+ * =============================================================================
  */
 
 import "@testing-library/jest-dom/vitest";
@@ -259,8 +279,12 @@ beforeAll(() => {
   });
 });
 
-// Mock localStorage with actual storage functionality
-beforeAll(() => {
+// =============================================================================
+// localStorage Mock (runs immediately before any module imports)
+// =============================================================================
+// Must be synchronous and at module level because authSlice accesses
+// localStorage at import time, before any beforeAll hooks run.
+(() => {
   let store: Record<string, string> = {};
   const localStorageMock: Storage = {
     get length() {
@@ -280,11 +304,16 @@ beforeAll(() => {
   };
   Object.defineProperty(window, "localStorage", {
     value: localStorageMock,
+    writable: true,
+    configurable: true,
   });
-});
+})();
 
-// Mock sessionStorage with actual storage functionality
-beforeAll(() => {
+// =============================================================================
+// sessionStorage Mock (runs immediately before any module imports)
+// =============================================================================
+// Same pattern as localStorage for consistency.
+(() => {
   let store: Record<string, string> = {};
   const sessionStorageMock: Storage = {
     get length() {
@@ -304,8 +333,10 @@ beforeAll(() => {
   };
   Object.defineProperty(window, "sessionStorage", {
     value: sessionStorageMock,
+    writable: true,
+    configurable: true,
   });
-});
+})();
 
 // Mock scrollTo
 beforeAll(() => {

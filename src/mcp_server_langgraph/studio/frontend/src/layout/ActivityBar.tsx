@@ -26,7 +26,6 @@ import {
   FileText,
   Database,
   DollarSign,
-  Route,
   FolderKanban,
   Boxes,
   Plug,
@@ -126,12 +125,6 @@ export const NAV_ITEMS: NavItem[] = [
     path: "/studio/files",
   },
   // === Observability ===
-  {
-    id: "traces",
-    icon: <Route size={20} />,
-    label: "Traces",
-    path: "/studio/traces",
-  },
   {
     id: "observability",
     icon: <Activity size={20} />,
