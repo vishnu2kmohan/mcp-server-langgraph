@@ -939,6 +939,13 @@ markers = [
     "background_agents: Background agent task management tests (submit, cancel, status)",
     "genui: GenUI endpoint tests (dynamic UI widget generation)",
     "canvas_help: Canvas help panel tests (contextual help, tutorials)",
+    "studio: Studio frontend component tests",
+    "help: Help system and contextual help tests",
+    "session_intelligence: Session intelligence AI tests (summarize, group, similar)",
+    "trace_intelligence: Trace intelligence AI tests (summarize, anomaly detection)",
+    "canvas_intelligence: Canvas intelligence AI tests (code analysis, artifact suggestions)",
+    "diagram_intelligence: Diagram intelligence AI tests (validation, diagram-to-code)",
+    "conversation_intelligence: Conversation intelligence AI tests (intent, context, goals)",
 ]
 # CODEX FINDING #4: Benchmark configuration
 # Benchmarks are DISABLED by default for fast test iteration (via --benchmark-disable in addopts)
