@@ -158,10 +158,14 @@ function MetricCard({ metric }: MetricCardProps): React.ReactElement {
     .replace(/_/g, " ")
     .replace(/\b\w/g, (l) => l.toUpperCase());
 
+  // Defensive coding: handle undefined/null values from runtime data
+  // TypeScript says value: number, but runtime data may be incomplete
   const formattedValue =
-    metric.value >= 1000
-      ? metric.value.toLocaleString()
-      : metric.value.toString();
+    metric.value == null
+      ? "N/A"
+      : metric.value >= 1000
+        ? metric.value.toLocaleString()
+        : metric.value.toString();
 
   return (
     <div

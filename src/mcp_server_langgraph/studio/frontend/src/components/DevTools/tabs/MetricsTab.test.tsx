@@ -271,4 +271,50 @@ describe("MetricsTab", () => {
       openSpy.mockRestore();
     });
   });
+
+  describe("defensive coding - undefined handling", () => {
+    it("should handle metric with undefined value gracefully", () => {
+      // This tests the runtime scenario where backend returns incomplete data
+      // TypeScript type says value: number, but runtime data may have undefined
+      const metricsWithUndefinedValue = [
+        {
+          name: "broken_metric",
+          value: undefined as unknown as number, // Simulate runtime data mismatch
+          unit: "ms",
+          trend: "stable" as const,
+          change: 0,
+          sparkline: [1, 2, 3],
+        },
+      ];
+
+      // Should NOT throw "can't access property 'toString', value is undefined"
+      expect(() => {
+        renderWithProvider(<MetricsTab metrics={metricsWithUndefinedValue} />);
+      }).not.toThrow();
+
+      // Should display fallback value (e.g., "N/A" or "-" or "0")
+      expect(screen.getByTestId("metrics-tab")).toBeInTheDocument();
+      // The metric card should still render with a fallback value
+      expect(screen.getByText(/broken metric/i)).toBeInTheDocument();
+    });
+
+    it("should handle metric with null value gracefully", () => {
+      const metricsWithNullValue = [
+        {
+          name: "null_metric",
+          value: null as unknown as number,
+          unit: "%",
+          trend: "up" as const,
+          change: 5,
+          sparkline: [10, 20, 30],
+        },
+      ];
+
+      expect(() => {
+        renderWithProvider(<MetricsTab metrics={metricsWithNullValue} />);
+      }).not.toThrow();
+
+      expect(screen.getByText(/null metric/i)).toBeInTheDocument();
+    });
+  });
 });
