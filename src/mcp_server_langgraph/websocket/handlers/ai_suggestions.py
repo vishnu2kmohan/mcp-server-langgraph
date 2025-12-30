@@ -122,9 +122,12 @@ class AISuggestionsHandler(WebSocketBase):
 
     async def on_disconnect(self) -> None:
         """Handle connection teardown."""
+        # Fall back to base class user if on_connect was never called
+        # This handles the race condition where client disconnects during auth
+        user_id = self._user_id or (self._user.id if self._user else None)
         logger.info(
-            f"AI suggestions stream disconnected: user={self._user_id}",
-            extra={"user_id": self._user_id},
+            f"AI suggestions stream disconnected: user={user_id}",
+            extra={"user_id": user_id},
         )
         self._session_context.clear()
 
