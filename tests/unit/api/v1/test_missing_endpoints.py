@@ -161,11 +161,42 @@ class TestWorkflowExecuteEndpoint:
     @pytest.fixture
     def mock_app(self) -> FastAPI:
         """Create FastAPI app with workflow router."""
-        from mcp_server_langgraph.api.v1.workflows import workflows_router
+        from mcp_server_langgraph.api.v1.workflows import (
+            get_workflow_service,
+            workflows_router,
+        )
+        from mcp_server_langgraph.auth.dependencies import (
+            get_current_user,
+            require_workflow_editor,
+            require_workflow_executor,
+            require_workflow_owner,
+            require_workflow_viewer,
+        )
 
         # workflows_router routes already include "/workflows" in their paths
         app = FastAPI()
         app.include_router(workflows_router, prefix="/api/v1")
+
+        # Mock authentication
+        mock_user = {
+            "sub": "test-user-id",
+            "user_id": "test-user-id",
+            "username": "testuser",
+            "email": "testuser@example.com",
+            "roles": ["admin"],
+            "realm_access": {"roles": ["admin"]},
+        }
+        app.dependency_overrides[get_current_user] = lambda: mock_user
+        app.dependency_overrides[require_workflow_viewer] = lambda: mock_user
+        app.dependency_overrides[require_workflow_editor] = lambda: mock_user
+        app.dependency_overrides[require_workflow_owner] = lambda: mock_user
+        app.dependency_overrides[require_workflow_executor] = lambda: mock_user
+
+        # Mock workflow service
+        mock_service = MagicMock()
+        mock_service.execute_workflow = AsyncMock(return_value={"execution_id": "exec-123", "status": "started"})
+        app.dependency_overrides[get_workflow_service] = lambda: mock_service
+
         return app
 
     @pytest.fixture
@@ -211,11 +242,42 @@ class TestWorkflowExecutionStatusEndpoint:
     @pytest.fixture
     def mock_app(self) -> FastAPI:
         """Create FastAPI app with workflow router."""
-        from mcp_server_langgraph.api.v1.workflows import workflows_router
+        from mcp_server_langgraph.api.v1.workflows import (
+            get_workflow_service,
+            workflows_router,
+        )
+        from mcp_server_langgraph.auth.dependencies import (
+            get_current_user,
+            require_workflow_editor,
+            require_workflow_executor,
+            require_workflow_owner,
+            require_workflow_viewer,
+        )
 
         # workflows_router routes already include "/workflows" in their paths
         app = FastAPI()
         app.include_router(workflows_router, prefix="/api/v1")
+
+        # Mock authentication
+        mock_user = {
+            "sub": "test-user-id",
+            "user_id": "test-user-id",
+            "username": "testuser",
+            "email": "testuser@example.com",
+            "roles": ["admin"],
+            "realm_access": {"roles": ["admin"]},
+        }
+        app.dependency_overrides[get_current_user] = lambda: mock_user
+        app.dependency_overrides[require_workflow_viewer] = lambda: mock_user
+        app.dependency_overrides[require_workflow_editor] = lambda: mock_user
+        app.dependency_overrides[require_workflow_owner] = lambda: mock_user
+        app.dependency_overrides[require_workflow_executor] = lambda: mock_user
+
+        # Mock workflow service
+        mock_service = MagicMock()
+        mock_service.get_execution = AsyncMock(return_value={"steps": [], "status": "idle"})
+        app.dependency_overrides[get_workflow_service] = lambda: mock_service
+
         return app
 
     @pytest.fixture
