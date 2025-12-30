@@ -249,6 +249,22 @@ class TestTupleModelCrossValidation:
             return user.split(":")[0]
         return user
 
+    def _get_directly_assignable_relations(self, model_data: dict) -> dict[str, set[str]]:
+        """
+        Extract type -> directly assignable relations mapping from model.
+
+        A relation is directly assignable if it has an entry in the type's
+        metadata.relations with directly_related_user_types. Relations that
+        are computed-only (via computedUserset without "this": {}) will NOT
+        have a metadata entry and cannot be directly assigned in tuples.
+        """
+        result: dict[str, set[str]] = {}
+        for type_def in model_data.get("type_definitions", []):
+            type_name = type_def.get("type")
+            metadata_relations = type_def.get("metadata", {}).get("relations", {})
+            result[type_name] = set(metadata_relations.keys())
+        return result
+
     def test_all_tuple_object_types_exist_in_model(self, model_data: dict, tuples_data: dict):
         """
         GIVEN: model.json and sample-tuples.json
@@ -329,6 +345,56 @@ class TestTupleModelCrossValidation:
                 errors.append(f"User '{t['user']}' references undefined type '{user_type}'")
 
         assert len(errors) == 0, "Invalid user types in tuples:\n" + "\n".join(errors)
+
+    def test_tuples_only_assign_directly_assignable_relations(self, model_data: dict, tuples_data: dict):
+        """
+        GIVEN: model.json and sample-tuples.json
+        WHEN: Checking tuple relations against model metadata
+        THEN: Tuples should only directly assign relations that have
+              directly_related_user_types in model metadata
+
+        Relations that are computed-only (defined via computedUserset without
+        "this": {}) will NOT have a metadata entry and cannot be directly
+        assigned via tuples. Attempting to do so will cause OpenFGA seeding
+        to fail with: "type 'X' is not an allowed type restriction for 'Y#Z'"
+
+        This test prevents regression of issues like mcp:aggregated-capabilities#viewer
+        which was computed from mcp#user and could not be directly assigned.
+
+        Reference: ADR-0068 - Gateway-Level Authentication (OpenFGA model design)
+        NOTE: Section header entries (with _section field) are skipped.
+        """
+        directly_assignable = self._get_directly_assignable_relations(model_data)
+        all_relations = self._get_model_types_and_relations(model_data)
+        tuples = tuples_data["tuples"]
+        errors = []
+
+        for t in tuples:
+            # Skip section header entries (documentation dividers, not tuples)
+            if "_section" in t:
+                continue
+
+            obj_type = self._extract_object_type(t["object"])
+            relation = t["relation"]
+
+            # Check if relation is directly assignable
+            if obj_type in directly_assignable:
+                valid_direct = directly_assignable[obj_type]
+                if relation not in valid_direct:
+                    computed = all_relations.get(obj_type, set()) - valid_direct
+                    errors.append(
+                        f"Tuple ({t['user']}, {relation}, {t['object']}): "
+                        f"relation '{relation}' is computed-only for type '{obj_type}' "
+                        f"and cannot be directly assigned. "
+                        f"Directly assignable: {valid_direct}. "
+                        f"Computed-only: {computed}."
+                    )
+
+        assert len(errors) == 0, (
+            f"Found {len(errors)} tuples attempting to directly assign computed-only relations:\n"
+            + "\n".join(errors)
+            + "\n\nFix: Use the base relation that the computed relation derives from."
+        )
 
 
 @pytest.mark.xdist_group(name="test_openfga_config")
