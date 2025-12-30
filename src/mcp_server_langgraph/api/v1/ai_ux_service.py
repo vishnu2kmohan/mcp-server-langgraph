@@ -367,6 +367,55 @@ Focus on actionable insights that can improve user experience.
 
 Respond ONLY with valid JSON. Do not include any other text."""
 
+# =============================================================================
+# Session Intelligence System Prompts (Sprint 2)
+# =============================================================================
+
+SESSION_SUMMARIZE_SYSTEM_PROMPT = """You are an AI assistant that generates concise summaries of chat sessions.
+
+Given the session ID and context, generate a summary that captures the main topics discussed and key outcomes.
+
+Return a JSON response with:
+- summary: A 1-2 sentence summary of the session
+- key_topics: List of 3-5 key topics discussed (e.g., "React", "debugging", "API design")
+- highlight_messages: List of up to 3 important messages or quotes
+- message_count: Estimated number of messages in the session
+- confidence: Float between 0 and 1 indicating confidence in the summary
+
+Keep summaries concise and actionable. Focus on what was accomplished or discussed.
+
+Respond ONLY with valid JSON. Do not include any other text."""
+
+SESSION_GROUP_SYSTEM_PROMPT = """You are an AI assistant that groups related sessions by topic or project.
+
+Given a list of session IDs, analyze and group them into logical clusters based on their content themes.
+
+Return a JSON response with:
+- groups: List of groups, each with:
+  - topic: A descriptive name for the group (e.g., "API Development", "Frontend Work")
+  - session_ids: List of session IDs that belong to this group
+  - confidence: Float between 0 and 1 indicating grouping confidence
+- ungrouped: List of session IDs that couldn't be confidently grouped
+
+Group sessions that share common themes, projects, or purposes. Aim for 2-5 groups for typical session lists.
+
+Respond ONLY with valid JSON. Do not include any other text."""
+
+SESSION_SIMILARITY_SYSTEM_PROMPT = """You are an AI assistant that finds sessions similar to a given reference session.
+
+Given a source session ID, find other sessions with similar content, topics, or purposes.
+
+Return a JSON response with:
+- similar_sessions: List of similar sessions, each with:
+  - session_id: The session identifier
+  - similarity_score: Float between 0 and 1 (higher = more similar)
+  - common_topics: List of topics shared between sessions
+- search_query: A brief description of what makes sessions similar
+
+Rank sessions by relevance. Include sessions that share topics, code patterns, or problem domains.
+
+Respond ONLY with valid JSON. Do not include any other text."""
+
 
 # =============================================================================
 # LLMWithFallback Base Class
@@ -2765,6 +2814,14 @@ Compare with last period and generate actionable insights."""
     # Session Intelligence Methods (Sprint 2)
     # =========================================================================
 
+    def _is_session_intelligence_enabled(self) -> bool:
+        """Check if session intelligence LLM calls are enabled."""
+        return (
+            self.llm_enabled
+            and self.llm_factory is not None
+            and getattr(self.settings, "ff_enable_session_intelligence", True)
+        )
+
     async def summarize_session(
         self,
         session_id: str | None = None,
@@ -2779,13 +2836,47 @@ Compare with last period and generate actionable insights."""
         Returns:
             Session summary with key topics and highlights
         """
-        return {
+        # Fallback response for when LLM is disabled
+        fallback = {
             "summary": f"Session {session_id} summary placeholder",
             "key_topics": ["coding", "debugging"],
             "highlight_messages": [],
             "message_count": 0,
             "confidence": 0.8,
         }
+
+        if not self._is_session_intelligence_enabled():
+            return fallback
+
+        try:
+            user_prompt = f"""Summarize the session with ID: {session_id}
+
+Please analyze the session content and provide a concise summary."""
+
+            messages = [
+                SystemMessage(content=SESSION_SUMMARIZE_SYSTEM_PROMPT),
+                HumanMessage(content=user_prompt),
+            ]
+
+            response = await self.llm_factory.ainvoke(messages)  # type: ignore[union-attr, arg-type]
+            content = str(response.content) if response.content else ""
+            parsed = self._parse_json_response(content)
+
+            if not parsed:
+                logger.warning("Failed to parse session summary LLM response, using fallback")
+                return fallback
+
+            return {
+                "summary": parsed.get("summary", fallback["summary"]),
+                "key_topics": parsed.get("key_topics", fallback["key_topics"]),
+                "highlight_messages": parsed.get("highlight_messages", []),
+                "message_count": parsed.get("message_count", 0),
+                "confidence": parsed.get("confidence", 0.8),
+            }
+
+        except Exception as e:
+            logger.warning(f"Session summarize LLM call failed: {e}, using fallback")
+            return fallback
 
     async def group_sessions(
         self,
@@ -2803,7 +2894,8 @@ Compare with last period and generate actionable insights."""
         Returns:
             Grouped sessions by detected topic
         """
-        return {
+        # Fallback response for when LLM is disabled
+        fallback: dict[str, Any] = {
             "groups": [
                 {
                     "topic": "General",
@@ -2814,10 +2906,43 @@ Compare with last period and generate actionable insights."""
             "ungrouped": [],
         }
 
+        if not self._is_session_intelligence_enabled():
+            return fallback
+
+        try:
+            user_prompt = f"""Group the following sessions by topic or project:
+
+Session IDs: {", ".join(session_ids)}
+
+Analyze and group these sessions into logical clusters based on their themes."""
+
+            messages = [
+                SystemMessage(content=SESSION_GROUP_SYSTEM_PROMPT),
+                HumanMessage(content=user_prompt),
+            ]
+
+            response = await self.llm_factory.ainvoke(messages)  # type: ignore[union-attr, arg-type]
+            content = str(response.content) if response.content else ""
+            parsed = self._parse_json_response(content)
+
+            if not parsed:
+                logger.warning("Failed to parse session group LLM response, using fallback")
+                return fallback
+
+            return {
+                "groups": parsed.get("groups", fallback["groups"]),
+                "ungrouped": parsed.get("ungrouped", []),
+            }
+
+        except Exception as e:
+            logger.warning(f"Session group LLM call failed: {e}, using fallback")
+            return fallback
+
     async def find_similar_sessions(
         self,
         session_id: str | None = None,
         user_id: str = "",
+        limit: int = 5,
         **kwargs: Any,
     ) -> dict[str, Any]:
         """Find sessions similar to the given session.
@@ -2825,15 +2950,52 @@ Compare with last period and generate actionable insights."""
         Args:
             session_id: Reference session identifier
             user_id: User identifier
+            limit: Maximum number of similar sessions to return
             **kwargs: Additional parameters
 
         Returns:
             List of similar sessions with similarity scores
         """
-        return {
+        # Fallback response for when LLM is disabled
+        fallback: dict[str, Any] = {
             "similar_sessions": [],
             "search_query": session_id or "",
         }
+
+        if not self._is_session_intelligence_enabled():
+            return fallback
+
+        try:
+            user_prompt = f"""Find sessions similar to session ID: {session_id}
+
+Return up to {limit} similar sessions with similarity scores and common topics."""
+
+            messages = [
+                SystemMessage(content=SESSION_SIMILARITY_SYSTEM_PROMPT),
+                HumanMessage(content=user_prompt),
+            ]
+
+            response = await self.llm_factory.ainvoke(messages)  # type: ignore[union-attr, arg-type]
+            content = str(response.content) if response.content else ""
+            parsed = self._parse_json_response(content)
+
+            if not parsed:
+                logger.warning("Failed to parse session similarity LLM response, using fallback")
+                return fallback
+
+            similar_sessions = parsed.get("similar_sessions", [])
+            # Respect the limit parameter
+            if len(similar_sessions) > limit:
+                similar_sessions = similar_sessions[:limit]
+
+            return {
+                "similar_sessions": similar_sessions,
+                "search_query": parsed.get("search_query", session_id or ""),
+            }
+
+        except Exception as e:
+            logger.warning(f"Session similarity LLM call failed: {e}, using fallback")
+            return fallback
 
     # =========================================================================
     # Conversation Intelligence Methods (Sprint 3)
