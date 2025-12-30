@@ -453,6 +453,59 @@ Prioritize actionable findings. Be specific about which steps have issues.
 
 Respond ONLY with valid JSON. Do not include any other text."""
 
+CANVAS_ARTIFACT_TYPE_SYSTEM_PROMPT = """You are an AI assistant that determines the optimal artifact type for content.
+
+Analyze the content and suggest the most appropriate artifact type for display and editing.
+
+Return a JSON response with:
+- suggested_type: One of "mermaid", "json", "code", "markdown", "text", "html", "csv"
+- confidence: Float between 0 and 1 indicating confidence in the suggestion
+- alternatives: List of alternative types with their confidence scores
+- reason: Brief explanation of why this type was suggested
+
+Consider syntax patterns, structure, and typical use cases for each type.
+
+Respond ONLY with valid JSON. Do not include any other text."""
+
+CANVAS_CODE_ANALYSIS_SYSTEM_PROMPT = """You are an AI assistant that analyzes code quality and complexity.
+
+Analyze the provided code for issues, quality metrics, and improvement suggestions.
+
+Return a JSON response with:
+- complexity: Integer cyclomatic complexity estimate (1-20 scale)
+- quality_score: Float between 0 and 1 (higher = better quality)
+- issues: List of issues found, each with:
+  - type: Issue type (e.g., "security", "performance", "style", "bug")
+  - message: Brief description
+  - severity: One of "info", "warning", "error", "critical"
+- suggestions: List of improvement suggestions, each with:
+  - type: Suggestion type (e.g., "refactor", "security", "performance")
+  - description: What to improve
+  - priority: One of "low", "medium", "high"
+- language: Detected or provided programming language
+- lines_of_code: Number of lines
+
+Focus on actionable findings. Prioritize security and correctness issues.
+
+Respond ONLY with valid JSON. Do not include any other text."""
+
+CANVAS_DIFF_EXPLAIN_SYSTEM_PROMPT = """You are an AI assistant that explains code or content changes in natural language.
+
+Compare the old and new content versions and explain what changed.
+
+Return a JSON response with:
+- summary: 1-2 sentence summary of the changes
+- changes: List of significant changes, each with:
+  - type: Change type (e.g., "addition", "deletion", "modification", "refactor")
+  - description: What was changed
+  - impact: One of "low", "medium", "high"
+- breaking_changes: Boolean indicating if changes may break compatibility
+- affected_areas: List of areas affected (e.g., "authentication", "API", "database")
+
+Be specific about what changed and why it matters.
+
+Respond ONLY with valid JSON. Do not include any other text."""
+
 
 # =============================================================================
 # LLMWithFallback Base Class
@@ -3145,25 +3198,14 @@ Return up to {limit} similar sessions with similarity scores and common topics."
     # Canvas Intelligence Methods (Sprint 4)
     # =========================================================================
 
-    async def suggest_artifact_type(
-        self,
-        content: str,
-        user_id: str,
-        session_id: str | None = None,
-        **kwargs: Any,
-    ) -> dict[str, Any]:
-        """Suggest optimal artifact type for content.
+    def _is_canvas_intelligence_enabled(self) -> bool:
+        """Check if canvas intelligence LLM calls are enabled."""
+        return (
+            self.llm_enabled and self.llm_factory is not None and getattr(self.settings, "ff_enable_canvas_intelligence", True)
+        )
 
-        Args:
-            content: Content to analyze
-            user_id: User identifier
-            session_id: Optional session identifier
-            **kwargs: Additional parameters
-
-        Returns:
-            Suggested artifact type with confidence and alternatives
-        """
-        # Heuristic-based type detection
+    def _heuristic_artifact_type(self, content: str) -> dict[str, Any]:
+        """Heuristic-based artifact type detection."""
         content_lower = content.lower()
 
         if any(keyword in content_lower for keyword in ["graph ", "graph\n", "sequencediagram", "classDiagram", "flowchart"]):
@@ -3197,6 +3239,112 @@ Return up to {limit} similar sessions with similarity scores and common topics."
             "reason": reason,
         }
 
+    def _heuristic_code_analysis(self, code: str, language: str | None) -> dict[str, Any]:
+        """Heuristic-based code analysis."""
+        lines = code.split("\n")
+        line_count = len(lines)
+
+        complexity = 1
+        if "if " in code or "else" in code:
+            complexity += code.count("if ") + code.count("else")
+        if "for " in code or "while " in code:
+            complexity += code.count("for ") + code.count("while ")
+        if "try" in code:
+            complexity += code.count("try")
+
+        issues: list[dict[str, Any]] = []
+        suggestions: list[dict[str, Any]] = []
+
+        if "TODO" in code or "FIXME" in code:
+            issues.append({"type": "todo", "message": "Contains TODO/FIXME comments", "severity": "info"})
+
+        if line_count > 100:
+            suggestions.append(
+                {"type": "refactor", "description": "Consider splitting into smaller functions", "priority": "medium"}
+            )
+
+        return {
+            "complexity": min(complexity, 20),
+            "quality_score": max(0.5, 1.0 - (complexity / 30)),
+            "issues": issues,
+            "suggestions": suggestions,
+            "language": language or "unknown",
+            "lines_of_code": line_count,
+        }
+
+    def _heuristic_diff_explain(self, old_content: str, new_content: str) -> dict[str, Any]:
+        """Heuristic-based diff explanation."""
+        old_lines = set(old_content.split("\n"))
+        new_lines = set(new_content.split("\n"))
+
+        added = new_lines - old_lines
+        removed = old_lines - new_lines
+
+        changes = []
+        if added:
+            changes.append({"type": "addition", "description": f"Added {len(added)} new lines", "impact": "medium"})
+        if removed:
+            changes.append({"type": "deletion", "description": f"Removed {len(removed)} lines", "impact": "medium"})
+
+        summary = "No significant changes detected"
+        if changes:
+            summary = f"Modified content: {len(added)} lines added, {len(removed)} lines removed"
+
+        return {"summary": summary, "changes": changes, "breaking_changes": False, "affected_areas": []}
+
+    async def suggest_artifact_type(
+        self,
+        content: str,
+        user_id: str,
+        session_id: str | None = None,
+        **kwargs: Any,
+    ) -> dict[str, Any]:
+        """Suggest optimal artifact type for content.
+
+        Args:
+            content: Content to analyze
+            user_id: User identifier
+            session_id: Optional session identifier
+            **kwargs: Additional parameters
+
+        Returns:
+            Suggested artifact type with confidence and alternatives
+        """
+        fallback = self._heuristic_artifact_type(content)
+
+        if not self._is_canvas_intelligence_enabled():
+            return fallback
+
+        try:
+            user_prompt = f"""Analyze the following content and suggest the best artifact type:
+
+```
+{content[:2000]}
+```
+
+Content length: {len(content)} characters
+User ID: {user_id or "anonymous"}"""
+
+            messages = [
+                SystemMessage(content=CANVAS_ARTIFACT_TYPE_SYSTEM_PROMPT),
+                HumanMessage(content=user_prompt),
+            ]
+
+            response = await self.llm_factory.ainvoke(messages)  # type: ignore[union-attr, arg-type]
+            result_content = response.content if hasattr(response, "content") else str(response)
+            parsed = self._parse_json_response(result_content)
+
+            return {
+                "suggested_type": parsed.get("suggested_type", fallback["suggested_type"]),
+                "confidence": parsed.get("confidence", fallback["confidence"]),
+                "alternatives": parsed.get("alternatives", fallback["alternatives"]),
+                "reason": parsed.get("reason", fallback["reason"]),
+            }
+
+        except Exception as e:
+            logger.warning(f"Artifact type suggestion LLM call failed: {e}, using heuristics")
+            return fallback
+
     async def analyze_code(
         self,
         code: str,
@@ -3217,49 +3365,43 @@ Return up to {limit} similar sessions with similarity scores and common topics."
         Returns:
             Code analysis results with issues and suggestions
         """
-        # Basic heuristic analysis
-        lines = code.split("\n")
-        line_count = len(lines)
+        fallback = self._heuristic_code_analysis(code, language)
 
-        # Simple complexity estimation based on code patterns
-        complexity = 1
-        if "if " in code or "else" in code:
-            complexity += code.count("if ") + code.count("else")
-        if "for " in code or "while " in code:
-            complexity += code.count("for ") + code.count("while ")
-        if "try" in code:
-            complexity += code.count("try")
+        if not self._is_canvas_intelligence_enabled():
+            return fallback
 
-        issues: list[dict[str, Any]] = []
-        suggestions: list[dict[str, Any]] = []
+        try:
+            user_prompt = f"""Analyze the following code for quality and issues:
 
-        # Detect potential issues
-        if "TODO" in code or "FIXME" in code:
-            issues.append(
-                {
-                    "type": "todo",
-                    "message": "Contains TODO/FIXME comments",
-                    "severity": "info",
-                }
-            )
+Language: {language or "auto-detect"}
 
-        if line_count > 100:
-            suggestions.append(
-                {
-                    "type": "refactor",
-                    "description": "Consider splitting into smaller functions",
-                    "priority": "medium",
-                }
-            )
+```
+{code[:3000]}
+```
 
-        return {
-            "complexity": min(complexity, 20),
-            "quality_score": max(0.5, 1.0 - (complexity / 30)),
-            "issues": issues,
-            "suggestions": suggestions,
-            "language": language or "unknown",
-            "lines_of_code": line_count,
-        }
+Provide detailed analysis with security, performance, and style issues."""
+
+            messages = [
+                SystemMessage(content=CANVAS_CODE_ANALYSIS_SYSTEM_PROMPT),
+                HumanMessage(content=user_prompt),
+            ]
+
+            response = await self.llm_factory.ainvoke(messages)  # type: ignore[union-attr, arg-type]
+            result_content = response.content if hasattr(response, "content") else str(response)
+            parsed = self._parse_json_response(result_content)
+
+            return {
+                "complexity": parsed.get("complexity", fallback["complexity"]),
+                "quality_score": parsed.get("quality_score", fallback["quality_score"]),
+                "issues": parsed.get("issues", fallback["issues"]),
+                "suggestions": parsed.get("suggestions", fallback["suggestions"]),
+                "language": parsed.get("language", fallback["language"]),
+                "lines_of_code": parsed.get("lines_of_code", fallback["lines_of_code"]),
+            }
+
+        except Exception as e:
+            logger.warning(f"Code analysis LLM call failed: {e}, using heuristics")
+            return fallback
 
     async def explain_diff(
         self,
@@ -3281,40 +3423,41 @@ Return up to {limit} similar sessions with similarity scores and common topics."
         Returns:
             Diff explanation with changes and impact assessment
         """
-        old_lines = set(old_content.split("\n"))
-        new_lines = set(new_content.split("\n"))
+        fallback = self._heuristic_diff_explain(old_content, new_content)
 
-        added = new_lines - old_lines
-        removed = old_lines - new_lines
+        if not self._is_canvas_intelligence_enabled():
+            return fallback
 
-        changes = []
-        if added:
-            changes.append(
-                {
-                    "type": "addition",
-                    "description": f"Added {len(added)} new lines",
-                    "impact": "medium",
-                }
-            )
-        if removed:
-            changes.append(
-                {
-                    "type": "deletion",
-                    "description": f"Removed {len(removed)} lines",
-                    "impact": "medium",
-                }
-            )
+        try:
+            user_prompt = f"""Compare these two versions and explain what changed:
 
-        summary = "No significant changes detected"
-        if changes:
-            summary = f"Modified content: {len(added)} lines added, {len(removed)} lines removed"
+=== OLD VERSION ===
+{old_content[:1500]}
 
-        return {
-            "summary": summary,
-            "changes": changes,
-            "breaking_changes": False,
-            "affected_areas": [],
-        }
+=== NEW VERSION ===
+{new_content[:1500]}
+
+Explain the changes in natural language."""
+
+            messages = [
+                SystemMessage(content=CANVAS_DIFF_EXPLAIN_SYSTEM_PROMPT),
+                HumanMessage(content=user_prompt),
+            ]
+
+            response = await self.llm_factory.ainvoke(messages)  # type: ignore[union-attr, arg-type]
+            result_content = response.content if hasattr(response, "content") else str(response)
+            parsed = self._parse_json_response(result_content)
+
+            return {
+                "summary": parsed.get("summary", fallback["summary"]),
+                "changes": parsed.get("changes", fallback["changes"]),
+                "breaking_changes": parsed.get("breaking_changes", fallback["breaking_changes"]),
+                "affected_areas": parsed.get("affected_areas", fallback["affected_areas"]),
+            }
+
+        except Exception as e:
+            logger.warning(f"Diff explanation LLM call failed: {e}, using heuristics")
+            return fallback
 
     # =========================================================================
     # Diagram Intelligence Methods (Sprint 4)
