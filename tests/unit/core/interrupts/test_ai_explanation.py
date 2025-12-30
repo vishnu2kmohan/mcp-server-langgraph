@@ -264,7 +264,8 @@ class TestAIExplanationModel:
         assert explanation.explanation_type == ExplanationType.UNCERTAINTY
 
     def test_ai_explanation_default_model(self) -> None:
-        """AIExplanation should default to gpt-4o-mini model."""
+        """AIExplanation should default to settings.model_name."""
+        from mcp_server_langgraph.core.config import settings
         from mcp_server_langgraph.core.interrupts.ai_explanation import AIExplanation
 
         explanation = AIExplanation(
@@ -272,7 +273,7 @@ class TestAIExplanationModel:
             what_could_go_wrong="Test",
         )
 
-        assert explanation.model_used == "gpt-4o-mini"
+        assert explanation.model_used == settings.model_name
 
     def test_ai_explanation_default_cached_false(self) -> None:
         """AIExplanation should default cached to False."""
