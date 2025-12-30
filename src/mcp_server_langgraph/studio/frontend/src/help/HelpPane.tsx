@@ -214,7 +214,7 @@ export function HelpPane({
           )}
 
           {/* AI-Suggested Topics */}
-          {aiTopics.length > 0 && (
+          {aiTopics && aiTopics.length > 0 && (
             <div className="mt-3 space-y-1.5">
               <div className="text-xs font-medium text-gray-500 dark:text-gray-400">
                 Related Topics
