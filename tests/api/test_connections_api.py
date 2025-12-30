@@ -386,6 +386,35 @@ def app(mock_repo, mock_oauth2_service, mock_mcp_client, mock_audit_repo, monkey
     app.dependency_overrides[get_mcp_client] = get_mock_mcp
     app.dependency_overrides[get_audit_log_repository] = get_mock_audit
 
+    # Mock authentication and authorization dependencies
+    from mcp_server_langgraph.auth.dependencies import (
+        get_current_user,
+        require_connection_owner,
+        require_connection_viewer,
+    )
+
+    # Use "user-123" to match test data created in tests (e.g., owner_id="user-123")
+    mock_user = {
+        "sub": "user-123",
+        "preferred_username": "testuser",
+        "username": "testuser",
+        "email": "testuser@example.com",
+        "roles": ["user"],
+    }
+
+    async def override_get_current_user():
+        return mock_user
+
+    async def override_require_connection_viewer():
+        return mock_user
+
+    async def override_require_connection_owner():
+        return mock_user
+
+    app.dependency_overrides[get_current_user] = override_get_current_user
+    app.dependency_overrides[require_connection_viewer] = override_require_connection_viewer
+    app.dependency_overrides[require_connection_owner] = override_require_connection_owner
+
     return app
 
 

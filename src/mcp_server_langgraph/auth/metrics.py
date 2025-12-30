@@ -326,13 +326,19 @@ def log_authorization_denied(
     resource_type = resource.split(":")[0] if ":" in resource else "unknown"
 
     logger.warning(
-        "authorization_denied",
-        user_id=user_id,
-        relation=relation,
-        resource=resource,
-        resource_type=resource_type,
-        reason=reason,
-        audit_category="authorization",
+        "authorization_denied user=%s relation=%s resource=%s reason=%s",
+        user_id,
+        relation,
+        resource,
+        reason,
+        extra={
+            "user_id": user_id,
+            "relation": relation,
+            "resource": resource,
+            "resource_type": resource_type,
+            "reason": reason,
+            "audit_category": "authorization",
+        },
     )
 
     # Also record as metric for dashboards
