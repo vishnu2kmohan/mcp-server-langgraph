@@ -415,6 +415,12 @@ class FeatureFlags(BaseSettings):
         description="Enable AI suggestions WebSocket endpoint (/api/v1/ws/ai/suggestions). Requires enable_ai_suggestions=true.",
     )
 
+    enable_orchestrator_status_websocket: bool = Field(
+        default=True,
+        description="Enable AI orchestrator status WebSocket endpoint (/api/v1/ws/orchestrator/status) "
+        "for real-time task progress updates from StudioOrchestrator.",
+    )
+
     enable_personalized_suggestions: bool = Field(
         default=True,
         description="Enable personalized suggestions based on conversation history",
@@ -1389,6 +1395,7 @@ class FeatureFlags(BaseSettings):
             "code_export": self.enable_code_export,
             "ai_suggestions": self.enable_ai_suggestions,
             "ai_suggestions_websocket": self.enable_ai_suggestions_websocket,
+            "orchestrator_status_websocket": self.enable_orchestrator_status_websocket,
             "suggestion_strategy": self.suggestion_strategy,
             "llm_suggestions": self.enable_llm_suggestions,  # DEPRECATED: use suggestion_strategy
             "notification_preferences": self.enable_notification_preferences,

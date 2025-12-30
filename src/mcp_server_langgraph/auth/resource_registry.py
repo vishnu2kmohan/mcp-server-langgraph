@@ -20,13 +20,55 @@ class ResourceType(str, Enum):
     Enumeration of supported authorization resource types.
 
     Used for type-safe resource type references throughout the codebase.
+    Aligned with OpenFGA model.json (33 types).
     """
 
+    # Core types
+    USER = "user"
+    ORGANIZATION = "organization"
+    ROLE = "role"
+    SYSTEM = "system"
+
+    # Resource types
     TOOL = "tool"
     CONVERSATION = "conversation"
-    USER = "user"
-    SYSTEM = "system"
     WORKFLOW = "workflow"
+    SESSION = "session"
+    PROJECT = "project"
+    CHAT = "chat"
+
+    # Infrastructure types
+    SERVICE_PRINCIPAL = "service_principal"
+    API_KEY = "api_key"
+    GATEWAY = "gateway"
+    MCP = "mcp"
+    MCP_CONNECTION = "mcp_connection"
+    CONNECTION = "connection"
+
+    # Data types
+    VECTOR_STORE = "vector_store"
+
+    # Authorization & Observability
+    AUTHZ = "authz"
+    DASHBOARD = "dashboard"
+    COST = "cost"
+    OBSERVABILITY = "observability"
+    LOGS = "logs"
+    TRACES = "traces"
+    METRICS = "metrics"
+    IDENTITY = "identity"
+    BUDGET = "budget"
+
+    # AI & Agents
+    AI = "ai"
+    AGENT = "agent"
+    SKILL = "skill"
+    EXECUTION = "execution"
+
+    # Compliance & Admin
+    COMPLIANCE = "compliance"
+    MARKETPLACE = "marketplace"
+    CONFIG = "config"
 
 
 @dataclass
@@ -70,12 +112,47 @@ class ResourceTypeRegistry:
         self._register_defaults()
 
     def _register_defaults(self) -> None:
-        """Register built-in resource types."""
+        """Register built-in resource types aligned with OpenFGA model.json."""
+        # ========== Core Types ==========
+        self.register(
+            ResourceTypeDefinition(
+                type_name=ResourceType.USER.value,
+                prefix="user:",
+                allowed_relations=[],  # Base type, no relations
+                description="User accounts and profiles",
+            )
+        )
+        self.register(
+            ResourceTypeDefinition(
+                type_name=ResourceType.ORGANIZATION.value,
+                prefix="organization:",
+                allowed_relations=["admin", "member"],
+                description="Organizations and teams",
+            )
+        )
+        self.register(
+            ResourceTypeDefinition(
+                type_name=ResourceType.ROLE.value,
+                prefix="role:",
+                allowed_relations=["assignee"],
+                description="Role assignments for sub-personas",
+            )
+        )
+        self.register(
+            ResourceTypeDefinition(
+                type_name=ResourceType.SYSTEM.value,
+                prefix="system:",
+                allowed_relations=["admin", "developer", "user", "viewer"],
+                description="System-level global access for sub-personas",
+            )
+        )
+
+        # ========== Resource Types ==========
         self.register(
             ResourceTypeDefinition(
                 type_name=ResourceType.TOOL.value,
                 prefix="tool:",
-                allowed_relations=["executor", "viewer", "admin"],
+                allowed_relations=["executor", "organization", "owner"],
                 description="AI tools and capabilities",
             )
         )
@@ -83,32 +160,234 @@ class ResourceTypeRegistry:
             ResourceTypeDefinition(
                 type_name=ResourceType.CONVERSATION.value,
                 prefix="conversation:",
-                allowed_relations=["viewer", "editor", "owner"],
+                allowed_relations=["editor", "owner", "viewer"],
                 description="Conversation threads and chat sessions",
-            )
-        )
-        self.register(
-            ResourceTypeDefinition(
-                type_name=ResourceType.USER.value,
-                prefix="user:",
-                allowed_relations=["self", "viewer", "admin"],
-                description="User accounts and profiles",
-            )
-        )
-        self.register(
-            ResourceTypeDefinition(
-                type_name=ResourceType.SYSTEM.value,
-                prefix="system:",
-                allowed_relations=["admin", "operator"],
-                description="System configuration and administration",
             )
         )
         self.register(
             ResourceTypeDefinition(
                 type_name=ResourceType.WORKFLOW.value,
                 prefix="workflow:",
-                allowed_relations=["executor", "viewer", "editor", "owner"],
+                allowed_relations=["editor", "executor", "organization", "owner", "project", "viewer"],
                 description="LangGraph workflows and pipelines",
+            )
+        )
+        self.register(
+            ResourceTypeDefinition(
+                type_name=ResourceType.SESSION.value,
+                prefix="session:",
+                allowed_relations=["editor", "organization", "owner", "project", "viewer"],
+                description="User sessions",
+            )
+        )
+        self.register(
+            ResourceTypeDefinition(
+                type_name=ResourceType.PROJECT.value,
+                prefix="project:",
+                allowed_relations=["editor", "executor", "organization", "owner", "viewer"],
+                description="Projects",
+            )
+        )
+        self.register(
+            ResourceTypeDefinition(
+                type_name=ResourceType.CHAT.value,
+                prefix="chat:",
+                allowed_relations=["organization", "owner", "viewer"],
+                description="Chat conversations",
+            )
+        )
+
+        # ========== Infrastructure Types ==========
+        self.register(
+            ResourceTypeDefinition(
+                type_name=ResourceType.SERVICE_PRINCIPAL.value,
+                prefix="service_principal:",
+                allowed_relations=["acts_as", "editor", "owner", "viewer"],
+                description="Service accounts and principals",
+            )
+        )
+        self.register(
+            ResourceTypeDefinition(
+                type_name=ResourceType.API_KEY.value,
+                prefix="api_key:",
+                allowed_relations=["owner", "revoker", "viewer"],
+                description="API keys",
+            )
+        )
+        self.register(
+            ResourceTypeDefinition(
+                type_name=ResourceType.GATEWAY.value,
+                prefix="gateway:",
+                allowed_relations=["admin", "viewer"],
+                description="Gateway access",
+            )
+        )
+        self.register(
+            ResourceTypeDefinition(
+                type_name=ResourceType.MCP.value,
+                prefix="mcp:",
+                allowed_relations=["user", "viewer"],
+                description="MCP server access",
+            )
+        )
+        self.register(
+            ResourceTypeDefinition(
+                type_name=ResourceType.MCP_CONNECTION.value,
+                prefix="mcp_connection:",
+                allowed_relations=["owner", "viewer"],
+                description="MCP connections",
+            )
+        )
+        self.register(
+            ResourceTypeDefinition(
+                type_name=ResourceType.CONNECTION.value,
+                prefix="connection:",
+                allowed_relations=["organization", "owner", "viewer"],
+                description="MCP connections and integrations",
+            )
+        )
+
+        # ========== Data Types ==========
+        self.register(
+            ResourceTypeDefinition(
+                type_name=ResourceType.VECTOR_STORE.value,
+                prefix="vector_store:",
+                allowed_relations=["editor", "organization", "owner", "viewer"],
+                description="Vector store collections",
+            )
+        )
+
+        # ========== Authorization & Observability ==========
+        self.register(
+            ResourceTypeDefinition(
+                type_name=ResourceType.AUTHZ.value,
+                prefix="authz:",
+                allowed_relations=["admin", "viewer"],
+                description="Authorization management",
+            )
+        )
+        self.register(
+            ResourceTypeDefinition(
+                type_name=ResourceType.DASHBOARD.value,
+                prefix="dashboard:",
+                allowed_relations=["admin", "editor", "organization", "viewer"],
+                description="Dashboards",
+            )
+        )
+        self.register(
+            ResourceTypeDefinition(
+                type_name=ResourceType.COST.value,
+                prefix="cost:",
+                allowed_relations=["admin", "organization", "viewer"],
+                description="Cost tracking",
+            )
+        )
+        self.register(
+            ResourceTypeDefinition(
+                type_name=ResourceType.OBSERVABILITY.value,
+                prefix="observability:",
+                allowed_relations=["admin", "organization", "viewer"],
+                description="Observability metrics",
+            )
+        )
+        self.register(
+            ResourceTypeDefinition(
+                type_name=ResourceType.LOGS.value,
+                prefix="logs:",
+                allowed_relations=["admin", "viewer"],
+                description="Audit logs",
+            )
+        )
+        self.register(
+            ResourceTypeDefinition(
+                type_name=ResourceType.TRACES.value,
+                prefix="traces:",
+                allowed_relations=["admin", "viewer"],
+                description="Distributed traces",
+            )
+        )
+        self.register(
+            ResourceTypeDefinition(
+                type_name=ResourceType.METRICS.value,
+                prefix="metrics:",
+                allowed_relations=["admin", "viewer"],
+                description="System metrics",
+            )
+        )
+        self.register(
+            ResourceTypeDefinition(
+                type_name=ResourceType.IDENTITY.value,
+                prefix="identity:",
+                allowed_relations=["admin", "viewer"],
+                description="Identity providers",
+            )
+        )
+        self.register(
+            ResourceTypeDefinition(
+                type_name=ResourceType.BUDGET.value,
+                prefix="budget:",
+                allowed_relations=["admin", "organization", "viewer"],
+                description="Budget alerts and cost limits",
+            )
+        )
+
+        # ========== AI & Agents ==========
+        self.register(
+            ResourceTypeDefinition(
+                type_name=ResourceType.AI.value,
+                prefix="ai:",
+                allowed_relations=["admin", "user", "viewer"],
+                description="AI features and suggestions",
+            )
+        )
+        self.register(
+            ResourceTypeDefinition(
+                type_name=ResourceType.AGENT.value,
+                prefix="agent:",
+                allowed_relations=["admin", "organization", "owner", "viewer"],
+                description="Agent configuration and HITL operations",
+            )
+        )
+        self.register(
+            ResourceTypeDefinition(
+                type_name=ResourceType.SKILL.value,
+                prefix="skill:",
+                allowed_relations=["admin", "viewer"],
+                description="Skill management operations",
+            )
+        )
+        self.register(
+            ResourceTypeDefinition(
+                type_name=ResourceType.EXECUTION.value,
+                prefix="execution:",
+                allowed_relations=["organization", "owner", "viewer"],
+                description="Workflow execution tracking",
+            )
+        )
+
+        # ========== Compliance & Admin ==========
+        self.register(
+            ResourceTypeDefinition(
+                type_name=ResourceType.COMPLIANCE.value,
+                prefix="compliance:",
+                allowed_relations=["admin", "viewer"],
+                description="Compliance reports (GDPR, HIPAA, SOC2, FedRAMP)",
+            )
+        )
+        self.register(
+            ResourceTypeDefinition(
+                type_name=ResourceType.MARKETPLACE.value,
+                prefix="marketplace:",
+                allowed_relations=["admin"],
+                description="Marketplace admin operations",
+            )
+        )
+        self.register(
+            ResourceTypeDefinition(
+                type_name=ResourceType.CONFIG.value,
+                prefix="config:",
+                allowed_relations=["admin", "viewer"],
+                description="System configuration",
             )
         )
 

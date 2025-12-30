@@ -357,6 +357,28 @@ def record_authorization_check(result: str, resource_type: str, duration_seconds
         logger.debug("Metric recording failed: %s", e)
 
 
+def record_authorization_cache_operation(operation: str, resource_type: str) -> None:
+    """
+    Record an authorization cache operation (hit or miss).
+
+    Args:
+        operation: Cache operation type ("hit" or "miss")
+        resource_type: Type of resource being authorized (e.g., "workflow", "project")
+    """
+    if not _metrics_available:
+        return
+
+    try:
+        # Use the existing authorization checks counter with a cache-specific result
+        if _auth_authorization_checks_total:
+            _auth_authorization_checks_total.labels(
+                result=f"cache_{operation}",
+                resource_type=resource_type,
+            ).inc()
+    except Exception as e:
+        logger.debug("Metric recording failed: %s", e)
+
+
 # =============================================================================
 # Session Lifecycle Metrics Recording Functions
 # =============================================================================

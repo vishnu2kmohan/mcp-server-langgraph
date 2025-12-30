@@ -443,6 +443,7 @@ class Settings(BaseSettings):
     )
     session_sliding_window: bool = True
     session_max_concurrent: int = 5  # Max concurrent sessions per user
+    session_encryption_key: str | None = None  # AES-256 encryption key for session data (64 hex chars)
 
     # API Key Cache Configuration (ADR-0034: Redis-backed API key lookup)
     # Improves API key validation from O(users×keys) to O(1)

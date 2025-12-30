@@ -25,7 +25,7 @@ import asyncio
 import json
 import os
 from pathlib import Path
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any, cast
 
 import httpx
 from openfga_sdk import ClientConfiguration, OpenFgaClient
@@ -37,12 +37,158 @@ from mcp_server_langgraph.core.exceptions import OpenFGAError, OpenFGATimeoutErr
 from mcp_server_langgraph.observability.telemetry import logger, metrics, tracer
 from mcp_server_langgraph.resilience import circuit_breaker, retry_with_backoff, with_bulkhead, with_timeout
 
+if TYPE_CHECKING:
+    from mcp_server_langgraph.core.cache import CacheService
+
 # OIDC token refresh buffer (seconds)
 # Refresh tokens this many seconds before expiration to account for:
 # - Clock skew between services
 # - Network latency
 # - Token validation time
 OIDC_TOKEN_REFRESH_BUFFER_SECONDS = 60  # Increased from 30s for better reliability
+
+# Authorization cache TTL (seconds)
+# Aligned with core/cache.py CACHE_TTLS["auth_permission"] = 300
+AUTH_CACHE_TTL = 300  # 5 minutes
+
+# Authorization cache version (increment to invalidate all cached permissions)
+AUTH_CACHE_VERSION = "v1"
+
+
+# =============================================================================
+# Authorization Caching Functions
+# =============================================================================
+
+
+def _get_auth_cache() -> "CacheService | None":
+    """
+    Get the authorization cache service instance.
+
+    Returns:
+        CacheService instance or None if not available.
+    """
+    try:
+        from mcp_server_langgraph.core.cache import get_cache
+
+        return get_cache()
+    except Exception as e:
+        logger.debug(f"Cache service unavailable: {e}")
+        return None
+
+
+def _normalize_auth_cache_key(user: str, relation: str, object: str) -> str:
+    """
+    Normalize cache key with proper user prefix handling.
+
+    Cache key format: auth_permission:{version}:{user}:{relation}:{object}
+
+    The key prefix "auth_permission" matches CACHE_TTLS in core/cache.py
+    for automatic TTL resolution.
+
+    Args:
+        user: User identifier (e.g., "user:alice")
+        relation: Relation to check (e.g., "viewer")
+        object: Object identifier (e.g., "workflow:default")
+
+    Returns:
+        Normalized cache key string.
+
+    Example:
+        >>> _normalize_auth_cache_key("user:alice", "viewer", "workflow:123")
+        "auth_permission:v1:user:alice:viewer:workflow:123"
+    """
+    return f"auth_permission:{AUTH_CACHE_VERSION}:{user}:{relation}:{object}"
+
+
+async def invalidate_user_permissions(user_id: str) -> int:
+    """
+    Invalidate all cached permissions for a user.
+
+    Call this when:
+    - User role changes
+    - User is added/removed from organization
+    - User sub-persona changes
+
+    Args:
+        user_id: User identifier (e.g., "user:alice")
+
+    Returns:
+        Number of cache entries invalidated.
+    """
+    cache = _get_auth_cache()
+    if not cache:
+        return 0
+
+    pattern = f"auth_permission:{AUTH_CACHE_VERSION}:{user_id}:*"
+    deleted = await cache.adelete_pattern(pattern)
+
+    logger.info(
+        "Invalidated user permissions cache",
+        extra={"user_id": user_id, "deleted_count": deleted},
+    )
+
+    return deleted
+
+
+async def invalidate_resource_permissions(resource: str) -> int:
+    """
+    Invalidate all cached permissions for a resource.
+
+    Call this when:
+    - Resource ownership changes
+    - Resource is shared/unshared
+    - Resource is deleted
+
+    Args:
+        resource: Resource identifier (e.g., "workflow:123")
+
+    Returns:
+        Number of cache entries invalidated.
+    """
+    cache = _get_auth_cache()
+    if not cache:
+        return 0
+
+    # Pattern matches any user and relation for this resource
+    pattern = f"auth_permission:{AUTH_CACHE_VERSION}:*:*:{resource}"
+    deleted = await cache.adelete_pattern(pattern)
+
+    logger.info(
+        "Invalidated resource permissions cache",
+        extra={"resource": resource, "deleted_count": deleted},
+    )
+
+    return deleted
+
+
+async def invalidate_relation_permissions(relation: str, resource_type: str) -> int:
+    """
+    Invalidate all cached permissions for a relation+type.
+
+    Call this when:
+    - OpenFGA model changes
+    - Bulk permission updates
+
+    Args:
+        relation: Relation name (e.g., "viewer")
+        resource_type: Resource type prefix (e.g., "workflow")
+
+    Returns:
+        Number of cache entries invalidated.
+    """
+    cache = _get_auth_cache()
+    if not cache:
+        return 0
+
+    pattern = f"auth_permission:{AUTH_CACHE_VERSION}:*:{relation}:{resource_type}:*"
+    deleted = await cache.adelete_pattern(pattern)
+
+    logger.info(
+        "Invalidated relation permissions cache",
+        extra={"relation": relation, "resource_type": resource_type, "deleted_count": deleted},
+    )
+
+    return deleted
 
 
 class OpenFGAConfig(BaseModel):
@@ -685,10 +831,38 @@ class OpenFGAClient:
             OpenFGAError: For other OpenFGA errors
         """
         await self._ensure_initialized()  # Lazy initialization
+
+        # Extract resource type for cache metrics
+        resource_type = object.split(":")[0] if ":" in object else "unknown"
+
+        # Check authorization cache first (before circuit breaker/resilience)
+        cache = _get_auth_cache()
+        cache_key = _normalize_auth_cache_key(user, relation, object)
+
+        if cache is not None:
+            cached_result = await cache.aget(cache_key)
+            if cached_result is not None:
+                logger.debug(
+                    "Authorization cache hit",
+                    extra={"user": user, "relation": relation, "object": object, "allowed": cached_result},
+                )
+                # Track cache hit metric via auth metrics module
+                from mcp_server_langgraph.auth.metrics import record_authorization_cache
+
+                record_authorization_cache("hit", resource_type)
+                return bool(cached_result)
+
+        # Track cache miss if we got here
+        if cache is not None:
+            from mcp_server_langgraph.auth.metrics import record_authorization_cache
+
+            record_authorization_cache("miss", resource_type)
+
         with tracer.start_as_current_span("openfga.check") as span:
             span.set_attribute("user", user)
             span.set_attribute("relation", relation)
             span.set_attribute("object", object)
+            span.set_attribute("cache_hit", False)
 
             try:
                 request = ClientCheckRequest(user=user, relation=relation, object=object, contextual_tuples=[])
@@ -701,6 +875,14 @@ class OpenFGAClient:
                 logger.info(
                     "Permission check", extra={"user": user, "relation": relation, "object": object, "allowed": allowed}
                 )
+
+                # Cache the result (both allow and deny)
+                if cache is not None:
+                    await cache.aset(cache_key, allowed, ttl=AUTH_CACHE_TTL)
+                    logger.debug(
+                        "Authorization result cached",
+                        extra={"cache_key": cache_key, "allowed": allowed, "ttl": AUTH_CACHE_TTL},
+                    )
 
                 # Track metrics
                 if allowed:
@@ -1214,9 +1396,12 @@ def load_sample_tuples(tuples_path: str | Path | None = None) -> list[dict[str, 
 
             raw_tuples = config.get("tuples", [])
 
-            # Filter out _comment keys and keep only user/relation/object
+            # Filter out comment-only entries and keep only user/relation/object
             tuples = []
             for t in raw_tuples:
+                # Skip entries that are section comments (only have _comment/_section keys)
+                if "user" not in t or "relation" not in t or "object" not in t:
+                    continue
                 tuples.append(
                     {
                         "user": t["user"],

@@ -285,6 +285,60 @@ def record_authorization_check(result: str, resource_type: str = "unknown", dura
     prometheus_metrics.record_authorization_check(result, resource_type, duration_ms / 1000 if duration_ms else None)
 
 
+def record_authorization_cache(operation: str, resource_type: str = "unknown") -> None:
+    """
+    Record authorization cache hit/miss metrics.
+
+    Args:
+        operation: Either "hit" or "miss"
+        resource_type: The resource type being checked (e.g., "workflow", "project")
+    """
+    # OpenTelemetry metrics
+    auth_authz_cache_operations.add(1, {"operation": operation, "resource_type": resource_type})
+
+    # Prometheus metrics
+    from mcp_server_langgraph.auth import prometheus_metrics
+
+    prometheus_metrics.record_authorization_cache_operation(operation, resource_type)
+
+
+def log_authorization_denied(
+    user_id: str,
+    relation: str,
+    resource: str,
+    reason: str = "permission_denied",
+) -> None:
+    """
+    Log authorization denial for audit trail.
+
+    Uses structured logging that flows to Loki for compliance auditing.
+
+    Args:
+        user_id: User identifier (e.g., "user:alice")
+        relation: Relation being checked (e.g., "viewer", "editor")
+        resource: Resource identifier (e.g., "workflow:123")
+        reason: Denial reason for categorization
+    """
+    import structlog
+
+    logger = structlog.get_logger(__name__)
+
+    resource_type = resource.split(":")[0] if ":" in resource else "unknown"
+
+    logger.warning(
+        "authorization_denied",
+        user_id=user_id,
+        relation=relation,
+        resource=resource,
+        resource_type=resource_type,
+        reason=reason,
+        audit_category="authorization",
+    )
+
+    # Also record as metric for dashboards
+    record_authorization_check("denied", resource_type)
+
+
 def record_session_lifecycle_event(
     event: str,
     user_id: str | None = None,
