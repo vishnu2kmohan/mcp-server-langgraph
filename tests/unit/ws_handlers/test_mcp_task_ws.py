@@ -24,12 +24,12 @@ pytestmark = [pytest.mark.unit, pytest.mark.websocket]
 def mock_websocket() -> MagicMock:
     """Create a mock WebSocket for testing."""
     ws = MagicMock()
-    ws.accept = AsyncMock()
-    ws.close = AsyncMock()
-    ws.send_json = AsyncMock()
-    ws.send_text = AsyncMock()
-    ws.receive_json = AsyncMock()
-    ws.receive_text = AsyncMock()
+    ws.accept = AsyncMock()  # noqa: async-mock-config
+    ws.close = AsyncMock()  # noqa: async-mock-config
+    ws.send_json = AsyncMock()  # noqa: async-mock-config
+    ws.send_text = AsyncMock()  # noqa: async-mock-config
+    ws.receive_json = AsyncMock()  # noqa: async-mock-config
+    ws.receive_text = AsyncMock()  # noqa: async-mock-config
     ws.query_params = {}
     ws.headers = {}
     ws.client_state = MagicMock()
@@ -238,8 +238,8 @@ class TestMCPTaskWebSocketHandler:
             mcp_service=mock_mcp_service,
         )
 
-        # No auth token provided
-        mock_websocket.query_params = {}
+        # No auth token provided (but include protocol version to pass version check)
+        mock_websocket.query_params = {"v": "1.0.0"}
         mock_websocket.headers = {}
 
         await handler.run(mock_websocket)
@@ -247,8 +247,8 @@ class TestMCPTaskWebSocketHandler:
         # Should close with authentication required code
         mock_websocket.close.assert_called_once()
         close_args = mock_websocket.close.call_args
-        # Code 4001 = Authentication required
-        assert close_args[1].get("code") == 4001 or close_args[0][0] == 4001
+        # Code 4001 = Authentication required (use kwargs since close is called with keyword args)
+        assert close_args.kwargs.get("code") == 4001 or (close_args.args and close_args.args[0] == 4001)
 
 
 @pytest.mark.xdist_group(name="mcp_task_ws_router")
