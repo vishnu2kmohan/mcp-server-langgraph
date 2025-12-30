@@ -33,6 +33,7 @@ from mcp_server_langgraph.studio.ai.suggestions import (
     WorkflowSuggestionAgent,
     ChatFollowUpSuggestionAgent,
     CommandInterpreterAgent,
+    ArtifactSuggestionAgent,
     get_suggestion_rate_limiter,
     track_rate_limit_hit,
     track_personalization_usage,
@@ -42,6 +43,7 @@ from mcp_server_langgraph.security.prompt_injection import (
     analyze_content as analyze_prompt_injection,
     sanitize_content as sanitize_prompt_injection,
 )
+from mcp_server_langgraph.api.v1.artifacts import get_artifacts_service
 
 
 ai_router = APIRouter(tags=["ai"])
@@ -495,13 +497,118 @@ async def get_node_type_schema(current_user: CurrentUser, node_type: str) -> dic
 # =============================================================================
 
 
+# Response models for GET /suggestions endpoint
+class ArtifactSuggestion(BaseModel):
+    """A single AI suggestion for an artifact."""
+
+    id: str = Field(description="Unique suggestion ID")
+    type: Literal["completion", "refactor", "fix", "explain"] = Field(description="Suggestion type")
+    content: str = Field(description="Suggestion content")
+    confidence: float = Field(ge=0.0, le=1.0, description="Confidence score")
+
+
+class ArtifactSuggestionsResponse(BaseModel):
+    """Response for GET /api/v1/ai/suggestions endpoint."""
+
+    suggestions: list[ArtifactSuggestion] = Field(default_factory=list, description="List of AI suggestions")
+
+
+@ai_router.get(
+    "/suggestions",
+    status_code=status.HTTP_200_OK,
+    summary="Get AI Suggestions for Artifact",
+    description="Fetch AI-powered suggestions for a specific artifact (code analysis)",
+)
+async def get_artifact_suggestions(
+    current_user: CurrentUser,
+    artifactId: str | None = None,
+) -> ArtifactSuggestionsResponse:
+    """
+    Get AI-powered suggestions for an artifact.
+
+    Returns code completion, refactoring, fix, and explanation suggestions
+    for the specified artifact. Used by the Canvas panel for real-time
+    AI assistance.
+
+    Args:
+        artifactId: The artifact ID to get suggestions for
+
+    Returns:
+        List of AI suggestions for the artifact
+
+    Example:
+        ```
+        GET /api/v1/ai/suggestions?artifactId=art-123
+        ```
+    """
+    if not artifactId:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Missing required query parameter: artifactId",
+        )
+
+    user_id = current_user.get("sub") or current_user.get("user_id") or "anonymous"
+
+    logger.info(
+        "AI artifact suggestions requested",
+        extra={
+            "artifact_id": artifactId,
+            "user_id": user_id,
+        },
+    )
+
+    # Get the artifact content from the store
+    artifacts_service = get_artifacts_service()
+    artifact = await artifacts_service.get_artifact(artifactId, user_id)
+
+    if not artifact:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Artifact not found: {artifactId}",
+        )
+
+    # Check feature flag for AI suggestions
+    flags = get_feature_flags()
+    enable_llm = getattr(flags, "enable_ai_suggestions", True)
+
+    # Generate AI suggestions using the ArtifactSuggestionAgent
+    agent = ArtifactSuggestionAgent(
+        enable_llm=enable_llm,
+        enable_cache=True,
+    )
+
+    content = artifact.get("content", "")
+    content_type = artifact.get("content_type", "code")
+    language = artifact.get("edit_metadata", {}).get("language") if artifact.get("edit_metadata") else None
+
+    suggestions = await agent.suggest(
+        content=content,
+        content_type=content_type,
+        language=language,
+        max_suggestions=3,
+    )
+
+    # Convert to response model
+    response_suggestions = [
+        ArtifactSuggestion(
+            id=s.id,
+            type=s.type,  # type: ignore[arg-type]
+            content=s.content,
+            confidence=s.confidence,
+        )
+        for s in suggestions
+    ]
+
+    return ArtifactSuggestionsResponse(suggestions=response_suggestions)
+
+
 @ai_router.post(
     "/suggestions",
     status_code=status.HTTP_200_OK,
-    summary="Get AI Suggestions",
+    summary="Generate AI Suggestions",
     description="Unified endpoint for AI-powered suggestions (chat follow-up, workflow optimization)",
 )
-async def get_ai_suggestions(
+async def generate_ai_suggestions(
     current_user: CurrentUser,
     suggestion_request: UnifiedSuggestionsRequest,
     http_request: Request,

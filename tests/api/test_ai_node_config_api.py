@@ -1065,3 +1065,68 @@ class TestSuggestionFeedback:
         assert response.status_code == 200
         data = response.json()
         assert data["recorded"] is False
+
+
+# =============================================================================
+# GET /api/v1/ai/suggestions Endpoint Tests
+# =============================================================================
+
+
+@pytest.mark.xdist_group(name="ai_api")
+class TestGetArtifactSuggestions:
+    """Tests for GET /api/v1/ai/suggestions endpoint."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers."""
+        gc.collect()
+
+    def test_get_suggestions_returns_suggestions_for_valid_artifact(self, client):
+        """Should return suggestions list for valid artifact ID."""
+        from unittest.mock import AsyncMock, MagicMock, patch
+
+        # Mock the artifacts service with an artifact that has code content
+        mock_service = MagicMock()
+        mock_service.get_artifact = AsyncMock(
+            return_value={
+                "id": "art-123",
+                "content": "def hello(): pass",
+                "content_type": "code",
+                "edit_metadata": {"language": "python"},
+            }
+        )
+
+        with patch(
+            "mcp_server_langgraph.api.v1.ai.get_artifacts_service",
+            return_value=mock_service,
+        ):
+            response = client.get("/api/v1/ai/suggestions?artifactId=art-123")
+            assert response.status_code == 200
+            data = response.json()
+            assert "suggestions" in data
+            assert isinstance(data["suggestions"], list)
+            # Should return heuristic suggestions for the code
+            # (LLM is disabled by default in tests)
+
+    def test_get_suggestions_without_artifact_id_returns_400(self, client):
+        """Should return 400 when artifactId is missing."""
+        response = client.get("/api/v1/ai/suggestions")
+        assert response.status_code == 400
+        data = response.json()
+        assert "artifactId" in data["detail"].lower() or "artifact" in data["detail"].lower()
+
+    def test_get_suggestions_returns_404_for_missing_artifact(self, client):
+        """Should return 404 when artifact is not found."""
+        from unittest.mock import AsyncMock, MagicMock, patch
+
+        # Mock the artifacts service to return None (artifact not found)
+        mock_service = MagicMock()
+        mock_service.get_artifact = AsyncMock(return_value=None)
+
+        with patch(
+            "mcp_server_langgraph.api.v1.ai.get_artifacts_service",
+            return_value=mock_service,
+        ):
+            response = client.get("/api/v1/ai/suggestions?artifactId=nonexistent-artifact")
+            assert response.status_code == 404
+            data = response.json()
+            assert "not found" in data["detail"].lower()
