@@ -1136,6 +1136,27 @@ repos:
       - Configuration drift between environments\n\n\
       Created: 2025-12-29 (after duplicate openfga-server client incident)\n\
       See: scripts/validation/validate_keycloak_realm.py\n"
+  - id: validate-openfga-tuples
+    name: Validate OpenFGA Tuples Against Model Schema
+    entry: uv run --frozen python -u scripts/validation/validate_openfga_tuples.py
+    language: system
+    files: ^config/openfga/(model\.json|sample-tuples\.json)$
+    pass_filenames: false
+    always_run: false
+    stages:
+    - pre-commit
+    description: "Validates OpenFGA tuples against model schema to prevent seeding failures:\n\n\
+      Checks:\n\
+      1. All tuple object types exist in model\n\
+      2. All tuple relations are valid for object type\n\
+      3. All tuple user types exist in model\n\
+      4. Tuples only assign directly-assignable relations (not computed-only)\n\n\
+      Prevents:\n\
+      - OpenFGA seeding failures from invalid tuples\n\
+      - Errors like 'type user is not an allowed type restriction for mcp#viewer'\n\
+      - Configuration drift between model and tuples\n\n\
+      Created: 2025-12-30 (after mcp#viewer computed-only relation bug)\n\
+      See: scripts/validation/validate_openfga_tuples.py\n"
   - id: validate-test-fixtures
     name: Validate Test Fixtures for Common Issues
     entry: uv run --frozen python -u scripts/validators/validate_test_fixtures.py
