@@ -2370,4 +2370,59 @@ describe("sessionSlice", () => {
       });
     });
   });
+
+  describe("cross-slice interactions", () => {
+    describe("logout action from authSlice", () => {
+      it("should reset hasPendingMutation when logout is dispatched", async () => {
+        // GIVEN: Store with hasPendingMutation set to true
+        const store = createTestStore({
+          hasPendingMutation: true,
+          currentSession: {
+            id: "s1",
+            name: "Test Session",
+            config: {
+              modelProvider: "openai",
+              modelName: "gpt-4",
+              temperature: 0.7,
+              maxTokens: 4096,
+            },
+            messages: [],
+            createdAt: Date.now(),
+            updatedAt: Date.now(),
+          },
+        });
+
+        // Verify initial state
+        expect(selectHasPendingMutation(store.getState())).toBe(true);
+        expect(selectCurrentSession(store.getState())).not.toBeNull();
+
+        // WHEN: Logout action is dispatched
+        // Import logout action dynamically to avoid circular dependency
+        const { logout } = await import("./authSlice");
+        store.dispatch(logout());
+
+        // THEN: hasPendingMutation should be reset to false
+        expect(selectHasPendingMutation(store.getState())).toBe(false);
+
+        // AND: currentSession should be cleared
+        expect(selectCurrentSession(store.getState())).toBeNull();
+      });
+
+      it("should handle logout even when hasPendingMutation is already false", async () => {
+        // GIVEN: Store with hasPendingMutation already false
+        const store = createTestStore({
+          hasPendingMutation: false,
+        });
+
+        expect(selectHasPendingMutation(store.getState())).toBe(false);
+
+        // WHEN: Logout action is dispatched
+        const { logout } = await import("./authSlice");
+        store.dispatch(logout());
+
+        // THEN: hasPendingMutation should still be false (idempotent)
+        expect(selectHasPendingMutation(store.getState())).toBe(false);
+      });
+    });
+  });
 });

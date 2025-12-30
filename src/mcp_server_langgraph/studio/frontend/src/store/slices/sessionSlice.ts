@@ -19,6 +19,7 @@ import type {
 } from "../../types/session";
 import { DEFAULT_SESSION_CONFIG } from "../../types/session";
 import { authenticatedFetch } from "../../utils/authenticatedFetch";
+import { logout } from "./authSlice";
 
 /**
  * Generate unique message ID
@@ -903,6 +904,15 @@ export const sessionSlice = createSlice({
       .addCase(clearMessages.rejected, (state, action) => {
         state.error = action.payload || "Failed to clear messages";
       });
+
+    // Cross-slice: Reset session state on logout
+    // This prevents stale hasPendingMutation flag from blocking session sync
+    // after re-login (see useSessionSync race condition guard)
+    builder.addCase(logout, (state) => {
+      state.hasPendingMutation = false;
+      state.currentSession = null;
+      state.error = null;
+    });
   },
 });
 
