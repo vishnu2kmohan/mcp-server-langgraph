@@ -14,6 +14,7 @@ Tests cover:
 """
 
 import gc
+import os
 from datetime import datetime, timedelta, UTC
 from decimal import Decimal
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -68,6 +69,33 @@ def sample_budget():
         "start_date": datetime.now(UTC).replace(day=1),
         "alert_thresholds": [Decimal("0.75"), Decimal("0.90")],
     }
+
+
+@pytest.fixture
+def reset_singletons():
+    """Reset cost storage singleton before/after tests."""
+    from mcp_server_langgraph.monitoring.cost_storage_factory import (
+        reset_cost_storage_backend,
+    )
+    from mcp_server_langgraph.monitoring.cost_tracker import _reset_cost_collector
+
+    # Use memory backend for unit tests
+    original_backend = os.environ.get("COST_STORAGE_BACKEND")
+    os.environ["COST_STORAGE_BACKEND"] = "memory"
+
+    reset_cost_storage_backend()
+    _reset_cost_collector()
+
+    yield
+
+    # Restore
+    if original_backend:
+        os.environ["COST_STORAGE_BACKEND"] = original_backend
+    else:
+        os.environ.pop("COST_STORAGE_BACKEND", None)
+
+    reset_cost_storage_backend()
+    _reset_cost_collector()
 
 
 # ==============================================================================
@@ -1207,7 +1235,7 @@ class TestDistributedTracingCostAttribution:
 
     @pytest.mark.unit
     @pytest.mark.asyncio
-    async def test_collector_record_usage_accepts_trace_context(self) -> None:
+    async def test_collector_record_usage_accepts_trace_context(self, reset_singletons) -> None:
         """CostMetricsCollector.record_usage should accept distributed tracing fields."""
         from mcp_server_langgraph.monitoring.cost_tracker import CostMetricsCollector
 
@@ -1236,7 +1264,7 @@ class TestDistributedTracingCostAttribution:
 
     @pytest.mark.unit
     @pytest.mark.asyncio
-    async def test_collector_record_usage_defaults_trace_fields_to_none(self) -> None:
+    async def test_collector_record_usage_defaults_trace_fields_to_none(self, reset_singletons) -> None:
         """CostMetricsCollector.record_usage should default trace fields to None."""
         from mcp_server_langgraph.monitoring.cost_tracker import CostMetricsCollector
 
