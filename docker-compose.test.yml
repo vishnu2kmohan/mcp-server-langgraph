@@ -512,20 +512,23 @@ services:
       - KC_DB_PASSWORD=postgres
 
       # Runtime settings (not baked into build)
-      # HOSTNAME CONFIGURATION: Set fixed hostname URL to ensure consistent issuer across all access methods
-      # This is required for E2E tests where tokens obtained via gateway (localhost:80) must be
-      # refreshed via internal Docker network URLs. Keycloak validates issuer consistency.
+      # HOSTNAME CONFIGURATION: Keycloak 26+ with path-based routing
       # See: https://www.keycloak.org/server/hostname
       #
-      # Keycloak 26+ hostname v2 configuration:
-      # KC_HOSTNAME_URL takes precedence and sets the exact base URL for all issuer claims.
-      # This ensures tokens always have issuer: http://localhost/authn/realms/default
-      # regardless of how Keycloak is accessed (gateway, direct port, Docker network).
-      # Note: KC_HTTP_RELATIVE_PATH=/authn is baked into the image, so URL includes /authn
+      # KC_HOSTNAME_URL sets the full base URL including path for issuer claims.
+      # This ensures tokens have issuer: http://localhost/authn/realms/default
+      # matching what OpenFGA, traefik-forward-auth, and other services expect.
+      #
+      # Note: KC_HOSTNAME_URL is a v1 option that produces a deprecation warning,
+      # but it's required when using path-based routing (KC_HTTP_RELATIVE_PATH=/authn)
+      # because hostname v2's KC_HOSTNAME doesn't support paths.
+      #
+      # KC_PROXY_HEADERS=xforwarded: Required for Keycloak behind reverse proxy (Traefik)
+      # Reference: https://www.keycloak.org/server/reverseproxy
       - KC_HOSTNAME_URL=http://localhost/authn
-      - KC_HOSTNAME_BACKCHANNEL_DYNAMIC=false
       - KC_HOSTNAME_STRICT=false
-      - KC_HOSTNAME_STRICT_HTTPS=false
+      - KC_PROXY_HEADERS=xforwarded
+      - KC_HOSTNAME_BACKCHANNEL_DYNAMIC=false
 
       # Note: KC_HTTP_RELATIVE_PATH=/authn is baked into the optimized image (build-time option)
 
