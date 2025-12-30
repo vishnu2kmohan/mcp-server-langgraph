@@ -275,7 +275,7 @@ class TestWebSocketBaseMessageHandling:
         class SlowWebSocket(WebSocketBase):
             async def handle_message(self, message: MessageEnvelope) -> MessageEnvelope | None:
                 # Simulate slow processing
-                await asyncio.sleep(2)
+                await asyncio.sleep(2)  # noqa: sleep-duration
                 return MessageEnvelope(type="response")
 
         mock_websocket.receive_json = AsyncMock(
@@ -324,7 +324,8 @@ class TestWebSocketBaseAuthentication:
             async def handle_message(self, message: MessageEnvelope) -> MessageEnvelope | None:
                 return None
 
-        mock_websocket.query_params = {}
+        # Include protocol version to pass version check, but no auth token
+        mock_websocket.query_params = {"v": "1.0.0"}
         mock_websocket.headers = {}
 
         ws = TestWebSocket(config=WebSocketConfig(require_auth=True, endpoint_name="test"))
@@ -333,7 +334,11 @@ class TestWebSocketBaseAuthentication:
         mock_websocket.close.assert_called_once()
         close_args = mock_websocket.close.call_args
         # Code 4001 = Authentication required
-        assert close_args[1].get("code") == 4001 or close_args[0][0] == 4001
+        # Handle both positional and keyword args for close call
+        code = close_args.kwargs.get("code") if close_args.kwargs else None
+        if code is None and close_args.args:
+            code = close_args.args[0]
+        assert code == 4001
 
     @pytest.mark.asyncio
     async def test_auth_token_from_query_param(self, mock_websocket: MagicMock) -> None:
@@ -348,8 +353,9 @@ class TestWebSocketBaseAuthentication:
             async def handle_message(self, message: MessageEnvelope) -> MessageEnvelope | None:
                 return None
 
-        mock_websocket.query_params = {"token": "test-jwt-token"}
-        mock_websocket.receive_json = AsyncMock(side_effect=WebSocketDisconnect(code=1000))
+        # Include protocol version along with token
+        mock_websocket.query_params = {"token": "test-jwt-token", "v": "1.0.0"}
+        mock_websocket.receive_json = AsyncMock(side_effect=WebSocketDisconnect(code=1000))  # noqa: async-mock-config
 
         # Mock the auth middleware
         with patch("mcp_server_langgraph.websocket.base.get_auth_middleware_from_websocket") as mock_auth:
@@ -381,9 +387,10 @@ class TestWebSocketBaseAuthentication:
             async def handle_message(self, message: MessageEnvelope) -> MessageEnvelope | None:
                 return None
 
-        mock_websocket.query_params = {}
+        # Include protocol version to pass version check
+        mock_websocket.query_params = {"v": "1.0.0"}
         mock_websocket.headers = {"Authorization": "Bearer header-jwt-token"}
-        mock_websocket.receive_json = AsyncMock(side_effect=WebSocketDisconnect(code=1000))
+        mock_websocket.receive_json = AsyncMock(side_effect=WebSocketDisconnect(code=1000))  # noqa: async-mock-config
 
         with patch("mcp_server_langgraph.websocket.base.get_auth_middleware_from_websocket") as mock_auth:
             mock_middleware = MagicMock()
@@ -423,7 +430,7 @@ class TestWebSocketBaseAuthorization:
             async def handle_message(self, message: MessageEnvelope) -> MessageEnvelope | None:
                 return None
 
-        mock_websocket.query_params = {"token": "test-token"}
+        mock_websocket.query_params = {"token": "test-token", "v": "1.0.0"}
         mock_websocket.receive_json = AsyncMock(side_effect=WebSocketDisconnect(code=1000))
 
         with (
@@ -439,8 +446,8 @@ class TestWebSocketBaseAuthorization:
             )
             mock_auth.return_value = mock_middleware
 
-            mock_fga_client = AsyncMock()
-            mock_fga_client.check_permission = AsyncMock(return_value=True)
+            mock_fga_client = AsyncMock()  # noqa: async-mock-config
+            mock_fga_client.check_permission = AsyncMock(return_value=True)  # noqa: async-mock-config
             mock_fga.return_value = mock_fga_client
 
             ws = TestWebSocket(
@@ -470,7 +477,7 @@ class TestWebSocketBaseAuthorization:
             async def handle_message(self, message: MessageEnvelope) -> MessageEnvelope | None:
                 return None
 
-        mock_websocket.query_params = {"token": "test-token"}
+        mock_websocket.query_params = {"token": "test-token", "v": "1.0.0"}
 
         with (
             patch("mcp_server_langgraph.websocket.base.get_auth_middleware_from_websocket") as mock_auth,
@@ -485,8 +492,8 @@ class TestWebSocketBaseAuthorization:
             )
             mock_auth.return_value = mock_middleware
 
-            mock_fga_client = AsyncMock()
-            mock_fga_client.check_permission = AsyncMock(return_value=False)
+            mock_fga_client = AsyncMock()  # noqa: async-mock-config
+            mock_fga_client.check_permission = AsyncMock(return_value=False)  # noqa: async-mock-config
             mock_fga.return_value = mock_fga_client
 
             ws = TestWebSocket(
@@ -505,7 +512,11 @@ class TestWebSocketBaseAuthorization:
             mock_websocket.close.assert_called_once()
             close_args = mock_websocket.close.call_args
             # Code 4003 = Authorization denied
-            assert close_args[1].get("code") == 4003 or close_args[0][0] == 4003
+            # Handle both positional and keyword args for close call
+            code = close_args.kwargs.get("code") if close_args.kwargs else None
+            if code is None and close_args.args:
+                code = close_args.args[0]
+            assert code == 4003
 
     @pytest.mark.asyncio
     async def test_authz_fail_closed_on_error(self, mock_websocket: MagicMock) -> None:
@@ -520,7 +531,7 @@ class TestWebSocketBaseAuthorization:
             async def handle_message(self, message: MessageEnvelope) -> MessageEnvelope | None:
                 return None
 
-        mock_websocket.query_params = {"token": "test-token"}
+        mock_websocket.query_params = {"token": "test-token", "v": "1.0.0"}
 
         with (
             patch("mcp_server_langgraph.websocket.base.get_auth_middleware_from_websocket") as mock_auth,
@@ -535,8 +546,8 @@ class TestWebSocketBaseAuthorization:
             )
             mock_auth.return_value = mock_middleware
 
-            mock_fga_client = AsyncMock()
-            mock_fga_client.check_permission = AsyncMock(side_effect=Exception("OpenFGA unavailable"))
+            mock_fga_client = AsyncMock()  # noqa: async-mock-config
+            mock_fga_client.check_permission = AsyncMock(side_effect=Exception("OpenFGA unavailable"))  # noqa: async-mock-config
             mock_fga.return_value = mock_fga_client
 
             ws = TestWebSocket(
@@ -563,7 +574,7 @@ class TestWebSocketBaseConfig:
         """Force GC to prevent mock accumulation in xdist workers."""
         gc.collect()
 
-    def test_config_defaults(self) -> None:
+    def test_websocket_config_creates_sensible_defaults(self) -> None:
         """
         GIVEN no custom configuration
         WHEN WebSocketConfig is created
