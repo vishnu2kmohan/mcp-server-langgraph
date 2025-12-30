@@ -15,6 +15,8 @@ from typing import Annotated, Any, Protocol
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 
+from mcp_server_langgraph.auth.dependencies import require_compliance_viewer
+
 logger = logging.getLogger(__name__)
 
 router = APIRouter(tags=["compliance"])
@@ -95,6 +97,7 @@ def set_compliance_service(service: ComplianceServiceProtocol | None) -> None:
 
 @router.get("/reports/gdpr")
 async def get_gdpr_report(
+    _: Annotated[dict[str, Any], Depends(require_compliance_viewer)],
     service: Annotated[ComplianceServiceProtocol, Depends(get_compliance_service)],
     start_time: datetime = Query(..., description="Start of time range"),
     end_time: datetime = Query(..., description="End of time range"),
@@ -117,6 +120,7 @@ async def get_gdpr_report(
 
 @router.get("/reports/hipaa")
 async def get_hipaa_report(
+    _: Annotated[dict[str, Any], Depends(require_compliance_viewer)],
     service: Annotated[ComplianceServiceProtocol, Depends(get_compliance_service)],
     start_time: datetime = Query(..., description="Start of time range"),
     end_time: datetime = Query(..., description="End of time range"),
@@ -140,6 +144,7 @@ async def get_hipaa_report(
 
 @router.get("/reports/soc2")
 async def get_soc2_report(
+    _: Annotated[dict[str, Any], Depends(require_compliance_viewer)],
     service: Annotated[ComplianceServiceProtocol, Depends(get_compliance_service)],
     start_time: datetime = Query(..., description="Start of time range"),
     end_time: datetime = Query(..., description="End of time range"),
@@ -162,6 +167,7 @@ async def get_soc2_report(
 
 @router.get("/reports/fedramp")
 async def get_fedramp_report(
+    _: Annotated[dict[str, Any], Depends(require_compliance_viewer)],
     service: Annotated[ComplianceServiceProtocol, Depends(get_compliance_service)],
     start_time: datetime = Query(..., description="Start of time range"),
     end_time: datetime = Query(..., description="End of time range"),
@@ -183,6 +189,7 @@ async def get_fedramp_report(
 
 @router.get("/reports/eu-ai-act")
 async def get_eu_ai_act_report(
+    _: Annotated[dict[str, Any], Depends(require_compliance_viewer)],
     service: Annotated[ComplianceServiceProtocol, Depends(get_compliance_service)],
     start_time: datetime = Query(..., description="Start of time range"),
     end_time: datetime = Query(..., description="End of time range"),
@@ -206,6 +213,7 @@ async def get_eu_ai_act_report(
 
 @router.get("/reports/summary")
 async def get_compliance_summary(
+    _: Annotated[dict[str, Any], Depends(require_compliance_viewer)],
     service: Annotated[ComplianceServiceProtocol, Depends(get_compliance_service)],
     start_time: datetime = Query(..., description="Start of time range"),
     end_time: datetime = Query(..., description="End of time range"),

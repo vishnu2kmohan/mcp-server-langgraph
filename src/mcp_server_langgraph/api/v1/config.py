@@ -12,9 +12,15 @@ Usage:
     GET /api/v1/config/defaults - Get server default configuration
 """
 
-from fastapi import APIRouter
+from typing import Annotated, Any
 
+from fastapi import APIRouter, Depends
+
+from mcp_server_langgraph.auth.dependencies import get_current_user
 from mcp_server_langgraph.core.config import settings
+
+# Type alias for current user
+CurrentUser = Annotated[dict[str, Any], Depends(get_current_user)]
 
 config_router = APIRouter(tags=["config"])
 
@@ -51,7 +57,7 @@ def _infer_model_provider(model_name: str) -> str:
 
 
 @config_router.get("/config/defaults")
-async def get_defaults() -> dict:
+async def get_defaults(current_user: CurrentUser) -> dict:
     """
     Get server default configuration for frontend hydration.
 

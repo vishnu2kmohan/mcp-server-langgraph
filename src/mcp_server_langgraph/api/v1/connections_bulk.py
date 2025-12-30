@@ -12,17 +12,21 @@ Usage:
 """
 
 import asyncio
-from typing import Literal
+from typing import Annotated, Any, Literal
 
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel, Field
 
+from mcp_server_langgraph.auth.dependencies import get_current_user
 from mcp_server_langgraph.core.dependencies import (
     MCPClient,
     get_connection_repository,
     get_mcp_client,
 )
 from mcp_server_langgraph.repositories.connections import ConnectionRepository
+
+# Type alias for current user
+CurrentUser = Annotated[dict[str, Any], Depends(get_current_user)]
 
 
 # ============================================================================
@@ -105,6 +109,7 @@ bulk_router = APIRouter(prefix="/connections/bulk", tags=["connections-bulk"])
 
 @bulk_router.post("/delete")
 async def bulk_delete(
+    current_user: CurrentUser,
     request: BulkDeleteRequest,
     repo: ConnectionRepository = Depends(get_connection_repository),
 ) -> BulkDeleteResponse:
@@ -132,6 +137,7 @@ async def bulk_delete(
 
 @bulk_router.post("/test")
 async def bulk_test(
+    current_user: CurrentUser,
     request: BulkTestRequest,
     repo: ConnectionRepository = Depends(get_connection_repository),
     mcp_client: MCPClient = Depends(get_mcp_client),
@@ -213,6 +219,7 @@ async def bulk_test(
 
 @bulk_router.post("/status")
 async def bulk_status_update(
+    current_user: CurrentUser,
     request: BulkStatusRequest,
     repo: ConnectionRepository = Depends(get_connection_repository),
 ) -> BulkStatusResponse:

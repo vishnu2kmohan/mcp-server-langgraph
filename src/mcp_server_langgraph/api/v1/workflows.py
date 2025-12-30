@@ -28,7 +28,14 @@ from mcp_server_langgraph.api.pagination import (
     CursorPaginatedResponse,
     CursorPaginationMetadata,
 )
-from mcp_server_langgraph.auth.middleware import get_current_user
+from mcp_server_langgraph.auth.dependencies import (
+    get_current_user,
+    require_workflow_editor,
+    require_workflow_executor,
+    require_workflow_owner,
+    require_workflow_viewer,
+)
+from mcp_server_langgraph.auth.openfga import invalidate_resource_permissions
 from mcp_server_langgraph.observability.telemetry import logger
 
 if TYPE_CHECKING:
@@ -730,13 +737,16 @@ def _is_admin(current_user: dict[str, Any]) -> bool:
     return "admin" in roles
 
 
-async def require_workflow_owner(
+async def _require_workflow_owner_with_service(
     workflow_id: str,
     current_user: dict[str, Any],
     service: WorkflowServiceAdapter,
 ) -> dict[str, Any]:
     """
-    Authorization dependency that requires the user to own the workflow.
+    Internal authorization helper for sharing operations.
+
+    This is kept for backward compatibility with sharing endpoints.
+    New code should use require_workflow_owner from dependencies.py.
 
     Args:
         workflow_id: The workflow ID to check.
@@ -834,7 +844,7 @@ async def get_workflow_shares_authorized(
     Only the workflow owner can view shares.
     """
     # Check ownership first
-    await require_workflow_owner(workflow_id, current_user, service)
+    await _require_workflow_owner_with_service(workflow_id, current_user, service)
 
     # Get shares
     result = await service.get_workflow_shares(workflow_id)
@@ -864,7 +874,7 @@ async def add_workflow_share_authorized(
     Only the workflow owner can add shares.
     """
     # Check ownership first
-    await require_workflow_owner(workflow_id, current_user, service)
+    await _require_workflow_owner_with_service(workflow_id, current_user, service)
 
     # Add share
     success = await service.add_workflow_share(
@@ -888,6 +898,9 @@ async def add_workflow_share_authorized(
         service=service,
     )
 
+    # Invalidate authorization cache for this workflow (permissions changed)
+    await invalidate_resource_permissions(f"workflow:{workflow_id}")
+
     return {"status": "shared", "email": request.email, "permission": request.permission}
 
 
@@ -903,7 +916,7 @@ async def remove_workflow_share_authorized(
     Only the workflow owner can remove shares.
     """
     # Check ownership first
-    await require_workflow_owner(workflow_id, current_user, service)
+    await _require_workflow_owner_with_service(workflow_id, current_user, service)
 
     # Remove share
     success = await service.remove_workflow_share(workflow_id, user_id)
@@ -913,6 +926,9 @@ async def remove_workflow_share_authorized(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Workflow {workflow_id} or share not found",
         )
+
+    # Invalidate authorization cache for this workflow (permissions changed)
+    await invalidate_resource_permissions(f"workflow:{workflow_id}")
 
 
 async def update_workflow_public_authorized(
@@ -927,7 +943,7 @@ async def update_workflow_public_authorized(
     Only the workflow owner can change public status.
     """
     # Check ownership first
-    await require_workflow_owner(workflow_id, current_user, service)
+    await _require_workflow_owner_with_service(workflow_id, current_user, service)
 
     # Update public status
     result = await service.update_workflow_public(workflow_id, request.is_public)
@@ -938,6 +954,9 @@ async def update_workflow_public_authorized(
             detail=f"Workflow {workflow_id} not found",
         )
 
+    # Invalidate authorization cache for this workflow (public visibility changed)
+    await invalidate_resource_permissions(f"workflow:{workflow_id}")
+
     return result
 
 
@@ -947,6 +966,7 @@ async def update_workflow_public_authorized(
 @workflows_router.get("/workflows")
 async def list_workflows(
     service: WorkflowService,
+    current_user: CurrentUser,
     cursor: str | None = Query(default=None, description="Pagination cursor"),
     limit: int = Query(default=20, ge=1, le=100, description="Items per page"),
     status: str | None = Query(default=None, description="Filter by workflow status (draft, published, archived)"),
@@ -958,6 +978,12 @@ async def list_workflows(
     """
     List all workflows with cursor-based pagination.
 
+    Requires authentication. Users can see:
+    - Their own workflows
+    - Workflows shared with them
+    - Public workflows
+    - Admins can see all workflows
+
     Supports:
     - Pagination: cursor, limit
     - Filtering: status, owner_id
@@ -966,11 +992,19 @@ async def list_workflows(
 
     Returns a paginated list of workflows with metadata for navigation.
     """
+    # Filter by user's accessible workflows unless admin
+    user_id = _get_user_id(current_user)
+    effective_owner_id = owner_id
+
+    # If not admin and no explicit owner_id filter, default to user's own workflows
+    if not _is_admin(current_user) and owner_id is None:
+        effective_owner_id = user_id
+
     workflows, next_cursor = await service.list_workflows(
         cursor=cursor,
         limit=limit,
         status=status,
-        owner_id=owner_id,
+        owner_id=effective_owner_id,
         search=search,
         sort_by=sort_by,
         sort_order=sort_order,
@@ -1033,10 +1067,12 @@ async def get_public_workflow(
 async def get_workflow(
     workflow_id: str,
     service: WorkflowService,
+    _: Annotated[dict[str, Any], Depends(require_workflow_viewer)],
 ) -> WorkflowResponse:
     """
     Get a specific workflow by ID.
 
+    Requires viewer access to the workflow (owner, editor, shared, or admin).
     Returns the complete workflow data including nodes and edges.
     """
     workflow = await service.get_workflow(workflow_id)
@@ -1054,13 +1090,19 @@ async def get_workflow(
 async def create_workflow(
     request: WorkflowCreateRequest,
     service: WorkflowService,
+    current_user: CurrentUser,
 ) -> WorkflowResponse:
     """
     Create a new workflow.
 
+    Requires authentication. The authenticated user becomes the workflow owner.
     The workflow is created with the provided name, description, nodes, and edges.
     """
+    # Inject user_id as owner
+    user_id = _get_user_id(current_user)
     workflow_data = request.model_dump()
+    workflow_data["user_id"] = user_id
+
     workflow = await service.create_workflow(workflow_data)
 
     return WorkflowResponse(**workflow)
@@ -1071,10 +1113,12 @@ async def update_workflow(
     workflow_id: str,
     request: WorkflowUpdateRequest,
     service: WorkflowService,
+    _: Annotated[dict[str, Any], Depends(require_workflow_editor)],
 ) -> WorkflowResponse:
     """
     Update an existing workflow.
 
+    Requires editor access to the workflow (owner, editor, or admin).
     Only the provided fields are updated; others remain unchanged.
     """
     update_data = request.model_dump(exclude_unset=True)
@@ -1093,10 +1137,12 @@ async def update_workflow(
 async def delete_workflow(
     workflow_id: str,
     service: WorkflowService,
+    _: Annotated[dict[str, Any], Depends(require_workflow_owner)],
 ) -> None:
     """
     Delete a workflow.
 
+    Requires owner access to the workflow. Only the owner or admin can delete.
     This permanently removes the workflow and cannot be undone.
     """
     deleted = await service.delete_workflow(workflow_id)
@@ -1207,13 +1253,16 @@ async def update_workflow_public(
 async def generate_workflow(
     request: GenerateWorkflowRequest,
     service: WorkflowService,
+    current_user: CurrentUser,
 ) -> GenerateWorkflowResponse:
     """
     Generate a workflow from session history or text prompt.
 
-    Uses AI to analyze the provided source and generate a workflow definition.
+    Requires authentication. Uses AI to analyze the provided source and
+    generate a workflow definition.
     Exactly one of session_id or prompt must be provided.
     """
+    _ = current_user  # Authentication required but user not used directly
     try:
         result = await service.generate_workflow(
             session_id=request.session_id,
@@ -1477,10 +1526,12 @@ class WorkflowExecuteResponse(BaseModel):
 async def execute_workflow(
     workflow_id: str,
     request: WorkflowExecuteRequest,
+    _: Annotated[dict[str, Any], Depends(require_workflow_executor)],
 ) -> WorkflowExecuteResponse:
     """
     Execute a workflow.
 
+    Requires executor access to the workflow (owner, executor, or admin).
     Starts workflow execution and returns an execution ID that can be
     used to track progress via GET /workflows/{workflow_id}/execution.
 
@@ -1567,10 +1618,12 @@ class WorkflowExecutionResponse(BaseModel):
 @workflows_router.get("/workflows/{workflow_id}/execution")
 async def get_workflow_execution_status(
     workflow_id: str,
+    _: Annotated[dict[str, Any], Depends(require_workflow_viewer)],
 ) -> WorkflowExecutionResponse:
     """
     Get the current execution status of a workflow.
 
+    Requires viewer access to the workflow.
     Returns the steps and their status for tracking workflow progress
     in real-time or polling mode.
 

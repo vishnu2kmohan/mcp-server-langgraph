@@ -7,20 +7,26 @@ Provides REST API for skill management and auto-update operations.
 from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import Annotated, Any
 
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status
 
+from mcp_server_langgraph.auth.dependencies import require_admin
 from mcp_server_langgraph.skills.auto_update import get_auto_update_scheduler
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/admin/skills", tags=["skills"])
 
+# Type alias for admin user dependency
+AdminUser = Annotated[dict[str, Any], Depends(require_admin)]
+
 
 @router.get("/updates")
-async def check_skill_updates() -> dict[str, Any]:
+async def check_skill_updates(admin_user: AdminUser) -> dict[str, Any]:
     """Check for available skill updates.
+
+    Requires admin authorization.
 
     Returns:
         Dict with list of available updates
@@ -51,8 +57,10 @@ async def check_skill_updates() -> dict[str, Any]:
 
 
 @router.post("/updates/apply")
-async def apply_skill_updates() -> dict[str, Any]:
+async def apply_skill_updates(admin_user: AdminUser) -> dict[str, Any]:
     """Apply all available skill updates.
+
+    Requires admin authorization.
 
     Returns:
         Dict with list of applied updates

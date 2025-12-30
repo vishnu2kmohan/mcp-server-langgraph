@@ -9,10 +9,15 @@ Usage:
     app.include_router(templates_router)
 """
 
-from typing import Literal
+from typing import Annotated, Any, Literal
 
-from fastapi import APIRouter, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from pydantic import BaseModel, Field
+
+from mcp_server_langgraph.auth.dependencies import get_current_user
+
+# Type alias for authenticated user dependency
+CurrentUser = Annotated[dict[str, Any], Depends(get_current_user)]
 
 
 # ============================================================================
@@ -403,9 +408,11 @@ templates_router = APIRouter(prefix="/connection-templates", tags=["connection-t
 
 
 @templates_router.get("/categories")
-async def list_categories() -> CategoryListResponse:
+async def list_categories(current_user: CurrentUser) -> CategoryListResponse:
     """
     List all template categories.
+
+    Requires user authentication.
 
     Returns list of categories that templates can belong to.
     """
@@ -414,12 +421,15 @@ async def list_categories() -> CategoryListResponse:
 
 @templates_router.get("")
 async def list_templates(
+    current_user: CurrentUser,
     category: str | None = Query(None, description="Filter by category"),
     auth_type: Literal["none", "api_key", "oauth2"] | None = Query(None, description="Filter by authentication type"),
     search: str | None = Query(None, min_length=1, description="Search by name or description"),
 ) -> TemplateListResponse:
     """
     List all available connection templates.
+
+    Requires user authentication.
 
     Supports filtering by category, authentication type, and search.
     """
@@ -442,9 +452,11 @@ async def list_templates(
 
 
 @templates_router.get("/{template_id}")
-async def get_template(template_id: str) -> ConnectionTemplate:
+async def get_template(template_id: str, current_user: CurrentUser) -> ConnectionTemplate:
     """
     Get a specific template by ID.
+
+    Requires user authentication.
 
     Returns full template details including configuration fields.
     """
@@ -461,9 +473,12 @@ async def get_template(template_id: str) -> ConnectionTemplate:
 async def apply_template(
     template_id: str,
     request: ApplyTemplateRequest,
+    current_user: CurrentUser,
 ) -> ApplyTemplateResponse:
     """
     Apply a template to create a pre-filled connection configuration.
+
+    Requires user authentication.
 
     Takes the template and user-provided values to generate a connection
     configuration that can be used to create a new connection.

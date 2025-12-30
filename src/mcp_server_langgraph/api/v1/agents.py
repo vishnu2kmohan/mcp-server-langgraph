@@ -17,16 +17,20 @@ Usage:
     PATCH /api/v1/agents/config/thinking-budget - Update thinking budget settings
 """
 
-from typing import Any
+from typing import Annotated, Any
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 from pydantic import BaseModel, Field
 
 from mcp_server_langgraph.agents.registry import OrchestratorInfo, get_all_orchestrators
+from mcp_server_langgraph.auth.dependencies import get_current_user
 from mcp_server_langgraph.core.config import settings
 from mcp_server_langgraph.core.feature_flags import feature_flags
 from mcp_server_langgraph.llm.providers import ProviderInfo, get_all_providers
 from mcp_server_langgraph.observability.telemetry import logger
+
+# Type alias for authenticated user dependency
+CurrentUser = Annotated[dict[str, Any], Depends(get_current_user)]
 
 agents_router = APIRouter(prefix="/agents", tags=["agents"])
 
@@ -294,17 +298,18 @@ def get_agent_feature_flags_snapshot() -> dict[str, bool]:
 
 
 @agents_router.get("/config")
-async def get_agent_config() -> AgentConfigResponse:
+async def get_agent_config(current_user: CurrentUser) -> AgentConfigResponse:
     """
     Get current agent configuration.
 
-    Returns the current model settings, verification settings,
-    list of available tools from the MCP server, and extended
-    configuration (thinking budget, feature flags).
+    Requires authentication. Returns the current model settings,
+    verification settings, list of available tools from the MCP server,
+    and extended configuration (thinking budget, feature flags).
 
     Returns:
         AgentConfigResponse with current agent configuration.
     """
+    _ = current_user  # Authentication required
     # Get registered tools
     tools_data = get_registered_tools()
     tools = [ToolInfo(name=t["name"], description=t["description"]) for t in tools_data]
@@ -378,11 +383,12 @@ async def update_thinking_budget(
 @agents_router.patch("/config/thinking-budget")
 async def patch_thinking_budget(
     request: ThinkingBudgetUpdateRequest,
+    current_user: CurrentUser,
 ) -> ThinkingBudgetUpdateResponse:
     """
     Update thinking budget configuration (PATCH).
 
-    Allows updating thinking budget settings:
+    Requires authentication. Allows updating thinking budget settings:
     - enabled: Enable/disable thinking budget feature
     - default_level: Set default thinking level (low, medium, high, ultra)
 
@@ -391,6 +397,7 @@ async def patch_thinking_budget(
     Returns:
         ThinkingBudgetUpdateResponse with update status and current config.
     """
+    _ = current_user  # Authentication required
     return await update_thinking_budget(request)
 
 
@@ -499,13 +506,14 @@ async def _query_metric(client: Any, query: str, time_range_hours: int) -> float
 
 @agents_router.get("/metrics")
 async def get_agent_metrics(
+    current_user: CurrentUser,
     time_range_hours: int = 24,
 ) -> AgentMetricsResponse:
     """
     Get agent orchestration metrics.
 
-    Queries the metrics backend (Prometheus/Mimir) for orchestrator,
-    HITL, and cost metrics over the specified time range.
+    Requires authentication. Queries the metrics backend (Prometheus/Mimir)
+    for orchestrator, HITL, and cost metrics over the specified time range.
 
     Args:
         time_range_hours: Time range for metrics in hours (default: 24)
@@ -516,6 +524,7 @@ async def get_agent_metrics(
     Raises:
         HTTPException: 503 if metrics backend is unavailable.
     """
+    _ = current_user  # Authentication required
     from datetime import UTC, datetime
 
     from fastapi import HTTPException

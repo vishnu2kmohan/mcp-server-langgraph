@@ -28,15 +28,23 @@ from __future__ import annotations
 
 import logging
 from decimal import Decimal
-from typing import Any
+from typing import Annotated, Any
 
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
+
+from mcp_server_langgraph.auth.dependencies import get_current_user
+
+# Type alias for current user
+CurrentUser = Annotated[dict[str, Any], Depends(get_current_user)]
 
 from mcp_server_langgraph.agents.studio_orchestrator import (
     StudioOrchestrator,
 )
 from mcp_server_langgraph.core.feature_flags import feature_flags
+from mcp_server_langgraph.websocket.handlers.orchestrator_status import (
+    get_orchestrator_status_broadcaster,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -115,6 +123,7 @@ def get_studio_orchestrator() -> StudioOrchestrator:
         ai_ux_service=None,  # Will be injected in later sprints
         llm_factory=None,
         enable_metrics=True,
+        status_broadcaster=get_orchestrator_status_broadcaster(),
     )
 
 
@@ -144,6 +153,7 @@ def get_studio_orchestrator() -> StudioOrchestrator:
     """,
 )
 async def analyze(
+    current_user: CurrentUser,
     request: StudioAnalyzeRequest,
     orchestrator: StudioOrchestrator = Depends(get_studio_orchestrator),
 ) -> StudioAnalyzeResponse:

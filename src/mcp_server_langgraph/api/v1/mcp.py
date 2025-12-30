@@ -26,10 +26,15 @@ Example:
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Any
+from typing import Annotated, Any
 
-from fastapi import APIRouter, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from pydantic import BaseModel, Field
+
+from mcp_server_langgraph.auth.dependencies import get_current_user
+
+# Type alias for authenticated user dependency
+CurrentUser = Annotated[dict[str, Any], Depends(get_current_user)]
 
 from mcp_server_langgraph.api.v1.mcp_bridge import (
     ChatError,
@@ -593,9 +598,11 @@ def _convert_tool_result(result: MCPToolResult) -> ToolCallResponse:
 
 
 @mcp_router.get("/tools")
-async def list_tools() -> ToolListResponse:
+async def list_tools(current_user: CurrentUser) -> ToolListResponse:
     """
     List available MCP tools.
+
+    Requires user authentication.
 
     Returns all tools exposed by the MCP server.
     Used as REST fallback when WebSocket is unavailable.
@@ -618,9 +625,11 @@ async def list_tools() -> ToolListResponse:
 
 
 @mcp_router.post("/tools/call")
-async def call_tool(request: ToolCallRequest) -> ToolCallResponse:
+async def call_tool(request: ToolCallRequest, current_user: CurrentUser) -> ToolCallResponse:
     """
     Call an MCP tool.
+
+    Requires user authentication.
 
     Executes the specified tool with the given arguments.
     Used as REST fallback when WebSocket is unavailable.
@@ -648,9 +657,11 @@ async def call_tool(request: ToolCallRequest) -> ToolCallResponse:
 
 
 @mcp_router.get("/resources")
-async def list_resources() -> ResourceListResponse:
+async def list_resources(current_user: CurrentUser) -> ResourceListResponse:
     """
     List available MCP resources.
+
+    Requires user authentication.
 
     Returns all resources exposed by the MCP server.
     """
@@ -673,10 +684,13 @@ async def list_resources() -> ResourceListResponse:
 
 @mcp_router.get("/resources/content")
 async def read_resource(
+    current_user: CurrentUser,
     uri: str = Query(..., description="Resource URI to read"),
 ) -> ResourceContentResponse:
     """
     Read a resource by URI.
+
+    Requires user authentication.
 
     Returns the content of the specified resource.
     """
@@ -708,9 +722,11 @@ async def read_resource(
 
 
 @mcp_router.get("/prompts")
-async def list_prompts() -> PromptListResponse:
+async def list_prompts(current_user: CurrentUser) -> PromptListResponse:
     """
     List available MCP prompts.
+
+    Requires user authentication.
 
     Returns all prompts (workflow templates) exposed by the MCP server.
     """
@@ -745,6 +761,7 @@ async def list_prompts() -> PromptListResponse:
 @mcp_router.post("/prompts/{prompt_name}")
 async def get_prompt(
     prompt_name: str,
+    current_user: CurrentUser,
     request: PromptGetRequest | None = None,
 ) -> PromptGetResponse:
     """
@@ -780,9 +797,11 @@ async def get_prompt(
 
 
 @mcp_router.post("/sampling")
-async def create_sampling(request: SamplingRequest) -> SamplingResponseModel:
+async def create_sampling(request: SamplingRequest, current_user: CurrentUser) -> SamplingResponseModel:
     """
     Request LLM completion via MCP sampling.
+
+    Requires user authentication.
 
     This is a server-initiated request for the client to sample from an LLM.
     Useful for agent patterns where the server needs LLM assistance.
@@ -828,9 +847,11 @@ async def create_sampling(request: SamplingRequest) -> SamplingResponseModel:
 
 
 @mcp_router.post("/elicitation")
-async def create_elicitation(request: ElicitationFormRequest) -> ElicitationResponseModel:
+async def create_elicitation(request: ElicitationFormRequest, current_user: CurrentUser) -> ElicitationResponseModel:
     """
     Request user input via form elicitation.
+
+    Requires user authentication.
 
     Allows the server to request structured input from the user.
     """
@@ -865,9 +886,12 @@ async def create_elicitation(request: ElicitationFormRequest) -> ElicitationResp
 @mcp_router.post("/elicitation/url")
 async def create_url_elicitation(
     request: ElicitationUrlRequest,
+    current_user: CurrentUser,
 ) -> ElicitationResponseModel:
     """
     Request user to navigate to a URL.
+
+    Requires user authentication.
 
     Useful for OAuth flows or handling sensitive data.
     """
@@ -900,9 +924,11 @@ async def create_url_elicitation(
 
 
 @mcp_router.get("/tasks")
-async def list_tasks() -> TaskListResponse:
+async def list_tasks(current_user: CurrentUser) -> TaskListResponse:
     """
     List active MCP tasks.
+
+    Requires user authentication.
 
     Returns all currently active tasks (experimental feature).
     """
@@ -924,9 +950,11 @@ async def list_tasks() -> TaskListResponse:
 
 
 @mcp_router.get("/tasks/{task_id}")
-async def get_task(task_id: str) -> TaskResponse:
+async def get_task(task_id: str, current_user: CurrentUser) -> TaskResponse:
     """
     Get task status.
+
+    Requires user authentication.
 
     Returns the current status of a task.
     """
@@ -958,9 +986,11 @@ async def get_task(task_id: str) -> TaskResponse:
 
 
 @mcp_router.post("/tasks/{task_id}/cancel")
-async def cancel_task(task_id: str) -> TaskResponse:
+async def cancel_task(task_id: str, current_user: CurrentUser) -> TaskResponse:
     """
     Cancel a running task.
+
+    Requires user authentication.
 
     Attempts to cancel the specified task.
     """
@@ -992,9 +1022,11 @@ async def cancel_task(task_id: str) -> TaskResponse:
 
 
 @mcp_router.get("/tasks/{task_id}/result")
-async def get_task_result(task_id: str) -> ToolCallResponse:
+async def get_task_result(task_id: str, current_user: CurrentUser) -> ToolCallResponse:
     """
     Get task result (blocks until complete).
+
+    Requires user authentication.
 
     Waits for the task to reach a terminal status, then returns the result.
     Per MCP 2025-11-25 spec: tasks/result.

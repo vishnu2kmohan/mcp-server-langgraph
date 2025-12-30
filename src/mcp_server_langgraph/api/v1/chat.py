@@ -18,18 +18,22 @@ LLM Integration:
 
     Cost tracking is handled automatically via LiteLLM's CostTrackingCallback
     registered in llm/factory.py.
+
+Authorization:
+    All endpoints require authentication. Chat sessions are user-owned resources.
 """
 
 from collections.abc import AsyncIterator
-from typing import TYPE_CHECKING, Any, Literal
+from typing import TYPE_CHECKING, Annotated, Any, Literal
 from uuid import uuid4
 
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.responses import StreamingResponse
 from litellm import acompletion
 from opentelemetry import trace
 from pydantic import BaseModel, Field
 
+from mcp_server_langgraph.auth.dependencies import get_current_user
 from mcp_server_langgraph.core.config import settings
 from mcp_server_langgraph.core.feature_flags import feature_flags
 
@@ -42,6 +46,19 @@ if TYPE_CHECKING:
 
 
 chat_router = APIRouter(tags=["chat"])
+
+
+# ============================================================================
+# Authorization Type Aliases
+# ============================================================================
+
+# Type alias for authenticated user dependency
+CurrentUser = Annotated[dict[str, Any], Depends(get_current_user)]
+
+
+def _get_user_id(user: dict[str, Any]) -> str:
+    """Extract user ID from authenticated user dict."""
+    return user.get("sub") or user.get("user_id") or user.get("preferred_username") or "anonymous"
 
 
 # Request/Response Models
@@ -916,13 +933,19 @@ def reset_chat_service() -> None:
 
 
 @chat_router.post("/chat/completions")
-async def create_completion(request: ChatCompletionRequest) -> ChatCompletionResponse:
+async def create_completion(
+    request: ChatCompletionRequest,
+    current_user: CurrentUser,
+) -> ChatCompletionResponse:
     """
     Create a chat completion.
+
+    Requires authentication. The user must be authenticated to create completions.
 
     Sends messages to the LLM and returns the assistant's response.
 
     Raises:
+        HTTPException 401: When authentication is required
         HTTPException 428: When MCP requires user elicitation (authentication, consent)
         HTTPException 403: When permission is denied
         HTTPException 503: When MCP server is unavailable
@@ -935,6 +958,7 @@ async def create_completion(request: ChatCompletionRequest) -> ChatCompletionRes
 
     service = get_chat_service()
     messages = [msg.model_dump() for msg in request.messages]
+    user_id = _get_user_id(current_user)
 
     try:
         response = await service.create_completion(
@@ -946,6 +970,7 @@ async def create_completion(request: ChatCompletionRequest) -> ChatCompletionRes
             resource_uris=request.resource_uris,
             reasoning_effort=request.reasoning_effort,
             enable_thinking=request.enable_thinking,
+            user_id=user_id,
         )
         return ChatCompletionResponse(**response)
     except MCPElicitationRequiredError as e:
@@ -966,14 +991,20 @@ async def create_completion(request: ChatCompletionRequest) -> ChatCompletionRes
 
 
 @chat_router.post("/chat/completions/stream")
-async def create_stream(request: ChatCompletionRequest) -> StreamingResponse:
+async def create_stream(
+    request: ChatCompletionRequest,
+    current_user: CurrentUser,
+) -> StreamingResponse:
     """
     Create a streaming chat completion.
+
+    Requires authentication. The user must be authenticated to create streams.
 
     Sends messages to the LLM and streams the response as Server-Sent Events.
     """
     service = get_chat_service()
     messages = [msg.model_dump() for msg in request.messages]
+    user_id = _get_user_id(current_user)
 
     async def event_generator() -> AsyncIterator[str]:
         async for chunk in service.create_stream(
@@ -985,6 +1016,7 @@ async def create_stream(request: ChatCompletionRequest) -> StreamingResponse:
             resource_uris=request.resource_uris,
             reasoning_effort=request.reasoning_effort,
             enable_thinking=request.enable_thinking,
+            user_id=user_id,
         ):
             # Format as SSE
             import json
@@ -1002,11 +1034,18 @@ async def create_stream(request: ChatCompletionRequest) -> StreamingResponse:
 
 
 @chat_router.get("/chat/{session_id}/history")
-async def get_history(session_id: str) -> list[dict[str, Any]]:
+async def get_history(
+    session_id: str,
+    current_user: CurrentUser,
+) -> list[dict[str, Any]]:
     """
     Get chat history for a session.
 
-    Returns all messages in chronological order.
+    Requires authentication. Returns all messages in chronological order.
+
+    Note: In a full implementation, this would also verify the user has
+    access to this specific session (owner/viewer). Currently requires
+    only authentication.
     """
     service = get_chat_service()
     history = await service.get_history(session_id)

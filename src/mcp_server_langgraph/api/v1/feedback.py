@@ -19,14 +19,19 @@ Usage:
 import logging
 from datetime import datetime, UTC
 from enum import Enum
-from typing import Any, Protocol
+from typing import Annotated, Any, Protocol
 
 from fastapi import APIRouter, Depends, status
 from pydantic import BaseModel, Field
 
+from mcp_server_langgraph.auth.dependencies import get_current_user
+
 logger = logging.getLogger(__name__)
 
 router = APIRouter(tags=["feedback"])
+
+# Type alias for authenticated user dependency
+CurrentUser = Annotated[dict[str, Any], Depends(get_current_user)]
 
 
 # Enums
@@ -231,10 +236,13 @@ def set_feedback_service(service: FeedbackService | None) -> None:
 )
 async def submit_hallucination_report(
     report: HallucinationReportRequest,
+    current_user: CurrentUser,
     service: FeedbackService = Depends(get_feedback_service),
 ) -> HallucinationReportResponse:
     """
     Report a hallucination in an AI response.
+
+    Requires user authentication.
 
     Use this endpoint when the AI:
     - Made a factually incorrect statement
@@ -242,8 +250,7 @@ async def submit_hallucination_report(
     - Cited a non-existent source
     - Exhibited other hallucination behavior
     """
-    # In real app, get user from request.state.user
-    user_id = "user-001"  # Placeholder
+    user_id = current_user.get("sub", current_user.get("user_id", "unknown"))
 
     result = await service.submit_hallucination_report(user_id, report)
     return HallucinationReportResponse(
@@ -258,16 +265,18 @@ async def submit_hallucination_report(
 )
 async def submit_message_feedback(
     feedback: MessageFeedbackRequest,
+    current_user: CurrentUser,
     service: FeedbackService = Depends(get_feedback_service),
 ) -> MessageFeedbackResponse:
     """
     Submit feedback for a message (thumbs up/down).
 
+    Requires user authentication.
+
     Use this endpoint to rate AI responses as helpful or unhelpful.
     Optionally provide a reason for the rating.
     """
-    # In real app, get user from request.state.user
-    user_id = "user-001"  # Placeholder
+    user_id = current_user.get("sub", current_user.get("user_id", "unknown"))
 
     result = await service.submit_message_feedback(user_id, feedback)
     return MessageFeedbackResponse(
@@ -278,11 +287,14 @@ async def submit_message_feedback(
 
 @router.get("/summary")
 async def get_feedback_summary(
+    current_user: CurrentUser,
     timeframe: str = "7d",
     service: FeedbackService = Depends(get_feedback_service),
 ) -> FeedbackSummaryResponse:
     """
     Get aggregated feedback summary.
+
+    Requires user authentication.
 
     Args:
         timeframe: Time period for aggregation (7d, 30d, 90d)

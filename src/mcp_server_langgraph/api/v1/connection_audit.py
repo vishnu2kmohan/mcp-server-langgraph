@@ -16,14 +16,18 @@ import csv
 import io
 import json
 from datetime import UTC, datetime
-from typing import Any, Literal
+from typing import Annotated, Any, Literal
 
 from fastapi import APIRouter, Depends, Header, Query, Request, status
 from fastapi.responses import Response
 from pydantic import BaseModel, Field
 
+from mcp_server_langgraph.auth.dependencies import require_admin
 from mcp_server_langgraph.core.dependencies import get_audit_log_repository
 from mcp_server_langgraph.repositories.audit_log import AuditLogRepository
+
+# Type alias for admin user dependency
+AdminUser = Annotated[dict[str, Any], Depends(require_admin)]
 
 
 # ============================================================================
@@ -108,12 +112,15 @@ audit_router = APIRouter(prefix="/connections", tags=["connection-audit"])
 async def log_audit_event(
     request: Request,
     event: AuditLogEventRequest,
+    admin_user: AdminUser,
     repo: AuditLogRepository = Depends(get_audit_log_repository),
     x_forwarded_for: str | None = Header(None),
     user_agent: str | None = Header(None),
 ) -> AuditLogEntry:
     """
     Log an audit event for a connection operation.
+
+    Requires admin authorization.
 
     Records the event with timestamp, actor information, and optional details.
     Automatically captures IP address and user agent from headers.
@@ -150,6 +157,7 @@ async def log_audit_event(
 
 @audit_router.get("/audit/logs")
 async def query_audit_logs(
+    admin_user: AdminUser,
     resource_type: str | None = Query(None, description="Filter by resource type"),
     resource_id: str | None = Query(None, description="Filter by resource ID"),
     actor_id: str | None = Query(None, description="Filter by actor ID"),
@@ -162,6 +170,8 @@ async def query_audit_logs(
 ) -> AuditLogListResponse:
     """
     Query audit logs with filtering and pagination.
+
+    Requires admin authorization.
 
     Supports filtering by resource type, resource ID, actor, event type,
     and time range. Results are paginated with limit and offset.
@@ -202,11 +212,14 @@ async def query_audit_logs(
 @audit_router.get("/{connection_id}/audit")
 async def get_connection_audit_log(
     connection_id: str,
+    admin_user: AdminUser,
     limit: int = Query(20, ge=1, le=100, description="Maximum number of logs to return"),
     repo: AuditLogRepository = Depends(get_audit_log_repository),
 ) -> AuditLogListResponse:
     """
     Get audit log for a specific connection.
+
+    Requires admin authorization.
 
     Returns the audit trail for a connection, ordered by timestamp descending.
     """
@@ -240,11 +253,14 @@ async def get_connection_audit_log(
 
 @audit_router.delete("/audit/retention")
 async def delete_old_audit_logs(
+    admin_user: AdminUser,
     days: int = Query(90, ge=1, le=365, description="Delete logs older than this many days"),
     repo: AuditLogRepository = Depends(get_audit_log_repository),
 ) -> RetentionDeleteResponse:
     """
     Delete audit logs older than the specified retention period.
+
+    Requires admin authorization.
 
     This is used for maintenance and compliance with data retention policies.
     """
@@ -271,6 +287,7 @@ class AuditLogExportResponse(BaseModel):
 
 @audit_router.get("/audit/export")
 async def export_audit_logs(
+    admin_user: AdminUser,
     format: Literal["json", "csv"] = Query(default="json", description="Export format (json or csv)"),
     resource_type: str | None = Query(None, description="Filter by resource type"),
     resource_id: str | None = Query(None, description="Filter by resource ID"),
@@ -282,6 +299,8 @@ async def export_audit_logs(
 ) -> Response:
     """
     Export audit logs in JSON or CSV format.
+
+    Requires admin authorization.
 
     Supports the same filters as the query endpoint. Results are returned
     as a downloadable file.

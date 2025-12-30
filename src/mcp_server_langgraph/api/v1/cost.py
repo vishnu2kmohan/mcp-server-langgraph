@@ -12,10 +12,19 @@ Usage:
 """
 
 from datetime import datetime
-from typing import TYPE_CHECKING, Any, Literal
+from typing import TYPE_CHECKING, Annotated, Any, Literal
 
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel, Field
+
+from mcp_server_langgraph.auth.dependencies import (
+    get_current_user,
+    require_cost_admin,
+    require_cost_viewer,
+)
+
+# Type alias for current user
+CurrentUser = Annotated[dict[str, Any], Depends(get_current_user)]
 
 if TYPE_CHECKING:
     from mcp_server_langgraph.monitoring.cost_budget import (
@@ -503,6 +512,7 @@ def reset_cost_service() -> None:
 
 @cost_router.get("/cost/summary")
 async def get_summary(
+    _: Annotated[dict[str, Any], Depends(require_cost_viewer)],
     start_date: str | None = Query(default=None, description="Start date (YYYY-MM-DD)"),
     end_date: str | None = Query(default=None, description="End date (YYYY-MM-DD)"),
 ) -> CostSummaryResponse:
@@ -519,6 +529,7 @@ async def get_summary(
 
 @cost_router.get("/cost/by-model")
 async def get_by_model(
+    _: Annotated[dict[str, Any], Depends(require_cost_viewer)],
     start_date: str | None = Query(default=None, description="Start date (YYYY-MM-DD)"),
     end_date: str | None = Query(default=None, description="End date (YYYY-MM-DD)"),
 ) -> list[ModelCostResponse]:
@@ -535,6 +546,7 @@ async def get_by_model(
 
 @cost_router.get("/cost/history")
 async def get_history(
+    _: Annotated[dict[str, Any], Depends(require_cost_viewer)],
     start_date: str | None = Query(default=None, description="Start date (YYYY-MM-DD)"),
     end_date: str | None = Query(default=None, description="End date (YYYY-MM-DD)"),
 ) -> list[DailyCostResponse]:
@@ -551,6 +563,7 @@ async def get_history(
 
 @cost_router.get("/cost/records")
 async def get_records(
+    _: Annotated[dict[str, Any], Depends(require_cost_viewer)],
     cursor: str | None = Query(default=None, description="Pagination cursor"),
     limit: int = Query(default=50, ge=1, le=1000, description="Records per page"),
     sort_by: str = Query(default="timestamp", description="Sort field: timestamp|total_tokens|estimated_cost_usd"),
@@ -597,6 +610,7 @@ async def get_records(
 
 @cost_router.get("/cost/summary/by-organization")
 async def get_cost_by_organization(
+    _: Annotated[dict[str, Any], Depends(require_cost_viewer)],
     start_date: str | None = Query(default=None, description="Start date (YYYY-MM-DD)"),
     end_date: str | None = Query(default=None, description="End date (YYYY-MM-DD)"),
 ) -> list[OrganizationCostResponse]:
@@ -613,6 +627,7 @@ async def get_cost_by_organization(
 
 @cost_router.get("/cost/summary/by-project")
 async def get_cost_by_project(
+    _: Annotated[dict[str, Any], Depends(require_cost_viewer)],
     organization_id: str | None = Query(default=None, description="Filter by organization"),
     start_date: str | None = Query(default=None, description="Start date (YYYY-MM-DD)"),
     end_date: str | None = Query(default=None, description="End date (YYYY-MM-DD)"),
@@ -634,6 +649,7 @@ async def get_cost_by_project(
 
 @cost_router.get("/cost/summary/by-team")
 async def get_cost_by_team(
+    _: Annotated[dict[str, Any], Depends(require_cost_viewer)],
     organization_id: str | None = Query(default=None, description="Filter by organization"),
     project_id: str | None = Query(default=None, description="Filter by project"),
     start_date: str | None = Query(default=None, description="Start date (YYYY-MM-DD)"),
@@ -765,6 +781,7 @@ def get_forecaster() -> "CostForecaster":
 
 @cost_router.get("/cost/budget/status")
 async def get_budget_status(
+    _: Annotated[dict[str, Any], Depends(require_cost_viewer)],
     entity_type: Literal["organization", "project", "team", "user"] = Query(
         ..., description="Entity type: organization, project, team, user"
     ),
@@ -841,6 +858,7 @@ async def get_budget_status(
 
 @cost_router.get("/cost/budget/anomaly")
 async def detect_cost_anomaly(
+    _: Annotated[dict[str, Any], Depends(require_cost_viewer)],
     entity_type: Literal["organization", "project", "team", "user"] = Query(
         ..., description="Entity type: organization, project, team, user"
     ),
@@ -887,6 +905,7 @@ async def detect_cost_anomaly(
 
 @cost_router.get("/cost/budget/forecast")
 async def get_cost_forecast(
+    _: Annotated[dict[str, Any], Depends(require_cost_viewer)],
     entity_type: Literal["organization", "project", "team", "user"] = Query(
         ..., description="Entity type: organization, project, team, user"
     ),
@@ -937,6 +956,7 @@ async def get_cost_forecast(
 
 @cost_router.get("/cost/budgets")
 async def list_budgets(
+    _: Annotated[dict[str, Any], Depends(require_cost_viewer)],
     entity_type: Literal["organization", "project", "team", "user"] | None = Query(
         default=None, description="Filter by entity type"
     ),
@@ -966,7 +986,10 @@ async def list_budgets(
 
 
 @cost_router.post("/cost/budgets", status_code=201)
-async def create_budget(request: BudgetCreateRequest) -> BudgetResponse:
+async def create_budget(
+    _: Annotated[dict[str, Any], Depends(require_cost_admin)],
+    request: BudgetCreateRequest,
+) -> BudgetResponse:
     """
     Create a new budget.
 
@@ -1014,6 +1037,7 @@ async def create_budget(request: BudgetCreateRequest) -> BudgetResponse:
 
 @cost_router.put("/cost/budgets/{entity_type}/{entity_id}")
 async def update_budget(
+    _: Annotated[dict[str, Any], Depends(require_cost_admin)],
     entity_type: Literal["organization", "project", "team", "user"],
     entity_id: str,
     request: BudgetUpdateRequest,
@@ -1065,6 +1089,7 @@ async def update_budget(
 
 @cost_router.delete("/cost/budgets/{entity_type}/{entity_id}", status_code=204)
 async def delete_budget(
+    _: Annotated[dict[str, Any], Depends(require_cost_admin)],
     entity_type: Literal["organization", "project", "team", "user"],
     entity_id: str,
 ) -> None:

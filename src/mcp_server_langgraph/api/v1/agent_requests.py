@@ -483,8 +483,13 @@ class AgentRequestQueue:
                 from mcp_server_langgraph.agents.explanation_orchestrator import (
                     CachedExplanationOrchestrator,
                 )
+                from mcp_server_langgraph.websocket.handlers.orchestrator_status import (
+                    get_orchestrator_status_broadcaster,
+                )
 
-                orchestrator = CachedExplanationOrchestrator()
+                orchestrator = CachedExplanationOrchestrator(
+                    status_broadcaster=get_orchestrator_status_broadcaster(),
+                )
                 reasoning_trace = (context or {}).get("reasoning_trace", [])
                 ai_explanation = await orchestrator.generate_explanation_cached(
                     approval_id=request_id,

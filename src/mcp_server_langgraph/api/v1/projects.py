@@ -22,12 +22,22 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from pydantic import BaseModel, Field
 
 from mcp_server_langgraph.auth.middleware import get_current_user
+from mcp_server_langgraph.auth.dependencies import (
+    require_project_viewer,
+    require_project_editor,
+    require_project_owner,
+)
 from mcp_server_langgraph.core.dependencies import get_project_repository
 from mcp_server_langgraph.storage.base import ProjectRepository
 from mcp_server_langgraph.storage.models import Project, ProjectConnection
 
 # Type alias for authenticated user dependency
 CurrentUser = Annotated[dict[str, Any], Depends(get_current_user)]
+
+# Type alias for authorized project access (includes user)
+ProjectViewer = Annotated[dict[str, Any], Depends(require_project_viewer)]
+ProjectEditor = Annotated[dict[str, Any], Depends(require_project_editor)]
+ProjectOwner = Annotated[dict[str, Any], Depends(require_project_owner)]
 
 
 # ============================================================================
@@ -356,9 +366,13 @@ async def create_project(
 )
 async def get_project(
     project_id: str,
+    user: ProjectViewer,
     repo: ProjectRepository = Depends(get_project_repository),
 ) -> ProjectDetailResponse:
-    """Get a project by ID with all child resources."""
+    """Get a project by ID with all child resources.
+
+    Requires 'viewer' access to the project (owner/editor/viewer).
+    """
     project = await repo.get(project_id)
     if project is None:
         raise HTTPException(
@@ -377,9 +391,13 @@ async def get_project(
 async def update_project(
     project_id: str,
     body: ProjectUpdate,
+    user: ProjectEditor,
     repo: ProjectRepository = Depends(get_project_repository),
 ) -> ProjectResponse:
-    """Update a project."""
+    """Update a project.
+
+    Requires 'editor' access to the project (owner/editor).
+    """
     # Build update data
     update_data = {}
     if body.name is not None:
@@ -418,10 +436,14 @@ async def update_project(
 )
 async def delete_project(
     project_id: str,
+    user: ProjectOwner,
     cascade: bool = False,
     repo: ProjectRepository = Depends(get_project_repository),
 ) -> None:
-    """Delete a project. If cascade=True, also deletes child resources."""
+    """Delete a project. If cascade=True, also deletes child resources.
+
+    Requires 'owner' access to the project.
+    """
     deleted = await repo.delete(project_id, cascade=cascade)
     if not deleted:
         raise HTTPException(
@@ -466,9 +488,13 @@ class ConnectionListResponse(BaseModel):
 )
 async def list_project_workflows(
     project_id: str,
+    user: ProjectViewer,
     repo: ProjectRepository = Depends(get_project_repository),
 ) -> WorkflowListResponse:
-    """List all workflows in a project."""
+    """List all workflows in a project.
+
+    Requires 'viewer' access to the project.
+    """
     project = await repo.get(project_id)
     if project is None:
         raise HTTPException(
@@ -498,9 +524,13 @@ async def list_project_workflows(
 )
 async def list_project_sessions(
     project_id: str,
+    user: ProjectViewer,
     repo: ProjectRepository = Depends(get_project_repository),
 ) -> SessionListResponse:
-    """List all sessions in a project."""
+    """List all sessions in a project.
+
+    Requires 'viewer' access to the project.
+    """
     project = await repo.get(project_id)
     if project is None:
         raise HTTPException(
@@ -531,9 +561,13 @@ async def list_project_sessions(
 )
 async def list_project_connections(
     project_id: str,
+    user: ProjectViewer,
     repo: ProjectRepository = Depends(get_project_repository),
 ) -> ConnectionListResponse:
-    """List all connections in a project."""
+    """List all connections in a project.
+
+    Requires 'viewer' access to the project.
+    """
     project = await repo.get(project_id)
     if project is None:
         raise HTTPException(
@@ -569,11 +603,15 @@ async def list_project_connections(
 )
 async def add_workflow_to_project(
     project_id: str,
+    user: ProjectEditor,
     workflow_id: str,
     workflow_name: str = "Workflow",
     repo: ProjectRepository = Depends(get_project_repository),
 ) -> ProjectDetailResponse:
-    """Add a workflow to a project."""
+    """Add a workflow to a project.
+
+    Requires 'editor' access to the project.
+    """
     result = await repo.add_workflow(project_id, workflow_id, workflow_name)
     if result is None:
         raise HTTPException(
@@ -591,9 +629,13 @@ async def add_workflow_to_project(
 async def remove_workflow_from_project(
     project_id: str,
     workflow_id: str,
+    user: ProjectEditor,
     repo: ProjectRepository = Depends(get_project_repository),
 ) -> ProjectDetailResponse:
-    """Remove a workflow from a project."""
+    """Remove a workflow from a project.
+
+    Requires 'editor' access to the project.
+    """
     result = await repo.remove_workflow(project_id, workflow_id)
     if result is None:
         raise HTTPException(
@@ -610,11 +652,15 @@ async def remove_workflow_from_project(
 )
 async def add_session_to_project(
     project_id: str,
+    user: ProjectEditor,
     session_id: str = Query(..., description="Session ID to add"),
     session_name: str = Query("Session", description="Session display name"),
     repo: ProjectRepository = Depends(get_project_repository),
 ) -> ProjectDetailResponse:
-    """Add a session to a project."""
+    """Add a session to a project.
+
+    Requires 'editor' access to the project.
+    """
     result = await repo.add_session(project_id, session_id, session_name)
     if result is None:
         raise HTTPException(
@@ -632,9 +678,13 @@ async def add_session_to_project(
 async def remove_session_from_project(
     project_id: str,
     session_id: str,
+    user: ProjectEditor,
     repo: ProjectRepository = Depends(get_project_repository),
 ) -> ProjectDetailResponse:
-    """Remove a session from a project."""
+    """Remove a session from a project.
+
+    Requires 'editor' access to the project.
+    """
     result = await repo.remove_session(project_id, session_id)
     if result is None:
         raise HTTPException(
@@ -651,12 +701,16 @@ async def remove_session_from_project(
 )
 async def add_connection_to_project(
     project_id: str,
+    user: ProjectEditor,
     connection_type: str,
     connection_id: str,
     connection_name: str = "Connection",
     repo: ProjectRepository = Depends(get_project_repository),
 ) -> ProjectDetailResponse:
-    """Add a connection to a project."""
+    """Add a connection to a project.
+
+    Requires 'editor' access to the project.
+    """
     if connection_type not in ["mcp_server", "vector_store", "api_key"]:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -687,9 +741,12 @@ async def add_connection_to_project(
 async def remove_connection_from_project(
     project_id: str,
     connection_id: str,
+    user: ProjectEditor,
     repo: ProjectRepository = Depends(get_project_repository),
 ) -> None:
     """Remove a connection from a project.
+
+    Requires 'editor' access to the project.
 
     This disassociates the connection from the project but does not delete
     the connection itself. The operation is idempotent - returns success
@@ -698,6 +755,7 @@ async def remove_connection_from_project(
     Args:
         project_id: The project to remove the connection from
         connection_id: The connection to remove
+        user: Authenticated user with editor access
 
     Returns:
         None (204 No Content on success)
@@ -733,9 +791,13 @@ class MemberListResponse(BaseModel):
 )
 async def list_project_members(
     project_id: str,
+    user: ProjectViewer,
     repo: ProjectRepository = Depends(get_project_repository),
 ) -> MemberListResponse:
-    """List all members of a project."""
+    """List all members of a project.
+
+    Requires 'viewer' access to the project.
+    """
     project = await repo.get(project_id)
     if project is None:
         raise HTTPException(
@@ -766,9 +828,13 @@ async def list_project_members(
 async def add_member_to_project(
     project_id: str,
     body: AddMemberRequest,
+    user: ProjectOwner,
     repo: ProjectRepository = Depends(get_project_repository),
 ) -> ProjectDetailResponse:
-    """Add a member to a project."""
+    """Add a member to a project.
+
+    Requires 'owner' access to the project (only owners can add members).
+    """
     if body.role not in ["editor", "viewer", "executor"]:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -792,9 +858,13 @@ async def add_member_to_project(
 async def remove_member_from_project(
     project_id: str,
     user_id: str,
+    user: ProjectOwner,
     repo: ProjectRepository = Depends(get_project_repository),
 ) -> ProjectDetailResponse:
-    """Remove a member from a project."""
+    """Remove a member from a project.
+
+    Requires 'owner' access to the project (only owners can remove members).
+    """
     result = await repo.remove_member(project_id, user_id)
     if result is None:
         raise HTTPException(
@@ -886,10 +956,13 @@ class ProjectAlertsResponse(BaseModel):
 )
 async def get_project_traces(
     project_id: str,
+    user: ProjectViewer,
     limit: int = 20,
     repo: ProjectRepository = Depends(get_project_repository),
 ) -> ProjectTracesResponse:
     """Get traces scoped to a project.
+
+    Requires 'viewer' access to the project.
 
     Filters global trace data to show only traces from:
     - Sessions belonging to this project
@@ -925,11 +998,14 @@ async def get_project_traces(
 )
 async def get_project_metrics(
     project_id: str,
+    user: ProjectViewer,
     start_date: str | None = None,
     end_date: str | None = None,
     repo: ProjectRepository = Depends(get_project_repository),
 ) -> ProjectMetricsResponse:
     """Get metrics scoped to a project.
+
+    Requires 'viewer' access to the project.
 
     Aggregates metrics from:
     - Sessions belonging to this project
@@ -961,11 +1037,14 @@ async def get_project_metrics(
 )
 async def get_project_logs(
     project_id: str,
+    user: ProjectViewer,
     limit: int = 100,
     level: str | None = None,
     repo: ProjectRepository = Depends(get_project_repository),
 ) -> ProjectLogsResponse:
     """Get logs scoped to a project.
+
+    Requires 'viewer' access to the project.
 
     Filters global log data to show only logs from:
     - Sessions belonging to this project
@@ -996,10 +1075,13 @@ async def get_project_logs(
 )
 async def get_project_alerts(
     project_id: str,
+    user: ProjectViewer,
     status_filter: str | None = None,  # "firing" | "resolved" | None (all)
     repo: ProjectRepository = Depends(get_project_repository),
 ) -> ProjectAlertsResponse:
     """Get alerts scoped to a project.
+
+    Requires 'viewer' access to the project.
 
     Shows alerts triggered by:
     - Sessions belonging to this project
@@ -1081,11 +1163,14 @@ class ProjectCostHistoryResponse(BaseModel):
 )
 async def get_project_cost_summary(
     project_id: str,
+    user: ProjectViewer,
     start_date: str | None = None,
     end_date: str | None = None,
     repo: ProjectRepository = Depends(get_project_repository),
 ) -> ProjectCostSummaryResponse:
     """Get cost summary scoped to a project.
+
+    Requires 'viewer' access to the project.
 
     Aggregates costs from:
     - Sessions belonging to this project
@@ -1118,11 +1203,15 @@ async def get_project_cost_summary(
 )
 async def get_project_cost_by_model(
     project_id: str,
+    user: ProjectViewer,
     start_date: str | None = None,
     end_date: str | None = None,
     repo: ProjectRepository = Depends(get_project_repository),
 ) -> ProjectCostByModelResponse:
-    """Get cost breakdown by model scoped to a project."""
+    """Get cost breakdown by model scoped to a project.
+
+    Requires 'viewer' access to the project.
+    """
     project = await repo.get(project_id)
     if project is None:
         raise HTTPException(
@@ -1148,11 +1237,15 @@ async def get_project_cost_by_model(
 )
 async def get_project_cost_history(
     project_id: str,
+    user: ProjectViewer,
     start_date: str | None = None,
     end_date: str | None = None,
     repo: ProjectRepository = Depends(get_project_repository),
 ) -> ProjectCostHistoryResponse:
-    """Get cost history scoped to a project."""
+    """Get cost history scoped to a project.
+
+    Requires 'viewer' access to the project.
+    """
     project = await repo.get(project_id)
     if project is None:
         raise HTTPException(

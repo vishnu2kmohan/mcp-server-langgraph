@@ -14,13 +14,18 @@ These endpoints require admin persona permissions.
 from __future__ import annotations
 
 import re
-from typing import TYPE_CHECKING, Any, Protocol
+from typing import TYPE_CHECKING, Annotated, Any, Protocol
 
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, Field, field_validator
+
+from mcp_server_langgraph.auth.dependencies import require_admin
 
 if TYPE_CHECKING:
     pass
+
+# Type alias for admin user dependency
+AdminUser = Annotated[dict[str, Any], Depends(require_admin)]
 
 
 class MarketplaceRegistry(Protocol):
@@ -154,8 +159,10 @@ def create_marketplace_router(registry: MarketplaceRegistry) -> APIRouter:
     router = APIRouter(prefix="/marketplaces", tags=["marketplace-admin"])
 
     @router.get("", response_model=MarketplaceListResponse)
-    async def list_marketplaces() -> MarketplaceListResponse:
+    async def list_marketplaces(admin_user: AdminUser) -> MarketplaceListResponse:
         """List all registered skill marketplaces.
+
+        Requires admin authorization.
 
         Returns list of marketplaces with their configuration and skill counts.
         """
@@ -163,8 +170,10 @@ def create_marketplace_router(registry: MarketplaceRegistry) -> APIRouter:
         return MarketplaceListResponse(marketplaces=marketplaces)
 
     @router.get("/{name}")
-    async def get_marketplace(name: str) -> dict[str, Any]:
+    async def get_marketplace(name: str, admin_user: AdminUser) -> dict[str, Any]:
         """Get details for a specific marketplace.
+
+        Requires admin authorization.
 
         Args:
             name: Marketplace name
@@ -183,8 +192,11 @@ def create_marketplace_router(registry: MarketplaceRegistry) -> APIRouter:
     @router.post("", response_model=MarketplaceResponse, status_code=201)
     async def register_marketplace(
         request: MarketplaceCreateRequest,
+        admin_user: AdminUser,
     ) -> MarketplaceResponse:
         """Register a new skill marketplace.
+
+        Requires admin authorization.
 
         Non-Anthropic marketplaces require admin approval for skills.
         """
@@ -208,8 +220,10 @@ def create_marketplace_router(registry: MarketplaceRegistry) -> APIRouter:
             )
 
     @router.delete("/{name}", response_model=MarketplaceResponse)
-    async def remove_marketplace(name: str) -> MarketplaceResponse:
+    async def remove_marketplace(name: str, admin_user: AdminUser) -> MarketplaceResponse:
         """Remove a marketplace.
+
+        Requires admin authorization.
 
         The default Anthropic marketplace cannot be removed.
         """
@@ -232,8 +246,10 @@ def create_marketplace_router(registry: MarketplaceRegistry) -> APIRouter:
             )
 
     @router.post("/{name}/sync", response_model=MarketplaceSyncResponse)
-    async def sync_marketplace(name: str) -> MarketplaceSyncResponse:
+    async def sync_marketplace(name: str, admin_user: AdminUser) -> MarketplaceSyncResponse:
         """Force sync skills from a marketplace.
+
+        Requires admin authorization.
 
         Fetches latest skills from the marketplace source.
         """
@@ -251,8 +267,10 @@ def create_marketplace_router(registry: MarketplaceRegistry) -> APIRouter:
             )
 
     @router.get("/{name}/skills", response_model=SkillListResponse)
-    async def list_marketplace_skills(name: str) -> SkillListResponse:
+    async def list_marketplace_skills(name: str, admin_user: AdminUser) -> SkillListResponse:
         """List all skills from a specific marketplace.
+
+        Requires admin authorization.
 
         Returns skill names and descriptions.
         """

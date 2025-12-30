@@ -9,13 +9,18 @@ Uses CachedUnifiedRegistry for cache-aside pattern to improve performance.
 Reference: MCP Protocol Specification 2025-11-25
 """
 
-from typing import Any
+from typing import Annotated, Any
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
+
+from mcp_server_langgraph.auth.dependencies import get_current_user
 
 # Router for aggregated MCP capabilities
 aggregated_router = APIRouter(prefix="/mcp", tags=["MCP Aggregated"])
+
+# Type alias for authenticated user dependency
+CurrentUser = Annotated[dict[str, Any], Depends(get_current_user)]
 
 
 # =============================================================================
@@ -105,9 +110,12 @@ class AllServersResponse(BaseModel):
     description="Get all tools from all registered MCP servers",
 )
 async def list_aggregated_tools(
+    current_user: CurrentUser,
     server_name: str | None = None,
 ) -> ToolsListResponse:
     """List all tools from registered MCP servers.
+
+    Requires user authentication.
 
     Uses cached registry for improved performance.
 
@@ -143,8 +151,10 @@ async def list_aggregated_tools(
     summary="Get tool by qualified name",
     description="Get a specific tool by its qualified name (server:tool)",
 )
-async def get_aggregated_tool(qualified_name: str) -> ToolResponse:
+async def get_aggregated_tool(qualified_name: str, current_user: CurrentUser) -> ToolResponse:
     """Get a specific tool by qualified name.
+
+    Requires user authentication.
 
     Args:
         qualified_name: Fully qualified name (server:tool)
@@ -183,9 +193,12 @@ async def get_aggregated_tool(qualified_name: str) -> ToolResponse:
     description="Get all resources from all registered MCP servers",
 )
 async def list_aggregated_resources(
+    current_user: CurrentUser,
     server_name: str | None = None,
 ) -> ResourcesListResponse:
     """List all resources from registered MCP servers.
+
+    Requires user authentication.
 
     Uses cached registry for improved performance.
 
@@ -222,8 +235,10 @@ async def list_aggregated_resources(
     summary="Get resource by qualified name",
     description="Get a specific resource by its qualified name (server:uri)",
 )
-async def get_aggregated_resource(qualified_name: str) -> ResourceResponse:
+async def get_aggregated_resource(qualified_name: str, current_user: CurrentUser) -> ResourceResponse:
     """Get a specific resource by qualified name.
+
+    Requires user authentication.
 
     Args:
         qualified_name: Fully qualified name (server:uri)
@@ -263,9 +278,12 @@ async def get_aggregated_resource(qualified_name: str) -> ResourceResponse:
     description="Get all prompts from all registered MCP servers",
 )
 async def list_aggregated_prompts(
+    current_user: CurrentUser,
     server_name: str | None = None,
 ) -> PromptsListResponse:
     """List all prompts from registered MCP servers.
+
+    Requires user authentication.
 
     Uses cached registry for improved performance.
 
@@ -301,8 +319,10 @@ async def list_aggregated_prompts(
     summary="Get prompt by qualified name",
     description="Get a specific prompt by its qualified name (server:name)",
 )
-async def get_aggregated_prompt(qualified_name: str) -> PromptResponse:
+async def get_aggregated_prompt(qualified_name: str, current_user: CurrentUser) -> PromptResponse:
     """Get a specific prompt by qualified name.
+
+    Requires user authentication.
 
     Args:
         qualified_name: Fully qualified name (server:name)
@@ -340,8 +360,10 @@ async def get_aggregated_prompt(qualified_name: str) -> PromptResponse:
     summary="List all registered servers",
     description="Get summary of all registered MCP servers and their capabilities",
 )
-async def list_aggregated_servers() -> AllServersResponse:
+async def list_aggregated_servers(current_user: CurrentUser) -> AllServersResponse:
     """List all registered servers with capability counts.
+
+    Requires user authentication.
 
     Uses cached registry for improved performance.
 
@@ -388,8 +410,10 @@ async def list_aggregated_servers() -> AllServersResponse:
     summary="Get server capabilities",
     description="Get capability summary for a specific server",
 )
-async def get_server_capabilities(server_name: str) -> ServerCapabilitiesResponse:
+async def get_server_capabilities(server_name: str, current_user: CurrentUser) -> ServerCapabilitiesResponse:
     """Get capability summary for a specific server.
+
+    Requires user authentication.
 
     Uses cached registry for improved performance.
 

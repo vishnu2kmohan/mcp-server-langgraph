@@ -12,11 +12,16 @@ Reference: Phase B - AI Feature Exposure
 import re
 from collections.abc import AsyncGenerator
 from enum import Enum
-from typing import Any, Literal, cast
+from typing import Annotated, Any, Literal, cast
 
-from fastapi import APIRouter, HTTPException, Request, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
+
+from mcp_server_langgraph.auth.dependencies import get_current_user
+
+# Type alias for current user
+CurrentUser = Annotated[dict[str, Any], Depends(get_current_user)]
 
 from mcp_server_langgraph.observability.telemetry import logger
 from mcp_server_langgraph.studio.ai.node_config import (
@@ -354,7 +359,10 @@ _registry = NodeTypeRegistry()
     summary="Get Node Configuration Help",
     description="Get AI-powered configuration help for a workflow node type",
 )
-async def get_node_config_help(request: NodeConfigHelpRequest) -> NodeConfigHelpResponse:
+async def get_node_config_help(
+    current_user: CurrentUser,
+    request: NodeConfigHelpRequest,
+) -> NodeConfigHelpResponse:
     """
     Get configuration help for a node type.
 
@@ -399,7 +407,10 @@ async def get_node_config_help(request: NodeConfigHelpRequest) -> NodeConfigHelp
     summary="Validate Node Configuration",
     description="Validate a node configuration against its schema",
 )
-async def validate_node_config(request: NodeConfigValidateRequest) -> NodeConfigValidateResponse:
+async def validate_node_config(
+    current_user: CurrentUser,
+    request: NodeConfigValidateRequest,
+) -> NodeConfigValidateResponse:
     """
     Validate node configuration.
 
@@ -441,7 +452,7 @@ async def validate_node_config(request: NodeConfigValidateRequest) -> NodeConfig
     summary="Get Available Node Types",
     description="Get all available workflow node types",
 )
-async def get_node_types() -> NodeTypesResponse:
+async def get_node_types(current_user: CurrentUser) -> NodeTypesResponse:
     """
     Get all available node types.
 
@@ -459,7 +470,7 @@ async def get_node_types() -> NodeTypesResponse:
     summary="Get Node Type Schema",
     description="Get the JSON Schema for a specific node type",
 )
-async def get_node_type_schema(node_type: str) -> dict[str, Any]:
+async def get_node_type_schema(current_user: CurrentUser, node_type: str) -> dict[str, Any]:
     """
     Get schema for a node type.
 
@@ -491,6 +502,7 @@ async def get_node_type_schema(node_type: str) -> dict[str, Any]:
     description="Unified endpoint for AI-powered suggestions (chat follow-up, workflow optimization)",
 )
 async def get_ai_suggestions(
+    current_user: CurrentUser,
     suggestion_request: UnifiedSuggestionsRequest,
     http_request: Request,
 ) -> UnifiedSuggestionsResponse:
@@ -669,6 +681,7 @@ async def _stream_suggestions(
     description="Stream AI suggestions using Server-Sent Events (SSE)",
 )
 async def stream_ai_suggestions(
+    current_user: CurrentUser,
     suggestion_request: UnifiedSuggestionsRequest,
     http_request: Request,
 ) -> StreamingResponse:
@@ -785,6 +798,7 @@ class SuggestionClickResponse(BaseModel):
     description="Track when a user clicks on a suggestion for analytics",
 )
 async def track_suggestion_click(
+    current_user: CurrentUser,
     request: SuggestionClickRequest,
 ) -> SuggestionClickResponse:
     """
@@ -827,6 +841,7 @@ async def track_suggestion_click(
     description="Track user interactions with suggestions (click, dismiss, view)",
 )
 async def track_suggestion_interaction(
+    current_user: CurrentUser,
     request: SuggestionTrackRequest,
 ) -> SuggestionTrackResponse:
     """
@@ -921,6 +936,7 @@ class SuggestionFeedbackResponse(BaseModel):
     description="Submit thumbs up/down feedback on a suggestion to improve quality",
 )
 async def submit_suggestion_feedback(
+    current_user: CurrentUser,
     request: SuggestionFeedbackRequest,
 ) -> SuggestionFeedbackResponse:
     """
@@ -1134,7 +1150,10 @@ async def _fetch_and_extract_content(url: str) -> dict[str, Any]:
     summary="Fetch URL Content",
     description="Fetch and extract content from a URL for chat context",
 )
-async def fetch_url_content(request: UrlFetchRequest) -> UrlFetchResponse:
+async def fetch_url_content(
+    current_user: CurrentUser,
+    request: UrlFetchRequest,
+) -> UrlFetchResponse:
     """
     Fetch content from a URL for inclusion in chat context.
 
@@ -1205,6 +1224,7 @@ class ChatSuggestionsResponse(BaseModel):
     description="Get AI-powered inline suggestions for chat input completion",
 )
 async def get_chat_suggestions(
+    current_user: CurrentUser,
     request: ChatSuggestionsRequest,
 ) -> ChatSuggestionsResponse:
     """
@@ -1297,6 +1317,7 @@ class CanvasActionResponse(BaseModel):
     description="Execute an AI-assisted canvas action (save, export, analyze)",
 )
 async def execute_canvas_action(
+    current_user: CurrentUser,
     action: str,
     request: CanvasActionRequest,
 ) -> CanvasActionResponse:
@@ -1407,6 +1428,7 @@ class InterpretCommandResponse(BaseModel):
     description="Interpret a natural language command and determine the intended action",
 )
 async def interpret_command(
+    current_user: CurrentUser,
     request: InterpretCommandRequest,
 ) -> InterpretCommandResponse:
     """

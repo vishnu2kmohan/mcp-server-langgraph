@@ -20,10 +20,15 @@ Reference: UX Audit Plan - Phase 6 AI-Native Integration
 
 import warnings
 from enum import Enum
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Annotated, Any
 
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel, Field
+
+from mcp_server_langgraph.auth.dependencies import get_current_user
+
+# Type alias for current user
+CurrentUser = Annotated[dict[str, Any], Depends(get_current_user)]
 
 from mcp_server_langgraph.observability.telemetry import logger
 
@@ -482,6 +487,7 @@ class ArtifactNameResponse(BaseModel):
     description="Analyzes user behavior to recommend appropriate UI complexity level.",
 )
 async def analyze_disclosure(
+    current_user: CurrentUser,
     body: DisclosureAnalyzeRequest,
     service: "AIUXService" = Depends(get_ai_ux_service),
 ) -> DisclosureAnalyzeResponse:
@@ -500,6 +506,7 @@ async def analyze_disclosure(
     description="Returns contextual suggestions for empty state pages. Uses LLM when available for personalized suggestions.",
 )
 async def get_empty_state_suggestions(
+    current_user: CurrentUser,
     body: EmptyStateSuggestionsRequest,
     service: "AIUXService" = Depends(get_ai_ux_service),
 ) -> EmptyStateSuggestionsResponse:
@@ -519,6 +526,7 @@ async def get_empty_state_suggestions(
     description="Returns a contextual nudge recommendation based on user behavior.",
 )
 async def recommend_nudge(
+    current_user: CurrentUser,
     body: NudgeRecommendRequest,
     service: "AIUXService" = Depends(get_ai_ux_service),
 ) -> NudgeRecommendResponse:
@@ -537,6 +545,7 @@ async def recommend_nudge(
     description="Analyzes an error and provides recovery suggestions. Uses LLM when available for intelligent analysis.",
 )
 async def analyze_error(
+    current_user: CurrentUser,
     body: ErrorAnalyzeRequest,
     service: "AIUXService" = Depends(get_ai_ux_service),
 ) -> ErrorAnalyzeResponse:
@@ -556,6 +565,7 @@ async def analyze_error(
     description="Returns a personalized onboarding path based on detected intent.",
 )
 async def personalize_onboarding(
+    current_user: CurrentUser,
     body: OnboardingPersonalizeRequest,
     service: "AIUXService" = Depends(get_ai_ux_service),
 ) -> OnboardingPersonalizeResponse:
@@ -574,6 +584,7 @@ async def personalize_onboarding(
     description="Returns AI-generated insights from HEART metrics data.",
 )
 async def get_metrics_insights(
+    current_user: CurrentUser,
     service: "AIUXService" = Depends(get_ai_ux_service),
 ) -> MetricsInsightsResponse:
     """
@@ -591,6 +602,7 @@ async def get_metrics_insights(
     description="Analyzes user behavior to detect actual persona. Uses LLM when available for nuanced analysis.",
 )
 async def analyze_persona(
+    current_user: CurrentUser,
     body: PersonaAnalyzeRequest,
     service: "AIUXService" = Depends(get_ai_ux_service),
 ) -> PersonaAnalyzeResponse:
@@ -610,6 +622,7 @@ async def analyze_persona(
     description="Runs multiple AI UX analyses in parallel and provides cross-service insights.",
 )
 async def composite_analyze(
+    current_user: CurrentUser,
     body: CompositeAnalysisRequest,
     service: "AIUXService" = Depends(get_ai_ux_service),
 ) -> CompositeAnalysisResponse:
@@ -629,6 +642,7 @@ async def composite_analyze(
     description="Streams composite analysis results as Server-Sent Events.",
 )
 async def stream_composite_analyze(
+    current_user: CurrentUser,
     body: CompositeAnalysisRequest,
     service: "AIUXService" = Depends(get_ai_ux_service),
 ) -> Any:
@@ -659,6 +673,7 @@ async def stream_composite_analyze(
     description="Processes multiple composite analysis requests in parallel with configurable concurrency.",
 )
 async def batch_composite_analyze(
+    current_user: CurrentUser,
     body: BatchCompositeRequest,
     service: "AIUXService" = Depends(get_ai_ux_service),
 ) -> BatchCompositeResponse:
@@ -712,6 +727,7 @@ async def batch_composite_analyze(
     description="Generates a machine-friendly programmatic name from artifact content using heuristics and LLM.",
 )
 async def generate_artifact_name_endpoint(
+    current_user: CurrentUser,
     body: ArtifactNameRequest,
 ) -> ArtifactNameResponse:
     """

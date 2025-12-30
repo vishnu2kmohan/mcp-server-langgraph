@@ -12,12 +12,13 @@ which provides real-time execution updates.
 """
 
 from datetime import datetime, UTC
-from typing import Any
+from typing import Annotated, Any
 from uuid import uuid4
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel, Field
 
+from mcp_server_langgraph.auth.dependencies import require_workflow_viewer
 from mcp_server_langgraph.observability.telemetry import logger
 
 workflow_executions_router = APIRouter(tags=["workflow-executions"])
@@ -192,6 +193,7 @@ def set_execution_history_manager(manager: ExecutionHistoryManagerInterface) -> 
 @workflow_executions_router.get("/workflows/{workflow_id}/executions")
 async def list_executions(
     workflow_id: str,
+    _: Annotated[dict[str, Any], Depends(require_workflow_viewer)],
     manager: ExecutionHistoryManagerInterface = Depends(get_execution_history_manager),
     status: str | None = Query(default=None, description="Filter by status"),
     limit: int = Query(default=50, ge=1, le=100, description="Maximum entries per page"),
@@ -250,6 +252,7 @@ async def list_executions(
 async def get_execution(
     workflow_id: str,
     execution_id: str,
+    _: Annotated[dict[str, Any], Depends(require_workflow_viewer)],
     manager: ExecutionHistoryManagerInterface = Depends(get_execution_history_manager),
 ) -> ExecutionResponse:
     """

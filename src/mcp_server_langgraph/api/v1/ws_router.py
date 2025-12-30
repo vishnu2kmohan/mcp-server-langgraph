@@ -48,6 +48,9 @@ from mcp_server_langgraph.websocket.handlers.mcp_aggregated import MCPAggregated
 from mcp_server_langgraph.websocket.handlers.ai_suggestions import AISuggestionsHandler
 from mcp_server_langgraph.websocket.handlers.budget_alerts import BudgetAlertsHandler
 from mcp_server_langgraph.websocket.handlers.devtools import DevToolsHandler
+from mcp_server_langgraph.websocket.handlers.orchestrator_status import (
+    OrchestratorStatusHandler,
+)
 from mcp_server_langgraph.websocket.handlers.trace import TraceHandler
 
 # Create the main WebSocket router
@@ -873,3 +876,81 @@ async def devtools_websocket(websocket: WebSocket) -> None:
 # - [x] AI Suggestions WebSocket (/ai/suggestions) - New!
 # - [x] Trace WebSocket (/traces) - New!
 # - [x] MCP Aggregated WebSocket (/mcp/aggregated) - New!
+# - [x] Orchestrator Status WebSocket (/orchestrator/status) - New!
+
+
+# =============================================================================
+# Orchestrator Status WebSocket Endpoint
+# =============================================================================
+
+
+@ws_router.websocket("/orchestrator/status")
+async def orchestrator_status_websocket(websocket: WebSocket) -> None:
+    """
+    WebSocket endpoint for real-time AI orchestrator status updates.
+
+    URL: /api/v1/ws/orchestrator/status
+
+    Provides real-time status updates from the AI orchestrators:
+    - Orchestrator status changes (idle, processing, error)
+    - Task lifecycle events (started, completed, failed)
+    - Support for all task categories (UX, SESSION, CONVERSATION, CANVAS, etc.)
+
+    This is a pub/sub endpoint - clients subscribe and receive updates
+    as orchestrators process tasks.
+
+    Message Types (Client -> Server):
+        - subscribe: Subscribe to status updates
+        - unsubscribe: Unsubscribe from status updates
+        - get_status: Request current orchestrator status
+
+    Response Types (Server -> Client):
+        - subscribed: Successfully subscribed
+        - unsubscribed: Successfully unsubscribed
+        - status: Current orchestrator status
+        - orchestrator_status: Real-time status update (pushed)
+        - task_started: Task started (pushed)
+        - task_completed: Task completed (pushed)
+        - task_failed: Task failed (pushed)
+
+    Example orchestrator_status message:
+        {
+            "type": "orchestrator_status",
+            "payload": {
+                "status": "processing",
+                "message": "Analyzing persona...",
+                "task_type": "persona_analysis",
+                "category": "ux"
+            }
+        }
+
+    Uses the standardized WebSocketBase infrastructure with:
+    - JWT authentication required
+    - OpenFGA authorization (requires 'viewer' relation on ai:orchestrator)
+    - OpenTelemetry tracing
+    - Metrics collection
+    - Standard message envelope
+
+    Feature Flag: FF_ENABLE_ORCHESTRATOR_STATUS_WEBSOCKET (default: True)
+    """
+    from mcp_server_langgraph.core.feature_flags import feature_flags
+    from mcp_server_langgraph.websocket.registry import get_orchestrator_status_broadcaster
+
+    # Check feature flag before allowing connection
+    if not feature_flags.enable_orchestrator_status_websocket:
+        await websocket.close(code=4003, reason="Orchestrator status WebSocket disabled")
+        return
+
+    handler = OrchestratorStatusHandler(
+        config=WebSocketConfig(
+            endpoint_name="orchestrator-status",
+            require_auth=True,
+            authz_resource_type="ai",
+            authz_resource_id="orchestrator",
+            authz_required_relation="viewer",
+            rate_limit_per_minute=200,
+            message_timeout=30,
+        ),
+        broadcaster=get_orchestrator_status_broadcaster(),
+    )
+    await handler.run(websocket)

@@ -17,15 +17,19 @@ Usage:
 """
 
 from datetime import datetime
-from typing import Any
+from typing import Annotated, Any
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel, EmailStr, Field
 
+from mcp_server_langgraph.auth.dependencies import require_admin
 from mcp_server_langgraph.auth.user_provider import UserProvider
 from mcp_server_langgraph.core.dependencies import get_audit_log_repository, get_user_provider
 from mcp_server_langgraph.observability.telemetry import logger
 from mcp_server_langgraph.repositories.audit_log import AuditLogRepository
+
+# Type alias for admin user dependency
+AdminUser = Annotated[dict[str, Any], Depends(require_admin)]
 
 admin_router = APIRouter(prefix="/admin", tags=["admin"])
 
@@ -160,6 +164,7 @@ async def get_audit_logs(
 
 @admin_router.get("/audit-logs")
 async def list_audit_logs(
+    admin_user: AdminUser,
     repository: AuditLogRepository = Depends(get_audit_log_repository),
     cursor: str | None = Query(default=None, description="Pagination cursor"),
     limit: int = Query(default=50, ge=1, le=100, description="Maximum entries per page"),
@@ -257,6 +262,7 @@ class UpdateUserRequest(BaseModel):
 
 @admin_router.get("/users")
 async def list_users(
+    admin_user: AdminUser,
     provider: UserProvider = Depends(get_user_provider),
     search: str | None = Query(default=None, description="Search filter for username/email"),
 ) -> PaginatedUserResponse:
@@ -297,6 +303,7 @@ async def list_users(
 @admin_router.get("/users/{user_id}")
 async def get_user(
     user_id: str,
+    admin_user: AdminUser,
     provider: UserProvider = Depends(get_user_provider),
 ) -> UserResponse:
     """
@@ -332,6 +339,7 @@ async def get_user(
 @admin_router.post("/users", status_code=201)
 async def create_user(
     request: CreateUserRequest,
+    admin_user: AdminUser,
     provider: UserProvider = Depends(get_user_provider),
 ) -> UserResponse:
     """
@@ -378,6 +386,7 @@ async def create_user(
 async def update_user(
     user_id: str,
     request: UpdateUserRequest,
+    admin_user: AdminUser,
     provider: UserProvider = Depends(get_user_provider),
 ) -> UserResponse:
     """
@@ -428,6 +437,7 @@ async def update_user(
 @admin_router.delete("/users/{user_id}", status_code=204)
 async def delete_user(
     user_id: str,
+    admin_user: AdminUser,
     provider: UserProvider = Depends(get_user_provider),
 ) -> None:
     """
@@ -476,6 +486,7 @@ class UserApiKeyResponse(BaseModel):
 @admin_router.get("/users/{user_id}/api-key")
 async def get_user_api_key(
     user_id: str,
+    admin_user: AdminUser,
     provider: UserProvider = Depends(get_user_provider),
 ) -> UserApiKeyResponse:
     """
@@ -512,6 +523,7 @@ async def get_user_api_key(
 @admin_router.post("/users/{user_id}/api-key")
 async def generate_user_api_key(
     user_id: str,
+    admin_user: AdminUser,
     provider: UserProvider = Depends(get_user_provider),
 ) -> UserApiKeyResponse:
     """

@@ -20,14 +20,19 @@ Usage:
 
 import logging
 from datetime import UTC, datetime
-from typing import Any, Protocol
+from typing import Annotated, Any, Protocol
 
 from fastapi import APIRouter, Depends, status
 from pydantic import BaseModel, Field, field_validator
 
+from mcp_server_langgraph.auth.dependencies import get_current_user
+
 logger = logging.getLogger(__name__)
 
 router = APIRouter(tags=["surveys"])
+
+# Type alias for authenticated user dependency
+CurrentUser = Annotated[dict[str, Any], Depends(get_current_user)]
 
 
 # Pydantic models for request/response
@@ -207,10 +212,13 @@ def set_surveys_service(service: SurveysService | None) -> None:
 )
 async def submit_sus_survey(
     request: SUSSurveyRequest,
+    current_user: CurrentUser,
     service: SurveysService = Depends(get_surveys_service),
 ) -> SUSSurveyResponse:
     """
     Submit a SUS survey.
+
+    Requires user authentication.
 
     The SUS consists of 10 questions with 5-point Likert scale responses:
     1 = Strongly Disagree, 5 = Strongly Agree
@@ -222,8 +230,7 @@ async def submit_sus_survey(
     # Calculate SUS score
     sus_score = calculate_sus_score(request.responses)
 
-    # In real app, get user from request.state.user
-    user_id = "user-001"  # Placeholder
+    user_id = current_user.get("sub", current_user.get("user_id", "unknown"))
 
     result = await service.submit_sus_survey(user_id, request.responses, sus_score)
     return SUSSurveyResponse(
@@ -234,11 +241,14 @@ async def submit_sus_survey(
 
 @router.get("/sus/summary")
 async def get_sus_summary(
+    current_user: CurrentUser,
     timeframe: str = "30d",
     service: SurveysService = Depends(get_surveys_service),
 ) -> SUSSummaryResponse:
     """
     Get aggregated SUS survey results.
+
+    Requires user authentication.
 
     Args:
         timeframe: Time period for aggregation (7d, 30d, 90d)

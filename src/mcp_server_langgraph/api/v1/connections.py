@@ -5,6 +5,7 @@ Implements CRUD operations for MCP server connections with:
 - OAuth2 authentication (per MCP 2025-03-26 / 2025-06-18 spec)
 - API Key authentication
 - Secure credential storage via secrets provider
+- OpenFGA authorization for connection ownership/viewing
 
 Usage:
     from mcp_server_langgraph.api.v1.connections import connections_router
@@ -12,11 +13,16 @@ Usage:
 """
 
 from secrets import token_urlsafe
-from typing import Literal
+from typing import Annotated, Any, Literal
 
-from fastapi import APIRouter, Depends, Header, HTTPException, Query, Request, status
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from pydantic import BaseModel, Field
 
+from mcp_server_langgraph.auth.dependencies import (
+    get_current_user,
+    require_connection_owner,
+    require_connection_viewer,
+)
 from mcp_server_langgraph.core.config import settings
 from mcp_server_langgraph.middleware.rate_limiter import (
     rate_limit_for_oauth2_callback,
@@ -130,13 +136,20 @@ connections_router = APIRouter(prefix="/connections", tags=["connections"])
 
 
 # ============================================================================
-# Placeholder Dependencies (will be replaced by actual implementations)
+# Authorization Type Aliases
 # ============================================================================
 
+# Type alias for authenticated user dependency
+CurrentUser = Annotated[dict[str, Any], Depends(get_current_user)]
 
-def get_current_user_id(x_user_id: str | None = Header(None, alias="X-User-ID")) -> str:
-    """Get current user ID from header (placeholder for actual auth)."""
-    return x_user_id or "default-user"
+# Type alias for authorized connection access
+ConnectionViewer = Annotated[dict[str, Any], Depends(require_connection_viewer)]
+ConnectionOwner = Annotated[dict[str, Any], Depends(require_connection_owner)]
+
+
+def _get_user_id(user: dict[str, Any]) -> str:
+    """Extract user ID from authenticated user dict."""
+    return user.get("sub") or user.get("user_id") or user.get("preferred_username") or "anonymous"
 
 
 # ============================================================================
@@ -146,7 +159,7 @@ def get_current_user_id(x_user_id: str | None = Header(None, alias="X-User-ID"))
 
 @connections_router.get("")
 async def list_connections(
-    user_id: str = Depends(get_current_user_id),
+    current_user: CurrentUser,
     status: Literal["disconnected", "connecting", "connected", "error", "auth_required"] | None = Query(
         None, description="Filter by status"
     ),
@@ -169,12 +182,15 @@ async def list_connections(
     """
     List MCP connections for the current user.
 
+    Requires authentication. Returns connections owned by the user.
+
     Supports:
     - Pagination: cursor, limit (cursor-based for efficient large result sets)
     - Filtering: status, auth_type, project_id
     - Search: search (uses PostgreSQL Full-Text Search on name and description)
     - Sorting: sort_by, sort_order
     """
+    user_id = _get_user_id(current_user)
     connections, next_cursor = await repo.list(
         owner_id=user_id,
         cursor=cursor,
@@ -198,18 +214,21 @@ async def list_connections(
 async def create_connection(
     request: Request,
     data: MCPConnectionCreate,
-    user_id: str = Depends(get_current_user_id),
+    current_user: CurrentUser,
     repo: ConnectionRepository = Depends(get_connection_repository),
     audit_repo: AuditLogRepository = Depends(get_audit_log_repository),
 ) -> ConnectionResponse:
     """
     Create a new MCP connection.
 
+    Requires authentication. The connection is created with the current user as owner.
+
     Supports three authentication types:
     - none: No authentication
     - api_key: API key stored in secrets provider
     - oauth2: OAuth2 with PKCE flow
     """
+    user_id = _get_user_id(current_user)
     connection = await repo.create(data, owner_id=user_id)
 
     # Log audit event
@@ -230,10 +249,13 @@ async def create_connection(
 @connections_router.get("/{connection_id}")
 async def get_connection(
     connection_id: str,
+    user: ConnectionViewer,
     repo: ConnectionRepository = Depends(get_connection_repository),
 ) -> ConnectionResponse:
     """
     Get a specific MCP connection by ID.
+
+    Requires 'viewer' access to the connection (owner or shared viewer).
 
     Returns full connection details (without sensitive credentials).
     """
@@ -251,15 +273,18 @@ async def update_connection(
     request: Request,
     connection_id: str,
     data: MCPConnectionUpdate,
-    user_id: str = Depends(get_current_user_id),
+    user: ConnectionOwner,
     repo: ConnectionRepository = Depends(get_connection_repository),
     audit_repo: AuditLogRepository = Depends(get_audit_log_repository),
 ) -> ConnectionResponse:
     """
     Update an MCP connection.
 
+    Requires 'owner' access to the connection.
+
     Note: Authentication changes require separate endpoints for security.
     """
+    user_id = _get_user_id(user)
     connection = await repo.update(connection_id, data)
     if connection is None:
         raise HTTPException(
@@ -286,15 +311,18 @@ async def update_connection(
 async def delete_connection(
     request: Request,
     connection_id: str,
-    user_id: str = Depends(get_current_user_id),
+    user: ConnectionOwner,
     repo: ConnectionRepository = Depends(get_connection_repository),
     audit_repo: AuditLogRepository = Depends(get_audit_log_repository),
 ) -> None:
     """
     Delete an MCP connection.
 
+    Requires 'owner' access to the connection.
+
     Also removes associated secrets (API keys, OAuth2 tokens).
     """
+    user_id = _get_user_id(user)
     # Get connection info before deletion for audit log
     connection = await repo.get(connection_id)
     if connection is None:
@@ -327,7 +355,7 @@ async def delete_connection(
 async def test_connection(  # noqa: PT028
     request: Request,
     connection_id: str,
-    user_id: str = Depends(get_current_user_id),  # noqa: PT028
+    user: ConnectionOwner,  # noqa: PT028
     repo: ConnectionRepository = Depends(get_connection_repository),  # noqa: PT028
     mcp_client: MCPClient = Depends(get_mcp_client),  # noqa: PT028
     audit_repo: AuditLogRepository = Depends(get_audit_log_repository),  # noqa: PT028
@@ -335,9 +363,12 @@ async def test_connection(  # noqa: PT028
     """
     Test an MCP connection.
 
+    Requires 'owner' access to the connection.
+
     Attempts to connect to the MCP server and retrieve server info.
     Updates connection status based on result.
     """
+    user_id = _get_user_id(user)
     connection = await repo.get(connection_id)
     if connection is None:
         raise HTTPException(
@@ -402,11 +433,14 @@ async def test_connection(  # noqa: PT028
 async def start_oauth2_flow(
     request: Request,
     connection_id: str,
+    user: ConnectionOwner,
     repo: ConnectionRepository = Depends(get_connection_repository),
     oauth2_service: OAuth2Service = Depends(get_oauth2_service),
 ) -> OAuth2StartResponse:
     """
     Start OAuth2 authorization flow for a connection.
+
+    Requires 'owner' access to the connection.
 
     Uses PKCE (Proof Key for Code Exchange) for security.
     Returns the authorization URL and state parameter.

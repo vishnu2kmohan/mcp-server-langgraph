@@ -18,17 +18,25 @@ Usage:
     GET /api/v1/observability/alerts - List alerts
     GET /api/v1/observability/alerts/{id} - Get a specific alert
     GET /api/v1/observability/alerts/rules - List alerting rules
+
+Authorization:
+    All endpoints require authentication. Most endpoints require 'viewer' access
+    to 'observability:default'. Configuration endpoints require 'admin' access.
 """
 
 import logging
-from typing import TYPE_CHECKING, Any, Literal
+from typing import TYPE_CHECKING, Annotated, Any, Literal
 
-from fastapi import APIRouter, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from pydantic import BaseModel, Field
 
 from mcp_server_langgraph.api.pagination import (
     CursorPaginatedResponse,
     CursorPaginationMetadata,
+)
+from mcp_server_langgraph.auth.dependencies import (
+    require_observability_admin,
+    require_observability_viewer,
 )
 
 logger = logging.getLogger(__name__)
@@ -43,6 +51,17 @@ if TYPE_CHECKING:
 
 
 observability_router = APIRouter(tags=["observability"])
+
+
+# ============================================================================
+# Authorization Type Aliases
+# ============================================================================
+
+# Type alias for observability viewer access (read-only)
+ObservabilityViewer = Annotated[dict[str, Any], Depends(require_observability_viewer)]
+
+# Type alias for observability admin access (configuration)
+ObservabilityAdmin = Annotated[dict[str, Any], Depends(require_observability_admin)]
 
 
 # Response Models
@@ -1057,6 +1076,7 @@ def reset_observability_service() -> None:
 
 @observability_router.get("/observability/traces")
 async def list_traces(
+    user: ObservabilityViewer,
     cursor: str | None = Query(default=None, description="Pagination cursor"),
     limit: int = Query(default=20, ge=1, le=100, description="Items per page"),
     session_id: str | None = Query(default=None, description="Filter by session ID"),
@@ -1070,6 +1090,8 @@ async def list_traces(
 ) -> CursorPaginatedResponse[dict[str, Any]]:
     """
     List traces with cursor-based pagination.
+
+    Requires 'viewer' access to 'observability:default'.
 
     Supports:
     - Pagination: cursor, limit
@@ -1107,9 +1129,14 @@ async def list_traces(
 
 
 @observability_router.get("/observability/traces/{trace_id}")
-async def get_trace(trace_id: str) -> TraceResponse:
+async def get_trace(
+    trace_id: str,
+    user: ObservabilityViewer,
+) -> TraceResponse:
     """
     Get a specific trace by ID.
+
+    Requires 'viewer' access to 'observability:default'.
 
     Returns the complete trace with all spans.
     """
@@ -1127,11 +1154,14 @@ async def get_trace(trace_id: str) -> TraceResponse:
 
 @observability_router.get("/observability/metrics")
 async def get_metrics(
+    user: ObservabilityViewer,
     start_date: str | None = Query(default=None, description="Start date (YYYY-MM-DD)"),
     end_date: str | None = Query(default=None, description="End date (YYYY-MM-DD)"),
 ) -> MetricsResponse:
     """
     Get metrics summary.
+
+    Requires 'viewer' access to 'observability:default'.
 
     Returns aggregate metrics for the specified period.
     """
@@ -1143,6 +1173,7 @@ async def get_metrics(
 
 @observability_router.get("/observability/logs")
 async def list_logs(
+    user: ObservabilityViewer,
     cursor: str | None = Query(default=None, description="Pagination cursor"),
     limit: int = Query(default=100, ge=1, le=1000, description="Items per page"),
     level: Literal["debug", "info", "warn", "error", "fatal"] | None = Query(default=None, description="Filter by log level"),
@@ -1155,6 +1186,8 @@ async def list_logs(
 ) -> CursorPaginatedResponse[dict[str, Any]]:
     """
     List logs with cursor-based pagination.
+
+    Requires 'viewer' access to 'observability:default'.
 
     Supports:
     - Pagination: cursor, limit
@@ -1192,6 +1225,7 @@ async def list_logs(
 
 @observability_router.get("/observability/alerts")
 async def list_alerts(
+    user: ObservabilityViewer,
     state: Literal["pending", "firing", "resolved", "silenced"] | None = Query(
         default=None, description="Filter by alert state"
     ),
@@ -1205,6 +1239,8 @@ async def list_alerts(
 ) -> CursorPaginatedResponse[dict[str, Any]]:
     """
     List alerts with filtering.
+
+    Requires 'viewer' access to 'observability:default'.
 
     Supports:
     - Filtering: state, severity, service_name, workflow_id, project_id
@@ -1238,11 +1274,14 @@ async def list_alerts(
 
 @observability_router.get("/observability/alerts/rules")
 async def list_alert_rules(
+    user: ObservabilityViewer,
     enabled_only: bool = Query(default=True, description="Only return enabled rules"),
     limit: int = Query(default=100, ge=1, le=1000, description="Maximum rules to return"),
 ) -> list[AlertRuleResponse]:
     """
     List configured alerting rules.
+
+    Requires 'viewer' access to 'observability:default'.
 
     Returns the alerting rules configured in the monitoring system.
     """
@@ -1256,9 +1295,14 @@ async def list_alert_rules(
 
 
 @observability_router.get("/observability/alerts/{alert_id}")
-async def get_alert(alert_id: str) -> AlertResponse:
+async def get_alert(
+    alert_id: str,
+    user: ObservabilityViewer,
+) -> AlertResponse:
     """
     Get a specific alert by ID.
+
+    Requires 'viewer' access to 'observability:default'.
 
     Returns the alert details including labels, annotations, and timing.
     """
@@ -1280,9 +1324,14 @@ async def get_alert(alert_id: str) -> AlertResponse:
 
 
 @observability_router.get("/observability/metrics/by-session/{session_id}")
-async def get_metrics_by_session(session_id: str) -> SessionMetricsResponse:
+async def get_metrics_by_session(
+    session_id: str,
+    user: ObservabilityViewer,
+) -> SessionMetricsResponse:
     """
     Get aggregated metrics for a specific session.
+
+    Requires 'viewer' access to 'observability:default'.
 
     Computes metrics from traces associated with this session:
     - total_requests: Total number of traces/requests in the session
@@ -1298,9 +1347,14 @@ async def get_metrics_by_session(session_id: str) -> SessionMetricsResponse:
 
 
 @observability_router.get("/observability/metrics/by-workflow/{workflow_id}")
-async def get_metrics_by_workflow(workflow_id: str) -> WorkflowMetricsResponse:
+async def get_metrics_by_workflow(
+    workflow_id: str,
+    user: ObservabilityViewer,
+) -> WorkflowMetricsResponse:
     """
     Get aggregated metrics for a specific workflow.
+
+    Requires 'viewer' access to 'observability:default'.
 
     Computes metrics from traces associated with this workflow:
     - total_executions: Total number of workflow executions
@@ -1316,9 +1370,14 @@ async def get_metrics_by_workflow(workflow_id: str) -> WorkflowMetricsResponse:
 
 
 @observability_router.get("/observability/metrics/by-user/{user_id}")
-async def get_metrics_by_user(user_id: str) -> UserMetricsResponse:
+async def get_metrics_by_user(
+    user_id: str,
+    user: ObservabilityViewer,
+) -> UserMetricsResponse:
     """
     Get aggregated metrics for a specific user.
+
+    Requires 'viewer' access to 'observability:default'.
 
     Computes metrics from traces associated with this user:
     - total_requests: Total number of traces/requests by this user
@@ -1335,6 +1394,7 @@ async def get_metrics_by_user(user_id: str) -> UserMetricsResponse:
 
 @observability_router.get("/observability/metrics/llm-streaming")
 async def get_llm_streaming_metrics(
+    user: ObservabilityViewer,
     provider: str | None = Query(default=None, description="Filter by provider (openai, anthropic, google)"),
     model: str | None = Query(default=None, description="Filter by model family"),
     time_range: Literal["5m", "15m", "1h", "6h", "24h"] = Query(
@@ -1343,6 +1403,8 @@ async def get_llm_streaming_metrics(
 ) -> LLMStreamingMetricsResponse:
     """
     Get aggregated LLM streaming metrics.
+
+    Requires 'viewer' access to 'observability:default'.
 
     Returns metrics for LLM streaming operations including:
     - Time To First Chunk (TTFC) percentiles

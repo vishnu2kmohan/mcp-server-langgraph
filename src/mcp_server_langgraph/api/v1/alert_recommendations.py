@@ -18,9 +18,11 @@ Reference: ADR-0026 - Comprehensive Client Resilience Patterns
 import logging
 import os
 import time
-from typing import Any
+from typing import Annotated, Any
 
 from fastapi import APIRouter, Depends, HTTPException
+
+from mcp_server_langgraph.auth.dependencies import get_current_user
 from pydantic import BaseModel, Field
 from typing import Literal
 
@@ -54,6 +56,9 @@ from mcp_server_langgraph.resilience.rate_limit import TokenBucket
 logger = logging.getLogger(__name__)
 
 alert_recommendation_router = APIRouter(prefix="/alerts", tags=["alerts"])
+
+# Type alias for authenticated user dependency
+CurrentUser = Annotated[dict[str, Any], Depends(get_current_user)]
 
 
 # =============================================================================
@@ -325,12 +330,15 @@ def set_recommendation_service(service: AIRecommendationService | None) -> None:
     description="Get all alerts with optional filtering by severity and state.",
 )
 async def list_alerts(
+    current_user: CurrentUser,
     alert_store: AlertStoreProtocol = Depends(get_alert_store),
     severity: list[AlertSeverity] | None = None,
     state: list[AlertState] | None = None,
 ) -> AlertListResponse:
     """
     List all alerts with optional filtering.
+
+    Requires user authentication.
 
     Args:
         alert_store: The alert store for retrieving alerts.
@@ -365,11 +373,14 @@ async def list_alerts(
 )
 async def get_alert_recommendation(
     alert_id: str,
+    current_user: CurrentUser,
     service: AIRecommendationService = Depends(get_recommendation_service),
     alert_store: AlertStore = Depends(get_alert_store),
 ) -> AIRecommendation:
     """
     Get the AI recommendation for a specific alert.
+
+    Requires user authentication.
 
     First checks the cache for an existing recommendation.
     If not found, generates a new recommendation (rate-limited).
@@ -437,11 +448,14 @@ async def get_alert_recommendation(
 )
 async def regenerate_alert_recommendation(
     alert_id: str,
+    current_user: CurrentUser,
     service: AIRecommendationService = Depends(get_recommendation_service),
     alert_store: AlertStore = Depends(get_alert_store),
 ) -> AIRecommendation:
     """
     Force regenerate the AI recommendation for an alert.
+
+    Requires user authentication.
 
     Bypasses the cache and generates a fresh recommendation (rate-limited).
 
@@ -578,10 +592,13 @@ class CorrelateAlertsResponse(BaseModel):
 )
 async def correlate_alerts(
     request: CorrelateAlertsRequest,
+    current_user: CurrentUser,
     alert_store: AlertStoreProtocol = Depends(get_alert_store),
 ) -> CorrelateAlertsResponse:
     """
     Correlate alerts to find related issues.
+
+    Requires user authentication.
 
     Supports two correlation types:
     - label: Group alerts by a common label key
