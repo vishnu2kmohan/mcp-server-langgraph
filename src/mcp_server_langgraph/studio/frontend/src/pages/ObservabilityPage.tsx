@@ -7,7 +7,7 @@
  * Uses RTK Query for data fetching with automatic caching and updates.
  */
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { useSearchParams, useLocation, useNavigate } from "react-router";
 import {
   Activity,
@@ -24,6 +24,10 @@ import {
   GitBranch,
   CheckCircle,
   XCircle,
+  Sparkles,
+  Loader2,
+  TrendingUp,
+  Zap,
 } from "lucide-react";
 import {
   useListTracesQuery,
@@ -40,6 +44,13 @@ import { TraceViewer } from "../components/Observability/TraceViewer";
 import { WebSocketMetricsPanel } from "../components/WebSocketMetrics/WebSocketMetricsPanel";
 import type { Trace, Span, SpanEvent } from "../components/Observability/types";
 import { useAppDispatch, useAppSelector } from "../store/hooks";
+import { selectUsername, selectPersona } from "../store/slices/personaSlice";
+import {
+  useTraceSummary,
+  useTraceAnomaly,
+} from "../hooks/useTraceIntelligence";
+import { useFeatureFlag } from "../contexts/FeatureFlagContext";
+import { Tooltip } from "../components/UI/Tooltip";
 import {
   setStatusFilter as setStatusFilterAction,
   setSessionIdFilter as setSessionIdFilterAction,
@@ -104,6 +115,32 @@ export function ObservabilityPage() {
   const projectIdFilter = useAppSelector(selectProjectIdFilter);
   const timeRange = useAppSelector(selectTimeRange);
   const selectedTraceId = useAppSelector(selectSelectedTraceId);
+
+  // Persona context for AI features
+  const username = useAppSelector(selectUsername);
+  const _persona = useAppSelector(selectPersona);
+  const currentUserId = useMemo(
+    () => (username ? `user:${username}` : "default-user"),
+    [username],
+  );
+
+  // Feature flag for AI trace intelligence
+  const aiTraceIntelligenceEnabled = useFeatureFlag("ai_suggestions");
+
+  // Trace Intelligence hooks - only active when a trace is selected
+  const traceSummary = useTraceSummary({
+    userId: currentUserId,
+    sessionId: sessionIdFilter || "observability-session",
+    traceId: selectedTraceId ?? "",
+    enabled: aiTraceIntelligenceEnabled && !!selectedTraceId,
+  });
+
+  const traceAnomaly = useTraceAnomaly({
+    userId: currentUserId,
+    sessionId: sessionIdFilter || "observability-session",
+    traceId: selectedTraceId ?? "",
+    enabled: aiTraceIntelligenceEnabled && !!selectedTraceId,
+  });
 
   // Pagination cursor (local state - not persisted)
   const [cursor, setCursor] = useState<string | undefined>(undefined);
@@ -806,6 +843,210 @@ export function ObservabilityPage() {
                               : undefined
                           }
                         />
+
+                        {/* AI Trace Intelligence Panel */}
+                        {aiTraceIntelligenceEnabled && (
+                          <div
+                            data-testid="trace-intelligence-panel"
+                            className="border-t border-gray-200 dark:border-gray-700"
+                          >
+                            <div className="px-4 py-2 bg-gradient-to-r from-purple-50 to-blue-50 dark:from-purple-900/20 dark:to-blue-900/20 border-b border-gray-200 dark:border-gray-700">
+                              <div className="flex items-center gap-2">
+                                <Sparkles
+                                  size={16}
+                                  className="text-purple-500"
+                                />
+                                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                                  AI Insights
+                                </span>
+                              </div>
+                            </div>
+
+                            <div className="p-4 grid grid-cols-1 lg:grid-cols-2 gap-4">
+                              {/* Trace Summary */}
+                              <div className="space-y-2">
+                                <h4 className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                                  Summary
+                                </h4>
+                                {traceSummary.isLoading ? (
+                                  <div className="flex items-center gap-2 text-sm text-gray-400">
+                                    <Loader2
+                                      size={14}
+                                      className="animate-spin"
+                                    />
+                                    <span>Analyzing trace...</span>
+                                  </div>
+                                ) : traceSummary.summary ? (
+                                  <div className="space-y-2">
+                                    <p className="text-sm text-gray-700 dark:text-gray-300">
+                                      {traceSummary.summary}
+                                    </p>
+                                    {traceSummary.keyActions.length > 0 && (
+                                      <div className="flex flex-wrap gap-1">
+                                        {traceSummary.keyActions.map(
+                                          (action, idx) => (
+                                            <span
+                                              key={idx}
+                                              className="px-2 py-0.5 text-xs bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded"
+                                            >
+                                              {action}
+                                            </span>
+                                          ),
+                                        )}
+                                      </div>
+                                    )}
+                                    <div className="flex items-center gap-4 text-xs text-gray-500 dark:text-gray-400">
+                                      {traceSummary.stepCount !== null && (
+                                        <span>
+                                          {traceSummary.stepCount} steps
+                                        </span>
+                                      )}
+                                      {traceSummary.toolCallCount !== null && (
+                                        <span>
+                                          {traceSummary.toolCallCount} tool
+                                          calls
+                                        </span>
+                                      )}
+                                      {traceSummary.totalDurationMs !==
+                                        null && (
+                                        <span>
+                                          {traceSummary.totalDurationMs}ms total
+                                        </span>
+                                      )}
+                                    </div>
+                                  </div>
+                                ) : (
+                                  <p className="text-sm text-gray-400">
+                                    No summary available
+                                  </p>
+                                )}
+                              </div>
+
+                              {/* Anomaly Detection */}
+                              <div className="space-y-2">
+                                <h4 className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                                  Health & Anomalies
+                                </h4>
+                                {traceAnomaly.isLoading ? (
+                                  <div className="flex items-center gap-2 text-sm text-gray-400">
+                                    <Loader2
+                                      size={14}
+                                      className="animate-spin"
+                                    />
+                                    <span>Detecting anomalies...</span>
+                                  </div>
+                                ) : (
+                                  <div className="space-y-2">
+                                    {/* Health Score */}
+                                    {traceAnomaly.healthScore !== null && (
+                                      <div className="flex items-center gap-2">
+                                        <span className="text-sm text-gray-600 dark:text-gray-400">
+                                          Health:
+                                        </span>
+                                        <span
+                                          className={`text-sm font-medium ${
+                                            traceAnomaly.healthScore >= 80
+                                              ? "text-green-600 dark:text-green-400"
+                                              : traceAnomaly.healthScore >= 60
+                                                ? "text-yellow-600 dark:text-yellow-400"
+                                                : "text-red-600 dark:text-red-400"
+                                          }`}
+                                        >
+                                          {traceAnomaly.healthScore}/100
+                                        </span>
+                                      </div>
+                                    )}
+
+                                    {/* Bottlenecks */}
+                                    {traceAnomaly.bottlenecks.length > 0 && (
+                                      <div className="space-y-1">
+                                        <span className="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1">
+                                          <Zap size={12} />
+                                          Bottlenecks:
+                                        </span>
+                                        {traceAnomaly.bottlenecks
+                                          .slice(0, 3)
+                                          .map((bottleneck, idx) => (
+                                            <Tooltip
+                                              key={idx}
+                                              content={`${bottleneck.duration_ms}ms (${bottleneck.percentage_of_total}% of total)`}
+                                              position="top"
+                                            >
+                                              <span className="inline-block px-2 py-0.5 text-xs bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 rounded cursor-help">
+                                                {bottleneck.step_name}
+                                              </span>
+                                            </Tooltip>
+                                          ))}
+                                      </div>
+                                    )}
+
+                                    {/* Anomalies */}
+                                    {traceAnomaly.anomalies.length > 0 && (
+                                      <div className="space-y-1">
+                                        <span className="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1">
+                                          <AlertTriangle size={12} />
+                                          Issues:
+                                        </span>
+                                        {traceAnomaly.anomalies
+                                          .slice(0, 3)
+                                          .map((anomaly, idx) => (
+                                            <Tooltip
+                                              key={idx}
+                                              content={
+                                                anomaly.suggested_fix ||
+                                                anomaly.message
+                                              }
+                                              position="top"
+                                            >
+                                              <div
+                                                className={`text-xs px-2 py-1 rounded cursor-help ${
+                                                  anomaly.severity === "error"
+                                                    ? "bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300"
+                                                    : anomaly.severity ===
+                                                        "warning"
+                                                      ? "bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300"
+                                                      : "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300"
+                                                }`}
+                                              >
+                                                {anomaly.step_name}:{" "}
+                                                {anomaly.message}
+                                              </div>
+                                            </Tooltip>
+                                          ))}
+                                      </div>
+                                    )}
+
+                                    {/* Optimization Suggestions */}
+                                    {traceAnomaly.optimizationSuggestions
+                                      .length > 0 && (
+                                      <div className="space-y-1">
+                                        <span className="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1">
+                                          <TrendingUp size={12} />
+                                          Suggestions:
+                                        </span>
+                                        <ul className="text-xs text-gray-600 dark:text-gray-400 list-disc list-inside">
+                                          {traceAnomaly.optimizationSuggestions
+                                            .slice(0, 3)
+                                            .map((suggestion, idx) => (
+                                              <li key={idx}>{suggestion}</li>
+                                            ))}
+                                        </ul>
+                                      </div>
+                                    )}
+
+                                    {traceAnomaly.anomalies.length === 0 &&
+                                      traceAnomaly.bottlenecks.length === 0 && (
+                                        <p className="text-sm text-green-600 dark:text-green-400 flex items-center gap-1">
+                                          <TrendingUp size={14} />
+                                          No issues detected
+                                        </p>
+                                      )}
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        )}
                       </div>
                     )}
                   </>

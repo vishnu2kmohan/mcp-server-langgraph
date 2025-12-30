@@ -13,7 +13,8 @@
  * - Observability integration via callbacks
  */
 
-import { Component, type ReactNode, type ErrorInfo } from "react";
+import { Component, type ReactNode, type ErrorInfo, useEffect } from "react";
+import { useAIErrorRecovery } from "../../hooks/useAIErrorRecovery";
 
 // =============================================================================
 // Types
@@ -56,7 +57,7 @@ interface AIErrorBoundaryState {
 }
 
 // =============================================================================
-// Default Fallback Component
+// Default Fallback Component (with AI Error Recovery)
 // =============================================================================
 
 function DefaultFallback({
@@ -64,6 +65,14 @@ function DefaultFallback({
   resetError,
   featureName,
 }: AIErrorFallbackProps) {
+  // Use AI error recovery to get intelligent suggestions
+  const { analyze, lastAnalysis, isAnalyzing } = useAIErrorRecovery();
+
+  // Analyze the error when component mounts
+  useEffect(() => {
+    analyze(error, { feature: featureName, component: "AIErrorBoundary" });
+  }, [error, featureName, analyze]);
+
   return (
     <div
       data-testid="ai-error-fallback"
@@ -104,6 +113,51 @@ function DefaultFallback({
       <p style={{ margin: "0 0 12px 0", fontSize: "13px", opacity: 0.9 }}>
         {error.message}
       </p>
+
+      {/* AI-powered recovery suggestions */}
+      {isAnalyzing && (
+        <p
+          style={{
+            margin: "0 0 12px 0",
+            fontSize: "12px",
+            fontStyle: "italic",
+          }}
+        >
+          Analyzing error for recovery suggestions...
+        </p>
+      )}
+      {lastAnalysis && lastAnalysis.suggestions.length > 0 && (
+        <div
+          data-testid="ai-recovery-suggestions"
+          style={{
+            marginBottom: "12px",
+            padding: "8px",
+            backgroundColor: "rgba(0,0,0,0.05)",
+            borderRadius: "4px",
+          }}
+        >
+          <p
+            style={{
+              margin: "0 0 8px 0",
+              fontSize: "12px",
+              fontWeight: "bold",
+            }}
+          >
+            Suggested actions:
+          </p>
+          <ul style={{ margin: 0, paddingLeft: "20px", fontSize: "12px" }}>
+            {lastAnalysis.suggestions.slice(0, 3).map((suggestion, i) => (
+              <li key={i} style={{ marginBottom: "4px" }}>
+                {suggestion.label}
+                {suggestion.guidance && (
+                  <span style={{ opacity: 0.8 }}> - {suggestion.guidance}</span>
+                )}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
       <button
         onClick={resetError}
         style={{

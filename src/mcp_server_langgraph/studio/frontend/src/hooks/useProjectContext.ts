@@ -1,8 +1,19 @@
 /**
  * useProjectContext Hook
  *
- * Hook to manage project context files (.studio/context.md).
- * Features:
+ * @deprecated This hook has no active runtime consumers and is scheduled for removal.
+ * The project context functionality should be integrated at the workflow or session level
+ * rather than as a standalone hook.
+ *
+ * If you need project context functionality, consider:
+ * - Using workflow-level context via the workflows API
+ * - Using session metadata for context storage
+ * - Integrating context into the session slice
+ *
+ * Deprecation reason: No clear consumer in the codebase (Phase 5 hooks audit).
+ * Removal timeline: Next major version
+ *
+ * Original features:
  * - Auto-detect project context on load
  * - Load and parse context content
  * - Update context content

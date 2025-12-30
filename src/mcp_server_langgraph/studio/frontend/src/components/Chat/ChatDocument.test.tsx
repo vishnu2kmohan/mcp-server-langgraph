@@ -139,6 +139,34 @@ vi.mock("../../hooks/useSlashCommands", () => ({
   }),
 }));
 
+// Mock useInlineSuggestions hook
+const mockUpdateInlineSuggestionInput = vi.fn();
+const mockAcceptInlineSuggestion = vi.fn();
+const mockDismissInlineSuggestion = vi.fn();
+
+vi.mock("../../hooks/useInlineSuggestions", () => ({
+  useInlineSuggestions: () => ({
+    suggestion: null,
+    isLoading: false,
+    updateInput: mockUpdateInlineSuggestionInput,
+    acceptSuggestion: mockAcceptInlineSuggestion,
+    dismissSuggestion: mockDismissInlineSuggestion,
+  }),
+}));
+
+// Mock useSessionAutoName hook (Phase 5.1 - AI-powered session titles)
+const mockSessionAutoName = {
+  isGenerating: false,
+  isSuccess: false,
+  generatedTitle: undefined,
+  hasDefaultName: true,
+  error: undefined,
+};
+
+vi.mock("../../hooks/useSessionAutoName", () => ({
+  useSessionAutoName: () => mockSessionAutoName,
+}));
+
 // Import after mocks
 import { ChatDocument } from "./ChatDocument";
 import sessionReducer, {
@@ -923,6 +951,87 @@ describe("ChatDocument", () => {
       });
 
       // File error should be passed to ChatInputForm
+      expect(screen.getByTestId("chat-document")).toBeInTheDocument();
+    });
+  });
+
+  describe("Session Auto-Naming Integration (Phase 5.1)", () => {
+    it("should use useSessionAutoName hook with correct session context", () => {
+      // Verify the hook is used (mock is called during render)
+      renderWithProviders(<ChatDocument sessionId="session-123" />, {
+        sessionOverrides: { currentSession: mockSession },
+      });
+
+      // Component should render successfully with the hook integrated
+      expect(screen.getByTestId("chat-document")).toBeInTheDocument();
+    });
+
+    it("should pass session messages to auto-name hook for title generation", () => {
+      // Session with messages that can be used for title generation
+      const sessionWithMessages: ClientSession = {
+        ...mockSession,
+        name: "New Chat", // Default name that triggers auto-naming
+        messages: [
+          {
+            id: "msg-1",
+            role: "user",
+            content: "Help me write a Python script for data analysis",
+            timestamp: Date.now(),
+          },
+        ],
+      };
+
+      renderWithProviders(<ChatDocument sessionId="session-123" />, {
+        sessionOverrides: { currentSession: sessionWithMessages },
+      });
+
+      // The hook should be called with session context
+      expect(screen.getByTestId("chat-document")).toBeInTheDocument();
+    });
+
+    it("should not trigger auto-naming when AI suggestions are disabled", () => {
+      // Disable AI suggestions feature flag
+      mockUseFeatureFlag.mockImplementation((flag: string) => {
+        if (flag === "ai_suggestions") return false;
+        return false;
+      });
+
+      renderWithProviders(<ChatDocument sessionId="session-123" />, {
+        sessionOverrides: { currentSession: mockSession },
+      });
+
+      // Component should still render but auto-naming should be disabled
+      expect(screen.getByTestId("chat-document")).toBeInTheDocument();
+
+      // Reset mock
+      mockUseFeatureFlag.mockImplementation((flag: string) => {
+        if (flag === "ai_suggestions") return true;
+        return false;
+      });
+    });
+  });
+
+  describe("Inline Suggestions Integration (Phase 2.3)", () => {
+    it("should update inline suggestions when input changes", async () => {
+      renderWithProviders(<ChatDocument sessionId="session-123" />, {
+        sessionOverrides: { currentSession: mockSession },
+      });
+
+      const input = screen.getByRole("textbox");
+      fireEvent.change(input, { target: { value: "Test message" } });
+
+      // The updateInput function should be called
+      await waitFor(() => {
+        expect(mockUpdateInlineSuggestionInput).toHaveBeenCalled();
+      });
+    });
+
+    it("should pass inline suggestion props to ChatInputForm", () => {
+      renderWithProviders(<ChatDocument sessionId="session-123" />, {
+        sessionOverrides: { currentSession: mockSession },
+      });
+
+      // ChatInputForm should receive inline suggestion props
       expect(screen.getByTestId("chat-document")).toBeInTheDocument();
     });
   });

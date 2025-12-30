@@ -1,9 +1,21 @@
 /**
  * useTierLimits Hook
  *
- * Provides tier-based limits and usage information.
- * Used to display usage indicators and upgrade prompts.
- * Part of Bob's user journey - surfacing tier limits to prevent confusion.
+ * @deprecated This hook has no active runtime consumers and is scheduled for removal.
+ * Tier limits should be enforced server-side and surfaced via the persona/feature flags API.
+ *
+ * If you need tier limit functionality, consider:
+ * - Using feature flags (useFeatureFlag) for tier-based feature gating
+ * - Using backend-provided limits in the /api/v1/me response
+ * - Integrating limits into the persona slice (hydrateFromServer)
+ *
+ * Deprecation reason: No clear consumer in the codebase (Phase 5 hooks audit).
+ * Removal timeline: Next major version
+ *
+ * Original features:
+ * - Tier-based limits and usage information
+ * - Usage indicators and upgrade prompts
+ * - Part of Bob's user journey - surfacing tier limits
  */
 
 import { useMemo } from "react";

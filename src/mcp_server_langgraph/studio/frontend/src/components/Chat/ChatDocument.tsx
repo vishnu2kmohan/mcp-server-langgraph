@@ -35,6 +35,8 @@ import { useFileUpload } from "../../hooks/useFileUpload";
 import { useFollowUpSuggestions } from "../../hooks/useFollowUpSuggestions";
 import { useUrlContentFetch } from "../../hooks/useUrlContentFetch";
 import { useSlashCommands } from "../../hooks/useSlashCommands";
+import { useInlineSuggestions } from "../../hooks/useInlineSuggestions";
+import { useSessionAutoName } from "../../hooks/useSessionAutoName";
 import type { SlashCommand } from "./SlashCommandMenu";
 import {
   ChatMessages,
@@ -441,6 +443,46 @@ Type \`/\` to see available commands.`,
     sessionId: currentSession?.id,
   });
 
+  // Inline suggestions hook (VSCode Copilot style ghost text)
+  const {
+    suggestion: inlineSuggestion,
+    isLoading: isSuggestionLoading,
+    updateInput: updateInlineSuggestionInput,
+    acceptSuggestion: handleAcceptInlineSuggestion,
+    dismissSuggestion: handleDismissInlineSuggestion,
+  } = useInlineSuggestions({
+    enabled: enableAiSuggestions && !isStreaming && !isSending,
+    sessionId: currentSession?.id,
+    minLength: 5, // Only suggest after 5 characters
+    debounceMs: 400, // Debounce to avoid too many API calls
+    onAccept: (suggestion) => {
+      // Append accepted suggestion to input
+      setInput((prev) => prev + suggestion);
+    },
+  });
+
+  // Update inline suggestions when input changes
+  useEffect(() => {
+    if (enableAiSuggestions && !isStreaming && !isSending) {
+      updateInlineSuggestionInput(input);
+    }
+  }, [
+    input,
+    enableAiSuggestions,
+    isStreaming,
+    isSending,
+    updateInlineSuggestionInput,
+  ]);
+
+  // Session auto-naming (AI-powered title generation like ChatGPT/Claude)
+  // Triggers after first user message for sessions with default names
+  const { isGenerating: _isGeneratingTitle } = useSessionAutoName({
+    sessionId: currentSession?.id,
+    messages: messages.map((m) => ({ role: m.role, content: m.content })),
+    currentName: currentSession?.name,
+    enabled: enableAiSuggestions && !!currentSession,
+  });
+
   // Handle suggestion selection - fill input with suggestion text and track click
   const handleSuggestionSelect = useCallback(
     (suggestion: FollowUpSuggestion) => {
@@ -812,6 +854,12 @@ Type \`/\` to see available commands.`,
         // Slash commands props
         slashCommands={enableSlashCommands ? slashCommands : undefined}
         onSlashCommandSelect={handleSlashCommandSelect}
+        // Inline AI suggestions props (Sprint 6 - VSCode Copilot style)
+        enableInlineSuggestions={enableAiSuggestions}
+        inlineSuggestion={inlineSuggestion}
+        isSuggestionLoading={isSuggestionLoading}
+        onAcceptSuggestion={handleAcceptInlineSuggestion}
+        onDismissSuggestion={handleDismissInlineSuggestion}
       />
     </div>
   );

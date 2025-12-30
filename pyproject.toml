@@ -936,6 +936,9 @@ markers = [
     "orchestrator: Orchestrator-specific tests (model registry, task routing, cost tracking)",
     "ai_explanations: AI Explanation generation tests (orchestrated explanation for HITL dialogs)",
     "sessions: Session management tests (fork, encryption, lifecycle, state persistence)",
+    "background_agents: Background agent task management tests (submit, cancel, status)",
+    "genui: GenUI endpoint tests (dynamic UI widget generation)",
+    "canvas_help: Canvas help panel tests (contextual help, tutorials)",
 ]
 # CODEX FINDING #4: Benchmark configuration
 # Benchmarks are DISABLED by default for fast test iteration (via --benchmark-disable in addopts)

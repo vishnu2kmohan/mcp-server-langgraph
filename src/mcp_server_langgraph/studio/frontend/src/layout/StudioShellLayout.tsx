@@ -15,7 +15,14 @@
  * |   StatusBar: Model | Tokens | Connection | Agent | User         |
  * +----------------------------------------------------------------+
  */
-import { useCallback, useMemo, useEffect, useState, Suspense } from "react";
+import {
+  useCallback,
+  useMemo,
+  useEffect,
+  useState,
+  Suspense,
+  useRef,
+} from "react";
 import { useLocation, Outlet } from "react-router";
 import { Panel, PanelGroup } from "react-resizable-panels";
 import { ConnectedConversationPanel } from "../conversation/ConnectedConversationPanel";
@@ -36,12 +43,13 @@ import {
   createSession,
   renameSession,
 } from "../store/slices/sessionSlice";
-import { selectUsername } from "../store/slices/personaSlice";
+import { selectUsername, selectPersona } from "../store/slices/personaSlice";
 import {
   selectAllAgents,
   updateAgentStatus,
 } from "../store/slices/backgroundAgentSlice";
 import { usePersonaRouting } from "../hooks/usePersonaRouting";
+import { useKeyboardShortcuts } from "../hooks/useKeyboardShortcuts";
 import { useConnectionHealthWebSocket } from "../hooks/useConnectionHealthWebSocket";
 import { useNudges } from "../hooks/useNudges";
 import { useAIPersonaAnalysis } from "../hooks/useAIPersonaAnalysis";
@@ -50,6 +58,8 @@ import { useHITLDialogs } from "../hooks/useHITLDialogs";
 import { useIsChatRoute } from "../hooks/useIsChatRoute";
 import { useFeatureFlag } from "../contexts/FeatureFlagContext";
 import { useAIOrchestratorStatus } from "../hooks/useAIOrchestratorStatus";
+import { useCostTrackingWebSocket } from "../hooks/useCostTrackingWebSocket";
+import { useCanvasKeyboardNav } from "../hooks/useCanvasKeyboardNav";
 import type {
   ConnectionStatus,
   TokenBreakdown,
@@ -171,6 +181,20 @@ export function StudioShellLayout() {
   const [showCommandPalette, setShowCommandPalette] = useState(false);
   const [showAgentPanel, setShowAgentPanel] = useState(false);
 
+  // Panel refs for keyboard navigation (Phase 5 - useCanvasKeyboardNav integration)
+  const activityBarRef = useRef<HTMLElement>(null);
+  const sessionNavRef = useRef<HTMLElement>(null);
+  const conversationRef = useRef<HTMLElement>(null);
+  const canvasRef = useRef<HTMLElement>(null);
+
+  // Keyboard navigation for panel focus (Cmd+1/2/3/4)
+  useCanvasKeyboardNav({
+    activityBarRef,
+    sessionNavRef,
+    conversationRef,
+    canvasRef,
+  });
+
   // Background agents from Redux
   const backgroundAgents = useAppSelector(selectAllAgents);
 
@@ -256,6 +280,13 @@ export function StudioShellLayout() {
   const { statusForStatusBar: aiOrchestratorStatus } =
     useAIOrchestratorStatus();
 
+  // Real-time cost tracking via WebSocket (Phase 5 hook integration)
+  const {
+    sessionCosts,
+    subscribeSession: subscribeCostSession,
+    unsubscribeSession: unsubscribeCostSession,
+  } = useCostTrackingWebSocket();
+
   // Map WebSocket status to StatusBar connection status
   const connectionStatus: ConnectionStatus = useMemo(() => {
     switch (wsStatus) {
@@ -275,6 +306,9 @@ export function StudioShellLayout() {
 
   // Get user info from Redux
   const username = useAppSelector(selectUsername);
+  const currentPersona = useAppSelector(selectPersona);
+  // Use username as userId for AI features (format: "user:username")
+  const currentUserId = username ? `user:${username}` : undefined;
 
   // Get current session for model info
   const currentSession = useAppSelector(selectCurrentSession);
@@ -347,49 +381,38 @@ export function StudioShellLayout() {
     };
   }, [currentSession?.messages]);
 
-  // Compute cost breakdown with per-model usage for StatusBar tooltip
-  // Aggregates tokens by model name from messages to show multi-model usage
+  // Subscribe to cost tracking for current session
+  useEffect(() => {
+    const sessionId = currentSession?.id;
+    if (!sessionId) return;
+
+    subscribeCostSession(sessionId);
+
+    return () => {
+      unsubscribeCostSession(sessionId);
+    };
+  }, [currentSession?.id, subscribeCostSession, unsubscribeCostSession]);
+
+  // Compute cost breakdown from WebSocket data for StatusBar
   const costBreakdown = useMemo((): CostBreakdown | undefined => {
-    if (!currentSession?.messages?.length) return undefined;
+    const sessionId = currentSession?.id;
+    if (!sessionId) return undefined;
 
-    // Aggregate usage by model
-    const byModel: Record<string, { tokens: number; cost: number }> = {};
-    let totalTokensFromUsage = 0;
-    let hasUsageData = false;
-
-    for (const msg of currentSession.messages) {
-      if (msg.usage) {
-        const modelKey = msg.modelName ?? "unknown";
-        const msgTokens =
-          (msg.usage.promptTokens ?? 0) + (msg.usage.completionTokens ?? 0);
-
-        if (!byModel[modelKey]) {
-          byModel[modelKey] = { tokens: 0, cost: 0 };
-        }
-        byModel[modelKey].tokens += msgTokens;
-        totalTokensFromUsage += msgTokens;
-        hasUsageData = true;
-      }
-    }
-
-    // Only return breakdown if we have actual usage data with model info
-    if (!hasUsageData) return undefined;
-
-    // Only include byModel if there's meaningful data (more than one model or known model)
-    const modelKeys = Object.keys(byModel);
-    const hasMeaningfulModelData =
-      modelKeys.length > 1 ||
-      (modelKeys.length === 1 && modelKeys[0] !== "unknown");
-
-    // Estimate cost (rough approximation based on average token pricing)
-    // This is a simple estimate - actual costs would come from backend
-    const estimatedCostUsd = totalTokensFromUsage * 0.000003; // ~$3/1M tokens average
+    const sessionCost = sessionCosts[sessionId];
+    if (!sessionCost) return undefined;
 
     return {
-      estimatedCostUsd,
-      byModel: hasMeaningfulModelData ? byModel : undefined,
+      estimatedCostUsd: sessionCost.total_cost,
+      byModel: sessionCost.model
+        ? {
+            [sessionCost.model]: {
+              tokens: sessionCost.token_count,
+              cost: sessionCost.total_cost,
+            },
+          }
+        : undefined,
     };
-  }, [currentSession?.messages]);
+  }, [currentSession?.id, sessionCosts]);
 
   // Handle panel resize
   const handlePanelResize = useCallback(
@@ -415,54 +438,32 @@ export function StudioShellLayout() {
     [dispatch],
   );
 
-  // Keyboard shortcuts
-  useEffect(() => {
-    const handleKeyDown = (e: globalThis.KeyboardEvent) => {
-      // Check for Cmd+/ (Mac) or Ctrl+/ (Windows/Linux) to toggle canvas
-      if ((e.metaKey || e.ctrlKey) && e.key === "/") {
-        e.preventDefault();
-        dispatch(toggleCanvas());
-        return;
-      }
-
-      // Check for Cmd+K (Mac) or Ctrl+K (Windows/Linux) to open command palette
-      if ((e.metaKey || e.ctrlKey) && e.key === "k") {
-        e.preventDefault();
-        setShowCommandPalette(true);
-        return;
-      }
-
-      // Check for Cmd+Shift+I (Mac) or Ctrl+Shift+I (Windows/Linux) to toggle DevTools
-      if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key === "I") {
-        e.preventDefault();
-        dispatch(toggleDevTools());
-        return;
-      }
-
-      // Check for Cmd+Shift+F (Mac) or Ctrl+Shift+F (Windows/Linux) to toggle Focus Mode
-      if (
-        (e.metaKey || e.ctrlKey) &&
-        e.shiftKey &&
-        e.key.toLowerCase() === "f"
-      ) {
-        e.preventDefault();
-        dispatch(toggleFocusMode());
-        return;
-      }
-
-      // Escape key exits focus mode
-      if (e.key === "Escape" && focusModeEnabled) {
-        e.preventDefault();
-        dispatch(setFocusModeEnabled(false));
-        return;
-      }
-
+  // Keyboard shortcuts (using hook instead of manual handling)
+  // Note: Define both ctrl+key and meta+key (cmd+key on Mac) for cross-platform support
+  const keyboardShortcuts = useMemo(
+    () => ({
+      // Toggle canvas: Ctrl+/ (Windows/Linux) or Cmd+/ (Mac)
+      "ctrl+/": () => dispatch(toggleCanvas()),
+      "meta+/": () => dispatch(toggleCanvas()),
+      // Open command palette: Ctrl+K or Cmd+K
+      "ctrl+k": () => setShowCommandPalette(true),
+      "meta+k": () => setShowCommandPalette(true),
+      // Toggle DevTools: Ctrl+Shift+I or Cmd+Shift+I
+      "ctrl+shift+i": () => dispatch(toggleDevTools()),
+      "meta+shift+i": () => dispatch(toggleDevTools()),
+      // Toggle Focus Mode: Ctrl+Shift+F or Cmd+Shift+F
+      "ctrl+shift+f": () => dispatch(toggleFocusMode()),
+      "meta+shift+f": () => dispatch(toggleFocusMode()),
+      // Exit focus mode: Escape (only when focus mode is enabled)
+      ...(focusModeEnabled && {
+        escape: () => dispatch(setFocusModeEnabled(false)),
+      }),
       // Note: Cmd+I / Ctrl+I for insights panel is handled by useCrossInsightsPanel hook
-    };
+    }),
+    [dispatch, focusModeEnabled],
+  );
 
-    document.addEventListener("keydown", handleKeyDown);
-    return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [dispatch, focusModeEnabled]);
+  useKeyboardShortcuts(keyboardShortcuts);
 
   // Handler for command palette execution
   const handleCommandExecute = useCallback(
@@ -698,6 +699,7 @@ export function StudioShellLayout() {
             {/* Sprint 4: AI-native navigation predictions enabled via feature flag */}
             {!focusModeEnabled && (
               <ActivityBar
+                ref={activityBarRef}
                 enableAI={aiSuggestionsEnabled}
                 reorderByPrediction={aiSuggestionsEnabled}
               />
@@ -742,7 +744,15 @@ export function StudioShellLayout() {
                   defaultSize={canvasCollapsed ? 80 : 40}
                   minSize={30}
                 >
-                  <ConnectedConversationPanel />
+                  <ConnectedConversationPanel
+                    enableAI={aiSuggestionsEnabled}
+                    enableRealTimeSuggestions={aiSuggestionsEnabled}
+                    userId={currentUserId}
+                    persona={currentPersona}
+                    currentTokens={tokenCount}
+                    maxTokens={128000}
+                    showContextWarning={tokenCount > 100000}
+                  />
                 </Panel>
 
                 {/* Canvas Panel */}
@@ -756,7 +766,10 @@ export function StudioShellLayout() {
                       minSize={25}
                       maxSize={60}
                     >
-                      <ConnectedCanvasPanel />
+                      <ConnectedCanvasPanel
+                        userId={currentUserId}
+                        persona={currentPersona}
+                      />
                     </Panel>
                   </>
                 )}

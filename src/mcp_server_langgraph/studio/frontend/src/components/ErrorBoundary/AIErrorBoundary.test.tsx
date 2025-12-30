@@ -13,12 +13,31 @@
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { render, screen, fireEvent, cleanup } from "@testing-library/react";
+import {
+  render,
+  screen,
+  fireEvent,
+  cleanup,
+  waitFor,
+} from "@testing-library/react";
 import type { ReactNode } from "react";
 import { Provider } from "react-redux";
 import { configureStore } from "@reduxjs/toolkit";
 import { AIIntelligenceProvider } from "../../contexts/AIIntelligenceContext";
 import { AIErrorBoundary } from "./AIErrorBoundary";
+
+// Mock useAIErrorRecovery hook
+const mockAnalyze = vi.fn();
+const mockUseAIErrorRecovery = vi.fn(() => ({
+  analyze: mockAnalyze,
+  lastAnalysis: null,
+  isAnalyzing: false,
+  clearAnalysis: vi.fn(),
+}));
+
+vi.mock("../../hooks/useAIErrorRecovery", () => ({
+  useAIErrorRecovery: () => mockUseAIErrorRecovery(),
+}));
 
 // Create mock store
 function createMockStore() {
@@ -309,6 +328,223 @@ describe("AIErrorBoundary", () => {
       );
 
       expect(screen.getByTestId("normal-content")).toBeInTheDocument();
+    });
+  });
+
+  describe("AI error recovery integration", () => {
+    beforeEach(() => {
+      mockAnalyze.mockClear();
+      mockUseAIErrorRecovery.mockClear();
+    });
+
+    it("should call analyze when error occurs in default fallback", async () => {
+      const Wrapper = createWrapper({ enabled: true });
+
+      // Reset mock to default state
+      mockUseAIErrorRecovery.mockReturnValue({
+        analyze: mockAnalyze,
+        lastAnalysis: null,
+        isAnalyzing: false,
+        clearAnalysis: vi.fn(),
+      });
+
+      render(
+        <Wrapper>
+          <AIErrorBoundary featureName="AI Suggestions">
+            <ThrowingComponent shouldThrow={true} />
+          </AIErrorBoundary>
+        </Wrapper>,
+      );
+
+      // Verify analyze was called with error and context
+      await waitFor(() => {
+        expect(mockAnalyze).toHaveBeenCalledWith(
+          expect.any(Error),
+          expect.objectContaining({
+            feature: "AI Suggestions",
+            component: "AIErrorBoundary",
+          }),
+        );
+      });
+    });
+
+    it("should display analyzing state", () => {
+      const Wrapper = createWrapper({ enabled: true });
+
+      // Mock analyzing state
+      mockUseAIErrorRecovery.mockReturnValue({
+        analyze: mockAnalyze,
+        lastAnalysis: null,
+        isAnalyzing: true,
+        clearAnalysis: vi.fn(),
+      });
+
+      render(
+        <Wrapper>
+          <AIErrorBoundary featureName="test-feature">
+            <ThrowingComponent shouldThrow={true} />
+          </AIErrorBoundary>
+        </Wrapper>,
+      );
+
+      expect(
+        screen.getByText(/Analyzing error for recovery suggestions/i),
+      ).toBeInTheDocument();
+    });
+
+    it("should display AI recovery suggestions when available", () => {
+      const Wrapper = createWrapper({ enabled: true });
+
+      // Mock analysis results with suggestions
+      mockUseAIErrorRecovery.mockReturnValue({
+        analyze: mockAnalyze,
+        lastAnalysis: {
+          error: new Error("Test error"),
+          severity: "medium",
+          category: "runtime",
+          suggestions: [
+            {
+              id: "1",
+              label: "Retry the operation",
+              guidance: "The error may be transient",
+              actionType: "retry",
+            },
+            {
+              id: "2",
+              label: "Check network connection",
+              guidance: "Ensure stable connectivity",
+              actionType: "manual",
+            },
+          ],
+          rootCause: "Network timeout",
+          timestamp: Date.now(),
+        },
+        isAnalyzing: false,
+        clearAnalysis: vi.fn(),
+      });
+
+      render(
+        <Wrapper>
+          <AIErrorBoundary featureName="test-feature">
+            <ThrowingComponent shouldThrow={true} />
+          </AIErrorBoundary>
+        </Wrapper>,
+      );
+
+      // Check suggestions are displayed
+      expect(screen.getByTestId("ai-recovery-suggestions")).toBeInTheDocument();
+      expect(screen.getByText(/Suggested actions/i)).toBeInTheDocument();
+      expect(screen.getByText(/Retry the operation/i)).toBeInTheDocument();
+      expect(screen.getByText(/Check network connection/i)).toBeInTheDocument();
+    });
+
+    it("should display suggestion guidance when provided", () => {
+      const Wrapper = createWrapper({ enabled: true });
+
+      // Mock analysis with guidance
+      mockUseAIErrorRecovery.mockReturnValue({
+        analyze: mockAnalyze,
+        lastAnalysis: {
+          error: new Error("Test error"),
+          severity: "low",
+          category: "validation",
+          suggestions: [
+            {
+              id: "1",
+              label: "Fix input format",
+              guidance: "Ensure the input matches the expected schema",
+              actionType: "manual",
+            },
+          ],
+          rootCause: "Invalid input",
+          timestamp: Date.now(),
+        },
+        isAnalyzing: false,
+        clearAnalysis: vi.fn(),
+      });
+
+      render(
+        <Wrapper>
+          <AIErrorBoundary featureName="test-feature">
+            <ThrowingComponent shouldThrow={true} />
+          </AIErrorBoundary>
+        </Wrapper>,
+      );
+
+      expect(
+        screen.getByText(/Ensure the input matches the expected schema/i),
+      ).toBeInTheDocument();
+    });
+
+    it("should limit suggestions to 3 items", () => {
+      const Wrapper = createWrapper({ enabled: true });
+
+      // Mock analysis with many suggestions
+      mockUseAIErrorRecovery.mockReturnValue({
+        analyze: mockAnalyze,
+        lastAnalysis: {
+          error: new Error("Test error"),
+          severity: "high",
+          category: "system",
+          suggestions: [
+            { id: "1", label: "Suggestion 1", actionType: "retry" },
+            { id: "2", label: "Suggestion 2", actionType: "retry" },
+            { id: "3", label: "Suggestion 3", actionType: "retry" },
+            { id: "4", label: "Suggestion 4", actionType: "retry" },
+            { id: "5", label: "Suggestion 5", actionType: "retry" },
+          ],
+          rootCause: "Multiple issues",
+          timestamp: Date.now(),
+        },
+        isAnalyzing: false,
+        clearAnalysis: vi.fn(),
+      });
+
+      render(
+        <Wrapper>
+          <AIErrorBoundary featureName="test-feature">
+            <ThrowingComponent shouldThrow={true} />
+          </AIErrorBoundary>
+        </Wrapper>,
+      );
+
+      // Should only show 3 suggestions
+      expect(screen.getByText(/Suggestion 1/)).toBeInTheDocument();
+      expect(screen.getByText(/Suggestion 2/)).toBeInTheDocument();
+      expect(screen.getByText(/Suggestion 3/)).toBeInTheDocument();
+      expect(screen.queryByText(/Suggestion 4/)).not.toBeInTheDocument();
+      expect(screen.queryByText(/Suggestion 5/)).not.toBeInTheDocument();
+    });
+
+    it("should not display suggestions section when empty", () => {
+      const Wrapper = createWrapper({ enabled: true });
+
+      // Mock analysis with no suggestions
+      mockUseAIErrorRecovery.mockReturnValue({
+        analyze: mockAnalyze,
+        lastAnalysis: {
+          error: new Error("Test error"),
+          severity: "low",
+          category: "unknown",
+          suggestions: [],
+          rootCause: "Unknown",
+          timestamp: Date.now(),
+        },
+        isAnalyzing: false,
+        clearAnalysis: vi.fn(),
+      });
+
+      render(
+        <Wrapper>
+          <AIErrorBoundary featureName="test-feature">
+            <ThrowingComponent shouldThrow={true} />
+          </AIErrorBoundary>
+        </Wrapper>,
+      );
+
+      expect(
+        screen.queryByTestId("ai-recovery-suggestions"),
+      ).not.toBeInTheDocument();
     });
   });
 });

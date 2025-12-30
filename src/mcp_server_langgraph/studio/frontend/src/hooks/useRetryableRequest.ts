@@ -1,15 +1,23 @@
 /**
  * useRetryableRequest Hook
  *
- * Hook for making HTTP requests with automatic retry on failure.
- * Implements exponential backoff with user-controllable retry.
+ * @deprecated This hook has no active runtime consumers and is scheduled for removal.
+ * Consider using RTK Query's built-in retry mechanism instead:
+ * - RTK Query provides automatic retry with `retry` option in baseQuery
+ * - For custom retry logic, use the `retryCondition` in RTK Query
  *
- * Features:
+ * If you need this functionality, please migrate to RTK Query patterns:
+ * @see https://redux-toolkit.js.org/rtk-query/usage/customizing-queries#automatic-retries
+ *
+ * Original functionality:
  * - Exponential backoff with jitter
  * - Configurable max retries
  * - Cancel pending requests/retries
  * - Force immediate retry
  * - Status tracking (idle, loading, success, error, cancelled)
+ *
+ * Deprecation reason: No clear consumer in the codebase (Phase 5 hooks audit).
+ * Removal timeline: Next major version
  */
 
 import { useState, useCallback, useRef } from "react";
@@ -70,6 +78,8 @@ export interface UseRetryableRequestOptions extends Partial<RetryConfig> {
 
 /**
  * Hook for making retryable HTTP requests.
+ *
+ * @deprecated Use RTK Query's built-in retry mechanism instead. See file header for migration guide.
  *
  * @example
  * ```tsx

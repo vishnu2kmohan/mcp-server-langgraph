@@ -60,8 +60,10 @@ export interface ConnectedConversationPanelProps {
   enableAI?: boolean;
   /** Enable real-time AI UX suggestions via WebSocket */
   enableRealTimeSuggestions?: boolean;
-  /** User ID for AI features */
+  /** User ID for AI features (format: "user:username") */
   userId?: string;
+  /** Current persona for RBAC-aware AI responses */
+  persona?: string;
   /** Show context optimization warning */
   showContextWarning?: boolean;
   /** Show goal tracking panel */
@@ -106,6 +108,7 @@ export function ConnectedConversationPanel({
   enableAI = false,
   enableRealTimeSuggestions = false,
   userId = "default-user",
+  persona,
   showContextWarning = false,
   showGoals = false,
   currentTokens = 0,
@@ -179,6 +182,8 @@ export function ConnectedConversationPanel({
         action: "typing",
         query: inputQuery,
         sessionId: sessionId ?? "default-session",
+        userId,
+        persona,
       });
     }, 500); // 500ms debounce
 
@@ -188,6 +193,8 @@ export function ConnectedConversationPanel({
     aiSuggestionsEnabled,
     inputQuery,
     sessionId,
+    userId,
+    persona,
     requestSuggestions,
   ]);
 

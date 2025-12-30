@@ -12,7 +12,7 @@
  * - AI-powered session intelligence (Sprint 2)
  */
 /* eslint-disable react-refresh/only-export-components -- Exports groupSessionsByDate utility alongside component */
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo, useState, forwardRef } from "react";
 import { useNavigate, useRouteLoaderData, useParams } from "react-router";
 import {
   Plus,
@@ -138,321 +138,330 @@ function truncateMessage(message: string, maxLength = 80): string {
   return message.slice(0, maxLength).trim() + "...";
 }
 
-export function SessionNav({
-  className,
-  enableAI = false,
-  showSummary = false,
-  showTopics = false,
-  userId = "default-user",
-  enableEdit = false,
-  enableContextMenu = false,
-  onRenameSession,
-  onDeleteSession,
-  enableHover = false,
-  sessionMetadata = {},
-}: SessionNavProps) {
-  const navigate = useNavigate();
-  const { sessionId: currentSessionId } = useParams();
-  const [searchQuery, setSearchQuery] = useState("");
+export const SessionNav = forwardRef<HTMLElement, SessionNavProps>(
+  function SessionNav(
+    {
+      className,
+      enableAI = false,
+      showSummary = false,
+      showTopics = false,
+      userId = "default-user",
+      enableEdit = false,
+      enableContextMenu = false,
+      onRenameSession,
+      onDeleteSession,
+      enableHover = false,
+      sessionMetadata = {},
+    },
+    ref,
+  ) {
+    const navigate = useNavigate();
+    const { sessionId: currentSessionId } = useParams();
+    const [searchQuery, setSearchQuery] = useState("");
 
-  // Hook for creating new chat sessions
-  const { createNewChat, isCreating } = useNewChat();
+    // Hook for creating new chat sessions
+    const { createNewChat, isCreating } = useNewChat();
 
-  // Get sessions from route loader data
-  const loaderData = useRouteLoaderData("studio") as
-    | SessionsLoaderData
-    | undefined;
+    // Get sessions from route loader data
+    const loaderData = useRouteLoaderData("studio") as
+      | SessionsLoaderData
+      | undefined;
 
-  // Memoize sessions to prevent unnecessary re-renders
-  const sessions = useMemo(
-    () => loaderData?.sessions ?? [],
-    [loaderData?.sessions],
-  );
-
-  // Filter sessions by search query
-  const filteredSessions = useMemo(() => {
-    if (!searchQuery.trim()) {
-      return sessions;
-    }
-    const query = searchQuery.toLowerCase();
-    return sessions.filter(
-      (session) =>
-        session.name?.toLowerCase().includes(query) ||
-        session.id.toLowerCase().includes(query),
+    // Memoize sessions to prevent unnecessary re-renders
+    const sessions = useMemo(
+      () => loaderData?.sessions ?? [],
+      [loaderData?.sessions],
     );
-  }, [sessions, searchQuery]);
 
-  // Group sessions by date
-  const groupedSessions = useMemo(
-    () => groupSessionsByDate(filteredSessions),
-    [filteredSessions],
-  );
-
-  const handleSessionClick = useCallback(
-    (session: Session) => {
-      navigate(`/studio/chat/${session.id}`);
-    },
-    [navigate],
-  );
-
-  const handleNewChat = useCallback(() => {
-    createNewChat();
-  }, [createNewChat]);
-
-  const handleSearchChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      setSearchQuery(e.target.value);
-    },
-    [],
-  );
-
-  const renderSessionItem = (session: Session) => {
-    // Use AISessionCard when AI is enabled
-    if (enableAI) {
-      return (
-        <li key={session.id}>
-          <AISessionCard
-            sessionId={session.id}
-            title={session.name || `Session ${session.id.slice(0, 8)}`}
-            userId={userId}
-            showSummary={showSummary}
-            showTopics={showTopics}
-            timestamp={new Date(session.created_at)}
-            onClick={(id) => navigate(`/studio/chat/${id}`)}
-            isActive={session.id === currentSessionId}
-            enableAI
-          />
-        </li>
+    // Filter sessions by search query
+    const filteredSessions = useMemo(() => {
+      if (!searchQuery.trim()) {
+        return sessions;
+      }
+      const query = searchQuery.toLowerCase();
+      return sessions.filter(
+        (session) =>
+          session.name?.toLowerCase().includes(query) ||
+          session.id.toLowerCase().includes(query),
       );
-    }
+    }, [sessions, searchQuery]);
 
-    // Build context menu items if enabled
-    const contextMenuItems: ContextMenuItem[] = enableContextMenu
-      ? [
-          {
-            id: "rename",
-            label: "Rename",
-            icon: <Edit2 size={14} />,
-            action: () => {
-              // Trigger inline edit mode (handled by InlineEdit click)
+    // Group sessions by date
+    const groupedSessions = useMemo(
+      () => groupSessionsByDate(filteredSessions),
+      [filteredSessions],
+    );
+
+    const handleSessionClick = useCallback(
+      (session: Session) => {
+        navigate(`/studio/chat/${session.id}`);
+      },
+      [navigate],
+    );
+
+    const handleNewChat = useCallback(() => {
+      createNewChat();
+    }, [createNewChat]);
+
+    const handleSearchChange = useCallback(
+      (e: React.ChangeEvent<HTMLInputElement>) => {
+        setSearchQuery(e.target.value);
+      },
+      [],
+    );
+
+    const renderSessionItem = (session: Session) => {
+      // Use AISessionCard when AI is enabled
+      if (enableAI) {
+        return (
+          <li key={session.id}>
+            <AISessionCard
+              sessionId={session.id}
+              title={session.name || `Session ${session.id.slice(0, 8)}`}
+              userId={userId}
+              showSummary={showSummary}
+              showTopics={showTopics}
+              timestamp={new Date(session.created_at)}
+              onClick={(id) => navigate(`/studio/chat/${id}`)}
+              isActive={session.id === currentSessionId}
+              enableAI
+            />
+          </li>
+        );
+      }
+
+      // Build context menu items if enabled
+      const contextMenuItems: ContextMenuItem[] = enableContextMenu
+        ? [
+            {
+              id: "rename",
+              label: "Rename",
+              icon: <Edit2 size={14} />,
+              action: () => {
+                // Trigger inline edit mode (handled by InlineEdit click)
+              },
             },
-          },
-          { id: "divider-1", type: "divider" },
-          {
-            id: "delete",
-            label: "Delete",
-            icon: <Trash2 size={14} />,
-            action: () => onDeleteSession?.(session.id),
-          },
-        ]
-      : [];
+            { id: "divider-1", type: "divider" },
+            {
+              id: "delete",
+              label: "Delete",
+              icon: <Trash2 size={14} />,
+              action: () => onDeleteSession?.(session.id),
+            },
+          ]
+        : [];
 
-    // Session display name
-    const displayName = session.name || `Session ${session.id.slice(0, 8)}`;
+      // Session display name
+      const displayName = session.name || `Session ${session.id.slice(0, 8)}`;
 
-    // Handle session rename
-    const handleRename = (newName: string) => {
-      onRenameSession?.(session.id, newName);
-    };
+      // Handle session rename
+      const handleRename = (newName: string) => {
+        onRenameSession?.(session.id, newName);
+      };
 
-    // Get session metadata for hover tooltip
-    const metadata = sessionMetadata[session.id];
-    const createdAt = new Date(session.created_at);
+      // Get session metadata for hover tooltip
+      const metadata = sessionMetadata[session.id];
+      const createdAt = new Date(session.created_at);
 
-    // Build hover tooltip content
-    const hoverContent = (
-      <div className="space-y-1.5 min-w-48 max-w-64">
-        <div className="flex items-center gap-1.5 text-xs text-gray-400">
-          <Clock size={12} />
-          <span>Created {formatRelativeTime(createdAt)}</span>
-        </div>
-        {metadata?.messageCount !== undefined && (
+      // Build hover tooltip content
+      const hoverContent = (
+        <div className="space-y-1.5 min-w-48 max-w-64">
           <div className="flex items-center gap-1.5 text-xs text-gray-400">
-            <MessageSquare size={12} />
-            <span>
-              {metadata.messageCount} message
-              {metadata.messageCount === 1 ? "" : "s"}
-            </span>
+            <Clock size={12} />
+            <span>Created {formatRelativeTime(createdAt)}</span>
           </div>
-        )}
-        {metadata?.firstMessage && (
-          <p className="text-xs text-gray-300 italic border-t border-gray-600 pt-1.5 mt-1.5">
-            {truncateMessage(metadata.firstMessage)}
-          </p>
-        )}
-      </div>
-    );
+          {metadata?.messageCount !== undefined && (
+            <div className="flex items-center gap-1.5 text-xs text-gray-400">
+              <MessageSquare size={12} />
+              <span>
+                {metadata.messageCount} message
+                {metadata.messageCount === 1 ? "" : "s"}
+              </span>
+            </div>
+          )}
+          {metadata?.firstMessage && (
+            <p className="text-xs text-gray-300 italic border-t border-gray-600 pt-1.5 mt-1.5">
+              {truncateMessage(metadata.firstMessage)}
+            </p>
+          )}
+        </div>
+      );
 
-    // Standard session item with optional inline edit and context menu
-    const sessionContent = (
-      <div
-        className={cn(
-          "w-full text-left px-3 py-2 rounded-lg text-sm",
-          "transition-colors",
-          session.id === currentSessionId
-            ? "bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300"
-            : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700",
-        )}
-      >
-        {enableEdit ? (
-          <InlineEdit
-            value={displayName}
-            onSave={handleRename}
-            placeholder="Session name"
-            aria-label={`Rename session ${displayName}`}
-            className="w-full"
-          />
-        ) : (
-          <button
-            type="button"
-            onClick={() => handleSessionClick(session)}
-            className="w-full text-left truncate"
-          >
-            {displayName}
-          </button>
-        )}
-      </div>
-    );
-
-    // Wrap with Tooltip if hover is enabled
-    const sessionWithHover = enableHover ? (
-      <Tooltip content={hoverContent} position="right" delay={200}>
-        {sessionContent}
-      </Tooltip>
-    ) : (
-      sessionContent
-    );
-
-    return (
-      <li key={session.id}>
-        {enableContextMenu ? (
-          <ContextMenu items={contextMenuItems} aria-label="Session actions">
-            {sessionWithHover}
-          </ContextMenu>
-        ) : (
-          sessionWithHover
-        )}
-      </li>
-    );
-  };
-
-  return (
-    <nav
-      data-testid="session-nav"
-      aria-label="Session navigation"
-      className={cn(
-        "flex flex-col h-full",
-        "bg-gray-50 dark:bg-gray-800",
-        "border-r border-gray-200 dark:border-gray-700",
-        className,
-      )}
-    >
-      {/* Header with New Chat button */}
-      <div className="p-2 border-b border-gray-200 dark:border-gray-700">
-        <button
-          type="button"
-          data-testid="new-chat-button"
-          onClick={handleNewChat}
-          disabled={isCreating}
+      // Standard session item with optional inline edit and context menu
+      const sessionContent = (
+        <div
           className={cn(
-            "w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg",
-            "bg-primary-500 hover:bg-primary-600",
-            "text-white font-medium text-sm",
+            "w-full text-left px-3 py-2 rounded-lg text-sm",
             "transition-colors",
-            "focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2",
-            isCreating && "opacity-50 cursor-not-allowed",
+            session.id === currentSessionId
+              ? "bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300"
+              : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700",
           )}
         >
-          <Plus size={16} className={cn(isCreating && "animate-spin")} />
-          <span>{isCreating ? "Creating..." : "New Chat"}</span>
-        </button>
-      </div>
-
-      {/* Search */}
-      <div className="p-2">
-        <div className="relative">
-          <Search
-            size={16}
-            className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
-            aria-hidden="true"
-          />
-          <input
-            type="text"
-            data-testid="session-search"
-            placeholder="Search sessions..."
-            value={searchQuery}
-            onChange={handleSearchChange}
-            aria-label="Search sessions"
-            className={cn(
-              "w-full pl-9 pr-3 py-2 rounded-lg text-sm",
-              "bg-white dark:bg-gray-900",
-              "border border-gray-200 dark:border-gray-700",
-              "focus:outline-none focus:ring-2 focus:ring-primary-500",
-              "placeholder-gray-400",
-            )}
-          />
+          {enableEdit ? (
+            <InlineEdit
+              value={displayName}
+              onSave={handleRename}
+              placeholder="Session name"
+              aria-label={`Rename session ${displayName}`}
+              className="w-full"
+            />
+          ) : (
+            <button
+              type="button"
+              onClick={() => handleSessionClick(session)}
+              className="w-full text-left truncate"
+            >
+              {displayName}
+            </button>
+          )}
         </div>
-      </div>
+      );
 
-      {/* Session list */}
-      <div className="flex-1 overflow-y-auto p-2" aria-label="Sessions">
-        {filteredSessions.length === 0 ? (
-          <div className="text-sm text-gray-500 dark:text-gray-400 italic text-center mt-4">
-            {searchQuery ? "No matching sessions" : "No sessions yet"}
-          </div>
-        ) : (
-          <>
-            {groupedSessions.today.length > 0 && (
-              <section
-                className="mb-3"
-                aria-labelledby="today-sessions-heading"
-              >
-                <h3
-                  id="today-sessions-heading"
-                  className="text-xs text-gray-400 uppercase tracking-wider mb-2"
-                >
-                  Today
-                </h3>
-                <ul className="space-y-1" role="list">
-                  {groupedSessions.today.map(renderSessionItem)}
-                </ul>
-              </section>
-            )}
-            {groupedSessions.yesterday.length > 0 && (
-              <section
-                className="mb-3"
-                aria-labelledby="yesterday-sessions-heading"
-              >
-                <h3
-                  id="yesterday-sessions-heading"
-                  className="text-xs text-gray-400 uppercase tracking-wider mb-2"
-                >
-                  Yesterday
-                </h3>
-                <ul className="space-y-1" role="list">
-                  {groupedSessions.yesterday.map(renderSessionItem)}
-                </ul>
-              </section>
-            )}
-            {groupedSessions.older.length > 0 && (
-              <section
-                className="mb-3"
-                aria-labelledby="older-sessions-heading"
-              >
-                <h3
-                  id="older-sessions-heading"
-                  className="text-xs text-gray-400 uppercase tracking-wider mb-2"
-                >
-                  Older
-                </h3>
-                <ul className="space-y-1" role="list">
-                  {groupedSessions.older.map(renderSessionItem)}
-                </ul>
-              </section>
-            )}
-          </>
+      // Wrap with Tooltip if hover is enabled
+      const sessionWithHover = enableHover ? (
+        <Tooltip content={hoverContent} position="right" delay={200}>
+          {sessionContent}
+        </Tooltip>
+      ) : (
+        sessionContent
+      );
+
+      return (
+        <li key={session.id}>
+          {enableContextMenu ? (
+            <ContextMenu items={contextMenuItems} aria-label="Session actions">
+              {sessionWithHover}
+            </ContextMenu>
+          ) : (
+            sessionWithHover
+          )}
+        </li>
+      );
+    };
+
+    return (
+      <nav
+        ref={ref}
+        data-testid="session-nav"
+        aria-label="Session navigation"
+        className={cn(
+          "flex flex-col h-full",
+          "bg-gray-50 dark:bg-gray-800",
+          "border-r border-gray-200 dark:border-gray-700",
+          className,
         )}
-      </div>
-    </nav>
-  );
-}
+      >
+        {/* Header with New Chat button */}
+        <div className="p-2 border-b border-gray-200 dark:border-gray-700">
+          <button
+            type="button"
+            data-testid="new-chat-button"
+            onClick={handleNewChat}
+            disabled={isCreating}
+            className={cn(
+              "w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg",
+              "bg-primary-500 hover:bg-primary-600",
+              "text-white font-medium text-sm",
+              "transition-colors",
+              "focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2",
+              isCreating && "opacity-50 cursor-not-allowed",
+            )}
+          >
+            <Plus size={16} className={cn(isCreating && "animate-spin")} />
+            <span>{isCreating ? "Creating..." : "New Chat"}</span>
+          </button>
+        </div>
+
+        {/* Search */}
+        <div className="p-2">
+          <div className="relative">
+            <Search
+              size={16}
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+              aria-hidden="true"
+            />
+            <input
+              type="text"
+              data-testid="session-search"
+              placeholder="Search sessions..."
+              value={searchQuery}
+              onChange={handleSearchChange}
+              aria-label="Search sessions"
+              className={cn(
+                "w-full pl-9 pr-3 py-2 rounded-lg text-sm",
+                "bg-white dark:bg-gray-900",
+                "border border-gray-200 dark:border-gray-700",
+                "focus:outline-none focus:ring-2 focus:ring-primary-500",
+                "placeholder-gray-400",
+              )}
+            />
+          </div>
+        </div>
+
+        {/* Session list */}
+        <div className="flex-1 overflow-y-auto p-2" aria-label="Sessions">
+          {filteredSessions.length === 0 ? (
+            <div className="text-sm text-gray-500 dark:text-gray-400 italic text-center mt-4">
+              {searchQuery ? "No matching sessions" : "No sessions yet"}
+            </div>
+          ) : (
+            <>
+              {groupedSessions.today.length > 0 && (
+                <section
+                  className="mb-3"
+                  aria-labelledby="today-sessions-heading"
+                >
+                  <h3
+                    id="today-sessions-heading"
+                    className="text-xs text-gray-400 uppercase tracking-wider mb-2"
+                  >
+                    Today
+                  </h3>
+                  <ul className="space-y-1" role="list">
+                    {groupedSessions.today.map(renderSessionItem)}
+                  </ul>
+                </section>
+              )}
+              {groupedSessions.yesterday.length > 0 && (
+                <section
+                  className="mb-3"
+                  aria-labelledby="yesterday-sessions-heading"
+                >
+                  <h3
+                    id="yesterday-sessions-heading"
+                    className="text-xs text-gray-400 uppercase tracking-wider mb-2"
+                  >
+                    Yesterday
+                  </h3>
+                  <ul className="space-y-1" role="list">
+                    {groupedSessions.yesterday.map(renderSessionItem)}
+                  </ul>
+                </section>
+              )}
+              {groupedSessions.older.length > 0 && (
+                <section
+                  className="mb-3"
+                  aria-labelledby="older-sessions-heading"
+                >
+                  <h3
+                    id="older-sessions-heading"
+                    className="text-xs text-gray-400 uppercase tracking-wider mb-2"
+                  >
+                    Older
+                  </h3>
+                  <ul className="space-y-1" role="list">
+                    {groupedSessions.older.map(renderSessionItem)}
+                  </ul>
+                </section>
+              )}
+            </>
+          )}
+        </div>
+      </nav>
+    );
+  },
+);
+
+// Display name for DevTools
+SessionNav.displayName = "SessionNav";

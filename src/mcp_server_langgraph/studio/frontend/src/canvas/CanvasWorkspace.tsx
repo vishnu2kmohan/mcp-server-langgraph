@@ -12,7 +12,18 @@ import {
   Suspense,
   lazy,
 } from "react";
-import { FileCode2, Clock, Code, User, Bot } from "lucide-react";
+import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
+import {
+  FileCode2,
+  Clock,
+  Code,
+  User,
+  Bot,
+  Sparkles,
+  AlertTriangle,
+  CheckCircle,
+  Loader2,
+} from "lucide-react";
 import { useAppDispatch, useAppSelector } from "../store/hooks";
 import {
   selectSelectedArtifactId,
@@ -41,6 +52,12 @@ const JSONArtifact = lazy(() =>
   })),
 );
 
+// Canvas Intelligence hooks (Phase 4 - Sprint 4)
+import {
+  useCodeAnalysis,
+  useDiagramAnalysis,
+} from "../hooks/useCanvasIntelligence";
+
 // =============================================================================
 // Types
 // =============================================================================
@@ -62,6 +79,14 @@ export interface CanvasWorkspaceProps {
   onRenameArtifact?: (artifactId: string, title: string) => void;
   /** Enable hover tooltip with artifact details */
   enableArtifactHover?: boolean;
+  /** User ID for AI features (format: "user:username") */
+  userId?: string;
+  /** Session ID for AI features */
+  sessionId?: string;
+  /** Current persona for RBAC-aware AI responses */
+  persona?: string;
+  /** Enable AI intelligence features (code analysis, diagram analysis) */
+  enableAI?: boolean;
 }
 
 // =============================================================================
@@ -237,6 +262,10 @@ export function CanvasWorkspace({
   enableArtifactEdit = false,
   onRenameArtifact,
   enableArtifactHover = false,
+  userId,
+  sessionId,
+  persona: _persona,
+  enableAI = false,
 }: CanvasWorkspaceProps) {
   const dispatch = useAppDispatch();
   const selectedArtifactId = useAppSelector(selectSelectedArtifactId);
@@ -265,6 +294,40 @@ export function CanvasWorkspace({
     if (!selectedArtifact) return ["code"];
     return getVisibleTabs(selectedArtifact.contentType);
   }, [selectedArtifact]);
+
+  // Determine artifact type for intelligence hooks
+  const isCodeArtifact = useMemo(
+    () =>
+      selectedArtifact?.type === "code" ||
+      selectedArtifact?.contentType === "code",
+    [selectedArtifact],
+  );
+
+  const isDiagramArtifact = useMemo(
+    () =>
+      selectedArtifact?.type === "mermaid" ||
+      selectedArtifact?.contentType === "mermaid",
+    [selectedArtifact],
+  );
+
+  // Canvas Intelligence: Code Analysis (gated by enableAI and feature flag)
+  const codeAnalysis = useCodeAnalysis({
+    userId: userId ?? "default-user",
+    sessionId: sessionId ?? "default-session",
+    code: isCodeArtifact && selectedArtifact ? selectedArtifact.content : "",
+    language: selectedArtifact?.editMetadata?.language,
+    enabled: enableAI && aiEditEnabled && isCodeArtifact && !!selectedArtifact,
+  });
+
+  // Canvas Intelligence: Diagram Analysis (gated by enableAI and feature flag)
+  const diagramAnalysis = useDiagramAnalysis({
+    userId: userId ?? "default-user",
+    sessionId: sessionId ?? "default-session",
+    diagramCode:
+      isDiagramArtifact && selectedArtifact ? selectedArtifact.content : "",
+    enabled:
+      enableAI && aiEditEnabled && isDiagramArtifact && !!selectedArtifact,
+  });
 
   // Auto-select first artifact if none selected
   useEffect(() => {
@@ -399,24 +462,182 @@ export function CanvasWorkspace({
         enableHover={enableArtifactHover}
       />
 
-      {/* Main workspace area - single pane layout */}
-      <div className="flex-1 overflow-hidden flex flex-col">
-        {/* Toolbar */}
-        <div className="flex items-center justify-between px-4 py-2 border-b border-gray-200 dark:border-gray-700">
-          <CanvasTabs
-            activeTab={activeTab}
-            onTabChange={setActiveTab}
-            visibleTabs={visibleTabs}
-            disabledTabs={isEditing ? ["preview", "data"] : []}
-          />
-          {selectedArtifact && (
-            <ArtifactActions
-              artifact={selectedArtifact}
-              compact
-              disabled={isEditing}
-            />
-          )}
-        </div>
+      {/* Main workspace area */}
+      <div className="flex-1 overflow-hidden">
+        <PanelGroup data-testid="panel-group" direction="horizontal">
+          {/* Preview/Editor panel */}
+          <Panel
+            id="editor"
+            data-testid="panel-editor"
+            defaultSize={60}
+            minSize={30}
+          >
+            <div className="flex flex-col h-full">
+              {/* Toolbar */}
+              <div className="flex items-center justify-between px-4 py-2 border-b border-gray-200 dark:border-gray-700">
+                <CanvasTabs
+                  activeTab={activeTab}
+                  onTabChange={setActiveTab}
+                  visibleTabs={visibleTabs}
+                  disabledTabs={isEditing ? ["preview", "data"] : []}
+                />
+                <div className="flex items-center gap-3">
+                  {/* AI Intelligence Indicator */}
+                  {enableAI && aiEditEnabled && selectedArtifact && (
+                    <div
+                      data-testid="ai-intelligence-indicator"
+                      className="flex items-center gap-1.5 text-xs"
+                    >
+                      {/* Code Analysis Indicator */}
+                      {isCodeArtifact && (
+                        <>
+                          {codeAnalysis.isLoading ? (
+                            <span className="flex items-center gap-1 text-gray-400">
+                              <Loader2
+                                size={12}
+                                className="animate-spin"
+                                aria-hidden="true"
+                              />
+                              <span>Analyzing...</span>
+                            </span>
+                          ) : codeAnalysis.qualityScore !== null ? (
+                            <Tooltip
+                              content={
+                                <div className="space-y-1 min-w-32">
+                                  <div className="font-medium">
+                                    Code Quality
+                                  </div>
+                                  <div className="flex items-center gap-1">
+                                    <span>Score:</span>
+                                    <span
+                                      className={cn(
+                                        "font-medium",
+                                        codeAnalysis.qualityScore >= 80
+                                          ? "text-green-400"
+                                          : codeAnalysis.qualityScore >= 60
+                                            ? "text-yellow-400"
+                                            : "text-red-400",
+                                      )}
+                                    >
+                                      {codeAnalysis.qualityScore}/100
+                                    </span>
+                                  </div>
+                                  {codeAnalysis.complexity !== null && (
+                                    <div>
+                                      Complexity: {codeAnalysis.complexity}
+                                    </div>
+                                  )}
+                                  {codeAnalysis.issues.length > 0 && (
+                                    <div className="text-yellow-400">
+                                      {codeAnalysis.issues.length} issue
+                                      {codeAnalysis.issues.length > 1
+                                        ? "s"
+                                        : ""}
+                                    </div>
+                                  )}
+                                </div>
+                              }
+                              position="bottom"
+                            >
+                              <span
+                                className={cn(
+                                  "flex items-center gap-1 px-1.5 py-0.5 rounded",
+                                  codeAnalysis.qualityScore >= 80
+                                    ? "bg-green-500/10 text-green-600 dark:text-green-400"
+                                    : codeAnalysis.qualityScore >= 60
+                                      ? "bg-yellow-500/10 text-yellow-600 dark:text-yellow-400"
+                                      : "bg-red-500/10 text-red-600 dark:text-red-400",
+                                )}
+                              >
+                                <Sparkles size={12} aria-hidden="true" />
+                                <span>{codeAnalysis.qualityScore}</span>
+                              </span>
+                            </Tooltip>
+                          ) : null}
+                        </>
+                      )}
+
+                      {/* Diagram Analysis Indicator */}
+                      {isDiagramArtifact && (
+                        <>
+                          {diagramAnalysis.isLoading ? (
+                            <span className="flex items-center gap-1 text-gray-400">
+                              <Loader2
+                                size={12}
+                                className="animate-spin"
+                                aria-hidden="true"
+                              />
+                              <span>Validating...</span>
+                            </span>
+                          ) : diagramAnalysis.isValid !== null ? (
+                            <Tooltip
+                              content={
+                                <div className="space-y-1 min-w-32">
+                                  <div className="font-medium">
+                                    Diagram Analysis
+                                  </div>
+                                  <div className="flex items-center gap-1">
+                                    <span>Type:</span>
+                                    <span className="capitalize">
+                                      {diagramAnalysis.diagramType || "unknown"}
+                                    </span>
+                                  </div>
+                                  {diagramAnalysis.nodeCount !== null && (
+                                    <div>
+                                      Nodes: {diagramAnalysis.nodeCount}
+                                    </div>
+                                  )}
+                                  {diagramAnalysis.edgeCount !== null && (
+                                    <div>
+                                      Edges: {diagramAnalysis.edgeCount}
+                                    </div>
+                                  )}
+                                  {diagramAnalysis.issues.length > 0 && (
+                                    <div className="text-yellow-400">
+                                      {diagramAnalysis.issues.length} issue
+                                      {diagramAnalysis.issues.length > 1
+                                        ? "s"
+                                        : ""}
+                                    </div>
+                                  )}
+                                </div>
+                              }
+                              position="bottom"
+                            >
+                              <span
+                                className={cn(
+                                  "flex items-center gap-1 px-1.5 py-0.5 rounded",
+                                  diagramAnalysis.isValid
+                                    ? "bg-green-500/10 text-green-600 dark:text-green-400"
+                                    : "bg-red-500/10 text-red-600 dark:text-red-400",
+                                )}
+                              >
+                                {diagramAnalysis.isValid ? (
+                                  <CheckCircle size={12} aria-hidden="true" />
+                                ) : (
+                                  <AlertTriangle size={12} aria-hidden="true" />
+                                )}
+                                <span>
+                                  {diagramAnalysis.isValid
+                                    ? "Valid"
+                                    : "Invalid"}
+                                </span>
+                              </span>
+                            </Tooltip>
+                          ) : null}
+                        </>
+                      )}
+                    </div>
+                  )}
+                  {selectedArtifact && (
+                    <ArtifactActions
+                      artifact={selectedArtifact}
+                      compact
+                      disabled={isEditing}
+                    />
+                  )}
+                </div>
+              </div>
 
         {/* Content area - switches based on active tab */}
         <div className="flex-1 overflow-auto p-4">

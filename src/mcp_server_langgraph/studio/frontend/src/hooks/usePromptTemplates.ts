@@ -1,8 +1,19 @@
 /**
  * usePromptTemplates Hook
  *
- * Manages prompt templates for quick access to common prompts.
- * Features:
+ * @deprecated This hook has no active runtime consumers and is scheduled for removal.
+ * Prompt templates functionality is better served by the useSlashCommands hook which
+ * already provides template access via "/" commands.
+ *
+ * If you need prompt template functionality, consider:
+ * - Using useSlashCommands for "/" menu access to templates
+ * - Using the workflow templates API for reusable prompts
+ * - Storing templates server-side for cross-device sync
+ *
+ * Deprecation reason: No clear consumer in the codebase (Phase 5 hooks audit).
+ * Removal timeline: Next major version
+ *
+ * Original features:
  * - Built-in template library
  * - Custom template creation
  * - Template variables with substitution

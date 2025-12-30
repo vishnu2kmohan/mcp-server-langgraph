@@ -48,6 +48,12 @@ from mcp_server_langgraph.api.v1.workflow_executions import workflow_executions_
 from mcp_server_langgraph.api.v1.sandbox import router as sandbox_router
 from mcp_server_langgraph.api.v1.code_execution import router as code_execution_router
 
+# Agentic memory endpoints (Phase 1.2: enable_agentic_memory)
+from mcp_server_langgraph.api.v1.memory import memory_router
+
+# Background agents endpoints (Phase 3.2: canvas_agents)
+from mcp_server_langgraph.api.v1.background_agents import background_agents_router
+
 # Alert infrastructure imports (ADR-0026 - Comprehensive Client Resilience Patterns)
 # Note: Alert WebSocket moved to consolidated ws_router (ADR-0068)
 from mcp_server_langgraph.api.v1.alertmanager_webhook import alertmanager_webhook_router
@@ -172,6 +178,12 @@ v1_router.include_router(code_execution_router, tags=["code-execution"])
 
 # Include Studio AI endpoints (unified StudioShell AI capabilities - Sprint 1)
 v1_router.include_router(studio_ai_router, prefix="/studio", tags=["studio-ai"])
+
+# Include agentic memory endpoints (Phase 1.2: enable_agentic_memory)
+v1_router.include_router(memory_router, prefix="/memory", tags=["memory"])
+
+# Include background agents endpoints (Phase 3.2: canvas_agents)
+v1_router.include_router(background_agents_router, tags=["background-agents"])
 
 # Include push notification endpoints (PWA support)
 v1_router.include_router(notifications_router)

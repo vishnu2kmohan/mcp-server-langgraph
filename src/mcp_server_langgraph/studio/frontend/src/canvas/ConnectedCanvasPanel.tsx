@@ -53,13 +53,21 @@ const logger = devLogger.withPrefix("[ConnectedCanvasPanel]");
 export interface ConnectedCanvasPanelProps {
   /** Additional class name */
   className?: string;
+  /** User ID for AI features (format: "user:username") */
+  userId?: string;
+  /** Current persona for RBAC-aware AI responses */
+  persona?: string;
 }
 
 // =============================================================================
 // Component
 // =============================================================================
 
-export function ConnectedCanvasPanel({ className }: ConnectedCanvasPanelProps) {
+export function ConnectedCanvasPanel({
+  className,
+  userId,
+  persona,
+}: ConnectedCanvasPanelProps) {
   const dispatch = useAppDispatch();
   const revalidator = useRevalidator();
 
@@ -619,6 +627,10 @@ export function ConnectedCanvasPanel({ className }: ConnectedCanvasPanelProps) {
         onSave={handleSave}
         enableArtifactHover
         className="h-full"
+        userId={userId}
+        sessionId={sessionId}
+        persona={persona}
+        enableAI={aiSuggestionsEnabled}
       />
       {/* Note: No <Outlet /> needed - chat routes don't render components.
           StudioShellLayout provides the full 3-panel UI for chat routes.

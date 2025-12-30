@@ -12,7 +12,7 @@
  * - AI-powered navigation predictions (Sprint 6)
  */
 /* eslint-disable react-refresh/only-export-components -- Exports NavItem types and constants alongside component */
-import { useCallback, useMemo, useEffect } from "react";
+import { useCallback, useMemo, useEffect, forwardRef } from "react";
 import { useNavigate, useLocation } from "react-router";
 import {
   MessageSquare,
@@ -197,145 +197,211 @@ export interface ActivityBarProps {
   reorderByPrediction?: boolean;
 }
 
-export function ActivityBar({
-  className,
-  enableAI = false,
-  reorderByPrediction = false,
-}: ActivityBarProps) {
-  const dispatch = useAppDispatch();
-  const navigate = useNavigate();
-  const location = useLocation();
-  const activeNavItem = useAppSelector(selectActiveNavItem);
+export const ActivityBar = forwardRef<HTMLElement, ActivityBarProps>(
+  function ActivityBar(
+    { className, enableAI = false, reorderByPrediction = false },
+    ref,
+  ) {
+    const dispatch = useAppDispatch();
+    const navigate = useNavigate();
+    const location = useLocation();
+    const activeNavItem = useAppSelector(selectActiveNavItem);
 
-  // RBAC: Get allowed sidebar items from persona slice (deny-by-default)
-  const allowedItems = useAppSelector(selectSidebarItems);
+    // RBAC: Get allowed sidebar items from persona slice (deny-by-default)
+    const allowedItems = useAppSelector(selectSidebarItems);
 
-  // Phase 4.2: Get navigation tracking data for AI predictions
-  const username = useAppSelector(selectUsername);
-  const recentPages = useAppSelector(selectRecentPages);
-  const currentPage = useAppSelector(selectCurrentPage);
+    // Phase 4.2: Get navigation tracking data for AI predictions
+    const username = useAppSelector(selectUsername);
+    const recentPages = useAppSelector(selectRecentPages);
+    const currentPage = useAppSelector(selectCurrentPage);
 
-  // Sync activeNavItem with current route (fixes deep-linking/browser navigation)
-  useEffect(() => {
-    const allItems = [...NAV_ITEMS, ...BOTTOM_ITEMS];
-    const matchedItem = allItems.find(
-      (item) => item.path && location.pathname.startsWith(item.path),
+    // Sync activeNavItem with current route (fixes deep-linking/browser navigation)
+    useEffect(() => {
+      const allItems = [...NAV_ITEMS, ...BOTTOM_ITEMS];
+      const matchedItem = allItems.find(
+        (item) => item.path && location.pathname.startsWith(item.path),
+      );
+
+      // Only sync if:
+      // 1. We found a matching nav item
+      // 2. It's different from current active item
+      // 3. It's visible to the current persona (in allowedItems)
+      if (
+        matchedItem &&
+        matchedItem.id !== activeNavItem &&
+        allowedItems.includes(matchedItem.id)
+      ) {
+        dispatch(setActiveNavItem(matchedItem.id));
+      }
+      // Note: Unknown routes (e.g., /studio/projects) don't change activeNavItem
+    }, [location.pathname, activeNavItem, allowedItems, dispatch]);
+
+    // Phase 4.2: Track page visits for AI predictions
+    useEffect(() => {
+      // Only track if we're on a studio page
+      if (location.pathname.startsWith("/studio/")) {
+        dispatch(trackPageVisit(location.pathname));
+      }
+    }, [location.pathname, dispatch]);
+
+    // AI Navigation Predictions (Sprint 6)
+    // Phase 4.2: Now uses real navigation tracking data from sessionSlice
+    const { predictedItems, isLoading: predictionsLoading } = useNavPrediction({
+      userId: username ?? "",
+      currentPage: currentPage || activeNavItem || "chat",
+      recentPages: recentPages,
+      enabled: enableAI,
+    });
+
+    // Create a set of predicted item IDs for quick lookup
+    const predictedItemIds = useMemo(() => {
+      if (!enableAI || !predictedItems?.length) return new Set<string>();
+      return new Set(predictedItems.map((p) => p.id));
+    }, [enableAI, predictedItems]);
+
+    // Filter navigation items based on persona permissions
+    const visibleNavItems = useMemo(() => {
+      const filtered = NAV_ITEMS.filter((item) =>
+        allowedItems.includes(item.id),
+      );
+
+      // Optionally reorder based on predictions
+      if (
+        enableAI &&
+        reorderByPrediction &&
+        (predictedItems?.length ?? 0) > 0
+      ) {
+        // Create a score map from predictions
+        const scoreMap = new Map(predictedItems.map((p) => [p.id, p.score]));
+
+        // Sort by prediction score (higher first), then original order
+        return [...filtered].sort((a, b) => {
+          const scoreA = scoreMap.get(a.id) ?? 0;
+          const scoreB = scoreMap.get(b.id) ?? 0;
+          return (scoreB as number) - (scoreA as number);
+        });
+      }
+
+      return filtered;
+    }, [allowedItems, enableAI, reorderByPrediction, predictedItems]);
+
+    // Filter bottom items based on persona permissions
+    const visibleBottomItems = useMemo(
+      () => BOTTOM_ITEMS.filter((item) => allowedItems.includes(item.id)),
+      [allowedItems],
     );
 
-    // Only sync if:
-    // 1. We found a matching nav item
-    // 2. It's different from current active item
-    // 3. It's visible to the current persona (in allowedItems)
-    if (
-      matchedItem &&
-      matchedItem.id !== activeNavItem &&
-      allowedItems.includes(matchedItem.id)
-    ) {
-      dispatch(setActiveNavItem(matchedItem.id));
-    }
-    // Note: Unknown routes (e.g., /studio/projects) don't change activeNavItem
-  }, [location.pathname, activeNavItem, allowedItems, dispatch]);
+    const handleNavClick = useCallback(
+      (item: NavItem) => {
+        dispatch(setActiveNavItem(item.id));
+        if (item.path) {
+          navigate(item.path);
+        }
+      },
+      [dispatch, navigate],
+    );
 
-  // Phase 4.2: Track page visits for AI predictions
-  useEffect(() => {
-    // Only track if we're on a studio page
-    if (location.pathname.startsWith("/studio/")) {
-      dispatch(trackPageVisit(location.pathname));
-    }
-  }, [location.pathname, dispatch]);
-
-  // AI Navigation Predictions (Sprint 6)
-  // Phase 4.2: Now uses real navigation tracking data from sessionSlice
-  const { predictedItems, isLoading: predictionsLoading } = useNavPrediction({
-    userId: username ?? "",
-    currentPage: currentPage || activeNavItem || "chat",
-    recentPages: recentPages,
-    enabled: enableAI,
-  });
-
-  // Create a set of predicted item IDs for quick lookup
-  const predictedItemIds = useMemo(() => {
-    if (!enableAI || !predictedItems?.length) return new Set<string>();
-    return new Set(predictedItems.map((p) => p.id));
-  }, [enableAI, predictedItems]);
-
-  // Filter navigation items based on persona permissions
-  const visibleNavItems = useMemo(() => {
-    const filtered = NAV_ITEMS.filter((item) => allowedItems.includes(item.id));
-
-    // Optionally reorder based on predictions
-    if (enableAI && reorderByPrediction && (predictedItems?.length ?? 0) > 0) {
-      // Create a score map from predictions
-      const scoreMap = new Map(predictedItems.map((p) => [p.id, p.score]));
-
-      // Sort by prediction score (higher first), then original order
-      return [...filtered].sort((a, b) => {
-        const scoreA = scoreMap.get(a.id) ?? 0;
-        const scoreB = scoreMap.get(b.id) ?? 0;
-        return (scoreB as number) - (scoreA as number);
+    // Open command palette by dispatching a synthetic Cmd+K event
+    const handleCommandPaletteClick = useCallback(() => {
+      const event = new KeyboardEvent("keydown", {
+        key: "k",
+        code: "KeyK",
+        metaKey: true,
+        ctrlKey: false,
+        bubbles: true,
       });
-    }
+      document.dispatchEvent(event);
+    }, []);
 
-    return filtered;
-  }, [allowedItems, enableAI, reorderByPrediction, predictedItems]);
-
-  // Filter bottom items based on persona permissions
-  const visibleBottomItems = useMemo(
-    () => BOTTOM_ITEMS.filter((item) => allowedItems.includes(item.id)),
-    [allowedItems],
-  );
-
-  const handleNavClick = useCallback(
-    (item: NavItem) => {
-      dispatch(setActiveNavItem(item.id));
-      if (item.path) {
-        navigate(item.path);
-      }
-    },
-    [dispatch, navigate],
-  );
-
-  // Open command palette by dispatching a synthetic Cmd+K event
-  const handleCommandPaletteClick = useCallback(() => {
-    const event = new KeyboardEvent("keydown", {
-      key: "k",
-      code: "KeyK",
-      metaKey: true,
-      ctrlKey: false,
-      bubbles: true,
-    });
-    document.dispatchEvent(event);
-  }, []);
-
-  return (
-    <nav
-      data-testid="activity-bar"
-      aria-label="Main navigation"
-      className={cn(
-        "flex flex-col items-center w-14 py-2",
-        "bg-gray-100 dark:bg-gray-900",
-        "border-r border-gray-200 dark:border-gray-700",
-        className,
-      )}
-    >
-      {/* Main navigation icons - RBAC filtered */}
-      <div
-        className="flex flex-col gap-1"
-        role="group"
-        aria-label="Primary navigation"
+    return (
+      <nav
+        ref={ref}
+        data-testid="activity-bar"
+        aria-label="Main navigation"
+        className={cn(
+          "flex flex-col items-center w-14 py-2",
+          "bg-gray-100 dark:bg-gray-900",
+          "border-r border-gray-200 dark:border-gray-700",
+          className,
+        )}
       >
-        {visibleNavItems.map((item) => {
-          const isPredicted = predictedItemIds.has(item.id);
-          return (
+        {/* Main navigation icons - RBAC filtered */}
+        <div
+          className="flex flex-col gap-1"
+          role="group"
+          aria-label="Primary navigation"
+        >
+          {visibleNavItems.map((item) => {
+            const isPredicted = predictedItemIds.has(item.id);
+            return (
+              <button
+                key={item.id}
+                type="button"
+                data-testid={`nav-${item.id}`}
+                aria-label={item.label}
+                title={isPredicted ? `${item.label} (Suggested)` : item.label}
+                onClick={() => handleNavClick(item)}
+                className={cn(
+                  "p-2 rounded-lg transition-all relative",
+                  "focus:outline-none focus:ring-2 focus:ring-primary-500",
+                  activeNavItem === item.id &&
+                    "bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300",
+                  activeNavItem !== item.id &&
+                    "text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700",
+                )}
+              >
+                {item.icon}
+                {/* AI Prediction Indicator */}
+                {enableAI && isPredicted && !predictionsLoading && (
+                  <span
+                    data-testid="nav-prediction-indicator"
+                    className={cn(
+                      "absolute -top-0.5 -right-0.5 w-2 h-2",
+                      "bg-amber-400 dark:bg-amber-500 rounded-full",
+                      "animate-pulse",
+                    )}
+                    aria-label="AI suggested"
+                  />
+                )}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Spacer */}
+        <div className="flex-1" aria-hidden="true" />
+
+        {/* Bottom icons - RBAC filtered */}
+        <div
+          className="flex flex-col gap-1"
+          role="group"
+          aria-label="Secondary navigation"
+        >
+          <button
+            type="button"
+            data-testid="command-palette-button"
+            aria-label="Command Palette"
+            title="Command Palette (⌘K)"
+            onClick={handleCommandPaletteClick}
+            className={cn(
+              "p-2 rounded-lg transition-all",
+              "text-gray-500 dark:text-gray-400",
+              "hover:bg-gray-200 dark:hover:bg-gray-700",
+              "focus:outline-none focus:ring-2 focus:ring-primary-500",
+            )}
+          >
+            <Command size={20} />
+          </button>
+          {visibleBottomItems.map((item) => (
             <button
               key={item.id}
               type="button"
               data-testid={`nav-${item.id}`}
               aria-label={item.label}
-              title={isPredicted ? `${item.label} (Suggested)` : item.label}
+              title={item.label}
               onClick={() => handleNavClick(item)}
               className={cn(
-                "p-2 rounded-lg transition-all relative",
+                "p-2 rounded-lg transition-all",
                 "focus:outline-none focus:ring-2 focus:ring-primary-500",
                 activeNavItem === item.id &&
                   "bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300",
@@ -344,68 +410,13 @@ export function ActivityBar({
               )}
             >
               {item.icon}
-              {/* AI Prediction Indicator */}
-              {enableAI && isPredicted && !predictionsLoading && (
-                <span
-                  data-testid="nav-prediction-indicator"
-                  className={cn(
-                    "absolute -top-0.5 -right-0.5 w-2 h-2",
-                    "bg-amber-400 dark:bg-amber-500 rounded-full",
-                    "animate-pulse",
-                  )}
-                  aria-label="AI suggested"
-                />
-              )}
             </button>
-          );
-        })}
-      </div>
+          ))}
+        </div>
+      </nav>
+    );
+  },
+);
 
-      {/* Spacer */}
-      <div className="flex-1" aria-hidden="true" />
-
-      {/* Bottom icons - RBAC filtered */}
-      <div
-        className="flex flex-col gap-1"
-        role="group"
-        aria-label="Secondary navigation"
-      >
-        <button
-          type="button"
-          data-testid="command-palette-button"
-          aria-label="Command Palette"
-          title="Command Palette (⌘K)"
-          onClick={handleCommandPaletteClick}
-          className={cn(
-            "p-2 rounded-lg transition-all",
-            "text-gray-500 dark:text-gray-400",
-            "hover:bg-gray-200 dark:hover:bg-gray-700",
-            "focus:outline-none focus:ring-2 focus:ring-primary-500",
-          )}
-        >
-          <Command size={20} />
-        </button>
-        {visibleBottomItems.map((item) => (
-          <button
-            key={item.id}
-            type="button"
-            data-testid={`nav-${item.id}`}
-            aria-label={item.label}
-            title={item.label}
-            onClick={() => handleNavClick(item)}
-            className={cn(
-              "p-2 rounded-lg transition-all",
-              "focus:outline-none focus:ring-2 focus:ring-primary-500",
-              activeNavItem === item.id &&
-                "bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300",
-              activeNavItem !== item.id &&
-                "text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700",
-            )}
-          >
-            {item.icon}
-          </button>
-        ))}
-      </div>
-    </nav>
-  );
-}
+// Display name for DevTools
+ActivityBar.displayName = "ActivityBar";

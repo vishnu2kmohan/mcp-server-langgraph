@@ -47,6 +47,8 @@ import { useAlertSoundIntegration } from "./hooks/useAlertSoundIntegration";
 import { usePWAUpdate } from "./hooks/usePWAUpdate";
 import { useOnboarding } from "./hooks/useOnboarding";
 import { useTheme } from "./hooks/useTheme";
+import { useAccessibility } from "./hooks/useAccessibility";
+import { useErrorReporting } from "./hooks/useErrorReporting";
 import {
   useGetCurrentUserQuery,
   useGetWorkflowTemplatesQuery,
@@ -169,6 +171,18 @@ export function App() {
   // Apply theme to document (defaults to dark, respects user preference)
   useTheme();
 
+  // Global accessibility settings - respects system preferences and persists user choices
+  // Features: reduced motion, high contrast, font size, screen reader announcements
+  const { reducedMotion: _reducedMotion, announce } = useAccessibility();
+
+  // Global error reporting - captures unhandled errors and sends to backend telemetry
+  // Phase 5.3: App-level error reporting for observability
+  useErrorReporting({
+    captureWindowErrors: true,
+    captureUnhandledRejections: true,
+    enabled: true,
+  });
+
   // UX Enhancement Feature Flags
   const enableOnboardingWizard = isEnabled("onboarding_wizard");
   const enableGuidedTour = isEnabled("guided_tour");
@@ -193,16 +207,26 @@ export function App() {
   }, []);
 
   // Handle tour completion
-  const handleTourComplete = useCallback((_result: TourCompleteResult) => {
-    storage.set(STORAGE_KEYS.TOUR_COMPLETED, true);
-    setShowGuidedTour(false);
-  }, []);
+  const handleTourComplete = useCallback(
+    (_result: TourCompleteResult) => {
+      storage.set(STORAGE_KEYS.TOUR_COMPLETED, true);
+      setShowGuidedTour(false);
+      announce("Tour complete. You can now start using Agent Studio.");
+    },
+    [announce],
+  );
 
   // Handle tour skip
-  const handleTourSkip = useCallback((_result: TourSkipResult) => {
-    storage.set(STORAGE_KEYS.TOUR_COMPLETED, true);
-    setShowGuidedTour(false);
-  }, []);
+  const handleTourSkip = useCallback(
+    (_result: TourSkipResult) => {
+      storage.set(STORAGE_KEYS.TOUR_COMPLETED, true);
+      setShowGuidedTour(false);
+      announce(
+        "Tour skipped. You can access the tour later from the help menu.",
+      );
+    },
+    [announce],
+  );
 
   // SUS Survey state (Priority 1.4 - triggers after 3rd session or 7 days)
   const [showSUSSurvey, setShowSUSSurvey] = useState(false);
@@ -268,6 +292,9 @@ export function App() {
   // Handler for OnboardingWizard completion
   const handleOnboardingComplete = (_result: OnboardingResult) => {
     completeOnboarding();
+
+    // Screen reader announcement for accessibility
+    announce("Onboarding complete. Welcome to Agent Studio.");
 
     // Trigger guided tour if not completed before (Priority 2.2)
     if (!hasTourCompleted()) {
