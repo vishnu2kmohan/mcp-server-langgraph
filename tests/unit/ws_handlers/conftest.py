@@ -109,13 +109,14 @@ def mock_websocket() -> MagicMock:
     """Create a mock WebSocket for testing."""
     # Don't use spec to allow __bool__ to work correctly
     ws = MagicMock()
-    ws.accept = AsyncMock()
-    ws.close = AsyncMock()
-    ws.send_json = AsyncMock()
-    ws.send_text = AsyncMock()
-    ws.receive_json = AsyncMock()
-    ws.receive_text = AsyncMock()
-    ws.query_params = {}
+    ws.accept = AsyncMock()  # noqa: async-mock-config
+    ws.close = AsyncMock()  # noqa: async-mock-config
+    ws.send_json = AsyncMock()  # noqa: async-mock-config
+    ws.send_text = AsyncMock()  # noqa: async-mock-config
+    ws.receive_json = AsyncMock()  # noqa: async-mock-config
+    ws.receive_text = AsyncMock()  # noqa: async-mock-config
+    # Include protocol version to pass WebSocket validation
+    ws.query_params = {"v": "1.0.0"}
     ws.headers = {}
     ws.client_state = MagicMock()
     return ws
