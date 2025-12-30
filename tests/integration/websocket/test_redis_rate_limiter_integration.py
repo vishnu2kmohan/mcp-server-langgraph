@@ -33,7 +33,7 @@ pytestmark = [
 
 # Redis connection settings from test environment
 REDIS_HOST = os.getenv("REDIS_HOST", "localhost")
-REDIS_PORT = int(os.getenv("REDIS_PORT", "6379"))
+REDIS_PORT = int(os.getenv("REDIS_PORT", "9379"))
 REDIS_RATE_LIMIT_DB = int(os.getenv("REDIS_RATE_LIMIT_DB", "3"))
 
 

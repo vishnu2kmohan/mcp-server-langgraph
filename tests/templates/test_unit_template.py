@@ -34,7 +34,7 @@ REFERENCES:
 # ============================================================================
 import gc  # Required for memory safety (teardown_method)
 import os  # Required for PYTEST_XDIST_WORKER check
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock
 
 import pytest
 
@@ -160,14 +160,23 @@ class TestExampleFeature:
     # ASYNC TEST WITH PATCH DECORATOR
     # ========================================================================
     @pytest.mark.asyncio
-    @patch("your_module.external_dependency")  # Replace with actual import path
-    async def test_example_with_patch(self, mock_external):
+    @pytest.mark.skip(reason="Template placeholder - replace 'your_module' with actual import path")
+    async def test_example_with_patch(self):
         """Test using @patch decorator for external dependencies.
 
         CRITICAL: When patching async methods, use new_callable=AsyncMock
+
+        NOTE: This test is skipped because it uses placeholder import paths.
+        Copy this template to your test file and replace 'your_module' with
+        the actual module path before enabling.
+
+        Example:
+            @patch("mcp_server_langgraph.auth.keycloak.KeycloakClient")
+            async def test_example_with_patch(self, mock_keycloak):
+                ...
         """
         # GIVEN: Configure patched dependency
-        mock_external.return_value = "mocked_value"  # EXPLICIT!
+        # mock_external.return_value = "mocked_value"  # EXPLICIT!
 
         # WHEN: Call function that uses external dependency
         # result = await your_function()

@@ -94,11 +94,14 @@ class TestCriticalStartupValidation:
         import importlib
 
         import mcp_server_langgraph.core.config as config_module
+        import mcp_server_langgraph.core.config._settings as settings_module
         import mcp_server_langgraph.core.dependencies as deps_module
 
-        # Reload config to pick up monkeypatched env vars
+        # CRITICAL: Reload _settings first (where Settings instance is created)
+        # Then reload the config package (which re-imports from _settings)
+        # Then reload dependencies (which imports settings from config)
+        importlib.reload(settings_module)
         importlib.reload(config_module)
-        # Reload dependencies to use the new config
         importlib.reload(deps_module)
 
         # Re-import to get updated functions
@@ -131,11 +134,14 @@ class TestCriticalStartupValidation:
         import importlib
 
         import mcp_server_langgraph.core.config as config_module
+        import mcp_server_langgraph.core.config._settings as settings_module
         import mcp_server_langgraph.core.dependencies as deps_module
 
-        # Reload config to pick up monkeypatched env vars
+        # CRITICAL: Reload _settings first (where Settings instance is created)
+        # Then reload the config package (which re-imports from _settings)
+        # Then reload dependencies (which imports settings from config)
+        importlib.reload(settings_module)
         importlib.reload(config_module)
-        # Reload dependencies to use the new config
         importlib.reload(deps_module)
 
         # Re-import to get updated functions
@@ -311,9 +317,13 @@ class TestDependencyInjectionSmoke:
         import importlib
 
         import mcp_server_langgraph.core.config as config_module
+        import mcp_server_langgraph.core.config._settings as settings_module
         import mcp_server_langgraph.core.dependencies as deps_module
 
-        # Reload config and dependencies to pick up monkeypatched env vars
+        # CRITICAL: Reload _settings first (where Settings instance is created)
+        # Then reload the config package (which re-imports from _settings)
+        # Then reload dependencies (which imports settings from config)
+        importlib.reload(settings_module)
         importlib.reload(config_module)
         importlib.reload(deps_module)
 
