@@ -70,6 +70,10 @@ class TestStreamingDisabledBehavior:
         from mcp_server_langgraph.api.v1.mcp_websocket import (
             AuthenticatedMCPHandler,
         )
+        from mcp_server_langgraph.mcp.websocket.config import (
+            is_streaming_enabled,
+            set_streaming_enabled,
+        )
 
         notifications: list[dict] = []
 
@@ -81,15 +85,15 @@ class TestStreamingDisabledBehavior:
             notification_callback=capture,
         )
 
-        # Disable streaming globally - patch the NEW location that the handler imports from
-        with patch.object(
-            handler,
-            "execute_tool",
-            return_value=[{"type": "text", "text": "Non-streaming result"}],
-        ):
-            with patch(
-                "mcp_server_langgraph.mcp.websocket.config.is_streaming_enabled",
-                return_value=False,
+        # Save original state and disable streaming using the actual setter
+        original_enabled = is_streaming_enabled()
+        set_streaming_enabled(False)
+
+        try:
+            with patch.object(
+                handler,
+                "execute_tool",
+                return_value=[{"type": "text", "text": "Non-streaming result"}],
             ):
                 message = {
                     "jsonrpc": "2.0",
@@ -102,6 +106,9 @@ class TestStreamingDisabledBehavior:
                     },
                 }
                 response = await handler.handle(message)
+        finally:
+            # Restore original state
+            set_streaming_enabled(original_enabled)
 
         # Should NOT have any streaming notifications
         streaming_notifications = [n for n in notifications if n.get("method", "").startswith("$/streaming/")]
