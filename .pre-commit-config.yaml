@@ -1116,6 +1116,26 @@ repos:
       - Navigation links losing time context\n\n\
       Created: 2025-12-11 (Grafana dashboard audit)\n\
       See: scripts/validation/validate_grafana_dashboards.py\n"
+  - id: validate-keycloak-realm
+    name: Validate Keycloak Realm Configuration
+    entry: uv run --frozen python -u scripts/validation/validate_keycloak_realm.py
+    language: system
+    files: ^tests/e2e/default-realm\.json$
+    pass_filenames: true
+    always_run: false
+    stages:
+    - pre-commit
+    description: "Validates Keycloak realm JSON files to prevent startup failures:\n\n\
+      Checks:\n\
+      1. Valid JSON syntax\n\
+      2. No duplicate client IDs (causes unique constraint violation)\n\
+      3. No duplicate usernames (causes unique constraint violation)\n\
+      4. Required fields present (id, realm)\n\n\
+      Prevents:\n\
+      - Keycloak startup failures from duplicate entries\n\
+      - Configuration drift between environments\n\n\
+      Created: 2025-12-29 (after duplicate openfga-server client incident)\n\
+      See: scripts/validation/validate_keycloak_realm.py\n"
   - id: validate-test-fixtures
     name: Validate Test Fixtures for Common Issues
     entry: uv run --frozen python -u scripts/validators/validate_test_fixtures.py

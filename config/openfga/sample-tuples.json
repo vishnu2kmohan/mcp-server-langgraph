@@ -91,6 +91,40 @@
       "object": "role:premium"
     },
     {
+      "_comment": "=== Sub-Persona Role Memberships (Security Audit) ===",
+      "_section": "Role assignments for differentiated sub-persona access"
+    },
+    {
+      "_comment": "security-admin: admin + security role",
+      "user": "user:admin",
+      "relation": "assignee",
+      "object": "role:security"
+    },
+    {
+      "_comment": "auditor: admin + audit role for compliance monitoring",
+      "user": "user:admin",
+      "relation": "assignee",
+      "object": "role:audit"
+    },
+    {
+      "_comment": "alice-analyst: developer + analyst role",
+      "user": "user:alice",
+      "relation": "assignee",
+      "object": "role:analyst"
+    },
+    {
+      "_comment": "alice-devops: developer + devops role",
+      "user": "user:alice",
+      "relation": "assignee",
+      "object": "role:devops"
+    },
+    {
+      "_comment": "compliance-officer: alice + compliance role",
+      "user": "user:alice",
+      "relation": "assignee",
+      "object": "role:compliance"
+    },
+    {
       "_comment": "Vector Store permissions (ADR-0068)",
       "user": "user:admin",
       "relation": "owner",
@@ -139,6 +173,12 @@
     {
       "user": "user:bob",
       "relation": "viewer",
+      "object": "workflow:alice_workflow"
+    },
+    {
+      "_comment": "Bob can execute workflows shared with him (security audit fix)",
+      "user": "user:bob",
+      "relation": "executor",
       "object": "workflow:alice_workflow"
     },
     {
@@ -203,6 +243,22 @@
       "user": "organization:acme",
       "relation": "organization",
       "object": "dashboard:grafana"
+    },
+    {
+      "_comment": "DevTools Dashboard permissions (/api/v1/ws/devtools)",
+      "user": "user:admin",
+      "relation": "admin",
+      "object": "dashboard:devtools"
+    },
+    {
+      "user": "user:alice",
+      "relation": "viewer",
+      "object": "dashboard:devtools"
+    },
+    {
+      "user": "user:bob",
+      "relation": "viewer",
+      "object": "dashboard:devtools"
     },
     {
       "_comment": "Cost tracking permissions (/api/v1/cost)",
@@ -488,6 +544,241 @@
       "user": "user:bob",
       "relation": "viewer",
       "object": "mcp:aggregated-capabilities"
+    },
+    {
+      "_comment": "=== System-level global access for sub-personas (10 new types) ===",
+      "_section": "Sub-persona authorization requires system:global tuples"
+    },
+    {
+      "_comment": "System permissions - admin sub-persona has admin access",
+      "user": "user:admin",
+      "relation": "admin",
+      "object": "system:global"
+    },
+    {
+      "_comment": "System permissions - alice has developer access (alice-builder, alice-analyst, alice-devops, compliance-officer)",
+      "user": "user:alice",
+      "relation": "developer",
+      "object": "system:global"
+    },
+    {
+      "_comment": "System permissions - bob has user access (standard user tier)",
+      "user": "user:bob",
+      "relation": "user",
+      "object": "system:global"
+    },
+    {
+      "_comment": "Connection permissions (/api/v1/connections)",
+      "user": "user:admin",
+      "relation": "owner",
+      "object": "connection:default"
+    },
+    {
+      "user": "user:alice",
+      "relation": "owner",
+      "object": "connection:alice_conn"
+    },
+    {
+      "user": "user:bob",
+      "relation": "viewer",
+      "object": "connection:alice_conn"
+    },
+    {
+      "user": "organization:acme",
+      "relation": "organization",
+      "object": "connection:default"
+    },
+    {
+      "_comment": "AI permissions (/api/v1/ai, /api/v1/ws/ai/suggestions)",
+      "user": "user:admin",
+      "relation": "admin",
+      "object": "ai:suggestions"
+    },
+    {
+      "user": "user:alice",
+      "relation": "user",
+      "object": "ai:suggestions"
+    },
+    {
+      "user": "user:bob",
+      "relation": "user",
+      "object": "ai:suggestions"
+    },
+    {
+      "_comment": "AI Orchestrator Status permissions (/api/v1/ws/orchestrator/status)",
+      "user": "user:admin",
+      "relation": "admin",
+      "object": "ai:orchestrator"
+    },
+    {
+      "user": "user:alice",
+      "relation": "viewer",
+      "object": "ai:orchestrator"
+    },
+    {
+      "user": "user:bob",
+      "relation": "viewer",
+      "object": "ai:orchestrator"
+    },
+    {
+      "_comment": "Budget permissions (/api/v1/ws/budget/alerts)",
+      "user": "user:admin",
+      "relation": "admin",
+      "object": "budget:alerts"
+    },
+    {
+      "user": "user:alice",
+      "relation": "viewer",
+      "object": "budget:alerts"
+    },
+    {
+      "user": "user:bob",
+      "relation": "viewer",
+      "object": "budget:alerts"
+    },
+    {
+      "user": "organization:acme",
+      "relation": "organization",
+      "object": "budget:alerts"
+    },
+    {
+      "_comment": "Agent permissions (/api/v1/agents)",
+      "user": "user:admin",
+      "relation": "owner",
+      "object": "agent:default"
+    },
+    {
+      "user": "user:alice",
+      "relation": "admin",
+      "object": "agent:default"
+    },
+    {
+      "user": "user:bob",
+      "relation": "viewer",
+      "object": "agent:default"
+    },
+    {
+      "user": "organization:acme",
+      "relation": "organization",
+      "object": "agent:default"
+    },
+    {
+      "_comment": "Skill permissions (/api/v1/skills)",
+      "user": "user:admin",
+      "relation": "admin",
+      "object": "skill:default"
+    },
+    {
+      "user": "user:alice",
+      "relation": "viewer",
+      "object": "skill:default"
+    },
+    {
+      "_comment": "Execution permissions (/api/v1/workflow_executions)",
+      "user": "user:admin",
+      "relation": "owner",
+      "object": "execution:default"
+    },
+    {
+      "user": "user:alice",
+      "relation": "owner",
+      "object": "execution:alice_exec"
+    },
+    {
+      "user": "user:bob",
+      "relation": "viewer",
+      "object": "execution:alice_exec"
+    },
+    {
+      "user": "organization:acme",
+      "relation": "organization",
+      "object": "execution:default"
+    },
+    {
+      "_comment": "Compliance permissions (/api/v1/compliance) - security-admin, auditor, compliance-officer",
+      "user": "user:admin",
+      "relation": "admin",
+      "object": "compliance:default"
+    },
+    {
+      "user": "user:alice",
+      "relation": "viewer",
+      "object": "compliance:default"
+    },
+    {
+      "_comment": "Marketplace permissions (/api/v1/marketplace) - admin only",
+      "user": "user:admin",
+      "relation": "admin",
+      "object": "marketplace:default"
+    },
+    {
+      "_comment": "Config permissions (/api/v1/config) - admin only",
+      "user": "user:admin",
+      "relation": "admin",
+      "object": "config:default"
+    },
+    {
+      "user": "user:alice",
+      "relation": "viewer",
+      "object": "config:default"
+    },
+    {
+      "_comment": "Project permissions (/api/v1/projects) - already has type in model, adding tuples",
+      "user": "user:admin",
+      "relation": "owner",
+      "object": "project:default"
+    },
+    {
+      "user": "user:alice",
+      "relation": "editor",
+      "object": "project:default"
+    },
+    {
+      "user": "user:bob",
+      "relation": "viewer",
+      "object": "project:default"
+    },
+    {
+      "user": "organization:acme",
+      "relation": "organization",
+      "object": "project:default"
+    },
+    {
+      "_comment": "Traces Stream WebSocket (/api/v1/ws/traces) - real-time trace streaming",
+      "user": "user:admin",
+      "relation": "admin",
+      "object": "traces:stream"
+    },
+    {
+      "user": "user:alice",
+      "relation": "viewer",
+      "object": "traces:stream"
+    },
+    {
+      "user": "user:bob",
+      "relation": "viewer",
+      "object": "traces:stream"
+    },
+    {
+      "_comment": "Cost Budget WebSocket (/api/v1/ws/budget/alerts) - budget monitoring",
+      "user": "user:admin",
+      "relation": "admin",
+      "object": "cost:budget"
+    },
+    {
+      "user": "user:alice",
+      "relation": "viewer",
+      "object": "cost:budget"
+    },
+    {
+      "user": "user:bob",
+      "relation": "viewer",
+      "object": "cost:budget"
+    },
+    {
+      "user": "organization:acme",
+      "relation": "organization",
+      "object": "cost:budget"
     }
   ]
 }

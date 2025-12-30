@@ -359,10 +359,12 @@ services:
       #   OpenFGA must expect the same issuer for token validation to succeed
       #   The extra_hosts mapping allows OpenFGA to resolve localhost to host-gateway
       - OPENFGA_AUTHN_METHOD=oidc
-      #- OPENFGA_AUTHN_OIDC_ISSUER=http://keycloak-test:8080/authn/realms/default
+      # With KC_HOSTNAME_URL=http://localhost/authn, all tokens have consistent issuer
+      # regardless of how Keycloak is accessed (gateway, direct port, Docker network)
       - OPENFGA_AUTHN_OIDC_ISSUER=http://localhost/authn/realms/default
-      - OPENFGA_AUTHN_OIDC_ISSUER_ALIASES=http://keycloak-test:8080/authn/realms/default,http://keycloak:8080/authn/realms/default
-      #- OPENFGA_AUTHN_OIDC_ISSUER_ALIASES=http://localhost/authn/realms/default,http://keycloak:8080/authn/realms/default
+      # Aliases kept for backwards compatibility with tokens issued before KC_HOSTNAME_URL change
+      # In steady state, all tokens should have the primary issuer
+      - OPENFGA_AUTHN_OIDC_ISSUER_ALIASES=http://localhost:8080/authn/realms/default,http://keycloak-test:8080/authn/realms/default
       - OPENFGA_AUTHN_OIDC_AUDIENCE=openfga-server
       - TESTING=true
     healthcheck:
@@ -425,19 +427,17 @@ services:
         condition: service_healthy
       openfga-test:
         condition: service_healthy
-      traefik-gateway:
-        condition: service_healthy
-    # Map localhost to host gateway for Keycloak token acquisition
-    extra_hosts:
-      - "localhost:host-gateway"
+      # NOTE: traefik-gateway dependency removed - seed script uses direct Keycloak connection
+      # OpenFGA accepts tokens with keycloak-test issuer via OPENFGA_AUTHN_OIDC_ISSUER_ALIASES
     environment:
       - OPENFGA_API_URL=http://openfga-test:8080
       # OIDC Authentication (ADR-0070 - OpenFGA OIDC Migration)
       # Seed script uses client credentials grant to obtain tokens from Keycloak
-      # Must use gateway URL (localhost) to get tokens with correct issuer
+      # Direct connection to Keycloak - tokens have issuer http://keycloak-test:8080/authn/realms/default
+      # OpenFGA accepts this via OPENFGA_AUTHN_OIDC_ISSUER_ALIASES configuration
       - OPENFGA_OIDC_CLIENT_ID=openfga-server
       - OPENFGA_OIDC_CLIENT_SECRET=test-openfga-server-secret
-      - KEYCLOAK_SERVER_URL=http://localhost/authn
+      - KEYCLOAK_SERVER_URL=http://keycloak-test:8080/authn
       - KEYCLOAK_REALM=default
       # Deprecated: Preshared key authentication (kept for rollback compatibility)
       - OPENFGA_PRESHARED_KEY=${OPENFGA_PRESHARED_KEY:-test-openfga-preshared-key}
@@ -515,14 +515,14 @@ services:
       # HOSTNAME CONFIGURATION: Set fixed hostname URL to ensure consistent issuer across all access methods
       # This is required for E2E tests where tokens obtained via gateway (localhost:80) must be
       # refreshed via internal Docker network URLs. Keycloak validates issuer consistency.
-      # Using KC_HOSTNAME_URL ensures the full issuer URL is consistent regardless of how Keycloak is accessed.
       # See: https://www.keycloak.org/server/hostname
-      # Keycloak 26+ hostname v2 configuration
-      # KC_HOSTNAME sets the fixed hostname for all issuer URLs
-      # KC_HOSTNAME_PORT=-1 uses default port for scheme (no port in HTTP URLs)
-      # KC_HOSTNAME_BACKCHANNEL_DYNAMIC=false ensures consistent issuer across all access methods
-      - KC_HOSTNAME=localhost
-      - KC_HOSTNAME_PORT=-1
+      #
+      # Keycloak 26+ hostname v2 configuration:
+      # KC_HOSTNAME_URL takes precedence and sets the exact base URL for all issuer claims.
+      # This ensures tokens always have issuer: http://localhost/authn/realms/default
+      # regardless of how Keycloak is accessed (gateway, direct port, Docker network).
+      # Note: KC_HTTP_RELATIVE_PATH=/authn is baked into the image, so URL includes /authn
+      - KC_HOSTNAME_URL=http://localhost/authn
       - KC_HOSTNAME_BACKCHANNEL_DYNAMIC=false
       - KC_HOSTNAME_STRICT=false
       - KC_HOSTNAME_STRICT_HTTPS=false
@@ -720,6 +720,47 @@ services:
           echo "Microsoft IdP has placeholder values or missing credentials - disabling..."
           /opt/keycloak/bin/kcadm.sh update identity-provider/instances/microsoft -r default \
             -s "enabled=false" 2>/dev/null && echo "✓ Microsoft IdP disabled" || echo "Warning: Could not disable Microsoft IdP"
+        fi
+
+        # Configure Token Exchange (RFC 8693) for mcp-server client
+        # This enables user impersonation without ROPC (password grant)
+        # Reference: ADR-0086 - Security Audit Keycloak/OpenFGA
+        echo "Configuring Token Exchange permissions..."
+
+        # Get mcp-server client ID
+        MCP_CLIENT_ID=$(/opt/keycloak/bin/kcadm.sh get clients -r default -q clientId=mcp-server --fields id 2>/dev/null | grep -o '"id" : "[^"]*"' | head -1 | cut -d'"' -f4)
+
+        if [ -n "$$MCP_CLIENT_ID" ]; then
+          echo "Found mcp-server client ID: $$MCP_CLIENT_ID"
+
+          # Enable token exchange permission on the client
+          # The authorizationServicesEnabled=true is already set in the realm JSON
+          # Now we need to create the token-exchange permission
+
+          # Create token-exchange scope in the authorization settings
+          /opt/keycloak/bin/kcadm.sh create clients/$$MCP_CLIENT_ID/authz/resource-server/scope \
+            -r default \
+            -s 'name=token-exchange' \
+            -s 'displayName=Token Exchange' 2>/dev/null && echo "✓ Created token-exchange scope" || echo "Token-exchange scope may already exist"
+
+          # Get the service account user for mcp-server
+          SERVICE_ACCOUNT_ID=$(/opt/keycloak/bin/kcadm.sh get users -r default -q username=service-account-mcp-server --fields id 2>/dev/null | grep -o '"id" : "[^"]*"' | head -1 | cut -d'"' -f4)
+
+          if [ -n "$$SERVICE_ACCOUNT_ID" ]; then
+            echo "Found service account ID: $$SERVICE_ACCOUNT_ID"
+
+            # Grant impersonation role to the service account
+            # This allows the client to impersonate other users
+            /opt/keycloak/bin/kcadm.sh add-roles -r default \
+              --uusername service-account-mcp-server \
+              --rolename admin 2>/dev/null && echo "✓ Granted admin role for impersonation" || echo "Admin role may already be assigned"
+          else
+            echo "Service account not found - will be created on first token request"
+          fi
+
+          echo "✓ Token Exchange configured for mcp-server"
+        else
+          echo "Warning: Could not find mcp-server client - Token Exchange not configured"
         fi
 
         echo "Keycloak initialization complete"

@@ -323,11 +323,25 @@
         "owner": {
           "this": {}
         },
-        "viewer": {
+        "editor": {
           "union": {
             "child": [
               {"this": {}},
               {"computedUserset": {"relation": "owner"}},
+              {
+                "tupleToUserset": {
+                  "tupleset": {"relation": "project"},
+                  "computedUserset": {"relation": "editor"}
+                }
+              }
+            ]
+          }
+        },
+        "viewer": {
+          "union": {
+            "child": [
+              {"this": {}},
+              {"computedUserset": {"relation": "editor"}},
               {
                 "tupleToUserset": {
                   "tupleset": {"relation": "organization"},
@@ -353,6 +367,9 @@
       "metadata": {
         "relations": {
           "owner": {
+            "directly_related_user_types": [{"type": "user"}]
+          },
+          "editor": {
             "directly_related_user_types": [{"type": "user"}]
           },
           "viewer": {
@@ -793,6 +810,319 @@
       "metadata": {
         "relations": {
           "user": {
+            "directly_related_user_types": [{"type": "user"}]
+          }
+        }
+      }
+    },
+    {
+      "type": "system",
+      "description": "System-level global access for sub-personas (admin, developer, user roles)",
+      "relations": {
+        "admin": {
+          "this": {}
+        },
+        "developer": {
+          "this": {}
+        },
+        "user": {
+          "this": {}
+        },
+        "viewer": {
+          "union": {
+            "child": [
+              {"this": {}},
+              {"computedUserset": {"relation": "admin"}}
+            ]
+          }
+        }
+      },
+      "metadata": {
+        "relations": {
+          "admin": {
+            "directly_related_user_types": [{"type": "user"}]
+          },
+          "developer": {
+            "directly_related_user_types": [{"type": "user"}]
+          },
+          "user": {
+            "directly_related_user_types": [{"type": "user"}]
+          },
+          "viewer": {
+            "directly_related_user_types": [{"type": "user"}]
+          }
+        }
+      }
+    },
+    {
+      "type": "connection",
+      "description": "MCP connections and integrations for /api/v1/connections",
+      "relations": {
+        "owner": {
+          "this": {}
+        },
+        "viewer": {
+          "union": {
+            "child": [
+              {"this": {}},
+              {"computedUserset": {"relation": "owner"}}
+            ]
+          }
+        },
+        "organization": {
+          "this": {}
+        }
+      },
+      "metadata": {
+        "relations": {
+          "owner": {
+            "directly_related_user_types": [{"type": "user"}]
+          },
+          "viewer": {
+            "directly_related_user_types": [{"type": "user"}]
+          },
+          "organization": {
+            "directly_related_user_types": [{"type": "organization"}]
+          }
+        }
+      }
+    },
+    {
+      "type": "ai",
+      "description": "AI features and suggestions for /api/v1/ai and WebSocket suggestions",
+      "relations": {
+        "user": {
+          "this": {}
+        },
+        "admin": {
+          "this": {}
+        },
+        "viewer": {
+          "union": {
+            "child": [
+              {"this": {}},
+              {"computedUserset": {"relation": "user"}},
+              {"computedUserset": {"relation": "admin"}}
+            ]
+          }
+        }
+      },
+      "metadata": {
+        "relations": {
+          "user": {
+            "directly_related_user_types": [{"type": "user"}]
+          },
+          "admin": {
+            "directly_related_user_types": [{"type": "user"}]
+          },
+          "viewer": {
+            "directly_related_user_types": [{"type": "user"}]
+          }
+        }
+      }
+    },
+    {
+      "type": "budget",
+      "description": "Budget alerts and cost limits for /api/v1/ws/budget",
+      "relations": {
+        "admin": {
+          "this": {}
+        },
+        "viewer": {
+          "union": {
+            "child": [
+              {"this": {}},
+              {"computedUserset": {"relation": "admin"}}
+            ]
+          }
+        },
+        "organization": {
+          "this": {}
+        }
+      },
+      "metadata": {
+        "relations": {
+          "admin": {
+            "directly_related_user_types": [{"type": "user"}]
+          },
+          "viewer": {
+            "directly_related_user_types": [{"type": "user"}]
+          },
+          "organization": {
+            "directly_related_user_types": [{"type": "organization"}]
+          }
+        }
+      }
+    },
+    {
+      "type": "agent",
+      "description": "Agent configuration and HITL operations for /api/v1/agents",
+      "relations": {
+        "owner": {
+          "this": {}
+        },
+        "admin": {
+          "union": {
+            "child": [
+              {"this": {}},
+              {"computedUserset": {"relation": "owner"}}
+            ]
+          }
+        },
+        "viewer": {
+          "union": {
+            "child": [
+              {"this": {}},
+              {"computedUserset": {"relation": "admin"}}
+            ]
+          }
+        },
+        "organization": {
+          "this": {}
+        }
+      },
+      "metadata": {
+        "relations": {
+          "owner": {
+            "directly_related_user_types": [{"type": "user"}]
+          },
+          "admin": {
+            "directly_related_user_types": [{"type": "user"}]
+          },
+          "viewer": {
+            "directly_related_user_types": [{"type": "user"}]
+          },
+          "organization": {
+            "directly_related_user_types": [{"type": "organization"}]
+          }
+        }
+      }
+    },
+    {
+      "type": "skill",
+      "description": "Skill management operations for /api/v1/skills",
+      "relations": {
+        "admin": {
+          "this": {}
+        },
+        "viewer": {
+          "union": {
+            "child": [
+              {"this": {}},
+              {"computedUserset": {"relation": "admin"}}
+            ]
+          }
+        }
+      },
+      "metadata": {
+        "relations": {
+          "admin": {
+            "directly_related_user_types": [{"type": "user"}]
+          },
+          "viewer": {
+            "directly_related_user_types": [{"type": "user"}]
+          }
+        }
+      }
+    },
+    {
+      "type": "execution",
+      "description": "Workflow execution tracking for /api/v1/workflow_executions",
+      "relations": {
+        "owner": {
+          "this": {}
+        },
+        "viewer": {
+          "union": {
+            "child": [
+              {"this": {}},
+              {"computedUserset": {"relation": "owner"}}
+            ]
+          }
+        },
+        "organization": {
+          "this": {}
+        }
+      },
+      "metadata": {
+        "relations": {
+          "owner": {
+            "directly_related_user_types": [{"type": "user"}]
+          },
+          "viewer": {
+            "directly_related_user_types": [{"type": "user"}]
+          },
+          "organization": {
+            "directly_related_user_types": [{"type": "organization"}]
+          }
+        }
+      }
+    },
+    {
+      "type": "compliance",
+      "description": "Compliance reports (GDPR, HIPAA, SOC2, FedRAMP) for /api/v1/compliance",
+      "relations": {
+        "admin": {
+          "this": {}
+        },
+        "viewer": {
+          "union": {
+            "child": [
+              {"this": {}},
+              {"computedUserset": {"relation": "admin"}}
+            ]
+          }
+        }
+      },
+      "metadata": {
+        "relations": {
+          "admin": {
+            "directly_related_user_types": [{"type": "user"}]
+          },
+          "viewer": {
+            "directly_related_user_types": [{"type": "user"}]
+          }
+        }
+      }
+    },
+    {
+      "type": "marketplace",
+      "description": "Marketplace admin operations for /api/v1/marketplace",
+      "relations": {
+        "admin": {
+          "this": {}
+        }
+      },
+      "metadata": {
+        "relations": {
+          "admin": {
+            "directly_related_user_types": [{"type": "user"}]
+          }
+        }
+      }
+    },
+    {
+      "type": "config",
+      "description": "System configuration for /api/v1/config",
+      "relations": {
+        "admin": {
+          "this": {}
+        },
+        "viewer": {
+          "union": {
+            "child": [
+              {"this": {}},
+              {"computedUserset": {"relation": "admin"}}
+            ]
+          }
+        }
+      },
+      "metadata": {
+        "relations": {
+          "admin": {
+            "directly_related_user_types": [{"type": "user"}]
+          },
+          "viewer": {
             "directly_related_user_types": [{"type": "user"}]
           }
         }
