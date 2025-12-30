@@ -119,6 +119,7 @@ def mock_audit_repo():
 def app(mock_audit_repo):
     """Create a test FastAPI app with the audit router."""
     from mcp_server_langgraph.api.v1.connection_audit import audit_router
+    from mcp_server_langgraph.auth.dependencies import require_admin
     from mcp_server_langgraph.core.dependencies import get_audit_log_repository
 
     app = FastAPI()
@@ -126,6 +127,20 @@ def app(mock_audit_repo):
 
     # Override dependencies
     app.dependency_overrides[get_audit_log_repository] = lambda: mock_audit_repo
+
+    # Mock admin user for authentication/authorization
+    mock_admin_user = {
+        "sub": "admin-user-123",
+        "preferred_username": "admin",
+        "username": "admin",
+        "email": "admin@example.com",
+        "roles": ["admin"],
+    }
+
+    async def override_require_admin():
+        return mock_admin_user
+
+    app.dependency_overrides[require_admin] = override_require_admin
 
     return app
 
