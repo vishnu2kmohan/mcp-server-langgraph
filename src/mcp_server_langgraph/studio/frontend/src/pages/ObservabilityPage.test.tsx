@@ -29,6 +29,8 @@ const mockRefetchTraces = vi.fn();
 const mockRefetchLogs = vi.fn();
 const mockRefetchMetrics = vi.fn();
 const mockRefetchAlerts = vi.fn();
+const mockRefetchSessions = vi.fn();
+const mockRefetchWorkflows = vi.fn();
 
 vi.mock("../api", async (importOriginal) => {
   const actual = await importOriginal<typeof import("../api")>();
@@ -39,6 +41,8 @@ vi.mock("../api", async (importOriginal) => {
     useGetMetricsQuery: vi.fn(),
     useGetTraceQuery: vi.fn(),
     useListAlertsQuery: vi.fn(),
+    useListSessionsQuery: vi.fn(),
+    useListWorkflowsQuery: vi.fn(),
   };
 });
 
@@ -48,6 +52,8 @@ import {
   useGetMetricsQuery,
   useGetTraceQuery,
   useListAlertsQuery,
+  useListSessionsQuery,
+  useListWorkflowsQuery,
 } from "../api";
 
 // Cast to vi.Mock for type safety
@@ -56,6 +62,12 @@ const mockUseListLogsQuery = useListLogsQuery as ReturnType<typeof vi.fn>;
 const mockUseGetMetricsQuery = useGetMetricsQuery as ReturnType<typeof vi.fn>;
 const mockUseGetTraceQuery = useGetTraceQuery as ReturnType<typeof vi.fn>;
 const mockUseListAlertsQuery = useListAlertsQuery as ReturnType<typeof vi.fn>;
+const mockUseListSessionsQuery = useListSessionsQuery as ReturnType<
+  typeof vi.fn
+>;
+const mockUseListWorkflowsQuery = useListWorkflowsQuery as ReturnType<
+  typeof vi.fn
+>;
 
 // Default mock data
 const mockTraces = [
@@ -132,6 +144,50 @@ const mockAlerts = [
   },
 ];
 
+const mockSessions = [
+  {
+    id: "session-1",
+    name: "Agent Chat Session",
+    workflow_id: null,
+    user_id: "user-123",
+    status: "active",
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+    config: null,
+  },
+  {
+    id: "session-2",
+    name: "Data Analysis Session",
+    workflow_id: "workflow-1",
+    user_id: "user-456",
+    status: "archived",
+    created_at: new Date(Date.now() - 86400000).toISOString(),
+    updated_at: new Date(Date.now() - 86400000).toISOString(),
+    config: null,
+  },
+];
+
+const mockWorkflows = [
+  {
+    id: "workflow-1",
+    name: "Data Pipeline",
+    description: "ETL workflow for data processing",
+    node_count: 5,
+    edge_count: 4,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  },
+  {
+    id: "workflow-2",
+    name: "Report Generator",
+    description: "Automated report generation workflow",
+    node_count: 3,
+    edge_count: 2,
+    created_at: new Date(Date.now() - 172800000).toISOString(),
+    updated_at: new Date(Date.now() - 172800000).toISOString(),
+  },
+];
+
 describe("ObservabilityPage", () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -170,6 +226,22 @@ describe("ObservabilityPage", () => {
       data: null,
       isLoading: false,
       error: null,
+    });
+
+    // Default mock: sessions (Agent Sessions tab)
+    mockUseListSessionsQuery.mockReturnValue({
+      data: { items: mockSessions, total: 2, next_cursor: null },
+      isLoading: false,
+      error: null,
+      refetch: mockRefetchSessions,
+    });
+
+    // Default mock: workflows (Workflow Runs tab)
+    mockUseListWorkflowsQuery.mockReturnValue({
+      data: { items: mockWorkflows, total: 2, next_cursor: null },
+      isLoading: false,
+      error: null,
+      refetch: mockRefetchWorkflows,
     });
   });
 
@@ -213,14 +285,34 @@ describe("ObservabilityPage", () => {
   });
 
   describe("Tabs", () => {
-    it("should have Traces tab", () => {
+    it("should have Agent Sessions tab", () => {
       render(
         <TestProvider>
           <ObservabilityPage />
         </TestProvider>,
       );
 
-      expect(screen.getByText("Traces")).toBeInTheDocument();
+      expect(screen.getByText("Agent Sessions")).toBeInTheDocument();
+    });
+
+    it("should have Workflow Runs tab", () => {
+      render(
+        <TestProvider>
+          <ObservabilityPage />
+        </TestProvider>,
+      );
+
+      expect(screen.getByText("Workflow Runs")).toBeInTheDocument();
+    });
+
+    it("should have Distributed Traces tab", () => {
+      render(
+        <TestProvider>
+          <ObservabilityPage />
+        </TestProvider>,
+      );
+
+      expect(screen.getByText("Distributed Traces")).toBeInTheDocument();
     });
 
     it("should have Logs tab", () => {
@@ -243,15 +335,41 @@ describe("ObservabilityPage", () => {
       expect(screen.getByText("Metrics")).toBeInTheDocument();
     });
 
-    it("should switch to Logs tab when clicked", async () => {
+    it("should default to Agent Sessions tab", async () => {
       render(
         <TestProvider>
           <ObservabilityPage />
         </TestProvider>,
       );
 
-      // Traces should be visible by default
-      expect(screen.getByText("chat/completion")).toBeInTheDocument();
+      // Agent Sessions should be visible by default
+      await waitFor(() => {
+        expect(screen.getByText("Agent Chat Session")).toBeInTheDocument();
+      });
+    });
+
+    it("should switch to Distributed Traces tab when clicked", async () => {
+      render(
+        <TestProvider>
+          <ObservabilityPage />
+        </TestProvider>,
+      );
+
+      // Click on Distributed Traces tab
+      fireEvent.click(screen.getByText("Distributed Traces"));
+
+      // Should display traces
+      await waitFor(() => {
+        expect(screen.getByText("chat/completion")).toBeInTheDocument();
+      });
+    });
+
+    it("should switch to Logs tab when clicked", async () => {
+      render(
+        <TestProvider>
+          <ObservabilityPage />
+        </TestProvider>,
+      );
 
       // Click on Logs tab
       fireEvent.click(screen.getByText("Logs"));
@@ -263,14 +381,164 @@ describe("ObservabilityPage", () => {
     });
   });
 
+  describe("Agent Sessions Tab", () => {
+    it("should display agent sessions by default", async () => {
+      render(
+        <TestProvider>
+          <ObservabilityPage />
+        </TestProvider>,
+      );
+
+      await waitFor(() => {
+        expect(screen.getByText("Agent Chat Session")).toBeInTheDocument();
+        expect(screen.getByText("Data Analysis Session")).toBeInTheDocument();
+      });
+    });
+
+    it("should show session status badges", async () => {
+      render(
+        <TestProvider>
+          <ObservabilityPage />
+        </TestProvider>,
+      );
+
+      await waitFor(() => {
+        expect(screen.getByText("Active")).toBeInTheDocument();
+        expect(screen.getByText("Archived")).toBeInTheDocument();
+      });
+    });
+
+    it("should show empty state when no sessions", async () => {
+      mockUseListSessionsQuery.mockReturnValue({
+        data: { items: [], total: 0, next_cursor: null },
+        isLoading: false,
+        error: null,
+        refetch: mockRefetchSessions,
+      });
+
+      render(
+        <TestProvider>
+          <ObservabilityPage />
+        </TestProvider>,
+      );
+
+      await waitFor(() => {
+        expect(screen.getByText("No agent sessions found")).toBeInTheDocument();
+      });
+    });
+
+    it("should call refetchSessions when refresh is clicked", async () => {
+      render(
+        <TestProvider>
+          <ObservabilityPage />
+        </TestProvider>,
+      );
+
+      await waitFor(() => {
+        expect(screen.getByText("Agent Chat Session")).toBeInTheDocument();
+      });
+
+      fireEvent.click(screen.getByText("Refresh"));
+
+      expect(mockRefetchSessions).toHaveBeenCalled();
+    });
+  });
+
+  describe("Workflow Runs Tab", () => {
+    it("should display workflows when switching to Workflow Runs tab", async () => {
+      render(
+        <TestProvider>
+          <ObservabilityPage />
+        </TestProvider>,
+      );
+
+      fireEvent.click(screen.getByText("Workflow Runs"));
+
+      await waitFor(() => {
+        expect(screen.getByText("Data Pipeline")).toBeInTheDocument();
+        expect(screen.getByText("Report Generator")).toBeInTheDocument();
+      });
+    });
+
+    it("should show workflow node and edge counts", async () => {
+      render(
+        <TestProvider>
+          <ObservabilityPage />
+        </TestProvider>,
+      );
+
+      fireEvent.click(screen.getByText("Workflow Runs"));
+
+      await waitFor(() => {
+        expect(screen.getByText("5 nodes")).toBeInTheDocument();
+        expect(screen.getByText("4 edges")).toBeInTheDocument();
+      });
+    });
+
+    it("should show workflow descriptions", async () => {
+      render(
+        <TestProvider>
+          <ObservabilityPage />
+        </TestProvider>,
+      );
+
+      fireEvent.click(screen.getByText("Workflow Runs"));
+
+      await waitFor(() => {
+        expect(
+          screen.getByText("ETL workflow for data processing"),
+        ).toBeInTheDocument();
+      });
+    });
+
+    it("should show empty state when no workflows", async () => {
+      mockUseListWorkflowsQuery.mockReturnValue({
+        data: { items: [], total: 0, next_cursor: null },
+        isLoading: false,
+        error: null,
+        refetch: mockRefetchWorkflows,
+      });
+
+      render(
+        <TestProvider>
+          <ObservabilityPage />
+        </TestProvider>,
+      );
+
+      fireEvent.click(screen.getByText("Workflow Runs"));
+
+      await waitFor(() => {
+        expect(screen.getByText("No workflow runs found")).toBeInTheDocument();
+      });
+    });
+
+    it("should call refetchWorkflows when refresh is clicked", async () => {
+      render(
+        <TestProvider>
+          <ObservabilityPage />
+        </TestProvider>,
+      );
+
+      fireEvent.click(screen.getByText("Workflow Runs"));
+
+      await waitFor(() => {
+        expect(screen.getByText("Data Pipeline")).toBeInTheDocument();
+      });
+
+      fireEvent.click(screen.getByText("Refresh"));
+
+      expect(mockRefetchWorkflows).toHaveBeenCalled();
+    });
+  });
+
   describe("Loading State", () => {
-    it("should show loading skeletons initially", () => {
-      // Set traces to loading state
-      mockUseListTracesQuery.mockReturnValue({
+    it("should show loading skeletons initially for sessions", () => {
+      // Set sessions to loading state
+      mockUseListSessionsQuery.mockReturnValue({
         data: null,
         isLoading: true,
         error: null,
-        refetch: mockRefetchTraces,
+        refetch: mockRefetchSessions,
       });
 
       render(
@@ -284,11 +552,11 @@ describe("ObservabilityPage", () => {
     });
 
     it("should show multiple skeleton items while loading", () => {
-      mockUseListTracesQuery.mockReturnValue({
+      mockUseListSessionsQuery.mockReturnValue({
         data: null,
         isLoading: true,
         error: null,
-        refetch: mockRefetchTraces,
+        refetch: mockRefetchSessions,
       });
 
       render(
@@ -304,12 +572,15 @@ describe("ObservabilityPage", () => {
   });
 
   describe("Traces Tab", () => {
-    it("should display traces after loading", async () => {
+    it("should display traces when navigating to Distributed Traces tab", async () => {
       render(
         <TestProvider>
           <ObservabilityPage />
         </TestProvider>,
       );
+
+      // Navigate to Distributed Traces tab
+      fireEvent.click(screen.getByText("Distributed Traces"));
 
       await waitFor(() => {
         expect(screen.getByText("chat/completion")).toBeInTheDocument();
@@ -322,6 +593,9 @@ describe("ObservabilityPage", () => {
           <ObservabilityPage />
         </TestProvider>,
       );
+
+      // Navigate to Distributed Traces tab
+      fireEvent.click(screen.getByText("Distributed Traces"));
 
       await waitFor(() => {
         expect(screen.getByText("chat/completion")).toBeInTheDocument();
@@ -337,6 +611,9 @@ describe("ObservabilityPage", () => {
           <ObservabilityPage />
         </TestProvider>,
       );
+
+      // Navigate to Distributed Traces tab
+      fireEvent.click(screen.getByText("Distributed Traces"));
 
       await waitFor(() => {
         // Duration is calculated from start_time and end_time
@@ -360,6 +637,9 @@ describe("ObservabilityPage", () => {
         </TestProvider>,
       );
 
+      // Navigate to Distributed Traces tab
+      fireEvent.click(screen.getByText("Distributed Traces"));
+
       await waitFor(() => {
         expect(screen.getByText(/No traces found/)).toBeInTheDocument();
       });
@@ -373,10 +653,6 @@ describe("ObservabilityPage", () => {
           <ObservabilityPage />
         </TestProvider>,
       );
-
-      await waitFor(() => {
-        expect(screen.queryByText("chat/completion")).toBeInTheDocument();
-      });
 
       fireEvent.click(screen.getByText("Logs"));
 
@@ -392,10 +668,6 @@ describe("ObservabilityPage", () => {
         </TestProvider>,
       );
 
-      await waitFor(() => {
-        expect(screen.queryByText("chat/completion")).toBeInTheDocument();
-      });
-
       fireEvent.click(screen.getByText("Logs"));
 
       await waitFor(() => {
@@ -410,10 +682,6 @@ describe("ObservabilityPage", () => {
           <ObservabilityPage />
         </TestProvider>,
       );
-
-      await waitFor(() => {
-        expect(screen.queryByText("chat/completion")).toBeInTheDocument();
-      });
 
       fireEvent.click(screen.getByText("Logs"));
 
@@ -437,10 +705,6 @@ describe("ObservabilityPage", () => {
         </TestProvider>,
       );
 
-      await waitFor(() => {
-        expect(screen.getByText("chat/completion")).toBeInTheDocument();
-      });
-
       fireEvent.click(screen.getByText("Logs"));
 
       await waitFor(() => {
@@ -457,10 +721,6 @@ describe("ObservabilityPage", () => {
         </TestProvider>,
       );
 
-      await waitFor(() => {
-        expect(screen.queryByText("chat/completion")).toBeInTheDocument();
-      });
-
       fireEvent.click(screen.getByText("Metrics"));
 
       await waitFor(() => {
@@ -474,10 +734,6 @@ describe("ObservabilityPage", () => {
           <ObservabilityPage />
         </TestProvider>,
       );
-
-      await waitFor(() => {
-        expect(screen.queryByText("chat/completion")).toBeInTheDocument();
-      });
 
       fireEvent.click(screen.getByText("Metrics"));
 
@@ -494,10 +750,6 @@ describe("ObservabilityPage", () => {
         </TestProvider>,
       );
 
-      await waitFor(() => {
-        expect(screen.queryByText("chat/completion")).toBeInTheDocument();
-      });
-
       fireEvent.click(screen.getByText("Metrics"));
 
       await waitFor(() => {
@@ -512,10 +764,6 @@ describe("ObservabilityPage", () => {
           <ObservabilityPage />
         </TestProvider>,
       );
-
-      await waitFor(() => {
-        expect(screen.queryByText("chat/completion")).toBeInTheDocument();
-      });
 
       fireEvent.click(screen.getByText("Metrics"));
 
@@ -532,10 +780,6 @@ describe("ObservabilityPage", () => {
         </TestProvider>,
       );
 
-      await waitFor(() => {
-        expect(screen.queryByText("chat/completion")).toBeInTheDocument();
-      });
-
       fireEvent.click(screen.getByText("Metrics"));
 
       await waitFor(() => {
@@ -548,12 +792,12 @@ describe("ObservabilityPage", () => {
   describe("Error Handling", () => {
     it("should display error message when fetch fails", async () => {
       // Mock RTK Query hooks to return error state
-      mockUseListTracesQuery.mockReturnValue({
+      mockUseListSessionsQuery.mockReturnValue({
         data: undefined,
         isLoading: false,
         isFetching: false,
         error: { status: 500, message: "Internal Server Error" },
-        refetch: mockRefetchTraces,
+        refetch: mockRefetchSessions,
       });
 
       render(
@@ -569,12 +813,12 @@ describe("ObservabilityPage", () => {
 
     it("should show retry button on error", async () => {
       // Mock RTK Query hooks to return error state
-      mockUseListTracesQuery.mockReturnValue({
+      mockUseListSessionsQuery.mockReturnValue({
         data: undefined,
         isLoading: false,
         isFetching: false,
         error: { status: 500 },
-        refetch: mockRefetchTraces,
+        refetch: mockRefetchSessions,
       });
 
       render(
@@ -609,6 +853,9 @@ describe("ObservabilityPage", () => {
         </TestProvider>,
       );
 
+      // Navigate to Distributed Traces tab
+      fireEvent.click(screen.getByText("Distributed Traces"));
+
       await waitFor(() => {
         expect(
           screen.getByRole("button", { name: /load more/i }),
@@ -629,6 +876,9 @@ describe("ObservabilityPage", () => {
           <ObservabilityPage />
         </TestProvider>,
       );
+
+      // Navigate to Distributed Traces tab
+      fireEvent.click(screen.getByText("Distributed Traces"));
 
       await waitFor(() => {
         expect(screen.getByText("chat/completion")).toBeInTheDocument();
@@ -653,6 +903,9 @@ describe("ObservabilityPage", () => {
         </TestProvider>,
       );
 
+      // Navigate to Distributed Traces tab
+      fireEvent.click(screen.getByText("Distributed Traces"));
+
       await waitFor(() => {
         expect(screen.getByText(/2 of 100/i)).toBeInTheDocument();
       });
@@ -666,6 +919,9 @@ describe("ObservabilityPage", () => {
           <ObservabilityPage />
         </TestProvider>,
       );
+
+      // Navigate to Distributed Traces tab
+      fireEvent.click(screen.getByText("Distributed Traces"));
 
       await waitFor(() => {
         expect(screen.getByText("chat/completion")).toBeInTheDocument();
@@ -690,6 +946,9 @@ describe("ObservabilityPage", () => {
         </TestProvider>,
       );
 
+      // Navigate to Distributed Traces tab
+      fireEvent.click(screen.getByText("Distributed Traces"));
+
       await waitFor(() => {
         expect(screen.getByText("chat/completion")).toBeInTheDocument();
       });
@@ -703,6 +962,9 @@ describe("ObservabilityPage", () => {
           <ObservabilityPage />
         </TestProvider>,
       );
+
+      // Navigate to Distributed Traces tab
+      fireEvent.click(screen.getByText("Distributed Traces"));
 
       await waitFor(() => {
         expect(screen.getByText("chat/completion")).toBeInTheDocument();
@@ -720,6 +982,9 @@ describe("ObservabilityPage", () => {
           <ObservabilityPage />
         </TestProvider>,
       );
+
+      // Navigate to Distributed Traces tab
+      fireEvent.click(screen.getByText("Distributed Traces"));
 
       await waitFor(() => {
         expect(screen.getByText("chat/completion")).toBeInTheDocument();
@@ -882,6 +1147,14 @@ describe("ObservabilityPage", () => {
             <Routes>
               <Route path="/observability" element={<ObservabilityPage />} />
               <Route
+                path="/observability/agent-sessions"
+                element={<ObservabilityPage />}
+              />
+              <Route
+                path="/observability/workflow-runs"
+                element={<ObservabilityPage />}
+              />
+              <Route
                 path="/observability/traces"
                 element={<ObservabilityPage />}
               />
@@ -902,6 +1175,24 @@ describe("ObservabilityPage", () => {
         </Provider>,
       );
     };
+
+    it("should show agent sessions tab when URL path is /observability/agent-sessions", async () => {
+      renderWithRoute("/observability/agent-sessions");
+
+      await waitFor(() => {
+        // Agent Sessions tab should be active - sessions content should be visible
+        expect(screen.getByText("Agent Chat Session")).toBeInTheDocument();
+      });
+    });
+
+    it("should show workflow runs tab when URL path is /observability/workflow-runs", async () => {
+      renderWithRoute("/observability/workflow-runs");
+
+      await waitFor(() => {
+        // Workflow Runs tab should be active - workflows content should be visible
+        expect(screen.getByText("Data Pipeline")).toBeInTheDocument();
+      });
+    });
 
     it("should show traces tab when URL path is /observability/traces", async () => {
       renderWithRoute("/observability/traces");
@@ -939,12 +1230,12 @@ describe("ObservabilityPage", () => {
       });
     });
 
-    it("should default to traces tab when URL path is /observability", async () => {
+    it("should default to agent sessions tab when URL path is /observability", async () => {
       renderWithRoute("/observability");
 
       await waitFor(() => {
-        // Default to traces tab
-        expect(screen.getByText("chat/completion")).toBeInTheDocument();
+        // Default to agent sessions tab
+        expect(screen.getByText("Agent Chat Session")).toBeInTheDocument();
       });
     });
   });
@@ -956,6 +1247,9 @@ describe("ObservabilityPage", () => {
           <ObservabilityPage />
         </TestProvider>,
       );
+
+      // Navigate to Distributed Traces tab
+      fireEvent.click(screen.getByText("Distributed Traces"));
 
       await waitFor(() => {
         expect(screen.getByText("chat/completion")).toBeInTheDocument();
@@ -974,6 +1268,9 @@ describe("ObservabilityPage", () => {
           <ObservabilityPage />
         </TestProvider>,
       );
+
+      // Navigate to Distributed Traces tab
+      fireEvent.click(screen.getByText("Distributed Traces"));
 
       await waitFor(() => {
         expect(screen.getByText("chat/completion")).toBeInTheDocument();
@@ -998,6 +1295,9 @@ describe("ObservabilityPage", () => {
         </TestProvider>,
       );
 
+      // Navigate to Distributed Traces tab
+      fireEvent.click(screen.getByText("Distributed Traces"));
+
       await waitFor(() => {
         expect(screen.getByText("chat/completion")).toBeInTheDocument();
       });
@@ -1020,6 +1320,9 @@ describe("ObservabilityPage", () => {
           <ObservabilityPage />
         </TestProvider>,
       );
+
+      // Navigate to Distributed Traces tab
+      fireEvent.click(screen.getByText("Distributed Traces"));
 
       await waitFor(() => {
         expect(screen.getByText("chat/completion")).toBeInTheDocument();
@@ -1044,6 +1347,9 @@ describe("ObservabilityPage", () => {
         </TestProvider>,
       );
 
+      // Navigate to Distributed Traces tab
+      fireEvent.click(screen.getByText("Distributed Traces"));
+
       await waitFor(() => {
         expect(screen.getByText("chat/completion")).toBeInTheDocument();
       });
@@ -1066,6 +1372,9 @@ describe("ObservabilityPage", () => {
           <ObservabilityPage />
         </TestProvider>,
       );
+
+      // Navigate to Distributed Traces tab
+      fireEvent.click(screen.getByText("Distributed Traces"));
 
       await waitFor(() => {
         expect(screen.getByText("chat/completion")).toBeInTheDocument();
@@ -1210,6 +1519,9 @@ describe("ObservabilityPage", () => {
         </TestProvider>,
       );
 
+      // Navigate to Distributed Traces tab
+      fireEvent.click(screen.getByText("Distributed Traces"));
+
       await waitFor(() => {
         const errorBadge = screen.getByText("error");
         expect(errorBadge).toBeInTheDocument();
@@ -1243,6 +1555,9 @@ describe("ObservabilityPage", () => {
         </TestProvider>,
       );
 
+      // Navigate to Distributed Traces tab
+      fireEvent.click(screen.getByText("Distributed Traces"));
+
       await waitFor(() => {
         const runningBadge = screen.getByText("running");
         expect(runningBadge).toBeInTheDocument();
@@ -1256,6 +1571,9 @@ describe("ObservabilityPage", () => {
           <ObservabilityPage />
         </TestProvider>,
       );
+
+      // Navigate to Distributed Traces tab
+      fireEvent.click(screen.getByText("Distributed Traces"));
 
       await waitFor(() => {
         expect(screen.getByText("chat/completion")).toBeInTheDocument();
@@ -1272,6 +1590,9 @@ describe("ObservabilityPage", () => {
           <ObservabilityPage />
         </TestProvider>,
       );
+
+      // Navigate to Distributed Traces tab
+      fireEvent.click(screen.getByText("Distributed Traces"));
 
       await waitFor(() => {
         expect(screen.getByText("chat/completion")).toBeInTheDocument();
@@ -1808,6 +2129,9 @@ describe("ObservabilityPage", () => {
         </TestProvider>,
       );
 
+      // Navigate to Distributed Traces tab
+      fireEvent.click(screen.getByText("Distributed Traces"));
+
       await waitFor(() => {
         expect(screen.getByText("chat/completion")).toBeInTheDocument();
       });
@@ -1880,6 +2204,9 @@ describe("ObservabilityPage", () => {
         </TestProvider>,
       );
 
+      // Navigate to Distributed Traces tab
+      fireEvent.click(screen.getByText("Distributed Traces"));
+
       await waitFor(() => {
         expect(screen.getByText("chat/completion")).toBeInTheDocument();
       });
@@ -1893,6 +2220,9 @@ describe("ObservabilityPage", () => {
           <ObservabilityPage />
         </TestProvider>,
       );
+
+      // Navigate to Distributed Traces tab
+      fireEvent.click(screen.getByText("Distributed Traces"));
 
       await waitFor(() => {
         expect(screen.getByText("chat/completion")).toBeInTheDocument();
@@ -1908,6 +2238,9 @@ describe("ObservabilityPage", () => {
         </TestProvider>,
       );
 
+      // Navigate to Distributed Traces tab
+      fireEvent.click(screen.getByText("Distributed Traces"));
+
       await waitFor(() => {
         expect(screen.getByText("chat/completion")).toBeInTheDocument();
       });
@@ -1921,6 +2254,9 @@ describe("ObservabilityPage", () => {
           <ObservabilityPage />
         </TestProvider>,
       );
+
+      // Navigate to Distributed Traces tab
+      fireEvent.click(screen.getByText("Distributed Traces"));
 
       await waitFor(() => {
         expect(screen.getByText("chat/completion")).toBeInTheDocument();
@@ -1943,6 +2279,9 @@ describe("ObservabilityPage", () => {
         </TestProvider>,
       );
 
+      // Navigate to Distributed Traces tab
+      fireEvent.click(screen.getByText("Distributed Traces"));
+
       await waitFor(() => {
         expect(screen.getByText("chat/completion")).toBeInTheDocument();
       });
@@ -1963,6 +2302,9 @@ describe("ObservabilityPage", () => {
           <ObservabilityPage />
         </TestProvider>,
       );
+
+      // Navigate to Distributed Traces tab
+      fireEvent.click(screen.getByText("Distributed Traces"));
 
       await waitFor(() => {
         expect(screen.getByText("chat/completion")).toBeInTheDocument();
@@ -1986,6 +2328,9 @@ describe("ObservabilityPage", () => {
           <ObservabilityPage />
         </TestProvider>,
       );
+
+      // Navigate to Distributed Traces tab
+      fireEvent.click(screen.getByText("Distributed Traces"));
 
       await waitFor(() => {
         expect(screen.getByText("chat/completion")).toBeInTheDocument();
@@ -2037,6 +2382,9 @@ describe("ObservabilityPage", () => {
         </TestProvider>,
       );
 
+      // Navigate to Distributed Traces tab
+      fireEvent.click(screen.getByText("Distributed Traces"));
+
       await waitFor(() => {
         expect(screen.getByText("chat/completion")).toBeInTheDocument();
       });
@@ -2069,6 +2417,9 @@ describe("ObservabilityPage", () => {
           <ObservabilityPage />
         </TestProvider>,
       );
+
+      // Navigate to Distributed Traces tab
+      fireEvent.click(screen.getByText("Distributed Traces"));
 
       await waitFor(() => {
         expect(screen.getByText("chat/completion")).toBeInTheDocument();
@@ -2217,6 +2568,9 @@ describe("ObservabilityPage", () => {
         </TestProvider>,
       );
 
+      // Navigate to Distributed Traces tab
+      fireEvent.click(screen.getByText("Distributed Traces"));
+
       await waitFor(() => {
         expect(screen.getByText("Loading...")).toBeInTheDocument();
       });
@@ -2241,6 +2595,9 @@ describe("ObservabilityPage", () => {
           <ObservabilityPage />
         </TestProvider>,
       );
+
+      // Navigate to Distributed Traces tab
+      fireEvent.click(screen.getByText("Distributed Traces"));
 
       await waitFor(() => {
         const loadMoreButton = screen.getByRole("button", { name: /loading/i });

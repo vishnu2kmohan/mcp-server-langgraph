@@ -135,8 +135,8 @@ class LokiLoggingClient(LoggingQueryClient):
         # Check circuit breaker
         breaker = get_circuit_breaker("loki")
         if breaker.current_state == pybreaker.STATE_OPEN:
-            logger.debug("Loki circuit breaker open, skipping search")
-            raise pybreaker.CircuitBreakerError(breaker)
+            logger.debug("Loki circuit breaker open, returning empty result")
+            return LogSearchResult(entries=[], total_count=0)
 
         # Retry with exponential backoff
         max_attempts = 3
@@ -170,17 +170,18 @@ class LokiLoggingClient(LoggingQueryClient):
                     continue
 
                 # All retries exhausted - record failure for circuit breaker
-                logger.exception(f"Loki query failed after {max_attempts} attempts: {e}")
+                logger.warning(f"Loki query failed after {max_attempts} attempts: {e}")
                 try:
                     breaker._inc_counter()
                     breaker.state.on_failure(e)
                 except pybreaker.CircuitBreakerError:
                     logger.debug("Loki circuit breaker opened due to repeated failures")
-                raise
+                # Return empty result instead of raising
+                return LogSearchResult(entries=[], total_count=0)
 
             except httpx.HTTPError as e:
-                logger.exception(f"Loki query failed: {e}")
-                raise
+                logger.warning(f"Loki query failed: {e}")
+                return LogSearchResult(entries=[], total_count=0)
 
         return LogSearchResult(entries=[], total_count=0)
 

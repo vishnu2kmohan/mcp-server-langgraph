@@ -123,10 +123,14 @@ class TempoTracingClient(TracingQueryClient):
         Returns:
             TraceInfo if found, None otherwise
         """
-        tempo_trace = await self._client.get_trace(trace_id)
-        if tempo_trace is None:
+        try:
+            tempo_trace = await self._client.get_trace(trace_id)
+            if tempo_trace is None:
+                return None
+            return _convert_trace(tempo_trace)
+        except Exception as e:
+            logger.warning(f"Failed to get trace {trace_id}: {e}")
             return None
-        return _convert_trace(tempo_trace)
 
     async def search_traces(
         self,
@@ -144,27 +148,31 @@ class TempoTracingClient(TracingQueryClient):
 
         Uses Tempo's TraceQL search capabilities.
         """
-        # Convert duration to Tempo format (e.g., "100ms", "1s")
-        min_duration = None
-        max_duration = None
-        if min_duration_ms is not None:
-            min_duration = f"{min_duration_ms}ms"
-        if max_duration_ms is not None:
-            max_duration = f"{max_duration_ms}ms"
+        try:
+            # Convert duration to Tempo format (e.g., "100ms", "1s")
+            min_duration = None
+            max_duration = None
+            if min_duration_ms is not None:
+                min_duration = f"{min_duration_ms}ms"
+            if max_duration_ms is not None:
+                max_duration = f"{max_duration_ms}ms"
 
-        result = await self._client.search(
-            service_name=service_name,
-            operation_name=operation_name,
-            tags=tags,
-            start=start,
-            end=end,
-            min_duration=min_duration,
-            max_duration=max_duration,
-            limit=limit,
-        )
+            result = await self._client.search(
+                service_name=service_name,
+                operation_name=operation_name,
+                tags=tags,
+                start=start,
+                end=end,
+                min_duration=min_duration,
+                max_duration=max_duration,
+                limit=limit,
+            )
 
-        traces = [_convert_trace(t) for t in result.traces]
-        return TraceSearchResult(traces=traces, total_count=result.total_traces)
+            traces = [_convert_trace(t) for t in result.traces]
+            return TraceSearchResult(traces=traces, total_count=result.total_traces)
+        except Exception as e:
+            logger.warning(f"Failed to search traces: {e}")
+            return TraceSearchResult(traces=[], total_count=0)
 
     async def search_by_attribute(
         self,
@@ -214,4 +222,8 @@ class TempoTracingClient(TracingQueryClient):
         """
         Check if Tempo is healthy and reachable.
         """
-        return await self._client.health_check()
+        try:
+            return await self._client.health_check()
+        except Exception as e:
+            logger.warning(f"Tempo health check failed: {e}")
+            return False

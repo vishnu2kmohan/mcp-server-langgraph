@@ -7,7 +7,14 @@
 
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
-type ObservabilityTab = "traces" | "logs" | "metrics" | "alerts" | "ws-metrics";
+type ObservabilityTab =
+  | "agent-sessions"
+  | "workflow-runs"
+  | "traces"
+  | "logs"
+  | "metrics"
+  | "alerts"
+  | "ws-metrics";
 
 export interface ObservabilityState {
   // Filter state
@@ -32,7 +39,7 @@ const initialState: ObservabilityState = {
   workflowIdFilter: "",
   projectIdFilter: "",
   timeRange: "1h",
-  activeTab: "traces",
+  activeTab: "agent-sessions",
   selectedTraceId: null,
 };
 

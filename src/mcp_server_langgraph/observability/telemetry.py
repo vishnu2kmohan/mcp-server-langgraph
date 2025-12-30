@@ -615,6 +615,19 @@ class ObservabilityConfig:
             error_handler.setFormatter(formatter)
             handlers.append(error_handler)
 
+        # Add DevTools console event handler for real-time debugging
+        # This forwards log messages to connected DevTools WebSocket clients
+        try:
+            from mcp_server_langgraph.middleware.devtools_emitter import DevToolsLoggingHandler
+
+            devtools_handler = DevToolsLoggingHandler()
+            devtools_handler.setLevel(logging.INFO)
+            devtools_handler.setFormatter(console_formatter)
+            handlers.append(devtools_handler)
+        except Exception:
+            # Skip DevTools handler if import fails (graceful degradation)
+            pass
+
         # Configure root logger with effective log level
         logging.basicConfig(level=effective_log_level, handlers=handlers)
 

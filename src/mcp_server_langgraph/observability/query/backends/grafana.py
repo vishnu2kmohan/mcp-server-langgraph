@@ -197,6 +197,9 @@ class GrafanaAlertingClient(AlertingQueryClient):
         except httpx.HTTPError:
             logger.exception("Failed to list alerts from Grafana")
             return AlertSearchResult(alerts=[], total_count=0)
+        except (ValueError, TypeError) as e:
+            logger.warning(f"Failed to parse Grafana alerts response: {e}")
+            return AlertSearchResult(alerts=[], total_count=0)
 
     async def get_alert(self, alert_id: str) -> Alert | None:
         """

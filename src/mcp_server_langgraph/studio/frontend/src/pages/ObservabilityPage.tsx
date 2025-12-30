@@ -20,6 +20,10 @@ import {
   Bell,
   ExternalLink,
   Wifi,
+  Bot,
+  GitBranch,
+  CheckCircle,
+  XCircle,
 } from "lucide-react";
 import {
   useListTracesQuery,
@@ -27,6 +31,8 @@ import {
   useGetMetricsQuery,
   useGetTraceQuery,
   useListAlertsQuery,
+  useListSessionsQuery,
+  useListWorkflowsQuery,
   type TraceSpan as ApiTraceSpan,
 } from "../api";
 import { SkeletonList, ErrorState } from "../components/UI";
@@ -53,10 +59,19 @@ import {
   selectSelectedTraceId,
 } from "../store/slices/observabilitySlice";
 
-type ObservabilityTab = "traces" | "logs" | "metrics" | "alerts" | "ws-metrics";
+type ObservabilityTab =
+  | "agent-sessions"
+  | "workflow-runs"
+  | "traces"
+  | "logs"
+  | "metrics"
+  | "alerts"
+  | "ws-metrics";
 
 // Valid tab values
 const VALID_TABS = [
+  "agent-sessions",
+  "workflow-runs",
   "traces",
   "logs",
   "metrics",
@@ -71,7 +86,7 @@ function getTabFromPath(pathname: string): ObservabilityTab {
   if (VALID_TABS.includes(lastSegment as ObservabilityTab)) {
     return lastSegment as ObservabilityTab;
   }
-  return "traces"; // default
+  return "agent-sessions"; // default - start with agent sessions
 }
 
 export function ObservabilityPage() {
@@ -139,11 +154,17 @@ export function ObservabilityPage() {
     (tab: ObservabilityTab) => {
       setActiveTab(tab);
       // Construct the new path based on current path structure
-      const basePath = location.pathname.replace(
-        /\/(traces|logs|metrics|alerts)$/,
+      // Remove any existing tab segment from the path
+      let basePath = location.pathname.replace(
+        /\/(agent-sessions|workflow-runs|traces|logs|metrics|alerts|ws-metrics)$/,
         "",
       );
-      const newPath = tab === "traces" ? basePath : `${basePath}/${tab}`;
+      // Ensure basePath doesn't end with a slash (except for root "/")
+      if (basePath.length > 1 && basePath.endsWith("/")) {
+        basePath = basePath.slice(0, -1);
+      }
+      // Always append the tab segment to ensure proper URL structure
+      const newPath = basePath === "/" ? `/${tab}` : `${basePath}/${tab}`;
       navigate(newPath, { replace: true });
     },
     [navigate, location.pathname, setActiveTab],
@@ -220,6 +241,28 @@ export function ObservabilityPage() {
     { skip: activeTab !== "alerts" },
   );
 
+  // Fetch sessions for agent execution view
+  const {
+    data: sessionsData,
+    isLoading: isSessionsLoading,
+    error: sessionsError,
+    refetch: refetchSessions,
+  } = useListSessionsQuery(
+    { limit: 50 },
+    { skip: activeTab !== "agent-sessions" },
+  );
+
+  // Fetch workflows for workflow runs view
+  const {
+    data: workflowsData,
+    isLoading: isWorkflowsLoading,
+    error: workflowsError,
+    refetch: refetchWorkflows,
+  } = useListWorkflowsQuery(
+    { limit: 50 },
+    { skip: activeTab !== "workflow-runs" },
+  );
+
   // Fetch selected trace details
   const { data: selectedTraceData, isLoading: isTraceDetailLoading } =
     useGetTraceQuery(selectedTraceId ?? "", {
@@ -277,7 +320,9 @@ export function ObservabilityPage() {
   const alerts = alertsData?.items ?? [];
 
   const tabs = [
-    { id: "traces" as const, label: "Traces", icon: Activity },
+    { id: "agent-sessions" as const, label: "Agent Sessions", icon: Bot },
+    { id: "workflow-runs" as const, label: "Workflow Runs", icon: GitBranch },
+    { id: "traces" as const, label: "Distributed Traces", icon: Activity },
     { id: "logs" as const, label: "Logs", icon: FileText },
     { id: "metrics" as const, label: "Metrics", icon: BarChart3 },
     { id: "alerts" as const, label: "Alerts", icon: Bell },
@@ -339,28 +384,42 @@ export function ObservabilityPage() {
   };
 
   const isLoading =
-    activeTab === "traces"
-      ? isTracesLoading
-      : activeTab === "logs"
-        ? isLogsLoading
-        : activeTab === "alerts"
-          ? isAlertsLoading
-          : isMetricsLoading;
+    activeTab === "agent-sessions"
+      ? isSessionsLoading
+      : activeTab === "workflow-runs"
+        ? isWorkflowsLoading
+        : activeTab === "traces"
+          ? isTracesLoading
+          : activeTab === "logs"
+            ? isLogsLoading
+            : activeTab === "alerts"
+              ? isAlertsLoading
+              : activeTab === "metrics"
+                ? isMetricsLoading
+                : false;
 
   const error =
-    activeTab === "traces"
-      ? tracesError
-      : activeTab === "logs"
-        ? logsError
-        : activeTab === "alerts"
-          ? alertsError
-          : metricsError;
+    activeTab === "agent-sessions"
+      ? sessionsError
+      : activeTab === "workflow-runs"
+        ? workflowsError
+        : activeTab === "traces"
+          ? tracesError
+          : activeTab === "logs"
+            ? logsError
+            : activeTab === "alerts"
+              ? alertsError
+              : activeTab === "metrics"
+                ? metricsError
+                : null;
 
   const handleRefresh = () => {
-    if (activeTab === "traces") refetchTraces();
+    if (activeTab === "agent-sessions") refetchSessions();
+    else if (activeTab === "workflow-runs") refetchWorkflows();
+    else if (activeTab === "traces") refetchTraces();
     else if (activeTab === "logs") refetchLogs();
     else if (activeTab === "alerts") refetchAlerts();
-    else refetchMetrics();
+    else if (activeTab === "metrics") refetchMetrics();
   };
 
   return (
@@ -530,7 +589,133 @@ export function ObservabilityPage() {
           />
         ) : (
           <>
-            {/* Traces Tab */}
+            {/* Agent Sessions Tab */}
+            {activeTab === "agent-sessions" && (
+              <div className="space-y-4">
+                {!sessionsData?.items || sessionsData.items.length === 0 ? (
+                  <div className="text-center py-12 text-gray-500 dark:text-gray-400">
+                    <Bot size={48} className="mx-auto mb-4 opacity-50" />
+                    <p>No agent sessions found</p>
+                    <p className="text-sm mt-2">
+                      Agent sessions will appear here when you start new
+                      conversations
+                    </p>
+                  </div>
+                ) : (
+                  sessionsData.items.map((session) => (
+                    <div
+                      key={session.id}
+                      className="p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 hover:border-blue-500 transition-colors cursor-pointer"
+                      onClick={() =>
+                        window.open(`/studio/chat/${session.id}`, "_blank")
+                      }
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <Bot size={20} className="text-purple-500" />
+                          <div>
+                            <h3 className="font-medium text-gray-900 dark:text-gray-100">
+                              {session.name || "Untitled Session"}
+                            </h3>
+                            <div className="flex items-center gap-3 mt-1 text-sm text-gray-500 dark:text-gray-400">
+                              <span className="flex items-center gap-1">
+                                <Clock size={14} />
+                                {new Date(session.created_at).toLocaleString()}
+                              </span>
+                              <span className="font-mono text-xs">
+                                {session.id.slice(0, 8)}...
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          {session.status === "active" ? (
+                            <span className="flex items-center gap-1 px-2 py-1 text-xs rounded-full bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">
+                              <CheckCircle size={12} />
+                              Active
+                            </span>
+                          ) : session.status === "archived" ? (
+                            <span className="flex items-center gap-1 px-2 py-1 text-xs rounded-full bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400">
+                              <Clock size={12} />
+                              Archived
+                            </span>
+                          ) : (
+                            <span className="flex items-center gap-1 px-2 py-1 text-xs rounded-full bg-gray-100 text-gray-700 dark:bg-gray-900/30 dark:text-gray-400">
+                              <XCircle size={12} />
+                              {session.status}
+                            </span>
+                          )}
+                          <ExternalLink size={16} className="text-gray-400" />
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            )}
+
+            {/* Workflow Runs Tab */}
+            {activeTab === "workflow-runs" && (
+              <div className="space-y-4">
+                {!workflowsData?.items || workflowsData.items.length === 0 ? (
+                  <div className="text-center py-12 text-gray-500 dark:text-gray-400">
+                    <GitBranch size={48} className="mx-auto mb-4 opacity-50" />
+                    <p>No workflow runs found</p>
+                    <p className="text-sm mt-2">
+                      Workflow executions will appear here when you run
+                      workflows
+                    </p>
+                  </div>
+                ) : (
+                  workflowsData.items.map((workflow) => (
+                    <div
+                      key={workflow.id}
+                      className="p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 hover:border-blue-500 transition-colors cursor-pointer"
+                      onClick={() =>
+                        window.open(
+                          `/studio/workflows/${workflow.id}`,
+                          "_blank",
+                        )
+                      }
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <GitBranch size={20} className="text-emerald-500" />
+                          <div>
+                            <h3 className="font-medium text-gray-900 dark:text-gray-100">
+                              {workflow.name}
+                            </h3>
+                            <div className="flex items-center gap-3 mt-1 text-sm text-gray-500 dark:text-gray-400">
+                              <span className="flex items-center gap-1">
+                                <Clock size={14} />
+                                {new Date(workflow.created_at).toLocaleString()}
+                              </span>
+                              {workflow.description && (
+                                <span className="truncate max-w-xs">
+                                  {workflow.description}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="flex items-center gap-1 px-2 py-1 text-xs rounded-full bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">
+                            <Activity size={12} />
+                            {workflow.node_count} nodes
+                          </span>
+                          <span className="flex items-center gap-1 px-2 py-1 text-xs rounded-full bg-gray-100 text-gray-700 dark:bg-gray-900/30 dark:text-gray-400">
+                            {workflow.edge_count} edges
+                          </span>
+                          <ExternalLink size={16} className="text-gray-400" />
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            )}
+
+            {/* Distributed Traces Tab */}
             {activeTab === "traces" && (
               <div className="space-y-4">
                 {traces.length === 0 ? (

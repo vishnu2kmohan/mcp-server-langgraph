@@ -124,10 +124,14 @@ class PrometheusMetricsClient(MetricsQueryClient):
         Returns:
             MetricQueryResult with query results
         """
-        results = await self._client.query(query, time=time)
+        try:
+            results = await self._client.query(query, time=time)
 
-        series = [_convert_query_result(r) for r in results]
-        return MetricQueryResult(series=series)
+            series = [_convert_query_result(r) for r in results]
+            return MetricQueryResult(series=series)
+        except Exception as e:
+            logger.warning(f"Prometheus instant query failed: {e}")
+            return MetricQueryResult(series=[])
 
     async def query_range(
         self,
@@ -148,27 +152,31 @@ class PrometheusMetricsClient(MetricsQueryClient):
         Returns:
             MetricQueryResult with time series data
         """
-        # Convert step to string format
-        if step is None:
-            step_str = "1m"
-        else:
-            total_seconds = int(step.total_seconds())
-            if total_seconds >= 3600:
-                step_str = f"{total_seconds // 3600}h"
-            elif total_seconds >= 60:
-                step_str = f"{total_seconds // 60}m"
+        try:
+            # Convert step to string format
+            if step is None:
+                step_str = "1m"
             else:
-                step_str = f"{total_seconds}s"
+                total_seconds = int(step.total_seconds())
+                if total_seconds >= 3600:
+                    step_str = f"{total_seconds // 3600}h"
+                elif total_seconds >= 60:
+                    step_str = f"{total_seconds // 60}m"
+                else:
+                    step_str = f"{total_seconds}s"
 
-        results = await self._client.query_range(
-            promql=query,
-            start=start,
-            end=end,
-            step=step_str,
-        )
+            results = await self._client.query_range(
+                promql=query,
+                start=start,
+                end=end,
+                step=step_str,
+            )
 
-        series = [_convert_query_result(r) for r in results]
-        return MetricQueryResult(series=series)
+            series = [_convert_query_result(r) for r in results]
+            return MetricQueryResult(series=series)
+        except Exception as e:
+            logger.warning(f"Prometheus range query failed: {e}")
+            return MetricQueryResult(series=[])
 
     async def get_service_metrics(
         self,
@@ -181,51 +189,55 @@ class PrometheusMetricsClient(MetricsQueryClient):
 
         Returns request rate, error rate, latency percentiles, etc.
         """
-        # Use the existing SLA metrics method
-        sla_metrics = await self._client.get_sla_metrics(
-            service=service_name,
-            timerange="1h",  # Default to last hour
-        )
-
-        result: dict[str, MetricSeries] = {}
-
-        # Convert SLA metrics to MetricSeries
-        now = start or end or datetime.now()
-
-        # Uptime
-        result["uptime_percentage"] = MetricSeries(
-            metric_name="uptime_percentage",
-            labels={"service": service_name},
-            values=[
-                MetricValue(
-                    timestamp=now,
-                    value=sla_metrics["uptime_percentage"],
-                )
-            ],
-        )
-
-        # Error rate
-        result["error_rate_percentage"] = MetricSeries(
-            metric_name="error_rate_percentage",
-            labels={"service": service_name},
-            values=[
-                MetricValue(
-                    timestamp=now,
-                    value=sla_metrics["error_rate_percentage"],
-                )
-            ],
-        )
-
-        # Response time percentiles
-        response_times = sla_metrics.get("response_times", {})
-        for percentile, value in response_times.items():
-            result[f"response_time_{percentile}"] = MetricSeries(
-                metric_name=f"response_time_{percentile}",
-                labels={"service": service_name},
-                values=[MetricValue(timestamp=now, value=value)],
+        try:
+            # Use the existing SLA metrics method
+            sla_metrics = await self._client.get_sla_metrics(
+                service=service_name,
+                timerange="1h",  # Default to last hour
             )
 
-        return result
+            result: dict[str, MetricSeries] = {}
+
+            # Convert SLA metrics to MetricSeries
+            now = start or end or datetime.now()
+
+            # Uptime
+            result["uptime_percentage"] = MetricSeries(
+                metric_name="uptime_percentage",
+                labels={"service": service_name},
+                values=[
+                    MetricValue(
+                        timestamp=now,
+                        value=sla_metrics["uptime_percentage"],
+                    )
+                ],
+            )
+
+            # Error rate
+            result["error_rate_percentage"] = MetricSeries(
+                metric_name="error_rate_percentage",
+                labels={"service": service_name},
+                values=[
+                    MetricValue(
+                        timestamp=now,
+                        value=sla_metrics["error_rate_percentage"],
+                    )
+                ],
+            )
+
+            # Response time percentiles
+            response_times = sla_metrics.get("response_times", {})
+            for percentile, value in response_times.items():
+                result[f"response_time_{percentile}"] = MetricSeries(
+                    metric_name=f"response_time_{percentile}",
+                    labels={"service": service_name},
+                    values=[MetricValue(timestamp=now, value=value)],
+                )
+
+            return result
+        except Exception as e:
+            logger.warning(f"Failed to get service metrics for {service_name}: {e}")
+            return {}
 
     async def health_check(self) -> bool:
         """Check if Prometheus/Mimir is healthy."""
