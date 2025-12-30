@@ -319,9 +319,9 @@ def log_authorization_denied(
         resource: Resource identifier (e.g., "workflow:123")
         reason: Denial reason for categorization
     """
-    import structlog
+    import logging
 
-    logger = structlog.get_logger(__name__)
+    logger = logging.getLogger(__name__)
 
     resource_type = resource.split(":")[0] if ":" in resource else "unknown"
 

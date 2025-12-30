@@ -230,7 +230,7 @@ async def submit_sus_survey(
     # Calculate SUS score
     sus_score = calculate_sus_score(request.responses)
 
-    user_id = current_user.get("sub", current_user.get("user_id", "unknown"))
+    user_id = str(current_user.get("sub") or current_user.get("user_id") or "unknown")
 
     result = await service.submit_sus_survey(user_id, request.responses, sus_score)
     return SUSSurveyResponse(

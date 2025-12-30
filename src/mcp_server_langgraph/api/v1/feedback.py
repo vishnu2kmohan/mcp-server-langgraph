@@ -250,7 +250,7 @@ async def submit_hallucination_report(
     - Cited a non-existent source
     - Exhibited other hallucination behavior
     """
-    user_id = current_user.get("sub", current_user.get("user_id", "unknown"))
+    user_id = str(current_user.get("sub") or current_user.get("user_id") or "unknown")
 
     result = await service.submit_hallucination_report(user_id, report)
     return HallucinationReportResponse(
@@ -276,7 +276,7 @@ async def submit_message_feedback(
     Use this endpoint to rate AI responses as helpful or unhelpful.
     Optionally provide a reason for the rating.
     """
-    user_id = current_user.get("sub", current_user.get("user_id", "unknown"))
+    user_id = str(current_user.get("sub") or current_user.get("user_id") or "unknown")
 
     result = await service.submit_message_feedback(user_id, feedback)
     return MessageFeedbackResponse(
