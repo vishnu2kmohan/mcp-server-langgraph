@@ -25,9 +25,28 @@ pytestmark = [
 def test_app() -> FastAPI:
     """Create a test app with the cost router."""
     from mcp_server_langgraph.api.v1.cost import cost_router
+    from mcp_server_langgraph.auth.dependencies import (
+        get_current_user,
+        require_cost_admin,
+        require_cost_viewer,
+    )
 
     app = FastAPI()
     app.include_router(cost_router, prefix="/api/v1")
+
+    # Mock authentication
+    mock_user = {
+        "sub": "test-user-id",
+        "user_id": "test-user-id",
+        "username": "testuser",
+        "email": "testuser@example.com",
+        "roles": ["admin"],
+        "realm_access": {"roles": ["admin"]},
+    }
+    app.dependency_overrides[get_current_user] = lambda: mock_user
+    app.dependency_overrides[require_cost_viewer] = lambda: mock_user
+    app.dependency_overrides[require_cost_admin] = lambda: mock_user
+
     return app
 
 
@@ -982,19 +1001,19 @@ class TestBudgetLoadingFromStorage:
             patch("mcp_server_langgraph.api.v1.cost.get_budget_checker") as mock_get_checker,
         ):
             # Mock cost service
-            mock_service = AsyncMock(spec=["get_summary"])
+            mock_service = AsyncMock()
             mock_service.get_summary.return_value = {"total_cost": 100.00}
             mock_get_service.return_value = mock_service
 
             # Mock budget storage to return None (no stored budget)
-            mock_storage = AsyncMock(spec=["get_budget"])
+            mock_storage = AsyncMock()
             mock_storage.get_budget.return_value = None
             mock_get_storage.return_value = mock_storage
 
             # Mock budget checker
             from mcp_server_langgraph.monitoring.cost_budget import BudgetStatus
 
-            mock_checker = AsyncMock(spec=["check"])
+            mock_checker = AsyncMock()
 
             def check_budget(budget, spend):
                 return BudgetStatus(

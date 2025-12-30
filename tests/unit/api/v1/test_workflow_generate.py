@@ -182,11 +182,12 @@ class TestGenerateWorkflowIntegration:
             GenerateWorkflowRequest,
         )
 
-        # GIVEN a prompt request
+        # GIVEN a prompt request and authenticated user
         request = GenerateWorkflowRequest(prompt="Create a chatbot workflow")
+        mock_user = {"sub": "user-123", "user_id": "user-123", "username": "testuser"}
 
         # WHEN calling the endpoint handler
-        result = await generate_workflow(request=request, service=mock_service)
+        result = await generate_workflow(request=request, service=mock_service, current_user=mock_user)
 
         # THEN should return generated workflow
         assert result.workflow.id == "wf-generated-123"
@@ -202,11 +203,12 @@ class TestGenerateWorkflowIntegration:
             GenerateWorkflowRequest,
         )
 
-        # GIVEN a session_id request
+        # GIVEN a session_id request and authenticated user
         request = GenerateWorkflowRequest(session_id="sess-456")
+        mock_user = {"sub": "user-123", "user_id": "user-123", "username": "testuser"}
 
         # WHEN calling the endpoint handler
-        await generate_workflow(request=request, service=mock_service)
+        await generate_workflow(request=request, service=mock_service, current_user=mock_user)
 
         # THEN should call service with session_id
         call_args = mock_service.generate_workflow.call_args
@@ -223,12 +225,13 @@ class TestGenerateWorkflowIntegration:
             GenerateWorkflowRequest,
         )
 
-        # GIVEN session doesn't exist
+        # GIVEN session doesn't exist and authenticated user
         mock_service.generate_workflow = AsyncMock(side_effect=ValueError("Session not found"))
+        mock_user = {"sub": "user-123", "user_id": "user-123", "username": "testuser"}
 
         # WHEN/THEN should raise 404
         request = GenerateWorkflowRequest(session_id="nonexistent")
         with pytest.raises(HTTPException) as exc_info:
-            await generate_workflow(request=request, service=mock_service)
+            await generate_workflow(request=request, service=mock_service, current_user=mock_user)
 
         assert exc_info.value.status_code == status.HTTP_404_NOT_FOUND

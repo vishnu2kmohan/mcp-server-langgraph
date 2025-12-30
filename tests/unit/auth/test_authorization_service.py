@@ -405,10 +405,11 @@ class TestAuthorizationServiceWithResourceRegistry:
             resource_registry=registry,
         )
 
-        # Act - try "owner" relation on "tool" type (not allowed)
+        # Act - try "admin" relation on "tool" type (not allowed)
+        # Tool type only allows: executor, organization, owner
         result = await service.authorize(
             user_id="user:alice",
-            relation="owner",  # "owner" is not a valid relation for "tool"
+            relation="admin",  # "admin" is not a valid relation for "tool"
             resource="tool:chat",
         )
 

@@ -26,9 +26,22 @@ pytestmark = [
 def test_app() -> FastAPI:
     """Create a test app with the chat router."""
     from mcp_server_langgraph.api.v1.chat import chat_router
+    from mcp_server_langgraph.auth.dependencies import get_current_user
 
     app = FastAPI()
     app.include_router(chat_router, prefix="/api/v1")
+
+    # Mock authentication
+    mock_user = {
+        "sub": "test-user-id",
+        "user_id": "test-user-id",
+        "username": "testuser",
+        "email": "testuser@example.com",
+        "roles": ["user"],
+        "realm_access": {"roles": ["user"]},
+    }
+    app.dependency_overrides[get_current_user] = lambda: mock_user
+
     return app
 
 

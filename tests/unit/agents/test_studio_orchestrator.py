@@ -1519,3 +1519,262 @@ class TestExplanationOrchestratorConsolidation:
 
         for expected in expected_hitl_types:
             assert expected in hitl_types, f"{expected} not in HITL category"
+
+
+# =============================================================================
+# Status Broadcaster Integration Tests
+# =============================================================================
+
+
+@pytest.mark.xdist_group(name="studio_orchestrator_broadcaster")
+class TestStudioOrchestratorBroadcasterIntegration:
+    """Test StudioOrchestrator integration with OrchestratorStatusBroadcaster."""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
+
+    def test_orchestrator_accepts_status_broadcaster(self) -> None:
+        """Test that StudioOrchestrator constructor accepts status_broadcaster."""
+        from mcp_server_langgraph.agents.studio_orchestrator import StudioOrchestrator
+
+        mock_broadcaster = MagicMock()
+        orchestrator = StudioOrchestrator(status_broadcaster=mock_broadcaster)
+
+        assert orchestrator is not None
+        assert orchestrator.status_broadcaster is mock_broadcaster
+
+    def test_orchestrator_accepts_user_id(self) -> None:
+        """Test that StudioOrchestrator constructor accepts user_id."""
+        from mcp_server_langgraph.agents.studio_orchestrator import StudioOrchestrator
+
+        orchestrator = StudioOrchestrator(user_id="user-123")
+        assert orchestrator._user_id == "user-123"
+
+    def test_orchestrator_without_broadcaster_has_none(self) -> None:
+        """Test that orchestrator without broadcaster has None."""
+        from mcp_server_langgraph.agents.studio_orchestrator import StudioOrchestrator
+
+        orchestrator = StudioOrchestrator()
+        assert orchestrator.status_broadcaster is None
+
+    @pytest.mark.asyncio
+    async def test_broadcaster_task_started_called_on_task_execution(self) -> None:
+        """Test that broadcaster.broadcast_task_started is called when task starts."""
+        from mcp_server_langgraph.agents.studio_orchestrator import (
+            StudioOrchestrator,
+            StudioTask,
+            TaskCategory,
+        )
+
+        mock_broadcaster = MagicMock()
+        mock_broadcaster.broadcast_task_started = AsyncMock()  # noqa: async-mock-config
+        mock_broadcaster.broadcast_status = AsyncMock()  # noqa: async-mock-config
+        mock_broadcaster.broadcast_task_completed = AsyncMock()  # noqa: async-mock-config
+
+        orchestrator = StudioOrchestrator(
+            status_broadcaster=mock_broadcaster,
+            user_id="user-123",
+        )
+
+        # Create a task
+        task = StudioTask(
+            task_type="persona_analysis",
+            category=TaskCategory.UX,
+            data={"user_id": "test"},
+        )
+
+        # Execute the task
+        await orchestrator.execute([task])
+
+        # Verify broadcast_task_started was called
+        mock_broadcaster.broadcast_task_started.assert_called()
+        call_args = mock_broadcaster.broadcast_task_started.call_args
+        assert call_args.kwargs["user_id"] == "user-123"
+
+    @pytest.mark.asyncio
+    async def test_broadcaster_task_completed_called_on_success(self) -> None:
+        """Test that broadcaster.broadcast_task_completed is called on success."""
+        from mcp_server_langgraph.agents.studio_orchestrator import (
+            StudioOrchestrator,
+            StudioTask,
+            TaskCategory,
+        )
+
+        mock_broadcaster = MagicMock()
+        mock_broadcaster.broadcast_task_started = AsyncMock()  # noqa: async-mock-config
+        mock_broadcaster.broadcast_status = AsyncMock()  # noqa: async-mock-config
+        mock_broadcaster.broadcast_task_completed = AsyncMock()  # noqa: async-mock-config
+
+        orchestrator = StudioOrchestrator(
+            status_broadcaster=mock_broadcaster,
+            user_id="user-456",
+        )
+
+        task = StudioTask(
+            task_type="persona_analysis",
+            category=TaskCategory.UX,
+            data={"user_id": "test"},
+        )
+
+        await orchestrator.execute([task])
+
+        # Verify broadcast_task_completed was called
+        mock_broadcaster.broadcast_task_completed.assert_called()
+        call_args = mock_broadcaster.broadcast_task_completed.call_args
+        assert call_args.kwargs["user_id"] == "user-456"
+
+    @pytest.mark.asyncio
+    async def test_broadcaster_status_processing_called(self) -> None:
+        """Test that broadcast_status with PROCESSING is called."""
+        from mcp_server_langgraph.agents.studio_orchestrator import (
+            StudioOrchestrator,
+            StudioTask,
+            TaskCategory,
+        )
+
+        mock_broadcaster = MagicMock()
+        mock_broadcaster.broadcast_task_started = AsyncMock()  # noqa: async-mock-config
+        mock_broadcaster.broadcast_status = AsyncMock()  # noqa: async-mock-config
+        mock_broadcaster.broadcast_task_completed = AsyncMock()  # noqa: async-mock-config
+
+        orchestrator = StudioOrchestrator(
+            status_broadcaster=mock_broadcaster,
+        )
+
+        task = StudioTask(
+            task_type="session_summarize",
+            category=TaskCategory.SESSION,
+        )
+
+        await orchestrator.execute([task])
+
+        # Verify broadcast_status was called
+        mock_broadcaster.broadcast_status.assert_called()
+
+    @pytest.mark.asyncio
+    async def test_broadcaster_not_called_when_not_provided(self) -> None:
+        """Test that broadcaster methods are not called when not provided."""
+        from mcp_server_langgraph.agents.studio_orchestrator import (
+            StudioOrchestrator,
+            StudioTask,
+            TaskCategory,
+        )
+
+        # Create orchestrator without broadcaster
+        orchestrator = StudioOrchestrator()
+
+        task = StudioTask(
+            task_type="persona_analysis",
+            category=TaskCategory.UX,
+        )
+
+        # This should not raise any errors
+        await orchestrator.execute([task])
+
+        # No broadcaster means no calls - just verify execution completes
+        assert orchestrator.status_broadcaster is None
+
+    @pytest.mark.asyncio
+    async def test_broadcaster_multiple_tasks_all_broadcast(self) -> None:
+        """Test that multiple tasks all trigger broadcasts."""
+        from mcp_server_langgraph.agents.studio_orchestrator import (
+            StudioOrchestrator,
+            StudioTask,
+            TaskCategory,
+        )
+
+        mock_broadcaster = MagicMock()
+        mock_broadcaster.broadcast_task_started = AsyncMock()  # noqa: async-mock-config
+        mock_broadcaster.broadcast_status = AsyncMock()  # noqa: async-mock-config
+        mock_broadcaster.broadcast_task_completed = AsyncMock()  # noqa: async-mock-config
+
+        orchestrator = StudioOrchestrator(
+            status_broadcaster=mock_broadcaster,
+        )
+
+        tasks = [
+            StudioTask(task_type="persona_analysis", category=TaskCategory.UX),
+            StudioTask(task_type="session_summarize", category=TaskCategory.SESSION),
+        ]
+
+        await orchestrator.execute(tasks)
+
+        # Two tasks, so broadcast_task_started should be called twice
+        assert mock_broadcaster.broadcast_task_started.call_count == 2
+        assert mock_broadcaster.broadcast_task_completed.call_count == 2
+
+    @pytest.mark.asyncio
+    async def test_broadcaster_idle_status_broadcast_on_completion(self) -> None:
+        """Test that IDLE status is broadcast when all tasks complete."""
+        from mcp_server_langgraph.agents.studio_orchestrator import (
+            StudioOrchestrator,
+            StudioTask,
+            TaskCategory,
+        )
+        from mcp_server_langgraph.websocket.handlers.orchestrator_status import (
+            OrchestratorStatus,
+        )
+
+        mock_broadcaster = MagicMock()
+        mock_broadcaster.broadcast_task_started = AsyncMock()  # noqa: async-mock-config
+        mock_broadcaster.broadcast_status = AsyncMock()  # noqa: async-mock-config
+        mock_broadcaster.broadcast_task_completed = AsyncMock()  # noqa: async-mock-config
+
+        orchestrator = StudioOrchestrator(
+            status_broadcaster=mock_broadcaster,
+        )
+
+        tasks = [
+            StudioTask(task_type="persona_analysis", category=TaskCategory.UX),
+        ]
+
+        await orchestrator.execute(tasks)
+
+        # Find the IDLE status broadcast call
+        broadcast_status_calls = mock_broadcaster.broadcast_status.call_args_list
+        idle_calls = [
+            call
+            for call in broadcast_status_calls
+            if call.kwargs.get("status") == OrchestratorStatus.IDLE or (call.args and call.args[0] == OrchestratorStatus.IDLE)
+        ]
+
+        # Should have at least one IDLE broadcast
+        assert len(idle_calls) >= 1, "Expected IDLE status broadcast after all tasks complete"
+
+    @pytest.mark.asyncio
+    async def test_broadcaster_idle_status_after_multiple_tasks(self) -> None:
+        """Test that IDLE is broadcast only after ALL tasks complete."""
+        from mcp_server_langgraph.agents.studio_orchestrator import (
+            StudioOrchestrator,
+            StudioTask,
+            TaskCategory,
+        )
+        from mcp_server_langgraph.websocket.handlers.orchestrator_status import (
+            OrchestratorStatus,
+        )
+
+        mock_broadcaster = MagicMock()
+        mock_broadcaster.broadcast_task_started = AsyncMock()  # noqa: async-mock-config
+        mock_broadcaster.broadcast_status = AsyncMock()  # noqa: async-mock-config
+        mock_broadcaster.broadcast_task_completed = AsyncMock()  # noqa: async-mock-config
+
+        orchestrator = StudioOrchestrator(
+            status_broadcaster=mock_broadcaster,
+        )
+
+        tasks = [
+            StudioTask(task_type="persona_analysis", category=TaskCategory.UX),
+            StudioTask(task_type="session_summarize", category=TaskCategory.SESSION),
+            StudioTask(task_type="intent_detect", category=TaskCategory.CONVERSATION),
+        ]
+
+        await orchestrator.execute(tasks)
+
+        # Get all broadcast_status calls in order
+        status_calls = mock_broadcaster.broadcast_status.call_args_list
+
+        # The last status call should be IDLE
+        last_call = status_calls[-1]
+        last_status = last_call.kwargs.get("status") or last_call.args[0]
+        assert last_status == OrchestratorStatus.IDLE, f"Last status should be IDLE, got {last_status}"

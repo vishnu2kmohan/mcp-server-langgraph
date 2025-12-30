@@ -51,13 +51,16 @@ class RealKeycloakAuth:
         # S501: verify=False is intentional for e2e tests against local dev servers
         self.client = httpx.AsyncClient(timeout=30.0, verify=False)  # noqa: S501 # nosec B501
 
-    async def login(self, username: str, password: str) -> dict[str, str]:
+    async def login(self, username: str, password: str = "") -> dict[str, str]:
         """
         Login user and get real JWT tokens from Keycloak.
 
+        Uses Token Exchange (RFC 8693) or client_credentials grant.
+        ROPC (password grant) is disabled per security audit (ADR-0086).
+
         Args:
-            username: User username
-            password: User password
+            username: User username (used for Token Exchange subject)
+            password: Deprecated - ROPC is disabled
 
         Returns:
             Dict with access_token, refresh_token, expires_in, etc.
@@ -67,14 +70,30 @@ class RealKeycloakAuth:
         """
         token_url = f"{self.base_url}/realms/{self.realm}/protocol/openid-connect/token"
 
+        # Try Token Exchange first (RFC 8693) for user-specific context
+        try:
+            data = {
+                "grant_type": "urn:ietf:params:oauth:grant-type:token-exchange",
+                "client_id": self.client_id,
+                "client_secret": self.client_secret,
+                "requested_subject": username,
+                "subject_token_type": "urn:ietf:params:oauth:token-type:access_token",
+                "requested_token_type": "urn:ietf:params:oauth:token-type:access_token",
+                "scope": "openid profile email",
+            }
+            response = await self.client.post(token_url, data=data)
+            if response.status_code == 200:
+                return response.json()
+        except Exception:
+            pass
+
+        # Fallback to client_credentials (service account)
         data = {
-            "grant_type": "password",
+            "grant_type": "client_credentials",
             "client_id": self.client_id,
-            "username": username,
-            "password": password,
+            "client_secret": self.client_secret,
+            "scope": "openid profile email",
         }
-        if self.client_secret:
-            data["client_secret"] = self.client_secret
 
         try:
             response = await self.client.post(

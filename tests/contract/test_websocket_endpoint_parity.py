@@ -295,3 +295,179 @@ class TestWebSocketAuthenticationContract:
                     f"{endpoint} should allow anonymous connections (require_auth=False). "
                     f"Current setting: require_auth={auth_requirements[endpoint]}"
                 )
+
+
+def get_sample_tuples_path() -> Path:
+    """Get the path to the sample-tuples.json file."""
+    current = Path(__file__).parent
+    tuples_path = current.parent.parent / "config" / "openfga" / "sample-tuples.json"
+    if not tuples_path.exists():
+        pytest.skip(f"sample-tuples.json not found at {tuples_path}")
+    return tuples_path
+
+
+def extract_backend_authz_resources(ws_router_path: Path) -> list[tuple[str, str, str]]:
+    """
+    Extract authz_resource_type and authz_resource_id from ws_router.py.
+
+    Returns:
+        List of tuples (endpoint_path, resource_type, resource_id).
+    """
+    content = ws_router_path.read_text()
+
+    # Find @ws_router.websocket decorators and their authz settings
+    # Pattern matches blocks containing both decorator and authz params
+    results: list[tuple[str, str, str]] = []
+
+    # First, find all websocket decorator paths
+    endpoint_pattern = r'@ws_router\.websocket\s*\(\s*["\']([^"\']+)["\']'
+    endpoints = list(re.finditer(endpoint_pattern, content))
+
+    for i, ep_match in enumerate(endpoints):
+        endpoint_path = ep_match.group(1)
+        start_pos = ep_match.end()
+
+        # Find the end of this endpoint's config (next decorator or end of file)
+        end_pos = endpoints[i + 1].start() if i + 1 < len(endpoints) else len(content)
+        block = content[start_pos:end_pos]
+
+        # Extract authz_resource_type and authz_resource_id
+        type_match = re.search(r'authz_resource_type\s*=\s*["\']([^"\']+)["\']', block)
+        id_match = re.search(r'authz_resource_id\s*=\s*["\']?([^"\'`,\s\)]+)', block)
+
+        if type_match and id_match:
+            resource_type = type_match.group(1)
+            resource_id = id_match.group(1)
+            # Skip dynamic IDs (workflow_id, etc.)
+            if not resource_id.endswith("_id") and resource_id != "workflow_id":
+                full_path = f"/api/v1/ws{endpoint_path}"
+                results.append((full_path, resource_type, resource_id))
+
+    return results
+
+
+def load_sample_tuples() -> list[dict]:
+    """Load tuples from sample-tuples.json."""
+    import json
+
+    tuples_path = get_sample_tuples_path()
+    with tuples_path.open() as f:
+        data = json.load(f)
+    return data.get("tuples", [])
+
+
+def extract_tuple_objects(tuples: list[dict]) -> set[str]:
+    """Extract all unique object values from tuples (e.g., 'dashboard:devtools')."""
+    objects: set[str] = set()
+    for t in tuples:
+        if "object" in t:
+            objects.add(t["object"])
+    return objects
+
+
+class TestWebSocketAuthorizationTupleParity:
+    """
+    Validate that WebSocket endpoints with authorization requirements
+    have corresponding tuples in sample-tuples.json.
+
+    This test catches the bug where:
+    1. WebSocket endpoint is added with authz_resource_type/authz_resource_id
+    2. No tuple is added to sample-tuples.json
+    3. All users get 403 Forbidden at runtime
+    4. WebSocket constantly reconnects (the DevTools bug that triggered this test)
+    """
+
+    def test_all_websocket_authz_resources_have_tuples(self) -> None:
+        """Every WebSocket authz resource should have at least one tuple."""
+        backend_path = get_backend_ws_router_path()
+        authz_resources = extract_backend_authz_resources(backend_path)
+
+        tuples = load_sample_tuples()
+        tuple_objects = extract_tuple_objects(tuples)
+
+        missing: list[tuple[str, str]] = []
+        for endpoint, resource_type, resource_id in authz_resources:
+            # Construct expected object format
+            expected_object = f"{resource_type}:{resource_id}"
+
+            if expected_object not in tuple_objects:
+                missing.append((endpoint, expected_object))
+
+        if missing:
+            missing_list = "\n  - ".join(f"{ep} requires {obj}" for ep, obj in missing)
+            pytest.fail(
+                f"Found {len(missing)} WebSocket endpoints without authorization tuples:\n"
+                f"  - {missing_list}\n\n"
+                f"These endpoints will return 403 Forbidden for ALL users.\n"
+                f"Add the missing tuples to config/openfga/sample-tuples.json"
+            )
+
+    def test_critical_websocket_tuples_include_all_users(self) -> None:
+        """
+        Critical WebSocket resources should have tuples for admin, alice, and bob.
+
+        This ensures all test personas can access essential functionality.
+        """
+        tuples = load_sample_tuples()
+
+        # Critical resources that should be accessible to all users
+        critical_resources = [
+            "mcp:websocket",
+            "chat:notifications",
+            "mcp_connection:health",
+            "mcp_connection:realtime",
+            "observability:heart",
+            "cost:usage",
+            "mcp:aggregated-capabilities",
+            "dashboard:devtools",
+            "ai:orchestrator",
+        ]
+
+        required_users = ["user:admin", "user:alice", "user:bob"]
+
+        for resource in critical_resources:
+            users_with_access = {
+                t["user"] for t in tuples if t.get("object") == resource and t.get("user", "").startswith("user:")
+            }
+
+            missing_users = set(required_users) - users_with_access
+            if missing_users:
+                pytest.fail(
+                    f"Critical resource '{resource}' missing tuples for: {missing_users}\n"
+                    f"Add tuples for these users to config/openfga/sample-tuples.json"
+                )
+
+    def test_devtools_tuple_exists(self) -> None:
+        """
+        Specific test for dashboard:devtools - the gap that triggered this audit.
+
+        This test ensures we never regress on the DevTools WebSocket authorization.
+        """
+        tuples = load_sample_tuples()
+        devtools_tuples = [t for t in tuples if t.get("object") == "dashboard:devtools"]
+
+        assert len(devtools_tuples) >= 3, (
+            f"REGRESSION: dashboard:devtools should have tuples for admin, alice, bob.\n"
+            f"Found {len(devtools_tuples)} tuples. Expected at least 3.\n"
+            f"This was the bug that caused DevTools to constantly reconnect."
+        )
+
+    def test_traces_stream_tuples_exist(self) -> None:
+        """Test that traces:stream WebSocket has authorization tuples."""
+        tuples = load_sample_tuples()
+        stream_tuples = [t for t in tuples if t.get("object") == "traces:stream"]
+
+        assert len(stream_tuples) >= 1, (
+            "Missing tuples for traces:stream WebSocket endpoint.\n"
+            "Add tuples for admin, alice, bob to config/openfga/sample-tuples.json"
+        )
+
+    def test_cost_budget_tuples_exist(self) -> None:
+        """Test that cost:budget WebSocket has authorization tuples."""
+        tuples = load_sample_tuples()
+        budget_tuples = [t for t in tuples if t.get("object") == "cost:budget"]
+
+        assert len(budget_tuples) >= 1, (
+            "Missing tuples for cost:budget WebSocket endpoint.\n"
+            "Add tuples for admin, alice, bob to config/openfga/sample-tuples.json"
+        )

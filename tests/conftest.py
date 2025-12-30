@@ -448,12 +448,76 @@ def reset_resilience_state(request):
 
 @pytest.fixture
 def mock_current_user():
-    """Shared mock current user fixture for API endpoint tests."""
+    """
+    Shared mock current user fixture for API endpoint tests.
+
+    Contains all fields expected by get_current_user dependency:
+    - sub: User ID (OpenID Connect standard claim)
+    - user_id: Alias for sub (for compatibility)
+    - username: User's preferred username
+    - email: User's email address
+    - roles: List of roles
+    - realm_access: Keycloak realm roles structure
+
+    Usage in tests:
+        def test_endpoint(mock_current_user):
+            app.dependency_overrides[get_current_user] = lambda: mock_current_user
+    """
+    user_id = get_user_id("alice")
     return {
-        "user_id": get_user_id("alice"),
+        "sub": user_id,
+        "user_id": user_id,
         "keycloak_id": "8c7b4e5d-1234-5678-abcd-ef1234567890",
         "username": "alice",
         "email": "alice@example.com",
+        "roles": ["developer"],
+        "realm_access": {"roles": ["developer"]},
+    }
+
+
+@pytest.fixture
+def mock_admin_user():
+    """
+    Shared mock admin user fixture for API endpoint tests.
+
+    Contains all fields expected by get_current_user dependency with admin role.
+
+    Usage in tests:
+        def test_admin_endpoint(mock_admin_user):
+            app.dependency_overrides[get_current_user] = lambda: mock_admin_user
+    """
+    user_id = get_user_id("admin")
+    return {
+        "sub": user_id,
+        "user_id": user_id,
+        "keycloak_id": "admin-1234-5678-abcd-ef1234567890",
+        "username": "admin",
+        "email": "admin@example.com",
+        "roles": ["admin", "developer"],
+        "realm_access": {"roles": ["admin", "developer"]},
+    }
+
+
+@pytest.fixture
+def mock_bob_user():
+    """
+    Shared mock standard user (bob) fixture for API endpoint tests.
+
+    Bob is a standard user with limited permissions.
+
+    Usage in tests:
+        def test_user_endpoint(mock_bob_user):
+            app.dependency_overrides[get_current_user] = lambda: mock_bob_user
+    """
+    user_id = get_user_id("bob")
+    return {
+        "sub": user_id,
+        "user_id": user_id,
+        "keycloak_id": "bob-1234-5678-abcd-ef1234567890",  # gitleaks:allow
+        "username": "bob",
+        "email": "bob@example.com",
+        "roles": ["user"],
+        "realm_access": {"roles": ["user"]},
     }
 
 

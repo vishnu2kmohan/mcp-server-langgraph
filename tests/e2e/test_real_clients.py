@@ -55,20 +55,21 @@ class TestRealKeycloakAuth:
 
             auth = RealKeycloakAuth(base_url="http://localhost:9082")
 
-            # Act
-            tokens = await auth.login("alice", "password123")
+            # Act - Note: password is deprecated, using modern OAuth2 flows (ADR-0086)
+            tokens = await auth.login("alice")
 
             # Assert
             assert tokens["access_token"] == "fake-access-token"
             assert tokens["refresh_token"] == "fake-refresh-token"
             assert tokens["expires_in"] == 300
 
-            mock_instance.post.assert_called_once()
+            # Verify token endpoint was called (may be Token Exchange or client_credentials)
+            assert mock_instance.post.call_count >= 1
             call_args = mock_instance.post.call_args
             assert "/realms/mcp-test/protocol/openid-connect/token" in call_args[0][0]
-            assert call_args[1]["data"]["grant_type"] == "password"
-            assert call_args[1]["data"]["username"] == "alice"
-            assert call_args[1]["data"]["password"] == "password123"
+            # Uses Token Exchange or client_credentials (ROPC is disabled per ADR-0086)
+            grant_type = call_args[1]["data"]["grant_type"]
+            assert grant_type in ["client_credentials", "urn:ietf:params:oauth:grant-type:token-exchange"]
 
     @pytest.mark.asyncio
     async def test_context_manager_closes_client(self):

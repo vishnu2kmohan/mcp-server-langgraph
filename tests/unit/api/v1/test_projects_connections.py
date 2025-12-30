@@ -91,14 +91,16 @@ class TestRemoveConnectionIntegration:
         """The endpoint should call repository.remove_connection."""
         from mcp_server_langgraph.api.v1.projects import remove_connection_from_project
 
-        # GIVEN a mock repository
+        # GIVEN a mock repository and authenticated user with editor access
         mock_repo = MagicMock()
         mock_repo.remove_connection = AsyncMock(return_value=True)
+        mock_user = {"sub": "user-123", "user_id": "user-123", "username": "testuser"}
 
         # WHEN calling the endpoint handler
         await remove_connection_from_project(
             project_id="proj-123",
             connection_id="conn-456",
+            user=mock_user,
             repo=mock_repo,
         )
 
@@ -111,14 +113,16 @@ class TestRemoveConnectionIntegration:
         """Successful removal should return None (204 response)."""
         from mcp_server_langgraph.api.v1.projects import remove_connection_from_project
 
-        # GIVEN a mock repository that succeeds
+        # GIVEN a mock repository that succeeds and authenticated user
         mock_repo = MagicMock()
         mock_repo.remove_connection = AsyncMock(return_value=True)
+        mock_user = {"sub": "user-123", "user_id": "user-123", "username": "testuser"}
 
         # WHEN calling the endpoint handler
         result = await remove_connection_from_project(
             project_id="proj-123",
             connection_id="conn-456",
+            user=mock_user,
             repo=mock_repo,
         )
 
@@ -133,9 +137,10 @@ class TestRemoveConnectionIntegration:
 
         from mcp_server_langgraph.api.v1.projects import remove_connection_from_project
 
-        # GIVEN a mock repository that returns None (not found)
+        # GIVEN a mock repository that returns None (not found) and authenticated user
         mock_repo = MagicMock()
         mock_repo.remove_connection = AsyncMock(return_value=None)
+        mock_user = {"sub": "user-123", "user_id": "user-123", "username": "testuser"}
 
         # WHEN calling the endpoint handler
         # THEN should raise HTTPException with 404
@@ -143,6 +148,7 @@ class TestRemoveConnectionIntegration:
             await remove_connection_from_project(
                 project_id="nonexistent-project",
                 connection_id="conn-456",
+                user=mock_user,
                 repo=mock_repo,
             )
 
@@ -154,14 +160,16 @@ class TestRemoveConnectionIntegration:
         """Should return success even if connection not in project (idempotent)."""
         from mcp_server_langgraph.api.v1.projects import remove_connection_from_project
 
-        # GIVEN a mock repository that returns True (project exists, connection removed or not present)
+        # GIVEN a mock repository that returns True and authenticated user
         mock_repo = MagicMock()
         mock_repo.remove_connection = AsyncMock(return_value=True)
+        mock_user = {"sub": "user-123", "user_id": "user-123", "username": "testuser"}
 
         # WHEN calling the endpoint handler for a connection not in project
         result = await remove_connection_from_project(
             project_id="proj-123",
             connection_id="not-in-project",
+            user=mock_user,
             repo=mock_repo,
         )
 

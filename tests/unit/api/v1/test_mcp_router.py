@@ -38,9 +38,21 @@ def app_with_mcp_router() -> FastAPI:
     from fastapi import FastAPI
 
     from mcp_server_langgraph.api.v1.mcp import mcp_router
+    from mcp_server_langgraph.auth.dependencies import get_current_user
 
     app = FastAPI()
     app.include_router(mcp_router, prefix="/api/v1/mcp")
+
+    # Mock authentication
+    mock_user = {
+        "sub": "test-user-id",
+        "user_id": "test-user-id",
+        "username": "testuser",
+        "roles": ["user"],
+        "realm_access": {"roles": ["user"]},
+    }
+    app.dependency_overrides[get_current_user] = lambda: mock_user
+
     return app
 
 

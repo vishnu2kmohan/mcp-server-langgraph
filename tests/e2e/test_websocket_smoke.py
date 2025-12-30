@@ -78,6 +78,7 @@ WS_ENDPOINTS = {
     "MCP_SESSION": "/api/v1/ws/mcp/test-session-123",
     # AI/UX endpoints
     "AI_SUGGESTIONS": "/api/v1/ws/ai/suggestions",
+    "ORCHESTRATOR_STATUS": "/api/v1/ws/orchestrator/status",
     # Workflow endpoints
     "WORKFLOW_EXECUTION": "/api/v1/ws/workflows/test-workflow-123",
     # Monitoring endpoints
@@ -107,22 +108,46 @@ AUTH_REQUIRED_ENDPOINTS = set(WS_ENDPOINTS.keys()) - ANONYMOUS_ALLOWED_ENDPOINTS
 
 def _get_keycloak_token(
     username: str = "alice",
-    password: str = "alice123",
+    password: str = "alice123",  # Deprecated: ROPC is disabled per ADR-0086
     client_id: str = E2E_CLIENT_ID,
     client_secret: str = E2E_CLIENT_SECRET,
 ) -> str | None:
-    """Get Keycloak access token via OAuth2 password grant."""
+    """Get Keycloak access token via modern OAuth2 flows.
+
+    Uses Token Exchange (RFC 8693) or client_credentials grant.
+    ROPC (password grant) is disabled per security audit (ADR-0086).
+    """
     token_url = f"{E2E_KEYCLOAK_URL}/realms/default/protocol/openid-connect/token"
 
+    # Try Token Exchange first (RFC 8693) for user-specific context
     try:
         response = requests.post(
             token_url,
             data={
-                "grant_type": "password",
+                "grant_type": "urn:ietf:params:oauth:grant-type:token-exchange",
                 "client_id": client_id,
                 "client_secret": client_secret,
-                "username": username,
-                "password": password,
+                "requested_subject": username,
+                "subject_token_type": "urn:ietf:params:oauth:token-type:access_token",
+                "requested_token_type": "urn:ietf:params:oauth:token-type:access_token",
+                "scope": "openid profile email",
+            },
+            timeout=10,
+        )
+        if response.status_code == 200:
+            return response.json().get("access_token")
+    except Exception:
+        pass
+
+    # Fallback to client_credentials (service account)
+    try:
+        response = requests.post(
+            token_url,
+            data={
+                "grant_type": "client_credentials",
+                "client_id": client_id,
+                "client_secret": client_secret,
+                "scope": "openid profile email",
             },
             timeout=10,
         )

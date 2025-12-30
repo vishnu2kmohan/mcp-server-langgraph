@@ -18,8 +18,31 @@ from datetime import UTC, datetime
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from fastapi import FastAPI
 
 pytestmark = [pytest.mark.unit, pytest.mark.api]
+
+
+def create_agents_test_app() -> FastAPI:
+    """Create a FastAPI app with the agents router and auth mocking."""
+    from mcp_server_langgraph.api.v1.agents import agents_router
+    from mcp_server_langgraph.auth.dependencies import get_current_user
+
+    app = FastAPI()
+    app.include_router(agents_router, prefix="/api/v1")
+
+    # Mock authentication
+    mock_user = {
+        "sub": "test-user-id",
+        "user_id": "test-user-id",
+        "username": "testuser",
+        "email": "testuser@example.com",
+        "roles": ["user"],
+        "realm_access": {"roles": ["user"]},
+    }
+    app.dependency_overrides[get_current_user] = lambda: mock_user
+
+    return app
 
 
 # =============================================================================
@@ -170,13 +193,7 @@ class TestAgentMetricsEndpoint:
         """Test GET /api/v1/agents/metrics returns 200."""
         from fastapi.testclient import TestClient
 
-        from mcp_server_langgraph.api.v1.agents import agents_router
-
-        # Create minimal app for testing
-        from fastapi import FastAPI
-
-        app = FastAPI()
-        app.include_router(agents_router, prefix="/api/v1")
+        app = create_agents_test_app()
 
         with patch("mcp_server_langgraph.api.v1.agents.get_metrics_client") as mock_get_client:
             mock_client = AsyncMock()  # noqa: async-mock-config - configured below
@@ -198,12 +215,7 @@ class TestAgentMetricsEndpoint:
         """Test GET /api/v1/agents/metrics returns structured JSON."""
         from fastapi.testclient import TestClient
 
-        from mcp_server_langgraph.api.v1.agents import agents_router
-
-        from fastapi import FastAPI
-
-        app = FastAPI()
-        app.include_router(agents_router, prefix="/api/v1")
+        app = create_agents_test_app()
 
         with patch("mcp_server_langgraph.api.v1.agents.get_metrics_client") as mock_get_client:
             mock_client = AsyncMock()  # noqa: async-mock-config - configured below
@@ -228,12 +240,7 @@ class TestAgentMetricsEndpoint:
         """Test metrics endpoint accepts time_range_hours parameter."""
         from fastapi.testclient import TestClient
 
-        from mcp_server_langgraph.api.v1.agents import agents_router
-
-        from fastapi import FastAPI
-
-        app = FastAPI()
-        app.include_router(agents_router, prefix="/api/v1")
+        app = create_agents_test_app()
 
         with patch("mcp_server_langgraph.api.v1.agents.get_metrics_client") as mock_get_client:
             mock_client = AsyncMock()  # noqa: async-mock-config - configured below
@@ -271,12 +278,7 @@ class TestAgentMetricsErrorHandling:
         """Test endpoint returns 503 when metrics backend is unavailable."""
         from fastapi.testclient import TestClient
 
-        from mcp_server_langgraph.api.v1.agents import agents_router
-
-        from fastapi import FastAPI
-
-        app = FastAPI()
-        app.include_router(agents_router, prefix="/api/v1")
+        app = create_agents_test_app()
 
         with patch("mcp_server_langgraph.api.v1.agents.get_metrics_client") as mock_get_client:
             mock_get_client.return_value = None
@@ -291,12 +293,7 @@ class TestAgentMetricsErrorHandling:
         """Test endpoint returns partial metrics if some queries fail."""
         from fastapi.testclient import TestClient
 
-        from mcp_server_langgraph.api.v1.agents import agents_router
-
-        from fastapi import FastAPI
-
-        app = FastAPI()
-        app.include_router(agents_router, prefix="/api/v1")
+        app = create_agents_test_app()
 
         with patch("mcp_server_langgraph.api.v1.agents.get_metrics_client") as mock_get_client:
             mock_client = AsyncMock()  # noqa: async-mock-config - configured below

@@ -140,32 +140,53 @@ def skip_if_infra_unavailable():
         )
 
 
-def _get_token(username: str, password: str) -> str | None:
-    """Get access token from Keycloak using password grant."""
+def _get_token(username: str, password: str = "") -> str | None:
+    """Get access token from Keycloak using modern OAuth2 flows.
+
+    Uses Token Exchange (RFC 8693) or client_credentials grant.
+    ROPC (password grant) is disabled per security audit (ADR-0086).
+    """
     import requests
 
     token_url = f"{KEYCLOAK_URL}/realms/default/protocol/openid-connect/token"
 
+    # Try Token Exchange first (RFC 8693) for user-specific context
     try:
         response = requests.post(
             token_url,
             data={
-                "grant_type": "password",
+                "grant_type": "urn:ietf:params:oauth:grant-type:token-exchange",
                 "client_id": KEYCLOAK_CLIENT_ID,
                 "client_secret": KEYCLOAK_CLIENT_SECRET,
-                "username": username,
-                "password": password,
+                "requested_subject": username,
+                "subject_token_type": "urn:ietf:params:oauth:token-type:access_token",
+                "requested_token_type": "urn:ietf:params:oauth:token-type:access_token",
+                "scope": "openid profile email",
             },
             timeout=10,
         )
-
-        if response.status_code != 200:
-            return None
-
-        data = response.json()
-        return data.get("access_token")
+        if response.status_code == 200:
+            return response.json().get("access_token")
     except Exception:
-        return None
+        pass
+
+    # Fallback to client_credentials (service account)
+    try:
+        response = requests.post(
+            token_url,
+            data={
+                "grant_type": "client_credentials",
+                "client_id": KEYCLOAK_CLIENT_ID,
+                "client_secret": KEYCLOAK_CLIENT_SECRET,
+                "scope": "openid profile email",
+            },
+            timeout=10,
+        )
+        if response.status_code == 200:
+            return response.json().get("access_token")
+    except Exception:
+        pass
+    return None
 
 
 @pytest.mark.xdist_group(name="test_vectors_api")

@@ -20,6 +20,16 @@ import pytest
 
 pytestmark = [pytest.mark.unit, pytest.mark.api, pytest.mark.orchestrator]
 
+# Mock user for testing auth-required endpoints
+MOCK_USER = {
+    "sub": "test-user-id",
+    "user_id": "test-user-id",
+    "username": "testuser",
+    "email": "testuser@example.com",
+    "roles": ["user"],
+    "realm_access": {"roles": ["user"]},
+}
+
 
 @pytest.mark.xdist_group(name="alert_orchestrator_api_init")
 class TestAlertOrchestratorAPIInjection:
@@ -151,7 +161,7 @@ class TestAlertOrchestratorBatchAnalysis:
 
             # With orchestrator set and enabled, it should be used
             # Note: The orchestrator is controlled via set_alert_orchestrator, not feature flags
-            result = await correlate_alerts(request, alert_store=mock_store)
+            result = await correlate_alerts(request, alert_store=mock_store, current_user=MOCK_USER)
             assert result is not None
 
         finally:
@@ -188,7 +198,7 @@ class TestAlertOrchestratorFallback:
         )
 
         # Should work without orchestrator
-        result = await correlate_alerts(request, alert_store=mock_store)
+        result = await correlate_alerts(request, alert_store=mock_store, current_user=MOCK_USER)
         assert result is not None
         assert result.total_alerts == 0
 
@@ -217,7 +227,7 @@ class TestAlertOrchestratorFallback:
                 label_key="service",
             )
 
-            result = await correlate_alerts(request, alert_store=mock_store)
+            result = await correlate_alerts(request, alert_store=mock_store, current_user=MOCK_USER)
 
             # Should NOT call orchestrator (it's disabled)
             mock_orchestrator.analyze_alerts.assert_not_called()

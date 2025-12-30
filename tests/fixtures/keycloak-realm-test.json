@@ -1,13 +1,13 @@
 {
   "realm": "test-realm",
   "enabled": true,
-  "sslRequired": "none",
+  "sslRequired": "all",
   "registrationAllowed": false,
   "loginWithEmailAllowed": true,
   "duplicateEmailsAllowed": false,
   "resetPasswordAllowed": true,
   "editUsernameAllowed": false,
-  "bruteForceProtected": false,
+  "bruteForceProtected": true,
   "permanentLockout": false,
   "maxFailureWaitSeconds": 900,
   "minimumQuickLoginWaitSeconds": 60,
@@ -39,7 +39,10 @@
       "protocol": "openid-connect",
       "publicClient": false,
       "standardFlowEnabled": true,
-      "directAccessGrantsEnabled": true,
+      "directAccessGrantsEnabled": false,
+      "attributes": {
+        "pkce.code.challenge.method": "S256"
+      },
       "serviceAccountsEnabled": true,
       "authorizationServicesEnabled": false,
       "fullScopeAllowed": true,
@@ -98,16 +101,33 @@
   "supportedLocales": [],
   "authenticationFlows": [],
   "authenticatorConfig": [],
-  "requiredActions": [],
+  "webAuthnPolicyPasswordlessRpEntityName": "MCP Server LangGraph - Test",
+  "webAuthnPolicyPasswordlessSignatureAlgorithms": ["ES256", "RS256"],
+  "webAuthnPolicyPasswordlessRpId": "",
+  "webAuthnPolicyPasswordlessRequireResidentKey": "Yes",
+  "webAuthnPolicyPasswordlessUserVerificationRequirement": "preferred",
+  "requiredActions": [
+    {
+      "alias": "webauthn-register-passwordless",
+      "name": "Webauthn Register Passwordless",
+      "providerId": "webauthn-register-passwordless",
+      "enabled": true,
+      "defaultAction": false,
+      "priority": 70
+    }
+  ],
   "browserFlow": "browser",
   "registrationFlow": "registration",
   "directGrantFlow": "direct grant",
   "resetCredentialsFlow": "reset credentials",
   "clientAuthenticationFlow": "clients",
   "dockerAuthenticationFlow": "docker auth",
+  "eventsEnabled": true,
+  "adminEventsEnabled": true,
+  "adminEventsDetailsEnabled": true,
   "attributes": {
-    "adminEventsEnabled": "false",
-    "adminEventsDetailsEnabled": "false"
+    "adminEventsEnabled": "true",
+    "adminEventsDetailsEnabled": "true"
   },
   "keycloakVersion": "23.0.0"
 }

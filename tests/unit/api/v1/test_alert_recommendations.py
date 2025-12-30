@@ -26,6 +26,17 @@ from mcp_server_langgraph.observability.query.interfaces import (
 pytestmark = pytest.mark.unit
 
 
+# Mock user for authentication
+MOCK_USER = {
+    "sub": "test-user-id",
+    "user_id": "test-user-id",
+    "username": "testuser",
+    "email": "testuser@example.com",
+    "roles": ["user"],
+    "realm_access": {"roles": ["user"]},
+}
+
+
 @pytest.mark.xdist_group(name="alert_recommendations_api")
 class TestAlertRecommendationRouter:
     """Tests for alert recommendation router existence."""
@@ -140,6 +151,7 @@ class TestGetAlertRecommendation:
 
         result = await get_alert_recommendation(
             alert_id="alert-456",
+            current_user=MOCK_USER,
             service=mock_service,
             alert_store=MagicMock(),
         )
@@ -168,6 +180,7 @@ class TestGetAlertRecommendation:
 
         result = await get_alert_recommendation(
             alert_id="alert-456",
+            current_user=MOCK_USER,
             service=mock_service,
             alert_store=mock_store,
         )
@@ -191,6 +204,7 @@ class TestGetAlertRecommendation:
         with pytest.raises(HTTPException) as exc_info:
             await get_alert_recommendation(
                 alert_id="nonexistent",
+                current_user=MOCK_USER,
                 service=mock_service,
                 alert_store=mock_store,
             )
@@ -282,6 +296,7 @@ class TestRegenerateRecommendation:
 
         result = await regenerate_alert_recommendation(
             alert_id="alert-456",
+            current_user=MOCK_USER,
             service=mock_service,
             alert_store=mock_store,
         )
@@ -303,6 +318,7 @@ class TestRegenerateRecommendation:
         with pytest.raises(HTTPException) as exc_info:
             await regenerate_alert_recommendation(
                 alert_id="nonexistent",
+                current_user=MOCK_USER,
                 service=mock_service,
                 alert_store=mock_store,
             )
@@ -413,6 +429,7 @@ class TestAlertHistoryEndpoint:
         await store.add_alert(alert)
 
         result = await list_alerts(
+            current_user=MOCK_USER,
             alert_store=store,
         )
 
@@ -468,6 +485,7 @@ class TestAlertHistoryEndpoint:
         )
 
         result = await list_alerts(
+            current_user=MOCK_USER,
             alert_store=store,
             severity=[AlertSeverity.CRITICAL],
         )
@@ -524,6 +542,7 @@ class TestAlertHistoryEndpoint:
         )
 
         result = await list_alerts(
+            current_user=MOCK_USER,
             alert_store=store,
             state=[AlertState.RESOLVED],
         )
@@ -710,7 +729,7 @@ class TestAlertCorrelationEndpoint:
             label_key="service",
         )
 
-        result = await correlate_alerts(request=request, alert_store=store)
+        result = await correlate_alerts(request=request, current_user=MOCK_USER, alert_store=store)
 
         assert len(result.groups) >= 1
         api_server_group = next((g for g in result.groups if g.label_value == "api-server"), None)
@@ -765,7 +784,7 @@ class TestAlertCorrelationEndpoint:
             window_minutes=5,
         )
 
-        result = await correlate_alerts(request=request, alert_store=store)
+        result = await correlate_alerts(request=request, current_user=MOCK_USER, alert_store=store)
 
         assert len(result.groups) >= 1
         assert len(result.groups[0].alerts) == 2
@@ -817,12 +836,12 @@ class TestAlertCorrelationEndpoint:
             detect_patterns=True,
         )
 
-        result = await correlate_alerts(request=request, alert_store=store)
+        result = await correlate_alerts(request=request, current_user=MOCK_USER, alert_store=store)
 
         assert len(result.groups) >= 1
         # Pattern detection should find resource_exhaustion or similar
         # Check that at least one group has a detected pattern
-        has_pattern = any(g.pattern is not None for g in result.groups)
+        _has_pattern = any(g.pattern is not None for g in result.groups)
         # Note: Pattern detection may not always trigger depending on alert names
         # The test verifies the endpoint works with pattern detection enabled
 
@@ -875,7 +894,7 @@ class TestAlertCorrelationEndpoint:
             identify_root_cause=True,
         )
 
-        result = await correlate_alerts(request=request, alert_store=store)
+        result = await correlate_alerts(request=request, current_user=MOCK_USER, alert_store=store)
 
         assert len(result.groups) >= 1
         assert result.groups[0].root_cause_id == "root-cause-alert"
@@ -900,6 +919,6 @@ class TestAlertCorrelationEndpoint:
             label_key="service",
         )
 
-        result = await correlate_alerts(request=request, alert_store=store)
+        result = await correlate_alerts(request=request, current_user=MOCK_USER, alert_store=store)
 
         assert len(result.groups) == 0

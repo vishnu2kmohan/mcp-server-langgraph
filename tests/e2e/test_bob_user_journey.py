@@ -2,18 +2,24 @@
 Bob User Journey E2E Tests
 
 Tests for standard-tier user (bob) journey including:
-- Login flow
+- Token acquisition (via Token Exchange or Service Account)
 - Permission denied for admin routes
 - Can view but not edit shared workflows
 - Can create own workflows
 
 These tests require E2E infrastructure (make test-infra-up).
+
+Note: ROPC (password grant) is disabled per security audit.
+User tokens are obtained via Token Exchange (RFC 8693) or service accounts.
 """
 
 import gc
 from typing import Any
 
 import pytest
+
+# Import the helper function for getting user tokens
+from tests.integration.auth.conftest import get_user_token
 
 pytestmark = [
     pytest.mark.e2e,
@@ -31,37 +37,30 @@ class TestBobStandardUserJourney:
         gc.collect()
 
     @pytest.mark.xfail(strict=True, reason="Requires E2E infrastructure running")
-    async def test_01_bob_login_with_keycloak(
+    async def test_01_bob_token_acquisition(
         self,
         e2e_keycloak_base_url: str,
         bob_credentials: dict[str, Any],
     ) -> None:
         """
-        Step 1: Bob authenticates with Keycloak.
+        Step 1: Bob obtains access token via Token Exchange.
 
-        GIVEN bob's credentials
-        WHEN bob attempts to login via Keycloak
+        GIVEN bob user exists in Keycloak
+        WHEN bob token is requested via modern auth methods
         THEN bob should receive a valid access token
+
+        Note: ROPC is disabled per security audit. Uses Token Exchange
+        (RFC 8693) or falls back to service account tokens.
         """
-        import httpx
+        # Try Token Exchange for bob-specific token (RFC 8693 compliant)
+        token = get_user_token("bob")
 
-        async with httpx.AsyncClient() as client:
-            # Get token from Keycloak
-            response = await client.post(
-                f"{e2e_keycloak_base_url}/realms/default/protocol/openid-connect/token",
-                data={
-                    "grant_type": "password",
-                    "client_id": "mcp-server",
-                    "username": bob_credentials["username"],
-                    "password": bob_credentials["password"],
-                },
-            )
-
-            assert response.status_code == 200
-            data = response.json()
-            assert "access_token" in data
-            assert "refresh_token" in data
-            assert data["token_type"].lower() == "bearer"
+        assert token is not None, (
+            "Failed to obtain token via Token Exchange or Service Account. "
+            "Ensure Keycloak is running and Token Exchange is configured."
+        )
+        # Token should be a non-empty string
+        assert len(token) > 0
 
     @pytest.mark.xfail(strict=True, reason="Requires E2E infrastructure running")
     async def test_02_bob_cannot_access_admin_routes(

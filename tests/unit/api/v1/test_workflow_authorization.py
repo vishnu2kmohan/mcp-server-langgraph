@@ -35,15 +35,16 @@ class TestRequireWorkflowOwnerDependency:
         gc.collect()
 
     def test_require_workflow_owner_function_exists(self) -> None:
-        """require_workflow_owner should be importable."""
-        from mcp_server_langgraph.api.v1.workflows import require_workflow_owner
+        """require_workflow_owner should be importable from dependencies."""
+        from mcp_server_langgraph.auth.dependencies import require_workflow_owner
 
         assert callable(require_workflow_owner)
 
     @pytest.mark.asyncio
     async def test_owner_can_access_workflow(self) -> None:
         """Workflow owner should be authorized to access sharing endpoints."""
-        from mcp_server_langgraph.api.v1.workflows import require_workflow_owner
+        # Use the internal helper function for unit testing authorization logic
+        from mcp_server_langgraph.api.v1.workflows import _require_workflow_owner_with_service
 
         # GIVEN a user who owns the workflow
         mock_service = MagicMock()
@@ -57,7 +58,7 @@ class TestRequireWorkflowOwnerDependency:
         current_user = {"sub": "user-alice", "preferred_username": "alice"}
 
         # WHEN checking ownership
-        result = await require_workflow_owner(
+        result = await _require_workflow_owner_with_service(
             workflow_id="wf-123",
             current_user=current_user,
             service=mock_service,
@@ -70,7 +71,7 @@ class TestRequireWorkflowOwnerDependency:
     @pytest.mark.asyncio
     async def test_non_owner_gets_403_forbidden(self) -> None:
         """Non-owner should receive 403 Forbidden."""
-        from mcp_server_langgraph.api.v1.workflows import require_workflow_owner
+        from mcp_server_langgraph.api.v1.workflows import _require_workflow_owner_with_service
 
         # GIVEN a user who does NOT own the workflow
         mock_service = MagicMock()
@@ -86,7 +87,7 @@ class TestRequireWorkflowOwnerDependency:
         # WHEN checking ownership
         # THEN should raise 403 Forbidden
         with pytest.raises(HTTPException) as exc_info:
-            await require_workflow_owner(
+            await _require_workflow_owner_with_service(
                 workflow_id="wf-123",
                 current_user=current_user,
                 service=mock_service,
@@ -98,7 +99,7 @@ class TestRequireWorkflowOwnerDependency:
     @pytest.mark.asyncio
     async def test_nonexistent_workflow_gets_404(self) -> None:
         """Non-existent workflow should return 404 Not Found."""
-        from mcp_server_langgraph.api.v1.workflows import require_workflow_owner
+        from mcp_server_langgraph.api.v1.workflows import _require_workflow_owner_with_service
 
         # GIVEN workflow does not exist
         mock_service = MagicMock()
@@ -108,7 +109,7 @@ class TestRequireWorkflowOwnerDependency:
         # WHEN checking ownership
         # THEN should raise 404 Not Found
         with pytest.raises(HTTPException) as exc_info:
-            await require_workflow_owner(
+            await _require_workflow_owner_with_service(
                 workflow_id="nonexistent-wf",
                 current_user=current_user,
                 service=mock_service,
@@ -119,7 +120,7 @@ class TestRequireWorkflowOwnerDependency:
     @pytest.mark.asyncio
     async def test_admin_can_access_any_workflow(self) -> None:
         """Admin users should be able to access any workflow."""
-        from mcp_server_langgraph.api.v1.workflows import require_workflow_owner
+        from mcp_server_langgraph.api.v1.workflows import _require_workflow_owner_with_service
 
         # GIVEN an admin user who does NOT own the workflow
         mock_service = MagicMock()
@@ -137,7 +138,7 @@ class TestRequireWorkflowOwnerDependency:
         }
 
         # WHEN checking ownership
-        result = await require_workflow_owner(
+        result = await _require_workflow_owner_with_service(
             workflow_id="wf-123",
             current_user=current_user,
             service=mock_service,
@@ -149,7 +150,7 @@ class TestRequireWorkflowOwnerDependency:
     @pytest.mark.asyncio
     async def test_user_id_extracted_from_sub_claim(self) -> None:
         """User ID should be extracted from 'sub' claim first."""
-        from mcp_server_langgraph.api.v1.workflows import require_workflow_owner
+        from mcp_server_langgraph.api.v1.workflows import _require_workflow_owner_with_service
 
         # GIVEN user with both sub and preferred_username
         mock_service = MagicMock()
@@ -166,7 +167,7 @@ class TestRequireWorkflowOwnerDependency:
         }
 
         # WHEN checking ownership
-        result = await require_workflow_owner(
+        result = await _require_workflow_owner_with_service(
             workflow_id="wf-123",
             current_user=current_user,
             service=mock_service,
@@ -178,7 +179,7 @@ class TestRequireWorkflowOwnerDependency:
     @pytest.mark.asyncio
     async def test_user_id_fallback_to_preferred_username(self) -> None:
         """User ID should fallback to 'preferred_username' if 'sub' missing."""
-        from mcp_server_langgraph.api.v1.workflows import require_workflow_owner
+        from mcp_server_langgraph.api.v1.workflows import _require_workflow_owner_with_service
 
         # GIVEN user with only preferred_username
         mock_service = MagicMock()
@@ -194,7 +195,7 @@ class TestRequireWorkflowOwnerDependency:
         }
 
         # WHEN checking ownership
-        result = await require_workflow_owner(
+        result = await _require_workflow_owner_with_service(
             workflow_id="wf-123",
             current_user=current_user,
             service=mock_service,

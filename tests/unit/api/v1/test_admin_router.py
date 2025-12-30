@@ -96,8 +96,14 @@ class TestAdminAuditLogsEndpoint:
 
         Key insight: FastAPI's Depends() captures the function object at import time.
         We must use the same object as the override key.
+
+        AUTH UPDATE (2025-12-29):
+        ========================
+        Admin endpoints now require authentication via require_admin dependency.
+        We mock this to return an admin user for testing.
         """
         from mcp_server_langgraph.api.v1.admin import admin_router
+        from mcp_server_langgraph.auth.dependencies import require_admin
         from mcp_server_langgraph.core.dependencies import get_audit_log_repository
 
         app = FastAPI()
@@ -106,6 +112,16 @@ class TestAdminAuditLogsEndpoint:
         # Override using the exact same function object from core.dependencies
         # This is the correct approach - FastAPI uses function identity for lookups
         app.dependency_overrides[get_audit_log_repository] = lambda: mock_repository
+
+        # Mock admin authentication - return a mock admin user
+        mock_admin_user = {
+            "sub": "admin-user-id",
+            "user_id": "admin-user-id",
+            "username": "admin",
+            "roles": ["admin"],
+            "realm_access": {"roles": ["admin"]},
+        }
+        app.dependency_overrides[require_admin] = lambda: mock_admin_user
 
         return TestClient(app)
 

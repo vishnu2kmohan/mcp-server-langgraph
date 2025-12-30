@@ -23,9 +23,21 @@ pytestmark = pytest.mark.unit
 def test_client() -> TestClient:
     """Create test client for config router."""
     from mcp_server_langgraph.api.v1.config import config_router
+    from mcp_server_langgraph.auth.dependencies import get_current_user
 
     app = FastAPI()
     app.include_router(config_router, prefix="/api/v1")
+
+    # Mock authentication
+    mock_user = {
+        "sub": "test-user-id",
+        "user_id": "test-user-id",
+        "username": "testuser",
+        "roles": ["admin"],
+        "realm_access": {"roles": ["admin"]},
+    }
+    app.dependency_overrides[get_current_user] = lambda: mock_user
+
     return TestClient(app)
 
 

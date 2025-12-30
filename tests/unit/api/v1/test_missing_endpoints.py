@@ -33,9 +33,21 @@ class TestChatSuggestionsEndpoint:
     def mock_app(self) -> FastAPI:
         """Create FastAPI app with AI router."""
         from mcp_server_langgraph.api.v1.ai import ai_router
+        from mcp_server_langgraph.auth.dependencies import get_current_user
 
         app = FastAPI()
         app.include_router(ai_router, prefix="/api/v1/ai")
+
+        # Mock authentication
+        mock_user = {
+            "sub": "test-user-id",
+            "user_id": "test-user-id",
+            "username": "testuser",
+            "roles": ["user"],
+            "realm_access": {"roles": ["user"]},
+        }
+        app.dependency_overrides[get_current_user] = lambda: mock_user
+
         return app
 
     @pytest.fixture
@@ -252,12 +264,25 @@ class TestAdminUserApiKeyEndpoint:
     def mock_app(self, mock_user_provider: MagicMock) -> FastAPI:
         """Create FastAPI app with admin router."""
         from mcp_server_langgraph.api.v1.admin import admin_router, get_user_provider
+        from mcp_server_langgraph.auth.dependencies import get_current_user, require_admin
 
         # admin_router already has prefix="/admin", so only add "/api/v1"
         app = FastAPI()
         app.include_router(admin_router, prefix="/api/v1")
         # Override the user provider dependency
         app.dependency_overrides[get_user_provider] = lambda: mock_user_provider
+
+        # Mock authentication
+        mock_user = {
+            "sub": "admin-user-id",
+            "user_id": "admin-user-id",
+            "username": "admin",
+            "roles": ["admin"],
+            "realm_access": {"roles": ["admin"]},
+        }
+        app.dependency_overrides[get_current_user] = lambda: mock_user
+        app.dependency_overrides[require_admin] = lambda: mock_user
+
         return app
 
     @pytest.fixture
@@ -298,9 +323,21 @@ class TestCanvasActionEndpoint:
     def mock_app(self) -> FastAPI:
         """Create FastAPI app with AI router."""
         from mcp_server_langgraph.api.v1.ai import ai_router
+        from mcp_server_langgraph.auth.dependencies import get_current_user
 
         app = FastAPI()
         app.include_router(ai_router, prefix="/api/v1/ai")
+
+        # Mock authentication
+        mock_user = {
+            "sub": "test-user-id",
+            "user_id": "test-user-id",
+            "username": "testuser",
+            "roles": ["user"],
+            "realm_access": {"roles": ["user"]},
+        }
+        app.dependency_overrides[get_current_user] = lambda: mock_user
+
         return app
 
     @pytest.fixture
@@ -350,9 +387,22 @@ class TestInterpretCommandEndpoint:
     def mock_app(self) -> FastAPI:
         """Create FastAPI app with AI router."""
         from mcp_server_langgraph.api.v1.ai import ai_router
+        from mcp_server_langgraph.auth.dependencies import get_current_user
 
         app = FastAPI()
         app.include_router(ai_router, prefix="/api/v1/ai")
+
+        # Mock authentication - return a test user
+        mock_user = {
+            "sub": "test-user-id",
+            "user_id": "test-user-id",
+            "username": "testuser",
+            "email": "testuser@example.com",
+            "roles": ["user"],
+            "realm_access": {"roles": ["user"]},
+        }
+        app.dependency_overrides[get_current_user] = lambda: mock_user
+
         return app
 
     @pytest.fixture

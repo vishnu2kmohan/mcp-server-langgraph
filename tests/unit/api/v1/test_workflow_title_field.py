@@ -107,10 +107,22 @@ def test_app(mock_workflow_service: MockWorkflowServiceAdapter) -> FastAPI:
         get_workflow_service,
         workflows_router,
     )
+    from mcp_server_langgraph.auth.dependencies import get_current_user
 
     app = FastAPI()
     app.include_router(workflows_router, prefix="/api/v1")
     app.dependency_overrides[get_workflow_service] = lambda: mock_workflow_service
+
+    # Mock authentication - return an admin user (to bypass owner filtering in list)
+    mock_user = {
+        "sub": "test-user-id",
+        "user_id": "test-user-id",
+        "username": "testuser",
+        "email": "testuser@example.com",
+        "roles": ["admin"],
+        "realm_access": {"roles": ["admin"]},
+    }
+    app.dependency_overrides[get_current_user] = lambda: mock_user
 
     return app
 

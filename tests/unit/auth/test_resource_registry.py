@@ -149,6 +149,27 @@ class TestResourceTypeRegistry:
         assert registry.is_valid_relation_for_type("conversation", "viewer") is True
         assert registry.is_valid_relation_for_type("conversation", "editor") is True
 
+    def test_session_has_editor_relation(self):
+        """
+        GIVEN: ResourceTypeRegistry instance
+        WHEN: Checking if session type has editor relation
+        THEN: Should return True (for collaborative session editing)
+
+        RED PHASE: This test will FAIL until we add 'editor' to session type
+        Reference: Security audit - session type lacks editor relation
+        """
+        from mcp_server_langgraph.auth.resource_registry import ResourceTypeRegistry
+
+        # Arrange
+        registry = ResourceTypeRegistry()
+
+        # Act & Assert
+        assert registry.is_valid_relation_for_type("session", "editor") is True, (
+            "Session type should have 'editor' relation for collaborative editing"
+        )
+        assert registry.is_valid_relation_for_type("session", "owner") is True
+        assert registry.is_valid_relation_for_type("session", "viewer") is True
+
     def test_is_valid_relation_returns_false_for_invalid_relation(self):
         """
         GIVEN: ResourceTypeRegistry instance
@@ -160,8 +181,9 @@ class TestResourceTypeRegistry:
         # Arrange
         registry = ResourceTypeRegistry()
 
-        # Act & Assert
-        assert registry.is_valid_relation_for_type("tool", "owner") is False
+        # Act & Assert - "deleter" is not a valid relation for tool
+        # tool has: executor, organization, owner (per model.json)
+        assert registry.is_valid_relation_for_type("tool", "deleter") is False
         assert registry.is_valid_relation_for_type("unknown_type", "viewer") is False
 
 

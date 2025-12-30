@@ -65,10 +65,23 @@ def app_with_marketplace(mock_marketplace_registry):
     from mcp_server_langgraph.api.v1.marketplace_admin import (
         create_marketplace_router,
     )
+    from mcp_server_langgraph.auth.dependencies import get_current_user, require_admin
 
     app = FastAPI()
     router = create_marketplace_router(mock_marketplace_registry)
     app.include_router(router, prefix="/api/v1/admin")
+
+    # Mock authentication - return an admin user
+    mock_user = {
+        "sub": "admin-user-id",
+        "user_id": "admin-user-id",
+        "username": "admin",
+        "roles": ["admin"],
+        "realm_access": {"roles": ["admin"]},
+    }
+    app.dependency_overrides[get_current_user] = lambda: mock_user
+    app.dependency_overrides[require_admin] = lambda: mock_user
+
     return app
 
 

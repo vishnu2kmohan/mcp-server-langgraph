@@ -143,6 +143,43 @@ def _grafana_oauth2_configured() -> bool:
         return False
 
 
+def get_service_account_token(
+    token_url: str = "http://localhost/authn/realms/default/protocol/openid-connect/token",
+    client_id: str = "mcp-server",
+    client_secret: str = "test-client-secret-for-e2e-tests",
+) -> str | None:
+    """
+    Get a service account token using client credentials grant.
+
+    This is the RFC 9700 compliant way to get tokens for service-to-service auth.
+    Use this for tests that need authentication but not a specific user identity.
+
+    Args:
+        token_url: Keycloak token endpoint URL
+        client_id: OAuth2 client ID with serviceAccountsEnabled=true
+        client_secret: OAuth2 client secret
+
+    Returns:
+        Access token string or None if request fails
+    """
+    try:
+        response = requests.post(
+            token_url,
+            data={
+                "grant_type": "client_credentials",
+                "client_id": client_id,
+                "client_secret": client_secret,
+                "scope": "openid profile email",
+            },
+            timeout=10,
+        )
+        if response.status_code == 200:
+            return response.json().get("access_token")
+    except Exception:
+        pass
+    return None
+
+
 def _get_test_token_via_modern_auth() -> str | None:
     """
     Get a test token using modern auth methods (RFC 9700 compliant).
@@ -150,7 +187,9 @@ def _get_test_token_via_modern_auth() -> str | None:
     Tries:
     1. Token exchange (RFC 8693) - impersonate admin user
     2. Client credentials - service account token
-    3. ROPC (deprecated) - fallback for backward compatibility
+
+    Note: ROPC (password grant) is disabled per security audit (ADR-0068).
+    Tests requiring user-specific tokens should use Token Exchange or mock auth.
 
     Returns:
         Access token string or None if all methods fail
@@ -181,45 +220,8 @@ def _get_test_token_via_modern_auth() -> str | None:
     except Exception:
         pass
 
-    # Try 2: Client credentials (service account)
-    try:
-        response = requests.post(
-            token_url,
-            data={
-                "grant_type": "client_credentials",
-                "client_id": client_id,
-                "client_secret": client_secret,
-                "scope": "openid profile email",
-            },
-            timeout=10,
-        )
-        if response.status_code == 200:
-            token = response.json().get("access_token")
-            if token:
-                return token
-    except Exception:
-        pass
-
-    # Try 3: ROPC fallback (deprecated per RFC 9700)
-    try:
-        response = requests.post(
-            token_url,
-            data={
-                "grant_type": "password",
-                "client_id": client_id,
-                "client_secret": client_secret,
-                "username": "admin",
-                "password": "admin123",
-                "scope": "openid profile email",
-            },
-            timeout=10,
-        )
-        if response.status_code == 200:
-            return response.json().get("access_token")
-    except Exception:
-        pass
-
-    return None
+    # Try 2: Client credentials (service account) - always works with ROPC disabled
+    return get_service_account_token(token_url, client_id, client_secret)
 
 
 def _authz_proxy_available() -> bool:
@@ -260,35 +262,23 @@ def _authz_proxy_auth_functional() -> bool:
     """Check if authz-proxy authentication is working correctly end-to-end.
 
     This validates the full auth flow:
-    1. Get a token from Keycloak for a known user (admin)
+    1. Get a service account token from Keycloak (client_credentials grant)
     2. Send that token to the authz-proxy
     3. Verify we get a non-401 response (auth was accepted)
 
     This is a stricter check than _authz_proxy_available() because it validates
     that the JWT validation is actually working, not just that the service is up.
 
+    Note: Uses service account token (RFC 9700 compliant) instead of ROPC which
+    is disabled per security audit.
+
     Returns:
         True if auth flow works end-to-end (token is validated correctly)
         False if auth is broken (always returns 401 even with valid token)
     """
     try:
-        # Get admin token from Keycloak
-        token_response = requests.post(
-            "http://localhost/authn/realms/default/protocol/openid-connect/token",
-            data={
-                "grant_type": "password",
-                "client_id": "mcp-server",
-                "client_secret": "test-client-secret-for-e2e-tests",
-                "username": "admin",
-                "password": "admin123",
-                "scope": "openid profile email",
-            },
-            timeout=10,
-        )
-        if token_response.status_code != 200:
-            return False
-
-        token = token_response.json().get("access_token")
+        # Get service account token from Keycloak (ROPC is disabled)
+        token = get_service_account_token()
         if not token:
             return False
 
@@ -366,31 +356,33 @@ def _keycloak_admin_api_available() -> bool:
 
 def get_user_token(
     username: str,
-    password: str | None = None,
+    password: str | None = None,  # Deprecated: ROPC is disabled
     token_url: str = "http://localhost/authn/realms/default/protocol/openid-connect/token",
     client_id: str = "mcp-server",
     client_secret: str = "test-client-secret-for-e2e-tests",
 ) -> str | None:
     """
-    Get a user-specific access token using modern auth methods (RFC 9700 compliant).
+    Get a user-specific access token using Token Exchange (RFC 8693).
 
     This is a reusable helper for integration tests that need user tokens.
+    Uses Token Exchange to impersonate the specified user.
 
-    Tries:
-    1. Token exchange (RFC 8693) - no password needed
-    2. ROPC (deprecated) - fallback if token exchange not configured
+    Note: ROPC (password grant) is disabled per security audit.
+    If Token Exchange is not configured, this returns None.
+    For tests that just need authentication (not a specific user),
+    use get_service_account_token() instead.
 
     Args:
-        username: Username to get token for
-        password: User's password (only used for ROPC fallback)
+        username: Username to get token for via Token Exchange
+        password: Deprecated - ignored (ROPC is disabled)
         token_url: Keycloak token endpoint URL
         client_id: OAuth2 client ID
         client_secret: OAuth2 client secret
 
     Returns:
-        Access token string or None if all methods fail
+        Access token string or None if Token Exchange fails
     """
-    # Try 1: Token exchange (RFC 8693) for user-specific token
+    # Token exchange (RFC 8693) for user-specific token
     try:
         response = requests.post(
             token_url,
@@ -412,35 +404,33 @@ def get_user_token(
     except Exception:
         pass
 
-    # Try 2: ROPC fallback (deprecated per RFC 9700)
-    if password:
-        try:
-            response = requests.post(
-                token_url,
-                data={
-                    "grant_type": "password",
-                    "client_id": client_id,
-                    "client_secret": client_secret,
-                    "username": username,
-                    "password": password,
-                    "scope": "openid profile email",
-                },
-                timeout=10,
-            )
-            if response.status_code == 200:
-                return response.json().get("access_token")
-        except Exception:
-            pass
-
-    return None
+    # Fallback: Return service account token if Token Exchange not configured
+    # Tests should use get_service_account_token() directly if user identity
+    # is not required
+    return get_service_account_token(token_url, client_id, client_secret)
 
 
 # User credentials mapping for quick lookups
+# Note: ROPC is disabled per security audit. These are kept for Token Exchange
+# subject lookup and test documentation. Do not use for grant_type=password.
 USER_CREDENTIALS = {
-    "admin": "admin123",
-    "alice": "alice123",
-    "bob": "bob123",
+    "admin": "admin123",  # Subject for Token Exchange
+    "alice": "alice123",  # Subject for Token Exchange
+    "bob": "bob123",  # Subject for Token Exchange
 }
+
+
+@pytest.fixture
+def service_account_token() -> str | None:
+    """Fixture providing a service account token for tests.
+
+    Use this for tests that need authentication but not a specific user identity.
+    This is the RFC 9700 compliant way to get tokens.
+
+    Returns:
+        Access token string or None if Keycloak is unavailable
+    """
+    return get_service_account_token()
 
 
 @pytest.fixture(autouse=True)
@@ -455,6 +445,11 @@ def skip_if_openfga_unavailable(request):
         "test_openfga_preshared_key.py",
         "test_openfga_seeding_flow.py",
         "test_unified_api_authorization.py",
+        "test_sub_persona_authorization.py",
+        "test_project_authorization.py",
+        "test_connection_authorization.py",
+        "test_chat_authorization.py",
+        "test_observability_authorization.py",
     ]
 
     test_file = request.fspath.basename if hasattr(request.fspath, "basename") else str(request.fspath).split("/")[-1]

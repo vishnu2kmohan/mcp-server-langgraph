@@ -127,26 +127,49 @@ def get_keycloak_token_url() -> str:
 
 def get_user_tokens(
     username: str = "admin",
-    password: str = "admin123",
+    password: str = "admin123",  # Deprecated: ROPC is disabled
     client_id: str = "mcp-server",
     client_secret: str = "test-client-secret-for-e2e-tests",
 ) -> dict | None:
     """
     Get access and refresh tokens for a user.
 
-    Note: Uses ROPC as fallback for testing - production uses Authorization Code + PKCE.
+    Uses Token Exchange (RFC 8693) or client_credentials grant.
+    ROPC is disabled per security audit.
+
+    Note: Returns dict with 'access_token' key from service account if
+    Token Exchange is not configured.
     """
     token_url = get_keycloak_token_url()
 
+    # Try Token Exchange first (RFC 8693)
     try:
         response = requests.post(
             token_url,
             data={
-                "grant_type": "password",
+                "grant_type": "urn:ietf:params:oauth:grant-type:token-exchange",
                 "client_id": client_id,
                 "client_secret": client_secret,
-                "username": username,
-                "password": password,
+                "requested_subject": username,
+                "subject_token_type": "urn:ietf:params:oauth:token-type:access_token",
+                "requested_token_type": "urn:ietf:params:oauth:token-type:access_token",
+                "scope": "openid profile email",
+            },
+            timeout=10,
+        )
+        if response.status_code == 200:
+            return response.json()
+    except Exception:
+        pass
+
+    # Fallback to client credentials (service account)
+    try:
+        response = requests.post(
+            token_url,
+            data={
+                "grant_type": "client_credentials",
+                "client_id": client_id,
+                "client_secret": client_secret,
                 "scope": "openid profile email",
             },
             timeout=10,

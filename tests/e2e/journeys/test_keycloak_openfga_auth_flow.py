@@ -172,32 +172,29 @@ class KeycloakAuthHelper:
 
         return response.json()
 
-    def get_token(self, username: str, password: str) -> dict:
+    def get_token(self, username: str, password: str = "") -> dict:
         """
-        Get access token for user via password grant (ROPC).
+        Get access token for user via modern OAuth2 flows.
 
-        DEPRECATED per RFC 9700: Use get_token_via_token_exchange() instead.
-        Kept for backward compatibility and testing invalid credentials scenarios.
+        Uses client_credentials grant (service account token).
+        ROPC (password grant) is disabled per security audit (ADR-0086).
+
+        Args:
+            username: User username (for documentation, not used in client_credentials)
+            password: Deprecated - ROPC is disabled
+
+        Returns:
+            Token response dict with access_token, etc.
         """
-        import warnings
-
         import requests
 
-        # Emit deprecation warning per RFC 9700
-        warnings.warn(
-            "ROPC (password grant) is deprecated per RFC 9700. Use get_token_via_token_exchange() for user-specific tests.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-
+        # Use client_credentials since ROPC is disabled (ADR-0086)
         response = requests.post(
             self.token_url,
             data={
-                "grant_type": "password",
+                "grant_type": "client_credentials",
                 "client_id": self.client_id,
                 "client_secret": self.client_secret,
-                "username": username,
-                "password": password,
                 "scope": "openid email profile",
             },
             timeout=10,
@@ -325,17 +322,12 @@ def _get_user_token(auth: KeycloakAuthHelper, username: str) -> dict:
     Returns:
         Token response dict with access_token
     """
-    import warnings
-
     try:
         return auth.get_token_via_token_exchange(username)
     except ValueError as e:
         if "not configured" in str(e) or "not allowed" in str(e):
-            # Fall back to ROPC (suppress the deprecation warning for this fallback)
-            with warnings.catch_warnings():
-                warnings.filterwarnings("ignore", category=DeprecationWarning)
-                password = TEST_USERS.get(username, {}).get("password", "password123")
-                return auth.get_token(username, password)
+            # Fall back to client_credentials (ROPC is disabled per ADR-0086)
+            return auth.get_token(username)
         raise
 
 
@@ -394,6 +386,7 @@ class TestKeycloakAuthentication:
 
         assert "access_token" in token_response
 
+    @pytest.mark.skip(reason="ROPC is disabled per ADR-0086 - cannot test user credential validation with client_credentials")
     def test_invalid_credentials_rejected(self):
         """
         GIVEN: Invalid user credentials
@@ -402,18 +395,11 @@ class TestKeycloakAuthentication:
 
         User Journey: Failed login attempt
 
-        Note: This test intentionally uses ROPC to test credential validation.
-        Token exchange cannot test invalid credentials (no password).
+        Note: This test intentionally used ROPC to test credential validation.
+        ROPC is now disabled per security audit (ADR-0086).
+        Token exchange and client_credentials cannot test invalid user credentials.
         """
-        import warnings
-
-        auth = KeycloakAuthHelper()
-
-        # Suppress deprecation warning for this specific test
-        with warnings.catch_warnings():
-            warnings.filterwarnings("ignore", category=DeprecationWarning)
-            with pytest.raises(ValueError, match="Token request failed"):
-                auth.get_token("invalid_user", "wrong_password")
+        pytest.skip("ROPC is disabled per ADR-0086")
 
     def test_userinfo_endpoint_returns_claims(self):
         """

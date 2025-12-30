@@ -510,3 +510,184 @@ class TestBaseOrchestratorMetrics:
 
         orchestrator = MetricsTestOrchestrator(enable_metrics=False)
         assert orchestrator.enable_metrics is False
+
+
+@pytest.mark.xdist_group(name="base_orchestrator_lifecycle")
+class TestBaseOrchestratorLifecycleCallbacks:
+    """Test task lifecycle callback support."""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers."""
+        gc.collect()
+
+    def _create_orchestrator_with_callbacks(self, on_task_start=None, on_task_complete=None, on_task_fail=None):
+        """Create orchestrator with optional lifecycle callbacks."""
+        from mcp_server_langgraph.agents.base_orchestrator import (
+            BaseOrchestrator,
+            BaseResult,
+            BaseTask,
+        )
+
+        class CallbackOrchestrator(BaseOrchestrator[BaseTask, BaseResult]):
+            @property
+            def feature_flag_name(self) -> str:
+                return "enable_callback_test"
+
+            async def _execute_task(self, task: BaseTask) -> BaseResult:
+                if task.data.get("should_fail"):
+                    raise ValueError(f"Task {task.task_type} failed intentionally")
+                return BaseResult(task_type=task.task_type, success=True, result={"done": True})
+
+            def synthesize(self, results: list[BaseResult]) -> dict[str, Any]:
+                return {"count": len(results)}
+
+        return CallbackOrchestrator(
+            on_task_start=on_task_start,
+            on_task_complete=on_task_complete,
+            on_task_fail=on_task_fail,
+        )
+
+    def test_orchestrator_accepts_lifecycle_callbacks(self) -> None:
+        """Test that orchestrator constructor accepts lifecycle callbacks."""
+        orchestrator = self._create_orchestrator_with_callbacks(
+            on_task_start=lambda task: None,
+            on_task_complete=lambda task, result: None,
+            on_task_fail=lambda task, error: None,
+        )
+        assert orchestrator is not None
+
+    def test_orchestrator_callbacks_default_to_none(self) -> None:
+        """Test that callbacks default to None when not provided."""
+        from mcp_server_langgraph.agents.base_orchestrator import (
+            BaseOrchestrator,
+            BaseResult,
+            BaseTask,
+        )
+
+        class NoCallbackOrchestrator(BaseOrchestrator[BaseTask, BaseResult]):
+            @property
+            def feature_flag_name(self) -> str:
+                return "enable_test"
+
+            async def _execute_task(self, task: BaseTask) -> BaseResult:
+                return BaseResult(task_type=task.task_type, success=True)
+
+            def synthesize(self, results: list[BaseResult]) -> dict[str, Any]:
+                return {}
+
+        orchestrator = NoCallbackOrchestrator()
+        assert orchestrator._on_task_start is None
+        assert orchestrator._on_task_complete is None
+        assert orchestrator._on_task_fail is None
+
+    @pytest.mark.asyncio
+    async def test_on_task_start_called_before_execution(self) -> None:
+        """Test that on_task_start is called before task execution."""
+        from mcp_server_langgraph.agents.base_orchestrator import BaseTask
+
+        started_tasks: list[str] = []
+
+        async def on_start(task: BaseTask) -> None:
+            started_tasks.append(task.task_type)
+
+        orchestrator = self._create_orchestrator_with_callbacks(on_task_start=on_start)
+        tasks = [BaseTask(task_type="task_a"), BaseTask(task_type="task_b")]
+
+        await orchestrator.execute(tasks)
+
+        assert "task_a" in started_tasks
+        assert "task_b" in started_tasks
+
+    @pytest.mark.asyncio
+    async def test_on_task_complete_called_after_success(self) -> None:
+        """Test that on_task_complete is called after successful task execution."""
+        from mcp_server_langgraph.agents.base_orchestrator import BaseResult, BaseTask
+
+        completed_tasks: list[tuple[str, bool]] = []
+
+        async def on_complete(task: BaseTask, result: BaseResult) -> None:
+            completed_tasks.append((task.task_type, result.success))
+
+        orchestrator = self._create_orchestrator_with_callbacks(on_task_complete=on_complete)
+        tasks = [BaseTask(task_type="task_success")]
+
+        await orchestrator.execute(tasks)
+
+        assert len(completed_tasks) == 1
+        assert completed_tasks[0] == ("task_success", True)
+
+    @pytest.mark.asyncio
+    async def test_on_task_fail_called_on_exception(self) -> None:
+        """Test that on_task_fail is called when task raises exception."""
+        from mcp_server_langgraph.agents.base_orchestrator import BaseTask
+
+        failed_tasks: list[tuple[str, str]] = []
+
+        async def on_fail(task: BaseTask, error: str) -> None:
+            failed_tasks.append((task.task_type, error))
+
+        orchestrator = self._create_orchestrator_with_callbacks(on_task_fail=on_fail)
+        tasks = [BaseTask(task_type="failing_task", data={"should_fail": True})]
+
+        await orchestrator.execute(tasks)
+
+        assert len(failed_tasks) == 1
+        assert failed_tasks[0][0] == "failing_task"
+        assert "failed intentionally" in failed_tasks[0][1]
+
+    @pytest.mark.asyncio
+    async def test_callbacks_called_in_order(self) -> None:
+        """Test that callbacks are called in correct order: start -> complete/fail."""
+        from mcp_server_langgraph.agents.base_orchestrator import BaseResult, BaseTask
+
+        events: list[str] = []
+
+        async def on_start(task: BaseTask) -> None:
+            events.append(f"start:{task.task_type}")
+
+        async def on_complete(task: BaseTask, result: BaseResult) -> None:
+            events.append(f"complete:{task.task_type}")
+
+        orchestrator = self._create_orchestrator_with_callbacks(
+            on_task_start=on_start,
+            on_task_complete=on_complete,
+        )
+        tasks = [BaseTask(task_type="ordered_task")]
+
+        await orchestrator.execute(tasks)
+
+        assert events == ["start:ordered_task", "complete:ordered_task"]
+
+    @pytest.mark.asyncio
+    async def test_sync_callbacks_also_work(self) -> None:
+        """Test that synchronous callbacks work as well as async."""
+        from mcp_server_langgraph.agents.base_orchestrator import BaseTask
+
+        started_tasks: list[str] = []
+
+        def sync_on_start(task: BaseTask) -> None:
+            started_tasks.append(task.task_type)
+
+        orchestrator = self._create_orchestrator_with_callbacks(on_task_start=sync_on_start)
+        tasks = [BaseTask(task_type="sync_test")]
+
+        await orchestrator.execute(tasks)
+
+        assert "sync_test" in started_tasks
+
+    @pytest.mark.asyncio
+    async def test_callback_exception_does_not_fail_task(self) -> None:
+        """Test that callback exceptions don't cause task failure."""
+        from mcp_server_langgraph.agents.base_orchestrator import BaseTask
+
+        async def failing_callback(task: BaseTask) -> None:
+            raise RuntimeError("Callback error")
+
+        orchestrator = self._create_orchestrator_with_callbacks(on_task_start=failing_callback)
+        tasks = [BaseTask(task_type="should_still_succeed")]
+
+        results = await orchestrator.execute(tasks)
+
+        # Task should still succeed despite callback error
+        assert len(results) == 1
+        assert results[0].success is True

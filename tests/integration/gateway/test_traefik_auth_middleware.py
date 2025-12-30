@@ -220,19 +220,21 @@ class TestAuthenticatedAccess:
 
     @pytest.fixture
     def authenticated_session(self) -> requests.Session:
-        """Get an authenticated session with valid Keycloak token."""
+        """Get an authenticated session with valid Keycloak token.
+
+        Uses service account token (client_credentials grant) since ROPC is disabled.
+        """
         session = requests.Session()
 
-        # Get token from Keycloak using password grant
+        # Get token from Keycloak using client credentials (ROPC is disabled)
         token_url = f"{GATEWAY_URL}/authn/realms/default/protocol/openid-connect/token"
         response = session.post(
             token_url,
             data={
-                "grant_type": "password",
+                "grant_type": "client_credentials",
                 "client_id": "mcp-server",
                 "client_secret": "test-client-secret-for-e2e-tests",
-                "username": TEST_USERNAME,
-                "password": TEST_PASSWORD,
+                "scope": "openid profile email",
             },
             timeout=10,
         )

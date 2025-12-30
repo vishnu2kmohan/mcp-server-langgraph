@@ -56,9 +56,15 @@ class TestAdminUsersListEndpoint:
         Uses dual mocking strategy for xdist reliability:
         1. Sets _user_provider singleton directly in dependencies module
         2. Sets dependency_overrides as a safety net
+
+        AUTH UPDATE (2025-12-29):
+        ========================
+        Admin endpoints now require authentication via require_admin dependency.
+        We mock this to return an admin user for testing.
         """
         import mcp_server_langgraph.core.dependencies as deps_module
         from mcp_server_langgraph.api.v1.admin import admin_router
+        from mcp_server_langgraph.auth.dependencies import require_admin
         from mcp_server_langgraph.core.dependencies import get_user_provider
 
         app = FastAPI()
@@ -69,6 +75,16 @@ class TestAdminUsersListEndpoint:
             deps_module._user_provider = mock_provider
             # Strategy 2: Also set dependency override as safety net
             app.dependency_overrides[get_user_provider] = lambda: mock_provider
+
+        # Mock admin authentication - return a mock admin user
+        mock_admin_user = {
+            "sub": "admin-user-id",
+            "user_id": "admin-user-id",
+            "username": "admin",
+            "roles": ["admin"],
+            "realm_access": {"roles": ["admin"]},
+        }
+        app.dependency_overrides[require_admin] = lambda: mock_admin_user
 
         return app
 
@@ -144,6 +160,7 @@ class TestAdminUserGetEndpoint:
         """Create a FastAPI app with the admin router."""
         import mcp_server_langgraph.core.dependencies as deps_module
         from mcp_server_langgraph.api.v1.admin import admin_router
+        from mcp_server_langgraph.auth.dependencies import require_admin
         from mcp_server_langgraph.core.dependencies import get_user_provider
 
         app = FastAPI()
@@ -153,6 +170,16 @@ class TestAdminUserGetEndpoint:
             # Dual mocking strategy for xdist reliability
             deps_module._user_provider = mock_provider
             app.dependency_overrides[get_user_provider] = lambda: mock_provider
+
+        # Mock admin authentication
+        mock_admin_user = {
+            "sub": "admin-user-id",
+            "user_id": "admin-user-id",
+            "username": "admin",
+            "roles": ["admin"],
+            "realm_access": {"roles": ["admin"]},
+        }
+        app.dependency_overrides[require_admin] = lambda: mock_admin_user
 
         return app
 
@@ -205,9 +232,16 @@ class TestAdminUserCreateEndpoint:
         return mock_provider
 
     def _create_app(self, mock_provider: AsyncMock | None = None) -> FastAPI:
-        """Create a FastAPI app with the admin router."""
+        """Create a FastAPI app with the admin router.
+
+        AUTH UPDATE (2025-12-29):
+        ========================
+        Admin endpoints now require authentication via require_admin dependency.
+        We mock this to return an admin user for testing.
+        """
         import mcp_server_langgraph.core.dependencies as deps_module
         from mcp_server_langgraph.api.v1.admin import admin_router
+        from mcp_server_langgraph.auth.dependencies import require_admin
         from mcp_server_langgraph.core.dependencies import get_user_provider
 
         app = FastAPI()
@@ -217,6 +251,16 @@ class TestAdminUserCreateEndpoint:
             # Dual mocking strategy for xdist reliability
             deps_module._user_provider = mock_provider
             app.dependency_overrides[get_user_provider] = lambda: mock_provider
+
+        # Mock admin authentication
+        mock_admin_user = {
+            "sub": "admin-user-id",
+            "user_id": "admin-user-id",
+            "username": "admin",
+            "roles": ["admin"],
+            "realm_access": {"roles": ["admin"]},
+        }
+        app.dependency_overrides[require_admin] = lambda: mock_admin_user
 
         return app
 
@@ -294,9 +338,16 @@ class TestAdminUserUpdateEndpoint:
         return mock_provider
 
     def _create_app(self, mock_provider: AsyncMock | None = None) -> FastAPI:
-        """Create a FastAPI app with the admin router."""
+        """Create a FastAPI app with the admin router.
+
+        AUTH UPDATE (2025-12-29):
+        ========================
+        Admin endpoints now require authentication via require_admin dependency.
+        We mock this to return an admin user for testing.
+        """
         import mcp_server_langgraph.core.dependencies as deps_module
         from mcp_server_langgraph.api.v1.admin import admin_router
+        from mcp_server_langgraph.auth.dependencies import require_admin
         from mcp_server_langgraph.core.dependencies import get_user_provider
 
         app = FastAPI()
@@ -306,6 +357,16 @@ class TestAdminUserUpdateEndpoint:
             # Dual mocking strategy for xdist reliability
             deps_module._user_provider = mock_provider
             app.dependency_overrides[get_user_provider] = lambda: mock_provider
+
+        # Mock admin authentication
+        mock_admin_user = {
+            "sub": "admin-user-id",
+            "user_id": "admin-user-id",
+            "username": "admin",
+            "roles": ["admin"],
+            "realm_access": {"roles": ["admin"]},
+        }
+        app.dependency_overrides[require_admin] = lambda: mock_admin_user
 
         return app
 
@@ -358,9 +419,16 @@ class TestAdminUserDeleteEndpoint:
         return mock_provider
 
     def _create_app(self, mock_provider: AsyncMock | None = None) -> FastAPI:
-        """Create a FastAPI app with the admin router."""
+        """Create a FastAPI app with the admin router.
+
+        AUTH UPDATE (2025-12-29):
+        ========================
+        Admin endpoints now require authentication via require_admin dependency.
+        We mock this to return an admin user for testing.
+        """
         import mcp_server_langgraph.core.dependencies as deps_module
         from mcp_server_langgraph.api.v1.admin import admin_router
+        from mcp_server_langgraph.auth.dependencies import require_admin
         from mcp_server_langgraph.core.dependencies import get_user_provider
 
         app = FastAPI()
@@ -370,6 +438,16 @@ class TestAdminUserDeleteEndpoint:
             # Dual mocking strategy for xdist reliability
             deps_module._user_provider = mock_provider
             app.dependency_overrides[get_user_provider] = lambda: mock_provider
+
+        # Mock admin authentication
+        mock_admin_user = {
+            "sub": "admin-user-id",
+            "user_id": "admin-user-id",
+            "username": "admin",
+            "roles": ["admin"],
+            "realm_access": {"roles": ["admin"]},
+        }
+        app.dependency_overrides[require_admin] = lambda: mock_admin_user
 
         return app
 

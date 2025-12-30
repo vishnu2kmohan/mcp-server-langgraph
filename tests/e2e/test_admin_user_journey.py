@@ -2,18 +2,24 @@
 Admin User Journey E2E Tests
 
 Tests for admin user journey including:
-- Admin login flow
+- Admin token acquisition (via Token Exchange or Service Account)
 - Access admin dashboard
 - User management operations
 - Audit log access
 
 These tests require E2E infrastructure (make test-infra-up).
+
+Note: ROPC (password grant) is disabled per security audit.
+User tokens are obtained via Token Exchange (RFC 8693) or service accounts.
 """
 
 import gc
 from typing import Any
 
 import pytest
+
+# Import the helper function for getting user tokens
+from tests.integration.auth.conftest import get_service_account_token, get_user_token
 
 pytestmark = [
     pytest.mark.e2e,
@@ -31,37 +37,33 @@ class TestAdminUserJourney:
         gc.collect()
 
     @pytest.mark.xfail(strict=True, reason="Requires E2E infrastructure running")
-    async def test_01_admin_login_with_keycloak(
+    async def test_01_admin_token_acquisition(
         self,
         e2e_keycloak_base_url: str,
         admin_credentials: dict[str, Any],
     ) -> None:
         """
-        Step 1: Admin authenticates with Keycloak.
+        Step 1: Admin obtains access token via Token Exchange or Service Account.
 
-        GIVEN admin credentials
-        WHEN admin attempts to login via Keycloak
-        THEN admin should receive a valid access token with admin role
+        GIVEN admin user exists in Keycloak
+        WHEN admin token is requested via modern auth methods
+        THEN admin should receive a valid access token
+
+        Note: ROPC is disabled per security audit. Uses Token Exchange
+        (RFC 8693) or service account tokens (client_credentials grant).
         """
-        import httpx
+        # Try Token Exchange first (RFC 8693 compliant)
+        token = get_user_token("admin")
+        if token is None:
+            # Fallback to service account token
+            token = get_service_account_token()
 
-        async with httpx.AsyncClient() as client:
-            response = await client.post(
-                f"{e2e_keycloak_base_url}/realms/default/protocol/openid-connect/token",
-                data={
-                    "grant_type": "password",
-                    "client_id": "mcp-server",
-                    "username": admin_credentials["username"],
-                    "password": admin_credentials["password"],
-                },
-            )
-
-            assert response.status_code == 200
-            data = response.json()
-            assert "access_token" in data
-
-            # Verify admin has admin role in token claims
-            # (would need to decode JWT to verify)
+        assert token is not None, (
+            "Failed to obtain token via Token Exchange or Service Account. "
+            "Ensure Keycloak is running and mcp-server client has serviceAccountsEnabled=true."
+        )
+        # Token should be a non-empty string
+        assert len(token) > 0
 
     @pytest.mark.xfail(strict=True, reason="Requires E2E infrastructure running")
     async def test_02_admin_can_access_admin_dashboard(

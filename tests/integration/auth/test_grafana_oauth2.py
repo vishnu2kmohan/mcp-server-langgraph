@@ -204,24 +204,38 @@ class TestGrafanaOAuth2Login:
         # Should end up at Keycloak login page
         assert "authn/realms/default" in response.url, f"Expected to be redirected to Keycloak, got: {response.url}"
 
-        # Step 2: Submit Keycloak login form
-        # Extract login form action URL from response
-        # Note: This is a simplified test - in reality we'd parse the HTML
-        # For now, we directly POST to Keycloak token endpoint
+        # Step 2: Get admin token via Token Exchange or client_credentials
+        # ROPC is disabled per security audit (ADR-0086)
 
-        # Get admin token directly via password grant
+        # Try Token Exchange first (RFC 8693) for user-specific roles
         token_response = requests.post(
             f"{KEYCLOAK_URL}/realms/default/protocol/openid-connect/token",
             data={
-                "grant_type": "password",
+                "grant_type": "urn:ietf:params:oauth:grant-type:token-exchange",
                 "client_id": "mcp-server",
                 "client_secret": "test-client-secret-for-e2e-tests",
-                "username": ADMIN_USERNAME,
-                "password": ADMIN_PASSWORD,
+                "requested_subject": ADMIN_USERNAME,
+                "subject_token_type": "urn:ietf:params:oauth:token-type:access_token",
+                "requested_token_type": "urn:ietf:params:oauth:token-type:access_token",
                 "scope": "openid profile email roles",
             },
             timeout=10,
         )
+
+        if token_response.status_code != 200:
+            # Fallback to client_credentials (won't have user roles)
+            token_response = requests.post(
+                f"{KEYCLOAK_URL}/realms/default/protocol/openid-connect/token",
+                data={
+                    "grant_type": "client_credentials",
+                    "client_id": "mcp-server",
+                    "client_secret": "test-client-secret-for-e2e-tests",
+                    "scope": "openid profile email roles",
+                },
+                timeout=10,
+            )
+            if token_response.status_code == 200:
+                pytest.skip("Token Exchange not configured - cannot test user-specific roles")
 
         assert token_response.status_code == 200, f"Admin token request failed: {token_response.text}"
 
@@ -250,19 +264,38 @@ class TestGrafanaOAuth2Login:
 
         User Journey: Alice logs in and gets view-only access
         """
-        # Get alice token via password grant
+        # Get alice token via Token Exchange or client_credentials
+        # ROPC is disabled per security audit (ADR-0086)
+
+        # Try Token Exchange first (RFC 8693) for user-specific roles
         token_response = requests.post(
             f"{KEYCLOAK_URL}/realms/default/protocol/openid-connect/token",
             data={
-                "grant_type": "password",
+                "grant_type": "urn:ietf:params:oauth:grant-type:token-exchange",
                 "client_id": "mcp-server",
                 "client_secret": "test-client-secret-for-e2e-tests",
-                "username": ALICE_USERNAME,
-                "password": ALICE_PASSWORD,
+                "requested_subject": ALICE_USERNAME,
+                "subject_token_type": "urn:ietf:params:oauth:token-type:access_token",
+                "requested_token_type": "urn:ietf:params:oauth:token-type:access_token",
                 "scope": "openid profile email roles",
             },
             timeout=10,
         )
+
+        if token_response.status_code != 200:
+            # Fallback to client_credentials (won't have user roles)
+            token_response = requests.post(
+                f"{KEYCLOAK_URL}/realms/default/protocol/openid-connect/token",
+                data={
+                    "grant_type": "client_credentials",
+                    "client_id": "mcp-server",
+                    "client_secret": "test-client-secret-for-e2e-tests",
+                    "scope": "openid profile email roles",
+                },
+                timeout=10,
+            )
+            if token_response.status_code == 200:
+                pytest.skip("Token Exchange not configured - cannot test user-specific roles")
 
         assert token_response.status_code == 200, f"Alice token request failed: {token_response.text}"
 

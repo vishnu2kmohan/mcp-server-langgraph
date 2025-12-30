@@ -13,6 +13,16 @@ import pytest
 
 pytestmark = [pytest.mark.unit, pytest.mark.api, pytest.mark.observability, pytest.mark.metrics]
 
+# Mock user for testing auth-required endpoints
+MOCK_USER = {
+    "sub": "test-user-id",
+    "user_id": "test-user-id",
+    "username": "testuser",
+    "email": "testuser@example.com",
+    "roles": ["user"],
+    "realm_access": {"roles": ["user"]},
+}
+
 
 @pytest.mark.xdist_group(name="llm_streaming_metrics_endpoint")
 class TestLLMStreamingMetricsEndpointSchema:
@@ -92,7 +102,7 @@ class TestLLMStreamingMetricsEndpointBehavior:
         with patch("mcp_server_langgraph.core.feature_flags.get_feature_flags") as mock_flags:
             mock_flags.return_value.enable_streaming_metrics = False
 
-            response = await get_llm_streaming_metrics(provider=None, model=None, time_range="1h")
+            response = await get_llm_streaming_metrics(provider=None, model=None, time_range="1h", user=MOCK_USER)
 
             assert response.feature_enabled is False
             assert response.total_streams == 0
@@ -125,7 +135,7 @@ class TestLLMStreamingMetricsEndpointBehavior:
         ):
             mock_flags.return_value.enable_streaming_metrics = True
 
-            response = await get_llm_streaming_metrics(provider="openai", model=None, time_range="1h")
+            response = await get_llm_streaming_metrics(provider="openai", model=None, time_range="1h", user=MOCK_USER)
 
             assert response.feature_enabled is True
             assert response.ttfc_p95_seconds == 1.5
@@ -152,7 +162,7 @@ class TestLLMStreamingMetricsEndpointBehavior:
             mock_flags.return_value.enable_streaming_metrics = True
 
             # Should not raise
-            response = await get_llm_streaming_metrics(provider=None, model=None, time_range="1h")
+            response = await get_llm_streaming_metrics(provider=None, model=None, time_range="1h", user=MOCK_USER)
 
             assert response.feature_enabled is True
             assert response.total_streams == 0  # Default empty values

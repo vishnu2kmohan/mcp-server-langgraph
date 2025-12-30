@@ -66,17 +66,42 @@ ALICE_USERNAME = "alice"
 ALICE_PASSWORD = "alice123"  # noqa: S105
 
 
-def get_keycloak_token(username: str, password: str) -> str | None:
-    """Get a JWT token from Keycloak for testing."""
+def get_keycloak_token(username: str, password: str = "") -> str | None:
+    """Get a JWT token from Keycloak for testing.
+
+    Uses Token Exchange (RFC 8693) or client_credentials grant.
+    ROPC (password grant) is disabled per security audit (ADR-0086).
+    """
+    token_url = f"{KEYCLOAK_URL}/realms/default/protocol/openid-connect/token"
+
+    # Try Token Exchange first (RFC 8693) for user-specific context
     try:
         response = requests.post(
-            f"{KEYCLOAK_URL}/realms/default/protocol/openid-connect/token",
+            token_url,
             data={
-                "grant_type": "password",
+                "grant_type": "urn:ietf:params:oauth:grant-type:token-exchange",
                 "client_id": "mcp-server",
                 "client_secret": "test-client-secret-for-e2e-tests",
-                "username": username,
-                "password": password,
+                "requested_subject": username,
+                "subject_token_type": "urn:ietf:params:oauth:token-type:access_token",
+                "requested_token_type": "urn:ietf:params:oauth:token-type:access_token",
+                "scope": "openid profile email",
+            },
+            timeout=10,
+        )
+        if response.status_code == 200:
+            return response.json().get("access_token")
+    except Exception:
+        pass
+
+    # Fallback to client_credentials (service account)
+    try:
+        response = requests.post(
+            token_url,
+            data={
+                "grant_type": "client_credentials",
+                "client_id": "mcp-server",
+                "client_secret": "test-client-secret-for-e2e-tests",
                 "scope": "openid profile email",
             },
             timeout=10,

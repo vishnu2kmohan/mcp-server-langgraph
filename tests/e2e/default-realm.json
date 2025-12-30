@@ -3,7 +3,7 @@
   "realm": "default",
   "enabled": true,
   "displayName": "MCP Server LangGraph - Test Realm",
-  "accessTokenLifespan": 3600,
+  "accessTokenLifespan": 900,
   "refreshTokenMaxReuse": 0,
   "ssoSessionIdleTimeout": 1800,
   "ssoSessionMaxLifespan": 36000,
@@ -15,17 +15,25 @@
       "publicClient": false,
       "clientAuthenticatorType": "client-secret",
       "secret": "test-client-secret-for-e2e-tests",
-      "directAccessGrantsEnabled": true,
+      "directAccessGrantsEnabled": false,
+      "attributes": {
+        "pkce.code.challenge.method": "S256"
+      },
       "standardFlowEnabled": true,
       "implicitFlowEnabled": false,
       "serviceAccountsEnabled": true,
+      "authorizationServicesEnabled": true,
       "protocol": "openid-connect",
       "redirectUris": [
+        "http://localhost/*",
         "http://localhost:*",
+        "http://127.0.0.1/*",
         "http://127.0.0.1:*"
       ],
       "webOrigins": [
+        "http://localhost",
         "http://localhost:*",
+        "http://127.0.0.1",
         "http://127.0.0.1:*"
       ],
       "defaultClientScopes": [
@@ -80,77 +88,19 @@
             "claim.name": "username",
             "jsonType.label": "String"
           }
-        }
-      ]
-    },
-    {
-      "clientId": "openfga-server",
-      "name": "OpenFGA Server Client",
-      "description": "Service account for OpenFGA API authentication (ADR-0070)",
-      "enabled": true,
-      "publicClient": false,
-      "clientAuthenticatorType": "client-secret",
-      "secret": "test-openfga-server-secret",
-      "directAccessGrantsEnabled": false,
-      "standardFlowEnabled": false,
-      "implicitFlowEnabled": false,
-      "serviceAccountsEnabled": true,
-      "protocol": "openid-connect",
-      "redirectUris": [],
-      "webOrigins": [],
-      "defaultClientScopes": [
-        "web-origins",
-        "acr",
-        "profile",
-        "roles"
-      ],
-      "optionalClientScopes": [],
-      "protocolMappers": [
+        },
         {
-          "name": "Client Audience",
+          "name": "sub_persona",
           "protocol": "openid-connect",
-          "protocolMapper": "oidc-audience-mapper",
+          "protocolMapper": "oidc-usermodel-attribute-mapper",
           "consentRequired": false,
           "config": {
-            "included.client.audience": "openfga-server",
+            "userinfo.token.claim": "true",
+            "user.attribute": "sub_persona",
             "id.token.claim": "true",
-            "access.token.claim": "true"
-          }
-        }
-      ]
-    },
-    {
-      "clientId": "openfga-server",
-      "name": "OpenFGA Server Client",
-      "description": "Service account for OpenFGA API authentication (ADR-0070)",
-      "enabled": true,
-      "publicClient": false,
-      "clientAuthenticatorType": "client-secret",
-      "secret": "test-openfga-server-secret",
-      "directAccessGrantsEnabled": false,
-      "standardFlowEnabled": false,
-      "implicitFlowEnabled": false,
-      "serviceAccountsEnabled": true,
-      "protocol": "openid-connect",
-      "redirectUris": [],
-      "webOrigins": [],
-      "defaultClientScopes": [
-        "web-origins",
-        "acr",
-        "profile",
-        "roles"
-      ],
-      "optionalClientScopes": [],
-      "protocolMappers": [
-        {
-          "name": "Client Audience",
-          "protocol": "openid-connect",
-          "protocolMapper": "oidc-audience-mapper",
-          "consentRequired": false,
-          "config": {
-            "included.client.audience": "openfga-server",
-            "id.token.claim": "true",
-            "access.token.claim": "true"
+            "access.token.claim": "true",
+            "claim.name": "sub_persona",
+            "jsonType.label": "String"
           }
         }
       ]
@@ -208,6 +158,7 @@
         }
       ],
       "realmRoles": [
+        "admin",
         "offline_access",
         "uma_authorization"
       ],
@@ -233,6 +184,7 @@
         }
       ],
       "realmRoles": [
+        "developer",
         "offline_access",
         "uma_authorization"
       ],
@@ -272,6 +224,18 @@
   "roles": {
     "realm": [
       {
+        "name": "admin",
+        "description": "Administrator role for full platform access",
+        "composite": false,
+        "clientRole": false
+      },
+      {
+        "name": "developer",
+        "description": "Developer role for development features",
+        "composite": false,
+        "clientRole": false
+      },
+      {
         "name": "offline_access",
         "description": "Offline access",
         "composite": false,
@@ -292,7 +256,7 @@
   "requiredCredentials": [
     "password"
   ],
-  "passwordPolicy": "hashAlgorithm(pbkdf2-sha512)",
+  "passwordPolicy": "hashAlgorithm(argon2)",
   "registrationAllowed": false,
   "registrationEmailAsUsername": false,
   "editUsernameAllowed": false,
@@ -301,9 +265,107 @@
   "verifyEmail": false,
   "loginWithEmailAllowed": true,
   "duplicateEmailsAllowed": false,
-  "sslRequired": "external",
-  "eventsEnabled": false,
-  "adminEventsEnabled": false,
-  "adminEventsDetailsEnabled": false,
-  "internationalizationEnabled": false
+  "sslRequired": "all",
+  "eventsEnabled": true,
+  "adminEventsEnabled": true,
+  "adminEventsDetailsEnabled": true,
+  "internationalizationEnabled": false,
+  "bruteForceProtected": true,
+  "permanentLockout": false,
+  "maxFailureWaitSeconds": 900,
+  "minimumQuickLoginWaitSeconds": 60,
+  "waitIncrementSeconds": 60,
+  "quickLoginCheckMilliSeconds": 1000,
+  "maxDeltaTimeSeconds": 43200,
+  "failureFactor": 5,
+  "maxTemporaryLockouts": 3,
+  "webAuthnPolicyPasswordlessRpEntityName": "MCP Server LangGraph",
+  "webAuthnPolicyPasswordlessSignatureAlgorithms": ["ES256", "RS256"],
+  "webAuthnPolicyPasswordlessRpId": "",
+  "webAuthnPolicyPasswordlessAttestationConveyancePreference": "not specified",
+  "webAuthnPolicyPasswordlessAuthenticatorAttachment": "not specified",
+  "webAuthnPolicyPasswordlessRequireResidentKey": "Yes",
+  "webAuthnPolicyPasswordlessUserVerificationRequirement": "preferred",
+  "webAuthnPolicyPasswordlessCreateTimeout": 0,
+  "webAuthnPolicyPasswordlessAvoidSameAuthenticatorRegister": false,
+  "webAuthnPolicyPasswordlessAcceptableAaguids": [],
+  "requiredActions": [
+    {
+      "alias": "CONFIGURE_TOTP",
+      "name": "Configure OTP",
+      "providerId": "CONFIGURE_TOTP",
+      "enabled": true,
+      "defaultAction": false,
+      "priority": 10
+    },
+    {
+      "alias": "UPDATE_PASSWORD",
+      "name": "Update Password",
+      "providerId": "UPDATE_PASSWORD",
+      "enabled": true,
+      "defaultAction": false,
+      "priority": 30
+    },
+    {
+      "alias": "UPDATE_PROFILE",
+      "name": "Update Profile",
+      "providerId": "UPDATE_PROFILE",
+      "enabled": true,
+      "defaultAction": false,
+      "priority": 40
+    },
+    {
+      "alias": "VERIFY_EMAIL",
+      "name": "Verify Email",
+      "providerId": "VERIFY_EMAIL",
+      "enabled": true,
+      "defaultAction": false,
+      "priority": 50
+    },
+    {
+      "alias": "webauthn-register",
+      "name": "Webauthn Register",
+      "providerId": "webauthn-register",
+      "enabled": true,
+      "defaultAction": false,
+      "priority": 60
+    },
+    {
+      "alias": "webauthn-register-passwordless",
+      "name": "Webauthn Register Passwordless",
+      "providerId": "webauthn-register-passwordless",
+      "enabled": true,
+      "defaultAction": false,
+      "priority": 70
+    },
+    {
+      "alias": "TERMS_AND_CONDITIONS",
+      "name": "Terms and Conditions",
+      "providerId": "TERMS_AND_CONDITIONS",
+      "enabled": false,
+      "defaultAction": false,
+      "priority": 20
+    }
+  ],
+  "clientPolicies": {
+    "policies": [
+      {
+        "name": "fapi-2-dpop-policy",
+        "description": "FAPI 2.0 Security Profile with DPoP sender-constraint for high-security APIs",
+        "enabled": true,
+        "conditions": [
+          {
+            "condition": "client-roles",
+            "configuration": {
+              "roles": ["fapi-client"]
+            }
+          }
+        ],
+        "profiles": ["fapi-2-dpop-security-profile"]
+      }
+    ]
+  },
+  "clientProfiles": {
+    "profiles": []
+  }
 }

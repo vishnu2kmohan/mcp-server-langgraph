@@ -61,13 +61,13 @@ def _keycloak_token_endpoint_functional() -> bool:
     """
     try:
         # Make a minimal token request that will fail auth but verify JSON response
+        # Uses client_credentials with invalid credentials (ROPC is disabled per ADR-0086)
         response = requests.post(
             "http://localhost/authn/realms/default/protocol/openid-connect/token",
             data={
-                "grant_type": "password",
+                "grant_type": "client_credentials",
                 "client_id": "invalid-client",
-                "username": "invalid",
-                "password": "invalid",
+                "client_secret": "invalid-secret",
             },
             timeout=5,
         )
@@ -171,20 +171,22 @@ class TestQdrantAuthenticatedAccess:
 
     @pytest.fixture
     def authenticated_session(self) -> requests.Session:
-        """Get an authenticated session with valid Keycloak token."""
+        """Get an authenticated session with valid Keycloak token.
+
+        Uses service account token (client_credentials grant) since ROPC is disabled.
+        """
         session = requests.Session()
 
-        # Get token from Keycloak using password grant
+        # Get token from Keycloak using client credentials (ROPC is disabled)
         token_url = f"{KEYCLOAK_URL}/realms/default/protocol/openid-connect/token"
         try:
             response = session.post(
                 token_url,
                 data={
-                    "grant_type": "password",
+                    "grant_type": "client_credentials",
                     "client_id": "mcp-server",
                     "client_secret": "test-client-secret-for-e2e-tests",
-                    "username": ADMIN_USERNAME,
-                    "password": ADMIN_PASSWORD,
+                    "scope": "openid profile email",
                 },
                 timeout=10,
             )
