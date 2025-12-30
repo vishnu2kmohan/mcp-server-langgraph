@@ -94,8 +94,7 @@ class HealthWebSocketManager:
         self.subscriptions: dict[str, set[str]] = {}  # client_id -> set of connection_ids
 
     async def connect(self, websocket: WebSocket, client_id: str) -> None:
-        """Accept a new WebSocket connection."""
-        await websocket.accept()
+        """Register a WebSocket connection (assumes already accepted by handler)."""
         self.active_connections[client_id] = websocket
         self.subscriptions[client_id] = set()
         logger.info(f"Health WebSocket connected: {client_id}")

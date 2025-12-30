@@ -211,8 +211,9 @@ def mock_repo() -> MockConnectionRepository:
 
 
 @pytest.fixture
-def app(mock_repo: MockConnectionRepository) -> FastAPI:
+def app(mock_repo: MockConnectionRepository, monkeypatch: pytest.MonkeyPatch) -> FastAPI:
     """Create a test FastAPI app with the health WebSocket endpoint."""
+    from mcp_server_langgraph.api.v1 import connection_health_ws
     from mcp_server_langgraph.api.v1.connection_health_ws import (
         connection_health_router,
     )
@@ -233,6 +234,12 @@ def app(mock_repo: MockConnectionRepository) -> FastAPI:
             "email": "test@example.com",
             "roles": ["user"],
         }
+
+    # Mock the validate_websocket_auth function which is used by the WebSocket endpoint
+    async def mock_validate_websocket_auth(websocket):
+        return {"user_id": "user-123", "roles": ["user"], "email": "test@example.com"}
+
+    monkeypatch.setattr(connection_health_ws, "validate_websocket_auth", mock_validate_websocket_auth)
 
     test_app.dependency_overrides[get_connection_repository] = get_mock_repo
     test_app.dependency_overrides[get_current_user] = get_mock_user

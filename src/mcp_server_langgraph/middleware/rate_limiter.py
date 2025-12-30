@@ -78,6 +78,8 @@ PATH_RATE_LIMITS: dict[str, str] = {
     "/api/v1/ai/composite": "20/minute",
     "/api/v1/ai/composite/stream": "20/minute",
     "/api/v1/ai/composite/batch": "10/minute",  # Lower limit for batch operations
+    # Frontend cache endpoints - prevent cache flooding
+    "/api/v1/cache": "100/minute",
 }
 
 

@@ -190,6 +190,7 @@ def app(mock_repo, mock_mcp_client):
     """Create a test FastAPI app with the connections router."""
     # Import here to ensure fresh module state
     from mcp_server_langgraph.api.v1.connections_bulk import bulk_router
+    from mcp_server_langgraph.auth.dependencies import get_current_user
     from mcp_server_langgraph.core.dependencies import (
         get_connection_repository,
         get_db_session,
@@ -198,6 +199,20 @@ def app(mock_repo, mock_mcp_client):
 
     app = FastAPI()
     app.include_router(bulk_router)
+
+    # Mock authenticated user
+    mock_user = {
+        "sub": "user-123",
+        "preferred_username": "testuser",
+        "username": "testuser",
+        "email": "testuser@example.com",
+        "roles": ["user"],
+    }
+
+    async def override_get_current_user():
+        return mock_user
+
+    app.dependency_overrides[get_current_user] = override_get_current_user
 
     # Override dependencies - including get_db_session to prevent any DB connections
     # during xdist parallel runs where global state may be polluted

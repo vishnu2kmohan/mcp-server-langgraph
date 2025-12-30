@@ -25,9 +25,25 @@ pytestmark = [pytest.mark.unit, pytest.mark.api]
 def app():
     """Create a test FastAPI app with the templates router."""
     from mcp_server_langgraph.api.v1.connection_templates import templates_router
+    from mcp_server_langgraph.auth.dependencies import get_current_user
 
     app = FastAPI()
     app.include_router(templates_router)
+
+    # Mock authenticated user
+    mock_user = {
+        "sub": "user-123",
+        "preferred_username": "testuser",
+        "username": "testuser",
+        "email": "testuser@example.com",
+        "roles": ["user"],
+    }
+
+    async def override_get_current_user():
+        return mock_user
+
+    app.dependency_overrides[get_current_user] = override_get_current_user
+
     return app
 
 

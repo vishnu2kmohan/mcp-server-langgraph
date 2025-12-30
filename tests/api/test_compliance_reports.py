@@ -29,9 +29,24 @@ def compliance_app() -> Generator[tuple[FastAPI, AsyncMock], None, None]:
         router,
         set_compliance_service,
     )
+    from mcp_server_langgraph.auth.dependencies import require_compliance_viewer
 
     app = FastAPI()
     app.include_router(router, prefix="/api/v1/compliance")
+
+    # Mock authenticated user with compliance viewer role
+    mock_user = {
+        "sub": "user-123",
+        "preferred_username": "compliance_viewer",
+        "username": "compliance_viewer",
+        "email": "compliance@example.com",
+        "roles": ["compliance_viewer"],
+    }
+
+    async def override_require_compliance_viewer():
+        return mock_user
+
+    app.dependency_overrides[require_compliance_viewer] = override_require_compliance_viewer
 
     mock_service = AsyncMock()  # async-mock-configured
     set_compliance_service(mock_service)
