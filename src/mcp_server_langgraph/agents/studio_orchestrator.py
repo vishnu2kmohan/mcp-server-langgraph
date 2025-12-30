@@ -38,7 +38,9 @@ Usage:
 from __future__ import annotations
 
 import logging
+import uuid
 from dataclasses import dataclass, field
+from datetime import UTC, datetime
 from enum import Enum
 from typing import TYPE_CHECKING, Any
 
@@ -46,10 +48,16 @@ from mcp_server_langgraph.agents.base_orchestrator import (
     BaseOrchestrator,
     BaseResult,
     BaseTask,
+    TaskStartCallback,
+    TaskCompleteCallback,
+    TaskFailCallback,
 )
 
 if TYPE_CHECKING:
     from mcp_server_langgraph.agents.cost_tracker import CostTracker
+    from mcp_server_langgraph.websocket.handlers.orchestrator_status import (
+        OrchestratorStatusBroadcasterProtocol,
+    )
 
 logger = logging.getLogger(__name__)
 
@@ -239,6 +247,8 @@ class StudioOrchestrator(BaseOrchestrator[StudioTask, StudioResult]):
         cost_tracker: CostTracker | None = None,
         session_id: str | None = None,
         explanation_orchestrator: Any | None = None,
+        status_broadcaster: OrchestratorStatusBroadcasterProtocol | None = None,
+        user_id: str | None = None,
     ) -> None:
         """Initialize Studio Orchestrator.
 
@@ -250,16 +260,195 @@ class StudioOrchestrator(BaseOrchestrator[StudioTask, StudioResult]):
             cost_tracker: Optional CostTracker for cost/budget management
             session_id: Optional session ID for cost tracking scope
             explanation_orchestrator: Optional ExplanationOrchestrator for HITL explanations
+            status_broadcaster: Optional broadcaster for real-time status updates to WebSocket clients
+            user_id: Optional user ID for filtering WebSocket broadcasts
         """
+        # Store broadcaster and user_id before super().__init__ since we need them for callbacks
+        self._status_broadcaster = status_broadcaster
+        self._user_id = user_id
+        self._task_start_times: dict[str, tuple[str, datetime]] = {}  # task_type -> (task_id, start_time)
+
+        # Create lifecycle callbacks for WebSocket broadcasting
+        on_task_start = self._create_task_start_callback() if status_broadcaster else None
+        on_task_complete = self._create_task_complete_callback() if status_broadcaster else None
+        on_task_fail = self._create_task_fail_callback() if status_broadcaster else None
+
         super().__init__(
             enable_metrics=enable_metrics,
             cost_tracker=cost_tracker,
             session_id=session_id,
+            on_task_start=on_task_start,
+            on_task_complete=on_task_complete,
+            on_task_fail=on_task_fail,
         )
         self._ai_ux_service = ai_ux_service
         self._llm_factory = llm_factory
         self._artifact_storage = artifact_storage
         self._explanation_orchestrator = explanation_orchestrator
+
+    def _create_task_start_callback(self) -> TaskStartCallback:
+        """Create callback for task start events."""
+        from mcp_server_langgraph.websocket.handlers.orchestrator_status import (
+            OrchestratorStatus,
+            TaskCategory as WsTaskCategory,
+            TaskInfo,
+        )
+
+        async def on_task_start(task: StudioTask) -> None:
+            if self._status_broadcaster is None:
+                return
+
+            # Generate a unique task ID
+            task_id = str(uuid.uuid4())
+            start_time = datetime.now(UTC)
+
+            # Store for completion/failure callback
+            self._task_start_times[task.task_type] = (task_id, start_time)
+
+            # Map StudioOrchestrator TaskCategory to WebSocket TaskCategory
+            ws_category = WsTaskCategory(task.category.value)
+
+            task_info = TaskInfo(
+                task_id=task_id,
+                task_type=task.task_type,
+                category=ws_category,
+                started_at=start_time,
+            )
+
+            # Broadcast task started
+            await self._status_broadcaster.broadcast_task_started(
+                task_info=task_info,
+                user_id=self._user_id,
+            )
+
+            # Also broadcast status update
+            await self._status_broadcaster.broadcast_status(
+                status=OrchestratorStatus.PROCESSING,
+                message=f"Processing {task.task_type}...",
+                task_type=task.task_type,
+                category=ws_category,
+                user_id=self._user_id,
+            )
+
+        return on_task_start
+
+    def _create_task_complete_callback(self) -> TaskCompleteCallback:
+        """Create callback for task completion events."""
+        from mcp_server_langgraph.websocket.handlers.orchestrator_status import (
+            TaskCategory as WsTaskCategory,
+            TaskInfo,
+        )
+
+        async def on_task_complete(task: StudioTask, result: StudioResult) -> None:
+            if self._status_broadcaster is None:
+                return
+
+            # Get stored task info
+            task_id, start_time = self._task_start_times.pop(
+                task.task_type,
+                (str(uuid.uuid4()), datetime.now(UTC)),
+            )
+
+            ws_category = WsTaskCategory(task.category.value)
+            completed_at = datetime.now(UTC)
+
+            task_info = TaskInfo(
+                task_id=task_id,
+                task_type=task.task_type,
+                category=ws_category,
+                started_at=start_time,
+                completed_at=completed_at,
+                success=result.success,
+            )
+
+            await self._status_broadcaster.broadcast_task_completed(
+                task_info=task_info,
+                user_id=self._user_id,
+            )
+
+        return on_task_complete
+
+    def _create_task_fail_callback(self) -> TaskFailCallback:
+        """Create callback for task failure events."""
+        from mcp_server_langgraph.websocket.handlers.orchestrator_status import (
+            OrchestratorStatus,
+            TaskCategory as WsTaskCategory,
+            TaskInfo,
+        )
+
+        async def on_task_fail(task: StudioTask, error: str) -> None:
+            if self._status_broadcaster is None:
+                return
+
+            # Get stored task info
+            task_id, start_time = self._task_start_times.pop(
+                task.task_type,
+                (str(uuid.uuid4()), datetime.now(UTC)),
+            )
+
+            ws_category = WsTaskCategory(task.category.value)
+            failed_at = datetime.now(UTC)
+
+            task_info = TaskInfo(
+                task_id=task_id,
+                task_type=task.task_type,
+                category=ws_category,
+                started_at=start_time,
+                completed_at=failed_at,
+                success=False,
+                error=error,
+            )
+
+            await self._status_broadcaster.broadcast_task_failed(
+                task_info=task_info,
+                user_id=self._user_id,
+            )
+
+            # Broadcast error status
+            await self._status_broadcaster.broadcast_status(
+                status=OrchestratorStatus.ERROR,
+                message=f"Task {task.task_type} failed: {error}",
+                task_type=task.task_type,
+                category=ws_category,
+                user_id=self._user_id,
+            )
+
+        return on_task_fail
+
+    @property
+    def status_broadcaster(self) -> OrchestratorStatusBroadcasterProtocol | None:
+        """Get the status broadcaster instance."""
+        return self._status_broadcaster
+
+    async def execute(self, tasks: list[StudioTask]) -> list[StudioResult]:
+        """Execute tasks and broadcast IDLE status when complete.
+
+        Overrides base execute() to add IDLE status broadcast after all
+        tasks complete, ensuring WebSocket clients know the orchestrator
+        has finished processing.
+
+        Args:
+            tasks: List of tasks to execute
+
+        Returns:
+            List of results from all tasks
+        """
+        # Call parent execute
+        results = await super().execute(tasks)
+
+        # Broadcast IDLE status after all tasks complete
+        if self._status_broadcaster is not None and tasks:
+            from mcp_server_langgraph.websocket.handlers.orchestrator_status import (
+                OrchestratorStatus,
+            )
+
+            await self._status_broadcaster.broadcast_status(
+                status=OrchestratorStatus.IDLE,
+                message="All tasks completed",
+                user_id=self._user_id,
+            )
+
+        return results
 
     @property
     def ai_ux_service(self) -> Any | None:

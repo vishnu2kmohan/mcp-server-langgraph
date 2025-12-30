@@ -27,6 +27,9 @@ if TYPE_CHECKING:
     from mcp_server_langgraph.websocket.handlers.mcp_aggregated import (
         MCPAggregatedBroadcaster,
     )
+    from mcp_server_langgraph.websocket.handlers.orchestrator_status import (
+        OrchestratorStatusBroadcaster,
+    )
 
 logger = logging.getLogger(__name__)
 
@@ -223,6 +226,31 @@ def set_devtools_broadcaster(broadcaster: DevToolsBroadcaster | None) -> None:
     _devtools_broadcaster = broadcaster
 
 
+# =============================================================================
+# Orchestrator Status Broadcaster
+# =============================================================================
+
+_orchestrator_status_broadcaster: OrchestratorStatusBroadcaster | None = None
+
+
+def get_orchestrator_status_broadcaster() -> OrchestratorStatusBroadcaster:
+    """Get the orchestrator status broadcaster instance."""
+    global _orchestrator_status_broadcaster
+    if _orchestrator_status_broadcaster is None:
+        from mcp_server_langgraph.websocket.handlers.orchestrator_status import (
+            OrchestratorStatusBroadcaster,
+        )
+
+        _orchestrator_status_broadcaster = OrchestratorStatusBroadcaster()
+    return _orchestrator_status_broadcaster
+
+
+def set_orchestrator_status_broadcaster(broadcaster: OrchestratorStatusBroadcaster | None) -> None:
+    """Set the orchestrator status broadcaster instance (for app initialization or testing)."""
+    global _orchestrator_status_broadcaster
+    _orchestrator_status_broadcaster = broadcaster
+
+
 __all__ = [
     # Notification
     "get_notification_broadcaster",
@@ -249,4 +277,7 @@ __all__ = [
     # DevTools
     "get_devtools_broadcaster",
     "set_devtools_broadcaster",
+    # Orchestrator Status
+    "get_orchestrator_status_broadcaster",
+    "set_orchestrator_status_broadcaster",
 ]

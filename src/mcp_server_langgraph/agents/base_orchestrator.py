@@ -34,8 +34,10 @@ Usage:
 from __future__ import annotations
 
 import asyncio
+import inspect
 import logging
 from abc import ABC, abstractmethod
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass, field
 from decimal import Decimal
 from typing import TYPE_CHECKING, Any, Generic, TypeVar
@@ -46,6 +48,11 @@ if TYPE_CHECKING:
     from mcp_server_langgraph.agents.cost_tracker import CostTracker
 
 logger = logging.getLogger(__name__)
+
+# Type aliases for lifecycle callbacks
+TaskStartCallback = Callable[[Any], Awaitable[None] | None]
+TaskCompleteCallback = Callable[[Any, Any], Awaitable[None] | None]
+TaskFailCallback = Callable[[Any, str], Awaitable[None] | None]
 
 
 @dataclass
@@ -102,6 +109,9 @@ class BaseOrchestrator(ABC, Generic[TaskT, ResultT]):
         enable_metrics: bool = True,
         cost_tracker: CostTracker | None = None,
         session_id: str | None = None,
+        on_task_start: TaskStartCallback | None = None,
+        on_task_complete: TaskCompleteCallback | None = None,
+        on_task_fail: TaskFailCallback | None = None,
     ) -> None:
         """Initialize base orchestrator.
 
@@ -109,10 +119,19 @@ class BaseOrchestrator(ABC, Generic[TaskT, ResultT]):
             enable_metrics: Whether to record metrics (default: True)
             cost_tracker: Optional CostTracker for cost/budget management
             session_id: Optional session ID for cost tracking scope
+            on_task_start: Optional callback invoked when a task starts.
+                Signature: (task: TaskT) -> None or Awaitable[None]
+            on_task_complete: Optional callback invoked when a task completes.
+                Signature: (task: TaskT, result: ResultT) -> None or Awaitable[None]
+            on_task_fail: Optional callback invoked when a task fails with exception.
+                Signature: (task: TaskT, error: str) -> None or Awaitable[None]
         """
         self._enable_metrics = enable_metrics
         self._cost_tracker = cost_tracker
         self._session_id = session_id
+        self._on_task_start = on_task_start
+        self._on_task_complete = on_task_complete
+        self._on_task_fail = on_task_fail
 
     @property
     def cost_tracker(self) -> CostTracker | None:
@@ -205,11 +224,67 @@ class BaseOrchestrator(ABC, Generic[TaskT, ResultT]):
         """
         ...
 
+    async def _invoke_callback(
+        self,
+        callback: Callable[..., Awaitable[None] | None] | None,
+        *args: Any,
+    ) -> None:
+        """Invoke a callback, handling both sync and async callbacks.
+
+        Args:
+            callback: The callback to invoke (sync or async)
+            *args: Arguments to pass to the callback
+        """
+        if callback is None:
+            return
+
+        try:
+            result = callback(*args)
+            # If callback returns a coroutine, await it
+            if inspect.iscoroutine(result):
+                await result
+        except Exception as e:
+            # Log callback errors but don't propagate them
+            logger.warning(
+                f"Lifecycle callback error: {e}",
+                extra={"error": str(e)},
+            )
+
+    async def _execute_task_with_callbacks(self, task: TaskT) -> ResultT:
+        """Execute a single task with lifecycle callbacks.
+
+        Wraps _execute_task to invoke on_task_start, on_task_complete,
+        and on_task_fail callbacks at the appropriate times.
+
+        Args:
+            task: The task to execute
+
+        Returns:
+            Result from executing the task
+        """
+        # Call on_task_start callback
+        await self._invoke_callback(self._on_task_start, task)
+
+        try:
+            result = await self._execute_task(task)
+
+            # Call on_task_complete callback
+            await self._invoke_callback(self._on_task_complete, task, result)
+
+            return result
+        except Exception as e:
+            # Call on_task_fail callback
+            await self._invoke_callback(self._on_task_fail, task, str(e))
+
+            # Re-raise so execute() can convert to failed result
+            raise
+
     async def execute(self, tasks: list[TaskT]) -> list[ResultT]:
         """Execute tasks in parallel.
 
         Uses asyncio.gather to run all tasks concurrently.
         Exceptions are converted to failed results.
+        Lifecycle callbacks are invoked for each task.
 
         Args:
             tasks: List of tasks to execute
@@ -220,8 +295,8 @@ class BaseOrchestrator(ABC, Generic[TaskT, ResultT]):
         if not tasks:
             return []
 
-        # Create coroutines for each task
-        coroutines = [self._execute_task(task) for task in tasks]
+        # Create coroutines for each task (with callbacks)
+        coroutines = [self._execute_task_with_callbacks(task) for task in tasks]
 
         # Execute all tasks in parallel
         results = await asyncio.gather(*coroutines, return_exceptions=True)
