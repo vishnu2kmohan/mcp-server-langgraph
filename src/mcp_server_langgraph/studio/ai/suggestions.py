@@ -1432,6 +1432,413 @@ Make suggestions specific to the content and conversation context, not generic."
 
 
 # =============================================================================
+# Artifact Code Suggestions
+# =============================================================================
+
+# Artifact suggestion metrics (lazy-loaded)
+_artifact_suggestion_counter: Any = None
+_artifact_suggestion_latency: Any = None
+_artifact_suggestion_errors: Any = None
+
+
+def _init_artifact_metrics() -> bool:
+    """Initialize artifact suggestion metrics lazily."""
+    global _artifact_suggestion_counter  # noqa: PLW0603
+    global _artifact_suggestion_latency  # noqa: PLW0603
+    global _artifact_suggestion_errors  # noqa: PLW0603
+
+    if _artifact_suggestion_counter is not None:
+        return True
+
+    try:
+        from prometheus_client import Counter, Histogram
+
+        _artifact_suggestion_counter = Counter(
+            "studio_artifact_suggestions_total",
+            "Total artifact code suggestions generated",
+            ["suggestion_type", "content_type", "source"],  # source: llm, heuristic
+        )
+
+        _artifact_suggestion_latency = Histogram(
+            "studio_artifact_suggestion_latency_seconds",
+            "Latency for generating artifact code suggestions",
+            ["content_type", "source"],
+            buckets=(0.05, 0.1, 0.25, 0.5, 1.0, 2.5, 5.0, 10.0),
+        )
+
+        _artifact_suggestion_errors = Counter(
+            "studio_artifact_suggestion_errors_total",
+            "Errors during artifact suggestion generation",
+            ["error_type", "content_type"],
+        )
+
+        return True
+    except ImportError:
+        logger.debug("prometheus_client not available, artifact metrics disabled")
+        return False
+
+
+@dataclass
+class ArtifactSuggestion:
+    """A code suggestion for an artifact.
+
+    Attributes:
+        id: Unique suggestion identifier
+        type: Suggestion type (completion, refactor, fix, explain)
+        content: The suggested code or explanation
+        confidence: Confidence score between 0.0 and 1.0
+    """
+
+    id: str
+    type: str  # completion, refactor, fix, explain
+    content: str
+    confidence: float
+
+
+class ArtifactSuggestionAgent:
+    """AI agent that generates code suggestions for artifacts.
+
+    Analyzes artifact content (code, markdown, etc.) and generates
+    suggestions for improvements, completions, fixes, and explanations.
+
+    Features:
+    - LLM-powered analysis with heuristic fallback
+    - TTL-based caching for performance
+    - Prometheus metrics for observability
+    - Support for multiple programming languages
+
+    Example:
+        ```python
+        agent = ArtifactSuggestionAgent()
+        suggestions = await agent.suggest(
+            content="def calculate(x): return x * 2",
+            content_type="code",
+            language="python",
+        )
+        for s in suggestions:
+            print(f"{s.type}: {s.content[:50]}...")
+        ```
+    """
+
+    def __init__(
+        self,
+        model_name: str = "gemini-2.5-flash",
+        temperature: float = 0.7,
+        enable_llm: bool = True,
+        enable_cache: bool = True,
+        llm_factory: Any | None = None,
+    ) -> None:
+        """Initialize the artifact suggestion agent.
+
+        Args:
+            model_name: LLM model to use for suggestions
+            temperature: LLM temperature for response creativity
+            enable_llm: Whether to use LLM (False = heuristics only)
+            enable_cache: Whether to cache suggestions
+            llm_factory: Optional pre-configured LLM factory
+        """
+        self.model_name = model_name
+        self.temperature = temperature
+        self.enable_llm = enable_llm
+        self.enable_cache = enable_cache
+        self._llm_factory = llm_factory
+        self._cache: dict[str, tuple[list[ArtifactSuggestion], float]] = {}
+        self._cache_ttl = 300.0  # 5 minutes
+
+    def _get_llm_factory(self) -> Any:
+        """Lazy-load the LLM factory."""
+        if self._llm_factory is None:
+            try:
+                from mcp_server_langgraph.core.config import get_settings
+                from mcp_server_langgraph.llm.factory import create_llm_from_config
+
+                settings = get_settings()
+                self._llm_factory = create_llm_from_config(settings)
+            except Exception as e:
+                logger.warning("Failed to initialize LLM factory: %s", e)
+                self._llm_factory = None
+        return self._llm_factory
+
+    def _cache_key(self, content: str, content_type: str, language: str | None) -> str:
+        """Generate cache key from content hash."""
+        key_str = f"{content_type}:{language or 'unknown'}:{content}"
+        return hashlib.md5(key_str.encode()).hexdigest()  # noqa: S324 - md5 for cache key, not security
+
+    def _get_cached(self, key: str) -> list[ArtifactSuggestion] | None:
+        """Get cached suggestions if not expired."""
+        if not self.enable_cache:
+            return None
+
+        cached = self._cache.get(key)
+        if cached is None:
+            return None
+
+        suggestions, timestamp = cached
+        if time.time() - timestamp > self._cache_ttl:
+            del self._cache[key]
+            return None
+
+        return suggestions
+
+    def _set_cache(self, key: str, suggestions: list[ArtifactSuggestion]) -> None:
+        """Cache suggestions with current timestamp."""
+        if self.enable_cache:
+            self._cache[key] = (suggestions, time.time())
+
+    async def suggest(
+        self,
+        content: str,
+        content_type: str,
+        language: str | None = None,
+        max_suggestions: int = 3,
+    ) -> list[ArtifactSuggestion]:
+        """Generate code suggestions for artifact content.
+
+        Args:
+            content: The artifact content (code, text, etc.)
+            content_type: Type of content ("code", "markdown", etc.)
+            language: Programming language (e.g., "python", "typescript")
+            max_suggestions: Maximum number of suggestions to return
+
+        Returns:
+            List of ArtifactSuggestion objects
+        """
+        import uuid
+
+        start_time = time.time()
+        source = "heuristic"
+
+        # Check cache first
+        cache_key = self._cache_key(content, content_type, language)
+        cached = self._get_cached(cache_key)
+        if cached is not None:
+            track_cache_operation("hit")
+            return cached[:max_suggestions]
+
+        track_cache_operation("miss")
+
+        suggestions: list[ArtifactSuggestion] = []
+
+        # Try LLM first if enabled
+        if self.enable_llm and content.strip():
+            llm_suggestions = await self._generate_with_llm(content, content_type, language, max_suggestions)
+            if llm_suggestions:
+                source = "llm"
+                suggestions = llm_suggestions
+
+        # Fall back to heuristics
+        if not suggestions:
+            suggestions = self._generate_heuristics(content, content_type, language, max_suggestions)
+            source = "heuristic"
+
+        # Assign unique IDs if not set
+        for s in suggestions:
+            if not s.id:
+                s.id = f"artifact-{uuid.uuid4().hex[:8]}"
+
+        # Cache results
+        self._set_cache(cache_key, suggestions)
+
+        # Record metrics
+        self._record_metrics(suggestions, content_type, source, start_time)
+
+        return suggestions[:max_suggestions]
+
+    async def _generate_with_llm(
+        self,
+        content: str,
+        content_type: str,
+        language: str | None,
+        max_suggestions: int,
+    ) -> list[ArtifactSuggestion]:
+        """Generate suggestions using LLM."""
+        import json
+
+        factory = self._get_llm_factory()
+        if factory is None:
+            return []
+
+        try:
+            lang_context = f"Language: {language}\n" if language else ""
+            prompt = f"""Analyze the following {content_type} and suggest improvements.
+
+{lang_context}Content:
+```
+{content[:2000]}
+```
+
+Provide up to {max_suggestions} suggestions. Each suggestion should be one of:
+- completion: Code to add or complete
+- refactor: Refactoring improvement
+- fix: Bug fix or error correction
+- explain: Explanation of the code
+
+Respond with a JSON array of objects with fields: type, content, confidence (0.0-1.0).
+Only include suggestions with confidence >= 0.5.
+
+Example response:
+[{{"type": "refactor", "content": "Use list comprehension for clarity", "confidence": 0.85}}]
+
+JSON response:"""
+
+            from langchain_core.messages import HumanMessage
+
+            response = await factory.ainvoke(
+                [HumanMessage(content=prompt)],
+                temperature=self.temperature,
+                max_tokens=1024,
+            )
+
+            # Parse JSON response
+            response_text = response.content.strip()
+            # Handle markdown code blocks
+            if response_text.startswith("```"):
+                lines = response_text.split("\n")
+                response_text = "\n".join(lines[1:-1])
+
+            suggestions_data = json.loads(response_text)
+
+            suggestions = []
+            for item in suggestions_data:
+                if isinstance(item, dict) and "type" in item and "content" in item:
+                    suggestions.append(
+                        ArtifactSuggestion(
+                            id="",  # Will be assigned later
+                            type=item.get("type", "explain"),
+                            content=item.get("content", ""),
+                            confidence=float(item.get("confidence", 0.7)),
+                        )
+                    )
+
+            return suggestions
+
+        except Exception as e:
+            logger.debug("LLM suggestion generation failed: %s", e)
+            self._record_error("llm_failure", content_type)
+            return []
+
+    def _generate_heuristics(
+        self,
+        content: str,
+        content_type: str,
+        language: str | None,
+        max_suggestions: int,
+    ) -> list[ArtifactSuggestion]:
+        """Generate suggestions using heuristic rules."""
+        suggestions: list[ArtifactSuggestion] = []
+
+        if not content.strip():
+            return suggestions
+
+        lines = content.split("\n")
+
+        # Heuristic: Suggest error handling for division
+        if "/" in content and "try" not in content.lower():
+            suggestions.append(
+                ArtifactSuggestion(
+                    id="",
+                    type="fix",
+                    content="Consider adding error handling for division operations to prevent ZeroDivisionError",
+                    confidence=0.65,
+                )
+            )
+
+        # Heuristic: Suggest type hints for Python
+        if language == "python" and "def " in content and "->" not in content:
+            suggestions.append(
+                ArtifactSuggestion(
+                    id="",
+                    type="refactor",
+                    content="Add type hints to function signatures for better code documentation",
+                    confidence=0.6,
+                )
+            )
+
+        # Heuristic: Suggest async/await for fetch calls
+        if "fetch(" in content and "await" not in content:
+            suggestions.append(
+                ArtifactSuggestion(
+                    id="",
+                    type="fix",
+                    content="The fetch call should use await or handle the Promise properly",
+                    confidence=0.7,
+                )
+            )
+
+        # Heuristic: Suggest docstrings for long functions
+        if language == "python" and len(lines) > 10 and '"""' not in content:
+            suggestions.append(
+                ArtifactSuggestion(
+                    id="",
+                    type="refactor",
+                    content="Add docstrings to document the function's purpose and parameters",
+                    confidence=0.55,
+                )
+            )
+
+        # Heuristic: Suggest list comprehension for simple loops
+        if language == "python" and "for " in content and ".append(" in content:
+            suggestions.append(
+                ArtifactSuggestion(
+                    id="",
+                    type="refactor",
+                    content="Consider using list comprehension for more concise code",
+                    confidence=0.6,
+                )
+            )
+
+        return suggestions[:max_suggestions]
+
+    def _record_metrics(
+        self,
+        suggestions: list[ArtifactSuggestion],
+        content_type: str,
+        source: str,
+        start_time: float,
+    ) -> None:
+        """Record Prometheus metrics for suggestion generation."""
+        try:
+            if not _init_artifact_metrics():
+                return
+
+            latency = time.time() - start_time
+
+            # Record latency
+            if _artifact_suggestion_latency:
+                _artifact_suggestion_latency.labels(
+                    content_type=content_type,
+                    source=source,
+                ).observe(latency)
+
+            # Record suggestion counts
+            if _artifact_suggestion_counter:
+                for s in suggestions:
+                    _artifact_suggestion_counter.labels(
+                        suggestion_type=s.type,
+                        content_type=content_type,
+                        source=source,
+                    ).inc()
+
+        except Exception as e:
+            logger.debug("Metric recording failed: %s", e)
+
+    def _record_error(self, error_type: str, content_type: str) -> None:
+        """Record error metric."""
+        try:
+            if not _init_artifact_metrics():
+                return
+
+            if _artifact_suggestion_errors:
+                _artifact_suggestion_errors.labels(
+                    error_type=error_type,
+                    content_type=content_type,
+                ).inc()
+
+        except Exception as e:
+            logger.debug("Error metric recording failed: %s", e)
+
+
+# =============================================================================
 # Command Interpretation
 # =============================================================================
 
