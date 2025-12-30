@@ -17,6 +17,11 @@ from fastapi.testclient import TestClient
 
 from mcp_server_langgraph.api.v1.projects import _extract_owner_name, projects_router
 from mcp_server_langgraph.auth.middleware import get_current_user
+from mcp_server_langgraph.auth.dependencies import (
+    require_project_viewer,
+    require_project_editor,
+    require_project_owner,
+)
 from mcp_server_langgraph.core.dependencies import get_project_repository
 from mcp_server_langgraph.storage.models import (
     Project,
@@ -350,6 +355,22 @@ def app(mock_repo, mock_current_user):
         return mock_current_user
 
     app.dependency_overrides[get_current_user] = override_get_current_user
+
+    # Mock OpenFGA authorization dependencies to return the mock user
+    # This bypasses OpenFGA permission checks in tests
+    async def override_require_project_viewer():
+        return mock_current_user
+
+    async def override_require_project_editor():
+        return mock_current_user
+
+    async def override_require_project_owner():
+        return mock_current_user
+
+    app.dependency_overrides[require_project_viewer] = override_require_project_viewer
+    app.dependency_overrides[require_project_editor] = override_require_project_editor
+    app.dependency_overrides[require_project_owner] = override_require_project_owner
+
     return app
 
 
