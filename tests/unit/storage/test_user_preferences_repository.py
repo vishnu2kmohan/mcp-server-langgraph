@@ -32,7 +32,10 @@ class TestUserPreferencesRepository:
         """Getting preferences for a user that doesn't exist should return None."""
         # GIVEN: A repository with a mock session
         mock_session = AsyncMock()
-        mock_session.execute.return_value = MagicMock(scalar_one_or_none=MagicMock(return_value=None))
+        # Create explicit mock result - MagicMock() with explicit return_value prevents auto-attr pollution
+        mock_result = MagicMock()
+        mock_result.scalar_one_or_none.return_value = None  # EXPLICIT: Prevents MagicMock attr leak
+        mock_session.execute.return_value = mock_result
         repo = UserPreferencesRepository(session=mock_session)
 
         # WHEN: Getting preferences for a nonexistent user
