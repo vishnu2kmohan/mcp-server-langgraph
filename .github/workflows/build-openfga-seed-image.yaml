@@ -100,6 +100,19 @@ jobs:
           fi
           echo "✅ config/openfga/sample-tuples.json found"
 
+      # Validate tuples against model schema before building image
+      # This catches issues like computed-only relations being directly assigned
+      - name: Set up uv for validation
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      - name: Validate OpenFGA tuples against model schema
+        run: |
+          echo "Validating OpenFGA tuples against model schema..."
+          uv run --frozen python scripts/validation/validate_openfga_tuples.py
+          echo "✅ OpenFGA tuples validation passed"
+
       # Authenticate to GitHub Container Registry using GITHUB_TOKEN
       - name: Login to GitHub Container Registry
         uses: docker/login-action@v3.6.0
