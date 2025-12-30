@@ -282,6 +282,78 @@ def load_tuples_from_config() -> list[dict[str, str]]:
         return []
 
 
+def load_model_from_config() -> dict | None:
+    """Load authorization model from config file."""
+    model_path = MODEL_PATH
+
+    # Try alternative paths
+    if not model_path.exists():
+        alt_paths = [
+            Path("config/openfga/model.json"),
+            Path("/config/openfga/model.json"),
+        ]
+        for alt_path in alt_paths:
+            if alt_path.exists():
+                model_path = alt_path
+                break
+        else:
+            print(f"⚠ Model not found for validation at {MODEL_PATH} or alternatives")
+            return None
+
+    try:
+        with open(model_path) as f:
+            return json.load(f)
+    except Exception as e:
+        print(f"⚠ Error loading model for validation: {e}")
+        return None
+
+
+def get_directly_assignable_relations(model: dict) -> dict[str, set[str]]:
+    """
+    Extract type -> directly assignable relations mapping from model.
+
+    A relation is directly assignable if it has an entry in the type's
+    metadata.relations with directly_related_user_types.
+    """
+    result: dict[str, set[str]] = {}
+    for type_def in model.get("type_definitions", []):
+        type_name = type_def.get("type")
+        metadata_relations = type_def.get("metadata", {}).get("relations", {})
+        result[type_name] = set(metadata_relations.keys())
+    return result
+
+
+def validate_tuples_against_model(tuples: list[dict], model: dict) -> list[str]:
+    """
+    Validate tuples against model schema before seeding.
+
+    Returns a list of error messages for invalid tuples.
+    This catches issues like computed-only relations being directly assigned.
+    """
+    errors: list[str] = []
+    directly_assignable = get_directly_assignable_relations(model)
+    type_defs = {t["type"]: t for t in model.get("type_definitions", [])}
+
+    for t in tuples:
+        obj = t["object"]
+        relation = t["relation"]
+        obj_type = obj.split(":")[0] if ":" in obj else obj
+
+        # Check if relation is directly assignable
+        if obj_type in directly_assignable:
+            valid_direct = directly_assignable[obj_type]
+            if relation not in valid_direct:
+                all_relations = set(type_defs.get(obj_type, {}).get("relations", {}).keys())
+                computed = all_relations - valid_direct
+                errors.append(
+                    f"Relation '{relation}' is computed-only for type '{obj_type}'. "
+                    f"Tuple: ({t['user']}, {relation}, {obj}). "
+                    f"Directly assignable: {valid_direct}. Computed: {computed}."
+                )
+
+    return errors
+
+
 def seed_relationship_tuples(store_id: str, model_id: str) -> bool:
     """Seed relationship tuples for test users from config file."""
     print("\nSeeding relationship tuples...")
@@ -291,6 +363,21 @@ def seed_relationship_tuples(store_id: str, model_id: str) -> bool:
     if not tuples:
         print("✗ No tuples to seed")
         return False
+
+    # Validate tuples against model schema (fail-fast before sending to OpenFGA)
+    print("\nValidating tuples against model schema...")
+    model = load_model_from_config()
+    if model:
+        validation_errors = validate_tuples_against_model(tuples, model)
+        if validation_errors:
+            print(f"✗ {len(validation_errors)} invalid tuple(s) found:")
+            for error in validation_errors:
+                print(f"  - {error}")
+            print("\n✗ Fix these issues before seeding. Aborting.")
+            return False
+        print("✓ All tuples valid against model schema")
+    else:
+        print("⚠ Could not load model for validation, proceeding with seeding...")
 
     # Write tuples in batches (OpenFGA has a limit per request)
     batch_size = 20
