@@ -510,7 +510,16 @@ export const clearMessages = createAsyncThunk<
  */
 export const saveAssistantMessage = createAsyncThunk<
   ChatMessage | null,
-  { role: "assistant" | "system"; content: string },
+  {
+    role: "assistant" | "system";
+    content: string;
+    usage?: {
+      promptTokens: number;
+      completionTokens: number;
+      totalTokens: number;
+    };
+    thinkingTokens?: number;
+  },
   { state: { session: SessionState }; rejectValue: string }
 >(
   "session/saveAssistantMessage",
@@ -527,6 +536,9 @@ export const saveAssistantMessage = createAsyncThunk<
       role: messageData.role,
       content: messageData.content,
       timestamp: Date.now(),
+      // Include token usage for cost tracking
+      usage: messageData.usage,
+      thinkingTokens: messageData.thinkingTokens,
     };
     dispatch(addMessage(assistantMessage));
 
@@ -539,6 +551,15 @@ export const saveAssistantMessage = createAsyncThunk<
           body: JSON.stringify({
             role: messageData.role,
             content: messageData.content,
+            // Include usage data for backend persistence
+            usage: messageData.usage
+              ? {
+                  prompt_tokens: messageData.usage.promptTokens,
+                  completion_tokens: messageData.usage.completionTokens,
+                  total_tokens: messageData.usage.totalTokens,
+                }
+              : undefined,
+            thinking_tokens: messageData.thinkingTokens,
           }),
         },
       );

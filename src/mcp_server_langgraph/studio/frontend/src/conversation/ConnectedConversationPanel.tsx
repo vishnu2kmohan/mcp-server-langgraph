@@ -147,12 +147,16 @@ export const ConnectedConversationPanel = forwardRef<
     streamingContent,
     error: _streamingError, // TODO: Display streaming errors in UI
     thinkingContent: _thinkingContent, // TODO: Display thinking content in UI
+    usage: streamingUsage, // Token usage from streaming response
+    thinkingTokens,
     startStream,
   } = useStreamingChat();
 
   // Track if we need to save the streaming response when complete
   const streamingCompleteRef = useRef(false);
   const lastStreamedContentRef = useRef<string>("");
+  const lastStreamedUsageRef = useRef<typeof streamingUsage>(null);
+  const lastThinkingTokensRef = useRef<number | null>(null);
 
   // =============================================================================
   // Artifact Extraction (connects Chat to Canvas)
@@ -351,10 +355,21 @@ export const ConnectedConversationPanel = forwardRef<
 
       // Add assistant message to Redux and persist to backend
       if (sessionId && assistantContent.trim()) {
+        // Get captured usage data from refs
+        const capturedUsage = lastStreamedUsageRef.current;
+        const capturedThinkingTokens = lastThinkingTokensRef.current;
+
+        // Clear refs after capturing
+        lastStreamedUsageRef.current = null;
+        lastThinkingTokensRef.current = null;
+
         dispatch(
           saveAssistantMessage({
             role: "assistant",
             content: assistantContent,
+            // Include token usage for cost tracking in the UI
+            usage: capturedUsage ?? undefined,
+            thinkingTokens: capturedThinkingTokens ?? undefined,
           }),
         )
           .unwrap()
@@ -379,13 +394,16 @@ export const ConnectedConversationPanel = forwardRef<
     extractAndSaveArtifacts,
   ]);
 
-  // Track streaming content for saving when complete
+  // Track streaming content and usage for saving when complete
   useEffect(() => {
     if (isStreaming && streamingContent) {
       streamingCompleteRef.current = true;
       lastStreamedContentRef.current = streamingContent;
+      // Also capture usage data at stream completion
+      lastStreamedUsageRef.current = streamingUsage;
+      lastThinkingTokensRef.current = thinkingTokens;
     }
-  }, [isStreaming, streamingContent]);
+  }, [isStreaming, streamingContent, streamingUsage, thinkingTokens]);
 
   // Get session title for display (currentSession defined earlier for message merging)
   const sessionTitle = currentSession?.name;
