@@ -600,7 +600,7 @@ class LLMFactory:
                         content = after_result.modified_output
                         span.set_attribute("hook.after_model.modified", True)
 
-                return AIMessage(content=content)
+                return AIMessage(content=content or "")
 
             except Exception as e:
                 # Convert to custom exceptions for better error handling
@@ -715,7 +715,7 @@ class LLMFactory:
 
                 self.telemetry.metrics.successful_calls.add(1, {"operation": "llm.fallback_async", "model": fallback_model})
 
-                return AIMessage(content=content)
+                return AIMessage(content=content or "")
 
             except Exception as e:
                 self.telemetry.logger.error(f"Async fallback model {fallback_model} failed: {e}", exc_info=True)

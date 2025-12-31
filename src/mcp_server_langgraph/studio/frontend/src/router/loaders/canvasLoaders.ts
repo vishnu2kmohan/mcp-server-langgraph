@@ -354,8 +354,16 @@ interface FrameworkSummary {
 export async function complianceLoader(
   _args: LoaderFunctionArgs,
 ): Promise<ComplianceLoaderData> {
+  // Default to last 30 days (required by backend)
+  const now = new Date();
+  const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+  const params = new URLSearchParams({
+    start_time: thirtyDaysAgo.toISOString(),
+    end_time: now.toISOString(),
+  });
+
   const result = await fetchJson<ComplianceSummary>(
-    `${API_BASE}/compliance/reports/summary`,
+    `${API_BASE}/compliance/reports/summary?${params}`,
   );
 
   if (!result) {
