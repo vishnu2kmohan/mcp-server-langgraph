@@ -99,13 +99,15 @@ Anthropic Claude models accessed through Vertex AI have different limits than th
 
 | Model | RPM | Input TPM | Output TPM | Region |
 |-------|-----|-----------|------------|--------|
-| Claude Opus 4.5 | 1,200 | 12,000,000 | 1,200,000 | us-east5 |
-| Claude Sonnet 4.5 | 3,000 | 3,000,000 | 300,000 | us-east5 |
-| Claude Haiku 4.5 | 10,000 | 10,000,000 | 1,000,000 | us-east5 |
+| Claude Opus 4.5 | 1,200 | 12,000,000 | 1,200,000 | global, us-east5, europe-west4 |
+| Claude Sonnet 4.5 | 3,000 | 3,000,000 | 300,000 | global, us-east5, europe-west4 |
+| Claude Haiku 4.5 | 10,000 | 10,000,000 | 1,000,000 | global, us-east5, europe-west4 |
 
-<Warning>
-Claude models are only available in the `us-east5` region on Vertex AI. Ensure your application accounts for this geographic constraint.
-</Warning>
+<Info>
+**Global Endpoint (GA)**: Claude models now support the `global` endpoint on Vertex AI, which dynamically routes requests to regions with available capacity for maximum availability. Use `global` for highest availability unless you have data residency requirements.
+
+See: [Global endpoint for Claude models on Vertex AI](https://cloud.google.com/blog/products/ai-machine-learning/global-endpoint-for-claude-models-generally-available-on-vertex-ai)
+</Info>
 
 ### Azure OpenAI Service
 

@@ -8,10 +8,12 @@ Tests both authentication approaches:
 These tests verify that LLMFactory correctly handles Vertex AI authentication
 for both Anthropic Claude and Google Gemini models.
 
-IMPORTANT: Region Configuration
-- Claude models (Opus, Sonnet, Haiku) are only available in us-east5 on Vertex AI
+Region Configuration (Updated 2025):
+- Claude models now support the GLOBAL endpoint on Vertex AI (GA)
+  Supported models: Claude Opus 4, Claude Sonnet 4, Claude Sonnet 3.7, Claude Sonnet 3.5 v2
+  See: https://cloud.google.com/blog/products/ai-machine-learning/global-endpoint-for-claude-models-generally-available-on-vertex-ai
 - Gemini models are available in most regions including us-central1 and global
-- See: https://cloud.google.com/vertex-ai/generative-ai/docs/partner-models/use-claude
+- Both Claude and Gemini can use 'global' for dynamic routing to available regions
 """
 
 import gc
@@ -25,9 +27,9 @@ from mcp_server_langgraph.llm.factory import LLMFactory
 pytestmark = [pytest.mark.integration, pytest.mark.slow]
 
 # Region configuration for different model families on Vertex AI
-# Claude models are only available in us-east5
-# Gemini models work in most regions (us-central1, global, etc.)
-CLAUDE_REGION = os.getenv("VERTEX_LOCATION", "us-east5")
+# Both Claude and Gemini now support the global endpoint
+# Global endpoint dynamically routes to regions with available capacity
+CLAUDE_REGION = os.getenv("VERTEX_LOCATION", "global")
 GEMINI_REGION = os.getenv("GOOGLE_CLOUD_LOCATION", "global")
 
 
@@ -49,7 +51,7 @@ class TestVertexAIWorkloadIdentity:
         """Test Claude via Vertex AI using Workload Identity (no explicit credentials)."""
         # When GOOGLE_APPLICATION_CREDENTIALS is NOT set, Vertex AI should use
         # Workload Identity (automatic on GKE)
-        # Note: Claude models only available in us-east5 on Vertex AI
+        # Note: Claude models support global endpoint on Vertex AI (GA)
         llm = LLMFactory(
             provider="vertex_ai",
             model_name="vertex_ai/claude-haiku-4-5@20251001",
@@ -103,7 +105,7 @@ class TestVertexAIServiceAccountKey:
         """Test Claude via Vertex AI using service account key file."""
         # When GOOGLE_APPLICATION_CREDENTIALS is set, Vertex AI should use
         # the specified service account key file
-        # Note: Claude models only available in us-east5 on Vertex AI
+        # Note: Claude models support global endpoint on Vertex AI (GA)
         llm = LLMFactory(
             provider="vertex_ai",
             model_name="vertex_ai/claude-haiku-4-5@20251001",

@@ -294,9 +294,9 @@ class TestVertexLocationEnvVarAlias:
     - VERTEX_LOCATION: Primary env var (takes precedence)
     - GOOGLE_CLOUD_LOCATION: Standard GCP env var (fallback)
 
-    Note: Claude models via Vertex AI require specific regions (e.g., us-east5),
-    while Gemini models can use "global". VERTEX_LOCATION takes precedence
-    to allow Claude-specific region configuration.
+    Note: Both Claude and Gemini now support the 'global' endpoint on Vertex AI.
+    Claude global endpoint is GA (Generally Available) since 2025.
+    See: https://cloud.google.com/blog/products/ai-machine-learning/global-endpoint-for-claude-models-generally-available-on-vertex-ai
     """
 
     def teardown_method(self):
@@ -324,11 +324,12 @@ class TestVertexLocationEnvVarAlias:
     def test_vertex_location_precedence(self, monkeypatch):
         """Test that VERTEX_LOCATION takes precedence over GOOGLE_CLOUD_LOCATION.
 
-        This is important for Claude models which require specific regions,
-        while Gemini models can use "global".
+        This ensures explicit VERTEX_LOCATION configuration takes priority
+        when both env vars are set, useful for regional endpoints with
+        data residency requirements.
         """
-        monkeypatch.setenv("VERTEX_LOCATION", "us-east5")  # Claude-compatible
-        monkeypatch.setenv("GOOGLE_CLOUD_LOCATION", "global")  # Gemini-compatible
+        monkeypatch.setenv("VERTEX_LOCATION", "us-east5")  # Regional endpoint
+        monkeypatch.setenv("GOOGLE_CLOUD_LOCATION", "global")  # Global endpoint
 
         settings = Settings()
 

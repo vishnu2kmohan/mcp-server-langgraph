@@ -261,10 +261,11 @@ jobs:
 
     - name: Run Vertex AI Integration Tests
       env:
-        # Vertex AI configuration for Anthropic Claude models
+        # Vertex AI configuration - Global endpoint for both Claude and Gemini
+        # Claude global endpoint is GA: https://cloud.google.com/blog/products/ai-machine-learning/global-endpoint-for-claude-models-generally-available-on-vertex-ai
         VERTEX_PROJECT: ${{ vars.GCP_PROJECT_ID }}
-        VERTEX_LOCATION: us-east5
-        CLOUD_ML_REGION: us-east5
+        VERTEX_LOCATION: global
+        CLOUD_ML_REGION: global
         ANTHROPIC_VERTEX_PROJECT_ID: ${{ vars.GCP_PROJECT_ID }}
         # Vertex AI configuration for Google Gemini models
         GOOGLE_CLOUD_PROJECT: ${{ vars.GCP_PROJECT_ID }}
