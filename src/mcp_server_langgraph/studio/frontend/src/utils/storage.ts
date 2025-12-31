@@ -74,6 +74,7 @@ export const STORAGE_KEYS = {
   // AI Features
   AI_SUGGESTIONS_CACHE: "studio-ai-suggestions-cache",
   AI_CONTEXT_HISTORY: "studio-ai-context-history",
+  AI_DISMISSED_IDS: "studio-ai-dismissed-ids",
   AI_PREFERENCES: "studio-ai-preferences",
 
   // Session Sync

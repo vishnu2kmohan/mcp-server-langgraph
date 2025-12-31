@@ -113,6 +113,8 @@ export function useAISuggestionsFetch(
     invalidateCache,
     setContext,
     getCacheAge,
+    dismissSuggestion: dismissFromCache,
+    clearDismissed,
   } = useAISuggestionsCache({ ttlMs });
 
   // Local state for suggestions (allows immediate updates for accept/dismiss)
@@ -161,28 +163,29 @@ export function useAISuggestionsFetch(
   );
 
   /**
-   * Dismiss a suggestion (removes from list, updates cache)
+   * Dismiss a suggestion (removes from list, persists in cache)
+   * Uses cache hook's dismissSuggestion to persist dismissal across refetches
    */
   const dismissSuggestion = useCallback(
     (id: string) => {
-      setLocalSuggestions((prev) => {
-        const updated = prev.filter((s) => s.id !== id);
-        cacheSuggestions(updated);
-        return updated;
-      });
+      // Update local state immediately
+      setLocalSuggestions((prev) => prev.filter((s) => s.id !== id));
+      // Persist dismissal in cache (survives refetches)
+      dismissFromCache(id);
       logger.debug("Dismissed suggestion:", id);
     },
-    [cacheSuggestions],
+    [dismissFromCache],
   );
 
   /**
-   * Clear all suggestions
+   * Clear all suggestions and dismissed IDs
    */
   const clearSuggestions = useCallback(() => {
     setLocalSuggestions([]);
     invalidateCache();
-    logger.debug("Cleared all suggestions");
-  }, [invalidateCache]);
+    clearDismissed();
+    logger.debug("Cleared all suggestions and dismissed IDs");
+  }, [invalidateCache, clearDismissed]);
 
   /**
    * Fetch suggestions from API (internal function, stable reference)

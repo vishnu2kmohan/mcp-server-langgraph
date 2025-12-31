@@ -288,4 +288,132 @@ describe("useAISuggestionsCache", () => {
       expect(result.current.getCacheAge()).toBe(0);
     });
   });
+
+  describe("dismissed suggestions tracking", () => {
+    it("tracks dismissed suggestion IDs", () => {
+      const { result } = renderHook(() => useAISuggestionsCache());
+
+      const suggestions: CachedSuggestion[] = [
+        { id: "1", type: "completion", content: "test 1", confidence: 0.9 },
+        { id: "2", type: "refactor", content: "test 2", confidence: 0.8 },
+      ];
+
+      act(() => {
+        result.current.cacheSuggestions(suggestions);
+        result.current.dismissSuggestion("1");
+      });
+
+      expect(result.current.dismissedIds).toContain("1");
+      expect(result.current.dismissedIds).not.toContain("2");
+    });
+
+    it("persists dismissed IDs in storage", () => {
+      const { result } = renderHook(() => useAISuggestionsCache());
+
+      act(() => {
+        result.current.cacheSuggestions([
+          { id: "1", type: "completion", content: "test", confidence: 0.9 },
+        ]);
+        result.current.dismissSuggestion("1");
+      });
+
+      // Check storage directly
+      const dismissed = sessionStore.get<string[]>(
+        STORAGE_KEYS.AI_DISMISSED_IDS,
+      );
+      expect(dismissed).toContain("1");
+    });
+
+    it("filters out dismissed suggestions when caching new data", () => {
+      const { result } = renderHook(() => useAISuggestionsCache());
+
+      // First: cache and dismiss a suggestion
+      act(() => {
+        result.current.cacheSuggestions([
+          { id: "1", type: "completion", content: "test 1", confidence: 0.9 },
+        ]);
+        result.current.dismissSuggestion("1");
+      });
+
+      // Second: cache new suggestions that include the dismissed one
+      // (simulates API returning the same suggestion again)
+      act(() => {
+        result.current.cacheSuggestions([
+          { id: "1", type: "completion", content: "test 1", confidence: 0.9 },
+          { id: "2", type: "refactor", content: "test 2", confidence: 0.8 },
+        ]);
+      });
+
+      // Dismissed suggestion should be filtered out
+      expect(result.current.suggestions).toHaveLength(1);
+      expect(result.current.suggestions[0].id).toBe("2");
+    });
+
+    it("clears dismissed IDs when context changes", () => {
+      const { result } = renderHook(() => useAISuggestionsCache());
+
+      act(() => {
+        result.current.setContext({
+          sessionId: "session-1",
+          artifactId: "artifact-1",
+        });
+        result.current.dismissSuggestion("1");
+      });
+
+      expect(result.current.dismissedIds).toContain("1");
+
+      // Change context - should clear dismissed IDs for the new context
+      act(() => {
+        result.current.setContext({
+          sessionId: "session-1",
+          artifactId: "artifact-2", // Different artifact
+        });
+      });
+
+      expect(result.current.dismissedIds).toEqual([]);
+    });
+
+    it("maintains dismissed IDs within same context", () => {
+      const { result } = renderHook(() => useAISuggestionsCache());
+
+      const context = { sessionId: "session-1", artifactId: "artifact-1" };
+
+      act(() => {
+        result.current.setContext(context);
+        result.current.dismissSuggestion("1");
+        result.current.dismissSuggestion("2");
+      });
+
+      // Set same context again - should keep dismissed IDs
+      act(() => {
+        result.current.setContext({ ...context });
+      });
+
+      expect(result.current.dismissedIds).toContain("1");
+      expect(result.current.dismissedIds).toContain("2");
+    });
+
+    it("isDismissed helper returns correct status", () => {
+      const { result } = renderHook(() => useAISuggestionsCache());
+
+      act(() => {
+        result.current.dismissSuggestion("1");
+      });
+
+      expect(result.current.isDismissed("1")).toBe(true);
+      expect(result.current.isDismissed("2")).toBe(false);
+    });
+
+    it("clearDismissed removes all dismissed IDs", () => {
+      const { result } = renderHook(() => useAISuggestionsCache());
+
+      act(() => {
+        result.current.dismissSuggestion("1");
+        result.current.dismissSuggestion("2");
+        result.current.clearDismissed();
+      });
+
+      expect(result.current.dismissedIds).toEqual([]);
+    });
+  });
 });

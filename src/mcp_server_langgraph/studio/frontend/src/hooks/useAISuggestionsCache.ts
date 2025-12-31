@@ -55,13 +55,15 @@ export interface UseAISuggestionsCacheOptions {
 }
 
 export interface UseAISuggestionsCacheResult {
-  /** Current cached suggestions */
+  /** Current cached suggestions (excludes dismissed) */
   suggestions: CachedSuggestion[];
   /** Current AI context (session, artifact) */
   context: AIContextRef | null;
   /** Whether cache is stale (expired or invalidated) */
   isStale: boolean;
-  /** Cache suggestions with TTL */
+  /** IDs of dismissed suggestions for current context */
+  dismissedIds: string[];
+  /** Cache suggestions with TTL (filters out dismissed) */
   cacheSuggestions: (suggestions: CachedSuggestion[]) => void;
   /** Invalidate (clear) the cache */
   invalidateCache: () => void;
@@ -69,6 +71,12 @@ export interface UseAISuggestionsCacheResult {
   setContext: (context: AIContextRef) => void;
   /** Get cache age in milliseconds */
   getCacheAge: () => number;
+  /** Dismiss a suggestion by ID (persists across refetches) */
+  dismissSuggestion: (id: string) => void;
+  /** Check if a suggestion is dismissed */
+  isDismissed: (id: string) => boolean;
+  /** Clear all dismissed IDs for current context */
+  clearDismissed: () => void;
 }
 
 // =============================================================================
@@ -90,12 +98,21 @@ export function useAISuggestionsCache(
   const cacheCreatedAt = useRef<number>(0);
   const previousContextRef = useRef<string | null>(null);
 
-  // Initialize suggestions from cache
+  // Initialize dismissed IDs from sessionStore (per-session persistence)
+  const [dismissedIds, setDismissedIds] = useState<string[]>(() => {
+    const stored = sessionStore.get<string[]>(STORAGE_KEYS.AI_DISMISSED_IDS);
+    return stored ?? [];
+  });
+
+  // Initialize suggestions from cache (filtering out dismissed)
   const [suggestions, setSuggestions] = useState<CachedSuggestion[]>(() => {
     const cached = storage.getWithTTL<CachedSuggestion[]>(
       STORAGE_KEYS.AI_SUGGESTIONS_CACHE,
     );
-    return cached ?? [];
+    const dismissed =
+      sessionStore.get<string[]>(STORAGE_KEYS.AI_DISMISSED_IDS) ?? [];
+    // Filter out dismissed suggestions on initial load
+    return (cached ?? []).filter((s) => !dismissed.includes(s.id));
   });
 
   // Initialize context from sessionStore
@@ -110,20 +127,20 @@ export function useAISuggestionsCache(
   const [isStale, setIsStale] = useState<boolean>(false);
 
   /**
-   * Cache suggestions with TTL
+   * Cache suggestions with TTL (filters out dismissed IDs)
    */
   const cacheSuggestions = useCallback(
     (newSuggestions: CachedSuggestion[]) => {
-      storage.setWithTTL(
-        STORAGE_KEYS.AI_SUGGESTIONS_CACHE,
-        newSuggestions,
-        ttlMs,
+      // Filter out any dismissed suggestions before caching
+      const filtered = newSuggestions.filter(
+        (s) => !dismissedIds.includes(s.id),
       );
-      setSuggestions(newSuggestions);
+      storage.setWithTTL(STORAGE_KEYS.AI_SUGGESTIONS_CACHE, filtered, ttlMs);
+      setSuggestions(filtered);
       cacheCreatedAt.current = Date.now();
       setIsStale(false);
     },
-    [ttlMs],
+    [ttlMs, dismissedIds],
   );
 
   /**
@@ -133,6 +150,14 @@ export function useAISuggestionsCache(
     storage.remove(STORAGE_KEYS.AI_SUGGESTIONS_CACHE);
     setSuggestions([]);
     cacheCreatedAt.current = 0;
+  }, []);
+
+  /**
+   * Clear dismissed IDs (internal helper)
+   */
+  const clearDismissedInternal = useCallback(() => {
+    sessionStore.remove(STORAGE_KEYS.AI_DISMISSED_IDS);
+    setDismissedIds([]);
   }, []);
 
   /**
@@ -152,12 +177,13 @@ export function useAISuggestionsCache(
       previousContextRef.current = newContextKey;
       setContextState(newContext);
 
-      // Invalidate cache if context changed and option is enabled
+      // Invalidate cache and clear dismissed IDs if context changed
       if (invalidateOnContextChange && contextChanged) {
         invalidateCache();
+        clearDismissedInternal();
       }
     },
-    [invalidateOnContextChange, invalidateCache],
+    [invalidateOnContextChange, invalidateCache, clearDismissedInternal],
   );
 
   /**
@@ -177,14 +203,49 @@ export function useAISuggestionsCache(
     }
   }, [context]);
 
+  /**
+   * Dismiss a suggestion by ID (persists across refetches)
+   */
+  const dismissSuggestion = useCallback((id: string) => {
+    setDismissedIds((prev) => {
+      if (prev.includes(id)) return prev;
+      const updated = [...prev, id];
+      sessionStore.set(STORAGE_KEYS.AI_DISMISSED_IDS, updated);
+      return updated;
+    });
+    // Also remove from current suggestions
+    setSuggestions((prev) => prev.filter((s) => s.id !== id));
+  }, []);
+
+  /**
+   * Check if a suggestion is dismissed
+   */
+  const isDismissed = useCallback(
+    (id: string): boolean => {
+      return dismissedIds.includes(id);
+    },
+    [dismissedIds],
+  );
+
+  /**
+   * Clear all dismissed IDs for current context (public API)
+   */
+  const clearDismissed = useCallback(() => {
+    clearDismissedInternal();
+  }, [clearDismissedInternal]);
+
   return {
     suggestions,
     context,
     isStale,
+    dismissedIds,
     cacheSuggestions,
     invalidateCache,
     setContext,
     getCacheAge,
+    dismissSuggestion,
+    isDismissed,
+    clearDismissed,
   };
 }
 
