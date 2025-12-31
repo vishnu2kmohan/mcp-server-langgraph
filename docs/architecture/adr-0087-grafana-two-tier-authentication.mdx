@@ -1,0 +1,94 @@
+# ADR-0087: Grafana Two-Tier Authentication Architecture
+
+**Status**: Accepted
+**Date**: 2025-12-31
+**Deciders**: Architecture Team
+**Related**: ADR-0031 (Keycloak Identity), ADR-0067 (Grafana LGTM Stack), ADR-0070 (OpenFGA OIDC)
+
+## Context
+
+The MCP Server LangGraph integrates with Grafana for observability dashboards and alerting. Two distinct access patterns require authentication:
+
+1. **UI Access**: Developers and operators accessing Grafana dashboards via browser
+2. **API Access**: Backend services (MCP server) querying Grafana's Alerting API programmatically
+
+### The Problem
+
+Grafana's JWT authentication (`GF_AUTH_JWT_ENABLED`) requires HTTPS for the JWKS URL:
+
+```
+Error: jwt_set_url must have https scheme
+```
+
+In the test environment (Docker Compose) without TLS between containers, this requirement cannot be satisfied.
+
+## Decision
+
+Implement a **two-tier authentication architecture** for Grafana:
+
+| Access Type | Authentication Method | Environment |
+|-------------|----------------------|-------------|
+| **UI Login** | Keycloak OAuth 2.0 (Generic OAuth) | All |
+| **API Access (Test)** | Basic Auth with admin credentials | Test/Dev |
+| **API Access (Production)** | JWT via Keycloak OIDC | Production (HTTPS) |
+
+### Test Environment Configuration
+
+```yaml
+# Grafana - OAuth for UI
+grafana-test:
+  environment:
+    - GF_AUTH_GENERIC_OAUTH_ENABLED=true
+    - GF_AUTH_OAUTH_AUTO_LOGIN=true
+
+# MCP Server - Basic auth for API
+mcp-server-test:
+  environment:
+    - GRAFANA_USERNAME=admin
+    - GRAFANA_PASSWORD=admin
+```
+
+### Production Configuration
+
+```yaml
+# Grafana - OAuth for UI + JWT for API
+grafana:
+  environment:
+    - GF_AUTH_GENERIC_OAUTH_ENABLED=true
+    - GF_AUTH_JWT_ENABLED=true
+    - GF_AUTH_JWT_JWK_SET_URL=https://keycloak/authn/realms/default/protocol/openid-connect/certs
+
+# MCP Server - OIDC for API
+mcp-server:
+  environment:
+    - GRAFANA_USE_OIDC=true
+```
+
+## Consequences
+
+### Positive
+
+- Keycloak remains the single identity provider for all human users
+- Same codebase works in both environments
+- JWT provides cryptographic security in production
+
+### Negative
+
+- Basic auth credentials in docker-compose.yml (acceptable for test env)
+- Different auth methods require documentation
+
+## Alternatives Considered
+
+1. **TLS Everywhere**: Rejected due to complexity for local development
+2. **Grafana Service Accounts**: Rejected because they require API-based creation
+3. **OAuth2 Proxy**: Rejected as overkill for internal service-to-service calls
+
+## Implementation
+
+The `GrafanaAlertingClient` in `src/mcp_server_langgraph/observability/query/backends/grafana.py` supports both modes via the `use_oidc` flag and auto-initializes on first use.
+
+## References
+
+- [Grafana JWT Authentication](https://grafana.com/docs/grafana/latest/setup-grafana/configure-security/configure-authentication/jwt/)
+- [Grafana Generic OAuth](https://grafana.com/docs/grafana/latest/setup-grafana/configure-security/configure-authentication/generic-oauth/)
+- [Full ADR](../../adr/adr-0087-grafana-two-tier-authentication.md)

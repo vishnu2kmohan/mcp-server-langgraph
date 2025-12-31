@@ -1,7 +1,7 @@
 # Architecture Decision Records (ADRs)
 
-**Last Updated**: 2025-12-28
-**Total ADRs**: 82
+**Last Updated**: 2025-12-31
+**Total ADRs**: 84
 
 ## Overview
 
@@ -74,6 +74,7 @@ Each ADR follows this structure:
 | [ADR-0039](adr-0039-openfga-permission-inheritance.md) | 39. OpenFGA Permission Inheritance for Service Principals | Accepted | 2025-01-28 |
 | [ADR-0068](adr-0068-gateway-level-authentication.md) | Gateway-Level Authentication with Traefik ForwardAuth | Unknown | Unknown |
 | [ADR-0070](adr-0070-openfga-oidc-authentication.md) | OpenFGA OIDC Authentication Migration | Accepted | 2025-12-15 |
+| [ADR-0087](adr-0087-grafana-two-tier-authentication.md) | 87. Grafana Two-Tier Authentication Architecture | Accepted | 2025-12-31 |
 
 ### Core Architecture
 
