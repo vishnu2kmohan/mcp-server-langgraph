@@ -19,7 +19,7 @@ Example:
 
         async def get_session_traces(self, session_id: str):
             return await self.tracing.search_by_attribute(
-                attribute="session_id",
+                attribute="session.id",  # OTEL uses dot notation
                 value=session_id,
             )
 
@@ -293,7 +293,8 @@ class TracingQueryClient(ABC):
         Useful for finding traces associated with a session, user, or request ID.
 
         Args:
-            attribute: Attribute name (e.g., "session_id", "user_id", "request_id")
+            attribute: Attribute name (e.g., "session.id", "user.id", "request.id")
+                       OTEL uses dot notation for semantic attribute naming.
             value: Attribute value to match
             start: Search start time
             end: Search end time
@@ -417,7 +418,8 @@ class LoggingQueryClient(ABC):
         Get logs matching a specific attribute value.
 
         Args:
-            attribute: Attribute name (e.g., "session_id", "user_id")
+            attribute: Attribute name (e.g., "session.id", "user.id")
+                       OTEL uses dot notation for semantic attribute naming.
             value: Attribute value to match
             start: Search start time
             end: Search end time

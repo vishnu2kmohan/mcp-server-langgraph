@@ -150,11 +150,11 @@ class TestSessionTraceEndpoint:
         assert "start_time" in data
         assert "end_time" in data
 
-        # Verify Tempo was queried with session_id
+        # Verify Tempo was queried with session.id (OTEL dot notation)
         mock_tempo.search_traces.assert_called_once()
         call_kwargs = mock_tempo.search_traces.call_args.kwargs
         assert "tags" in call_kwargs
-        assert call_kwargs["tags"].get("session_id") == "session-123"
+        assert call_kwargs["tags"].get("session.id") == "session-123"
 
     @pytest.mark.asyncio
     async def test_get_session_trace_maps_spans_to_steps(self) -> None:

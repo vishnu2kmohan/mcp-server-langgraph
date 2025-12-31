@@ -107,9 +107,9 @@ class TempoClient:
             limit=20
         )
 
-        # Get traces for a session
+        # Get traces for a session (OTEL uses dot notation)
         traces = await client.search_by_attribute(
-            attribute="session_id",
+            attribute="session.id",
             value="sess-12345",
             start=datetime.now() - timedelta(hours=1)
         )
@@ -372,7 +372,8 @@ class TempoClient:
         Useful for finding traces associated with a session, user, or request ID.
 
         Args:
-            attribute: Attribute name (e.g., "session_id", "user_id")
+            attribute: Attribute name (e.g., "session.id", "user.id")
+                       OTEL uses dot notation for semantic attribute naming.
             value: Attribute value to match
             start: Search start time (defaults to last hour)
             end: Search end time (defaults to now)

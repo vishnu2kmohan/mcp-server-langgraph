@@ -555,17 +555,18 @@ class ObservabilityServiceImpl(ObservabilityService):
         Returns (traces, next_cursor).
         """
         # Build tags dict from entity filters for attribute-based search
+        # Use dot notation to match OTEL span attribute naming (session.id, user.id, etc.)
         tags: dict[str, str] = {}
         if session_id:
-            tags["session_id"] = session_id
+            tags["session.id"] = session_id
         if user_id:
-            tags["user_id"] = user_id
+            tags["user.id"] = user_id
         if workflow_id:
-            tags["workflow_id"] = workflow_id
+            tags["workflow.id"] = workflow_id
         if project_id:
-            tags["project_id"] = project_id
+            tags["project.id"] = project_id
         if organization_id:
-            tags["organization_id"] = organization_id
+            tags["organization.id"] = organization_id
 
         if tags:
             # Use attribute search for entity filtering
@@ -768,30 +769,30 @@ class ObservabilityServiceImpl(ObservabilityService):
             # Get logs correlated with a specific trace
             result = await self.logging.get_logs_for_trace(trace_id=trace_id)
         elif session_id:
-            # Get logs by session_id attribute
+            # Get logs by session.id attribute (dot notation matches OTEL spans)
             result = await self.logging.get_logs_by_attribute(
-                attribute="session_id",
+                attribute="session.id",
                 value=session_id,
                 limit=limit,
             )
         elif user_id:
-            # Get logs by user_id attribute
+            # Get logs by user.id attribute (dot notation matches OTEL spans)
             result = await self.logging.get_logs_by_attribute(
-                attribute="user_id",
+                attribute="user.id",
                 value=user_id,
                 limit=limit,
             )
         elif workflow_id:
-            # Get logs by workflow_id attribute
+            # Get logs by workflow.id attribute (dot notation matches OTEL spans)
             result = await self.logging.get_logs_by_attribute(
-                attribute="workflow_id",
+                attribute="workflow.id",
                 value=workflow_id,
                 limit=limit,
             )
         elif project_id:
-            # Get logs by project_id attribute
+            # Get logs by project.id attribute (dot notation matches OTEL spans)
             result = await self.logging.get_logs_by_attribute(
-                attribute="project_id",
+                attribute="project.id",
                 value=project_id,
                 limit=limit,
             )
@@ -903,7 +904,7 @@ class ObservabilityServiceImpl(ObservabilityService):
         then aggregates span durations to compute metrics.
         """
         result = await self.tracing.search_by_attribute(
-            attribute="session_id",
+            attribute="session.id",
             value=session_id,
             limit=1000,
         )
@@ -941,7 +942,7 @@ class ObservabilityServiceImpl(ObservabilityService):
         Uses Tempo TraceQL to find all traces for this workflow.
         """
         result = await self.tracing.search_by_attribute(
-            attribute="workflow_id",
+            attribute="workflow.id",
             value=workflow_id,
             limit=1000,
         )
@@ -979,7 +980,7 @@ class ObservabilityServiceImpl(ObservabilityService):
         Uses Tempo TraceQL to find all traces for this user.
         """
         result = await self.tracing.search_by_attribute(
-            attribute="user_id",
+            attribute="user.id",
             value=user_id,
             limit=1000,
         )
@@ -1000,8 +1001,8 @@ class ObservabilityServiceImpl(ObservabilityService):
         unique_sessions: set[str] = set()
         for t in traces:
             for span in t.spans:
-                if hasattr(span, "attributes") and "session_id" in span.attributes:
-                    unique_sessions.add(span.attributes["session_id"])
+                if hasattr(span, "attributes") and "session.id" in span.attributes:
+                    unique_sessions.add(span.attributes["session.id"])
 
         return {
             "total_requests": len(traces),

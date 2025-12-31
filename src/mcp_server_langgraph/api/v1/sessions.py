@@ -1880,7 +1880,7 @@ async def get_session_trace(
 
     if tempo_client is not None:
         try:
-            result = await tempo_client.search_traces(tags={"session_id": session_id})
+            result = await tempo_client.search_traces(tags={"session.id": session_id})
             if result and result.traces:
                 # Map first trace's spans to TraceStep
                 trace = result.traces[0]

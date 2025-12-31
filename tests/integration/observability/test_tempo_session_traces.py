@@ -146,8 +146,8 @@ class TestTempoTraceRetrievalIntegration:
         await client.initialize()
 
         try:
-            # Search for traces with session_id tag
-            result = await client.search_traces(tags={"session_id": session_id})
+            # Search for traces with session.id tag (OTEL dot notation)
+            result = await client.search_traces(tags={"session.id": session_id})
 
             # Should return TraceSearchResult (possibly empty)
             assert result is not None
@@ -221,8 +221,8 @@ class TestSessionTraceEndpointIntegration:
         await client.initialize()
 
         try:
-            # Query for traces
-            result = await client.search_traces(tags={"session_id": session_id})
+            # Query for traces (OTEL uses dot notation: session.id)
+            result = await client.search_traces(tags={"session.id": session_id})
 
             # Convert to SessionTraceResponse format (mimicking sessions.py logic)
             steps: list[TraceStep] = []

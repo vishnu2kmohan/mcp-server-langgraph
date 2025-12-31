@@ -196,7 +196,7 @@ def get_tempo_client(request: Request) -> "TempoTracingClient | None":
             tempo: TempoTracingClient | None = Depends(get_tempo_client),
         ):
             if tempo:
-                traces = await tempo.search_traces(tags={"session_id": session_id})
+                traces = await tempo.search_traces(tags={"session.id": session_id})
     """
     return getattr(request.app.state, "tempo_client", None)
 

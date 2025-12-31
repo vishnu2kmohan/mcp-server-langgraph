@@ -173,7 +173,8 @@ class TestObservabilityServiceImpl:
 
         mock_tracing_client.search_by_attribute.assert_called_once()
         call_kwargs = mock_tracing_client.search_by_attribute.call_args.kwargs
-        assert call_kwargs["attribute"] == "session_id"
+        # OTEL uses dot notation for semantic attributes (session.id, not session_id)
+        assert call_kwargs["attribute"] == "session.id"
         assert call_kwargs["value"] == "session-123"
 
     @pytest.mark.asyncio
