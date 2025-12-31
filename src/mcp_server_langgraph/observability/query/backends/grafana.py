@@ -202,10 +202,15 @@ class GrafanaAlertingClient(AlertingQueryClient):
 
     @property
     def client(self) -> httpx.AsyncClient:
-        """Get HTTP client, initializing if needed."""
+        """Get HTTP client, raising if not initialized."""
         if self._client is None:
             raise RuntimeError("Client not initialized. Call initialize() first.")
         return self._client
+
+    async def _ensure_initialized(self) -> None:
+        """Ensure client is initialized, initializing if needed."""
+        if self._client is None:
+            await self.initialize()
 
     async def list_alerts(
         self,
@@ -221,6 +226,7 @@ class GrafanaAlertingClient(AlertingQueryClient):
 
         Uses GET /api/alertmanager/grafana/api/v2/alerts
         """
+        await self._ensure_initialized()
         try:
             # Build query parameters
             params: dict[str, str] = {}
@@ -320,6 +326,7 @@ class GrafanaAlertingClient(AlertingQueryClient):
 
         Uses GET /api/v1/provisioning/alert-rules
         """
+        await self._ensure_initialized()
         try:
             response = await self.client.get("/api/v1/provisioning/alert-rules")
             response.raise_for_status()
@@ -362,6 +369,7 @@ class GrafanaAlertingClient(AlertingQueryClient):
     async def health_check(self) -> bool:
         """Check if Grafana is healthy."""
         try:
+            await self._ensure_initialized()
             response = await self.client.get("/api/health")
             return response.status_code == 200
         except Exception:
