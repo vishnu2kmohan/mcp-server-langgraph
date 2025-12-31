@@ -303,7 +303,7 @@ class AISuggestionsHandler(WebSocketBase):
         """
         from langchain_core.messages import HumanMessage, SystemMessage
 
-        from mcp_server_langgraph.core.config import get_settings
+        from mcp_server_langgraph.core.config import settings
         from mcp_server_langgraph.llm.factory import create_llm_from_config
 
         suggestion_id = str(uuid.uuid4())
@@ -324,7 +324,6 @@ class AISuggestionsHandler(WebSocketBase):
 
         try:
             # Get LLM factory from config
-            settings = get_settings()
             llm = create_llm_from_config(settings)
 
             # Build prompt for suggestion generation

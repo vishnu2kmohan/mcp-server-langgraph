@@ -1549,10 +1549,9 @@ class ArtifactSuggestionAgent:
         """Lazy-load the LLM factory."""
         if self._llm_factory is None:
             try:
-                from mcp_server_langgraph.core.config import get_settings
+                from mcp_server_langgraph.core.config import settings
                 from mcp_server_langgraph.llm.factory import create_llm_from_config
 
-                settings = get_settings()
                 self._llm_factory = create_llm_from_config(settings)
             except Exception as e:
                 logger.warning("Failed to initialize LLM factory: %s", e)
