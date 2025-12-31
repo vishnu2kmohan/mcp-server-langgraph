@@ -1203,8 +1203,10 @@ services:
       - LOKI_URL=http://loki-test:3100
       - MIMIR_URL=http://mimir-test:9009
       - GRAFANA_URL=http://grafana-test:3000
-      - GRAFANA_USERNAME=admin
-      - GRAFANA_PASSWORD=admin
+      # Grafana API uses JWT authentication via Keycloak tokens
+      # MCP server obtains token from Keycloak using mcp-server client credentials
+      # and passes it as Bearer token to Grafana (GF_AUTH_JWT_ENABLED=true on Grafana)
+      - GRAFANA_USE_OIDC=true
       # GCP credentials for Vertex AI (mounted from host for local development)
       - GOOGLE_APPLICATION_CREDENTIALS=/app/.config/gcloud/application_default_credentials.json
       # GCP Project ID required for google-genai SDK (pydantic-ai) when using ADC
@@ -1571,6 +1573,22 @@ services:
       - GF_AUTH_OAUTH_AUTO_LOGIN=true
       # Disable other auth methods to enforce SSO
       - GF_AUTH_DISABLE_LOGIN_FORM=true
+      # ======================================================================
+      # JWT Authentication for API Access (Service-to-Service)
+      # ======================================================================
+      # Enables MCP server to call Grafana API using Keycloak JWT tokens
+      # Token obtained via OAuth2 client credentials grant, passed as Bearer token
+      - GF_AUTH_JWT_ENABLED=true
+      - GF_AUTH_JWT_HEADER_NAME=Authorization
+      - GF_AUTH_JWT_EMAIL_CLAIM=email
+      - GF_AUTH_JWT_USERNAME_CLAIM=preferred_username
+      - GF_AUTH_JWT_AUTO_SIGN_UP=true
+      # JWKS URL for token validation (Keycloak's public keys)
+      - GF_AUTH_JWT_JWK_SET_URL=http://keycloak-test:8080/authn/realms/default/protocol/openid-connect/certs
+      # Expect tokens from our Keycloak realm
+      - GF_AUTH_JWT_EXPECT_CLAIMS={"iss":"http://localhost/authn/realms/default"}
+      # Role mapping: admin realm role -> Grafana Admin, otherwise Viewer
+      - GF_AUTH_JWT_ROLE_ATTRIBUTE_PATH=contains(realm_access.roles[*], 'admin') && 'Admin' || 'Viewer'
     volumes:
       - grafana-data:/var/lib/grafana  # Named volume prevents SQLite locking issues
       - ./monitoring/grafana/datasources.yml:/etc/grafana/provisioning/datasources/datasources.yml:ro

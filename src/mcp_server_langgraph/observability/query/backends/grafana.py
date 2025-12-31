@@ -7,19 +7,30 @@ Used in LGTM stack (Loki, Grafana, Tempo, Mimir) deployments.
 Configuration:
     GRAFANA_URL: Grafana URL (default: http://grafana:3000)
     GRAFANA_API_KEY: API key for authentication (optional, for service accounts)
-    GRAFANA_USERNAME: Basic auth username (optional)
-    GRAFANA_PASSWORD: Basic auth password (optional)
+    GRAFANA_USE_OIDC: Use OIDC/Keycloak authentication (default: false)
+    GRAFANA_USERNAME: Basic auth username (optional, fallback if no OIDC/API key)
+    GRAFANA_PASSWORD: Basic auth password (optional, fallback if no OIDC/API key)
+
+OIDC authentication uses Keycloak client credentials:
+    KEYCLOAK_SERVER_URL: Keycloak URL (e.g., http://keycloak:8080/authn)
+    KEYCLOAK_REALM: Realm name (default: default)
+    OAUTH2_CLIENT_ID: Client ID for token acquisition
+    OAUTH2_CLIENT_SECRET: Client secret for token acquisition
 
 Example:
     export GRAFANA_URL=http://localhost:3000
-    export GRAFANA_API_KEY=glsa_xxx...
+    export GRAFANA_USE_OIDC=true
 """
 
 import logging
 import os
+import time
 from datetime import datetime, timedelta
 
 import httpx
+
+# OIDC token refresh buffer (refresh before expiration)
+OIDC_TOKEN_REFRESH_BUFFER_SECONDS = 30
 
 from mcp_server_langgraph.observability.query.interfaces import (
     Alert,
@@ -87,6 +98,7 @@ class GrafanaAlertingClient(AlertingQueryClient):
         api_key: str | None = None,
         username: str | None = None,
         password: str | None = None,
+        use_oidc: bool | None = None,
     ) -> None:
         """
         Initialize Grafana client.
@@ -96,23 +108,84 @@ class GrafanaAlertingClient(AlertingQueryClient):
             api_key: API key for auth (default from GRAFANA_API_KEY env)
             username: Basic auth username (default from GRAFANA_USERNAME env)
             password: Basic auth password (default from GRAFANA_PASSWORD env)
+            use_oidc: Use OIDC authentication (default from GRAFANA_USE_OIDC env)
         """
         resolved_url = base_url or os.getenv("GRAFANA_URL") or "http://grafana:3000"
         self.base_url = resolved_url.rstrip("/")
         self.api_key = api_key or os.getenv("GRAFANA_API_KEY")
         self.username = username or os.getenv("GRAFANA_USERNAME")
         self.password = password or os.getenv("GRAFANA_PASSWORD")
+        self.use_oidc = use_oidc if use_oidc is not None else os.getenv("GRAFANA_USE_OIDC", "").lower() in ("true", "1", "yes")
         self._client: httpx.AsyncClient | None = None
+
+        # OIDC token cache
+        self._oidc_access_token: str | None = None
+        self._oidc_token_expires_at: float = 0.0
+
+    async def _get_oidc_token(self) -> str:
+        """Obtain OIDC access token from Keycloak using client credentials grant."""
+        # Check cached token
+        if self._oidc_access_token:
+            if time.time() < (self._oidc_token_expires_at - OIDC_TOKEN_REFRESH_BUFFER_SECONDS):
+                return self._oidc_access_token
+
+        # Get Keycloak configuration from environment
+        keycloak_url = os.getenv("KEYCLOAK_SERVER_URL", "http://keycloak:8080/authn")
+        realm = os.getenv("KEYCLOAK_REALM", "default")
+        client_id = os.getenv("OAUTH2_CLIENT_ID", "mcp-server")
+        client_secret = os.getenv("OAUTH2_CLIENT_SECRET", "")
+
+        token_endpoint = f"{keycloak_url.rstrip('/')}/realms/{realm}/protocol/openid-connect/token"
+
+        logger.info(
+            "Obtaining OIDC token for Grafana API",
+            extra={"client_id": client_id, "token_endpoint": token_endpoint},
+        )
+
+        async with httpx.AsyncClient() as client:
+            response = await client.post(
+                token_endpoint,
+                data={
+                    "grant_type": "client_credentials",
+                    "client_id": client_id,
+                    "client_secret": client_secret,
+                },
+                timeout=10.0,
+            )
+            response.raise_for_status()
+
+            token_response = response.json()
+            access_token = token_response.get("access_token")
+            expires_in = token_response.get("expires_in", 300)
+
+            if not access_token:
+                raise RuntimeError("No access_token in Keycloak token response")
+
+            # Cache the token
+            self._oidc_access_token = access_token
+            self._oidc_token_expires_at = time.time() + expires_in
+
+            logger.info("OIDC token obtained successfully for Grafana API")
+            return access_token
 
     async def initialize(self) -> None:
         """Initialize HTTP client with auth."""
         headers: dict[str, str] = {"Content-Type": "application/json"}
 
         auth = None
-        if self.api_key:
+        if self.use_oidc:
+            # Obtain initial OIDC token
+            token = await self._get_oidc_token()
+            headers["Authorization"] = f"Bearer {token}"
+            logger.info(f"Grafana alerting client initialized with OIDC: {self.base_url}")
+        elif self.api_key:
             headers["Authorization"] = f"Bearer {self.api_key}"
+            logger.info(f"Grafana alerting client initialized with API key: {self.base_url}")
         elif self.username and self.password:
             auth = httpx.BasicAuth(self.username, self.password)
+            logger.info(f"Grafana alerting client initialized with basic auth: {self.base_url}")
+        else:
+            logger.warning(f"Grafana alerting client initialized without auth: {self.base_url}")
 
         self._client = httpx.AsyncClient(
             base_url=self.base_url,
@@ -120,7 +193,6 @@ class GrafanaAlertingClient(AlertingQueryClient):
             auth=auth,
             timeout=httpx.Timeout(30.0),
         )
-        logger.info(f"Grafana alerting client initialized: {self.base_url}")
 
     async def close(self) -> None:
         """Close HTTP client."""
