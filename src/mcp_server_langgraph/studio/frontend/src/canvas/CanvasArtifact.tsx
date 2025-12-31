@@ -338,6 +338,10 @@ export function CanvasArtifact({
     try {
       const pyodide = await getPyodide();
 
+      // Load common scientific packages (required before import)
+      // These are included in Pyodide but need explicit loading
+      await pyodide.loadPackage(["matplotlib", "numpy"]);
+
       // Prepare stdout/stderr capture and matplotlib backend
       await pyodide.runPythonAsync(`
 import sys, io, matplotlib
