@@ -10,7 +10,14 @@
  *
  * Use this in StudioShellLayout instead of the standalone ConversationPanel.
  */
-import { useCallback, useMemo, useState, useEffect, useRef } from "react";
+import {
+  useCallback,
+  useMemo,
+  useState,
+  useEffect,
+  useRef,
+  forwardRef,
+} from "react";
 import { useNavigate, useRouteLoaderData, useParams } from "react-router";
 import {
   AlertTriangle,
@@ -103,17 +110,23 @@ const DEFAULT_SLASH_COMMANDS: SlashCommand[] = [
 // Component
 // =============================================================================
 
-export function ConnectedConversationPanel({
-  className,
-  enableAI = false,
-  enableRealTimeSuggestions = false,
-  userId = "default-user",
-  persona,
-  showContextWarning = false,
-  showGoals = false,
-  currentTokens = 0,
-  maxTokens = 128000,
-}: ConnectedConversationPanelProps) {
+export const ConnectedConversationPanel = forwardRef<
+  HTMLDivElement,
+  ConnectedConversationPanelProps
+>(function ConnectedConversationPanel(
+  {
+    className,
+    enableAI = false,
+    enableRealTimeSuggestions = false,
+    userId = "default-user",
+    persona,
+    showContextWarning = false,
+    showGoals = false,
+    currentTokens = 0,
+    maxTokens = 128000,
+  },
+  ref,
+) {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const { sessionId } = useParams();
@@ -474,7 +487,7 @@ export function ConnectedConversationPanel({
     contextOptimization.usagePercent > 80;
 
   return (
-    <div className={cn("flex flex-col h-full", className)}>
+    <div ref={ref} className={cn("flex flex-col h-full", className)}>
       {/* Goal Tracker (Sprint 3) */}
       {enableAI && showGoals && goalTracking.primaryGoal && (
         <div
@@ -704,4 +717,7 @@ export function ConnectedConversationPanel({
       />
     </div>
   );
-}
+});
+
+// Display name for DevTools
+ConnectedConversationPanel.displayName = "ConnectedConversationPanel";

@@ -164,7 +164,7 @@ describe("SessionNav", () => {
 
   describe("search functionality", () => {
     it("should filter sessions based on search query", async () => {
-      const _user = userEvent.setup();
+      const user = userEvent.setup();
       const store = createTestStore();
       render(<SessionNav />, { wrapper: createWrapper(store) });
 
@@ -177,7 +177,7 @@ describe("SessionNav", () => {
     });
 
     it("should show 'No matching sessions' when search has no results", async () => {
-      const _user = userEvent.setup();
+      const user = userEvent.setup();
       const store = createTestStore();
       render(<SessionNav />, { wrapper: createWrapper(store) });
 
@@ -190,7 +190,7 @@ describe("SessionNav", () => {
 
   describe("navigation", () => {
     it("should navigate to session when clicked", async () => {
-      const _user = userEvent.setup();
+      const user = userEvent.setup();
       const store = createTestStore();
       render(<SessionNav />, { wrapper: createWrapper(store) });
 
@@ -294,7 +294,7 @@ describe("SessionNav AI Intelligence", () => {
   });
 
   it("should navigate to session when AISessionCard is clicked", async () => {
-    const _user = userEvent.setup();
+    const user = userEvent.setup();
     const store = createTestStore();
     render(<SessionNav enableAI />, { wrapper: createWrapper(store) });
 
@@ -430,7 +430,7 @@ describe("SessionNav Hover Details", () => {
   });
 
   it("should show hover tooltip when enableHover prop is true", async () => {
-    const _user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     const Wrapper = createWrapper(store);
     render(
       <Wrapper>
@@ -450,7 +450,7 @@ describe("SessionNav Hover Details", () => {
   });
 
   it("should display session creation time in hover tooltip", async () => {
-    const _user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     const Wrapper = createWrapper(store);
     render(
       <Wrapper>
@@ -468,7 +468,7 @@ describe("SessionNav Hover Details", () => {
   });
 
   it("should display message count in hover tooltip when available", async () => {
-    const _user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     const Wrapper = createWrapper(store);
     render(
       <Wrapper>
@@ -488,7 +488,7 @@ describe("SessionNav Hover Details", () => {
   });
 
   it("should display first message preview in hover tooltip when available", async () => {
-    const _user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     const Wrapper = createWrapper(store);
     render(
       <Wrapper>
@@ -513,7 +513,7 @@ describe("SessionNav Hover Details", () => {
   });
 
   it("should truncate long first message in hover tooltip", async () => {
-    const _user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     const longMessage =
       "This is a very long message that should be truncated when displayed in the hover tooltip because we do not want to show too much content in a small tooltip";
     const Wrapper = createWrapper(store);
@@ -542,7 +542,7 @@ describe("SessionNav Hover Details", () => {
   });
 
   it("should hide hover tooltip when mouse leaves", async () => {
-    const _user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     const Wrapper = createWrapper(store);
     render(
       <Wrapper>
@@ -563,7 +563,7 @@ describe("SessionNav Hover Details", () => {
   });
 
   it("should not show hover tooltip when enableHover is false", async () => {
-    const _user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     const Wrapper = createWrapper(store);
     render(
       <Wrapper>

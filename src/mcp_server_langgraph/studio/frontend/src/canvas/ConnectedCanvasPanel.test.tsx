@@ -1213,10 +1213,16 @@ describe("ConnectedCanvasPanel", () => {
       await user.click(saveButtons[0]);
 
       // Verify fetch was called with Authorization header
+      // Note: Other calls (AI suggestions, etc.) may happen first, so find the artifacts call
       await waitFor(() => {
         expect(fetchMock).toHaveBeenCalled();
-        const callArgs = fetchMock.mock.calls[0];
-        expect(callArgs[0]).toContain("/api/v1/artifacts/");
+        const artifactCall = fetchMock.mock.calls.find(
+          (call) =>
+            typeof call[0] === "string" &&
+            call[0].includes("/api/v1/artifacts/"),
+        );
+        expect(artifactCall).toBeDefined();
+        expect(artifactCall?.[0]).toContain("/api/v1/artifacts/");
       });
 
       // Restore

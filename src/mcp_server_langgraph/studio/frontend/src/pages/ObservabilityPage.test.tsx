@@ -46,6 +46,51 @@ vi.mock("../api", async (importOriginal) => {
   };
 });
 
+// Mock trace intelligence hooks
+const mockTraceSummary = {
+  summary: null,
+  totalDurationMs: null,
+  stepCount: null,
+  toolCallCount: null,
+  success: null,
+  keyActions: [],
+  isLoading: false,
+  error: null,
+  refetch: vi.fn(),
+};
+
+const mockTraceAnomaly = {
+  anomalies: [],
+  bottlenecks: [],
+  healthScore: null,
+  optimizationSuggestions: [],
+  isLoading: false,
+  error: null,
+  refetch: vi.fn(),
+};
+
+vi.mock("../hooks/useTraceIntelligence", () => ({
+  useTraceSummary: vi.fn(() => mockTraceSummary),
+  useTraceAnomaly: vi.fn(() => mockTraceAnomaly),
+}));
+
+import {
+  useTraceSummary,
+  useTraceAnomaly,
+} from "../hooks/useTraceIntelligence";
+
+const mockUseTraceSummary = useTraceSummary as ReturnType<typeof vi.fn>;
+const mockUseTraceAnomaly = useTraceAnomaly as ReturnType<typeof vi.fn>;
+
+// Mock feature flag context
+vi.mock("../contexts/FeatureFlagContext", () => ({
+  useFeatureFlag: vi.fn(() => false),
+}));
+
+import { useFeatureFlag } from "../contexts/FeatureFlagContext";
+
+const mockUseFeatureFlag = useFeatureFlag as ReturnType<typeof vi.fn>;
+
 import {
   useListTracesQuery,
   useListLogsQuery,
@@ -2703,6 +2748,430 @@ describe("ObservabilityPage", () => {
       expect(screen.getByText("label5=value5")).toBeInTheDocument();
       expect(screen.queryByText("label6=value6")).not.toBeInTheDocument();
       expect(screen.queryByText("label7=value7")).not.toBeInTheDocument();
+    });
+  });
+
+  describe("Trace Intelligence Integration", () => {
+    beforeEach(() => {
+      // Enable AI feature flag for trace intelligence tests
+      mockUseFeatureFlag.mockReturnValue(true);
+
+      // Mock trace detail query to return data
+      mockUseGetTraceQuery.mockReturnValue({
+        data: {
+          trace_id: "1",
+          spans: [
+            {
+              span_id: "span-1",
+              name: "Main Span",
+              start_time: new Date().toISOString(),
+              duration_ms: 100,
+              status: "ok",
+              depth: 0,
+              attributes: {},
+              events: [],
+              error_message: null,
+              parent_span_id: null,
+            },
+          ],
+          start_time: new Date().toISOString(),
+          end_time: new Date(Date.now() + 1000).toISOString(),
+          duration_ms: 1000,
+          service_name: "test-service",
+        },
+        isLoading: false,
+        error: null,
+      });
+    });
+
+    afterEach(() => {
+      // Reset to default disabled state
+      mockUseFeatureFlag.mockReturnValue(false);
+      mockUseTraceSummary.mockReturnValue(mockTraceSummary);
+      mockUseTraceAnomaly.mockReturnValue(mockTraceAnomaly);
+    });
+
+    it("should show AI Insights panel when trace is selected and AI is enabled", async () => {
+      render(
+        <TestProvider>
+          <ObservabilityPage />
+        </TestProvider>,
+      );
+
+      // Navigate to Distributed Traces tab
+      fireEvent.click(screen.getByText("Distributed Traces"));
+
+      await waitFor(() => {
+        expect(screen.getByText("chat/completion")).toBeInTheDocument();
+      });
+
+      // Click on a trace to select it
+      fireEvent.click(screen.getByText("chat/completion"));
+
+      // Should show the trace intelligence panel
+      await waitFor(() => {
+        expect(
+          screen.getByTestId("trace-intelligence-panel"),
+        ).toBeInTheDocument();
+        expect(screen.getByText("AI Insights")).toBeInTheDocument();
+      });
+    });
+
+    it("should not show AI Insights panel when AI feature flag is disabled", async () => {
+      // Disable AI feature flag
+      mockUseFeatureFlag.mockReturnValue(false);
+
+      render(
+        <TestProvider>
+          <ObservabilityPage />
+        </TestProvider>,
+      );
+
+      // Navigate to Distributed Traces tab
+      fireEvent.click(screen.getByText("Distributed Traces"));
+
+      await waitFor(() => {
+        expect(screen.getByText("chat/completion")).toBeInTheDocument();
+      });
+
+      // Click on a trace to select it
+      fireEvent.click(screen.getByText("chat/completion"));
+
+      // Should show trace details but NOT AI insights
+      await waitFor(() => {
+        expect(screen.getByText("Trace Details")).toBeInTheDocument();
+      });
+
+      expect(
+        screen.queryByTestId("trace-intelligence-panel"),
+      ).not.toBeInTheDocument();
+    });
+
+    it("should display trace summary when available", async () => {
+      // Mock trace summary with data
+      mockUseTraceSummary.mockReturnValue({
+        ...mockTraceSummary,
+        summary: "Agent successfully processed 3 user requests",
+        totalDurationMs: 2500,
+        stepCount: 5,
+        toolCallCount: 2,
+        success: true,
+        keyActions: ["search", "analyze", "respond"],
+      });
+
+      render(
+        <TestProvider>
+          <ObservabilityPage />
+        </TestProvider>,
+      );
+
+      // Navigate to Distributed Traces tab
+      fireEvent.click(screen.getByText("Distributed Traces"));
+
+      await waitFor(() => {
+        expect(screen.getByText("chat/completion")).toBeInTheDocument();
+      });
+
+      // Click on a trace to select it
+      fireEvent.click(screen.getByText("chat/completion"));
+
+      // Should show the summary
+      await waitFor(() => {
+        expect(
+          screen.getByText("Agent successfully processed 3 user requests"),
+        ).toBeInTheDocument();
+      });
+
+      // Should show key metrics
+      expect(screen.getByText("5 steps")).toBeInTheDocument();
+      expect(screen.getByText("2 tool calls")).toBeInTheDocument();
+      expect(screen.getByText("2500ms total")).toBeInTheDocument();
+
+      // Should show key actions
+      expect(screen.getByText("search")).toBeInTheDocument();
+      expect(screen.getByText("analyze")).toBeInTheDocument();
+      expect(screen.getByText("respond")).toBeInTheDocument();
+    });
+
+    it("should show loading state for trace summary", async () => {
+      // Mock trace summary loading
+      mockUseTraceSummary.mockReturnValue({
+        ...mockTraceSummary,
+        isLoading: true,
+      });
+
+      render(
+        <TestProvider>
+          <ObservabilityPage />
+        </TestProvider>,
+      );
+
+      // Navigate to Distributed Traces tab
+      fireEvent.click(screen.getByText("Distributed Traces"));
+
+      await waitFor(() => {
+        expect(screen.getByText("chat/completion")).toBeInTheDocument();
+      });
+
+      // Click on a trace to select it
+      fireEvent.click(screen.getByText("chat/completion"));
+
+      // Should show loading indicator
+      await waitFor(() => {
+        expect(screen.getByText("Analyzing trace...")).toBeInTheDocument();
+      });
+    });
+
+    it("should display health score when available", async () => {
+      // Mock trace anomaly with health score
+      mockUseTraceAnomaly.mockReturnValue({
+        ...mockTraceAnomaly,
+        healthScore: 85,
+      });
+
+      render(
+        <TestProvider>
+          <ObservabilityPage />
+        </TestProvider>,
+      );
+
+      // Navigate to Distributed Traces tab
+      fireEvent.click(screen.getByText("Distributed Traces"));
+
+      await waitFor(() => {
+        expect(screen.getByText("chat/completion")).toBeInTheDocument();
+      });
+
+      // Click on a trace to select it
+      fireEvent.click(screen.getByText("chat/completion"));
+
+      // Should show health score
+      await waitFor(() => {
+        expect(screen.getByText("85/100")).toBeInTheDocument();
+      });
+    });
+
+    it("should display bottlenecks when detected", async () => {
+      // Mock trace anomaly with bottlenecks
+      mockUseTraceAnomaly.mockReturnValue({
+        ...mockTraceAnomaly,
+        healthScore: 70,
+        bottlenecks: [
+          {
+            step_name: "llm_call",
+            duration_ms: 1500,
+            percentage_of_total: 60,
+          },
+          {
+            step_name: "db_query",
+            duration_ms: 500,
+            percentage_of_total: 20,
+          },
+        ],
+      });
+
+      render(
+        <TestProvider>
+          <ObservabilityPage />
+        </TestProvider>,
+      );
+
+      // Navigate to Distributed Traces tab
+      fireEvent.click(screen.getByText("Distributed Traces"));
+
+      await waitFor(() => {
+        expect(screen.getByText("chat/completion")).toBeInTheDocument();
+      });
+
+      // Click on a trace to select it
+      fireEvent.click(screen.getByText("chat/completion"));
+
+      // Should show bottlenecks
+      await waitFor(() => {
+        expect(screen.getByText("llm_call")).toBeInTheDocument();
+        expect(screen.getByText("db_query")).toBeInTheDocument();
+      });
+    });
+
+    it("should display anomalies when detected", async () => {
+      // Mock trace anomaly with anomalies
+      mockUseTraceAnomaly.mockReturnValue({
+        ...mockTraceAnomaly,
+        healthScore: 50,
+        anomalies: [
+          {
+            type: "slow_step",
+            step_name: "external_api",
+            severity: "warning",
+            message: "Step took 3x longer than average",
+            suggested_fix: "Consider caching API responses",
+          },
+          {
+            type: "error",
+            step_name: "parser",
+            severity: "error",
+            message: "Parsing failed for input",
+          },
+        ],
+      });
+
+      render(
+        <TestProvider>
+          <ObservabilityPage />
+        </TestProvider>,
+      );
+
+      // Navigate to Distributed Traces tab
+      fireEvent.click(screen.getByText("Distributed Traces"));
+
+      await waitFor(() => {
+        expect(screen.getByText("chat/completion")).toBeInTheDocument();
+      });
+
+      // Click on a trace to select it
+      fireEvent.click(screen.getByText("chat/completion"));
+
+      // Should show anomalies with messages
+      await waitFor(() => {
+        expect(
+          screen.getByText("external_api: Step took 3x longer than average"),
+        ).toBeInTheDocument();
+        expect(
+          screen.getByText("parser: Parsing failed for input"),
+        ).toBeInTheDocument();
+      });
+    });
+
+    it("should display optimization suggestions when available", async () => {
+      // Mock trace anomaly with suggestions
+      mockUseTraceAnomaly.mockReturnValue({
+        ...mockTraceAnomaly,
+        healthScore: 75,
+        optimizationSuggestions: [
+          "Consider parallelizing independent steps",
+          "Use streaming for large payloads",
+          "Cache frequently accessed data",
+        ],
+      });
+
+      render(
+        <TestProvider>
+          <ObservabilityPage />
+        </TestProvider>,
+      );
+
+      // Navigate to Distributed Traces tab
+      fireEvent.click(screen.getByText("Distributed Traces"));
+
+      await waitFor(() => {
+        expect(screen.getByText("chat/completion")).toBeInTheDocument();
+      });
+
+      // Click on a trace to select it
+      fireEvent.click(screen.getByText("chat/completion"));
+
+      // Should show optimization suggestions
+      await waitFor(() => {
+        expect(
+          screen.getByText("Consider parallelizing independent steps"),
+        ).toBeInTheDocument();
+        expect(
+          screen.getByText("Use streaming for large payloads"),
+        ).toBeInTheDocument();
+        expect(
+          screen.getByText("Cache frequently accessed data"),
+        ).toBeInTheDocument();
+      });
+    });
+
+    it("should show loading state for anomaly detection", async () => {
+      // Mock trace anomaly loading
+      mockUseTraceAnomaly.mockReturnValue({
+        ...mockTraceAnomaly,
+        isLoading: true,
+      });
+
+      render(
+        <TestProvider>
+          <ObservabilityPage />
+        </TestProvider>,
+      );
+
+      // Navigate to Distributed Traces tab
+      fireEvent.click(screen.getByText("Distributed Traces"));
+
+      await waitFor(() => {
+        expect(screen.getByText("chat/completion")).toBeInTheDocument();
+      });
+
+      // Click on a trace to select it
+      fireEvent.click(screen.getByText("chat/completion"));
+
+      // Should show loading indicator for anomaly detection
+      await waitFor(() => {
+        expect(screen.getByText("Detecting anomalies...")).toBeInTheDocument();
+      });
+    });
+
+    it("should show 'No issues detected' when trace is healthy", async () => {
+      // Mock healthy trace with no anomalies or bottlenecks
+      mockUseTraceAnomaly.mockReturnValue({
+        ...mockTraceAnomaly,
+        healthScore: 95,
+        anomalies: [],
+        bottlenecks: [],
+      });
+
+      render(
+        <TestProvider>
+          <ObservabilityPage />
+        </TestProvider>,
+      );
+
+      // Navigate to Distributed Traces tab
+      fireEvent.click(screen.getByText("Distributed Traces"));
+
+      await waitFor(() => {
+        expect(screen.getByText("chat/completion")).toBeInTheDocument();
+      });
+
+      // Click on a trace to select it
+      fireEvent.click(screen.getByText("chat/completion"));
+
+      // Should show "No issues detected"
+      await waitFor(() => {
+        expect(screen.getByText("No issues detected")).toBeInTheDocument();
+      });
+    });
+
+    it("should show 'No summary available' when summary is empty", async () => {
+      // Mock empty summary result (non-loading, non-error)
+      mockUseTraceSummary.mockReturnValue({
+        ...mockTraceSummary,
+        summary: null,
+        isLoading: false,
+      });
+
+      render(
+        <TestProvider>
+          <ObservabilityPage />
+        </TestProvider>,
+      );
+
+      // Navigate to Distributed Traces tab
+      fireEvent.click(screen.getByText("Distributed Traces"));
+
+      await waitFor(() => {
+        expect(screen.getByText("chat/completion")).toBeInTheDocument();
+      });
+
+      // Click on a trace to select it
+      fireEvent.click(screen.getByText("chat/completion"));
+
+      // Should show "No summary available"
+      await waitFor(() => {
+        expect(screen.getByText("No summary available")).toBeInTheDocument();
+      });
     });
   });
 });

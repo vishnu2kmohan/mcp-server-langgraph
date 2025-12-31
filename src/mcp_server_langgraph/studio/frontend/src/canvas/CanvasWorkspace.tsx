@@ -12,7 +12,6 @@ import {
   Suspense,
   lazy,
 } from "react";
-import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
 import {
   FileCode2,
   Clock,
@@ -45,11 +44,6 @@ import { LazyAIEditOverlay, type Selection } from "../ai/lazy";
 // Lazy-loaded preview components for different content types
 const InteractiveMermaidDiagram = lazy(
   () => import("../components/Chat/InteractiveMermaidDiagram"),
-);
-const JSONArtifact = lazy(() =>
-  import("../components/Artifacts/JSONArtifact").then((mod) => ({
-    default: mod.JSONArtifact,
-  })),
 );
 
 // Canvas Intelligence hooks (Phase 4 - Sprint 4)
@@ -103,15 +97,8 @@ interface ArtifactTabBarProps {
 }
 
 /** Format date to relative time */
-function formatArtifactDate(dateStr: string | undefined): string {
-  // Handle undefined or invalid date strings
-  if (!dateStr) return "Unknown";
-
+function formatArtifactDate(dateStr: string): string {
   const date = new Date(dateStr);
-
-  // Check for invalid date (NaN)
-  if (isNaN(date.getTime())) return "Unknown";
-
   const now = new Date();
   const diffMs = now.getTime() - date.getTime();
   const diffMins = Math.floor(diffMs / 60000);
@@ -462,185 +449,164 @@ export function CanvasWorkspace({
         enableHover={enableArtifactHover}
       />
 
-      {/* Main workspace area */}
-      <div className="flex-1 overflow-hidden">
-        <PanelGroup data-testid="panel-group" direction="horizontal">
-          {/* Preview/Editor panel */}
-          <Panel
-            id="editor"
-            data-testid="panel-editor"
-            defaultSize={60}
-            minSize={30}
-          >
-            <div className="flex flex-col h-full">
-              {/* Toolbar */}
-              <div className="flex items-center justify-between px-4 py-2 border-b border-gray-200 dark:border-gray-700">
-                <CanvasTabs
-                  activeTab={activeTab}
-                  onTabChange={setActiveTab}
-                  visibleTabs={visibleTabs}
-                  disabledTabs={isEditing ? ["preview", "data"] : []}
-                />
-                <div className="flex items-center gap-3">
-                  {/* AI Intelligence Indicator */}
-                  {enableAI && aiEditEnabled && selectedArtifact && (
-                    <div
-                      data-testid="ai-intelligence-indicator"
-                      className="flex items-center gap-1.5 text-xs"
-                    >
-                      {/* Code Analysis Indicator */}
-                      {isCodeArtifact && (
-                        <>
-                          {codeAnalysis.isLoading ? (
-                            <span className="flex items-center gap-1 text-gray-400">
-                              <Loader2
-                                size={12}
-                                className="animate-spin"
-                                aria-hidden="true"
-                              />
-                              <span>Analyzing...</span>
-                            </span>
-                          ) : codeAnalysis.qualityScore !== null ? (
-                            <Tooltip
-                              content={
-                                <div className="space-y-1 min-w-32">
-                                  <div className="font-medium">
-                                    Code Quality
-                                  </div>
-                                  <div className="flex items-center gap-1">
-                                    <span>Score:</span>
-                                    <span
-                                      className={cn(
-                                        "font-medium",
-                                        codeAnalysis.qualityScore >= 80
-                                          ? "text-green-400"
-                                          : codeAnalysis.qualityScore >= 60
-                                            ? "text-yellow-400"
-                                            : "text-red-400",
-                                      )}
-                                    >
-                                      {codeAnalysis.qualityScore}/100
-                                    </span>
-                                  </div>
-                                  {codeAnalysis.complexity !== null && (
-                                    <div>
-                                      Complexity: {codeAnalysis.complexity}
-                                    </div>
-                                  )}
-                                  {codeAnalysis.issues.length > 0 && (
-                                    <div className="text-yellow-400">
-                                      {codeAnalysis.issues.length} issue
-                                      {codeAnalysis.issues.length > 1
-                                        ? "s"
-                                        : ""}
-                                    </div>
-                                  )}
-                                </div>
-                              }
-                              position="bottom"
-                            >
+      {/* Main workspace area - single pane with tab switching */}
+      <div
+        data-testid="panel-editor"
+        className="flex-1 flex flex-col overflow-hidden"
+      >
+        {/* Toolbar */}
+        <div className="flex items-center justify-between px-4 py-2 border-b border-gray-200 dark:border-gray-700">
+          <CanvasTabs
+            activeTab={activeTab}
+            onTabChange={setActiveTab}
+            visibleTabs={visibleTabs}
+            disabledTabs={isEditing ? ["preview", "data"] : []}
+          />
+          <div className="flex items-center gap-3">
+            {/* AI Intelligence Indicator */}
+            {enableAI && aiEditEnabled && selectedArtifact && (
+              <div
+                data-testid="ai-intelligence-indicator"
+                className="flex items-center gap-1.5 text-xs"
+              >
+                {/* Code Analysis Indicator */}
+                {isCodeArtifact && (
+                  <>
+                    {codeAnalysis.isLoading ? (
+                      <span className="flex items-center gap-1 text-gray-400">
+                        <Loader2
+                          size={12}
+                          className="animate-spin"
+                          aria-hidden="true"
+                        />
+                        <span>Analyzing...</span>
+                      </span>
+                    ) : codeAnalysis.qualityScore !== null ? (
+                      <Tooltip
+                        content={
+                          <div className="space-y-1 min-w-32">
+                            <div className="font-medium">Code Quality</div>
+                            <div className="flex items-center gap-1">
+                              <span>Score:</span>
                               <span
                                 className={cn(
-                                  "flex items-center gap-1 px-1.5 py-0.5 rounded",
+                                  "font-medium",
                                   codeAnalysis.qualityScore >= 80
-                                    ? "bg-green-500/10 text-green-600 dark:text-green-400"
+                                    ? "text-green-400"
                                     : codeAnalysis.qualityScore >= 60
-                                      ? "bg-yellow-500/10 text-yellow-600 dark:text-yellow-400"
-                                      : "bg-red-500/10 text-red-600 dark:text-red-400",
+                                      ? "text-yellow-400"
+                                      : "text-red-400",
                                 )}
                               >
-                                <Sparkles size={12} aria-hidden="true" />
-                                <span>{codeAnalysis.qualityScore}</span>
+                                {codeAnalysis.qualityScore}/100
                               </span>
-                            </Tooltip>
-                          ) : null}
-                        </>
-                      )}
+                            </div>
+                            {codeAnalysis.complexity !== null && (
+                              <div>Complexity: {codeAnalysis.complexity}</div>
+                            )}
+                            {codeAnalysis.issues.length > 0 && (
+                              <div className="text-yellow-400">
+                                {codeAnalysis.issues.length} issue
+                                {codeAnalysis.issues.length > 1 ? "s" : ""}
+                              </div>
+                            )}
+                          </div>
+                        }
+                        position="bottom"
+                      >
+                        <span
+                          className={cn(
+                            "flex items-center gap-1 px-1.5 py-0.5 rounded",
+                            codeAnalysis.qualityScore >= 80
+                              ? "bg-green-500/10 text-green-600 dark:text-green-400"
+                              : codeAnalysis.qualityScore >= 60
+                                ? "bg-yellow-500/10 text-yellow-600 dark:text-yellow-400"
+                                : "bg-red-500/10 text-red-600 dark:text-red-400",
+                          )}
+                        >
+                          <Sparkles size={12} aria-hidden="true" />
+                          <span>{codeAnalysis.qualityScore}</span>
+                        </span>
+                      </Tooltip>
+                    ) : null}
+                  </>
+                )}
 
-                      {/* Diagram Analysis Indicator */}
-                      {isDiagramArtifact && (
-                        <>
-                          {diagramAnalysis.isLoading ? (
-                            <span className="flex items-center gap-1 text-gray-400">
-                              <Loader2
-                                size={12}
-                                className="animate-spin"
-                                aria-hidden="true"
-                              />
-                              <span>Validating...</span>
-                            </span>
-                          ) : diagramAnalysis.isValid !== null ? (
-                            <Tooltip
-                              content={
-                                <div className="space-y-1 min-w-32">
-                                  <div className="font-medium">
-                                    Diagram Analysis
-                                  </div>
-                                  <div className="flex items-center gap-1">
-                                    <span>Type:</span>
-                                    <span className="capitalize">
-                                      {diagramAnalysis.diagramType || "unknown"}
-                                    </span>
-                                  </div>
-                                  {diagramAnalysis.nodeCount !== null && (
-                                    <div>
-                                      Nodes: {diagramAnalysis.nodeCount}
-                                    </div>
-                                  )}
-                                  {diagramAnalysis.edgeCount !== null && (
-                                    <div>
-                                      Edges: {diagramAnalysis.edgeCount}
-                                    </div>
-                                  )}
-                                  {diagramAnalysis.issues.length > 0 && (
-                                    <div className="text-yellow-400">
-                                      {diagramAnalysis.issues.length} issue
-                                      {diagramAnalysis.issues.length > 1
-                                        ? "s"
-                                        : ""}
-                                    </div>
-                                  )}
-                                </div>
-                              }
-                              position="bottom"
-                            >
-                              <span
-                                className={cn(
-                                  "flex items-center gap-1 px-1.5 py-0.5 rounded",
-                                  diagramAnalysis.isValid
-                                    ? "bg-green-500/10 text-green-600 dark:text-green-400"
-                                    : "bg-red-500/10 text-red-600 dark:text-red-400",
-                                )}
-                              >
-                                {diagramAnalysis.isValid ? (
-                                  <CheckCircle size={12} aria-hidden="true" />
-                                ) : (
-                                  <AlertTriangle size={12} aria-hidden="true" />
-                                )}
-                                <span>
-                                  {diagramAnalysis.isValid
-                                    ? "Valid"
-                                    : "Invalid"}
-                                </span>
+                {/* Diagram Analysis Indicator */}
+                {isDiagramArtifact && (
+                  <>
+                    {diagramAnalysis.isLoading ? (
+                      <span className="flex items-center gap-1 text-gray-400">
+                        <Loader2
+                          size={12}
+                          className="animate-spin"
+                          aria-hidden="true"
+                        />
+                        <span>Validating...</span>
+                      </span>
+                    ) : diagramAnalysis.isValid !== null ? (
+                      <Tooltip
+                        content={
+                          <div className="space-y-1 min-w-32">
+                            <div className="font-medium">Diagram Analysis</div>
+                            <div className="flex items-center gap-1">
+                              <span>Type:</span>
+                              <span className="capitalize">
+                                {diagramAnalysis.diagramType || "unknown"}
                               </span>
-                            </Tooltip>
-                          ) : null}
-                        </>
-                      )}
-                    </div>
-                  )}
-                  {selectedArtifact && (
-                    <ArtifactActions
-                      artifact={selectedArtifact}
-                      compact
-                      disabled={isEditing}
-                    />
-                  )}
-                </div>
+                            </div>
+                            {diagramAnalysis.nodeCount !== null && (
+                              <div>Nodes: {diagramAnalysis.nodeCount}</div>
+                            )}
+                            {diagramAnalysis.edgeCount !== null && (
+                              <div>Edges: {diagramAnalysis.edgeCount}</div>
+                            )}
+                            {diagramAnalysis.issues.length > 0 && (
+                              <div className="text-yellow-400">
+                                {diagramAnalysis.issues.length} issue
+                                {diagramAnalysis.issues.length > 1 ? "s" : ""}
+                              </div>
+                            )}
+                          </div>
+                        }
+                        position="bottom"
+                      >
+                        <span
+                          className={cn(
+                            "flex items-center gap-1 px-1.5 py-0.5 rounded",
+                            diagramAnalysis.isValid
+                              ? "bg-green-500/10 text-green-600 dark:text-green-400"
+                              : "bg-red-500/10 text-red-600 dark:text-red-400",
+                          )}
+                        >
+                          {diagramAnalysis.isValid ? (
+                            <CheckCircle size={12} aria-hidden="true" />
+                          ) : (
+                            <AlertTriangle size={12} aria-hidden="true" />
+                          )}
+                          <span>
+                            {diagramAnalysis.isValid ? "Valid" : "Invalid"}
+                          </span>
+                        </span>
+                      </Tooltip>
+                    ) : null}
+                  </>
+                )}
               </div>
+            )}
+            {selectedArtifact && (
+              <ArtifactActions
+                artifact={selectedArtifact}
+                compact
+                disabled={isEditing}
+              />
+            )}
+          </div>
+        </div>
 
-        {/* Content area - switches based on active tab */}
+        {/* Tab-based content area - single pane */}
         <div className="flex-1 overflow-auto p-4">
+          {/* Code View */}
           {selectedArtifact && activeTab === "code" && (
             <div data-testid="code-view">
               <CanvasArtifact
@@ -657,66 +623,42 @@ export function CanvasWorkspace({
             </div>
           )}
 
+          {/* Preview View */}
           {selectedArtifact && activeTab === "preview" && (
             <div data-testid="preview-view">
-              <Suspense
-                fallback={
-                  <div className="text-gray-400 text-sm">
-                    Loading preview...
-                  </div>
-                }
-              >
-                {selectedArtifact.contentType === "mermaid" && (
+              {selectedArtifact.contentType === "mermaid" ? (
+                <Suspense
+                  fallback={
+                    <div className="flex items-center justify-center h-32">
+                      <Loader2 className="animate-spin text-gray-400" />
+                    </div>
+                  }
+                >
                   <InteractiveMermaidDiagram code={selectedArtifact.content} />
-                )}
-                {selectedArtifact.contentType === "markdown" && (
-                  <CanvasArtifact
-                    artifact={selectedArtifact}
-                    editable={false}
-                    showLineNumbers={false}
-                    ariaLabel={`${selectedArtifact.title || "Artifact"} - Preview`}
-                  />
-                )}
-                {(selectedArtifact.contentType === "html" ||
-                  selectedArtifact.contentType === "jsx") && (
-                  <div
-                    className="prose dark:prose-invert max-w-none"
-                    dangerouslySetInnerHTML={{
-                      __html: selectedArtifact.content,
-                    }}
-                  />
-                )}
-              </Suspense>
+                </Suspense>
+              ) : (
+                <CanvasArtifact
+                  artifact={selectedArtifact}
+                  editable={false}
+                  showLineNumbers={false}
+                  ariaLabel={`${selectedArtifact.title || "Artifact"} - Preview`}
+                />
+              )}
             </div>
           )}
 
+          {/* Data View */}
           {selectedArtifact && activeTab === "data" && (
             <div data-testid="data-view">
-              <Suspense
-                fallback={
-                  <div className="text-gray-400 text-sm">
-                    Loading data view...
-                  </div>
-                }
-              >
-                <JSONArtifact
-                  artifact={{
-                    id: selectedArtifact.id,
-                    type: "json",
-                    title: selectedArtifact.title || "JSON Data",
-                    data: (() => {
-                      try {
-                        return JSON.parse(selectedArtifact.content);
-                      } catch {
-                        return {
-                          error: "Invalid JSON",
-                          raw: selectedArtifact.content,
-                        };
-                      }
-                    })(),
-                  }}
-                />
-              </Suspense>
+              <pre className="text-sm text-gray-600 dark:text-gray-400 whitespace-pre-wrap font-mono bg-gray-50 dark:bg-gray-800 p-4 rounded-lg overflow-auto">
+                {selectedArtifact.contentType === "json"
+                  ? JSON.stringify(
+                      JSON.parse(selectedArtifact.content),
+                      null,
+                      2,
+                    )
+                  : selectedArtifact.content}
+              </pre>
             </div>
           )}
         </div>

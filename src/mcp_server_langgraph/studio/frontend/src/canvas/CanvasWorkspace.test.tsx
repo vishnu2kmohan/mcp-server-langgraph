@@ -265,12 +265,12 @@ describe("CanvasWorkspace", () => {
         store,
       });
 
-      // Verify both editor and preview panels are rendered when artifact is selected
+      // Verify single pane layout with code view (no separate preview panel)
       expect(screen.getByTestId("panel-editor")).toBeInTheDocument();
-      expect(screen.getByTestId("panel-preview")).toBeInTheDocument();
+      expect(screen.getByTestId("code-view")).toBeInTheDocument();
 
       // The artifact content is rendered via CanvasArtifact component
-      // which uses a code editor - check for the panels rather than text content
+      // which uses a code editor - check for the views rather than text content
       // since code editors may not expose content via DOM text nodes
       const editorPanel = screen.getByTestId("panel-editor");
       expect(editorPanel).toBeInTheDocument();

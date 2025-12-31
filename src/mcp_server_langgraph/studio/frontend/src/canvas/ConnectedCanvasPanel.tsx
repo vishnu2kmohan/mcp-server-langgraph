@@ -15,6 +15,7 @@ import {
   useState,
   useEffect,
   useRef,
+  forwardRef,
   Suspense,
 } from "react";
 import { useRouteLoaderData, useRevalidator } from "react-router";
@@ -63,11 +64,10 @@ export interface ConnectedCanvasPanelProps {
 // Component
 // =============================================================================
 
-export function ConnectedCanvasPanel({
-  className,
-  userId,
-  persona,
-}: ConnectedCanvasPanelProps) {
+export const ConnectedCanvasPanel = forwardRef<
+  HTMLDivElement,
+  ConnectedCanvasPanelProps
+>(function ConnectedCanvasPanel({ className, userId, persona }, ref) {
   const dispatch = useAppDispatch();
   const revalidator = useRevalidator();
 
@@ -498,6 +498,7 @@ export function ConnectedCanvasPanel({
 
   return (
     <div
+      ref={ref}
       data-testid="canvas-panel"
       className={cn(
         "flex flex-col h-full relative",
@@ -637,4 +638,7 @@ export function ConnectedCanvasPanel({
           The chatLoader provides data, but UI comes from SessionNav + ConversationPanel + CanvasPanel. */}
     </div>
   );
-}
+});
+
+// Display name for DevTools
+ConnectedCanvasPanel.displayName = "ConnectedCanvasPanel";

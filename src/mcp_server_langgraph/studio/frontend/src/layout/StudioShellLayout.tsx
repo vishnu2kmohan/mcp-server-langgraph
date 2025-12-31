@@ -182,10 +182,12 @@ export function StudioShellLayout() {
   const [showAgentPanel, setShowAgentPanel] = useState(false);
 
   // Panel refs for keyboard navigation (Phase 5 - useCanvasKeyboardNav integration)
+  // Note: ActivityBar and SessionNav use HTMLElement (nav elements), while
+  // ConnectedConversationPanel and ConnectedCanvasPanel use HTMLDivElement
   const activityBarRef = useRef<HTMLElement>(null);
   const sessionNavRef = useRef<HTMLElement>(null);
-  const conversationRef = useRef<HTMLElement>(null);
-  const canvasRef = useRef<HTMLElement>(null);
+  const conversationRef = useRef<HTMLDivElement>(null);
+  const canvasRef = useRef<HTMLDivElement>(null);
 
   // Keyboard navigation for panel focus (Cmd+1/2/3/4)
   useCanvasKeyboardNav({
@@ -727,6 +729,7 @@ export function StudioShellLayout() {
                       maxSize={35}
                     >
                       <SessionNav
+                        ref={sessionNavRef}
                         enableEdit
                         enableContextMenu
                         enableHover
@@ -745,6 +748,7 @@ export function StudioShellLayout() {
                   minSize={30}
                 >
                   <ConnectedConversationPanel
+                    ref={conversationRef}
                     enableAI={aiSuggestionsEnabled}
                     enableRealTimeSuggestions={aiSuggestionsEnabled}
                     userId={currentUserId}
@@ -767,6 +771,7 @@ export function StudioShellLayout() {
                       maxSize={60}
                     >
                       <ConnectedCanvasPanel
+                        ref={canvasRef}
                         userId={currentUserId}
                         persona={currentPersona}
                       />
