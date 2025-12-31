@@ -23,12 +23,12 @@ pytestmark = [pytest.mark.unit, pytest.mark.websocket]
 def mock_websocket() -> MagicMock:
     """Create a mock WebSocket for testing."""
     ws = MagicMock()
-    ws.accept = AsyncMock()
-    ws.close = AsyncMock()
-    ws.send_json = AsyncMock()
-    ws.send_text = AsyncMock()
-    ws.receive_json = AsyncMock()
-    ws.receive_text = AsyncMock()
+    ws.accept = AsyncMock()  # noqa: async-mock-config
+    ws.close = AsyncMock()  # noqa: async-mock-config
+    ws.send_json = AsyncMock()  # noqa: async-mock-config
+    ws.send_text = AsyncMock()  # noqa: async-mock-config
+    ws.receive_json = AsyncMock()  # noqa: async-mock-config
+    ws.receive_text = AsyncMock()  # noqa: async-mock-config
     ws.query_params = {}
     ws.headers = {}
     ws.client_state = MagicMock()
@@ -39,8 +39,8 @@ def mock_websocket() -> MagicMock:
 def mock_broadcaster() -> MagicMock:
     """Create a mock notification broadcaster."""
     broadcaster = MagicMock()
-    broadcaster.subscribe = AsyncMock()
-    broadcaster.unsubscribe = AsyncMock()
+    broadcaster.subscribe = AsyncMock()  # noqa: async-mock-config
+    broadcaster.unsubscribe = AsyncMock()  # noqa: async-mock-config
     return broadcaster
 
 

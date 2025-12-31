@@ -71,7 +71,7 @@ class TestConnectionsServiceAdapter:
         mock_conn2.server_type = "langgraph"
         mock_conn2.last_connected = None
 
-        mock_repo = AsyncMock()
+        mock_repo = AsyncMock()  # noqa: async-mock-config
         mock_repo.list = AsyncMock(return_value=([mock_conn1, mock_conn2], None))
 
         adapter = ConnectionsServiceAdapter(repository=mock_repo, owner_id="user-1")
@@ -101,7 +101,7 @@ class TestConnectionsServiceAdapter:
         mock_conn.status = "active"
         # server_type and last_connected will be accessed via getattr with defaults
 
-        mock_repo = AsyncMock()
+        mock_repo = AsyncMock()  # noqa: async-mock-config
         mock_repo.list = AsyncMock(return_value=([mock_conn], None))
 
         adapter = ConnectionsServiceAdapter(repository=mock_repo)
@@ -118,7 +118,7 @@ class TestConnectionsServiceAdapter:
             ConnectionsServiceAdapter,
         )
 
-        mock_repo = AsyncMock()
+        mock_repo = AsyncMock()  # noqa: async-mock-config
         mock_repo.list = AsyncMock(return_value=([], None))
 
         adapter = ConnectionsServiceAdapter(repository=mock_repo)
@@ -141,7 +141,7 @@ class TestConnectionsServiceAdapter:
         mock_conn.url = "http://localhost:8080"
         mock_conn.last_connected = "2025-12-22T10:00:00Z"
 
-        mock_repo = AsyncMock()
+        mock_repo = AsyncMock()  # noqa: async-mock-config
         mock_repo.get = AsyncMock(return_value=mock_conn)
 
         adapter = ConnectionsServiceAdapter(repository=mock_repo)
@@ -162,7 +162,7 @@ class TestConnectionsServiceAdapter:
             ConnectionsServiceAdapter,
         )
 
-        mock_repo = AsyncMock()
+        mock_repo = AsyncMock()  # noqa: async-mock-config
         mock_repo.get = AsyncMock(return_value=None)
 
         adapter = ConnectionsServiceAdapter(repository=mock_repo)
@@ -180,7 +180,7 @@ class TestConnectionsServiceAdapter:
         mock_conn = MagicMock()
         mock_conn.status = "active"
 
-        mock_repo = AsyncMock()
+        mock_repo = AsyncMock()  # noqa: async-mock-config
         mock_repo.get = AsyncMock(return_value=mock_conn)
 
         adapter = ConnectionsServiceAdapter(repository=mock_repo)
@@ -200,7 +200,7 @@ class TestConnectionsServiceAdapter:
         mock_conn = MagicMock()
         mock_conn.status = "connected"
 
-        mock_repo = AsyncMock()
+        mock_repo = AsyncMock()  # noqa: async-mock-config
         mock_repo.get = AsyncMock(return_value=mock_conn)
 
         adapter = ConnectionsServiceAdapter(repository=mock_repo)
@@ -218,7 +218,7 @@ class TestConnectionsServiceAdapter:
         mock_conn = MagicMock()
         mock_conn.status = "disconnected"
 
-        mock_repo = AsyncMock()
+        mock_repo = AsyncMock()  # noqa: async-mock-config
         mock_repo.get = AsyncMock(return_value=mock_conn)
 
         adapter = ConnectionsServiceAdapter(repository=mock_repo)
@@ -235,7 +235,7 @@ class TestConnectionsServiceAdapter:
             ConnectionsServiceAdapter,
         )
 
-        mock_repo = AsyncMock()
+        mock_repo = AsyncMock()  # noqa: async-mock-config
         mock_repo.get = AsyncMock(return_value=None)
 
         adapter = ConnectionsServiceAdapter(repository=mock_repo)

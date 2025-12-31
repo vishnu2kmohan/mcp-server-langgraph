@@ -1890,6 +1890,51 @@ repos:
       Created: 2025-12-28 (DevTools integration gap audit)
 
       '
+  - id: check-canvas-parity
+    name: Check Canvas Action Parity (Frontend ↔ Backend)
+    entry: uv run --frozen pytest tests/contract/test_canvas_ai_frontend_contract.py::TestCanvasAIFrontendBackendContract -x -q --tb=short
+    language: system
+    pass_filenames: false
+    files: ^(src/mcp_server_langgraph/studio/frontend/src/canvas/CanvasShortcutsMenu\.tsx|src/mcp_server_langgraph/api/v1/ai\.py)$
+    always_run: false
+    stages:
+    - pre-commit
+    description: 'Validates that all frontend CanvasShortcutAction types are supported by backend.
+
+      Prevents integration gaps like:
+      - Frontend has: "explain" | "fix" | "review" actions
+      - Backend valid_actions: missing these actions → 400 Bad Request
+
+      Scans:
+      - Frontend CanvasShortcutsMenu.tsx for CanvasShortcutAction type
+      - Backend ai.py for valid_actions set and handlers
+
+      Exit code 1 if missing actions detected.
+
+      Created: 2025-12-31 (Canvas 400 error audit)
+
+      '
+  - id: check-openapi-sync
+    name: Check OpenAPI Schema Sync (FastAPI ↔ OpenAPI)
+    entry: uv run --frozen pytest tests/contract/test_openapi_fastapi_sync.py::TestOpenAPIFastAPISync::test_openapi_schema_not_stale -x -q --tb=short
+    language: system
+    pass_filenames: false
+    files: ^(src/mcp_server_langgraph/api/.*\.py|api/openapi\.json)$
+    always_run: false
+    stages:
+    - pre-push
+    description: 'Validates that api/openapi.json matches actual FastAPI routes.
+
+      Prevents schema drift like:
+      - Backend adds new endpoint
+      - Developer forgets to regenerate openapi.json
+      - Frontend types are stale → runtime 404 errors
+
+      Fix: Run "uv run python scripts/export_openapi.py" to regenerate.
+
+      Created: 2025-12-31 (OpenAPI sync audit - 53 endpoints were stale)
+
+      '
   - id: check-no-create-all
     name: Prevent SQLAlchemy create_all() Usage
     entry: uv run --frozen python -u .pre-commit-hooks/check_no_create_all.py

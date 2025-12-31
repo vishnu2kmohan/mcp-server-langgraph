@@ -65,7 +65,7 @@ class TestSessionDescriptionField:
         THEN response should include the description field
         """
         with patch("mcp_server_langgraph.api.v1.sessions.get_session_service") as mock_get_service:
-            mock_service = AsyncMock()
+            mock_service = AsyncMock()  # noqa: async-mock-config
             mock_service.create_session.return_value = {
                 "id": str(uuid4()),
                 "name": "Test Session",
@@ -96,7 +96,7 @@ class TestSessionDescriptionField:
         THEN description should default to empty string
         """
         with patch("mcp_server_langgraph.api.v1.sessions.get_session_service") as mock_get_service:
-            mock_service = AsyncMock()
+            mock_service = AsyncMock()  # noqa: async-mock-config
             mock_service.create_session.return_value = {
                 "id": str(uuid4()),
                 "name": "Test Session",
@@ -125,7 +125,7 @@ class TestSessionDescriptionField:
         """
         session_id = str(uuid4())
         with patch("mcp_server_langgraph.api.v1.sessions.get_session_service") as mock_get_service:
-            mock_service = AsyncMock()
+            mock_service = AsyncMock()  # noqa: async-mock-config
             mock_service.update_session.return_value = {
                 "id": session_id,
                 "name": "Original Session",
@@ -160,7 +160,7 @@ class TestSessionDescriptionField:
         """
         session_id = str(uuid4())
         with patch("mcp_server_langgraph.api.v1.sessions.get_session_service") as mock_get_service:
-            mock_service = AsyncMock()
+            mock_service = AsyncMock()  # noqa: async-mock-config
             mock_service.get_session.return_value = {
                 "id": session_id,
                 "name": "Detailed Session",
@@ -185,7 +185,7 @@ class TestSessionDescriptionField:
         THEN response should include description in each session
         """
         with patch("mcp_server_langgraph.api.v1.sessions.get_session_service") as mock_get_service:
-            mock_service = AsyncMock()
+            mock_service = AsyncMock()  # noqa: async-mock-config
             mock_service.list_sessions.return_value = (
                 [
                     {

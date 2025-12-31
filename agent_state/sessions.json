@@ -1,5 +1,5 @@
 {
-  "lifecycle-test-af9c0161": {
+  "lifecycle-test-fbe5278c": {
     "state": {
       "step": 1,
       "data": "initial",
@@ -7,20 +7,46 @@
         {
           "phase": "phase1",
           "summary": "First phase complete",
-          "timestamp": "2025-12-22T13:16:16.988381+00:00"
+          "timestamp": "2025-12-31T16:09:43.362696+00:00"
         },
         {
           "phase": "phase2",
           "summary": "Second phase complete",
-          "timestamp": "2025-12-22T13:16:16.988459+00:00"
+          "timestamp": "2025-12-31T16:09:43.362770+00:00"
         },
         {
           "phase": "phase3",
           "summary": "Third phase complete",
-          "timestamp": "2025-12-22T13:16:16.988528+00:00"
+          "timestamp": "2025-12-31T16:09:43.362835+00:00"
         }
       ]
     },
-    "updated_at": "2025-12-22T13:16:16.988531+00:00"
+    "updated_at": "2025-12-31T16:09:43.362838+00:00"
+  },
+  "test-session-001": {
+    "state": {
+      "last_query": "First query",
+      "last_response": "[gemini-3-flash] Processed: First query..."
+    },
+    "updated_at": "2025-12-31T16:40:12.278813+00:00"
+  },
+  "test-checkpoint-session-5ebba6ba": {
+    "state": {
+      "checkpoints": [
+        {
+          "phase": "research",
+          "summary": "Completed initial research phase",
+          "timestamp": "2025-12-31T16:40:13.056132+00:00"
+        }
+      ]
+    },
+    "updated_at": "2025-12-31T16:40:13.056144+00:00"
+  },
+  "workflow-session": {
+    "state": {
+      "last_query": "Research AI safety",
+      "last_response": "[gemini-3-flash] Processed: Research AI safety..."
+    },
+    "updated_at": "2025-12-31T16:40:16.890246+00:00"
   }
 }

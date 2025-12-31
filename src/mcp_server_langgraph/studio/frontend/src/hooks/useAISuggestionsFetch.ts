@@ -52,6 +52,12 @@ export interface UseAISuggestionsFetchOptions {
   debounceMs?: number;
   /** TTL for cached suggestions in milliseconds (default: 5 minutes) */
   ttlMs?: number;
+  /**
+   * Whether to auto-fetch suggestions when context changes.
+   * When false, suggestions are only fetched via explicit refresh() call.
+   * @default true (for backward compatibility)
+   */
+  autoFetch?: boolean;
 }
 
 export interface UseAISuggestionsFetchResult {
@@ -96,6 +102,7 @@ export function useAISuggestionsFetch(
     enabled,
     debounceMs = DEFAULT_DEBOUNCE_MS,
     ttlMs,
+    autoFetch = true, // Default to true for backward compatibility
   } = options;
 
   // Handle auth failure - redirect to login
@@ -312,6 +319,14 @@ export function useAISuggestionsFetch(
     // Reset force refresh flag
     forceRefreshRef.current = false;
 
+    // Skip auto-fetch when autoFetch is false (opt-in mode)
+    // User must explicitly call refresh() to trigger fetching
+    if (!autoFetch) {
+      setIsLoading(false);
+      logger.debug("Auto-fetch disabled, waiting for explicit refresh()");
+      return;
+    }
+
     // Set loading state and debounce the fetch
     setIsLoading(true);
 
@@ -337,6 +352,7 @@ export function useAISuggestionsFetch(
     hasCacheHit,
     cachedSuggestions,
     doFetch,
+    autoFetch,
   ]);
 
   // Cleanup on unmount

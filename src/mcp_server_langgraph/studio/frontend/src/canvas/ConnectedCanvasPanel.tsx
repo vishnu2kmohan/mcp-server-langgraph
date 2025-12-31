@@ -40,7 +40,7 @@ import {
 } from "./CanvasShortcutsMenu";
 
 // AI Components (Phase 4) - lazy-loaded for reduced bundle size
-import { LazyInlineSuggestions, type Suggestion } from "../ai/lazy";
+import { LazySuggestionsPanel, type Suggestion } from "../ai/lazy";
 
 // Save operation status for optimistic UI feedback
 type SaveStatus = "idle" | "saving" | "saved" | "error";
@@ -93,6 +93,11 @@ export const ConnectedCanvasPanel = forwardRef<
 
   // Track loading state for canvas shortcut actions
   const [shortcutActionLoading, setShortcutActionLoading] = useState(false);
+
+  // Suggestions panel state (opt-in mode - user must click sparkles to show)
+  const [suggestionsPanelVisible, setSuggestionsPanelVisible] = useState(false);
+  const [suggestionsPanelExpanded, setSuggestionsPanelExpanded] =
+    useState(true);
 
   // Cleanup timeout on unmount
   useEffect(() => {
@@ -162,16 +167,19 @@ export const ConnectedCanvasPanel = forwardRef<
     selectedArtifact.contentType === "code";
 
   // AI Suggestions - using useAISuggestionsFetch hook (Phase 4)
+  // autoFetch: false for opt-in mode - user must click sparkles to fetch
   const {
     suggestions,
     isLoading: suggestionsLoading,
     acceptSuggestion,
     dismissSuggestion,
+    refresh: refreshSuggestions,
   } = useAISuggestionsFetch({
     artifactId: shouldFetchSuggestions ? selectedArtifactId : null,
     sessionId,
     enabled: shouldFetchSuggestions,
     debounceMs: 500,
+    autoFetch: false, // Opt-in: don't auto-fetch, wait for user to click sparkles
   });
 
   // Handlers for CanvasWorkspace callbacks
@@ -354,6 +362,25 @@ export const ConnectedCanvasPanel = forwardRef<
     [selectedArtifactId, dismissSuggestion],
   );
 
+  // Sparkles trigger handler - opens panel and fetches suggestions (opt-in)
+  const handleSparklesTrigger = useCallback(() => {
+    logger.debug("Sparkles trigger clicked, showing suggestions panel");
+    setSuggestionsPanelVisible(true);
+    setSuggestionsPanelExpanded(true);
+    // Fetch suggestions on demand
+    refreshSuggestions();
+  }, [refreshSuggestions]);
+
+  // Handle suggestions panel toggle
+  const handleSuggestionsPanelToggle = useCallback(() => {
+    setSuggestionsPanelExpanded((prev) => !prev);
+  }, []);
+
+  // Handle suggestions panel refresh
+  const handleSuggestionsPanelRefresh = useCallback(() => {
+    refreshSuggestions();
+  }, [refreshSuggestions]);
+
   // Track shortcut action error state for user feedback
   const [shortcutError, setShortcutError] = useState<string | null>(null);
 
@@ -533,18 +560,62 @@ export const ConnectedCanvasPanel = forwardRef<
         </div>
       )}
 
-      {/* AI Inline Suggestions (Phase 4) - gated by ai_suggestions feature flag */}
+      {/* AI Suggestions Sparkles Trigger (Phase 4) - opt-in mode */}
+      {/* Shows a sparkles button that users click to fetch and view suggestions */}
+      {aiSuggestionsEnabled &&
+        selectedArtifactId &&
+        !suggestionsPanelVisible && (
+          <button
+            type="button"
+            onClick={handleSparklesTrigger}
+            data-testid="sparkles-trigger"
+            aria-label="Get AI suggestions"
+            className={cn(
+              "absolute top-12 right-2 z-10",
+              "p-2 rounded-lg shadow-md",
+              "bg-white dark:bg-gray-800",
+              "border border-gray-200 dark:border-gray-700",
+              "text-primary-500 hover:text-primary-600 dark:hover:text-primary-400",
+              "hover:bg-primary-50 dark:hover:bg-primary-900/20",
+              "transition-colors",
+            )}
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="lucide lucide-sparkles"
+            >
+              <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z" />
+              <path d="M5 3v4" />
+              <path d="M19 17v4" />
+              <path d="M3 5h4" />
+              <path d="M17 19h4" />
+            </svg>
+          </button>
+        )}
+
+      {/* AI Suggestions Panel (Phase 4) - table view for reviewing suggestions */}
       {/* Lazy-loaded to reduce initial bundle size */}
       {aiSuggestionsEnabled &&
         selectedArtifactId &&
-        (suggestions.length > 0 || suggestionsLoading) && (
-          <div className="absolute top-12 right-2 z-10 w-80">
+        suggestionsPanelVisible && (
+          <div className="absolute top-12 right-2 z-10 w-96">
             <Suspense fallback={null}>
-              <LazyInlineSuggestions
+              <LazySuggestionsPanel
                 suggestions={suggestions}
                 onAccept={handleAcceptSuggestion}
                 onDismiss={handleDismissSuggestion}
+                onRefresh={handleSuggestionsPanelRefresh}
                 isLoading={suggestionsLoading}
+                isExpanded={suggestionsPanelExpanded}
+                onToggleExpand={handleSuggestionsPanelToggle}
               />
             </Suspense>
           </div>

@@ -113,7 +113,7 @@ class TestArtifactsListEndpoint:
         THEN response should be 200 OK
         """
         with patch("mcp_server_langgraph.api.v1.artifacts.get_artifacts_service") as mock_get_service:
-            mock_service = AsyncMock()
+            mock_service = AsyncMock()  # noqa: async-mock-config
             mock_service.list_artifacts.return_value = ([], None, False)
             mock_get_service.return_value = mock_service
 
@@ -129,7 +129,7 @@ class TestArtifactsListEndpoint:
         THEN response should contain items array
         """
         with patch("mcp_server_langgraph.api.v1.artifacts.get_artifacts_service") as mock_get_service:
-            mock_service = AsyncMock()
+            mock_service = AsyncMock()  # noqa: async-mock-config
             mock_service.list_artifacts.return_value = (
                 [sample_artifact],
                 None,
@@ -153,7 +153,7 @@ class TestArtifactsListEndpoint:
         """
         session_id = sample_artifact["session_id"]
         with patch("mcp_server_langgraph.api.v1.artifacts.get_artifacts_service") as mock_get_service:
-            mock_service = AsyncMock()
+            mock_service = AsyncMock()  # noqa: async-mock-config
             mock_service.list_artifacts.return_value = (
                 [sample_artifact],
                 None,
@@ -176,7 +176,7 @@ class TestArtifactsListEndpoint:
         THEN should return paginated response with hasMore
         """
         with patch("mcp_server_langgraph.api.v1.artifacts.get_artifacts_service") as mock_get_service:
-            mock_service = AsyncMock()
+            mock_service = AsyncMock()  # noqa: async-mock-config
             mock_service.list_artifacts.return_value = ([], "next-cursor", True)
             mock_get_service.return_value = mock_service
 
@@ -205,7 +205,7 @@ class TestArtifactsGetEndpoint:
         """
         artifact_id = sample_artifact["id"]
         with patch("mcp_server_langgraph.api.v1.artifacts.get_artifacts_service") as mock_get_service:
-            mock_service = AsyncMock()
+            mock_service = AsyncMock()  # noqa: async-mock-config
             mock_service.get_artifact.return_value = sample_artifact
             mock_get_service.return_value = mock_service
 
@@ -221,7 +221,7 @@ class TestArtifactsGetEndpoint:
         THEN response should be 404 Not Found
         """
         with patch("mcp_server_langgraph.api.v1.artifacts.get_artifacts_service") as mock_get_service:
-            mock_service = AsyncMock()
+            mock_service = AsyncMock()  # noqa: async-mock-config
             mock_service.get_artifact.return_value = None
             mock_get_service.return_value = mock_service
 
@@ -246,7 +246,7 @@ class TestArtifactsCreateEndpoint:
         THEN response should be 201 Created
         """
         with patch("mcp_server_langgraph.api.v1.artifacts.get_artifacts_service") as mock_get_service:
-            mock_service = AsyncMock()
+            mock_service = AsyncMock()  # noqa: async-mock-config
             mock_service.create_artifact.return_value = {
                 "id": "art-new123",
                 "version": 1,
@@ -300,7 +300,7 @@ class TestArtifactsUpdateEndpoint:
         """
         artifact_id = sample_artifact["id"]
         with patch("mcp_server_langgraph.api.v1.artifacts.get_artifacts_service") as mock_get_service:
-            mock_service = AsyncMock()
+            mock_service = AsyncMock()  # noqa: async-mock-config
             mock_service.update_artifact.return_value = {
                 "id": artifact_id,
                 "version": 2,
@@ -325,7 +325,7 @@ class TestArtifactsUpdateEndpoint:
         THEN response should be 404 Not Found
         """
         with patch("mcp_server_langgraph.api.v1.artifacts.get_artifacts_service") as mock_get_service:
-            mock_service = AsyncMock()
+            mock_service = AsyncMock()  # noqa: async-mock-config
             mock_service.update_artifact.return_value = None
             mock_get_service.return_value = mock_service
 
@@ -354,7 +354,7 @@ class TestArtifactsDeleteEndpoint:
         """
         artifact_id = sample_artifact["id"]
         with patch("mcp_server_langgraph.api.v1.artifacts.get_artifacts_service") as mock_get_service:
-            mock_service = AsyncMock()
+            mock_service = AsyncMock()  # noqa: async-mock-config
             mock_service.delete_artifact.return_value = True
             mock_get_service.return_value = mock_service
 
@@ -370,7 +370,7 @@ class TestArtifactsDeleteEndpoint:
         THEN response should be 404 Not Found
         """
         with patch("mcp_server_langgraph.api.v1.artifacts.get_artifacts_service") as mock_get_service:
-            mock_service = AsyncMock()
+            mock_service = AsyncMock()  # noqa: async-mock-config
             mock_service.delete_artifact.return_value = False
             mock_get_service.return_value = mock_service
 
@@ -398,7 +398,7 @@ class TestArtifactsVersionsEndpoint:
         """
         artifact_id = sample_artifact["id"]
         with patch("mcp_server_langgraph.api.v1.artifacts.get_artifacts_service") as mock_get_service:
-            mock_service = AsyncMock()
+            mock_service = AsyncMock()  # noqa: async-mock-config
             mock_service.get_artifact_versions.return_value = [sample_version]
             mock_get_service.return_value = mock_service
 
@@ -417,7 +417,7 @@ class TestArtifactsVersionsEndpoint:
         THEN response should be 404 Not Found
         """
         with patch("mcp_server_langgraph.api.v1.artifacts.get_artifacts_service") as mock_get_service:
-            mock_service = AsyncMock()
+            mock_service = AsyncMock()  # noqa: async-mock-config
             mock_service.get_artifact_versions.return_value = None
             mock_get_service.return_value = mock_service
 
@@ -443,7 +443,7 @@ class TestArtifactsForkEndpoint:
         """
         artifact_id = sample_artifact["id"]
         with patch("mcp_server_langgraph.api.v1.artifacts.get_artifacts_service") as mock_get_service:
-            mock_service = AsyncMock()
+            mock_service = AsyncMock()  # noqa: async-mock-config
             mock_service.fork_artifact.return_value = {
                 "id": "art-forked123",
                 "parent_id": artifact_id,
@@ -469,7 +469,7 @@ class TestArtifactsForkEndpoint:
         THEN response should be 404 Not Found
         """
         with patch("mcp_server_langgraph.api.v1.artifacts.get_artifacts_service") as mock_get_service:
-            mock_service = AsyncMock()
+            mock_service = AsyncMock()  # noqa: async-mock-config
             mock_service.fork_artifact.return_value = None
             mock_get_service.return_value = mock_service
 
@@ -497,7 +497,7 @@ class TestArtifactsSemanticSearchEndpoint:
         THEN response should be 200 OK with results
         """
         with patch("mcp_server_langgraph.api.v1.artifacts.get_artifacts_service") as mock_get_service:
-            mock_service = AsyncMock()
+            mock_service = AsyncMock()  # noqa: async-mock-config
             mock_service.semantic_search.return_value = [
                 {"artifact_id": "art-1", "score": 0.95, "title": "Function Sum"},
             ]
@@ -536,7 +536,7 @@ class TestArtifactsSemanticSearchEndpoint:
         THEN should pass limit to service
         """
         with patch("mcp_server_langgraph.api.v1.artifacts.get_artifacts_service") as mock_get_service:
-            mock_service = AsyncMock()
+            mock_service = AsyncMock()  # noqa: async-mock-config
             mock_service.semantic_search.return_value = []
             mock_get_service.return_value = mock_service
 
@@ -558,7 +558,7 @@ class TestArtifactsSemanticSearchEndpoint:
         THEN response should be 200 with empty results
         """
         with patch("mcp_server_langgraph.api.v1.artifacts.get_artifacts_service") as mock_get_service:
-            mock_service = AsyncMock()
+            mock_service = AsyncMock()  # noqa: async-mock-config
             mock_service.semantic_search.return_value = []
             mock_get_service.return_value = mock_service
 
@@ -589,7 +589,7 @@ class TestArtifactsFindSimilarEndpoint:
         """
         artifact_id = sample_artifact["id"]
         with patch("mcp_server_langgraph.api.v1.artifacts.get_artifacts_service") as mock_get_service:
-            mock_service = AsyncMock()
+            mock_service = AsyncMock()  # noqa: async-mock-config
             mock_service.find_similar.return_value = [
                 {"artifact_id": "art-similar-1", "score": 0.92, "title": "Similar Code"},
             ]
@@ -611,7 +611,7 @@ class TestArtifactsFindSimilarEndpoint:
         """
         artifact_id = sample_artifact["id"]
         with patch("mcp_server_langgraph.api.v1.artifacts.get_artifacts_service") as mock_get_service:
-            mock_service = AsyncMock()
+            mock_service = AsyncMock()  # noqa: async-mock-config
             mock_service.find_similar.return_value = []
             mock_get_service.return_value = mock_service
 
@@ -631,7 +631,7 @@ class TestArtifactsFindSimilarEndpoint:
         """
         artifact_id = sample_artifact["id"]
         with patch("mcp_server_langgraph.api.v1.artifacts.get_artifacts_service") as mock_get_service:
-            mock_service = AsyncMock()
+            mock_service = AsyncMock()  # noqa: async-mock-config
             mock_service.find_similar.return_value = []
             mock_get_service.return_value = mock_service
 
@@ -820,7 +820,7 @@ class TestArtifactsContentSizeValidation:
         oversized_content = "x" * (settings.artifacts_max_content_size + 1)
 
         with patch("mcp_server_langgraph.api.v1.artifacts.get_artifacts_service") as mock_get_service:
-            mock_service = AsyncMock()
+            mock_service = AsyncMock()  # noqa: async-mock-config
             mock_service.update_artifact.return_value = {
                 "id": artifact_id,
                 "version": 2,
@@ -843,7 +843,7 @@ class TestArtifactsContentSizeValidation:
         THEN response should be 201 Created
         """
         with patch("mcp_server_langgraph.api.v1.artifacts.get_artifacts_service") as mock_get_service:
-            mock_service = AsyncMock()
+            mock_service = AsyncMock()  # noqa: async-mock-config
             mock_service.create_artifact.return_value = {
                 "id": "art-new123",
                 "version": 1,
@@ -975,7 +975,7 @@ class TestArtifactDescriptionField:
         session_id = f"session-{uuid4().hex[:8]}"
 
         with patch("mcp_server_langgraph.api.v1.artifacts.get_artifacts_service") as mock_get_service:
-            mock_service = AsyncMock()
+            mock_service = AsyncMock()  # noqa: async-mock-config
             mock_service.create_artifact.return_value = {
                 "id": artifact_id,
                 "type": "code",
@@ -1017,7 +1017,7 @@ class TestArtifactDescriptionField:
         session_id = f"session-{uuid4().hex[:8]}"
 
         with patch("mcp_server_langgraph.api.v1.artifacts.get_artifacts_service") as mock_get_service:
-            mock_service = AsyncMock()
+            mock_service = AsyncMock()  # noqa: async-mock-config
             mock_service.create_artifact.return_value = {
                 "id": artifact_id,
                 "type": "code",
@@ -1058,7 +1058,7 @@ class TestArtifactDescriptionField:
         session_id = f"session-{uuid4().hex[:8]}"
 
         with patch("mcp_server_langgraph.api.v1.artifacts.get_artifacts_service") as mock_get_service:
-            mock_service = AsyncMock()
+            mock_service = AsyncMock()  # noqa: async-mock-config
             mock_service.get_artifact.return_value = {
                 "id": artifact_id,
                 "type": "code",
@@ -1106,7 +1106,7 @@ class TestArtifactDescriptionField:
         session_id = f"session-{uuid4().hex[:8]}"
 
         with patch("mcp_server_langgraph.api.v1.artifacts.get_artifacts_service") as mock_get_service:
-            mock_service = AsyncMock()
+            mock_service = AsyncMock()  # noqa: async-mock-config
             mock_service.get_artifact.return_value = {
                 "id": artifact_id,
                 "type": "mermaid",
@@ -1137,7 +1137,7 @@ class TestArtifactDescriptionField:
         session_id = f"session-{uuid4().hex[:8]}"
 
         with patch("mcp_server_langgraph.api.v1.artifacts.get_artifacts_service") as mock_get_service:
-            mock_service = AsyncMock()
+            mock_service = AsyncMock()  # noqa: async-mock-config
             # list_artifacts returns (items, next_cursor, has_more)
             mock_service.list_artifacts.return_value = (
                 [

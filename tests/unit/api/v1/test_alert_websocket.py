@@ -114,7 +114,7 @@ class TestAlertWebSocketAuthentication:
         mock_websocket.query_params.get.return_value = "valid-jwt-token"
         mock_websocket.headers.get.return_value = ""
 
-        mock_auth_middleware = AsyncMock()
+        mock_auth_middleware = AsyncMock()  # noqa: async-mock-config
         mock_auth_middleware.verify_token.return_value = MagicMock(
             valid=True,
             payload={
@@ -148,7 +148,7 @@ class TestAlertWebSocketAuthentication:
         mock_websocket.query_params.get.return_value = None
         mock_websocket.headers.get.return_value = "Bearer header-jwt-token"
 
-        mock_auth_middleware = AsyncMock()
+        mock_auth_middleware = AsyncMock()  # noqa: async-mock-config
         mock_auth_middleware.verify_token.return_value = MagicMock(
             valid=True,
             payload={
@@ -201,7 +201,7 @@ class TestAlertWebSocketAuthentication:
         mock_websocket.query_params.get.return_value = "invalid-token"
         mock_websocket.headers.get.return_value = ""
 
-        mock_auth_middleware = AsyncMock()
+        mock_auth_middleware = AsyncMock()  # noqa: async-mock-config
         mock_auth_middleware.verify_token.return_value = MagicMock(
             valid=False,
             payload=None,
@@ -228,7 +228,7 @@ class TestAlertWebSocketAuthentication:
         mock_websocket.query_params.get.return_value = "query-token"
         mock_websocket.headers.get.return_value = "Bearer header-token"
 
-        mock_auth_middleware = AsyncMock()
+        mock_auth_middleware = AsyncMock()  # noqa: async-mock-config
         mock_auth_middleware.verify_token.return_value = MagicMock(
             valid=True,
             payload={
@@ -300,7 +300,7 @@ class TestAlertBroadcaster:
         """Force GC to prevent mock accumulation in xdist workers."""
         gc.collect()
 
-    def test_broadcaster_initialization(self) -> None:
+    def test_broadcaster_init_creates_instance_with_zero_subscribers(self) -> None:
         """
         GIVEN the AlertBroadcaster class
         WHEN creating a new instance
@@ -322,7 +322,7 @@ class TestAlertBroadcaster:
         from mcp_server_langgraph.alerts.broadcaster import AlertBroadcaster
 
         broadcaster = AlertBroadcaster()
-        mock_connection = AsyncMock()
+        mock_connection = AsyncMock()  # noqa: async-mock-config
 
         await broadcaster.subscribe(mock_connection, user_id="admin-123")
 
@@ -338,7 +338,7 @@ class TestAlertBroadcaster:
         from mcp_server_langgraph.alerts.broadcaster import AlertBroadcaster
 
         broadcaster = AlertBroadcaster()
-        mock_connection = AsyncMock()
+        mock_connection = AsyncMock()  # noqa: async-mock-config
 
         await broadcaster.subscribe(mock_connection, user_id="admin-123")
         assert broadcaster.subscriber_count == 1
@@ -356,8 +356,8 @@ class TestAlertBroadcaster:
         from mcp_server_langgraph.alerts.broadcaster import AlertBroadcaster
 
         broadcaster = AlertBroadcaster()
-        mock_connection1 = AsyncMock()
-        mock_connection2 = AsyncMock()
+        mock_connection1 = AsyncMock()  # noqa: async-mock-config
+        mock_connection2 = AsyncMock()  # noqa: async-mock-config
 
         await broadcaster.subscribe(mock_connection1, user_id="admin-1")
         await broadcaster.subscribe(mock_connection2, user_id="admin-2")
@@ -394,7 +394,7 @@ class TestAlertBroadcaster:
         from mcp_server_langgraph.alerts.broadcaster import AlertBroadcaster
 
         broadcaster = AlertBroadcaster()
-        mock_connection = AsyncMock()
+        mock_connection = AsyncMock()  # noqa: async-mock-config
 
         await broadcaster.subscribe(mock_connection, user_id="admin-1")
 
@@ -420,7 +420,7 @@ class TestAlertBroadcaster:
         from mcp_server_langgraph.alerts.broadcaster import AlertBroadcaster
 
         broadcaster = AlertBroadcaster()
-        mock_connection = AsyncMock()
+        mock_connection = AsyncMock()  # noqa: async-mock-config
 
         await broadcaster.subscribe(mock_connection, user_id="admin-1")
 
@@ -446,7 +446,7 @@ class TestAlertBroadcaster:
         from mcp_server_langgraph.alerts.broadcaster import AlertBroadcaster
 
         broadcaster = AlertBroadcaster()
-        mock_connection = AsyncMock()
+        mock_connection = AsyncMock()  # noqa: async-mock-config
 
         await broadcaster.subscribe(mock_connection, user_id="admin-1")
 
@@ -474,8 +474,8 @@ class TestAlertBroadcaster:
         broadcaster = AlertBroadcaster()
 
         # One good connection, one that will fail
-        good_connection = AsyncMock()
-        bad_connection = AsyncMock()
+        good_connection = AsyncMock()  # noqa: async-mock-config
+        bad_connection = AsyncMock()  # noqa: async-mock-config
         bad_connection.send_json.side_effect = Exception("Connection closed")
 
         await broadcaster.subscribe(good_connection, user_id="admin-1")
@@ -584,7 +584,7 @@ class TestAlertWebSocketPingPong:
         """
         from mcp_server_langgraph.api.v1.alert_websocket import handle_client_message
 
-        mock_websocket = AsyncMock()
+        mock_websocket = AsyncMock()  # noqa: async-mock-config
 
         result = await handle_client_message(mock_websocket, {"type": "ping"})
 
@@ -609,7 +609,7 @@ class TestAlertWebSocketIntegration:
         from mcp_server_langgraph.alerts.broadcaster import AlertBroadcaster
 
         broadcaster = AlertBroadcaster()
-        mock_websocket = AsyncMock()
+        mock_websocket = AsyncMock()  # noqa: async-mock-config
 
         # Simulate connection lifecycle
         await broadcaster.subscribe(mock_websocket, user_id="admin-123")

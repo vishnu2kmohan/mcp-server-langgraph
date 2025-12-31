@@ -823,7 +823,7 @@ class TestAgentRequestAuditTrail:
         )
         from mcp_server_langgraph.audit.models import AuditEventType
 
-        mock_audit_service = AsyncMock()
+        mock_audit_service = AsyncMock()  # noqa: async-mock-config
 
         await log_agent_request_audit_event(
             audit_service=mock_audit_service,
@@ -1430,7 +1430,7 @@ class TestBatchApprovalAuditLogging:
                 )
             )
 
-        mock_audit = AsyncMock()
+        mock_audit = AsyncMock()  # noqa: async-mock-config
 
         batch_request = BatchApproveRequest(
             request_ids=["audit-req-001", "audit-req-002"],

@@ -23,6 +23,12 @@ export interface ArtifactTypeSuggestionOptions {
   sessionId: string;
   content: string;
   enabled?: boolean;
+  /**
+   * Whether to auto-fetch when dependencies change.
+   * When false, only fetches when refetch() is called explicitly.
+   * @default true (for backward compatibility)
+   */
+  autoFetch?: boolean;
 }
 
 export interface ArtifactTypeAlternative {
@@ -46,6 +52,8 @@ export interface CodeAnalysisOptions {
   code: string;
   language?: string;
   enabled?: boolean;
+  /** @default true */
+  autoFetch?: boolean;
 }
 
 export interface CodeIssue {
@@ -79,6 +87,8 @@ export interface DiffExplanationOptions {
   oldContent: string;
   newContent: string;
   enabled?: boolean;
+  /** @default true */
+  autoFetch?: boolean;
 }
 
 export interface DiffChange {
@@ -102,6 +112,8 @@ export interface DiagramAnalysisOptions {
   sessionId: string;
   diagramCode: string;
   enabled?: boolean;
+  /** @default true */
+  autoFetch?: boolean;
 }
 
 export interface DiagramSuggestion {
@@ -134,6 +146,8 @@ export interface DiagramToCodeOptions {
   diagramCode: string;
   targetLanguage?: string;
   enabled?: boolean;
+  /** @default true */
+  autoFetch?: boolean;
 }
 
 export interface DiagramToCodeResult {
@@ -162,7 +176,13 @@ export interface DiagramToCodeResult {
 export function useArtifactTypeSuggestion(
   options: ArtifactTypeSuggestionOptions,
 ): ArtifactTypeSuggestionResult {
-  const { userId, sessionId, content, enabled = true } = options;
+  const {
+    userId,
+    sessionId,
+    content,
+    enabled = true,
+    autoFetch = true,
+  } = options;
 
   const [analyzeMutation, { isLoading }] = useStudioAnalyzeMutation();
 
@@ -232,8 +252,11 @@ export function useArtifactTypeSuggestion(
   }, [analyzeMutation, userId, sessionId, content, enabled]);
 
   useEffect(() => {
-    fetchSuggestion();
-  }, [fetchSuggestion]);
+    // Only auto-fetch when autoFetch is true (default behavior)
+    if (autoFetch) {
+      fetchSuggestion();
+    }
+  }, [fetchSuggestion, autoFetch]);
 
   return useMemo(
     () => ({
@@ -265,7 +288,14 @@ export function useArtifactTypeSuggestion(
 export function useCodeAnalysis(
   options: CodeAnalysisOptions,
 ): CodeAnalysisResult {
-  const { userId, sessionId, code, language, enabled = true } = options;
+  const {
+    userId,
+    sessionId,
+    code,
+    language,
+    enabled = true,
+    autoFetch = true,
+  } = options;
 
   const [analyzeMutation, { isLoading }] = useStudioAnalyzeMutation();
 
@@ -354,8 +384,10 @@ export function useCodeAnalysis(
   }, [analyzeMutation, userId, sessionId, code, language, enabled]);
 
   useEffect(() => {
-    fetchAnalysis();
-  }, [fetchAnalysis]);
+    if (autoFetch) {
+      fetchAnalysis();
+    }
+  }, [fetchAnalysis, autoFetch]);
 
   return useMemo(
     () => ({
@@ -389,7 +421,14 @@ export function useCodeAnalysis(
 export function useDiffExplanation(
   options: DiffExplanationOptions,
 ): DiffExplanationResult {
-  const { userId, sessionId, oldContent, newContent, enabled = true } = options;
+  const {
+    userId,
+    sessionId,
+    oldContent,
+    newContent,
+    enabled = true,
+    autoFetch = true,
+  } = options;
 
   const [analyzeMutation, { isLoading }] = useStudioAnalyzeMutation();
 
@@ -463,8 +502,10 @@ export function useDiffExplanation(
   }, [analyzeMutation, userId, sessionId, oldContent, newContent, enabled]);
 
   useEffect(() => {
-    fetchExplanation();
-  }, [fetchExplanation]);
+    if (autoFetch) {
+      fetchExplanation();
+    }
+  }, [fetchExplanation, autoFetch]);
 
   return useMemo(
     () => ({
@@ -496,7 +537,13 @@ export function useDiffExplanation(
 export function useDiagramAnalysis(
   options: DiagramAnalysisOptions,
 ): DiagramAnalysisResult {
-  const { userId, sessionId, diagramCode, enabled = true } = options;
+  const {
+    userId,
+    sessionId,
+    diagramCode,
+    enabled = true,
+    autoFetch = true,
+  } = options;
 
   const [analyzeMutation, { isLoading }] = useStudioAnalyzeMutation();
 
@@ -581,8 +628,10 @@ export function useDiagramAnalysis(
   }, [analyzeMutation, userId, sessionId, diagramCode, enabled]);
 
   useEffect(() => {
-    fetchAnalysis();
-  }, [fetchAnalysis]);
+    if (autoFetch) {
+      fetchAnalysis();
+    }
+  }, [fetchAnalysis, autoFetch]);
 
   return useMemo(
     () => ({
@@ -623,6 +672,7 @@ export function useDiagramToCode(
     diagramCode,
     targetLanguage,
     enabled = true,
+    autoFetch = true,
   } = options;
 
   const [analyzeMutation, { isLoading }] = useStudioAnalyzeMutation();
@@ -703,8 +753,10 @@ export function useDiagramToCode(
   ]);
 
   useEffect(() => {
-    fetchCode();
-  }, [fetchCode]);
+    if (autoFetch) {
+      fetchCode();
+    }
+  }, [fetchCode, autoFetch]);
 
   return useMemo(
     () => ({

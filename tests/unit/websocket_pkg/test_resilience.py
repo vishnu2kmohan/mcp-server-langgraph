@@ -57,7 +57,7 @@ class TestWithCircuitBreaker:
             "mcp_server_langgraph.websocket.resilience.get_circuit_breaker",
             return_value=mock_breaker,
         ):
-            async_op = AsyncMock()()
+            async_op = AsyncMock()()  # noqa: async-mock-config
             result = await with_circuit_breaker(
                 "test_service",
                 async_op,
@@ -80,7 +80,7 @@ class TestWithCircuitBreaker:
             "mcp_server_langgraph.websocket.resilience.get_circuit_breaker",
             return_value=mock_breaker,
         ):
-            async_op = AsyncMock()()
+            async_op = AsyncMock()()  # noqa: async-mock-config
             result = await with_circuit_breaker(
                 "test_service",
                 async_op,
@@ -105,7 +105,7 @@ class TestWithCircuitBreaker:
             "mcp_server_langgraph.websocket.resilience.get_circuit_breaker",
             return_value=mock_breaker,
         ):
-            async_op = AsyncMock()()
+            async_op = AsyncMock()()  # noqa: async-mock-config
             result = await with_circuit_breaker(
                 "test_service",
                 async_op,
@@ -126,7 +126,7 @@ class TestWithCircuitBreaker:
             "mcp_server_langgraph.websocket.resilience.get_circuit_breaker",
             return_value=mock_breaker,
         ):
-            async_op = AsyncMock()()
+            async_op = AsyncMock()()  # noqa: async-mock-config
             result = await with_circuit_breaker(
                 "test_service",
                 async_op,
@@ -148,7 +148,7 @@ class TestWithCircuitBreaker:
             "mcp_server_langgraph.websocket.resilience.get_circuit_breaker",
             return_value=mock_breaker,
         ):
-            async_op = AsyncMock()()
+            async_op = AsyncMock()()  # noqa: async-mock-config
 
             with pytest.raises(pybreaker.CircuitBreakerError):
                 await with_circuit_breaker("test_service", async_op)
@@ -166,7 +166,7 @@ class TestWithCircuitBreaker:
             return_value=mock_breaker,
         ):
             with patch("mcp_server_langgraph.websocket.resilience.logger") as mock_logger:
-                async_op = AsyncMock()()
+                async_op = AsyncMock()()  # noqa: async-mock-config
                 await with_circuit_breaker("my_service", async_op, fallback="default")
 
                 mock_logger.warning.assert_called_once()

@@ -71,7 +71,7 @@ class TestCostSummaryEndpoint:
         THEN response should be 200 OK
         """
         with patch("mcp_server_langgraph.api.v1.cost.get_cost_service") as mock_get_service:
-            mock_service = AsyncMock()  # async-mock-configured (return_value set below)
+            mock_service = AsyncMock()  # async-mock-configured (return_value set below)  # noqa: async-mock-config
             mock_service.get_summary.return_value = {
                 "total_cost": 125.50,
                 "prompt_tokens": 50000,
@@ -93,7 +93,7 @@ class TestCostSummaryEndpoint:
         THEN response should contain cost summary
         """
         with patch("mcp_server_langgraph.api.v1.cost.get_cost_service") as mock_get_service:
-            mock_service = AsyncMock()  # async-mock-configured (return_value set below)
+            mock_service = AsyncMock()  # async-mock-configured (return_value set below)  # noqa: async-mock-config
             mock_service.get_summary.return_value = {
                 "total_cost": 125.50,
                 "prompt_tokens": 50000,
@@ -125,7 +125,7 @@ class TestCostByModelEndpoint:
         THEN response should be 200 OK
         """
         with patch("mcp_server_langgraph.api.v1.cost.get_cost_service") as mock_get_service:
-            mock_service = AsyncMock()  # async-mock-configured (return_value set below)
+            mock_service = AsyncMock()  # async-mock-configured (return_value set below)  # noqa: async-mock-config
             mock_service.get_by_model.return_value = [
                 {"model": "gpt-4", "cost": 100.00, "requests": 500},
                 {"model": "gpt-3.5-turbo", "cost": 25.50, "requests": 1000},
@@ -144,7 +144,7 @@ class TestCostByModelEndpoint:
         THEN response should contain per-model breakdown
         """
         with patch("mcp_server_langgraph.api.v1.cost.get_cost_service") as mock_get_service:
-            mock_service = AsyncMock()  # async-mock-configured (return_value set below)
+            mock_service = AsyncMock()  # async-mock-configured (return_value set below)  # noqa: async-mock-config
             mock_service.get_by_model.return_value = [
                 {"model": "gpt-4", "cost": 100.00, "requests": 500},
             ]
@@ -175,7 +175,7 @@ class TestCostHistoryEndpoint:
         THEN response should be 200 OK
         """
         with patch("mcp_server_langgraph.api.v1.cost.get_cost_service") as mock_get_service:
-            mock_service = AsyncMock()  # async-mock-configured (return_value set below)
+            mock_service = AsyncMock()  # async-mock-configured (return_value set below)  # noqa: async-mock-config
             mock_service.get_history.return_value = [
                 {"date": "2025-01-01", "cost": 10.00},
                 {"date": "2025-01-02", "cost": 15.00},
@@ -194,7 +194,7 @@ class TestCostHistoryEndpoint:
         THEN response should contain time series data
         """
         with patch("mcp_server_langgraph.api.v1.cost.get_cost_service") as mock_get_service:
-            mock_service = AsyncMock()  # async-mock-configured (return_value set below)
+            mock_service = AsyncMock()  # async-mock-configured (return_value set below)  # noqa: async-mock-config
             mock_service.get_history.return_value = [
                 {"date": "2025-01-01", "cost": 10.00},
             ]
@@ -222,7 +222,7 @@ class TestCostRecordsEndpoint:
         THEN response should be 200 OK
         """
         with patch("mcp_server_langgraph.api.v1.cost.get_cost_service") as mock_get_service:
-            mock_service = AsyncMock()
+            mock_service = AsyncMock()  # noqa: async-mock-config
             mock_service.get_records.return_value = {
                 "records": [],
                 "next_cursor": None,
@@ -242,7 +242,7 @@ class TestCostRecordsEndpoint:
         THEN service should be called with org filter
         """
         with patch("mcp_server_langgraph.api.v1.cost.get_cost_service") as mock_get_service:
-            mock_service = AsyncMock()
+            mock_service = AsyncMock()  # noqa: async-mock-config
             mock_service.get_records.return_value = {
                 "records": [
                     {
@@ -290,7 +290,7 @@ class TestCostByOrganizationEndpoint:
         THEN response should be 200 OK
         """
         with patch("mcp_server_langgraph.api.v1.cost.get_cost_service") as mock_get_service:
-            mock_service = AsyncMock()
+            mock_service = AsyncMock()  # noqa: async-mock-config
             mock_service.get_cost_by_organization.return_value = [
                 {
                     "organization_id": "organization:acme",
@@ -325,7 +325,7 @@ class TestCostByProjectEndpoint:
         THEN response should be 200 OK
         """
         with patch("mcp_server_langgraph.api.v1.cost.get_cost_service") as mock_get_service:
-            mock_service = AsyncMock()
+            mock_service = AsyncMock()  # noqa: async-mock-config
             mock_service.get_cost_by_project.return_value = [
                 {
                     "project_id": "project:backend",
@@ -361,7 +361,7 @@ class TestCostByTeamEndpoint:
         THEN response should be 200 OK
         """
         with patch("mcp_server_langgraph.api.v1.cost.get_cost_service") as mock_get_service:
-            mock_service = AsyncMock()
+            mock_service = AsyncMock()  # noqa: async-mock-config
             mock_service.get_cost_by_team.return_value = [
                 {
                     "team_id": "team:platform",
@@ -398,7 +398,7 @@ class TestOrganizationalDateFiltering:
         THEN service should be called with date filters
         """
         with patch("mcp_server_langgraph.api.v1.cost.get_cost_service") as mock_get_service:
-            mock_service = AsyncMock()
+            mock_service = AsyncMock()  # noqa: async-mock-config
             mock_service.get_cost_by_organization.return_value = []
             mock_get_service.return_value = mock_service
 
@@ -418,7 +418,7 @@ class TestOrganizationalDateFiltering:
         THEN service should be called with date filters
         """
         with patch("mcp_server_langgraph.api.v1.cost.get_cost_service") as mock_get_service:
-            mock_service = AsyncMock()
+            mock_service = AsyncMock()  # noqa: async-mock-config
             mock_service.get_records.return_value = {
                 "records": [],
                 "next_cursor": None,
@@ -455,7 +455,7 @@ class TestCostServiceImplDateFiltering:
 
         from mcp_server_langgraph.api.v1.cost import CostServiceImpl
 
-        mock_storage = AsyncMock()
+        mock_storage = AsyncMock()  # noqa: async-mock-config
         mock_storage.get_cost_by_organization.return_value = []
 
         service = CostServiceImpl(storage=mock_storage)
@@ -483,7 +483,7 @@ class TestCostServiceImplDateFiltering:
 
         from mcp_server_langgraph.api.v1.cost import CostServiceImpl
 
-        mock_storage = AsyncMock()
+        mock_storage = AsyncMock()  # noqa: async-mock-config
         mock_storage.get_cost_by_project.return_value = []
 
         service = CostServiceImpl(storage=mock_storage)
@@ -513,7 +513,7 @@ class TestCostServiceImplDateFiltering:
 
         from mcp_server_langgraph.api.v1.cost import CostServiceImpl
 
-        mock_storage = AsyncMock()
+        mock_storage = AsyncMock()  # noqa: async-mock-config
         mock_storage.get_cost_by_team.return_value = []
 
         service = CostServiceImpl(storage=mock_storage)
@@ -596,7 +596,7 @@ class TestCostRecordsInputValidation:
         THEN response should be 200 OK
         """
         with patch("mcp_server_langgraph.api.v1.cost.get_cost_service") as mock_get_service:
-            mock_service = AsyncMock()
+            mock_service = AsyncMock()  # noqa: async-mock-config
             mock_service.get_records.return_value = {
                 "records": [],
                 "next_cursor": None,
@@ -670,7 +670,7 @@ class TestDateParameterValidation:
         The exact status code depends on whether validation happens at router or service level.
         """
         with patch("mcp_server_langgraph.api.v1.cost.get_cost_service") as mock_get_service:
-            mock_service = AsyncMock()
+            mock_service = AsyncMock()  # noqa: async-mock-config
             # Service returns empty data - the endpoint may handle validation before calling service
             mock_service.get_summary.return_value = {
                 "total_cost": 0.0,
@@ -694,7 +694,7 @@ class TestDateParameterValidation:
         THEN response should be 200 OK (uses defaults)
         """
         with patch("mcp_server_langgraph.api.v1.cost.get_cost_service") as mock_get_service:
-            mock_service = AsyncMock()
+            mock_service = AsyncMock()  # noqa: async-mock-config
             mock_service.get_summary.return_value = {
                 "total_cost": 0.0,
                 "prompt_tokens": 0,
@@ -714,7 +714,7 @@ class TestDateParameterValidation:
         THEN response should be 200 OK
         """
         with patch("mcp_server_langgraph.api.v1.cost.get_cost_service") as mock_get_service:
-            mock_service = AsyncMock()
+            mock_service = AsyncMock()  # noqa: async-mock-config
             mock_service.get_summary.return_value = {
                 "total_cost": 100.0,
                 "prompt_tokens": 5000,
@@ -743,7 +743,7 @@ class TestSortParameterValidation:
         THEN response should be 200 OK
         """
         with patch("mcp_server_langgraph.api.v1.cost.get_cost_service") as mock_get_service:
-            mock_service = AsyncMock()
+            mock_service = AsyncMock()  # noqa: async-mock-config
             mock_service.get_records.return_value = {
                 "records": [],
                 "next_cursor": None,
@@ -763,7 +763,7 @@ class TestSortParameterValidation:
         THEN response should be 200 OK
         """
         with patch("mcp_server_langgraph.api.v1.cost.get_cost_service") as mock_get_service:
-            mock_service = AsyncMock()
+            mock_service = AsyncMock()  # noqa: async-mock-config
             mock_service.get_records.return_value = {
                 "records": [],
                 "next_cursor": None,
@@ -783,7 +783,7 @@ class TestSortParameterValidation:
         THEN response should be 200 OK
         """
         with patch("mcp_server_langgraph.api.v1.cost.get_cost_service") as mock_get_service:
-            mock_service = AsyncMock()
+            mock_service = AsyncMock()  # noqa: async-mock-config
             mock_service.get_records.return_value = {
                 "records": [],
                 "next_cursor": None,
@@ -803,7 +803,7 @@ class TestSortParameterValidation:
         THEN response should be 200 OK
         """
         with patch("mcp_server_langgraph.api.v1.cost.get_cost_service") as mock_get_service:
-            mock_service = AsyncMock()
+            mock_service = AsyncMock()  # noqa: async-mock-config
             mock_service.get_records.return_value = {
                 "records": [],
                 "next_cursor": None,
@@ -853,7 +853,7 @@ class TestEntityTypeValidation:
         """
         with patch("mcp_server_langgraph.api.v1.cost.get_cost_service") as mock_get_service:
             with patch("mcp_server_langgraph.api.v1.cost.get_budget_checker") as mock_get_checker:
-                mock_service = AsyncMock()
+                mock_service = AsyncMock()  # noqa: async-mock-config
                 mock_service.get_cost_by_organization.return_value = []
                 mock_service.get_cost_by_project.return_value = []
                 mock_service.get_cost_by_team.return_value = []
@@ -955,21 +955,21 @@ class TestBudgetLoadingFromStorage:
             patch("mcp_server_langgraph.api.v1.cost.get_budget_checker") as mock_get_checker,
         ):
             # Mock cost service
-            mock_service = AsyncMock()
+            mock_service = AsyncMock()  # noqa: async-mock-config
             mock_service.get_cost_by_organization.return_value = [
                 {"organization_id": "organization:acme", "total_cost": 2500.00}
             ]
             mock_get_service.return_value = mock_service
 
             # Mock budget storage to return stored budget
-            mock_storage = AsyncMock()
+            mock_storage = AsyncMock()  # noqa: async-mock-config
             mock_storage.get_budget.return_value = stored_budget
             mock_get_storage.return_value = mock_storage
 
             # Mock budget checker
             from mcp_server_langgraph.monitoring.cost_budget import BudgetStatus
 
-            mock_checker = AsyncMock()
+            mock_checker = AsyncMock()  # noqa: async-mock-config
             mock_status = BudgetStatus(
                 budget=stored_budget,
                 current_spend=Decimal("2500.00"),
@@ -1001,19 +1001,19 @@ class TestBudgetLoadingFromStorage:
             patch("mcp_server_langgraph.api.v1.cost.get_budget_checker") as mock_get_checker,
         ):
             # Mock cost service
-            mock_service = AsyncMock()
+            mock_service = AsyncMock()  # noqa: async-mock-config
             mock_service.get_summary.return_value = {"total_cost": 100.00}
             mock_get_service.return_value = mock_service
 
             # Mock budget storage to return None (no stored budget)
-            mock_storage = AsyncMock()
+            mock_storage = AsyncMock()  # noqa: async-mock-config
             mock_storage.get_budget.return_value = None
             mock_get_storage.return_value = mock_storage
 
             # Mock budget checker
             from mcp_server_langgraph.monitoring.cost_budget import BudgetStatus
 
-            mock_checker = AsyncMock()
+            mock_checker = AsyncMock()  # noqa: async-mock-config
 
             def check_budget(budget, spend):
                 return BudgetStatus(
@@ -1049,12 +1049,12 @@ class TestBudgetLoadingFromStorage:
             patch("mcp_server_langgraph.api.v1.cost.get_budget_checker") as mock_get_checker,
         ):
             # Mock cost service
-            mock_service = AsyncMock()
+            mock_service = AsyncMock()  # noqa: async-mock-config
             mock_service.get_cost_by_project.return_value = [{"project_id": "project:backend", "total_cost": 500.00}]
             mock_get_service.return_value = mock_service
 
             # Mock budget storage
-            mock_storage = AsyncMock()
+            mock_storage = AsyncMock()  # noqa: async-mock-config
             mock_storage.get_budget.return_value = None
             mock_get_storage.return_value = mock_storage
 
@@ -1062,7 +1062,7 @@ class TestBudgetLoadingFromStorage:
             from decimal import Decimal
             from mcp_server_langgraph.monitoring.cost_budget import Budget, BudgetStatus
 
-            mock_checker = AsyncMock()
+            mock_checker = AsyncMock()  # noqa: async-mock-config
             mock_checker.check.return_value = BudgetStatus(
                 budget=Budget(
                     entity_type="project",

@@ -434,6 +434,54 @@ class TestCanvasActionEndpoint:
 
         assert response.status_code in [400, 404, 422]
 
+    def test_canvas_explain_action(self, client: TestClient) -> None:
+        """
+        POST /api/v1/ai/canvas/explain explains code/artifact.
+
+        GIVEN an artifact with code content
+        WHEN the explain action is requested
+        THEN it should return 200 with an explanation
+        """
+        response = client.post(
+            "/api/v1/ai/canvas/explain",
+            json={
+                "artifact_id": "artifact-123",
+                "content": "def hello(): return 'world'",
+                "content_type": "code",
+                "language": "python",
+                "session_id": "session-456",
+            },
+        )
+
+        assert response.status_code == 200
+        data = response.json()
+        assert data["success"] is True
+        assert "content" in data.get("data", {}) or "explanation" in data.get("data", {})
+
+    def test_canvas_fix_action(self, client: TestClient) -> None:
+        """
+        POST /api/v1/ai/canvas/fix fixes code/artifact issues.
+
+        GIVEN an artifact with code that has issues
+        WHEN the fix action is requested
+        THEN it should return 200 with fixed content
+        """
+        response = client.post(
+            "/api/v1/ai/canvas/fix",
+            json={
+                "artifact_id": "artifact-789",
+                "content": "def broken(:\n    return",
+                "content_type": "code",
+                "language": "python",
+                "session_id": "session-456",
+            },
+        )
+
+        assert response.status_code == 200
+        data = response.json()
+        assert data["success"] is True
+        assert "content" in data.get("data", {})
+
 
 @pytest.mark.unit
 @pytest.mark.api

@@ -11,8 +11,10 @@
  * - Clear console
  * - Auto-scroll to bottom
  * - Keyboard navigation
+ * - Virtualized rendering for large lists (uses @tanstack/react-virtual)
  */
-import { useState, useCallback, useRef, useMemo } from "react";
+import { useState, useCallback, useRef, useMemo, useEffect } from "react";
+import { useVirtualizer } from "@tanstack/react-virtual";
 import {
   Info,
   AlertTriangle,
@@ -35,7 +37,6 @@ import {
 import { cn } from "../../../utils/cn";
 import { useConsoleEntries } from "../hooks/useConsoleEntries";
 import { exportConsoleToJSON, exportConsoleToCSV } from "../utils/export";
-import { useBatchedUpdates, useStableCallback } from "../utils/performance";
 import { useTimelineContext } from "../context/DevToolsTimelineProvider";
 import type {
   ConsoleTabProps,
@@ -44,14 +45,17 @@ import type {
 } from "../types";
 
 // =============================================================================
-// Performance Constants
+// Virtualization Constants
 // =============================================================================
 
-/** Initial batch size for rendering entries (improves initial render time) */
-const INITIAL_BATCH_SIZE = 100;
+/** Default estimated height for console entries (in pixels) */
+const ESTIMATED_ROW_HEIGHT = 36;
 
-/** Enable batched rendering for lists larger than this threshold */
-const BATCHING_THRESHOLD = 50;
+/** Overscan count - number of items to render outside the visible area */
+const OVERSCAN_COUNT = 10;
+
+/** Threshold below which we skip virtualization for simplicity */
+const VIRTUALIZATION_THRESHOLD = 100;
 
 // =============================================================================
 // Constants
@@ -85,6 +89,8 @@ interface ConsoleEntryRowProps {
   isFocused: boolean;
   onToggleExpand: () => void;
   onCopy: () => void;
+  style?: React.CSSProperties;
+  measureRef?: (node: HTMLDivElement | null) => void;
 }
 
 function ConsoleEntryRow({
@@ -93,6 +99,8 @@ function ConsoleEntryRow({
   isFocused,
   onToggleExpand,
   onCopy,
+  style,
+  measureRef,
 }: ConsoleEntryRowProps) {
   const [isHovered, setIsHovered] = useState(false);
   const hasData = entry.data || entry.stackTrace;
@@ -125,6 +133,7 @@ function ConsoleEntryRow({
 
   return (
     <div
+      ref={measureRef}
       data-testid={`console-entry-${entry.id}`}
       data-focused={isFocused}
       className={cn(
@@ -133,6 +142,7 @@ function ConsoleEntryRow({
         levelStyles[entry.level],
         isFocused && "bg-primary-50 dark:bg-primary-900/20",
       )}
+      style={style}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
@@ -290,6 +300,54 @@ export function ConsoleTab({
   const listRef = useRef<HTMLDivElement>(null);
 
   /**
+   * Filter entries by timeline window for time-travel debugging.
+   */
+  const timelineFilteredEntries = useMemo(() => {
+    const baseEntries = filteredEntries.length > 0 ? filteredEntries : entries;
+
+    // If no time window is set, return all entries
+    if (!timeline.timeWindow) return baseEntries;
+
+    // Filter entries within the timeline window
+    return baseEntries.filter((entry) => {
+      return (
+        entry.timestamp >= timeline.timeWindow!.start &&
+        entry.timestamp <= timeline.timeWindow!.end
+      );
+    });
+  }, [filteredEntries, entries, timeline.timeWindow]);
+
+  /**
+   * Get display entries (with timeline filtering applied).
+   */
+  const displayEntries = useMemo(() => {
+    return timelineFilteredEntries;
+  }, [timelineFilteredEntries]);
+
+  /**
+   * Only use virtualization for large lists.
+   * For smaller lists, rendering all items is faster and simpler.
+   */
+  const shouldVirtualize = displayEntries.length >= VIRTUALIZATION_THRESHOLD;
+
+  /**
+   * Virtualizer for efficient rendering of large lists.
+   * Only renders visible rows + overscan, dramatically improving performance
+   * for logs with thousands of entries.
+   */
+  const virtualizer = useVirtualizer({
+    count: displayEntries.length,
+    getScrollElement: () => listRef.current,
+    estimateSize: () => ESTIMATED_ROW_HEIGHT,
+    overscan: OVERSCAN_COUNT,
+    // Enable dynamic sizing for expanded entries
+    measureElement: (element) =>
+      element?.getBoundingClientRect().height ?? ESTIMATED_ROW_HEIGHT,
+    // Only enable when virtualization is needed
+    enabled: shouldVirtualize,
+  });
+
+  /**
    * Toggle entry expansion.
    */
   const toggleExpand = useCallback((entryId: string) => {
@@ -325,10 +383,14 @@ export function ConsoleTab({
    * Scroll to bottom of log.
    */
   const scrollToBottom = useCallback(() => {
-    if (listRef.current) {
-      listRef.current.scrollTop = listRef.current.scrollHeight;
+    if (displayEntries.length > 0) {
+      if (shouldVirtualize) {
+        virtualizer.scrollToIndex(displayEntries.length - 1, { align: "end" });
+      } else if (listRef.current) {
+        listRef.current.scrollTop = listRef.current.scrollHeight;
+      }
     }
-  }, []);
+  }, [displayEntries.length, shouldVirtualize, virtualizer]);
 
   /**
    * Handle clearing both local and external entries.
@@ -346,75 +408,27 @@ export function ConsoleTab({
       if (e.key === "ArrowDown") {
         e.preventDefault();
         setFocusedIndex((prev) =>
-          Math.min(prev + 1, filteredEntries.length - 1),
+          Math.min(prev + 1, displayEntries.length - 1),
         );
       } else if (e.key === "ArrowUp") {
         e.preventDefault();
         setFocusedIndex((prev) => Math.max(prev - 1, 0));
       } else if (e.key === "Enter" && focusedIndex >= 0) {
-        const entry = filteredEntries[focusedIndex];
+        const entry = displayEntries[focusedIndex];
         if (entry.data || entry.stackTrace) {
           toggleExpand(entry.id);
         }
       }
     },
-    [filteredEntries, focusedIndex, toggleExpand],
+    [displayEntries, focusedIndex, toggleExpand],
   );
 
   /**
-   * Filter entries by timeline window for time-travel debugging.
+   * Re-measure items when expansion state changes.
    */
-  const timelineFilteredEntries = useMemo(() => {
-    const baseEntries = filteredEntries.length > 0 ? filteredEntries : entries;
-
-    // If no time window is set, return all entries
-    if (!timeline.timeWindow) return baseEntries;
-
-    // Filter entries within the timeline window
-    return baseEntries.filter((entry) => {
-      return (
-        entry.timestamp >= timeline.timeWindow!.start &&
-        entry.timestamp <= timeline.timeWindow!.end
-      );
-    });
-  }, [filteredEntries, entries, timeline.timeWindow]);
-
-  /**
-   * Get display entries (with timeline filtering applied).
-   */
-  const allEntries = useMemo(() => {
-    return timelineFilteredEntries;
-  }, [timelineFilteredEntries]);
-
-  /**
-   * Use batched updates for large lists to improve initial render performance.
-   * Only applies batching when list exceeds threshold.
-   */
-  const shouldBatch = allEntries.length > BATCHING_THRESHOLD;
-  const {
-    displayedItems: batchedEntries,
-    hasMore,
-    loadMore,
-  } = useBatchedUpdates(allEntries, INITIAL_BATCH_SIZE);
-
-  // Use batched entries for large lists, otherwise use all entries
-  const displayEntries = shouldBatch ? batchedEntries : allEntries;
-
-  /**
-   * Load more entries when scrolling near bottom.
-   */
-  const stableLoadMore = useStableCallback(loadMore);
-  const handleScroll = useCallback(
-    (e: React.UIEvent<HTMLDivElement>) => {
-      const target = e.currentTarget;
-      const nearBottom =
-        target.scrollHeight - target.scrollTop - target.clientHeight < 100;
-      if (nearBottom && hasMore) {
-        stableLoadMore();
-      }
-    },
-    [hasMore, stableLoadMore],
-  );
+  useEffect(() => {
+    virtualizer.measure();
+  }, [expandedEntries, virtualizer]);
 
   return (
     <div
@@ -437,12 +451,12 @@ export function ConsoleTab({
           <option value="error">Errors</option>
         </select>
 
-        {/* Entry count - show total count, not batched count */}
+        {/* Entry count */}
         <span
           data-testid="entry-count"
           className="text-xs text-gray-500 dark:text-gray-400"
         >
-          {allEntries.length}
+          {displayEntries.length}
         </span>
 
         {/* Spacer */}
@@ -521,28 +535,51 @@ export function ConsoleTab({
           tabIndex={0}
           onKeyDown={handleKeyDown}
           onClick={() => setFocusedIndex(0)}
-          onScroll={handleScroll}
           className="flex-1 overflow-y-auto focus:outline-none"
         >
-          {displayEntries.map((entry, index) => (
-            <ConsoleEntryRow
-              key={entry.id}
-              entry={entry}
-              isExpanded={expandedEntries.has(entry.id)}
-              isFocused={focusedIndex === index}
-              onToggleExpand={() => toggleExpand(entry.id)}
-              onCopy={() => copyMessage(entry.message)}
-            />
-          ))}
-          {/* Load more indicator for batched lists */}
-          {shouldBatch && hasMore && (
+          {shouldVirtualize ? (
+            /* Virtualized rendering for large lists */
             <div
-              data-testid="load-more-indicator"
-              className="flex items-center justify-center py-2 text-xs text-gray-400 dark:text-gray-500"
+              style={{
+                height: `${virtualizer.getTotalSize()}px`,
+                width: "100%",
+                position: "relative",
+              }}
             >
-              Scroll to load more ({allEntries.length - displayEntries.length}{" "}
-              remaining)
+              {virtualizer.getVirtualItems().map((virtualRow) => {
+                const entry = displayEntries[virtualRow.index];
+                return (
+                  <ConsoleEntryRow
+                    key={entry.id}
+                    entry={entry}
+                    isExpanded={expandedEntries.has(entry.id)}
+                    isFocused={focusedIndex === virtualRow.index}
+                    onToggleExpand={() => toggleExpand(entry.id)}
+                    onCopy={() => copyMessage(entry.message)}
+                    measureRef={virtualizer.measureElement}
+                    style={{
+                      position: "absolute",
+                      top: 0,
+                      left: 0,
+                      width: "100%",
+                      transform: `translateY(${virtualRow.start}px)`,
+                    }}
+                  />
+                );
+              })}
             </div>
+          ) : (
+            /* Standard rendering for small lists */
+            displayEntries.map((entry, index) => (
+              <ConsoleEntryRow
+                key={entry.id}
+                entry={entry}
+                isExpanded={expandedEntries.has(entry.id)}
+                isFocused={focusedIndex === index}
+                onToggleExpand={() => toggleExpand(entry.id)}
+                onCopy={() => copyMessage(entry.message)}
+              />
+            ))
           )}
         </div>
       )}

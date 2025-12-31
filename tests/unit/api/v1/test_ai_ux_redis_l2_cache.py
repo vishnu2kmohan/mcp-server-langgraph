@@ -81,7 +81,7 @@ def mock_settings_no_redis():
 @pytest.fixture
 def mock_redis_client():
     """Create mock async Redis client."""
-    redis = AsyncMock()
+    redis = AsyncMock()  # noqa: async-mock-config
     redis.get = AsyncMock(return_value=None)
     redis.setex = AsyncMock(return_value=True)
     return redis
@@ -465,7 +465,7 @@ class TestCacheInvalidation:
         service._response_cache["user-123:disclosure"] = {"data": "test2"}
         service._response_cache["user-456:persona"] = {"data": "other"}
 
-        deleted_count = await service.invalidate_user_cache("user-123")
+        _deleted_count = await service.invalidate_user_cache("user-123")
 
         # User-specific entries should be removed from L1
         assert "user-123:persona" not in service._response_cache

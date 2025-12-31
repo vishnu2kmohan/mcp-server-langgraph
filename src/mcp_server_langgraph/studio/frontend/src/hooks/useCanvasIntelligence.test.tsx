@@ -395,4 +395,175 @@ describe("Canvas Intelligence Hooks", () => {
       expect(result.current.code).toBeNull();
     });
   });
+
+  // ==========================================================================
+  // autoFetch Option Tests (Opt-in Behavior)
+  // ==========================================================================
+
+  describe("autoFetch option (opt-in behavior)", () => {
+    it("useArtifactTypeSuggestion does NOT auto-fetch when autoFetch is false", async () => {
+      const { useArtifactTypeSuggestion } =
+        await import("./useCanvasIntelligence");
+      const { useStudioAnalyzeMutation } = await import("../api");
+
+      const mockMutate = vi.fn(() => ({
+        unwrap: () => Promise.resolve({ analyses: {} }),
+      }));
+      vi.mocked(useStudioAnalyzeMutation).mockReturnValue([
+        mockMutate,
+        { isLoading: false },
+      ] as ReturnType<typeof useStudioAnalyzeMutation>);
+
+      const { result } = renderHook(
+        () =>
+          useArtifactTypeSuggestion({
+            userId: "test-user",
+            sessionId: "session-123",
+            content: "graph TB\n  A --> B",
+            autoFetch: false, // Opt-in mode
+          }),
+        { wrapper: createWrapper() },
+      );
+
+      // Should NOT have auto-fetched
+      expect(mockMutate).not.toHaveBeenCalled();
+      expect(result.current.suggestedType).toBeNull();
+
+      // Explicit refetch should work
+      await result.current.refetch();
+      expect(mockMutate).toHaveBeenCalledTimes(1);
+    });
+
+    it("useCodeAnalysis does NOT auto-fetch when autoFetch is false", async () => {
+      const { useCodeAnalysis } = await import("./useCanvasIntelligence");
+      const { useStudioAnalyzeMutation } = await import("../api");
+
+      const mockMutate = vi.fn(() => ({
+        unwrap: () => Promise.resolve({ analyses: {} }),
+      }));
+      vi.mocked(useStudioAnalyzeMutation).mockReturnValue([
+        mockMutate,
+        { isLoading: false },
+      ] as ReturnType<typeof useStudioAnalyzeMutation>);
+
+      const { result } = renderHook(
+        () =>
+          useCodeAnalysis({
+            userId: "test-user",
+            sessionId: "session-123",
+            code: "function test() {}",
+            autoFetch: false, // Opt-in mode
+          }),
+        { wrapper: createWrapper() },
+      );
+
+      expect(mockMutate).not.toHaveBeenCalled();
+      expect(result.current.complexity).toBeNull();
+    });
+
+    it("useDiffExplanation does NOT auto-fetch when autoFetch is false", async () => {
+      const { useDiffExplanation } = await import("./useCanvasIntelligence");
+      const { useStudioAnalyzeMutation } = await import("../api");
+
+      const mockMutate = vi.fn(() => ({
+        unwrap: () => Promise.resolve({ analyses: {} }),
+      }));
+      vi.mocked(useStudioAnalyzeMutation).mockReturnValue([
+        mockMutate,
+        { isLoading: false },
+      ] as ReturnType<typeof useStudioAnalyzeMutation>);
+
+      const { result } = renderHook(
+        () =>
+          useDiffExplanation({
+            userId: "test-user",
+            sessionId: "session-123",
+            oldContent: "old",
+            newContent: "new",
+            autoFetch: false, // Opt-in mode
+          }),
+        { wrapper: createWrapper() },
+      );
+
+      expect(mockMutate).not.toHaveBeenCalled();
+      expect(result.current.summary).toBeNull();
+    });
+
+    it("useDiagramAnalysis does NOT auto-fetch when autoFetch is false", async () => {
+      const { useDiagramAnalysis } = await import("./useCanvasIntelligence");
+      const { useStudioAnalyzeMutation } = await import("../api");
+
+      const mockMutate = vi.fn(() => ({
+        unwrap: () => Promise.resolve({ analyses: {} }),
+      }));
+      vi.mocked(useStudioAnalyzeMutation).mockReturnValue([
+        mockMutate,
+        { isLoading: false },
+      ] as ReturnType<typeof useStudioAnalyzeMutation>);
+
+      const { result } = renderHook(
+        () =>
+          useDiagramAnalysis({
+            userId: "test-user",
+            sessionId: "session-123",
+            diagramCode: "graph TB",
+            autoFetch: false, // Opt-in mode
+          }),
+        { wrapper: createWrapper() },
+      );
+
+      expect(mockMutate).not.toHaveBeenCalled();
+      expect(result.current.diagramType).toBeNull();
+    });
+
+    it("useDiagramToCode does NOT auto-fetch when autoFetch is false", async () => {
+      const { useDiagramToCode } = await import("./useCanvasIntelligence");
+      const { useStudioAnalyzeMutation } = await import("../api");
+
+      const mockMutate = vi.fn(() => ({
+        unwrap: () => Promise.resolve({ analyses: {} }),
+      }));
+      vi.mocked(useStudioAnalyzeMutation).mockReturnValue([
+        mockMutate,
+        { isLoading: false },
+      ] as ReturnType<typeof useStudioAnalyzeMutation>);
+
+      const { result } = renderHook(
+        () =>
+          useDiagramToCode({
+            userId: "test-user",
+            sessionId: "session-123",
+            diagramCode: "graph TB",
+            autoFetch: false, // Opt-in mode
+          }),
+        { wrapper: createWrapper() },
+      );
+
+      expect(mockMutate).not.toHaveBeenCalled();
+      expect(result.current.code).toBeNull();
+    });
+
+    it("maintains backward compatibility - auto-fetches by default", async () => {
+      const { useArtifactTypeSuggestion } =
+        await import("./useCanvasIntelligence");
+
+      const { result } = renderHook(
+        () =>
+          useArtifactTypeSuggestion({
+            userId: "test-user",
+            sessionId: "session-123",
+            content: "graph TB",
+            // No autoFetch specified - should default to true
+          }),
+        { wrapper: createWrapper() },
+      );
+
+      await waitFor(() => {
+        expect(result.current.isLoading).toBe(false);
+      });
+
+      // Should have auto-fetched (default behavior)
+      expect(result.current.suggestedType).toBe("mermaid");
+    });
+  });
 });

@@ -253,7 +253,7 @@ class TestHeartbeatLoop:
 
         manager = HeartbeatManager(interval=0.1, timeout=10)
         mock_ws = MagicMock()
-        mock_ws.send_json = AsyncMock()
+        mock_ws.send_json = AsyncMock()  # noqa: async-mock-config
 
         await manager.start(mock_ws)
         await asyncio.sleep(0.15)  # Wait for heartbeat
@@ -276,7 +276,7 @@ class TestHeartbeatLoop:
 
         manager = HeartbeatManager(interval=0.05, timeout=0.01, on_timeout=on_timeout)
         mock_ws = MagicMock()
-        mock_ws.send_json = AsyncMock()
+        mock_ws.send_json = AsyncMock()  # noqa: async-mock-config
 
         await manager.start(mock_ws)
         try:
@@ -315,7 +315,7 @@ class TestHeartbeatLoop:
 
         manager = HeartbeatManager(interval=5)  # Long interval
         mock_ws = MagicMock()
-        mock_ws.send_json = AsyncMock()
+        mock_ws.send_json = AsyncMock()  # noqa: async-mock-config
 
         task = await manager.start(mock_ws)
         await asyncio.sleep(0.01)  # Let loop start
@@ -331,7 +331,7 @@ class TestHeartbeatLoop:
 
         manager = HeartbeatManager(interval=0.05)
         mock_ws = MagicMock()
-        mock_ws.send_json = AsyncMock()
+        mock_ws.send_json = AsyncMock()  # noqa: async-mock-config
 
         task = await manager.start(mock_ws)
         await asyncio.sleep(0.03)

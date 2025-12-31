@@ -280,8 +280,8 @@ class TestAgentRequestWebSocketBroadcaster:
         )
 
         broadcaster = AgentRequestBroadcaster()
-        mock_ws = AsyncMock()
-        mock_ws.accept = AsyncMock()
+        mock_ws = AsyncMock()  # noqa: async-mock-config
+        mock_ws.accept = AsyncMock()  # noqa: async-mock-config
 
         await broadcaster.connect(mock_ws, session_id="session_123", user_id="user_456")
 
@@ -295,8 +295,8 @@ class TestAgentRequestWebSocketBroadcaster:
         )
 
         broadcaster = AgentRequestBroadcaster()
-        mock_ws = AsyncMock()
-        mock_ws.accept = AsyncMock()
+        mock_ws = AsyncMock()  # noqa: async-mock-config
+        mock_ws.accept = AsyncMock()  # noqa: async-mock-config
 
         await broadcaster.connect(mock_ws, session_id="session_123", user_id="user_456")
         broadcaster.disconnect(mock_ws)
@@ -312,12 +312,12 @@ class TestAgentRequestWebSocketBroadcaster:
         )
 
         broadcaster = AgentRequestBroadcaster()
-        mock_ws1 = AsyncMock()
-        mock_ws1.accept = AsyncMock()
-        mock_ws1.send_json = AsyncMock()
-        mock_ws2 = AsyncMock()
-        mock_ws2.accept = AsyncMock()
-        mock_ws2.send_json = AsyncMock()
+        mock_ws1 = AsyncMock()  # noqa: async-mock-config
+        mock_ws1.accept = AsyncMock()  # noqa: async-mock-config
+        mock_ws1.send_json = AsyncMock()  # noqa: async-mock-config
+        mock_ws2 = AsyncMock()  # noqa: async-mock-config
+        mock_ws2.accept = AsyncMock()  # noqa: async-mock-config
+        mock_ws2.send_json = AsyncMock()  # noqa: async-mock-config
 
         await broadcaster.connect(mock_ws1, session_id="session_1", user_id="user_1")
         await broadcaster.connect(mock_ws2, session_id="session_2", user_id="user_2")
@@ -335,12 +335,12 @@ class TestAgentRequestWebSocketBroadcaster:
         )
 
         broadcaster = AgentRequestBroadcaster()
-        mock_ws1 = AsyncMock()
-        mock_ws1.accept = AsyncMock()
-        mock_ws1.send_json = AsyncMock()
-        mock_ws2 = AsyncMock()
-        mock_ws2.accept = AsyncMock()
-        mock_ws2.send_json = AsyncMock()
+        mock_ws1 = AsyncMock()  # noqa: async-mock-config
+        mock_ws1.accept = AsyncMock()  # noqa: async-mock-config
+        mock_ws1.send_json = AsyncMock()  # noqa: async-mock-config
+        mock_ws2 = AsyncMock()  # noqa: async-mock-config
+        mock_ws2.accept = AsyncMock()  # noqa: async-mock-config
+        mock_ws2.send_json = AsyncMock()  # noqa: async-mock-config
 
         await broadcaster.connect(mock_ws1, session_id="session_target", user_id="user_1")
         await broadcaster.connect(mock_ws2, session_id="session_other", user_id="user_2")
@@ -578,7 +578,7 @@ class TestAgentRequestWebSocketBroadcastIntegration:
 
         # Mock broadcaster
         mock_broadcaster = MagicMock(spec=AgentRequestBroadcaster)
-        mock_broadcaster.broadcast = AsyncMock()
+        mock_broadcaster.broadcast = AsyncMock()  # noqa: async-mock-config
 
         with patch(
             "mcp_server_langgraph.api.v1.agent_request_websocket.get_broadcaster",
@@ -614,7 +614,7 @@ class TestAgentRequestWebSocketBroadcastIntegration:
         )
 
         mock_broadcaster = MagicMock(spec=AgentRequestBroadcaster)
-        mock_broadcaster.broadcast = AsyncMock()
+        mock_broadcaster.broadcast = AsyncMock()  # noqa: async-mock-config
 
         with patch(
             "mcp_server_langgraph.api.v1.agent_request_websocket.get_broadcaster",
@@ -636,7 +636,7 @@ class TestAgentRequestWebSocketBroadcastIntegration:
         )
 
         mock_broadcaster = MagicMock(spec=AgentRequestBroadcaster)
-        mock_broadcaster.broadcast = AsyncMock()
+        mock_broadcaster.broadcast = AsyncMock()  # noqa: async-mock-config
 
         with patch(
             "mcp_server_langgraph.api.v1.agent_request_websocket.get_broadcaster",
@@ -667,7 +667,7 @@ class TestAgentRequestWebSocketBroadcastIntegration:
         )
 
         mock_broadcaster = MagicMock(spec=AgentRequestBroadcaster)
-        mock_broadcaster.broadcast = AsyncMock()
+        mock_broadcaster.broadcast = AsyncMock()  # noqa: async-mock-config
 
         with patch(
             "mcp_server_langgraph.api.v1.agent_request_websocket.get_broadcaster",
@@ -711,8 +711,8 @@ class TestAgentRequestWebSocketKeepalive:
         """Test that ping message returns pong."""
         from mcp_server_langgraph.api.v1.agent_request_websocket import handle_ping
 
-        mock_ws = AsyncMock()
-        mock_ws.send_json = AsyncMock()
+        mock_ws = AsyncMock()  # noqa: async-mock-config
+        mock_ws.send_json = AsyncMock()  # noqa: async-mock-config
 
         await handle_ping(mock_ws)
 

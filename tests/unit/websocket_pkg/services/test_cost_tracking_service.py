@@ -37,7 +37,7 @@ class TestCostTrackingServiceAdapter:
     @pytest.mark.asyncio
     async def test_get_session_cost_returns_cached_data(self) -> None:
         """get_session_cost returns data from Redis cache when available."""
-        mock_cache = AsyncMock()
+        mock_cache = AsyncMock()  # noqa: async-mock-config
         mock_cache.aget.return_value = {
             "session_id": "session-123",
             "total_cost": 0.05,
@@ -56,7 +56,7 @@ class TestCostTrackingServiceAdapter:
     @pytest.mark.asyncio
     async def test_get_session_cost_falls_back_to_memory_on_redis_error(self) -> None:
         """get_session_cost falls back to in-memory cache on Redis error."""
-        mock_cache = AsyncMock()
+        mock_cache = AsyncMock()  # noqa: async-mock-config
         mock_cache.aget.side_effect = Exception("Redis connection failed")
 
         adapter = CostTrackingServiceAdapter(cache=mock_cache)
@@ -75,7 +75,7 @@ class TestCostTrackingServiceAdapter:
     @pytest.mark.asyncio
     async def test_get_session_cost_returns_zeros_when_no_data(self) -> None:
         """get_session_cost returns zero cost when no cached data exists."""
-        mock_cache = AsyncMock()
+        mock_cache = AsyncMock()  # noqa: async-mock-config
         mock_cache.aget.return_value = None
 
         adapter = CostTrackingServiceAdapter(cache=mock_cache)
@@ -91,7 +91,7 @@ class TestCostTrackingServiceAdapter:
     @pytest.mark.asyncio
     async def test_update_session_cost_async_updates_cache(self) -> None:
         """update_session_cost_async updates both Redis and in-memory cache."""
-        mock_cache = AsyncMock()
+        mock_cache = AsyncMock()  # noqa: async-mock-config
         mock_cache.aget.return_value = None
 
         adapter = CostTrackingServiceAdapter(cache=mock_cache)
@@ -105,7 +105,7 @@ class TestCostTrackingServiceAdapter:
     @pytest.mark.asyncio
     async def test_update_session_cost_async_accumulates_costs(self) -> None:
         """update_session_cost_async adds to existing costs."""
-        mock_cache = AsyncMock()
+        mock_cache = AsyncMock()  # noqa: async-mock-config
         mock_cache.aget.return_value = {
             "session_id": "session-acc",
             "total_cost": 0.05,

@@ -98,7 +98,7 @@ class TestMCPTaskWebSocketHandlerLifecycle:
         from mcp_server_langgraph.websocket.types import AuthUser, WebSocketConfig
 
         config = WebSocketConfig(endpoint_name="mcp-tasks")
-        mock_service = AsyncMock()
+        mock_service = AsyncMock()  # noqa: async-mock-config
         mock_service.list_tasks.return_value = [
             MockTask("task-1", "running"),
             MockTask("task-2", "pending"),
@@ -107,7 +107,7 @@ class TestMCPTaskWebSocketHandlerLifecycle:
         with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
             handler = MCPTaskWebSocketHandler(config=config, mcp_service=mock_service)
 
-        mock_ws = AsyncMock()
+        mock_ws = AsyncMock()  # noqa: async-mock-config
         handler._websocket = mock_ws
         user = AuthUser(id="user-123", username="testuser")
 
@@ -128,7 +128,7 @@ class TestMCPTaskWebSocketHandlerLifecycle:
         from mcp_server_langgraph.websocket.types import WebSocketConfig
 
         config = WebSocketConfig(endpoint_name="mcp-tasks")
-        mock_service = AsyncMock()
+        mock_service = AsyncMock()  # noqa: async-mock-config
 
         with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
             handler = MCPTaskWebSocketHandler(config=config, mcp_service=mock_service)
@@ -157,7 +157,7 @@ class TestMCPTaskWebSocketHandlerMessages:
         from mcp_server_langgraph.websocket.types import MessageEnvelope, WebSocketConfig
 
         config = WebSocketConfig(endpoint_name="mcp-tasks")
-        mock_service = AsyncMock()
+        mock_service = AsyncMock()  # noqa: async-mock-config
         mock_service.get_task.return_value = MockTask("task-1", "running")
 
         with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
@@ -181,7 +181,7 @@ class TestMCPTaskWebSocketHandlerMessages:
         from mcp_server_langgraph.websocket.types import MessageEnvelope, WebSocketConfig
 
         config = WebSocketConfig(endpoint_name="mcp-tasks")
-        mock_service = AsyncMock()
+        mock_service = AsyncMock()  # noqa: async-mock-config
 
         with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
             handler = MCPTaskWebSocketHandler(config=config, mcp_service=mock_service)
@@ -202,7 +202,7 @@ class TestMCPTaskWebSocketHandlerMessages:
         from mcp_server_langgraph.websocket.types import MessageEnvelope, WebSocketConfig
 
         config = WebSocketConfig(endpoint_name="mcp-tasks")
-        mock_service = AsyncMock()
+        mock_service = AsyncMock()  # noqa: async-mock-config
         mock_service.get_task.return_value = None
 
         with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
@@ -224,7 +224,7 @@ class TestMCPTaskWebSocketHandlerMessages:
         from mcp_server_langgraph.websocket.types import MessageEnvelope, WebSocketConfig
 
         config = WebSocketConfig(endpoint_name="mcp-tasks")
-        mock_service = AsyncMock()
+        mock_service = AsyncMock()  # noqa: async-mock-config
         mock_service.get_task.side_effect = Exception("Database error")
 
         with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
@@ -246,7 +246,7 @@ class TestMCPTaskWebSocketHandlerMessages:
         from mcp_server_langgraph.websocket.types import MessageEnvelope, WebSocketConfig
 
         config = WebSocketConfig(endpoint_name="mcp-tasks")
-        mock_service = AsyncMock()
+        mock_service = AsyncMock()  # noqa: async-mock-config
 
         with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
             handler = MCPTaskWebSocketHandler(config=config, mcp_service=mock_service)
@@ -270,7 +270,7 @@ class TestMCPTaskWebSocketHandlerMessages:
         from mcp_server_langgraph.websocket.types import MessageEnvelope, WebSocketConfig
 
         config = WebSocketConfig(endpoint_name="mcp-tasks")
-        mock_service = AsyncMock()
+        mock_service = AsyncMock()  # noqa: async-mock-config
         mock_service.list_tasks.return_value = [
             MockTask("task-1", "completed"),
             MockTask("task-2", "running"),
@@ -297,7 +297,7 @@ class TestMCPTaskWebSocketHandlerMessages:
         from mcp_server_langgraph.websocket.types import MessageEnvelope, WebSocketConfig
 
         config = WebSocketConfig(endpoint_name="mcp-tasks")
-        mock_service = AsyncMock()
+        mock_service = AsyncMock()  # noqa: async-mock-config
 
         with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
             handler = MCPTaskWebSocketHandler(config=config, mcp_service=mock_service)
@@ -326,7 +326,7 @@ class TestMCPTaskWebSocketHandlerConversion:
         from mcp_server_langgraph.websocket.types import WebSocketConfig
 
         config = WebSocketConfig(endpoint_name="mcp-tasks")
-        mock_service = AsyncMock()
+        mock_service = AsyncMock()  # noqa: async-mock-config
 
         with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
             handler = MCPTaskWebSocketHandler(config=config, mcp_service=mock_service)
@@ -350,7 +350,7 @@ class TestMCPTaskWebSocketHandlerConversion:
         from mcp_server_langgraph.websocket.types import WebSocketConfig
 
         config = WebSocketConfig(endpoint_name="mcp-tasks")
-        mock_service = AsyncMock()
+        mock_service = AsyncMock()  # noqa: async-mock-config
 
         with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
             handler = MCPTaskWebSocketHandler(config=config, mcp_service=mock_service)
@@ -380,12 +380,12 @@ class TestMCPTaskWebSocketHandlerPush:
         from mcp_server_langgraph.websocket.types import WebSocketConfig
 
         config = WebSocketConfig(endpoint_name="mcp-tasks")
-        mock_service = AsyncMock()
+        mock_service = AsyncMock()  # noqa: async-mock-config
 
         with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
             handler = MCPTaskWebSocketHandler(config=config, mcp_service=mock_service)
 
-        mock_ws = AsyncMock()
+        mock_ws = AsyncMock()  # noqa: async-mock-config
         handler._websocket = mock_ws
         handler.subscriptions.add("task-1")
 
@@ -403,12 +403,12 @@ class TestMCPTaskWebSocketHandlerPush:
         from mcp_server_langgraph.websocket.types import WebSocketConfig
 
         config = WebSocketConfig(endpoint_name="mcp-tasks")
-        mock_service = AsyncMock()
+        mock_service = AsyncMock()  # noqa: async-mock-config
 
         with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
             handler = MCPTaskWebSocketHandler(config=config, mcp_service=mock_service)
 
-        mock_ws = AsyncMock()
+        mock_ws = AsyncMock()  # noqa: async-mock-config
         handler._websocket = mock_ws
         # Not subscribed
 
@@ -426,7 +426,7 @@ class TestMCPTaskWebSocketHandlerPush:
         from mcp_server_langgraph.websocket.types import WebSocketConfig
 
         config = WebSocketConfig(endpoint_name="mcp-tasks")
-        mock_service = AsyncMock()
+        mock_service = AsyncMock()  # noqa: async-mock-config
 
         with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
             handler = MCPTaskWebSocketHandler(config=config, mcp_service=mock_service)

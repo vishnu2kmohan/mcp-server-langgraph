@@ -72,6 +72,16 @@ export const LazyInlineSuggestions = lazy(() =>
   })),
 );
 
+/**
+ * Lazy-loaded SuggestionsPanel component.
+ * Table-based panel for reviewing all suggestions at once (opt-in mode).
+ */
+export const LazySuggestionsPanel = lazy(() =>
+  import("./SuggestionsPanel").then((module) => ({
+    default: module.SuggestionsPanel,
+  })),
+);
+
 // Re-export types that consumers need (types don't affect bundle size)
 export type {
   Command,
@@ -92,3 +102,4 @@ export type {
   AIEditOverlayProps,
 } from "./AIEditOverlay";
 export type { Suggestion, SuggestionType } from "./InlineSuggestions";
+export type { SuggestionsPanelProps } from "./SuggestionsPanel";

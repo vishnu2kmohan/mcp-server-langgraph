@@ -47,6 +47,7 @@ class TestRedisUserRateLimiterImports:
         assert RedisWebSocketRateLimiter is not None
 
 
+@pytest.mark.xdist_group(name="redis_rate_limiter")
 class TestRedisUserRateLimiterInstantiation:
     """Test RedisUserRateLimiter initialization."""
 
@@ -58,7 +59,7 @@ class TestRedisUserRateLimiterInstantiation:
         """Should accept a Redis client on initialization."""
         from mcp_server_langgraph.websocket.rate_limiter import RedisUserRateLimiter
 
-        mock_redis = AsyncMock()
+        mock_redis = AsyncMock()  # noqa: async-mock-config
         limiter = RedisUserRateLimiter(
             redis_client=mock_redis,
             max_messages=100,
@@ -73,7 +74,7 @@ class TestRedisUserRateLimiterInstantiation:
         """Should have a default key prefix for Redis keys."""
         from mcp_server_langgraph.websocket.rate_limiter import RedisUserRateLimiter
 
-        mock_redis = AsyncMock()
+        mock_redis = AsyncMock()  # noqa: async-mock-config
         limiter = RedisUserRateLimiter(
             redis_client=mock_redis,
             max_messages=100,
@@ -86,7 +87,7 @@ class TestRedisUserRateLimiterInstantiation:
         """Should accept custom key prefix."""
         from mcp_server_langgraph.websocket.rate_limiter import RedisUserRateLimiter
 
-        mock_redis = AsyncMock()
+        mock_redis = AsyncMock()  # noqa: async-mock-config
         limiter = RedisUserRateLimiter(
             redis_client=mock_redis,
             max_messages=100,
@@ -97,6 +98,7 @@ class TestRedisUserRateLimiterInstantiation:
         assert limiter.key_prefix == "custom:prefix:"
 
 
+@pytest.mark.xdist_group(name="redis_rate_limiter")
 class TestRedisUserRateLimiterCheckAndIncrement:
     """Test RedisUserRateLimiter.check_and_increment method."""
 
@@ -109,7 +111,7 @@ class TestRedisUserRateLimiterCheckAndIncrement:
         """Should return True when under the limit."""
         from mcp_server_langgraph.websocket.rate_limiter import RedisUserRateLimiter
 
-        mock_redis = AsyncMock()
+        mock_redis = AsyncMock()  # noqa: async-mock-config
         # Simulate Redis INCR returning 1 (first message)
         mock_redis.incr.return_value = 1
         mock_redis.expire.return_value = True
@@ -130,7 +132,7 @@ class TestRedisUserRateLimiterCheckAndIncrement:
         """Should return False when over the limit."""
         from mcp_server_langgraph.websocket.rate_limiter import RedisUserRateLimiter
 
-        mock_redis = AsyncMock()
+        mock_redis = AsyncMock()  # noqa: async-mock-config
         # Simulate Redis INCR returning 101 (over limit of 100)
         mock_redis.incr.return_value = 101
         mock_redis.expire.return_value = True
@@ -150,7 +152,7 @@ class TestRedisUserRateLimiterCheckAndIncrement:
         """Should set expiry on the Redis key."""
         from mcp_server_langgraph.websocket.rate_limiter import RedisUserRateLimiter
 
-        mock_redis = AsyncMock()
+        mock_redis = AsyncMock()  # noqa: async-mock-config
         mock_redis.incr.return_value = 1
         mock_redis.expire.return_value = True
 
@@ -172,7 +174,7 @@ class TestRedisUserRateLimiterCheckAndIncrement:
         """Should use the correct Redis key format."""
         from mcp_server_langgraph.websocket.rate_limiter import RedisUserRateLimiter
 
-        mock_redis = AsyncMock()
+        mock_redis = AsyncMock()  # noqa: async-mock-config
         mock_redis.incr.return_value = 1
         mock_redis.expire.return_value = True
 
@@ -189,6 +191,7 @@ class TestRedisUserRateLimiterCheckAndIncrement:
         mock_redis.incr.assert_called_with(expected_key)
 
 
+@pytest.mark.xdist_group(name="redis_rate_limiter")
 class TestRedisUserRateLimiterGetRemaining:
     """Test RedisUserRateLimiter.get_remaining method."""
 
@@ -201,7 +204,7 @@ class TestRedisUserRateLimiterGetRemaining:
         """Should return max_messages when key doesn't exist."""
         from mcp_server_langgraph.websocket.rate_limiter import RedisUserRateLimiter
 
-        mock_redis = AsyncMock()
+        mock_redis = AsyncMock()  # noqa: async-mock-config
         mock_redis.get.return_value = None
 
         limiter = RedisUserRateLimiter(
@@ -219,7 +222,7 @@ class TestRedisUserRateLimiterGetRemaining:
         """Should return remaining quota based on current count."""
         from mcp_server_langgraph.websocket.rate_limiter import RedisUserRateLimiter
 
-        mock_redis = AsyncMock()
+        mock_redis = AsyncMock()  # noqa: async-mock-config
         mock_redis.get.return_value = b"30"  # 30 messages used
 
         limiter = RedisUserRateLimiter(
@@ -237,7 +240,7 @@ class TestRedisUserRateLimiterGetRemaining:
         """Should return 0 when at the limit."""
         from mcp_server_langgraph.websocket.rate_limiter import RedisUserRateLimiter
 
-        mock_redis = AsyncMock()
+        mock_redis = AsyncMock()  # noqa: async-mock-config
         mock_redis.get.return_value = b"100"
 
         limiter = RedisUserRateLimiter(
@@ -251,6 +254,7 @@ class TestRedisUserRateLimiterGetRemaining:
         assert remaining == 0
 
 
+@pytest.mark.xdist_group(name="redis_rate_limiter")
 class TestRedisUserRateLimiterFailover:
     """Test RedisUserRateLimiter graceful degradation."""
 
@@ -263,7 +267,7 @@ class TestRedisUserRateLimiterFailover:
         """Should allow request when Redis is unavailable (fail-open)."""
         from mcp_server_langgraph.websocket.rate_limiter import RedisUserRateLimiter
 
-        mock_redis = AsyncMock()
+        mock_redis = AsyncMock()  # noqa: async-mock-config
         mock_redis.incr.side_effect = Exception("Redis connection failed")
 
         limiter = RedisUserRateLimiter(
@@ -283,7 +287,7 @@ class TestRedisUserRateLimiterFailover:
         """Should deny request when Redis is unavailable if fail_open=False."""
         from mcp_server_langgraph.websocket.rate_limiter import RedisUserRateLimiter
 
-        mock_redis = AsyncMock()
+        mock_redis = AsyncMock()  # noqa: async-mock-config
         mock_redis.incr.side_effect = Exception("Redis connection failed")
 
         limiter = RedisUserRateLimiter(
@@ -303,7 +307,7 @@ class TestRedisUserRateLimiterFailover:
         """Should return max_messages on Redis error (optimistic)."""
         from mcp_server_langgraph.websocket.rate_limiter import RedisUserRateLimiter
 
-        mock_redis = AsyncMock()
+        mock_redis = AsyncMock()  # noqa: async-mock-config
         mock_redis.get.side_effect = Exception("Redis connection failed")
 
         limiter = RedisUserRateLimiter(
@@ -354,6 +358,7 @@ class TestRedisWebSocketRateLimiterInstantiation:
         assert limiter._redis_client is None
 
 
+@pytest.mark.xdist_group(name="redis_rate_limiter")
 class TestRedisWebSocketRateLimiterCheckMessage:
     """Test RedisWebSocketRateLimiter.check_message method."""
 
@@ -369,7 +374,7 @@ class TestRedisWebSocketRateLimiterCheckMessage:
             RedisWebSocketRateLimiter,
         )
 
-        mock_redis = AsyncMock()
+        mock_redis = AsyncMock()  # noqa: async-mock-config
         mock_redis.incr.return_value = 1
         mock_redis.expire.return_value = True
 
@@ -396,7 +401,7 @@ class TestRedisWebSocketRateLimiterCheckMessage:
             RedisWebSocketRateLimiter,
         )
 
-        mock_redis = AsyncMock()
+        mock_redis = AsyncMock()  # noqa: async-mock-config
         mock_redis.incr.return_value = 601  # Over 600 limit
         mock_redis.expire.return_value = True
 
@@ -416,6 +421,7 @@ class TestRedisWebSocketRateLimiterCheckMessage:
         assert result is False
 
 
+@pytest.mark.xdist_group(name="redis_rate_limiter")
 class TestRedisWebSocketRateLimiterStats:
     """Test RedisWebSocketRateLimiter statistics methods."""
 
@@ -431,7 +437,7 @@ class TestRedisWebSocketRateLimiterStats:
             RedisWebSocketRateLimiter,
         )
 
-        mock_redis = AsyncMock()
+        mock_redis = AsyncMock()  # noqa: async-mock-config
         mock_redis.get.return_value = b"50"
 
         limiter = RedisWebSocketRateLimiter(
@@ -460,7 +466,7 @@ class TestRedisWebSocketRateLimiterStats:
             RedisWebSocketRateLimiter,
         )
 
-        mock_redis = AsyncMock()
+        mock_redis = AsyncMock()  # noqa: async-mock-config
         mock_redis.get.return_value = b"100"
 
         limiter = RedisWebSocketRateLimiter(
@@ -479,6 +485,7 @@ class TestRedisWebSocketRateLimiterStats:
         assert remaining == 500  # 600 - 100
 
 
+@pytest.mark.xdist_group(name="redis_rate_limiter")
 class TestRedisWebSocketRateLimiterFactory:
     """Test factory function for creating Redis rate limiter."""
 
@@ -526,6 +533,7 @@ class TestRedisWebSocketRateLimiterFactory:
             assert isinstance(limiter, WebSocketRateLimiter)
 
 
+@pytest.mark.xdist_group(name="redis_rate_limiter")
 class TestRateLimitInfo:
     """Test rate limit info structure for error responses."""
 
@@ -585,7 +593,7 @@ class TestRateLimitInfo:
             RateLimitInfo,
         )
 
-        mock_redis = AsyncMock()
+        mock_redis = AsyncMock()  # noqa: async-mock-config
         mock_redis.get.return_value = b"10"  # 10 messages used
         mock_redis.ttl.return_value = 45  # 45 seconds until window resets
 
@@ -630,7 +638,7 @@ class TestRateLimitErrorResponse:
         from mcp_server_langgraph.websocket.rate_limiter import RateLimitInfo
 
         # Create a mock WebSocket
-        mock_ws = AsyncMock()
+        mock_ws = AsyncMock()  # noqa: async-mock-config
         sent_messages: list[dict] = []
         mock_ws.send_json = AsyncMock(side_effect=lambda m: sent_messages.append(m))
 
@@ -687,7 +695,7 @@ class TestRedisHealthCheck:
             RedisWebSocketRateLimiter,
         )
 
-        mock_redis = AsyncMock()
+        mock_redis = AsyncMock()  # noqa: async-mock-config
         mock_redis.ping.return_value = True
 
         with patch(
@@ -717,7 +725,7 @@ class TestRedisHealthCheck:
             RedisWebSocketRateLimiter,
         )
 
-        mock_redis = AsyncMock()
+        mock_redis = AsyncMock()  # noqa: async-mock-config
         mock_redis.ping.side_effect = Exception("Connection refused")
 
         with patch(

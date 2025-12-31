@@ -173,8 +173,15 @@ class TestOpenFGAGlobalInitialization:
             mock_clear_global.assert_called_once()
 
 
+@pytest.mark.xdist_group(name="websocket_authz_global_client")
 class TestWebSocketAuthorizationUsesGlobalClient:
     """Tests to verify WebSocket authz middleware uses the global client."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers."""
+        import gc
+
+        gc.collect()
 
     @pytest.mark.asyncio
     async def test_websocket_authz_calls_get_openfga_client(self) -> None:

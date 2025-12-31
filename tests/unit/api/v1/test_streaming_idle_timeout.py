@@ -47,7 +47,7 @@ class TestStreamingResetsIdleTimeout:
 
         streaming_handler = StreamingToolCallHandler(
             mcp_handler=handler,
-            send_notification=AsyncMock(),  # async-mock-configured (callback)
+            send_notification=AsyncMock(),  # async-mock-configured (callback)  # noqa: async-mock-config
             connection_manager=connection_manager,
         )
 
@@ -69,7 +69,7 @@ class TestStreamingResetsIdleTimeout:
 
         streaming_handler = StreamingToolCallHandler(
             mcp_handler=handler,
-            send_notification=AsyncMock(),  # async-mock-configured (callback)
+            send_notification=AsyncMock(),  # async-mock-configured (callback)  # noqa: async-mock-config
             session_id="test-session-123",
         )
 
@@ -89,7 +89,7 @@ class TestStreamingResetsIdleTimeout:
 
         handler = AuthenticatedMCPHandler(user_id="user:test")
         mock_connection_manager = MagicMock()
-        send_notification = AsyncMock()  # async-mock-configured
+        send_notification = AsyncMock()  # async-mock-configured  # noqa: async-mock-config
 
         streaming_handler = StreamingToolCallHandler(
             mcp_handler=handler,

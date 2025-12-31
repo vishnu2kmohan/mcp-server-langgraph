@@ -39,14 +39,14 @@ class TestAdminApiKeyGetEndpoint:
 
     def _create_mock_user_provider(self, user: UserData | None = None) -> AsyncMock:
         """Create a mock user provider."""
-        mock_provider = AsyncMock()
+        mock_provider = AsyncMock()  # noqa: async-mock-config
         mock_provider.get_user_by_username.return_value = user
         mock_provider.get_user_by_id.return_value = user
         return mock_provider
 
     def _create_mock_api_key_manager(self, keys: list[dict] | None = None, raise_error: Exception | None = None) -> AsyncMock:
         """Create a mock API key manager."""
-        mock_manager = AsyncMock()
+        mock_manager = AsyncMock()  # noqa: async-mock-config
         if raise_error:
             mock_manager.list_api_keys.side_effect = raise_error
         else:
@@ -186,7 +186,7 @@ class TestAdminApiKeyGenerateEndpoint:
 
     def _create_mock_user_provider(self, user: UserData | None = None) -> AsyncMock:
         """Create a mock user provider."""
-        mock_provider = AsyncMock()
+        mock_provider = AsyncMock()  # noqa: async-mock-config
         mock_provider.get_user_by_username.return_value = user
         mock_provider.get_user_by_id.return_value = user
         return mock_provider
@@ -197,7 +197,7 @@ class TestAdminApiKeyGenerateEndpoint:
         raise_error: Exception | None = None,
     ) -> AsyncMock:
         """Create a mock API key manager."""
-        mock_manager = AsyncMock()
+        mock_manager = AsyncMock()  # noqa: async-mock-config
         if raise_error:
             mock_manager.create_api_key.side_effect = raise_error
         else:
@@ -338,7 +338,7 @@ class TestAdminApiKeyGenerateEndpoint:
         mock_provider = self._create_mock_user_provider(mock_user)
 
         # Mock existing keys
-        mock_api_key_manager = AsyncMock()
+        mock_api_key_manager = AsyncMock()  # noqa: async-mock-config
         mock_api_key_manager.list_api_keys.return_value = [{"key_id": "old123", "name": "Old Key"}]
         mock_api_key_manager.revoke_api_key.return_value = None
         mock_api_key_manager.create_api_key.return_value = {

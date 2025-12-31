@@ -631,7 +631,7 @@ class TestChatServiceImpl:
         from mcp_server_langgraph.api.v1.chat import ChatServiceImpl
 
         # Mock LangGraph agent with astream_events
-        mock_agent = AsyncMock()  # async-mock-configured
+        mock_agent = AsyncMock()  # async-mock-configured  # noqa: async-mock-config
 
         async def mock_astream_events(*args, **kwargs):
             """Simulate LangGraph astream_events output."""
@@ -683,7 +683,7 @@ class TestChatServiceImpl:
         """
         from mcp_server_langgraph.api.v1.chat import ChatServiceImpl
 
-        mock_agent = AsyncMock()  # async-mock-configured
+        mock_agent = AsyncMock()  # async-mock-configured  # noqa: async-mock-config
 
         async def mock_astream_events(*args, **kwargs):
             # Simulate node transitions
@@ -734,7 +734,7 @@ class TestChatServiceImpl:
         """
         from mcp_server_langgraph.api.v1.chat import ChatServiceImpl
 
-        mock_agent = AsyncMock()  # async-mock-configured
+        mock_agent = AsyncMock()  # async-mock-configured  # noqa: async-mock-config
 
         async def mock_astream_events(*args, **kwargs):
             # Simulate edge traversal from router to agent
@@ -786,7 +786,7 @@ class TestChatServiceImpl:
         """
         from mcp_server_langgraph.api.v1.chat import ChatServiceImpl
 
-        mock_agent = AsyncMock()  # async-mock-configured
+        mock_agent = AsyncMock()  # async-mock-configured  # noqa: async-mock-config
 
         async def mock_astream_events(*args, **kwargs):
             yield {

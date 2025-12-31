@@ -57,7 +57,7 @@ def mock_cache_service():
     cache.aset = AsyncMock(return_value=None)
     cache.adelete = AsyncMock(return_value=None)
     cache.adelete_pattern = AsyncMock(return_value=0)
-    cache.redis = AsyncMock()
+    cache.redis = AsyncMock()  # noqa: async-mock-config
     cache.redis.ttl = AsyncMock(return_value=250)  # 250s remaining TTL
     return cache
 
@@ -76,7 +76,7 @@ def mock_settings():
 def mock_llm_factory():
     """Create mock LLM factory."""
     factory = MagicMock()
-    factory.ainvoke = AsyncMock()
+    factory.ainvoke = AsyncMock()  # noqa: async-mock-config
     return factory
 
 
@@ -264,7 +264,7 @@ class TestAIUXServiceTieredCacheViaMixin:
             mock_cache_service.aget = AsyncMock(return_value=SAMPLE_PERSONA_RESPONSE)
 
             # Get before count
-            labels = {"service": "ai_ux", "method": "test_method"}
+            _labels = {"service": "ai_ux", "method": "test_method"}
 
             await service._cache_get_tiered("ai_ux:test_key", method="test_method")
 
@@ -402,7 +402,7 @@ class TestAIUXServiceCacheInvalidationViaMixin:
 
             mock_cache_service.adelete_pattern = AsyncMock(return_value=5)
 
-            deleted = await service.invalidate_user_cache("user-123")
+            _deleted = await service.invalidate_user_cache("user-123")
 
             # Should have called adelete_pattern with user-scoped pattern
             mock_cache_service.adelete_pattern.assert_called()
@@ -423,7 +423,7 @@ class TestAIUXServiceCacheInvalidationViaMixin:
 
             mock_cache_service.adelete_pattern = AsyncMock(return_value=3)
 
-            deleted = await service.invalidate_method_cache("analyze_persona")
+            _deleted = await service.invalidate_method_cache("analyze_persona")
 
             mock_cache_service.adelete_pattern.assert_called()
             call_args = mock_cache_service.adelete_pattern.call_args
@@ -496,7 +496,7 @@ class TestAIUXServiceDuplicateCodeRemoved:
         from mcp_server_langgraph.api.v1.ai_ux_service import AIUXService
         import inspect
 
-        source = inspect.getsource(AIUXService.__init__)
+        _source = inspect.getsource(AIUXService.__init__)
 
         # After migration, should not contain direct TTLCache instantiation
         # The mixin handles L1 cache via CacheService

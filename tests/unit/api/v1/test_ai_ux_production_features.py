@@ -42,7 +42,7 @@ class TestRedisCacheIntegration:
     async def test_error_analysis_checks_redis_cache_first(self) -> None:
         """Error analysis should check Redis cache before calling LLM."""
         service = create_test_service()
-        service.redis_cache = AsyncMock()
+        service.redis_cache = AsyncMock()  # noqa: async-mock-config
         service.redis_cache.get = AsyncMock(return_value=None)  # Cache miss
 
         error_info = ErrorInfo(
@@ -338,7 +338,7 @@ class TestWebSocketHeartbeat:
         service = create_test_service()
 
         # Add a mock connection
-        mock_ws = AsyncMock()
+        mock_ws = AsyncMock()  # noqa: async-mock-config
         service._websocket_connections["stale-user"] = mock_ws
 
         # If service has cleanup method, call it
@@ -352,7 +352,7 @@ class TestWebSocketHeartbeat:
         from mcp_server_langgraph.core.feature_flags import feature_flags
 
         # Check if heartbeat interval setting exists
-        has_interval = hasattr(feature_flags, "ai_ux_websocket_heartbeat_interval") or hasattr(
+        _has_interval = hasattr(feature_flags, "ai_ux_websocket_heartbeat_interval") or hasattr(
             feature_flags, "websocket_heartbeat_interval_seconds"
         )
         # This is a soft check - interval can be hardcoded for now

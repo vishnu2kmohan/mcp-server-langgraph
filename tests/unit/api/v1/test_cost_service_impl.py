@@ -44,9 +44,9 @@ class TestCostServiceImpl:
     def mock_storage(self) -> MagicMock:
         """Create a mock CostStorageBackend."""
         storage = MagicMock()
-        storage.get_cost_summary = AsyncMock()  # async-mock-configured
-        storage.get_cost_by_model = AsyncMock()  # async-mock-configured
-        storage.get_cost_history = AsyncMock()  # async-mock-configured
+        storage.get_cost_summary = AsyncMock()  # async-mock-configured  # noqa: async-mock-config
+        storage.get_cost_by_model = AsyncMock()  # async-mock-configured  # noqa: async-mock-config
+        storage.get_cost_history = AsyncMock()  # async-mock-configured  # noqa: async-mock-config
         return storage
 
     @pytest.fixture

@@ -171,7 +171,7 @@ class TestQueueApprovalRequestWithExplanation:
             with patch(
                 "mcp_server_langgraph.agents.explanation_orchestrator.CachedExplanationOrchestrator"
             ) as mock_orch_class:
-                mock_orch = AsyncMock()
+                mock_orch = AsyncMock()  # noqa: async-mock-config
                 mock_orch.generate_explanation_cached = AsyncMock(return_value=mock_explanation)
                 mock_orch_class.return_value = mock_orch
 
@@ -236,7 +236,7 @@ class TestQueueApprovalRequestWithExplanation:
             with patch(
                 "mcp_server_langgraph.agents.explanation_orchestrator.CachedExplanationOrchestrator"
             ) as mock_orch_class:
-                mock_orch = AsyncMock()
+                mock_orch = AsyncMock()  # noqa: async-mock-config
                 mock_orch.generate_explanation_cached = AsyncMock(side_effect=Exception("LLM service unavailable"))
                 mock_orch_class.return_value = mock_orch
 
@@ -280,7 +280,7 @@ class TestQueueApprovalRequestWithExplanation:
             with patch(
                 "mcp_server_langgraph.agents.explanation_orchestrator.CachedExplanationOrchestrator"
             ) as mock_orch_class:
-                mock_orch = AsyncMock()
+                mock_orch = AsyncMock()  # noqa: async-mock-config
                 mock_orch.generate_explanation_cached = AsyncMock(return_value=mock_explanation)
                 mock_orch_class.return_value = mock_orch
 

@@ -352,6 +352,7 @@ class TestDistributedRateLimitingIntegration:
         assert result_2 is False, "Instance 2 should see user blocked"
 
 
+@pytest.mark.xdist_group(name="feature_flag_rate_limiting")
 class TestFeatureFlagControlledRateLimiting:
     """Tests for feature flag controlled rate limiter selection."""
 

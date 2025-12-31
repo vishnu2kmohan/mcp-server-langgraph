@@ -68,7 +68,7 @@ class TestHITLPushNotificationIntegration:
         )
 
         # Create a mock push sender
-        mock_push_sender = AsyncMock()
+        mock_push_sender = AsyncMock()  # noqa: async-mock-config
         mock_push_sender.send_to_user = AsyncMock(return_value=1)
 
         # Create a mock approval request
@@ -124,7 +124,7 @@ class TestHITLPushNotificationIntegration:
         )
 
         # Create a mock push sender
-        mock_push_sender = AsyncMock()
+        mock_push_sender = AsyncMock()  # noqa: async-mock-config
 
         # Create a mock approval request
         request = AgentRequest(
@@ -183,7 +183,7 @@ class TestHITLPushNotificationIntegration:
         )
 
         # Create a mock push sender
-        mock_push_sender = AsyncMock()
+        mock_push_sender = AsyncMock()  # noqa: async-mock-config
         mock_push_sender.send_to_user = AsyncMock(return_value=1)
 
         # Create a mock clarification request
@@ -398,7 +398,7 @@ class TestHITLPushBroadcastIntegration:
             patch("mcp_server_langgraph.api.v1.agent_request_websocket.get_broadcaster") as mock_get_broadcaster,
             patch("mcp_server_langgraph.api.v1.agent_request_websocket.send_hitl_approval_notification") as mock_send_push,
         ):
-            mock_broadcaster = AsyncMock()
+            mock_broadcaster = AsyncMock()  # noqa: async-mock-config
             mock_get_broadcaster.return_value = mock_broadcaster
             mock_send_push.return_value = None
 
@@ -439,7 +439,7 @@ class TestHITLPushBroadcastIntegration:
                 "mcp_server_langgraph.api.v1.agent_request_websocket.send_hitl_approval_updated_notification"
             ) as mock_send_push,
         ):
-            mock_broadcaster = AsyncMock()
+            mock_broadcaster = AsyncMock()  # noqa: async-mock-config
             mock_get_broadcaster.return_value = mock_broadcaster
             mock_send_push.return_value = None
 
@@ -478,7 +478,7 @@ class TestHITLPushBroadcastIntegration:
                 "mcp_server_langgraph.api.v1.agent_request_websocket.send_hitl_execution_resumed_notification"
             ) as mock_send_push,
         ):
-            mock_broadcaster = AsyncMock()
+            mock_broadcaster = AsyncMock()  # noqa: async-mock-config
             mock_get_broadcaster.return_value = mock_broadcaster
             mock_send_push.return_value = None
 

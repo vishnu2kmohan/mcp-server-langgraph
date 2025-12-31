@@ -172,7 +172,7 @@ class TestOrchestratorStatusBroadcastThroughput:
         # Create and subscribe mock WebSockets
         mock_websockets = [AsyncMock(spec=["send_json"]) for _ in range(num_subscribers)]
         for ws in mock_websockets:
-            ws.send_json = AsyncMock()  # Ensure send_json is async
+            ws.send_json = AsyncMock()  # Ensure send_json is async  # noqa: async-mock-config
 
         for i, ws in enumerate(mock_websockets):
             await broadcaster.subscribe(ws, user_id=f"user-{i}")
@@ -214,7 +214,7 @@ class TestOrchestratorStatusBroadcastThroughput:
         # Create and subscribe mock WebSockets
         mock_websockets = [AsyncMock(spec=["send_json"]) for _ in range(num_subscribers)]
         for ws in mock_websockets:
-            ws.send_json = AsyncMock()
+            ws.send_json = AsyncMock()  # noqa: async-mock-config
 
         for i, ws in enumerate(mock_websockets):
             await broadcaster.subscribe(ws, user_id=f"user-{i}")
@@ -277,7 +277,7 @@ class TestOrchestratorStatusTaskLifecycleThroughput:
         # Create and subscribe mock WebSockets
         mock_websockets = [AsyncMock(spec=["send_json"]) for _ in range(num_subscribers)]
         for ws in mock_websockets:
-            ws.send_json = AsyncMock()
+            ws.send_json = AsyncMock()  # noqa: async-mock-config
 
         for i, ws in enumerate(mock_websockets):
             await broadcaster.subscribe(ws, user_id=f"user-{i}")
@@ -332,7 +332,7 @@ class TestOrchestratorStatusTaskLifecycleThroughput:
         # Create and subscribe mock WebSockets
         mock_websockets = [AsyncMock(spec=["send_json"]) for _ in range(num_subscribers)]
         for ws in mock_websockets:
-            ws.send_json = AsyncMock()
+            ws.send_json = AsyncMock()  # noqa: async-mock-config
 
         for i, ws in enumerate(mock_websockets):
             await broadcaster.subscribe(ws, user_id=f"user-{i}")
@@ -407,7 +407,7 @@ class TestOrchestratorStatusQueueStress:
 
         # Create and subscribe a mock WebSocket
         mock_ws = AsyncMock(spec=["send_json"])
-        mock_ws.send_json = AsyncMock()
+        mock_ws.send_json = AsyncMock()  # noqa: async-mock-config
         await broadcaster.subscribe(mock_ws, user_id="user-1")
 
         # Measure queue time
@@ -446,7 +446,7 @@ class TestOrchestratorStatusQueueStress:
 
         # Create and subscribe a mock WebSocket
         mock_ws = AsyncMock(spec=["send_json"])
-        mock_ws.send_json = AsyncMock()
+        mock_ws.send_json = AsyncMock()  # noqa: async-mock-config
         await broadcaster.subscribe(mock_ws, user_id="user-1")
 
         # Queue all tasks
@@ -511,7 +511,7 @@ class TestOrchestratorStatusProgressThroughput:
         # Create and subscribe mock WebSockets
         mock_websockets = [AsyncMock(spec=["send_json"]) for _ in range(num_subscribers)]
         for ws in mock_websockets:
-            ws.send_json = AsyncMock()
+            ws.send_json = AsyncMock()  # noqa: async-mock-config
 
         for i, ws in enumerate(mock_websockets):
             await broadcaster.subscribe(ws, user_id=f"user-{i}")
@@ -563,7 +563,7 @@ class TestOrchestratorStatusProgressThroughput:
         # Create and subscribe mock WebSockets
         mock_websockets = [AsyncMock(spec=["send_json"]) for _ in range(num_subscribers)]
         for ws in mock_websockets:
-            ws.send_json = AsyncMock()
+            ws.send_json = AsyncMock()  # noqa: async-mock-config
 
         for i, ws in enumerate(mock_websockets):
             await broadcaster.subscribe(ws, user_id=f"user-{i}")
@@ -639,7 +639,7 @@ class TestOrchestratorStatusFailedSubscriberCleanup:
                 # These will raise on send
                 ws.send_json = AsyncMock(side_effect=Exception("Connection closed"))
             else:
-                ws.send_json = AsyncMock()
+                ws.send_json = AsyncMock()  # noqa: async-mock-config
             mock_websockets.append(ws)
 
         for i, ws in enumerate(mock_websockets):
@@ -679,7 +679,7 @@ class TestOrchestratorStatusFailedSubscriberCleanup:
         healthy_websockets = []
         for i in range(num_healthy):
             ws = AsyncMock(spec=["send_json"])
-            ws.send_json = AsyncMock()
+            ws.send_json = AsyncMock()  # noqa: async-mock-config
             healthy_websockets.append(ws)
             await broadcaster.subscribe(ws, user_id=f"healthy-{i}")
 
@@ -768,7 +768,7 @@ class TestOrchestratorStatusMemoryEfficiency:
 
         # Subscribe a minimal WebSocket to enable broadcasts
         ws = AsyncMock(spec=["send_json"])
-        ws.send_json = AsyncMock()
+        ws.send_json = AsyncMock()  # noqa: async-mock-config
         await broadcaster.subscribe(ws, user_id="test-user")
 
         for i in range(num_cycles):
@@ -811,7 +811,7 @@ class TestOrchestratorStatusMemoryEfficiency:
 
         # Subscribe a minimal WebSocket
         ws = AsyncMock(spec=["send_json"])
-        ws.send_json = AsyncMock()
+        ws.send_json = AsyncMock()  # noqa: async-mock-config
         await broadcaster.subscribe(ws, user_id="test-user")
 
         # Queue all tasks

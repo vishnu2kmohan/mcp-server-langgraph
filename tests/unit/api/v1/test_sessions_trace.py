@@ -36,7 +36,7 @@ class TestSessionTraceEndpoint:
 
     def _create_mock_session_service(self, session_exists: bool = True) -> AsyncMock:
         """Create mock session service."""
-        mock_service = AsyncMock()
+        mock_service = AsyncMock()  # noqa: async-mock-config
         if session_exists:
             mock_service.get_session.return_value = MagicMock(
                 session_id="session-123",
@@ -52,7 +52,7 @@ class TestSessionTraceEndpoint:
         raise_error: Exception | None = None,
     ) -> AsyncMock:
         """Create mock Tempo client."""
-        mock_client = AsyncMock()
+        mock_client = AsyncMock()  # noqa: async-mock-config
 
         if raise_error:
             mock_client.search_traces.side_effect = raise_error

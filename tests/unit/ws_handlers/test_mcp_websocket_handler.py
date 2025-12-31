@@ -85,6 +85,7 @@ class TestMCPWebSocketHandlerConstruction:
         assert handler.config.rate_limit_per_minute == 300
 
 
+@pytest.mark.xdist_group(name="mcp_websocket_handler")
 class TestMCPMessageHandling:
     """Test MCP protocol message handling via WebSocketBase."""
 
@@ -230,6 +231,7 @@ class TestMCPPingPong:
         assert "error" in response.payload
 
 
+@pytest.mark.xdist_group(name="mcp_websocket_handler")
 class TestMCPAuthenticationContext:
     """Test authenticated MCP handler creation."""
 
@@ -301,6 +303,7 @@ class TestMCPSessionManagement:
         assert len(handler.session_id) > 0
 
 
+@pytest.mark.xdist_group(name="mcp_websocket_handler")
 class TestMCPStreamingSupport:
     """Test streaming tool call support."""
 
@@ -413,6 +416,7 @@ class TestMCPRateLimiting:
         assert handler.config.rate_limit_per_minute == 100
 
 
+@pytest.mark.xdist_group(name="mcp_websocket_handler")
 class TestMCPErrorHandling:
     """Test error handling for MCP protocol messages."""
 
@@ -554,6 +558,7 @@ class TestMCPWebSocketHandlerProtocol:
         assert response.payload["jsonrpc"] == "2.0"
 
 
+@pytest.mark.xdist_group(name="mcp_websocket_handler")
 class TestMCPWebSocketHandlerLifecycle:
     """Test WebSocketBase lifecycle integration."""
 
