@@ -5,16 +5,30 @@ Integration tests for PostgreSQL-backed workflow sharing repository.
 These tests require a PostgreSQL database connection.
 
 Uses pytest-asyncio and SQLAlchemy async engine for database operations.
+
+NOTE: These tests cannot use SQLite fallback because the WorkflowModel
+uses PostgreSQL-specific features like TSVECTOR for full-text search.
 """
 
 from __future__ import annotations
 
 import gc
+import os
+import socket
 import uuid
 from typing import TYPE_CHECKING, AsyncGenerator
 
 import pytest
+from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, create_async_engine
+
+from tests.constants import (
+    TEST_POSTGRES_DB,
+    TEST_POSTGRES_HOST,
+    TEST_POSTGRES_PASSWORD,
+    TEST_POSTGRES_PORT,
+    TEST_POSTGRES_USER,
+)
 
 if TYPE_CHECKING:
     from mcp_server_langgraph.storage.workflow.share_repository import (
@@ -28,33 +42,44 @@ pytestmark = [
 ]
 
 
-# Check if required dependencies are available
-try:
-    import aiosqlite  # noqa: F401
-
-    HAS_AIOSQLITE = True
-except ImportError:
-    HAS_AIOSQLITE = False
+def _database_available() -> bool:
+    """Check if the PostgreSQL test database is available."""
+    try:
+        with socket.create_connection((TEST_POSTGRES_HOST, TEST_POSTGRES_PORT), timeout=2):
+            return True
+    except (ConnectionRefusedError, TimeoutError, OSError):
+        return False
 
 
 @pytest.fixture
 async def async_engine() -> AsyncGenerator[AsyncEngine, None]:
     """
-    Create an async SQLAlchemy engine for testing.
+    Create an async SQLAlchemy engine for PostgreSQL testing.
 
-    Uses in-memory SQLite for isolated tests without external dependencies.
-    For real Postgres tests, configure DATABASE_URL environment variable.
+    Requires PostgreSQL with TSVECTOR support - cannot fallback to SQLite.
+    Uses docker-compose.test.yml PostgreSQL instance.
     """
-    import os
+    if not _database_available():
+        pytest.skip(
+            f"PostgreSQL not available at {TEST_POSTGRES_HOST}:{TEST_POSTGRES_PORT}. "
+            "Run 'docker-compose -f docker-compose.test.yml up postgres-test' to start."
+        )
 
-    database_url = os.environ.get("TEST_DATABASE_URL")
+    database_url = os.environ.get(
+        "TEST_DATABASE_URL",
+        f"postgresql+asyncpg://{TEST_POSTGRES_USER}:{TEST_POSTGRES_PASSWORD}"
+        f"@{TEST_POSTGRES_HOST}:{TEST_POSTGRES_PORT}/{TEST_POSTGRES_DB}",
+    )
 
-    if database_url is None:
-        if not HAS_AIOSQLITE:
-            pytest.skip("aiosqlite required for in-memory SQLite tests. Set TEST_DATABASE_URL for Postgres.")
-        database_url = "sqlite+aiosqlite:///:memory:"
+    engine = create_async_engine(database_url, echo=False, pool_pre_ping=True)
 
-    engine = create_async_engine(database_url, echo=False)
+    # Test connection before proceeding
+    try:
+        async with engine.begin() as conn:
+            await conn.execute(text("SELECT 1"))
+    except Exception as e:
+        await engine.dispose()
+        pytest.skip(f"PostgreSQL connection failed: {e}")
 
     # Create tables
     from mcp_server_langgraph.storage.workflow.postgres_models import WorkflowBase
