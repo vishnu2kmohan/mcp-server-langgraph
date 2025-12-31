@@ -114,6 +114,9 @@ AUTH_SECURITY_HEADERS: dict[str, str] = {
 
 # CSP for SPA routes (login, callback, studio)
 # Allows inline scripts/styles for React and loads assets from same origin
+# CDN domains for code execution:
+# - codesandbox.io: Sandpack code execution
+# - cdn.jsdelivr.net: Pyodide Python runtime
 SPA_SECURITY_HEADERS: dict[str, str] = {
     "X-Content-Type-Options": "nosniff",
     "X-Frame-Options": "DENY",
@@ -121,11 +124,12 @@ SPA_SECURITY_HEADERS: dict[str, str] = {
     "Referrer-Policy": "strict-origin-when-cross-origin",
     "Content-Security-Policy": (
         "default-src 'self'; "
-        "script-src 'self' 'unsafe-inline'; "  # Allow inline scripts for React
-        "style-src 'self' 'unsafe-inline'; "  # Allow inline styles for React
-        "img-src 'self' data: https:; "  # Allow images from same origin, data URIs, and HTTPS
-        "font-src 'self' data:; "  # Allow fonts from same origin and data URIs
-        "connect-src 'self' ws: wss: https:; "  # Allow API calls, WebSockets, and HTTPS
+        "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.codesandbox.io https://cdn.jsdelivr.net; "
+        "style-src 'self' 'unsafe-inline'; "
+        "img-src 'self' data: https:; "
+        "font-src 'self' data:; "
+        "connect-src 'self' ws: wss: https: https://*.codesandbox.io https://cdn.jsdelivr.net; "
+        "frame-src 'self' https://*.codesandbox.io https://codesandbox.io; "
         "frame-ancestors 'none'"
     ),
     "Permissions-Policy": "geolocation=(), microphone=(), camera=()",

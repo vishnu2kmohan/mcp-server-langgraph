@@ -408,9 +408,9 @@ class TestStudioFrontendAuthentication:
         """
         GIVEN a successful OAuth2 callback
         WHEN tokens are exchanged
-        THEN should set mcp_session cookie for subsequent requests.
+        THEN should set studio_session cookie for subsequent requests.
         """
         from mcp_server_langgraph.studio.security import SESSION_COOKIE_NAME
 
         # Verify the session cookie name is defined
-        assert SESSION_COOKIE_NAME == "mcp_session"
+        assert SESSION_COOKIE_NAME == "studio_session"

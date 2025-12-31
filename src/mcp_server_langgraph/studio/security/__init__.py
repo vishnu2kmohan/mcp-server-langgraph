@@ -16,13 +16,17 @@ from urllib.parse import unquote
 
 
 # Security headers configuration
+# CDN domains for code execution:
+# - codesandbox.io: Sandpack code execution
+# - cdn.jsdelivr.net: Pyodide Python runtime
 SECURITY_HEADERS: dict[str, str] = {
     "Content-Security-Policy": (
         "default-src 'self'; "
-        "script-src 'self' 'unsafe-inline' 'unsafe-eval'; "
+        "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.codesandbox.io https://cdn.jsdelivr.net; "
         "style-src 'self' 'unsafe-inline'; "
         "img-src 'self' data: https:; "
-        "connect-src 'self' wss: https:; "
+        "connect-src 'self' wss: https: https://*.codesandbox.io https://cdn.jsdelivr.net; "
+        "frame-src 'self' https://*.codesandbox.io https://codesandbox.io; "
         "frame-ancestors 'none'"
     ),
     "X-Content-Type-Options": "nosniff",

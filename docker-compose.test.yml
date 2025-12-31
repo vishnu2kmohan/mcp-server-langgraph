@@ -153,9 +153,9 @@ services:
       - "traefik.http.middlewares.forward-auth.forwardauth.address=http://traefik-forward-auth:4181"
       - "traefik.http.middlewares.forward-auth.forwardauth.trustForwardHeader=true"
       - "traefik.http.middlewares.forward-auth.forwardauth.authResponseHeaders=X-Forwarded-User,X-Auth-User,X-Auth-Email"
-      # CSP Headers for Sandpack code execution (codesandbox.io iframes)
-      # Required for SandpackExecutor component to work with CodeSandbox bundler
-      - "traefik.http.middlewares.sandpack-csp.headers.customresponseheaders.Content-Security-Policy=default-src 'self'; frame-src 'self' https://*.codesandbox.io https://codesandbox.io; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.codesandbox.io; style-src 'self' 'unsafe-inline'; connect-src 'self' https://*.codesandbox.io wss://*.codesandbox.io; img-src 'self' data: https:; font-src 'self' data:;"
+      # CSP Headers for Sandpack (codesandbox.io) and Pyodide (cdn.jsdelivr.net)
+      # Required for SandpackExecutor and CanvasArtifact Python execution
+      - "traefik.http.middlewares.sandpack-csp.headers.customresponseheaders.Content-Security-Policy=default-src 'self'; frame-src 'self' https://*.codesandbox.io https://codesandbox.io; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.codesandbox.io https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; connect-src 'self' https://*.codesandbox.io wss://*.codesandbox.io https://cdn.jsdelivr.net; img-src 'self' data: https:; font-src 'self' data:;"
       # Route: /gateway/* -> Traefik Dashboard [PROTECTED]
       # Traefik dashboard requires both /api and /dashboard paths internally.
       # We use replacepathregex to rewrite /gateway/api -> /api and /gateway/dashboard -> /dashboard

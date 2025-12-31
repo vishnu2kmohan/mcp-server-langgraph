@@ -15,19 +15,23 @@
  * This component handles executable content that requires user opt-in.
  *
  * CSP (Content Security Policy) Requirements:
- * When deploying with Content Security Policy headers, Sandpack requires:
+ * When deploying with Content Security Policy headers, code execution requires:
+ *
+ * CDN Domains:
+ * - codesandbox.io: Sandpack code execution (JS/TS/JSX/TSX)
+ * - cdn.jsdelivr.net: Pyodide Python runtime (CanvasArtifact Python execution)
  *
  * 1. frame-src: Allow iframe sources
  *    frame-src 'self' https://*.codesandbox.io https://codesandbox.io;
  *
- * 2. script-src: Allow Sandpack bundler scripts (if using dynamic loading)
- *    script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.codesandbox.io;
+ * 2. script-src: Allow Sandpack bundler and Pyodide runtime
+ *    script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.codesandbox.io https://cdn.jsdelivr.net;
  *
  * 3. style-src: Allow inline styles for Sandpack editor
  *    style-src 'self' 'unsafe-inline';
  *
- * 4. connect-src: Allow WebSocket connections for hot reload
- *    connect-src 'self' https://*.codesandbox.io wss://*.codesandbox.io;
+ * 4. connect-src: Allow WebSocket connections and CDN fetch
+ *    connect-src 'self' https://*.codesandbox.io wss://*.codesandbox.io https://cdn.jsdelivr.net;
  *
  * 5. img-src: Allow images from code execution
  *    img-src 'self' data: https:;
@@ -36,9 +40,9 @@
  * add_header Content-Security-Policy "
  *   default-src 'self';
  *   frame-src 'self' https://*.codesandbox.io https://codesandbox.io;
- *   script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.codesandbox.io;
+ *   script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.codesandbox.io https://cdn.jsdelivr.net;
  *   style-src 'self' 'unsafe-inline';
- *   connect-src 'self' https://*.codesandbox.io wss://*.codesandbox.io;
+ *   connect-src 'self' https://*.codesandbox.io wss://*.codesandbox.io https://cdn.jsdelivr.net;
  *   img-src 'self' data: https:;
  * ";
  *
