@@ -696,3 +696,46 @@ def _reset_cost_collector() -> None:
     """Reset the singleton collector instance (for testing only)."""
     global _collector_instance
     _collector_instance = None
+
+
+# ==============================================================================
+# Redis Session Cost Cache Integration
+# ==============================================================================
+
+
+async def update_session_cost_cache(
+    session_id: str,
+    cost: float,
+    tokens: int,
+) -> None:
+    """
+    Update the Redis session cost cache.
+
+    This function is called after cost recording to update the WebSocket
+    cost tracking cache, enabling real-time cost visibility in the UI.
+
+    Args:
+        session_id: Session identifier.
+        cost: Cost in USD to add.
+        tokens: Token count to add.
+    """
+    from mcp_server_langgraph.websocket.services.cost_tracking import (
+        get_websocket_cost_service,
+    )
+
+    try:
+        service = get_websocket_cost_service()
+        await service.update_session_cost_async(
+            session_id=session_id,
+            cost=cost,
+            tokens=tokens,
+        )
+    except Exception as e:
+        # Don't let cache update failures affect cost recording
+        import logging
+
+        logger = logging.getLogger(__name__)
+        logger.warning(
+            f"Failed to update session cost cache for {session_id}: {e}",
+            extra={"session_id": session_id, "error": str(e)},
+        )

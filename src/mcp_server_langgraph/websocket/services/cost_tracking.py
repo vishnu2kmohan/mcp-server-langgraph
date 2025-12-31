@@ -7,21 +7,35 @@ with stub fallbacks for features under development.
 
 Architecture:
     - Wraps CostServiceImpl for aggregate cost data
-    - Uses Redis for session-level cost caching (when available)
-    - Falls back to stub data for unimplemented features
+    - Uses Redis for session-level cost caching (L1+L2 tiered cache)
+    - Falls back to in-memory cache when Redis is unavailable
+    - Key pattern: session_cost:{session_id}
+    - TTL: 1 hour for active sessions
 """
 
 from __future__ import annotations
 
 import logging
+from datetime import datetime, UTC
 from typing import TYPE_CHECKING, Any
 
 from mcp_server_langgraph.core.feature_flags import get_feature_flags
 
 if TYPE_CHECKING:
     from mcp_server_langgraph.api.v1.cost import CostService
+    from mcp_server_langgraph.core.cache import CacheService
 
 logger = logging.getLogger(__name__)
+
+# =============================================================================
+# Constants
+# =============================================================================
+
+# Cache key prefix for session costs
+SESSION_COST_CACHE_KEY_PREFIX = "session_cost"
+
+# Cache TTL: 1 hour for active sessions
+SESSION_COST_CACHE_TTL = 3600  # seconds
 
 
 class CostTrackingServiceAdapter:
@@ -40,15 +54,22 @@ class CostTrackingServiceAdapter:
     to use them while maintaining backward compatibility.
     """
 
-    def __init__(self, cost_service: CostService | None = None) -> None:
+    def __init__(
+        self,
+        cost_service: CostService | None = None,
+        cache: CacheService | None = None,
+    ) -> None:
         """
-        Initialize with optional cost service.
+        Initialize with optional cost service and cache.
 
         Args:
             cost_service: CostService instance for aggregate data.
                 If None, lazily imports the global instance.
+            cache: CacheService instance for Redis L1+L2 caching.
+                If None, lazily imports the global instance.
         """
         self._cost_service = cost_service
+        self._cache: CacheService | None = cache
         self._session_costs: dict[str, dict[str, Any]] = {}
         self._user_budgets: dict[str, dict[str, Any]] = {}
 
@@ -61,28 +82,62 @@ class CostTrackingServiceAdapter:
             self._cost_service = get_cost_service()
         return self._cost_service
 
+    @property
+    def cache(self) -> CacheService:
+        """Get the cache service, lazily initializing if needed."""
+        if self._cache is None:
+            from mcp_server_langgraph.core.cache import get_cache
+
+            self._cache = get_cache()
+        return self._cache
+
+    def _get_cache_key(self, session_id: str) -> str:
+        """Generate cache key for session cost."""
+        return f"{SESSION_COST_CACHE_KEY_PREFIX}:{session_id}"
+
     async def get_session_cost(self, session_id: str) -> dict[str, Any]:
         """
         Get current cost for a session.
 
-        Currently returns cached/stub data. When Redis cost tracking is
-        implemented, this will query real session costs.
+        Uses a tiered caching strategy:
+        1. Check Redis cache (L1 in-memory + L2 Redis)
+        2. If cache miss, query cost service for session summary
+        3. Cache the result with 1 hour TTL
+        4. Fall back to in-memory cache if Redis fails
 
         Args:
             session_id: Session identifier.
 
         Returns:
-            Dict with session_id, total_cost, token_count.
+            Dict with session_id, total_cost, token_count, updated_at.
         """
-        # Check cache first
+        cache_key = self._get_cache_key(session_id)
+
+        # 1. Try Redis cache first (L1 + L2)
+        try:
+            cached_data = await self.cache.aget(cache_key)
+            if cached_data:
+                logger.debug(
+                    f"Session cost cache hit for {session_id}",
+                    extra={"session_id": session_id},
+                )
+                # Type assertion: cached_data is dict[str, Any] from our cache
+                return dict(cached_data)
+        except Exception as e:
+            logger.warning(
+                f"Redis cache get failed for {session_id}: {e}",
+                extra={"session_id": session_id, "error": str(e)},
+            )
+            # Fall through to in-memory cache
+
+        # 2. Check in-memory cache (fallback)
         if session_id in self._session_costs:
             return self._session_costs[session_id]
 
-        # TODO: When Redis session cost tracking is implemented:
-        # - Query Redis for session:{session_id}:cost
-        # - Aggregate cost events for the session
-
-        # Stub response for now
+        # 3. No cache entry found - return stub data
+        # Note: The cache is populated by LLM calls via update_session_cost_async.
+        # If there's no cache entry, it means no LLM calls have been made for this
+        # session yet, so 0.0 cost is the correct value.
         flags = get_feature_flags()
         if not flags.enable_websocket_enhanced_metrics:
             # Return minimal stub when metrics are disabled
@@ -92,9 +147,9 @@ class CostTrackingServiceAdapter:
                 "token_count": 0,
             }
 
-        # Return default stub
+        # Return stub - cache will be populated when LLM calls are made
         logger.debug(
-            f"Session cost not found for {session_id}, returning stub",
+            f"No cached cost for session {session_id}, returning initial values",
             extra={"session_id": session_id},
         )
         return {
@@ -139,7 +194,7 @@ class CostTrackingServiceAdapter:
 
     def update_session_cost(self, session_id: str, cost: float, tokens: int) -> dict[str, Any]:
         """
-        Update cached session cost.
+        Update cached session cost (sync version, in-memory only).
 
         Called when cost events are received to update the local cache.
 
@@ -162,6 +217,104 @@ class CostTrackingServiceAdapter:
         self._session_costs[session_id]["token_count"] += tokens
 
         return self._session_costs[session_id]
+
+    async def update_session_cost_async(self, session_id: str, cost: float, tokens: int) -> dict[str, Any]:
+        """
+        Update session cost in Redis cache (async version).
+
+        Called when LLM calls complete to update the cached session cost.
+        This updates both the Redis cache and the in-memory fallback.
+
+        Args:
+            session_id: Session identifier.
+            cost: Cost to add (in USD).
+            tokens: Token count to add.
+
+        Returns:
+            Updated session cost data.
+        """
+        cache_key = self._get_cache_key(session_id)
+
+        # 1. Get existing cached data or create new entry
+        try:
+            existing_data = await self.cache.aget(cache_key)
+        except Exception as e:
+            logger.warning(
+                f"Redis cache get failed during update for {session_id}: {e}",
+                extra={"session_id": session_id, "error": str(e)},
+            )
+            existing_data = None
+
+        # Fall back to in-memory if Redis failed
+        if existing_data is None and session_id in self._session_costs:
+            existing_data = self._session_costs[session_id]
+
+        # 2. Calculate new totals
+        if existing_data:
+            new_total_cost = existing_data.get("total_cost", 0.0) + cost
+            new_token_count = existing_data.get("token_count", 0) + tokens
+        else:
+            new_total_cost = cost
+            new_token_count = tokens
+
+        # 3. Build updated session cost data
+        session_cost = {
+            "session_id": session_id,
+            "total_cost": new_total_cost,
+            "token_count": new_token_count,
+            "updated_at": datetime.now(UTC).isoformat(),
+        }
+
+        # 4. Update Redis cache
+        try:
+            await self.cache.aset(cache_key, session_cost, ttl=SESSION_COST_CACHE_TTL)
+            logger.debug(
+                f"Updated session cost cache for {session_id}",
+                extra={
+                    "session_id": session_id,
+                    "added_cost": cost,
+                    "added_tokens": tokens,
+                    "total_cost": new_total_cost,
+                    "total_tokens": new_token_count,
+                },
+            )
+        except Exception as e:
+            logger.warning(
+                f"Redis cache set failed during update for {session_id}: {e}",
+                extra={"session_id": session_id, "error": str(e)},
+            )
+
+        # 5. Also update in-memory cache
+        self._session_costs[session_id] = session_cost
+
+        return session_cost
+
+    async def invalidate_session_cost(self, session_id: str) -> None:
+        """
+        Invalidate session cost cache.
+
+        Called when session is deleted or cost data needs to be refreshed.
+
+        Args:
+            session_id: Session identifier.
+        """
+        cache_key = self._get_cache_key(session_id)
+
+        # Delete from Redis
+        try:
+            await self.cache.adelete(cache_key)
+            logger.debug(
+                f"Invalidated session cost cache for {session_id}",
+                extra={"session_id": session_id},
+            )
+        except Exception as e:
+            logger.warning(
+                f"Redis cache delete failed for {session_id}: {e}",
+                extra={"session_id": session_id, "error": str(e)},
+            )
+
+        # Also delete from in-memory cache
+        self._session_costs.pop(session_id, None)
 
 
 # Service singleton

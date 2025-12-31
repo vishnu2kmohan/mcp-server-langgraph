@@ -126,6 +126,21 @@ class CostTrackingCallback(CustomLogger):
             user_id=metadata.get("user_id"),
         )
 
+        # Update Redis session cost cache for real-time WebSocket updates
+        # This enables the useCostTrackingWebSocket hook to return real data
+        session_id = metadata.get("session_id")
+        if session_id and session_id != "unknown":
+            from mcp_server_langgraph.monitoring.cost_tracker import (
+                update_session_cost_cache,
+            )
+
+            total_tokens = usage.prompt_tokens + usage.completion_tokens
+            await update_session_cost_cache(
+                session_id=session_id,
+                cost=float(response_cost),
+                tokens=total_tokens,
+            )
+
 
 def get_model_cost_from_litellm(
     model: str,
