@@ -62,6 +62,17 @@ export interface ConversationPanelProps {
   onInputChange?: (value: string) => void;
   /** Additional class name */
   className?: string;
+  // Inline AI Suggestions props (Sprint 6 - VSCode Copilot style)
+  /** Enable inline ghost text suggestions */
+  enableInlineSuggestions?: boolean;
+  /** Current inline suggestion text (ghost text after cursor) */
+  inlineSuggestion?: string;
+  /** Whether suggestion is being fetched */
+  isSuggestionLoading?: boolean;
+  /** Callback when user accepts suggestion (Tab key) */
+  onAcceptSuggestion?: (suggestion: string) => void;
+  /** Callback when user dismisses suggestion (Escape key) */
+  onDismissSuggestion?: () => void;
 }
 
 // =============================================================================
@@ -147,6 +158,12 @@ export function ConversationPanel({
   onSuggestionUsed,
   onInputChange,
   className,
+  // Inline AI suggestions
+  enableInlineSuggestions = false,
+  inlineSuggestion = "",
+  isSuggestionLoading = false,
+  onAcceptSuggestion,
+  onDismissSuggestion,
 }: ConversationPanelProps) {
   const [showSlashMenu, setShowSlashMenu] = useState(false);
   const [slashFilter, setSlashFilter] = useState("");
@@ -277,6 +294,12 @@ export function ConversationPanel({
           isLoading={isLoading}
           autoFocus={autoFocus}
           ariaLabel="Type your message"
+          // Inline AI suggestions
+          enableInlineSuggestions={enableInlineSuggestions}
+          inlineSuggestion={inlineSuggestion}
+          isSuggestionLoading={isSuggestionLoading}
+          onAcceptSuggestion={onAcceptSuggestion}
+          onDismissSuggestion={onDismissSuggestion}
         />
       </div>
     </div>

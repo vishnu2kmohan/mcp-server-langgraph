@@ -45,9 +45,11 @@ describe("Conversation Module Exports", () => {
 
     it("should export ConnectedConversationPanel", () => {
       expect(conversationModule.ConnectedConversationPanel).toBeDefined();
-      expect(typeof conversationModule.ConnectedConversationPanel).toBe(
-        "function",
-      );
+      // ConnectedConversationPanel uses forwardRef, which returns an object with $$typeof
+      expect(
+        typeof conversationModule.ConnectedConversationPanel === "function" ||
+          typeof conversationModule.ConnectedConversationPanel === "object",
+      ).toBe(true);
     });
   });
 
@@ -80,11 +82,15 @@ describe("Conversation Module Exports", () => {
         "ConnectedConversationPanel",
       ];
 
-      const actualExports = Object.keys(conversationModule).filter(
-        (key) =>
-          typeof conversationModule[key as keyof typeof conversationModule] ===
-          "function",
-      );
+      // Filter for functions and objects (forwardRef components are objects)
+      const actualExports = Object.keys(conversationModule).filter((key) => {
+        const value =
+          conversationModule[key as keyof typeof conversationModule];
+        const type = typeof value;
+        // Include functions and objects (forwardRef returns object)
+        // Exclude type exports (undefined at runtime)
+        return type === "function" || (type === "object" && value !== null);
+      });
 
       expect(actualExports.sort()).toEqual(expectedExports.sort());
     });

@@ -1180,9 +1180,21 @@ describe("ObservabilityPage", () => {
   describe("URL Tab Sync", () => {
     // Helper to render with specific initial route
     const renderWithRoute = (initialPath: string) => {
+      // Must include persona reducer because ObservabilityPage uses selectUsername
+      const personaReducer = (
+        state = {
+          persona: "user" as const,
+          username: "testuser",
+          email: "test@example.com",
+          permissions: [],
+          isPersonaLoading: false,
+        },
+      ) => state;
+
       const store = configureStore({
         reducer: {
           observability: observabilityReducer,
+          persona: personaReducer,
         },
       });
 

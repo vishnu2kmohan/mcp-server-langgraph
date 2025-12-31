@@ -30,6 +30,24 @@
  * - HITL integration is tested via dedicated component test files above
  * - This file uses lightweight mocks to keep memory under control
  *
+ * =============================================================================
+ * MEMORY SAFETY (pytest-xdist equivalent for Vitest)
+ * =============================================================================
+ *
+ * This file is ~4000 lines and may cause memory pressure in parallel test runs.
+ *
+ * RUNNING TESTS IN ISOLATION:
+ *   npm test -- --run src/layout/StudioShellLayout.test.tsx
+ *
+ * If OOM occurs, run specific test groups:
+ *   npm test -- --run src/layout/StudioShellLayout.test.tsx -t "Core Layout"
+ *   npm test -- --run src/layout/StudioShellLayout.test.tsx -t "AI"
+ *
+ * FUTURE OPTIMIZATION (if needed):
+ * - Split into StudioShellLayout.core.test.tsx (layout, panels, RBAC)
+ * - Split into StudioShellLayout.ai.test.tsx (AI interpretation, nudges)
+ * - Extract shared mock infrastructure to dedicated setup file
+ *
  * IMPORTANT: All vi.mock() calls are hoisted by vitest, but to ensure proper module
  * resolution order, component imports that depend on mocked modules should appear
  * AFTER the mock definitions for clarity and to avoid initialization race conditions.

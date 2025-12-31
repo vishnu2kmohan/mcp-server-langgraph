@@ -751,6 +751,7 @@ export function StudioShellLayout() {
                     ref={conversationRef}
                     enableAI={aiSuggestionsEnabled}
                     enableRealTimeSuggestions={aiSuggestionsEnabled}
+                    enableInlineSuggestions={aiSuggestionsEnabled}
                     userId={currentUserId}
                     persona={currentPersona}
                     currentTokens={tokenCount}

@@ -198,4 +198,171 @@ describe("ChatInput", () => {
       expect(screen.getByRole("textbox")).toHaveFocus();
     });
   });
+
+  describe("Inline Suggestions", () => {
+    it("should render ghost text overlay when enableInlineSuggestions is true and suggestion exists", () => {
+      render(
+        <ChatInput
+          onSend={() => {}}
+          enableInlineSuggestions={true}
+          inlineSuggestion="complete this"
+        />,
+      );
+      expect(
+        screen.getByTestId("inline-suggestion-overlay"),
+      ).toBeInTheDocument();
+      expect(screen.getByTestId("inline-suggestion")).toHaveTextContent(
+        "complete this",
+      );
+    });
+
+    it("should not render ghost text overlay when enableInlineSuggestions is false", () => {
+      render(
+        <ChatInput
+          onSend={() => {}}
+          enableInlineSuggestions={false}
+          inlineSuggestion="complete this"
+        />,
+      );
+      expect(
+        screen.queryByTestId("inline-suggestion-overlay"),
+      ).not.toBeInTheDocument();
+    });
+
+    it("should not render ghost text overlay when no suggestion provided", () => {
+      render(
+        <ChatInput
+          onSend={() => {}}
+          enableInlineSuggestions={true}
+          inlineSuggestion=""
+        />,
+      );
+      expect(
+        screen.queryByTestId("inline-suggestion-overlay"),
+      ).not.toBeInTheDocument();
+    });
+
+    it("should call onAcceptSuggestion when Tab key is pressed", async () => {
+      const onAcceptSuggestion = vi.fn();
+      render(
+        <ChatInput
+          onSend={() => {}}
+          enableInlineSuggestions={true}
+          inlineSuggestion="complete this"
+          onAcceptSuggestion={onAcceptSuggestion}
+        />,
+      );
+
+      const input = screen.getByRole("textbox");
+      await userEvent.type(input, "test");
+      fireEvent.keyDown(input, { key: "Tab" });
+
+      expect(onAcceptSuggestion).toHaveBeenCalledWith("complete this");
+    });
+
+    it("should call onDismissSuggestion when Escape key is pressed", async () => {
+      const onDismissSuggestion = vi.fn();
+      render(
+        <ChatInput
+          onSend={() => {}}
+          enableInlineSuggestions={true}
+          inlineSuggestion="complete this"
+          onDismissSuggestion={onDismissSuggestion}
+        />,
+      );
+
+      const input = screen.getByRole("textbox");
+      fireEvent.keyDown(input, { key: "Escape" });
+
+      expect(onDismissSuggestion).toHaveBeenCalled();
+    });
+
+    it("should show loading spinner when isSuggestionLoading is true and input has content", async () => {
+      render(
+        <ChatInput
+          onSend={() => {}}
+          enableInlineSuggestions={true}
+          isSuggestionLoading={true}
+        />,
+      );
+
+      await userEvent.type(screen.getByRole("textbox"), "test");
+      expect(
+        screen.getByTestId("suggestion-loading-spinner"),
+      ).toBeInTheDocument();
+    });
+
+    it("should not show loading spinner when input is empty", () => {
+      render(
+        <ChatInput
+          onSend={() => {}}
+          enableInlineSuggestions={true}
+          isSuggestionLoading={true}
+        />,
+      );
+
+      expect(
+        screen.queryByTestId("suggestion-loading-spinner"),
+      ).not.toBeInTheDocument();
+    });
+
+    it("should prevent default Tab behavior when accepting suggestion", async () => {
+      const onAcceptSuggestion = vi.fn();
+      render(
+        <ChatInput
+          onSend={() => {}}
+          enableInlineSuggestions={true}
+          inlineSuggestion="complete this"
+          onAcceptSuggestion={onAcceptSuggestion}
+        />,
+      );
+
+      const input = screen.getByRole("textbox");
+      // Focus the input first
+      input.focus();
+      expect(input).toHaveFocus();
+
+      // Fire Tab keydown - it should call onAcceptSuggestion and prevent default
+      fireEvent.keyDown(input, { key: "Tab" });
+
+      // Verify suggestion was accepted (proves handler ran and prevented default)
+      expect(onAcceptSuggestion).toHaveBeenCalledWith("complete this");
+      // Focus should be retained since default was prevented
+      expect(input).toHaveFocus();
+    });
+
+    it("should not call onAcceptSuggestion when Tab pressed without suggestion", async () => {
+      const onAcceptSuggestion = vi.fn();
+      render(
+        <ChatInput
+          onSend={() => {}}
+          enableInlineSuggestions={true}
+          inlineSuggestion=""
+          onAcceptSuggestion={onAcceptSuggestion}
+        />,
+      );
+
+      const input = screen.getByRole("textbox");
+      fireEvent.keyDown(input, { key: "Tab" });
+
+      expect(onAcceptSuggestion).not.toHaveBeenCalled();
+    });
+
+    it("should not call onDismissSuggestion when Escape pressed without suggestion", async () => {
+      const onDismissSuggestion = vi.fn();
+      render(
+        <ChatInput
+          onSend={() => {}}
+          enableInlineSuggestions={true}
+          inlineSuggestion=""
+          onDismissSuggestion={onDismissSuggestion}
+        />,
+      );
+
+      const input = screen.getByRole("textbox");
+      fireEvent.keyDown(input, { key: "Escape" });
+
+      expect(onDismissSuggestion).not.toHaveBeenCalled();
+    });
+  });
 });

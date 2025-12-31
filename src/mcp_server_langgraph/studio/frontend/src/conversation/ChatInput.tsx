@@ -23,6 +23,17 @@ export interface ChatInputProps {
   autoFocus?: boolean;
   ariaLabel?: string;
   className?: string;
+  // Inline AI Suggestions props (Sprint 6 - VSCode Copilot style)
+  /** Enable inline ghost text suggestions */
+  enableInlineSuggestions?: boolean;
+  /** Current inline suggestion text (ghost text after cursor) */
+  inlineSuggestion?: string;
+  /** Whether suggestion is being fetched */
+  isSuggestionLoading?: boolean;
+  /** Callback when user accepts suggestion (Tab key) */
+  onAcceptSuggestion?: (suggestion: string) => void;
+  /** Callback when user dismisses suggestion (Escape key) */
+  onDismissSuggestion?: () => void;
 }
 
 // =============================================================================
@@ -39,6 +50,12 @@ export function ChatInput({
   autoFocus = false,
   ariaLabel,
   className,
+  // Inline suggestions
+  enableInlineSuggestions = false,
+  inlineSuggestion = "",
+  isSuggestionLoading = false,
+  onAcceptSuggestion,
+  onDismissSuggestion,
 }: ChatInputProps) {
   const [value, setValue] = useState("");
   const [showSlashIndicator, setShowSlashIndicator] = useState(false);
@@ -95,13 +112,33 @@ export function ChatInput({
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+      // Tab to accept inline suggestion
+      if (e.key === "Tab" && enableInlineSuggestions && inlineSuggestion) {
+        e.preventDefault();
+        onAcceptSuggestion?.(inlineSuggestion);
+        return;
+      }
+
+      // Escape to dismiss inline suggestion
+      if (e.key === "Escape" && enableInlineSuggestions && inlineSuggestion) {
+        e.preventDefault();
+        onDismissSuggestion?.();
+        return;
+      }
+
       // Enter without Shift sends the message
       if (e.key === "Enter" && !e.shiftKey) {
         e.preventDefault();
         handleSend();
       }
     },
-    [handleSend],
+    [
+      handleSend,
+      enableInlineSuggestions,
+      inlineSuggestion,
+      onAcceptSuggestion,
+      onDismissSuggestion,
+    ],
   );
 
   const isDisabled = disabled || isLoading;
@@ -127,8 +164,42 @@ export function ChatInput({
         </div>
       )}
 
-      {/* Textarea */}
+      {/* Textarea with inline suggestion overlay */}
       <div className="relative flex-1">
+        {/* Ghost text overlay for inline AI suggestions */}
+        {enableInlineSuggestions && inlineSuggestion && (
+          <div
+            data-testid="inline-suggestion-overlay"
+            className="absolute inset-0 px-4 py-2 pointer-events-none overflow-hidden whitespace-pre-wrap break-words"
+            aria-hidden="true"
+          >
+            {/* Invisible text to position the ghost text after input */}
+            <span className="invisible">{value}</span>
+            {/* Ghost text suggestion */}
+            <span
+              data-testid="inline-suggestion"
+              className="text-gray-400 dark:text-gray-500"
+            >
+              {inlineSuggestion}
+            </span>
+          </div>
+        )}
+
+        {/* Loading indicator for suggestion fetch */}
+        {enableInlineSuggestions &&
+          isSuggestionLoading &&
+          value.trim().length > 0 && (
+            <div
+              data-testid="suggestion-loading"
+              className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none"
+            >
+              <Loader2
+                data-testid="suggestion-loading-spinner"
+                className="w-4 h-4 animate-spin text-gray-400"
+              />
+            </div>
+          )}
+
         <textarea
           ref={textareaRef}
           data-testid="chat-input"

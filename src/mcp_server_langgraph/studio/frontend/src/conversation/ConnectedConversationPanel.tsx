@@ -48,6 +48,7 @@ import {
 import { useAIRealTimeUXSuggestions } from "../hooks/useAIRealTimeUXSuggestions";
 import type { Suggestion } from "../hooks/useAIRealTimeSuggestions";
 import { useArtifactExtraction } from "../hooks/useArtifactExtraction";
+import { useInlineSuggestions } from "../hooks/useInlineSuggestions";
 import { ConversationPanel } from "./ConversationPanel";
 import type { SlashCommand } from "./SlashCommandMenu";
 import type { ChatLoaderData } from "../router/loaders";
@@ -67,6 +68,8 @@ export interface ConnectedConversationPanelProps {
   enableAI?: boolean;
   /** Enable real-time AI UX suggestions via WebSocket */
   enableRealTimeSuggestions?: boolean;
+  /** Enable inline ghost text suggestions (VSCode Copilot style) */
+  enableInlineSuggestions?: boolean;
   /** User ID for AI features (format: "user:username") */
   userId?: string;
   /** Current persona for RBAC-aware AI responses */
@@ -118,6 +121,7 @@ export const ConnectedConversationPanel = forwardRef<
     className,
     enableAI = false,
     enableRealTimeSuggestions = false,
+    enableInlineSuggestions = false,
     userId = "default-user",
     persona,
     showContextWarning = false,
@@ -165,6 +169,26 @@ export const ConnectedConversationPanel = forwardRef<
   useEffect(() => {
     resetExtraction();
   }, [sessionId, resetExtraction]);
+
+  // =============================================================================
+  // Inline Suggestions (Ghost Text) - VSCode Copilot Style
+  // =============================================================================
+
+  const {
+    suggestion: inlineSuggestion,
+    isLoading: isSuggestionLoading,
+    updateInput: updateInlineSuggestionInput,
+    acceptSuggestion: acceptInlineSuggestion,
+    dismissSuggestion: dismissInlineSuggestion,
+  } = useInlineSuggestions({
+    enabled: enableInlineSuggestions,
+    sessionId: sessionId ?? "default-session",
+    minLength: 3,
+    debounceMs: 300,
+    onError: (error) => {
+      logger.debug("Inline suggestion error", { error: error.message });
+    },
+  });
 
   // =============================================================================
   // Real-time AI UX Suggestions (WebSocket)
@@ -421,10 +445,17 @@ export const ConnectedConversationPanel = forwardRef<
     [dispatch, revalidateMessages, sessionId, currentSession?.id, startStream],
   );
 
-  // Handle input change for intent detection
-  const handleInputChange = useCallback((value: string) => {
-    setInputQuery(value);
-  }, []);
+  // Handle input change for intent detection and inline suggestions
+  const handleInputChange = useCallback(
+    (value: string) => {
+      setInputQuery(value);
+      // Update inline suggestions hook (debounced internally)
+      if (enableInlineSuggestions) {
+        updateInlineSuggestionInput(value);
+      }
+    },
+    [enableInlineSuggestions, updateInlineSuggestionInput],
+  );
 
   // Handle telemetry for messages
   const handleMessageSent = useCallback(
@@ -714,6 +745,12 @@ export const ConnectedConversationPanel = forwardRef<
         isStreaming={isStreaming}
         autoFocus
         className="flex-1"
+        // Inline AI Suggestions (VSCode Copilot style)
+        enableInlineSuggestions={enableInlineSuggestions}
+        inlineSuggestion={inlineSuggestion}
+        isSuggestionLoading={isSuggestionLoading}
+        onAcceptSuggestion={acceptInlineSuggestion}
+        onDismissSuggestion={dismissInlineSuggestion}
       />
     </div>
   );
