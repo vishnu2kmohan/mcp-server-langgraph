@@ -1203,6 +1203,8 @@ services:
       - LOKI_URL=http://loki-test:3100
       - MIMIR_URL=http://mimir-test:9009
       - GRAFANA_URL=http://grafana-test:3000
+      - GRAFANA_USERNAME=admin
+      - GRAFANA_PASSWORD=admin
       # GCP credentials for Vertex AI (mounted from host for local development)
       - GOOGLE_APPLICATION_CREDENTIALS=/app/.config/gcloud/application_default_credentials.json
       # GCP Project ID required for google-genai SDK (pydantic-ai) when using ADC
