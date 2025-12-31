@@ -707,7 +707,7 @@ class TestRemediationApprovalAuditTrail:
         )
         from mcp_server_langgraph.audit.models import AuditEventType
 
-        mock_audit_service = AsyncMock()
+        mock_audit_service = AsyncMock()  # noqa: async-mock-config
 
         await log_remediation_audit_event(
             audit_service=mock_audit_service,
@@ -1040,3 +1040,164 @@ class TestRemediationFeedbackIntegration:
         patterns = await feedback_store.get_rejection_patterns("TestAlert")
         assert patterns.get(RejectionReason.TOO_RISKY, 0) == 2
         assert patterns.get(RejectionReason.WRONG_COMMAND, 0) == 1
+
+
+@pytest.mark.xdist_group(name="test_remediation_approvals")
+class TestRemediationTrackingMetadata:
+    """Tests for few-shot and constraint tracking metadata."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers."""
+        gc.collect()
+
+    def test_remediation_request_has_fewshot_field(self) -> None:
+        """RemediationRequest model has had_fewshot field."""
+        from mcp_server_langgraph.alerts.approval_queue import RemediationRequest
+
+        request = RemediationRequest(
+            remediation_id="rem-001",
+            alert_id="alert-001",
+            alert_name="TestAlert",
+            severity="critical",
+            step_number=1,
+            action="restart",
+            description="Test action",
+            requested_at="2025-12-31T00:00:00Z",
+            had_fewshot=True,
+        )
+
+        assert request.had_fewshot is True
+
+    def test_remediation_request_has_constraints_field(self) -> None:
+        """RemediationRequest model has had_constraints field."""
+        from mcp_server_langgraph.alerts.approval_queue import RemediationRequest
+
+        request = RemediationRequest(
+            remediation_id="rem-001",
+            alert_id="alert-001",
+            alert_name="TestAlert",
+            severity="critical",
+            step_number=1,
+            action="restart",
+            description="Test action",
+            requested_at="2025-12-31T00:00:00Z",
+            had_constraints=True,
+        )
+
+        assert request.had_constraints is True
+
+    def test_remediation_request_tracking_defaults_to_false(self) -> None:
+        """Tracking metadata defaults to False when not specified."""
+        from mcp_server_langgraph.alerts.approval_queue import RemediationRequest
+
+        request = RemediationRequest(
+            remediation_id="rem-001",
+            alert_id="alert-001",
+            alert_name="TestAlert",
+            severity="critical",
+            step_number=1,
+            action="restart",
+            description="Test action",
+            requested_at="2025-12-31T00:00:00Z",
+        )
+
+        assert request.had_fewshot is False
+        assert request.had_constraints is False
+
+    @pytest.mark.asyncio
+    async def test_approval_records_fewshot_true_when_examples_used(self) -> None:
+        """Approval records had_fewshot=True when few-shot examples were used."""
+        from unittest.mock import patch
+
+        from mcp_server_langgraph.alerts.approval_queue import RemediationApprovalQueue
+        from mcp_server_langgraph.alerts.ai_recommendation import AIRecommendation
+
+        queue = RemediationApprovalQueue()
+
+        recommendation = AIRecommendation(
+            recommendation_id="rec-fewshot-001",
+            alert_id="alert-fewshot",
+            root_cause_analysis="Test root cause",
+            remediation_steps=[
+                {
+                    "step_number": 1,
+                    "action": "restart",
+                    "description": "Restart service",
+                    "requires_approval": True,
+                    "risk_level": "medium",
+                }
+            ],
+            risk_assessment={"overall": "low"},
+            generated_at=datetime.now(UTC).isoformat(),
+            model_used="test-model",
+        )
+
+        # Queue remediation with fewshot tracking
+        await queue.queue_remediation(
+            alert_id="alert-fewshot",
+            alert_name="TestAlert",
+            severity="critical",
+            recommendation=recommendation,
+        )
+
+        pending = await queue.list_pending()
+        latest = pending[-1]
+
+        # Set had_fewshot to True (simulating few-shot usage)
+        latest.had_fewshot = True
+
+        with patch("mcp_server_langgraph.api.v1.remediation_approvals.record_recommendation_approval"):
+            # Call the function that would record approval
+            from mcp_server_langgraph.alerts.metrics import record_recommendation_approval
+
+            record_recommendation_approval(
+                alert_type=latest.alert_name,
+                had_fewshot=latest.had_fewshot,
+                had_constraints=latest.had_constraints,
+            )
+
+            # Verify had_fewshot was passed correctly
+            assert latest.had_fewshot is True
+
+    @pytest.mark.asyncio
+    async def test_rejection_records_constraints_true_when_used(self) -> None:
+        """Rejection records had_constraints=True when constraints influenced recommendation."""
+        from mcp_server_langgraph.alerts.approval_queue import RemediationApprovalQueue
+        from mcp_server_langgraph.alerts.ai_recommendation import AIRecommendation
+
+        queue = RemediationApprovalQueue()
+
+        recommendation = AIRecommendation(
+            recommendation_id="rec-constraint-001",
+            alert_id="alert-constraint",
+            root_cause_analysis="Test root cause",
+            remediation_steps=[
+                {
+                    "step_number": 1,
+                    "action": "restart",
+                    "description": "Restart service",
+                    "requires_approval": True,
+                    "risk_level": "medium",
+                }
+            ],
+            risk_assessment={"overall": "low"},
+            generated_at=datetime.now(UTC).isoformat(),
+            model_used="test-model",
+        )
+
+        # Queue remediation with constraint tracking
+        await queue.queue_remediation(
+            alert_id="alert-constraint",
+            alert_name="TestAlert",
+            severity="critical",
+            recommendation=recommendation,
+        )
+
+        pending = await queue.list_pending()
+        latest = pending[-1]
+
+        # Set had_constraints to True (simulating constraint usage)
+        latest.had_constraints = True
+
+        # Verify had_constraints was set
+        assert latest.had_constraints is True

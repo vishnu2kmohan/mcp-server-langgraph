@@ -49,6 +49,19 @@ vi.mock("./useRealtimeSync", () => ({
       send: mockSend,
       disconnect: mockDisconnect,
       reconnect: mockReconnect,
+      metrics: {
+        totalAttempts: 0,
+        totalReconnections: 0,
+        consecutiveFailures: 0,
+        lastReconnectionTime: null,
+        lastDisconnectionTime: null,
+        avgReconnectionDurationMs: 0,
+        totalReconnectionTimeMs: 0,
+        failuresByReason: {},
+        recentAttempts: [],
+        successRate: 100,
+      },
+      resetMetrics: vi.fn(),
     };
   },
 }));

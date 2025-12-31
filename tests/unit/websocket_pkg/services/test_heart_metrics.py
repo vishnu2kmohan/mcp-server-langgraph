@@ -357,3 +357,121 @@ class TestHeartDimensionValidation:
         result = await adapter.get_dimension_metrics(invalid_dimension)
 
         assert "error" in result
+
+
+@pytest.mark.unit
+@pytest.mark.xdist_group(name="websocket_services_heart_metrics")
+class TestHeartMetricsPrometheusIntegration:
+    """Tests for HEART metrics Prometheus/Mimir integration."""
+
+    def setup_method(self) -> None:
+        """Reset singleton before each test."""
+        from mcp_server_langgraph.websocket.services.heart_metrics import (
+            reset_websocket_heart_metrics_service,
+        )
+
+        reset_websocket_heart_metrics_service()
+
+    def teardown_method(self) -> None:
+        """Force GC and reset singleton to prevent mock accumulation."""
+        from mcp_server_langgraph.websocket.services.heart_metrics import (
+            reset_websocket_heart_metrics_service,
+        )
+
+        reset_websocket_heart_metrics_service()
+        gc.collect()
+
+    @pytest.mark.asyncio
+    async def test_get_current_snapshot_queries_prometheus(self) -> None:
+        """get_current_snapshot queries Prometheus when metrics client is provided."""
+        from unittest.mock import AsyncMock
+
+        from mcp_server_langgraph.websocket.services.heart_metrics import (
+            HeartMetricsServiceAdapter,
+        )
+
+        mock_metrics_client = AsyncMock()
+        mock_metrics_client.query_instant.return_value = MagicMock(series=[MagicMock(values=[MagicMock(value=85.0)])])
+
+        adapter = HeartMetricsServiceAdapter()
+        adapter._metrics_client = mock_metrics_client
+
+        with patch("mcp_server_langgraph.websocket.services.heart_metrics.get_feature_flags") as mock_flags:
+            mock_ff = MagicMock()
+            mock_ff.enable_websocket_enhanced_metrics = True
+            mock_flags.return_value = mock_ff
+
+            result = await adapter.get_current_snapshot()
+
+        # Should return data with HEART dimensions
+        assert "happiness" in result
+        # Prometheus should have been queried
+        assert mock_metrics_client.query_instant.called
+
+    @pytest.mark.asyncio
+    async def test_get_current_snapshot_falls_back_on_prometheus_error(self) -> None:
+        """get_current_snapshot falls back to stub data on Prometheus error."""
+        from unittest.mock import AsyncMock
+
+        from mcp_server_langgraph.websocket.services.heart_metrics import (
+            HeartMetricsServiceAdapter,
+        )
+
+        mock_metrics_client = AsyncMock()
+        mock_metrics_client.query_instant.side_effect = Exception("Prometheus unavailable")
+
+        adapter = HeartMetricsServiceAdapter()
+        adapter._metrics_client = mock_metrics_client
+
+        with patch("mcp_server_langgraph.websocket.services.heart_metrics.get_feature_flags") as mock_flags:
+            mock_ff = MagicMock()
+            mock_ff.enable_websocket_enhanced_metrics = True
+            mock_flags.return_value = mock_ff
+
+            result = await adapter.get_current_snapshot()
+
+        # Should still return valid data (fallback to stubs)
+        assert "happiness" in result
+        assert result["happiness"]["score"] is not None
+
+    @pytest.mark.asyncio
+    async def test_get_dimension_metrics_queries_prometheus(self) -> None:
+        """get_dimension_metrics queries Prometheus when metrics client is provided."""
+        from unittest.mock import AsyncMock
+
+        from mcp_server_langgraph.websocket.services.heart_metrics import (
+            HeartMetricsServiceAdapter,
+        )
+
+        mock_metrics_client = AsyncMock()
+        mock_metrics_client.query_instant.return_value = MagicMock(series=[MagicMock(values=[MagicMock(value=92.0)])])
+
+        adapter = HeartMetricsServiceAdapter()
+        adapter._metrics_client = mock_metrics_client
+
+        result = await adapter.get_dimension_metrics("happiness")
+
+        # Should return data with score
+        assert "score" in result
+        # Prometheus should have been queried
+        assert mock_metrics_client.query_instant.called
+
+    @pytest.mark.asyncio
+    async def test_minimal_snapshot_when_metrics_disabled(self) -> None:
+        """get_current_snapshot returns minimal data when metrics disabled."""
+        from mcp_server_langgraph.websocket.services.heart_metrics import (
+            HeartMetricsServiceAdapter,
+        )
+
+        adapter = HeartMetricsServiceAdapter()
+
+        with patch("mcp_server_langgraph.websocket.services.heart_metrics.get_feature_flags") as mock_flags:
+            mock_ff = MagicMock()
+            mock_ff.enable_websocket_enhanced_metrics = False
+            mock_flags.return_value = mock_ff
+
+            result = await adapter.get_current_snapshot()
+
+        assert result["metrics_enabled"] is False
+        # Should have zero scores
+        assert result["happiness"]["score"] == 0

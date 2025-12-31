@@ -35,7 +35,7 @@ from mcp_server_langgraph.websocket.base import WebSocketBase
 from mcp_server_langgraph.websocket.types import AuthUser, MessageEnvelope, WebSocketConfig
 
 if TYPE_CHECKING:
-    pass
+    from mcp_server_langgraph.websocket.services.connections import ConnectionsServiceAdapter
 
 logger = logging.getLogger(__name__)
 
@@ -59,8 +59,13 @@ class ConnectionsRealtimeWebSocketHandler(WebSocketBase):
     push-based updates using the WebSocketBase infrastructure.
     """
 
-    def __init__(self) -> None:
-        """Initialize the handler with configuration."""
+    def __init__(self, connections_service: ConnectionsServiceAdapter | None = None) -> None:
+        """Initialize the handler with configuration.
+
+        Args:
+            connections_service: Optional connections service adapter.
+                If not provided, will be lazy-initialized.
+        """
         config = WebSocketConfig(
             endpoint_name="connections-realtime",
             require_auth=True,
@@ -73,6 +78,9 @@ class ConnectionsRealtimeWebSocketHandler(WebSocketBase):
         # Subscription state
         self._subscribed_connections: set[str] = set()
         self._subscribed_all: bool = False
+
+        # Service adapter for connection data
+        self._connections_service: ConnectionsServiceAdapter | None = connections_service
 
     async def handle_message(self, message: MessageEnvelope) -> MessageEnvelope | None:
         """
@@ -192,13 +200,18 @@ class ConnectionsRealtimeWebSocketHandler(WebSocketBase):
         """
         Get status for a specific connection.
 
-        TODO: Integrate with actual MCP connection manager.
+        Uses ConnectionsServiceAdapter when available, falls back to stub data.
         """
-        # Mock implementation - will be replaced with real service integration
+        if self._connections_service is not None:
+            connection = await self._connections_service.get_connection(connection_id)
+            if connection is not None:
+                return connection
+
+        # Fallback when service unavailable or connection not found
         return {
             "id": connection_id,
             "name": f"Connection {connection_id}",
-            "status": "connected",
+            "status": "unknown",
             "type": "mcp",
             "last_seen": datetime.now(UTC).isoformat(),
         }
@@ -207,18 +220,31 @@ class ConnectionsRealtimeWebSocketHandler(WebSocketBase):
         """
         Get all connections.
 
-        TODO: Integrate with actual MCP connection manager.
+        Uses ConnectionsServiceAdapter when available, falls back to empty list.
         """
-        # Mock implementation - will be replaced with real service integration
+        if self._connections_service is not None:
+            try:
+                return await self._connections_service.list_connections()
+            except Exception as e:
+                logger.warning(f"Failed to list connections: {e}")
+                return []
+
+        # Fallback when service unavailable
         return []
 
     async def _perform_health_check(self, connection_id: str) -> dict[str, Any]:
         """
         Perform health check for a connection.
 
-        TODO: Integrate with actual health check service.
+        Uses ConnectionsServiceAdapter when available, falls back to stub data.
         """
-        # Mock implementation
+        if self._connections_service is not None:
+            health = await self._connections_service.get_connection_health(connection_id)
+            if health:
+                health["checked_at"] = datetime.now(UTC).isoformat()
+                return health
+
+        # Fallback when service unavailable
         return {
             "connection_id": connection_id,
             "healthy": True,

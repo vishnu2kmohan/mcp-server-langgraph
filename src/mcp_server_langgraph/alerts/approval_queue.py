@@ -48,6 +48,8 @@ class RemediationRequest(BaseModel):
     approved_at: str | None = Field(None, description="When decision was made")
     reason: str | None = Field(None, description="Reason for rejection")
     recommendation_id: str | None = Field(None, description="Source recommendation ID")
+    had_fewshot: bool = Field(False, description="Whether few-shot examples were used in recommendation")
+    had_constraints: bool = Field(False, description="Whether rejection constraints were used in recommendation")
 
 
 class RemediationApprovalQueue:

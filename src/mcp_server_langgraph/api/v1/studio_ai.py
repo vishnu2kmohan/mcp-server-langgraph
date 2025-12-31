@@ -30,7 +30,7 @@ import logging
 from decimal import Decimal
 from typing import Annotated, Any
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel, Field
 
 from mcp_server_langgraph.auth.dependencies import get_current_user
@@ -146,30 +146,47 @@ class GenUIResponse(BaseModel):
 # =============================================================================
 
 
-def get_studio_orchestrator() -> StudioOrchestrator:
-    """Get or create StudioOrchestrator instance.
+def get_studio_orchestrator(request: Request) -> StudioOrchestrator:
+    """Get or create StudioOrchestrator instance with DI from app.state.
+
+    Injects AIUXService and LLMFactory from request.app.state when available.
+    Falls back gracefully to None if not configured.
+
+    Args:
+        request: FastAPI request object with app.state.
 
     Returns:
-        StudioOrchestrator configured for request handling
+        StudioOrchestrator configured for request handling.
     """
-    # TODO: In production, inject AIUXService, LLMFactory via proper DI
+    # Extract services from app.state (graceful fallback to None)
+    ai_ux_service = getattr(request.app.state, "ai_ux_service", None)
+    llm_factory = getattr(request.app.state, "llm_factory", None)
+
     return StudioOrchestrator(
-        ai_ux_service=None,  # Will be injected in later sprints
-        llm_factory=None,
+        ai_ux_service=ai_ux_service,
+        llm_factory=llm_factory,
         enable_metrics=True,
         status_broadcaster=get_orchestrator_status_broadcaster(),
     )
 
 
-def get_genui_orchestrator() -> GenUIOrchestrator:
-    """Get or create GenUIOrchestrator instance.
+def get_genui_orchestrator(request: Request) -> GenUIOrchestrator:
+    """Get or create GenUIOrchestrator instance with DI from app.state.
+
+    Injects LLMFactory from request.app.state when available.
+    Falls back gracefully to None if not configured.
+
+    Args:
+        request: FastAPI request object with app.state.
 
     Returns:
-        GenUIOrchestrator configured for request handling
+        GenUIOrchestrator configured for request handling.
     """
-    # TODO: In production, inject LLMFactory via proper DI
+    # Extract LLM factory from app.state (graceful fallback to None)
+    llm_factory = getattr(request.app.state, "llm_factory", None)
+
     return GenUIOrchestrator(
-        llm_factory=None,
+        llm_factory=llm_factory,
         enable_metrics=True,
     )
 

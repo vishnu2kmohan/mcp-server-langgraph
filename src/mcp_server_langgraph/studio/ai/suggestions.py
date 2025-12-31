@@ -28,6 +28,7 @@ _suggestion_rate_limit_hits: Any = None
 _suggestion_personalization: Any = None
 _suggestion_cache_operations: Any = None
 _suggestion_streaming_requests: Any = None
+_suggestion_interactions: Any = None
 
 
 def _init_suggestion_metrics() -> bool:
@@ -44,6 +45,7 @@ def _init_suggestion_metrics() -> bool:
     global _suggestion_personalization  # noqa: PLW0603
     global _suggestion_cache_operations  # noqa: PLW0603
     global _suggestion_streaming_requests  # noqa: PLW0603
+    global _suggestion_interactions  # noqa: PLW0603
 
     if _metrics_available is not None:
         return _metrics_available
@@ -124,6 +126,16 @@ def _init_suggestion_metrics() -> bool:
             "studio_suggestion_streaming_requests_total",
             "Total streaming suggestion requests",
             ["suggestion_type"],
+        )
+
+        # Interaction tracking metrics (click, dismiss, view)
+        _suggestion_interactions = Counter(
+            "studio_suggestion_interactions_total",
+            "Total suggestion interactions by action type",
+            ["action", "suggestion_type", "category"],
+            # action: click, dismiss, view
+            # suggestion_type: chat_followup, workflow
+            # category: explore, clarify, etc. (or empty)
         )
 
         _metrics_available = True
@@ -358,6 +370,37 @@ def track_streaming_request(suggestion_type: str) -> None:
     _init_suggestion_metrics()
     if _suggestion_streaming_requests:
         _suggestion_streaming_requests.labels(suggestion_type=suggestion_type).inc()
+
+
+def track_suggestion_interaction(
+    action: str,
+    suggestion_type: str,
+    category: str | None = None,
+) -> None:
+    """Track a suggestion user interaction.
+
+    Used for HEART metrics tracking - Adoption/Engagement.
+
+    Args:
+        action: The action taken (click, dismiss, view)
+        suggestion_type: Type of suggestion (chat_followup, workflow)
+        category: Optional category of the suggestion (explore, clarify, etc.)
+    """
+    _init_suggestion_metrics()
+    if _suggestion_interactions:
+        _suggestion_interactions.labels(
+            action=action,
+            suggestion_type=suggestion_type,
+            category=category or "unknown",
+        ).inc()
+        logger.debug(
+            "Tracked suggestion interaction",
+            extra={
+                "action": action,
+                "suggestion_type": suggestion_type,
+                "category": category,
+            },
+        )
 
 
 # Quality tracking metric (initialized lazily)

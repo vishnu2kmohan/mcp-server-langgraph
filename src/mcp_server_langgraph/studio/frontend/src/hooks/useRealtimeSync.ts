@@ -190,6 +190,9 @@ export function useRealtimeSync(
   const reconnectAttemptsRef = useRef(0);
   // Ref to store createConnection for use in actuallyCreateConnection without circular deps
   const createConnectionRef = useRef<() => void>(() => {});
+  // Store URL in ref to make hook resilient to URL reference changes
+  // This prevents unnecessary reconnections when URL prop changes by reference but not content
+  const urlRef = useRef(url);
 
   // Track reconnection timing
   const reconnectionStartTimeRef = useRef<number | null>(null);
@@ -198,6 +201,9 @@ export function useRealtimeSync(
 
   // Keep ref in sync with state
   reconnectAttemptsRef.current = reconnectAttempts;
+
+  // Keep urlRef in sync with latest URL prop (used by actuallyCreateConnection and createConnection)
+  urlRef.current = url;
 
   // Store callbacks in refs to avoid dependency issues
   const callbacksRef = useRef({
@@ -382,6 +388,9 @@ export function useRealtimeSync(
    * Called after proactive token validation in createConnection.
    */
   const actuallyCreateConnection = useCallback(() => {
+    // Read URL from ref - this makes the function stable regardless of URL prop reference
+    const currentUrl = urlRef.current;
+
     // Clean up existing connection without triggering onclose
     if (wsRef.current) {
       wsRef.current.onclose = null;
@@ -392,7 +401,7 @@ export function useRealtimeSync(
     setStatus("connecting");
 
     // Append protocol version to URL for server compatibility checking
-    const wsUrl = appendProtocolVersion(url);
+    const wsUrl = appendProtocolVersion(currentUrl);
     const ws = new WebSocket(wsUrl);
     wsRef.current = ws;
 
@@ -504,7 +513,8 @@ export function useRealtimeSync(
       }
     };
   }, [
-    url,
+    // Note: url is intentionally NOT a dependency - we read from urlRef.current
+    // to make this hook resilient to unstable URL references from callers
     reconnectInterval,
     maxReconnectAttempts,
     exponentialBackoff,
@@ -526,17 +536,20 @@ export function useRealtimeSync(
    * connect → 4010 close → refresh → reconnect
    */
   const createConnection = useCallback(() => {
+    // Read URL from ref - this makes the hook resilient to unstable URL references
+    const currentUrl = urlRef.current;
+
     // Don't attempt connection with empty URL
-    if (!url) {
+    if (!currentUrl) {
       // Note: Initial state is already 'disconnected' when url is empty
       return;
     }
 
     // Validate WebSocket URL protocol to prevent DOMException
     // WebSocket URLs must start with ws:// or wss://
-    if (!url.startsWith("ws://") && !url.startsWith("wss://")) {
+    if (!currentUrl.startsWith("ws://") && !currentUrl.startsWith("wss://")) {
       const error = new Error(
-        `Invalid WebSocket URL: "${url}". URL must start with ws:// or wss://`,
+        `Invalid WebSocket URL: "${currentUrl}". URL must start with ws:// or wss://`,
       );
       setStatus("error");
       callbacksRef.current.onError?.(error);
@@ -557,7 +570,9 @@ export function useRealtimeSync(
       // Token is valid - proceed with connection
       actuallyCreateConnection();
     });
-  }, [url, actuallyCreateConnection]);
+    // Note: url is intentionally NOT a dependency - we read from urlRef.current
+    // to make this hook resilient to unstable URL references from callers
+  }, [actuallyCreateConnection]);
 
   // Keep ref in sync for use in actuallyCreateConnection's reconnect timeout
   createConnectionRef.current = createConnection;
@@ -602,9 +617,32 @@ export function useRealtimeSync(
     createConnection();
   }, [createConnection]);
 
-  // Initialize connection on mount
+  // Track committed URL to detect actual content changes
+  const committedUrlRef = useRef<string | null>(null);
+
+  // Initialize connection on mount and handle URL content changes
   useEffect(() => {
-    createConnection();
+    // Check if URL content actually changed (not just reference)
+    const urlContentChanged = url !== committedUrlRef.current;
+
+    if (urlContentChanged) {
+      // Update committed URL
+      committedUrlRef.current = url;
+
+      // Close existing connection if URL changed (not on initial mount)
+      if (wsRef.current && committedUrlRef.current !== null) {
+        manualCloseRef.current = true;
+        wsRef.current.onclose = null;
+        wsRef.current.close();
+        wsRef.current = null;
+      }
+
+      // Reset manual close flag for new connection
+      manualCloseRef.current = false;
+
+      // Create new connection with updated URL
+      createConnection();
+    }
 
     return () => {
       manualCloseRef.current = true;
@@ -618,7 +656,9 @@ export function useRealtimeSync(
         wsRef.current.close();
       }
     };
-  }, [createConnection]);
+    // url is a dependency to detect content changes, but createConnection
+    // reads from urlRef.current so it doesn't need to be recreated
+  }, [url, createConnection]);
 
   return {
     status,

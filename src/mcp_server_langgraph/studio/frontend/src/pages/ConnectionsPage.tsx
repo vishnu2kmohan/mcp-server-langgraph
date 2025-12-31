@@ -46,7 +46,12 @@ import {
   ConnectionTemplateSelector,
   ConnectionAuditLog,
 } from "../components/Connection";
-import { LazyAggregatedCapabilitiesPanel } from "../components/MCP";
+import {
+  LazyAggregatedCapabilitiesPanel,
+  LazyToolInvocationDialog,
+  LazyResourceViewer,
+  LazyPromptTester,
+} from "../components/MCP";
 import { useAppSelector } from "../store/hooks";
 import { selectPersona } from "../store/slices/personaSlice";
 import type {
@@ -136,6 +141,14 @@ export function ConnectionsPage() {
 
   // Selection state for bulk operations
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+
+  // Capability dialog states (Tool/Resource/Prompt)
+  const [toolDialogOpen, setToolDialogOpen] = useState(false);
+  const [selectedTool, setSelectedTool] = useState<string | null>(null);
+  const [resourceViewerOpen, setResourceViewerOpen] = useState(false);
+  const [selectedResource, setSelectedResource] = useState<string | null>(null);
+  const [promptTesterOpen, setPromptTesterOpen] = useState(false);
+  const [selectedPrompt, setSelectedPrompt] = useState<string | null>(null);
 
   // Refs for keyboard shortcuts
   const searchInputRef = useRef<HTMLInputElement>(null);
@@ -305,6 +318,13 @@ export function ConnectionsPage() {
     setDeleteConfirmId(null);
     setTemplateSelectorOpen(false);
     setAuditLogConnectionId(null);
+    // Close capability dialogs
+    setToolDialogOpen(false);
+    setSelectedTool(null);
+    setResourceViewerOpen(false);
+    setSelectedResource(null);
+    setPromptTesterOpen(false);
+    setSelectedPrompt(null);
   }, []);
 
   // Focus search input
@@ -734,16 +754,16 @@ export function ConnectionsPage() {
             <LazyAggregatedCapabilitiesPanel
               showAdminActions={isAdmin}
               onToolInvoke={(qualifiedName) => {
-                console.log("Tool invoke requested:", qualifiedName);
-                // TODO: Open ToolInvocationDialog with the selected tool
+                setSelectedTool(qualifiedName);
+                setToolDialogOpen(true);
               }}
               onResourceView={(qualifiedName) => {
-                console.log("Resource view requested:", qualifiedName);
-                // TODO: Open ResourceViewer with the selected resource
+                setSelectedResource(qualifiedName);
+                setResourceViewerOpen(true);
               }}
               onPromptTest={(qualifiedName) => {
-                console.log("Prompt test requested:", qualifiedName);
-                // TODO: Open PromptTester with the selected prompt
+                setSelectedPrompt(qualifiedName);
+                setPromptTesterOpen(true);
               }}
             />
           </Suspense>
@@ -838,6 +858,36 @@ export function ConnectionsPage() {
           </div>
         </div>
       )}
+
+      {/* Tool Invocation Dialog */}
+      <LazyToolInvocationDialog
+        open={toolDialogOpen}
+        onClose={() => {
+          setToolDialogOpen(false);
+          setSelectedTool(null);
+        }}
+        preselectedToolName={selectedTool ?? undefined}
+      />
+
+      {/* Resource Viewer Dialog */}
+      <LazyResourceViewer
+        open={resourceViewerOpen}
+        onClose={() => {
+          setResourceViewerOpen(false);
+          setSelectedResource(null);
+        }}
+        preselectedResourceUri={selectedResource ?? undefined}
+      />
+
+      {/* Prompt Tester Dialog */}
+      <LazyPromptTester
+        open={promptTesterOpen}
+        onClose={() => {
+          setPromptTesterOpen(false);
+          setSelectedPrompt(null);
+        }}
+        preselectedPromptName={selectedPrompt ?? undefined}
+      />
     </div>
   );
 }

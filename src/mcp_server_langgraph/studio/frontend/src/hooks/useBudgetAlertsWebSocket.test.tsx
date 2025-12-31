@@ -96,6 +96,21 @@ describe("useBudgetAlertsWebSocket", () => {
           send: mockSend,
           disconnect: mockDisconnect,
           reconnect: mockReconnect,
+          reconnectAttempts: 0,
+          lastMessageTime: null,
+          metrics: {
+            totalAttempts: 0,
+            totalReconnections: 0,
+            consecutiveFailures: 0,
+            lastReconnectionTime: null,
+            lastDisconnectionTime: null,
+            avgReconnectionDurationMs: 0,
+            totalReconnectionTimeMs: 0,
+            failuresByReason: {},
+            recentAttempts: [],
+            successRate: 100,
+          },
+          resetMetrics: vi.fn(),
         };
       },
     );
@@ -109,14 +124,34 @@ describe("useBudgetAlertsWebSocket", () => {
     capturedCallbacks.onConnect = null;
   });
 
+  // Shared mock return value structure for consistent testing
+  const createMockReturn = (overrides: { status?: string } = {}) => ({
+    status: overrides.status ?? "connected",
+    send: mockSend,
+    disconnect: mockDisconnect,
+    reconnect: mockReconnect,
+    reconnectAttempts: 0,
+    lastMessageTime: null,
+    metrics: {
+      totalAttempts: 0,
+      totalReconnections: 0,
+      consecutiveFailures: 0,
+      lastReconnectionTime: null,
+      lastDisconnectionTime: null,
+      avgReconnectionDurationMs: 0,
+      totalReconnectionTimeMs: 0,
+      failuresByReason: {},
+      recentAttempts: [],
+      successRate: 100,
+    },
+    resetMetrics: vi.fn(),
+  });
+
   describe("connection status", () => {
     it("returns connected status when WebSocket is connected", () => {
-      mockUseRealtimeSync.mockReturnValue({
-        status: "connected",
-        send: mockSend,
-        disconnect: mockDisconnect,
-        reconnect: mockReconnect,
-      });
+      mockUseRealtimeSync.mockReturnValue(
+        createMockReturn({ status: "connected" }),
+      );
 
       const { result } = renderHook(() => useBudgetAlertsWebSocket(), {
         wrapper,
@@ -126,12 +161,9 @@ describe("useBudgetAlertsWebSocket", () => {
     });
 
     it("returns disconnected status when WebSocket is disconnected", () => {
-      mockUseRealtimeSync.mockReturnValue({
-        status: "disconnected",
-        send: mockSend,
-        disconnect: mockDisconnect,
-        reconnect: mockReconnect,
-      });
+      mockUseRealtimeSync.mockReturnValue(
+        createMockReturn({ status: "disconnected" }),
+      );
 
       const { result } = renderHook(() => useBudgetAlertsWebSocket(), {
         wrapper,
@@ -141,12 +173,9 @@ describe("useBudgetAlertsWebSocket", () => {
     });
 
     it("provides disconnect function", () => {
-      mockUseRealtimeSync.mockReturnValue({
-        status: "connected",
-        send: mockSend,
-        disconnect: mockDisconnect,
-        reconnect: mockReconnect,
-      });
+      mockUseRealtimeSync.mockReturnValue(
+        createMockReturn({ status: "connected" }),
+      );
 
       const { result } = renderHook(() => useBudgetAlertsWebSocket(), {
         wrapper,
@@ -158,12 +187,9 @@ describe("useBudgetAlertsWebSocket", () => {
     });
 
     it("provides reconnect function", () => {
-      mockUseRealtimeSync.mockReturnValue({
-        status: "disconnected",
-        send: mockSend,
-        disconnect: mockDisconnect,
-        reconnect: mockReconnect,
-      });
+      mockUseRealtimeSync.mockReturnValue(
+        createMockReturn({ status: "disconnected" }),
+      );
 
       const { result } = renderHook(() => useBudgetAlertsWebSocket(), {
         wrapper,

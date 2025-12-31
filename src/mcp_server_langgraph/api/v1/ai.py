@@ -38,6 +38,7 @@ from mcp_server_langgraph.studio.ai.suggestions import (
     track_rate_limit_hit,
     track_personalization_usage,
     track_streaming_request,
+    track_suggestion_interaction,
 )
 from mcp_server_langgraph.security.prompt_injection import (
     analyze_content as analyze_prompt_injection,
@@ -935,8 +936,12 @@ async def track_suggestion_click(
         },
     )
 
-    # TODO: Add Prometheus metrics or analytics service integration here
-    # For now, we just log the click event
+    # Track click in Prometheus metrics for HEART analytics
+    track_suggestion_interaction(
+        action="click",
+        suggestion_type=request.suggestion_type.value,
+        category=request.category,
+    )
 
     return SuggestionClickResponse(tracked=True)
 
@@ -947,7 +952,7 @@ async def track_suggestion_click(
     summary="Track Suggestion Interaction",
     description="Track user interactions with suggestions (click, dismiss, view)",
 )
-async def track_suggestion_interaction(
+async def track_suggestion_interaction_endpoint(
     current_user: CurrentUser,
     request: SuggestionTrackRequest,
 ) -> SuggestionTrackResponse:
@@ -990,7 +995,13 @@ async def track_suggestion_interaction(
         },
     )
 
-    # Emit Prometheus metrics
+    # Emit Prometheus metrics (both general interaction and quality counters)
+    track_suggestion_interaction(
+        action=request.action.value,
+        suggestion_type=request.suggestion_type or "unknown",
+        category=request.category,
+    )
+
     try:
         from mcp_server_langgraph.studio.ai.suggestions import track_suggestion_quality
 
@@ -1000,7 +1011,7 @@ async def track_suggestion_interaction(
             category=request.category,
         )
     except ImportError:
-        # Metrics not available
+        # Quality metrics not available
         pass
 
     return SuggestionTrackResponse(tracked=True)

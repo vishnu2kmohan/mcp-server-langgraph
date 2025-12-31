@@ -305,6 +305,32 @@ class TestSessionsDeleteEndpoint:
 
             assert response.status_code == 404
 
+    def test_delete_session_invalidates_cost_cache(self, test_app: FastAPI, sample_session: dict) -> None:
+        """
+        GIVEN a session exists with cached cost data
+        WHEN DELETE request is made
+        THEN the session cost cache should be invalidated
+
+        This ensures stale cost data is not returned after session deletion.
+        The cache key format is 'session_cost:{session_id}' with 1 hour TTL.
+        """
+        with (
+            patch("mcp_server_langgraph.api.v1.sessions.get_session_service") as mock_get_service,
+            patch("mcp_server_langgraph.api.v1.sessions.invalidate_session_cost_cache") as mock_invalidate_cache,
+        ):
+            mock_service = AsyncMock()
+            mock_service.delete_session.return_value = True
+            mock_get_service.return_value = mock_service
+
+            client = TestClient(test_app)
+            session_id = sample_session["id"]
+            response = client.delete(f"/api/v1/sessions/{session_id}")
+
+            assert response.status_code == 204
+
+            # Verify cache invalidation was called with correct session_id
+            mock_invalidate_cache.assert_called_once_with(session_id)
+
 
 @pytest.mark.xdist_group(name="test_sessions_router")
 class TestSessionsMessagesEndpoint:

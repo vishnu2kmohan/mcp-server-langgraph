@@ -27,6 +27,10 @@ import {
   WifiOff,
   X,
   Lightbulb,
+  AlertCircle,
+  Brain,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react";
 import { useAppDispatch, useAppSelector } from "../store/hooks";
 import {
@@ -49,6 +53,7 @@ import { useAIRealTimeUXSuggestions } from "../hooks/useAIRealTimeUXSuggestions"
 import type { Suggestion } from "../hooks/useAIRealTimeSuggestions";
 import { useArtifactExtraction } from "../hooks/useArtifactExtraction";
 import { useInlineSuggestions } from "../hooks/useInlineSuggestions";
+import { useDebounce } from "../hooks/useDebounce";
 import { ConversationPanel } from "./ConversationPanel";
 import type { SlashCommand } from "./SlashCommandMenu";
 import type { ChatLoaderData } from "../router/loaders";
@@ -137,6 +142,15 @@ export const ConnectedConversationPanel = forwardRef<
 
   // Track input for intent detection
   const [inputQuery, setInputQuery] = useState("");
+  // Debounce the input query to prevent excessive API calls on every keystroke
+  // 500ms delay balances responsiveness with API efficiency
+  const debouncedInputQuery = useDebounce(inputQuery, 500);
+
+  // State for dismissing streaming errors and collapsing thinking content
+  const [isStreamingErrorDismissed, setIsStreamingErrorDismissed] =
+    useState(false);
+  const [isThinkingContentCollapsed, setIsThinkingContentCollapsed] =
+    useState(false);
 
   // =============================================================================
   // Streaming Chat (LLM Response Generation)
@@ -145,12 +159,19 @@ export const ConnectedConversationPanel = forwardRef<
   const {
     isStreaming,
     streamingContent,
-    error: _streamingError, // TODO: Display streaming errors in UI
-    thinkingContent: _thinkingContent, // TODO: Display thinking content in UI
+    error: streamingError,
+    thinkingContent,
     usage: streamingUsage, // Token usage from streaming response
     thinkingTokens,
     startStream,
   } = useStreamingChat();
+
+  // Reset dismissed error state when a new error occurs
+  useEffect(() => {
+    if (streamingError) {
+      setIsStreamingErrorDismissed(false);
+    }
+  }, [streamingError]);
 
   // Track if we need to save the streaming response when complete
   const streamingCompleteRef = useRef(false);
@@ -412,12 +433,12 @@ export const ConnectedConversationPanel = forwardRef<
   // Conversation Intelligence Hooks (Sprint 3)
   // =============================================================================
 
-  // Intent detection - classifies user intent as they type
+  // Intent detection - classifies user intent as they type (debounced)
   const intentDetection = useIntentDetection({
     userId,
     sessionId: sessionId ?? "default-session",
-    query: inputQuery,
-    enabled: enableAI && inputQuery.length >= 3,
+    query: debouncedInputQuery,
+    enabled: enableAI && debouncedInputQuery.length >= 3,
   });
 
   // Context optimization - suggests trimming when approaching token limit
@@ -537,6 +558,82 @@ export const ConnectedConversationPanel = forwardRef<
 
   return (
     <div ref={ref} className={cn("flex flex-col h-full", className)}>
+      {/* Streaming Error Display (Phase 3.4) */}
+      {streamingError && !isStreamingErrorDismissed && (
+        <div
+          data-testid="streaming-error"
+          className={cn(
+            "flex items-center gap-2 px-4 py-2",
+            "bg-red-50 dark:bg-red-900/20",
+            "border-b border-red-200 dark:border-red-800",
+            "text-sm text-red-700 dark:text-red-300",
+          )}
+        >
+          <AlertCircle size={16} className="flex-shrink-0" />
+          <div className="flex-1">
+            <span className="font-medium">Streaming Error: </span>
+            <span>{streamingError}</span>
+          </div>
+          <button
+            data-testid="dismiss-streaming-error"
+            onClick={() => setIsStreamingErrorDismissed(true)}
+            className="p-1 hover:bg-red-100 dark:hover:bg-red-800/50 rounded"
+            aria-label="Dismiss error"
+          >
+            <X size={14} />
+          </button>
+        </div>
+      )}
+
+      {/* Thinking Content Display (Phase 3.4) */}
+      {thinkingContent && isStreaming && (
+        <div
+          data-testid="thinking-content"
+          className={cn(
+            "flex flex-col gap-1 px-4 py-2",
+            "bg-purple-50 dark:bg-purple-900/20",
+            "border-b border-purple-200 dark:border-purple-800",
+            "text-sm text-purple-700 dark:text-purple-300",
+          )}
+        >
+          <div className="flex items-center gap-2">
+            <Brain size={16} className="flex-shrink-0 animate-pulse" />
+            <span className="font-medium">Thinking</span>
+            {thinkingTokens && (
+              <span
+                data-testid="thinking-tokens-badge"
+                className="px-1.5 py-0.5 bg-purple-100 dark:bg-purple-800/50 rounded text-xs"
+              >
+                {thinkingTokens.toLocaleString()}
+              </span>
+            )}
+            <button
+              data-testid="toggle-thinking-content"
+              onClick={() =>
+                setIsThinkingContentCollapsed(!isThinkingContentCollapsed)
+              }
+              className="ml-auto p-1 hover:bg-purple-100 dark:hover:bg-purple-800/50 rounded"
+              aria-label={
+                isThinkingContentCollapsed
+                  ? "Expand thinking content"
+                  : "Collapse thinking content"
+              }
+            >
+              {isThinkingContentCollapsed ? (
+                <ChevronDown size={14} />
+              ) : (
+                <ChevronUp size={14} />
+              )}
+            </button>
+          </div>
+          {!isThinkingContentCollapsed && (
+            <div className="pl-6 text-xs text-purple-600 dark:text-purple-400 whitespace-pre-wrap max-h-24 overflow-y-auto">
+              {thinkingContent}
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Goal Tracker (Sprint 3) */}
       {enableAI && showGoals && goalTracking.primaryGoal && (
         <div

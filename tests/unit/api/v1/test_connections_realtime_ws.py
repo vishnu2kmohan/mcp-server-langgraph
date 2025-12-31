@@ -27,7 +27,7 @@ class TestConnectionsRealtimeWebSocketHandler:
         """Force GC to prevent mock accumulation in xdist workers."""
         gc.collect()
 
-    def test_handler_exists(self) -> None:
+    def test_handler_class_exists_in_module(self) -> None:
         """GIVEN the module WHEN importing THEN handler class exists."""
         from mcp_server_langgraph.api.v1.connections_realtime_ws import (
             ConnectionsRealtimeWebSocketHandler,
@@ -179,7 +179,7 @@ class TestConnectionsRealtimeRouter:
         """Force GC to prevent mock accumulation in xdist workers."""
         gc.collect()
 
-    def test_router_exists(self) -> None:
+    def test_router_object_exists_in_module(self) -> None:
         """GIVEN the module WHEN importing THEN router exists."""
         from mcp_server_langgraph.api.v1.connections_realtime_ws import router
 
@@ -196,3 +196,131 @@ class TestConnectionsRealtimeRouter:
         # Check for websocket route
         websocket_routes = [r for r in routes if hasattr(r, "path")]
         assert len(websocket_routes) > 0
+
+
+@pytest.mark.xdist_group(name="connections_realtime_ws")
+class TestConnectionsRealtimeServiceIntegration:
+    """Tests for ConnectionsServiceAdapter integration."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers."""
+        gc.collect()
+
+    @pytest.mark.asyncio
+    async def test_get_connection_status_uses_service_adapter(self) -> None:
+        """_get_connection_status delegates to ConnectionsServiceAdapter."""
+        from unittest.mock import AsyncMock
+
+        from mcp_server_langgraph.api.v1.connections_realtime_ws import (
+            ConnectionsRealtimeWebSocketHandler,
+        )
+
+        mock_service = AsyncMock()
+        mock_service.get_connection.return_value = {
+            "id": "conn-123",
+            "name": "Test Connection",
+            "status": "connected",
+            "server_type": "mcp",
+        }
+
+        handler = ConnectionsRealtimeWebSocketHandler()
+        handler._connections_service = mock_service
+
+        result = await handler._get_connection_status("conn-123")
+
+        assert result["id"] == "conn-123"
+        assert result["name"] == "Test Connection"
+        assert result["status"] == "connected"
+        mock_service.get_connection.assert_called_once_with("conn-123")
+
+    @pytest.mark.asyncio
+    async def test_get_connection_status_fallback_when_not_found(self) -> None:
+        """_get_connection_status returns fallback when connection not found."""
+        from unittest.mock import AsyncMock
+
+        from mcp_server_langgraph.api.v1.connections_realtime_ws import (
+            ConnectionsRealtimeWebSocketHandler,
+        )
+
+        mock_service = AsyncMock()
+        mock_service.get_connection.return_value = None
+
+        handler = ConnectionsRealtimeWebSocketHandler()
+        handler._connections_service = mock_service
+
+        result = await handler._get_connection_status("nonexistent")
+
+        # Should return a sensible fallback
+        assert result["id"] == "nonexistent"
+        assert "status" in result
+
+    @pytest.mark.asyncio
+    async def test_get_all_connections_delegates_to_service(self) -> None:
+        """_get_all_connections delegates to ConnectionsServiceAdapter."""
+        from unittest.mock import AsyncMock
+
+        from mcp_server_langgraph.api.v1.connections_realtime_ws import (
+            ConnectionsRealtimeWebSocketHandler,
+        )
+
+        mock_connections = [
+            {"id": "conn-1", "name": "Connection 1", "status": "connected"},
+            {"id": "conn-2", "name": "Connection 2", "status": "disconnected"},
+        ]
+        mock_service = AsyncMock()
+        mock_service.list_connections.return_value = mock_connections
+
+        handler = ConnectionsRealtimeWebSocketHandler()
+        handler._connections_service = mock_service
+
+        result = await handler._get_all_connections()
+
+        assert len(result) == 2
+        assert result[0]["id"] == "conn-1"
+        assert result[1]["id"] == "conn-2"
+        mock_service.list_connections.assert_called_once()
+
+    @pytest.mark.asyncio
+    async def test_perform_health_check_uses_service(self) -> None:
+        """_perform_health_check delegates to ConnectionsServiceAdapter."""
+        from unittest.mock import AsyncMock
+
+        from mcp_server_langgraph.api.v1.connections_realtime_ws import (
+            ConnectionsRealtimeWebSocketHandler,
+        )
+
+        mock_service = AsyncMock()
+        mock_service.get_connection_health.return_value = {
+            "connection_id": "conn-123",
+            "healthy": True,
+            "status": "connected",
+        }
+
+        handler = ConnectionsRealtimeWebSocketHandler()
+        handler._connections_service = mock_service
+
+        result = await handler._perform_health_check("conn-123")
+
+        assert result["connection_id"] == "conn-123"
+        assert result["healthy"] is True
+        mock_service.get_connection_health.assert_called_once_with("conn-123")
+
+    @pytest.mark.asyncio
+    async def test_get_all_connections_graceful_on_service_error(self) -> None:
+        """_get_all_connections returns empty list on service error."""
+        from unittest.mock import AsyncMock
+
+        from mcp_server_langgraph.api.v1.connections_realtime_ws import (
+            ConnectionsRealtimeWebSocketHandler,
+        )
+
+        mock_service = AsyncMock()
+        mock_service.list_connections.side_effect = Exception("Service unavailable")
+
+        handler = ConnectionsRealtimeWebSocketHandler()
+        handler._connections_service = mock_service
+
+        result = await handler._get_all_connections()
+
+        # Should gracefully return empty list
+        assert result == []

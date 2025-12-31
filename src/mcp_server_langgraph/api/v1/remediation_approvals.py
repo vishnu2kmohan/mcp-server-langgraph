@@ -280,8 +280,8 @@ async def approve_remediation(
         # Record approval metric for AI recommendation quality tracking
         record_recommendation_approval(
             alert_type=result.alert_name,
-            had_fewshot=False,  # TODO: Track few-shot usage in recommendation
-            had_constraints=False,  # TODO: Track constraint usage in recommendation
+            had_fewshot=result.had_fewshot,
+            had_constraints=result.had_constraints,
         )
 
         # Log audit event for compliance
@@ -347,8 +347,8 @@ async def reject_remediation(
         record_recommendation_rejection(
             alert_type=result.alert_name,
             reason=request.reason.value,
-            had_fewshot=False,  # TODO: Track few-shot usage in recommendation
-            had_constraints=False,  # TODO: Track constraint usage in recommendation
+            had_fewshot=result.had_fewshot,
+            had_constraints=result.had_constraints,
         )
 
         # Log audit event for compliance

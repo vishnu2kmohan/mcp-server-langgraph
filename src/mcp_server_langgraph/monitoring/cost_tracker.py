@@ -739,3 +739,31 @@ async def update_session_cost_cache(
             f"Failed to update session cost cache for {session_id}: {e}",
             extra={"session_id": session_id, "error": str(e)},
         )
+
+
+async def invalidate_session_cost_cache(session_id: str) -> None:
+    """
+    Invalidate the Redis session cost cache for a deleted session.
+
+    This function should be called when a session is deleted to ensure
+    stale cost data is not returned by the WebSocket cost tracking endpoint.
+
+    Args:
+        session_id: Session identifier.
+    """
+    from mcp_server_langgraph.websocket.services.cost_tracking import (
+        get_websocket_cost_service,
+    )
+
+    try:
+        service = get_websocket_cost_service()
+        await service.invalidate_session_cost(session_id)
+    except Exception as e:
+        # Don't let cache invalidation failures affect session deletion
+        import logging
+
+        logger = logging.getLogger(__name__)
+        logger.warning(
+            f"Failed to invalidate session cost cache for {session_id}: {e}",
+            extra={"session_id": session_id, "error": str(e)},
+        )

@@ -89,6 +89,24 @@ vi.mock("../hooks/useSessionAutoName", () => ({
   },
 }));
 
+// Mock useStreamingChat for streaming error and thinking content tests
+const mockStreamingChatReturn = {
+  isStreaming: false,
+  streamingContent: "",
+  error: null as string | null,
+  thinkingContent: "" as string,
+  usage: null,
+  thinkingTokens: null as number | null,
+  startStream: vi.fn(),
+  stopStream: vi.fn(),
+  clearContent: vi.fn(),
+  model: "gemini-2.5-flash",
+};
+
+vi.mock("../hooks/useStreamingChat", () => ({
+  useStreamingChat: () => mockStreamingChatReturn,
+}));
+
 // Mock conversation intelligence hooks (Sprint 3)
 vi.mock("../hooks/useConversationIntelligence", () => ({
   useIntentDetection: vi.fn(() => ({
@@ -188,6 +206,13 @@ describe("ConnectedConversationPanel", () => {
     mockSessionLoaderData.messages = [];
     mockSessionLoaderData.artifacts = [];
     mockSessionLoaderData.session = undefined;
+
+    // Reset streaming chat mock state
+    mockStreamingChatReturn.isStreaming = false;
+    mockStreamingChatReturn.streamingContent = "";
+    mockStreamingChatReturn.error = null;
+    mockStreamingChatReturn.thinkingContent = "";
+    mockStreamingChatReturn.thinkingTokens = null;
 
     // Setup fetch mock for API calls
     global.fetch = mockFetch;
@@ -879,6 +904,126 @@ describe("ConnectedConversationPanel", () => {
       const callArgs = mockUseSessionAutoName.mock.calls[0][0];
       expect(Array.isArray(callArgs.messages)).toBe(true);
       expect(callArgs.messages.length).toBeGreaterThan(0);
+    });
+  });
+
+  // ===========================================================================
+  // Streaming Error and Thinking Content Display (Phase 3.4)
+  // ===========================================================================
+
+  describe("Streaming Error Display", () => {
+    it("should display streaming error when error occurs", () => {
+      const store = createTestStore();
+
+      // Set error state in mock
+      mockStreamingChatReturn.error = "Connection failed: Network error";
+
+      render(<ConnectedConversationPanel />, { wrapper: createWrapper(store) });
+
+      // Error should be displayed
+      expect(screen.getByTestId("streaming-error")).toBeInTheDocument();
+      expect(screen.getByText(/Connection failed/i)).toBeInTheDocument();
+    });
+
+    it("should not display error indicator when no error", () => {
+      const store = createTestStore();
+
+      // No error
+      mockStreamingChatReturn.error = null;
+
+      render(<ConnectedConversationPanel />, { wrapper: createWrapper(store) });
+
+      // Error indicator should not be present
+      expect(screen.queryByTestId("streaming-error")).not.toBeInTheDocument();
+    });
+
+    it("should allow dismissing streaming error", async () => {
+      const store = createTestStore();
+      const user = userEvent.setup();
+
+      mockStreamingChatReturn.error = "Temporary connection issue";
+
+      render(<ConnectedConversationPanel />, { wrapper: createWrapper(store) });
+
+      // Error should be displayed
+      expect(screen.getByTestId("streaming-error")).toBeInTheDocument();
+
+      // Click dismiss button
+      const dismissButton = screen.getByTestId("dismiss-streaming-error");
+      await user.click(dismissButton);
+
+      // Error should be dismissed (component state, not mock)
+      await waitFor(() => {
+        expect(screen.queryByTestId("streaming-error")).not.toBeInTheDocument();
+      });
+    });
+  });
+
+  describe("Thinking Content Display", () => {
+    it("should display thinking content when available", () => {
+      const store = createTestStore();
+
+      mockStreamingChatReturn.thinkingContent =
+        "Analyzing the user request for code generation...";
+      mockStreamingChatReturn.isStreaming = true;
+
+      render(<ConnectedConversationPanel />, { wrapper: createWrapper(store) });
+
+      expect(screen.getByTestId("thinking-content")).toBeInTheDocument();
+      expect(
+        screen.getByText(/Analyzing the user request/i),
+      ).toBeInTheDocument();
+    });
+
+    it("should not display thinking section when no thinking content", () => {
+      const store = createTestStore();
+
+      mockStreamingChatReturn.thinkingContent = "";
+      mockStreamingChatReturn.isStreaming = true;
+
+      render(<ConnectedConversationPanel />, { wrapper: createWrapper(store) });
+
+      expect(screen.queryByTestId("thinking-content")).not.toBeInTheDocument();
+    });
+
+    it("should display thinking tokens badge when available", () => {
+      const store = createTestStore();
+
+      mockStreamingChatReturn.thinkingContent = "Deep thinking...";
+      mockStreamingChatReturn.thinkingTokens = 1250;
+      mockStreamingChatReturn.isStreaming = true;
+
+      render(<ConnectedConversationPanel />, { wrapper: createWrapper(store) });
+
+      expect(screen.getByTestId("thinking-tokens-badge")).toBeInTheDocument();
+      expect(screen.getByText("1,250")).toBeInTheDocument();
+    });
+
+    it("should be collapsible", async () => {
+      const store = createTestStore();
+      const user = userEvent.setup();
+
+      mockStreamingChatReturn.thinkingContent =
+        "Extended thinking process for complex analysis...";
+      mockStreamingChatReturn.isStreaming = true;
+
+      render(<ConnectedConversationPanel />, { wrapper: createWrapper(store) });
+
+      // Thinking content visible by default
+      expect(
+        screen.getByText(/Extended thinking process/i),
+      ).toBeInTheDocument();
+
+      // Click to collapse
+      const collapseButton = screen.getByTestId("toggle-thinking-content");
+      await user.click(collapseButton);
+
+      // Content should be hidden
+      await waitFor(() => {
+        expect(
+          screen.queryByText(/Extended thinking process/i),
+        ).not.toBeInTheDocument();
+      });
     });
   });
 });

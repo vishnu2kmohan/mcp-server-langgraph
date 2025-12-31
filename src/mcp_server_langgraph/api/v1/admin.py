@@ -22,6 +22,8 @@ from typing import Annotated, Any
 from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel, EmailStr, Field
 
+from mcp_server_langgraph.api.deps import get_api_key_manager
+from mcp_server_langgraph.auth.api_keys import APIKeyManager
 from mcp_server_langgraph.auth.dependencies import require_admin
 from mcp_server_langgraph.auth.user_provider import UserProvider
 from mcp_server_langgraph.core.dependencies import get_audit_log_repository, get_user_provider
@@ -488,6 +490,7 @@ async def get_user_api_key(
     user_id: str,
     admin_user: AdminUser,
     provider: UserProvider = Depends(get_user_provider),
+    api_key_manager: APIKeyManager | None = Depends(get_api_key_manager),
 ) -> UserApiKeyResponse:
     """
     Get the API key for a user (masked for security).
@@ -509,14 +512,36 @@ async def get_user_api_key(
     if existing is None:
         raise HTTPException(status_code=404, detail=f"User not found: {user_id}")
 
-    # TODO: Retrieve actual API key from storage
-    # For now, return a mock masked key
-    masked_key = "sk-****...****" if existing else None
+    # Retrieve API keys from APIKeyManager (Keycloak storage)
+    masked_key = None
+    created_at = None
+
+    if api_key_manager:
+        try:
+            keys = await api_key_manager.list_api_keys(existing.user_id)
+            if keys:
+                # Return info for the most recently created key
+                latest_key = max(keys, key=lambda k: k.get("created", ""))
+                # Create masked format: show key_id prefix
+                key_id = latest_key.get("key_id", "")
+                masked_key = f"mcpkey_****...{key_id[-4:]}" if key_id else "mcpkey_****...****"
+                # Parse created timestamp
+                created_str = latest_key.get("created")
+                if created_str:
+                    from datetime import datetime
+
+                    try:
+                        created_dt = datetime.fromisoformat(created_str.replace("Z", "+00:00"))
+                        created_at = int(created_dt.timestamp() * 1000)
+                    except ValueError:
+                        pass
+        except Exception as e:
+            logger.warning(f"Failed to retrieve API keys for user {user_id}: {e}")
 
     return UserApiKeyResponse(
         user_id=existing.user_id,
         masked_key=masked_key,
-        created_at=None,
+        created_at=created_at,
     )
 
 
@@ -525,6 +550,7 @@ async def generate_user_api_key(
     user_id: str,
     admin_user: AdminUser,
     provider: UserProvider = Depends(get_user_provider),
+    api_key_manager: APIKeyManager | None = Depends(get_api_key_manager),
 ) -> UserApiKeyResponse:
     """
     Generate a new API key for a user.
@@ -538,7 +564,6 @@ async def generate_user_api_key(
     Returns:
         UserApiKeyResponse with the new api_key (full key)
     """
-    import secrets
     import time
 
     # Check if user exists
@@ -549,23 +574,60 @@ async def generate_user_api_key(
     if existing is None:
         raise HTTPException(status_code=404, detail=f"User not found: {user_id}")
 
-    # Generate a new API key
-    api_key = f"sk-{secrets.token_urlsafe(32)}"
-    created_at = int(time.time() * 1000)
+    # Use APIKeyManager to create and store the key in Keycloak
+    if api_key_manager:
+        try:
+            # Revoke existing keys first (admin-generated keys replace old ones)
+            existing_keys = await api_key_manager.list_api_keys(existing.user_id)
+            for old_key in existing_keys:
+                key_id = old_key.get("key_id")
+                if key_id:
+                    await api_key_manager.revoke_api_key(existing.user_id, key_id)
 
-    # TODO: Store the hashed API key in the database
+            # Create new API key via APIKeyManager
+            result = await api_key_manager.create_api_key(
+                user_id=existing.user_id,
+                name="Admin Generated",
+                expires_days=365,
+            )
 
-    logger.info(
-        "API key generated for user",
-        extra={
-            "user_id": existing.user_id,
-            "audit_event_type": "admin.api_key_generated",
-        },
-    )
+            api_key = result["api_key"]
+            created_str = result.get("created", "")
 
-    return UserApiKeyResponse(
-        user_id=existing.user_id,
-        api_key=api_key,
-        masked_key=f"sk-{api_key[3:7]}...{api_key[-4:]}",
-        created_at=created_at,
+            # Parse created timestamp
+            created_at = int(time.time() * 1000)
+            if created_str:
+                try:
+                    created_dt = datetime.fromisoformat(created_str.replace("Z", "+00:00"))
+                    created_at = int(created_dt.timestamp() * 1000)
+                except ValueError:
+                    pass
+
+            logger.info(
+                "API key generated for user via APIKeyManager",
+                extra={
+                    "user_id": existing.user_id,
+                    "key_id": result.get("key_id"),
+                    "audit_event_type": "admin.api_key_generated",
+                },
+            )
+
+            return UserApiKeyResponse(
+                user_id=existing.user_id,
+                api_key=api_key,
+                masked_key=f"mcpkey_****...{api_key[-4:]}",
+                created_at=created_at,
+            )
+
+        except ValueError as e:
+            # Quota exceeded or other validation error
+            raise HTTPException(status_code=400, detail=str(e)) from e
+        except Exception as e:
+            logger.error(f"Failed to generate API key for user {user_id}: {e}")
+            raise HTTPException(status_code=500, detail="Failed to generate API key") from e
+
+    # Fallback if APIKeyManager not available (should not happen in production)
+    raise HTTPException(
+        status_code=503,
+        detail="API key manager not available. Please ensure Keycloak is configured.",
     )

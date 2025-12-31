@@ -162,8 +162,8 @@ class CostTrackingServiceAdapter:
         """
         Get budget status for a user.
 
-        Currently returns stub data. When user budget management is
-        implemented, this will query the budget system.
+        Queries the budget storage for the user's configured budget limit
+        and calculates current usage from the cost storage.
 
         Args:
             user_id: User identifier.
@@ -171,26 +171,69 @@ class CostTrackingServiceAdapter:
         Returns:
             Dict with user_id, budget_limit, current_usage, remaining.
         """
-        # Check cache first
+        # Check in-memory cache first
         if user_id in self._user_budgets:
             return self._user_budgets[user_id]
 
-        # TODO: When budget management is implemented:
-        # - Query user budget configuration from database
-        # - Calculate current usage from cost storage
-        # - Return real budget status
+        # Default budget limit
+        budget_limit = 100.0  # Default $100 budget
+        current_usage = 0.0
 
-        # Stub response for now
-        logger.debug(
-            f"User budget not found for {user_id}, returning stub",
-            extra={"user_id": user_id},
-        )
-        return {
+        # Query real budget from database
+        try:
+            from mcp_server_langgraph.monitoring.budget_storage import get_budget_storage
+
+            storage = get_budget_storage()
+            budget = await storage.get_budget("user", user_id)
+
+            if budget:
+                budget_limit = float(budget.monthly_limit_usd)
+                logger.debug(
+                    f"Found budget for user {user_id}: ${budget_limit}",
+                    extra={"user_id": user_id, "budget_limit": budget_limit},
+                )
+            else:
+                logger.debug(
+                    f"No budget found for user {user_id}, using default ${budget_limit}",
+                    extra={"user_id": user_id},
+                )
+        except Exception as e:
+            logger.warning(
+                f"Failed to query budget for user {user_id}: {e}",
+                extra={"user_id": user_id, "error": str(e)},
+            )
+
+        # Query current usage from cost storage
+        try:
+            from mcp_server_langgraph.monitoring.litellm_cost_callback import (
+                get_current_spend_for_entity,
+            )
+
+            current_spend = await get_current_spend_for_entity("user", user_id)
+            current_usage = float(current_spend)
+            logger.debug(
+                f"Current spend for user {user_id}: ${current_usage}",
+                extra={"user_id": user_id, "current_usage": current_usage},
+            )
+        except Exception as e:
+            logger.warning(
+                f"Failed to query current spend for user {user_id}: {e}",
+                extra={"user_id": user_id, "error": str(e)},
+            )
+
+        # Calculate remaining
+        remaining = max(0.0, budget_limit - current_usage)
+
+        # Build response and cache it
+        result = {
             "user_id": user_id,
-            "budget_limit": 100.0,  # Default $100 budget
-            "current_usage": 0.0,
-            "remaining": 100.0,
+            "budget_limit": budget_limit,
+            "current_usage": current_usage,
+            "remaining": remaining,
         }
+        self._user_budgets[user_id] = result
+
+        return result
 
     def update_session_cost(self, session_id: str, cost: float, tokens: int) -> dict[str, Any]:
         """

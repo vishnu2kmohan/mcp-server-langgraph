@@ -34,8 +34,10 @@ from mcp_server_langgraph.core.config import Settings
 
 if TYPE_CHECKING:
     from mcp_server_langgraph.audit.service import UnifiedAuditService
+    from mcp_server_langgraph.auth.api_keys import APIKeyManager
     from mcp_server_langgraph.auth.openfga import OpenFGAClient
     from mcp_server_langgraph.core.http_client import HttpClientManager
+    from mcp_server_langgraph.observability.query.backends.tempo import TempoTracingClient
 
 
 # ==============================================================================
@@ -146,6 +148,57 @@ def get_audit_service(request: Request) -> "UnifiedAuditService | None":
                 await audit.log_event(...)
     """
     return getattr(request.app.state, "audit_service", None)
+
+
+def get_api_key_manager(request: Request) -> "APIKeyManager | None":
+    """
+    Get API key manager from FastAPI request state.
+
+    The API key manager is initialized at startup with Keycloak client
+    and optional Redis cache for O(1) API key lookups.
+
+    Args:
+        request: FastAPI Request object (injected via Depends)
+
+    Returns:
+        APIKeyManager if initialized, None otherwise
+
+    Example:
+        @router.post("/users/{user_id}/api-key")
+        async def generate_api_key(
+            user_id: str,
+            api_key_manager: APIKeyManager | None = Depends(get_api_key_manager),
+        ):
+            if api_key_manager:
+                result = await api_key_manager.create_api_key(user_id, "Admin Generated")
+                return result
+    """
+    return getattr(request.app.state, "api_key_manager", None)
+
+
+def get_tempo_client(request: Request) -> "TempoTracingClient | None":
+    """
+    Get Tempo tracing client from FastAPI request state.
+
+    The Tempo client is initialized at startup for querying distributed traces
+    from Grafana Tempo. Used for session trace retrieval.
+
+    Args:
+        request: FastAPI Request object (injected via Depends)
+
+    Returns:
+        TempoTracingClient if initialized, None otherwise
+
+    Example:
+        @router.get("/sessions/{session_id}/trace")
+        async def get_session_trace(
+            session_id: str,
+            tempo: TempoTracingClient | None = Depends(get_tempo_client),
+        ):
+            if tempo:
+                traces = await tempo.search_traces(tags={"session_id": session_id})
+    """
+    return getattr(request.app.state, "tempo_client", None)
 
 
 # ==============================================================================

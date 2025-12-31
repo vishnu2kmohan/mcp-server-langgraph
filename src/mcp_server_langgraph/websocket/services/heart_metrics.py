@@ -19,9 +19,13 @@ Architecture:
 from __future__ import annotations
 
 import logging
-from typing import Any
+from datetime import UTC, datetime
+from typing import TYPE_CHECKING, Any
 
 from mcp_server_langgraph.core.feature_flags import get_feature_flags
+
+if TYPE_CHECKING:
+    from mcp_server_langgraph.observability.query.backends.prometheus import PrometheusMetricsClient
 
 logger = logging.getLogger(__name__)
 
@@ -41,10 +45,16 @@ class HeartMetricsServiceAdapter:
     - Task success (T): Completion rates
     """
 
-    def __init__(self) -> None:
-        """Initialize the HEART metrics adapter."""
+    def __init__(self, metrics_client: PrometheusMetricsClient | None = None) -> None:
+        """Initialize the HEART metrics adapter.
+
+        Args:
+            metrics_client: Optional Prometheus/Mimir client for querying metrics.
+                If not provided, stub data will be used.
+        """
         self._cached_snapshot: dict[str, Any] | None = None
         self._cached_dimensions: dict[str, dict[str, Any]] = {}
+        self._metrics_client: PrometheusMetricsClient | None = metrics_client
 
     async def get_current_snapshot(self, time_range: str = "24h") -> dict[str, Any]:
         """
@@ -60,15 +70,15 @@ class HeartMetricsServiceAdapter:
         if not flags.enable_websocket_enhanced_metrics:
             return self._get_minimal_snapshot()
 
-        # TODO: When Prometheus/Mimir is configured:
-        # - Query happiness_score metric
-        # - Query engagement_rate metric
-        # - Query adoption_rate metric
-        # - Query retention_rate metric
-        # - Query task_success_rate metric
-        # - Calculate trends from historical data
+        # Query Prometheus/Mimir if metrics client is available
+        if self._metrics_client is not None:
+            try:
+                return await self._query_heart_metrics_from_prometheus(time_range)
+            except Exception as e:
+                logger.warning(f"Failed to query HEART metrics from Prometheus: {e}")
+                # Fall through to stub data
 
-        # Stub data for development
+        # Stub data for development/fallback
         return {
             "happiness": {"score": 85, "trend": "up", "change": 2.5},
             "engagement": {"score": 72, "trend": "stable", "change": 0.3},
@@ -76,8 +86,48 @@ class HeartMetricsServiceAdapter:
             "retention": {"score": 88, "trend": "stable", "change": -0.5},
             "task_success": {"score": 95, "trend": "up", "change": 1.2},
             "time_range": time_range,
-            "last_updated": "2025-12-22T12:00:00Z",
+            "last_updated": datetime.now(UTC).isoformat(),
         }
+
+    async def _query_heart_metrics_from_prometheus(self, time_range: str) -> dict[str, Any]:
+        """
+        Query HEART metrics from Prometheus/Mimir.
+
+        Args:
+            time_range: Time range for metrics.
+
+        Returns:
+            Dict with all HEART dimension scores and trends.
+        """
+        metrics = {}
+        dimensions = {
+            "happiness": "heart_happiness_score",
+            "engagement": "heart_engagement_rate",
+            "adoption": "heart_adoption_rate",
+            "retention": "heart_retention_rate",
+            "task_success": "heart_task_success_rate",
+        }
+
+        for dimension, metric_name in dimensions.items():
+            try:
+                result = await self._metrics_client.query_instant(metric_name)
+                if result.series and result.series[0].values:
+                    score = result.series[0].values[0].value
+                    metrics[dimension] = {
+                        "score": round(score, 1),
+                        "trend": "stable",  # Could calculate from range query
+                        "change": 0.0,
+                    }
+                else:
+                    # No data for this metric - use default
+                    metrics[dimension] = {"score": 0, "trend": "stable", "change": 0.0}
+            except Exception as e:
+                logger.debug(f"Failed to query {metric_name}: {e}")
+                metrics[dimension] = {"score": 0, "trend": "stable", "change": 0.0}
+
+        metrics["time_range"] = time_range
+        metrics["last_updated"] = datetime.now(UTC).isoformat()
+        return metrics
 
     async def get_dimension_metrics(self, dimension: str, time_range: str = "24h") -> dict[str, Any]:
         """
@@ -95,7 +145,13 @@ class HeartMetricsServiceAdapter:
             logger.warning(f"Unknown HEART dimension: {dimension}")
             return {"error": f"Unknown dimension: {dimension}"}
 
-        # TODO: Query specific dimension metrics from Prometheus/Mimir
+        # Query Prometheus if client available
+        if self._metrics_client is not None:
+            try:
+                return await self._query_dimension_from_prometheus(dimension, time_range)
+            except Exception as e:
+                logger.warning(f"Failed to query {dimension} from Prometheus: {e}")
+                # Fall through to stub data
 
         # Stub data mapping
         dimension_data = {
@@ -152,6 +208,41 @@ class HeartMetricsServiceAdapter:
         }
 
         return dimension_data.get(dimension, {"error": "Not found"})
+
+    async def _query_dimension_from_prometheus(self, dimension: str, time_range: str) -> dict[str, Any]:
+        """
+        Query detailed dimension metrics from Prometheus.
+
+        Args:
+            dimension: HEART dimension name.
+            time_range: Time range for metrics.
+
+        Returns:
+            Detailed metrics for the dimension.
+        """
+        metric_names = {
+            "happiness": "heart_happiness_score",
+            "engagement": "heart_engagement_rate",
+            "adoption": "heart_adoption_rate",
+            "retention": "heart_retention_rate",
+            "task_success": "heart_task_success_rate",
+        }
+
+        metric_name = metric_names.get(dimension)
+        if not metric_name:
+            return {"error": f"Unknown dimension: {dimension}"}
+
+        result = await self._metrics_client.query_instant(metric_name)
+        if result.series and result.series[0].values:
+            score = result.series[0].values[0].value
+            return {
+                "score": round(score, 1),
+                "trend": "stable",
+                "samples": 0,
+                "breakdown": {},
+            }
+
+        return {"score": 0, "trend": "stable", "samples": 0, "breakdown": {}}
 
     def _get_minimal_snapshot(self) -> dict[str, Any]:
         """Get minimal snapshot when enhanced metrics are disabled."""

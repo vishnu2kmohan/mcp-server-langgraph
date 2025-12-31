@@ -24,11 +24,14 @@ from typing import Any, cast
 from urllib.parse import urlencode
 
 import httpx
-from fastapi import APIRouter, Body, HTTPException, Query, Request, status
+from fastapi import APIRouter, Body, Depends, HTTPException, Query, Request, status
 from fastapi.responses import JSONResponse, RedirectResponse
 from pydantic import BaseModel, Field
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.responses import Response
+
+from mcp_server_langgraph.api.deps import get_openfga_client
+from mcp_server_langgraph.auth.dependencies import get_current_user
 
 from mcp_server_langgraph.auth.device_auth import (
     AccessDenied,
@@ -1577,6 +1580,8 @@ class SwitchOrgResponse(BaseModel):
 async def switch_organization(
     request: SwitchOrgRequest,
     http_request: Request,
+    current_user: dict[str, Any] = Depends(get_current_user),
+    openfga_client: Any = Depends(get_openfga_client),
 ) -> SwitchOrgResponse:
     """
     Switch the user's organization context.
@@ -1602,19 +1607,101 @@ async def switch_organization(
             detail="Organization ID is required",
         )
 
+    # Get user identifier for OpenFGA check
+    user_id = current_user.get("user_id") or current_user.get("sub", "")
+    # Normalize to OpenFGA format if needed
+    if not user_id.startswith("user:"):
+        user_id = f"user:{user_id}"
+
     # Log the organization switch attempt
     logger.info(
         "Organization switch requested",
         extra={
             "audit_event_type": "auth.org_switch",
             "audit_category": "authorization",
+            "user_id": user_id,
             "target_org_id": org_id,
             "client_ip": http_request.client.host if http_request.client else None,
         },
     )
 
-    # TODO: Validate that user has access to the target organization
-    # This would typically involve checking OpenFGA or a database
+    # Validate that user has access to the target organization via OpenFGA
+    if openfga_client:
+        try:
+            # Check for member or admin relation on the organization
+            has_access = await openfga_client.check_permission(
+                user=user_id,
+                relation="member",
+                object=f"organization:{org_id}",
+            )
+
+            if not has_access:
+                # Also check admin relation as a fallback
+                has_access = await openfga_client.check_permission(
+                    user=user_id,
+                    relation="admin",
+                    object=f"organization:{org_id}",
+                )
+
+            if not has_access:
+                logger.warning(
+                    "Organization switch denied - no permission",
+                    extra={
+                        "audit_event_type": "auth.org_switch_denied",
+                        "audit_category": "authorization",
+                        "user_id": user_id,
+                        "target_org_id": org_id,
+                    },
+                )
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail=f"Access denied: You do not have permission to access organization {org_id}",
+                )
+
+        except HTTPException:
+            # Re-raise HTTP exceptions (like 403)
+            raise
+        except Exception as e:
+            # Fail closed: If OpenFGA is unavailable, deny access for security
+            logger.error(
+                "Organization switch failed - OpenFGA error",
+                extra={
+                    "audit_event_type": "auth.org_switch_error",
+                    "audit_category": "authorization",
+                    "user_id": user_id,
+                    "target_org_id": org_id,
+                    "error": str(e),
+                },
+            )
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail="Authorization service unavailable. Please try again later.",
+            ) from e
+    else:
+        # No OpenFGA client configured - fail closed for security
+        logger.warning(
+            "Organization switch denied - OpenFGA not configured",
+            extra={
+                "audit_event_type": "auth.org_switch_denied",
+                "audit_category": "authorization",
+                "reason": "openfga_not_configured",
+            },
+        )
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Authorization service not configured",
+        )
+
+    # Log successful switch
+    logger.info(
+        "Organization switch successful",
+        extra={
+            "audit_event_type": "auth.org_switch_success",
+            "audit_category": "authorization",
+            "user_id": user_id,
+            "target_org_id": org_id,
+        },
+    )
 
     return SwitchOrgResponse(
         success=True,

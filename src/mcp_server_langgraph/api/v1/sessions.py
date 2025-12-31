@@ -26,11 +26,13 @@ from datetime import UTC, datetime
 from enum import Enum
 from typing import Annotated, Any, Literal
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from pydantic import BaseModel, Field, model_validator
 
+from mcp_server_langgraph.api.deps import get_tempo_client
 from mcp_server_langgraph.auth.middleware import get_current_user
 from mcp_server_langgraph.core.config import settings
+from mcp_server_langgraph.monitoring.cost_tracker import invalidate_session_cost_cache
 
 
 # Enums for type-safe status and role values
@@ -1498,6 +1500,7 @@ async def delete_session(session_id: str, current_user: CurrentUser) -> None:
     Delete a session.
 
     Requires authentication. Only the session owner can delete it.
+    Also invalidates the Redis session cost cache to prevent stale data.
     """
     user_id = _get_user_id(current_user)
     service = get_session_service()
@@ -1508,6 +1511,9 @@ async def delete_session(session_id: str, current_user: CurrentUser) -> None:
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Session {session_id} not found",
         )
+
+    # Invalidate session cost cache to prevent stale data in WebSocket responses
+    await invalidate_session_cost_cache(session_id)
 
 
 @sessions_router.patch(
@@ -1835,7 +1841,9 @@ async def rate_message(
 @sessions_router.get("/sessions/{session_id}/trace")
 async def get_session_trace(
     session_id: str,
+    request: Request,
     current_user: CurrentUser,
+    tempo_client: Any = Depends(get_tempo_client),
 ) -> SessionTraceResponse:
     """
     Get the execution trace for a session.
@@ -1843,11 +1851,13 @@ async def get_session_trace(
     Returns trace data for debugging and monitoring agent execution.
     Used by DevTools AgentTraceTab in the frontend.
 
-    Note: Currently returns empty trace data as trace persistence is not yet implemented.
-    Future implementation will retrieve trace data from Redis/PostgreSQL.
+    Retrieves traces from Grafana Tempo filtered by session_id tag.
+    Gracefully degrades to empty trace if Tempo is unavailable.
 
     Args:
         session_id: The session to get trace for
+        request: FastAPI request for dependency injection
+        tempo_client: Tempo tracing client for trace retrieval
 
     Returns:
         Execution trace data (empty if no trace available)
@@ -1863,14 +1873,47 @@ async def get_session_trace(
             detail=f"Session {session_id} not found",
         )
 
-    # TODO: Implement trace retrieval from storage
-    # For now, return empty trace to prevent 404 errors from frontend
-    # Future: Retrieve from Redis (real-time) or PostgreSQL (persisted)
+    # Query Tempo for traces with session_id tag
+    steps: list[TraceStep] = []
+    start_time: int | None = None
+    end_time: int | None = None
+
+    if tempo_client is not None:
+        try:
+            result = await tempo_client.search_traces(tags={"session_id": session_id})
+            if result and result.traces:
+                # Map first trace's spans to TraceStep
+                trace = result.traces[0]
+                if trace.start_time:
+                    start_time = int(trace.start_time.timestamp() * 1000)
+                if trace.duration_ms and start_time:
+                    end_time = start_time + int(trace.duration_ms)
+
+                for span in trace.spans or []:
+                    status_name = "completed"
+                    if hasattr(span, "status_code") and span.status_code:
+                        status_name = getattr(span.status_code, "name", "completed").lower()
+                        if status_name == "ok":
+                            status_name = "completed"
+                        elif status_name == "error":
+                            status_name = "failed"
+
+                    steps.append(
+                        TraceStep(
+                            name=span.operation_name,
+                            status=status_name,
+                            duration=int(span.duration_ms) if span.duration_ms else None,
+                        )
+                    )
+        except Exception as e:
+            # Graceful degradation: return empty trace on Tempo errors
+            logger.warning(f"Failed to retrieve trace from Tempo for session {session_id}: {e}")
+
     return SessionTraceResponse(
         raw_output=None,
-        steps=[],
+        steps=steps,
         tokens=None,
         current_node=None,
-        start_time=None,
-        end_time=None,
+        start_time=start_time,
+        end_time=end_time,
     )
