@@ -63,7 +63,7 @@ from .models import (
     WorkflowSortField,
     WorkflowSummary,
 )
-from .postgres_models import WorkflowBase, WorkflowModel
+from .postgres_models import WorkflowModel
 
 
 async def create_postgres_engine(
@@ -96,15 +96,25 @@ async def create_postgres_engine(
 
 async def init_workflow_database(engine: AsyncEngine) -> None:
     """
-    Initialize the workflow database schema.
+    Initialize the workflow database connection.
 
-    Creates all tables defined in WorkflowBase if they don't exist.
+    IMPORTANT: This function NO LONGER creates tables via create_all().
+    All schema management is handled exclusively by Alembic migrations.
+
+    The workflows table and related schema are created by migrations:
+    - d4e5f6g7h8i9: Creates workflows table with FTS
+    - j0k1l2m3n4o5: Adds workflow sharing support
+    - s9t0u1v2w3x4: Adds workflow title column
 
     Args:
         engine: SQLAlchemy async engine
+
+    Note:
+        Run 'alembic upgrade head' before using this manager.
     """
-    async with engine.begin() as conn:
-        await conn.run_sync(WorkflowBase.metadata.create_all)
+    # Verify engine is valid by testing connection
+    async with engine.begin():
+        pass  # Connection test - schema managed by Alembic
 
 
 class PostgresWorkflowManager:

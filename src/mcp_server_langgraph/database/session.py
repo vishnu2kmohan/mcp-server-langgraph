@@ -11,7 +11,6 @@ from contextlib import asynccontextmanager
 
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker, create_async_engine
 
-from mcp_server_langgraph.database.models import Base
 
 logger = logging.getLogger(__name__)
 
@@ -115,10 +114,14 @@ async def get_async_session(database_url: str, echo: bool = False) -> AsyncGener
 
 async def init_database(database_url: str, echo: bool = False) -> None:
     """
-    Initialize the database schema.
+    Initialize the database connection.
 
-    Creates all tables defined in models if they don't exist.
-    This is idempotent - safe to call multiple times.
+    IMPORTANT: This function NO LONGER creates tables via create_all().
+    All schema management is handled exclusively by Alembic migrations.
+
+    To apply schema changes:
+        1. Create migration: alembic revision --autogenerate -m "description"
+        2. Apply migration: alembic upgrade head
 
     Args:
         database_url: PostgreSQL connection URL
@@ -126,16 +129,17 @@ async def init_database(database_url: str, echo: bool = False) -> None:
 
     Example:
         >>> await init_database("postgresql+asyncpg://postgres:postgres@localhost/cost_tracking")
+
+    Note:
+        Run 'alembic upgrade head' before starting the application to ensure
+        the database schema is up to date.
     """
-    engine = get_engine(database_url, echo)
+    # Initialize the engine (validates connection can be established)
+    get_engine(database_url, echo)
 
-    logger.info("Initializing database schema...")
-
-    async with engine.begin() as conn:
-        # Create all tables
-        await conn.run_sync(Base.metadata.create_all)
-
-    logger.info("Database schema initialized successfully")
+    logger.info(
+        "Database connection initialized. Schema is managed by Alembic migrations - run 'alembic upgrade head' if needed."
+    )
 
 
 async def cleanup_database() -> None:

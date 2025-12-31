@@ -1890,6 +1890,30 @@ repos:
       Created: 2025-12-28 (DevTools integration gap audit)
 
       '
+  - id: check-no-create-all
+    name: Prevent SQLAlchemy create_all() Usage
+    entry: uv run --frozen python -u .pre-commit-hooks/check_no_create_all.py
+    language: system
+    types: [python]
+    files: ^src/
+    stages:
+    - pre-commit
+    - pre-push
+    description: 'Prevents SQLAlchemy create_all() in production code.
+
+      All database schema management must use Alembic migrations to ensure
+      consistent schemas between development and production environments.
+
+      Schema drift issue prevented:
+      - workflows.title column missing in production
+      - workflow_executions table missing entirely
+      - alert_records table missing entirely
+
+      Fix: Remove create_all() and create Alembic migration instead.
+
+      Created: 2025-12-31 (Schema drift audit)
+
+      '
 
 - repo: https://github.com/antonbabenko/pre-commit-terraform
   rev: v1.96.2

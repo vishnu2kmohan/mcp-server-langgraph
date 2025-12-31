@@ -37,7 +37,7 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker, create_async_engine
 
 from .models import Message, Session, SessionConfig
-from .postgres_models import MessageModel, SessionBase, SessionModel
+from .postgres_models import MessageModel, SessionModel
 
 
 async def create_postgres_engine(
@@ -70,15 +70,24 @@ async def create_postgres_engine(
 
 async def init_session_database(engine: AsyncEngine) -> None:
     """
-    Initialize the session database schema.
+    Initialize the session database connection.
 
-    Creates all tables defined in SessionBase if they don't exist.
+    IMPORTANT: This function NO LONGER creates tables via create_all().
+    All schema management is handled exclusively by Alembic migrations.
+
+    The sessions and messages tables are created by migrations:
+    - b2c3d4e5f6g7: Creates sessions and messages tables with FTS
+    - m3n4o5p6q7r8: Adds session status and workflow_id columns
 
     Args:
         engine: SQLAlchemy async engine
+
+    Note:
+        Run 'alembic upgrade head' before using this manager.
     """
-    async with engine.begin() as conn:
-        await conn.run_sync(SessionBase.metadata.create_all)
+    # Verify engine is valid by testing connection
+    async with engine.begin():
+        pass  # Connection test - schema managed by Alembic
 
 
 class PostgresSessionManager:
