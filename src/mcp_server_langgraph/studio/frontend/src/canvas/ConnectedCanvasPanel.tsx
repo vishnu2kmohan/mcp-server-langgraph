@@ -212,11 +212,11 @@ export const ConnectedCanvasPanel = forwardRef<
         const response = await authenticatedFetch(
           `/api/v1/artifacts/${artifactId}`,
           {
-            method: "PATCH",
+            method: "PUT",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
               content,
-              editedBy: "user",
+              edit_metadata: { edited_by: "user" },
             }),
           },
         );

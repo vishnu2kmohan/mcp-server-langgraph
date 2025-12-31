@@ -320,11 +320,14 @@ class Settings(BaseSettings):
         # Data processing libraries
         "pandas",
         "numpy",
+        # Data visualization libraries
+        "matplotlib",
+        "matplotlib.pyplot",
     ]  # Allowed Python imports (whitelist)
 
     # Docker-specific settings
     code_execution_docker_image: str = (
-        "mcr.microsoft.com/playwright/python:v1.42.0-jammy"  # Docker image for execution (includes Chromium/Playwright + curl)
+        "jupyter/scipy-notebook:python-3.12"  # Docker image for execution (includes numpy, pandas, matplotlib, scipy)
     )
     code_execution_docker_socket: str = "/var/run/docker.sock"  # Docker socket path
 
