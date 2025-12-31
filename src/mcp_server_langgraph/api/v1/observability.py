@@ -116,6 +116,11 @@ class TraceListItem(BaseModel):
     start_time: str | None = Field(default=None, description="Start timestamp")
     duration_ms: float | None = Field(default=None, description="Total duration")
     span_count: int | None = Field(default=None, description="Number of spans")
+    # Additional fields expected by frontend
+    status: str | None = Field(default=None, description="Trace status (ok, error, unset)")
+    end_time: str | None = Field(default=None, description="End timestamp")
+    has_thinking: bool | None = Field(default=None, description="Whether trace includes LLM thinking/reasoning")
+    thinking_tokens_total: int | None = Field(default=None, description="Total thinking tokens used in trace")
 
 
 class MetricsResponse(BaseModel):
@@ -123,6 +128,11 @@ class MetricsResponse(BaseModel):
 
     requests_total: int = Field(description="Total requests")
     errors_total: int = Field(description="Total errors")
+    avg_latency_ms: float = Field(default=0.0, description="Average latency in milliseconds")
+    p99_latency_ms: float = Field(default=0.0, description="P99 latency in milliseconds")
+    tokens_used: int = Field(default=0, description="Total tokens used")
+    active_sessions: int = Field(default=0, description="Number of active sessions")
+    # Keep legacy fields for backward compatibility
     latency_p50: float | None = Field(default=None, description="P50 latency in seconds")
     latency_p95: float | None = Field(default=None, description="P95 latency in seconds")
     latency_p99: float | None = Field(default=None, description="P99 latency in seconds")
@@ -131,10 +141,11 @@ class MetricsResponse(BaseModel):
 class LogEntryResponse(BaseModel):
     """Response model for a log entry."""
 
+    id: str = Field(description="Unique log entry ID")
     timestamp: str = Field(description="Log timestamp")
     level: str = Field(description="Log level (debug, info, warn, error, fatal)")
     message: str = Field(description="Log message")
-    service_name: str = Field(description="Service name")
+    service: str = Field(description="Service name")
     trace_id: str | None = Field(default=None, description="Correlated trace ID")
     span_id: str | None = Field(default=None, description="Correlated span ID")
     attributes: dict[str, Any] = Field(default_factory=dict, description="Additional attributes")
@@ -474,12 +485,35 @@ class ObservabilityServiceImpl(ObservabilityService):
 
     def _trace_info_to_dict(self, trace: Any) -> dict[str, Any]:
         """Convert TraceInfo dataclass to dict matching TraceListItem/TraceResponse format."""
+        # Determine status from trace info
+        status = "ok"
+        if hasattr(trace, "has_errors") and trace.has_errors:
+            status = "error"
+        elif hasattr(trace, "status"):
+            status = trace.status
+
+        # Check for thinking content in spans
+        has_thinking = False
+        thinking_tokens_total = 0
+        if hasattr(trace, "spans"):
+            for span in trace.spans:
+                if hasattr(span, "attributes"):
+                    if span.attributes.get("thinking_content"):
+                        has_thinking = True
+                    thinking_tokens = span.attributes.get("thinking_tokens", 0)
+                    if thinking_tokens:
+                        thinking_tokens_total += int(thinking_tokens)
+
         return {
             "trace_id": trace.trace_id,
             "name": trace.root_operation,
             "start_time": trace.start_time.isoformat() if trace.start_time else None,
+            "end_time": trace.end_time.isoformat() if hasattr(trace, "end_time") and trace.end_time else None,
             "duration_ms": trace.duration_ms,
             "span_count": trace.span_count,
+            "status": status,
+            "has_thinking": has_thinking if has_thinking else None,
+            "thinking_tokens_total": thinking_tokens_total if thinking_tokens_total > 0 else None,
         }
 
     def _trace_info_to_full_dict(self, trace: Any) -> dict[str, Any]:
@@ -572,14 +606,18 @@ class ObservabilityServiceImpl(ObservabilityService):
         """
         Get metrics summary.
 
-        Queries for requests_total, errors_total, and latency percentiles.
+        Queries for requests_total, errors_total, latency, tokens, and active sessions.
 
-        Returns dict matching MetricsResponse format.
+        Returns dict matching MetricsResponse format for DevTools MetricsTab.
         """
         # Query for key metrics using instant queries
         # Default values if metrics not available
         requests_total = 0
         errors_total = 0
+        avg_latency_ms = 0.0
+        p99_latency_ms = 0.0
+        tokens_used = 0
+        active_sessions = 0
         latency_p50 = None
         latency_p95 = None
         latency_p99 = None
@@ -592,7 +630,7 @@ class ObservabilityServiceImpl(ObservabilityService):
                 if val is not None:
                     requests_total = int(val)
         except Exception as e:
-            logger.debug("Operation failed: %s", e)
+            logger.debug("Failed to query requests_total: %s", e)
 
         try:
             # Query errors_total
@@ -602,11 +640,73 @@ class ObservabilityServiceImpl(ObservabilityService):
                 if val is not None:
                     errors_total = int(val)
         except Exception as e:
-            logger.debug("Operation failed: %s", e)
+            logger.debug("Failed to query errors_total: %s", e)
+
+        try:
+            # Query average latency (try histogram_quantile or avg)
+            latency_result = await self.metrics.query_instant(
+                "histogram_quantile(0.5, sum(rate(http_request_duration_seconds_bucket[5m])) by (le))"
+            )
+            if latency_result.series:
+                val = latency_result.series[0].latest_value
+                if val is not None:
+                    avg_latency_ms = val * 1000  # Convert seconds to ms
+                    latency_p50 = val
+        except Exception as e:
+            logger.debug("Failed to query avg latency: %s", e)
+
+        try:
+            # Query p99 latency
+            p99_result = await self.metrics.query_instant(
+                "histogram_quantile(0.99, sum(rate(http_request_duration_seconds_bucket[5m])) by (le))"
+            )
+            if p99_result.series:
+                val = p99_result.series[0].latest_value
+                if val is not None:
+                    p99_latency_ms = val * 1000  # Convert seconds to ms
+                    latency_p99 = val
+        except Exception as e:
+            logger.debug("Failed to query p99 latency: %s", e)
+
+        try:
+            # Query p95 latency
+            p95_result = await self.metrics.query_instant(
+                "histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket[5m])) by (le))"
+            )
+            if p95_result.series:
+                val = p95_result.series[0].latest_value
+                if val is not None:
+                    latency_p95 = val
+        except Exception as e:
+            logger.debug("Failed to query p95 latency: %s", e)
+
+        try:
+            # Query tokens_used (LLM token counter)
+            tokens_result = await self.metrics.query_instant("llm_tokens_total")
+            if tokens_result.series:
+                val = tokens_result.series[0].latest_value
+                if val is not None:
+                    tokens_used = int(val)
+        except Exception as e:
+            logger.debug("Failed to query tokens_used: %s", e)
+
+        try:
+            # Query active_sessions (gauge metric)
+            sessions_result = await self.metrics.query_instant("active_sessions")
+            if sessions_result.series:
+                val = sessions_result.series[0].latest_value
+                if val is not None:
+                    active_sessions = int(val)
+        except Exception as e:
+            logger.debug("Failed to query active_sessions: %s", e)
 
         return {
             "requests_total": requests_total,
             "errors_total": errors_total,
+            "avg_latency_ms": avg_latency_ms,
+            "p99_latency_ms": p99_latency_ms,
+            "tokens_used": tokens_used,
+            "active_sessions": active_sessions,
             "latency_p50": latency_p50,
             "latency_p95": latency_p95,
             "latency_p99": latency_p99,
@@ -614,11 +714,21 @@ class ObservabilityServiceImpl(ObservabilityService):
 
     def _log_entry_to_dict(self, entry: Any) -> dict[str, Any]:
         """Convert LogEntry dataclass to dict matching LogEntryResponse format."""
+        # Generate unique ID from timestamp and message hash if not available
+        import hashlib
+
+        log_id = getattr(entry, "id", None)
+        if not log_id:
+            ts_str = entry.timestamp.isoformat() if entry.timestamp else ""
+            hash_input = f"{ts_str}:{entry.message}:{entry.service_name}"
+            log_id = hashlib.sha256(hash_input.encode()).hexdigest()[:16]
+
         return {
+            "id": log_id,
             "timestamp": entry.timestamp.isoformat() if entry.timestamp else None,
             "level": entry.level.value if hasattr(entry.level, "value") else str(entry.level),
             "message": entry.message,
-            "service_name": entry.service_name,
+            "service": entry.service_name,  # Frontend expects 'service' not 'service_name'
             "trace_id": entry.trace_id,
             "span_id": entry.span_id,
             "attributes": entry.attributes if hasattr(entry, "attributes") else {},
