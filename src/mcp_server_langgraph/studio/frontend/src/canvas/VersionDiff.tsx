@@ -11,7 +11,7 @@
  * - Restore action for reverting to a version
  * - AI-powered diff explanation (Sprint 4)
  */
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { X, RotateCcw, Sparkles, Loader2 } from "lucide-react";
 import type { ArtifactVersion } from "../types/artifacts";
 import { cn } from "../utils/cn";
@@ -205,6 +205,9 @@ export function VersionDiff({
 
   const hasChanges = diffLines.some((line) => line.type !== "unchanged");
 
+  // Track if user has triggered AI analysis (opt-in pattern)
+  const [hasTriggeredAnalysis, setHasTriggeredAnalysis] = useState(false);
+
   // Sprint 4: AI-powered diff explanation
   const {
     summary: aiSummary,
@@ -287,7 +290,26 @@ export function VersionDiff({
             {aiLoading && (
               <Loader2 size={14} className="animate-spin text-primary-500" />
             )}
-            {aiError && (
+            {!hasTriggeredAnalysis && !aiLoading && (
+              <button
+                type="button"
+                data-testid="analyze-diff-button"
+                onClick={() => {
+                  setHasTriggeredAnalysis(true);
+                  refetchAI();
+                }}
+                className={cn(
+                  "flex items-center gap-1 px-2 py-1 text-xs font-medium rounded",
+                  "bg-primary-100 text-primary-700 hover:bg-primary-200",
+                  "dark:bg-primary-900/30 dark:text-primary-300 dark:hover:bg-primary-900/50",
+                  "transition-colors",
+                )}
+              >
+                <Sparkles size={12} />
+                Analyze
+              </button>
+            )}
+            {aiError && hasTriggeredAnalysis && (
               <button
                 type="button"
                 onClick={() => refetchAI()}
@@ -298,19 +320,25 @@ export function VersionDiff({
             )}
           </div>
 
+          {!hasTriggeredAnalysis && !aiLoading && (
+            <p className="text-sm text-gray-500 dark:text-gray-400">
+              Click &quot;Analyze&quot; to get AI-powered diff explanation.
+            </p>
+          )}
+
           {aiLoading && (
             <p className="text-sm text-gray-500 dark:text-gray-400">
               Analyzing changes...
             </p>
           )}
 
-          {aiError && (
+          {aiError && hasTriggeredAnalysis && (
             <p className="text-sm text-red-600 dark:text-red-400">
               Failed to analyze diff. Click retry to try again.
             </p>
           )}
 
-          {!aiLoading && !aiError && aiSummary && (
+          {hasTriggeredAnalysis && !aiLoading && !aiError && aiSummary && (
             <div className="space-y-2">
               <p className="text-sm text-gray-700 dark:text-gray-300">
                 {aiSummary}

@@ -456,7 +456,9 @@ class TestCanvasActionEndpoint:
         assert response.status_code == 200
         data = response.json()
         assert data["success"] is True
-        assert "content" in data.get("data", {}) or "explanation" in data.get("data", {})
+        # Content should be at top level (not nested in data)
+        assert "content" in data, "Expected 'content' field at top level of response"
+        assert data["content"] is not None
 
     def test_canvas_fix_action(self, client: TestClient) -> None:
         """
@@ -480,7 +482,9 @@ class TestCanvasActionEndpoint:
         assert response.status_code == 200
         data = response.json()
         assert data["success"] is True
-        assert "content" in data.get("data", {})
+        # Content should be at top level (not nested in data)
+        assert "content" in data, "Expected 'content' field at top level of response"
+        assert data["content"] is not None
 
 
 @pytest.mark.unit

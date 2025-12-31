@@ -154,14 +154,14 @@ describe("useAISuggestionsFetch", () => {
       );
     });
 
-    it("auto-fetches when autoFetch is true (default)", async () => {
+    it("auto-fetches when autoFetch is explicitly true", async () => {
       renderHook(
         () =>
           useAISuggestionsFetch({
             artifactId: "artifact-123",
             sessionId: "session-456",
             enabled: true,
-            // autoFetch defaults to true
+            autoFetch: true, // Explicit opt-in
           }),
         { wrapper },
       );
@@ -245,18 +245,18 @@ describe("useAISuggestionsFetch", () => {
   });
 
   // ==========================================================================
-  // Backward Compatibility Tests
+  // Opt-in Pattern Tests
   // ==========================================================================
 
-  describe("backward compatibility (autoFetch=true default)", () => {
-    it("maintains existing auto-fetch behavior by default", async () => {
+  describe("opt-in pattern (autoFetch=false default)", () => {
+    it("does NOT auto-fetch by default (opt-in pattern)", async () => {
       renderHook(
         () =>
           useAISuggestionsFetch({
             artifactId: "artifact-123",
             sessionId: "session-456",
             enabled: true,
-            // No autoFetch specified - should default to true
+            // No autoFetch specified - should default to false
           }),
         { wrapper },
       );
@@ -265,7 +265,8 @@ describe("useAISuggestionsFetch", () => {
         vi.advanceTimersByTime(600);
       });
 
-      expect(authenticatedFetch).toHaveBeenCalled();
+      // Should NOT auto-fetch because autoFetch defaults to false
+      expect(authenticatedFetch).not.toHaveBeenCalled();
     });
 
     it("re-fetches on artifact change when autoFetch=true", async () => {

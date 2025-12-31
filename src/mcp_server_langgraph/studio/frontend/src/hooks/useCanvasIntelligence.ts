@@ -26,7 +26,7 @@ export interface ArtifactTypeSuggestionOptions {
   /**
    * Whether to auto-fetch when dependencies change.
    * When false, only fetches when refetch() is called explicitly.
-   * @default true (for backward compatibility)
+   * @default false (opt-in pattern)
    */
   autoFetch?: boolean;
 }
@@ -52,7 +52,7 @@ export interface CodeAnalysisOptions {
   code: string;
   language?: string;
   enabled?: boolean;
-  /** @default true */
+  /** @default false */
   autoFetch?: boolean;
 }
 
@@ -87,7 +87,7 @@ export interface DiffExplanationOptions {
   oldContent: string;
   newContent: string;
   enabled?: boolean;
-  /** @default true */
+  /** @default false */
   autoFetch?: boolean;
 }
 
@@ -112,7 +112,7 @@ export interface DiagramAnalysisOptions {
   sessionId: string;
   diagramCode: string;
   enabled?: boolean;
-  /** @default true */
+  /** @default false */
   autoFetch?: boolean;
 }
 
@@ -146,7 +146,7 @@ export interface DiagramToCodeOptions {
   diagramCode: string;
   targetLanguage?: string;
   enabled?: boolean;
-  /** @default true */
+  /** @default false */
   autoFetch?: boolean;
 }
 
@@ -181,7 +181,7 @@ export function useArtifactTypeSuggestion(
     sessionId,
     content,
     enabled = true,
-    autoFetch = true,
+    autoFetch = false,
   } = options;
 
   const [analyzeMutation, { isLoading }] = useStudioAnalyzeMutation();
@@ -294,7 +294,7 @@ export function useCodeAnalysis(
     code,
     language,
     enabled = true,
-    autoFetch = true,
+    autoFetch = false,
   } = options;
 
   const [analyzeMutation, { isLoading }] = useStudioAnalyzeMutation();
@@ -427,7 +427,7 @@ export function useDiffExplanation(
     oldContent,
     newContent,
     enabled = true,
-    autoFetch = true,
+    autoFetch = false,
   } = options;
 
   const [analyzeMutation, { isLoading }] = useStudioAnalyzeMutation();
@@ -542,7 +542,7 @@ export function useDiagramAnalysis(
     sessionId,
     diagramCode,
     enabled = true,
-    autoFetch = true,
+    autoFetch = false,
   } = options;
 
   const [analyzeMutation, { isLoading }] = useStudioAnalyzeMutation();
@@ -672,7 +672,7 @@ export function useDiagramToCode(
     diagramCode,
     targetLanguage,
     enabled = true,
-    autoFetch = true,
+    autoFetch = false,
   } = options;
 
   const [analyzeMutation, { isLoading }] = useStudioAnalyzeMutation();

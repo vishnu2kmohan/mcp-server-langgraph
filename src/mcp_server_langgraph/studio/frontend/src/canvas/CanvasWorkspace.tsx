@@ -297,6 +297,12 @@ export function CanvasWorkspace({
     [selectedArtifact],
   );
 
+  // Track if user has triggered AI analysis (opt-in pattern)
+  const [hasTriggeredCodeAnalysis, setHasTriggeredCodeAnalysis] =
+    useState(false);
+  const [hasTriggeredDiagramAnalysis, setHasTriggeredDiagramAnalysis] =
+    useState(false);
+
   // Canvas Intelligence: Code Analysis (gated by enableAI and feature flag)
   const codeAnalysis = useCodeAnalysis({
     userId: userId ?? "default-user",
@@ -472,7 +478,25 @@ export function CanvasWorkspace({
                 {/* Code Analysis Indicator */}
                 {isCodeArtifact && (
                   <>
-                    {codeAnalysis.isLoading ? (
+                    {!hasTriggeredCodeAnalysis && !codeAnalysis.isLoading ? (
+                      <button
+                        type="button"
+                        data-testid="analyze-code-trigger"
+                        onClick={() => {
+                          setHasTriggeredCodeAnalysis(true);
+                          codeAnalysis.refetch();
+                        }}
+                        className={cn(
+                          "flex items-center gap-1 px-2 py-1 text-xs font-medium rounded",
+                          "bg-primary-100 text-primary-700 hover:bg-primary-200",
+                          "dark:bg-primary-900/30 dark:text-primary-300 dark:hover:bg-primary-900/50",
+                          "transition-colors",
+                        )}
+                      >
+                        <Sparkles size={12} aria-hidden="true" />
+                        Analyze
+                      </button>
+                    ) : codeAnalysis.isLoading ? (
                       <span className="flex items-center gap-1 text-gray-400">
                         <Loader2
                           size={12}
@@ -535,7 +559,26 @@ export function CanvasWorkspace({
                 {/* Diagram Analysis Indicator */}
                 {isDiagramArtifact && (
                   <>
-                    {diagramAnalysis.isLoading ? (
+                    {!hasTriggeredDiagramAnalysis &&
+                    !diagramAnalysis.isLoading ? (
+                      <button
+                        type="button"
+                        data-testid="analyze-diagram-trigger"
+                        onClick={() => {
+                          setHasTriggeredDiagramAnalysis(true);
+                          diagramAnalysis.refetch();
+                        }}
+                        className={cn(
+                          "flex items-center gap-1 px-2 py-1 text-xs font-medium rounded",
+                          "bg-primary-100 text-primary-700 hover:bg-primary-200",
+                          "dark:bg-primary-900/30 dark:text-primary-300 dark:hover:bg-primary-900/50",
+                          "transition-colors",
+                        )}
+                      >
+                        <Sparkles size={12} aria-hidden="true" />
+                        Validate
+                      </button>
+                    ) : diagramAnalysis.isLoading ? (
                       <span className="flex items-center gap-1 text-gray-400">
                         <Loader2
                           size={12}

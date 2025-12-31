@@ -55,7 +55,7 @@ export interface UseAISuggestionsFetchOptions {
   /**
    * Whether to auto-fetch suggestions when context changes.
    * When false, suggestions are only fetched via explicit refresh() call.
-   * @default true (for backward compatibility)
+   * @default false (opt-in pattern)
    */
   autoFetch?: boolean;
 }
@@ -102,7 +102,7 @@ export function useAISuggestionsFetch(
     enabled,
     debounceMs = DEFAULT_DEBOUNCE_MS,
     ttlMs,
-    autoFetch = true, // Default to true for backward compatibility
+    autoFetch = false, // Default to false for opt-in pattern
   } = options;
 
   // Handle auth failure - redirect to login

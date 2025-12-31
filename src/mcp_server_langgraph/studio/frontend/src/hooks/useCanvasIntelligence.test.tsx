@@ -159,6 +159,7 @@ describe("Canvas Intelligence Hooks", () => {
             userId: "test-user",
             sessionId: "session-123",
             content: "graph TB\n  A[Start] --> B[Process]\n  B --> C[End]",
+            autoFetch: true, // Explicitly enable to test fetching behavior
           }),
         { wrapper: createWrapper() },
       );
@@ -222,6 +223,7 @@ describe("Canvas Intelligence Hooks", () => {
             sessionId: "session-123",
             code: "function test() { const temp = 1; return 2; }",
             language: "typescript",
+            autoFetch: true, // Explicitly enable to test fetching behavior
           }),
         { wrapper: createWrapper() },
       );
@@ -269,6 +271,7 @@ describe("Canvas Intelligence Hooks", () => {
             sessionId: "session-123",
             oldContent: "function old() {}",
             newContent: "function new() { auth(); }",
+            autoFetch: true, // Explicitly enable to test fetching behavior
           }),
         { wrapper: createWrapper() },
       );
@@ -314,6 +317,7 @@ describe("Canvas Intelligence Hooks", () => {
             userId: "test-user",
             sessionId: "session-123",
             diagramCode: "graph TB\n  A --> B\n  B --> C",
+            autoFetch: true, // Explicitly enable to test fetching behavior
           }),
         { wrapper: createWrapper() },
       );
@@ -362,6 +366,7 @@ describe("Canvas Intelligence Hooks", () => {
             diagramCode:
               "graph TB\n  A[Login] --> B{Valid?}\n  B -->|Yes| C[Token]",
             targetLanguage: "typescript",
+            autoFetch: true, // Explicitly enable to test fetching behavior
           }),
         { wrapper: createWrapper() },
       );
@@ -543,9 +548,18 @@ describe("Canvas Intelligence Hooks", () => {
       expect(result.current.code).toBeNull();
     });
 
-    it("maintains backward compatibility - auto-fetches by default", async () => {
+    it("defaults to opt-in mode (autoFetch=false) - does NOT auto-fetch by default", async () => {
       const { useArtifactTypeSuggestion } =
         await import("./useCanvasIntelligence");
+      const { useStudioAnalyzeMutation } = await import("../api");
+
+      const mockMutate = vi.fn(() => ({
+        unwrap: () => Promise.resolve({ analyses: {} }),
+      }));
+      vi.mocked(useStudioAnalyzeMutation).mockReturnValue([
+        mockMutate,
+        { isLoading: false },
+      ] as ReturnType<typeof useStudioAnalyzeMutation>);
 
       const { result } = renderHook(
         () =>
@@ -553,7 +567,47 @@ describe("Canvas Intelligence Hooks", () => {
             userId: "test-user",
             sessionId: "session-123",
             content: "graph TB",
-            // No autoFetch specified - should default to true
+            // No autoFetch specified - should default to false (opt-in pattern)
+          }),
+        { wrapper: createWrapper() },
+      );
+
+      // Should NOT have auto-fetched (opt-in pattern default)
+      expect(mockMutate).not.toHaveBeenCalled();
+      expect(result.current.suggestedType).toBeNull();
+    });
+
+    it("auto-fetches when autoFetch is explicitly true", async () => {
+      const { useArtifactTypeSuggestion } =
+        await import("./useCanvasIntelligence");
+      const { useStudioAnalyzeMutation } = await import("../api");
+
+      // Restore the proper mock response for this test
+      const mockMutate = vi.fn(() => ({
+        unwrap: () =>
+          Promise.resolve({
+            analyses: {
+              artifact_suggest_type: {
+                suggested_type: "mermaid",
+                confidence: 0.95,
+                alternatives: [],
+                reason: "Contains mermaid syntax",
+              },
+            },
+          }),
+      }));
+      vi.mocked(useStudioAnalyzeMutation).mockReturnValue([
+        mockMutate,
+        { isLoading: false },
+      ] as ReturnType<typeof useStudioAnalyzeMutation>);
+
+      const { result } = renderHook(
+        () =>
+          useArtifactTypeSuggestion({
+            userId: "test-user",
+            sessionId: "session-123",
+            content: "graph TB",
+            autoFetch: true, // Explicitly enable auto-fetch
           }),
         { wrapper: createWrapper() },
       );
@@ -562,7 +616,8 @@ describe("Canvas Intelligence Hooks", () => {
         expect(result.current.isLoading).toBe(false);
       });
 
-      // Should have auto-fetched (default behavior)
+      // Should have auto-fetched when explicitly enabled
+      expect(mockMutate).toHaveBeenCalledTimes(1);
       expect(result.current.suggestedType).toBe("mermaid");
     });
   });

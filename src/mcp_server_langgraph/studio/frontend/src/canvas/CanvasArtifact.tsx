@@ -210,6 +210,9 @@ export function CanvasArtifact({
   // Determine if this is a code artifact that can be analyzed
   const isCodeArtifact = artifact.contentType === "code";
 
+  // Track if user has triggered AI analysis (opt-in pattern)
+  const [hasTriggeredAnalysis, setHasTriggeredAnalysis] = useState(false);
+
   // Sprint 4: AI-powered code analysis
   const {
     complexity: aiComplexity,
@@ -694,7 +697,26 @@ base64.b64encode(buf.read()).decode("utf-8")
             {aiLoading && (
               <Loader2 size={14} className="animate-spin text-primary-500" />
             )}
-            {aiError && (
+            {!hasTriggeredAnalysis && !aiLoading && (
+              <button
+                type="button"
+                data-testid="analyze-code-button"
+                onClick={() => {
+                  setHasTriggeredAnalysis(true);
+                  refetchAI();
+                }}
+                className={cn(
+                  "flex items-center gap-1 px-2 py-1 text-xs font-medium rounded",
+                  "bg-primary-100 text-primary-700 hover:bg-primary-200",
+                  "dark:bg-primary-900/30 dark:text-primary-300 dark:hover:bg-primary-900/50",
+                  "transition-colors",
+                )}
+              >
+                <Sparkles size={12} />
+                Analyze
+              </button>
+            )}
+            {aiError && hasTriggeredAnalysis && (
               <button
                 type="button"
                 onClick={() => refetchAI()}
@@ -705,19 +727,25 @@ base64.b64encode(buf.read()).decode("utf-8")
             )}
           </div>
 
+          {!hasTriggeredAnalysis && !aiLoading && (
+            <p className="text-sm text-gray-500 dark:text-gray-400">
+              Click &quot;Analyze&quot; to get AI-powered code insights.
+            </p>
+          )}
+
           {aiLoading && (
             <p className="text-sm text-gray-500 dark:text-gray-400">
               Analyzing code...
             </p>
           )}
 
-          {aiError && (
+          {aiError && hasTriggeredAnalysis && (
             <p className="text-sm text-red-600 dark:text-red-400">
               Failed to analyze code. Click retry to try again.
             </p>
           )}
 
-          {!aiLoading && !aiError && (
+          {hasTriggeredAnalysis && !aiLoading && !aiError && (
             <div className="space-y-2">
               {/* Metrics Row */}
               <div className="flex items-center gap-4">
