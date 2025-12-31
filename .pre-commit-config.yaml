@@ -1807,6 +1807,27 @@ repos:
 
       '
 
+  - id: check-otel-attribute-naming
+    name: Check OTEL Attribute Naming (prevent trace/log query bugs)
+    entry: uv run --frozen python -u scripts/validation/check_otel_attribute_naming.py
+    language: system
+    files: ^src/mcp_server_langgraph/(api/v1|observability|monitoring)/.*\.py$
+    pass_filenames: true
+    always_run: false
+    stages:
+    - pre-commit
+    description: 'Validates OTEL attribute naming uses dot notation.
+
+      OTEL semantic conventions use dot notation (session.id, user.id, workflow.id).
+
+      Underscore notation (session_id) will not match OTEL spans in Tempo/Loki.
+
+      Bug prevention: da0d442c fixed DevTools showing no data due to this mismatch.
+
+      See: tests/integration/observability/test_otel_tempo_data_flow.py
+
+      '
+
   - id: validate-test-ids
     name: Validate Test IDs (xdist isolation)
     entry: uv run --frozen python -u scripts/validators/validate_test_ids.py
