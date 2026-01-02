@@ -1,8 +1,8 @@
 # Pre-commit Hooks Catalog
 
-**Last Updated**: 2025-12-16
+**Last Updated**: 2026-01-02
 **Purpose**: Complete catalog of all pre-commit hooks and validation strategy
-**Total Hooks**: 83 hooks across 3 stages (including 5 frontend hooks)
+**Total Hooks**: 84 hooks across 3 stages (including 5 frontend hooks)
 **Config File**: `.pre-commit-config.yaml` (1,597 lines)
 
 ---
@@ -320,6 +320,14 @@ These are project-specific validation hooks:
 - `validate-prometheus-rules` - Validate Prometheus alert rules
 - `check-grafana-dashboards` - Validate Grafana JSON
 - `validate-service-mesh` - Check Istio/Linkerd config
+
+#### Observability (OTEL)
+- `check-otel-attribute-naming` - **Prevents trace/log query bugs**
+  - **Purpose**: Validates OTEL span attribute queries use dot notation
+  - **Files**: `api/v1/*.py`, `observability/*.py`, `monitoring/*.py`
+  - **Prevents**: Attribute name mismatch between span emission (`session.id`) and queries (`session_id`)
+  - **Bug Fixed**: DevTools tabs showing no data due to underscore vs dot notation
+  - **Reference**: `scripts/validation/check_otel_attribute_naming.py`
 
 ---
 

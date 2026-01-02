@@ -1,6 +1,6 @@
 # Testing Patterns Context
 
-**Last Updated**: 2025-12-19
+**Last Updated**: 2026-01-02
 **Purpose**: Reference guide for writing tests in mcp-server-langgraph
 **Test Count**: 437+ tests across multiple categories
 
@@ -408,6 +408,101 @@ def test_fallback_to_env_vars(mock_infisical):
 - Test different configuration scenarios
 - Test fallback behavior
 - Verify graceful degradation
+
+---
+
+### Pattern 8: OTEL Data Flow Testing
+
+**Use Case**: Validating OTEL attribute naming conventions across emission and query layers
+
+**Problem**: Unit tests with mocked dependencies cannot detect attribute name mismatches between OTEL span emission and backend queries. For example:
+- OTEL spans use: `span.set_attribute("session.id", value)`
+- Tempo queries incorrectly use: `tags={"session_id": value}`
+- Result: Queries never find any traces/logs
+
+**Solution**: Data flow integration tests that validate attribute naming at both ends.
+
+```python
+import ast
+import inspect
+import pytest
+
+@pytest.mark.integration
+@pytest.mark.observability
+@pytest.mark.dataflow
+class TestOTELDataFlow:
+    """Data flow tests validating OTEL → Backend → API pipeline."""
+
+    @pytest.mark.asyncio
+    async def test_production_code_uses_dot_notation(self):
+        """
+        GIVEN production code that sets span attributes
+        WHEN session-related attributes are set
+        THEN they should use OTEL semantic dot notation.
+        """
+        from mcp_server_langgraph.auth import session as session_module
+
+        source = inspect.getsource(session_module)
+        tree = ast.parse(source)
+
+        session_attributes = []
+        for node in ast.walk(tree):
+            if isinstance(node, ast.Call):
+                if isinstance(node.func, ast.Attribute) and node.func.attr == "set_attribute":
+                    if node.args and isinstance(node.args[0], ast.Constant):
+                        attr_name = node.args[0].value
+                        if "session" in str(attr_name).lower():
+                            session_attributes.append(attr_name)
+
+        # Verify dot notation is used
+        for attr in session_attributes:
+            assert "." in attr, f"Attribute '{attr}' should use dot notation"
+
+    @pytest.mark.asyncio
+    async def test_query_code_matches_emission_convention(self):
+        """
+        GIVEN production code that queries Tempo/Loki
+        WHEN building tag filters for session/user/workflow
+        THEN it should use dot notation matching OTEL spans.
+        """
+        import inspect
+        from mcp_server_langgraph.api.v1 import observability as obs_module
+
+        source = inspect.getsource(obs_module)
+
+        # All entity types should use dot notation
+        expected_patterns = [
+            'tags["session.id"]',
+            'tags["user.id"]',
+            'tags["workflow.id"]',
+            'tags["project.id"]',
+            'tags["organization.id"]',
+        ]
+
+        for pattern in expected_patterns:
+            assert pattern in source, (
+                f"Query code should use dot notation: {pattern}"
+            )
+
+        # Verify NO underscore notation in query contexts
+        bad_patterns = ['tags["session_id"]', 'tags["user_id"]']
+        for pattern in bad_patterns:
+            assert pattern not in source, (
+                f"Found underscore notation: {pattern} - should use dot notation"
+            )
+```
+
+**Key Points**:
+- Use `@pytest.mark.dataflow` marker for data flow tests
+- Validate BOTH emission (span.set_attribute) AND query (tags/filters)
+- Use AST parsing to inspect production code attribute usage
+- Check for OTEL semantic conventions (dot notation: `session.id`)
+- Prevent regressions by failing on underscore notation
+
+**Reference Files**:
+- `tests/integration/observability/test_otel_tempo_data_flow.py` - Tempo data flow
+- `tests/integration/observability/test_loki_data_flow.py` - Loki data flow
+- `scripts/validation/check_otel_attribute_naming.py` - Pre-commit validation
 
 ---
 
