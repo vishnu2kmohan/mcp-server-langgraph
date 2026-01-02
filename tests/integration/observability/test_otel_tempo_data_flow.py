@@ -401,3 +401,53 @@ class TestAttributeNamingConventions:
             for pattern in bad_patterns:
                 if pattern in line:
                     pytest.fail(f"Line {i + 1}: Found '{pattern}' - should use 'session.id' (dot notation) for Tempo queries")
+
+    @pytest.mark.asyncio
+    async def test_observability_module_uses_dot_notation_for_all_entity_types(self) -> None:
+        """
+        GIVEN the observability module that builds Tempo tag queries
+        WHEN filtering by session/user/workflow/project/organization
+        THEN it should use dot notation for all entity types.
+
+        This comprehensive test validates all OTEL entity attribute patterns.
+        """
+        import inspect
+
+        from mcp_server_langgraph.api.v1 import observability as obs_module
+
+        source = inspect.getsource(obs_module)
+
+        # All entity types should use dot notation
+        expected_dot_patterns = [
+            ('tags["session.id"]', "session.id"),
+            ('tags["user.id"]', "user.id"),
+            ('tags["workflow.id"]', "workflow.id"),
+            ('tags["project.id"]', "project.id"),
+            ('tags["organization.id"]', "organization.id"),
+        ]
+
+        for pattern, entity in expected_dot_patterns:
+            assert pattern in source, (
+                f"Observability module should use '{entity}' (dot notation) when building Tempo tag filters"
+            )
+
+        # Bad patterns that should NOT exist
+        bad_underscore_patterns = [
+            ('tags["session_id"]', "session_id"),
+            ('tags["user_id"]', "user_id"),
+            ('tags["workflow_id"]', "workflow_id"),
+            ('tags["project_id"]', "project_id"),
+            ('tags["organization_id"]', "organization_id"),
+        ]
+
+        lines = source.split("\n")
+        for i, line in enumerate(lines):
+            stripped = line.strip()
+            if stripped.startswith("#"):
+                continue
+            for pattern, entity in bad_underscore_patterns:
+                if pattern in line:
+                    pytest.fail(
+                        f"Line {i + 1}: Found '{pattern}' - should use "
+                        f"'{entity.replace('_', '.')}' (dot notation) for OTEL attributes"
+                    )

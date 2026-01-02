@@ -284,16 +284,19 @@ class TestLokiAttributeNamingConventions:
         # Get source code
         source = inspect.getsource(obs_module)
 
-        # Look for get_logs_by_attribute calls with session.id
+        # Look for get_logs_by_attribute calls with OTEL dot notation
         assert 'attribute="session.id"' in source, "Log queries should use 'session.id' (dot notation)"
         assert 'attribute="user.id"' in source, "Log queries should use 'user.id' (dot notation)"
         assert 'attribute="workflow.id"' in source, "Log queries should use 'workflow.id' (dot notation)"
+        assert 'attribute="project.id"' in source, "Log queries should use 'project.id' (dot notation)"
 
         # Negative check - should NOT have underscore version
         bad_patterns = [
             'attribute="session_id"',
             'attribute="user_id"',
             'attribute="workflow_id"',
+            'attribute="project_id"',
+            'attribute="organization_id"',
         ]
 
         lines = source.split("\n")
