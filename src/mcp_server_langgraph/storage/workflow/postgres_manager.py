@@ -63,7 +63,7 @@ from .models import (
     WorkflowSortField,
     WorkflowSummary,
 )
-from .postgres_models import WorkflowModel
+from .postgres_models import WorkflowModel, WorkflowVersionModel
 
 
 async def create_postgres_engine(
@@ -450,3 +450,101 @@ class PostgresWorkflowManager:
             created_at=model.created_at,
             updated_at=model.updated_at,
         )
+
+    # ==========================================================================
+    # Version History Methods
+    # ==========================================================================
+
+    async def get_workflow_versions(
+        self,
+        workflow_id: str,
+    ) -> list[WorkflowVersionModel]:
+        """
+        Get version history for a workflow.
+
+        Returns versions ordered by version_number descending (newest first).
+
+        Args:
+            workflow_id: ID of the workflow
+
+        Returns:
+            List of WorkflowVersionModel objects
+        """
+        async with self._session_maker() as session:
+            result = await session.execute(
+                select(WorkflowVersionModel)
+                .where(WorkflowVersionModel.workflow_id == workflow_id)
+                .order_by(WorkflowVersionModel.version_number.desc())
+            )
+            return list(result.scalars().all())
+
+    async def restore_workflow_version(
+        self,
+        workflow_id: str,
+        version_id: str,
+        user_id: str,
+    ) -> StoredWorkflow:
+        """
+        Restore a workflow to a previous version.
+
+        Creates a new version with the restored state (append-only, no overwrites).
+
+        Args:
+            workflow_id: ID of the workflow
+            version_id: ID of the version to restore
+            user_id: ID of the user performing the restore
+
+        Returns:
+            Updated workflow with new version
+
+        Raises:
+            ValueError: If workflow or version not found
+        """
+        async with self._session_maker() as session:
+            # 1. Get the workflow
+            workflow_result = await session.execute(select(WorkflowModel).where(WorkflowModel.id == workflow_id))
+            workflow = workflow_result.scalar_one_or_none()
+
+            if not workflow:
+                raise ValueError(f"Workflow not found: {workflow_id}")
+
+            # 2. Get the version to restore
+            version_result = await session.execute(select(WorkflowVersionModel).where(WorkflowVersionModel.id == version_id))
+            version_to_restore = version_result.scalar_one_or_none()
+
+            if not version_to_restore:
+                raise ValueError(f"Version not found: {version_id}")
+
+            # 3. Get the current max version number
+            max_version_result = await session.execute(
+                select(func.max(WorkflowVersionModel.version_number)).where(WorkflowVersionModel.workflow_id == workflow_id)
+            )
+            max_version = max_version_result.scalar() or 0
+
+            # 4. Create a new version with the restored state
+            new_version = WorkflowVersionModel(
+                id=str(uuid.uuid4()),
+                workflow_id=workflow_id,
+                version_number=max_version + 1,
+                graph_json=version_to_restore.graph_json,
+                source_text=version_to_restore.source_text,
+                commit_message=f"Restored from version {version_to_restore.version_number}",
+                created_by=user_id,
+                created_at=datetime.now(UTC),
+                prompt_version=version_to_restore.prompt_version,
+                prompt_hash=version_to_restore.prompt_hash,
+                prompt_model=version_to_restore.prompt_model,
+            )
+            session.add(new_version)
+
+            # 5. Update the workflow with the restored nodes/edges
+            graph_json = version_to_restore.graph_json or {}
+            workflow.nodes = graph_json.get("nodes", [])
+            workflow.edges = graph_json.get("edges", [])
+            workflow.head_version_id = new_version.id
+            workflow.updated_at = datetime.now(UTC)
+
+            await session.commit()
+            await session.refresh(workflow)
+
+            return self._model_to_stored(workflow)

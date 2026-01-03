@@ -14,9 +14,9 @@ Optimized for:
 from datetime import UTC, datetime
 from typing import Any
 
-from sqlalchemy import Boolean, DateTime, ForeignKey, Index, JSON, String, Text
+from sqlalchemy import Boolean, CheckConstraint, DateTime, ForeignKey, Index, Integer, JSON, String, Text
 from sqlalchemy.dialects.postgresql import TSVECTOR
-from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
 
 class WorkflowBase(DeclarativeBase):
@@ -67,6 +67,14 @@ class WorkflowModel(WorkflowBase):
     # Sharing fields
     is_public: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
     share_link: Mapped[str | None] = mapped_column(String(64), nullable=True, unique=True)
+
+    # Versioning fields (added for chat-to-workflow feature)
+    head_version_id: Mapped[str | None] = mapped_column(
+        String(36),
+        ForeignKey("workflow_versions.id", ondelete="SET NULL", use_alter=True),
+        nullable=True,
+    )
+    source_text: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
@@ -179,3 +187,89 @@ class WorkflowShareModel(WorkflowBase):
     def __repr__(self) -> str:
         """String representation."""
         return f"<WorkflowShare(workflow_id={self.workflow_id!r}, user_id={self.user_id!r}, permission={self.permission!r})>"
+
+
+class WorkflowVersionModel(WorkflowBase):
+    """
+    SQLAlchemy model for workflow version history.
+
+    Table: workflow_versions (append-only revision history)
+
+    Enables:
+    - Durable workflows with draft/publish lifecycle
+    - Version diffing and rollback
+    - Prompt-level telemetry linkage for optimization
+    - Audit trail of all workflow changes
+
+    References:
+    - Plan: Chat-to-Workflow Feature (validated by 4 independent reviews)
+    - ADR-0089: Prompt Architecture Centralization
+    """
+
+    __tablename__ = "workflow_versions"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True)
+    workflow_id: Mapped[str] = mapped_column(
+        String(36),
+        ForeignKey("workflows.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    version_number: Mapped[int] = mapped_column(Integer, nullable=False)
+
+    # Snapshot of workflow state at this version
+    graph_json: Mapped[dict[str, Any]] = mapped_column(JSON, nullable=False, default=dict)
+    source_text: Mapped[str | None] = mapped_column(Text, nullable=True)
+    commit_message: Mapped[str | None] = mapped_column(Text, nullable=True)
+
+    # Audit fields
+    created_by: Mapped[str] = mapped_column(String(255), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
+        default=lambda: datetime.now(UTC),
+    )
+
+    # Telemetry linkage for prompt optimization (per review consensus)
+    prompt_version: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    prompt_hash: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    prompt_model: Mapped[str | None] = mapped_column(String(100), nullable=True)
+
+    # Relationship to workflow
+    workflow: Mapped["WorkflowModel"] = relationship(
+        "WorkflowModel",
+        foreign_keys=[workflow_id],
+        backref="versions",
+    )
+
+    # Table constraints and indices
+    __table_args__ = (
+        # Unique constraint: one version number per workflow
+        Index(
+            "ix_workflow_versions_workflow_version",
+            "workflow_id",
+            "version_number",
+            unique=True,
+        ),
+        # Index for ordering by creation time
+        Index(
+            "ix_workflow_versions_created_at",
+            "workflow_id",
+            "created_at",
+        ),
+        # Index for prompt telemetry queries
+        Index(
+            "ix_workflow_versions_prompt_version",
+            "prompt_version",
+            postgresql_where="prompt_version IS NOT NULL",
+        ),
+        # Ensure version numbers are positive
+        CheckConstraint(
+            "version_number > 0",
+            name="workflow_versions_version_positive",
+        ),
+    )
+
+    def __repr__(self) -> str:
+        """String representation."""
+        return f"<WorkflowVersion(workflow_id={self.workflow_id!r}, version={self.version_number}, created_at={self.created_at!r})>"
