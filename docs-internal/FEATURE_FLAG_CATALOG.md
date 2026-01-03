@@ -1,7 +1,7 @@
 # Feature Flag Catalog
 
-**Total Flags**: 165 (1 deprecated, 3 new)
-**Last Updated**: 2025-12-27 (Sprint Block 5 Consolidation)
+**Total Flags**: 174 (1 deprecated, 12 new)
+**Last Updated**: 2026-01-03 (ADR-0090 Agent Orchestration Architecture)
 
 This catalog is generated from `src/mcp_server_langgraph/core/feature_flags.py`.
 
@@ -27,7 +27,7 @@ This catalog is generated from `src/mcp_server_langgraph/core/feature_flags.py`.
 14. [MCP Extensions](#mcp-extensions) (5 flags)
 15. [Multi-Framework Parity](#multi-framework-parity) (5 flags)
 16. [Observability](#observability) (5 flags)
-17. [Orchestrator](#orchestrator) (6 flags)
+17. [Orchestrator](#orchestrator) (15 flags)
 18. [Performance](#performance) (7 flags)
 19. [Pydantic AI](#pydantic-ai) (3 flags)
 20. [Security](#security) (11 flags)
@@ -253,16 +253,25 @@ This catalog is generated from `src/mcp_server_langgraph/core/feature_flags.py`.
 
 ## Orchestrator
 
-*6 flags in this category*
+*15 flags in this category*
 
 | Flag | Type | Default | Environment Variable | Description |
 |------|------|---------|---------------------|-------------|
-| `enable_orchestrated_ai_ux` | bool | `False` | `FF_ENABLE_ORCHESTRATED_AI_UX` | Enable orchestrated AI UX composite analysis for parallel execution (gradual ... |
-| `enable_orchestrated_alert_analysis` | bool | `False` | `FF_ENABLE_ORCHESTRATED_ALERT_ANALYSIS` | Enable orchestrated alert analysis for parallel correlation and root cause (g... |
+| `enable_orchestrated_ai_ux` | bool | `False` | `FF_ENABLE_ORCHESTRATED_AI_UX` | Enable orchestrated AI UX composite analysis for parallel execution (gradual rollout) |
+| `enable_orchestrated_alert_analysis` | bool | `False` | `FF_ENABLE_ORCHESTRATED_ALERT_ANALYSIS` | Enable orchestrated alert analysis for parallel correlation and root cause (gradual rollout) |
 | `enable_orchestrator_resilience` | bool | `True` | `FF_ENABLE_ORCHESTRATOR_RESILIENCE` | Enable resilience patterns (circuit breaker, timeout, bulkhead) for orchestrator |
 | `orchestrator_circuit_breaker_threshold` | int | `3` | `FF_ORCHESTRATOR_CIRCUIT_BREAKER_THRESHOLD` | Number of failures before circuit breaker opens (1-10) |
 | `orchestrator_max_concurrent` | int | `5` | `FF_ORCHESTRATOR_MAX_CONCURRENT` | Maximum concurrent orchestrations allowed (bulkhead limit) (1-20) |
 | `orchestrator_timeout_seconds` | int | `300` | `FF_ORCHESTRATOR_TIMEOUT_SECONDS` | Maximum time in seconds for orchestrator execution (30-600) |
+| `enable_router_agent` | bool | `False` | `FF_ENABLE_ROUTER_AGENT` | Enable RouterAgent for intelligent task classification and routing (ADR-0090 Phase 3) |
+| `enable_swarm_orchestrator` | bool | `False` | `FF_ENABLE_SWARM_ORCHESTRATOR` | Enable SwarmOrchestrator for race/cascade/consensus execution patterns (ADR-0090 Phase 4) |
+| `enable_hierarchical_orchestrator` | bool | `False` | `FF_ENABLE_HIERARCHICAL_ORCHESTRATOR` | Enable hierarchical coordinator-worker orchestration pattern (ADR-0090 Phase 4) |
+| `force_high_risk_review` | bool | `True` | `FF_FORCE_HIGH_RISK_REVIEW` | Require human approval for high-risk execution plans (ADR-0090 safety) |
+| `default_critique_rounds` | int | `1` | `FF_DEFAULT_CRITIQUE_ROUNDS` | Default number of critique iterations for plan refinement (0-3) |
+| `enable_plan_cache` | bool | `True` | `FF_ENABLE_PLAN_CACHE` | Enable Redis caching for execution plans |
+| `orchestration_compat_mode` | bool | `True` | `FF_ORCHESTRATION_COMPAT_MODE` | Backward compatibility mode - uses legacy orchestrator when true |
+| `max_thinking_budget` | str | `"medium"` | `FF_MAX_THINKING_BUDGET` | Cap extended thinking tokens (none/low/medium/high/ultra) |
+| `router_cache_ttl_seconds` | int | `3600` | `FF_ROUTER_CACHE_TTL_SECONDS` | Router classification cache TTL in seconds (60-86400) |
 
 ## Performance
 

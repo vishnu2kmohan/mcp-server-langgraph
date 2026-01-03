@@ -116,10 +116,10 @@ class FeatureFlags(BaseSettings):
     )
 
     enable_llm_factory_streaming: bool = Field(
-        default=False,
-        description="Use LLMFactory.astream() for streaming instead of direct litellm. "
-        "Provides resilience patterns (bulkhead, circuit breaker, retry). "
-        "Default False for gradual rollout.",
+        default=True,
+        description="Use LLMFactory.astream() for streaming with resilience patterns "
+        "(bulkhead, circuit breaker, retry). Default True - legacy litellm path removed. "
+        "This flag now controls resilience features rather than method selection.",
     )
 
     llm_timeout_seconds: int = Field(
@@ -358,6 +358,16 @@ class FeatureFlags(BaseSettings):
     enable_workflows_feature: bool = Field(
         default=True,
         description="Enable workflow builder UI feature",
+    )
+
+    enable_workflow_from_chat: bool = Field(
+        default=False,
+        description="Enable chat-to-workflow generation feature with versioning and code editor. "
+        "Requires workflow_versions table migration. Enables: "
+        "- POST /api/v1/workflows/from-chat endpoint, "
+        "- POST /api/v1/workflows/{id}/validate endpoint, "
+        "- Workflow version history and rollback, "
+        "- Monaco code editor with bidirectional sync.",
     )
 
     enable_sessions_feature: bool = Field(
@@ -881,6 +891,73 @@ class FeatureFlags(BaseSettings):
     )
 
     # =========================================================================
+    # Agent Orchestration Architecture (ADR Plan Phases 3-5)
+    # =========================================================================
+    # These flags control the phased rollout of RouterAgent, SwarmOrchestrator,
+    # and hierarchical orchestration patterns.
+
+    enable_router_agent: bool = Field(
+        default=False,
+        description="Enable RouterAgent for intelligent task classification and routing. "
+        "Phase 3 feature - set FF_ENABLE_ROUTER_AGENT=true to activate.",
+    )
+
+    enable_swarm_orchestrator: bool = Field(
+        default=False,
+        description="Enable SwarmOrchestrator for race/cascade/consensus patterns. "
+        "Phase 4 feature - set FF_ENABLE_SWARM_ORCHESTRATOR=true to activate.",
+    )
+
+    enable_hierarchical_orchestrator: bool = Field(
+        default=False,
+        description="Enable hierarchical orchestration with coordinator-worker pattern. "
+        "Phase 4 feature - set FF_ENABLE_HIERARCHICAL_ORCHESTRATOR=true to activate.",
+    )
+
+    force_high_risk_review: bool = Field(
+        default=True,
+        description="Force human review for high-risk execution plans. "
+        "Safety feature - set FF_FORCE_HIGH_RISK_REVIEW=false to disable (not recommended).",
+    )
+
+    default_critique_rounds: int = Field(
+        default=1,
+        ge=0,
+        le=3,
+        description="Default number of critique rounds for plan refinement (0-3). "
+        "Higher values improve quality but increase latency and cost.",
+    )
+
+    enable_plan_cache: bool = Field(
+        default=True,
+        description="Enable Redis caching for execution plans. "
+        "Improves performance by caching plan classifications. "
+        "Set FF_ENABLE_PLAN_CACHE=false to disable.",
+    )
+
+    orchestration_compat_mode: bool = Field(
+        default=True,
+        description="Enable compatibility mode for backward compatibility. "
+        "When True, uses legacy orchestrator. Set FF_ORCHESTRATION_COMPAT_MODE=false "
+        "after enabling router/swarm features.",
+    )
+
+    max_thinking_budget: str = Field(
+        default="medium",
+        description="Maximum thinking budget level (none, low, medium, high, ultra). "
+        "Caps thinking token usage for cost control. "
+        "Set FF_MAX_THINKING_BUDGET to override.",
+    )
+
+    router_cache_ttl_seconds: int = Field(
+        default=3600,
+        ge=60,
+        le=86400,
+        description="TTL in seconds for router classification cache (60s-24h). "
+        "Default 1 hour. Adjust based on classification stability.",
+    )
+
+    # =========================================================================
     # AI UX Service Migration (Phase 11)
     # =========================================================================
     enable_orchestrated_ai_ux: bool = Field(
@@ -1067,6 +1144,21 @@ class FeatureFlags(BaseSettings):
     enable_batch_composite_analysis: bool = Field(
         default=True,
         description="Enable batch composite analysis (runs persona, disclosure, error analyses in parallel)",
+    )
+
+    # =========================================================================
+    # Plan Editor Features (Phase 5b - Prompt Architecture ADR-0089)
+    # =========================================================================
+    enable_plan_search: bool = Field(
+        default=False,
+        description="Enable semantic template search for execution plans using vector embeddings. "
+        "Requires pgvector or Qdrant. Falls back to field-only search if unavailable.",
+    )
+
+    enable_plan_templates: bool = Field(
+        default=False,
+        description="Enable template suggestion features for execution plans. "
+        "Uses LLM to suggest templates based on user intent. Guarded for gradual rollout.",
     )
 
     # =========================================================================
@@ -1386,6 +1478,7 @@ class FeatureFlags(BaseSettings):
             "devtools_network_tab": self.devtools_network_tab,
             # Core features
             "workflows": self.enable_workflows_feature,
+            "workflow_from_chat": self.enable_workflow_from_chat,
             "sessions": self.enable_sessions_feature,
             # Cost dashboard: admins always see it; users only if enable_cost_dashboard_users
             "cost_dashboard": (
@@ -1440,6 +1533,9 @@ class FeatureFlags(BaseSettings):
             "genui": self.enable_genui,
             # Frontend Redis L2 Cache
             "frontend_redis_l2_cache": self.enable_frontend_redis_l2_cache,
+            # Plan Editor Features (Phase 5b)
+            "plan_search": self.enable_plan_search,
+            "plan_templates": self.enable_plan_templates,
             # WebSocket Infrastructure Features
             "websocket_new_base": self.enable_websocket_new_base,
             "websocket_server_heartbeat": self.enable_websocket_server_heartbeat,

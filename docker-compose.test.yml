@@ -1270,6 +1270,15 @@ services:
       - FF_ENABLE_SDK_FILE_CHECKPOINTING=true # File rollback capability
       - FF_ENABLE_SDK_INTERRUPT=true    # Graceful interrupt support
       # -----------------------------------------------------------------------
+      # Plan Editor Features (Phase 5b - Prompt Architecture ADR-0089)
+      # -----------------------------------------------------------------------
+      - FF_ENABLE_PLAN_SEARCH=true      # Semantic template search using vector embeddings
+      - FF_ENABLE_PLAN_TEMPLATES=true   # Template suggestion features for execution plans
+      # -----------------------------------------------------------------------
+      # Chat-to-Workflow Feature (Plan: greedy-wiggling-marshmallow.md)
+      # -----------------------------------------------------------------------
+      - FF_ENABLE_WORKFLOW_FROM_CHAT=true # Generate workflows from chat with versioning
+      # -----------------------------------------------------------------------
       # Studio AI Orchestration (StudioShell AI Enhancement)
       # -----------------------------------------------------------------------
       - FF_ENABLE_STUDIO_AI=true                   # Master toggle for Studio AI
