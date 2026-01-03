@@ -1,13 +1,13 @@
 # Orchestrator Operations Runbook
 
-**Reference**: ADR-0078 - Multi-Agent Orchestrator Patterns
-**Last Updated**: 2025-12-21
+**Reference**: ADR-0078, ADR-0090 - Multi-Agent Orchestrator Patterns
+**Last Updated**: 2026-01-03
 
 ---
 
 ## Overview
 
-This runbook covers operational procedures for monitoring, troubleshooting, and tuning the multi-agent orchestrators (UX and Alert).
+This runbook covers operational procedures for monitoring, troubleshooting, and tuning the multi-agent orchestrators.
 
 ### Orchestrators Covered
 
@@ -15,6 +15,34 @@ This runbook covers operational procedures for monitoring, troubleshooting, and 
 |--------------|--------------|---------|
 | UXOrchestrator | `enable_orchestrated_ai_ux` | Parallel AI UX composite analysis |
 | AlertOrchestrator | `enable_orchestrated_alert_analysis` | Parallel alert correlation & root cause |
+| **RouterAgent** | `enable_router_agent` | Intelligent task classification and routing |
+| **SwarmOrchestrator** | `enable_swarm_orchestrator` | Race/cascade/consensus execution patterns |
+| **HierarchicalOrchestrator** | `enable_hierarchical_orchestrator` | Coordinator-worker pattern |
+
+### Agent Orchestration Architecture (ADR-0090)
+
+The new agent orchestration architecture adds:
+
+| Component | Description |
+|-----------|-------------|
+| `RouterAgent` | Classifies tasks and routes to appropriate agents |
+| `SwarmOrchestrator` | Executes with race/cascade/consensus strategies |
+| `ExecutionPlan` | Approval workflow for high-risk operations |
+| `PlanTemplate` | Reusable execution plan templates |
+
+**Feature Flags for Phased Rollout**:
+
+| Flag | Default | Purpose |
+|------|---------|---------|
+| `enable_router_agent` | `false` | Enable RouterAgent |
+| `enable_swarm_orchestrator` | `false` | Enable SwarmOrchestrator |
+| `enable_hierarchical_orchestrator` | `false` | Enable hierarchical pattern |
+| `force_high_risk_review` | `true` | Require approval for high-risk |
+| `default_critique_rounds` | `1` | Default critique iterations |
+| `enable_plan_cache` | `true` | Redis caching for plans |
+| `orchestration_compat_mode` | `true` | Backward compatibility mode |
+| `max_thinking_budget` | `"medium"` | Cap thinking tokens |
+| `router_cache_ttl_seconds` | `3600` | Router cache TTL |
 
 ### Key Metrics
 
@@ -27,6 +55,14 @@ This runbook covers operational procedures for monitoring, troubleshooting, and 
 | `agent.orchestrator.feature_flag.check` | Feature flag check count |
 | `agent.orchestration.cost.dollars` | Cost in dollars |
 | `agent.orchestration.cost.alert` | Budget alert triggers |
+| **`router_latency_seconds`** | Router classification latency |
+| **`router_confidence`** | Router confidence scores |
+| **`router_cache`** | Router cache hit/miss rate |
+| **`swarm_branches`** | Swarm parallel branches |
+| **`swarm_cost_usd`** | Swarm execution cost |
+| **`critique_rounds`** | Critique loop iterations |
+| **`approval_path`** | Plan approval/rejection rate |
+| **`thinking_tokens`** | Extended thinking token usage |
 
 ---
 

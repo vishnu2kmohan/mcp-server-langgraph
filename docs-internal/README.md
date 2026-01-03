@@ -68,6 +68,16 @@ Testing guides and reports:
 - `TEST_RESULTS_SUMMARY.md` - Test execution summaries
 - `TESTING_QUICK_START.md` - Quick start testing guide
 
+### 🔐 Security & Authorization
+Authorization and access control documentation:
+- `OPENFGA_ARCHITECTURE.md` - OpenFGA authorization model, relationship patterns, and integration guide
+- `SECURITY_REMEDIATION.md` - Security issue remediation
+
+### 📊 Observability & Metrics
+Monitoring, metrics, and observability guides:
+- `HEART_METRICS_IMPLEMENTATION.md` - HEART framework implementation (Goals-Signals-Metrics, WebSocket, Prometheus)
+- `WEBSOCKET_STANDARDIZATION.md` - WebSocket infrastructure patterns and base handler implementation
+
 ### 📋 Root-level Files
 - `BREAKING_CHANGES.md` - Breaking changes log
 - `COMPLIANCE.md` - Compliance framework documentation
@@ -77,7 +87,6 @@ Testing guides and reports:
 - `MINTLIFY_USAGE.md` - Mintlify usage guide
 - `PIP_AUTHENTICATION_FIX.md` - PIP authentication workarounds
 - `ROOT_DIRECTORY_POLICY.md` - Root directory organization policy
-- `SECURITY_REMEDIATION.md` - Security issue remediation
 
 ## Document Retention
 
@@ -109,6 +118,6 @@ When adding new internal documentation:
 
 ---
 
-**Last Updated:** 2025-12-20
+**Last Updated:** 2026-01-03
 **Maintained By:** Repository Maintainers
 **Last Archived:** 2025-11-10 (22 files archived)

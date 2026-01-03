@@ -351,6 +351,7 @@
               "guides/multi-agent-orchestrators",
               "guides/sdk-hooks",
               "guides/tool-development",
+              "guides/prompt-engineering",
               "guides/multi-framework-integration",
               "guides/claude-sdk-integration"
             ]
@@ -598,6 +599,7 @@
               "architecture/adr-0073-configuration-domain-decomposition",
               "architecture/adr-0074-ai-suggestions-streaming-cost-tracking",
               "architecture/adr-0075-prompt-injection-detection",
+              "architecture/adr-0089-prompt-architecture-centralization",
               "architecture/adr-0076-sandpack-jsdom-27-mock"
             ]
           },
