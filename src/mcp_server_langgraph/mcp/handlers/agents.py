@@ -390,7 +390,7 @@ class AgentsToolHandler(AbstractToolHandler):
         else:
             model = self.model_selector.select_model("complicated")
 
-        verifier = self.model_selector.select_verifier("auto")
+        verifier_result = self.model_selector.select_verifier("auto")
 
         return [
             TextContent(
@@ -398,7 +398,7 @@ class AgentsToolHandler(AbstractToolHandler):
                 text=json.dumps(
                     {
                         "model": model,
-                        "verifier": verifier,
+                        "verifier": verifier_result.model,
                         "primary_vendor": self.model_selector.primary_vendor,
                         "available_vendors": self.model_selector.available_vendors,
                     },

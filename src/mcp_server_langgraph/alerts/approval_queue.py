@@ -112,6 +112,8 @@ class RemediationApprovalQueue:
                     approved_at=None,
                     reason=None,
                     recommendation_id=recommendation.recommendation_id,
+                    had_fewshot=recommendation.had_fewshot,
+                    had_constraints=recommendation.had_constraints,
                 )
 
                 self._remediations[remediation_id] = request

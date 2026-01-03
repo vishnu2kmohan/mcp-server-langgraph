@@ -49,6 +49,7 @@ class EmbeddingService(Protocol):
         """
         ...
 
+
 logger = logging.getLogger(__name__)
 
 
@@ -172,9 +173,7 @@ class RouterAgent:
         try:
             # Build messages for classification
             # Use dynamic template with available tools injected at runtime
-            system_prompt = get_orchestration_router_prompt(
-                available_tools=tools_available or []
-            )
+            system_prompt = get_orchestration_router_prompt(available_tools=tools_available or [])
             messages = [
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": message},
@@ -356,9 +355,7 @@ def select_executor_critic(
         Tuple of (executor_model_id, critic_model_id or None)
     """
     # Select executor based on complexity tier
-    executor = TIER_MODELS.get(executor_vendor, TIER_MODELS["google"]).get(
-        complexity, TIER_MODELS["google"]["complicated"]
-    )
+    executor = TIER_MODELS.get(executor_vendor, TIER_MODELS["google"]).get(complexity, TIER_MODELS["google"]["complicated"])
 
     # Determine if critic is needed
     if risk == "low":
@@ -369,14 +366,10 @@ def select_executor_critic(
     if prefer_same_vendor:
         # Cost optimization: use same vendor, lower tier for critic
         critic_tier = "simple" if complexity != "complex" else "complicated"
-        critic = TIER_MODELS.get(executor_vendor, TIER_MODELS["google"]).get(
-            critic_tier, TIER_MODELS["google"]["simple"]
-        )
+        critic = TIER_MODELS.get(executor_vendor, TIER_MODELS["google"]).get(critic_tier, TIER_MODELS["google"]["simple"])
     else:
         # Cross-vendor diversity: use different vendor for critic
         critic_tier = "simple" if risk == "medium" else "complicated"
-        critic = TIER_MODELS.get(critic_vendor, TIER_MODELS["anthropic"]).get(
-            critic_tier, TIER_MODELS["anthropic"]["simple"]
-        )
+        critic = TIER_MODELS.get(critic_vendor, TIER_MODELS["anthropic"]).get(critic_tier, TIER_MODELS["anthropic"]["simple"])
 
     return (executor, critic)

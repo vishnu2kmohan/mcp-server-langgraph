@@ -98,16 +98,10 @@ class WorkerAgent(BaseAgent):
             # Handle thinking budget if manager available and budget requested
             thinking_content = None
             thinking_tokens = 0
-            if (
-                self.thinking_budget_manager
-                and request.thinking_budget != "none"
-                and self.model_id is not None
-            ):
+            if self.thinking_budget_manager and request.thinking_budget != "none" and self.model_id is not None:
                 # Map thinking budget to provider-specific params
                 # Convert string level to ThinkingLevel enum
-                thinking_level = self.thinking_budget_manager.level_from_string(
-                    request.thinking_budget
-                )
+                thinking_level = self.thinking_budget_manager.level_from_string(request.thinking_budget)
                 thinking_params = self.thinking_budget_manager.get_params(
                     model=self.model_id,
                     level=thinking_level,
@@ -143,7 +137,7 @@ class WorkerAgent(BaseAgent):
                 thinking_tokens=thinking_tokens,
             )
 
-        except asyncio.TimeoutError:
+        except TimeoutError:
             return AgentResult(
                 content="",
                 success=False,

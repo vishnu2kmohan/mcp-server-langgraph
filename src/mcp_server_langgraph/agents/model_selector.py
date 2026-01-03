@@ -44,6 +44,7 @@ class SelectionResult:
     vendor: str
     is_fallback: bool
 
+
 # NOTE: MODEL_TIERS dict removed in Phase 1 refactor.
 # Tier-to-model mapping now lives in ModelRegistry.get_model_for_tier()
 # which centralizes the business logic for cost-efficiency mappings.
@@ -269,13 +270,9 @@ class ModelSelector:
             effective_primary_model = primary_model
         else:
             try:
-                effective_primary_model = registry.get_model_for_tier(
-                    vendor=self.primary_vendor, tier="complicated"
-                )
+                effective_primary_model = registry.get_model_for_tier(vendor=self.primary_vendor, tier="complicated")
             except KeyError:
-                effective_primary_model = registry.get_model_for_tier(
-                    vendor="google", tier="complicated"
-                )
+                effective_primary_model = registry.get_model_for_tier(vendor="google", tier="complicated")
 
         if verifier_vendor == "same":
             # Use same vendor as primary (explicitly requested)
@@ -289,14 +286,10 @@ class ModelSelector:
                 if vendor != self.primary_vendor:
                     actual_verifier_vendor = vendor
                     try:
-                        verifier_model = registry.get_model_for_tier(
-                            vendor=vendor, tier="complicated"
-                        )
+                        verifier_model = registry.get_model_for_tier(vendor=vendor, tier="complicated")
                     except KeyError:
                         # Fallback to anthropic complicated tier
-                        verifier_model = registry.get_model_for_tier(
-                            vendor="anthropic", tier="complicated"
-                        )
+                        verifier_model = registry.get_model_for_tier(vendor="anthropic", tier="complicated")
                     break
 
             # Fallback to same vendor if no cross-vendor available
@@ -309,15 +302,11 @@ class ModelSelector:
             # Explicit vendor requested
             actual_verifier_vendor = verifier_vendor
             try:
-                verifier_model = registry.get_model_for_tier(
-                    vendor=verifier_vendor, tier="complicated"
-                )
+                verifier_model = registry.get_model_for_tier(vendor=verifier_vendor, tier="complicated")
             except KeyError:
                 # Default to Anthropic for verification
                 actual_verifier_vendor = "anthropic"
-                verifier_model = registry.get_model_for_tier(
-                    vendor="anthropic", tier="complicated"
-                )
+                verifier_model = registry.get_model_for_tier(vendor="anthropic", tier="complicated")
 
         # Record cross-vendor verification metrics
         # All branches above assign actual_verifier_vendor, assert for mypy

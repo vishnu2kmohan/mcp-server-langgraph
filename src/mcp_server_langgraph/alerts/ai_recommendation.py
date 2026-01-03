@@ -205,6 +205,8 @@ class AIRecommendation(BaseModel):
     generated_at: str = Field(..., description="ISO8601 timestamp of generation")
     model_used: str = Field(..., description="LLM model used for generation")
     confidence_score: float = Field(default=0.5, description="Confidence score (0.0-1.0) for the recommendation")
+    had_fewshot: bool = Field(default=False, description="Whether few-shot examples were used in generation")
+    had_constraints: bool = Field(default=False, description="Whether rejection constraints were used in generation")
 
 
 class LLMFactoryProtocol(Protocol):
@@ -281,10 +283,20 @@ Respond ONLY with valid JSON in this exact format:
     return prompt
 
 
+class PromptWithTracking:
+    """Prompt with tracking information for few-shot and constraint usage."""
+
+    def __init__(self, prompt: str, had_fewshot: bool, had_constraints: bool) -> None:
+        """Initialize prompt with tracking flags."""
+        self.prompt = prompt
+        self.had_fewshot = had_fewshot
+        self.had_constraints = had_constraints
+
+
 async def build_recommendation_prompt_with_feedback(
     alert: Alert,
     feedback_store: "FeedbackStore | None" = None,
-) -> str:
+) -> PromptWithTracking:
     """
     Build the prompt for LLM recommendation generation with few-shot examples.
 
@@ -297,7 +309,7 @@ async def build_recommendation_prompt_with_feedback(
         feedback_store: Optional feedback store for few-shot examples.
 
     Returns:
-        Enhanced prompt string.
+        PromptWithTracking containing prompt string and tracking flags.
     """
     runbook_url = alert.annotations.get("runbook_url", "Not available")
 
@@ -321,6 +333,10 @@ async def build_recommendation_prompt_with_feedback(
 
 """
 
+    # Track usage of few-shot and constraints
+    had_fewshot = False
+    had_constraints = False
+
     # Add few-shot examples if feedback store is available
     if feedback_store:
         examples = await feedback_store.get_approved_examples(
@@ -329,6 +345,7 @@ async def build_recommendation_prompt_with_feedback(
         )
 
         if examples:
+            had_fewshot = True
             prompt += """## Previously Successful Remediations
 The following remediations were approved and executed successfully for similar alerts:
 
@@ -345,6 +362,7 @@ The following remediations were approved and executed successfully for similar a
         # Add constraints from rejection patterns
         constraints = await _build_constraints_from_rejections(alert.name, feedback_store)
         if constraints:
+            had_constraints = True
             prompt += f"""## Important Constraints
 Based on previous feedback, avoid these approaches:
 {constraints}
@@ -401,7 +419,7 @@ Respond ONLY with valid JSON in this exact format:
     }
 }
 """
-    return prompt
+    return PromptWithTracking(prompt=prompt, had_fewshot=had_fewshot, had_constraints=had_constraints)
 
 
 async def _build_constraints_from_rejections(
@@ -700,10 +718,18 @@ class AIRecommendationService:
             span.set_attribute("recommendation.cache_hit", False)
 
             # Build prompt - use feedback-enhanced prompt if feedback store is available
+            # Track few-shot and constraint usage for metrics
+            had_fewshot = False
+            had_constraints = False
             if self._feedback_store:
-                prompt = await build_recommendation_prompt_with_feedback(alert, self._feedback_store)
+                prompt_with_tracking = await build_recommendation_prompt_with_feedback(alert, self._feedback_store)
+                prompt = prompt_with_tracking.prompt
+                had_fewshot = prompt_with_tracking.had_fewshot
+                had_constraints = prompt_with_tracking.had_constraints
                 logger.debug(f"Using feedback-enhanced prompt for alert {alert.alert_id}")
                 span.set_attribute("recommendation.feedback_enhanced", True)
+                span.set_attribute("recommendation.had_fewshot", had_fewshot)
+                span.set_attribute("recommendation.had_constraints", had_constraints)
             else:
                 prompt = build_recommendation_prompt(alert)
                 span.set_attribute("recommendation.feedback_enhanced", False)
@@ -756,6 +782,8 @@ class AIRecommendationService:
                     generated_at=datetime.now(UTC).isoformat(),
                     model_used=self._model_name,
                     confidence_score=confidence_score,
+                    had_fewshot=had_fewshot,
+                    had_constraints=had_constraints,
                 )
 
                 # Cache the recommendation (L2 Redis + L1 in-memory)

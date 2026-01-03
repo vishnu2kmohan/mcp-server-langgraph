@@ -146,27 +146,20 @@ class SwarmOrchestrator:
         # Create cancel events for each agent
         agent_cancel_events = [asyncio.Event() for _ in self.agents]
 
-        async def run_with_index(
-            index: int, agent: BaseAgent, agent_cancel: asyncio.Event
-        ) -> tuple[int, AgentResult]:
+        async def run_with_index(index: int, agent: BaseAgent, agent_cancel: asyncio.Event) -> tuple[int, AgentResult]:
             """Run agent and return index with result."""
             result = await agent.run(request, cancel_event=agent_cancel)
             return (index, result)
 
         # Create tasks for all agents
-        tasks = [
-            asyncio.create_task(run_with_index(i, agent, agent_cancel_events[i]))
-            for i, agent in enumerate(self.agents)
-        ]
+        tasks = [asyncio.create_task(run_with_index(i, agent, agent_cancel_events[i])) for i, agent in enumerate(self.agents)]
 
         try:
             # Wait for first successful result with timeout
             async def wait_for_first_success() -> AgentResult:
                 done, pending = set(), set(tasks)
                 while pending:
-                    done_batch, pending = await asyncio.wait(
-                        pending, return_when=asyncio.FIRST_COMPLETED
-                    )
+                    done_batch, pending = await asyncio.wait(pending, return_when=asyncio.FIRST_COMPLETED)
                     for task in done_batch:
                         _, result = task.result()
                         if result.success:
@@ -242,10 +235,7 @@ class SwarmOrchestrator:
         All agents run in parallel. Most common answer wins.
         """
         # Run all agents in parallel
-        tasks = [
-            asyncio.create_task(agent.run(request, cancel_event=cancel_event))
-            for agent in self.agents
-        ]
+        tasks = [asyncio.create_task(agent.run(request, cancel_event=cancel_event)) for agent in self.agents]
 
         try:
             results = await asyncio.wait_for(
