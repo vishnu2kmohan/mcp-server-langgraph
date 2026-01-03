@@ -13,7 +13,17 @@
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { renderHook, act, waitFor } from "@testing-library/react";
+import { renderHook, act, waitFor, cleanup } from "@testing-library/react";
+import { MemoryRouter } from "react-router";
+import type { ReactNode } from "react";
+
+// =============================================================================
+// Test Wrapper
+// =============================================================================
+
+const wrapper = ({ children }: { children: ReactNode }) => (
+  <MemoryRouter>{children}</MemoryRouter>
+);
 
 // =============================================================================
 // Tests
@@ -25,7 +35,9 @@ describe("useBatchApprovals", () => {
   });
 
   afterEach(() => {
-    vi.restoreAllMocks();
+    cleanup();
+    vi.clearAllMocks();
+    vi.resetAllMocks();
   });
 
   describe("Deprecation", () => {
@@ -54,7 +66,7 @@ describe("useBatchApprovals", () => {
     it("should return initial state with loading false", async () => {
       const { useBatchApprovals } = await import("./useBatchApprovals");
 
-      const { result } = renderHook(() => useBatchApprovals());
+      const { result } = renderHook(() => useBatchApprovals(), { wrapper });
 
       expect(result.current.isApproving).toBe(false);
       expect(result.current.isRejecting).toBe(false);
@@ -66,7 +78,7 @@ describe("useBatchApprovals", () => {
     it("should provide batchApprove function", async () => {
       const { useBatchApprovals } = await import("./useBatchApprovals");
 
-      const { result } = renderHook(() => useBatchApprovals());
+      const { result } = renderHook(() => useBatchApprovals(), { wrapper });
 
       expect(typeof result.current.batchApprove).toBe("function");
     });
@@ -91,7 +103,7 @@ describe("useBatchApprovals", () => {
       );
       vi.stubGlobal("fetch", mockFetch);
 
-      const { result } = renderHook(() => useBatchApprovals());
+      const { result } = renderHook(() => useBatchApprovals(), { wrapper });
 
       act(() => {
         result.current.batchApprove(["req-001", "req-002"]);
@@ -115,7 +127,7 @@ describe("useBatchApprovals", () => {
       });
       vi.stubGlobal("fetch", mockFetch);
 
-      const { result } = renderHook(() => useBatchApprovals());
+      const { result } = renderHook(() => useBatchApprovals(), { wrapper });
 
       await act(async () => {
         await result.current.batchApprove(["req-001", "req-002"], "Verified");
@@ -140,7 +152,7 @@ describe("useBatchApprovals", () => {
     it("should provide batchReject function", async () => {
       const { useBatchApprovals } = await import("./useBatchApprovals");
 
-      const { result } = renderHook(() => useBatchApprovals());
+      const { result } = renderHook(() => useBatchApprovals(), { wrapper });
 
       expect(typeof result.current.batchReject).toBe("function");
     });
@@ -164,7 +176,7 @@ describe("useBatchApprovals", () => {
       );
       vi.stubGlobal("fetch", mockFetch);
 
-      const { result } = renderHook(() => useBatchApprovals());
+      const { result } = renderHook(() => useBatchApprovals(), { wrapper });
 
       act(() => {
         result.current.batchReject(["req-001"]);
@@ -191,7 +203,7 @@ describe("useBatchApprovals", () => {
       });
       vi.stubGlobal("fetch", mockFetch);
 
-      const { result } = renderHook(() => useBatchApprovals());
+      const { result } = renderHook(() => useBatchApprovals(), { wrapper });
 
       await act(async () => {
         await result.current.batchApprove(["req-001"]);
@@ -218,7 +230,7 @@ describe("useBatchApprovals", () => {
         });
       vi.stubGlobal("fetch", mockFetch);
 
-      const { result } = renderHook(() => useBatchApprovals());
+      const { result } = renderHook(() => useBatchApprovals(), { wrapper });
 
       // First call fails
       await act(async () => {
@@ -256,7 +268,7 @@ describe("useBatchApprovals", () => {
       });
       vi.stubGlobal("fetch", mockFetch);
 
-      const { result } = renderHook(() => useBatchApprovals());
+      const { result } = renderHook(() => useBatchApprovals(), { wrapper });
 
       let response;
       await act(async () => {

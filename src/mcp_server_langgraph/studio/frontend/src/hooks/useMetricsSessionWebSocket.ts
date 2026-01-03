@@ -13,7 +13,7 @@ import { useAppDispatch, useAppSelector } from "../store/hooks";
 import { logout, selectIsAuthenticated } from "../store/slices/authSlice";
 import { addNotification } from "../store/slices/notificationSlice";
 import { getAuthToken } from "../utils/storage";
-import { buildWebSocketUrl, WS_ENDPOINTS } from "../utils/websocket";
+import { buildWebSocketUrl } from "../utils/websocket";
 import {
   PROTOCOL_VERSION_MISMATCH_NOTIFICATION,
   showProtocolVersionMismatchToast,
