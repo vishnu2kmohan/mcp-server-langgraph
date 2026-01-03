@@ -261,6 +261,11 @@ class Settings(BaseSettings):
 
     context_cache_size: int = 100  # LRU cache size for loaded contexts
 
+    # Vector Search Provider Configuration
+    # Provider for vector similarity search (semantic plan search, template matching)
+    # Options: "inmemory" (testing), "pgvector" (PostgreSQL), "qdrant" (dedicated vector DB)
+    vector_search_provider: str = "inmemory"  # Default to inmemory for safe testing
+
     # Data Security & Compliance (for regulated workloads)
     enable_context_encryption: bool = False  # Enable encryption-at-rest for context data
     context_encryption_key: str | None = None  # Encryption key for context data (Fernet-compatible)

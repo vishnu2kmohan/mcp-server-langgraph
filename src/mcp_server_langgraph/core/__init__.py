@@ -231,11 +231,11 @@ def __getattr__(name: str):  # type: ignore[no-untyped-def]  # noqa: C901
 
         return getattr(session_fork, name)
 
-    # Visual verification helper
+    # Visual verification helper - use importlib to avoid recursion
     if name == "visual_verification_helper":
-        from mcp_server_langgraph.core import visual_verification_helper
+        import importlib
 
-        return visual_verification_helper
+        return importlib.import_module("mcp_server_langgraph.core.visual_verification_helper")
 
     if name in (
         "combine_verification_results",
@@ -243,9 +243,10 @@ def __getattr__(name: str):  # type: ignore[no-untyped-def]  # noqa: C901
         "perform_visual_verification",
         "prioritize_urls",
     ):
-        from mcp_server_langgraph.core import visual_verification_helper
+        import importlib
 
-        return getattr(visual_verification_helper, name)
+        vvh = importlib.import_module("mcp_server_langgraph.core.visual_verification_helper")
+        return getattr(vvh, name)
 
     # Not found
     msg = f"module {__name__!r} has no attribute {name!r}"
