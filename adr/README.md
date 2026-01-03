@@ -1,7 +1,7 @@
 # Architecture Decision Records (ADRs)
 
-**Last Updated**: 2025-12-31
-**Total ADRs**: 84
+**Last Updated**: 2026-01-03
+**Total ADRs**: 87
 
 ## Overview
 
@@ -51,6 +51,7 @@ Each ADR follows this structure:
 | ADR | Title | Status | Date |
 |-----|-------|--------|------|
 | [ADR-0083](adr-0083-confidence-based-hitl-system.md) | 83. Confidence-Based Human-in-the-Loop (HITL) System | Accepted | 2025-12-21 |
+| [ADR-0090](adr-0090-agent-orchestration-architecture.md) | 90. Agent Orchestration Architecture | Implemented | 2026-01-03 |
 
 ### Architecture & Multi-Agent Systems
 
@@ -152,6 +153,8 @@ Each ADR follows this structure:
 | [ADR-0075](adr-0075-prompt-injection-detection.md) | Prompt Injection Detection and Sanitization | Accepted | Unknown |
 | [ADR-0076](adr-0076-sandpack-jsdom-27-mock.md) | Sandpack Mock for jsdom 27 Compatibility | Accepted | Unknown |
 | [ADR-0085](adr-0085-feature-flag-consolidation.md) | Feature Flag Consolidation (Sprint Block 5) | Accepted | 2025-12-27 |
+| [ADR-0088](adr-0088-frontend-hook-selection-guidance.md) | Frontend Hook Selection Guidance | Accepted | 2026-01-02 |
+| [ADR-0089](adr-0089-prompt-architecture-centralization.md) | Prompt Architecture Centralization | Implemented | 2026-01-03 |
 
 ### Performance & Resilience
 
