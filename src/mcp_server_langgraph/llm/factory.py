@@ -963,6 +963,81 @@ class LLMFactory:
                         cause=e,
                     )
 
+    # ==========================================================================
+    # Validated Invocation (ADR-0089 Phase 7 Extension)
+    # ==========================================================================
+
+    async def ainvoke_validated(
+        self,
+        messages: list[BaseMessage | dict[str, Any]],
+        *,
+        schema: type,
+        prompt_name: str,
+        fallback: Any | None = None,
+        hook_context: HookContext | None = None,
+        **kwargs: Any,
+    ) -> Any:
+        """
+        Asynchronous LLM invocation with automatic output validation.
+
+        Calls ainvoke() and validates the response against a Pydantic schema.
+        Returns a ValidationResult instead of raw AIMessage.
+
+        This method NEVER raises on validation errors - it returns a ValidationResult
+        with success=False and the error message. LLM provider errors are still raised.
+
+        Args:
+            messages: List of messages to send to the LLM
+            schema: Pydantic model class to validate response against
+            prompt_name: Name of the prompt (for telemetry)
+            fallback: Optional fallback value on validation failure
+            hook_context: Optional hook context for BEFORE_MODEL/AFTER_MODEL hooks
+            **kwargs: Additional parameters passed through to ainvoke (temperature, max_tokens, etc.)
+
+        Returns:
+            ValidationResult with:
+            - success: Whether validation passed
+            - parsed_output: Parsed Pydantic model (or fallback on failure)
+            - error: Error message if validation failed
+            - used_fallback: Whether fallback was used
+            - prompt_name: Name of the prompt
+
+        Raises:
+            LLMProviderError: On LLM provider errors (NOT validation errors)
+            CircuitBreakerOpenError: If circuit breaker is open
+            RetryExhaustedError: If all retry attempts failed
+
+        Examples:
+            >>> from mcp_server_langgraph.core.prompts.schemas import ResponseOutput
+            >>> result = await factory.ainvoke_validated(
+            ...     messages=[HumanMessage(content="Hello")],
+            ...     schema=ResponseOutput,
+            ...     prompt_name="response",
+            ... )
+            >>> if result.success:
+            ...     print(result.parsed_output.content)
+        """
+        from mcp_server_langgraph.core.prompts.telemetry import record_prompt_usage
+        from mcp_server_langgraph.core.prompts.validation import validate_output
+
+        # Record prompt telemetry (non-blocking)
+        # Use "latest" as default version since we're invoking from the factory
+        record_prompt_usage(prompt_name=prompt_name, prompt_version="latest")
+
+        # Call the underlying ainvoke method
+        # LLM errors will propagate up - validation only handles response parsing
+        response = await self.ainvoke(messages, hook_context=hook_context, **kwargs)
+
+        # Validate the response content against the schema
+        content = str(response.content) if hasattr(response, "content") else str(response)
+
+        return validate_output(
+            content=content,
+            schema=schema,
+            prompt_name=prompt_name,
+            fallback=fallback,
+        )
+
 
 # ==============================================================================
 # DRY Helper Functions for Factory Creation
