@@ -261,10 +261,20 @@ _websocket_heart_metrics_service: HeartMetricsServiceAdapter | None = None
 
 
 def get_websocket_heart_metrics_service() -> HeartMetricsServiceAdapter:
-    """Get the WebSocket HEART metrics service adapter instance."""
+    """Get the WebSocket HEART metrics service adapter instance.
+
+    Initializes with metrics client from factory for real Prometheus/Mimir queries.
+    Uses lazy import to avoid circular dependencies.
+    """
     global _websocket_heart_metrics_service
     if _websocket_heart_metrics_service is None:
-        _websocket_heart_metrics_service = HeartMetricsServiceAdapter()
+        # Lazy import to avoid circular dependency
+        from mcp_server_langgraph.observability.query.factory import get_metrics_client
+
+        metrics_client = get_metrics_client()
+        _websocket_heart_metrics_service = HeartMetricsServiceAdapter(
+            metrics_client=metrics_client  # type: ignore[arg-type]
+        )
     return _websocket_heart_metrics_service
 
 

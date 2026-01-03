@@ -276,6 +276,24 @@ class TestHeartMetricsSingleton:
 
         assert isinstance(result, HeartMetricsServiceAdapter)
 
+    def test_get_websocket_heart_metrics_service_injects_metrics_client(self) -> None:
+        """Test singleton is initialized with metrics client from factory."""
+        from mcp_server_langgraph.websocket.services.heart_metrics import (
+            get_websocket_heart_metrics_service,
+        )
+
+        # Mock at the source (factory) since we use lazy import inside the function
+        with patch("mcp_server_langgraph.observability.query.factory.get_metrics_client") as mock_get_client:
+            mock_client = MagicMock()
+            mock_get_client.return_value = mock_client
+
+            service = get_websocket_heart_metrics_service()
+
+            # Verify that get_metrics_client was called to inject the client
+            mock_get_client.assert_called_once()
+            # Verify the service has the metrics client
+            assert service._metrics_client is mock_client
+
     def test_get_websocket_heart_metrics_service_returns_same_instance(self) -> None:
         """Test get_websocket_heart_metrics_service returns same instance."""
         from mcp_server_langgraph.websocket.services.heart_metrics import (
