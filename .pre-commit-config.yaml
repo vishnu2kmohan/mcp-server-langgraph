@@ -435,6 +435,31 @@ repos:
       Prevents test memory leaks that caused 16GB+ OOM crashes.
 
       '
+  - id: frontend-test-patterns-validation
+    name: Frontend Test Patterns Validation
+    entry: >
+      bash -c 'cd src/mcp_server_langgraph/studio/frontend &&
+      ./scripts/validate-test-patterns.sh 2>&1 || (echo "" && echo "ERROR - Frontend test patterns validation failed." && echo "Run: cd src/mcp_server_langgraph/studio/frontend && npm run validate:test-patterns" && exit 1)'
+    language: system
+    pass_filenames: false
+    files: ^src/mcp_server_langgraph/studio/frontend/src/.*\.(test|spec)\.(ts|tsx)$
+    always_run: false
+    stages:
+    - pre-commit
+    description: 'Validates frontend test files avoid problematic patterns.
+
+      Added 2025-12-30 to catch common test anti-patterns.
+
+      Checks for:
+      - delete window.location (breaks keyboard events unless marked safe)
+      - currentSessionId in session slice tests (should be currentSession)
+      - vi.fn() in vi.mock() without vi.hoisted() (initialization errors)
+
+      Duration: ~1-2s (static analysis, no test execution).
+
+      Prevents hard-to-debug test failures from common anti-patterns.
+
+      '
   - id: run-integration-tests
     name: Run Integration Tests (manual - requires Docker)
     entry: bash -c 'PYTHONUNBUFFERED=1 OTEL_SDK_DISABLED=true uv run --frozen pytest -n auto tests/integration/ -v --tb=short'

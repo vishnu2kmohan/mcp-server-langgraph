@@ -7,8 +7,53 @@
 
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { renderHook, act, waitFor, cleanup } from "@testing-library/react";
+import { MemoryRouter } from "react-router";
+import { Provider } from "react-redux";
+import { configureStore } from "@reduxjs/toolkit";
+import React from "react";
 import { useHeartDashboard } from "./useHeartDashboard";
 import type { HeartMetricsSnapshot } from "./useHeartMetricsWebSocket";
+
+// Create a minimal mock store for testing
+const createMockStore = () =>
+  configureStore({
+    reducer: {
+      // Minimal reducer that satisfies the store requirements
+      auth: () => ({ user: null, isAuthenticated: false }),
+      session: () => ({ currentSession: null, sessions: [] }),
+    },
+  });
+
+// Wrapper with Router and Redux Provider context
+const RouterWrapper = ({ children }: { children: React.ReactNode }) => (
+  <Provider store={createMockStore()}>
+    <MemoryRouter>{children}</MemoryRouter>
+  </Provider>
+);
+
+// Mock metrics object matching ReconnectionMetrics interface
+const createMockMetrics = () => ({
+  totalReconnections: 0,
+  totalAttempts: 0,
+  consecutiveFailures: 0,
+  lastReconnectionTime: null,
+  lastDisconnectionTime: null,
+  avgReconnectionDurationMs: null,
+  totalReconnectionTimeMs: 0,
+  failuresByReason: {
+    max_attempts_exceeded: 0,
+    token_expired: 0,
+    token_refresh_failed: 0,
+    network_error: 0,
+    server_error: 0,
+    invalid_url: 0,
+    manual_disconnect: 0,
+    unknown: 0,
+    protocol_version_mismatch: 0,
+  },
+  recentAttempts: [],
+  successRate: null,
+});
 
 // Mock useRealtimeSync for WebSocket simulation
 vi.mock("./useRealtimeSync", () => ({
@@ -17,13 +62,19 @@ vi.mock("./useRealtimeSync", () => ({
     send: vi.fn(),
     disconnect: vi.fn(),
     reconnect: vi.fn(),
+    metrics: createMockMetrics(),
+    resetMetrics: vi.fn(),
   })),
 }));
 
-// Mock storage
-vi.mock("../utils/storage", () => ({
-  getAuthToken: vi.fn(() => "test-token"),
-}));
+// Mock storage - use importOriginal to preserve STORAGE_KEYS export
+vi.mock("../utils/storage", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("../utils/storage")>();
+  return {
+    ...actual,
+    getAuthToken: vi.fn(() => "test-token"),
+  };
+});
 
 // Mock fetch for initial data
 const mockFetch = vi.fn();
@@ -86,13 +137,16 @@ describe("useHeartDashboard Real-time Integration", () => {
       send: vi.fn(),
       disconnect: vi.fn(),
       reconnect: vi.fn(),
+      metrics: createMockMetrics(),
+      resetMetrics: vi.fn(),
     }));
   });
 
   describe("WebSocket Connection Status", () => {
     it("should expose WebSocket connection status when enableRealtime is true", async () => {
-      const { result } = renderHook(() =>
-        useHeartDashboard({ enableRealtime: true }),
+      const { result } = renderHook(
+        () => useHeartDashboard({ enableRealtime: true }),
+        { wrapper: RouterWrapper },
       );
 
       await waitFor(() => {
@@ -107,7 +161,9 @@ describe("useHeartDashboard Real-time Integration", () => {
     });
 
     it("should have undefined wsStatus when enableRealtime is false", async () => {
-      const { result } = renderHook(() => useHeartDashboard());
+      const { result } = renderHook(() => useHeartDashboard(), {
+        wrapper: RouterWrapper,
+      });
 
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
@@ -118,7 +174,9 @@ describe("useHeartDashboard Real-time Integration", () => {
     });
 
     it("should indicate when receiving real-time updates", async () => {
-      const { result } = renderHook(() => useHeartDashboard());
+      const { result } = renderHook(() => useHeartDashboard(), {
+        wrapper: RouterWrapper,
+      });
 
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
@@ -142,11 +200,14 @@ describe("useHeartDashboard Real-time Integration", () => {
           send: vi.fn(),
           disconnect: vi.fn(),
           reconnect: vi.fn(),
+          metrics: createMockMetrics(),
+          resetMetrics: vi.fn(),
         };
       });
 
-      const { result } = renderHook(() =>
-        useHeartDashboard({ enableRealtime: true }),
+      const { result } = renderHook(
+        () => useHeartDashboard({ enableRealtime: true }),
+        { wrapper: RouterWrapper },
       );
 
       await waitFor(() => {
@@ -187,11 +248,14 @@ describe("useHeartDashboard Real-time Integration", () => {
           send: vi.fn(),
           disconnect: vi.fn(),
           reconnect: vi.fn(),
+          metrics: createMockMetrics(),
+          resetMetrics: vi.fn(),
         };
       });
 
-      const { result } = renderHook(() =>
-        useHeartDashboard({ enableRealtime: true }),
+      const { result } = renderHook(
+        () => useHeartDashboard({ enableRealtime: true }),
+        { wrapper: RouterWrapper },
       );
 
       await waitFor(() => {
@@ -228,10 +292,13 @@ describe("useHeartDashboard Real-time Integration", () => {
         send: vi.fn(),
         disconnect: vi.fn(),
         reconnect: vi.fn(),
+        metrics: createMockMetrics(),
+        resetMetrics: vi.fn(),
       }));
 
-      const { result } = renderHook(() =>
-        useHeartDashboard({ enableRealtime: true }),
+      const { result } = renderHook(
+        () => useHeartDashboard({ enableRealtime: true }),
+        { wrapper: RouterWrapper },
       );
 
       // When WebSocket is disconnected, isRealtime should be false
@@ -241,8 +308,9 @@ describe("useHeartDashboard Real-time Integration", () => {
     });
 
     it("should disable WebSocket when enableRealtime is false", async () => {
-      const { result } = renderHook(() =>
-        useHeartDashboard({ enableRealtime: false }),
+      const { result } = renderHook(
+        () => useHeartDashboard({ enableRealtime: false }),
+        { wrapper: RouterWrapper },
       );
 
       await waitFor(() => {
@@ -257,8 +325,9 @@ describe("useHeartDashboard Real-time Integration", () => {
   describe("Configuration Options", () => {
     it("should accept enableRealtime option", () => {
       // TDD RED: enableRealtime option doesn't exist in interface yet
-      const { result } = renderHook(() =>
-        useHeartDashboard({ enableRealtime: true }),
+      const { result } = renderHook(
+        () => useHeartDashboard({ enableRealtime: true }),
+        { wrapper: RouterWrapper },
       );
 
       expect(result.current).toBeDefined();
@@ -267,11 +336,13 @@ describe("useHeartDashboard Real-time Integration", () => {
     it("should use custom WebSocket URL when provided", async () => {
       const { useRealtimeSync } = await import("./useRealtimeSync");
 
-      renderHook(() =>
-        useHeartDashboard({
-          enableRealtime: true,
-          wsUrl: "ws://custom:8000/metrics",
-        }),
+      renderHook(
+        () =>
+          useHeartDashboard({
+            enableRealtime: true,
+            wsUrl: "ws://custom:8000/metrics",
+          }),
+        { wrapper: RouterWrapper },
       );
 
       // TDD RED: wsUrl option doesn't exist
@@ -295,11 +366,14 @@ describe("useHeartDashboard Real-time Integration", () => {
           send: vi.fn(),
           disconnect: vi.fn(),
           reconnect: vi.fn(),
+          metrics: createMockMetrics(),
+          resetMetrics: vi.fn(),
         };
       });
 
-      const { result } = renderHook(() =>
-        useHeartDashboard({ enableRealtime: true }),
+      const { result } = renderHook(
+        () => useHeartDashboard({ enableRealtime: true }),
+        { wrapper: RouterWrapper },
       );
 
       await waitFor(() => {
@@ -330,10 +404,15 @@ describe("useHeartDashboard Real-time Integration", () => {
         send: sendMock,
         disconnect: vi.fn(),
         reconnect: vi.fn(),
+        metrics: createMockMetrics(),
+        resetMetrics: vi.fn(),
+        reconnectAttempts: 0,
+        lastMessageTime: null,
       });
 
-      const { result } = renderHook(() =>
-        useHeartDashboard({ enableRealtime: true }),
+      const { result } = renderHook(
+        () => useHeartDashboard({ enableRealtime: true }),
+        { wrapper: RouterWrapper },
       );
 
       await waitFor(() => {

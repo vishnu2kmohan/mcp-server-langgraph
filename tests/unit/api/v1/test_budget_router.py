@@ -15,11 +15,42 @@ Tests cover:
 
 import gc
 from decimal import Decimal
+from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from fastapi import FastAPI
+from fastapi.testclient import TestClient
 
 pytestmark = [pytest.mark.unit, pytest.mark.api]
+
+
+def _create_budget_test_app() -> FastAPI:
+    """Create a test app with proper auth dependency overrides."""
+    from mcp_server_langgraph.api.v1.cost import cost_router
+    from mcp_server_langgraph.auth.dependencies import (
+        get_current_user,
+        require_cost_admin,
+        require_cost_viewer,
+    )
+
+    app = FastAPI()
+    app.include_router(cost_router, prefix="/api/v1")
+
+    # Mock authentication - bypass all auth checks
+    mock_user: dict[str, Any] = {
+        "sub": "test-user-id",
+        "user_id": "test-user-id",
+        "username": "testuser",
+        "email": "testuser@example.com",
+        "roles": ["admin"],
+        "realm_access": {"roles": ["admin"]},
+    }
+    app.dependency_overrides[get_current_user] = lambda: mock_user
+    app.dependency_overrides[require_cost_viewer] = lambda: mock_user
+    app.dependency_overrides[require_cost_admin] = lambda: mock_user
+
+    return app
 
 
 # ==============================================================================
@@ -42,13 +73,7 @@ class TestBudgetCRUDEndpoints:
         WHEN calling GET /cost/budgets
         THEN it should return 200 OK with a list of budgets
         """
-        from fastapi.testclient import TestClient
-        from fastapi import FastAPI
-
-        from mcp_server_langgraph.api.v1.cost import cost_router
-
-        app = FastAPI()
-        app.include_router(cost_router, prefix="/api/v1")
+        app = _create_budget_test_app()
 
         with patch("mcp_server_langgraph.api.v1.cost.get_budget_storage") as mock_storage:
             mock_storage_instance = AsyncMock()  # noqa: async-mock-config
@@ -68,14 +93,9 @@ class TestBudgetCRUDEndpoints:
         WHEN calling GET /cost/budgets
         THEN it should return all budgets
         """
-        from fastapi.testclient import TestClient
-        from fastapi import FastAPI
-
-        from mcp_server_langgraph.api.v1.cost import cost_router
         from mcp_server_langgraph.monitoring.cost_budget import Budget
 
-        app = FastAPI()
-        app.include_router(cost_router, prefix="/api/v1")
+        app = _create_budget_test_app()
 
         mock_budgets = [
             Budget(
@@ -109,17 +129,11 @@ class TestBudgetCRUDEndpoints:
         WHEN calling POST /cost/budgets
         THEN it should return 201 Created
         """
-        from fastapi.testclient import TestClient
-        from fastapi import FastAPI
-
-        from mcp_server_langgraph.api.v1.cost import cost_router
-
-        app = FastAPI()
-        app.include_router(cost_router, prefix="/api/v1")
+        app = _create_budget_test_app()
 
         with patch("mcp_server_langgraph.api.v1.cost.get_budget_storage") as mock_storage:
             mock_storage_instance = AsyncMock()  # noqa: async-mock-config
-            mock_storage_instance.save_budget = AsyncMock()  # noqa: async-mock-config
+            mock_storage_instance.save_budget = AsyncMock(return_value=None)
             mock_storage_instance.get_budget = AsyncMock(return_value=None)
             mock_storage.return_value = mock_storage_instance
 
@@ -143,14 +157,9 @@ class TestBudgetCRUDEndpoints:
         WHEN calling POST /cost/budgets
         THEN it should return 409 Conflict
         """
-        from fastapi.testclient import TestClient
-        from fastapi import FastAPI
-
-        from mcp_server_langgraph.api.v1.cost import cost_router
         from mcp_server_langgraph.monitoring.cost_budget import Budget
 
-        app = FastAPI()
-        app.include_router(cost_router, prefix="/api/v1")
+        app = _create_budget_test_app()
 
         existing_budget = Budget(
             entity_type="project",
@@ -182,14 +191,9 @@ class TestBudgetCRUDEndpoints:
         WHEN calling PUT /cost/budgets/{entity_type}/{entity_id}
         THEN it should return 200 OK with updated budget
         """
-        from fastapi.testclient import TestClient
-        from fastapi import FastAPI
-
-        from mcp_server_langgraph.api.v1.cost import cost_router
         from mcp_server_langgraph.monitoring.cost_budget import Budget
 
-        app = FastAPI()
-        app.include_router(cost_router, prefix="/api/v1")
+        app = _create_budget_test_app()
 
         existing_budget = Budget(
             entity_type="team",
@@ -200,7 +204,7 @@ class TestBudgetCRUDEndpoints:
         with patch("mcp_server_langgraph.api.v1.cost.get_budget_storage") as mock_storage:
             mock_storage_instance = AsyncMock()  # noqa: async-mock-config
             mock_storage_instance.get_budget = AsyncMock(return_value=existing_budget)
-            mock_storage_instance.save_budget = AsyncMock()  # noqa: async-mock-config
+            mock_storage_instance.save_budget = AsyncMock(return_value=None)
             mock_storage.return_value = mock_storage_instance
 
             client = TestClient(app)
@@ -222,13 +226,7 @@ class TestBudgetCRUDEndpoints:
         WHEN calling PUT /cost/budgets/{entity_type}/{entity_id}
         THEN it should return 404 Not Found
         """
-        from fastapi.testclient import TestClient
-        from fastapi import FastAPI
-
-        from mcp_server_langgraph.api.v1.cost import cost_router
-
-        app = FastAPI()
-        app.include_router(cost_router, prefix="/api/v1")
+        app = _create_budget_test_app()
 
         with patch("mcp_server_langgraph.api.v1.cost.get_budget_storage") as mock_storage:
             mock_storage_instance = AsyncMock()  # noqa: async-mock-config
@@ -250,13 +248,7 @@ class TestBudgetCRUDEndpoints:
         WHEN calling DELETE /cost/budgets/{entity_type}/{entity_id}
         THEN it should return 204 No Content
         """
-        from fastapi.testclient import TestClient
-        from fastapi import FastAPI
-
-        from mcp_server_langgraph.api.v1.cost import cost_router
-
-        app = FastAPI()
-        app.include_router(cost_router, prefix="/api/v1")
+        app = _create_budget_test_app()
 
         with patch("mcp_server_langgraph.api.v1.cost.get_budget_storage") as mock_storage:
             mock_storage_instance = AsyncMock()  # noqa: async-mock-config
@@ -276,13 +268,7 @@ class TestBudgetCRUDEndpoints:
         WHEN calling DELETE /cost/budgets/{entity_type}/{entity_id}
         THEN it should return 404 Not Found
         """
-        from fastapi.testclient import TestClient
-        from fastapi import FastAPI
-
-        from mcp_server_langgraph.api.v1.cost import cost_router
-
-        app = FastAPI()
-        app.include_router(cost_router, prefix="/api/v1")
+        app = _create_budget_test_app()
 
         with patch("mcp_server_langgraph.api.v1.cost.get_budget_storage") as mock_storage:
             mock_storage_instance = AsyncMock()  # noqa: async-mock-config
@@ -310,13 +296,7 @@ class TestBudgetStatusEndpoint:
         WHEN calling GET /cost/budget/status
         THEN it should return 200 OK
         """
-        from fastapi.testclient import TestClient
-
-        from mcp_server_langgraph.api.v1.cost import cost_router
-        from fastapi import FastAPI
-
-        app = FastAPI()
-        app.include_router(cost_router, prefix="/api/v1")
+        app = _create_budget_test_app()
 
         with (
             patch("mcp_server_langgraph.api.v1.cost.get_budget_checker") as mock_checker,
@@ -364,13 +344,7 @@ class TestBudgetStatusEndpoint:
         WHEN calling GET /cost/budget/status
         THEN it should return budget status with all fields
         """
-        from fastapi.testclient import TestClient
-
-        from mcp_server_langgraph.api.v1.cost import cost_router
-        from fastapi import FastAPI
-
-        app = FastAPI()
-        app.include_router(cost_router, prefix="/api/v1")
+        app = _create_budget_test_app()
 
         with (
             patch("mcp_server_langgraph.api.v1.cost.get_budget_checker") as mock_checker,
@@ -430,13 +404,7 @@ class TestBudgetAnomalyEndpoint:
         WHEN calling GET /cost/budget/anomaly
         THEN it should return 200 OK
         """
-        from fastapi.testclient import TestClient
-
-        from mcp_server_langgraph.api.v1.cost import cost_router
-        from fastapi import FastAPI
-
-        app = FastAPI()
-        app.include_router(cost_router, prefix="/api/v1")
+        app = _create_budget_test_app()
 
         with (
             patch("mcp_server_langgraph.api.v1.cost.get_anomaly_detector") as mock_detector,
@@ -486,13 +454,7 @@ class TestBudgetAnomalyEndpoint:
         WHEN calling GET /cost/budget/anomaly
         THEN it should return is_anomaly=True
         """
-        from fastapi.testclient import TestClient
-
-        from mcp_server_langgraph.api.v1.cost import cost_router
-        from fastapi import FastAPI
-
-        app = FastAPI()
-        app.include_router(cost_router, prefix="/api/v1")
+        app = _create_budget_test_app()
 
         with (
             patch("mcp_server_langgraph.api.v1.cost.get_anomaly_detector") as mock_detector,
@@ -555,13 +517,7 @@ class TestBudgetForecastEndpoint:
         WHEN calling GET /cost/budget/forecast
         THEN it should return 200 OK
         """
-        from fastapi.testclient import TestClient
-
-        from mcp_server_langgraph.api.v1.cost import cost_router
-        from fastapi import FastAPI
-
-        app = FastAPI()
-        app.include_router(cost_router, prefix="/api/v1")
+        app = _create_budget_test_app()
 
         with (
             patch("mcp_server_langgraph.api.v1.cost.get_forecaster") as mock_forecaster,
@@ -606,13 +562,7 @@ class TestBudgetForecastEndpoint:
         WHEN calling GET /cost/budget/forecast
         THEN it should return projected total and trend
         """
-        from fastapi.testclient import TestClient
-
-        from mcp_server_langgraph.api.v1.cost import cost_router
-        from fastapi import FastAPI
-
-        app = FastAPI()
-        app.include_router(cost_router, prefix="/api/v1")
+        app = _create_budget_test_app()
 
         with (
             patch("mcp_server_langgraph.api.v1.cost.get_forecaster") as mock_forecaster,
