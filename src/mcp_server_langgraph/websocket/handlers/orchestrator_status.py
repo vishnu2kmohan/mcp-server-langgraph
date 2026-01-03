@@ -16,6 +16,11 @@ Message Types (Server -> Client):
     - task_started: A task has started processing
     - task_completed: A task completed successfully
     - task_failed: A task failed with error
+    - workflow_validation_started: Workflow validation has started
+    - workflow_validation_passed: Workflow validation passed
+    - workflow_validation_failed: Workflow validation failed
+    - workflow_draft_saved: A workflow draft was saved
+    - workflow_published: A workflow was published
 
 Example Messages:
     orchestrator_status:
@@ -91,6 +96,7 @@ class TaskCategory(Enum):
     HITL = "hitl"
     COMMAND = "command"
     ALERT = "alert"
+    WORKFLOW = "workflow"  # Workflow validation and lifecycle events
 
 
 @dataclass
@@ -522,6 +528,142 @@ class OrchestratorStatusBroadcaster:
                     "task_type": task_type,
                     "category": category.value,
                     "queue_depth": len(self._queued_tasks),
+                },
+            },
+            user_id=user_id,
+        )
+
+    # =========================================================================
+    # Workflow Validation Events (Chat-to-Workflow Feature)
+    # =========================================================================
+
+    async def broadcast_workflow_validation_started(
+        self,
+        workflow_id: str,
+        user_id: str | None = None,
+    ) -> None:
+        """
+        Broadcast that workflow validation has started.
+
+        Args:
+            workflow_id: The workflow being validated.
+            user_id: Optional user ID to filter recipients.
+        """
+        await self._broadcast(
+            {
+                "type": "workflow_validation_started",
+                "payload": {
+                    "workflow_id": workflow_id,
+                    "started_at": datetime.now(UTC).isoformat(),
+                },
+            },
+            user_id=user_id,
+        )
+
+    async def broadcast_workflow_validation_passed(
+        self,
+        workflow_id: str,
+        warnings: list[str] | None = None,
+        user_id: str | None = None,
+    ) -> None:
+        """
+        Broadcast that workflow validation passed.
+
+        Args:
+            workflow_id: The workflow that was validated.
+            warnings: Optional list of validation warnings.
+            user_id: Optional user ID to filter recipients.
+        """
+        payload: dict[str, Any] = {
+            "workflow_id": workflow_id,
+            "valid": True,
+            "completed_at": datetime.now(UTC).isoformat(),
+        }
+        if warnings:
+            payload["warnings"] = warnings
+
+        await self._broadcast(
+            {"type": "workflow_validation_passed", "payload": payload},
+            user_id=user_id,
+        )
+
+    async def broadcast_workflow_validation_failed(
+        self,
+        workflow_id: str,
+        errors: list[str],
+        warnings: list[str] | None = None,
+        user_id: str | None = None,
+    ) -> None:
+        """
+        Broadcast that workflow validation failed.
+
+        Args:
+            workflow_id: The workflow that was validated.
+            errors: List of validation errors.
+            warnings: Optional list of validation warnings.
+            user_id: Optional user ID to filter recipients.
+        """
+        payload: dict[str, Any] = {
+            "workflow_id": workflow_id,
+            "valid": False,
+            "errors": errors,
+            "completed_at": datetime.now(UTC).isoformat(),
+        }
+        if warnings:
+            payload["warnings"] = warnings
+
+        await self._broadcast(
+            {"type": "workflow_validation_failed", "payload": payload},
+            user_id=user_id,
+        )
+
+    async def broadcast_workflow_draft_saved(
+        self,
+        workflow_id: str,
+        version: int,
+        user_id: str | None = None,
+    ) -> None:
+        """
+        Broadcast that a workflow draft was saved.
+
+        Args:
+            workflow_id: The workflow that was saved.
+            version: The version number of the saved draft.
+            user_id: Optional user ID to filter recipients.
+        """
+        await self._broadcast(
+            {
+                "type": "workflow_draft_saved",
+                "payload": {
+                    "workflow_id": workflow_id,
+                    "version": version,
+                    "saved_at": datetime.now(UTC).isoformat(),
+                },
+            },
+            user_id=user_id,
+        )
+
+    async def broadcast_workflow_published(
+        self,
+        workflow_id: str,
+        version: int,
+        user_id: str | None = None,
+    ) -> None:
+        """
+        Broadcast that a workflow was published.
+
+        Args:
+            workflow_id: The workflow that was published.
+            version: The version number that was published.
+            user_id: Optional user ID to filter recipients.
+        """
+        await self._broadcast(
+            {
+                "type": "workflow_published",
+                "payload": {
+                    "workflow_id": workflow_id,
+                    "version": version,
+                    "published_at": datetime.now(UTC).isoformat(),
                 },
             },
             user_id=user_id,

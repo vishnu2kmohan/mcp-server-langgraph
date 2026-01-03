@@ -141,7 +141,7 @@ class TestPeriodicTokenValidationIntegration:
         expired_token = _create_test_token(-60)  # Expired 1 minute ago
 
         mock_ws = AsyncMock()  # noqa: async-mock-config
-        mock_ws.query_params = {"token": expired_token}
+        mock_ws.query_params = {"token": expired_token, "v": "1.0.0"}
         mock_ws.headers = {}
         mock_ws.client_state = None
 
@@ -212,7 +212,7 @@ class TestPeriodicTokenValidationIntegration:
         valid_token = _create_test_token(3600)
 
         mock_ws = AsyncMock()  # noqa: async-mock-config
-        mock_ws.query_params = {"token": valid_token}
+        mock_ws.query_params = {"token": valid_token, "v": "1.0.0"}
         mock_ws.headers = {}
         mock_ws.client_state = None
 

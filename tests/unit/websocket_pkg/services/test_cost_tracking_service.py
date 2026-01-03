@@ -180,3 +180,108 @@ class TestCostTrackingUserBudget:
 
         assert "session-delete" not in adapter._session_costs
         mock_cache.adelete.assert_called_once()
+
+
+@pytest.mark.unit
+@pytest.mark.xdist_group(name="cost_tracking_service")
+class TestCostTrackingDatabaseFallback:
+    """Tests for database fallback when cache misses."""
+
+    def setup_method(self) -> None:
+        """Reset singleton before each test."""
+        reset_websocket_cost_service()
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation."""
+        reset_websocket_cost_service()
+        gc.collect()
+
+    @pytest.mark.asyncio
+    async def test_get_session_cost_queries_database_on_cache_miss(self) -> None:
+        """get_session_cost queries TokenUsageRecord on cache miss."""
+        from decimal import Decimal
+
+        mock_cache = AsyncMock()
+        mock_cache.aget.return_value = None  # Cache miss
+
+        # Mock database session and query
+        mock_session = AsyncMock()
+        mock_result = MagicMock()
+        # Simulate database aggregation result: (total_cost, total_tokens)
+        mock_result.one_or_none.return_value = (Decimal("0.0542"), 2500)
+        mock_session.execute.return_value = mock_result
+
+        adapter = CostTrackingServiceAdapter(cache=mock_cache)
+
+        with (
+            patch("mcp_server_langgraph.websocket.services.cost_tracking.get_feature_flags") as mock_flags,
+            patch(
+                "mcp_server_langgraph.websocket.services.cost_tracking.get_async_session_context"
+            ) as mock_get_session,
+        ):
+            mock_flags.return_value = MagicMock(enable_websocket_enhanced_metrics=True)
+            mock_get_session.return_value.__aenter__.return_value = mock_session
+
+            result = await adapter.get_session_cost("session-db-test")
+
+        # Should have queried database and returned aggregated data
+        assert result["session_id"] == "session-db-test"
+        assert result["total_cost"] == pytest.approx(0.0542, rel=1e-4)
+        assert result["token_count"] == 2500
+
+        # Should have cached the result in Redis
+        mock_cache.aset.assert_called_once()
+
+    @pytest.mark.asyncio
+    async def test_get_session_cost_returns_zeros_when_database_empty(self) -> None:
+        """get_session_cost returns zeros when no database records exist."""
+        mock_cache = AsyncMock()
+        mock_cache.aget.return_value = None  # Cache miss
+
+        # Mock database session returning None (no records)
+        mock_session = AsyncMock()
+        mock_result = MagicMock()
+        mock_result.one_or_none.return_value = None
+        mock_session.execute.return_value = mock_result
+
+        adapter = CostTrackingServiceAdapter(cache=mock_cache)
+
+        with (
+            patch("mcp_server_langgraph.websocket.services.cost_tracking.get_feature_flags") as mock_flags,
+            patch(
+                "mcp_server_langgraph.websocket.services.cost_tracking.get_async_session_context"
+            ) as mock_get_session,
+        ):
+            mock_flags.return_value = MagicMock(enable_websocket_enhanced_metrics=True)
+            mock_get_session.return_value.__aenter__.return_value = mock_session
+
+            result = await adapter.get_session_cost("session-empty")
+
+        # Should return zeros when database has no records
+        assert result["session_id"] == "session-empty"
+        assert result["total_cost"] == 0.0
+        assert result["token_count"] == 0
+
+    @pytest.mark.asyncio
+    async def test_get_session_cost_handles_database_error_gracefully(self) -> None:
+        """get_session_cost returns zeros on database error."""
+        mock_cache = AsyncMock()
+        mock_cache.aget.return_value = None  # Cache miss
+
+        adapter = CostTrackingServiceAdapter(cache=mock_cache)
+
+        with (
+            patch("mcp_server_langgraph.websocket.services.cost_tracking.get_feature_flags") as mock_flags,
+            patch(
+                "mcp_server_langgraph.websocket.services.cost_tracking.get_async_session_context"
+            ) as mock_get_session,
+        ):
+            mock_flags.return_value = MagicMock(enable_websocket_enhanced_metrics=True)
+            mock_get_session.side_effect = Exception("Database connection failed")
+
+            result = await adapter.get_session_cost("session-db-error")
+
+        # Should gracefully return zeros on database error
+        assert result["session_id"] == "session-db-error"
+        assert result["total_cost"] == 0.0
+        assert result["token_count"] == 0

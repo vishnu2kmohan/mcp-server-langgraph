@@ -3,12 +3,13 @@ Cost Tracking Service Adapter for WebSocket.
 
 Adapts the existing CostServiceImpl to the CostServiceProtocol expected
 by the WebSocket handler. Provides session-level cost tracking when available,
-with stub fallbacks for features under development.
+with database fallback for historical cost data.
 
 Architecture:
     - Wraps CostServiceImpl for aggregate cost data
     - Uses Redis for session-level cost caching (L1+L2 tiered cache)
     - Falls back to in-memory cache when Redis is unavailable
+    - Queries TokenUsageRecord from database on cache miss
     - Key pattern: session_cost:{session_id}
     - TTL: 1 hour for active sessions
 """
@@ -16,14 +17,19 @@ Architecture:
 from __future__ import annotations
 
 import logging
+from contextlib import asynccontextmanager
 from datetime import datetime, UTC
-from typing import TYPE_CHECKING, Any
+from decimal import Decimal
+from typing import TYPE_CHECKING, Any, AsyncIterator
+
+from sqlalchemy import func, select
 
 from mcp_server_langgraph.core.feature_flags import get_feature_flags
 
 if TYPE_CHECKING:
     from mcp_server_langgraph.api.v1.cost import CostService
     from mcp_server_langgraph.core.cache import CacheService
+    from sqlalchemy.ext.asyncio import AsyncSession
 
 logger = logging.getLogger(__name__)
 
@@ -36,6 +42,21 @@ SESSION_COST_CACHE_KEY_PREFIX = "session_cost"
 
 # Cache TTL: 1 hour for active sessions
 SESSION_COST_CACHE_TTL = 3600  # seconds
+
+
+@asynccontextmanager
+async def get_async_session_context() -> AsyncIterator[AsyncSession]:
+    """
+    Get async database session context manager.
+
+    Yields an async session for database operations.
+    Commits on success, rolls back on exception.
+    """
+    from mcp_server_langgraph.core.config import settings
+    from mcp_server_langgraph.database import get_async_session
+
+    async with get_async_session(settings.database_url) as session:
+        yield session
 
 
 class CostTrackingServiceAdapter:
@@ -134,10 +155,7 @@ class CostTrackingServiceAdapter:
         if session_id in self._session_costs:
             return self._session_costs[session_id]
 
-        # 3. No cache entry found - return stub data
-        # Note: The cache is populated by LLM calls via update_session_cost_async.
-        # If there's no cache entry, it means no LLM calls have been made for this
-        # session yet, so 0.0 cost is the correct value.
+        # 3. Check feature flag
         flags = get_feature_flags()
         if not flags.enable_websocket_enhanced_metrics:
             # Return minimal stub when metrics are disabled
@@ -147,9 +165,34 @@ class CostTrackingServiceAdapter:
                 "token_count": 0,
             }
 
-        # Return stub - cache will be populated when LLM calls are made
+        # 4. Query database for historical cost data
+        try:
+            session_cost = await self._query_session_cost_from_database(session_id)
+            if session_cost:
+                # Cache the result in Redis for future requests
+                try:
+                    await self.cache.aset(
+                        cache_key, session_cost, ttl=SESSION_COST_CACHE_TTL
+                    )
+                    logger.debug(
+                        f"Cached session cost from database for {session_id}",
+                        extra={"session_id": session_id},
+                    )
+                except Exception as e:
+                    logger.warning(
+                        f"Failed to cache session cost for {session_id}: {e}",
+                        extra={"session_id": session_id, "error": str(e)},
+                    )
+                return session_cost
+        except Exception as e:
+            logger.warning(
+                f"Database query failed for session {session_id}: {e}",
+                extra={"session_id": session_id, "error": str(e)},
+            )
+
+        # 5. Return zeros when no data found
         logger.debug(
-            f"No cached cost for session {session_id}, returning initial values",
+            f"No cost data for session {session_id}, returning initial values",
             extra={"session_id": session_id},
         )
         return {
@@ -157,6 +200,43 @@ class CostTrackingServiceAdapter:
             "total_cost": 0.0,
             "token_count": 0,
         }
+
+    async def _query_session_cost_from_database(
+        self, session_id: str
+    ) -> dict[str, Any] | None:
+        """
+        Query TokenUsageRecord to aggregate costs by session_id.
+
+        Args:
+            session_id: Session identifier to query.
+
+        Returns:
+            Session cost data dict or None if no records found.
+        """
+        from mcp_server_langgraph.database.models import TokenUsageRecord
+
+        async with get_async_session_context() as session:
+            # Aggregate costs by session_id
+            stmt = select(
+                func.sum(TokenUsageRecord.estimated_cost_usd).label("total_cost"),
+                func.sum(TokenUsageRecord.total_tokens).label("total_tokens"),
+            ).where(TokenUsageRecord.session_id == session_id)
+
+            result = await session.execute(stmt)
+            row = result.one_or_none()
+
+            if row is None or row[0] is None:
+                return None
+
+            total_cost_decimal: Decimal = row[0]
+            total_tokens: int = row[1] or 0
+
+            return {
+                "session_id": session_id,
+                "total_cost": float(total_cost_decimal),
+                "token_count": total_tokens,
+                "updated_at": datetime.now(UTC).isoformat(),
+            }
 
     async def get_user_budget(self, user_id: str) -> dict[str, Any]:
         """

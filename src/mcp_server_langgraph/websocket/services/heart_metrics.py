@@ -99,7 +99,8 @@ class HeartMetricsServiceAdapter:
         Returns:
             Dict with all HEART dimension scores and trends.
         """
-        metrics = {}
+        assert self._metrics_client is not None  # Caller guarantees this
+        metrics: dict[str, Any] = {}
         dimensions = {
             "happiness": "heart_happiness_score",
             "engagement": "heart_engagement_rate",
@@ -220,6 +221,7 @@ class HeartMetricsServiceAdapter:
         Returns:
             Detailed metrics for the dimension.
         """
+        assert self._metrics_client is not None  # Caller guarantees this
         metric_names = {
             "happiness": "heart_happiness_score",
             "engagement": "heart_engagement_rate",

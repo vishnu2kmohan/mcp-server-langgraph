@@ -180,7 +180,7 @@ class TestWebSocketLifecycleIntegration:
         """
         token = _create_test_jwt(user_id="user:alice", username="alice")
 
-        with lifecycle_client.websocket_connect(f"/ws/auth-required?token={token}") as websocket:
+        with lifecycle_client.websocket_connect(f"/ws/auth-required?v=1.0.0&token={token}") as websocket:
             assert websocket is not None
             # Send a ping to verify connection is working
             websocket.send_json({"type": "ping", "payload": {}})
@@ -232,7 +232,7 @@ class TestWebSocketLifecycleIntegration:
         WHEN connecting to a no-auth WebSocket
         THEN the connection is established successfully.
         """
-        with lifecycle_client.websocket_connect("/ws/no-auth") as websocket:
+        with lifecycle_client.websocket_connect("/ws/no-auth?v=1.0.0") as websocket:
             assert websocket is not None
             # Send ping to verify
             websocket.send_json({"type": "ping", "payload": {}})
@@ -247,7 +247,7 @@ class TestWebSocketLifecycleIntegration:
         """
         token = _create_test_jwt(user_id="user:alice")
 
-        with lifecycle_client.websocket_connect(f"/ws/auth-required?token={token}") as websocket:
+        with lifecycle_client.websocket_connect(f"/ws/auth-required?v=1.0.0&token={token}") as websocket:
             # Send ping
             websocket.send_json({"type": "ping", "payload": {}})
             response = websocket.receive_json()
@@ -264,7 +264,7 @@ class TestWebSocketLifecycleIntegration:
         """
         token = _create_test_jwt(user_id="user:alice")
 
-        with lifecycle_client.websocket_connect(f"/ws/auth-required?token={token}") as websocket:
+        with lifecycle_client.websocket_connect(f"/ws/auth-required?v=1.0.0&token={token}") as websocket:
             # Send echo message
             websocket.send_json(
                 {
@@ -285,7 +285,7 @@ class TestWebSocketLifecycleIntegration:
         """
         token = _create_test_jwt(user_id="user:alice")
 
-        with lifecycle_client.websocket_connect(f"/ws/auth-required?token={token}") as websocket:
+        with lifecycle_client.websocket_connect(f"/ws/auth-required?v=1.0.0&token={token}") as websocket:
             # Send multiple messages
             for i in range(3):
                 websocket.send_json(
@@ -306,7 +306,7 @@ class TestWebSocketLifecycleIntegration:
         """
         token = _create_test_jwt(user_id="user:alice")
 
-        with lifecycle_client.websocket_connect(f"/ws/auth-required?token={token}") as websocket:
+        with lifecycle_client.websocket_connect(f"/ws/auth-required?v=1.0.0&token={token}") as websocket:
             # Send unknown message type (not invalid, just unhandled)
             websocket.send_json({"type": "unknown_custom_type", "payload": {}})
 
@@ -336,7 +336,7 @@ class TestWebSocketAuthorizationIntegration:
             roles=["admin", "user"],
         )
 
-        with lifecycle_client.websocket_connect(f"/ws/auth-required?token={admin_token}") as websocket:
+        with lifecycle_client.websocket_connect(f"/ws/auth-required?v=1.0.0&token={admin_token}") as websocket:
             websocket.send_json({"type": "ping", "payload": {}})
             response = websocket.receive_json()
             assert response["type"] == "pong"
@@ -351,12 +351,12 @@ class TestWebSocketAuthorizationIntegration:
         bob_token = _create_test_jwt(user_id="user:bob", username="bob")
 
         # Both should connect successfully
-        with lifecycle_client.websocket_connect(f"/ws/auth-required?token={alice_token}") as alice_ws:
+        with lifecycle_client.websocket_connect(f"/ws/auth-required?v=1.0.0&token={alice_token}") as alice_ws:
             alice_ws.send_json({"type": "echo", "payload": {"user": "alice"}})
             alice_response = alice_ws.receive_json()
             assert alice_response["payload"]["echo"]["user"] == "alice"
 
-        with lifecycle_client.websocket_connect(f"/ws/auth-required?token={bob_token}") as bob_ws:
+        with lifecycle_client.websocket_connect(f"/ws/auth-required?v=1.0.0&token={bob_token}") as bob_ws:
             bob_ws.send_json({"type": "echo", "payload": {"user": "bob"}})
             bob_response = bob_ws.receive_json()
             assert bob_response["payload"]["echo"]["user"] == "bob"
@@ -378,7 +378,7 @@ class TestWebSocketErrorHandlingIntegration:
         """
         token = _create_test_jwt(user_id="user:alice")
 
-        with lifecycle_client.websocket_connect(f"/ws/auth-required?token={token}") as websocket:
+        with lifecycle_client.websocket_connect(f"/ws/auth-required?v=1.0.0&token={token}") as websocket:
             # Send malformed JSON as text
             websocket.send_text("not valid json {{{")
             response = websocket.receive_json()
@@ -398,7 +398,7 @@ class TestWebSocketErrorHandlingIntegration:
         """
         token = _create_test_jwt(user_id="user:alice")
 
-        with lifecycle_client.websocket_connect(f"/ws/auth-required?token={token}") as websocket:
+        with lifecycle_client.websocket_connect(f"/ws/auth-required?v=1.0.0&token={token}") as websocket:
             # Send unknown message type
             websocket.send_json({"type": "unknown_type", "payload": {}})
 
@@ -486,7 +486,7 @@ class TestWebSocketRateLimitHeadersIntegration:
         """
         token = _create_test_jwt(user_id="user:alice", username="alice")
 
-        with rate_limit_client.websocket_connect(f"/ws/rate-limited?token={token}") as websocket:
+        with rate_limit_client.websocket_connect(f"/ws/rate-limited?v=1.0.0&token={token}") as websocket:
             # Send 3 messages (at limit)
             for i in range(3):
                 websocket.send_json({"type": "echo", "payload": {"msg": i}})
@@ -518,7 +518,7 @@ class TestWebSocketRateLimitHeadersIntegration:
         """
         token = _create_test_jwt(user_id="user:alice", username="alice")
 
-        with rate_limit_client.websocket_connect(f"/ws/rate-limited?token={token}") as websocket:
+        with rate_limit_client.websocket_connect(f"/ws/rate-limited?v=1.0.0&token={token}") as websocket:
             # Exhaust rate limit
             for i in range(3):
                 websocket.send_json({"type": "echo", "payload": {"msg": i}})
