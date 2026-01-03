@@ -11,13 +11,14 @@ Usage:
     GET /api/v1/chat/{session_id}/history - Get chat history for a session
 
 LLM Integration:
-    This module supports both streaming methods:
-    - _stream_via_llm_factory(): Uses LLMFactory.astream() with resilience patterns
-      (bulkhead isolation, structured error handling, OTEL tracing)
-    - _stream_via_litellm(): Direct litellm.acompletion (legacy fallback)
+    All streaming uses LLMFactory.astream() which provides:
+    - Circuit breaker resilience
+    - Retry with exponential backoff
+    - OTEL tracing integration
+    - Cost tracking via LiteLLM's CostTrackingCallback
 
-    Cost tracking is handled automatically via LiteLLM's CostTrackingCallback
-    registered in llm/factory.py.
+    Note: The legacy _stream_via_litellm() method has been removed.
+    LLMFactory is now the only streaming path, providing unified resilience patterns.
 
 Authorization:
     All endpoints require authentication. Chat sessions are user-owned resources.
@@ -614,10 +615,8 @@ class ChatServiceImpl(ChatService):
 
         factory = self.llm_factory
         if not factory:
-            # Fallback to litellm if factory not available
-            async for chunk in self._stream_via_litellm(session_id, messages, **kwargs):
-                yield chunk
-            return
+            # LLMFactory is required for streaming - legacy litellm path removed
+            raise ChatError("LLMFactory is required for streaming. Please configure LLM settings.")
 
         async for chunk in factory.astream(langchain_messages, **kwargs):
             # Only yield non-final chunks (final chunk typically has empty content)
@@ -633,74 +632,12 @@ class ChatServiceImpl(ChatService):
 
             yield chunk_data
 
-    async def _stream_via_litellm(
-        self,
-        session_id: str,
-        messages: list[dict[str, Any]],
-        **kwargs: Any,
-    ) -> AsyncIterator[dict[str, Any]]:
-        """Stream completion using LiteLLM directly (legacy fallback)."""
-        model = kwargs.get("model") or settings.model_name
-        temperature = kwargs.get("temperature", 0.7)
-        max_tokens = kwargs.get("max_tokens")
-        reasoning_effort = kwargs.get("reasoning_effort")
-        enable_thinking = kwargs.get("enable_thinking", True)
-
-        # Inject resource context if provided
-        resource_uris = kwargs.get("resource_uris")
-        messages = await self._inject_resource_context(messages, resource_uris)
-
-        # Build completion parameters
-        completion_params: dict[str, Any] = {
-            "model": model,
-            "messages": messages,
-            "temperature": temperature,
-            "max_tokens": max_tokens,
-            "stream": True,
-        }
-
-        # Add reasoning_effort for models that support extended thinking
-        # Only add if thinking is enabled and the model supports it
-        supports_thinking = model_supports_thinking(model)
-        if supports_thinking and enable_thinking and reasoning_effort:
-            completion_params["reasoning_effort"] = reasoning_effort
-
-        # Add OTEL metadata for distributed tracing (streaming)
-        # LiteLLM propagates metadata.* attributes to OTEL spans
-        from mcp_server_langgraph.llm.otel_integration import build_otel_metadata
-
-        completion_params["metadata"] = build_otel_metadata(
-            session_id=session_id,
-            workflow_id=kwargs.get("workflow_id"),
-            orchestrator_id=kwargs.get("orchestrator_id"),
-            user_id=kwargs.get("user_id"),
-            request_id=kwargs.get("request_id"),
-            feature="chat_stream",
-            # Organizational hierarchy for cost attribution
-            organization_id=kwargs.get("organization_id"),
-            project_id=kwargs.get("project_id"),
-            team_id=kwargs.get("team_id"),
-        )
-
-        response = await acompletion(**completion_params)
-
-        async for chunk in response:
-            if chunk.choices:
-                delta = chunk.choices[0].delta
-                chunk_data: dict[str, Any] = {
-                    "delta": {
-                        "content": delta.content if hasattr(delta, "content") else "",
-                    },
-                }
-
-                # Include thinking content in stream if available
-                # LiteLLM may stream thinking blocks or reasoning_content
-                if hasattr(delta, "reasoning_content") and delta.reasoning_content:
-                    chunk_data["delta"]["thinking"] = delta.reasoning_content
-                elif hasattr(delta, "thinking") and delta.thinking:
-                    chunk_data["delta"]["thinking"] = delta.thinking
-
-                yield chunk_data
+    # NOTE: _stream_via_litellm has been removed.
+    # All streaming now goes through LLMFactory.astream() which provides:
+    # - Circuit breaker resilience
+    # - Retry with backoff
+    # - OTEL tracing integration
+    # - Cost tracking via callbacks
 
     async def _stream_via_langgraph(
         self,
@@ -854,6 +791,10 @@ class ChatServiceImpl(ChatService):
 
         use_langgraph = kwargs.pop("use_langgraph", False)
 
+        # Inject resource context if provided (was in legacy _stream_via_litellm, moved here)
+        resource_uris = kwargs.pop("resource_uris", None)
+        messages = await self._inject_resource_context(messages, resource_uris)
+
         # Try LangGraph agent if requested and configured
         if use_langgraph and self._langgraph_agent is not None:
             try:
@@ -872,17 +813,10 @@ class ChatServiceImpl(ChatService):
             except ChatError as e:
                 logger.warning(f"MCP streaming failed, falling back: {e}")
 
-        # Use LLMFactory streaming if feature flag enabled (provides resilience patterns)
-        if feature_flags.enable_llm_factory_streaming:
-            try:
-                async for chunk in self._stream_via_llm_factory(session_id, messages, **kwargs):
-                    yield chunk
-                return
-            except Exception as e:
-                logger.warning(f"LLMFactory streaming failed, falling back to LiteLLM: {e}")
-
-        # Fallback to direct LiteLLM (legacy path)
-        async for chunk in self._stream_via_litellm(session_id, messages, **kwargs):
+        # Use LLMFactory streaming (provides resilience patterns: circuit breaker, retry)
+        # Note: enable_llm_factory_streaming feature flag controls resilience features,
+        # but LLMFactory.astream() is always the streaming method (legacy litellm removed)
+        async for chunk in self._stream_via_llm_factory(session_id, messages, **kwargs):
             yield chunk
 
     async def get_history(self, session_id: str) -> list[dict[str, Any]] | None:

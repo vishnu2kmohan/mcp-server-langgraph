@@ -225,18 +225,24 @@ class TestChatStreamingBackwardCompatibility:
         gc.collect()
 
     @pytest.mark.asyncio
-    async def test_stream_via_litellm_still_works(self) -> None:
+    async def test_stream_via_litellm_removed(self) -> None:
         """
         GIVEN a ChatServiceImpl
-        WHEN using _stream_via_litellm (legacy method)
-        THEN it should still work for backward compatibility
+        WHEN checking for legacy _stream_via_litellm
+        THEN it should NOT exist (legacy method removed)
+
+        This validates the removal of the legacy litellm fallback path.
+        All streaming now goes through LLMFactory.astream() with resilience patterns.
         """
         from mcp_server_langgraph.api.v1.chat import ChatServiceImpl
 
         service = ChatServiceImpl()
 
-        # _stream_via_litellm should still exist
-        assert hasattr(service, "_stream_via_litellm")
+        # _stream_via_litellm should be removed (legacy method deleted)
+        assert not hasattr(service, "_stream_via_litellm"), (
+            "_stream_via_litellm should be removed. "
+            "All streaming should now use LLMFactory.astream()"
+        )
 
     def test_chat_completion_service_has_stream_via_llm_factory_method(self) -> None:
         """

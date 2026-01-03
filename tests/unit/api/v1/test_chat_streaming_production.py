@@ -45,17 +45,20 @@ class TestLLMFactoryStreamingFeatureFlag:
         assert hasattr(flags, "enable_llm_factory_streaming")
         assert isinstance(flags.enable_llm_factory_streaming, bool)
 
-    def test_feature_flag_default_false(self) -> None:
+    def test_feature_flag_default_true(self) -> None:
         """
         GIVEN the FeatureFlags class
         WHEN using default values
-        THEN enable_llm_factory_streaming should be False (gradual rollout)
+        THEN enable_llm_factory_streaming should be True (legacy removed)
+
+        With the removal of _stream_via_litellm, LLMFactory streaming is now
+        the default and only path for streaming. The flag defaults to True.
         """
         from mcp_server_langgraph.core.feature_flags import FeatureFlags
 
         flags = FeatureFlags()
-        # Default to False for gradual rollout
-        assert flags.enable_llm_factory_streaming is False
+        # Default to True now that legacy litellm path is removed
+        assert flags.enable_llm_factory_streaming is True
 
 
 # =============================================================================
@@ -105,59 +108,56 @@ class TestLLMFactoryStreamingProductionWiring:
             assert any("delta" in c for c in chunks)
 
     @pytest.mark.asyncio
-    async def test_create_stream_uses_litellm_when_flag_disabled(self) -> None:
+    async def test_create_stream_always_uses_llm_factory(self) -> None:
         """
-        GIVEN enable_llm_factory_streaming=False
-        WHEN create_stream is called (and MCP not configured)
-        THEN it should use _stream_via_litellm (legacy path)
-        """
-        from mcp_server_langgraph.api.v1.chat import ChatServiceImpl
-
-        service = ChatServiceImpl()
-
-        messages = [{"role": "user", "content": "Hi"}]
-
-        with (
-            patch("mcp_server_langgraph.api.v1.chat.feature_flags") as mock_flags,
-            patch("mcp_server_langgraph.api.v1.chat.acompletion", new_callable=AsyncMock) as mock_acompletion,
-        ):
-            mock_flags.enable_llm_factory_streaming = False
-
-            # Mock litellm streaming response
-            async def mock_stream():
-                class MockDelta:
-                    content = "Hi there"
-
-                class MockChoice:
-                    delta = MockDelta()
-
-                class MockChunk:
-                    choices = [MockChoice()]
-
-                yield MockChunk()
-
-            mock_acompletion.return_value = mock_stream()
-
-            chunks = []
-            async for chunk in service.create_stream("session-1", messages):
-                chunks.append(chunk)
-
-            # Should have used litellm
-            mock_acompletion.assert_called_once()
-
-    @pytest.mark.asyncio
-    async def test_create_stream_fallback_on_factory_error(self) -> None:
-        """
-        GIVEN enable_llm_factory_streaming=True and factory throws error
+        GIVEN enable_llm_factory_streaming=True (default after legacy removal)
         WHEN create_stream is called
-        THEN it should fallback to _stream_via_litellm
+        THEN it should always use LLMFactory streaming (no litellm fallback)
+
+        After removing _stream_via_litellm, LLMFactory.astream() is the only
+        streaming path. The feature flag now controls resilience features rather
+        than method selection.
         """
         from mcp_server_langgraph.api.v1.chat import ChatServiceImpl
 
         mock_factory = MagicMock()
 
+        async def mock_astream(messages, **kwargs):
+            yield StreamChunk(content="Response", chunk_index=0, is_final=False)
+            yield StreamChunk(content="", chunk_index=1, is_final=True)
+
+        mock_factory.astream = mock_astream
+
+        service = ChatServiceImpl(llm_factory=mock_factory)
+
+        messages = [{"role": "user", "content": "Hi"}]
+
+        # LLMFactory streaming is always used
+        chunks = []
+        async for chunk in service.create_stream("session-1", messages):
+            chunks.append(chunk)
+
+        # Should have received chunks from LLMFactory
+        assert len(chunks) >= 1
+        assert any("delta" in c for c in chunks)
+
+    @pytest.mark.asyncio
+    async def test_create_stream_propagates_factory_error(self) -> None:
+        """
+        GIVEN LLMFactory.astream() throws an error
+        WHEN create_stream is called
+        THEN it should propagate the error (no fallback to litellm)
+
+        After removing _stream_via_litellm, LLMFactory errors propagate directly.
+        The circuit breaker and retry patterns in LLMFactory handle resilience.
+        """
+        from mcp_server_langgraph.api.v1.chat import ChatServiceImpl
+        from mcp_server_langgraph.core.exceptions import LLMProviderError
+
+        mock_factory = MagicMock()
+
         async def failing_astream(messages, **kwargs):
-            raise ConnectionError("Factory connection failed")
+            raise LLMProviderError("Factory connection failed", metadata={"provider": "google"})
             yield  # Make it an async generator
 
         mock_factory.astream = failing_astream
@@ -166,33 +166,12 @@ class TestLLMFactoryStreamingProductionWiring:
 
         messages = [{"role": "user", "content": "Hi"}]
 
-        with (
-            patch("mcp_server_langgraph.api.v1.chat.feature_flags") as mock_flags,
-            patch("mcp_server_langgraph.api.v1.chat.acompletion", new_callable=AsyncMock) as mock_acompletion,
-        ):
-            mock_flags.enable_llm_factory_streaming = True
+        # Error should propagate - no fallback to litellm
+        with pytest.raises(LLMProviderError) as exc_info:
+            async for _ in service.create_stream("session-1", messages):
+                pass
 
-            # Mock litellm fallback
-            async def mock_stream():
-                class MockDelta:
-                    content = "Fallback response"
-
-                class MockChoice:
-                    delta = MockDelta()
-
-                class MockChunk:
-                    choices = [MockChoice()]
-
-                yield MockChunk()
-
-            mock_acompletion.return_value = mock_stream()
-
-            chunks = []
-            async for chunk in service.create_stream("session-1", messages):
-                chunks.append(chunk)
-
-            # Should have fallen back to litellm
-            mock_acompletion.assert_called_once()
+        assert "Factory connection failed" in str(exc_info.value)
 
 
 # =============================================================================

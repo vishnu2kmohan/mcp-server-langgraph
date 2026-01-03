@@ -311,14 +311,16 @@ async def analyze(
     """,
 )
 async def generate_ui(
-    request: GenUIRequest,
+    genui_request: GenUIRequest,
     current_user: CurrentUser,
+    orchestrator: GenUIOrchestrator = Depends(get_genui_orchestrator),
 ) -> dict[str, Any]:
     """Generate dynamic UI widgets.
 
     Args:
-        request: GenUI request with tasks to execute
+        genui_request: GenUI request with tasks to execute
         current_user: Authenticated user context
+        orchestrator: GenUIOrchestrator instance (injected via DI)
 
     Returns:
         Generated widgets with layout suggestion
@@ -338,15 +340,13 @@ async def generate_ui(
         }
 
     try:
-        orchestrator = get_genui_orchestrator()
-
         # Convert request tasks to GenUITask objects
         tasks = [
             GenUITask(
                 task_type=task.get("task_type", "generate_widget"),
                 data=task.get("data", {}),
             )
-            for task in request.tasks
+            for task in genui_request.tasks
         ]
 
         # Execute tasks

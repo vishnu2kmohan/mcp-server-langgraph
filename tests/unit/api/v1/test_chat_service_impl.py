@@ -217,62 +217,74 @@ class TestChatServiceImpl:
     ) -> None:
         """GIVEN a ChatServiceImpl with streaming enabled
         WHEN create_stream() is called
-        THEN it yields streaming chunks
+        THEN it yields streaming chunks via LLMFactory.astream()
+
+        Note: With legacy _stream_via_litellm removed, all streaming
+        now goes through LLMFactory.astream() which provides resilience patterns.
         """
         from mcp_server_langgraph.api.v1.chat import ChatServiceImpl
+        from mcp_server_langgraph.llm.factory import StreamChunk
 
-        # Create mock streaming chunks
-        async def mock_stream():
-            for chunk in [
-                MagicMock(choices=[MagicMock(delta=MagicMock(content="Hello"))]),
-                MagicMock(choices=[MagicMock(delta=MagicMock(content=" world"))]),
-                MagicMock(choices=[MagicMock(delta=MagicMock(content="!"))]),
-            ]:
-                yield chunk
+        # Create mock LLMFactory with streaming
+        mock_factory = MagicMock()
 
-        with patch("mcp_server_langgraph.api.v1.chat.acompletion") as mock_acompletion:
-            mock_acompletion.return_value = mock_stream()
+        async def mock_astream(messages, **kwargs):
+            yield StreamChunk(content="Hello", chunk_index=0, is_final=False)
+            yield StreamChunk(content=" world", chunk_index=1, is_final=False)
+            yield StreamChunk(content="!", chunk_index=2, is_final=True, finish_reason="stop")
 
-            service = ChatServiceImpl()
-            chunks = []
-            async for chunk in service.create_stream(
-                session_id="test-session",
-                messages=sample_messages,
-            ):
-                chunks.append(chunk)
+        mock_factory.astream = mock_astream
 
+        service = ChatServiceImpl(llm_factory=mock_factory)
+        chunks = []
+        async for chunk in service.create_stream(
+            session_id="test-session",
+            messages=sample_messages,
+        ):
+            chunks.append(chunk)
+
+        # All 3 chunks should be yielded via LLMFactory
         assert len(chunks) == 3
         assert chunks[0]["delta"]["content"] == "Hello"
         assert chunks[1]["delta"]["content"] == " world"
         assert chunks[2]["delta"]["content"] == "!"
 
     @pytest.mark.asyncio
-    async def test_create_stream_passes_stream_parameter(
+    async def test_create_stream_uses_llm_factory(
         self,
         sample_messages: list[dict],
     ) -> None:
         """GIVEN a streaming request
         WHEN create_stream() is called
-        THEN it passes stream=True to the LLM
+        THEN it uses LLMFactory.astream() for streaming
+
+        Note: With legacy _stream_via_litellm removed, LLMFactory.astream()
+        is the only streaming path which provides circuit breaker resilience.
         """
         from mcp_server_langgraph.api.v1.chat import ChatServiceImpl
+        from mcp_server_langgraph.llm.factory import StreamChunk
 
-        async def mock_stream():
-            yield MagicMock(choices=[MagicMock(delta=MagicMock(content="Hi"))])
+        mock_factory = MagicMock()
+        astream_called = False
+        captured_kwargs = {}
 
-        with patch("mcp_server_langgraph.api.v1.chat.acompletion") as mock_acompletion:
-            mock_acompletion.return_value = mock_stream()
+        async def mock_astream(messages, **kwargs):
+            nonlocal astream_called, captured_kwargs
+            astream_called = True
+            captured_kwargs = kwargs
+            yield StreamChunk(content="Hi", chunk_index=0, is_final=True)
 
-            service = ChatServiceImpl()
-            async for _ in service.create_stream(
-                session_id="test-session",
-                messages=sample_messages,
-            ):
-                pass
+        mock_factory.astream = mock_astream
 
-        mock_acompletion.assert_called_once()
-        call_kwargs = mock_acompletion.call_args.kwargs
-        assert call_kwargs["stream"] is True
+        service = ChatServiceImpl(llm_factory=mock_factory)
+        async for _ in service.create_stream(
+            session_id="test-session",
+            messages=sample_messages,
+        ):
+            pass
+
+        # LLMFactory.astream() should be called
+        assert astream_called, "LLMFactory.astream() should be called for streaming"
 
     # =========================================================================
     # get_history() tests
@@ -576,13 +588,17 @@ class TestChatServiceImpl:
     ) -> None:
         """GIVEN resource URIs for streaming
         WHEN create_stream() is called
-        THEN resources are injected before streaming
+        THEN resources are injected before streaming via LLMFactory
+
+        Note: With legacy _stream_via_litellm removed, all streaming
+        goes through LLMFactory.astream() with resource injection.
         """
         from mcp_server_langgraph.api.v1.chat import ChatServiceImpl
         from mcp_server_langgraph.api.v1.mcp_bridge import MCPResourceContent
+        from mcp_server_langgraph.llm.factory import StreamChunk
 
         mock_bridge = MagicMock()
-        mock_bridge.is_configured = False  # Use LiteLLM path for streaming
+        mock_bridge.is_configured = False  # Not using MCP path for streaming
         mock_bridge.read_resource = AsyncMock(
             return_value=[
                 MCPResourceContent(
@@ -593,25 +609,27 @@ class TestChatServiceImpl:
             ]
         )
 
-        async def mock_stream():
-            yield MagicMock(choices=[MagicMock(delta=MagicMock(content="Response"))])
+        # Create mock LLMFactory
+        mock_factory = MagicMock()
 
-        with patch("mcp_server_langgraph.api.v1.chat.acompletion") as mock_acompletion:
-            mock_acompletion.return_value = mock_stream()
+        async def mock_astream(messages, **kwargs):
+            yield StreamChunk(content="Response", chunk_index=0, is_final=True)
 
-            service = ChatServiceImpl(mcp_bridge=mock_bridge)
-            chunks = []
-            async for chunk in service.create_stream(
-                session_id="test-session",
-                messages=sample_messages,
-                resource_uris=["file:///context.txt"],
-            ):
-                chunks.append(chunk)
+        mock_factory.astream = mock_astream
+
+        service = ChatServiceImpl(mcp_bridge=mock_bridge, llm_factory=mock_factory)
+        chunks = []
+        async for chunk in service.create_stream(
+            session_id="test-session",
+            messages=sample_messages,
+            resource_uris=["file:///context.txt"],
+        ):
+            chunks.append(chunk)
 
         # Verify resource was read
         mock_bridge.read_resource.assert_called_once_with("file:///context.txt")
 
-        # Verify streaming still works
+        # Verify streaming via LLMFactory works
         assert len(chunks) == 1
         assert chunks[0]["delta"]["content"] == "Response"
 
@@ -822,32 +840,38 @@ class TestChatServiceImpl:
         assert "completed" in statuses
 
     @pytest.mark.asyncio
-    async def test_create_stream_fallback_to_litellm_when_no_langgraph(
+    async def test_create_stream_fallback_to_llm_factory_when_no_langgraph(
         self,
         sample_messages: list[dict],
     ) -> None:
         """GIVEN no LangGraph agent configured
         WHEN create_stream() is called with use_langgraph=True
-        THEN it falls back to LiteLLM streaming
+        THEN it falls back to LLMFactory streaming
+
+        Note: With legacy _stream_via_litellm removed, the fallback chain now
+        terminates at LLMFactory.astream() instead of direct litellm.acompletion().
         """
         from mcp_server_langgraph.api.v1.chat import ChatServiceImpl
+        from mcp_server_langgraph.llm.factory import StreamChunk
 
-        async def mock_stream():
-            yield MagicMock(choices=[MagicMock(delta=MagicMock(content="Fallback"))])
+        # Create mock LLMFactory
+        mock_factory = MagicMock()
 
-        with patch("mcp_server_langgraph.api.v1.chat.acompletion") as mock_acompletion:
-            mock_acompletion.return_value = mock_stream()
+        async def mock_astream(messages, **kwargs):
+            yield StreamChunk(content="Fallback", chunk_index=0, is_final=True)
 
-            # No langgraph_agent provided
-            service = ChatServiceImpl()
-            chunks = []
-            async for chunk in service.create_stream(
-                session_id="test-session",
-                messages=sample_messages,
-                use_langgraph=True,  # Request LangGraph but none configured
-            ):
-                chunks.append(chunk)
+        mock_factory.astream = mock_astream
 
-        # Should fallback to LiteLLM
+        # No langgraph_agent provided, but LLMFactory is available
+        service = ChatServiceImpl(llm_factory=mock_factory)
+        chunks = []
+        async for chunk in service.create_stream(
+            session_id="test-session",
+            messages=sample_messages,
+            use_langgraph=True,  # Request LangGraph but none configured
+        ):
+            chunks.append(chunk)
+
+        # Should fallback to LLMFactory.astream()
         assert len(chunks) == 1
         assert chunks[0]["delta"]["content"] == "Fallback"

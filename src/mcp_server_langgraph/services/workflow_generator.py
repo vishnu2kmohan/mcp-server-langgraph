@@ -19,6 +19,13 @@ from typing import TYPE_CHECKING, Any
 from langchain_core.messages import HumanMessage, SystemMessage
 from pydantic import BaseModel, Field
 
+# Import centralized prompts and telemetry (ADR-0089)
+from mcp_server_langgraph.core.prompts import (
+    WORKFLOW_GENERATOR_SYSTEM_PROMPT as SYSTEM_PROMPT,
+    # Telemetry (Phase 7 - ADR-0089)
+    record_prompt_usage,
+)
+
 if TYPE_CHECKING:
     from mcp_server_langgraph.llm.factory import LLMFactory
 
@@ -77,51 +84,14 @@ class WorkflowGenerationResult(BaseModel):
 
 
 # ==============================================================================
-# System Prompt
+# System Prompt (Migrated to core/prompts/ per ADR-0089)
 # ==============================================================================
-
-SYSTEM_PROMPT = """You are an expert workflow designer for LangGraph-based AI agent systems.
-
-Your task is to design workflow graphs that accomplish user goals. A workflow consists of:
-
-## Node Types
-- **start**: Entry point of the workflow. Every workflow must have exactly one start node.
-- **end**: Exit point of the workflow. Every workflow must have at least one end node.
-- **llm**: An LLM processing node that can generate text, analyze input, or make decisions.
-  - Config: {"model": "model-name", "temperature": 0.7, "system_prompt": "..."}
-- **tool**: Invokes an external tool or API.
-  - Config: {"tool_name": "...", "parameters": {...}}
-- **router**: Routes flow based on conditions. Connect to multiple targets with condition labels.
-- **condition**: Evaluates a condition and branches the flow.
-  - Config: {"condition": "expression"}
-- **memory**: Saves or retrieves from memory/context.
-  - Config: {"action": "save|retrieve", "key": "..."}
-
-## Design Principles
-1. Start with a single 'start' node
-2. End with at least one 'end' node
-3. Use 'llm' nodes for AI processing
-4. Use 'router' nodes for conditional branching
-5. Use 'tool' nodes for external integrations
-6. Keep workflows focused and minimal
-7. Ensure all nodes are connected (no orphans)
-8. Ensure the graph is acyclic (no infinite loops without conditions)
-
-## Output Format
-Respond with valid JSON matching this structure:
-{
-  "name": "Workflow Name",
-  "description": "Description of what this workflow does",
-  "nodes": [
-    {"id": "unique_id", "type": "node_type", "label": "Human Label", "config": {...}}
-  ],
-  "edges": [
-    {"source": "from_node_id", "target": "to_node_id", "condition": null}
-  ],
-  "reasoning": "Explanation of design decisions"
-}
-
-IMPORTANT: Respond ONLY with the JSON object, no markdown code blocks or additional text."""
+# Prompt is now centralized in:
+#   src/mcp_server_langgraph/core/prompts/workflow_prompts.py
+#
+# Imported as:
+#   WORKFLOW_GENERATOR_SYSTEM_PROMPT -> SYSTEM_PROMPT (alias for backward compatibility)
+# ==============================================================================
 
 
 # ==============================================================================
@@ -174,6 +144,9 @@ class WorkflowGenerator:
         Analyzes the conversation to understand user intent and creates
         a workflow that captures the discussed functionality.
 
+        SECURITY: Session content is sanitized before LLM exposure to prevent
+        prompt injection attacks. See ADR-0089 and Plan Review Consensus.
+
         Args:
             messages: List of message dicts with 'role' and 'content' keys.
 
@@ -183,8 +156,29 @@ class WorkflowGenerator:
         Raises:
             WorkflowGenerationError: If generation or parsing fails.
         """
-        # Format session messages into a summary
-        conversation = "\n".join(f"[{m.get('role', 'user').upper()}]: {m.get('content', '')}" for m in messages)
+        # Import sanitization (Review consensus: sanitize before LLM calls)
+        from mcp_server_langgraph.security.prompt_injection import sanitize_content
+
+        # Sanitize each message before processing (prevents injection attacks)
+        sanitized_messages = []
+        for m in messages:
+            content = m.get("content", "")
+            role = m.get("role", "user")
+            # Sanitize content - replaces detected injection patterns
+            sanitized, detection_result = sanitize_content(str(content))
+            if detection_result.risk_score > 0.5:
+                logger.warning(
+                    "High-risk content detected in session message",
+                    extra={
+                        "role": role,
+                        "risk_score": detection_result.risk_score,
+                        "patterns": [d["pattern"] for d in detection_result.detections],
+                    },
+                )
+            sanitized_messages.append({"role": role, "content": sanitized})
+
+        # Format sanitized session messages into a summary
+        conversation = "\n".join(f"[{m.get('role', 'user').upper()}]: {m.get('content', '')}" for m in sanitized_messages)
 
         user_message = f"""Analyze this conversation and create a workflow that captures the discussed functionality:
 
@@ -213,6 +207,9 @@ Based on this conversation, design a workflow that implements what the user is t
             SystemMessage(content=self.get_system_prompt()),
             HumanMessage(content=user_message),
         ]
+
+        # Record prompt usage for telemetry (Phase 7 - ADR-0089)
+        record_prompt_usage("workflow_generator", "v1")
 
         try:
             response = await self._llm.ainvoke(messages)  # type: ignore[arg-type]

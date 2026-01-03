@@ -28,6 +28,29 @@ from langchain_core.messages import HumanMessage, SystemMessage
 
 from mcp_server_langgraph.core.cache_mixin import StaleWhileRevalidateMixin
 
+# Import centralized prompts and telemetry (ADR-0089)
+from mcp_server_langgraph.core.prompts import (
+    CANVAS_ARTIFACT_TYPE_SYSTEM_PROMPT,
+    CANVAS_CODE_ANALYSIS_SYSTEM_PROMPT,
+    CANVAS_DIFF_EXPLAIN_SYSTEM_PROMPT,
+    DIAGRAM_ANALYZE_SYSTEM_PROMPT,
+    DIAGRAM_TO_CODE_SYSTEM_PROMPT,
+    DISCLOSURE_ANALYSIS_SYSTEM_PROMPT,
+    EMPTY_STATE_SYSTEM_PROMPT,
+    ERROR_ANALYSIS_SYSTEM_PROMPT,
+    METRICS_INSIGHTS_SYSTEM_PROMPT,
+    NUDGE_RECOMMENDATION_SYSTEM_PROMPT,
+    ONBOARDING_PERSONALIZATION_SYSTEM_PROMPT,
+    PERSONA_ANALYSIS_SYSTEM_PROMPT,
+    SESSION_GROUP_SYSTEM_PROMPT,
+    SESSION_SIMILARITY_SYSTEM_PROMPT,
+    SESSION_SUMMARIZE_SYSTEM_PROMPT,
+    TRACE_ANOMALIES_SYSTEM_PROMPT,
+    TRACE_SUMMARIZE_SYSTEM_PROMPT,
+    # Telemetry (Phase 7 - ADR-0089)
+    record_prompt_usage,
+)
+
 # Cache TTL in seconds (1 hour for LLM responses)
 CACHE_TTL_SECONDS = 3600
 CACHE_MAX_SIZE = 1000
@@ -233,311 +256,32 @@ if TYPE_CHECKING:
 
 
 # =============================================================================
-# Prompts
+# Prompts (Migrated to core/prompts/ per ADR-0089)
 # =============================================================================
-
-ERROR_ANALYSIS_SYSTEM_PROMPT = """You are an AI assistant that analyzes errors and provides recovery suggestions.
-
-Given an error message and optional user context, analyze the error and return a JSON response with:
-- category: One of 'network', 'authentication', 'authorization', 'validation', 'server', 'client', 'timeout', 'quota', 'unknown'
-- subcategory: A more specific classification
-- confidence: Float between 0 and 1
-- root_cause: A human-readable explanation of what likely caused the error
-- suggestions: List of recovery suggestions, each with:
-  - action: One of 'navigate', 'retry', 'wait', 'simplify', 'contact', 'modal', 'execute'
-  - label: Button text
-  - guidance: Optional detailed instructions
-  - estimated_success: Float between 0 and 1
-
-Respond ONLY with valid JSON. Do not include any other text."""
-
-EMPTY_STATE_SYSTEM_PROMPT = """You are an AI assistant that generates contextual suggestions for empty states.
-
-Given the page context, user persona, and optional history, generate personalized suggestions to help the user get started.
-
-Return a JSON response with:
-- suggestions: List of suggestions, each with:
-  - text: The suggestion text
-  - action: One of 'navigate', 'modal', 'execute'
-  - target: The URL or modal ID to target
-  - confidence: Float between 0 and 1
-  - category: Category like 'onboarding', 'discovery', 'alternative'
-
-Respond ONLY with valid JSON. Do not include any other text."""
-
-PERSONA_ANALYSIS_SYSTEM_PROMPT = """You are an AI assistant that analyzes user behavior to detect their actual persona.
-
-Given the assigned persona, recent actions, and feature usage, determine if the user's behavior matches their assigned persona.
-
-Return a JSON response with:
-- detected_persona: The persona that best matches their behavior
-- confidence: Float between 0 and 1
-- behavior_signals: List of behavioral indicators
-- recommendation: Optional recommendation if persona mismatch detected
-- ui_adaptations: List of UI changes to apply, each with:
-  - feature: The feature to adapt
-  - action: One of 'unlock', 'promote', 'hide'
-
-Available personas: admin, security-admin, auditor, alice-builder, alice-analyst, alice-devops, compliance-officer, bob
-
-Respond ONLY with valid JSON. Do not include any other text."""
-
-DISCLOSURE_ANALYSIS_SYSTEM_PROMPT = """You are an AI assistant that analyzes user behavior to recommend UI complexity levels.
-
-Given the user's feature usage and session history, determine their current expertise level and recommend an appropriate disclosure level.
-
-Return a JSON response with:
-- current_level: One of 'beginner', 'intermediate', 'advanced', 'expert'
-- recommended_level: One of 'beginner', 'intermediate', 'advanced', 'expert'
-- confidence: Float between 0 and 1
-- unlock_features: List of feature names to unlock at the recommended level
-- personalized_message: Optional message explaining the recommendation
-
-Consider these factors:
-- Total feature usage count indicates engagement
-- Advanced features (workflows, mcp, agents, traces) indicate expertise
-- Session duration indicates commitment
-- Diversity of feature usage indicates breadth of knowledge
-
-Respond ONLY with valid JSON. Do not include any other text."""
-
-NUDGE_RECOMMENDATION_SYSTEM_PROMPT = """You are an AI assistant that recommends contextual nudges to help users discover features.
-
-Given the user's current context, nudge history, and behavior, decide if a nudge should be shown.
-
-Return a JSON response with:
-- should_show: Boolean indicating if a nudge should be shown
-- nudge: Optional object if should_show is true, containing:
-  - id: Unique identifier for the nudge
-  - type: One of 'tooltip', 'spotlight', 'banner'
-  - target_element: CSS selector for the target element
-  - message: The nudge message to display
-  - priority: One of 'low', 'medium', 'high'
-  - show_after_ms: Milliseconds delay before showing
-- confidence: Float between 0 and 1
-
-Consider:
-- Don't show nudges if user has dismissed many recently
-- Time on page indicates when user might need help
-- Previous nudge history helps avoid repetition
-- Context determines which nudges are relevant
-
-Respond ONLY with valid JSON. Do not include any other text."""
-
-ONBOARDING_PERSONALIZATION_SYSTEM_PROMPT = """You are an AI assistant that personalizes user onboarding based on detected intent.
-
-Given the user's initial actions and signup context, determine their likely intent and recommend an onboarding path.
-
-Return a JSON response with:
-- detected_intent: Brief description of what the user wants to accomplish
-- confidence: Float between 0 and 1
-- recommended_path: List of onboarding steps, each with:
-  - step: Step identifier
-  - template: Optional template name
-  - guided: Boolean for guided mode
-  - focus: Optional focus area
-- skip_steps: List of step identifiers to skip
-- persona_prediction: Predicted persona based on behavior
-
-Intent categories: build_workflow, use_chat, observe_systems, build_automation, explore, integrate_tools
-
-Respond ONLY with valid JSON. Do not include any other text."""
-
-METRICS_INSIGHTS_SYSTEM_PROMPT = """You are an AI assistant that analyzes HEART metrics data and generates actionable insights.
-
-Analyze the provided metrics data and generate insights about user experience patterns.
-
-Return a JSON response with:
-- insights: List of insights, each with:
-  - type: One of 'anomaly', 'trend', 'pattern'
-  - dimension: HEART dimension ('happiness', 'engagement', 'adoption', 'retention', 'task_success')
-  - message: Human-readable insight description
-  - severity: One of 'info', 'warning', 'critical'
-  - sentiment: One of 'positive', 'negative', 'neutral'
-  - suggested_actions: Optional list of recommended actions
-  - detected_at: Optional ISO timestamp
-- predictions: List of metric predictions, each with:
-  - metric: Metric name
-  - current: Current value
-  - predicted: Predicted value
-  - confidence: Float between 0 and 1
-  - drivers: List of factors driving the prediction
-
-Focus on actionable insights that can improve user experience.
-
-Respond ONLY with valid JSON. Do not include any other text."""
-
+# All AI UX prompts are now centralized in:
+#   src/mcp_server_langgraph/core/prompts/ai_ux_prompts.py
+#
+# Imported prompts:
+#   - ERROR_ANALYSIS_SYSTEM_PROMPT
+#   - EMPTY_STATE_SYSTEM_PROMPT
+#   - PERSONA_ANALYSIS_SYSTEM_PROMPT
+#   - DISCLOSURE_ANALYSIS_SYSTEM_PROMPT
+#   - NUDGE_RECOMMENDATION_SYSTEM_PROMPT
+#   - ONBOARDING_PERSONALIZATION_SYSTEM_PROMPT
+#   - METRICS_INSIGHTS_SYSTEM_PROMPT
+#   - SESSION_SUMMARIZE_SYSTEM_PROMPT
+#   - SESSION_GROUP_SYSTEM_PROMPT
+#   - SESSION_SIMILARITY_SYSTEM_PROMPT
+#   - TRACE_SUMMARIZE_SYSTEM_PROMPT
+#   - TRACE_ANOMALIES_SYSTEM_PROMPT
+#   - CANVAS_ARTIFACT_TYPE_SYSTEM_PROMPT
+#   - CANVAS_CODE_ANALYSIS_SYSTEM_PROMPT
+#   - CANVAS_DIFF_EXPLAIN_SYSTEM_PROMPT
+#   - DIAGRAM_ANALYZE_SYSTEM_PROMPT
+#   - DIAGRAM_TO_CODE_SYSTEM_PROMPT
+#
+# See: mcp_server_langgraph.core.prompts for centralized management
 # =============================================================================
-# Session Intelligence System Prompts (Sprint 2)
-# =============================================================================
-
-SESSION_SUMMARIZE_SYSTEM_PROMPT = """You are an AI assistant that generates concise summaries of chat sessions.
-
-Given the session ID and context, generate a summary that captures the main topics discussed and key outcomes.
-
-Return a JSON response with:
-- summary: A 1-2 sentence summary of the session
-- key_topics: List of 3-5 key topics discussed (e.g., "React", "debugging", "API design")
-- highlight_messages: List of up to 3 important messages or quotes
-- message_count: Estimated number of messages in the session
-- confidence: Float between 0 and 1 indicating confidence in the summary
-
-Keep summaries concise and actionable. Focus on what was accomplished or discussed.
-
-Respond ONLY with valid JSON. Do not include any other text."""
-
-SESSION_GROUP_SYSTEM_PROMPT = """You are an AI assistant that groups related sessions by topic or project.
-
-Given a list of session IDs, analyze and group them into logical clusters based on their content themes.
-
-Return a JSON response with:
-- groups: List of groups, each with:
-  - topic: A descriptive name for the group (e.g., "API Development", "Frontend Work")
-  - session_ids: List of session IDs that belong to this group
-  - confidence: Float between 0 and 1 indicating grouping confidence
-- ungrouped: List of session IDs that couldn't be confidently grouped
-
-Group sessions that share common themes, projects, or purposes. Aim for 2-5 groups for typical session lists.
-
-Respond ONLY with valid JSON. Do not include any other text."""
-
-SESSION_SIMILARITY_SYSTEM_PROMPT = """You are an AI assistant that finds sessions similar to a given reference session.
-
-Given a source session ID, find other sessions with similar content, topics, or purposes.
-
-Return a JSON response with:
-- similar_sessions: List of similar sessions, each with:
-  - session_id: The session identifier
-  - similarity_score: Float between 0 and 1 (higher = more similar)
-  - common_topics: List of topics shared between sessions
-- search_query: A brief description of what makes sessions similar
-
-Rank sessions by relevance. Include sessions that share topics, code patterns, or problem domains.
-
-Respond ONLY with valid JSON. Do not include any other text."""
-
-TRACE_SUMMARIZE_SYSTEM_PROMPT = """You are an AI assistant that generates concise summaries of agent execution traces.
-
-Given trace data including step durations, tool calls, and execution flow, generate a summary.
-
-Return a JSON response with:
-- summary: A 1-2 sentence summary of what the agent accomplished
-- total_duration_ms: Total execution time in milliseconds
-- step_count: Number of steps in the trace
-- tool_call_count: Number of tool calls made
-- success: Boolean indicating if the trace completed successfully
-- key_actions: List of 3-5 key actions performed (e.g., "Fetched user data", "Processed results")
-- confidence: Float between 0 and 1 indicating confidence in the summary
-
-Focus on the main workflow outcome and any notable events.
-
-Respond ONLY with valid JSON. Do not include any other text."""
-
-TRACE_ANOMALIES_SYSTEM_PROMPT = """You are an AI assistant that detects anomalies and bottlenecks in agent execution traces.
-
-Analyze the trace data to identify performance issues, errors, and optimization opportunities.
-
-Return a JSON response with:
-- anomalies: List of detected anomalies, each with:
-  - type: Anomaly type (e.g., "timeout", "error", "retry", "unexpected_state")
-  - description: Brief description of the anomaly
-  - severity: One of "info", "warning", "error", "critical"
-- bottlenecks: List of performance bottlenecks, each with:
-  - step: Step or action name
-  - duration_ms: Duration in milliseconds
-  - recommendation: Suggested optimization
-- health_score: Float between 0 and 1 indicating overall trace health
-- optimization_suggestions: List of general optimization recommendations
-
-Prioritize actionable findings. Be specific about which steps have issues.
-
-Respond ONLY with valid JSON. Do not include any other text."""
-
-CANVAS_ARTIFACT_TYPE_SYSTEM_PROMPT = """You are an AI assistant that determines the optimal artifact type for content.
-
-Analyze the content and suggest the most appropriate artifact type for display and editing.
-
-Return a JSON response with:
-- suggested_type: One of "mermaid", "json", "code", "markdown", "text", "html", "csv"
-- confidence: Float between 0 and 1 indicating confidence in the suggestion
-- alternatives: List of alternative types with their confidence scores
-- reason: Brief explanation of why this type was suggested
-
-Consider syntax patterns, structure, and typical use cases for each type.
-
-Respond ONLY with valid JSON. Do not include any other text."""
-
-CANVAS_CODE_ANALYSIS_SYSTEM_PROMPT = """You are an AI assistant that analyzes code quality and complexity.
-
-Analyze the provided code for issues, quality metrics, and improvement suggestions.
-
-Return a JSON response with:
-- complexity: Integer cyclomatic complexity estimate (1-20 scale)
-- quality_score: Float between 0 and 1 (higher = better quality)
-- issues: List of issues found, each with:
-  - type: Issue type (e.g., "security", "performance", "style", "bug")
-  - message: Brief description
-  - severity: One of "info", "warning", "error", "critical"
-- suggestions: List of improvement suggestions, each with:
-  - type: Suggestion type (e.g., "refactor", "security", "performance")
-  - description: What to improve
-  - priority: One of "low", "medium", "high"
-- language: Detected or provided programming language
-- lines_of_code: Number of lines
-
-Focus on actionable findings. Prioritize security and correctness issues.
-
-Respond ONLY with valid JSON. Do not include any other text."""
-
-CANVAS_DIFF_EXPLAIN_SYSTEM_PROMPT = """You are an AI assistant that explains code or content changes in natural language.
-
-Compare the old and new content versions and explain what changed.
-
-Return a JSON response with:
-- summary: 1-2 sentence summary of the changes
-- changes: List of significant changes, each with:
-  - type: Change type (e.g., "addition", "deletion", "modification", "refactor")
-  - description: What was changed
-  - impact: One of "low", "medium", "high"
-- breaking_changes: Boolean indicating if changes may break compatibility
-- affected_areas: List of areas affected (e.g., "authentication", "API", "database")
-
-Be specific about what changed and why it matters.
-
-Respond ONLY with valid JSON. Do not include any other text."""
-
-DIAGRAM_ANALYZE_SYSTEM_PROMPT = """You are an AI assistant that analyzes Mermaid diagrams.
-
-Analyze the provided Mermaid diagram code for structure, validity, and complexity.
-
-Return a JSON response with:
-- diagram_type: One of "flowchart", "sequence", "class", "state", "er", "gantt", "unknown"
-- is_valid: Boolean indicating if the diagram syntax is valid
-- node_count: Number of nodes/entities in the diagram
-- edge_count: Number of connections/relationships
-- complexity_score: Float between 0 and 1 (higher = more complex)
-- issues: List of syntax or structural issues found
-- suggestions: List of improvement suggestions
-- description: Brief natural language description of what the diagram represents
-
-Be specific about any syntax errors or structural improvements.
-
-Respond ONLY with valid JSON. Do not include any other text."""
-
-DIAGRAM_TO_CODE_SYSTEM_PROMPT = """You are an AI assistant that generates code from Mermaid diagrams.
-
-Convert the provided Mermaid diagram into executable code in the specified target language.
-
-Return a JSON response with:
-- code: The generated code as a string (use \\n for newlines)
-- language: The target programming language
-- confidence: Float between 0 and 1 indicating confidence in the generated code
-- explanation: Brief explanation of the generated code structure
-
-Generate idiomatic code for the target language. Handle flowcharts as control flow,
-sequence diagrams as function calls, class diagrams as type definitions.
-
-Respond ONLY with valid JSON. Do not include any other text."""
 
 
 # =============================================================================
@@ -1150,6 +894,9 @@ User context:
             SystemMessage(content=ERROR_ANALYSIS_SYSTEM_PROMPT),
             HumanMessage(content=user_prompt),
         ]
+
+        # Record prompt usage for telemetry (Phase 7 - ADR-0089)
+        record_prompt_usage("error_analysis", "v1")
 
         response = await self.llm_factory.ainvoke(messages)  # type: ignore[union-attr, arg-type]
         logger.debug(f"LLM error analysis response: {response.content}")
@@ -3364,8 +3111,8 @@ User ID: {user_id or "anonymous"}"""
             ]
 
             response = await self.llm_factory.ainvoke(messages)  # type: ignore[union-attr, arg-type]
-            result_content = response.content if hasattr(response, "content") else str(response)
-            parsed = self._parse_json_response(result_content)
+            result_content = str(response.content) if hasattr(response, "content") else str(response)
+            parsed = self._parse_json_response(result_content) or {}
 
             return {
                 "suggested_type": parsed.get("suggested_type", fallback["suggested_type"]),
@@ -3420,8 +3167,8 @@ Provide detailed analysis with security, performance, and style issues."""
             ]
 
             response = await self.llm_factory.ainvoke(messages)  # type: ignore[union-attr, arg-type]
-            result_content = response.content if hasattr(response, "content") else str(response)
-            parsed = self._parse_json_response(result_content)
+            result_content = str(response.content) if hasattr(response, "content") else str(response)
+            parsed = self._parse_json_response(result_content) or {}
 
             return {
                 "complexity": parsed.get("complexity", fallback["complexity"]),
@@ -3478,8 +3225,8 @@ Explain the changes in natural language."""
             ]
 
             response = await self.llm_factory.ainvoke(messages)  # type: ignore[union-attr, arg-type]
-            result_content = response.content if hasattr(response, "content") else str(response)
-            parsed = self._parse_json_response(result_content)
+            result_content = str(response.content) if hasattr(response, "content") else str(response)
+            parsed = self._parse_json_response(result_content) or {}
 
             return {
                 "summary": parsed.get("summary", fallback["summary"]),
@@ -3610,8 +3357,8 @@ Provide detailed analysis of this diagram."""
             ]
 
             response = await self.llm_factory.ainvoke(messages)  # type: ignore[union-attr, arg-type]
-            result_content = response.content if hasattr(response, "content") else str(response)
-            parsed = self._parse_json_response(result_content)
+            result_content = str(response.content) if hasattr(response, "content") else str(response)
+            parsed = self._parse_json_response(result_content) or {}
 
             return {
                 "diagram_type": parsed.get("diagram_type", fallback["diagram_type"]),
@@ -3668,8 +3415,8 @@ Generate production-quality {target_language} code that implements the logic sho
             ]
 
             response = await self.llm_factory.ainvoke(messages)  # type: ignore[union-attr, arg-type]
-            result_content = response.content if hasattr(response, "content") else str(response)
-            parsed = self._parse_json_response(result_content)
+            result_content = str(response.content) if hasattr(response, "content") else str(response)
+            parsed = self._parse_json_response(result_content) or {}
 
             return {
                 "code": parsed.get("code", fallback["code"]),
@@ -3741,8 +3488,8 @@ Provide a concise summary of what was accomplished in this trace."""
             ]
 
             response = await self.llm_factory.ainvoke(messages)  # type: ignore[union-attr, arg-type]
-            content = response.content if hasattr(response, "content") else str(response)
-            parsed = self._parse_json_response(content)
+            content = str(response.content) if hasattr(response, "content") else str(response)
+            parsed = self._parse_json_response(content) or {}
 
             return {
                 "summary": parsed.get("summary", fallback["summary"]),
@@ -3803,8 +3550,8 @@ Detect any anomalies, bottlenecks, or performance issues in this trace."""
             ]
 
             response = await self.llm_factory.ainvoke(messages)  # type: ignore[union-attr, arg-type]
-            content = response.content if hasattr(response, "content") else str(response)
-            parsed = self._parse_json_response(content)
+            content = str(response.content) if hasattr(response, "content") else str(response)
+            parsed = self._parse_json_response(content) or {}
 
             return {
                 "anomalies": parsed.get("anomalies", fallback["anomalies"]),
