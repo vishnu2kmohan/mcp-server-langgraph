@@ -3,6 +3,18 @@
  *
  * Sprint 3 - Phase 6.1: AI-Augmented Progressive Disclosure
  *
+ * @deprecated This hook has no active runtime consumers and is scheduled for removal.
+ * Consider using `useProgressiveDisclosure` for disclosure level management, which
+ * provides basic progressive disclosure without AI overhead.
+ *
+ * For AI-powered disclosure recommendations, integrate with the StudioOrchestrator
+ * via `useStudioAnalyzeMutation` with category="ux" and type="disclosure_analyze".
+ *
+ * Deprecation reason: No clear consumer in the codebase (Phase 5 hooks audit).
+ * Removal timeline: Next major version
+ *
+ * ---
+ * Original description:
  * Uses AI to dynamically adjust UI complexity based on user behavior patterns.
  * Extends the base useProgressiveDisclosure hook with AI recommendations.
  *

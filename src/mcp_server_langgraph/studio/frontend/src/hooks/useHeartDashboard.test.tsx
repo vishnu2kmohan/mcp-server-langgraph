@@ -148,7 +148,9 @@ describe("useHeartDashboard", () => {
 
   describe("initial state", () => {
     it("starts with loading state", async () => {
-      const { result } = renderHook(() => useHeartDashboard(), { wrapper: RouterWrapper });
+      const { result } = renderHook(() => useHeartDashboard(), {
+        wrapper: RouterWrapper,
+      });
 
       // Initially loading
       expect(result.current.loading).toBe(true);
@@ -160,14 +162,18 @@ describe("useHeartDashboard", () => {
     });
 
     it("uses default time range of 30d", async () => {
-      const { result } = renderHook(() => useHeartDashboard(), { wrapper: RouterWrapper });
+      const { result } = renderHook(() => useHeartDashboard(), {
+        wrapper: RouterWrapper,
+      });
 
       expect(result.current.timeRange).toBe("30d");
       await waitFor(() => expect(result.current.loading).toBe(false));
     });
 
     it("fetches data on mount", async () => {
-      const { result } = renderHook(() => useHeartDashboard(), { wrapper: RouterWrapper });
+      const { result } = renderHook(() => useHeartDashboard(), {
+        wrapper: RouterWrapper,
+      });
 
       await waitFor(() => expect(result.current.loading).toBe(false));
 
@@ -186,7 +192,9 @@ describe("useHeartDashboard", () => {
 
   describe("data fetching", () => {
     it("sets data after successful fetch", async () => {
-      const { result } = renderHook(() => useHeartDashboard(), { wrapper: RouterWrapper });
+      const { result } = renderHook(() => useHeartDashboard(), {
+        wrapper: RouterWrapper,
+      });
 
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
@@ -197,7 +205,9 @@ describe("useHeartDashboard", () => {
     });
 
     it("uses authenticatedFetch with onAuthFailure callback", async () => {
-      const { result } = renderHook(() => useHeartDashboard(), { wrapper: RouterWrapper });
+      const { result } = renderHook(() => useHeartDashboard(), {
+        wrapper: RouterWrapper,
+      });
 
       await waitFor(() => expect(result.current.loading).toBe(false));
 
@@ -212,7 +222,9 @@ describe("useHeartDashboard", () => {
     it("handles fetch errors gracefully", async () => {
       mockAuthenticatedFetch.mockRejectedValueOnce(new Error("Network error"));
 
-      const { result } = renderHook(() => useHeartDashboard(), { wrapper: RouterWrapper });
+      const { result } = renderHook(() => useHeartDashboard(), {
+        wrapper: RouterWrapper,
+      });
 
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
@@ -228,7 +240,9 @@ describe("useHeartDashboard", () => {
         status: 500,
       });
 
-      const { result } = renderHook(() => useHeartDashboard(), { wrapper: RouterWrapper });
+      const { result } = renderHook(() => useHeartDashboard(), {
+        wrapper: RouterWrapper,
+      });
 
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
@@ -244,7 +258,9 @@ describe("useHeartDashboard", () => {
 
   describe("time range", () => {
     it("allows changing time range", async () => {
-      const { result } = renderHook(() => useHeartDashboard(), { wrapper: RouterWrapper });
+      const { result } = renderHook(() => useHeartDashboard(), {
+        wrapper: RouterWrapper,
+      });
 
       await waitFor(() => expect(result.current.loading).toBe(false));
 
@@ -258,7 +274,9 @@ describe("useHeartDashboard", () => {
     });
 
     it("refetches data when time range changes", async () => {
-      const { result } = renderHook(() => useHeartDashboard(), { wrapper: RouterWrapper });
+      const { result } = renderHook(() => useHeartDashboard(), {
+        wrapper: RouterWrapper,
+      });
 
       await waitFor(() => expect(result.current.loading).toBe(false));
       mockAuthenticatedFetch.mockClear();
@@ -276,7 +294,9 @@ describe("useHeartDashboard", () => {
     });
 
     it("supports 7d, 30d, and 90d time ranges", async () => {
-      const { result } = renderHook(() => useHeartDashboard(), { wrapper: RouterWrapper });
+      const { result } = renderHook(() => useHeartDashboard(), {
+        wrapper: RouterWrapper,
+      });
 
       await waitFor(() => expect(result.current.loading).toBe(false));
 
@@ -309,7 +329,9 @@ describe("useHeartDashboard", () => {
 
   describe("dimension data", () => {
     it("provides dimensions array", async () => {
-      const { result } = renderHook(() => useHeartDashboard(), { wrapper: RouterWrapper });
+      const { result } = renderHook(() => useHeartDashboard(), {
+        wrapper: RouterWrapper,
+      });
 
       await waitFor(() => expect(result.current.loading).toBe(false));
 
@@ -318,7 +340,9 @@ describe("useHeartDashboard", () => {
     });
 
     it("provides overall health score", async () => {
-      const { result } = renderHook(() => useHeartDashboard(), { wrapper: RouterWrapper });
+      const { result } = renderHook(() => useHeartDashboard(), {
+        wrapper: RouterWrapper,
+      });
 
       await waitFor(() => expect(result.current.loading).toBe(false));
 
@@ -326,7 +350,9 @@ describe("useHeartDashboard", () => {
     });
 
     it("provides data point count", async () => {
-      const { result } = renderHook(() => useHeartDashboard(), { wrapper: RouterWrapper });
+      const { result } = renderHook(() => useHeartDashboard(), {
+        wrapper: RouterWrapper,
+      });
 
       await waitFor(() => expect(result.current.loading).toBe(false));
 
@@ -339,7 +365,9 @@ describe("useHeartDashboard", () => {
         () => new Promise(() => {}),
       );
 
-      const { result } = renderHook(() => useHeartDashboard(), { wrapper: RouterWrapper });
+      const { result } = renderHook(() => useHeartDashboard(), {
+        wrapper: RouterWrapper,
+      });
 
       // Before fetch completes
       expect(result.current.dimensions).toEqual([]);
@@ -353,7 +381,9 @@ describe("useHeartDashboard", () => {
 
   describe("refresh", () => {
     it("provides manual refresh function", async () => {
-      const { result } = renderHook(() => useHeartDashboard(), { wrapper: RouterWrapper });
+      const { result } = renderHook(() => useHeartDashboard(), {
+        wrapper: RouterWrapper,
+      });
 
       await waitFor(() => expect(result.current.loading).toBe(false));
 
@@ -361,7 +391,9 @@ describe("useHeartDashboard", () => {
     });
 
     it("refetches data on manual refresh", async () => {
-      const { result } = renderHook(() => useHeartDashboard(), { wrapper: RouterWrapper });
+      const { result } = renderHook(() => useHeartDashboard(), {
+        wrapper: RouterWrapper,
+      });
 
       await waitFor(() => expect(result.current.loading).toBe(false));
       mockAuthenticatedFetch.mockClear();
@@ -374,7 +406,9 @@ describe("useHeartDashboard", () => {
     });
 
     it("sets loading state during refresh", async () => {
-      const { result } = renderHook(() => useHeartDashboard(), { wrapper: RouterWrapper });
+      const { result } = renderHook(() => useHeartDashboard(), {
+        wrapper: RouterWrapper,
+      });
 
       await waitFor(() => expect(result.current.loading).toBe(false));
 
@@ -412,7 +446,9 @@ describe("useHeartDashboard", () => {
     });
 
     it("does not auto-refresh when autoRefreshMs not set", async () => {
-      const { result } = renderHook(() => useHeartDashboard(), { wrapper: RouterWrapper });
+      const { result } = renderHook(() => useHeartDashboard(), {
+        wrapper: RouterWrapper,
+      });
 
       await waitFor(() => expect(result.current.loading).toBe(false));
 

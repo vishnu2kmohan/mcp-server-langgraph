@@ -325,6 +325,123 @@ export const PERSONA_DEFAULT_PRESET: Record<string, string> = {
 };
 
 // =============================================================================
+// Persona Theme Types
+// =============================================================================
+
+/**
+ * Theme configuration for persona-specific styling.
+ * Uses Tailwind CSS classes for consistent theming.
+ */
+export interface PersonaTheme {
+  /** Background color class */
+  bg: string;
+  /** Text color class */
+  text: string;
+  /** Border color class */
+  border: string;
+  /** Badge/accent color class */
+  badge: string;
+  /** Hover state class */
+  hover: string;
+  /** Ring/focus state class */
+  ring: string;
+}
+
+/**
+ * Theme configurations mapped to persona colors.
+ */
+const PERSONA_THEMES: Record<string, PersonaTheme> = {
+  red: {
+    bg: "bg-red-50 dark:bg-red-950",
+    text: "text-red-700 dark:text-red-300",
+    border: "border-red-200 dark:border-red-800",
+    badge: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200",
+    hover: "hover:bg-red-100 dark:hover:bg-red-900",
+    ring: "ring-red-500",
+  },
+  orange: {
+    bg: "bg-orange-50 dark:bg-orange-950",
+    text: "text-orange-700 dark:text-orange-300",
+    border: "border-orange-200 dark:border-orange-800",
+    badge:
+      "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200",
+    hover: "hover:bg-orange-100 dark:hover:bg-orange-900",
+    ring: "ring-orange-500",
+  },
+  yellow: {
+    bg: "bg-yellow-50 dark:bg-yellow-950",
+    text: "text-yellow-700 dark:text-yellow-300",
+    border: "border-yellow-200 dark:border-yellow-800",
+    badge:
+      "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200",
+    hover: "hover:bg-yellow-100 dark:hover:bg-yellow-900",
+    ring: "ring-yellow-500",
+  },
+  blue: {
+    bg: "bg-blue-50 dark:bg-blue-950",
+    text: "text-blue-700 dark:text-blue-300",
+    border: "border-blue-200 dark:border-blue-800",
+    badge: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200",
+    hover: "hover:bg-blue-100 dark:hover:bg-blue-900",
+    ring: "ring-blue-500",
+  },
+  purple: {
+    bg: "bg-purple-50 dark:bg-purple-950",
+    text: "text-purple-700 dark:text-purple-300",
+    border: "border-purple-200 dark:border-purple-800",
+    badge:
+      "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200",
+    hover: "hover:bg-purple-100 dark:hover:bg-purple-900",
+    ring: "ring-purple-500",
+  },
+  cyan: {
+    bg: "bg-cyan-50 dark:bg-cyan-950",
+    text: "text-cyan-700 dark:text-cyan-300",
+    border: "border-cyan-200 dark:border-cyan-800",
+    badge: "bg-cyan-100 text-cyan-800 dark:bg-cyan-900 dark:text-cyan-200",
+    hover: "hover:bg-cyan-100 dark:hover:bg-cyan-900",
+    ring: "ring-cyan-500",
+  },
+  teal: {
+    bg: "bg-teal-50 dark:bg-teal-950",
+    text: "text-teal-700 dark:text-teal-300",
+    border: "border-teal-200 dark:border-teal-800",
+    badge: "bg-teal-100 text-teal-800 dark:bg-teal-900 dark:text-teal-200",
+    hover: "hover:bg-teal-100 dark:hover:bg-teal-900",
+    ring: "ring-teal-500",
+  },
+  green: {
+    bg: "bg-green-50 dark:bg-green-950",
+    text: "text-green-700 dark:text-green-300",
+    border: "border-green-200 dark:border-green-800",
+    badge: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200",
+    hover: "hover:bg-green-100 dark:hover:bg-green-900",
+    ring: "ring-green-500",
+  },
+};
+
+const DEFAULT_THEME: PersonaTheme = {
+  bg: "bg-gray-50 dark:bg-gray-950",
+  text: "text-gray-700 dark:text-gray-300",
+  border: "border-gray-200 dark:border-gray-800",
+  badge: "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200",
+  hover: "hover:bg-gray-100 dark:hover:bg-gray-900",
+  ring: "ring-gray-500",
+};
+
+/**
+ * Get theme configuration for a persona.
+ *
+ * @param personaId - The persona ID to get theme for
+ * @returns PersonaTheme with Tailwind classes
+ */
+export function getPersonaTheme(personaId: string): PersonaTheme {
+  const persona = getPersonaById(personaId);
+  if (!persona?.color) return DEFAULT_THEME;
+  return PERSONA_THEMES[persona.color] ?? DEFAULT_THEME;
+}
+
+// =============================================================================
 // Utility Functions
 // =============================================================================
 

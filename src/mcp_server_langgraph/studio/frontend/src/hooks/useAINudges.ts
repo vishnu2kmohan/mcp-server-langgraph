@@ -3,6 +3,21 @@
  *
  * Sprint 3 - Phase 6.3: AI-Driven Smart Nudges
  *
+ * @deprecated Use `useNudges` with `enableAI=true` instead.
+ * This hook provides Redux integration but was never adopted in production.
+ * The simpler `useNudges` hook is the standard for all nudge functionality.
+ *
+ * Migration example:
+ * ```tsx
+ * // Instead of:
+ * const { activeNudge } = useAINudges({ enabled: true, pageContext: "chat" });
+ *
+ * // Use:
+ * const { activeNudge } = useNudges({ enableAI: true, pageContext: "chat" });
+ * ```
+ *
+ * ---
+ * Original description:
  * Uses AI to intelligently time and target nudges based on user behavior.
  * Integrates with the Fogg Behavior Model (Motivation + Ability = Trigger).
  *

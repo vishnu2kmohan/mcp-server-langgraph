@@ -25,6 +25,7 @@ import {
   showProtocolVersionMismatchToast,
 } from "../utils/websocketAuth";
 import { reportWebSocketMetrics } from "../utils/websocketTelemetry";
+import { buildWebSocketUrlWithPath, WS_ENDPOINTS } from "../utils/websocket";
 
 // WebSocket message types
 interface ExecutionStartedMessage {
@@ -105,13 +106,16 @@ export function useWorkflowExecution(
     (state: RootState) => state.workflow.executionState,
   );
 
-  // Construct WebSocket URL
+  // Construct WebSocket URL using standardized utilities (ADR-0068 compliant)
   // Uses the consolidated WebSocket endpoint: /api/v1/ws/workflows/{workflow_id}
   const wsUrl = useMemo(() => {
     if (!autoConnect || !workflowId) return "";
-    const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-    const host = window.location.host;
-    return `${protocol}//${host}/api/v1/ws/workflows/${workflowId}`;
+    return buildWebSocketUrlWithPath(
+      WS_ENDPOINTS.WORKFLOW_EXECUTION,
+      { workflowId },
+      {},
+      true, // Include auth token for authenticated endpoint
+    );
   }, [workflowId, autoConnect]);
 
   // Handle incoming WebSocket messages

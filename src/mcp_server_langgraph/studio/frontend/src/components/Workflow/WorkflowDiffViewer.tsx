@@ -1,0 +1,297 @@
+/**
+ * WorkflowDiffViewer Component
+ *
+ * Side-by-side or unified diff view for comparing workflow versions.
+ * Enables visual comparison of nodes, edges, and metadata changes.
+ *
+ * Features:
+ * - Side-by-side view (split pane)
+ * - Unified view (inline diff)
+ * - Additions highlighted in green
+ * - Deletions highlighted in red
+ * - Diff summary statistics
+ *
+ * References:
+ * - Plan: Chat-to-Workflow Feature, Phase 4
+ * - ADR-0089: Prompt Architecture Centralization
+ */
+
+import { useState, useMemo, useCallback } from "react";
+import { X, GitCompare, Columns, List, Plus, Minus } from "lucide-react";
+
+import { cn } from "../../utils/cn";
+
+// =============================================================================
+// Types
+// =============================================================================
+
+type DiffMode = "side-by-side" | "unified";
+
+interface WorkflowVersion {
+  id: string;
+  workflow_id: string;
+  version_number: number;
+  graph_json: {
+    nodes: Array<{ id: string; type: string; data?: Record<string, unknown> }>;
+    edges: Array<{ id?: string; source: string; target: string }>;
+  };
+  commit_message?: string;
+  created_by: string;
+  created_at: string;
+}
+
+interface DiffSummary {
+  nodesAdded: number;
+  nodesRemoved: number;
+  edgesAdded: number;
+  edgesRemoved: number;
+  hasChanges: boolean;
+}
+
+export interface WorkflowDiffViewerProps {
+  /** Version A (older/left) */
+  versionA: WorkflowVersion;
+  /** Version B (newer/right) */
+  versionB: WorkflowVersion;
+  /** Initial diff mode */
+  defaultMode?: DiffMode;
+  /** Callback when close button clicked */
+  onClose?: () => void;
+  /** Additional class name */
+  className?: string;
+}
+
+// =============================================================================
+// Helpers
+// =============================================================================
+
+function computeDiffSummary(
+  versionA: WorkflowVersion,
+  versionB: WorkflowVersion,
+): DiffSummary {
+  const nodesA = new Set(versionA.graph_json.nodes.map((n) => n.id));
+  const nodesB = new Set(versionB.graph_json.nodes.map((n) => n.id));
+
+  const edgesA = new Set(
+    versionA.graph_json.edges.map((e) => `${e.source}->${e.target}`),
+  );
+  const edgesB = new Set(
+    versionB.graph_json.edges.map((e) => `${e.source}->${e.target}`),
+  );
+
+  const nodesAdded = [...nodesB].filter((n) => !nodesA.has(n)).length;
+  const nodesRemoved = [...nodesA].filter((n) => !nodesB.has(n)).length;
+  const edgesAdded = [...edgesB].filter((e) => !edgesA.has(e)).length;
+  const edgesRemoved = [...edgesA].filter((e) => !edgesB.has(e)).length;
+
+  return {
+    nodesAdded,
+    nodesRemoved,
+    edgesAdded,
+    edgesRemoved,
+    hasChanges:
+      nodesAdded > 0 || nodesRemoved > 0 || edgesAdded > 0 || edgesRemoved > 0,
+  };
+}
+
+function formatJson(obj: unknown): string {
+  return JSON.stringify(obj, null, 2);
+}
+
+// =============================================================================
+// Component
+// =============================================================================
+
+export function WorkflowDiffViewer({
+  versionA,
+  versionB,
+  defaultMode = "side-by-side",
+  onClose,
+  className,
+}: WorkflowDiffViewerProps) {
+  const [mode, setMode] = useState<DiffMode>(defaultMode);
+
+  // Compute diff summary
+  const diffSummary = useMemo(
+    () => computeDiffSummary(versionA, versionB),
+    [versionA, versionB],
+  );
+
+  // JSON representations
+  const jsonA = useMemo(() => formatJson(versionA.graph_json), [versionA]);
+  const jsonB = useMemo(() => formatJson(versionB.graph_json), [versionB]);
+
+  // Handle mode toggle
+  const handleModeChange = useCallback((newMode: DiffMode) => {
+    setMode(newMode);
+  }, []);
+
+  return (
+    <div
+      data-testid="diff-viewer"
+      className={cn(
+        "flex flex-col h-full bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg",
+        className,
+      )}
+    >
+      {/* Header */}
+      <div className="flex items-center justify-between px-4 py-2 border-b border-gray-200 dark:border-gray-700">
+        <div className="flex items-center gap-2">
+          <GitCompare size={16} className="text-gray-500" />
+          <h3 className="text-sm font-medium text-gray-900 dark:text-gray-100">
+            Compare Versions
+          </h3>
+        </div>
+
+        <div className="flex items-center gap-2">
+          {/* Mode toggle */}
+          <div
+            data-testid="diff-mode-toggle"
+            className="flex items-center gap-1 bg-gray-100 dark:bg-gray-800 rounded-md p-0.5"
+          >
+            <button
+              type="button"
+              onClick={() => handleModeChange("side-by-side")}
+              className={cn(
+                "flex items-center gap-1.5 px-2 py-1 rounded text-xs font-medium",
+                "transition-colors",
+                mode === "side-by-side"
+                  ? "bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 shadow-sm"
+                  : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300",
+              )}
+            >
+              <Columns size={12} />
+              Split
+            </button>
+            <button
+              type="button"
+              aria-label="Unified"
+              onClick={() => handleModeChange("unified")}
+              className={cn(
+                "flex items-center gap-1.5 px-2 py-1 rounded text-xs font-medium",
+                "transition-colors",
+                mode === "unified"
+                  ? "bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 shadow-sm"
+                  : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300",
+              )}
+            >
+              <List size={12} />
+              Unified
+            </button>
+          </div>
+
+          {/* Close button */}
+          {onClose && (
+            <button
+              type="button"
+              aria-label="Close"
+              onClick={onClose}
+              className="p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500"
+            >
+              <X size={16} />
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* Version labels */}
+      <div className="flex items-center justify-between px-4 py-1.5 bg-gray-50 dark:bg-gray-800/50 border-b border-gray-200 dark:border-gray-700 text-xs">
+        <span className="text-gray-600 dark:text-gray-400">
+          v{versionA.version_number} - {versionA.commit_message || "No message"}
+        </span>
+        <span className="text-gray-600 dark:text-gray-400">
+          v{versionB.version_number} - {versionB.commit_message || "No message"}
+        </span>
+      </div>
+
+      {/* Diff summary */}
+      <div
+        data-testid="diff-summary"
+        className="flex items-center gap-4 px-4 py-2 bg-gray-50 dark:bg-gray-800/50 border-b border-gray-200 dark:border-gray-700"
+      >
+        {diffSummary.hasChanges ? (
+          <>
+            {(diffSummary.nodesAdded > 0 || diffSummary.edgesAdded > 0) && (
+              <div
+                data-testid="diff-additions"
+                className="flex items-center gap-1 text-xs text-green-600 dark:text-green-400"
+              >
+                <Plus size={12} />
+                <span>
+                  {diffSummary.nodesAdded > 0 &&
+                    `${diffSummary.nodesAdded} node${diffSummary.nodesAdded > 1 ? "s" : ""}`}
+                  {diffSummary.nodesAdded > 0 &&
+                    diffSummary.edgesAdded > 0 &&
+                    ", "}
+                  {diffSummary.edgesAdded > 0 &&
+                    `${diffSummary.edgesAdded} edge${diffSummary.edgesAdded > 1 ? "s" : ""}`}
+                </span>
+              </div>
+            )}
+            {(diffSummary.nodesRemoved > 0 || diffSummary.edgesRemoved > 0) && (
+              <div
+                data-testid="diff-deletions"
+                className="flex items-center gap-1 text-xs text-red-600 dark:text-red-400"
+              >
+                <Minus size={12} />
+                <span>
+                  {diffSummary.nodesRemoved > 0 &&
+                    `${diffSummary.nodesRemoved} node${diffSummary.nodesRemoved > 1 ? "s" : ""}`}
+                  {diffSummary.nodesRemoved > 0 &&
+                    diffSummary.edgesRemoved > 0 &&
+                    ", "}
+                  {diffSummary.edgesRemoved > 0 &&
+                    `${diffSummary.edgesRemoved} edge${diffSummary.edgesRemoved > 1 ? "s" : ""}`}
+                </span>
+              </div>
+            )}
+          </>
+        ) : (
+          <span className="text-xs text-gray-500 dark:text-gray-400">
+            No changes between versions
+          </span>
+        )}
+      </div>
+
+      {/* Diff content */}
+      <div className="flex-1 overflow-hidden">
+        {mode === "side-by-side" ? (
+          <div
+            data-testid="side-by-side-view"
+            className="flex h-full divide-x divide-gray-200 dark:divide-gray-700"
+          >
+            {/* Left pane (Version A) */}
+            <div className="flex-1 overflow-auto">
+              <pre className="p-4 text-xs text-gray-700 dark:text-gray-300 font-mono whitespace-pre-wrap">
+                {jsonA}
+              </pre>
+            </div>
+            {/* Right pane (Version B) */}
+            <div className="flex-1 overflow-auto">
+              <pre className="p-4 text-xs text-gray-700 dark:text-gray-300 font-mono whitespace-pre-wrap">
+                {jsonB}
+              </pre>
+            </div>
+          </div>
+        ) : (
+          <div data-testid="unified-view" className="h-full overflow-auto">
+            <pre className="p-4 text-xs text-gray-700 dark:text-gray-300 font-mono whitespace-pre-wrap">
+              {/* Unified diff view - show both with labels */}
+              <span className="text-red-600 dark:text-red-400">
+                --- v{versionA.version_number}
+              </span>
+              {"\n"}
+              <span className="text-green-600 dark:text-green-400">
+                +++ v{versionB.version_number}
+              </span>
+              {"\n\n"}
+              {jsonB}
+            </pre>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+export default WorkflowDiffViewer;

@@ -17,6 +17,7 @@ import { MessageList } from "./MessageList";
 import { ChatInput } from "./ChatInput";
 import { FollowUpSuggestions, type Suggestion } from "./FollowUpSuggestions";
 import { SlashCommandMenu, type SlashCommand } from "./SlashCommandMenu";
+import { GenerateWorkflowButton } from "./GenerateWorkflowButton";
 import type { ChatMessage } from "./MessageBubble";
 import { cn } from "../utils/cn";
 
@@ -35,6 +36,8 @@ export interface ConversationPanelProps {
   slashCommands?: SlashCommand[];
   /** Callback when slash command selected */
   onSlashCommand?: (command: SlashCommand) => void;
+  /** Session ID for workflow generation */
+  sessionId?: string;
   /** Session title for header */
   sessionTitle?: string;
   /** Callback for renaming session */
@@ -81,11 +84,17 @@ export interface ConversationPanelProps {
 
 interface SessionHeaderProps {
   title: string;
+  sessionId?: string;
   onRename?: () => void;
   onDelete?: () => void;
 }
 
-function SessionHeader({ title, onRename, onDelete }: SessionHeaderProps) {
+function SessionHeader({
+  title,
+  sessionId,
+  onRename,
+  onDelete,
+}: SessionHeaderProps) {
   return (
     <div
       data-testid="session-header"
@@ -98,6 +107,8 @@ function SessionHeader({ title, onRename, onDelete }: SessionHeaderProps) {
         {title}
       </h2>
       <div className="flex items-center gap-1">
+        {/* Generate Workflow from Chat button */}
+        {sessionId && <GenerateWorkflowButton sessionId={sessionId} />}
         {onRename && (
           <button
             data-testid="session-rename-button"
@@ -146,6 +157,7 @@ export function ConversationPanel({
   suggestions = [],
   slashCommands = [],
   onSlashCommand,
+  sessionId,
   sessionTitle,
   onRename,
   onDelete,
@@ -248,6 +260,7 @@ export function ConversationPanel({
       {sessionTitle && (
         <SessionHeader
           title={sessionTitle}
+          sessionId={sessionId}
           onRename={onRename}
           onDelete={onDelete}
         />

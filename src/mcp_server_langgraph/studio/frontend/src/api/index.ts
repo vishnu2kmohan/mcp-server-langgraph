@@ -67,6 +67,11 @@ import type {
   UpdateWorkflowPublicRequest,
   GenerateWorkflowCodeRequest,
   GenerateWorkflowCodeResponse,
+  ValidateWorkflowRequest,
+  ValidateWorkflowResponse,
+  GenerateWorkflowFromChatRequest,
+  GenerateWorkflowFromChatResponse,
+  WorkflowVersion,
   // Project-scoped types
   ProjectObservabilityResponse,
   ProjectLogsResponse,
@@ -509,6 +514,56 @@ export const api = createApi({
         method: "POST",
         body: { workflow_id, language },
       }),
+    }),
+
+    // Workflow Validation (ADR-0089, Plan Review Consensus)
+    // Uses centralized WorkflowValidator service - NO JS DUPLICATION
+    validateWorkflow: builder.mutation<
+      ValidateWorkflowResponse,
+      ValidateWorkflowRequest
+    >({
+      query: ({ workflow_id }) => ({
+        url: `/workflows/${workflow_id}/validate`,
+        method: "POST",
+      }),
+    }),
+
+    // Workflow Version History (Plan: greedy-wiggling-marshmallow.md, Phase 3)
+    // Fetches all versions for a workflow
+    getWorkflowVersions: builder.query<WorkflowVersion[], string>({
+      query: (workflowId) => `/workflows/${workflowId}/versions`,
+      providesTags: (_result, _error, workflowId) => [
+        { type: "Workflow", id: `${workflowId}-versions` },
+      ],
+    }),
+
+    // Restore a previous workflow version
+    restoreWorkflowVersion: builder.mutation<
+      Workflow,
+      { workflowId: string; versionId: string }
+    >({
+      query: ({ workflowId, versionId }) => ({
+        url: `/workflows/${workflowId}/versions/${versionId}/restore`,
+        method: "POST",
+      }),
+      invalidatesTags: (_result, _error, { workflowId }) => [
+        { type: "Workflow", id: workflowId },
+        { type: "Workflow", id: `${workflowId}-versions` },
+      ],
+    }),
+
+    // Chat-to-Workflow Generation (ADR-0089, Plan Review Consensus)
+    // Generates and persists workflow from session history
+    generateWorkflowFromChat: builder.mutation<
+      GenerateWorkflowFromChatResponse,
+      GenerateWorkflowFromChatRequest
+    >({
+      query: (body) => ({
+        url: "/workflows/from-chat",
+        method: "POST",
+        body,
+      }),
+      invalidatesTags: [{ type: "Workflow", id: "LIST" }],
     }),
 
     // Shared Workflows (read-only access for standard users)
@@ -3197,6 +3252,10 @@ export const {
   useRemoveWorkflowShareMutation,
   useUpdateWorkflowPublicMutation,
   useGenerateWorkflowCodeMutation,
+  useValidateWorkflowMutation,
+  useGetWorkflowVersionsQuery,
+  useRestoreWorkflowVersionMutation,
+  useGenerateWorkflowFromChatMutation,
   useGetSharedWorkflowsQuery,
   // Sessions
   useListSessionsQuery,

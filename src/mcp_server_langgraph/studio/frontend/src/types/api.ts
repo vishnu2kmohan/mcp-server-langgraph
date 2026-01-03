@@ -305,6 +305,44 @@ export interface Workflow {
   user_id?: string;
   created_at: string;
   updated_at: string;
+  /** Current version number (1 for new workflows) */
+  version?: number;
+  /** Workflow lifecycle status */
+  status?: "draft" | "published" | "archived";
+  /** ID of the head (latest) version */
+  head_version_id?: string;
+  /** Source code representation (Python/YAML) */
+  source_text?: string;
+}
+
+// =============================================================================
+// Workflow Versions (Plan: greedy-wiggling-marshmallow.md, Phase 3)
+// =============================================================================
+
+/**
+ * Workflow version history entry.
+ * Enables draft/publish lifecycle, diffing, rollback, and audit trails.
+ */
+export interface WorkflowVersion {
+  id: string;
+  workflow_id: string;
+  version_number: number;
+  /** Snapshot of workflow state (nodes + edges) */
+  graph_json: {
+    nodes: Array<Record<string, unknown>>;
+    edges: Array<Record<string, unknown>>;
+  };
+  /** Source code representation at this version */
+  source_text?: string;
+  /** Commit message describing the change */
+  commit_message?: string;
+  /** User who created this version */
+  created_by: string;
+  created_at: string;
+  /** Prompt version used to generate this version (telemetry linkage) */
+  prompt_version?: string;
+  /** LLM model used for generation */
+  prompt_model?: string;
 }
 
 export interface WorkflowSummary {
@@ -371,6 +409,64 @@ export interface GenerateWorkflowCodeRequest {
 export interface GenerateWorkflowCodeResponse {
   code: string;
   language: string;
+}
+
+// =============================================================================
+// Workflow Validation (ADR-0089, Plan Review Consensus)
+// =============================================================================
+
+/**
+ * Request to validate a workflow's graph structure.
+ * Currently empty - workflow is fetched by ID.
+ */
+export interface ValidateWorkflowRequest {
+  workflow_id: string;
+}
+
+/**
+ * Response from workflow validation.
+ * Uses centralized WorkflowValidator service (NO JS DUPLICATION).
+ */
+export interface ValidateWorkflowResponse {
+  valid: boolean;
+  errors: string[];
+  warnings: string[];
+}
+
+// =============================================================================
+// Chat-to-Workflow Generation (ADR-0089, Plan Review Consensus)
+// =============================================================================
+
+/**
+ * Metadata about the prompt used for workflow generation.
+ * Enables telemetry linkage for prompt optimization analytics.
+ */
+export interface PromptMetadata {
+  name: string;
+  version: string;
+  hash: string;
+  model: string;
+}
+
+/**
+ * Request to generate a workflow from chat session history.
+ */
+export interface GenerateWorkflowFromChatRequest {
+  session_id: string;
+  refinement_mode?: "auto" | "plan";
+  template_id?: string;
+}
+
+/**
+ * Response containing generated workflow from chat.
+ * Workflow is persisted with status='draft' and version=1.
+ */
+export interface GenerateWorkflowFromChatResponse {
+  workflow: Workflow;
+  confidence: number;
+  suggestions: string[];
+  prompt_metadata: PromptMetadata;
+  plan?: Record<string, unknown>;
 }
 
 // =============================================================================

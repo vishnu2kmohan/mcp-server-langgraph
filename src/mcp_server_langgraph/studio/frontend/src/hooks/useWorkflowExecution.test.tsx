@@ -78,6 +78,14 @@ describe("useWorkflowExecution", () => {
         send: mockSend,
         disconnect: mockDisconnect,
         reconnect: mockReconnect,
+        metrics: {
+          totalAttempts: 0,
+          successfulConnections: 0,
+          failedConnections: 0,
+          totalMessagesReceived: 0,
+          totalMessagesSent: 0,
+          lastConnectionTime: null,
+        },
       };
     });
   });
@@ -121,8 +129,9 @@ describe("useWorkflowExecution", () => {
       expect(mockUseRealtimeSync).toHaveBeenCalledWith(
         expect.objectContaining({
           // Consolidated WebSocket URL: /api/v1/ws/workflows/{workflow_id}
+          // Now includes query params (v=protocol_version, token=auth) via buildWebSocketUrlWithPath
           url: expect.stringMatching(
-            /ws.*\/api\/v1\/ws\/workflows\/workflow-abc$/,
+            /ws.*\/api\/v1\/ws\/workflows\/workflow-abc\?/,
           ),
         }),
       );
@@ -146,6 +155,14 @@ describe("useWorkflowExecution", () => {
         send: mockSend,
         disconnect: mockDisconnect,
         reconnect: mockReconnect,
+        metrics: {
+          totalAttempts: 0,
+          successfulConnections: 0,
+          failedConnections: 0,
+          totalMessagesReceived: 0,
+          totalMessagesSent: 0,
+          lastConnectionTime: null,
+        },
       });
 
       const store = createTestStore();

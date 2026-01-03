@@ -851,6 +851,7 @@ export const ConnectedConversationPanel = forwardRef<
         data-testid="connected-conversation-panel"
         messages={messages}
         onSendMessage={handleSendMessage}
+        sessionId={sessionId}
         sessionTitle={sessionTitle}
         slashCommands={DEFAULT_SLASH_COMMANDS}
         onSlashCommand={handleSlashCommand}
