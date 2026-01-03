@@ -2,12 +2,27 @@
 Template Recommendation Module
 
 Provides AI-powered workflow template recommendations.
-Uses embedding-based similarity (sentence-transformers) with fallback to keywords.
+
+Supports multiple embedding backends:
+1. EmbeddingService (unified abstraction) - preferred
+2. sentence-transformers (legacy) - fallback
+3. Keyword matching - last resort
+
+Usage:
+    from mcp_server_langgraph.studio.ai.templates import get_template_recommender
+
+    recommender = get_template_recommender()  # Uses EmbeddingService from settings
+    matches = await recommender.recommend("Build a chatbot with RAG")
 """
+
+from __future__ import annotations
 
 import logging
 from dataclasses import dataclass, field
-from typing import Any
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from mcp_server_langgraph.llm.embeddings import EmbeddingService
 
 # Lazy-load embeddings to handle missing dependency
 
@@ -162,24 +177,40 @@ BUILT_IN_TEMPLATES = [
 class TemplateRecommender:
     """Recommends workflow templates based on user descriptions.
 
-    Uses semantic similarity (sentence-transformers) to match user intent
-    to available templates. Falls back to keyword matching when embeddings
-    are unavailable.
+    Uses semantic similarity to match user intent to available templates.
+    Supports multiple embedding backends:
+    1. EmbeddingService (unified abstraction) - preferred when injected
+    2. sentence-transformers (legacy) - fallback for backward compatibility
+    3. Keyword matching - last resort when no embeddings available
 
     Example:
+        # With EmbeddingService (recommended)
+        from mcp_server_langgraph.studio.ai.templates import get_template_recommender
+        recommender = get_template_recommender()
+        matches = await recommender.recommend("Build a chatbot with RAG")
+
+        # Legacy (backward compatible)
         recommender = TemplateRecommender()
         matches = await recommender.recommend("Build a chatbot with RAG")
     """
 
-    def __init__(self, enable_embeddings: bool = True) -> None:
+    def __init__(
+        self,
+        enable_embeddings: bool = True,
+        embedding_service: EmbeddingService | None = None,
+    ) -> None:
         """Initialize the template recommender.
 
         Args:
             enable_embeddings: Whether to use embedding-based similarity
+            embedding_service: Optional EmbeddingService for unified embeddings.
+                If provided, takes precedence over sentence-transformers.
         """
         self._templates = list(BUILT_IN_TEMPLATES)
         self._enable_embeddings = enable_embeddings
+        self._embedding_service = embedding_service
         self._embeddings_initialized = False
+        self._template_embeddings_cache: dict[str, list[float]] = {}
 
     def _initialize_embeddings(self) -> None:
         """Pre-compute embeddings for all templates (lazy initialization)."""
@@ -245,10 +276,20 @@ class TemplateRecommender:
         # Lazy-initialize embeddings on first recommendation
         self._initialize_embeddings()
 
+        # Pre-compute query embedding once if using EmbeddingService
+        query_embedding: list[float] | None = None
+        if self._embedding_service is not None:
+            try:
+                query_embedding = await self._embedding_service.embed(description)
+            except Exception as e:
+                logger.debug("Failed to compute query embedding: %s", e)
+
         results = []
 
         for template in self._templates:
-            similarity = await self._compute_similarity(description, template)
+            similarity = await self._compute_similarity(
+                description, template, query_embedding=query_embedding
+            )
             results.append(
                 {
                     "template": template,
@@ -269,29 +310,85 @@ class TemplateRecommender:
         self,
         description: str,
         template: WorkflowTemplate,
+        query_embedding: list[float] | None = None,
     ) -> float:
         """Compute similarity between description and template.
 
-        Uses embedding-based cosine similarity when available,
-        falls back to keyword matching otherwise.
+        Priority:
+        1. EmbeddingService (unified abstraction) - if injected
+        2. sentence-transformers (legacy) - if available
+        3. Keyword matching - fallback
 
         Args:
             description: User description
             template: Workflow template
+            query_embedding: Pre-computed query embedding (optimization)
 
         Returns:
             Similarity score between 0 and 1
         """
-        # Try embedding-based similarity first
+        # Priority 1: Use injected EmbeddingService with pre-computed query
+        if self._embedding_service is not None and query_embedding is not None:
+            try:
+                return await self._compute_embedding_service_similarity(
+                    template, query_embedding
+                )
+            except Exception as e:
+                logger.debug(
+                    "EmbeddingService similarity failed, falling back: %s", e
+                )
+
+        # Priority 2: Use legacy sentence-transformers
         if self._enable_embeddings and _embeddings_available and _embedding_model is not None:
             try:
                 return self._compute_embedding_similarity(description, template)
             except Exception as e:
-                # Fall through to keyword matching on any error
-                logger.debug("Embedding similarity failed, falling back to keywords: %s", e)
+                logger.debug(
+                    "Embedding similarity failed, falling back to keywords: %s", e
+                )
 
-        # Fallback: keyword-based similarity
+        # Priority 3: Keyword-based similarity
         return self._compute_keyword_similarity(description, template)
+
+    async def _compute_embedding_service_similarity(
+        self,
+        template: WorkflowTemplate,
+        query_embedding: list[float],
+    ) -> float:
+        """Compute similarity using the unified EmbeddingService.
+
+        Args:
+            template: Workflow template
+            query_embedding: Pre-computed query embedding
+
+        Returns:
+            Cosine similarity score between 0 and 1
+        """
+        import numpy as np
+
+        # Get or compute template embedding (cached)
+        if template.id in self._template_embeddings_cache:
+            template_embedding = self._template_embeddings_cache[template.id]
+        else:
+            template_text = self._get_template_text(template)
+            template_embedding = await self._embedding_service.embed(template_text)
+            self._template_embeddings_cache[template.id] = template_embedding
+
+        # Compute cosine similarity
+        query_arr = np.array(query_embedding)
+        template_arr = np.array(template_embedding)
+
+        dot_product = np.dot(query_arr, template_arr)
+        norm_query = np.linalg.norm(query_arr)
+        norm_template = np.linalg.norm(template_arr)
+
+        if norm_query == 0 or norm_template == 0:
+            return 0.0
+
+        similarity = dot_product / (norm_query * norm_template)
+
+        # Convert from [-1, 1] to [0, 1] range
+        return float((similarity + 1) / 2)
 
     def _compute_embedding_similarity(
         self,
@@ -371,3 +468,35 @@ class TemplateRecommender:
             score += 0.2 * (len(common_words) / len(template_words))
 
         return min(score, 1.0)
+
+
+def get_template_recommender(
+    embedding_service: EmbeddingService | None = None,
+) -> TemplateRecommender:
+    """Factory function to create a TemplateRecommender with EmbeddingService.
+
+    If no embedding_service is provided, uses get_embedding_service() to create
+    one based on application settings.
+
+    Args:
+        embedding_service: Optional EmbeddingService instance.
+            If None, creates one from settings.
+
+    Returns:
+        TemplateRecommender configured with the embedding service
+
+    Example:
+        # Use default from settings
+        recommender = get_template_recommender()
+
+        # Use custom embedding service
+        from mcp_server_langgraph.llm.embeddings import InMemoryEmbeddingService
+        service = InMemoryEmbeddingService(dimensions=768)
+        recommender = get_template_recommender(embedding_service=service)
+    """
+    if embedding_service is None:
+        from mcp_server_langgraph.llm.embeddings import get_embedding_service
+
+        embedding_service = get_embedding_service()
+
+    return TemplateRecommender(embedding_service=embedding_service)
