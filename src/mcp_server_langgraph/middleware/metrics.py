@@ -209,9 +209,79 @@ class MetricsMiddleware(BaseHTTPMiddleware):
                     endpoint=endpoint,
                 ).observe(duration)
 
+            # Broadcast to MetricsBroadcaster for real-time DevTools streaming
+            self._broadcast_to_devtools(request, method, endpoint, status, duration)
+
         except Exception as e:
             # Don't let metrics failures break the request
             logger.debug("Metric recording failed: %s", e)
+
+    def _broadcast_to_devtools(
+        self,
+        request: Request,
+        method: str,
+        endpoint: str,
+        status: str,
+        duration: float,
+    ) -> None:
+        """
+        Broadcast metrics to DevTools via MetricsBroadcaster.
+
+        Uses fire-and-forget async task for non-blocking broadcast.
+        Uses lazy imports to avoid circular dependencies.
+
+        Args:
+            request: The HTTP request
+            method: HTTP method
+            endpoint: Normalized endpoint path
+            status: Response status code as string
+            duration: Request duration in seconds
+        """
+        import asyncio
+
+        try:
+            # Lazy import to avoid circular dependency
+            from mcp_server_langgraph.websocket.handlers.metrics_broadcaster import (
+                MetricType,
+                get_metrics_broadcaster,
+            )
+
+            # Extract session_id from request headers if available
+            session_id = request.headers.get("x-session-id")
+
+            broadcaster = get_metrics_broadcaster()
+
+            # Fire-and-forget async broadcast (don't block the request)
+            try:
+                loop = asyncio.get_running_loop()
+            except RuntimeError:
+                # No event loop running - skip broadcasting
+                return
+
+            # Create task to broadcast counter metric (fire-and-forget)
+            loop.create_task(  # noqa: RUF006
+                broadcaster.broadcast_metric(
+                    name="http_requests_total",
+                    value=1.0,  # Counter increment
+                    labels={"method": method, "endpoint": endpoint, "status": status},
+                    session_id=session_id,
+                    metric_type=MetricType.COUNTER,
+                )
+            )
+
+            # Create task to broadcast duration metric (fire-and-forget)
+            loop.create_task(  # noqa: RUF006
+                broadcaster.broadcast_metric(
+                    name="http_request_duration_seconds",
+                    value=duration,
+                    labels={"method": method, "endpoint": endpoint},
+                    session_id=session_id,
+                    metric_type=MetricType.HISTOGRAM,
+                )
+            )
+        except Exception as e:
+            # Don't let broadcast failures break the request
+            logger.debug("Metrics broadcast failed: %s", e)
 
 
 # Module-level references for patching in tests

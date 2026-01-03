@@ -206,3 +206,261 @@ class TestMetricsMiddlewareIntegration:
         response = client.get("/not-found")
         assert response.status_code == 404
         assert response.json()["detail"] == "Not found"
+
+
+@pytest.mark.xdist_group(name="metrics_middleware_broadcaster")
+class TestMetricsBroadcasterWiring:
+    """Tests for MetricsBroadcaster integration in metrics middleware.
+
+    TDD tests verifying that HTTP metrics are broadcast to DevTools
+    via MetricsBroadcaster for real-time streaming.
+    """
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers."""
+        gc.collect()
+
+    @pytest.mark.asyncio
+    async def test_broadcast_to_devtools_sends_counter_metric(self) -> None:
+        """
+        GIVEN a request is processed by the middleware
+        WHEN _broadcast_to_devtools is called
+        THEN it should broadcast http_requests_total counter metric
+        """
+        from unittest.mock import AsyncMock
+
+        from mcp_server_langgraph.middleware.metrics import MetricsMiddleware
+
+        middleware = MetricsMiddleware(app=MagicMock())
+
+        mock_request = MagicMock()
+        mock_request.headers.get.return_value = "test-session-123"
+
+        with patch(
+            "mcp_server_langgraph.websocket.handlers.metrics_broadcaster.get_metrics_broadcaster"
+        ) as mock_get_broadcaster:
+            mock_broadcaster = MagicMock()
+            mock_broadcaster.broadcast_metric = AsyncMock(return_value=None)
+            mock_get_broadcaster.return_value = mock_broadcaster
+
+            # Call the method
+            middleware._broadcast_to_devtools(
+                request=mock_request,
+                method="GET",
+                endpoint="/api/test",
+                status="200",
+                duration=0.05,
+            )
+
+            # Allow async tasks to run
+            import asyncio
+
+            await asyncio.sleep(0.01)
+
+            # Verify counter metric was broadcast
+            calls = mock_broadcaster.broadcast_metric.call_args_list
+            counter_call = next(
+                (c for c in calls if c.kwargs.get("name") == "http_requests_total"),
+                None,
+            )
+            assert counter_call is not None
+            assert counter_call.kwargs["value"] == 1.0
+            assert counter_call.kwargs["labels"]["method"] == "GET"
+            assert counter_call.kwargs["labels"]["endpoint"] == "/api/test"
+            assert counter_call.kwargs["labels"]["status"] == "200"
+            assert counter_call.kwargs["session_id"] == "test-session-123"
+
+    @pytest.mark.asyncio
+    async def test_broadcast_to_devtools_sends_histogram_metric(self) -> None:
+        """
+        GIVEN a request is processed by the middleware
+        WHEN _broadcast_to_devtools is called
+        THEN it should broadcast http_request_duration_seconds histogram metric
+        """
+        from unittest.mock import AsyncMock
+
+        from mcp_server_langgraph.middleware.metrics import MetricsMiddleware
+
+        middleware = MetricsMiddleware(app=MagicMock())
+
+        mock_request = MagicMock()
+        mock_request.headers.get.return_value = "test-session-456"
+
+        with patch(
+            "mcp_server_langgraph.websocket.handlers.metrics_broadcaster.get_metrics_broadcaster"
+        ) as mock_get_broadcaster:
+            mock_broadcaster = MagicMock()
+            mock_broadcaster.broadcast_metric = AsyncMock(return_value=None)
+            mock_get_broadcaster.return_value = mock_broadcaster
+
+            # Call the method with specific duration
+            middleware._broadcast_to_devtools(
+                request=mock_request,
+                method="POST",
+                endpoint="/api/data",
+                status="201",
+                duration=0.123,
+            )
+
+            # Allow async tasks to run
+            import asyncio
+
+            await asyncio.sleep(0.01)
+
+            # Verify histogram metric was broadcast
+            calls = mock_broadcaster.broadcast_metric.call_args_list
+            histogram_call = next(
+                (c for c in calls if c.kwargs.get("name") == "http_request_duration_seconds"),
+                None,
+            )
+            assert histogram_call is not None
+            assert histogram_call.kwargs["value"] == 0.123
+            assert histogram_call.kwargs["labels"]["method"] == "POST"
+            assert histogram_call.kwargs["labels"]["endpoint"] == "/api/data"
+            assert histogram_call.kwargs["session_id"] == "test-session-456"
+
+    @pytest.mark.asyncio
+    async def test_broadcast_to_devtools_extracts_session_id_from_header(self) -> None:
+        """
+        GIVEN a request with x-session-id header
+        WHEN _broadcast_to_devtools is called
+        THEN it should extract and pass the session_id to broadcaster
+        """
+        from unittest.mock import AsyncMock
+
+        from mcp_server_langgraph.middleware.metrics import MetricsMiddleware
+
+        middleware = MetricsMiddleware(app=MagicMock())
+
+        mock_request = MagicMock()
+        mock_request.headers.get.return_value = "custom-session-id-789"
+
+        with patch(
+            "mcp_server_langgraph.websocket.handlers.metrics_broadcaster.get_metrics_broadcaster"
+        ) as mock_get_broadcaster:
+            mock_broadcaster = MagicMock()
+            mock_broadcaster.broadcast_metric = AsyncMock(return_value=None)
+            mock_get_broadcaster.return_value = mock_broadcaster
+
+            middleware._broadcast_to_devtools(
+                request=mock_request,
+                method="GET",
+                endpoint="/test",
+                status="200",
+                duration=0.01,
+            )
+
+            # Verify header extraction
+            mock_request.headers.get.assert_called_with("x-session-id")
+
+            # Allow async tasks to run
+            import asyncio
+
+            await asyncio.sleep(0.01)
+
+            # Verify session_id passed to broadcaster
+            calls = mock_broadcaster.broadcast_metric.call_args_list
+            for call in calls:
+                assert call.kwargs["session_id"] == "custom-session-id-789"
+
+    def test_broadcast_to_devtools_handles_no_event_loop_gracefully(self) -> None:
+        """
+        GIVEN no event loop is running
+        WHEN _broadcast_to_devtools is called
+        THEN it should return without error (skip broadcasting)
+        """
+        from mcp_server_langgraph.middleware.metrics import MetricsMiddleware
+
+        middleware = MetricsMiddleware(app=MagicMock())
+
+        mock_request = MagicMock()
+        mock_request.headers.get.return_value = None
+
+        # This should not raise even without an event loop
+        # The method catches RuntimeError from get_running_loop()
+        with patch(
+            "mcp_server_langgraph.websocket.handlers.metrics_broadcaster.get_metrics_broadcaster"
+        ) as mock_get_broadcaster:
+            mock_broadcaster = MagicMock()
+            mock_get_broadcaster.return_value = mock_broadcaster
+
+            # Should not raise
+            middleware._broadcast_to_devtools(
+                request=mock_request,
+                method="GET",
+                endpoint="/test",
+                status="200",
+                duration=0.01,
+            )
+
+            # broadcast_metric should not be called (no event loop)
+            mock_broadcaster.broadcast_metric.assert_not_called()
+
+    def test_broadcast_to_devtools_handles_import_error_gracefully(self) -> None:
+        """
+        GIVEN MetricsBroadcaster import fails
+        WHEN _broadcast_to_devtools is called
+        THEN it should handle the error gracefully without breaking the request
+        """
+        from mcp_server_langgraph.middleware.metrics import MetricsMiddleware
+
+        middleware = MetricsMiddleware(app=MagicMock())
+
+        mock_request = MagicMock()
+        mock_request.headers.get.return_value = None
+
+        with patch(
+            "mcp_server_langgraph.websocket.handlers.metrics_broadcaster.get_metrics_broadcaster",
+            side_effect=ImportError("Module not found"),
+        ):
+            # Should not raise - errors are caught and logged
+            middleware._broadcast_to_devtools(
+                request=mock_request,
+                method="GET",
+                endpoint="/test",
+                status="200",
+                duration=0.01,
+            )
+            # Test passes if no exception is raised
+
+    def test_broadcast_to_devtools_handles_none_session_id(self) -> None:
+        """
+        GIVEN a request without x-session-id header
+        WHEN _broadcast_to_devtools is called
+        THEN it should pass None as session_id to broadcaster
+        """
+        from unittest.mock import AsyncMock
+
+        from mcp_server_langgraph.middleware.metrics import MetricsMiddleware
+
+        middleware = MetricsMiddleware(app=MagicMock())
+
+        mock_request = MagicMock()
+        mock_request.headers.get.return_value = None  # No session ID
+
+        with patch(
+            "mcp_server_langgraph.websocket.handlers.metrics_broadcaster.get_metrics_broadcaster"
+        ) as mock_get_broadcaster:
+            mock_broadcaster = MagicMock()
+            mock_broadcaster.broadcast_metric = AsyncMock(return_value=None)
+            mock_get_broadcaster.return_value = mock_broadcaster
+
+            # Use asyncio to run in event loop context
+            import asyncio
+
+            async def run_test() -> None:
+                middleware._broadcast_to_devtools(
+                    request=mock_request,
+                    method="GET",
+                    endpoint="/test",
+                    status="200",
+                    duration=0.01,
+                )
+                await asyncio.sleep(0.01)
+
+                # Verify None session_id passed
+                calls = mock_broadcaster.broadcast_metric.call_args_list
+                for call in calls:
+                    assert call.kwargs["session_id"] is None
+
+            asyncio.get_event_loop().run_until_complete(run_test())
