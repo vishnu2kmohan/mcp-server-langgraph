@@ -166,7 +166,7 @@ class GrafanaAlertingClient(AlertingQueryClient):
             self._oidc_token_expires_at = time.time() + expires_in
 
             logger.info("OIDC token obtained successfully for Grafana API")
-            return access_token
+            return str(access_token)
 
     async def initialize(self) -> None:
         """Initialize HTTP client with auth."""

@@ -173,6 +173,23 @@ class TraceBroadcaster:
             return False
         return not (filter_.status and span.get("status") != filter_.status)
 
+    def queue_broadcast(self, span: dict[str, Any]) -> None:
+        """
+        Synchronously add a span to the recent traces buffer.
+
+        This is a non-blocking method that can be called from any context,
+        including from OTEL span processors that run outside of async contexts.
+        Does not broadcast to WebSocket subscribers - use broadcast_span() for that.
+
+        Args:
+            span: The span data to add to the buffer.
+        """
+        # Direct append without async lock - thread-safe for single writes
+        # The list operations are atomic in CPython
+        self._recent_traces.insert(0, span)
+        if len(self._recent_traces) > self._max_recent_traces:
+            self._recent_traces = self._recent_traces[: self._max_recent_traces]
+
     @property
     def subscriber_count(self) -> int:
         """Get the number of active subscribers."""
