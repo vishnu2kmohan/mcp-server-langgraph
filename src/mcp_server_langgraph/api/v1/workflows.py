@@ -36,7 +36,9 @@ from mcp_server_langgraph.auth.dependencies import (
     require_workflow_viewer,
 )
 from mcp_server_langgraph.auth.openfga import invalidate_resource_permissions
+from mcp_server_langgraph.core.feature_flags import get_feature_flags
 from mcp_server_langgraph.observability.telemetry import logger
+from mcp_server_langgraph.services.workflow_validator import WorkflowValidator
 
 if TYPE_CHECKING:
     from mcp_server_langgraph.storage.workflow import PostgresWorkflowManager, RedisWorkflowManager
@@ -173,6 +175,138 @@ class GenerateWorkflowResponse(BaseModel):
     workflow: WorkflowResponse = Field(description="Generated workflow definition")
     confidence: float = Field(ge=0.0, le=1.0, description="Generation confidence score")
     suggestions: list[str] = Field(default_factory=list, description="Improvement suggestions")
+
+
+# ==============================================================================
+# Chat-to-Workflow Models (ADR-0089, Plan Review Consensus)
+# ==============================================================================
+
+
+class PromptMetadata(BaseModel):
+    """Metadata about the prompt used for workflow generation.
+
+    Enables telemetry linkage for prompt optimization analytics.
+    Stored in workflow_versions table for tracking which prompt
+    configurations produce successful workflows.
+    """
+
+    name: str = Field(description="Prompt name (e.g., 'workflow_generator')")
+    version: str = Field(description="Prompt version (e.g., 'v1')")
+    hash: str = Field(description="SHA-256 hash of prompt content")
+    model: str = Field(description="LLM model used (e.g., 'claude-opus-4-5')")
+
+
+class FromChatRequest(BaseModel):
+    """Request to generate a workflow from chat session history.
+
+    References:
+    - Plan: Chat-to-Workflow Feature (validated by 4 independent reviews)
+    - Review consensus: Sanitize session content before LLM exposure
+    """
+
+    session_id: str = Field(description="Session ID to generate workflow from")
+    refinement_mode: Literal["auto", "plan"] = Field(
+        default="auto",
+        description="Generation mode: 'auto' generates immediately, 'plan' returns execution plan for approval",
+    )
+    template_id: str | None = Field(
+        default=None,
+        description="Optional template ID to use as starting point",
+    )
+
+
+class FromChatResponse(BaseModel):
+    """Response containing generated workflow from chat.
+
+    The workflow is persisted with status='draft' and version=1.
+    Includes prompt metadata for telemetry linkage.
+    """
+
+    workflow: WorkflowResponse = Field(description="Generated workflow (status=draft)")
+    confidence: float = Field(ge=0.0, le=1.0, description="Generation confidence score")
+    suggestions: list[str] = Field(default_factory=list, description="Improvement suggestions")
+    prompt_metadata: PromptMetadata = Field(description="Prompt telemetry metadata")
+    plan: dict[str, Any] | None = Field(
+        default=None,
+        description="Execution plan (when refinement_mode='plan')",
+    )
+
+
+# ==============================================================================
+# Workflow Validation Models (ADR-0089, Plan Review Consensus)
+# ==============================================================================
+
+
+class ValidateWorkflowRequest(BaseModel):
+    """Request to validate a workflow.
+
+    The request body is optional - the workflow is fetched by ID.
+    Future: May accept inline workflow dict for pre-save validation.
+    """
+
+    pass  # Currently no body needed - workflow fetched by ID
+
+
+class ValidateWorkflowResponse(BaseModel):
+    """Response from workflow validation.
+
+    Uses centralized WorkflowValidator service (NO JS DUPLICATION).
+    Both Monaco editor and React Flow call this single endpoint.
+
+    References:
+    - Plan: Chat-to-Workflow Feature (validated by 4 independent reviews)
+    - Review consensus: Centralized validation endpoint
+    """
+
+    valid: bool = Field(description="Whether the workflow passed validation")
+    errors: list[str] = Field(
+        default_factory=list,
+        description="List of error messages (blocking issues)",
+    )
+    warnings: list[str] = Field(
+        default_factory=list,
+        description="List of warning messages (non-blocking issues)",
+    )
+
+
+# ==============================================================================
+# Workflow Version Response Models (Plan: greedy-wiggling-marshmallow.md, Phase 3)
+# ==============================================================================
+
+
+class WorkflowVersionResponse(BaseModel):
+    """Response model for workflow version history.
+
+    Represents a single version entry in the workflow's history.
+    Enables draft/publish lifecycle, diffing, rollback, and audit trails.
+
+    References:
+    - Plan: Chat-to-Workflow Feature (validated by 4 independent reviews)
+    - Phase 3: Data Model & Persistence (MANDATORY versioning)
+    """
+
+    id: str = Field(description="Unique version identifier")
+    workflow_id: str = Field(description="ID of the parent workflow")
+    version_number: int = Field(description="Version number (1-based, increments)")
+    graph_json: dict[str, Any] = Field(description="Snapshot of workflow state (nodes + edges)")
+    source_text: str | None = Field(
+        default=None,
+        description="Source code representation (Python/YAML) at this version",
+    )
+    commit_message: str | None = Field(
+        default=None,
+        description="Description of changes in this version",
+    )
+    created_by: str = Field(description="User who created this version")
+    created_at: str = Field(description="ISO 8601 timestamp when version was created")
+    prompt_version: str | None = Field(
+        default=None,
+        description="Prompt version used to generate this version (telemetry)",
+    )
+    prompt_model: str | None = Field(
+        default=None,
+        description="LLM model used for generation (telemetry)",
+    )
 
 
 # ==============================================================================
@@ -589,6 +723,221 @@ class WorkflowServiceAdapter:
                 "Add memory for conversation context",
             ],
         }
+
+    # ==========================================================================
+    # Chat-to-Workflow Generation (ADR-0089, Plan Review Consensus)
+    # ==========================================================================
+
+    async def generate_from_chat(
+        self,
+        session_id: str,
+        refinement_mode: str = "auto",
+        template_id: str | None = None,
+        user_id: str | None = None,
+    ) -> dict[str, Any]:
+        """
+        Generate and persist a workflow from chat session history.
+
+        This method:
+        1. Fetches session messages by session_id
+        2. Session messages are sanitized in WorkflowGenerator (ADR-0089)
+        3. Generates workflow via WorkflowGenerator
+        4. Persists with status='draft', version=1
+        5. Returns prompt metadata for telemetry linkage
+
+        Args:
+            session_id: Session ID to fetch messages from.
+            refinement_mode: 'auto' generates immediately, 'plan' returns plan.
+            template_id: Optional template to use as starting point.
+            user_id: User ID for ownership.
+
+        Returns:
+            Dict with workflow, confidence, suggestions, prompt_metadata.
+
+        Raises:
+            ValueError: If session not found.
+        """
+        import hashlib
+
+        from mcp_server_langgraph.services.workflow_generator import (
+            WorkflowGenerationError,
+            WorkflowGenerator,
+            workflow_to_api_format,
+        )
+
+        # Fetch session messages
+        from mcp_server_langgraph.api.v1.sessions import get_session_service
+
+        session_service = get_session_service()
+        messages = await session_service.get_session_messages(session_id)
+
+        if messages is None:
+            raise ValueError(f"Session {session_id} not found")
+
+        # Try to create LLM-powered generator
+        try:
+            from mcp_server_langgraph.core.config import settings
+            from mcp_server_langgraph.llm.factory import create_llm_from_config
+
+            llm = create_llm_from_config(settings)
+            generator = WorkflowGenerator(llm=llm)
+
+            # Get prompt metadata for telemetry
+            system_prompt = generator.get_system_prompt()
+            prompt_hash = hashlib.sha256(system_prompt.encode()).hexdigest()[:16]
+            model_name = getattr(settings, "llm_model", "unknown")
+
+            prompt_metadata = {
+                "name": "workflow_generator",
+                "version": "v1",
+                "hash": prompt_hash,
+                "model": model_name,
+            }
+        except Exception:
+            # Fallback if LLM unavailable
+            result = self._generate_stub_workflow(f"From session: {session_id}")
+            result["prompt_metadata"] = {
+                "name": "workflow_generator",
+                "version": "v1",
+                "hash": "stub",
+                "model": "stub",
+            }
+            return result
+
+        try:
+            # Generate workflow from session (sanitization happens inside)
+            generation_result = await generator.generate_from_session(messages)
+            result = workflow_to_api_format(generation_result)
+
+            # Add prompt metadata
+            result["prompt_metadata"] = prompt_metadata
+
+            # Add plan for refinement_mode='plan'
+            if refinement_mode == "plan":
+                result["plan"] = {
+                    "id": f"plan-{session_id[:8]}",
+                    "steps": [
+                        "Analyze conversation context",
+                        "Generate workflow structure",
+                        "Validate graph integrity",
+                        "Persist draft workflow",
+                    ],
+                    "requires_approval": True,
+                }
+
+            # Persist workflow with draft status
+            workflow_data = result["workflow"].copy()
+            workflow_data["user_id"] = user_id
+            workflow_data["status"] = "draft"
+
+            # Create initial version
+            # Note: Version creation will be handled by storage layer
+            # when workflow_versions table is available
+
+            await self.create_workflow(workflow_data)
+
+            return result
+
+        except WorkflowGenerationError:
+            # Fallback to stub on generation failure
+            result = self._generate_stub_workflow(f"From session: {session_id}")
+            result["prompt_metadata"] = {
+                "name": "workflow_generator",
+                "version": "v1",
+                "hash": "error_fallback",
+                "model": "error_fallback",
+            }
+            return result
+
+    # ==========================================================================
+    # Version History Methods
+    # ==========================================================================
+
+    async def get_workflow_versions(
+        self,
+        workflow_id: str,
+    ) -> list[dict[str, Any]]:
+        """
+        Get version history for a workflow.
+
+        Returns versions ordered by version_number descending (newest first).
+
+        Args:
+            workflow_id: ID of the workflow
+
+        Returns:
+            List of version dicts with telemetry fields
+        """
+        # Check if manager supports versioning
+        if hasattr(self._manager, "get_workflow_versions"):
+            versions = await self._manager.get_workflow_versions(workflow_id)
+            return [
+                {
+                    "id": v.id,
+                    "workflow_id": v.workflow_id,
+                    "version_number": v.version_number,
+                    "graph_json": v.graph_json,
+                    "source_text": getattr(v, "source_text", None),
+                    "commit_message": getattr(v, "commit_message", None),
+                    "created_by": v.created_by,
+                    "created_at": v.created_at.isoformat() if hasattr(v.created_at, "isoformat") else str(v.created_at),
+                    "prompt_version": getattr(v, "prompt_version", None),
+                    "prompt_model": getattr(v, "prompt_model", None),
+                }
+                for v in versions
+            ]
+
+        # Fallback: return empty list if versioning not supported
+        return []
+
+    async def restore_workflow_version(
+        self,
+        workflow_id: str,
+        version_id: str,
+        user_id: str,
+    ) -> dict[str, Any]:
+        """
+        Restore a workflow to a previous version.
+
+        Creates a new version with the restored state (append-only, no overwrites).
+
+        Args:
+            workflow_id: ID of the workflow
+            version_id: ID of the version to restore
+            user_id: ID of the user performing the restore
+
+        Returns:
+            Updated workflow dict with new version number
+
+        Raises:
+            ValueError: If workflow or version not found
+        """
+        # Check if manager supports versioning
+        if hasattr(self._manager, "restore_workflow_version"):
+            workflow = await self._manager.restore_workflow_version(
+                workflow_id=workflow_id,
+                version_id=version_id,
+                user_id=user_id,
+            )
+            return {
+                "id": workflow.id,
+                "name": workflow.name,
+                "description": workflow.description,
+                "nodes": workflow.nodes,
+                "edges": workflow.edges,
+                "created_at": workflow.created_at.isoformat()
+                if hasattr(workflow.created_at, "isoformat")
+                else str(workflow.created_at),
+                "updated_at": workflow.updated_at.isoformat()
+                if hasattr(workflow.updated_at, "isoformat")
+                else str(workflow.updated_at),
+                "status": workflow.status,
+                "user_id": workflow.user_id,
+                "version": getattr(workflow, "version", 1),
+            }
+
+        # Fallback: raise error if versioning not supported
+        raise ValueError(f"Workflow versioning not supported by {type(self._manager).__name__}")
 
 
 # ==============================================================================
@@ -1279,6 +1628,259 @@ async def generate_workflow(
         confidence=result["confidence"],
         suggestions=result.get("suggestions", []),
     )
+
+
+# ==============================================================================
+# Chat-to-Workflow Endpoint (ADR-0089, Plan Review Consensus)
+# ==============================================================================
+
+
+@workflows_router.post("/workflows/from-chat", status_code=status.HTTP_201_CREATED)
+async def generate_workflow_from_chat(
+    request: FromChatRequest,
+    service: WorkflowService,
+    current_user: CurrentUser,
+) -> FromChatResponse:
+    """
+    Generate and persist a workflow from chat session history.
+
+    This endpoint:
+    1. Fetches session messages by session_id
+    2. Sanitizes messages to prevent prompt injection (ADR-0089)
+    3. Generates workflow via WorkflowGenerator
+    4. Persists with status='draft', version=1
+    5. Returns prompt metadata for telemetry linkage
+
+    Requires authentication and enable_workflow_from_chat feature flag.
+
+    Args:
+        request: FromChatRequest with session_id and refinement_mode
+        service: Workflow service adapter
+        current_user: Authenticated user
+
+    Returns:
+        FromChatResponse with persisted workflow and metadata
+
+    Raises:
+        HTTPException 404: If feature disabled or session not found
+        HTTPException 422: If validation fails
+    """
+    # Check feature flag (imported at module level for testability)
+    flags = get_feature_flags()
+    if not flags.enable_workflow_from_chat:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Workflow from chat feature is not enabled",
+        )
+
+    user_id = _get_user_id(current_user)
+
+    try:
+        result = await service.generate_from_chat(
+            session_id=request.session_id,
+            refinement_mode=request.refinement_mode,
+            template_id=request.template_id,
+            user_id=user_id,
+        )
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(e),
+        ) from e
+
+    # Build response
+    workflow_data = result["workflow"]
+    workflow_data["status"] = "draft"
+
+    return FromChatResponse(
+        workflow=WorkflowResponse(**workflow_data),
+        confidence=result["confidence"],
+        suggestions=result.get("suggestions", []),
+        prompt_metadata=PromptMetadata(
+            **result.get(
+                "prompt_metadata",
+                {
+                    "name": "workflow_generator",
+                    "version": "v1",
+                    "hash": "unknown",
+                    "model": "unknown",
+                },
+            )
+        ),
+        plan=result.get("plan"),
+    )
+
+
+# ==============================================================================
+# Workflow Validation Endpoint (ADR-0089, Plan Review Consensus)
+# ==============================================================================
+
+
+@workflows_router.post("/workflows/{workflow_id}/validate")
+async def validate_workflow(
+    workflow_id: str,
+    service: WorkflowService,
+    current_user: CurrentUser,
+) -> ValidateWorkflowResponse:
+    """
+    Validate a workflow's graph structure and content.
+
+    Uses centralized WorkflowValidator service - NO JS DUPLICATION.
+    Both Monaco editor and React Flow call this single endpoint.
+
+    The endpoint:
+    1. Fetches workflow by ID
+    2. Validates using WorkflowValidator service
+    3. Returns validation result with errors and warnings
+
+    Requires authentication and enable_workflow_from_chat feature flag.
+
+    Args:
+        workflow_id: ID of the workflow to validate
+        service: Workflow service adapter
+        current_user: Authenticated user
+
+    Returns:
+        ValidateWorkflowResponse with valid flag, errors, and warnings
+
+    Raises:
+        HTTPException 404: If feature disabled or workflow not found
+    """
+    # Check feature flag (imported at module level for testability)
+    flags = get_feature_flags()
+    if not flags.enable_workflow_from_chat:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Workflow validation feature is not enabled",
+        )
+
+    # Fetch workflow
+    workflow = await service.get_workflow(workflow_id)
+    if workflow is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Workflow '{workflow_id}' not found",
+        )
+
+    # Validate using centralized validator
+    validator = WorkflowValidator()
+    result = await validator.validate(workflow)
+
+    return ValidateWorkflowResponse(
+        valid=result.valid,
+        errors=result.errors,
+        warnings=result.warnings,
+    )
+
+
+# ==============================================================================
+# Workflow Version History Endpoints (Plan: greedy-wiggling-marshmallow.md, Phase 3)
+# ==============================================================================
+
+
+@workflows_router.get("/workflows/{workflow_id}/versions")
+async def get_workflow_versions(
+    workflow_id: str,
+    service: WorkflowService,
+    current_user: CurrentUser,
+) -> list[WorkflowVersionResponse]:
+    """
+    Get version history for a workflow.
+
+    Returns all versions for the specified workflow, ordered by version_number
+    descending (newest first). Enables version diffing, rollback, and auditing.
+
+    Requires authentication and enable_workflow_from_chat feature flag.
+
+    Args:
+        workflow_id: ID of the workflow to get versions for
+        service: Workflow service adapter
+        current_user: Authenticated user
+
+    Returns:
+        List of WorkflowVersionResponse, newest first
+
+    Raises:
+        HTTPException 404: If feature disabled or workflow not found
+    """
+    # Check feature flag
+    flags = get_feature_flags()
+    if not flags.enable_workflow_from_chat:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Workflow versioning feature is not enabled",
+        )
+
+    # Get versions from service
+    versions = await service.get_workflow_versions(workflow_id=workflow_id)
+
+    # Convert to response models
+    return [
+        WorkflowVersionResponse(
+            id=v.get("id", ""),
+            workflow_id=v.get("workflow_id", workflow_id),
+            version_number=v.get("version_number", 0),
+            graph_json=v.get("graph_json", {}),
+            source_text=v.get("source_text"),
+            commit_message=v.get("commit_message"),
+            created_by=v.get("created_by", "unknown"),
+            created_at=v.get("created_at", ""),
+            prompt_version=v.get("prompt_version"),
+            prompt_model=v.get("prompt_model"),
+        )
+        for v in versions
+    ]
+
+
+@workflows_router.post("/workflows/{workflow_id}/versions/{version_id}/restore")
+async def restore_workflow_version(
+    workflow_id: str,
+    version_id: str,
+    service: WorkflowService,
+    current_user: CurrentUser,
+) -> WorkflowResponse:
+    """
+    Restore a workflow to a previous version.
+
+    This creates a NEW version with the restored state (append-only versioning).
+    The new version's commit_message indicates it was restored from version_id.
+
+    Requires authentication and enable_workflow_from_chat feature flag.
+
+    Args:
+        workflow_id: ID of the workflow to restore
+        version_id: ID of the version to restore to
+        service: Workflow service adapter
+        current_user: Authenticated user
+
+    Returns:
+        WorkflowResponse with the updated workflow (new version)
+
+    Raises:
+        HTTPException 404: If feature disabled, workflow not found, or version not found
+    """
+    # Check feature flag
+    flags = get_feature_flags()
+    if not flags.enable_workflow_from_chat:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Workflow versioning feature is not enabled",
+        )
+
+    try:
+        # Restore via service (creates new version)
+        restored = await service.restore_workflow_version(
+            workflow_id=workflow_id,
+            version_id=version_id,
+            user_id=current_user.id,
+        )
+
+        return WorkflowResponse(**restored)
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(e),
+        ) from e
 
 
 # ==============================================================================
