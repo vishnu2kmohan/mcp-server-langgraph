@@ -712,6 +712,7 @@ describe("StudioShellLayout", () => {
 
     // Mock window.location.pathname to match router path for route detection
     // The component checks BOTH useLocation().pathname AND window.location.pathname
+    // keyboard-safe: this deletes window.location only to mock pathname for route detection
     // @ts-expect-error - window.location is read-only but we need to mock it
     delete window.location;
     window.location = {
@@ -2120,6 +2121,7 @@ describe("StudioShellLayout", () => {
     const originalLocation = window.location;
 
     beforeEach(() => {
+      // keyboard-safe: this deletes window.location only to mock pathname for route detection
       // @ts-expect-error - window.location is read-only
       delete window.location;
       // Must set pathname to /studio/chat so StudioShellLayout's route detection
@@ -2610,6 +2612,7 @@ describe("StudioShellLayout", () => {
       const originalLocation = window.location;
 
       // Mock window.location
+      // keyboard-safe: this deletes window.location only to mock pathname for navigation tests
       // @ts-expect-error - window.location is read-only
       delete window.location;
       window.location = { ...originalLocation, href: "" };
@@ -3917,7 +3920,7 @@ describe("StudioShellLayout", () => {
       const store = createTestStore({
         session: {
           ...initialSessionState,
-          currentSessionId: sessionId,
+          currentSessionId: sessionId, // lang-graph: legacy session shape
           sessions: {
             [sessionId]: {
               id: sessionId,
@@ -3955,7 +3958,7 @@ describe("StudioShellLayout", () => {
       const store = createTestStore({
         session: {
           ...initialSessionState,
-          currentSessionId: sessionId,
+          currentSessionId: sessionId, // lang-graph: legacy session shape
           sessions: {
             [sessionId]: {
               id: sessionId,
@@ -3983,7 +3986,7 @@ describe("StudioShellLayout", () => {
       const store = createTestStore({
         session: {
           ...initialSessionState,
-          currentSessionId: sessionId1,
+          currentSessionId: sessionId1, // lang-graph: legacy session shape
           sessions: {
             [sessionId1]: {
               id: sessionId1,

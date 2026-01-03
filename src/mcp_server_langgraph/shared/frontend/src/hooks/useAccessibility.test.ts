@@ -12,7 +12,6 @@ import {
   useAnnounce,
   useSkipLink,
 } from './useAccessibility';
-import { useRef } from 'react';
 
 describe('useFocusTrap', () => {
   let container: HTMLDivElement;

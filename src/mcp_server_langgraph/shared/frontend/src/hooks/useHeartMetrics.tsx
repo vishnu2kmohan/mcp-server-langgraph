@@ -16,7 +16,7 @@
  * @module @mcp-server-langgraph/shared-frontend/hooks
  */
 
-import React, { createContext, useContext, useCallback, useState, useRef, useEffect, useMemo } from 'react';
+import { createContext, useContext, useCallback, useState, useRef, useEffect, useMemo, type ReactNode, type ReactElement } from 'react';
 
 // =============================================================================
 // Types
@@ -88,7 +88,7 @@ export interface HeartMetricsContextValue {
 }
 
 export interface HeartMetricsProviderProps {
-  children: React.ReactNode;
+  children: ReactNode;
   /**
    * Override initial tracking state
    */
@@ -174,7 +174,7 @@ const HeartMetricsContext = createContext<HeartMetricsContextValue | null>(null)
 export function HeartMetricsProvider({
   children,
   initialTrackingEnabled,
-}: HeartMetricsProviderProps): React.ReactElement {
+}: HeartMetricsProviderProps): ReactElement {
   const [metrics, setMetrics] = useState<HeartMetrics>(initialMetrics);
   const [isTrackingEnabled, setTrackingEnabledState] = useState<boolean>(
     initialTrackingEnabled ?? getInitialTrackingState()

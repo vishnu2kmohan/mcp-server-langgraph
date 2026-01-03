@@ -38,7 +38,7 @@ describe("observabilitySlice", () => {
     workflowIdFilter: "",
     projectIdFilter: "",
     timeRange: "1h",
-    activeTab: "traces",
+    activeTab: "agent-sessions",
     selectedTraceId: null,
   };
 

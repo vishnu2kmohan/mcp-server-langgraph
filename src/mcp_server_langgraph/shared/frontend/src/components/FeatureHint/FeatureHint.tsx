@@ -5,7 +5,7 @@
  * Helps users discover features at the right moment.
  */
 
-import React, { ReactElement, useState, useCallback, useMemo, useEffect } from 'react';
+import { ReactElement, useState, useCallback, useMemo, useEffect } from 'react';
 
 // =============================================================================
 // Types

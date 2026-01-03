@@ -5,7 +5,7 @@
  * Persists completed steps to localStorage.
  */
 
-import React, { ReactElement, useState, useCallback, useMemo, useEffect } from 'react';
+import { ReactElement, useState, useCallback, useMemo, useEffect } from 'react';
 
 // =============================================================================
 // Types

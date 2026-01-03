@@ -214,7 +214,8 @@ export function useLLMStreamingWebSocket(
   const url = useMemo(
     () =>
       isAuthenticated
-        ? (customUrl ?? buildWebSocketUrl("/api/v1/ws/llm/streaming" as never, {}, true))
+        ? (customUrl ??
+          buildWebSocketUrl("/api/v1/ws/llm/streaming" as never, {}, true))
         : "",
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [customUrl, authToken, isAuthenticated],

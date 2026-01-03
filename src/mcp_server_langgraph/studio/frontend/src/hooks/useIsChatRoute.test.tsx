@@ -70,6 +70,7 @@ describe("useIsChatRoute", () => {
 
   beforeEach(() => {
     // Reset window.location mock before each test
+    // keyboard-safe: this deletes window.location only to mock pathname for route detection
     // @ts-expect-error - window.location is read-only
     delete window.location;
   });

@@ -5,7 +5,7 @@
  * Respects Do Not Track browser setting.
  */
 
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 
 // ==============================================================================
 // Types

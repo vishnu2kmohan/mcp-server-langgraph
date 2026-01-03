@@ -54,7 +54,7 @@ const createTestStore = () => {
     preloadedState: {
       session: {
         sessions: [],
-        currentSessionId: "test-session-1",
+        currentSessionId: "test-session-1", // lang-graph: legacy session shape
         isLoading: false,
         error: null,
       },
