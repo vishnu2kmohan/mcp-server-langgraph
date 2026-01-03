@@ -23,7 +23,7 @@ class TestOrchestratorBasic:
         """Force GC to prevent mock accumulation in xdist workers"""
         gc.collect()
 
-    def test_orchestrator_exists(self):
+    def test_orchestrator_import_and_instantiate_succeeds(self):
         """GIVEN the agents module
         WHEN importing Orchestrator
         THEN it should be available
@@ -104,7 +104,7 @@ class TestSubagent:
         """Force GC to prevent mock accumulation in xdist workers"""
         gc.collect()
 
-    def test_subagent_exists(self):
+    def test_subagent_import_and_instantiate_succeeds(self):
         """GIVEN the agents module
         WHEN importing Subagent
         THEN it should be available
@@ -176,7 +176,7 @@ class TestSubagentLLMIntegration:
             llm_factory=mock_llm,
         )
 
-        result = await subagent.execute()
+        _result = await subagent.execute()  # noqa: F841 (verifying execution completes)
 
         # Verify LLM was called
         mock_llm.ainvoke.assert_called_once()
@@ -295,7 +295,7 @@ class TestCoordinator:
         """Force GC to prevent mock accumulation in xdist workers"""
         gc.collect()
 
-    def test_coordinator_exists(self):
+    def test_coordinator_import_and_instantiate_succeeds(self):
         """GIVEN the agents module
         WHEN importing Coordinator
         THEN it should be available
@@ -421,9 +421,9 @@ class TestModelSelector:
 
         # Should return a valid model name
         assert verifier is not None
-        assert len(verifier) > 0
+        assert len(verifier.model) > 0
 
-    def test_graceful_fallback(self):
+    def test_graceful_fallback_returns_available_tier(self):
         """GIVEN a ModelSelector with limited tiers
         WHEN requesting unavailable tier
         THEN fallback should be used

@@ -354,7 +354,7 @@ class Orchestrator:
         Returns:
             Model identifier for verification
         """
-        return self.model_selector.select_verifier("auto")
+        return self.model_selector.select_verifier("auto").model
 
     @feature_gated("enable_sdk_agent_definition", "SDK AgentDefinition")
     async def execute_definition(

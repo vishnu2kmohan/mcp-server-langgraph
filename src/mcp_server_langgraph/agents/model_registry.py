@@ -56,6 +56,9 @@ class ModelCapabilities:
         supports_streaming: Whether model supports streaming responses
         supports_extended_thinking: Whether model supports extended thinking mode
         supports_effort_param: Whether model supports effort parameter (Claude Opus 4.5 only)
+        supports_json_mode: Whether model supports structured JSON output
+        tier: Model tier for complexity routing (simple, complicated, complex)
+        max_thinking_tokens: Maximum thinking tokens for extended thinking (None if not supported)
     """
 
     model_id: str
@@ -72,11 +75,36 @@ class ModelCapabilities:
     supports_streaming: bool = False
     supports_extended_thinking: bool = False
     supports_effort_param: bool = False
+    supports_json_mode: bool = False
+    tier: Literal["simple", "complicated", "complex"] = "complicated"
+    max_thinking_tokens: int | None = None
 
     def __post_init__(self) -> None:
         """Calculate effective_limit if not provided."""
         if self.effective_limit is None:
             self.effective_limit = int(self.context_limit * DEFAULT_EFFECTIVE_PERCENTAGE)
+
+    @property
+    def capabilities(self) -> set[str]:
+        """Aggregate capability set for filtering.
+
+        Returns:
+            Set of enabled capability names.
+        """
+        caps: set[str] = set()
+        if self.supports_vision:
+            caps.add("vision")
+        if self.supports_tools:
+            caps.add("tools")
+        if self.supports_streaming:
+            caps.add("streaming")
+        if self.supports_extended_thinking:
+            caps.add("extended_thinking")
+        if self.supports_effort_param:
+            caps.add("effort_param")
+        if self.supports_json_mode:
+            caps.add("json_mode")
+        return caps
 
 
 @dataclass
@@ -112,6 +140,9 @@ class ModelRegistry:
             supports_streaming=True,
             supports_extended_thinking=True,
             supports_effort_param=True,
+            supports_json_mode=True,
+            tier="complex",
+            max_thinking_tokens=65536,  # ULTRA level
         )
 
         self._models["claude-sonnet-4-5-20250929"] = ModelCapabilities(
@@ -127,6 +158,9 @@ class ModelRegistry:
             supports_streaming=True,
             supports_extended_thinking=True,
             supports_effort_param=False,
+            supports_json_mode=True,
+            tier="complicated",
+            max_thinking_tokens=32768,  # HIGH level
         )
 
         self._models["claude-haiku-4-5-20251001"] = ModelCapabilities(
@@ -142,6 +176,9 @@ class ModelRegistry:
             supports_streaming=True,
             supports_extended_thinking=False,
             supports_effort_param=False,
+            supports_json_mode=True,
+            tier="simple",
+            max_thinking_tokens=None,  # No extended thinking
         )
 
         # Google Gemini models
@@ -158,6 +195,9 @@ class ModelRegistry:
             supports_streaming=True,
             supports_extended_thinking=False,
             supports_effort_param=False,
+            supports_json_mode=True,
+            tier="simple",
+            max_thinking_tokens=None,
         )
 
         self._models["gemini-3-pro"] = ModelCapabilities(
@@ -173,6 +213,9 @@ class ModelRegistry:
             supports_streaming=True,
             supports_extended_thinking=True,  # Deep Think
             supports_effort_param=False,
+            supports_json_mode=True,
+            tier="complex",
+            max_thinking_tokens=65536,  # Deep Think budget
         )
 
         # For complicated tier (gemini-2.5-flash)
@@ -189,6 +232,9 @@ class ModelRegistry:
             supports_streaming=True,
             supports_extended_thinking=False,
             supports_effort_param=False,
+            supports_json_mode=True,
+            tier="complicated",
+            max_thinking_tokens=None,
         )
 
         # OpenAI GPT-5 models
@@ -205,6 +251,9 @@ class ModelRegistry:
             supports_streaming=True,
             supports_extended_thinking=False,
             supports_effort_param=False,
+            supports_json_mode=True,
+            tier="complicated",
+            max_thinking_tokens=None,
         )
 
         self._models["gpt-5.2-pro"] = ModelCapabilities(
@@ -220,6 +269,9 @@ class ModelRegistry:
             supports_streaming=True,
             supports_extended_thinking=True,
             supports_effort_param=False,
+            supports_json_mode=True,
+            tier="complex",
+            max_thinking_tokens=65536,
         )
 
         # Legacy OpenAI models for backward compatibility
@@ -234,6 +286,9 @@ class ModelRegistry:
             supports_vision=True,
             supports_tools=True,
             supports_streaming=True,
+            supports_json_mode=True,
+            tier="simple",
+            max_thinking_tokens=None,
         )
 
         self._models["gpt-4.1-mini"] = ModelCapabilities(
@@ -247,6 +302,9 @@ class ModelRegistry:
             supports_vision=True,
             supports_tools=True,
             supports_streaming=True,
+            supports_json_mode=True,
+            tier="simple",
+            max_thinking_tokens=None,
         )
 
         self._models["o3"] = ModelCapabilities(
@@ -261,6 +319,9 @@ class ModelRegistry:
             supports_tools=True,
             supports_streaming=True,
             supports_extended_thinking=True,
+            supports_json_mode=True,
+            tier="complex",
+            max_thinking_tokens=100_000,  # o3 has high thinking capacity
         )
 
         # Vertex AI Anthropic models (use @ format)
@@ -277,6 +338,9 @@ class ModelRegistry:
             supports_streaming=True,
             supports_extended_thinking=True,
             supports_effort_param=True,
+            supports_json_mode=True,
+            tier="complex",
+            max_thinking_tokens=65536,
         )
 
         self._models["claude-sonnet-4-5@20250929"] = ModelCapabilities(
@@ -290,6 +354,10 @@ class ModelRegistry:
             supports_vision=True,
             supports_tools=True,
             supports_streaming=True,
+            supports_extended_thinking=True,
+            supports_json_mode=True,
+            tier="complicated",
+            max_thinking_tokens=32768,
         )
 
         self._models["claude-haiku-4-5@20251001"] = ModelCapabilities(
@@ -303,6 +371,9 @@ class ModelRegistry:
             supports_vision=True,
             supports_tools=True,
             supports_streaming=True,
+            supports_json_mode=True,
+            tier="simple",
+            max_thinking_tokens=None,
         )
 
         # Vertex AI Gemini models
@@ -317,6 +388,9 @@ class ModelRegistry:
             supports_vision=True,
             supports_tools=True,
             supports_streaming=True,
+            supports_json_mode=True,
+            tier="simple",
+            max_thinking_tokens=None,
         )
 
         self._models["vertex_ai/gemini-3-pro"] = ModelCapabilities(
@@ -331,6 +405,9 @@ class ModelRegistry:
             supports_tools=True,
             supports_streaming=True,
             supports_extended_thinking=True,
+            supports_json_mode=True,
+            tier="complex",
+            max_thinking_tokens=65536,
         )
 
         # Azure OpenAI models
@@ -345,6 +422,9 @@ class ModelRegistry:
             supports_vision=True,
             supports_tools=True,
             supports_streaming=True,
+            supports_json_mode=True,
+            tier="complicated",
+            max_thinking_tokens=None,
         )
 
         self._models["azure/gpt-5.2-pro"] = ModelCapabilities(
@@ -359,6 +439,9 @@ class ModelRegistry:
             supports_tools=True,
             supports_streaming=True,
             supports_extended_thinking=True,
+            supports_json_mode=True,
+            tier="complex",
+            max_thinking_tokens=65536,
         )
 
     def _get_default_capabilities(self, model_id: str) -> ModelCapabilities:
@@ -426,7 +509,7 @@ class ModelRegistry:
 
         Args:
             model_id: Model identifier
-            capability: Capability name (vision, tools, streaming, extended_thinking, effort_param)
+            capability: Capability name (vision, tools, streaming, extended_thinking, effort_param, json_mode)
 
         Returns:
             True if model supports the capability
@@ -439,6 +522,7 @@ class ModelRegistry:
             "streaming": caps.supports_streaming,
             "extended_thinking": caps.supports_extended_thinking,
             "effort_param": caps.supports_effort_param,
+            "json_mode": caps.supports_json_mode,
         }
 
         return capability_map.get(capability, False)
@@ -464,12 +548,14 @@ class ModelRegistry:
         self,
         vendor: str | None = None,
         capability: str | None = None,
+        tier: str | None = None,
     ) -> list[str]:
         """List registered model IDs.
 
         Args:
             vendor: Filter by vendor (optional)
             capability: Filter by capability (optional)
+            tier: Filter by tier - simple, complicated, complex (optional)
 
         Returns:
             List of model IDs matching filters
@@ -481,6 +567,9 @@ class ModelRegistry:
 
         if capability:
             models = [m for m in models if self.supports_capability(m, capability)]
+
+        if tier:
+            models = [m for m in models if self._models[m].tier == tier]
 
         return models
 
@@ -506,6 +595,72 @@ class ModelRegistry:
         output_cost = (output_tokens / 1_000_000) * caps.output_cost_per_1m
 
         return input_cost + output_cost
+
+    def get_model_for_tier(
+        self,
+        vendor: str,
+        tier: Literal["simple", "complicated", "complex"],
+    ) -> str:
+        """Get the preferred model for a specific vendor and tier.
+
+        This method encapsulates the business logic for tier-based model selection:
+        - Returns the most appropriate model for the given tier
+        - Handles cost-efficiency mappings (e.g., Google uses gemini-3-flash for
+          both simple and complicated tiers)
+        - Falls back to any available model for the vendor if exact tier not found
+
+        Args:
+            vendor: Vendor name (google, anthropic, openai, vertex_ai_anthropic, etc.)
+            tier: Complexity tier (simple, complicated, complex)
+
+        Returns:
+            Model identifier string
+
+        Raises:
+            KeyError: If no model is registered for the vendor
+        """
+        # Tier preference mapping for cost efficiency
+        # Some vendors use cheaper models for lower tiers
+        tier_preferences: dict[str, dict[str, str]] = {
+            "google": {
+                "simple": "gemini-3-flash",
+                "complicated": "gemini-3-flash",  # Cost efficiency
+                "complex": "gemini-3-pro",
+            },
+            "anthropic": {
+                "simple": "claude-haiku-4-5-20251001",
+                "complicated": "claude-sonnet-4-5-20250929",
+                "complex": "claude-opus-4-5-20251101",
+            },
+            "openai": {
+                "simple": "gpt-5.2",
+                "complicated": "gpt-5.2",  # Cost efficiency
+                "complex": "gpt-5.2-pro",
+            },
+            "vertex_ai_anthropic": {
+                "simple": "claude-haiku-4-5@20251001",
+                "complicated": "claude-sonnet-4-5@20250929",
+                "complex": "claude-opus-4-5@20251101",
+            },
+        }
+
+        # Try vendor-specific preference mapping first
+        if vendor in tier_preferences:
+            preferred_model = tier_preferences[vendor].get(tier)
+            if preferred_model and preferred_model in self._models:
+                return preferred_model
+
+        # Fall back to listing models by vendor and tier from registry
+        models = self.list_models(vendor=vendor, tier=tier)
+        if models:
+            return models[0]
+
+        # Last resort: any model for this vendor
+        vendor_models = self.list_models(vendor=vendor)
+        if vendor_models:
+            return vendor_models[0]
+
+        raise KeyError(f"No model registered for vendor: {vendor}")
 
 
 # Singleton instance

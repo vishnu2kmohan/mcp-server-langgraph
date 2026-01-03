@@ -313,10 +313,11 @@ class TestOrchestratorVerifier:
 
     def test_get_verifier_model_uses_auto_mode(self) -> None:
         """Test that get_verifier_model uses auto mode."""
-        from mcp_server_langgraph.agents.model_selector import ModelSelector
+        from mcp_server_langgraph.agents.model_selector import ModelSelector, SelectionResult
 
         mock_selector = MagicMock(spec=ModelSelector)
-        mock_selector.select_verifier.return_value = "claude-sonnet"
+        mock_result = SelectionResult(model="claude-sonnet", tier="complicated", vendor="anthropic", is_fallback=False)
+        mock_selector.select_verifier.return_value = mock_result
 
         orchestrator = Orchestrator(model_selector=mock_selector)
 

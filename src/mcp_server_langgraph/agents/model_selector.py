@@ -19,33 +19,34 @@ Usage:
 from __future__ import annotations
 
 import os
+from dataclasses import dataclass
 
 from mcp_server_langgraph.agents.metrics import (
     record_cross_vendor_verification,
     record_model_selection,
 )
+from mcp_server_langgraph.agents.model_registry import get_default_registry
 
-# Model aliases for graceful upgrades (December 2025)
-MODEL_TIERS = {
-    "simple": {
-        "google": "gemini-3-flash",
-        "anthropic": "claude-haiku-4-5-20251001",
-        "openai": "gpt-5.2",
-        "vertex_ai_anthropic": "claude-haiku-4-5@20251001",
-    },
-    "complicated": {
-        "google": "gemini-3-flash",  # Same as simple for cost efficiency
-        "anthropic": "claude-sonnet-4-5-20250929",
-        "openai": "gpt-5.2",  # Same as simple for cost efficiency
-        "vertex_ai_anthropic": "claude-sonnet-4-5@20250929",
-    },
-    "complex": {
-        "google": "gemini-3-pro",
-        "anthropic": "claude-opus-4-5-20251101",
-        "openai": "gpt-5.2-pro",
-        "vertex_ai_anthropic": "claude-opus-4-5@20251101",
-    },
-}
+
+@dataclass
+class SelectionResult:
+    """Result of model selection.
+
+    Attributes:
+        model: Selected model identifier
+        tier: Effective complexity tier used
+        vendor: Vendor of the selected model
+        is_fallback: True if fallback was used
+    """
+
+    model: str
+    tier: str
+    vendor: str
+    is_fallback: bool
+
+# NOTE: MODEL_TIERS dict removed in Phase 1 refactor.
+# Tier-to-model mapping now lives in ModelRegistry.get_model_for_tier()
+# which centralizes the business logic for cost-efficiency mappings.
 
 # Vendor priority order (includes Vertex AI Anthropic for enterprise deployments)
 VENDOR_PRIORITY = ["google", "anthropic", "openai", "vertex_ai_anthropic"]
@@ -137,24 +138,32 @@ class ModelSelector:
         Returns:
             Model identifier string
         """
+        registry = get_default_registry()
         effective_tier = self._fallback_tier(complexity)
         is_fallback = effective_tier != complexity
         vendor = self.primary_vendor
         model = None
 
-        if vendor in MODEL_TIERS[effective_tier]:
-            model = MODEL_TIERS[effective_tier][vendor]
-        else:
-            # Fallback to first available vendor for this tier
-            for v in VENDOR_PRIORITY:
-                if v in self.available_vendors and v in MODEL_TIERS[effective_tier]:
-                    model = MODEL_TIERS[effective_tier][v]
-                    vendor = v
-                    break
+        # Try primary vendor first via registry
+        try:
+            model = registry.get_model_for_tier(vendor=vendor, tier=effective_tier)  # type: ignore[arg-type]
+        except KeyError:
+            pass
 
-        # Ultimate fallback
+        # Fallback to first available vendor for this tier
         if model is None:
-            model = MODEL_TIERS[effective_tier]["google"]
+            for v in VENDOR_PRIORITY:
+                if v in self.available_vendors:
+                    try:
+                        model = registry.get_model_for_tier(vendor=v, tier=effective_tier)  # type: ignore[arg-type]
+                        vendor = v
+                        break
+                    except KeyError:
+                        continue
+
+        # Ultimate fallback to google
+        if model is None:
+            model = registry.get_model_for_tier(vendor="google", tier=effective_tier)  # type: ignore[arg-type]
             vendor = "google"
 
         # Record model selection metrics
@@ -167,22 +176,106 @@ class ModelSelector:
 
         return model
 
-    def select_verifier(self, verifier_vendor: str = "auto") -> str:
+    def select(
+        self,
+        complexity: str,
+        vendor: str | None = None,
+    ) -> SelectionResult:
+        """Select model with detailed result information.
+
+        This method provides more detailed selection results including
+        the effective tier, vendor, and fallback status.
+
+        Args:
+            complexity: Task complexity (simple, complicated, complex)
+            vendor: Preferred vendor (optional, uses primary if None)
+
+        Returns:
+            SelectionResult with model, tier, vendor, and fallback info
+        """
+        registry = get_default_registry()
+
+        # Handle unknown complexity by falling back to "complicated"
+        valid_tiers = {"simple", "complicated", "complex"}
+        if complexity not in valid_tiers:
+            effective_tier = "complicated"
+            is_fallback = True
+        else:
+            effective_tier = self._fallback_tier(complexity)
+            is_fallback = effective_tier != complexity
+
+        # Determine which vendor to use
+        selected_vendor = vendor if vendor else self.primary_vendor
+        model = None
+
+        # Try the preferred vendor first via registry
+        try:
+            model = registry.get_model_for_tier(vendor=selected_vendor, tier=effective_tier)  # type: ignore[arg-type]
+        except KeyError:
+            pass
+
+        # Fallback to available vendors
+        if model is None:
+            for v in VENDOR_PRIORITY:
+                if v in self.available_vendors:
+                    try:
+                        model = registry.get_model_for_tier(vendor=v, tier=effective_tier)  # type: ignore[arg-type]
+                        selected_vendor = v
+                        break
+                    except KeyError:
+                        continue
+
+        # Ultimate fallback to google
+        if model is None:
+            model = registry.get_model_for_tier(vendor="google", tier=effective_tier)  # type: ignore[arg-type]
+            selected_vendor = "google"
+
+        # Record model selection metrics
+        record_model_selection(
+            tier=effective_tier,
+            vendor=selected_vendor,
+            model=model,
+            is_fallback=is_fallback,
+        )
+
+        return SelectionResult(
+            model=model,
+            tier=effective_tier,
+            vendor=selected_vendor,
+            is_fallback=is_fallback,
+        )
+
+    def select_verifier(
+        self,
+        verifier_vendor: str = "auto",
+        primary_model: str | None = None,
+    ) -> SelectionResult:
         """Select verifier model for cross-vendor verification.
 
         Args:
             verifier_vendor: Vendor preference (auto, same, anthropic, google, openai)
+            primary_model: Primary model being verified (for logging/reference)
 
         Returns:
-            Verifier model identifier
+            SelectionResult with verifier model details
         """
+        registry = get_default_registry()
         same_vendor_fallback = False
-        actual_verifier_vendor = None
-        verifier_model = None
-        primary_model = MODEL_TIERS["complicated"].get(
-            self.primary_vendor,
-            MODEL_TIERS["complicated"]["google"],
-        )
+        actual_verifier_vendor: str | None = None
+        verifier_model: str | None = None
+
+        # Use provided primary_model or determine from tier via registry
+        if primary_model:
+            effective_primary_model = primary_model
+        else:
+            try:
+                effective_primary_model = registry.get_model_for_tier(
+                    vendor=self.primary_vendor, tier="complicated"
+                )
+            except KeyError:
+                effective_primary_model = registry.get_model_for_tier(
+                    vendor="google", tier="complicated"
+                )
 
         if verifier_vendor == "same":
             # Use same vendor as primary (explicitly requested)
@@ -195,10 +288,15 @@ class ModelSelector:
             for vendor in self.available_vendors:
                 if vendor != self.primary_vendor:
                     actual_verifier_vendor = vendor
-                    verifier_model = MODEL_TIERS["complicated"].get(
-                        vendor,
-                        MODEL_TIERS["complicated"]["anthropic"],
-                    )
+                    try:
+                        verifier_model = registry.get_model_for_tier(
+                            vendor=vendor, tier="complicated"
+                        )
+                    except KeyError:
+                        # Fallback to anthropic complicated tier
+                        verifier_model = registry.get_model_for_tier(
+                            vendor="anthropic", tier="complicated"
+                        )
                     break
 
             # Fallback to same vendor if no cross-vendor available
@@ -210,26 +308,36 @@ class ModelSelector:
         else:
             # Explicit vendor requested
             actual_verifier_vendor = verifier_vendor
-            if verifier_vendor in MODEL_TIERS["complicated"]:
-                verifier_model = MODEL_TIERS["complicated"][verifier_vendor]
-            else:
+            try:
+                verifier_model = registry.get_model_for_tier(
+                    vendor=verifier_vendor, tier="complicated"
+                )
+            except KeyError:
                 # Default to Anthropic for verification
                 actual_verifier_vendor = "anthropic"
-                verifier_model = MODEL_TIERS["complicated"]["anthropic"]
+                verifier_model = registry.get_model_for_tier(
+                    vendor="anthropic", tier="complicated"
+                )
 
         # Record cross-vendor verification metrics
         # All branches above assign actual_verifier_vendor, assert for mypy
         assert actual_verifier_vendor is not None
+        assert verifier_model is not None
         record_cross_vendor_verification(
             primary_vendor=self.primary_vendor,
             verifier_vendor=actual_verifier_vendor,
-            primary_model=primary_model,
+            primary_model=effective_primary_model,
             verifier_model=verifier_model,
             success=True,  # Selection always succeeds
             same_vendor_fallback=same_vendor_fallback,
         )
 
-        return verifier_model
+        return SelectionResult(
+            model=verifier_model,
+            tier="complicated",
+            vendor=actual_verifier_vendor,
+            is_fallback=same_vendor_fallback,
+        )
 
     def get_model_for_task(self, task_complexity_score: int) -> str:
         """Select model based on numeric complexity score.

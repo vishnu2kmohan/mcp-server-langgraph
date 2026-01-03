@@ -127,6 +127,98 @@ synthesis_error_counter = meter.create_counter(
     unit="1",
 )
 
+# =============================================================================
+# Router Metrics
+# =============================================================================
+
+router_latency_histogram = meter.create_histogram(
+    name="agent.router.latency",
+    description="Router decision latency in milliseconds",
+    unit="ms",
+)
+
+router_confidence_histogram = meter.create_histogram(
+    name="agent.router.confidence",
+    description="Router decision confidence score (0-1)",
+    unit="1",
+)
+
+router_cache_counter = meter.create_counter(
+    name="agent.router.cache.count",
+    description="Router cache hits and misses",
+    unit="1",
+)
+
+# =============================================================================
+# Swarm Orchestration Metrics
+# =============================================================================
+
+swarm_branches_counter = meter.create_counter(
+    name="agent.swarm.branches.count",
+    description="Swarm branches launched and cancelled",
+    unit="1",
+)
+
+swarm_cost_gauge = meter.create_gauge(
+    name="agent.swarm.cost",
+    description="Swarm execution cost in USD",
+    unit="USD",
+)
+
+cascade_tier_counter = meter.create_counter(
+    name="agent.cascade.tier.count",
+    description="Cascade tier escalations",
+    unit="1",
+)
+
+consensus_votes_histogram = meter.create_histogram(
+    name="agent.consensus.votes",
+    description="Consensus votes per decision",
+    unit="1",
+)
+
+# =============================================================================
+# Critique Loop Metrics
+# =============================================================================
+
+critique_rounds_histogram = meter.create_histogram(
+    name="agent.critique.rounds",
+    description="Number of critique rounds executed",
+    unit="1",
+)
+
+critique_acceptance_counter = meter.create_counter(
+    name="agent.critique.acceptance.count",
+    description="Critique acceptance events per round",
+    unit="1",
+)
+
+# =============================================================================
+# Thinking Budget Metrics
+# =============================================================================
+
+thinking_tokens_histogram = meter.create_histogram(
+    name="agent.thinking.tokens",
+    description="Thinking tokens used per request",
+    unit="1",
+)
+
+# =============================================================================
+# Approval Flow Metrics
+# =============================================================================
+
+approval_path_counter = meter.create_counter(
+    name="agent.approval.path.count",
+    description="Approval path outcomes (approved/rejected/expired)",
+    unit="1",
+)
+
+high_risk_trigger_counter = meter.create_counter(
+    name="agent.approval.high_risk.count",
+    description="High-risk approval triggers",
+    unit="1",
+)
+
 
 def record_orchestrator_execution(
     task_count: int,
@@ -1304,5 +1396,285 @@ def record_explanation_orchestration(
             "successful_count": successful_count,
             "duration_ms": duration_ms,
             "success": success,
+        },
+    )
+
+
+# =============================================================================
+# Router Recording Functions
+# =============================================================================
+
+
+def record_router_decision(
+    latency_ms: float,
+    complexity: str,
+    risk: str,
+    confidence: float,
+    cache_hit: bool,
+    model: str,
+) -> None:
+    """Record router decision metrics.
+
+    Args:
+        latency_ms: Router decision latency in milliseconds
+        complexity: Classified complexity (simple/complicated/complex)
+        risk: Classified risk level (low/medium/high)
+        confidence: Router confidence score (0-1)
+        cache_hit: Whether decision was served from cache
+        model: Router model used
+    """
+    attributes = {
+        "complexity": complexity,
+        "risk": risk,
+        "model": model,
+    }
+
+    router_latency_histogram.record(latency_ms, attributes)
+    router_confidence_histogram.record(confidence, attributes)
+
+    cache_attributes = {
+        "result": "hit" if cache_hit else "miss",
+    }
+    router_cache_counter.add(1, cache_attributes)
+
+    logger.debug(
+        "Recorded router decision",
+        extra={
+            "latency_ms": latency_ms,
+            "complexity": complexity,
+            "risk": risk,
+            "confidence": confidence,
+            "cache_hit": cache_hit,
+            "model": model,
+        },
+    )
+
+
+# =============================================================================
+# Swarm Recording Functions
+# =============================================================================
+
+
+def record_swarm_execution(
+    strategy: str,
+    branches_launched: int,
+    branches_cancelled: int,
+    winner_model: str,
+    total_cost_usd: float,
+    session_id: str,
+) -> None:
+    """Record swarm orchestration execution metrics.
+
+    Args:
+        strategy: Swarm strategy used (race/cascade/consensus)
+        branches_launched: Number of branches started
+        branches_cancelled: Number of branches cancelled
+        winner_model: Winning model (for race/cascade)
+        total_cost_usd: Total execution cost in USD
+        session_id: Session identifier
+    """
+    launch_attributes = {
+        "strategy": strategy,
+        "status": "launched",
+    }
+    swarm_branches_counter.add(branches_launched, launch_attributes)
+
+    if branches_cancelled > 0:
+        cancel_attributes = {
+            "strategy": strategy,
+            "status": "cancelled",
+        }
+        swarm_branches_counter.add(branches_cancelled, cancel_attributes)
+
+    cost_attributes = {
+        "strategy": strategy,
+        "session_id": session_id,
+    }
+    swarm_cost_gauge.set(total_cost_usd, cost_attributes)
+
+    logger.debug(
+        "Recorded swarm execution",
+        extra={
+            "strategy": strategy,
+            "branches_launched": branches_launched,
+            "branches_cancelled": branches_cancelled,
+            "winner_model": winner_model,
+            "total_cost_usd": total_cost_usd,
+            "session_id": session_id,
+        },
+    )
+
+
+def record_cascade_tier(tier: str, success: bool) -> None:
+    """Record cascade tier escalation.
+
+    Args:
+        tier: Tier used (simple/complicated/complex)
+        success: Whether execution at this tier succeeded
+    """
+    attributes = {
+        "tier": tier,
+        "success": str(success).lower(),
+    }
+    cascade_tier_counter.add(1, attributes)
+
+    logger.debug(
+        "Recorded cascade tier",
+        extra={
+            "tier": tier,
+            "success": success,
+        },
+    )
+
+
+# =============================================================================
+# Critique Recording Functions
+# =============================================================================
+
+
+def record_critique_loop(
+    task_type: str,
+    complexity: str,
+    rounds_executed: int,
+    accepted_at_round: int | None = None,
+) -> None:
+    """Record critique loop execution metrics.
+
+    Args:
+        task_type: Type of task (code/analysis/data/etc)
+        complexity: Task complexity
+        rounds_executed: Number of critique rounds executed
+        accepted_at_round: Round at which critique was accepted (None if not accepted)
+    """
+    attributes = {
+        "task_type": task_type,
+        "complexity": complexity,
+    }
+
+    critique_rounds_histogram.record(rounds_executed, attributes)
+
+    if accepted_at_round is not None:
+        acceptance_attributes = {
+            "round": str(accepted_at_round),
+            "accepted": "true",
+        }
+        critique_acceptance_counter.add(1, acceptance_attributes)
+    else:
+        rejection_attributes = {
+            "round": str(rounds_executed),
+            "accepted": "false",
+        }
+        critique_acceptance_counter.add(1, rejection_attributes)
+
+    logger.debug(
+        "Recorded critique loop",
+        extra={
+            "task_type": task_type,
+            "complexity": complexity,
+            "rounds_executed": rounds_executed,
+            "accepted_at_round": accepted_at_round,
+        },
+    )
+
+
+# =============================================================================
+# Thinking Budget Recording Functions
+# =============================================================================
+
+
+def record_thinking_usage(
+    model: str,
+    budget_level: str,
+    thinking_tokens: int,
+    completion_tokens: int,
+) -> None:
+    """Record thinking budget usage metrics.
+
+    Args:
+        model: Model used for thinking
+        budget_level: Budget level (none/light/medium/deep)
+        thinking_tokens: Number of thinking tokens used
+        completion_tokens: Number of completion tokens generated
+    """
+    attributes = {
+        "model": model,
+        "budget_level": budget_level,
+    }
+
+    thinking_tokens_histogram.record(thinking_tokens, attributes)
+
+    logger.debug(
+        "Recorded thinking usage",
+        extra={
+            "model": model,
+            "budget_level": budget_level,
+            "thinking_tokens": thinking_tokens,
+            "completion_tokens": completion_tokens,
+        },
+    )
+
+
+# =============================================================================
+# Approval Flow Recording Functions
+# =============================================================================
+
+
+def record_approval_decision(
+    result: str,
+    risk_level: str,
+    wait_time_seconds: float,
+    rejection_reason: str | None = None,
+) -> None:
+    """Record approval flow decision metrics.
+
+    Args:
+        result: Decision result (approved/rejected/expired)
+        risk_level: Risk level of the plan
+        wait_time_seconds: Time waited for decision
+        rejection_reason: Reason for rejection (if rejected)
+    """
+    attributes = {
+        "result": result,
+        "risk_level": risk_level,
+    }
+
+    approval_path_counter.add(1, attributes)
+
+    logger.debug(
+        "Recorded approval decision",
+        extra={
+            "result": result,
+            "risk_level": risk_level,
+            "wait_time_seconds": wait_time_seconds,
+            "rejection_reason": rejection_reason,
+        },
+    )
+
+
+def record_high_risk_trigger(
+    task_type: str,
+    auto_approve: bool,
+    estimated_cost_usd: float,
+) -> None:
+    """Record high-risk approval trigger.
+
+    Args:
+        task_type: Type of task that triggered high-risk
+        auto_approve: Whether auto-approve was enabled
+        estimated_cost_usd: Estimated cost of the plan
+    """
+    attributes = {
+        "task_type": task_type,
+        "auto_approve": str(auto_approve).lower(),
+    }
+
+    high_risk_trigger_counter.add(1, attributes)
+
+    logger.debug(
+        "Recorded high-risk trigger",
+        extra={
+            "task_type": task_type,
+            "auto_approve": auto_approve,
+            "estimated_cost_usd": estimated_cost_usd,
         },
     )

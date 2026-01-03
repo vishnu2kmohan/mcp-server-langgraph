@@ -63,18 +63,23 @@ class TestModelSelectorBasics:
 
         assert selector.available_tiers == ["simple", "complex"]
 
-    def test_model_tiers_constant_exists(self) -> None:
-        """Test MODEL_TIERS constant has all tiers and vendors."""
-        from mcp_server_langgraph.agents.model_selector import MODEL_TIERS
+    def test_registry_has_all_tiers_and_vendors(self) -> None:
+        """Test ModelRegistry.get_model_for_tier works for all tiers and vendors.
 
-        assert "simple" in MODEL_TIERS
-        assert "complicated" in MODEL_TIERS
-        assert "complex" in MODEL_TIERS
+        After Phase 1 refactor, MODEL_TIERS dict was removed. Tier-to-model
+        mapping now lives in ModelRegistry.get_model_for_tier().
+        """
+        from mcp_server_langgraph.agents.model_registry import ModelRegistry
 
-        for tier in MODEL_TIERS:
-            assert "google" in MODEL_TIERS[tier]
-            assert "anthropic" in MODEL_TIERS[tier]
-            assert "openai" in MODEL_TIERS[tier]
+        registry = ModelRegistry()
+
+        # All tiers should return valid models for main vendors
+        for tier in ["simple", "complicated", "complex"]:
+            for vendor in ["google", "anthropic", "openai"]:
+                model = registry.get_model_for_tier(vendor=vendor, tier=tier)
+                assert model is not None
+                assert isinstance(model, str)
+                assert len(model) > 0
 
     def test_vendor_priority_constant(self) -> None:
         """Test VENDOR_PRIORITY defines priority order."""
@@ -391,7 +396,7 @@ class TestVerifierSelection:
 
         # Should return a complicated tier model
         assert verifier is not None
-        assert "gemini" in verifier.lower() or "flash" in verifier.lower()
+        assert "gemini" in verifier.model.lower() or "flash" in verifier.model.lower()
 
     def test_select_verifier_auto_cross_vendor(self) -> None:
         """Test auto verifier prefers cross-vendor."""
@@ -404,7 +409,7 @@ class TestVerifierSelection:
         verifier = selector.select_verifier("auto")
 
         # Primary is google, so verifier should be anthropic
-        assert "claude" in verifier.lower() or "sonnet" in verifier.lower()
+        assert "claude" in verifier.model.lower() or "sonnet" in verifier.model.lower()
 
     def test_select_verifier_auto_single_vendor_fallback(self) -> None:
         """Test auto verifier falls back to same vendor when only one available."""
@@ -415,7 +420,7 @@ class TestVerifierSelection:
         verifier = selector.select_verifier("auto")
 
         # Should fall back to google since it's the only vendor
-        assert "gemini" in verifier.lower() or "flash" in verifier.lower()
+        assert "gemini" in verifier.model.lower() or "flash" in verifier.model.lower()
 
     def test_select_verifier_explicit_anthropic(self) -> None:
         """Test explicit anthropic verifier."""
@@ -425,7 +430,7 @@ class TestVerifierSelection:
 
         verifier = selector.select_verifier("anthropic")
 
-        assert "claude" in verifier.lower() or "sonnet" in verifier.lower()
+        assert "claude" in verifier.model.lower() or "sonnet" in verifier.model.lower()
 
     def test_select_verifier_explicit_google(self) -> None:
         """Test explicit google verifier."""
@@ -435,7 +440,7 @@ class TestVerifierSelection:
 
         verifier = selector.select_verifier("google")
 
-        assert "gemini" in verifier.lower()
+        assert "gemini" in verifier.model.lower()
 
     def test_select_verifier_explicit_openai(self) -> None:
         """Test explicit openai verifier."""
@@ -445,7 +450,7 @@ class TestVerifierSelection:
 
         verifier = selector.select_verifier("openai")
 
-        assert "gpt" in verifier.lower() or "o3" in verifier.lower() or "mini" in verifier.lower()
+        assert "gpt" in verifier.model.lower() or "o3" in verifier.model.lower() or "mini" in verifier.model.lower()
 
     def test_select_verifier_invalid_vendor_defaults_to_anthropic(self) -> None:
         """Test invalid verifier vendor defaults to anthropic."""
@@ -456,7 +461,7 @@ class TestVerifierSelection:
         verifier = selector.select_verifier("invalid_vendor")
 
         # Should default to anthropic
-        assert "claude" in verifier.lower() or "sonnet" in verifier.lower()
+        assert "claude" in verifier.model.lower() or "sonnet" in verifier.model.lower()
 
 
 @pytest.mark.unit
@@ -604,7 +609,7 @@ class TestModelSelectorEdgeCases:
         verifier = selector.select_verifier("auto")
 
         # Should pick anthropic (first non-primary)
-        assert "claude" in verifier.lower() or "sonnet" in verifier.lower()
+        assert "claude" in verifier.model.lower() or "sonnet" in verifier.model.lower()
 
     def test_verifier_auto_with_openai_primary(self) -> None:
         """Test auto verifier when OpenAI is primary."""
@@ -617,7 +622,7 @@ class TestModelSelectorEdgeCases:
         verifier = selector.select_verifier("auto")
 
         # Should pick anthropic as verifier
-        assert "claude" in verifier.lower() or "sonnet" in verifier.lower()
+        assert "claude" in verifier.model.lower() or "sonnet" in verifier.model.lower()
 
 
 @pytest.mark.unit
@@ -634,34 +639,44 @@ class TestModelSelectorVertexAIAnthropic:
         """Force GC to prevent mock accumulation in xdist workers."""
         gc.collect()
 
-    def test_model_tiers_has_vertex_ai_anthropic(self) -> None:
-        """MODEL_TIERS should include vertex_ai_anthropic vendor."""
-        from mcp_server_langgraph.agents.model_selector import MODEL_TIERS
+    def test_registry_has_vertex_ai_anthropic(self) -> None:
+        """ModelRegistry.get_model_for_tier should include vertex_ai_anthropic vendor.
+
+        After Phase 1 refactor, MODEL_TIERS dict was removed. Vertex AI Anthropic
+        tier mapping now lives in ModelRegistry.get_model_for_tier().
+        """
+        from mcp_server_langgraph.agents.model_registry import ModelRegistry
+
+        registry = ModelRegistry()
 
         for tier in ["simple", "complicated", "complex"]:
-            assert "vertex_ai_anthropic" in MODEL_TIERS[tier], f"Missing vertex_ai_anthropic in {tier} tier"
+            model = registry.get_model_for_tier(vendor="vertex_ai_anthropic", tier=tier)
+            assert model is not None, f"Missing vertex_ai_anthropic model for {tier} tier"
 
     def test_vertex_ai_anthropic_simple_tier(self) -> None:
         """Vertex AI Anthropic simple tier should use Haiku."""
-        from mcp_server_langgraph.agents.model_selector import MODEL_TIERS
+        from mcp_server_langgraph.agents.model_registry import ModelRegistry
 
-        model = MODEL_TIERS["simple"]["vertex_ai_anthropic"]
+        registry = ModelRegistry()
+        model = registry.get_model_for_tier(vendor="vertex_ai_anthropic", tier="simple")
         assert "haiku" in model.lower()
         assert "@" in model  # Vertex AI format uses @version
 
     def test_vertex_ai_anthropic_complicated_tier(self) -> None:
         """Vertex AI Anthropic complicated tier should use Sonnet."""
-        from mcp_server_langgraph.agents.model_selector import MODEL_TIERS
+        from mcp_server_langgraph.agents.model_registry import ModelRegistry
 
-        model = MODEL_TIERS["complicated"]["vertex_ai_anthropic"]
+        registry = ModelRegistry()
+        model = registry.get_model_for_tier(vendor="vertex_ai_anthropic", tier="complicated")
         assert "sonnet" in model.lower()
         assert "@" in model
 
     def test_vertex_ai_anthropic_complex_tier(self) -> None:
         """Vertex AI Anthropic complex tier should use Opus."""
-        from mcp_server_langgraph.agents.model_selector import MODEL_TIERS
+        from mcp_server_langgraph.agents.model_registry import ModelRegistry
 
-        model = MODEL_TIERS["complex"]["vertex_ai_anthropic"]
+        registry = ModelRegistry()
+        model = registry.get_model_for_tier(vendor="vertex_ai_anthropic", tier="complex")
         assert "opus" in model.lower()
         assert "@" in model
 

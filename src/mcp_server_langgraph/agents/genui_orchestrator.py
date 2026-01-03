@@ -37,65 +37,31 @@ from mcp_server_langgraph.agents.base_orchestrator import (
 )
 from mcp_server_langgraph.core.feature_flags import feature_flags
 
+# Import centralized prompts and telemetry (ADR-0089)
+from mcp_server_langgraph.core.prompts import (
+    GENUI_FORM_SYSTEM_PROMPT,
+    GENUI_RENDER_SYSTEM_PROMPT,
+    GENUI_WIDGET_SYSTEM_PROMPT,
+    # Telemetry (Phase 7 - ADR-0089)
+    record_prompt_usage,
+)
+
 if TYPE_CHECKING:
     pass
 
 logger = logging.getLogger(__name__)
 
 # =============================================================================
-# System Prompts
+# System Prompts (Migrated to core/prompts/ per ADR-0089)
 # =============================================================================
-
-GENUI_WIDGET_SYSTEM_PROMPT = """You are an AI assistant that generates dynamic UI widget configurations.
-
-Based on the user's prompt and context data, generate an appropriate widget configuration.
-
-Widget types:
-- chart: For numerical data visualization (bar charts, line charts)
-- table: For structured data display (rows and columns)
-- text: For summaries, explanations, or single values
-
-Respond with a JSON object containing:
-{
-    "widget_type": "chart" | "table" | "text",
-    "title": "Widget Title",
-    "data": {
-        // For chart:
-        "labels": ["Label1", "Label2", ...],
-        "values": [num1, num2, ...]
-        // For table:
-        "columns": ["Col1", "Col2", ...],
-        "rows": [["val1", "val2"], ...]
-        // For text:
-        "content": "The text content"
-    },
-    "confidence": 0.0-1.0
-}"""
-
-GENUI_RENDER_SYSTEM_PROMPT = """You are an AI assistant that transforms raw data into UI widget format.
-
-Given raw data and a format hint, determine the best widget representation.
-
-Respond with a JSON object containing:
-{
-    "widget_type": "chart" | "table" | "text",
-    "title": "Appropriate Title",
-    "data": { ... },
-    "confidence": 0.0-1.0
-}"""
-
-GENUI_FORM_SYSTEM_PROMPT = """You are an AI assistant that processes form submissions.
-
-Validate the form data and determine the next action.
-
-Respond with a JSON object containing:
-{
-    "action": "submit" | "validate" | "error",
-    "validated_data": { ... },
-    "next_step": "confirmation" | "review" | "error_display",
-    "errors": [...] (if any),
-    "confidence": 0.0-1.0
-}"""
+# Prompts are now centralized in:
+#   src/mcp_server_langgraph/core/prompts/genui_prompts.py
+#
+# Imported prompts:
+#   - GENUI_WIDGET_SYSTEM_PROMPT
+#   - GENUI_RENDER_SYSTEM_PROMPT
+#   - GENUI_FORM_SYSTEM_PROMPT
+# =============================================================================
 
 
 # =============================================================================
@@ -284,7 +250,10 @@ Form Data: {json.dumps(task.data.get("form_data", {}), indent=2)}"""
                     result=fallback,
                 )
 
-            # Call LLM
+            # Call LLM with telemetry (Phase 7 - ADR-0089)
+            prompt_name = f"genui_{task.task_type.replace('generate_', '').replace('execute_', '')}"
+            record_prompt_usage(prompt_name, "v1")
+
             messages = [
                 SystemMessage(content=system_prompt),
                 HumanMessage(content=user_prompt),

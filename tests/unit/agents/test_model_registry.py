@@ -444,8 +444,8 @@ class TestModelRegistration:
         assert updated.context_limit == 999_999
         assert updated.context_limit != original_limit
 
-    def test_unregister_model(self) -> None:
-        """Test unregistering a model."""
+    def test_unregister_model_returns_default_fallback(self) -> None:
+        """Test unregistering a model returns default fallback on get."""
         from mcp_server_langgraph.agents.model_registry import (
             ModelCapabilities,
             ModelRegistry,
@@ -516,8 +516,9 @@ class TestCostCalculation:
             output_tokens=10_000,
         )
 
-        expected_input_cost = (100_000 / 1_000_000) * 5.00  # $0.50
-        expected_output_cost = (10_000 / 1_000_000) * 25.00  # $0.25
+        # Cost breakdown (for documentation):
+        # Input: (100_000 / 1_000_000) * 5.00 = $0.50
+        # Output: (10_000 / 1_000_000) * 25.00 = $0.25
         expected_total = 0.75
 
         assert abs(cost - expected_total) < 0.0001
@@ -655,3 +656,380 @@ class TestModelRegistryFeatureFlags:
         from mcp_server_langgraph.core.feature_flags import feature_flags
 
         assert feature_flags.enable_model_capabilities_routing is True
+
+
+@pytest.mark.unit
+@pytest.mark.agents
+@pytest.mark.orchestrator
+@pytest.mark.xdist_group(name="model_registry_tier")
+class TestModelCapabilitiesTier:
+    """Tests for tier field on ModelCapabilities (Phase 1 orchestration)."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers."""
+        gc.collect()
+
+    def test_model_capabilities_has_tier_field(self) -> None:
+        """Test ModelCapabilities has tier field."""
+        from mcp_server_langgraph.agents.model_registry import ModelCapabilities
+
+        caps = ModelCapabilities(
+            model_id="test-model",
+            vendor="test",
+            context_limit=100_000,
+            max_output_tokens=10_000,
+            input_cost_per_1m=1.0,
+            output_cost_per_1m=2.0,
+            tier="simple",
+        )
+
+        assert hasattr(caps, "tier")
+        assert caps.tier == "simple"
+
+    def test_tier_defaults_to_complicated(self) -> None:
+        """Test tier defaults to 'complicated' (middle tier)."""
+        from mcp_server_langgraph.agents.model_registry import ModelCapabilities
+
+        caps = ModelCapabilities(
+            model_id="test-model",
+            vendor="test",
+            context_limit=100_000,
+            max_output_tokens=10_000,
+            input_cost_per_1m=1.0,
+            output_cost_per_1m=2.0,
+        )
+
+        assert caps.tier == "complicated"
+
+    def test_tier_accepts_valid_values(self) -> None:
+        """Test tier accepts all valid values: simple, complicated, complex."""
+        from mcp_server_langgraph.agents.model_registry import ModelCapabilities
+
+        for tier in ["simple", "complicated", "complex"]:
+            caps = ModelCapabilities(
+                model_id=f"test-{tier}",
+                vendor="test",
+                context_limit=100_000,
+                max_output_tokens=10_000,
+                input_cost_per_1m=1.0,
+                output_cost_per_1m=2.0,
+                tier=tier,
+            )
+            assert caps.tier == tier
+
+    def test_builtin_claude_opus_has_complex_tier(self) -> None:
+        """Test Claude Opus 4.5 is registered with complex tier."""
+        from mcp_server_langgraph.agents.model_registry import ModelRegistry
+
+        registry = ModelRegistry()
+        caps = registry.get("claude-opus-4-5-20251101")
+
+        assert caps.tier == "complex"
+
+    def test_builtin_claude_sonnet_has_complicated_tier(self) -> None:
+        """Test Claude Sonnet 4.5 is registered with complicated tier."""
+        from mcp_server_langgraph.agents.model_registry import ModelRegistry
+
+        registry = ModelRegistry()
+        caps = registry.get("claude-sonnet-4-5-20250929")
+
+        assert caps.tier == "complicated"
+
+    def test_builtin_claude_haiku_has_simple_tier(self) -> None:
+        """Test Claude Haiku 4.5 is registered with simple tier."""
+        from mcp_server_langgraph.agents.model_registry import ModelRegistry
+
+        registry = ModelRegistry()
+        caps = registry.get("claude-haiku-4-5-20251001")
+
+        assert caps.tier == "simple"
+
+    def test_builtin_gemini_flash_has_simple_tier(self) -> None:
+        """Test Gemini Flash is registered with simple tier."""
+        from mcp_server_langgraph.agents.model_registry import ModelRegistry
+
+        registry = ModelRegistry()
+        caps = registry.get("gemini-3-flash")
+
+        assert caps.tier == "simple"
+
+    def test_builtin_gemini_pro_has_complex_tier(self) -> None:
+        """Test Gemini Pro is registered with complex tier."""
+        from mcp_server_langgraph.agents.model_registry import ModelRegistry
+
+        registry = ModelRegistry()
+        caps = registry.get("gemini-3-pro")
+
+        assert caps.tier == "complex"
+
+    def test_builtin_gpt_5_2_has_complicated_tier(self) -> None:
+        """Test GPT-5.2 is registered with complicated tier."""
+        from mcp_server_langgraph.agents.model_registry import ModelRegistry
+
+        registry = ModelRegistry()
+        caps = registry.get("gpt-5.2")
+
+        assert caps.tier == "complicated"
+
+    def test_builtin_gpt_5_2_pro_has_complex_tier(self) -> None:
+        """Test GPT-5.2-pro is registered with complex tier."""
+        from mcp_server_langgraph.agents.model_registry import ModelRegistry
+
+        registry = ModelRegistry()
+        caps = registry.get("gpt-5.2-pro")
+
+        assert caps.tier == "complex"
+
+    def test_list_models_by_tier(self) -> None:
+        """Test list_models supports tier filter."""
+        from mcp_server_langgraph.agents.model_registry import ModelRegistry
+
+        registry = ModelRegistry()
+
+        complex_models = registry.list_models(tier="complex")
+
+        assert "claude-opus-4-5-20251101" in complex_models
+        assert "gemini-3-pro" in complex_models
+        assert "gpt-5.2-pro" in complex_models
+
+    def test_all_registered_models_have_tier(self) -> None:
+        """Audit test: All registered models must have tier set."""
+        from mcp_server_langgraph.agents.model_registry import ModelRegistry
+
+        registry = ModelRegistry()
+        all_models = registry.list_models()
+
+        for model_id in all_models:
+            caps = registry.get(model_id)
+            assert caps.tier in ["simple", "complicated", "complex"], f"Model {model_id} has invalid tier: {caps.tier}"
+
+
+@pytest.mark.unit
+@pytest.mark.agents
+@pytest.mark.orchestrator
+@pytest.mark.xdist_group(name="model_registry_json_mode")
+class TestModelCapabilitiesJsonMode:
+    """Tests for supports_json_mode field on ModelCapabilities."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers."""
+        gc.collect()
+
+    def test_model_capabilities_has_json_mode_field(self) -> None:
+        """Test ModelCapabilities has supports_json_mode field."""
+        from mcp_server_langgraph.agents.model_registry import ModelCapabilities
+
+        caps = ModelCapabilities(
+            model_id="test-model",
+            vendor="test",
+            context_limit=100_000,
+            max_output_tokens=10_000,
+            input_cost_per_1m=1.0,
+            output_cost_per_1m=2.0,
+            supports_json_mode=True,
+        )
+
+        assert hasattr(caps, "supports_json_mode")
+        assert caps.supports_json_mode is True
+
+    def test_json_mode_defaults_to_false(self) -> None:
+        """Test supports_json_mode defaults to False."""
+        from mcp_server_langgraph.agents.model_registry import ModelCapabilities
+
+        caps = ModelCapabilities(
+            model_id="test-model",
+            vendor="test",
+            context_limit=100_000,
+            max_output_tokens=10_000,
+            input_cost_per_1m=1.0,
+            output_cost_per_1m=2.0,
+        )
+
+        assert caps.supports_json_mode is False
+
+    def test_supports_capability_includes_json_mode(self) -> None:
+        """Test supports_capability works with json_mode."""
+        from mcp_server_langgraph.agents.model_registry import (
+            ModelCapabilities,
+            ModelRegistry,
+        )
+
+        registry = ModelRegistry()
+
+        custom_caps = ModelCapabilities(
+            model_id="json-capable-model",
+            vendor="test",
+            context_limit=100_000,
+            max_output_tokens=10_000,
+            input_cost_per_1m=1.0,
+            output_cost_per_1m=2.0,
+            supports_json_mode=True,
+        )
+        registry.register(custom_caps)
+
+        assert registry.supports_capability("json-capable-model", "json_mode") is True
+
+
+@pytest.mark.unit
+@pytest.mark.agents
+@pytest.mark.orchestrator
+@pytest.mark.xdist_group(name="model_registry_thinking_tokens")
+class TestModelCapabilitiesThinkingTokens:
+    """Tests for max_thinking_tokens field on ModelCapabilities."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers."""
+        gc.collect()
+
+    def test_model_capabilities_has_max_thinking_tokens_field(self) -> None:
+        """Test ModelCapabilities has max_thinking_tokens field."""
+        from mcp_server_langgraph.agents.model_registry import ModelCapabilities
+
+        caps = ModelCapabilities(
+            model_id="test-model",
+            vendor="test",
+            context_limit=100_000,
+            max_output_tokens=10_000,
+            input_cost_per_1m=1.0,
+            output_cost_per_1m=2.0,
+            max_thinking_tokens=32768,
+        )
+
+        assert hasattr(caps, "max_thinking_tokens")
+        assert caps.max_thinking_tokens == 32768
+
+    def test_max_thinking_tokens_defaults_to_none(self) -> None:
+        """Test max_thinking_tokens defaults to None (not supported)."""
+        from mcp_server_langgraph.agents.model_registry import ModelCapabilities
+
+        caps = ModelCapabilities(
+            model_id="test-model",
+            vendor="test",
+            context_limit=100_000,
+            max_output_tokens=10_000,
+            input_cost_per_1m=1.0,
+            output_cost_per_1m=2.0,
+        )
+
+        assert caps.max_thinking_tokens is None
+
+    def test_builtin_claude_opus_has_max_thinking_tokens(self) -> None:
+        """Test Claude Opus 4.5 has max_thinking_tokens set (supports thinking)."""
+        from mcp_server_langgraph.agents.model_registry import ModelRegistry
+
+        registry = ModelRegistry()
+        caps = registry.get("claude-opus-4-5-20251101")
+
+        assert caps.max_thinking_tokens is not None
+        assert caps.max_thinking_tokens > 0
+
+    def test_builtin_gemini_pro_has_max_thinking_tokens(self) -> None:
+        """Test Gemini Pro has max_thinking_tokens set (Deep Think)."""
+        from mcp_server_langgraph.agents.model_registry import ModelRegistry
+
+        registry = ModelRegistry()
+        caps = registry.get("gemini-3-pro")
+
+        assert caps.supports_extended_thinking is True
+        assert caps.max_thinking_tokens is not None
+
+    def test_builtin_haiku_has_no_thinking_tokens(self) -> None:
+        """Test Claude Haiku has no thinking tokens (not supported)."""
+        from mcp_server_langgraph.agents.model_registry import ModelRegistry
+
+        registry = ModelRegistry()
+        caps = registry.get("claude-haiku-4-5-20251001")
+
+        assert caps.supports_extended_thinking is False
+        assert caps.max_thinking_tokens is None
+
+    def test_all_thinking_models_have_max_tokens_set(self) -> None:
+        """Audit: All models with extended_thinking must have max_thinking_tokens."""
+        from mcp_server_langgraph.agents.model_registry import ModelRegistry
+
+        registry = ModelRegistry()
+        all_models = registry.list_models()
+
+        for model_id in all_models:
+            caps = registry.get(model_id)
+            if caps.supports_extended_thinking:
+                assert caps.max_thinking_tokens is not None, (
+                    f"Model {model_id} supports extended_thinking but has no max_thinking_tokens"
+                )
+
+
+@pytest.mark.unit
+@pytest.mark.agents
+@pytest.mark.orchestrator
+@pytest.mark.xdist_group(name="model_registry_capabilities_set")
+class TestModelCapabilitiesSet:
+    """Tests for capabilities aggregation property."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers."""
+        gc.collect()
+
+    def test_model_capabilities_has_capabilities_property(self) -> None:
+        """Test ModelCapabilities has capabilities property returning set."""
+        from mcp_server_langgraph.agents.model_registry import ModelCapabilities
+
+        caps = ModelCapabilities(
+            model_id="test-model",
+            vendor="test",
+            context_limit=100_000,
+            max_output_tokens=10_000,
+            input_cost_per_1m=1.0,
+            output_cost_per_1m=2.0,
+            supports_vision=True,
+            supports_tools=True,
+            supports_streaming=True,
+        )
+
+        assert hasattr(caps, "capabilities")
+        capabilities = caps.capabilities
+        assert isinstance(capabilities, set)
+        assert "vision" in capabilities
+        assert "tools" in capabilities
+        assert "streaming" in capabilities
+
+    def test_capabilities_includes_all_enabled_flags(self) -> None:
+        """Test capabilities property includes all enabled capability flags."""
+        from mcp_server_langgraph.agents.model_registry import ModelCapabilities
+
+        caps = ModelCapabilities(
+            model_id="full-model",
+            vendor="test",
+            context_limit=100_000,
+            max_output_tokens=10_000,
+            input_cost_per_1m=1.0,
+            output_cost_per_1m=2.0,
+            supports_vision=True,
+            supports_tools=True,
+            supports_streaming=True,
+            supports_extended_thinking=True,
+            supports_effort_param=True,
+            supports_json_mode=True,
+        )
+
+        capabilities = caps.capabilities
+        expected = {"vision", "tools", "streaming", "extended_thinking", "effort_param", "json_mode"}
+        assert capabilities == expected
+
+    def test_capabilities_excludes_disabled_flags(self) -> None:
+        """Test capabilities property excludes disabled capability flags."""
+        from mcp_server_langgraph.agents.model_registry import ModelCapabilities
+
+        caps = ModelCapabilities(
+            model_id="minimal-model",
+            vendor="test",
+            context_limit=100_000,
+            max_output_tokens=10_000,
+            input_cost_per_1m=1.0,
+            output_cost_per_1m=2.0,
+            supports_tools=True,  # Only this enabled
+        )
+
+        capabilities = caps.capabilities
+        assert "tools" in capabilities
+        assert "vision" not in capabilities
+        assert "streaming" not in capabilities

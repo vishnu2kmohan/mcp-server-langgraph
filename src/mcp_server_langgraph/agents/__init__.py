@@ -41,7 +41,6 @@ from mcp_server_langgraph.agents.metrics import (
     record_synthesis_operation,
 )
 from mcp_server_langgraph.agents.model_selector import (
-    MODEL_TIERS,
     VENDOR_PRIORITY,
     ModelSelector,
 )
@@ -114,7 +113,6 @@ __all__ = [
     "ArtifactStorage",
     # Model Selection
     "ModelSelector",
-    "MODEL_TIERS",
     "VENDOR_PRIORITY",
     # Metrics
     "record_artifact_storage",
