@@ -1780,3 +1780,171 @@ class TestFeatureFlagConsolidation:
         assert isinstance(warnings_list, list)
         # Should not have warnings for non-deprecated flag usage
         assert not any("enable_llm_suggestions" in msg for msg in warnings_list)
+
+
+@pytest.mark.xdist_group(name="feature_flags_orchestration")
+class TestOrchestrationFeatureFlags:
+    """Tests for Agent Orchestration Architecture feature flags (ADR plan)."""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers."""
+        gc.collect()
+
+    @pytest.mark.unit
+    def test_enable_router_agent_exists(self):
+        """Test enable_router_agent flag exists."""
+        from mcp_server_langgraph.core.feature_flags import FeatureFlags
+
+        flags = FeatureFlags()
+        assert hasattr(flags, "enable_router_agent")
+
+    @pytest.mark.unit
+    def test_enable_router_agent_defaults_to_false(self):
+        """Test enable_router_agent defaults to False for safe rollout."""
+        from mcp_server_langgraph.core.feature_flags import FeatureFlags
+
+        flags = FeatureFlags()
+        assert flags.enable_router_agent is False
+
+    @pytest.mark.unit
+    def test_enable_swarm_orchestrator_exists(self):
+        """Test enable_swarm_orchestrator flag exists."""
+        from mcp_server_langgraph.core.feature_flags import FeatureFlags
+
+        flags = FeatureFlags()
+        assert hasattr(flags, "enable_swarm_orchestrator")
+
+    @pytest.mark.unit
+    def test_enable_swarm_orchestrator_defaults_to_false(self):
+        """Test enable_swarm_orchestrator defaults to False for safe rollout."""
+        from mcp_server_langgraph.core.feature_flags import FeatureFlags
+
+        flags = FeatureFlags()
+        assert flags.enable_swarm_orchestrator is False
+
+    @pytest.mark.unit
+    def test_enable_hierarchical_orchestrator_exists(self):
+        """Test enable_hierarchical_orchestrator flag exists."""
+        from mcp_server_langgraph.core.feature_flags import FeatureFlags
+
+        flags = FeatureFlags()
+        assert hasattr(flags, "enable_hierarchical_orchestrator")
+
+    @pytest.mark.unit
+    def test_enable_hierarchical_orchestrator_defaults_to_false(self):
+        """Test enable_hierarchical_orchestrator defaults to False for safe rollout."""
+        from mcp_server_langgraph.core.feature_flags import FeatureFlags
+
+        flags = FeatureFlags()
+        assert flags.enable_hierarchical_orchestrator is False
+
+    @pytest.mark.unit
+    def test_force_high_risk_review_exists(self):
+        """Test force_high_risk_review flag exists."""
+        from mcp_server_langgraph.core.feature_flags import FeatureFlags
+
+        flags = FeatureFlags()
+        assert hasattr(flags, "force_high_risk_review")
+
+    @pytest.mark.unit
+    def test_force_high_risk_review_defaults_to_true(self):
+        """Test force_high_risk_review defaults to True for safety."""
+        from mcp_server_langgraph.core.feature_flags import FeatureFlags
+
+        flags = FeatureFlags()
+        assert flags.force_high_risk_review is True
+
+    @pytest.mark.unit
+    def test_default_critique_rounds_exists(self):
+        """Test default_critique_rounds flag exists."""
+        from mcp_server_langgraph.core.feature_flags import FeatureFlags
+
+        flags = FeatureFlags()
+        assert hasattr(flags, "default_critique_rounds")
+
+    @pytest.mark.unit
+    def test_default_critique_rounds_defaults_to_1(self):
+        """Test default_critique_rounds defaults to 1."""
+        from mcp_server_langgraph.core.feature_flags import FeatureFlags
+
+        flags = FeatureFlags()
+        assert flags.default_critique_rounds == 1
+
+    @pytest.mark.unit
+    def test_default_critique_rounds_has_valid_range(self):
+        """Test default_critique_rounds must be 0-3."""
+        from pydantic import ValidationError
+
+        from mcp_server_langgraph.core.feature_flags import FeatureFlags
+
+        # Valid values
+        FeatureFlags(default_critique_rounds=0)
+        FeatureFlags(default_critique_rounds=3)
+
+        # Invalid: too high
+        with pytest.raises(ValidationError):
+            FeatureFlags(default_critique_rounds=4)
+
+    @pytest.mark.unit
+    def test_enable_plan_cache_exists(self):
+        """Test enable_plan_cache flag exists."""
+        from mcp_server_langgraph.core.feature_flags import FeatureFlags
+
+        flags = FeatureFlags()
+        assert hasattr(flags, "enable_plan_cache")
+
+    @pytest.mark.unit
+    def test_enable_plan_cache_defaults_to_true(self):
+        """Test enable_plan_cache defaults to True for performance."""
+        from mcp_server_langgraph.core.feature_flags import FeatureFlags
+
+        flags = FeatureFlags()
+        assert flags.enable_plan_cache is True
+
+    @pytest.mark.unit
+    def test_orchestration_compat_mode_exists(self):
+        """Test orchestration_compat_mode flag exists."""
+        from mcp_server_langgraph.core.feature_flags import FeatureFlags
+
+        flags = FeatureFlags()
+        assert hasattr(flags, "orchestration_compat_mode")
+
+    @pytest.mark.unit
+    def test_orchestration_compat_mode_defaults_to_true(self):
+        """Test orchestration_compat_mode defaults to True for backward compatibility."""
+        from mcp_server_langgraph.core.feature_flags import FeatureFlags
+
+        flags = FeatureFlags()
+        assert flags.orchestration_compat_mode is True
+
+    @pytest.mark.unit
+    def test_max_thinking_budget_exists(self):
+        """Test max_thinking_budget flag exists."""
+        from mcp_server_langgraph.core.feature_flags import FeatureFlags
+
+        flags = FeatureFlags()
+        assert hasattr(flags, "max_thinking_budget")
+
+    @pytest.mark.unit
+    def test_max_thinking_budget_defaults_to_medium(self):
+        """Test max_thinking_budget defaults to 'medium'."""
+        from mcp_server_langgraph.core.feature_flags import FeatureFlags
+
+        flags = FeatureFlags()
+        assert flags.max_thinking_budget == "medium"
+
+    @pytest.mark.unit
+    def test_router_cache_ttl_seconds_exists(self):
+        """Test router_cache_ttl_seconds flag exists."""
+        from mcp_server_langgraph.core.feature_flags import FeatureFlags
+
+        flags = FeatureFlags()
+        assert hasattr(flags, "router_cache_ttl_seconds")
+
+    @pytest.mark.unit
+    def test_router_cache_ttl_seconds_defaults_to_3600(self):
+        """Test router_cache_ttl_seconds defaults to 1 hour."""
+        from mcp_server_langgraph.core.feature_flags import FeatureFlags
+
+        flags = FeatureFlags()
+        assert flags.router_cache_ttl_seconds == 3600
