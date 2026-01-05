@@ -208,26 +208,71 @@ export default tseslint.config(
       'no-restricted-syntax': 'off',
     },
   },
-  // Override for HITL dialogs hook
+  // Override for HITL dialogs hook - processes API data before transformation
   {
     files: ['**/hooks/useHITLDialogs.ts'],
     rules: {
       'no-restricted-syntax': 'off',
     },
   },
-  // Override for all components that consume API data - temporary during ADR-0091 migration
-  // This broadly disables the snake_case warning until the migration is complete
+  // Override for HITL dialog components - they are API boundary components that:
+  // 1. Consume API contract types (snake_case) directly as props
+  // 2. Build API-compatible response objects to send back to backend
+  // These are tightly coupled with the HITL WebSocket/hook layer
   {
     files: [
-      '**/components/**/*.tsx',
-      '**/components/**/*.ts',
-      '**/pages/*.tsx',
-      '**/conversation/*.tsx',
-      '**/layout/*.tsx',
-      '**/canvas/*.tsx',
+      '**/components/Admin/AgentApprovalDialog.tsx',
+      '**/components/Admin/ClarificationDialog.tsx',
+      '**/components/Admin/RemediationApprovalDialog.tsx',
     ],
     rules: {
       'no-restricted-syntax': 'off',
     },
   },
+  // Override for Admin alert/remediation components - API boundary layer
+  // These components directly consume backend Alert, Recommendation, Remediation types
+  // Full camelCase migration requires RTK Query transformResponse (tracked in ADR-0091 Phase 5)
+  {
+    files: [
+      '**/components/Admin/AIRecommendationCard.tsx',
+      '**/components/Admin/AdminDashboard.tsx',
+      '**/components/Admin/AgentApprovalAuditLog.tsx',
+      '**/components/Admin/AlertDetailPanel.tsx',
+      '**/components/Admin/AlertGroupsPanel.tsx',
+      '**/components/Admin/AlertsPanel.tsx',
+      '**/components/Admin/BatchApprovalPanel.tsx',
+    ],
+    rules: {
+      'no-restricted-syntax': 'off',
+    },
+  },
+  // Override for components that consume API data - pending Phase 5 migration
+  // These consume backend types directly (Agents, Workflow, Session, Project, MCP, Cost, Observability)
+  // Full camelCase migration requires RTK Query transformResponse (tracked in ADR-0091 Phase 5)
+  {
+    files: [
+      '**/components/Agents/*.tsx',
+      '**/components/Chat/SaveAsWorkflowButton.tsx',
+      '**/components/Connection/*.tsx',
+      '**/components/Cost/*.tsx',
+      '**/components/DevTools/**/*.tsx',
+      '**/components/DevTools/**/*.ts',
+      '**/components/Insights/*.tsx',
+      '**/components/MCP/*.tsx',
+      '**/components/Observability/*.tsx',
+      '**/components/PlanEditor/*.tsx',
+      '**/components/Project/*.tsx',
+      '**/components/Session/*.tsx',
+      '**/components/Workflow/*.tsx',
+      '**/conversation/*.tsx',
+      '**/layout/*.tsx',
+      '**/pages/*.tsx',
+    ],
+    rules: {
+      'no-restricted-syntax': 'off',
+    },
+  },
+  // ADR-0091 Phase 4 Complete: Targeted overrides for API boundary components
+  // Phase 5 will add RTK Query transformResponse to migrate from snake_case to camelCase
+  // See ADR-0091 for full migration tracking
 );
