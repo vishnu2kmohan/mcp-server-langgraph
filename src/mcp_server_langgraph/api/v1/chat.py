@@ -36,7 +36,6 @@ from pydantic import BaseModel, Field
 
 from mcp_server_langgraph.auth.dependencies import get_current_user
 from mcp_server_langgraph.core.config import settings
-from mcp_server_langgraph.core.feature_flags import feature_flags
 
 if TYPE_CHECKING:
     pass
@@ -252,6 +251,7 @@ class ChatServiceImpl(ChatService):
         mcp_bridge: Any | None = None,
         langgraph_agent: Any | None = None,
         llm_factory: Any | None = None,
+        router_agent: Any | None = None,
     ) -> None:
         """
         Initialize with optional dependencies.
@@ -265,11 +265,14 @@ class ChatServiceImpl(ChatService):
                              If provided, enables real-time node/edge streaming.
             llm_factory: Optional LLMFactory instance for streaming via astream().
                          If None, falls back to direct litellm.acompletion.
+            router_agent: Optional RouterAgent for orchestration routing.
+                         If provided, enables dynamic routing based on request classification.
         """
         self._session_storage = session_storage
         self._mcp_bridge = mcp_bridge
         self._langgraph_agent = langgraph_agent
         self._llm_factory = llm_factory
+        self._router_agent = router_agent
 
     @property
     def mcp_bridge(self) -> Any | None:
@@ -288,6 +291,17 @@ class ChatServiceImpl(ChatService):
 
             self._llm_factory = create_llm_from_config(settings)
         return self._llm_factory
+
+    @property
+    def router_agent(self) -> Any | None:
+        """Get the router agent, lazily initializing if needed."""
+        if self._router_agent is None:
+            # Only initialize if LLM factory is available
+            if self.llm_factory is not None:
+                from mcp_server_langgraph.agents.router_agent import RouterAgent
+
+                self._router_agent = RouterAgent(llm_factory=self.llm_factory)
+        return self._router_agent
 
     def _get_current_trace_id(self) -> str | None:
         """Get the current OpenTelemetry trace ID for observability correlation.
@@ -603,6 +617,8 @@ class ChatServiceImpl(ChatService):
         """
         from langchain_core.messages import HumanMessage, SystemMessage
 
+        from mcp_server_langgraph.api.v1.mcp_bridge import ChatError
+
         # Convert dict messages to LangChain messages
         langchain_messages = []
         for msg in messages:
@@ -776,26 +792,97 @@ class ChatServiceImpl(ChatService):
         """
         Create a streaming chat completion.
 
-        Tries LangGraph (if use_langgraph=True), then MCP agent, then LiteLLM.
+        When routing is enabled, classifies the request first and emits a routing_decision event.
+        Then selects streaming strategy based on routing (LangGraph, MCP, or LLMFactory).
 
         Args:
             session_id: Session ID for tracking
             messages: List of message dicts with 'role' and 'content'
-            **kwargs: Additional parameters (model, temperature, max_tokens, user_id, use_langgraph)
+            **kwargs: Additional parameters:
+                - enable_routing: Enable router agent classification (default: False)
+                - use_langgraph: Force LangGraph agent (overridden by routing)
+                - model, temperature, max_tokens, user_id: Standard LLM parameters
 
         Yields:
-            Streaming chunks with delta content and optional langgraph_node/edge events
+            Streaming chunks with:
+            - routing_decision: First event when routing enabled (classification result)
+            - delta: Content chunks with text/thinking
+            - langgraph_node/langgraph_edge: Graph execution events (if using LangGraph)
         """
+        from mcp_server_langgraph.agents.router_agent import DEFAULT_ROUTER_OUTPUT, RouterOutput
         from mcp_server_langgraph.api.v1.mcp_bridge import ChatError
         from mcp_server_langgraph.observability.telemetry import logger
 
+        # Check enable_routing: explicit param > feature flag > default False
+        enable_routing = kwargs.pop("enable_routing", None)
+        if enable_routing is None:
+            # Fall back to feature flag if not explicitly set
+            enable_routing = getattr(settings, "enable_chat_routing", False)
         use_langgraph = kwargs.pop("use_langgraph", False)
 
-        # Inject resource context if provided (was in legacy _stream_via_litellm, moved here)
+        # Inject resource context if provided
         resource_uris = kwargs.pop("resource_uris", None)
         messages = await self._inject_resource_context(messages, resource_uris)
 
-        # Try LangGraph agent if requested and configured
+        # Router agent classification when enabled
+        routing_decision: RouterOutput | None = None
+        if enable_routing and self.router_agent is not None:
+            try:
+                # Extract last user message for classification
+                last_user_message = next(
+                    (msg.get("content", "") for msg in reversed(messages) if msg.get("role") == "user"),
+                    "",
+                )
+
+                routing_decision = await self.router_agent.route(message=last_user_message)
+                logger.info(
+                    f"Router decision: orchestrator={routing_decision.suggested_orchestrator}, "
+                    f"complexity={routing_decision.complexity}, confidence={routing_decision.confidence}"
+                )
+
+                # Emit routing decision as first SSE event
+                yield {
+                    "routing_decision": {
+                        "complexity": routing_decision.complexity,
+                        "risk": routing_decision.risk,
+                        "task_type": routing_decision.task_type,
+                        "tools_needed": routing_decision.tools_needed,
+                        "suggested_orchestrator": routing_decision.suggested_orchestrator,
+                        "critique_rounds": routing_decision.critique_rounds,
+                        "thinking_budget": routing_decision.thinking_budget,
+                        "confidence": routing_decision.confidence,
+                        "skills_needed": routing_decision.skills_needed,
+                        "execution_mode": routing_decision.execution_mode,
+                        "routing_rationale": routing_decision.routing_rationale,
+                    }
+                }
+
+                # Use routing decision to select streaming strategy
+                if routing_decision.suggested_orchestrator in ("studio", "swarm"):
+                    use_langgraph = True
+
+            except Exception as e:
+                logger.warning(f"Router classification failed, using defaults: {e}")
+                routing_decision = DEFAULT_ROUTER_OUTPUT
+
+                # Emit default routing decision
+                yield {
+                    "routing_decision": {
+                        "complexity": routing_decision.complexity,
+                        "risk": routing_decision.risk,
+                        "task_type": routing_decision.task_type,
+                        "tools_needed": routing_decision.tools_needed,
+                        "suggested_orchestrator": routing_decision.suggested_orchestrator,
+                        "critique_rounds": routing_decision.critique_rounds,
+                        "thinking_budget": routing_decision.thinking_budget,
+                        "confidence": routing_decision.confidence,
+                        "skills_needed": routing_decision.skills_needed,
+                        "execution_mode": routing_decision.execution_mode,
+                        "routing_rationale": routing_decision.routing_rationale,
+                    }
+                }
+
+        # Try LangGraph agent if requested (via routing or explicit flag) and configured
         if use_langgraph and self._langgraph_agent is not None:
             try:
                 async for chunk in self._stream_via_langgraph(session_id, messages, **kwargs):
@@ -814,8 +901,6 @@ class ChatServiceImpl(ChatService):
                 logger.warning(f"MCP streaming failed, falling back: {e}")
 
         # Use LLMFactory streaming (provides resilience patterns: circuit breaker, retry)
-        # Note: enable_llm_factory_streaming feature flag controls resilience features,
-        # but LLMFactory.astream() is always the streaming method (legacy litellm removed)
         async for chunk in self._stream_via_llm_factory(session_id, messages, **kwargs):
             yield chunk
 

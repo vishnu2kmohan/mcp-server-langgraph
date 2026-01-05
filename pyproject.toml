@@ -838,6 +838,7 @@ markers = [
     "tools: Tool implementation tests (bash, file, web tools)",
     "llm: LLM API tests (expensive, requires API keys, skipped in CI)",
     "chat: Chat router and streaming tests",
+    "router: Router agent orchestration tests (request classification, routing decisions)",
     "connections: Connection API authorization tests",
     "projects: Project API authorization tests",
     "sub_persona: Sub-persona authorization tests (admin, alice, bob personas)",
