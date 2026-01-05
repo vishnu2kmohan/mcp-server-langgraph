@@ -4,13 +4,32 @@ Tests for web_fetch tool backed by the sandbox runner.
 
 import gc
 import json
+from collections.abc import Iterator
 from types import SimpleNamespace
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 
 
 pytestmark = pytest.mark.unit
+
+
+@pytest.fixture
+def sandbox_enabled_settings() -> Iterator[MagicMock]:
+    """Mock settings to enable sandbox web fetch operations.
+
+    The web_fetch tools require:
+    - enable_code_execution = True
+    - environment in SANDBOX_ENVIRONMENTS or enable_sandbox_tools = True
+    """
+    mock_settings = MagicMock()
+    mock_settings.enable_code_execution = True
+    mock_settings.environment = "test"
+    mock_settings.enable_sandbox_tools = True
+    mock_settings.code_execution_timeout = 30
+
+    with patch("mcp_server_langgraph.tools.web_fetch_tools.settings", mock_settings):
+        yield mock_settings
 
 
 @pytest.mark.xdist_group(name="web_fetch_tool")
@@ -22,7 +41,7 @@ class TestWebFetchTool:
         gc.collect()
 
     @pytest.mark.asyncio
-    async def test_web_fetch_returns_content(self):
+    async def test_web_fetch_returns_content(self, sandbox_enabled_settings: MagicMock):
         from mcp_server_langgraph.tools.web_fetch_tools import web_fetch
 
         payload = {"text": "<html>Hello World</html>", "content_type": "text/html", "truncated": False, "status": 200}
@@ -35,7 +54,7 @@ class TestWebFetchTool:
         assert "Hello World" in result
 
     @pytest.mark.asyncio
-    async def test_web_fetch_converts_html_to_markdown(self):
+    async def test_web_fetch_converts_html_to_markdown(self, sandbox_enabled_settings: MagicMock):
         from mcp_server_langgraph.tools.web_fetch_tools import web_fetch
 
         html_content = "<html><body><h1>Title</h1><p>Paragraph text.</p></body></html>"
@@ -51,7 +70,7 @@ class TestWebFetchTool:
         assert "<html>" not in result
 
     @pytest.mark.asyncio
-    async def test_web_fetch_with_prompt_includes_prompt(self):
+    async def test_web_fetch_with_prompt_includes_prompt(self, sandbox_enabled_settings: MagicMock):
         from mcp_server_langgraph.tools.web_fetch_tools import web_fetch
 
         html_content = "<html><body><h1>Product Page</h1><p>Price: $99.99</p></body></html>"
@@ -73,7 +92,7 @@ class TestWebFetchTool:
         assert "error" in result.lower()
 
     @pytest.mark.asyncio
-    async def test_web_fetch_timeout_error(self):
+    async def test_web_fetch_timeout_error(self, sandbox_enabled_settings: MagicMock):
         from mcp_server_langgraph.tools.web_fetch_tools import web_fetch
 
         run_result = SimpleNamespace(

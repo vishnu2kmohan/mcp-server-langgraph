@@ -8,6 +8,7 @@ TDD Phase: RED - Write failing tests first
 """
 
 import gc
+from collections.abc import Iterator
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -42,6 +43,35 @@ def mock_settings():
     settings.bash_execution_timeout = 30
     settings.bash_working_directory = "/tmp"
     return settings
+
+
+@pytest.fixture
+def sandbox_enabled_settings() -> Iterator[MagicMock]:
+    """Mock settings to enable sandbox bash execution.
+
+    The bash tool requires:
+    - enable_code_execution = True
+    - environment in SANDBOX_ENVIRONMENTS or enable_sandbox_tools = True
+    """
+    mock_settings = MagicMock()
+    mock_settings.enable_code_execution = True
+    mock_settings.environment = "test"
+    mock_settings.enable_sandbox_tools = True
+    mock_settings.code_execution_timeout = 30
+
+    with patch("mcp_server_langgraph.tools.bash_tools.settings", mock_settings):
+        yield mock_settings
+
+
+@pytest.fixture
+def sandbox_and_feature_flags(sandbox_enabled_settings: MagicMock) -> Iterator[MagicMock]:
+    """Mock both settings and feature flags for bash execution.
+
+    Combines sandbox settings with feature flag enablement.
+    """
+    with patch("mcp_server_langgraph.tools.bash_tools.feature_flags") as mock_flags:
+        mock_flags.enable_bash_tool = True
+        yield sandbox_enabled_settings
 
 
 # =============================================================================
@@ -206,43 +236,86 @@ class TestBashToolExecution:
         """Force GC to prevent mock accumulation in xdist workers."""
         gc.collect()
 
-    def test_execute_simple_command(self) -> None:
+    def _create_mock_runner_result(
+        self,
+        stdout: str = "",
+        stderr: str = "",
+        exit_code: int = 0,
+        timed_out: bool = False,
+        error_message: str | None = None,
+    ) -> MagicMock:
+        """Create a mock sandbox runner result."""
+        result = MagicMock()
+        result.stdout = stdout
+        result.stderr = stderr
+        result.exit_code = exit_code
+        result.timed_out = timed_out
+        result.error_message = error_message
+        return result
+
+    def test_execute_simple_command(self, sandbox_enabled_settings: MagicMock) -> None:
         """Test executing a simple allowed command."""
         from mcp_server_langgraph.tools.bash_tools import execute_bash
 
-        with patch("mcp_server_langgraph.tools.bash_tools.feature_flags") as mock_flags:
+        mock_result = self._create_mock_runner_result(stdout="hello")
+        mock_runner = MagicMock()
+        mock_runner.run_bash.return_value = mock_result
+
+        with (
+            patch("mcp_server_langgraph.tools.bash_tools.feature_flags") as mock_flags,
+            patch("mcp_server_langgraph.tools.bash_tools.get_sandbox_runner", return_value=mock_runner),
+        ):
             mock_flags.enable_bash_tool = True
 
             result = execute_bash.invoke({"command": "echo hello"})
 
             assert "hello" in result
             assert "error" not in result.lower()
+            mock_runner.run_bash.assert_called_once()
 
-    def test_execute_command_with_output(self) -> None:
+    def test_execute_command_with_output(self, sandbox_enabled_settings: MagicMock) -> None:
         """Test command output is captured."""
         from mcp_server_langgraph.tools.bash_tools import execute_bash
 
-        with patch("mcp_server_langgraph.tools.bash_tools.feature_flags") as mock_flags:
+        mock_result = self._create_mock_runner_result(stdout="/home/user/project")
+        mock_runner = MagicMock()
+        mock_runner.run_bash.return_value = mock_result
+
+        with (
+            patch("mcp_server_langgraph.tools.bash_tools.feature_flags") as mock_flags,
+            patch("mcp_server_langgraph.tools.bash_tools.get_sandbox_runner", return_value=mock_runner),
+        ):
             mock_flags.enable_bash_tool = True
 
             result = execute_bash.invoke({"command": "pwd"})
 
             # Should return current working directory
-            assert "/" in result or "error" not in result.lower()
+            assert "/" in result
+            assert "error" not in result.lower()
 
-    def test_execute_blocked_command_returns_error(self) -> None:
+    def test_execute_blocked_command_returns_error(self, sandbox_enabled_settings: MagicMock) -> None:
         """Test that blocked commands return an error."""
         from mcp_server_langgraph.tools.bash_tools import execute_bash
 
-        result = execute_bash.invoke({"command": "sudo ls"})
+        with patch("mcp_server_langgraph.tools.bash_tools.feature_flags") as mock_flags:
+            mock_flags.enable_bash_tool = True
 
-        assert "error" in result.lower() or "blocked" in result.lower()
+            result = execute_bash.invoke({"command": "sudo ls"})
 
-    def test_execute_with_timeout(self) -> None:
+            assert "error" in result.lower() or "blocked" in result.lower()
+
+    def test_execute_with_timeout(self, sandbox_enabled_settings: MagicMock) -> None:
         """Test command execution respects timeout."""
         from mcp_server_langgraph.tools.bash_tools import execute_bash
 
-        with patch("mcp_server_langgraph.tools.bash_tools.feature_flags") as mock_flags:
+        mock_result = self._create_mock_runner_result(stdout="fast")
+        mock_runner = MagicMock()
+        mock_runner.run_bash.return_value = mock_result
+
+        with (
+            patch("mcp_server_langgraph.tools.bash_tools.feature_flags") as mock_flags,
+            patch("mcp_server_langgraph.tools.bash_tools.get_sandbox_runner", return_value=mock_runner),
+        ):
             mock_flags.enable_bash_tool = True
 
             # A command that should complete quickly
@@ -255,6 +328,7 @@ class TestBashToolExecution:
 
             # Should complete without timeout
             assert "fast" in result
+            mock_runner.run_bash.assert_called_once_with("echo fast", timeout_override=5)
 
 
 # =============================================================================

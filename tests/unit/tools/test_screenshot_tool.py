@@ -4,8 +4,9 @@ Tests for screenshot tools delegating to the sandbox runner.
 
 import gc
 import json
+from collections.abc import Iterator
 from types import SimpleNamespace
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -14,6 +15,24 @@ pytestmark = [pytest.mark.unit, pytest.mark.screenshot_tool]
 
 class StubResult(SimpleNamespace):
     pass
+
+
+@pytest.fixture
+def sandbox_enabled_settings() -> Iterator[MagicMock]:
+    """Mock settings to enable sandbox screenshot operations.
+
+    The screenshot tools require:
+    - enable_code_execution = True
+    - environment in SANDBOX_ENVIRONMENTS or enable_sandbox_tools = True
+    """
+    mock_settings = MagicMock()
+    mock_settings.enable_code_execution = True
+    mock_settings.environment = "test"
+    mock_settings.enable_sandbox_tools = True
+    mock_settings.code_execution_timeout = 30
+
+    with patch("mcp_server_langgraph.tools.screenshot_tools.settings", mock_settings):
+        yield mock_settings
 
 
 @pytest.mark.xdist_group(name="test_screenshot_tool_basic")
@@ -29,7 +48,7 @@ class TestScreenshotToolBasic:
         assert isinstance(capture_screenshot, BaseTool)
 
     @pytest.mark.asyncio
-    async def test_capture_screenshot_returns_json_from_runner(self):
+    async def test_capture_screenshot_returns_json_from_runner(self, sandbox_enabled_settings: MagicMock):
         from mcp_server_langgraph.tools.screenshot_tools import capture_screenshot
 
         payload = {
@@ -69,7 +88,7 @@ class TestElementScreenshot:
         gc.collect()
 
     @pytest.mark.asyncio
-    async def test_capture_element_screenshot_passes_selector(self):
+    async def test_capture_element_screenshot_passes_selector(self, sandbox_enabled_settings: MagicMock):
         from mcp_server_langgraph.tools.screenshot_tools import capture_element_screenshot
 
         payload = {

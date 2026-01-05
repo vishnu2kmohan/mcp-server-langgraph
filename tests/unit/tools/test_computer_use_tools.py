@@ -6,8 +6,9 @@ from __future__ import annotations
 
 import gc
 import json
+from collections.abc import Iterator
 from types import SimpleNamespace
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -20,6 +21,24 @@ class StubResult(SimpleNamespace):
 
 def make_run_result(payload: dict) -> StubResult:
     return StubResult(stdout=json.dumps(payload), stderr="", exit_code=0, timed_out=False, error_message=None)
+
+
+@pytest.fixture
+def sandbox_enabled_settings() -> Iterator[MagicMock]:
+    """Mock settings to enable sandbox computer use operations.
+
+    The computer use tools require:
+    - enable_code_execution = True
+    - environment in SANDBOX_ENVIRONMENTS or enable_sandbox_tools = True
+    """
+    mock_settings = MagicMock()
+    mock_settings.enable_code_execution = True
+    mock_settings.environment = "test"
+    mock_settings.enable_sandbox_tools = True
+    mock_settings.code_execution_timeout = 30
+
+    with patch("mcp_server_langgraph.tools.computer_use_tools.settings", mock_settings):
+        yield mock_settings
 
 
 @pytest.mark.xdist_group(name="test_computer_use_flag")
@@ -41,7 +60,7 @@ class TestMouseInteractionTools:
         gc.collect()
 
     @pytest.mark.asyncio
-    async def test_mouse_click_at_coordinates(self) -> None:
+    async def test_mouse_click_at_coordinates(self, sandbox_enabled_settings: MagicMock) -> None:
         from mcp_server_langgraph.tools.computer_use_tools import mouse_click
 
         run_result = make_run_result({"success": True, "action": "mouse_click", "coordinates": {"x": 100, "y": 200}})
@@ -57,7 +76,7 @@ class TestMouseInteractionTools:
         assert result.get("coordinates") == {"x": 100, "y": 200}
 
     @pytest.mark.asyncio
-    async def test_mouse_click_on_selector(self) -> None:
+    async def test_mouse_click_on_selector(self, sandbox_enabled_settings: MagicMock) -> None:
         from mcp_server_langgraph.tools.computer_use_tools import mouse_click
 
         run_result = make_run_result({"success": True, "selector": "#submit-button"})
@@ -79,7 +98,7 @@ class TestKeyboardTools:
         gc.collect()
 
     @pytest.mark.asyncio
-    async def test_keyboard_type(self) -> None:
+    async def test_keyboard_type(self, sandbox_enabled_settings: MagicMock) -> None:
         from mcp_server_langgraph.tools.computer_use_tools import keyboard_type
 
         run_result = make_run_result({"success": True, "text_typed": "hello"})
@@ -101,7 +120,7 @@ class TestNavigationTools:
         gc.collect()
 
     @pytest.mark.asyncio
-    async def test_navigate(self) -> None:
+    async def test_navigate(self, sandbox_enabled_settings: MagicMock) -> None:
         from mcp_server_langgraph.tools.computer_use_tools import navigate
 
         run_result = make_run_result({"success": True, "url": "https://example.com"})
