@@ -165,7 +165,7 @@ export function ConversationPanel({
   isStreaming = false,
   isScrolledUp = false,
   onScrollToBottom,
-  autoFocus: _autoFocus = false,
+  autoFocus = false,
   onMessageSent,
   onSuggestionUsed,
   onInputChange,
@@ -276,6 +276,7 @@ export function ConversationPanel({
           isStreaming={isStreaming}
           slashCommands={slashCommands}
           onSlashCommand={handleSelectSlashCommand}
+          autoFocus={autoFocus}
           // Inline AI suggestions
           enableInlineSuggestions={enableInlineSuggestions}
           inlineSuggestion={inlineSuggestion}

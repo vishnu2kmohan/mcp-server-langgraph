@@ -12,7 +12,7 @@ import { axe, toHaveNoViolations } from "jest-axe";
 import { ConversationPanel } from "./ConversationPanel";
 import type { ChatMessage } from "./MessageBubble";
 import type { Suggestion } from "./FollowUpSuggestions";
-import type { SlashCommand } from "./SlashCommandMenu";
+import type { SlashCommand } from "../components/Chat/ChatInputForm";
 
 expect.extend(toHaveNoViolations);
 
@@ -41,8 +41,8 @@ const mockSuggestions: Suggestion[] = [
 ];
 
 const mockSlashCommands: SlashCommand[] = [
-  { id: "cmd-1", name: "help", description: "Show help", icon: "HelpCircle" },
-  { id: "cmd-2", name: "clear", description: "Clear chat", icon: "Trash2" },
+  { name: "help", description: "Show help", icon: "help" },
+  { name: "clear", description: "Clear chat", icon: "trash" },
 ];
 
 // =============================================================================

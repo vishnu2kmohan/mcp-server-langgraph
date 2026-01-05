@@ -51,6 +51,8 @@ export interface ConnectedChatInputFormProps {
   onAcceptSuggestion?: (suggestion: string) => void;
   /** Callback when user dismisses suggestion (Escape) */
   onDismissSuggestion?: () => void;
+  /** Auto-focus the textarea on mount */
+  autoFocus?: boolean;
 }
 
 // =============================================================================
@@ -86,6 +88,7 @@ export function ConnectedChatInputForm({
   isSuggestionLoading = false,
   onAcceptSuggestion,
   onDismissSuggestion,
+  autoFocus = false,
 }: ConnectedChatInputFormProps) {
   // =============================================================================
   // File Upload Hook
@@ -211,6 +214,8 @@ export function ConnectedChatInputForm({
       isSuggestionLoading={isSuggestionLoading}
       onAcceptSuggestion={onAcceptSuggestion}
       onDismissSuggestion={onDismissSuggestion}
+      // Auto-focus
+      autoFocus={autoFocus}
     />
   );
 }

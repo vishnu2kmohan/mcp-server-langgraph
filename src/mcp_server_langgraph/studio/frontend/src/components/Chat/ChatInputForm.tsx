@@ -118,6 +118,8 @@ export interface ChatInputFormProps {
   onAcceptSuggestion?: (suggestion: string) => void;
   /** Callback when user dismisses suggestion (Escape key) */
   onDismissSuggestion?: () => void;
+  /** Auto-focus the textarea on mount */
+  autoFocus?: boolean;
 }
 
 export function ChatInputForm({
@@ -164,11 +166,20 @@ export function ChatInputForm({
   isSuggestionLoading = false,
   onAcceptSuggestion,
   onDismissSuggestion,
+  // Auto-focus
+  autoFocus = false,
 }: ChatInputFormProps) {
   const [isModelDropdownOpen, setIsModelDropdownOpen] = useState(false);
   const [isVoiceBannerDismissed, setIsVoiceBannerDismissed] = useState(false);
   const [isSlashMenuForceClosed, setIsSlashMenuForceClosed] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  // Auto-focus the textarea on mount if autoFocus is true
+  useEffect(() => {
+    if (autoFocus && textareaRef.current) {
+      textareaRef.current.focus();
+    }
+  }, [autoFocus]);
 
   // Slash command menu logic
   const showSlashMenu = useMemo(() => {
@@ -649,6 +660,7 @@ export function ChatInputForm({
                 type="submit"
                 disabled={!canSend}
                 aria-label="Send"
+                data-testid="send-button"
                 className="p-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 {isProcessing ? (
