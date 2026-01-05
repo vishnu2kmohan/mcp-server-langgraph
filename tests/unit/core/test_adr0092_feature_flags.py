@@ -326,8 +326,10 @@ class TestADR0092FeatureFlagIntegration:
 
         flags = FeatureFlags(enable_enhanced_router_output=False)
 
-        with pytest.raises(FeatureDisabledError):
-            flags.require_feature("enable_enhanced_router_output", "Enhanced Router Output")
+        # Ensure FF_TEST_MODE is not set (it bypasses require_feature checks)
+        with patch.dict(os.environ, {"FF_TEST_MODE": ""}, clear=False):
+            with pytest.raises(FeatureDisabledError):
+                flags.require_feature("enable_enhanced_router_output", "Enhanced Router Output")
 
     def test_require_feature_passes_for_enabled_adr0092_flags(self) -> None:
         """Test require_feature passes for enabled ADR-0092 flags."""
