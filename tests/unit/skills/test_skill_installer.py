@@ -9,6 +9,7 @@ TDD: RED phase - tests define expected behavior.
 
 from __future__ import annotations
 
+import asyncio
 import gc
 import textwrap
 from pathlib import Path
@@ -229,7 +230,7 @@ class TestSkillInstallerDependencies:
             "mcp_server_langgraph.skills.installer.asyncio.create_subprocess_exec",
             new_callable=AsyncMock,
         ) as mock_exec:
-            mock_process = AsyncMock()
+            mock_process = AsyncMock(spec=asyncio.subprocess.Process)
             mock_process.returncode = 0
             mock_process.communicate = AsyncMock(return_value=(b"", b""))
             mock_exec.return_value = mock_process
@@ -262,7 +263,7 @@ class TestSkillInstallerDependencies:
             "mcp_server_langgraph.skills.installer.asyncio.create_subprocess_exec",
             new_callable=AsyncMock,
         ) as mock_exec:
-            mock_process = AsyncMock()
+            mock_process = AsyncMock(spec=asyncio.subprocess.Process)
             mock_process.returncode = 0
             mock_process.communicate = AsyncMock(return_value=(b"", b""))
             mock_exec.return_value = mock_process
@@ -293,7 +294,7 @@ class TestSkillInstallerDependencies:
             "mcp_server_langgraph.skills.installer.asyncio.create_subprocess_exec",
             new_callable=AsyncMock,
         ) as mock_exec:
-            mock_process = AsyncMock()
+            mock_process = AsyncMock(spec=asyncio.subprocess.Process)
             mock_process.returncode = 0
             mock_process.communicate = AsyncMock(return_value=(b"", b""))
             mock_exec.return_value = mock_process
@@ -324,7 +325,7 @@ class TestSkillInstallerDependencies:
             "mcp_server_langgraph.skills.installer.asyncio.create_subprocess_exec",
             new_callable=AsyncMock,
         ) as mock_exec:
-            mock_process = AsyncMock()
+            mock_process = AsyncMock(spec=asyncio.subprocess.Process)
             mock_process.returncode = 1
             mock_process.communicate = AsyncMock(return_value=(b"", b"ERROR: Package not found"))
             mock_exec.return_value = mock_process
@@ -573,6 +574,6 @@ class TestSkillInstallerExceptionHandling:
                 result = await installer.install_dependencies(skill_dir, [])
 
         assert result is False
-        # Error should be logged
-        mock_logger.error.assert_called_once()
-        assert "Failed to install dependencies" in str(mock_logger.error.call_args)
+        # Error should be logged (uses logger.exception which includes traceback)
+        mock_logger.exception.assert_called_once()
+        assert "Failed to install dependencies" in str(mock_logger.exception.call_args)
