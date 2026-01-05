@@ -10,12 +10,15 @@ export {
   type MessageBubbleProps,
 } from "./MessageBubble";
 export { MessageList, type MessageListProps } from "./MessageList";
-export { ChatInput, type ChatInputProps } from "./ChatInput";
 export {
-  SlashCommandMenu,
+  ConnectedChatInputForm,
+  type ConnectedChatInputFormProps,
+} from "./ConnectedChatInputForm";
+// Re-export SlashCommand from the canonical location (components/Chat)
+export {
   type SlashCommand,
   type SlashCommandMenuProps,
-} from "./SlashCommandMenu";
+} from "../components/Chat/SlashCommandMenu";
 export {
   FollowUpSuggestions,
   type Suggestion,

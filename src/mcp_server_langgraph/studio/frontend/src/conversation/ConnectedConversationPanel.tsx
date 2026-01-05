@@ -55,7 +55,7 @@ import { useArtifactExtraction } from "../hooks/useArtifactExtraction";
 import { useInlineSuggestions } from "../hooks/useInlineSuggestions";
 import { useDebounce } from "../hooks/useDebounce";
 import { ConversationPanel } from "./ConversationPanel";
-import type { SlashCommand } from "./SlashCommandMenu";
+import type { SlashCommand } from "../components/Chat/ChatInputForm";
 import type { ChatLoaderData } from "../router/loaders";
 import { devLogger } from "../utils/devLogger";
 import { cn } from "../utils/cn";
@@ -95,22 +95,19 @@ export interface ConnectedConversationPanelProps {
 
 const DEFAULT_SLASH_COMMANDS: SlashCommand[] = [
   {
-    id: "new",
     name: "new",
     description: "Start a new conversation",
-    icon: undefined,
+    icon: "message",
   },
   {
-    id: "clear",
     name: "clear",
     description: "Clear conversation history",
-    icon: undefined,
+    icon: "trash",
   },
   {
-    id: "help",
     name: "help",
     description: "Show available commands",
-    icon: undefined,
+    icon: "help",
   },
 ];
 
@@ -515,7 +512,7 @@ export const ConnectedConversationPanel = forwardRef<
   // Handle slash commands
   const handleSlashCommand = useCallback(
     (command: SlashCommand) => {
-      switch (command.id) {
+      switch (command.name) {
         case "new":
           // Create a new session and navigate to it
           dispatch(createSession({ name: "New Chat" }))

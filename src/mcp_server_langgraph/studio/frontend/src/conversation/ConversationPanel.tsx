@@ -11,12 +11,12 @@
  * - Session header with actions
  * - Telemetry callbacks for analytics
  */
-import { useState, useCallback, useRef, useEffect } from "react";
+import { useState, useCallback } from "react";
 import { Pencil, Trash2 } from "lucide-react";
 import { MessageList } from "./MessageList";
-import { ChatInput } from "./ChatInput";
+import { ConnectedChatInputForm } from "./ConnectedChatInputForm";
+import { type SlashCommand } from "../components/Chat/ChatInputForm";
 import { FollowUpSuggestions, type Suggestion } from "./FollowUpSuggestions";
-import { SlashCommandMenu, type SlashCommand } from "./SlashCommandMenu";
 import { GenerateWorkflowButton } from "./GenerateWorkflowButton";
 import type { ChatMessage } from "./MessageBubble";
 import { cn } from "../utils/cn";
@@ -165,7 +165,7 @@ export function ConversationPanel({
   isStreaming = false,
   isScrolledUp = false,
   onScrollToBottom,
-  autoFocus = false,
+  autoFocus: _autoFocus = false,
   onMessageSent,
   onSuggestionUsed,
   onInputChange,
@@ -177,22 +177,7 @@ export function ConversationPanel({
   onAcceptSuggestion,
   onDismissSuggestion,
 }: ConversationPanelProps) {
-  const [showSlashMenu, setShowSlashMenu] = useState(false);
-  const [slashFilter, setSlashFilter] = useState("");
-  const [_inputValue, setInputValue] = useState("");
-  const inputRef = useRef<HTMLTextAreaElement>(null);
-
-  // Focus input on mount if autoFocus
-  useEffect(() => {
-    if (autoFocus && inputRef.current) {
-      inputRef.current.focus();
-    }
-  }, [autoFocus]);
-
-  // Filter slash commands based on input
-  const filteredCommands = slashCommands.filter((cmd) =>
-    cmd.name.toLowerCase().includes(slashFilter.toLowerCase()),
-  );
+  const [inputValue, setInputValue] = useState("");
 
   // Handle sending a message
   const handleSendMessage = useCallback(
@@ -209,22 +194,18 @@ export function ConversationPanel({
     [onSendMessage, onMessageSent],
   );
 
-  // Handle slash command detection (only for slash commands starting with "/")
-  const handleSlashCommand = useCallback((input: string) => {
-    if (input.startsWith("/")) {
-      setShowSlashMenu(true);
-      setSlashFilter(input.slice(1)); // Remove leading /
-    } else {
-      setShowSlashMenu(false);
-      setSlashFilter("");
-    }
-  }, []);
+  // Handle input value changes
+  const handleInputChange = useCallback(
+    (newValue: string) => {
+      setInputValue(newValue);
+      onInputChange?.(newValue);
+    },
+    [onInputChange],
+  );
 
-  // Handle slash command selection
+  // Handle slash command selection (ChatInputForm handles its own menu)
   const handleSelectSlashCommand = useCallback(
     (command: SlashCommand) => {
-      setShowSlashMenu(false);
-      setSlashFilter("");
       setInputValue("");
       onSlashCommand?.(command);
     },
@@ -285,28 +266,16 @@ export function ConversationPanel({
         />
       )}
 
-      {/* Slash Command Menu */}
-      {showSlashMenu && filteredCommands.length > 0 && (
-        <SlashCommandMenu
-          commands={filteredCommands}
-          isOpen={showSlashMenu}
-          query={slashFilter}
-          onSelect={handleSelectSlashCommand}
-          onClose={() => setShowSlashMenu(false)}
-          className="mx-4 mb-2"
-        />
-      )}
-
-      {/* Chat Input */}
+      {/* Chat Input with File Upload, Voice, and Slash Command Menu */}
       <div className="p-4 border-t border-gray-200 dark:border-gray-700">
-        <ChatInput
-          onSend={handleSendMessage}
-          onSlashCommand={handleSlashCommand}
-          onInputChange={onInputChange}
-          disabled={isLoading}
-          isLoading={isLoading}
-          autoFocus={autoFocus}
-          ariaLabel="Type your message"
+        <ConnectedChatInputForm
+          value={inputValue}
+          onChange={handleInputChange}
+          onSubmit={handleSendMessage}
+          isProcessing={isLoading}
+          isStreaming={isStreaming}
+          slashCommands={slashCommands}
+          onSlashCommand={handleSelectSlashCommand}
           // Inline AI suggestions
           enableInlineSuggestions={enableInlineSuggestions}
           inlineSuggestion={inlineSuggestion}
