@@ -4,7 +4,7 @@
   "metadata": {
     "purpose": "Single source of truth for test user permissions",
     "users": {
-      "admin": "Super user with owner/admin access to all resources. Has both 'admin' and 'user' relations where WebSocket endpoints require 'user' relation (ADR-0091 fix)",
+      "admin": "Super user with owner/admin access to all resources. Model inheritance (ADR-0093) ensures admin implicitly has 'user' and 'developer' relations via computed relations.",
       "alice": "Developer user with editor access to vectors (CRUD), viewer access to OpenFGA authz UI",
       "bob": "Basic user with viewer access to vectors (read-only, no OpenFGA authz UI access)"
     },
@@ -16,7 +16,12 @@
       "workflow:hitl": "bob excluded - only editors who can approve/reject HITL requests need 'editor' relation",
       "compliance:default": "bob excluded - compliance reports require security clearance (alice has viewer for compliance-officer sub-persona)"
     },
-    "adr_references": ["ADR-0068 (OpenFGA ReBAC)", "ADR-0091 (API Response Transformation - admin user relation fix)"],
+    "model_inheritance_notes": {
+      "ai_type": "admin → user → viewer (ADR-0093 fix for ai:suggestions bug)",
+      "system_type": "admin → developer, admin → user, admin → viewer",
+      "conversation_type": "owner → editor → viewer"
+    },
+    "adr_references": ["ADR-0068 (OpenFGA ReBAC)", "ADR-0091 (API Response Transformation)", "ADR-0093 (Relation Inheritance Patterns - model refactoring)"],
     "updated": "2026-01-04"
   },
   "tuples": [
@@ -610,15 +615,9 @@
       "object": "connection:default"
     },
     {
-      "_comment": "AI permissions (/api/v1/ai, /api/v1/ws/ai/suggestions)",
+      "_comment": "AI permissions (/api/v1/ai, /api/v1/ws/ai/suggestions) - admin implicitly has 'user' via model inheritance (ADR-0093)",
       "user": "user:admin",
       "relation": "admin",
-      "object": "ai:suggestions"
-    },
-    {
-      "_comment": "Admin also needs 'user' relation for WebSocket access (required_relation=user)",
-      "user": "user:admin",
-      "relation": "user",
       "object": "ai:suggestions"
     },
     {
