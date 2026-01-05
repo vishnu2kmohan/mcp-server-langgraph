@@ -1318,6 +1318,7 @@ services:
       # -----------------------------------------------------------------------
       # ADR-0092 Hierarchical Capability Architecture (Phase 1-6 Complete)
       # -----------------------------------------------------------------------
+      - FF_ENABLE_HIERARCHICAL_CAPABILITY_PROVIDER=true  # Master toggle for ADR-0092
       - FF_ENABLE_ENHANCED_ROUTER_OUTPUT=true      # RouterOutput with skills/execution_mode
       - FF_ENABLE_CAPABILITY_RESOLUTION=true       # Hierarchical registries + providers
       - FF_ENABLE_STUDIO_MD_LOADING=true           # STUDIO.md discovery and parsing

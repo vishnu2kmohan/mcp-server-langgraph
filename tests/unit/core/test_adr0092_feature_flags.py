@@ -374,3 +374,66 @@ class TestADR0092FeatureFlagIntegration:
         assert flags.enable_capability_resolution is True
         assert flags.enable_studio_md_loading is True
         assert flags.enable_multi_pattern_execution is True
+
+
+@pytest.mark.unit
+@pytest.mark.xdist_group(name="adr0092_master_flag")
+class TestHierarchicalCapabilityProviderMasterFlag:
+    """Tests for enable_hierarchical_capability_provider master flag.
+
+    This master flag enables the entire ADR-0092 Hierarchical Capability
+    Architecture with a single toggle for convenience.
+    """
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers."""
+        gc.collect()
+
+    def test_enable_hierarchical_capability_provider_exists(self) -> None:
+        """Test enable_hierarchical_capability_provider flag exists."""
+        from mcp_server_langgraph.core.feature_flags import FeatureFlags
+
+        flags = FeatureFlags()
+        assert hasattr(flags, "enable_hierarchical_capability_provider")
+
+    def test_enable_hierarchical_capability_provider_defaults_false(self) -> None:
+        """Test enable_hierarchical_capability_provider defaults to False."""
+        from mcp_server_langgraph.core.feature_flags import FeatureFlags
+
+        flags = FeatureFlags()
+        assert flags.enable_hierarchical_capability_provider is False
+
+    def test_enable_hierarchical_capability_provider_can_be_enabled(self) -> None:
+        """Test enable_hierarchical_capability_provider can be set to True."""
+        from mcp_server_langgraph.core.feature_flags import FeatureFlags
+
+        flags = FeatureFlags(enable_hierarchical_capability_provider=True)
+        assert flags.enable_hierarchical_capability_provider is True
+
+    def test_enable_hierarchical_capability_provider_env_override(self) -> None:
+        """Test enable_hierarchical_capability_provider can be set via environment."""
+        from mcp_server_langgraph.core.feature_flags import FeatureFlags
+
+        with patch.dict(os.environ, {"FF_ENABLE_HIERARCHICAL_CAPABILITY_PROVIDER": "true"}):
+            flags = FeatureFlags()
+            assert flags.enable_hierarchical_capability_provider is True
+
+    def test_master_flag_enables_all_core_adr0092_flags(self) -> None:
+        """Test that is_hierarchical_capability_enabled property checks all core flags."""
+        from mcp_server_langgraph.core.feature_flags import FeatureFlags
+
+        # When master flag is enabled, is_hierarchical_capability_enabled should be True
+        flags = FeatureFlags(enable_hierarchical_capability_provider=True)
+        assert flags.is_hierarchical_capability_enabled is True
+
+        # When master flag is disabled, should be False
+        flags = FeatureFlags(enable_hierarchical_capability_provider=False)
+        assert flags.is_hierarchical_capability_enabled is False
+
+    def test_individual_flags_also_enable_capability(self) -> None:
+        """Test that individual core flags also enable capability when set."""
+        from mcp_server_langgraph.core.feature_flags import FeatureFlags
+
+        # When capability_resolution is enabled (without master), should also work
+        flags = FeatureFlags(enable_capability_resolution=True)
+        assert flags.is_hierarchical_capability_enabled is True

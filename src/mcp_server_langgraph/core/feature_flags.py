@@ -1008,6 +1008,15 @@ class FeatureFlags(BaseSettings):
         "Part of ADR-0092. Set FF_ENABLE_HITL_UNDO_ROLLBACK=true to activate.",
     )
 
+    # Master toggle for ADR-0092 Hierarchical Capability Architecture
+    enable_hierarchical_capability_provider: bool = Field(
+        default=False,
+        description="Master toggle for ADR-0092 Hierarchical Capability Architecture. "
+        "Enables the entire capability-aware agent execution system including: "
+        "hierarchical registries, STUDIO.md loading, and CapabilityProvider protocol. "
+        "Set FF_ENABLE_HIERARCHICAL_CAPABILITY_PROVIDER=true to activate all ADR-0092 features.",
+    )
+
     force_high_risk_review: bool = Field(
         default=True,
         description="Force human review for high-risk execution plans. "
@@ -1384,6 +1393,23 @@ class FeatureFlags(BaseSettings):
             return "heuristic"
         # Otherwise use the new strategy field
         return self.suggestion_strategy
+
+    @property
+    def is_hierarchical_capability_enabled(self) -> bool:
+        """
+        Check if hierarchical capability architecture is enabled.
+
+        Returns True if either:
+        - The master flag (enable_hierarchical_capability_provider) is enabled, OR
+        - The core capability_resolution flag is enabled
+
+        This provides flexibility to enable the system via either the master toggle
+        or the individual core flag.
+
+        Returns:
+            True if hierarchical capability features should be active.
+        """
+        return self.enable_hierarchical_capability_provider or self.enable_capability_resolution
 
     def get_rate_limit(self, feature: str | None = None) -> int:
         """
