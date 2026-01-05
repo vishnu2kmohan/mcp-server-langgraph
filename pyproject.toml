@@ -934,6 +934,7 @@ markers = [
     "hitl: Tests for Human-in-the-Loop (confidence-based approval, clarification workflows)",
     "push_notifications: Tests for Web Push notification integration (VAPID, service worker)",
     "memory: Tests for structured note-taking and agentic memory (NOTES.md, checkpoints)",
+    "agentic_memory: Tests for agentic memory integration (tiered memory, conversation context)",
     "sdk: Tests for Claude Agent SDK integration (SDK-agnostic interface, hooks, state)",
     "hooks: Tests for SDK hook system (PreToolUse, PostToolUse, lifecycle hooks)",
     "desktop_extension: Tests for .mcpb desktop extension packaging (manifest, builder, platforms)",
