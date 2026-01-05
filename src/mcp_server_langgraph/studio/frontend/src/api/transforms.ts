@@ -134,3 +134,86 @@ export function extractPaginationMetadata(
 
   return undefined;
 }
+
+// =============================================================================
+// ADR-0091 Phase 5: Snake to Camel Case Transformation
+// =============================================================================
+
+/**
+ * Convert a snake_case string to camelCase.
+ *
+ * @param str - The snake_case string to convert
+ * @returns The camelCase version of the string
+ *
+ * @example
+ * toCamelCase("alert_id") // "alertId"
+ * toCamelCase("user_first_name") // "userFirstName"
+ */
+export function toCamelCase(str: string): string {
+  // Handle already camelCase or single word
+  if (!str.includes("_")) {
+    return str;
+  }
+
+  return str
+    .toLowerCase()
+    .replace(/_+([a-z0-9])/g, (_, char: string) => char.toUpperCase());
+}
+
+/**
+ * Recursively transform all object keys from snake_case to camelCase.
+ *
+ * This is the core transformation function for ADR-0091 Phase 5.
+ * Use this in RTK Query's transformResponse to convert backend responses.
+ *
+ * Features:
+ * - Recursively processes nested objects
+ * - Transforms arrays of objects
+ * - Preserves primitive values (strings, numbers, booleans, null)
+ * - Handles Date objects and other special types
+ * - Preserves already-camelCase keys
+ *
+ * @param obj - The object with snake_case keys to transform
+ * @returns A new object with all keys converted to camelCase
+ *
+ * @example
+ * ```typescript
+ * // In RTK Query endpoint
+ * listAlerts: builder.query({
+ *   query: (params) => ({ url: '/alerts', params }),
+ *   transformResponse: (response: BackendAlertResponse) =>
+ *     transformSnakeToCamel(response),
+ * }),
+ * ```
+ */
+export function transformSnakeToCamel<T = unknown>(obj: T): T {
+  // Handle null and undefined
+  if (obj === null || obj === undefined) {
+    return obj;
+  }
+
+  // Handle arrays - recursively transform each element
+  if (Array.isArray(obj)) {
+    return obj.map((item) => transformSnakeToCamel(item)) as T;
+  }
+
+  // Handle Date objects - preserve as-is
+  if (obj instanceof Date) {
+    return obj;
+  }
+
+  // Handle plain objects
+  if (typeof obj === "object") {
+    const result: Record<string, unknown> = {};
+
+    for (const [key, value] of Object.entries(obj)) {
+      const camelKey = toCamelCase(key);
+      result[camelKey] = transformSnakeToCamel(value);
+    }
+
+    return result as T;
+  }
+
+  // Handle primitives (string, number, boolean) - return as-is
+  return obj;
+}

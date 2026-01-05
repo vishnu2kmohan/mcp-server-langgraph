@@ -267,6 +267,219 @@ describe("extractPaginationMetadata", () => {
   });
 });
 
+// =============================================================================
+// ADR-0091 Phase 5: Snake to Camel Case Transformation Tests
+// =============================================================================
+
+describe("transformSnakeToCamel", () => {
+  // Import dynamically to match test structure
+  const getTransformSnakeToCamel = async () => {
+    const { transformSnakeToCamel } = await import("./transforms");
+    return transformSnakeToCamel;
+  };
+
+  it("transforms simple object keys from snake_case to camelCase", async () => {
+    const transformSnakeToCamel = await getTransformSnakeToCamel();
+
+    const input = {
+      alert_id: "123",
+      created_at: "2024-01-01",
+      user_name: "John",
+    };
+
+    const result = transformSnakeToCamel(input);
+
+    expect(result).toEqual({
+      alertId: "123",
+      createdAt: "2024-01-01",
+      userName: "John",
+    });
+  });
+
+  it("handles nested objects recursively", async () => {
+    const transformSnakeToCamel = await getTransformSnakeToCamel();
+
+    const input = {
+      user_id: "123",
+      user_details: {
+        first_name: "John",
+        last_name: "Doe",
+        contact_info: {
+          email_address: "john@example.com",
+        },
+      },
+    };
+
+    const result = transformSnakeToCamel(input);
+
+    expect(result).toEqual({
+      userId: "123",
+      userDetails: {
+        firstName: "John",
+        lastName: "Doe",
+        contactInfo: {
+          emailAddress: "john@example.com",
+        },
+      },
+    });
+  });
+
+  it("handles arrays of objects", async () => {
+    const transformSnakeToCamel = await getTransformSnakeToCamel();
+
+    const input = {
+      alert_items: [
+        { alert_id: "1", alert_type: "warning" },
+        { alert_id: "2", alert_type: "error" },
+      ],
+    };
+
+    const result = transformSnakeToCamel(input);
+
+    expect(result).toEqual({
+      alertItems: [
+        { alertId: "1", alertType: "warning" },
+        { alertId: "2", alertType: "error" },
+      ],
+    });
+  });
+
+  it("preserves primitive values unchanged", async () => {
+    const transformSnakeToCamel = await getTransformSnakeToCamel();
+
+    const input = {
+      count: 42,
+      is_active: true,
+      status: "pending",
+      nullable_field: null,
+    };
+
+    const result = transformSnakeToCamel(input);
+
+    expect(result).toEqual({
+      count: 42,
+      isActive: true,
+      status: "pending",
+      nullableField: null,
+    });
+  });
+
+  it("handles empty objects and arrays", async () => {
+    const transformSnakeToCamel = await getTransformSnakeToCamel();
+
+    expect(transformSnakeToCamel({})).toEqual({});
+    expect(transformSnakeToCamel({ empty_array: [] })).toEqual({
+      emptyArray: [],
+    });
+  });
+
+  it("handles keys that are already camelCase", async () => {
+    const transformSnakeToCamel = await getTransformSnakeToCamel();
+
+    const input = {
+      alertId: "123", // Already camelCase
+      user_name: "John", // snake_case
+    };
+
+    const result = transformSnakeToCamel(input);
+
+    expect(result).toEqual({
+      alertId: "123",
+      userName: "John",
+    });
+  });
+
+  it("handles keys with consecutive underscores", async () => {
+    const transformSnakeToCamel = await getTransformSnakeToCamel();
+
+    const input = {
+      some__double__underscore: "value",
+    };
+
+    const result = transformSnakeToCamel(input);
+
+    // Double underscores should be handled gracefully
+    expect(result).toHaveProperty("someDoubleUnderscore");
+  });
+
+  it("handles keys with numbers", async () => {
+    const transformSnakeToCamel = await getTransformSnakeToCamel();
+
+    const input = {
+      model_v2_name: "test",
+      item_1_count: 5,
+    };
+
+    const result = transformSnakeToCamel(input);
+
+    expect(result).toEqual({
+      modelV2Name: "test",
+      item1Count: 5,
+    });
+  });
+
+  it("preserves array of primitives", async () => {
+    const transformSnakeToCamel = await getTransformSnakeToCamel();
+
+    const input = {
+      tool_names: ["tool_1", "tool_2", "tool_3"],
+    };
+
+    const result = transformSnakeToCamel(input);
+
+    // String values should NOT be transformed, only keys
+    expect(result).toEqual({
+      toolNames: ["tool_1", "tool_2", "tool_3"],
+    });
+  });
+
+  it("handles Date objects correctly", async () => {
+    const transformSnakeToCamel = await getTransformSnakeToCamel();
+
+    const dateValue = new Date("2024-01-01");
+    const input = {
+      created_at: dateValue,
+    };
+
+    const result = transformSnakeToCamel(input);
+
+    expect(result.createdAt).toBe(dateValue);
+  });
+});
+
+describe("toCamelCase utility", () => {
+  const getToCamelCase = async () => {
+    const { toCamelCase } = await import("./transforms");
+    return toCamelCase;
+  };
+
+  it("converts snake_case to camelCase", async () => {
+    const toCamelCase = await getToCamelCase();
+
+    expect(toCamelCase("alert_id")).toBe("alertId");
+    expect(toCamelCase("created_at")).toBe("createdAt");
+    expect(toCamelCase("user_first_name")).toBe("userFirstName");
+  });
+
+  it("handles single word", async () => {
+    const toCamelCase = await getToCamelCase();
+
+    expect(toCamelCase("alert")).toBe("alert");
+  });
+
+  it("handles already camelCase", async () => {
+    const toCamelCase = await getToCamelCase();
+
+    expect(toCamelCase("alertId")).toBe("alertId");
+  });
+
+  it("handles uppercase letters in snake_case", async () => {
+    const toCamelCase = await getToCamelCase();
+
+    expect(toCamelCase("HTTP_STATUS")).toBe("httpStatus");
+  });
+});
+
 describe("contract validation: pagination transform matches backend schema", () => {
   it("CRITICAL: count represents page size, NOT total items", () => {
     // This test documents the critical semantic difference
