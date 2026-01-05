@@ -68,7 +68,12 @@ class RouterOutput(BaseModel):
         critique_rounds: Number of critique/revision rounds (0-3)
         thinking_budget: Extended thinking budget level
         confidence: Confidence in classification (0.0-1.0)
+        skills_needed: List of skills the task may need (ADR-0092)
+        execution_mode: Execution mode selection (ADR-0092)
+        routing_rationale: Explanation for routing decision (ADR-0092)
     """
+
+    model_config = {"extra": "ignore"}  # Ignore unknown fields for forward compat
 
     complexity: Literal["simple", "complicated", "complex"]
     risk: Literal["low", "medium", "high"]
@@ -78,6 +83,11 @@ class RouterOutput(BaseModel):
     critique_rounds: int = Field(ge=0, le=3)
     thinking_budget: Literal["none", "light", "medium", "deep"]
     confidence: float = Field(ge=0.0, le=1.0)
+
+    # ADR-0092: New fields for Hierarchical Capability Architecture
+    skills_needed: list[str] = Field(default_factory=list)
+    execution_mode: Literal["pure_llm", "tool_calling", "react", "programmatic", "orchestrator"] = "tool_calling"
+    routing_rationale: str = ""
 
 
 class TemplateSuggestion(BaseModel):
@@ -117,6 +127,10 @@ DEFAULT_ROUTER_OUTPUT = RouterOutput(
     critique_rounds=1,
     thinking_budget="light",
     confidence=0.5,
+    # ADR-0092: New fields with backward-compatible defaults
+    skills_needed=[],
+    execution_mode="tool_calling",
+    routing_rationale="",
 )
 
 # Import centralized orchestration router prompt with dynamic template support

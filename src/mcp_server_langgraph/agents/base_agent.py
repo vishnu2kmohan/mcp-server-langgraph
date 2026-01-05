@@ -28,7 +28,10 @@ from __future__ import annotations
 import asyncio
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from typing import Any, Literal
+from typing import TYPE_CHECKING, Any, Literal
+
+if TYPE_CHECKING:
+    from mcp_server_langgraph.core.scopes import CapabilityScope
 
 
 @dataclass
@@ -46,6 +49,12 @@ class AgentRequest:
         timeout_seconds: Request timeout in seconds
         session_id: Session ID for tracing
         trace_id: Trace ID for distributed tracing
+        tools: Tools to bind for this request (ADR-0092)
+        skills: Skills to invoke for this request (ADR-0092)
+        scope: Resolution scope for capabilities (ADR-0092)
+        user_tool_selection: User-specified tools override (ADR-0092)
+        user_skill_selection: User-specified skills override (ADR-0092)
+        merge_strategy: How to merge router + user selections (ADR-0092)
     """
 
     message: str
@@ -55,6 +64,21 @@ class AgentRequest:
     timeout_seconds: float = 60.0
     session_id: str | None = None
     trace_id: str | None = None
+
+    # ADR-0092: Hierarchical Capability Architecture fields
+    tools: list[str] | None = None
+    skills: list[str] | None = None
+    scope: CapabilityScope | None = None  # Defaults to TASK at runtime
+    user_tool_selection: list[str] | None = None
+    user_skill_selection: list[str] | None = None
+    merge_strategy: Literal["user_only", "router_only", "union", "intersection"] = "union"
+
+    def __post_init__(self) -> None:
+        """Set default scope to TASK if not provided."""
+        if self.scope is None:
+            from mcp_server_langgraph.core.scopes import CapabilityScope
+
+            self.scope = CapabilityScope.TASK
 
 
 @dataclass
