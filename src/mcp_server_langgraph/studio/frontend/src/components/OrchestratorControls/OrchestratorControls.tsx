@@ -142,6 +142,7 @@ export function OrchestratorControls({
           </label>
           <select
             id="orchestrator-mode"
+            data-testid="orchestrator-selector"
             value={config.orchestrator}
             onChange={handleOrchestratorChange}
             disabled={disabled}
