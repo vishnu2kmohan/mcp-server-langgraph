@@ -165,3 +165,153 @@ class TestAISuggestionsHandler:
 
         # Should log with None (acceptable in this edge case)
         assert "disconnected" in caplog.text
+
+
+@pytest.mark.xdist_group(name="ai_suggestions_handler_errors")
+class TestAISuggestionsHandlerErrorResponses:
+    """Tests for AISuggestionsHandler error response format (ADR-0093 protocol compliance)."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers."""
+        gc.collect()
+
+    def test_create_error_response_format(self, ai_suggestions_config) -> None:
+        """
+        Test that _create_error_response returns ADR-0093 compliant format.
+
+        ADR-0093 specifies error responses MUST have:
+        - type: "error"
+        - payload: { code: str, message: str, retryable: bool }
+        """
+        from mcp_server_langgraph.websocket.handlers.ai_suggestions import (
+            AISuggestionsHandler,
+        )
+        from mcp_server_langgraph.websocket.types import AISuggestionMessageType
+
+        handler = AISuggestionsHandler(config=ai_suggestions_config)
+
+        response = handler._create_error_response(
+            code="test_code",
+            message="Test error message",
+            retryable=True,
+        )
+
+        # MUST have type="error"
+        assert response.type == AISuggestionMessageType.ERROR
+
+        # MUST have payload (NOT data!)
+        assert response.payload is not None
+
+        # Payload MUST contain all required fields
+        assert response.payload["code"] == "test_code"
+        assert response.payload["message"] == "Test error message"
+        assert response.payload["retryable"] is True
+
+    def test_error_response_with_retryable_false(self, ai_suggestions_config) -> None:
+        """Test error response with retryable=False."""
+        from mcp_server_langgraph.websocket.handlers.ai_suggestions import (
+            AISuggestionsHandler,
+        )
+
+        handler = AISuggestionsHandler(config=ai_suggestions_config)
+
+        response = handler._create_error_response(
+            code="invalid_request",
+            message="Request is invalid",
+            retryable=False,
+        )
+
+        assert response.payload["retryable"] is False
+
+    def test_error_response_serializes_correctly(self, ai_suggestions_config) -> None:
+        """Test that error response serializes to correct JSON format for frontend."""
+        from mcp_server_langgraph.websocket.handlers.ai_suggestions import (
+            AISuggestionsHandler,
+        )
+
+        handler = AISuggestionsHandler(config=ai_suggestions_config)
+
+        response = handler._create_error_response(
+            code="internal_error",
+            message="An internal error occurred",
+            retryable=True,
+        )
+
+        # Serialize to dict (what gets sent over WebSocket)
+        response_dict = response.to_dict()
+
+        # Frontend expects this exact structure
+        assert response_dict["type"] == "error"
+        assert "payload" in response_dict
+        assert response_dict["payload"]["code"] == "internal_error"
+        assert response_dict["payload"]["message"] == "An internal error occurred"
+        assert response_dict["payload"]["retryable"] is True
+
+        # MUST NOT have "data" field (this was the bug)
+        assert "data" not in response_dict
+
+    @pytest.mark.asyncio
+    async def test_handle_message_returns_error_on_exception(self, ai_suggestions_config, mock_user) -> None:
+        """Test that handle_message returns proper error format on exception."""
+        from mcp_server_langgraph.websocket.handlers.ai_suggestions import (
+            AISuggestionsHandler,
+        )
+        from mcp_server_langgraph.websocket.types import (
+            AISuggestionMessageType,
+            MessageEnvelope,
+        )
+
+        handler = AISuggestionsHandler(config=ai_suggestions_config)
+        handler._websocket = MagicMock()
+        handler._user = mock_user
+        handler._user_id = mock_user.id
+
+        # Create a message that will trigger an exception (missing required fields)
+        bad_message = MessageEnvelope(
+            type=AISuggestionMessageType.SUGGESTION_REQUEST,
+            payload={"invalid": "payload"},  # Missing required fields
+        )
+
+        response = await handler.handle_message(bad_message)
+
+        # Should return error response with correct format
+        assert response is not None
+        assert response.type == AISuggestionMessageType.ERROR
+        assert response.payload is not None
+        assert "code" in response.payload
+        assert "message" in response.payload
+        assert "retryable" in response.payload
+
+    @pytest.mark.asyncio
+    async def test_handle_invalid_request_returns_error(self, ai_suggestions_config, mock_user) -> None:
+        """Test that invalid suggestion request returns proper error."""
+        from mcp_server_langgraph.websocket.handlers.ai_suggestions import (
+            AISuggestionsHandler,
+        )
+        from mcp_server_langgraph.websocket.types import (
+            AISuggestionMessageType,
+            MessageEnvelope,
+        )
+
+        handler = AISuggestionsHandler(config=ai_suggestions_config)
+        handler._websocket = MagicMock()
+        handler._user = mock_user
+        handler._user_id = mock_user.id
+
+        # Create a suggestion request with missing session_id
+        message = MessageEnvelope(
+            type=AISuggestionMessageType.SUGGESTION_REQUEST,
+            payload={
+                "input_text": "Hello",
+                "cursor_position": 5,
+                # session_id is missing
+            },
+        )
+
+        response = await handler.handle_message(message)
+
+        # Should return error with "invalid_request" or "missing_session" code
+        assert response is not None
+        assert response.type == AISuggestionMessageType.ERROR
+        assert response.payload["code"] in ["invalid_request", "missing_session"]
+        assert response.payload["retryable"] is False
