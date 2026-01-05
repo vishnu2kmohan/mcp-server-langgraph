@@ -37,6 +37,13 @@ vi.mock("../hooks/useRealtimeSync", () => ({
       send: mockSend,
       disconnect: vi.fn(),
       reconnect: vi.fn(),
+      metrics: {
+        totalAttempts: 0,
+        successfulConnections: 0,
+        failedConnections: 0,
+        reconnections: 0,
+        averageConnectionTime: 0,
+      },
     };
   },
 }));
@@ -86,6 +93,21 @@ interface BackendSuggestionResponse {
   type: "suggestions";
   data: BackendSuggestion[];
   timestamp?: number;
+}
+
+/**
+ * Backend WebSocket error response format (ADR-0093)
+ *
+ * The backend sends errors with a `payload` wrapper containing
+ * structured error information, NOT a simple `data` string.
+ */
+interface _BackendErrorResponse {
+  type: "error";
+  payload: {
+    code: string;
+    message: string;
+    retryable: boolean;
+  };
 }
 
 // =============================================================================
@@ -222,23 +244,49 @@ describe("AI WebSocket Integration", () => {
       });
     });
 
-    it("should handle backend error messages", async () => {
+    it("should handle backend error messages with ADR-0093 payload format", async () => {
       const { result } = renderHook(
         () => useAIRealTimeSuggestions({ enabled: true }),
         { wrapper },
       );
 
-      // Simulate backend error response
+      // Simulate backend error response with ADR-0093 payload format
+      // This is the CORRECT format sent by ai_suggestions.py handler
       act(() => {
         mockOnMessage?.({
           type: BACKEND_MESSAGE_TYPES.ERROR,
-          data: "Rate limit exceeded",
+          payload: {
+            code: "rate_limited",
+            message: "Rate limit exceeded",
+            retryable: true,
+          },
         });
       });
 
       await waitFor(() => {
         expect(result.current.error).not.toBeNull();
         expect(result.current.error?.message).toBe("Rate limit exceeded");
+      });
+    });
+
+    it("should handle legacy backend error messages with data format", async () => {
+      const { result } = renderHook(
+        () => useAIRealTimeSuggestions({ enabled: true }),
+        { wrapper },
+      );
+
+      // Simulate legacy backend error response with data format
+      // This is for backward compatibility with older backend versions
+      act(() => {
+        mockOnMessage?.({
+          type: BACKEND_MESSAGE_TYPES.ERROR,
+          data: "Connection closed",
+        });
+      });
+
+      await waitFor(() => {
+        expect(result.current.error).not.toBeNull();
+        expect(result.current.error?.message).toBe("Connection closed");
       });
     });
 

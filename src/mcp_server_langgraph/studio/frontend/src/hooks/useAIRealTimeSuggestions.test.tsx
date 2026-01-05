@@ -46,6 +46,13 @@ vi.mock("./useRealtimeSync", () => ({
       send: mockSend,
       disconnect: mockDisconnect,
       reconnect: mockReconnect,
+      metrics: {
+        totalAttempts: 0,
+        successfulConnections: 0,
+        failedConnections: 0,
+        reconnections: 0,
+        averageConnectionTime: 0,
+      },
     };
   },
 }));
@@ -342,6 +349,71 @@ describe("useAIRealTimeSuggestions", () => {
       );
 
       expect(result.current.reconnectAttempts).toBeLessThanOrEqual(3);
+    });
+
+    it("should handle error messages with ADR-0093 payload format", async () => {
+      const { result } = renderHook(
+        () => useAIRealTimeSuggestions({ enabled: true }),
+        { wrapper },
+      );
+
+      // Simulate receiving an error message with payload format (ADR-0093)
+      act(() => {
+        mockOnMessage?.({
+          type: "error",
+          payload: {
+            code: "UNAUTHORIZED",
+            message: "Token expired",
+            retryable: false,
+          },
+        });
+      });
+
+      await waitFor(() => {
+        expect(result.current.error).not.toBeNull();
+        expect(result.current.error?.message).toBe("Token expired");
+      });
+    });
+
+    it("should handle error messages with legacy data format", async () => {
+      const { result } = renderHook(
+        () => useAIRealTimeSuggestions({ enabled: true }),
+        { wrapper },
+      );
+
+      // Simulate receiving an error message with legacy data format
+      act(() => {
+        mockOnMessage?.({
+          type: "error",
+          data: "Connection limit exceeded",
+        });
+      });
+
+      await waitFor(() => {
+        expect(result.current.error).not.toBeNull();
+        expect(result.current.error?.message).toBe("Connection limit exceeded");
+      });
+    });
+
+    it("should fallback to Unknown error when no message provided", async () => {
+      const { result } = renderHook(
+        () => useAIRealTimeSuggestions({ enabled: true }),
+        { wrapper },
+      );
+
+      // Simulate receiving an error message with no payload or data
+      act(() => {
+        mockOnMessage?.({
+          type: "error",
+        });
+      });
+
+      await waitFor(() => {
+        expect(result.current.error).not.toBeNull();
+        // ADR-0093: When neither payload.message nor data is available,
+        // fallback to "Unknown error" instead of showing "undefined"
+        expect(result.current.error?.message).toBe("Unknown error");
+      });
     });
   });
 
