@@ -23,14 +23,9 @@ describe("Conversation Module Exports", () => {
       expect(typeof conversationModule.MessageList).toBe("function");
     });
 
-    it("should export ChatInput", () => {
-      expect(conversationModule.ChatInput).toBeDefined();
-      expect(typeof conversationModule.ChatInput).toBe("function");
-    });
-
-    it("should export SlashCommandMenu", () => {
-      expect(conversationModule.SlashCommandMenu).toBeDefined();
-      expect(typeof conversationModule.SlashCommandMenu).toBe("function");
+    it("should export ConnectedChatInputForm", () => {
+      expect(conversationModule.ConnectedChatInputForm).toBeDefined();
+      expect(typeof conversationModule.ConnectedChatInputForm).toBe("function");
     });
 
     it("should export FollowUpSuggestions", () => {
@@ -54,12 +49,11 @@ describe("Conversation Module Exports", () => {
   });
 
   describe("Module Completeness", () => {
-    it("should export exactly 7 components", () => {
+    it("should export exactly 6 components", () => {
       const componentExports = [
         "MessageBubble",
         "MessageList",
-        "ChatInput",
-        "SlashCommandMenu",
+        "ConnectedChatInputForm",
         "FollowUpSuggestions",
         "ConversationPanel",
         "ConnectedConversationPanel",
@@ -72,11 +66,11 @@ describe("Conversation Module Exports", () => {
 
     it("should have stable public API", () => {
       // Snapshot of expected exports - update when intentionally changing API
+      // Note: ChatInput and SlashCommandMenu were removed in favor of ConnectedChatInputForm
       const expectedExports = [
         "MessageBubble",
         "MessageList",
-        "ChatInput",
-        "SlashCommandMenu",
+        "ConnectedChatInputForm",
         "FollowUpSuggestions",
         "ConversationPanel",
         "ConnectedConversationPanel",
