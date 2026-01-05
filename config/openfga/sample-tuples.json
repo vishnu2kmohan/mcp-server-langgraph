@@ -4,11 +4,20 @@
   "metadata": {
     "purpose": "Single source of truth for test user permissions",
     "users": {
-      "admin": "Super user with owner/admin access to all resources",
+      "admin": "Super user with owner/admin access to all resources. Has both 'admin' and 'user' relations where WebSocket endpoints require 'user' relation (ADR-0091 fix)",
       "alice": "Developer user with editor access to vectors (CRUD), viewer access to OpenFGA authz UI",
       "bob": "Basic user with viewer access to vectors (read-only, no OpenFGA authz UI access)"
     },
-    "updated": "2025-12-15"
+    "intentional_exclusions": {
+      "authz:playground": "bob excluded - only admin/developer should access OpenFGA authorization UI",
+      "identity:keycloak": "alice/bob excluded - Keycloak admin access is admin-only for security",
+      "marketplace:default": "alice/bob excluded - marketplace management is admin-only",
+      "dashboard:alerts": "alice/bob excluded - infrastructure alerts are admin-only",
+      "workflow:hitl": "bob excluded - only editors who can approve/reject HITL requests need 'editor' relation",
+      "compliance:default": "bob excluded - compliance reports require security clearance (alice has viewer for compliance-officer sub-persona)"
+    },
+    "adr_references": ["ADR-0068 (OpenFGA ReBAC)", "ADR-0091 (API Response Transformation - admin user relation fix)"],
+    "updated": "2026-01-04"
   },
   "tuples": [
     {
@@ -346,6 +355,12 @@
       "object": "gateway:traefik"
     },
     {
+      "_comment": "Bob can view gateway status (basic user read-only access)",
+      "user": "user:bob",
+      "relation": "viewer",
+      "object": "gateway:traefik"
+    },
+    {
       "_comment": "Logs (Loki) permissions",
       "user": "user:admin",
       "relation": "admin",
@@ -418,6 +433,12 @@
     {
       "_comment": "Audit WebSocket - alice has viewer access for compliance monitoring",
       "user": "user:alice",
+      "relation": "viewer",
+      "object": "logs:audit"
+    },
+    {
+      "_comment": "Audit WebSocket - bob has viewer access for transparency (can see own actions)",
+      "user": "user:bob",
       "relation": "viewer",
       "object": "logs:audit"
     },
@@ -595,6 +616,12 @@
       "object": "ai:suggestions"
     },
     {
+      "_comment": "Admin also needs 'user' relation for WebSocket access (required_relation=user)",
+      "user": "user:admin",
+      "relation": "user",
+      "object": "ai:suggestions"
+    },
+    {
       "user": "user:alice",
       "relation": "user",
       "object": "ai:suggestions"
@@ -674,6 +701,12 @@
       "object": "skill:default"
     },
     {
+      "_comment": "Bob can view skills (basic user read-only access)",
+      "user": "user:bob",
+      "relation": "viewer",
+      "object": "skill:default"
+    },
+    {
       "_comment": "Execution permissions (/api/v1/workflow_executions)",
       "user": "user:admin",
       "relation": "owner",
@@ -719,6 +752,12 @@
     },
     {
       "user": "user:alice",
+      "relation": "viewer",
+      "object": "config:default"
+    },
+    {
+      "_comment": "Bob can view config (basic user read-only access)",
+      "user": "user:bob",
       "relation": "viewer",
       "object": "config:default"
     },

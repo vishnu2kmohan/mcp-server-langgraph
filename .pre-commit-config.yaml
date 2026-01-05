@@ -454,6 +454,7 @@ repos:
       - delete window.location (breaks keyboard events unless marked safe)
       - currentSessionId in session slice tests (should be currentSession)
       - vi.fn() in vi.mock() without vi.hoisted() (initialization errors)
+      - WebSocket hooks missing state transition tests (URL stability, loading guards)
 
       Duration: ~1-2s (static analysis, no test execution).
 
