@@ -320,7 +320,7 @@ class TestEditFileTool:
     # =========================================================================
 
     @pytest.mark.unit
-    @pytest.mark.skip(reason="TDD: EDIT_FILE_CREATE_BACKUP not yet implemented")
+    @pytest.mark.xfail(strict=True, reason="TDD: EDIT_FILE_CREATE_BACKUP not yet implemented")
     def test_edit_file_creates_backup(self, temp_workspace: Path, existing_file: Path, sandbox_enabled_settings: MagicMock):
         """GIVEN an existing file and backup enabled
         WHEN edit_file modifies the file

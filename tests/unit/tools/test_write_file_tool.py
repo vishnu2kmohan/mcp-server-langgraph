@@ -261,7 +261,7 @@ class TestWriteFileTool:
     # =========================================================================
 
     @pytest.mark.unit
-    @pytest.mark.skip(reason="TDD: WRITE_FILE_CREATE_BACKUP not yet implemented")
+    @pytest.mark.xfail(strict=True, reason="TDD: WRITE_FILE_CREATE_BACKUP not yet implemented")
     def test_write_file_creates_backup_before_overwrite(self, temp_workspace: Path, existing_file: Path):
         """GIVEN an existing file and create_backup=True
         WHEN write_file overwrites the file
