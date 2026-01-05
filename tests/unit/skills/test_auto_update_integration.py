@@ -132,13 +132,16 @@ class TestAutoUpdateAPIEndpoint:
     async def test_check_updates_returns_available_updates(self) -> None:
         """Test check updates returns list of available updates."""
         from mcp_server_langgraph.api.v1.skills import check_skill_updates
+        from mcp_server_langgraph.skills.auto_update import AutoUpdateScheduler
+
+        mock_admin_user = {"user_id": "admin-test-user", "roles": ["admin"]}
 
         with patch("mcp_server_langgraph.api.v1.skills.get_auto_update_scheduler") as mock_get:
-            mock_scheduler = AsyncMock()
+            mock_scheduler = AsyncMock(spec=AutoUpdateScheduler)
             mock_scheduler.check_updates_available = AsyncMock(return_value=[])
             mock_get.return_value = mock_scheduler
 
-            result = await check_skill_updates()
+            result = await check_skill_updates(admin_user=mock_admin_user)
             assert result is not None
             assert "updates" in result
 
@@ -146,13 +149,16 @@ class TestAutoUpdateAPIEndpoint:
     async def test_apply_updates_applies_available_updates(self) -> None:
         """Test apply updates endpoint applies updates."""
         from mcp_server_langgraph.api.v1.skills import apply_skill_updates
+        from mcp_server_langgraph.skills.auto_update import AutoUpdateScheduler
+
+        mock_admin_user = {"user_id": "admin-test-user", "roles": ["admin"]}
 
         with patch("mcp_server_langgraph.api.v1.skills.get_auto_update_scheduler") as mock_get:
-            mock_scheduler = AsyncMock()
+            mock_scheduler = AsyncMock(spec=AutoUpdateScheduler)
             mock_scheduler.apply_updates = AsyncMock(return_value=[])
             mock_get.return_value = mock_scheduler
 
-            result = await apply_skill_updates()
+            result = await apply_skill_updates(admin_user=mock_admin_user)
             assert result is not None
             assert "applied" in result
 

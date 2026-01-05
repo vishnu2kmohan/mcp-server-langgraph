@@ -188,11 +188,18 @@ An ESLint rule catches common snake_case property access patterns:
 - ✅ Added legacy conversion functions for backward compatibility with dialog components
 - ✅ Updated test files to expect camelCase data from hooks
 
-### Phase 4: Cleanup (Pending)
-- Remove deprecated snake_case type definitions from types/hitl.ts
-- Migrate dialog components (AgentApprovalDialog, ClarificationDialog) to camelCase types
-- Upgrade ESLint rule from `warn` to `error`
-- Add pre-commit hook for enforcement
+### Phase 4: Cleanup (Completed)
+- ✅ Identified API boundary components (HITL dialogs consume backend contract types directly)
+- ✅ Added targeted ESLint overrides for API boundary components
+- ✅ Upgraded ESLint rule from `warn` to `error` for strict enforcement
+- ✅ Pre-commit hook (`frontend-lint`) enforces snake_case detection on commit
+
+**Note**: types/hitl.ts intentionally uses snake_case as it defines API contract types matching the backend. Dialog components (AgentApprovalDialog, ClarificationDialog) are API boundary components that consume these types directly.
+
+### Phase 5: RTK Query Migration (Pending)
+- Add `transformResponse` to remaining RTK Query endpoints
+- Migrate API boundary components to consume transformed camelCase data
+- Remove ESLint overrides as components are migrated
 
 ## Related Decisions
 

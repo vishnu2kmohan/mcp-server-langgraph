@@ -104,8 +104,9 @@ export default tseslint.config(
       // Catch common snake_case API field patterns in new code
       // This helps prevent regressions after the camelCase API transformation
       // See ADR-0091 for the complete API transformation strategy
+      // ADR-0091 Phase 4: Upgraded from 'warn' to 'error' for strict enforcement
       'no-restricted-syntax': [
-        'warn',
+        'error',
         {
           selector:
             "MemberExpression[property.name=/^(alert_id|started_at|ended_at|created_at|updated_at|user_id|session_id|trace_id|span_id|workflow_id|project_id|organization_id|remediation_id|recommendation_id|step_number|risk_level|total_cost|total_tokens|prompt_tokens|completion_tokens|request_count|next_cursor|prev_cursor|has_next|has_prev|auth_type|api_key|default_level|feature_flag|task_categories|version_number|graph_json|source_text|commit_message|created_by|prompt_version|prompt_model|head_version_id|node_count|edge_count|message_count|owner_id|connection_type|tool_count|max_tokens|request_id|per_page|total_pages)$/]",
