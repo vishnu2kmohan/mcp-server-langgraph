@@ -1,0 +1,206 @@
+---
+title: "91. API Response Transformation Strategy"
+description: 'Architecture Decision Record: 91. Frontend API Response snake_case to camelCase Transformation'
+icon: 'code'
+contentType: "reference"
+seoTitle: "91. API Response Transformation Strategy - Architecture Decision Record"
+seoDescription: "Architecture Decision Record for API Response Transformation Strategy. Category: Frontend Architecture. Part of MCP Server with LangGraph documentation."
+keywords:
+  - "architecture"
+  - "decision"
+  - "record"
+  - "ADR"
+  - "MCP Server"
+  - "LangGraph"
+  - "API"
+  - "transformation"
+  - "camelCase"
+  - "snake_case"
+  - "RTK Query"
+---
+
+# 91. API Response Transformation Strategy
+
+Date: 2026-01-04
+
+## Status
+
+Accepted
+
+## Category
+
+Frontend Architecture
+
+## Context
+
+The backend API uses Python/FastAPI conventions with `snake_case` field names (e.g., `alert_id`, `started_at`, `total_cost`), while the frontend uses TypeScript/JavaScript conventions with `camelCase` field names (e.g., `alertId`, `startedAt`, `totalCost`).
+
+This mismatch creates several problems:
+
+1. **Inconsistent Code**: Mix of snake_case and camelCase in frontend components
+2. **Developer Confusion**: Unclear which case convention to use
+3. **Refactoring Risk**: Each component manually converting fields
+4. **Type Safety Gaps**: Types don't reflect actual API response format
+5. **Maintenance Burden**: 165+ instances of snake_case access across 21+ files
+
+## Decision
+
+We will implement a **centralized API response transformation layer** using RTK Query's `transformResponse` feature. All API responses will be converted from `snake_case` to `camelCase` at the API boundary before reaching components.
+
+### Implementation Architecture
+
+```
+┌─────────────────────────────────────────────────────────────────────────┐
+│                           Backend API                                    │
+│                    (snake_case responses)                                │
+└─────────────────────────────────────────────────────────────────────────┘
+                                    │
+                                    ▼
+┌─────────────────────────────────────────────────────────────────────────┐
+│                    RTK Query transformResponse                          │
+│                                                                         │
+│  ┌─────────────────────────────────────────────────────────────────┐   │
+│  │ Domain-Specific Transforms (src/api/transforms.ts)               │   │
+│  │                                                                   │   │
+│  │ - transformTraceItem()     - transformBudgetStatus()             │   │
+│  │ - transformSpan()          - transformCostSummary()              │   │
+│  │ - transformAlert()         - transformSession()                   │   │
+│  │ - transformMetrics()       - transformAuditLog()                 │   │
+│  │ - transformOrgCost()       - transformRemediation()              │   │
+│  │ - transformProjectCost()   - transformAIRecommendation()         │   │
+│  │ - transformTeamCost()      - transformConnection()               │   │
+│  │ - transformAgentMetrics()  - transformWorkflow()                 │   │
+│  │ - transformSnakeToCamel()  (generic recursive transform)         │   │
+│  └─────────────────────────────────────────────────────────────────┘   │
+└─────────────────────────────────────────────────────────────────────────┘
+                                    │
+                                    ▼
+┌─────────────────────────────────────────────────────────────────────────┐
+│                       React Components                                   │
+│                     (camelCase only)                                     │
+└─────────────────────────────────────────────────────────────────────────┘
+```
+
+### Transform Function Catalog
+
+| Category | Transform Functions | Key Fields |
+|----------|-------------------|------------|
+| **Observability** | `transformTraceItem`, `transformSpan`, `transformAlert`, `transformMetrics` | `traceId`, `spanId`, `startTime`, `durationMs`, `serviceName` |
+| **Cost** | `transformOrgCost`, `transformProjectCost`, `transformTeamCost`, `transformBudgetStatus`, `transformCostSummary`, `transformCostForecast` | `totalCost`, `totalTokens`, `requestCount`, `percentUsed` |
+| **Session** | `transformSession` | `sessionId`, `userId`, `createdAt`, `tokenCount` |
+| **Audit** | `transformAuditLog` | `userId`, `userEmail`, `resourceType`, `ipAddress` |
+| **Admin** | `transformRemediation`, `transformAIRecommendation` | `remediationId`, `stepNumber`, `riskLevel`, `rootCauseAnalysis` |
+| **Config** | `transformThinkingBudget`, `transformOrchestratorInfo`, `transformProviderInfo` | `defaultLevel`, `taskCategories`, `supportedModelTypes` |
+| **Connection** | `transformConnection` | `authType`, `oauth2Config.clientId` |
+| **Workflow** | `transformWorkflow` | `ownerId`, `organizationId`, `nodeCount`, `edgeCount` |
+| **Generic** | `transformSnakeToCamel<T>` | Recursive conversion for any structure |
+
+### RTK Query Integration Pattern
+
+```typescript
+// src/api/index.ts
+
+// For simple responses - use generic transform
+getMetrics: builder.query<CamelCaseMetrics, void>({
+  query: () => "/observability/metrics",
+  transformResponse: (response: Record<string, unknown>) =>
+    transformMetrics(response),
+  providesTags: ["Trace"],
+}),
+
+// For paginated responses - transform items array
+listTraces: builder.query<PaginatedResponse<CamelCaseTraceItem>, TraceListParams>({
+  query: (params) => ({ url: "/observability/traces", params }),
+  transformResponse: (response: PaginatedResponse<Record<string, unknown>>) => ({
+    ...response,
+    items: (response.items || []).map(transformTraceItem),
+    next_cursor: response.next_cursor, // Keep for cursor-based navigation
+  }),
+  providesTags: ["Trace"],
+}),
+
+// For complex nested responses - use generic recursive transform
+getAgentMetrics: builder.query<AgentMetricsResponse, AgentMetricsParams | void>({
+  query: (params) => ({ url: "/agents/metrics", params }),
+  transformResponse: (response: Record<string, unknown>) =>
+    transformSnakeToCamel<AgentMetricsResponse>(response),
+  providesTags: ["Agent"],
+}),
+```
+
+### ESLint Enforcement
+
+An ESLint rule catches common snake_case property access patterns:
+
+```javascript
+// eslint.config.js
+'no-restricted-syntax': [
+  'warn',
+  {
+    selector: "MemberExpression[property.name=/^(alert_id|started_at|...)$/]",
+    message: 'Use camelCase field names. See ADR-0091.',
+  },
+],
+```
+
+## Consequences
+
+### Positive Consequences
+
+1. **Consistency**: All frontend code uses camelCase exclusively
+2. **Type Safety**: TypeScript types reflect actual data shape
+3. **Single Transformation Point**: Changes isolated to `transforms.ts`
+4. **Developer Experience**: Clear convention reduces cognitive load
+5. **Maintainability**: Easier refactoring and updates
+6. **Prevention**: ESLint warns on snake_case usage in new code
+
+### Negative Consequences
+
+1. **Migration Effort**: 165+ existing instances need updating
+2. **Bundle Size**: Small increase from transform functions (~3KB)
+3. **Runtime Overhead**: Transformation adds ~1-5ms per response (negligible)
+4. **Learning Curve**: Developers must learn the transform pattern
+
+### Risks and Mitigations
+
+| Risk | Mitigation |
+|------|------------|
+| Breaking changes in existing components | TypeScript catches mismatches immediately |
+| Missing transform for new endpoint | ESLint rule warns; PR review checklist |
+| Performance degradation | Benchmarked at <5ms; acceptable for API responses |
+
+## Migration Plan
+
+### Phase 1: Foundation (Completed)
+- Created 15+ domain transform functions
+- Added `transformResponse` to high-traffic endpoints
+- Added ESLint rule for prevention
+
+### Phase 2: Component Migration (Completed)
+- ✅ Updated CostPage.tsx to use camelCase from transformed endpoints
+- ✅ Added transforms for cost endpoints (getCostSummary, getCostByModel, getCostHistory)
+- ✅ TypeScript now enforces camelCase throughout cost components
+
+### Phase 3: WebSocket Data Transformation (Completed)
+- ✅ useCostTrackingWebSocket: Transforms session costs, user budgets, budget warnings
+- ✅ useLLMStreamingWebSocket: Transforms streaming events (started, first_chunk, chunk_received, completed)
+- ✅ useAgentRequestWebSocket: Transforms HITL payloads (approval_required, clarification_required, approval_updated, execution_resumed)
+- ✅ Added legacy conversion functions for backward compatibility with dialog components
+- ✅ Updated test files to expect camelCase data from hooks
+
+### Phase 4: Cleanup (Pending)
+- Remove deprecated snake_case type definitions from types/hitl.ts
+- Migrate dialog components (AgentApprovalDialog, ClarificationDialog) to camelCase types
+- Upgrade ESLint rule from `warn` to `error`
+- Add pre-commit hook for enforcement
+
+## Related Decisions
+
+- ADR-0088: Frontend Hook Selection Guidance
+- ADR-0045: RTK Query API Design (if exists)
+
+## References
+
+- RTK Query transformResponse: https://redux-toolkit.js.org/rtk-query/usage/customizing-queries
+- Transform implementation: `src/mcp_server_langgraph/studio/frontend/src/api/transforms.ts`
+- ESLint configuration: `src/mcp_server_langgraph/studio/frontend/eslint.config.js`

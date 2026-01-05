@@ -1,0 +1,2335 @@
+---
+title: ADR-0092 Hierarchical Capability Architecture
+description: 'Unified tool, skill, and memory hierarchy for all agents with STUDIO.md compatibility'
+icon: 'layer-group'
+seoTitle: "ADR-0092: Hierarchical Capability Architecture"
+seoDescription: "Architecture Decision Record for hierarchical tools, skills, and memory compatible with CLAUDE.md and Anthropic Agent Skills specifications."
+keywords: ["capabilities", "hierarchy", "STUDIO.md", "CLAUDE.md", "Agent Skills", "tools", "memory", "scopes", "ADR"]
+contentType: "reference"
+---
+
+# ADR-0092: Hierarchical Capability Architecture
+
+| Status | Proposed |
+|--------|----------|
+| Date | 2026-01-04 |
+| Authors | Claude Opus 4.5 |
+| Deciders | Architecture Review |
+| Consulted | Anthropic Agent Skills Spec, Claude Code Memory Spec |
+| Informed | All Contributors |
+
+## Context and Problem Statement
+
+The current agent architecture has a gap between routing recommendations and execution capabilities:
+
+1. **RouterAgent recommends tools** via `tools_needed` field but WorkerAgent doesn't bind them
+2. **Skills are flat** - no hierarchical scoping (org → project → team → user)
+3. **No STUDIO.md** - unlike CLAUDE.md, no workspace memory integration
+4. **Memory is ephemeral** - no cross-session persistence at appropriate scopes
+
+Research into industry standards revealed:
+- **CLAUDE.md Memory Hierarchy**: Enterprise Policy → Project Memory → Project Rules → User Memory
+- **Anthropic Agent Skills**: Progressive disclosure (metadata → instructions → referenced files)
+- **Google ADK Context Architecture**: Working Context → Session → Memory → Artifacts
+
+### Problem Statement
+
+How do we enable **all agents** to be **tool-aware** and **skill-aware** via **composition** (not inheritance), with **hierarchical scoping** for enterprise, organization, project, team, user, session, and task contexts?
+
+## Decision Drivers
+
+1. **Composition over Inheritance**: Enhance existing agents, don't create new subclasses
+2. **Anthropic Compatibility**: Align with CLAUDE.md and Agent Skills specifications
+3. **Enterprise Scoping**: Support org → project → team → user hierarchies
+4. **Progressive Disclosure**: Load context hierarchically (metadata first, details on demand)
+5. **User Control**: Allow users to select/override tools alongside router suggestions
+6. **Minimal Disruption**: Existing agents continue working without breaking changes
+
+## Decision
+
+Implement an 8-layer Hierarchical Capability Architecture with composition-based capability injection.
+
+---
+
+## Architecture Overview
+
+### 1. Scope Hierarchy (7 Levels)
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    ENTERPRISE                                │
+│  /etc/studio/STUDIO.md (policy, compliance, guardrails)     │
+├─────────────────────────────────────────────────────────────┤
+│                    ORGANIZATION                              │
+│  .studio/orgs/{org_id}/STUDIO.md (org defaults, cost limits)│
+├─────────────────────────────────────────────────────────────┤
+│                    PROJECT                                   │
+│  ./STUDIO.md (project skills, coding standards)              │
+├─────────────────────────────────────────────────────────────┤
+│                    TEAM                                      │
+│  .studio/teams/{team_id}/STUDIO.md (team preferences)        │
+├─────────────────────────────────────────────────────────────┤
+│                    USER                                      │
+│  ~/.studio/STUDIO.md (personal preferences, API keys)        │
+├─────────────────────────────────────────────────────────────┤
+│                    SESSION                                   │
+│  In-memory (conversation history, working context)           │
+├─────────────────────────────────────────────────────────────┤
+│                    TASK                                      │
+│  Ephemeral (router output, current tool bindings)            │
+└─────────────────────────────────────────────────────────────┘
+```
+
+**Precedence**: Lower scopes override higher scopes (Task > Session > User > Team > Project > Org > Enterprise)
+
+**Enum Definition**:
+
+```python
+class CapabilityScope(StrEnum):
+    """Hierarchical scopes for capability resolution."""
+    ENTERPRISE = "enterprise"  # /etc/studio/STUDIO.md
+    ORGANIZATION = "organization"  # .studio/orgs/{org_id}/STUDIO.md
+    PROJECT = "project"  # ./STUDIO.md
+    TEAM = "team"  # .studio/teams/{team_id}/STUDIO.md
+    USER = "user"  # ~/.studio/STUDIO.md
+    SESSION = "session"  # In-memory session context
+    TASK = "task"  # Current task execution context
+```
+
+---
+
+### 1.1 Containerized/Cloud-Native Storage Patterns
+
+In Docker/Kubernetes environments, filesystem-based STUDIO.md is not always feasible.
+This section defines storage backends for each scope in cloud-native deployments.
+
+**Storage Backend Matrix**:
+
+| Scope | Local Dev | Docker | Kubernetes | Storage Backend |
+|-------|-----------|--------|------------|-----------------|
+| **Enterprise** | `/etc/studio/STUDIO.md` | ConfigMap | ConfigMap (cluster-wide) | `studio_enterprise` table |
+| **Organization** | `.studio/orgs/{id}/` | Database | Database + Secret | `studio_organization` table |
+| **Project** | `./STUDIO.md` | Git volume | Git volume / ConfigMap | `studio_project` table |
+| **Team** | `.studio/teams/{id}/` | Database | Database | `studio_team` table |
+| **User** | `~/.studio/STUDIO.md` | Database | Database + Vault | `studio_user` table |
+| **Session** | In-memory | Redis | Redis | `session_config:{id}` key |
+| **Task** | Ephemeral | Ephemeral | Ephemeral | Request context only |
+
+**Storage Provider Protocol**:
+
+```python
+class StudioStorageProvider(Protocol):
+    """Protocol for STUDIO.md storage backends."""
+
+    async def get_config(
+        self,
+        scope: CapabilityScope,
+        scope_id: str | None = None,
+    ) -> StudioConfig | None:
+        """Get configuration for a scope."""
+        ...
+
+    async def set_config(
+        self,
+        scope: CapabilityScope,
+        config: StudioConfig,
+        scope_id: str | None = None,
+    ) -> None:
+        """Save configuration for a scope."""
+        ...
+
+
+class DatabaseStudioStorage:
+    """Database-backed storage for Docker/K8s environments."""
+
+    def __init__(self, db: AsyncSession, redis: Redis):
+        self.db = db
+        self.redis = redis
+
+    async def get_config(
+        self,
+        scope: CapabilityScope,
+        scope_id: str | None = None,
+    ) -> StudioConfig | None:
+        """Get config from appropriate backend."""
+
+        if scope == CapabilityScope.ENTERPRISE:
+            # Enterprise: K8s ConfigMap or database
+            return await self._get_from_configmap_or_db("enterprise")
+
+        elif scope == CapabilityScope.SESSION:
+            # Session: Redis with TTL
+            key = f"studio_config:session:{scope_id}"
+            data = await self.redis.get(key)
+            return StudioConfig.model_validate_json(data) if data else None
+
+        else:
+            # Org/Project/Team/User: Database with tenant context
+            table = f"studio_{scope.value}"
+            result = await self.db.execute(
+                select(StudioConfigModel)
+                .where(StudioConfigModel.scope == scope.value)
+                .where(StudioConfigModel.scope_id == scope_id)
+            )
+            row = result.scalar_one_or_none()
+            return StudioConfig.model_validate(row.config) if row else None
+```
+
+**Kubernetes-Specific Patterns**:
+
+```yaml
+# Enterprise-level ConfigMap (cluster-wide defaults)
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: studio-enterprise-config
+  namespace: mcp-server
+data:
+  STUDIO.md: |
+    ---
+    name: enterprise-defaults
+    description: Organization-wide AI governance policy
+    tools:
+      disabled:
+        - shell_access
+        - file_delete
+      defaults:
+        timeout_seconds: 60
+    cost:
+      daily_limit_usd: 1000.0
+    ---
+    # Enterprise AI Governance Policy
+    All AI agents must follow these guidelines...
+```
+
+```yaml
+# Per-user secrets via External Secrets Operator
+apiVersion: external-secrets.io/v1beta1
+kind: ExternalSecret
+metadata:
+  name: user-studio-config
+spec:
+  secretStoreRef:
+    name: vault-backend
+    kind: ClusterSecretStore
+  target:
+    name: user-{{ .user_id }}-studio
+  data:
+    - secretKey: api_keys
+      remoteRef:
+        key: users/{{ .user_id }}/studio
+        property: api_keys
+```
+
+**Database Schema**:
+
+```python
+class StudioConfigModel(Base):
+    """Database model for STUDIO.md configurations."""
+    __tablename__ = "studio_configs"
+
+    id = Column(UUID, primary_key=True, default=uuid4)
+    scope = Column(String(50), nullable=False)  # enterprise, org, project, etc.
+    scope_id = Column(String(255), nullable=True)  # org_id, project_id, user_id
+    config = Column(JSONB, nullable=False)  # Parsed STUDIO.md content
+    config_hash = Column(String(64), nullable=False)  # For change detection
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+
+    __table_args__ = (
+        UniqueConstraint("scope", "scope_id", name="uq_studio_scope"),
+        Index("ix_studio_scope_lookup", "scope", "scope_id"),
+    )
+```
+
+**Hybrid Resolution** (File → Database fallback):
+
+```python
+class HybridStudioStorage:
+    """Tries filesystem first, falls back to database."""
+
+    def __init__(
+        self,
+        file_storage: FileSystemStudioStorage,
+        db_storage: DatabaseStudioStorage,
+    ):
+        self.file_storage = file_storage
+        self.db_storage = db_storage
+
+    async def get_config(
+        self,
+        scope: CapabilityScope,
+        scope_id: str | None = None,
+    ) -> StudioConfig | None:
+        """Try filesystem first, then database."""
+
+        # For Enterprise/Project: check filesystem first (GitOps pattern)
+        if scope in (CapabilityScope.ENTERPRISE, CapabilityScope.PROJECT):
+            config = await self.file_storage.get_config(scope, scope_id)
+            if config:
+                return config
+
+        # Fall back to database (Docker/K8s pattern)
+        return await self.db_storage.get_config(scope, scope_id)
+```
+
+---
+
+### 2. STUDIO.md Specification
+
+**Location Discovery** (recursive upward traversal like CLAUDE.md):
+
+```python
+def discover_studio_files(start_path: Path) -> list[Path]:
+    """Discover STUDIO.md files from task to enterprise."""
+    files = []
+
+    # Task-local (optional)
+    if (start_path / ".studio" / "STUDIO.md").exists():
+        files.append(start_path / ".studio" / "STUDIO.md")
+
+    # Project level
+    for parent in start_path.parents:
+        studio_file = parent / "STUDIO.md"
+        if studio_file.exists():
+            files.append(studio_file)
+
+    # User level
+    user_studio = Path.home() / ".studio" / "STUDIO.md"
+    if user_studio.exists():
+        files.append(user_studio)
+
+    # Enterprise level
+    enterprise_studio = Path("/etc/studio/STUDIO.md")
+    if enterprise_studio.exists():
+        files.append(enterprise_studio)
+
+    return files  # Ordered: task → project → user → enterprise
+```
+
+**STUDIO.md Format** (YAML frontmatter + Markdown, compatible with SKILL.md):
+
+```yaml
+---
+name: my-project
+description: Project configuration for MCP Server LangGraph
+version: "1.0.0"
+
+# Capability Configuration
+tools:
+  enabled:
+    - web_search
+    - code_execution
+    - file_operations
+  disabled:
+    - shell_access  # Explicitly disabled for security
+  defaults:
+    timeout_seconds: 30
+    max_concurrent: 5
+
+skills:
+  enabled:
+    - "@anthropic/web-research"
+    - "@internal/code-review"
+  local:
+    - ./skills/custom-tool/SKILL.md
+  disabled:
+    - "@anthropic/shell-exec"
+
+# Memory Configuration (compatible with CLAUDE.md)
+memory:
+  inherit: true  # Inherit from parent scopes
+  imports:
+    - "@project/coding-standards.md"
+    - "@team/review-checklist.md"
+
+# Rules with path scoping (like CLAUDE.md project rules)
+rules:
+  - paths: ["src/**/*.py"]
+    content: "Use type hints for all function signatures"
+  - paths: ["tests/**/*.py"]
+    content: "Use pytest fixtures, never unittest.TestCase"
+
+# Model preferences
+models:
+  default: "claude-sonnet-4-5-20250929"
+  code_generation: "claude-opus-4-5-20251101"
+  fast_tasks: "claude-haiku-4-5-20251001"
+
+# Cost controls
+cost:
+  daily_limit_usd: 50.0
+  per_request_limit_usd: 2.0
+  thinking_budget_default: "light"
+---
+
+# Project Instructions
+
+These instructions apply to all agents working in this project context.
+
+## Coding Standards
+
+- Follow PEP 8 style guidelines
+- Use Google-style docstrings
+- 100% type annotation coverage for new code
+
+## Testing Requirements
+
+- Write tests FIRST (TDD)
+- Minimum 80% coverage for new code
+- Use pytest markers appropriately
+```
+
+---
+
+### 3. Enhanced AgentRequest and AgentResult
+
+**AgentRequest Enhancement**:
+
+```python
+@dataclass
+class AgentRequest:
+    """Request for agent execution with capability context."""
+
+    # Existing fields
+    message: str
+    context: dict[str, Any] = field(default_factory=dict)
+    thinking_budget: Literal["none", "light", "medium", "deep"] = "none"
+    max_tokens: int | None = None
+    timeout_seconds: float = 60.0
+    session_id: str | None = None
+    trace_id: str | None = None
+
+    # NEW: Capability context
+    tools: list[str] | None = None  # Tool names to bind
+    skills: list[str] | None = None  # Skill names to enable
+    scope: CapabilityScope = CapabilityScope.TASK  # Resolution scope
+
+    # NEW: User overrides (from UI)
+    user_tool_selection: list[str] | None = None  # User-selected tools
+    user_skill_selection: list[str] | None = None  # User-selected skills
+    merge_strategy: Literal["user_only", "router_only", "union", "intersection"] = "union"
+```
+
+**Tool/Skill Resolution**:
+
+```python
+def resolve_capabilities(
+    router_tools: list[str],
+    router_skills: list[str],
+    user_tools: list[str] | None,
+    user_skills: list[str] | None,
+    merge_strategy: str,
+) -> tuple[list[str], list[str]]:
+    """Merge router suggestions with user selections."""
+
+    if merge_strategy == "user_only":
+        return (user_tools or [], user_skills or [])
+    elif merge_strategy == "router_only":
+        return (router_tools, router_skills)
+    elif merge_strategy == "union":
+        tools = list(set(router_tools) | set(user_tools or []))
+        skills = list(set(router_skills) | set(user_skills or []))
+        return (tools, skills)
+    elif merge_strategy == "intersection":
+        tools = list(set(router_tools) & set(user_tools or router_tools))
+        skills = list(set(router_skills) & set(user_skills or router_skills))
+        return (tools, skills)
+```
+
+---
+
+### 3.1 Enhanced RouterOutput with Skills and Execution Mode
+
+**Current Gap**: The existing `RouterOutput` only includes `tools_needed`, not `skills_needed`
+or `execution_mode`. This limits the Router's ability to make comprehensive decisions.
+
+**Enhanced RouterOutput**:
+
+```python
+class RouterOutput(BaseModel):
+    """Enhanced orchestration routing decision with skills and execution mode."""
+
+    # Existing fields
+    complexity: Literal["simple", "complicated", "complex"]
+    risk: Literal["low", "medium", "high"]
+    task_type: Literal["chat", "code", "analysis", "data", "ops", "other"]
+    tools_needed: list[str]
+    suggested_orchestrator: Literal["standard", "swarm", "studio", "ux", "alert"]
+    critique_rounds: int = Field(ge=0, le=3)
+    thinking_budget: Literal["none", "light", "medium", "deep"]
+    confidence: float = Field(ge=0.0, le=1.0)
+
+    # NEW: Skills and execution mode
+    skills_needed: list[str] = Field(default_factory=list)  # Skill names
+    execution_mode: Literal[
+        "pure_llm",       # No tools, direct LLM response
+        "tool_calling",   # Native function calling (fast)
+        "react",          # Reasoning + Acting loop (exploratory)
+        "programmatic",   # Code-orchestrated batch operations
+        "orchestrator",   # Supervisor + workers pattern
+    ] = "tool_calling"
+
+    # NEW: Rationale for transparency
+    routing_rationale: str = ""  # Brief explanation of routing decision
+```
+
+**Updated Router Prompt** with skills awareness:
+
+```python
+ORCHESTRATION_ROUTER_SYSTEM_PROMPT = """<role>
+You are an intelligent request classifier and orchestration router.
+</role>
+
+<available_tools>
+{available_tools}
+</available_tools>
+
+<available_skills>
+{available_skills}
+</available_skills>
+
+<classification_criteria>
+## Complexity Levels
+- **simple**: Single-step, well-defined tasks
+- **complicated**: Multi-step or domain knowledge required
+- **complex**: Novel problems, creative work, high-stakes
+
+## Execution Modes
+- **pure_llm**: No tools/skills needed, direct LLM response
+- **tool_calling**: Simple tool invocation (1-3 tools, deterministic)
+- **react**: Multi-step reasoning with exploration (use for unclear paths)
+- **programmatic**: Batch operations, data processing (5+ tools, no exploration)
+- **orchestrator**: Complex hierarchical tasks requiring supervisor pattern
+
+## Skill Selection Criteria
+Skills are higher-level capabilities than tools. Select skills when:
+- Task requires domain-specific knowledge (e.g., "code-review" skill)
+- Task benefits from structured workflows (e.g., "web-research" skill)
+- Task involves specialized operations (e.g., "pdf-generation" skill)
+</classification_criteria>
+
+<output_schema>
+{{
+    "complexity": "simple" | "complicated" | "complex",
+    "risk": "low" | "medium" | "high",
+    "task_type": "chat" | "code" | "analysis" | "data" | "ops" | "other",
+    "tools_needed": ["tool_name_1", "tool_name_2"],
+    "skills_needed": ["skill_name_1", "skill_name_2"],
+    "execution_mode": "pure_llm" | "tool_calling" | "react" | "programmatic" | "orchestrator",
+    "suggested_orchestrator": "standard" | "swarm" | "studio" | "ux" | "alert",
+    "critique_rounds": 0-3,
+    "thinking_budget": "none" | "light" | "medium" | "deep",
+    "confidence": 0.0-1.0,
+    "routing_rationale": "Brief explanation of why this routing was chosen"
+}}
+</output_schema>"""
+
+
+def get_orchestration_router_prompt(
+    available_tools: list[str] | None = None,
+    available_skills: list[str] | None = None,
+) -> str:
+    """Get router prompt with tools AND skills injected."""
+    tools_section = "\n".join(f"- {t}" for t in available_tools) if available_tools else "(No tools)"
+    skills_section = "\n".join(f"- {s}" for s in available_skills) if available_skills else "(No skills)"
+
+    return ORCHESTRATION_ROUTER_SYSTEM_PROMPT.format(
+        available_tools=tools_section,
+        available_skills=skills_section,
+    )
+```
+
+---
+
+### 3.2 Skill Search Tool (Parallel to Tool Search Tool)
+
+For large skill libraries (10+ skills), implement Skill Search Tool following
+[Anthropic's Tool Search pattern](https://www.anthropic.com/engineering/advanced-tool-use):
+
+```python
+class SkillSearchTool:
+    """Dynamic skill discovery for large skill libraries.
+
+    Per Anthropic's Advanced Tool Use recommendation:
+    - When skill definitions exceed 10K tokens, use search instead of loading all
+    - Provides 85% reduction in context usage for large skill libraries
+    - Router uses search to discover relevant skills on-demand
+    """
+
+    def __init__(
+        self,
+        skill_registry: HierarchicalSkillRegistry,
+        embedding_service: EmbeddingService | None = None,
+    ):
+        self.registry = skill_registry
+        self.embedding_service = embedding_service
+
+    def get_search_tool_definition(self) -> dict:
+        """Return tool definition for skill search (~500 tokens)."""
+        return {
+            "name": "search_skills",
+            "description": "Search available skills by description, tags, or capability",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "query": {
+                        "type": "string",
+                        "description": "Search query for finding relevant skills"
+                    },
+                    "tags": {
+                        "type": "array",
+                        "items": {"type": "string"},
+                        "description": "Optional tags to filter by"
+                    },
+                    "limit": {
+                        "type": "integer",
+                        "default": 5,
+                        "description": "Maximum skills to return"
+                    }
+                },
+                "required": ["query"]
+            }
+        }
+
+    async def search(
+        self,
+        query: str,
+        tags: list[str] | None = None,
+        limit: int = 5,
+        scope: CapabilityScope = CapabilityScope.PROJECT,
+    ) -> list[SkillSummary]:
+        """Search skills and return summaries (not full definitions).
+
+        Returns only metadata for progressive disclosure:
+        - name, description, tags (loaded)
+        - instructions NOT loaded until skill is selected
+        """
+        # Text-based search
+        matches = self.registry.search(query)
+
+        # Filter by tags if provided
+        if tags:
+            matches = [s for s in matches if any(t in s.tags for t in tags)]
+
+        # Filter by scope
+        matches = [s for s in matches if self._in_scope(s, scope)]
+
+        # Return summaries only (progressive disclosure)
+        return [
+            SkillSummary(
+                name=s.name,
+                description=s.description,
+                tags=s.tags,
+                version=s.version,
+                # Note: instructions NOT included - loaded on demand
+            )
+            for s in matches[:limit]
+        ]
+
+    async def search_semantic(
+        self,
+        query: str,
+        limit: int = 5,
+        min_similarity: float = 0.7,
+    ) -> list[SkillSummary]:
+        """Semantic search using embeddings."""
+        if not self.embedding_service:
+            return await self.search(query, limit=limit)
+
+        query_embedding = await self.embedding_service.embed(query)
+
+        # Find similar skills by embedding
+        similar = await self.registry.find_by_embedding(
+            embedding=query_embedding,
+            min_similarity=min_similarity,
+            limit=limit,
+        )
+
+        return [
+            SkillSummary(
+                name=s.name,
+                description=s.description,
+                tags=s.tags,
+                version=s.version,
+                similarity=s.similarity,
+            )
+            for s in similar
+        ]
+
+    def should_use_search(self, skill_count: int) -> bool:
+        """Use search when skill library exceeds threshold."""
+        return skill_count > 10  # Per Anthropic recommendation
+
+
+class SkillSummary(BaseModel):
+    """Lightweight skill metadata for search results (progressive disclosure)."""
+    name: str
+    description: str
+    tags: list[str] = Field(default_factory=list)
+    version: str = "1.0.0"
+    similarity: float | None = None  # For semantic search results
+```
+
+---
+
+### 3.3 Progressive Disclosure for Skills
+
+**Progressive Disclosure Strategy** (aligned with Anthropic Agent Skills spec):
+
+| Stage | Data Loaded | Token Cost | When |
+|-------|-------------|------------|------|
+| **Discovery** | Names only | ~50 tokens | Initial routing |
+| **Search** | Name, description, tags | ~200 tokens/skill | Skill search results |
+| **Selection** | Full metadata | ~500 tokens/skill | User/Router selects |
+| **Activation** | Instructions + scripts | ~2K+ tokens/skill | Skill is invoked |
+
+```python
+class ProgressiveSkillLoader:
+    """Load skill data progressively to minimize token usage."""
+
+    def __init__(self, skill_registry: HierarchicalSkillRegistry):
+        self.registry = skill_registry
+        self._instruction_cache: dict[str, str] = {}
+
+    async def get_skill_names(
+        self,
+        scope: CapabilityScope,
+    ) -> list[str]:
+        """Stage 1: Discovery - names only (~50 tokens total)."""
+        skills = self.registry.list_for_scope(scope)
+        return [s.name for s in skills]
+
+    async def get_skill_summaries(
+        self,
+        names: list[str],
+        scope: CapabilityScope,
+    ) -> list[SkillSummary]:
+        """Stage 2: Search - name, description, tags (~200 tokens/skill)."""
+        return [
+            SkillSummary(
+                name=s.name,
+                description=s.description,
+                tags=s.tags,
+                version=s.version,
+            )
+            for name in names
+            if (s := self.registry.get_for_scope(name, scope))
+        ]
+
+    async def get_skill_metadata(
+        self,
+        name: str,
+        scope: CapabilityScope,
+    ) -> Skill | None:
+        """Stage 3: Selection - full metadata (~500 tokens/skill)."""
+        skill = self.registry.get_for_scope(name, scope)
+        if skill:
+            # Return skill without instructions
+            return Skill(
+                name=skill.name,
+                description=skill.description,
+                tags=skill.tags,
+                version=skill.version,
+                author=skill.author,
+                dependencies=skill.dependencies,
+                sandbox_config=skill.sandbox_config,
+                required_secrets=skill.required_secrets,
+                # instructions NOT loaded yet
+                instructions="",
+            )
+        return None
+
+    async def get_skill_instructions(
+        self,
+        name: str,
+        scope: CapabilityScope,
+    ) -> str:
+        """Stage 4: Activation - full instructions (~2K+ tokens/skill)."""
+        # Check cache first
+        cache_key = f"{scope}:{name}"
+        if cache_key in self._instruction_cache:
+            return self._instruction_cache[cache_key]
+
+        skill = self.registry.get_for_scope(name, scope)
+        if skill:
+            self._instruction_cache[cache_key] = skill.instructions
+            return skill.instructions
+
+        return ""
+
+    async def load_for_execution(
+        self,
+        names: list[str],
+        scope: CapabilityScope,
+    ) -> list[Skill]:
+        """Load full skills for execution (all stages)."""
+        return [
+            s for name in names
+            if (s := self.registry.get_for_scope(name, scope))
+        ]
+```
+
+---
+
+### 3.4 Is RouterAgent Sophisticated Enough?
+
+**Current Limitations**:
+
+| Limitation | Impact | Mitigation |
+|------------|--------|------------|
+| Single LLM call | May miss nuanced decisions | Add confidence threshold for re-routing |
+| No skill awareness | Cannot recommend skills | Add `available_skills` to prompt |
+| No execution mode | Doesn't optimize execution | Add `execution_mode` to output |
+| No multi-turn | Can't clarify ambiguous requests | Add follow-up routing for low confidence |
+| Fixed prompt | Can't adapt to new patterns | Add few-shot examples from usage data |
+
+**Recommendations for Router Enhancement**:
+
+```python
+class EnhancedRouterAgent:
+    """Router with confidence-based refinement and skill awareness."""
+
+    def __init__(
+        self,
+        llm_factory: Any,
+        tool_search: ToolSearchTool | None = None,
+        skill_search: SkillSearchTool | None = None,
+        model_id: str | None = None,
+        confidence_threshold: float = 0.7,
+    ):
+        self.llm_factory = llm_factory
+        self.tool_search = tool_search
+        self.skill_search = skill_search
+        self.model_id = model_id
+        self.confidence_threshold = confidence_threshold
+
+    async def route(
+        self,
+        message: str,
+        tools_available: list[str] | None = None,
+        skills_available: list[str] | None = None,
+        use_search: bool = True,
+    ) -> RouterOutput:
+        """Route with optional search-based discovery."""
+
+        # Determine if we should use search tools
+        tool_count = len(tools_available or [])
+        skill_count = len(skills_available or [])
+
+        if use_search and self.tool_search and tool_count > 10:
+            # Use Tool Search for large libraries
+            tools_available = ["search_tools"]  # Only expose search
+
+        if use_search and self.skill_search and skill_count > 10:
+            # Use Skill Search for large libraries
+            skills_available = ["search_skills"]  # Only expose search
+
+        # Build prompt with tools AND skills
+        system_prompt = get_orchestration_router_prompt(
+            available_tools=tools_available,
+            available_skills=skills_available,
+        )
+
+        # Make routing decision
+        output = await self._call_router(message, system_prompt)
+
+        # If low confidence, consider refinement
+        if output.confidence < self.confidence_threshold:
+            output = await self._refine_routing(message, output)
+
+        return output
+
+    async def _refine_routing(
+        self,
+        message: str,
+        initial_output: RouterOutput,
+    ) -> RouterOutput:
+        """Refine low-confidence routing decisions."""
+
+        # For low confidence, we could:
+        # 1. Use a more powerful model for re-classification
+        # 2. Add few-shot examples for similar past decisions
+        # 3. Fall back to safe defaults with explanation
+
+        if initial_output.confidence < 0.5:
+            # Very low confidence - use safe defaults
+            return RouterOutput(
+                complexity="complicated",
+                risk="medium",
+                task_type="other",
+                tools_needed=initial_output.tools_needed,
+                skills_needed=initial_output.skills_needed,
+                execution_mode="tool_calling",  # Safe default
+                suggested_orchestrator="standard",
+                critique_rounds=1,
+                thinking_budget="light",
+                confidence=0.5,
+                routing_rationale="Low confidence - using safe defaults",
+            )
+
+        # Medium confidence - return with flag
+        return initial_output
+
+    async def route_with_search(
+        self,
+        message: str,
+        scope: CapabilityScope,
+    ) -> RouterOutput:
+        """Route using search tools for large capability libraries.
+
+        Two-phase routing:
+        1. Initial route with search tools exposed
+        2. Search for specific tools/skills based on initial decision
+        3. Re-route with discovered capabilities
+        """
+        # Phase 1: Initial routing with search capability
+        initial = await self.route(
+            message=message,
+            tools_available=["search_tools"],
+            skills_available=["search_skills"],
+            use_search=True,
+        )
+
+        # Phase 2: Discover specific tools/skills
+        discovered_tools = []
+        discovered_skills = []
+
+        if self.tool_search and initial.tools_needed:
+            for tool_query in initial.tools_needed:
+                matches = await self.tool_search.search(tool_query)
+                discovered_tools.extend([m.name for m in matches])
+
+        if self.skill_search and initial.skills_needed:
+            for skill_query in initial.skills_needed:
+                matches = await self.skill_search.search(skill_query, scope=scope)
+                discovered_skills.extend([m.name for m in matches])
+
+        # Phase 3: Refine with discovered capabilities
+        refined = await self.route(
+            message=message,
+            tools_available=discovered_tools,
+            skills_available=discovered_skills,
+            use_search=False,  # Now use specific capabilities
+        )
+
+        return refined
+```
+
+---
+
+### 3.5 Additional Progressive Disclosure Areas
+
+Beyond tools and skills, progressive disclosure should be applied to **all context types**
+to optimize token usage and improve agent focus. Research into context engineering
+identifies four key strategies: **write**, **select**, **compress**, and **isolate**.
+
+**Progressive Disclosure Matrix**:
+
+| Context Type | Stage 1 (Discovery) | Stage 2 (Summary) | Stage 3 (Detail) | Stage 4 (Full) |
+|--------------|---------------------|-------------------|------------------|----------------|
+| **Tools** | Names only (~50 tokens) | Name + description (~200/tool) | + parameters (~500/tool) | + examples (~1K+/tool) |
+| **Skills** | Names only (~50 tokens) | Name + description + tags (~200/skill) | + metadata (~500/skill) | + instructions (~2K+/skill) |
+| **Conversation** | Recent 3 turns (~500 tokens) | Session summary (~1K tokens) | Key decisions/facts (~2K tokens) | Full history (variable) |
+| **Codebase** | File tree structure (~200 tokens) | File names + sizes (~500 tokens) | Key symbols/exports (~1K tokens) | Full file contents (variable) |
+| **Memory** | Keys only (~50 tokens) | Key + timestamps (~200 tokens) | Key + summaries (~500 tokens) | Full values (variable) |
+| **Personas** | Names only (~50 tokens) | Name + description (~200/persona) | + capabilities (~500/persona) | + full prompt (~2K+/persona) |
+
+#### 3.5.1 Conversation History Progressive Disclosure
+
+```python
+class ConversationProgressiveLoader:
+    """Progressive loading of conversation history.
+
+    Strategy: Most recent context is most relevant.
+    - Stage 1: Last 3 turns (always loaded)
+    - Stage 2: Session summary (generated on-demand)
+    - Stage 3: Key decisions and facts extracted
+    - Stage 4: Full history (only when explicitly needed)
+    """
+
+    def __init__(
+        self,
+        summarizer: ConversationSummarizer,
+        fact_extractor: FactExtractor,
+    ):
+        self.summarizer = summarizer
+        self.fact_extractor = fact_extractor
+
+    async def load_stage_1(
+        self,
+        session_id: str,
+        turn_count: int = 3,
+    ) -> list[Message]:
+        """Stage 1: Recent turns only (~500 tokens)."""
+        return await self._get_recent_turns(session_id, turn_count)
+
+    async def load_stage_2(
+        self,
+        session_id: str,
+    ) -> ConversationSummary:
+        """Stage 2: Compressed summary (~1K tokens).
+
+        Uses LLM-based summarization to compress full history
+        into key points, maintaining semantic density.
+        """
+        full_history = await self._get_full_history(session_id)
+        return await self.summarizer.summarize(
+            messages=full_history,
+            max_tokens=1000,
+            preserve=["decisions", "preferences", "context"],
+        )
+
+    async def load_stage_3(
+        self,
+        session_id: str,
+    ) -> list[ExtractedFact]:
+        """Stage 3: Key decisions and facts (~2K tokens).
+
+        Extracts structured facts that may be relevant to current task.
+        """
+        full_history = await self._get_full_history(session_id)
+        return await self.fact_extractor.extract(
+            messages=full_history,
+            categories=["decision", "preference", "constraint", "goal"],
+        )
+
+    def select_stage_for_task(
+        self,
+        task_complexity: str,
+        requires_context: bool,
+        is_follow_up: bool,
+    ) -> int:
+        """Select appropriate stage based on task characteristics."""
+        if not requires_context:
+            return 1  # Minimal context
+        if is_follow_up:
+            return 2  # Need summary for continuity
+        if task_complexity == "complex":
+            return 3  # Need detailed facts
+        return 1  # Default to minimal
+```
+
+#### 3.5.2 Codebase Navigation Progressive Disclosure
+
+```python
+class CodebaseProgressiveLoader:
+    """Progressive loading of codebase context.
+
+    Strategy: Start with structure, drill down on relevance.
+    - Stage 1: File tree (directories and files)
+    - Stage 2: File metadata (size, language, recent changes)
+    - Stage 3: Key symbols (exports, classes, functions)
+    - Stage 4: Full file contents (only on explicit request)
+    """
+
+    async def load_stage_1(
+        self,
+        root_path: Path,
+        max_depth: int = 3,
+    ) -> FileTree:
+        """Stage 1: Directory structure only (~200 tokens)."""
+        return await self._build_tree(root_path, max_depth, include_files=True)
+
+    async def load_stage_2(
+        self,
+        paths: list[Path],
+    ) -> list[FileMetadata]:
+        """Stage 2: File metadata (~500 tokens for 20 files)."""
+        return [
+            FileMetadata(
+                path=p,
+                size=p.stat().st_size,
+                language=self._detect_language(p),
+                last_modified=datetime.fromtimestamp(p.stat().st_mtime),
+                line_count=self._count_lines(p),
+            )
+            for p in paths
+        ]
+
+    async def load_stage_3(
+        self,
+        path: Path,
+    ) -> list[Symbol]:
+        """Stage 3: Key symbols (~1K tokens/file).
+
+        Uses language-aware parsing to extract exports, classes, functions.
+        """
+        return await self._extract_symbols(path)
+
+    async def load_stage_4(
+        self,
+        path: Path,
+        line_range: tuple[int, int] | None = None,
+    ) -> str:
+        """Stage 4: Full file contents (variable tokens).
+
+        Optionally limited to specific line range.
+        """
+        content = path.read_text()
+        if line_range:
+            lines = content.splitlines()
+            return "\n".join(lines[line_range[0]:line_range[1]])
+        return content
+```
+
+#### 3.5.3 Memory Layer Progressive Disclosure
+
+```python
+class MemoryProgressiveLoader:
+    """Progressive loading of memory across scopes.
+
+    Strategy: Load keys first, values on demand.
+    - Stage 1: Memory keys only
+    - Stage 2: Keys with timestamps and types
+    - Stage 3: Keys with value summaries
+    - Stage 4: Full values
+    """
+
+    async def load_stage_1(
+        self,
+        scope: CapabilityScope,
+        user_id: str,
+    ) -> list[str]:
+        """Stage 1: Keys only (~50 tokens)."""
+        return await self.memory_store.list_keys(scope, user_id)
+
+    async def load_stage_2(
+        self,
+        scope: CapabilityScope,
+        user_id: str,
+    ) -> list[MemoryKeyInfo]:
+        """Stage 2: Keys with metadata (~200 tokens)."""
+        keys = await self.memory_store.list_keys(scope, user_id)
+        return [
+            MemoryKeyInfo(
+                key=k,
+                created_at=await self.memory_store.get_created_at(k, scope),
+                updated_at=await self.memory_store.get_updated_at(k, scope),
+                value_type=await self.memory_store.get_value_type(k, scope),
+            )
+            for k in keys
+        ]
+
+    async def load_stage_3(
+        self,
+        scope: CapabilityScope,
+        user_id: str,
+        keys: list[str],
+    ) -> list[MemorySummary]:
+        """Stage 3: Keys with summaries (~500 tokens)."""
+        return [
+            MemorySummary(
+                key=k,
+                summary=await self._summarize_value(k, scope, user_id),
+            )
+            for k in keys
+        ]
+```
+
+---
+
+### 3.6 Additional Execution Mode Selection Factors
+
+The Router Agent should consider multiple factors beyond complexity and tool count
+when selecting the optimal `execution_mode`. Research into agent planning identifies
+key dimensions that affect execution strategy.
+
+**Execution Mode Selection Matrix**:
+
+| Factor | PURE_LLM | TOOL_CALLING | REACT | PROGRAMMATIC | ORCHESTRATOR |
+|--------|----------|--------------|-------|--------------|--------------|
+| **Tool count** | 0 | 1-3 | 1-10 | 5+ | 3+ |
+| **Risk level** | Any | Low-Medium | Any | Low | Medium-High |
+| **Determinism need** | Low | High | Low | High | Medium |
+| **Token efficiency** | Excellent | Good | Moderate | Excellent | Variable |
+| **Exploration need** | None | None | High | None | Medium |
+| **Multi-step** | No | No | Yes | Yes | Yes |
+| **Async suitability** | No | Yes | No | Yes | Yes |
+| **Error handling** | Simple | Simple | Complex | Programmatic | Hierarchical |
+| **External deps** | None | Few | Many | Batched | Delegated |
+
+#### 3.6.1 Enhanced Execution Mode Selector
+
+```python
+class ExecutionModeSelector:
+    """Select optimal execution mode based on comprehensive task analysis."""
+
+    def select(
+        self,
+        # Task characteristics
+        task_complexity: Literal["simple", "complicated", "complex"],
+        risk_level: Literal["low", "medium", "high"],
+
+        # Tool/skill requirements
+        tool_count: int,
+        skill_count: int,
+
+        # Execution requirements
+        requires_exploration: bool = False,
+        requires_multi_step: bool = False,
+        requires_determinism: bool = False,
+        requires_batch_processing: bool = False,
+
+        # Efficiency requirements
+        token_budget: Literal["tight", "normal", "generous"] = "normal",
+        latency_requirement: Literal["fast", "normal", "async"] = "normal",
+
+        # Error handling requirements
+        error_handling_complexity: Literal["simple", "moderate", "complex"] = "moderate",
+        has_external_dependencies: bool = False,
+
+        # HITL requirements
+        requires_approval: bool = False,
+        requires_clarification: bool = False,
+    ) -> ExecutionMode:
+        """Select execution mode based on comprehensive factors."""
+
+        # Priority 1: HITL requirements may force specific modes
+        if requires_approval or requires_clarification:
+            # HITL works best with ReACT (natural breakpoints) or Orchestrator
+            if task_complexity == "complex":
+                return ExecutionMode.ORCHESTRATOR
+            return ExecutionMode.REACT
+
+        # Priority 2: No tools/skills → Pure LLM
+        if tool_count == 0 and skill_count == 0:
+            return ExecutionMode.PURE_LLM
+
+        # Priority 3: Batch processing requirement → Programmatic
+        if requires_batch_processing and not requires_exploration:
+            return ExecutionMode.PROGRAMMATIC
+
+        # Priority 4: Determinism + few tools → Tool Calling
+        if requires_determinism and tool_count <= 3:
+            return ExecutionMode.TOOL_CALLING
+
+        # Priority 5: Exploration or complex reasoning → ReACT
+        if requires_exploration or (requires_multi_step and task_complexity != "simple"):
+            return ExecutionMode.REACT
+
+        # Priority 6: High risk + complex → Orchestrator (for supervision)
+        if risk_level == "high" and task_complexity == "complex":
+            return ExecutionMode.ORCHESTRATOR
+
+        # Priority 7: Token efficiency considerations
+        if token_budget == "tight":
+            # Programmatic saves ~37% tokens on complex tasks
+            if tool_count > 3:
+                return ExecutionMode.PROGRAMMATIC
+            return ExecutionMode.TOOL_CALLING
+
+        # Priority 8: Latency considerations
+        if latency_requirement == "fast":
+            return ExecutionMode.TOOL_CALLING
+        if latency_requirement == "async":
+            return ExecutionMode.PROGRAMMATIC
+
+        # Default based on complexity
+        match task_complexity:
+            case "simple":
+                return ExecutionMode.TOOL_CALLING
+            case "complicated":
+                return ExecutionMode.REACT if tool_count > 3 else ExecutionMode.TOOL_CALLING
+            case "complex":
+                return ExecutionMode.ORCHESTRATOR if tool_count > 5 else ExecutionMode.REACT
+
+        return ExecutionMode.TOOL_CALLING  # Safe default
+
+
+# Extend RouterOutput to include all factors
+class EnhancedRouterOutput(RouterOutput):
+    """RouterOutput with comprehensive execution mode factors."""
+
+    # Existing fields inherited...
+
+    # Execution requirement flags (NEW)
+    requires_exploration: bool = False
+    requires_multi_step: bool = False
+    requires_determinism: bool = False
+    requires_batch_processing: bool = False
+
+    # Efficiency requirements (NEW)
+    token_budget: Literal["tight", "normal", "generous"] = "normal"
+    latency_requirement: Literal["fast", "normal", "async"] = "normal"
+
+    # HITL requirements (NEW)
+    requires_approval: bool = False
+    requires_clarification: bool = False
+    approval_reason: str = ""  # Why approval is needed
+```
+
+#### 3.6.2 Factor Detection Heuristics
+
+```python
+class TaskAnalyzer:
+    """Analyze task to detect execution mode factors."""
+
+    EXPLORATION_KEYWORDS = {
+        "find", "search", "explore", "discover", "investigate",
+        "analyze", "debug", "understand", "trace", "profile",
+    }
+
+    DETERMINISM_KEYWORDS = {
+        "always", "exactly", "precisely", "must", "require",
+        "format", "structure", "schema", "validate", "verify",
+    }
+
+    BATCH_KEYWORDS = {
+        "all", "every", "each", "bulk", "batch", "multiple",
+        "many", "across", "throughout", "comprehensive",
+    }
+
+    APPROVAL_PATTERNS = {
+        r"delete|remove|destroy",  # Destructive actions
+        r"deploy|publish|release",  # Production changes
+        r"payment|billing|cost",  # Financial impact
+        r"permission|access|role",  # Security changes
+        r"migrate|upgrade|downgrade",  # Schema/version changes
+    }
+
+    async def analyze(
+        self,
+        message: str,
+        tools_available: list[str],
+        skills_available: list[str],
+    ) -> dict[str, Any]:
+        """Analyze task to detect execution factors."""
+        message_lower = message.lower()
+        words = set(message_lower.split())
+
+        return {
+            "requires_exploration": bool(words & self.EXPLORATION_KEYWORDS),
+            "requires_determinism": bool(words & self.DETERMINISM_KEYWORDS),
+            "requires_batch_processing": bool(words & self.BATCH_KEYWORDS),
+            "requires_multi_step": self._detect_multi_step(message),
+            "requires_approval": self._detect_approval_needed(message),
+            "approval_reason": self._get_approval_reason(message),
+            "estimated_tool_calls": self._estimate_tool_calls(message, tools_available),
+        }
+
+    def _detect_multi_step(self, message: str) -> bool:
+        """Detect if task requires multiple steps."""
+        # Multi-step indicators
+        indicators = [
+            " then ", " after ", " before ", " first ", " finally ",
+            " step ", " next ", " followed by ", "1.", "2.", "-",
+        ]
+        return any(ind in message.lower() for ind in indicators)
+
+    def _detect_approval_needed(self, message: str) -> bool:
+        """Detect if task likely requires human approval."""
+        import re
+        return any(
+            re.search(pattern, message.lower())
+            for pattern in self.APPROVAL_PATTERNS
+        )
+
+    def _get_approval_reason(self, message: str) -> str:
+        """Get reason for requiring approval."""
+        import re
+        for pattern in self.APPROVAL_PATTERNS:
+            if re.search(pattern, message.lower()):
+                return f"Task involves potentially high-risk operation: {pattern}"
+        return ""
+```
+
+---
+
+### 3.7 HITL UX Best Practices Assessment
+
+This section analyzes our current Human-in-the-Loop (HITL) implementation against
+industry best practices and identifies gaps and enhancement opportunities.
+
+#### 3.7.1 Industry Best Practices (Research Summary)
+
+Based on research into HITL design patterns:
+
+| Pattern | Description | Use Case |
+|---------|-------------|----------|
+| **Interrupt & Resume** | Agent pauses execution, human reviews, agent resumes | LangGraph `interrupt()` |
+| **Human-as-a-Tool** | Human is modeled as another tool the agent can call | Expert consultation |
+| **Approval Flows** | Policy-driven approval routing based on action type | High-risk operations |
+| **Fallback Escalation** | Low-confidence decisions escalate to humans | Uncertain classifications |
+| **Confidence Thresholds** | Automatic action above threshold, human review below | Risk mitigation |
+| **Async Review Channels** | Non-blocking human review with notification | Batch processing |
+| **Contextual Transparency** | Show AI reasoning to inform human decisions | Trust building |
+| **Undo/Rollback** | Allow humans to reverse AI actions | Error recovery |
+| **Preference Learning** | Learn from human decisions to reduce interrupts | Progressive automation |
+
+#### 3.7.2 Current Implementation Inventory
+
+**What We Have** (167 HITL-related files found):
+
+| Component | Location | Status |
+|-----------|----------|--------|
+| **ApprovalNode** | `core/interrupts/__init__.py` | ✅ Implemented |
+| **ConfidenceApprovalNode** | `core/interrupts/confidence.py` | ✅ Implemented |
+| **ClarificationRequest** | `core/interrupts/__init__.py` | ✅ Implemented |
+| **ApprovalResponse** | `core/interrupts/__init__.py` | ✅ Implemented |
+| **InterruptHandler** | `core/interrupts/__init__.py` | ✅ Implemented |
+| **ExecutionPlan approval** | `api/v1/execution_plans.py` | ✅ Implemented |
+| **Remediation approval** | `api/v1/remediation_approvals.py` | ✅ Implemented |
+| **HITL Dialogs (frontend)** | `hooks/useHITLDialogs.ts` | ✅ Implemented |
+
+**Current Thresholds**:
+```python
+# From core/interrupts/confidence.py
+DEFAULT_CONFIDENCE_THRESHOLD = 0.7  # Below this requires human review
+AUTO_APPROVE_THRESHOLD = 0.9  # Above this auto-approves
+```
+
+#### 3.7.3 Gap Analysis
+
+| Best Practice | Current State | Gap | Priority |
+|---------------|---------------|-----|----------|
+| **Interrupt & Resume** | ✅ ApprovalNode uses LangGraph interrupt | None | - |
+| **Human-as-a-Tool** | ❌ Not implemented | Add HumanExpertTool | Medium |
+| **Approval Flows** | ✅ ExecutionPlan + Remediation | None | - |
+| **Fallback Escalation** | ✅ ConfidenceApprovalNode | None | - |
+| **Confidence Thresholds** | ✅ 0.7/0.9 thresholds | May need tuning | Low |
+| **Async Review Channels** | ⚠️ Partial (WebSocket notifications) | Add email/Slack integration | Medium |
+| **Contextual Transparency** | ⚠️ Partial (some reasoning shown) | Add full reasoning display | High |
+| **Undo/Rollback** | ❌ Not implemented | Add reversible actions | High |
+| **Preference Learning** | ❌ Not implemented | Learn from approvals | Medium |
+
+#### 3.7.4 Recommended Enhancements
+
+```python
+# 1. Human-as-a-Tool Pattern
+class HumanExpertTool:
+    """Model human expert as a tool the agent can call.
+
+    Use cases:
+    - Domain expertise needed (legal, compliance, architecture)
+    - Subjective judgment required (UX, design decisions)
+    - External context not available to agent
+    """
+
+    name = "ask_human_expert"
+    description = "Ask a human expert for input when AI is uncertain"
+
+    async def execute(
+        self,
+        question: str,
+        context: str,
+        expertise_area: str,
+        urgency: Literal["low", "medium", "high"] = "medium",
+    ) -> HumanResponse:
+        """Request human expert input via appropriate channel."""
+
+        # Create interrupt with full context
+        interrupt = HumanExpertInterrupt(
+            question=question,
+            context=context,
+            expertise_area=expertise_area,
+            urgency=urgency,
+            reasoning="Agent determined human expertise needed",
+        )
+
+        # Route to appropriate human based on expertise
+        assignee = await self._route_to_expert(expertise_area)
+
+        # Create async review request
+        request_id = await self._create_review_request(
+            interrupt=interrupt,
+            assignee=assignee,
+        )
+
+        # Wait for response (with timeout)
+        response = await self._wait_for_response(
+            request_id=request_id,
+            timeout=self._get_timeout_for_urgency(urgency),
+        )
+
+        return response
+
+
+# 2. Contextual Transparency Enhancement
+class TransparentApprovalRequest(BaseModel):
+    """Approval request with full reasoning transparency."""
+
+    action: str  # What the AI wants to do
+    reasoning: str  # Why the AI chose this action
+    alternatives_considered: list[str]  # Other options evaluated
+    confidence: float  # AI's confidence in decision
+    risk_factors: list[str]  # Identified risks
+
+    # Evidence for human review
+    supporting_context: list[ContextItem]  # Relevant context used
+    similar_past_decisions: list[PastDecision]  # How similar cases were handled
+
+    # Impact assessment
+    reversibility: Literal["reversible", "partially_reversible", "irreversible"]
+    affected_resources: list[str]
+    estimated_impact: str
+
+
+# 3. Undo/Rollback Support
+class ReversibleAction:
+    """Wrapper for actions that can be undone."""
+
+    def __init__(
+        self,
+        action: Callable,
+        undo_action: Callable,
+        description: str,
+    ):
+        self.action = action
+        self.undo_action = undo_action
+        self.description = description
+        self.execution_id: str | None = None
+        self.executed_at: datetime | None = None
+        self.state_before: dict | None = None
+
+    async def execute(self, **kwargs) -> ActionResult:
+        """Execute action and store state for undo."""
+        # Capture state before action
+        self.state_before = await self._capture_state(kwargs)
+
+        # Execute action
+        result = await self.action(**kwargs)
+
+        # Record for audit trail
+        self.execution_id = str(uuid4())
+        self.executed_at = datetime.now(UTC)
+        await self._record_execution(result)
+
+        return result
+
+    async def undo(self) -> UndoResult:
+        """Undo the action by restoring previous state."""
+        if not self.execution_id:
+            raise ValueError("Action was never executed")
+
+        result = await self.undo_action(self.state_before)
+        await self._record_undo(result)
+
+        return result
+
+
+class ActionHistoryStore:
+    """Store action history for undo/rollback."""
+
+    async def record(
+        self,
+        action: ReversibleAction,
+        user_id: str,
+        session_id: str,
+    ) -> str:
+        """Record action for potential undo."""
+        ...
+
+    async def undo_last(
+        self,
+        user_id: str,
+        session_id: str,
+    ) -> UndoResult:
+        """Undo the last action in session."""
+        ...
+
+    async def undo_to_checkpoint(
+        self,
+        checkpoint_id: str,
+    ) -> list[UndoResult]:
+        """Undo all actions back to a checkpoint."""
+        ...
+
+
+# 4. Preference Learning from Approvals
+class ApprovalLearner:
+    """Learn from human approval decisions to reduce future interrupts."""
+
+    async def record_decision(
+        self,
+        approval_request: ApprovalRequest,
+        human_decision: Literal["approve", "reject", "modify"],
+        modification: str | None = None,
+        reasoning: str | None = None,
+    ) -> None:
+        """Record a human decision for learning."""
+        await self.decision_store.save(
+            request_type=approval_request.action_type,
+            context_hash=self._hash_context(approval_request.context),
+            decision=human_decision,
+            modification=modification,
+            reasoning=reasoning,
+            timestamp=datetime.now(UTC),
+        )
+
+    async def get_similar_decisions(
+        self,
+        approval_request: ApprovalRequest,
+        min_similarity: float = 0.8,
+        limit: int = 5,
+    ) -> list[PastDecision]:
+        """Find similar past decisions to inform current request."""
+        context_embedding = await self._embed_context(approval_request.context)
+        return await self.decision_store.find_similar(
+            embedding=context_embedding,
+            min_similarity=min_similarity,
+            limit=limit,
+        )
+
+    async def should_auto_approve(
+        self,
+        approval_request: ApprovalRequest,
+        threshold: float = 0.95,
+    ) -> tuple[bool, str]:
+        """Determine if request matches well-established approval pattern."""
+        similar = await self.get_similar_decisions(approval_request)
+
+        if len(similar) < 5:
+            return False, "Insufficient history"
+
+        # Check if all similar decisions were approved
+        approval_rate = sum(1 for d in similar if d.decision == "approve") / len(similar)
+
+        if approval_rate >= threshold:
+            return True, f"High approval rate ({approval_rate:.0%}) for similar requests"
+
+        return False, f"Mixed decisions ({approval_rate:.0%} approval rate)"
+```
+
+#### 3.7.5 HITL UX Recommendations
+
+**Frontend Enhancements**:
+
+| Enhancement | Description | Priority |
+|-------------|-------------|----------|
+| **Reasoning Display** | Show AI's full reasoning in approval dialogs | High |
+| **Risk Visualization** | Color-coded risk indicators (green/yellow/red) | High |
+| **Similar Decisions** | Show how similar requests were handled | Medium |
+| **Quick Actions** | Pre-populated approve/reject with common responses | Medium |
+| **Undo Button** | Always-visible undo for recent AI actions | High |
+| **Batch Review** | Review multiple similar requests at once | Medium |
+| **Keyboard Shortcuts** | Quick approve/reject via keyboard | Low |
+
+**Backend Enhancements**:
+
+| Enhancement | Description | Priority |
+|-------------|-------------|----------|
+| **Async Notifications** | Email/Slack for pending approvals | Medium |
+| **Escalation Timeout** | Auto-escalate if no response in X hours | Medium |
+| **Approval Analytics** | Dashboard for approval patterns | Low |
+| **Policy Engine** | Configurable approval policies | Medium |
+
+---
+
+### 4. CapabilityProvider Protocol
+
+**Composition Pattern** - Agents receive capability context without subclassing:
+
+```python
+from typing import Protocol
+
+class CapabilityProvider(Protocol):
+    """Protocol for providing tools and skills to agents."""
+
+    async def get_tools(
+        self,
+        scope: CapabilityScope,
+        user_id: str | None = None,
+        project_id: str | None = None,
+    ) -> list[Tool]:
+        """Get available tools for the given scope."""
+        ...
+
+    async def get_skills(
+        self,
+        scope: CapabilityScope,
+        user_id: str | None = None,
+        project_id: str | None = None,
+    ) -> list[Skill]:
+        """Get available skills for the given scope."""
+        ...
+
+    async def get_memory(
+        self,
+        scope: CapabilityScope,
+        user_id: str | None = None,
+        project_id: str | None = None,
+    ) -> MemoryContext:
+        """Get memory/context for the given scope."""
+        ...
+
+
+class HierarchicalCapabilityProvider:
+    """Resolves capabilities across scope hierarchy."""
+
+    def __init__(
+        self,
+        tool_registry: ToolRegistry,
+        skill_registry: SkillRegistry,
+        memory_store: MemoryStore,
+        studio_loader: StudioLoader,
+    ):
+        self.tool_registry = tool_registry
+        self.skill_registry = skill_registry
+        self.memory_store = memory_store
+        self.studio_loader = studio_loader
+
+    async def get_tools(
+        self,
+        scope: CapabilityScope,
+        user_id: str | None = None,
+        project_id: str | None = None,
+        org_id: str | None = None,
+        team_id: str | None = None,
+    ) -> list[Tool]:
+        """Resolve tools with hierarchical override."""
+
+        # Load STUDIO.md files for all applicable scopes
+        configs = await self.studio_loader.load_hierarchy(
+            scope=scope,
+            user_id=user_id,
+            project_id=project_id,
+            org_id=org_id,
+            team_id=team_id,
+        )
+
+        # Merge tools: lower scopes override higher scopes
+        enabled_tools: set[str] = set()
+        disabled_tools: set[str] = set()
+
+        for config in configs:  # Enterprise → Org → Project → Team → User
+            enabled_tools.update(config.tools.enabled)
+            disabled_tools.update(config.tools.disabled)
+
+        # Final set: enabled minus disabled
+        final_tool_names = enabled_tools - disabled_tools
+
+        return [
+            self.tool_registry.get(name)
+            for name in final_tool_names
+            if self.tool_registry.get(name)
+        ]
+```
+
+---
+
+### 5. Enhanced WorkerAgent with Capability Injection
+
+**BaseAgent Enhancement** (optional capability provider):
+
+```python
+class BaseAgent(ABC):
+    """Abstract base class with optional capability provider."""
+
+    capability_provider: CapabilityProvider | None = None
+
+    def with_capabilities(
+        self,
+        provider: CapabilityProvider,
+    ) -> "BaseAgent":
+        """Set capability provider and return self for chaining."""
+        self.capability_provider = provider
+        return self
+
+    @abstractmethod
+    async def run(
+        self,
+        request: AgentRequest,
+        cancel_event: asyncio.Event | None = None,
+    ) -> AgentResult:
+        """Execute agent with capabilities resolved from request."""
+        ...
+```
+
+**Agent Execution Strategy** (Flexible Multi-Pattern Approach):
+
+Based on research into agent patterns, ReACT is **not always optimal**. The recommended approach
+is a **hybrid strategy** where execution pattern is selected based on task characteristics.
+
+**Agent Execution Patterns** (per [Anthropic's Composable Patterns](https://research.aimultiple.com/building-ai-agents/)):
+
+| Pattern | Use Case | Token Efficiency | Determinism |
+|---------|----------|------------------|-------------|
+| **Pure LLM** | Simple Q&A, no tools needed | Excellent | High |
+| **Tool Calling** | Single tool invocation, simple tasks | Good | High |
+| **ReACT** | Multi-step reasoning, exploration | Moderate | Low |
+| **Programmatic** | Batch operations, data processing | Excellent | High |
+| **Orchestrator-Workers** | Complex hierarchical tasks | Variable | Medium |
+
+**Execution Mode Enum**:
+
+```python
+class ExecutionMode(StrEnum):
+    """Agent execution patterns based on task characteristics."""
+    PURE_LLM = "pure_llm"  # No tools, direct LLM response
+    TOOL_CALLING = "tool_calling"  # Native function calling (fast, reliable)
+    REACT = "react"  # Reasoning + Acting loop (exploratory)
+    PROGRAMMATIC = "programmatic"  # Code-orchestrated tool calls (batch)
+    ORCHESTRATOR = "orchestrator"  # Supervisor + workers pattern
+```
+
+**Execution Mode Selection** (based on task and tool characteristics):
+
+```python
+def select_execution_mode(
+    tools: list[Tool],
+    task_complexity: str,  # simple, complicated, complex
+    tool_count: int,
+    requires_multi_step: bool,
+    requires_exploration: bool,
+) -> ExecutionMode:
+    """Select optimal execution mode for task."""
+
+    # No tools → Pure LLM
+    if not tools or tool_count == 0:
+        return ExecutionMode.PURE_LLM
+
+    # Simple task, few tools → Native tool calling (fastest)
+    if task_complexity == "simple" and tool_count <= 3:
+        return ExecutionMode.TOOL_CALLING
+
+    # Batch operations or data processing → Programmatic
+    if tool_count > 5 and not requires_exploration:
+        return ExecutionMode.PROGRAMMATIC
+
+    # Complex with exploration → ReACT
+    if requires_exploration or requires_multi_step:
+        return ExecutionMode.REACT
+
+    # Complex hierarchical → Orchestrator-Workers
+    if task_complexity == "complex" and tool_count > 3:
+        return ExecutionMode.ORCHESTRATOR
+
+    # Default fallback
+    return ExecutionMode.TOOL_CALLING
+```
+
+**WorkerAgent with Multi-Pattern Execution**:
+
+```python
+class WorkerAgent(BaseAgent):
+    """Worker agent with flexible execution patterns."""
+
+    def __init__(
+        self,
+        llm_factory: Any,
+        thinking_budget_manager: ThinkingBudgetManager | None = None,
+        model_id: str | None = None,
+        capability_provider: CapabilityProvider | None = None,
+    ) -> None:
+        self.llm_factory = llm_factory
+        self.thinking_budget_manager = thinking_budget_manager
+        self.model_id = model_id
+        self.capability_provider = capability_provider
+
+    async def run(
+        self,
+        request: AgentRequest,
+        cancel_event: asyncio.Event | None = None,
+    ) -> AgentResult:
+        """Execute with appropriate pattern based on task."""
+
+        if cancel_event and cancel_event.is_set():
+            return AgentResult(content="", success=False, error="Cancelled")
+
+        try:
+            # Resolve capabilities
+            tools = await self._resolve_tools(request)
+            messages = [{"role": "user", "content": request.message}]
+
+            # Select execution mode
+            mode = select_execution_mode(
+                tools=tools,
+                task_complexity=request.context.get("complexity", "complicated"),
+                tool_count=len(tools),
+                requires_multi_step=request.context.get("multi_step", False),
+                requires_exploration=request.context.get("exploration", False),
+            )
+
+            # Execute with selected pattern
+            match mode:
+                case ExecutionMode.PURE_LLM:
+                    return await self._run_pure_llm(request, messages)
+                case ExecutionMode.TOOL_CALLING:
+                    return await self._run_tool_calling(request, tools, messages)
+                case ExecutionMode.REACT:
+                    return await self._run_react(request, tools, messages)
+                case ExecutionMode.PROGRAMMATIC:
+                    return await self._run_programmatic(request, tools, messages)
+                case ExecutionMode.ORCHESTRATOR:
+                    return await self._run_orchestrator(request, tools, messages)
+
+        except Exception as e:
+            return AgentResult(content="", success=False, error=str(e))
+
+    async def _run_tool_calling(
+        self,
+        request: AgentRequest,
+        tools: list[Tool],
+        messages: list[dict],
+    ) -> AgentResult:
+        """Native function calling - fast, deterministic."""
+        # Use LLM's native tool_choice for single-shot tool invocation
+        lc_tools = [tool.to_langchain() for tool in tools]
+        model = self.llm_factory.get_model(self.model_id).bind_tools(lc_tools)
+
+        response = await asyncio.wait_for(
+            model.ainvoke(messages),
+            timeout=request.timeout_seconds,
+        )
+
+        # Execute tool calls if present
+        if response.tool_calls:
+            tool_results = await self._execute_tool_calls(response.tool_calls, tools)
+            # Add tool results and get final response
+            messages.extend([response, *tool_results])
+            final_response = await model.ainvoke(messages)
+            return AgentResult(content=final_response.content, success=True)
+
+        return AgentResult(content=response.content, success=True)
+
+    async def _run_react(
+        self,
+        request: AgentRequest,
+        tools: list[Tool],
+        messages: list[dict],
+    ) -> AgentResult:
+        """ReACT pattern - reasoning + acting loop for exploration."""
+        from langgraph.prebuilt import create_react_agent
+
+        lc_tools = [tool.to_langchain() for tool in tools]
+        model = self.llm_factory.get_model(self.model_id)
+        agent = create_react_agent(model, lc_tools)
+
+        result = await asyncio.wait_for(
+            agent.ainvoke({"messages": messages}),
+            timeout=request.timeout_seconds,
+        )
+
+        final_message = result["messages"][-1]
+        return AgentResult(
+            content=final_message.content,
+            success=True,
+            model_used=self.model_id or "",
+        )
+
+    async def _run_programmatic(
+        self,
+        request: AgentRequest,
+        tools: list[Tool],
+        messages: list[dict],
+    ) -> AgentResult:
+        """Programmatic tool calling - code-orchestrated batch operations.
+
+        Per Anthropic's Advanced Tool Use:
+        - LLM generates Python code that calls tools
+        - Code executes in sandbox, results processed before returning
+        - 37% token reduction on complex tasks
+        """
+        # Enable code execution with tool access
+        model = self.llm_factory.get_model(self.model_id)
+
+        # Provide tools as callable functions in code context
+        tool_functions = {t.name: t.execute for t in tools}
+
+        # Generate orchestration code
+        code_prompt = self._build_programmatic_prompt(request.message, tools)
+        response = await model.ainvoke([{"role": "user", "content": code_prompt}])
+
+        # Execute generated code with tool bindings
+        result = await self._execute_code_with_tools(
+            response.content,
+            tool_functions,
+            timeout=request.timeout_seconds,
+        )
+
+        return AgentResult(content=result, success=True)
+
+    async def _run_orchestrator(
+        self,
+        request: AgentRequest,
+        tools: list[Tool],
+        messages: list[dict],
+    ) -> AgentResult:
+        """Orchestrator-Workers pattern - hierarchical task decomposition.
+
+        Uses LangGraph StateGraph for deterministic workflow with
+        ReACT loops embedded within worker nodes.
+        """
+        from langgraph.graph import StateGraph, END
+
+        # Build orchestrator graph with specialized workers
+        graph = StateGraph(OrchestratorState)
+
+        # Add orchestrator node (plans and routes)
+        graph.add_node("orchestrator", self._orchestrator_node)
+
+        # Add worker nodes (execute with tools)
+        for tool in tools:
+            worker_name = f"worker_{tool.name}"
+            graph.add_node(worker_name, self._create_worker_node(tool))
+
+        # Dynamic routing based on orchestrator decisions
+        graph.add_conditional_edges(
+            "orchestrator",
+            self._route_to_worker,
+            {tool.name: f"worker_{tool.name}" for tool in tools} | {"__end__": END}
+        )
+
+        # Workers return to orchestrator for next decision
+        for tool in tools:
+            graph.add_edge(f"worker_{tool.name}", "orchestrator")
+
+        compiled = graph.compile()
+        result = await compiled.ainvoke({"messages": messages, "tools": tools})
+
+        return AgentResult(content=result["final_answer"], success=True)
+```
+
+**Anthropic Advanced Tool Use Integration**:
+
+For large tool libraries (10+ tools), integrate [Anthropic's Tool Search Tool](https://www.anthropic.com/engineering/advanced-tool-use):
+
+```python
+class ToolSearchIntegration:
+    """Integrate Anthropic's Tool Search for large tool libraries."""
+
+    def __init__(self, tool_registry: ToolRegistry):
+        self.registry = tool_registry
+        self.search_tool = self._create_search_tool()
+
+    def _create_search_tool(self) -> Tool:
+        """Create Tool Search Tool for dynamic discovery."""
+        return Tool(
+            name="search_tools",
+            description="Search available tools by description or capability",
+            parameters={
+                "query": {"type": "string", "description": "Search query"}
+            },
+            execute=self._search_tools,
+        )
+
+    async def _search_tools(self, query: str) -> list[dict]:
+        """Search and return matching tool definitions."""
+        matches = self.registry.search(query)
+        return [
+            {
+                "name": t.name,
+                "description": t.description,
+                "parameters": t.parameters,
+            }
+            for t in matches[:5]  # Return top 5 matches
+        ]
+
+    def should_use_search(self, tool_count: int) -> bool:
+        """Use Tool Search when library exceeds threshold."""
+        return tool_count > 10  # Per Anthropic recommendation
+```
+
+---
+
+### 6. HierarchicalSkillRegistry
+
+**Extending existing SkillRegistry**:
+
+```python
+class HierarchicalSkillRegistry(SkillRegistry):
+    """Skill registry with scope-aware resolution."""
+
+    def __init__(self):
+        super().__init__()
+        self._scoped_skills: dict[CapabilityScope, dict[str, Skill]] = {
+            scope: {} for scope in CapabilityScope
+        }
+
+    def register(
+        self,
+        skill: Skill,
+        scope: CapabilityScope = CapabilityScope.PROJECT,
+    ) -> None:
+        """Register skill at a specific scope."""
+        self._scoped_skills[scope][skill.name] = skill
+        # Also add to flat registry for backward compatibility
+        super().register(skill)
+
+    def get_for_scope(
+        self,
+        name: str,
+        scope: CapabilityScope,
+    ) -> Skill | None:
+        """Get skill, checking from task scope up to enterprise."""
+        scope_order = [
+            CapabilityScope.TASK,
+            CapabilityScope.SESSION,
+            CapabilityScope.USER,
+            CapabilityScope.TEAM,
+            CapabilityScope.PROJECT,
+            CapabilityScope.ORGANIZATION,
+            CapabilityScope.ENTERPRISE,
+        ]
+
+        # Find starting index
+        start_idx = scope_order.index(scope)
+
+        # Search from requested scope up to enterprise
+        for check_scope in scope_order[start_idx:]:
+            if name in self._scoped_skills[check_scope]:
+                return self._scoped_skills[check_scope][name]
+
+        return None
+
+    def list_for_scope(
+        self,
+        scope: CapabilityScope,
+        include_parent_scopes: bool = True,
+    ) -> list[Skill]:
+        """List all skills available at a scope."""
+        if not include_parent_scopes:
+            return list(self._scoped_skills[scope].values())
+
+        # Merge from enterprise down, lower scopes override
+        merged: dict[str, Skill] = {}
+        scope_order = [
+            CapabilityScope.ENTERPRISE,
+            CapabilityScope.ORGANIZATION,
+            CapabilityScope.PROJECT,
+            CapabilityScope.TEAM,
+            CapabilityScope.USER,
+            CapabilityScope.SESSION,
+            CapabilityScope.TASK,
+        ]
+
+        end_idx = scope_order.index(scope) + 1
+        for check_scope in scope_order[:end_idx]:
+            merged.update(self._scoped_skills[check_scope])
+
+        return list(merged.values())
+```
+
+---
+
+### 7. Memory Hierarchy (CLAUDE.md Compatible)
+
+**Memory Tiers** (aligned with Google ADK layers):
+
+```python
+class MemoryTier(StrEnum):
+    """Memory storage tiers with different persistence."""
+    WORKING = "working"  # Ephemeral, current task
+    SESSION = "session"  # Current session, cleared on disconnect
+    DURABLE = "durable"  # Cross-session, persisted to database
+    ARTIFACT = "artifact"  # Generated outputs, versioned storage
+```
+
+**MemoryStore Implementation**:
+
+```python
+class MemoryStore:
+    """Hierarchical memory store with scope-based access."""
+
+    def __init__(
+        self,
+        redis_client: Redis,
+        database: AsyncSession,
+    ):
+        self.redis = redis_client
+        self.db = database
+
+    async def get(
+        self,
+        key: str,
+        scope: CapabilityScope,
+        tier: MemoryTier = MemoryTier.SESSION,
+        user_id: str | None = None,
+    ) -> Any | None:
+        """Get memory value from appropriate storage."""
+
+        if tier == MemoryTier.WORKING:
+            # In-memory only, not persisted
+            return self._working_memory.get(f"{scope}:{key}")
+
+        elif tier == MemoryTier.SESSION:
+            # Redis with TTL
+            redis_key = f"memory:{scope}:{user_id or 'anon'}:{key}"
+            return await self.redis.get(redis_key)
+
+        elif tier == MemoryTier.DURABLE:
+            # Database storage
+            return await self._get_from_db(key, scope, user_id)
+
+        elif tier == MemoryTier.ARTIFACT:
+            # Versioned artifact storage
+            return await self._get_artifact(key, scope, user_id)
+
+    async def set(
+        self,
+        key: str,
+        value: Any,
+        scope: CapabilityScope,
+        tier: MemoryTier = MemoryTier.SESSION,
+        user_id: str | None = None,
+        ttl_seconds: int | None = None,
+    ) -> None:
+        """Set memory value at appropriate tier."""
+
+        if tier == MemoryTier.SESSION:
+            redis_key = f"memory:{scope}:{user_id or 'anon'}:{key}"
+            await self.redis.set(redis_key, value, ex=ttl_seconds or 3600)
+
+        elif tier == MemoryTier.DURABLE:
+            await self._save_to_db(key, value, scope, user_id)
+```
+
+---
+
+### 8. Progressive Disclosure
+
+**Context Loading Strategy** (metadata first, details on demand):
+
+```python
+class ProgressiveContextLoader:
+    """Load context progressively to minimize token usage."""
+
+    async def load_initial(
+        self,
+        scope: CapabilityScope,
+    ) -> dict[str, Any]:
+        """Load lightweight metadata only."""
+        return {
+            "tools": [t.name for t in self.get_tool_names(scope)],
+            "skills": [s.name for s in self.get_skill_names(scope)],
+            "rules_count": self.count_rules(scope),
+        }
+
+    async def load_tool_details(
+        self,
+        tool_name: str,
+        scope: CapabilityScope,
+    ) -> dict[str, Any]:
+        """Load full tool definition when needed."""
+        tool = await self.capability_provider.get_tool(tool_name, scope)
+        return {
+            "name": tool.name,
+            "description": tool.description,
+            "parameters": tool.parameters_schema,
+            "examples": tool.examples[:3],  # First 3 examples
+        }
+
+    async def load_skill_instructions(
+        self,
+        skill_name: str,
+        scope: CapabilityScope,
+    ) -> str:
+        """Load full skill instructions when activated."""
+        skill = await self.capability_provider.get_skill(skill_name, scope)
+        return skill.instructions
+```
+
+---
+
+## Implementation Plan
+
+### Phase 1: Foundation (Week 1)
+
+| Task | Files | Scope |
+|------|-------|-------|
+| Define CapabilityScope enum | `src/mcp_server_langgraph/core/scopes.py` | New |
+| Enhance AgentRequest | `src/mcp_server_langgraph/agents/base_agent.py` | Modify |
+| Create CapabilityProvider protocol | `src/mcp_server_langgraph/capabilities/provider.py` | New |
+| Write foundation tests | `tests/unit/capabilities/test_provider.py` | New |
+
+### Phase 2: STUDIO.md Loader (Week 2)
+
+| Task | Files | Scope |
+|------|-------|-------|
+| Create StudioConfig model | `src/mcp_server_langgraph/studio/config.py` | New |
+| Create StudioLoader | `src/mcp_server_langgraph/studio/loader.py` | New |
+| Implement discovery traversal | `src/mcp_server_langgraph/studio/discovery.py` | New |
+| Write loader tests | `tests/unit/studio/test_loader.py` | New |
+
+### Phase 3: Hierarchical Registries (Week 3)
+
+| Task | Files | Scope |
+|------|-------|-------|
+| Extend SkillRegistry | `src/mcp_server_langgraph/skills/registry.py` | Modify |
+| Create HierarchicalToolRegistry | `src/mcp_server_langgraph/tools/registry.py` | Modify |
+| Implement scope resolution | `src/mcp_server_langgraph/capabilities/resolver.py` | New |
+| Write registry tests | `tests/unit/capabilities/test_resolver.py` | New |
+
+### Phase 4: Memory Hierarchy (Week 4)
+
+| Task | Files | Scope |
+|------|-------|-------|
+| Create MemoryStore | `src/mcp_server_langgraph/memory/store.py` | New |
+| Implement tier storage | `src/mcp_server_langgraph/memory/tiers.py` | New |
+| Add progressive loading | `src/mcp_server_langgraph/memory/progressive.py` | New |
+| Write memory tests | `tests/unit/memory/test_store.py` | New |
+
+### Phase 5: Agent Integration (Week 5)
+
+| Task | Files | Scope |
+|------|-------|-------|
+| Enhance WorkerAgent | `src/mcp_server_langgraph/agents/worker_agent.py` | Modify |
+| Add ReACT integration | `src/mcp_server_langgraph/agents/react_runner.py` | New |
+| Wire to ChatServiceImpl | `src/mcp_server_langgraph/api/v1/chat.py` | Modify |
+| Write integration tests | `tests/integration/agents/test_capability_flow.py` | New |
+
+### Phase 6: UI Integration (Week 6)
+
+| Task | Files | Scope |
+|------|-------|-------|
+| Add tool selection UI | `frontend/src/components/ToolSelector.tsx` | New |
+| Add skill selection UI | `frontend/src/components/SkillSelector.tsx` | New |
+| Wire to chat input | `frontend/src/conversation/ConnectedChatInputForm.tsx` | Modify |
+| Write frontend tests | `frontend/src/components/__tests__/ToolSelector.test.tsx` | New |
+
+---
+
+## Feature Flags
+
+```python
+# Feature flags for phased rollout
+ENABLE_HIERARCHICAL_CAPABILITIES = "enable_hierarchical_capabilities"  # Phase 1
+ENABLE_STUDIO_MD_LOADING = "enable_studio_md_loading"  # Phase 2
+ENABLE_SCOPED_SKILLS = "enable_scoped_skills"  # Phase 3
+ENABLE_MEMORY_HIERARCHY = "enable_memory_hierarchy"  # Phase 4
+ENABLE_AGENT_TOOL_BINDING = "enable_agent_tool_binding"  # Phase 5
+ENABLE_USER_TOOL_SELECTION = "enable_user_tool_selection"  # Phase 6
+```
+
+---
+
+## Consequences
+
+### Positive
+
+1. **All agents become capability-aware** without subclassing
+2. **Enterprise governance** via STUDIO.md at /etc/studio/
+3. **User control** over tool/skill selection alongside router suggestions
+4. **Progressive disclosure** minimizes context token usage
+5. **CLAUDE.md compatibility** for existing Claude Code users
+6. **Backward compatible** - existing agents work without changes
+
+### Negative
+
+1. **Complexity increase** with 7 scope levels
+2. **Discovery overhead** for recursive STUDIO.md traversal
+3. **Cache invalidation** challenges across scope changes
+4. **Testing surface** increases significantly
+
+### Mitigations
+
+1. **Scope caching**: Cache resolved capabilities with scope-key TTL
+2. **Lazy loading**: Only load STUDIO.md when first accessed at scope
+3. **Validation hooks**: Pre-commit validation for STUDIO.md format
+4. **Observability**: Trace capability resolution for debugging
+
+---
+
+## Related ADRs
+
+- **ADR-0090**: Agent Orchestration Architecture (RouterAgent, WorkerAgent)
+- **ADR-0089**: Prompt Architecture Centralization
+- **ADR-0088**: Frontend Hook Selection Guidance (WebSocket patterns)
+
+## References
+
+- [Anthropic Agent Skills Specification](https://www.anthropic.com/engineering/equipping-agents-for-the-real-world-with-agent-skills)
+- [Claude Code Memory Hierarchy](https://code.claude.com/docs/en/memory)
+- [Google ADK Context Architecture](https://developers.googleblog.com/en/building-ai-agents-with-google-adk/)
+- [LangGraph ReACT Agent](https://langchain-ai.github.io/langgraph/reference/prebuilt/#langgraph.prebuilt.create_react_agent)

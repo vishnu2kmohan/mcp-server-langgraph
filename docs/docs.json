@@ -365,7 +365,8 @@
               "guides/code-execution",
               "guides/devtools",
               "guides/skills-marketplace",
-              "guides/service-workers"
+              "guides/service-workers",
+              "guides/orchestrator-status-websocket"
             ]
           },
           {
@@ -552,7 +553,9 @@
               "architecture/adr-0038-scim-implementation",
               "architecture/adr-0039-openfga-permission-inheritance",
               "architecture/adr-0068-gateway-level-authentication",
-              "architecture/adr-0070-openfga-oidc-authentication"
+              "architecture/adr-0070-openfga-oidc-authentication",
+              "architecture/adr-0086-security-audit-keycloak-openfga",
+              "architecture/adr-0087-grafana-two-tier-authentication"
             ]
           },
           {
@@ -600,6 +603,10 @@
               "architecture/adr-0074-ai-suggestions-streaming-cost-tracking",
               "architecture/adr-0075-prompt-injection-detection",
               "architecture/adr-0089-prompt-architecture-centralization",
+              "architecture/adr-0090-agent-orchestration-architecture",
+              "architecture/adr-0091-api-response-transformation-strategy",
+              "architecture/adr-0092-hierarchical-capability-architecture",
+              "architecture/adr-0088-frontend-hook-selection-guidance",
               "architecture/adr-0076-sandpack-jsdom-27-mock"
             ]
           },

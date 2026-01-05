@@ -1,3 +1,13 @@
+---
+title: ADR-0090 Agent Orchestration Architecture
+description: 'Comprehensive agent orchestration with RouterAgent, SwarmOrchestrator, and execution plan workflows'
+icon: 'sitemap'
+seoTitle: "ADR-0090: Agent Orchestration Architecture"
+seoDescription: "Architecture Decision Record for multi-agent orchestration including RouterAgent, SwarmOrchestrator, ExecutionPlan approval workflows, and semantic template matching."
+keywords: ["orchestration", "multi-agent", "RouterAgent", "SwarmOrchestrator", "execution plans", "HITL", "ADR"]
+contentType: "reference"
+---
+
 # ADR-0090: Agent Orchestration Architecture
 
 | Status | Implemented |
@@ -132,68 +142,6 @@ Comprehensive metrics in `agents/metrics.py`:
 - Approval: path, high-risk triggers
 - Thinking: tokens histogram
 
-### Phase 8: Frontend-Backend Orchestrator Selection
-
-User-facing orchestrator mode selection integrated into chat flow:
-
-**Type Architecture**:
-Two distinct types for user-facing vs internal orchestrator modes:
-
-```typescript
-// User-facing modes (exposed in UI dropdown)
-type UserOrchestratorMode = "standard" | "swarm";
-
-// All modes including internal (for backend/system use)
-type OrchestratorMode = "standard" | "swarm" | "studio" | "ux" | "alert";
-```
-
-**OrchestratorMode Types**:
-- `standard`: Default single-agent flow (user-facing)
-- `swarm`: Parallel multi-agent execution (user-facing)
-- `studio`: Studio-specific agent configuration (internal)
-- `ux`: UX-optimized response generation (internal)
-- `alert`: Alert-triggered automated response (internal)
-
-**Shared Types File**: `src/mcp_server_langgraph/studio/frontend/src/types/orchestrator.ts`
-- Centralized type definitions
-- `USER_ORCHESTRATOR_MODES` array for UI iteration
-- `ORCHESTRATOR_MODE_DESCRIPTIONS` for tooltips
-- Type guards: `isUserOrchestratorMode()`, `isOrchestratorMode()`
-- Conversion: `toUserOrchestratorMode()` (fallback to "standard")
-
-**Implementation Files**:
-- `src/mcp_server_langgraph/studio/frontend/src/store/slices/sessionSlice.ts`:
-  - `SendMessagePayload` type supporting orchestrator option
-  - `sendMessage` thunk sends `preferred_orchestrator` to backend
-- `src/mcp_server_langgraph/studio/frontend/src/hooks/useStreamingChat.ts`:
-  - `StartStreamOptions` interface with `orchestrator` field
-  - Streaming endpoint receives `preferred_orchestrator` in request body
-- `src/mcp_server_langgraph/studio/frontend/src/conversation/ConversationPanel.tsx`:
-  - `SendMessageOptions` interface for orchestrator selection
-  - `showOrchestratorSelector` prop for UI toggle
-- `src/mcp_server_langgraph/studio/frontend/src/conversation/ConnectedChatInputForm.tsx`:
-  - Orchestrator dropdown selector UI component
-  - Mode selection persisted across messages
-
-**Data Flow**:
-```
-User selects orchestrator mode → ConversationPanel → ConnectedChatInputForm
-                                       ↓
-                         handleSendMessage(content, {orchestrator})
-                                       ↓
-                    sendMessage({content, orchestrator}) to Redux
-                                       ↓
-                    startStream(sessionId, content, {orchestrator})
-                                       ↓
-                POST /api/v1/chat/completions/stream
-                {preferred_orchestrator: "swarm"}
-                                       ↓
-                Backend RouterAgent uses preferred mode
-```
-
-**E2E Tests**:
-- `e2e/orchestrator-selection.spec.ts`: UI display, mode selection, request integration
-
 ## Feature Flags
 
 | Flag | Default | Purpose |
@@ -209,7 +157,6 @@ User selects orchestrator mode → ConversationPanel → ConnectedChatInputForm
 | `router_cache_ttl_seconds` | `3600` | Router cache TTL |
 | `enable_plan_search` | `false` | Semantic template search |
 | `enable_plan_templates` | `false` | Template suggestions |
-| `enable_orchestrator_selector` | `false` | Frontend orchestrator mode selection |
 
 ## Rollout Strategy
 
@@ -242,8 +189,7 @@ Stage 4: Full rollout
 | EmbeddingService | 29 | 93% |
 | Frontend Components | 82 | 85% |
 | Telemetry | 31 | 89% |
-| Orchestrator Selection (E2E) | 10 | 100% |
-| **Total** | **510+** | **~90%** |
+| **Total** | **500+** | **~90%** |
 
 ## Consequences
 
@@ -268,13 +214,12 @@ Stage 4: Full rollout
 
 ## Related ADRs
 
-- [ADR-0078](adr-0078-multi-agent-orchestrator-patterns.md): Base orchestrator patterns
-- [ADR-0081](adr-0081-handoff-pattern-multi-agent.md): Handoff pattern
-- [ADR-0083](adr-0083-confidence-based-hitl-system.md): HITL system
-- [ADR-0089](adr-0089-prompt-architecture-centralization.md): Prompt architecture
+- [ADR-0078](./adr-0078-multi-agent-orchestrator-patterns.mdx): Base orchestrator patterns
+- [ADR-0081](./adr-0081-handoff-pattern-multi-agent.mdx): Handoff pattern
+- [ADR-0083](./adr-0083-confidence-based-hitl-system.mdx): HITL system
+- [ADR-0089](./adr-0089-prompt-architecture-centralization.mdx): Prompt architecture
 
 ## References
 
 - Plan: `~/.claude/plans/shiny-snuggling-cerf.md`
-- Implementation: Phases 1-7 completed 2026-01-03
-- Phase 8 (Frontend-Backend Orchestrator Selection): Completed 2026-01-04
+- Implementation: 8 phases completed 2026-01-03
