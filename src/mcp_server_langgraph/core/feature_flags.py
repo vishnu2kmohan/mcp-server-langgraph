@@ -862,6 +862,15 @@ class FeatureFlags(BaseSettings):
     )
 
     # =========================================================================
+    # Orchestrator UI Selection (ADR-0090 Phase 8)
+    # =========================================================================
+    enable_orchestrator_selector: bool = Field(
+        default=False,
+        description="Enable frontend orchestrator mode selector in chat UI. "
+        "When enabled, users can choose between 'standard' and 'swarm' modes.",
+    )
+
+    # =========================================================================
     # Orchestrator Resilience (Phase 10)
     # =========================================================================
     enable_orchestrator_resilience: bool = Field(
@@ -912,6 +921,91 @@ class FeatureFlags(BaseSettings):
         default=False,
         description="Enable hierarchical orchestration with coordinator-worker pattern. "
         "Phase 4 feature - set FF_ENABLE_HIERARCHICAL_ORCHESTRATOR=true to activate.",
+    )
+
+    # =========================================================================
+    # ADR-0092 Hierarchical Capability Architecture Feature Flags
+    # =========================================================================
+    # These flags control the phased rollout of hierarchical capability resolution.
+    # All default to False for safe, controlled rollout.
+    #
+    # CORE FLAGS (P0/P1 - minimum viable):
+    #   - enable_enhanced_router_output: RouterOutput with skills/execution_mode
+    #   - enable_capability_resolution: Master for hierarchical registries
+    #   - enable_studio_md_loading: STUDIO.md discovery/parsing
+    #   - enable_multi_pattern_execution: ReACT, programmatic execution modes
+    #
+    # OPTIONAL FLAGS (P2/P3 - can defer):
+    #   - enable_user_capability_selection: UI tool/skill selectors
+    #   - enable_progressive_skill_loading: 4-stage skill loading
+    #   - enable_semantic_skill_search: Vector-based skill discovery
+    #   - enable_semantic_memory_retrieval: Vector-based memory search
+    #   - enable_hitl_undo_rollback: Reversible actions
+    # =========================================================================
+
+    # Core ADR-0092 Flags (P0/P1)
+    enable_enhanced_router_output: bool = Field(
+        default=False,
+        description="Enable enhanced RouterOutput with skills_needed, execution_mode, and routing_rationale fields. "
+        "Part of ADR-0092 Hierarchical Capability Architecture. "
+        "Set FF_ENABLE_ENHANCED_ROUTER_OUTPUT=true to activate.",
+    )
+
+    enable_capability_resolution: bool = Field(
+        default=False,
+        description="Enable hierarchical capability resolution via CapabilityProvider. "
+        "Master flag for hierarchical tool/skill registries and STUDIO.md-based configuration. "
+        "Part of ADR-0092. Set FF_ENABLE_CAPABILITY_RESOLUTION=true to activate.",
+    )
+
+    enable_studio_md_loading: bool = Field(
+        default=False,
+        description="Enable STUDIO.md configuration file discovery and parsing. "
+        "Loads hierarchical configuration from project, user, and enterprise scopes. "
+        "Part of ADR-0092. Set FF_ENABLE_STUDIO_MD_LOADING=true to activate.",
+    )
+
+    enable_multi_pattern_execution: bool = Field(
+        default=False,
+        description="Enable multiple execution patterns (ReACT, programmatic, orchestrator). "
+        "Allows WorkerAgent to select execution mode based on task characteristics. "
+        "Part of ADR-0092. Set FF_ENABLE_MULTI_PATTERN_EXECUTION=true to activate.",
+    )
+
+    # Optional ADR-0092 Flags (P2/P3)
+    enable_user_capability_selection: bool = Field(
+        default=False,
+        description="Enable user-facing tool and skill selection in chat UI. "
+        "Allows users to explicitly choose which tools/skills to use. "
+        "Part of ADR-0092. Set FF_ENABLE_USER_CAPABILITY_SELECTION=true to activate.",
+    )
+
+    enable_progressive_skill_loading: bool = Field(
+        default=False,
+        description="Enable 4-stage progressive skill loading for token efficiency. "
+        "Loads skills progressively based on relevance to reduce initial context. "
+        "Part of ADR-0092. Set FF_ENABLE_PROGRESSIVE_SKILL_LOADING=true to activate.",
+    )
+
+    enable_semantic_skill_search: bool = Field(
+        default=False,
+        description="Enable vector-based semantic skill discovery. "
+        "Uses embeddings to find relevant skills based on task description. "
+        "Part of ADR-0092. Set FF_ENABLE_SEMANTIC_SKILL_SEARCH=true to activate.",
+    )
+
+    enable_semantic_memory_retrieval: bool = Field(
+        default=False,
+        description="Enable vector-based semantic memory retrieval. "
+        "Uses embeddings to find relevant memories for context enrichment. "
+        "Part of ADR-0092. Set FF_ENABLE_SEMANTIC_MEMORY_RETRIEVAL=true to activate.",
+    )
+
+    enable_hitl_undo_rollback: bool = Field(
+        default=False,
+        description="Enable reversible actions with undo/rollback capability. "
+        "Allows undoing agent actions that were approved via HITL. "
+        "Part of ADR-0092. Set FF_ENABLE_HITL_UNDO_ROLLBACK=true to activate.",
     )
 
     force_high_risk_review: bool = Field(
@@ -1540,6 +1634,8 @@ class FeatureFlags(BaseSettings):
             "websocket_new_base": self.enable_websocket_new_base,
             "websocket_server_heartbeat": self.enable_websocket_server_heartbeat,
             "websocket_enhanced_metrics": self.enable_websocket_enhanced_metrics,
+            # Orchestrator UI Selection (ADR-0090 Phase 8)
+            "orchestrator_selector": self.enable_orchestrator_selector,
         }
 
 
