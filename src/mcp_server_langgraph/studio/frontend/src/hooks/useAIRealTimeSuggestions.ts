@@ -79,6 +79,12 @@ interface WebSocketMessage {
   type: string;
   data?: Suggestion[];
   timestamp?: number;
+  /** Error payload from backend (ADR-0093 protocol alignment) */
+  payload?: {
+    code?: string;
+    message?: string;
+    retryable?: boolean;
+  };
 }
 
 /**
@@ -155,7 +161,13 @@ export function useAIRealTimeSuggestions(
           break;
 
         case "error":
-          setError(new Error(String(message.data)));
+          // ADR-0093: Backend sends error in payload, fallback to data for compatibility
+          setError(
+            new Error(
+              message.payload?.message ??
+                (message.data ? String(message.data) : "Unknown error"),
+            ),
+          );
           break;
 
         default:
