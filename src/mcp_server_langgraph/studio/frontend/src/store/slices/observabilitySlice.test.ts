@@ -40,6 +40,7 @@ describe("observabilitySlice", () => {
     timeRange: "1h",
     activeTab: "agent-sessions",
     selectedTraceId: null,
+    webSocketMetrics: {},
   };
 
   describe("reducers", () => {
