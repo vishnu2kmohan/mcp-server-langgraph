@@ -39,7 +39,7 @@ export interface UseWebSocketMetricsPushResult {
  * Hook to periodically push WebSocket metrics to backend.
  */
 export function useWebSocketMetricsPush(
-  options: UseWebSocketMetricsPushOptions = {}
+  options: UseWebSocketMetricsPushOptions = {},
 ): UseWebSocketMetricsPushResult {
   const { enabled = true, intervalMs = 30000 } = options;
 
@@ -49,7 +49,7 @@ export function useWebSocketMetricsPush(
 
   // Get metrics from Redux store
   const webSocketMetrics = useSelector(
-    (state: RootState) => state.observability.webSocketMetrics
+    (state: RootState) => state.observability.webSocketMetrics,
   );
 
   // Get auth state - derive isAuthenticated from tokens presence
@@ -84,7 +84,8 @@ export function useWebSocketMetricsPush(
         consecutive_failures: metrics.consecutiveFailures,
         success_rate: metrics.successRate,
         failures_by_reason: metrics.failuresByReason,
-        avg_reconnection_duration_ms: metrics.avgReconnectionDurationMs ?? undefined,
+        avg_reconnection_duration_ms:
+          metrics.avgReconnectionDurationMs ?? undefined,
       };
     });
 
@@ -107,7 +108,7 @@ export function useWebSocketMetricsPush(
         return true;
       } else {
         console.warn(
-          `Failed to push WebSocket metrics: ${response.status} ${response.statusText}`
+          `Failed to push WebSocket metrics: ${response.status} ${response.statusText}`,
         );
         return false;
       }

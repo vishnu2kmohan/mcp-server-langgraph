@@ -6,7 +6,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { renderHook, act } from "@testing-library/react";
+import { renderHook, act, cleanup } from "@testing-library/react";
 import { Provider } from "react-redux";
 import { configureStore } from "@reduxjs/toolkit";
 import type { ReactNode } from "react";
@@ -27,7 +27,9 @@ const createTestStore = (authenticated = true) =>
     preloadedState: {
       auth: {
         isAuthenticated: authenticated,
-        user: authenticated ? { id: "test-user", email: "test@example.com" } : null,
+        user: authenticated
+          ? { id: "test-user", email: "test@example.com" }
+          : null,
         token: authenticated ? "test-token" : null,
         refreshToken: null,
         expiresAt: null,
@@ -51,15 +53,19 @@ describe("useWebSocketMetricsPush", () => {
   beforeEach(() => {
     vi.useFakeTimers();
     originalFetch = globalThis.fetch;
-    mockFetch = vi.fn().mockResolvedValue(
-      new Response(JSON.stringify({ status: "accepted" }), { status: 200 })
-    );
+    mockFetch = vi
+      .fn()
+      .mockResolvedValue(
+        new Response(JSON.stringify({ status: "accepted" }), { status: 200 }),
+      );
     globalThis.fetch = mockFetch;
   });
 
   afterEach(() => {
+    cleanup();
     vi.useRealTimers();
     vi.clearAllMocks();
+    vi.restoreAllMocks();
     globalThis.fetch = originalFetch;
   });
 
@@ -77,7 +83,9 @@ describe("useWebSocketMetricsPush", () => {
       const store = createTestStore();
       const wrapper = createWrapper(store);
 
-      const { result } = renderHook(() => useWebSocketMetricsPush(), { wrapper });
+      const { result } = renderHook(() => useWebSocketMetricsPush(), {
+        wrapper,
+      });
 
       expect(typeof result.current.pushNow).toBe("function");
       expect(result.current.lastPushTime).toBeNull();
@@ -99,12 +107,12 @@ describe("useWebSocketMetricsPush", () => {
           endpointId: "notifications",
           metrics,
           lastUpdated: Date.now(),
-        })
+        }),
       );
 
       renderHook(
         () => useWebSocketMetricsPush({ enabled: true, intervalMs: 30000 }),
-        { wrapper }
+        { wrapper },
       );
 
       // Fast-forward 30 seconds
@@ -119,7 +127,7 @@ describe("useWebSocketMetricsPush", () => {
           headers: expect.objectContaining({
             "Content-Type": "application/json",
           }),
-        })
+        }),
       );
     });
 
@@ -129,7 +137,7 @@ describe("useWebSocketMetricsPush", () => {
 
       renderHook(
         () => useWebSocketMetricsPush({ enabled: true, intervalMs: 30000 }),
-        { wrapper }
+        { wrapper },
       );
 
       // Fast-forward 30 seconds
@@ -152,12 +160,12 @@ describe("useWebSocketMetricsPush", () => {
           endpointId: "alerts",
           metrics,
           lastUpdated: Date.now(),
-        })
+        }),
       );
 
       renderHook(
         () => useWebSocketMetricsPush({ enabled: false, intervalMs: 30000 }),
-        { wrapper }
+        { wrapper },
       );
 
       await act(async () => {
@@ -180,12 +188,12 @@ describe("useWebSocketMetricsPush", () => {
           endpointId: "traces",
           metrics,
           lastUpdated: Date.now(),
-        })
+        }),
       );
 
       const { result } = renderHook(
         () => useWebSocketMetricsPush({ enabled: false }),
-        { wrapper }
+        { wrapper },
       );
 
       await act(async () => {
@@ -206,10 +214,12 @@ describe("useWebSocketMetricsPush", () => {
           endpointId: "devtools",
           metrics,
           lastUpdated: Date.now(),
-        })
+        }),
       );
 
-      const { result } = renderHook(() => useWebSocketMetricsPush(), { wrapper });
+      const { result } = renderHook(() => useWebSocketMetricsPush(), {
+        wrapper,
+      });
 
       expect(result.current.lastPushTime).toBeNull();
 
@@ -233,12 +243,12 @@ describe("useWebSocketMetricsPush", () => {
           endpointId: "test",
           metrics,
           lastUpdated: Date.now(),
-        })
+        }),
       );
 
       renderHook(
         () => useWebSocketMetricsPush({ enabled: true, intervalMs: 30000 }),
-        { wrapper }
+        { wrapper },
       );
 
       await act(async () => {
@@ -259,10 +269,12 @@ describe("useWebSocketMetricsPush", () => {
           endpointId: "test",
           metrics,
           lastUpdated: Date.now(),
-        })
+        }),
       );
 
-      const { result } = renderHook(() => useWebSocketMetricsPush(), { wrapper });
+      const { result } = renderHook(() => useWebSocketMetricsPush(), {
+        wrapper,
+      });
 
       await act(async () => {
         await result.current.pushNow();
@@ -287,13 +299,15 @@ describe("useWebSocketMetricsPush", () => {
           endpointId: "test",
           metrics,
           lastUpdated: Date.now(),
-        })
+        }),
       );
 
       // Set up mock to reject
       globalThis.fetch = vi.fn().mockRejectedValue(new Error("Network error"));
 
-      const { result } = renderHook(() => useWebSocketMetricsPush(), { wrapper });
+      const { result } = renderHook(() => useWebSocketMetricsPush(), {
+        wrapper,
+      });
 
       // Should not throw
       await act(async () => {
@@ -315,15 +329,20 @@ describe("useWebSocketMetricsPush", () => {
           endpointId: "test",
           metrics,
           lastUpdated: Date.now(),
-        })
+        }),
       );
 
       // Set up mock to return non-ok response
       globalThis.fetch = vi.fn().mockResolvedValue(
-        new Response("Internal Server Error", { status: 500, statusText: "Internal Server Error" })
+        new Response("Internal Server Error", {
+          status: 500,
+          statusText: "Internal Server Error",
+        }),
       );
 
-      const { result } = renderHook(() => useWebSocketMetricsPush(), { wrapper });
+      const { result } = renderHook(() => useWebSocketMetricsPush(), {
+        wrapper,
+      });
 
       // Should not throw
       await act(async () => {
@@ -351,10 +370,12 @@ describe("useWebSocketMetricsPush", () => {
           endpointId: "notifications",
           metrics: metrics1,
           lastUpdated: Date.now(),
-        })
+        }),
       );
 
-      const { result } = renderHook(() => useWebSocketMetricsPush(), { wrapper });
+      const { result } = renderHook(() => useWebSocketMetricsPush(), {
+        wrapper,
+      });
 
       await act(async () => {
         await result.current.pushNow();
@@ -390,12 +411,12 @@ describe("useWebSocketMetricsPush", () => {
           endpointId: "test",
           metrics,
           lastUpdated: Date.now(),
-        })
+        }),
       );
 
       const { unmount } = renderHook(
         () => useWebSocketMetricsPush({ enabled: true, intervalMs: 30000 }),
-        { wrapper }
+        { wrapper },
       );
 
       unmount();

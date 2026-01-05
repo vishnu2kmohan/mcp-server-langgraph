@@ -6,6 +6,7 @@
  */
 
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
+import type { ReconnectionMetrics } from "../../types/websocket-metrics";
 
 type ObservabilityTab =
   | "agent-sessions"
@@ -15,6 +16,18 @@ type ObservabilityTab =
   | "metrics"
   | "alerts"
   | "ws-metrics";
+
+/**
+ * WebSocket connection info stored in Redux.
+ */
+export interface WebSocketConnectionInfo {
+  /** Endpoint identifier (e.g., "notifications", "traces") */
+  endpointId: string;
+  /** Current reconnection metrics */
+  metrics: ReconnectionMetrics;
+  /** Last update timestamp */
+  lastUpdated: number;
+}
 
 export interface ObservabilityState {
   // Filter state
@@ -30,6 +43,9 @@ export interface ObservabilityState {
   // UI state
   activeTab: ObservabilityTab;
   selectedTraceId: string | null;
+
+  // WebSocket connection metrics (keyed by endpointId)
+  webSocketMetrics: Record<string, WebSocketConnectionInfo>;
 }
 
 const initialState: ObservabilityState = {
@@ -41,6 +57,7 @@ const initialState: ObservabilityState = {
   timeRange: "1h",
   activeTab: "agent-sessions",
   selectedTraceId: null,
+  webSocketMetrics: {},
 };
 
 export const observabilitySlice = createSlice({
@@ -80,6 +97,20 @@ export const observabilitySlice = createSlice({
       state.projectIdFilter = "";
       state.selectedTraceId = null;
     },
+    // WebSocket metrics actions
+    updateWebSocketMetrics: (
+      state,
+      action: PayloadAction<WebSocketConnectionInfo>,
+    ) => {
+      const { endpointId, metrics, lastUpdated } = action.payload;
+      state.webSocketMetrics[endpointId] = { endpointId, metrics, lastUpdated };
+    },
+    removeWebSocketMetrics: (state, action: PayloadAction<string>) => {
+      delete state.webSocketMetrics[action.payload];
+    },
+    resetWebSocketMetrics: (state) => {
+      state.webSocketMetrics = {};
+    },
   },
 });
 
@@ -93,6 +124,9 @@ export const {
   setActiveTab,
   setSelectedTraceId,
   resetFilters,
+  updateWebSocketMetrics,
+  removeWebSocketMetrics,
+  resetWebSocketMetrics,
 } = observabilitySlice.actions;
 
 // Selectors
@@ -125,5 +159,20 @@ export const selectActiveTab = (state: { observability: ObservabilityState }) =>
 export const selectSelectedTraceId = (state: {
   observability: ObservabilityState;
 }) => state.observability.selectedTraceId;
+
+// WebSocket metrics selectors
+export const selectWebSocketMetrics = (state: {
+  observability: ObservabilityState;
+}) => state.observability.webSocketMetrics;
+
+export const selectWebSocketMetricsByEndpoint = (
+  state: { observability: ObservabilityState },
+  endpointId: string,
+): WebSocketConnectionInfo | undefined =>
+  state.observability.webSocketMetrics[endpointId];
+
+export const selectTotalWebSocketConnections = (state: {
+  observability: ObservabilityState;
+}) => Object.keys(state.observability.webSocketMetrics).length;
 
 export default observabilitySlice.reducer;

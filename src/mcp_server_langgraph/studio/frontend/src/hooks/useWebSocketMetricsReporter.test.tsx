@@ -91,7 +91,9 @@ describe("useWebSocketMetricsReporter", () => {
 
       // Verify initial state
       let state = store.getState();
-      expect(selectWebSocketMetrics(state)["notifications"].metrics.totalAttempts).toBe(2);
+      expect(
+        selectWebSocketMetrics(state)["notifications"].metrics.totalAttempts,
+      ).toBe(2);
 
       // Update with new metrics
       const updatedMetrics = createInitialReconnectionMetrics();
@@ -104,7 +106,9 @@ describe("useWebSocketMetricsReporter", () => {
 
       // Verify updated state
       state = store.getState();
-      expect(selectWebSocketMetrics(state)["notifications"].metrics.totalAttempts).toBe(5);
+      expect(
+        selectWebSocketMetrics(state)["notifications"].metrics.totalAttempts,
+      ).toBe(5);
     });
 
     it("should track multiple endpoints independently", () => {

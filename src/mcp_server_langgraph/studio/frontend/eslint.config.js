@@ -100,6 +100,19 @@ export default tseslint.config(
           ],
         },
       ],
+
+      // Catch common snake_case API field patterns in new code
+      // This helps prevent regressions after the camelCase API transformation
+      // See ADR-0091 for the complete API transformation strategy
+      'no-restricted-syntax': [
+        'warn',
+        {
+          selector:
+            "MemberExpression[property.name=/^(alert_id|started_at|ended_at|created_at|updated_at|user_id|session_id|trace_id|span_id|workflow_id|project_id|organization_id|remediation_id|recommendation_id|step_number|risk_level|total_cost|total_tokens|prompt_tokens|completion_tokens|request_count|next_cursor|prev_cursor|has_next|has_prev|auth_type|api_key|default_level|feature_flag|task_categories|version_number|graph_json|source_text|commit_message|created_by|prompt_version|prompt_model|head_version_id|node_count|edge_count|message_count|owner_id|connection_type|tool_count|max_tokens|request_id|per_page|total_pages)$/]",
+          message:
+            'Use camelCase field names (e.g., alertId, startedAt, userId). API responses are now transformed via RTK Query transformResponse. See ADR-0091.',
+        },
+      ],
     },
   },
   // Override for storage utility - it legitimately needs direct localStorage access
@@ -128,6 +141,91 @@ export default tseslint.config(
   // Override for websocket utility - it defines buildWebSocketUrl and uses it internally
   {
     files: ['**/utils/websocket.ts'],
+    rules: {
+      'no-restricted-syntax': 'off',
+    },
+  },
+  // Override for API transforms - they legitimately work with snake_case fields
+  {
+    files: ['**/api/transforms.ts', '**/api/transforms.test.ts'],
+    rules: {
+      'no-restricted-syntax': 'off',
+    },
+  },
+  // Override for API index - query params must use snake_case for backend
+  {
+    files: ['**/api/index.ts'],
+    rules: {
+      'no-restricted-syntax': 'off',
+    },
+  },
+  // Override for mock handlers - they simulate snake_case API responses
+  {
+    files: ['**/mocks/**/*.ts'],
+    rules: {
+      'no-restricted-syntax': 'off',
+    },
+  },
+  // Override for WebSocket hooks - they process raw API data before transformation
+  {
+    files: ['**/hooks/use*WebSocket.ts', '**/hooks/useStreamingChat.ts'],
+    rules: {
+      'no-restricted-syntax': 'off',
+    },
+  },
+  // Override for HITL types - they define API-compatible snake_case types
+  {
+    files: ['**/types/hitl.ts'],
+    rules: {
+      'no-restricted-syntax': 'off',
+    },
+  },
+  // Override for apiTransforms - it works with snake_case conversions
+  {
+    files: ['**/utils/apiTransforms.ts'],
+    rules: {
+      'no-restricted-syntax': 'off',
+    },
+  },
+  // Override for Intelligence hooks - they work with AI API responses
+  {
+    files: ['**/hooks/use*Intelligence.ts', '**/hooks/useStudioAI.ts', '**/hooks/useAIOrchestratorStatus.ts'],
+    rules: {
+      'no-restricted-syntax': 'off',
+    },
+  },
+  // Override for router loaders - they process API responses
+  {
+    files: ['**/router/loaders/*.ts'],
+    rules: {
+      'no-restricted-syntax': 'off',
+    },
+  },
+  // Override for store slices - they store API data
+  {
+    files: ['**/store/slices/*.ts'],
+    rules: {
+      'no-restricted-syntax': 'off',
+    },
+  },
+  // Override for HITL dialogs hook
+  {
+    files: ['**/hooks/useHITLDialogs.ts'],
+    rules: {
+      'no-restricted-syntax': 'off',
+    },
+  },
+  // Override for all components that consume API data - temporary during ADR-0091 migration
+  // This broadly disables the snake_case warning until the migration is complete
+  {
+    files: [
+      '**/components/**/*.tsx',
+      '**/components/**/*.ts',
+      '**/pages/*.tsx',
+      '**/conversation/*.tsx',
+      '**/layout/*.tsx',
+      '**/canvas/*.tsx',
+    ],
     rules: {
       'no-restricted-syntax': 'off',
     },

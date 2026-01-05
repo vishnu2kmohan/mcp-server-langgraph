@@ -117,7 +117,9 @@ describe("useWebSocketTelemetrySync", () => {
       // Should now be synced
       state = store.getState();
       expect(selectWebSocketMetrics(state)["alerts"]).toBeDefined();
-      expect(selectWebSocketMetrics(state)["alerts"].metrics.totalAttempts).toBe(10);
+      expect(
+        selectWebSocketMetrics(state)["alerts"].metrics.totalAttempts,
+      ).toBe(10);
     });
 
     it("should use default sync interval of 2000ms", async () => {
@@ -228,7 +230,9 @@ describe("useWebSocketTelemetrySync", () => {
       });
 
       const state = store.getState();
-      expect(selectWebSocketMetrics(state)["manual"].metrics.totalAttempts).toBe(42);
+      expect(
+        selectWebSocketMetrics(state)["manual"].metrics.totalAttempts,
+      ).toBe(42);
     });
   });
 
