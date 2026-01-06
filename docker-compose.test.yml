@@ -1295,6 +1295,7 @@ services:
       - FF_ENABLE_INTERACTIVE_ARTIFACTS=true       # Interactive rendering (Sandpack, Mermaid)
       - FF_ENABLE_URL_CONTENT_FETCH=true           # #URL content fetch
       - FF_ENABLE_SLASH_COMMANDS=true              # Slash commands (/)
+      - FF_ENABLE_RICH_TEXT_CHAT_INPUT=true        # Pill + RichTextInput chat mode
       - FF_ENABLE_STYLE_PRESETS=true               # Response style presets
       - FF_ENABLE_COMMAND_PALETTE=true             # Command palette (Cmd+K)
       - FF_ENABLE_KEYBOARD_SHORTCUTS=true          # Customizable keyboard shortcuts
