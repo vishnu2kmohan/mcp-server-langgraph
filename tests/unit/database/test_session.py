@@ -26,16 +26,31 @@ def reset_global_state():
 
     Note: We always reset to None after yield (not restore original) to avoid
     xdist contamination where "original" values from other workers leak.
+
+    Also clears the URL-keyed engine and session maker registries added for
+    multi-database support (ADR-0091).
     """
-    # Reset to None for test isolation
+    # Reset legacy globals for test isolation
     session_module._engine = None
     session_module._async_session_maker = None
+
+    # Reset URL-keyed registries
+    if hasattr(session_module, "_engines"):
+        session_module._engines.clear()
+    if hasattr(session_module, "_session_makers"):
+        session_module._session_makers.clear()
 
     yield
 
     # Always reset to None after test (don't restore potentially contaminated state)
     session_module._engine = None
     session_module._async_session_maker = None
+
+    # Clear URL-keyed registries after test
+    if hasattr(session_module, "_engines"):
+        session_module._engines.clear()
+    if hasattr(session_module, "_session_makers"):
+        session_module._session_makers.clear()
 
 
 @pytest.mark.xdist_group(name="test_database_session")

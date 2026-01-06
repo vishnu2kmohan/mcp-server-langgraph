@@ -732,3 +732,54 @@ def pytest_sessionfinish(session, exitstatus):
         logging.debug("litellm async client cleanup not available (older version)")
     except Exception as e:
         logging.debug(f"litellm async client cleanup failed (non-critical): {e}")
+
+
+# ==============================================================================
+# Service Client Registry Reset Fixtures (targeted, NOT autouse)
+# ==============================================================================
+
+
+@pytest.fixture(scope="function")
+def reset_engine_registry():
+    """
+    Reset database engine registry for tests that need isolation.
+
+    USAGE: Only request this fixture in tests that specifically need
+    clean engine state. Not autouse to avoid breaking tests that rely
+    on long-lived engines.
+
+    Example:
+        def test_engine_creation(reset_engine_registry):
+            # Test starts with empty registry
+            engine = get_engine("postgresql://...")
+    """
+    from mcp_server_langgraph.database import session as session_module
+
+    # Clear before test
+    session_module._engines.clear()
+    session_module._session_makers.clear()
+    yield
+    # Cleanup after test
+    session_module._engines.clear()
+    session_module._session_makers.clear()
+
+
+@pytest.fixture(scope="function")
+def reset_qdrant_client():
+    """
+    Reset Qdrant client for tests that need isolation.
+
+    USAGE: Only request this fixture in tests that specifically need
+    a fresh Qdrant client. Not autouse to avoid breaking tests that
+    rely on persistent client state.
+
+    Example:
+        def test_qdrant_singleton(reset_qdrant_client):
+            # Test starts with no cached client
+            client = get_shared_qdrant_client()
+    """
+    from mcp_server_langgraph.storage.vectors.factory import close_qdrant_client
+
+    close_qdrant_client()
+    yield
+    close_qdrant_client()

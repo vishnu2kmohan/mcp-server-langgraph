@@ -442,3 +442,178 @@ def test_realm_has_fapi2_client_policies(repo_root: Path):
         f"Current profiles: {profiles}\n"
         f"Expected one of: fapi-2-security-profile, fapi-2-dpop-security-profile"
     )
+
+
+def test_realm_json_has_grafana_client(repo_root: Path):
+    """
+    Verify that the realm configuration includes the 'grafana' client.
+
+    The Grafana dashboard requires an OAuth2 client for Keycloak SSO.
+    Without this client, users get "Client not found" error when
+    accessing http://localhost/dashboards.
+
+    Reference: docker-compose.test.yml GF_AUTH_GENERIC_OAUTH_CLIENT_ID=grafana
+    """
+    realm_file = repo_root / "tests" / "e2e" / "default-realm.json"
+
+    with open(realm_file) as f:
+        realm_config = json.load(f)
+
+    clients = realm_config.get("clients", [])
+
+    # Find grafana client
+    grafana_client = None
+    for client in clients:
+        if client.get("clientId") == "grafana":
+            grafana_client = client
+            break
+
+    assert grafana_client is not None, (
+        "Client 'grafana' not found in realm configuration.\n"
+        "\n"
+        "This causes 'Client not found' error when accessing Grafana dashboards.\n"
+        "\n"
+        "Expected client configuration:\n"
+        "{\n"
+        '  "clientId": "grafana",\n'
+        '  "enabled": true,\n'
+        '  "publicClient": false,\n'
+        '  "secret": "test-grafana-secret",\n'
+        '  "standardFlowEnabled": true,\n'
+        '  "attributes": {"pkce.code.challenge.method": "S256"}\n'
+        "}\n"
+        "\n"
+        f"Found clients: {[c.get('clientId') for c in clients]}"
+    )
+
+    # Validate grafana client configuration
+    assert grafana_client.get("enabled") is True, "Client 'grafana' must be enabled"
+    assert grafana_client.get("standardFlowEnabled") is True, (
+        "Client 'grafana' must have standardFlowEnabled for OAuth2 authorization code flow"
+    )
+    assert grafana_client.get("secret") == "test-grafana-secret", (
+        "Client 'grafana' secret must match docker-compose.test.yml GF_AUTH_GENERIC_OAUTH_CLIENT_SECRET"
+    )
+
+
+def test_realm_json_has_openfga_server_client(repo_root: Path):
+    """
+    Verify that the realm configuration includes the 'openfga-server' client.
+
+    OpenFGA uses OIDC authentication for API access (ADR-0070).
+    Without this client, OpenFGA cannot validate JWT tokens.
+
+    Reference: docker-compose.test.yml OPENFGA_OIDC_CLIENT_ID=openfga-server
+    """
+    realm_file = repo_root / "tests" / "e2e" / "default-realm.json"
+
+    with open(realm_file) as f:
+        realm_config = json.load(f)
+
+    clients = realm_config.get("clients", [])
+
+    # Find openfga-server client
+    openfga_client = None
+    for client in clients:
+        if client.get("clientId") == "openfga-server":
+            openfga_client = client
+            break
+
+    assert openfga_client is not None, (
+        "Client 'openfga-server' not found in realm configuration.\n"
+        "\n"
+        "This causes OpenFGA API authentication failures.\n"
+        "\n"
+        "Expected client configuration:\n"
+        "{\n"
+        '  "clientId": "openfga-server",\n'
+        '  "enabled": true,\n'
+        '  "publicClient": false,\n'
+        '  "serviceAccountsEnabled": true\n'
+        "}\n"
+        "\n"
+        f"Found clients: {[c.get('clientId') for c in clients]}"
+    )
+
+    # Validate openfga-server client configuration
+    assert openfga_client.get("enabled") is True, "Client 'openfga-server' must be enabled"
+    assert openfga_client.get("serviceAccountsEnabled") is True, (
+        "Client 'openfga-server' must have serviceAccountsEnabled for client_credentials grant"
+    )
+
+
+def test_all_required_clients_exist_in_realm(repo_root: Path):
+    """
+    Comprehensive contract test: Validate ALL required OAuth2 clients from
+    docker-compose.test.yml exist in the realm JSON.
+
+    This test extracts CLIENT_ID values from docker-compose.test.yml and
+    verifies each one exists in tests/e2e/default-realm.json.
+
+    Why this test exists:
+    - Grafana "Client not found" error went undetected because there was no
+      contract test validating realm JSON matches docker-compose.test.yml
+    - Integration tests only run with Docker infrastructure
+    - This meta test runs in CI without Docker, catching issues early
+
+    Reference: GitHub issue - Missing grafana OAuth client
+    """
+    realm_file = repo_root / "tests" / "e2e" / "default-realm.json"
+    docker_compose_file = repo_root / "docker-compose.test.yml"
+
+    # Load realm configuration
+    with open(realm_file) as f:
+        realm_config = json.load(f)
+
+    realm_clients = {c.get("clientId") for c in realm_config.get("clients", [])}
+
+    # Load docker-compose.test.yml
+    with open(docker_compose_file) as f:
+        compose_config = yaml.safe_load(f)
+
+    # Extract all CLIENT_ID values from environment variables
+    # Patterns: VAR_NAME_CLIENT_ID=xxx (variable name ends with _CLIENT_ID)
+    # This avoids matching URLs with client_id= query parameters
+    import re
+
+    required_clients: set[str] = set()
+    optional_patterns = ["GITHUB", "GOOGLE", "MICROSOFT", "GITLAB"]  # SSO providers are optional
+
+    # Match environment variables like:
+    # - OPENFGA_OIDC_CLIENT_ID=openfga-server
+    # - GF_AUTH_GENERIC_OAUTH_CLIENT_ID=grafana
+    # - PROVIDERS_OIDC_CLIENT_ID=mcp-server
+    # But NOT: LOGOUT_REDIRECT=http://...?client_id=mcp-server (URLs)
+    client_id_pattern = re.compile(r"^[A-Z_]+_CLIENT_ID=(.+)$", re.IGNORECASE)
+
+    services = compose_config.get("services", {})
+    for service_name, service_config in services.items():
+        env_vars = service_config.get("environment", [])
+        if isinstance(env_vars, list):
+            for env in env_vars:
+                if isinstance(env, str):
+                    match = client_id_pattern.match(env)
+                    if match:
+                        # Skip optional SSO providers
+                        if any(pattern in env.upper() for pattern in optional_patterns):
+                            continue
+                        client_id = match.group(1).strip()
+                        # Skip empty values, placeholders, and shell variables
+                        if client_id and not client_id.startswith("$") and not client_id.startswith("{"):
+                            required_clients.add(client_id)
+
+    # Validate each required client exists in realm
+    missing_clients = required_clients - realm_clients
+
+    assert len(missing_clients) == 0, (
+        f"Missing Keycloak clients in tests/e2e/default-realm.json:\n"
+        f"\n"
+        f"Missing: {sorted(missing_clients)}\n"
+        f"\n"
+        f"Required by docker-compose.test.yml: {sorted(required_clients)}\n"
+        f"Available in realm JSON: {sorted(realm_clients)}\n"
+        f"\n"
+        f"Fix: Add the missing client(s) to tests/e2e/default-realm.json\n"
+        f"\n"
+        f"This contract test ensures docker-compose.test.yml and realm JSON stay in sync."
+    )
