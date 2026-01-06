@@ -164,6 +164,14 @@ class PreferencesRepository(ABC):
             return NotificationPreferences.default(user_id=user_id)
         return prefs
 
+    async def aclose(self) -> None:  # noqa: B027
+        """
+        Close any underlying connections (idempotent).
+
+        Safe to call multiple times. Should be called during shutdown.
+        Default implementation for repositories without connections.
+        """
+
 
 class InMemoryPreferencesRepository(PreferencesRepository):
     """
@@ -269,6 +277,17 @@ class RedisPreferencesRepository(PreferencesRepository):
             logger.debug(f"Deleted notification preferences from Redis for user: {user_id}")
         except Exception as e:
             logger.warning(f"Failed to delete preferences from Redis: {e}")
+
+    async def aclose(self) -> None:
+        """
+        Close Redis connection (idempotent).
+
+        Safe to call multiple times. Should be called during shutdown.
+        """
+        if self._redis is not None:
+            await self._redis.aclose()
+            self._redis = None
+            logger.info("RedisPreferencesRepository connection closed")
 
 
 async def should_send_notification(

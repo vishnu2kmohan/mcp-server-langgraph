@@ -65,6 +65,22 @@ class APIKeyManager:
         self.cache_ttl = cache_ttl
         self.cache_enabled = cache_enabled and redis_client is not None
 
+    async def aclose(self) -> None:
+        """
+        Close the Redis client (idempotent).
+
+        Safe to call multiple times. After calling, Redis operations will be disabled.
+        This should be called during application shutdown to prevent connection leaks.
+        """
+        if self.redis is not None:
+            try:
+                await self.redis.aclose()
+            except Exception as e:
+                logger.warning(f"Error closing APIKeyManager Redis client: {e}")
+            finally:
+                self.redis = None
+                self.cache_enabled = False
+
     def generate_api_key(self, prefix: str = DEFAULT_PREFIX) -> str:
         """
         Generate cryptographically secure API key

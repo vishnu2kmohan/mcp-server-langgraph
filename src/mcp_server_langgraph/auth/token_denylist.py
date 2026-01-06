@@ -63,6 +63,14 @@ class TokenDenylist(ABC):
             jti: JWT ID to remove
         """
 
+    @abstractmethod
+    async def aclose(self) -> None:
+        """
+        Close any underlying connections (idempotent).
+
+        Safe to call multiple times. Should be called during shutdown.
+        """
+
 
 class InMemoryTokenDenylist(TokenDenylist):
     """
@@ -112,6 +120,10 @@ class InMemoryTokenDenylist(TokenDenylist):
         if jti in self._denied_tokens:
             del self._denied_tokens[jti]
             logger.debug(f"Token {jti[:8]}... removed from denylist")
+
+    async def aclose(self) -> None:
+        """No-op for in-memory implementation (idempotent)."""
+        pass
 
 
 class RedisTokenDenylist(TokenDenylist):
@@ -169,6 +181,21 @@ class RedisTokenDenylist(TokenDenylist):
         key = f"{self.key_prefix}{jti}"
         await self.redis.delete(key)
         logger.debug(f"Token {jti[:8]}... removed from Redis denylist")
+
+    async def aclose(self) -> None:
+        """
+        Close the Redis client (idempotent).
+
+        Safe to call multiple times. After calling, Redis operations will fail.
+        This should be called during application shutdown to prevent connection leaks.
+        """
+        if self.redis is not None:
+            try:
+                await self.redis.aclose()
+            except Exception as e:
+                logger.warning(f"Error closing RedisTokenDenylist Redis client: {e}")
+            finally:
+                self.redis = None  # type: ignore[assignment]
 
 
 def create_token_denylist(

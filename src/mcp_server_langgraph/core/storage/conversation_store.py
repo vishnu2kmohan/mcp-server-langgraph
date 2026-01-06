@@ -80,6 +80,21 @@ class ConversationStore:
         """Generate Redis key for conversation"""
         return f"conversation:metadata:{thread_id}"
 
+    def close(self) -> None:
+        """
+        Close the Redis client (idempotent).
+
+        Safe to call multiple times. After calling, Redis operations will fail.
+        This should be called during application shutdown to prevent connection leaks.
+        """
+        if self._redis_client is not None:
+            try:
+                self._redis_client.close()
+            except Exception:
+                pass  # Ignore close errors
+            finally:
+                self._redis_client = None
+
     async def record_conversation(
         self,
         thread_id: str,

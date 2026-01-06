@@ -461,6 +461,36 @@ repos:
       Prevents hard-to-debug test failures from common anti-patterns.
 
       '
+  - id: frontend-test-file-size-check
+    name: Frontend Test File Size Check (OOM Prevention)
+    entry: >
+      bash -c 'cd src/mcp_server_langgraph/studio/frontend &&
+      ./scripts/check-test-file-size.sh check 2>&1 || (echo "" && echo "ERROR - Oversized test files detected (>1000 lines)." && echo "See: docs-internal/frontend/testing/TESTING_OOM_PREVENTION.md" && exit 1)'
+    language: system
+    pass_filenames: false
+    files: ^src/mcp_server_langgraph/studio/frontend/src/.*\.(test|spec)\.(ts|tsx)$
+    always_run: false
+    stages:
+    - pre-commit
+    description: 'Validates frontend test files stay under 1000 lines to prevent OOM.
+
+      Added 2026-01-05 for OOM prevention in Vitest test runs.
+
+      Large monolithic test files (>1000 lines) cause heap exhaustion due to:
+      - Heavy fixture/mock accumulation within a single file
+      - Limited worker restart opportunities
+      - Prolonged heap usage without GC
+
+      Enforces sharding strategy:
+      - Maximum: 1000 lines per test file
+      - Warning: 800 lines (approaching limit)
+      - Ideal: 400-800 lines per shard
+
+      Duration: ~1s (static line count check).
+
+      Run with --fix-suggestions for split recommendations.
+
+      '
   - id: run-integration-tests
     name: Run Integration Tests (manual - requires Docker)
     entry: bash -c 'PYTHONUNBUFFERED=1 OTEL_SDK_DISABLED=true uv run --frozen pytest -n auto tests/integration/ -v --tb=short'

@@ -343,6 +343,10 @@ class OpenFGAClient:
         self._initialized = False
         self._oidc_access_token: str | None = None
         self._oidc_token_expires_at: float | None = None
+        # Lock to prevent race conditions during concurrent initialization
+        # Without this lock, multiple concurrent calls to _ensure_initialized()
+        # can each create a new OpenFgaClient, leaking aiohttp.ClientSession instances
+        self._init_lock = asyncio.Lock()
 
         # Determine authentication method
         auth_method = "none"
@@ -523,102 +527,118 @@ class OpenFGAClient:
         - If refresh needed, resets _initialized to trigger re-initialization
         - This ensures the SDK client is recreated with fresh credentials
         - Prevents 401 errors from expired tokens causing circuit breaker opens
+
+        Thread Safety:
+        - Uses asyncio.Lock to prevent race conditions during concurrent initialization
+        - Without lock, concurrent calls could each create a new OpenFgaClient,
+          overwriting self._client without closing the old one (session leak)
         """
-        # Check if OIDC token needs refresh (expired or expiring soon)
-        # If so, force re-initialization to get fresh credentials
-        if self._initialized and self._should_refresh_token():
-            logger.info(
-                "OIDC token expired or near expiry, triggering re-initialization",
-                extra={
-                    "expires_at": self._oidc_token_expires_at,
-                    "store_id": self.store_id,
-                },
-            )
-            # Close existing client to prevent resource leaks
-            if self._client is not None:
-                try:
-                    await self._client.close()
-                except Exception as e:
-                    logger.warning(f"Error closing expired client: {e}")
-            self._client = None
-            self._initialized = False
+        # Acquire lock to prevent race conditions in concurrent initialization
+        # Without this, multiple concurrent calls can all see _initialized = False
+        # and each create a new OpenFgaClient, leaking aiohttp.ClientSession instances
+        async with self._init_lock:
+            # Check if OIDC token needs refresh (expired or expiring soon)
+            # If so, force re-initialization to get fresh credentials
+            if self._initialized and self._should_refresh_token():
+                logger.info(
+                    "OIDC token expired or near expiry, triggering re-initialization",
+                    extra={
+                        "expires_at": self._oidc_token_expires_at,
+                        "store_id": self.store_id,
+                    },
+                )
+                # Close existing client to prevent resource leaks
+                if self._client is not None:
+                    try:
+                        await self._client.close()
+                    except Exception as e:
+                        logger.warning(f"Error closing expired client: {e}")
+                self._client = None
+                self._initialized = False
 
-        if not self._initialized:
-            # IMPORTANT: Obtain OIDC token FIRST if configured
-            # This is needed for store/model lookups when using OIDC authentication
-            credentials = None
-            auth_method = "none"
+            if not self._initialized:
+                # IMPORTANT: Obtain OIDC token FIRST if configured
+                # This is needed for store/model lookups when using OIDC authentication
+                credentials = None
+                auth_method = "none"
 
-            if self.config.oidc_client_id and self.config.oidc_client_secret and self.config.oidc_issuer:
-                # Obtain OIDC access token from Keycloak BEFORE store lookup
-                access_token = await self._get_oidc_access_token()
-                if access_token:
+                if self.config.oidc_client_id and self.config.oidc_client_secret and self.config.oidc_issuer:
+                    # Obtain OIDC access token from Keycloak BEFORE store lookup
+                    access_token = await self._get_oidc_access_token()
+                    if access_token:
+                        credentials = Credentials(
+                            method="api_token",
+                            configuration=CredentialConfiguration(api_token=access_token),
+                        )
+                        auth_method = "oidc"
+                elif self.config.preshared_key:
+                    # Fallback to preshared key (deprecated)
                     credentials = Credentials(
                         method="api_token",
-                        configuration=CredentialConfiguration(api_token=access_token),
+                        configuration=CredentialConfiguration(api_token=self.config.preshared_key),
                     )
-                    auth_method = "oidc"
-            elif self.config.preshared_key:
-                # Fallback to preshared key (deprecated)
-                credentials = Credentials(
-                    method="api_token",
-                    configuration=CredentialConfiguration(api_token=self.config.preshared_key),
+                    auth_method = "preshared"
+
+                # Look up store by name if store_id is not set but store_name is
+                store_id = self.config.store_id
+                if not store_id and self.config.store_name:
+                    store_id = await self._lookup_store_by_name(self.config.store_name)
+                    if store_id:
+                        self.store_id = store_id
+                        self.config.store_id = store_id
+                        logger.info(
+                            "Resolved store by name",
+                            extra={"store_name": self.config.store_name, "store_id": store_id},
+                        )
+                    else:
+                        logger.warning(
+                            "Could not find store by name",
+                            extra={"store_name": self.config.store_name},
+                        )
+
+                # Look up latest model_id if not provided
+                model_id = self.config.model_id
+                if not model_id and store_id:
+                    model_id = await self._lookup_latest_model_id(store_id)
+                    if model_id:
+                        self.model_id = model_id
+                        self.config.model_id = model_id
+                        logger.info(
+                            "Resolved latest model for store",
+                            extra={"store_id": store_id, "model_id": model_id},
+                        )
+                    else:
+                        logger.warning(
+                            "Could not find authorization model for store",
+                            extra={"store_id": store_id},
+                        )
+
+                # Close any existing client before creating new one (prevents session leak)
+                if self._client is not None:
+                    try:
+                        await self._client.close()
+                    except Exception as e:
+                        logger.warning(f"Error closing old client before replacement: {e}")
+
+                # Create client with credentials obtained earlier
+                configuration = ClientConfiguration(
+                    api_url=self.config.api_url,
+                    store_id=store_id,
+                    authorization_model_id=model_id,
+                    credentials=credentials,
                 )
-                auth_method = "preshared"
-
-            # Look up store by name if store_id is not set but store_name is
-            store_id = self.config.store_id
-            if not store_id and self.config.store_name:
-                store_id = await self._lookup_store_by_name(self.config.store_name)
-                if store_id:
-                    self.store_id = store_id
-                    self.config.store_id = store_id
-                    logger.info(
-                        "Resolved store by name",
-                        extra={"store_name": self.config.store_name, "store_id": store_id},
-                    )
-                else:
-                    logger.warning(
-                        "Could not find store by name",
-                        extra={"store_name": self.config.store_name},
-                    )
-
-            # Look up latest model_id if not provided
-            model_id = self.config.model_id
-            if not model_id and store_id:
-                model_id = await self._lookup_latest_model_id(store_id)
-                if model_id:
-                    self.model_id = model_id
-                    self.config.model_id = model_id
-                    logger.info(
-                        "Resolved latest model for store",
-                        extra={"store_id": store_id, "model_id": model_id},
-                    )
-                else:
-                    logger.warning(
-                        "Could not find authorization model for store",
-                        extra={"store_id": store_id},
-                    )
-
-            # Create client with credentials obtained earlier
-            configuration = ClientConfiguration(
-                api_url=self.config.api_url,
-                store_id=store_id,
-                authorization_model_id=model_id,
-                credentials=credentials,
-            )
-            self._client = OpenFgaClient(configuration)
-            self._initialized = True
-            logger.info(
-                "OpenFGA SDK client initialized",
-                extra={
-                    "api_url": self.config.api_url,
-                    "store_id": store_id,
-                    "model_id": model_id,
-                    "auth_method": auth_method,
-                    "auth_enabled": credentials is not None,
-                },
-            )
+                self._client = OpenFgaClient(configuration)
+                self._initialized = True
+                logger.info(
+                    "OpenFGA SDK client initialized",
+                    extra={
+                        "api_url": self.config.api_url,
+                        "store_id": store_id,
+                        "model_id": model_id,
+                        "auth_method": auth_method,
+                        "auth_enabled": credentials is not None,
+                    },
+                )
 
     async def _lookup_store_by_name(self, store_name: str) -> str | None:
         """

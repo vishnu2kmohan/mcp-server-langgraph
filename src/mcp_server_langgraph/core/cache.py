@@ -896,6 +896,59 @@ class CacheService:
         except Exception as e:
             logger.debug("Operation failed: %s", e)
 
+    # =========================================================================
+    # Lifecycle Management (close/aclose)
+    # =========================================================================
+
+    def close(self) -> None:
+        """
+        Close the sync Redis client (idempotent).
+
+        Safe to call multiple times - subsequent calls are no-ops.
+        This method should be called during application shutdown.
+
+        Note:
+            This only closes the sync Redis client. For async cleanup,
+            use aclose() instead (or in addition to this).
+
+        Example:
+            >>> cache = get_cache()
+            >>> cache.close()
+            >>> cache.close()  # Safe, no-op
+        """
+        if self.redis is not None:
+            try:
+                self.redis.close()
+                logger.debug("Sync Redis client closed")
+            except Exception as e:
+                logger.warning(f"Error closing sync Redis client: {e}")
+            finally:
+                self.redis = None
+
+    async def aclose(self) -> None:
+        """
+        Close the async Redis client (idempotent).
+
+        Safe to call multiple times - subsequent calls are no-ops.
+        This method should be called during application shutdown.
+
+        Called from:
+        - mcp_server_langgraph.lifecycle.cleanup.cleanup_all_clients()
+
+        Example:
+            >>> cache = get_cache()
+            >>> await cache.aclose()
+            >>> await cache.aclose()  # Safe, no-op
+        """
+        if self.async_redis is not None:
+            try:
+                await self.async_redis.close()
+                logger.debug("Async Redis client closed")
+            except Exception as e:
+                logger.warning(f"Error closing async Redis client: {e}")
+            finally:
+                self.async_redis = None
+
     def get_statistics(self) -> dict[str, Any]:
         """
         Get cache statistics.

@@ -231,6 +231,14 @@ class SessionStore(ABC):
             Number of sessions deleted
         """
 
+    @abstractmethod
+    async def aclose(self) -> None:
+        """
+        Close any underlying connections (idempotent).
+
+        Safe to call multiple times. Should be called during shutdown.
+        """
+
     def _generate_session_id(self) -> str:
         """Generate cryptographically secure session ID"""
         return secrets.token_urlsafe(32)
@@ -511,6 +519,10 @@ class InMemorySessionStore(SessionStore):
 
         logger.info(f"Deleted {count} inactive sessions before {cutoff_date.isoformat()}")
         return count
+
+    async def aclose(self) -> None:
+        """No-op for in-memory store (no connections to close)."""
+        pass
 
 
 class RedisSessionStore(SessionStore):
@@ -865,6 +877,16 @@ class RedisSessionStore(SessionStore):
 
         logger.info(f"Deleted {count} inactive sessions from Redis before {cutoff_date.isoformat()}")
         return count
+
+    async def aclose(self) -> None:
+        """Close Redis connection (idempotent).
+
+        Safe to call multiple times. Should be called during shutdown.
+        """
+        if self.redis is not None:
+            await self.redis.aclose()
+            self.redis = None
+            logger.info("RedisSessionStore connection closed")
 
 
 def create_session_store(backend: str = "memory", redis_url: str | None = None, **kwargs: Any) -> SessionStore:

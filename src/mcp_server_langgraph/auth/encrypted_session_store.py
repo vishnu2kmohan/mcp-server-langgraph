@@ -363,6 +363,14 @@ class EncryptedSessionStore(SessionStore):
         """
         return await self._store.delete_inactive_sessions(cutoff_date)
 
+    async def aclose(self) -> None:
+        """Close underlying session store connections (idempotent).
+
+        Delegates to the wrapped store's aclose() method.
+        Safe to call multiple times. Should be called during shutdown.
+        """
+        await self._store.aclose()
+
 
 # =============================================================================
 # Module Exports
