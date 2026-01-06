@@ -10,7 +10,6 @@
  * 2. If WebSocket fails, fall back to REST
  * 3. REST uses /api/v1/chat/completions/stream (SSE)
  */
-
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { renderHook, act, waitFor } from "@testing-library/react";
 
@@ -19,26 +18,19 @@ const mockNavigate = vi.fn();
 vi.mock("react-router", () => ({
   useNavigate: () => mockNavigate,
 }));
-
-// Mock authenticatedFetch
 const mockAuthenticatedFetch = vi.fn();
 vi.mock("../utils/authenticatedFetch", () => ({
   authenticatedFetch: (...args: unknown[]) => mockAuthenticatedFetch(...args),
 }));
-
-// Mock intendedRoute
 const mockSaveCurrentRouteAsIntended = vi.fn();
 vi.mock("../utils/intendedRoute", () => ({
   saveCurrentRouteAsIntended: () => mockSaveCurrentRouteAsIntended(),
 }));
-
-// Mock Redux store hooks
 const mockDispatch = vi.fn();
 vi.mock("../store/hooks", () => ({
   useAppDispatch: () => mockDispatch,
   useAppSelector: () => null,
 }));
-
 import { useMCPConnection } from "./useMCPConnection";
 
 // Mock WebSocket
@@ -47,38 +39,31 @@ class MockWebSocket {
   static OPEN = 1;
   static CLOSING = 2;
   static CLOSED = 3;
-
   url: string;
   readyState: number = MockWebSocket.CONNECTING;
   onopen: ((event: Event) => void) | null = null;
   onclose: ((event: CloseEvent) => void) | null = null;
   onmessage: ((event: MessageEvent) => void) | null = null;
   onerror: ((event: Event) => void) | null = null;
-
   constructor(url: string) {
     this.url = url;
   }
-
   simulateOpen() {
     this.readyState = MockWebSocket.OPEN;
     this.onopen?.(new Event("open"));
   }
-
   simulateClose(code = 1000, reason = "") {
     this.readyState = MockWebSocket.CLOSED;
     this.onclose?.(new CloseEvent("close", { code, reason }));
   }
-
   simulateError() {
     this.onerror?.(new Event("error"));
   }
-
   simulateMessage(data: unknown) {
     this.onmessage?.(
       new MessageEvent("message", { data: JSON.stringify(data) }),
     );
   }
-
   send = vi.fn();
   close = vi.fn(() => {
     this.readyState = MockWebSocket.CLOSED;
@@ -88,25 +73,18 @@ class MockWebSocket {
 
 describe("useMCPConnection", () => {
   let mockWebSocket: MockWebSocket | null = null;
-
   beforeEach(() => {
     vi.clearAllMocks();
     mockWebSocket = null;
-
-    // Default successful response for authenticatedFetch
     mockAuthenticatedFetch.mockResolvedValue({
       ok: true,
       json: () => Promise.resolve({ tools: [] }),
     });
-
-    // Mock WebSocket constructor with static constants using vi.stubGlobal
-    // This works correctly in jsdom environment where WebSocket is read-only
-    // Vitest 4 requires function syntax for constructor mocks (arrow functions don't work with `new`)
+    // Mock WebSocket constructor - Vitest 4 requires function syntax
     const MockWebSocketConstructor = vi.fn(function (url: string) {
       mockWebSocket = new MockWebSocket(url);
       return mockWebSocket;
     });
-    // Add static constants that the hook checks against
     Object.assign(MockWebSocketConstructor, {
       CONNECTING: 0,
       OPEN: 1,
@@ -115,7 +93,6 @@ describe("useMCPConnection", () => {
     });
     vi.stubGlobal("WebSocket", MockWebSocketConstructor);
   });
-
   afterEach(() => {
     vi.unstubAllGlobals();
     vi.restoreAllMocks();
@@ -124,22 +101,17 @@ describe("useMCPConnection", () => {
   describe("Initial State", () => {
     it("should start in disconnected state", () => {
       const { result } = renderHook(() => useMCPConnection());
-
       expect(result.current.isConnected).toBe(false);
       expect(result.current.connectionMode).toBe("disconnected");
       expect(result.current.tools).toEqual([]);
       expect(result.current.error).toBeNull();
     });
-
     it("should not auto-connect by default", () => {
       renderHook(() => useMCPConnection());
-
       expect(global.WebSocket).not.toHaveBeenCalled();
     });
-
     it("should auto-connect when autoConnect option is true", async () => {
       renderHook(() => useMCPConnection({ autoConnect: true }));
-
       expect(global.WebSocket).toHaveBeenCalled();
     });
   });
@@ -147,38 +119,29 @@ describe("useMCPConnection", () => {
   describe("Protocol Version in URL", () => {
     it("should append protocol version as query parameter", async () => {
       const { result } = renderHook(() => useMCPConnection());
-
       await act(async () => {
         result.current.connect();
       });
-
       expect(mockWebSocket?.url).toContain("v=");
       expect(mockWebSocket?.url).toMatch(/v=\d+\.\d+\.\d+/);
     });
-
     it("should preserve session parameter when adding version", async () => {
       const { result } = renderHook(() =>
         useMCPConnection({ sessionId: "test-session-123" }),
       );
-
       await act(async () => {
         result.current.connect();
       });
-
       expect(mockWebSocket?.url).toContain("session=test-session-123");
       expect(mockWebSocket?.url).toContain("v=");
     });
-
     it("should use ampersand for version when session exists", async () => {
       const { result } = renderHook(() =>
         useMCPConnection({ sessionId: "test-session" }),
       );
-
       await act(async () => {
         result.current.connect();
       });
-
-      // URL should have session first, then version
       expect(mockWebSocket?.url).toMatch(/\?session=test-session&v=/);
     });
   });
@@ -186,17 +149,13 @@ describe("useMCPConnection", () => {
   describe("Authentication", () => {
     it("should use authenticatedFetch for REST fallback", async () => {
       const { result } = renderHook(() => useMCPConnection());
-
       await act(async () => {
         result.current.connect();
       });
-
-      // Simulate WebSocket failure to trigger REST fallback
       await act(async () => {
         mockWebSocket?.simulateError();
         mockWebSocket?.simulateClose(1006, "Connection failed");
       });
-
       await waitFor(() => {
         expect(mockAuthenticatedFetch).toHaveBeenCalledWith(
           "/api/v1/mcp/tools",
@@ -207,34 +166,25 @@ describe("useMCPConnection", () => {
         );
       });
     });
-
     it("should use authenticatedFetch for tool calls in REST mode", async () => {
       const { result } = renderHook(() => useMCPConnection());
-
       await act(async () => {
         result.current.connect();
       });
-
-      // Simulate WebSocket failure
       await act(async () => {
         mockWebSocket?.simulateError();
         mockWebSocket?.simulateClose(1006, "Connection failed");
       });
-
       await waitFor(() => {
         expect(result.current.connectionMode).toBe("rest");
       });
-
-      // Now call a tool
       mockAuthenticatedFetch.mockResolvedValueOnce({
         ok: true,
         json: () => Promise.resolve({ result: "success" }),
       });
-
       await act(async () => {
         await result.current.callTool("test-tool", { arg: "value" });
       });
-
       expect(mockAuthenticatedFetch).toHaveBeenCalledWith(
         "/api/v1/mcp/tools/call",
         expect.objectContaining({
@@ -247,7 +197,6 @@ describe("useMCPConnection", () => {
         }),
       );
     });
-
     it("should navigate to login on auth failure during REST fallback", async () => {
       mockAuthenticatedFetch.mockImplementationOnce(
         async (_url: string, options: { onAuthFailure?: () => void }) => {
@@ -255,51 +204,37 @@ describe("useMCPConnection", () => {
           return { ok: false, status: 401 };
         },
       );
-
       const { result } = renderHook(() => useMCPConnection());
-
       await act(async () => {
         result.current.connect();
       });
-
-      // Simulate WebSocket failure to trigger REST fallback
       await act(async () => {
         mockWebSocket?.simulateError();
         mockWebSocket?.simulateClose(1006, "Connection failed");
       });
-
       await waitFor(() => {
         expect(mockSaveCurrentRouteAsIntended).toHaveBeenCalled();
       });
-
       expect(mockNavigate).toHaveBeenCalledWith("/login", { replace: true });
     });
-
     it("should navigate to login on auth failure during tool call", async () => {
       const { result } = renderHook(() => useMCPConnection());
-
       await act(async () => {
         result.current.connect();
       });
-
-      // Simulate WebSocket failure to get to REST mode
       await act(async () => {
         mockWebSocket?.simulateError();
         mockWebSocket?.simulateClose(1006, "Connection failed");
       });
-
       await waitFor(() => {
         expect(result.current.connectionMode).toBe("rest");
       });
-
-      // Now mock auth failure on tool call
       mockAuthenticatedFetch.mockImplementationOnce(
         async (_url: string, options: { onAuthFailure?: () => void }) => {
           options.onAuthFailure?.();
           return { ok: false, status: 401 };
         },
       );
-
       await act(async () => {
         try {
           await result.current.callTool("test-tool", { arg: "value" });
@@ -307,7 +242,6 @@ describe("useMCPConnection", () => {
           // Expected to fail
         }
       });
-
       expect(mockSaveCurrentRouteAsIntended).toHaveBeenCalled();
       expect(mockNavigate).toHaveBeenCalledWith("/login", { replace: true });
     });
@@ -316,75 +250,54 @@ describe("useMCPConnection", () => {
   describe("WebSocket Connection", () => {
     it("should connect via WebSocket when connect is called", async () => {
       const { result } = renderHook(() => useMCPConnection());
-
       await act(async () => {
         result.current.connect();
       });
-
       expect(global.WebSocket).toHaveBeenCalledWith(
         expect.stringContaining("/api/v1/ws/mcp"),
       );
     });
-
     it("should set connected state when WebSocket opens", async () => {
       const { result } = renderHook(() => useMCPConnection());
-
       await act(async () => {
         result.current.connect();
       });
-
-      // Simulate WebSocket open
       await act(async () => {
         mockWebSocket?.simulateOpen();
       });
-
       await waitFor(() => {
         expect(result.current.isConnected).toBe(true);
         expect(result.current.connectionMode).toBe("websocket");
       });
     });
-
     it("should request tools list after connection", async () => {
       const { result } = renderHook(() => useMCPConnection());
-
       await act(async () => {
         result.current.connect();
       });
-
       await act(async () => {
         mockWebSocket?.simulateOpen();
       });
-
-      // Should send tools/list request
       await waitFor(() => {
         expect(mockWebSocket?.send).toHaveBeenCalledWith(
           expect.stringContaining('"method":"tools/list"'),
         );
       });
     });
-
     it("should update tools when tools/list response received", async () => {
       const { result } = renderHook(() => useMCPConnection());
-
       await act(async () => {
         result.current.connect();
       });
-
       await act(async () => {
         mockWebSocket?.simulateOpen();
       });
-
-      // Wait for tools/list request to be sent
       await waitFor(() => {
         expect(mockWebSocket?.send).toHaveBeenCalled();
       });
-
-      // Get the request ID from the sent message
       const sentMessage = JSON.parse(
         (mockWebSocket?.send as ReturnType<typeof vi.fn>).mock.calls[0][0],
       );
-
-      // Simulate tools response with matching ID
       await act(async () => {
         mockWebSocket?.simulateMessage({
           jsonrpc: "2.0",
@@ -397,32 +310,25 @@ describe("useMCPConnection", () => {
           },
         });
       });
-
       await waitFor(() => {
         expect(result.current.tools).toHaveLength(2);
         expect(result.current.tools[0].name).toBe("calculator");
       });
     });
-
     it("should disconnect when disconnect is called", async () => {
       const { result } = renderHook(() => useMCPConnection());
-
       await act(async () => {
         result.current.connect();
       });
-
       await act(async () => {
         mockWebSocket?.simulateOpen();
       });
-
       await waitFor(() => {
         expect(result.current.isConnected).toBe(true);
       });
-
       await act(async () => {
         result.current.disconnect();
       });
-
       await waitFor(() => {
         expect(result.current.isConnected).toBe(false);
         expect(result.current.connectionMode).toBe("disconnected");
@@ -433,23 +339,18 @@ describe("useMCPConnection", () => {
   describe("REST Fallback", () => {
     it("should fall back to REST when WebSocket fails to connect", async () => {
       const { result } = renderHook(() => useMCPConnection());
-
       await act(async () => {
         result.current.connect();
       });
-
-      // Simulate WebSocket error
       await act(async () => {
         mockWebSocket?.simulateError();
         mockWebSocket?.simulateClose(1006, "Connection failed");
       });
-
       await waitFor(() => {
         expect(result.current.connectionMode).toBe("rest");
         expect(result.current.isConnected).toBe(true);
       });
     });
-
     it("should fetch tools via REST when in REST mode", async () => {
       mockAuthenticatedFetch.mockResolvedValueOnce({
         ok: true,
@@ -458,19 +359,14 @@ describe("useMCPConnection", () => {
             tools: [{ name: "calculator", description: "Math operations" }],
           }),
       });
-
       const { result } = renderHook(() => useMCPConnection());
-
       await act(async () => {
         result.current.connect();
       });
-
-      // Simulate WebSocket failure
       await act(async () => {
         mockWebSocket?.simulateError();
         mockWebSocket?.simulateClose(1006, "Connection failed");
       });
-
       await waitFor(() => {
         expect(mockAuthenticatedFetch).toHaveBeenCalledWith(
           "/api/v1/mcp/tools",
@@ -479,44 +375,34 @@ describe("useMCPConnection", () => {
       });
     });
   });
-
   describe("Connection Status Indicator", () => {
     it("should return websocket status when connected via WebSocket", async () => {
       const { result } = renderHook(() => useMCPConnection());
-
       await act(async () => {
         result.current.connect();
       });
-
       await act(async () => {
         mockWebSocket?.simulateOpen();
       });
-
       await waitFor(() => {
         expect(result.current.connectionMode).toBe("websocket");
       });
     });
-
     it("should return rest status when using REST fallback", async () => {
       const { result } = renderHook(() => useMCPConnection());
-
       await act(async () => {
         result.current.connect();
       });
-
       await act(async () => {
         mockWebSocket?.simulateError();
         mockWebSocket?.simulateClose(1006);
       });
-
       await waitFor(() => {
         expect(result.current.connectionMode).toBe("rest");
       });
     });
-
     it("should return disconnected when not connected", () => {
       const { result } = renderHook(() => useMCPConnection());
-
       expect(result.current.connectionMode).toBe("disconnected");
     });
   });

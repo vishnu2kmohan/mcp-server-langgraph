@@ -61,13 +61,13 @@ vi.mock("../../../hooks/useTraceWebSocket", () => ({
 
 // Mock alert slice selector
 let mockAlerts: Array<{
-  alert_id: string;
+  alertId: string;
   name: string;
   state: string;
   severity: string;
   service: string;
   message: string;
-  started_at: string;
+  startedAt: string;
 }> = [];
 
 // Mock LangGraph nodes from Redux
@@ -196,13 +196,13 @@ describe("DevToolsWebSocketObserver", () => {
       // Simulate new alert in Redux
       mockAlerts = [
         {
-          alert_id: "alert-1",
+          alertId: "alert-1",
           name: "HighErrorRate",
           state: "firing",
           severity: "critical",
           service: "api",
           message: "Error rate exceeded threshold",
-          started_at: "2024-01-01T12:00:00Z",
+          startedAt: "2024-01-01T12:00:00Z",
         },
       ];
 

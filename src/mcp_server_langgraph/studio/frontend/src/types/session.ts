@@ -8,6 +8,8 @@
  * - Store state and actions
  */
 
+import type { SnakeToCamelCaseDeep } from "../api/transforms";
+
 // ==============================================================================
 // Model Configuration
 // ==============================================================================
@@ -34,6 +36,12 @@ export interface ServerConfig {
   max_tokens: number;
   temperature: number;
 }
+
+/**
+ * ServerConfig with camelCase keys for frontend use.
+ * Used after transformSnakeToCamel transformation.
+ */
+export type ServerConfigCamelCase = SnakeToCamelCaseDeep<ServerConfig>;
 
 /**
  * Default session configuration - FALLBACK ONLY

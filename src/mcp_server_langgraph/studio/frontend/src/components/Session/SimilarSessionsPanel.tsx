@@ -148,15 +148,15 @@ export function SimilarSessionsPanel({
       <div className="space-y-2" aria-label="Similar sessions">
         {similarSessions.map((session) => {
           const sessionName =
-            sessionNames[session.session_id] || session.session_id;
-          const scorePercent = Math.round(session.similarity_score * 100);
+            sessionNames[session.sessionId] || session.sessionId;
+          const scorePercent = Math.round(session.similarityScore * 100);
 
           return (
             <button
-              key={session.session_id}
+              key={session.sessionId}
               type="button"
               className="w-full text-left group p-2 rounded-md border border-gray-200 dark:border-gray-700 hover:border-purple-300 dark:hover:border-purple-600 hover:bg-purple-50 dark:hover:bg-purple-900/10 cursor-pointer transition-colors focus:outline-none focus:ring-2 focus:ring-purple-500"
-              onClick={() => onSessionSelect?.(session.session_id)}
+              onClick={() => onSessionSelect?.(session.sessionId)}
             >
               <div className="flex items-center justify-between mb-1">
                 <span className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate flex-1">
@@ -166,9 +166,9 @@ export function SimilarSessionsPanel({
                   {scorePercent}%
                 </span>
               </div>
-              {session.common_topics.length > 0 && (
+              {session.commonTopics.length > 0 && (
                 <div className="flex flex-wrap gap-1">
-                  {session.common_topics.map((topic) => (
+                  {session.commonTopics.map((topic) => (
                     <span
                       key={topic}
                       className="inline-flex items-center px-1.5 py-0.5 text-xs font-medium bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 rounded"

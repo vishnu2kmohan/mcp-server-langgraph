@@ -16,7 +16,14 @@
 
 import { useState, lazy, Suspense } from "react";
 import { useChatAutoScroll } from "../../hooks/useChatAutoScroll";
-import { MessageSquare, RefreshCw, ExternalLink, Loader2 } from "lucide-react";
+import {
+  MessageSquare,
+  RefreshCw,
+  ExternalLink,
+  Loader2,
+  Bot,
+  User,
+} from "lucide-react";
 import { ConfidenceIndicator } from "./ConfidenceIndicator";
 import { MessageActions } from "./MessageActions";
 import { MarkdownContent } from "./MarkdownContent";
@@ -36,6 +43,8 @@ import {
   AIFollowUpSuggestions,
   type FollowUpSuggestion,
 } from "./AIFollowUpSuggestions";
+import { ResponseRating, type RatingValue } from "./ResponseRating";
+import { TokenUsageDisplay, type ModelProvider } from "./TokenUsageDisplay";
 // Import consolidated chat types
 import type {
   Source,
@@ -64,6 +73,9 @@ export type {
 
 // Re-export FollowUpSuggestion type for consumers
 export type { FollowUpSuggestion };
+
+// Re-export rating and token usage types
+export type { RatingValue, ModelProvider };
 
 export interface ChatMessagesProps {
   messages: Message[];
@@ -109,6 +121,27 @@ export interface ChatMessagesProps {
   ) => void;
   /** Whether suggestions are loading */
   suggestionsLoading?: boolean;
+  // Response Rating props
+  /** Map of message IDs to their rating values */
+  messageRatings?: Record<string, RatingValue>;
+  /** Callback when user rates a message */
+  onRateMessage?: (messageId: string, rating: RatingValue) => void;
+  /** Callback when user submits feedback for a negative rating */
+  onRatingFeedback?: (messageId: string, feedback: string) => void;
+  /** Whether a rating is currently being submitted */
+  isRatingSubmitting?: boolean;
+  // Token Usage Display props
+  /** Whether to show token usage for messages */
+  showTokenUsage?: boolean;
+  /** Model provider for cost calculation */
+  modelProvider?: ModelProvider;
+  /** Whether to show cost estimation in token usage */
+  showCost?: boolean;
+  // Avatar props (show_chat_avatars feature)
+  /** Whether to show avatars for messages. Default: false */
+  showAvatars?: boolean;
+  /** User initials for avatar display (e.g., "JD" for John Doe) */
+  userInitials?: string;
 }
 
 // Note: MarkdownContent and loading fallbacks moved to MarkdownContent.tsx
@@ -137,6 +170,18 @@ export function ChatMessages({
   onSuggestionSelect,
   onSuggestionFeedback,
   suggestionsLoading = false,
+  // Response Rating props
+  messageRatings = {},
+  onRateMessage,
+  onRatingFeedback,
+  isRatingSubmitting = false,
+  // Token Usage Display props
+  showTokenUsage = false,
+  modelProvider = "openai",
+  showCost = false,
+  // Avatar props (show_chat_avatars feature)
+  showAvatars = false,
+  userInitials,
 }: ChatMessagesProps) {
   // Use extracted auto-scroll hook
   const { messagesEndRef } = useChatAutoScroll(messages, streamingContent);
@@ -163,9 +208,18 @@ export function ChatMessages({
       {messages.map((message) => (
         <div
           key={message.id}
-          className={`group flex ${message.role === "user" ? "justify-end" : "justify-start"}`}
+          className={`group flex animate-message-in motion-reduce:animate-none ${message.role === "user" ? "justify-end" : "justify-start"}`}
         >
           <div className="relative flex items-start gap-2">
+            {/* Assistant Avatar - shown when showAvatars is true */}
+            {showAvatars && message.role !== "user" && (
+              <div
+                data-testid="assistant-avatar"
+                className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center bg-gradient-to-br from-gray-500 to-gray-600"
+              >
+                <Bot className="w-4 h-4 text-white" />
+              </div>
+            )}
             {/* Message Actions - appears on hover (before message for assistant, after for user) */}
             {message.role !== "user" &&
               (onEditMessage || onRegenerateMessage || onDeleteMessage) && (
@@ -182,10 +236,10 @@ export function ChatMessages({
                 </div>
               )}
             <div
-              className={`max-w-[70%] px-4 py-3 rounded-lg ${
+              className={`max-w-[70%] px-4 py-3 rounded-2xl ${
                 message.role === "user"
-                  ? "bg-blue-600 text-white"
-                  : "bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-gray-100"
+                  ? "bg-chat-user-bubble dark:bg-chat-user-bubble-dark text-white rounded-br-md"
+                  : "bg-chat-ai-bubble dark:bg-chat-ai-bubble-dark border border-gray-200/50 dark:border-gray-700/50 text-gray-900 dark:text-gray-100 rounded-bl-md"
               }`}
             >
               {/* Rich markdown rendering for all messages */}
@@ -239,6 +293,31 @@ export function ChatMessages({
                       isReported={message.isReported}
                     />
                   )}
+
+                  {/* Token Usage Display */}
+                  {showTokenUsage && message.usage && (
+                    <TokenUsageDisplay
+                      promptTokens={message.usage.promptTokens ?? 0}
+                      completionTokens={message.usage.completionTokens ?? 0}
+                      modelProvider={modelProvider}
+                      showCost={showCost}
+                      compact
+                    />
+                  )}
+
+                  {/* Response Rating */}
+                  {onRateMessage && (
+                    <ResponseRating
+                      messageId={message.id}
+                      onRate={onRateMessage}
+                      currentRating={messageRatings[message.id]}
+                      showFeedbackInput
+                      onFeedback={onRatingFeedback}
+                      isSubmitting={isRatingSubmitting}
+                      showThankYou
+                      compact
+                    />
+                  )}
                 </div>
               )}
 
@@ -265,6 +344,21 @@ export function ChatMessages({
                   />
                 </div>
               )}
+            {/* User Avatar - shown when showAvatars is true */}
+            {showAvatars && message.role === "user" && (
+              <div
+                data-testid="user-avatar"
+                className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center bg-gradient-to-br from-chat-accent to-indigo-600"
+              >
+                {userInitials ? (
+                  <span className="text-white text-xs font-medium">
+                    {userInitials}
+                  </span>
+                ) : (
+                  <User className="w-4 h-4 text-white" />
+                )}
+              </div>
+            )}
           </div>
         </div>
       ))}

@@ -68,8 +68,8 @@ export function ShareWorkflowDialog({
 
   // Derived state from query data
   const shares = sharesData?.shares ?? [];
-  const isPublic = sharesData?.is_public ?? false;
-  const shareLink = sharesData?.share_link ?? null;
+  const isPublic = sharesData?.isPublic ?? false;
+  const shareLink = sharesData?.shareLink ?? null;
 
   // Clear error when dialog opens/closes
   useEffect(() => {
@@ -252,7 +252,7 @@ export function ShareWorkflowDialog({
               <div className="space-y-2">
                 {shares.map((share) => (
                   <div
-                    key={share.user_id}
+                    key={share.userId}
                     className="flex items-center justify-between p-2 bg-gray-50 dark:bg-gray-700/50 rounded-lg"
                   >
                     <div className="flex items-center gap-3">
@@ -271,7 +271,7 @@ export function ShareWorkflowDialog({
                       </div>
                     </div>
                     <button
-                      onClick={() => handleRemoveShare(share.user_id)}
+                      onClick={() => handleRemoveShare(share.userId)}
                       aria-label="Remove"
                       className="p-1 text-gray-500 hover:text-red-600 dark:text-gray-400 dark:hover:text-red-400 rounded"
                     >

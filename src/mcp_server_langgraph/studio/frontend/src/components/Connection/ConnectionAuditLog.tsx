@@ -16,17 +16,18 @@ import {
   Filter,
 } from "lucide-react";
 import { authenticatedFetch } from "../../utils/authenticatedFetch";
+import { transformSnakeToCamel } from "../../api/transforms";
 
 interface AuditLogEntry {
   id: string;
-  event_type: string;
-  resource_type: string;
-  resource_id: string;
-  actor_id: string;
+  eventType: string;
+  resourceType: string;
+  resourceId: string;
+  actorId: string;
   action: string;
   details: Record<string, unknown>;
-  ip_address: string | null;
-  user_agent: string | null;
+  ipAddress: string | null;
+  userAgent: string | null;
   timestamp: string;
 }
 
@@ -74,7 +75,8 @@ export function ConnectionAuditLog({ connectionId }: ConnectionAuditLogProps) {
         throw new Error("Failed to fetch audit logs");
       }
 
-      const data: AuditLogResponse = await response.json();
+      const rawData = await response.json();
+      const data = transformSnakeToCamel<AuditLogResponse>(rawData);
       setLogs(data.logs);
     } catch (err) {
       setError(
@@ -215,7 +217,7 @@ export function ConnectionAuditLog({ connectionId }: ConnectionAuditLogProps) {
               >
                 <div className="flex items-center gap-3">
                   <span className="font-mono text-sm text-gray-700 dark:text-gray-300">
-                    {log.event_type}
+                    {log.eventType}
                   </span>
                   <span
                     className={`rounded-full px-2 py-0.5 text-xs font-medium ${getActionColor(log.action)}`}
@@ -226,7 +228,7 @@ export function ConnectionAuditLog({ connectionId }: ConnectionAuditLogProps) {
 
                 <div className="flex items-center gap-4">
                   <span className="text-sm text-gray-500 dark:text-gray-400">
-                    {log.actor_id}
+                    {log.actorId}
                   </span>
                   <span className="text-sm text-gray-400 dark:text-gray-500">
                     {formatDate(log.timestamp)}
@@ -264,23 +266,23 @@ export function ConnectionAuditLog({ connectionId }: ConnectionAuditLogProps) {
 
                   {/* Metadata */}
                   <div className="grid grid-cols-2 gap-4 text-sm">
-                    {log.ip_address && (
+                    {log.ipAddress && (
                       <div>
                         <span className="font-medium text-gray-600 dark:text-gray-400">
                           IP Address:
                         </span>
                         <span className="ml-2 font-mono text-gray-800 dark:text-gray-200">
-                          {log.ip_address}
+                          {log.ipAddress}
                         </span>
                       </div>
                     )}
-                    {log.user_agent && (
+                    {log.userAgent && (
                       <div className="col-span-2">
                         <span className="font-medium text-gray-600 dark:text-gray-400">
                           User Agent:
                         </span>
                         <span className="ml-2 text-gray-800 dark:text-gray-200">
-                          {log.user_agent}
+                          {log.userAgent}
                         </span>
                       </div>
                     )}

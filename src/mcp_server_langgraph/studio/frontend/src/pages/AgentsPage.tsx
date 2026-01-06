@@ -23,6 +23,7 @@ import {
   OrchestratorsListCard,
   TaskMappingCard,
   LLMProvidersCard,
+  AgentMetricsCard,
 } from "../components/Agents";
 import { selectPersona, type Persona } from "../store/slices/personaSlice";
 
@@ -68,7 +69,7 @@ export function AgentsPage() {
   useEffect(() => {
     if (config) {
       setLocalTemperature(config.temperature);
-      setLocalVerification(config.verification_enabled);
+      setLocalVerification(config.verificationEnabled);
     }
   }, [config]);
 
@@ -269,25 +270,28 @@ export function AgentsPage() {
           {/* Sprint 2: Enhanced Cards (persona-aware, components handle visibility) */}
 
           {/* Thinking Budget Card */}
-          <ThinkingBudgetCard data={config?.thinking_budget_defaults} />
+          <ThinkingBudgetCard data={config?.thinkingBudgetDefaults} />
 
           {/* LLM Providers Card (shows supported providers) */}
           <LLMProvidersCard providers={config?.providers ?? []} />
 
           {/* Feature Flags Card */}
-          <FeatureFlagsCard data={config?.feature_flags_snapshot} />
+          <FeatureFlagsCard data={config?.featureFlagsSnapshot} />
 
           {/* Orchestrators List Card (shows registered orchestrators) */}
           <OrchestratorsListCard
             orchestrators={config?.orchestrators ?? []}
-            featureFlags={config?.feature_flags_snapshot ?? {}}
+            featureFlags={config?.featureFlagsSnapshot ?? {}}
           />
 
           {/* Phase 6: Task Mapping Card (shows orchestrator-to-task mapping) */}
           <TaskMappingCard
             orchestrators={config?.orchestrators ?? []}
-            featureFlags={config?.feature_flags_snapshot ?? {}}
+            featureFlags={config?.featureFlagsSnapshot ?? {}}
           />
+
+          {/* Agent Metrics Card (orchestration, HITL, cost metrics - admin/developer only) */}
+          <AgentMetricsCard />
         </div>
       </div>
     </div>

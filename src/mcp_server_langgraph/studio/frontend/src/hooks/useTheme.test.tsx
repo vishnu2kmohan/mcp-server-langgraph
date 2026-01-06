@@ -12,21 +12,15 @@ import { Provider } from "react-redux";
 import { configureStore } from "@reduxjs/toolkit";
 import { useTheme } from "./useTheme";
 import uiReducer from "../store/slices/uiSlice";
+import { createTestUIState } from "../store/slices/__tests__/uiSlice.fixtures";
 import type { ReactNode } from "react";
 
-// Create test store
+// Create test store using type-safe UIState factory
 const createTestStore = (theme: "light" | "dark" | "system" = "dark") =>
   configureStore({
     reducer: { ui: uiReducer },
     preloadedState: {
-      ui: {
-        sidebarOpen: true,
-        sidebarCollapsed: false,
-        theme,
-        isLoading: false,
-        activeView: "workflows" as const,
-        notifications: [],
-      },
+      ui: createTestUIState({ theme }),
     },
   });
 

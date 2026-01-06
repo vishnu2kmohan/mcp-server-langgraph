@@ -26,7 +26,7 @@ export interface ResourceViewerProps {
 
 interface ResourceContent {
   uri: string;
-  mime_type: string | null;
+  mimeType: string | null;
   text: string | null;
   blob: string | null;
 }
@@ -79,7 +79,7 @@ export function ResourceViewer({
           if (item) {
             setContent({
               uri: item.uri,
-              mime_type: item.mime_type ?? null,
+              mimeType: item.mimeType ?? null,
               text: item.text ?? null,
               blob: item.blob ?? null,
             });
@@ -218,7 +218,7 @@ export function ResourceViewer({
                           </div>
                         )}
                         <div className="mt-1 text-xs text-gray-500 dark:text-gray-500">
-                          {resource.mime_type}
+                          {resource.mimeType}
                         </div>
                       </button>
                     </li>
@@ -297,21 +297,20 @@ export function ResourceViewer({
                     )}
 
                     {/* Binary content (image) */}
-                    {content.blob &&
-                      content.mime_type?.startsWith("image/") && (
-                        <img
-                          src={`data:${content.mime_type};base64,${content.blob}`}
-                          alt={selectedResource?.name || "Resource content"}
-                          className="max-w-full rounded-md"
-                        />
-                      )}
+                    {content.blob && content.mimeType?.startsWith("image/") && (
+                      <img
+                        src={`data:${content.mimeType};base64,${content.blob}`}
+                        alt={selectedResource?.name || "Resource content"}
+                        className="max-w-full rounded-md"
+                      />
+                    )}
 
                     {/* Binary content (other) */}
                     {content.blob &&
-                      !content.mime_type?.startsWith("image/") && (
+                      !content.mimeType?.startsWith("image/") && (
                         <div className="rounded-md bg-gray-50 p-4 dark:bg-gray-900">
                           <p className="text-sm text-gray-600 dark:text-gray-400">
-                            Binary content ({content.mime_type})
+                            Binary content ({content.mimeType})
                           </p>
                           <p className="mt-2 text-xs text-gray-500">
                             {content.blob.length} characters (base64 encoded)

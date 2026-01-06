@@ -11,6 +11,49 @@
 export type Persona = "admin" | "developer" | "user";
 
 /**
+ * WebSocket endpoint permissions.
+ *
+ * Contains boolean permissions for each WebSocket endpoint, determined via
+ * OpenFGA batch check on the backend. Enables frontend to conditionally
+ * connect only to authorized WebSocket endpoints, preventing unnecessary
+ * connection attempts and reconnection loops.
+ *
+ * Reference: GitHub issue - Chat doesn't load due to alert WS auth failure
+ */
+export interface WebSocketPermissions {
+  /** Admin-only alert stream (/ws/alerts) */
+  alerts: boolean;
+  /** DevTools panel (/ws/devtools) */
+  devtools: boolean;
+  /** Notifications stream (/ws/notifications) */
+  notifications: boolean;
+  /** Audit event stream (/ws/audit) */
+  audit: boolean;
+  /** MCP task updates (/ws/mcp/tasks) */
+  mcp_tasks: boolean;
+  /** MCP capability changes (/ws/mcp/aggregated) */
+  mcp_aggregated: boolean;
+  /** Connection health (/ws/connections/health) */
+  connections_health: boolean;
+  /** Connection realtime (/ws/connections/realtime) */
+  connections_realtime: boolean;
+  /** HEART metrics stream (/ws/metrics/heart) */
+  heart_metrics: boolean;
+  /** Trace span stream (/ws/traces) */
+  traces: boolean;
+  /** Cost tracking (/ws/usage/cost) */
+  cost_tracking: boolean;
+  /** Budget alerts (/ws/budget/alerts) */
+  budget_alerts: boolean;
+  /** HITL agent requests (/ws/agents/requests) */
+  agent_requests: boolean;
+  /** AI suggestions (/ws/ai/suggestions) */
+  ai_suggestions: boolean;
+  /** Orchestrator status (/ws/orchestrator/status) */
+  orchestrator_status: boolean;
+}
+
+/**
  * Organization role within a specific organization.
  */
 export type OrganizationRole = "admin" | "member" | "viewer";
@@ -37,6 +80,11 @@ export interface User {
   persona: Persona;
   /** Avatar URL (optional) */
   avatarUrl?: string;
+  /**
+   * WebSocket endpoint permissions (Sprint 5).
+   * Enables frontend to only connect to authorized WebSocket endpoints.
+   */
+  websocketPermissions?: WebSocketPermissions;
 }
 
 /**

@@ -94,6 +94,35 @@ function getOptimalWorkerCount(): number {
 
 const maxWorkers = getOptimalWorkerCount();
 
+// =============================================================================
+// Heap Size Configuration
+// =============================================================================
+// Get heap size from environment or use adaptive defaults:
+// - CI (7GB runner): 4096MB per worker with 1-2 workers = ~8GB max
+// - Local development: 8192MB per worker
+//
+// Environment variables:
+//   VITEST_HEAP_SIZE=<MB>  - Explicit heap size in MB
+// =============================================================================
+function getHeapSizeMB(): string {
+  // Priority 1: Explicit environment variable
+  if (process.env.VITEST_HEAP_SIZE) {
+    return process.env.VITEST_HEAP_SIZE;
+  }
+
+  // Priority 2: CI environments use smaller heap to fit 7GB runner
+  const isCI =
+    process.env.CI === "true" || process.env.GITHUB_ACTIONS === "true";
+  if (isCI) {
+    return "4096"; // 4GB per worker - safe for 7GB runner with 1 worker
+  }
+
+  // Priority 3: Local development uses larger heap
+  return "8192"; // 8GB per worker for local development
+}
+
+const heapSizeMB = getHeapSizeMB();
+
 export default defineConfig({
   plugins: [react()],
   resolve: {
@@ -137,9 +166,11 @@ export default defineConfig({
 
     // Vitest 4: execArgv is a top-level option that applies to all worker processes
     // Per-worker heap limits to prevent OOM in individual workers
-    // Each worker gets 16GB max heap - complex test files with many mocks need more memory
-    // With 1 max worker in sharded mode (VITEST_MAX_FORKS=1), max total usage is ~16GB
-    execArgv: ["--max-old-space-size=16384"],
+    // Heap size is environment-aware:
+    //   - CI (7GB runner): 4GB per worker - fits 7GB runner with 1-2 workers
+    //   - Local: 8GB per worker - allows complex test files with many mocks
+    // Override with VITEST_HEAP_SIZE=<MB> environment variable
+    execArgv: [`--max-old-space-size=${heapSizeMB}`],
 
     // Each test file gets its own environment (better isolation)
     isolate: true,

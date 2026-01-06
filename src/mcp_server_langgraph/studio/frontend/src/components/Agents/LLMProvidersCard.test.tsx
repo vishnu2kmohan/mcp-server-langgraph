@@ -39,31 +39,31 @@ function createTestStoreWithPersona(persona: "admin" | "developer" | "user") {
   });
 }
 
-// Mock providers data (matches backend SUPPORTED_PROVIDERS)
+// Mock providers data (camelCase per ADR-0091)
 const mockProviders: ProviderInfo[] = [
   {
     name: "google",
-    display_name: "Google Gemini",
+    displayName: "Google Gemini",
     description: "Google's Gemini AI models",
-    supported_model_types: ["primary", "summarization", "verification"],
-    requires_api_key: true,
-    api_key_env_var: "GOOGLE_API_KEY",
+    supportedModelTypes: ["primary", "summarization", "verification"],
+    requiresApiKey: true,
+    apiKeyEnvVar: "GOOGLE_API_KEY",
   },
   {
     name: "anthropic",
-    display_name: "Anthropic Claude",
+    displayName: "Anthropic Claude",
     description: "Anthropic's Claude AI models",
-    supported_model_types: ["primary", "summarization", "verification"],
-    requires_api_key: true,
-    api_key_env_var: "ANTHROPIC_API_KEY",
+    supportedModelTypes: ["primary", "summarization", "verification"],
+    requiresApiKey: true,
+    apiKeyEnvVar: "ANTHROPIC_API_KEY",
   },
   {
     name: "ollama",
-    display_name: "Ollama (Local)",
+    displayName: "Ollama (Local)",
     description: "Local LLM inference via Ollama",
-    supported_model_types: ["primary"],
-    requires_api_key: false,
-    api_key_env_var: null,
+    supportedModelTypes: ["primary"],
+    requiresApiKey: false,
+    apiKeyEnvVar: null,
   },
 ];
 

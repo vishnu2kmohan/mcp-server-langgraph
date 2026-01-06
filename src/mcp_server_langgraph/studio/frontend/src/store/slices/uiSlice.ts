@@ -20,6 +20,9 @@ interface UIState {
     message: string;
     timestamp: number;
   }>;
+  // Chat input keyboard preference (Sprint 5.1)
+  // true = Enter to submit (ChatGPT style), false = Ctrl+Enter to submit
+  submitOnEnter: boolean;
 }
 
 // Load collapsed state from localStorage using storage utility
@@ -37,6 +40,13 @@ const getInitialTheme = (): "light" | "dark" | "system" => {
   return "dark"; // Default to dark mode
 };
 
+// Load submitOnEnter from localStorage, defaulting to true (ChatGPT style)
+const getInitialSubmitOnEnter = (): boolean => {
+  const stored = storage.get<boolean>(STORAGE_KEYS.SUBMIT_ON_ENTER);
+  // Default to true if not set (Enter to submit, like ChatGPT)
+  return stored !== false;
+};
+
 const initialState: UIState = {
   sidebarOpen: true,
   sidebarCollapsed: getInitialCollapsedState(),
@@ -44,6 +54,7 @@ const initialState: UIState = {
   isLoading: false,
   activeView: "workflows",
   notifications: [],
+  submitOnEnter: getInitialSubmitOnEnter(),
 };
 
 export const uiSlice = createSlice({
@@ -97,6 +108,12 @@ export const uiSlice = createSlice({
     clearNotifications: (state) => {
       state.notifications = [];
     },
+    // Sprint 5.1: Keyboard preference for chat input
+    setSubmitOnEnter: (state, action: PayloadAction<boolean>) => {
+      state.submitOnEnter = action.payload;
+      // Persist to localStorage using storage utility
+      storage.set(STORAGE_KEYS.SUBMIT_ON_ENTER, action.payload);
+    },
   },
 });
 
@@ -111,6 +128,7 @@ export const {
   addNotification,
   removeNotification,
   clearNotifications,
+  setSubmitOnEnter,
 } = uiSlice.actions;
 
 // Selectors
@@ -121,6 +139,10 @@ export const selectTheme = (state: { ui: UIState }) => state.ui.theme;
 
 export const selectSidebarOpen = (state: { ui: UIState }) =>
   state.ui.sidebarOpen;
+
+// Sprint 5.1: Keyboard preference selector
+export const selectSubmitOnEnter = (state: { ui: UIState }) =>
+  state.ui.submitOnEnter;
 
 // Export getInitialTheme for testing
 export { getInitialTheme };

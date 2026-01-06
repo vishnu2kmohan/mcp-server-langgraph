@@ -18,13 +18,13 @@ export interface SpanEvent {
  */
 export interface Span {
   /** Unique span identifier */
-  span_id: string;
+  spanId: string;
   /** Human-readable span name */
   name: string;
   /** Start time in milliseconds since epoch */
-  start_time: number;
+  startTime: number;
   /** Duration in milliseconds */
-  duration_ms: number;
+  durationMs: number;
   /** Span status */
   status: "ok" | "error" | "unset";
   /** Depth in the span hierarchy (0 = root) */
@@ -34,9 +34,9 @@ export interface Span {
   /** Span events */
   events: SpanEvent[];
   /** Error message if status is error */
-  error_message?: string;
+  errorMessage?: string;
   /** Parent span ID (if not root) */
-  parent_span_id?: string;
+  parentSpanId?: string;
 }
 
 /**
@@ -44,15 +44,15 @@ export interface Span {
  */
 export interface Trace {
   /** Unique trace identifier */
-  trace_id: string;
+  traceId: string;
   /** All spans in this trace */
   spans: Span[];
   /** Trace start time in milliseconds since epoch */
-  start_time: number;
+  startTime: number;
   /** Trace end time in milliseconds since epoch */
-  end_time: number;
+  endTime: number;
   /** Total trace duration in milliseconds */
-  duration_ms: number;
+  durationMs: number;
   /** Service name */
-  service_name?: string;
+  serviceName?: string;
 }

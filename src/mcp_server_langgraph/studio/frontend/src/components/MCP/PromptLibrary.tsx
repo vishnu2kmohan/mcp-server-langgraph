@@ -66,10 +66,10 @@ export function PromptLibrary({ serverFilter, onTest }: PromptLibraryProps) {
 
     return data.prompts.filter(
       (prompt) =>
-        prompt.qualified_name.toLowerCase().includes(term) ||
+        prompt.qualifiedName.toLowerCase().includes(term) ||
         prompt.name.toLowerCase().includes(term) ||
         (prompt.description?.toLowerCase().includes(term) ?? false) ||
-        prompt.server_name.toLowerCase().includes(term),
+        prompt.serverName.toLowerCase().includes(term),
     );
   }, [data?.prompts, searchTerm]);
 
@@ -150,10 +150,10 @@ export function PromptLibrary({ serverFilter, onTest }: PromptLibraryProps) {
           </div>
         ) : (
           filteredPrompts.map((prompt) => {
-            const isExpanded = expandedPrompts.has(prompt.qualified_name);
+            const isExpanded = expandedPrompts.has(prompt.qualifiedName);
             return (
               <Card
-                key={prompt.qualified_name}
+                key={prompt.qualifiedName}
                 variant="default"
                 padding="sm"
                 className="hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
@@ -165,10 +165,10 @@ export function PromptLibrary({ serverFilter, onTest }: PromptLibraryProps) {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1">
                         <span className="font-mono text-sm font-medium text-gray-900 dark:text-gray-100">
-                          {prompt.qualified_name}
+                          {prompt.qualifiedName}
                         </span>
                         <Badge variant="outline" size="sm">
-                          {prompt.server_name}
+                          {prompt.serverName}
                         </Badge>
                       </div>
                       {prompt.description && (
@@ -188,7 +188,7 @@ export function PromptLibrary({ serverFilter, onTest }: PromptLibraryProps) {
                       {prompt.arguments.length > 0 && (
                         <button
                           type="button"
-                          onClick={() => toggleExpanded(prompt.qualified_name)}
+                          onClick={() => toggleExpanded(prompt.qualifiedName)}
                           aria-label="Expand"
                           className={cn(
                             "p-1.5 rounded-md",
@@ -202,7 +202,7 @@ export function PromptLibrary({ serverFilter, onTest }: PromptLibraryProps) {
                       )}
                       <button
                         type="button"
-                        onClick={() => handleTest(prompt.qualified_name)}
+                        onClick={() => handleTest(prompt.qualifiedName)}
                         className={cn(
                           "shrink-0 px-3 py-1.5 text-sm font-medium rounded-md",
                           "bg-success-500 text-white",

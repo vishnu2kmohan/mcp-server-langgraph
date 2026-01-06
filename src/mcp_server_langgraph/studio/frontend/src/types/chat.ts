@@ -46,6 +46,13 @@ export interface Message {
   thinkingTokens?: number;
   /** Model name that generated this message */
   modelName?: string;
+  /** Token usage for this message (assistant messages only) */
+  usage?: {
+    promptTokens?: number;
+    completionTokens?: number;
+  };
+  /** User rating for this message */
+  rating?: "up" | "down" | null;
 }
 
 // =============================================================================

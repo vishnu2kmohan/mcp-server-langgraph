@@ -11,7 +11,11 @@
 import { useState, useCallback, useRef, useMemo, useEffect } from "react";
 import { useRealtimeSync } from "./useRealtimeSync";
 import { useAppDispatch, useAppSelector } from "../store/hooks";
-import { logout, selectIsAuthenticated } from "../store/slices/authSlice";
+import {
+  logout,
+  selectIsAuthenticated,
+  selectWebSocketPermissions,
+} from "../store/slices/authSlice";
 import { addNotification } from "../store/slices/notificationSlice";
 import { buildWebSocketUrl, WS_ENDPOINTS } from "../utils/websocket";
 import {
@@ -19,6 +23,7 @@ import {
   showProtocolVersionMismatchToast,
 } from "../utils/websocketAuth";
 import { reportWebSocketMetrics } from "../utils/websocketTelemetry";
+import { transformSnakeToCamel } from "../api/transforms";
 
 // =============================================================================
 // Types
@@ -36,24 +41,26 @@ export type ConnectionStatus =
 
 /**
  * Connection health structure matching backend schema
+ * Note: Uses camelCase per ADR-0091 (transformed at API boundary)
  */
 export interface ConnectionHealth {
   id: string;
   name: string;
   url: string;
   status: ConnectionStatus;
-  auth_type: string;
-  server_name?: string;
-  server_version?: string;
-  tool_count: number;
-  resource_count: number;
-  prompt_count: number;
-  last_error?: string;
-  last_checked?: string;
+  authType: string;
+  serverName?: string;
+  serverVersion?: string;
+  toolCount: number;
+  resourceCount: number;
+  promptCount: number;
+  lastError?: string;
+  lastChecked?: string;
 }
 
 /**
  * Summary statistics for connections
+ * Note: Uses camelCase per ADR-0091 (transformed at API boundary)
  */
 export interface ConnectionSummary {
   total: number;
@@ -61,7 +68,7 @@ export interface ConnectionSummary {
   disconnected: number;
   connecting: number;
   error: number;
-  auth_required: number;
+  authRequired: number;
 }
 
 /**
@@ -87,19 +94,20 @@ interface ErrorMessage {
   message: string;
 }
 
+// Message interfaces use camelCase (after transform applied per ADR-0091)
 interface SubscribedMessage {
   type: "subscribed";
-  connection_id: string;
+  connectionId: string;
 }
 
 interface UnsubscribedMessage {
   type: "unsubscribed";
-  connection_id: string;
+  connectionId: string;
 }
 
 interface HealthCheckStartedMessage {
-  type: "health_check_started";
-  connection_id: string;
+  type: "health_check_started"; // String value not transformed, only keys are
+  connectionId: string;
   message: string;
 }
 
@@ -196,16 +204,21 @@ export function useConnectionHealthWebSocket(
   // Get auth state for WebSocket authentication
   const dispatch = useAppDispatch();
   const isAuthenticated = useAppSelector(selectIsAuthenticated);
+  const wsPermissions = useAppSelector(selectWebSocketPermissions);
 
-  // Compute WebSocket URL - only generate URL when authenticated
-  // Passing empty string prevents connection attempt before auth is ready
+  // Check if user has permission for connection health WebSocket
+  const hasConnectionHealthPermission =
+    wsPermissions?.connections_health ?? false;
+
+  // Compute WebSocket URL - only generate URL when authenticated AND has permission
+  // Passing empty string prevents connection attempt before auth is ready or if unauthorized
   // The buildWebSocketUrl utility fetches the auth token internally when includeAuthToken=true
   const url = useMemo(
     () =>
-      isAuthenticated
+      isAuthenticated && hasConnectionHealthPermission
         ? (customUrl ?? getDefaultWebSocketUrl(true /* includeAuthToken */))
         : "",
-    [customUrl, isAuthenticated],
+    [customUrl, isAuthenticated, hasConnectionHealthPermission],
   );
 
   // State
@@ -238,7 +251,8 @@ export function useConnectionHealthWebSocket(
 
   // Handle incoming messages
   const handleMessage = useCallback((data: unknown) => {
-    const message = data as ServerMessage;
+    // Transform snake_case to camelCase per ADR-0091
+    const message = transformSnakeToCamel(data) as ServerMessage;
 
     switch (message.type) {
       case "connection_status":
@@ -272,23 +286,23 @@ export function useConnectionHealthWebSocket(
         break;
 
       case "subscribed":
-        subscribedConnectionsRef.current.add(message.connection_id);
+        subscribedConnectionsRef.current.add(message.connectionId);
         setSubscribedConnections((prev) =>
-          new Set(prev).add(message.connection_id),
+          new Set(prev).add(message.connectionId),
         );
         break;
 
       case "unsubscribed":
-        subscribedConnectionsRef.current.delete(message.connection_id);
+        subscribedConnectionsRef.current.delete(message.connectionId);
         setSubscribedConnections((prev) => {
           const next = new Set(prev);
-          next.delete(message.connection_id);
+          next.delete(message.connectionId);
           return next;
         });
         break;
 
       case "health_check_started":
-        callbacksRef.current.onHealthCheckStarted?.(message.connection_id);
+        callbacksRef.current.onHealthCheckStarted?.(message.connectionId);
         break;
     }
   }, []);
@@ -345,7 +359,7 @@ export function useConnectionHealthWebSocket(
       disconnected: 0,
       connecting: 0,
       error: 0,
-      auth_required: 0,
+      authRequired: 0,
     };
 
     for (const conn of connections) {
@@ -363,7 +377,7 @@ export function useConnectionHealthWebSocket(
           counts.error++;
           break;
         case "auth_required":
-          counts.auth_required++;
+          counts.authRequired++;
           break;
       }
     }

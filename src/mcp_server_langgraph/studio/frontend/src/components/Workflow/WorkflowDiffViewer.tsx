@@ -29,15 +29,15 @@ type DiffMode = "side-by-side" | "unified";
 
 interface WorkflowVersion {
   id: string;
-  workflow_id: string;
-  version_number: number;
-  graph_json: {
+  workflowId: string;
+  versionNumber: number;
+  graphJson: {
     nodes: Array<{ id: string; type: string; data?: Record<string, unknown> }>;
     edges: Array<{ id?: string; source: string; target: string }>;
   };
-  commit_message?: string;
-  created_by: string;
-  created_at: string;
+  commitMessage?: string;
+  createdBy: string;
+  createdAt: string;
 }
 
 interface DiffSummary {
@@ -69,14 +69,14 @@ function computeDiffSummary(
   versionA: WorkflowVersion,
   versionB: WorkflowVersion,
 ): DiffSummary {
-  const nodesA = new Set(versionA.graph_json.nodes.map((n) => n.id));
-  const nodesB = new Set(versionB.graph_json.nodes.map((n) => n.id));
+  const nodesA = new Set(versionA.graphJson.nodes.map((n) => n.id));
+  const nodesB = new Set(versionB.graphJson.nodes.map((n) => n.id));
 
   const edgesA = new Set(
-    versionA.graph_json.edges.map((e) => `${e.source}->${e.target}`),
+    versionA.graphJson.edges.map((e) => `${e.source}->${e.target}`),
   );
   const edgesB = new Set(
-    versionB.graph_json.edges.map((e) => `${e.source}->${e.target}`),
+    versionB.graphJson.edges.map((e) => `${e.source}->${e.target}`),
   );
 
   const nodesAdded = [...nodesB].filter((n) => !nodesA.has(n)).length;
@@ -118,8 +118,8 @@ export function WorkflowDiffViewer({
   );
 
   // JSON representations
-  const jsonA = useMemo(() => formatJson(versionA.graph_json), [versionA]);
-  const jsonB = useMemo(() => formatJson(versionB.graph_json), [versionB]);
+  const jsonA = useMemo(() => formatJson(versionA.graphJson), [versionA]);
+  const jsonB = useMemo(() => formatJson(versionB.graphJson), [versionB]);
 
   // Handle mode toggle
   const handleModeChange = useCallback((newMode: DiffMode) => {
@@ -197,10 +197,10 @@ export function WorkflowDiffViewer({
       {/* Version labels */}
       <div className="flex items-center justify-between px-4 py-1.5 bg-gray-50 dark:bg-gray-800/50 border-b border-gray-200 dark:border-gray-700 text-xs">
         <span className="text-gray-600 dark:text-gray-400">
-          v{versionA.version_number} - {versionA.commit_message || "No message"}
+          v{versionA.versionNumber} - {versionA.commitMessage || "No message"}
         </span>
         <span className="text-gray-600 dark:text-gray-400">
-          v{versionB.version_number} - {versionB.commit_message || "No message"}
+          v{versionB.versionNumber} - {versionB.commitMessage || "No message"}
         </span>
       </div>
 
@@ -278,11 +278,11 @@ export function WorkflowDiffViewer({
             <pre className="p-4 text-xs text-gray-700 dark:text-gray-300 font-mono whitespace-pre-wrap">
               {/* Unified diff view - show both with labels */}
               <span className="text-red-600 dark:text-red-400">
-                --- v{versionA.version_number}
+                --- v{versionA.versionNumber}
               </span>
               {"\n"}
               <span className="text-green-600 dark:text-green-400">
-                +++ v{versionB.version_number}
+                +++ v{versionB.versionNumber}
               </span>
               {"\n\n"}
               {jsonB}

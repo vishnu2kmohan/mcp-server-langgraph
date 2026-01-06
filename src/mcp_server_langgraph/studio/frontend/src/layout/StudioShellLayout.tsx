@@ -23,7 +23,7 @@ import {
   Suspense,
   useRef,
 } from "react";
-import { useLocation, Outlet } from "react-router";
+import { useLocation, Outlet, useNavigate } from "react-router";
 import { Panel, PanelGroup } from "react-resizable-panels";
 import { ConnectedConversationPanel } from "../conversation/ConnectedConversationPanel";
 import { useAppDispatch, useAppSelector } from "../store/hooks";
@@ -31,19 +31,28 @@ import {
   selectCanvasCollapsed,
   selectSessionNavCollapsed,
   selectFocusModeEnabled,
+  selectPanelSizes,
+  selectHasCustomLayout,
+  selectMaximizedPanelId,
   setPanelSizes,
   toggleCanvas,
   toggleSessionNav,
   toggleFocusMode,
   setFocusModeEnabled,
+  setSessionNavCollapsed,
   type CanvasPanelSizes,
 } from "../store/slices/canvasSlice";
+import { storage, STORAGE_KEYS } from "../utils/storage";
 import {
   selectCurrentSession,
   createSession,
   renameSession,
 } from "../store/slices/sessionSlice";
-import { selectUsername, selectPersona } from "../store/slices/personaSlice";
+import {
+  selectUsername,
+  selectPersona,
+  selectSubPersona,
+} from "../store/slices/personaSlice";
 import {
   selectAllAgents,
   updateAgentStatus,
@@ -67,6 +76,12 @@ import type {
 } from "./StatusBar";
 import { NudgeTooltip } from "../components/Nudge";
 import { CrossInsightsPanel } from "../components/Analytics/CrossInsightsPanel";
+import { KeyboardShortcutOverlay } from "../components/Common/KeyboardShortcutOverlay";
+import { OnboardingWizard } from "../components/Onboarding/OnboardingWizard";
+import type {
+  OnboardingResult,
+  WorkflowTemplate,
+} from "../components/Onboarding/OnboardingWizard";
 import { AgentApprovalDialog } from "../components/Admin/AgentApprovalDialog";
 import { ClarificationDialog } from "../components/Admin/ClarificationDialog";
 // Use consolidated HITL types from types/hitl.ts
@@ -91,6 +106,9 @@ import { SessionNav } from "./SessionNav";
 import { StatusBar } from "./StatusBar";
 import { TopBar } from "./TopBar";
 import { ResizeHandle } from "./ResizeHandle";
+import { useBreakpoint } from "./ResponsiveLayout";
+import { MobileDrawer } from "./MobileDrawer";
+import { HamburgerMenu } from "./HamburgerMenu";
 import { ConnectedCanvasPanel } from "../canvas/ConnectedCanvasPanel";
 import { TelemetryViewer } from "../devtools";
 import { devLogger } from "../utils/devLogger";
@@ -103,6 +121,49 @@ import {
 import { authenticatedFetch } from "../utils/authenticatedFetch";
 
 const logger = devLogger.withPrefix("[StudioShell]");
+
+// =============================================================================
+// Section Title Mapping (Sprint 2.3 - Wayfinding)
+// =============================================================================
+
+/**
+ * Maps route pathnames to section titles for TopBar breadcrumb display.
+ * Used to provide context for users on non-chat routes.
+ */
+const SECTION_TITLES: Record<string, string> = {
+  "/studio/chat": "", // No section title for chat (default view)
+  "/studio/workflows": "Workflows",
+  "/studio/agents": "Agents",
+  "/studio/mcp": "MCP",
+  "/studio/vectors": "Vectors",
+  "/studio/connections": "Connections",
+  "/studio/files": "Files",
+  "/studio/traces": "Traces",
+  "/studio/observability": "Observability",
+  "/studio/cost": "Cost",
+  "/studio/admin": "Admin",
+  "/studio/audit": "Audit",
+  "/studio/compliance": "Compliance",
+  "/studio/settings": "Settings",
+  "/studio/help": "Help",
+  "/studio/projects": "Projects",
+};
+
+/**
+ * Derives section title from pathname.
+ * Falls back to empty string for unknown routes or chat routes.
+ */
+function getSectionTitle(pathname: string): string {
+  // Exact match first
+  if (SECTION_TITLES[pathname] !== undefined) {
+    return SECTION_TITLES[pathname];
+  }
+  // Check for partial matches (e.g., /studio/chat/:sessionId → "")
+  const basePath = Object.keys(SECTION_TITLES).find(
+    (key) => pathname.startsWith(key + "/") || pathname === key,
+  );
+  return basePath ? (SECTION_TITLES[basePath] ?? "") : "";
+}
 
 // =============================================================================
 // Command Palette Commands
@@ -171,15 +232,24 @@ const PALETTE_COMMANDS: Command[] = [
 
 export function StudioShellLayout() {
   const dispatch = useAppDispatch();
+  const navigate = useNavigate();
   const sessionNavCollapsed = useAppSelector(selectSessionNavCollapsed);
   const canvasCollapsed = useAppSelector(selectCanvasCollapsed);
   const focusModeEnabled = useAppSelector(selectFocusModeEnabled);
   const devToolsCollapsed = useAppSelector(selectDevToolsCollapsed);
-  const _devToolsHeight = useAppSelector(selectDevToolsHeight);
+  const devToolsHeight = useAppSelector(selectDevToolsHeight);
+  const panelSizes = useAppSelector(selectPanelSizes);
+  const hasCustomLayout = useAppSelector(selectHasCustomLayout);
+  const maximizedPanelId = useAppSelector(selectMaximizedPanelId);
+
+  // Responsive layout - auto-collapse at narrow widths (Sprint 2.2)
+  const breakpoint = useBreakpoint();
+  const hasAppliedInitialCollapse = useRef(false);
 
   // AI component state
   const [showCommandPalette, setShowCommandPalette] = useState(false);
   const [showAgentPanel, setShowAgentPanel] = useState(false);
+  const [showShortcuts, setShowShortcuts] = useState(false);
 
   // Panel refs for keyboard navigation (Phase 5 - useCanvasKeyboardNav integration)
   // Note: ActivityBar and SessionNav use HTMLElement (nav elements), while
@@ -204,6 +274,25 @@ export function StudioShellLayout() {
   const aiCommandPaletteEnabled = useFeatureFlag("canvas_ai_palette");
   const aiSuggestionsEnabled = useFeatureFlag("ai_suggestions");
   const nudgesEnabled = useFeatureFlag("nudges");
+  const onboardingWizardEnabled = useFeatureFlag("onboarding_wizard");
+  // Sprint 4.1: Panel zoom/maximize feature flag
+  const panelZoomEnabled = useFeatureFlag("panel_zoom");
+  // Sprint 5.1: Mobile drawer navigation feature flag
+  const mobileDrawerEnabled = useFeatureFlag("mobile_drawer");
+
+  // Sprint 5.1: Mobile drawer state
+  const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
+  // Show hamburger menu at narrow breakpoints when feature is enabled
+  const showMobileNav =
+    mobileDrawerEnabled && (breakpoint === "sm" || breakpoint === "md");
+
+  // Onboarding wizard state (Sprint 3.2)
+  // Show wizard for first-time users when feature flag is enabled
+  const [showOnboarding, setShowOnboarding] = useState(() => {
+    if (!onboardingWizardEnabled) return false;
+    // Check if user has already completed onboarding using storage utility
+    return storage.get<boolean>(STORAGE_KEYS.ONBOARDING) !== true;
+  });
 
   // HITL dialog state management (extracted to hook for reusability)
   // Handles: approval/clarification dialogs, loading states, dismissed tracking,
@@ -228,6 +317,15 @@ export function StudioShellLayout() {
 
   // Get current route for page context
   const location = useLocation();
+
+  // Sprint 2.3: Derive section title from pathname for TopBar breadcrumb
+  const sectionTitle = useMemo(
+    () => getSectionTitle(location.pathname),
+    [location.pathname],
+  );
+
+  // Get sub-persona for TopBar badge (more granular than base persona)
+  const subPersona = useAppSelector(selectSubPersona);
 
   // Determine if we should show the canvas layout (3-panel: SessionNav + Conversation + Canvas)
   // or the outlet for full-page routes like Observability, Workflows, Cost, etc.
@@ -273,6 +371,27 @@ export function StudioShellLayout() {
   // Persona-based routing: handles default route redirects and access validation
   // This integrates PersonaRouter logic into the StudioShell
   usePersonaRouting();
+
+  // Sprint 2.2: Auto-collapse SessionNav at narrow widths (sm/md breakpoints)
+  // Only runs ONCE at mount to prevent flip-flopping on window resize.
+  // Respects user's custom layout - if hasCustomLayout is true, don't auto-collapse.
+  useEffect(() => {
+    // Only apply once at mount
+    if (hasAppliedInitialCollapse.current) return;
+
+    // Don't override user's custom layout
+    if (hasCustomLayout) {
+      hasAppliedInitialCollapse.current = true;
+      return;
+    }
+
+    // Auto-collapse SessionNav on narrow breakpoints (sm or md)
+    if (breakpoint === "sm" || breakpoint === "md") {
+      dispatch(setSessionNavCollapsed(true));
+    }
+
+    hasAppliedInitialCollapse.current = true;
+  }, [breakpoint, hasCustomLayout, dispatch]);
 
   // Get real-time connection health status
   const { status: wsStatus, reconnectAttempts: wsReconnectAttempts } =
@@ -404,17 +523,46 @@ export function StudioShellLayout() {
     if (!sessionCost) return undefined;
 
     return {
-      estimatedCostUsd: sessionCost.total_cost,
+      estimatedCostUsd: sessionCost.totalCost,
       byModel: sessionCost.model
         ? {
             [sessionCost.model]: {
-              tokens: sessionCost.token_count,
-              cost: sessionCost.total_cost,
+              tokens: sessionCost.tokenCount,
+              cost: sessionCost.totalCost,
             },
           }
         : undefined,
     };
   }, [currentSession?.id, sessionCosts]);
+
+  // Sprint 4.1: Compute panel visibility based on maximizedPanelId
+  // When a panel is maximized (and feature flag enabled), hide other panels
+  const effectiveSessionNavVisible = useMemo(() => {
+    if (!panelZoomEnabled || !maximizedPanelId) {
+      // Normal behavior: respect sessionNavCollapsed
+      return !sessionNavCollapsed;
+    }
+    // When a panel is maximized, only show session-nav if it's the maximized one
+    return maximizedPanelId === "session-nav";
+  }, [panelZoomEnabled, maximizedPanelId, sessionNavCollapsed]);
+
+  const effectiveCanvasVisible = useMemo(() => {
+    if (!panelZoomEnabled || !maximizedPanelId) {
+      // Normal behavior: respect canvasCollapsed
+      return !canvasCollapsed;
+    }
+    // When a panel is maximized, only show canvas if it's the maximized one
+    return maximizedPanelId === "canvas";
+  }, [panelZoomEnabled, maximizedPanelId, canvasCollapsed]);
+
+  const effectiveConversationVisible = useMemo(() => {
+    if (!panelZoomEnabled || !maximizedPanelId) {
+      // Conversation is always visible by default
+      return true;
+    }
+    // When a panel is maximized, only show conversation if it's the maximized one
+    return maximizedPanelId === "conversation";
+  }, [panelZoomEnabled, maximizedPanelId]);
 
   // Handle panel resize
   const handlePanelResize = useCallback(
@@ -456,13 +604,16 @@ export function StudioShellLayout() {
       // Toggle Focus Mode: Ctrl+Shift+F or Cmd+Shift+F
       "ctrl+shift+f": () => dispatch(toggleFocusMode()),
       "meta+shift+f": () => dispatch(toggleFocusMode()),
+      // Show keyboard shortcuts overlay: ? key (Sprint 3.1)
+      "shift+?": () => setShowShortcuts(true),
+      "?": () => setShowShortcuts(true),
       // Exit focus mode: Escape (only when focus mode is enabled)
       ...(focusModeEnabled && {
         escape: () => dispatch(setFocusModeEnabled(false)),
       }),
       // Note: Cmd+I / Ctrl+I for insights panel is handled by useCrossInsightsPanel hook
     }),
-    [dispatch, focusModeEnabled],
+    [dispatch, focusModeEnabled, setShowShortcuts],
   );
 
   useKeyboardShortcuts(keyboardShortcuts);
@@ -486,17 +637,16 @@ export function StudioShellLayout() {
             dispatch(toggleSessionNav());
             break;
           case "open-settings":
-            // Navigation handled by router
-            window.location.href = "/studio/settings";
+            navigate("/studio/settings");
             break;
           case "open-help":
-            window.location.href = "/studio/help";
+            navigate("/studio/help");
             break;
           case "open-observability":
-            window.location.href = "/studio/observability";
+            navigate("/studio/observability");
             break;
           case "open-compliance":
-            window.location.href = "/studio/compliance";
+            navigate("/studio/compliance");
             break;
           case "toggle-focus-mode":
             dispatch(toggleFocusMode());
@@ -516,9 +666,9 @@ export function StudioShellLayout() {
         // Handle AI interpretations based on action type
         switch (interpretation.action) {
           case "navigate":
-            // Navigate to specified path
+            // Navigate to specified path using SPA navigation
             if (typeof interpretation.params.path === "string") {
-              window.location.href = interpretation.params.path;
+              navigate(interpretation.params.path);
             }
             break;
           case "toggle-panel":
@@ -541,7 +691,7 @@ export function StudioShellLayout() {
         }
       }
     },
-    [dispatch],
+    [dispatch, navigate],
   );
 
   // Handler for agent cancel
@@ -639,22 +789,87 @@ export function StudioShellLayout() {
     [],
   );
 
+  // Onboarding wizard handlers (Sprint 3.2)
+  const handleOnboardingComplete = useCallback((result: OnboardingResult) => {
+    logger.debug("Onboarding completed:", result);
+    storage.set(STORAGE_KEYS.ONBOARDING, true);
+    setShowOnboarding(false);
+  }, []);
+
+  const handleOnboardingSkip = useCallback(() => {
+    logger.debug("Onboarding skipped");
+    storage.set(STORAGE_KEYS.ONBOARDING, true);
+    setShowOnboarding(false);
+  }, []);
+
+  // Sample workflow templates for onboarding
+  const onboardingTemplates: WorkflowTemplate[] = useMemo(
+    () => [
+      {
+        id: "conversational-agent",
+        name: "Conversational Agent",
+        description: "A basic chat agent with context retention",
+        category: "conversational",
+        tags: ["chat", "basic"],
+      },
+      {
+        id: "data-pipeline",
+        name: "Data Pipeline",
+        description: "Process and transform data with AI",
+        category: "pipeline",
+        tags: ["data", "processing"],
+      },
+      {
+        id: "multi-agent",
+        name: "Multi-Agent Collaboration",
+        description: "Multiple agents working together",
+        category: "collaboration",
+        tags: ["multi-agent", "advanced"],
+      },
+    ],
+    [],
+  );
+
   return (
     <div
       data-testid="studio-shell"
       className="studio-shell flex flex-col h-screen bg-white dark:bg-gray-900"
     >
+      {/* Skip-to-content link (WCAG 2.1 AA - 2.4.1 Bypass Blocks) */}
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:absolute focus:z-50 focus:p-4 focus:bg-white focus:text-blue-600 focus:ring-2 focus:ring-blue-500"
+      >
+        Skip to main content
+      </a>
+
       {/* TopBar - persona-aware header (hidden in focus mode) */}
+      {/* Sprint 2.3: sectionTitle provides wayfinding breadcrumb for non-chat routes */}
+      {/* Sprint 5.1: Add hamburger menu for mobile navigation */}
       {!focusModeEnabled && (
-        <TopBar
-          onUserMenuClick={handleUserMenuClick}
-          pendingApprovals={
-            agentHitlEnabled ? pendingApprovals.length : undefined
-          }
-          onPendingApprovalsClick={
-            agentHitlEnabled ? handlePendingApprovalsClick : undefined
-          }
-        />
+        <div className="flex items-center">
+          {/* Sprint 5.1: Hamburger menu for mobile breakpoints */}
+          {showMobileNav && (
+            <div className="flex-shrink-0 p-2">
+              <HamburgerMenu
+                onClick={() => setMobileDrawerOpen(true)}
+                isOpen={mobileDrawerOpen}
+              />
+            </div>
+          )}
+          <TopBar
+            sectionTitle={sectionTitle || undefined}
+            subPersonaBadge={subPersona || undefined}
+            onUserMenuClick={handleUserMenuClick}
+            pendingApprovals={
+              agentHitlEnabled ? pendingApprovals.length : undefined
+            }
+            onPendingApprovalsClick={
+              agentHitlEnabled ? handlePendingApprovalsClick : undefined
+            }
+            className={showMobileNav ? "flex-1" : undefined}
+          />
+        </div>
       )}
 
       {/* Focus Mode Exit Button - shows when in focus mode */}
@@ -719,14 +934,20 @@ export function StudioShellLayout() {
                 className="flex-1"
               >
                 {/* Session Nav Panel */}
-                {!sessionNavCollapsed && (
+                {/* Sprint 4.1: Uses effectiveSessionNavVisible for maximize support */}
+                {effectiveSessionNavVisible && (
                   <>
                     <Panel
                       id="session-nav"
+                      data-testid="session-nav"
                       order={1}
-                      defaultSize={20}
-                      minSize={15}
-                      maxSize={35}
+                      defaultSize={
+                        maximizedPanelId === "session-nav"
+                          ? 100
+                          : panelSizes.sessionNav
+                      }
+                      minSize={maximizedPanelId ? undefined : 15}
+                      maxSize={maximizedPanelId ? undefined : 35}
                     >
                       <SessionNav
                         ref={sessionNavRef}
@@ -734,42 +955,57 @@ export function StudioShellLayout() {
                         enableContextMenu
                         enableHover
                         onRenameSession={handleRenameSession}
+                        enableSimilarSessions={aiSuggestionsEnabled}
+                        userId={currentUserId}
                       />
                     </Panel>
-                    <ResizeHandle />
+                    {!maximizedPanelId && <ResizeHandle />}
                   </>
                 )}
 
                 {/* Conversation Panel */}
-                <Panel
-                  id="conversation"
-                  order={2}
-                  defaultSize={canvasCollapsed ? 80 : 40}
-                  minSize={30}
-                >
-                  <ConnectedConversationPanel
-                    ref={conversationRef}
-                    enableAI={aiSuggestionsEnabled}
-                    enableRealTimeSuggestions={aiSuggestionsEnabled}
-                    enableInlineSuggestions={aiSuggestionsEnabled}
-                    userId={currentUserId}
-                    persona={currentPersona}
-                    currentTokens={tokenCount}
-                    maxTokens={128000}
-                    showContextWarning={tokenCount > 100000}
-                  />
-                </Panel>
+                {/* Sprint 4.1: Uses effectiveConversationVisible for maximize support */}
+                {effectiveConversationVisible && (
+                  <Panel
+                    id="conversation"
+                    order={2}
+                    defaultSize={
+                      maximizedPanelId === "conversation"
+                        ? 100
+                        : canvasCollapsed
+                          ? 80
+                          : panelSizes.conversation
+                    }
+                    minSize={maximizedPanelId ? undefined : 30}
+                  >
+                    <ConnectedConversationPanel
+                      ref={conversationRef}
+                      enableAI={aiSuggestionsEnabled}
+                      enableRealTimeSuggestions={aiSuggestionsEnabled}
+                      enableInlineSuggestions={aiSuggestionsEnabled}
+                      userId={currentUserId}
+                      persona={currentPersona}
+                      currentTokens={tokenCount}
+                      maxTokens={128000}
+                      showContextWarning={tokenCount > 100000}
+                    />
+                  </Panel>
+                )}
 
                 {/* Canvas Panel */}
-                {!canvasCollapsed && (
+                {/* Sprint 4.1: Uses effectiveCanvasVisible for maximize support */}
+                {effectiveCanvasVisible && (
                   <>
-                    <ResizeHandle />
+                    {!maximizedPanelId && <ResizeHandle />}
                     <Panel
                       id="canvas"
+                      data-testid="canvas-panel"
                       order={3}
-                      defaultSize={40}
-                      minSize={25}
-                      maxSize={60}
+                      defaultSize={
+                        maximizedPanelId === "canvas" ? 100 : panelSizes.canvas
+                      }
+                      minSize={maximizedPanelId ? undefined : 25}
+                      maxSize={maximizedPanelId ? undefined : 60}
                     >
                       <ConnectedCanvasPanel
                         ref={canvasRef}
@@ -817,7 +1053,7 @@ export function StudioShellLayout() {
             <Panel
               id="devtools"
               order={2}
-              defaultSize={25}
+              defaultSize={devToolsHeight}
               minSize={10}
               maxSize={50}
             >
@@ -978,6 +1214,13 @@ export function StudioShellLayout() {
           </div>
         )}
 
+      {/* Keyboard Shortcuts Overlay (? key) - Sprint 3.1 */}
+      <KeyboardShortcutOverlay
+        shortcuts={keyboardShortcuts}
+        isOpen={showShortcuts}
+        onClose={() => setShowShortcuts(false)}
+      />
+
       {/* AI Command Palette (Cmd+K) - gated by canvas_ai_palette feature flag */}
       {/* Lazy-loaded to reduce initial bundle size */}
       {aiCommandPaletteEnabled && (
@@ -1050,6 +1293,24 @@ export function StudioShellLayout() {
           />
         </div>
       )}
+
+      {/* Sprint 5.1: Mobile Drawer Navigation - gated by mobile_drawer feature flag */}
+      {/* Renders at narrow breakpoints (sm, md) for mobile navigation */}
+      {showMobileNav && (
+        <MobileDrawer
+          isOpen={mobileDrawerOpen}
+          onClose={() => setMobileDrawerOpen(false)}
+        />
+      )}
+
+      {/* Onboarding Wizard (Sprint 3.2) - gated by onboarding_wizard feature flag */}
+      {/* High z-index to ensure it appears above other overlays for first-time users */}
+      <OnboardingWizard
+        isOpen={showOnboarding}
+        onComplete={handleOnboardingComplete}
+        onSkip={handleOnboardingSkip}
+        templates={onboardingTemplates}
+      />
     </div>
   );
 }

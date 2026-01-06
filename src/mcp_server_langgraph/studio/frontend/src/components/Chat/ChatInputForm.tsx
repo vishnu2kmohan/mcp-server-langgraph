@@ -38,6 +38,7 @@ import {
   type ReasoningEffortLevel,
 } from "./ReasoningEffortSelector";
 import { SlashCommandMenu, type SlashCommand } from "./SlashCommandMenu";
+import { RichTextInput, type MentionOption } from "./RichTextInput";
 
 // Re-export SlashCommand for external use
 export type { SlashCommand };
@@ -120,6 +121,23 @@ export interface ChatInputFormProps {
   onDismissSuggestion?: () => void;
   /** Auto-focus the textarea on mount */
   autoFocus?: boolean;
+  // RichText mode props (Sprint 5.2 - Pill + RichTextInput as default)
+  /**
+   * Enable rich text mode with pill container styling.
+   * When true: Renders RichTextInput with formatting toolbar
+   * When false: Renders plain textarea (backwards compatible)
+   */
+  enableRichTextMode?: boolean;
+  /**
+   * Keyboard submit behavior - PASS THROUGH from uiSlice, never hardcode.
+   * - true: Enter = submit, Shift+Enter = newline (ChatGPT style)
+   * - false: Ctrl/Cmd+Enter = submit, Enter = newline (legacy)
+   */
+  submitOnEnter?: boolean;
+  /** Mention options for RichTextInput autocomplete */
+  mentionOptions?: MentionOption[];
+  /** Maximum character length for RichTextInput */
+  richTextMaxLength?: number;
 }
 
 export function ChatInputForm({
@@ -168,6 +186,11 @@ export function ChatInputForm({
   onDismissSuggestion,
   // Auto-focus
   autoFocus = false,
+  // RichText mode props
+  enableRichTextMode = false,
+  submitOnEnter = true,
+  mentionOptions = [],
+  richTextMaxLength,
 }: ChatInputFormProps) {
   const [isModelDropdownOpen, setIsModelDropdownOpen] = useState(false);
   const [isVoiceBannerDismissed, setIsVoiceBannerDismissed] = useState(false);
@@ -246,6 +269,7 @@ export function ChatInputForm({
     enableInlineSuggestions &&
     !isProcessing &&
     input.trim().length > 0 &&
+    !!inlineSuggestion &&
     inlineSuggestion.length > 0;
 
   // Handle keyboard shortcuts (Enter to send, Shift+Enter for newline, Tab to accept suggestion)
@@ -265,11 +289,19 @@ export function ChatInputForm({
         return;
       }
 
-      if (e.key === "Enter" && !e.shiftKey) {
-        e.preventDefault();
-        if (input.trim().length > 0 && !isProcessing) {
-          onSubmit();
+      // Submit handling - respects submitOnEnter preference
+      if (e.key === "Enter") {
+        const shouldSubmit = submitOnEnter
+          ? !e.shiftKey // Enter to submit (ChatGPT style)
+          : e.ctrlKey || e.metaKey; // Ctrl/Cmd+Enter to submit (legacy)
+
+        if (shouldSubmit) {
+          e.preventDefault();
+          if (input.trim().length > 0 && !isProcessing) {
+            onSubmit();
+          }
         }
+        // Note: when submitOnEnter=false and no modifier key, Enter creates newline (default behavior)
       }
     },
     [
@@ -280,6 +312,7 @@ export function ChatInputForm({
       inlineSuggestion,
       onAcceptSuggestion,
       onDismissSuggestion,
+      submitOnEnter,
     ],
   );
 
@@ -535,150 +568,273 @@ export function ChatInputForm({
           />
         )}
 
-        {/* Input wrapper - ChatGPT/Claude style rounded container */}
-        <div
-          data-testid="input-wrapper"
-          className="flex items-end gap-2 p-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-2xl shadow-sm focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-transparent transition-all"
-        >
-          {/* Left controls - Attachment button */}
-          <div className="flex items-center gap-1 pb-1">
-            {/* Hidden file input */}
-            <input
-              type="file"
-              multiple
-              onChange={handleFileChange}
-              className="sr-only"
-              aria-hidden="true"
-              id="chat-file-input"
-            />
-            <button
-              type="button"
-              disabled={isProcessing || isUploading}
-              aria-label="Attach file"
-              className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 disabled:opacity-50 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-              onClick={() =>
-                document.getElementById("chat-file-input")?.click()
-              }
-            >
-              <Plus className="w-5 h-5" />
-            </button>
-          </div>
+        {/* RichText Mode: Pill container with RichTextInput */}
+        {enableRichTextMode ? (
+          <div
+            data-testid="pill-container"
+            className="relative flex flex-col bg-white dark:bg-gray-800/95 rounded-2xl shadow-lg ring-1 ring-gray-200/50 dark:ring-gray-700/50 backdrop-blur-sm transition-all duration-200 focus-within:ring-2 focus-within:ring-chat-accent/50 focus-within:shadow-xl"
+          >
+            {/* RichTextInput area */}
+            <div data-testid="rich-text-input" className="px-3 pt-3">
+              <RichTextInput
+                value={input}
+                onChange={onInputChange}
+                onSubmit={() => onSubmit()}
+                placeholder="Type your message..."
+                disabled={isProcessing}
+                submitOnEnter={submitOnEnter}
+                enableInlineSuggestions={enableInlineSuggestions}
+                inlineSuggestion={inlineSuggestion}
+                onAcceptSuggestion={onAcceptSuggestion}
+                onDismissSuggestion={onDismissSuggestion}
+                isSuggestionLoading={isSuggestionLoading}
+                mentionOptions={mentionOptions}
+                maxLength={richTextMaxLength}
+                className="w-full border-0 bg-transparent focus:ring-0"
+              />
+            </div>
 
-          {/* Textarea with inline suggestion overlay - expandable multi-line input */}
-          <div className="flex-1 relative">
-            {/* Ghost text overlay for inline AI suggestions */}
-            {showInlineSuggestion && (
-              <div
-                data-testid="inline-suggestion-overlay"
-                className="absolute inset-0 px-2 py-2 pointer-events-none overflow-hidden whitespace-pre-wrap break-words min-h-[40px]"
-                aria-hidden="true"
-              >
-                {/* Invisible text to position the ghost text after input */}
-                <span className="invisible">{input}</span>
-                {/* Ghost text suggestion */}
-                <span
-                  data-testid="inline-suggestion"
-                  className="text-gray-400 dark:text-gray-500"
+            {/* Controls row - OUTSIDE RichTextInput */}
+            <div className="flex items-center justify-between px-3 pb-3 border-t border-gray-100 dark:border-gray-700 pt-2 mt-2">
+              {/* Left: File upload, Voice */}
+              <div className="flex items-center gap-2">
+                {/* Hidden file input */}
+                <input
+                  type="file"
+                  multiple
+                  onChange={handleFileChange}
+                  className="sr-only"
+                  aria-hidden="true"
+                  id="chat-file-input-rich"
+                />
+                <button
+                  type="button"
+                  disabled={isProcessing || isUploading}
+                  aria-label="Attach file"
+                  className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 disabled:opacity-50 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                  onClick={() =>
+                    document.getElementById("chat-file-input-rich")?.click()
+                  }
                 >
-                  {inlineSuggestion}
-                </span>
+                  <Plus className="w-5 h-5" />
+                </button>
+
+                {isVoiceSupported && (
+                  <button
+                    type="button"
+                    onClick={isListening ? onStopListening : onStartListening}
+                    disabled={isProcessing}
+                    aria-label={
+                      isListening ? "Stop voice input" : "Start voice input"
+                    }
+                    className={`p-2 rounded-lg transition-colors ${
+                      isListening
+                        ? "text-red-500 bg-red-50 dark:bg-red-900/20"
+                        : "text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+                    } disabled:opacity-50`}
+                  >
+                    {isListening ? (
+                      <MicOff className="w-5 h-5" />
+                    ) : (
+                      <Mic className="w-5 h-5" />
+                    )}
+                  </button>
+                )}
+
+                {/* Reasoning Effort Selector in controls row (RichText mode only) */}
+                {modelSupportsThinking &&
+                  enableThinking &&
+                  onReasoningEffortChange && (
+                    <ReasoningEffortSelector
+                      value={reasoningEffort}
+                      onChange={onReasoningEffortChange}
+                      disabled={isProcessing}
+                      modelSupportsThinking={modelSupportsThinking}
+                      compact={true}
+                    />
+                  )}
               </div>
-            )}
 
-            {/* Loading indicator for suggestion fetch */}
-            {enableInlineSuggestions &&
-              isSuggestionLoading &&
-              input.trim().length > 0 && (
+              {/* Right: Send/Stop button */}
+              <div className="flex items-center gap-2">
+                {isStreaming && onStopStreaming ? (
+                  <button
+                    type="button"
+                    onClick={onStopStreaming}
+                    aria-label="Stop generating"
+                    className="p-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
+                    data-testid="stop-streaming-button"
+                  >
+                    <Square className="w-5 h-5" />
+                  </button>
+                ) : (
+                  <button
+                    type="submit"
+                    disabled={!canSend}
+                    aria-label="Send"
+                    data-testid="send-button"
+                    className="p-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  >
+                    {isProcessing ? (
+                      <Loader2
+                        className="w-5 h-5 animate-spin"
+                        data-testid="send-button-loading"
+                      />
+                    ) : (
+                      <Send className="w-5 h-5" />
+                    )}
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+        ) : (
+          /* Legacy Mode: Plain textarea with existing styling */
+          <div
+            data-testid="input-wrapper"
+            className="flex items-end gap-2 p-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-2xl shadow-sm focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-transparent transition-all"
+          >
+            {/* Left controls - Attachment button */}
+            <div className="flex items-center gap-1 pb-1">
+              {/* Hidden file input */}
+              <input
+                type="file"
+                multiple
+                onChange={handleFileChange}
+                className="sr-only"
+                aria-hidden="true"
+                id="chat-file-input"
+              />
+              <button
+                type="button"
+                disabled={isProcessing || isUploading}
+                aria-label="Attach file"
+                className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 disabled:opacity-50 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                onClick={() =>
+                  document.getElementById("chat-file-input")?.click()
+                }
+              >
+                <Plus className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Textarea with inline suggestion overlay - expandable multi-line input */}
+            <div className="flex-1 relative">
+              {/* Ghost text overlay for inline AI suggestions */}
+              {showInlineSuggestion && (
                 <div
-                  data-testid="suggestion-loading"
-                  className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none"
+                  data-testid="inline-suggestion-overlay"
+                  className="absolute inset-0 px-2 py-2 pointer-events-none overflow-hidden whitespace-pre-wrap break-words min-h-[40px]"
+                  aria-hidden="true"
                 >
-                  <Loader2 className="w-4 h-4 animate-spin text-gray-400" />
+                  {/* Invisible text to position the ghost text after input */}
+                  <span className="invisible">{input}</span>
+                  {/* Ghost text suggestion */}
+                  <span
+                    data-testid="inline-suggestion"
+                    className="text-gray-400 dark:text-gray-500"
+                  >
+                    {inlineSuggestion}
+                  </span>
                 </div>
               )}
 
-            <textarea
-              ref={textareaRef}
-              value={input}
-              onChange={(e) => onInputChange(e.target.value)}
-              onKeyDown={handleKeyDown}
-              placeholder="Type your message..."
-              disabled={isProcessing}
-              rows={1}
-              aria-label="Chat message input"
-              className="w-full px-2 py-2 bg-transparent text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-inset rounded-lg disabled:opacity-50 min-h-[40px] max-h-[200px]"
-            />
+              {/* Loading indicator for suggestion fetch */}
+              {enableInlineSuggestions &&
+                isSuggestionLoading &&
+                input.trim().length > 0 && (
+                  <div
+                    data-testid="suggestion-loading"
+                    className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none"
+                  >
+                    <Loader2 className="w-4 h-4 animate-spin text-gray-400" />
+                  </div>
+                )}
 
-            {/* Hint text for accepting suggestion */}
-            {showInlineSuggestion && (
-              <div
-                data-testid="suggestion-hint"
-                className="absolute -bottom-5 left-2 text-xs text-gray-400 dark:text-gray-500"
-              >
-                Press Tab to accept
-              </div>
-            )}
-          </div>
-
-          {/* Right controls - Voice & Send */}
-          <div className="flex items-center gap-1 pb-1">
-            {isVoiceSupported && (
-              <button
-                type="button"
-                onClick={isListening ? onStopListening : onStartListening}
+              <textarea
+                ref={textareaRef}
+                value={input}
+                onChange={(e) => onInputChange(e.target.value)}
+                onKeyDown={handleKeyDown}
+                placeholder="Type your message..."
                 disabled={isProcessing}
-                aria-label={
-                  isListening ? "Stop voice input" : "Start voice input"
-                }
-                className={`p-2 rounded-lg transition-colors ${
-                  isListening
-                    ? "text-red-500 bg-red-50 dark:bg-red-900/20"
-                    : "text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
-                } disabled:opacity-50`}
-              >
-                {isListening ? (
-                  <MicOff className="w-5 h-5" />
-                ) : (
-                  <Mic className="w-5 h-5" />
-                )}
-              </button>
-            )}
+                rows={1}
+                aria-label="Message input"
+                className="w-full px-2 py-2 bg-transparent text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-inset rounded-lg disabled:opacity-50 min-h-[40px] max-h-[200px]"
+              />
 
-            {/* Stop button when streaming, otherwise Send button */}
-            {isStreaming && onStopStreaming ? (
-              <button
-                type="button"
-                onClick={onStopStreaming}
-                aria-label="Stop generating"
-                className="p-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
-                data-testid="stop-streaming-button"
-              >
-                <Square className="w-5 h-5" />
-              </button>
-            ) : (
-              <button
-                type="submit"
-                disabled={!canSend}
-                aria-label="Send"
-                data-testid="send-button"
-                className="p-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-              >
-                {isProcessing ? (
-                  <Loader2
-                    className="w-5 h-5 animate-spin"
-                    data-testid="send-button-loading"
-                  />
-                ) : (
-                  <Send className="w-5 h-5" />
-                )}
-              </button>
-            )}
+              {/* Hint text for accepting suggestion */}
+              {showInlineSuggestion && (
+                <div
+                  data-testid="suggestion-hint"
+                  className="absolute -bottom-5 left-2 text-xs text-gray-400 dark:text-gray-500"
+                >
+                  Press Tab to accept
+                </div>
+              )}
+            </div>
+
+            {/* Right controls - Voice & Send */}
+            <div className="flex items-center gap-1 pb-1">
+              {isVoiceSupported && (
+                <button
+                  type="button"
+                  onClick={isListening ? onStopListening : onStartListening}
+                  disabled={isProcessing}
+                  aria-label={
+                    isListening ? "Stop voice input" : "Start voice input"
+                  }
+                  className={`p-2 rounded-lg transition-colors ${
+                    isListening
+                      ? "text-red-500 bg-red-50 dark:bg-red-900/20"
+                      : "text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+                  } disabled:opacity-50`}
+                >
+                  {isListening ? (
+                    <MicOff className="w-5 h-5" />
+                  ) : (
+                    <Mic className="w-5 h-5" />
+                  )}
+                </button>
+              )}
+
+              {/* Stop button when streaming, otherwise Send button */}
+              {isStreaming && onStopStreaming ? (
+                <button
+                  type="button"
+                  onClick={onStopStreaming}
+                  aria-label="Stop generating"
+                  className="p-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
+                  data-testid="stop-streaming-button"
+                >
+                  <Square className="w-5 h-5" />
+                </button>
+              ) : (
+                <button
+                  type="submit"
+                  disabled={!canSend}
+                  aria-label="Send"
+                  data-testid="send-button"
+                  className="p-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  {isProcessing ? (
+                    <Loader2
+                      className="w-5 h-5 animate-spin"
+                      data-testid="send-button-loading"
+                    />
+                  ) : (
+                    <Send className="w-5 h-5" />
+                  )}
+                </button>
+              )}
+            </div>
           </div>
-        </div>
+        )}
       </form>
 
-      {/* Reasoning Effort Selector and Thinking Toggle */}
-      {modelSupportsThinking && (
+      {/* Reasoning Effort Selector and Thinking Toggle - only in Legacy mode */}
+      {/* In RichText mode, ReasoningEffortSelector is in the controls row; thinking toggle is hidden (product approved) */}
+      {modelSupportsThinking && !enableRichTextMode && (
         <div className="flex items-center justify-between mt-3 px-1">
           {/* Enable Thinking Toggle */}
           {onEnableThinkingChange && (

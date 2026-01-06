@@ -156,7 +156,7 @@ function AlertItem({ alert, isSelected, onClick }: AlertItemProps) {
 
   return (
     <button
-      data-testid={`alert-item-${alert.alert_id}`}
+      data-testid={`alert-item-${alert.alertId}`}
       onClick={onClick}
       className={`w-full text-left p-3 rounded-lg border transition-colors ${
         isSelected
@@ -167,7 +167,7 @@ function AlertItem({ alert, isSelected, onClick }: AlertItemProps) {
       <div className="flex items-start gap-3">
         {/* Severity Indicator */}
         <div
-          data-testid={`severity-badge-${alert.alert_id}`}
+          data-testid={`severity-badge-${alert.alertId}`}
           className={`w-2 h-2 mt-2 rounded-full flex-shrink-0 ${getSeverityColor(
             alert.severity,
           )}`}
@@ -180,7 +180,7 @@ function AlertItem({ alert, isSelected, onClick }: AlertItemProps) {
               {alert.name}
             </span>
             <span
-              data-testid={`state-badge-${alert.alert_id}`}
+              data-testid={`state-badge-${alert.alertId}`}
               className={`text-xs px-2 py-0.5 rounded-full ${stateStyle.bg} ${stateStyle.text}`}
             >
               {alert.state.charAt(0).toUpperCase() + alert.state.slice(1)}
@@ -199,8 +199,8 @@ function AlertItem({ alert, isSelected, onClick }: AlertItemProps) {
                 {serviceLabel}
               </span>
             )}
-            <span data-testid={`alert-time-${alert.alert_id}`}>
-              {formatRelativeTime(alert.started_at)}
+            <span data-testid={`alert-time-${alert.alertId}`}>
+              {formatRelativeTime(alert.startedAt)}
             </span>
           </div>
         </div>
@@ -466,10 +466,10 @@ export function AlertsPanel({
           <div className="space-y-2">
             {filteredAlerts.map((alert) => (
               <AlertItem
-                key={alert.alert_id}
+                key={alert.alertId}
                 alert={alert}
-                isSelected={selectedAlertId === alert.alert_id}
-                onClick={() => onSelectAlert(alert.alert_id)}
+                isSelected={selectedAlertId === alert.alertId}
+                onClick={() => onSelectAlert(alert.alertId)}
               />
             ))}
           </div>

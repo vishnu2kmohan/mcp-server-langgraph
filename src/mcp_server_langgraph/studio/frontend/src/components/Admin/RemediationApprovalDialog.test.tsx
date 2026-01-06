@@ -34,45 +34,45 @@ import type { RemediationRequest, AIRecommendation } from "../../types/api";
 // =============================================================================
 
 const mockRemediation: RemediationRequest = {
-  remediation_id: "rem-001",
-  alert_id: "alert-001",
-  alert_name: "HighCPU",
+  remediationId: "rem-001",
+  alertId: "alert-001",
+  alertName: "HighCPU",
   severity: "critical",
-  step_number: 1,
+  stepNumber: 1,
   action: "scale",
   description: "Scale up replicas to handle current load",
   command: "kubectl scale deployment api-server --replicas=5",
-  risk_level: "low",
+  riskLevel: "low",
   status: "pending",
-  requested_at: "2024-01-15T10:36:00Z",
-  approved_by: null,
-  approved_at: null,
+  requestedAt: "2024-01-15T10:36:00Z",
+  approvedBy: null,
+  approvedAt: null,
   reason: null,
-  recommendation_id: "rec-001",
+  recommendationId: "rec-001",
 };
 
 const mockRecommendation: AIRecommendation = {
-  recommendation_id: "rec-001",
-  alert_id: "alert-001",
-  root_cause_analysis: "Memory leak causing CPU pressure",
-  remediation_steps: [
+  recommendationId: "rec-001",
+  alertId: "alert-001",
+  rootCauseAnalysis: "Memory leak causing CPU pressure",
+  remediationSteps: [
     {
-      step_number: 1,
+      stepNumber: 1,
       action: "scale",
       description: "Scale up replicas to handle current load",
       command: "kubectl scale deployment api-server --replicas=5",
-      requires_approval: true,
-      risk_level: "low",
+      requiresApproval: true,
+      riskLevel: "low",
     },
   ],
-  risk_assessment: {
-    overall_risk: "low",
-    impact_analysis: "Minimal impact, additional pods added",
-    rollback_plan: "kubectl scale deployment api-server --replicas=3",
+  riskAssessment: {
+    overallRisk: "low",
+    impactAnalysis: "Minimal impact, additional pods added",
+    rollbackPlan: "kubectl scale deployment api-server --replicas=3",
   },
-  runbook_reference: "https://runbooks.example.com/scale",
-  generated_at: "2024-01-15T10:35:00Z",
-  model_used: "claude-3-5-sonnet",
+  runbookReference: "https://runbooks.example.com/scale",
+  generatedAt: "2024-01-15T10:35:00Z",
+  modelUsed: "claude-3-5-sonnet",
 };
 
 const defaultProps: RemediationApprovalDialogProps = {
@@ -181,7 +181,7 @@ describe("RemediationApprovalDialog", () => {
     it("should show warning for high risk remediations", () => {
       const highRiskRemediation = {
         ...mockRemediation,
-        risk_level: "high" as const,
+        riskLevel: "high" as const,
       };
       render(
         <RemediationApprovalDialog
@@ -233,8 +233,8 @@ describe("RemediationApprovalDialog", () => {
 
       await waitFor(() => {
         expect(onApprove).toHaveBeenCalledWith({
-          remediation_id: "rem-001",
-          approved_by: expect.any(String),
+          remediationId: "rem-001",
+          approvedBy: expect.any(String),
           reason: undefined,
         });
       });
@@ -255,8 +255,8 @@ describe("RemediationApprovalDialog", () => {
 
       await waitFor(() => {
         expect(onApprove).toHaveBeenCalledWith({
-          remediation_id: "rem-001",
-          approved_by: expect.any(String),
+          remediationId: "rem-001",
+          approvedBy: expect.any(String),
           reason: "Approved after review",
         });
       });
@@ -316,10 +316,10 @@ describe("RemediationApprovalDialog", () => {
 
       await waitFor(() => {
         expect(onReject).toHaveBeenCalledWith({
-          remediation_id: "rem-001",
-          rejected_by: expect.any(String),
+          remediationId: "rem-001",
+          rejectedBy: expect.any(String),
           reason: "too_risky",
-          reason_detail: undefined,
+          reasonDetail: undefined,
         });
       });
     });
@@ -418,7 +418,7 @@ describe("RemediationApprovalDialog", () => {
       await waitFor(() => {
         expect(onReject).toHaveBeenCalledWith(
           expect.objectContaining({
-            remediation_id: "rem-001",
+            remediationId: "rem-001",
             reason: "too_risky",
           }),
         );
@@ -476,7 +476,7 @@ describe("RemediationApprovalDialog", () => {
         expect(onReject).toHaveBeenCalledWith(
           expect.objectContaining({
             reason: "other",
-            reason_detail: "Custom reason here",
+            reasonDetail: "Custom reason here",
           }),
         );
       });

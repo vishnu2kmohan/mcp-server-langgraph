@@ -18,7 +18,11 @@
 
 import { useEffect, useCallback, useMemo, useRef, useState } from "react";
 import { useAppDispatch, useAppSelector } from "../store/hooks";
-import { logout, selectIsAuthenticated } from "../store/slices/authSlice";
+import {
+  logout,
+  selectIsAuthenticated,
+  selectWebSocketPermissions,
+} from "../store/slices/authSlice";
 import { addNotification } from "../store/slices/notificationSlice";
 import { buildWebSocketUrl, WS_ENDPOINTS } from "../utils/websocket";
 import {
@@ -259,6 +263,11 @@ export function useAgentRequestWebSocket(
   const dispatch = useAppDispatch();
 
   const isAuthenticated = useAppSelector(selectIsAuthenticated);
+  const wsPermissions = useAppSelector(selectWebSocketPermissions);
+
+  // Check if user has permission for agent requests WebSocket
+  const hasAgentRequestsPermission = wsPermissions?.agent_requests ?? false;
+
   const [pendingApprovals, setPendingApprovals] = useState<
     ApprovalRequiredPayload[]
   >([]);
@@ -288,19 +297,20 @@ export function useAgentRequestWebSocket(
 
   // Compute WebSocket URL - recalculates when auth state changes
   // The buildWebSocketUrl utility fetches the auth token internally when includeAuthToken=true
-  // Pass empty string when not authenticated to prevent connection attempt
+  // Pass empty string when not authenticated or no permission to prevent connection attempt
   const wsUrl = useMemo(
     () =>
-      isAuthenticated
+      isAuthenticated && hasAgentRequestsPermission
         ? (url ??
           getDefaultWebSocketUrl(sessionId, true /* includeAuthToken */))
         : "",
-    [url, sessionId, isAuthenticated],
+    [url, sessionId, isAuthenticated, hasAgentRequestsPermission],
   );
 
-  // Track effective enabled state - only connect when authenticated
-  // WebSocket requires valid auth token, so we only connect when authenticated
-  const effectiveEnabled = enabled && isAuthenticated;
+  // Track effective enabled state - only connect when authenticated AND has permission
+  // WebSocket requires valid auth token and authorization
+  const effectiveEnabled =
+    enabled && isAuthenticated && hasAgentRequestsPermission;
 
   // Handle incoming messages (receives parsed data from useRealtimeSync)
   const handleMessage = useCallback((data: unknown) => {

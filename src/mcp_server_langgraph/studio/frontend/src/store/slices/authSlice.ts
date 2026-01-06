@@ -12,7 +12,13 @@
 
 import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
 import type { RootState } from "../index";
-import type { User, AuthTokens, Organization, Persona } from "../../types/auth";
+import type {
+  User,
+  AuthTokens,
+  Organization,
+  Persona,
+  WebSocketPermissions,
+} from "../../types/auth";
 import {
   storage,
   STORAGE_KEYS,
@@ -239,6 +245,33 @@ export const initializeAuth = createAsyncThunk<
     }
 
     const data = await response.json();
+
+    // Map snake_case websocket_permissions to camelCase WebSocketPermissions
+    // These permissions enable frontend to only connect to authorized WebSocket endpoints
+    let websocketPermissions: WebSocketPermissions | undefined;
+    if (data.websocket_permissions) {
+      websocketPermissions = {
+        alerts: data.websocket_permissions.alerts ?? false,
+        devtools: data.websocket_permissions.devtools ?? false,
+        notifications: data.websocket_permissions.notifications ?? false,
+        audit: data.websocket_permissions.audit ?? false,
+        mcp_tasks: data.websocket_permissions.mcp_tasks ?? false,
+        mcp_aggregated: data.websocket_permissions.mcp_aggregated ?? false,
+        connections_health:
+          data.websocket_permissions.connections_health ?? false,
+        connections_realtime:
+          data.websocket_permissions.connections_realtime ?? false,
+        heart_metrics: data.websocket_permissions.heart_metrics ?? false,
+        traces: data.websocket_permissions.traces ?? false,
+        cost_tracking: data.websocket_permissions.cost_tracking ?? false,
+        budget_alerts: data.websocket_permissions.budget_alerts ?? false,
+        agent_requests: data.websocket_permissions.agent_requests ?? false,
+        ai_suggestions: data.websocket_permissions.ai_suggestions ?? false,
+        orchestrator_status:
+          data.websocket_permissions.orchestrator_status ?? false,
+      };
+    }
+
     // Map snake_case API response to camelCase User type
     const user: User = {
       id: data.user_id || data.keycloak_id || "",
@@ -249,6 +282,7 @@ export const initializeAuth = createAsyncThunk<
       displayName: data.display_name,
       roles: data.roles || [],
       persona: data.persona || derivePersona(data.roles || []),
+      websocketPermissions,
     };
 
     return {
@@ -517,6 +551,8 @@ export const selectIsAuthenticated = (state: RootState) =>
   state.auth.user !== null;
 export const selectUserPersona = (state: RootState) =>
   state.auth.user?.persona ?? null;
+export const selectWebSocketPermissions = (state: RootState) =>
+  state.auth.user?.websocketPermissions ?? null;
 
 // ============================================================================
 // Thunk for getting access token (with auto-refresh)

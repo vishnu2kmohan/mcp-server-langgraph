@@ -151,7 +151,7 @@ function formatRelativeTime(isoDate: string): string {
 // =============================================================================
 
 interface RemediationStepCardProps {
-  step: AIRecommendation["remediation_steps"][0];
+  step: AIRecommendation["remediationSteps"][number];
   remediation?: RemediationRequest;
   onApprove: (remediationId: string) => void;
   onReject: (remediationId: string) => void;
@@ -170,23 +170,23 @@ function RemediationStepCard({
       {/* Step Header */}
       <div className="flex items-center gap-3 mb-2">
         <span
-          data-testid={`step-number-${step.step_number}`}
+          data-testid={`step-number-${step.stepNumber}`}
           className="flex items-center justify-center w-6 h-6 rounded-full bg-blue-500 text-white text-sm font-medium"
         >
-          {step.step_number}
+          {step.stepNumber}
         </span>
         <span className="font-medium text-gray-900 dark:text-white">
           {step.action.charAt(0).toUpperCase() + step.action.slice(1)}
         </span>
         <span
-          data-testid={`step-risk-${step.step_number}`}
-          className={`text-xs px-2 py-0.5 rounded-full ${getRiskColor(step.risk_level)} text-white`}
+          data-testid={`step-risk-${step.stepNumber}`}
+          className={`text-xs px-2 py-0.5 rounded-full ${getRiskColor(step.riskLevel)} text-white`}
         >
-          {step.risk_level}
+          {step.riskLevel}
         </span>
         {remediation && (
           <span
-            data-testid={`step-status-${step.step_number}`}
+            data-testid={`step-status-${step.stepNumber}`}
             className="flex items-center gap-1 text-xs text-gray-500"
           >
             {getStatusIcon(remediation.status)}
@@ -212,16 +212,16 @@ function RemediationStepCard({
       {isPending && remediation && (
         <div className="flex gap-2">
           <button
-            data-testid={`approve-step-${step.step_number}`}
-            onClick={() => onApprove(remediation.remediation_id)}
+            data-testid={`approve-step-${step.stepNumber}`}
+            onClick={() => onApprove(remediation.remediationId)}
             className="flex items-center gap-1 px-3 py-1.5 text-sm bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 rounded-lg hover:bg-green-200 dark:hover:bg-green-900/50 transition-colors"
           >
             <CheckCircle className="w-4 h-4" />
             Approve
           </button>
           <button
-            data-testid={`reject-step-${step.step_number}`}
-            onClick={() => onReject(remediation.remediation_id)}
+            data-testid={`reject-step-${step.stepNumber}`}
+            onClick={() => onReject(remediation.remediationId)}
             className="flex items-center gap-1 px-3 py-1.5 text-sm bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 rounded-lg hover:bg-red-200 dark:hover:bg-red-900/50 transition-colors"
           >
             <XCircle className="w-4 h-4" />
@@ -261,7 +261,7 @@ export function AlertDetailPanel({
 
   // Find remediation for each step
   const getRemediationForStep = (stepNumber: number) =>
-    pendingRemediations.find((r) => r.step_number === stepNumber);
+    pendingRemediations.find((r) => r.stepNumber === stepNumber);
 
   return (
     <div
@@ -316,7 +316,7 @@ export function AlertDetailPanel({
             data-testid="alert-started"
             className="text-xs text-gray-500 dark:text-gray-500"
           >
-            Started: {formatRelativeTime(alert.started_at)}
+            Started: {formatRelativeTime(alert.startedAt)}
           </div>
         </div>
 
@@ -366,7 +366,7 @@ export function AlertDetailPanel({
                 Root Cause Analysis
               </h3>
               <p className="text-sm text-gray-600 dark:text-gray-400 bg-gray-50 dark:bg-gray-800/50 p-3 rounded-lg">
-                {recommendation.root_cause_analysis}
+                {recommendation.rootCauseAnalysis}
               </p>
             </section>
 
@@ -383,10 +383,10 @@ export function AlertDetailPanel({
                   <span
                     data-testid="overall-risk"
                     className={`text-xs px-2 py-0.5 rounded-full text-white ${getRiskColor(
-                      recommendation.risk_assessment.overall_risk,
+                      recommendation.riskAssessment.overallRisk,
                     )}`}
                   >
-                    {recommendation.risk_assessment.overall_risk}
+                    {recommendation.riskAssessment.overallRisk}
                   </span>
                 </div>
                 <div>
@@ -394,7 +394,7 @@ export function AlertDetailPanel({
                     Impact:{" "}
                   </span>
                   <span className="text-sm text-gray-700 dark:text-gray-300">
-                    {recommendation.risk_assessment.impact_analysis}
+                    {recommendation.riskAssessment.impactAnalysis}
                   </span>
                 </div>
                 <div>
@@ -402,7 +402,7 @@ export function AlertDetailPanel({
                     Rollback:{" "}
                   </span>
                   <code className="text-xs bg-gray-100 dark:bg-gray-700 px-1 py-0.5 rounded">
-                    {recommendation.risk_assessment.rollback_plan}
+                    {recommendation.riskAssessment.rollbackPlan}
                   </code>
                 </div>
               </div>
@@ -427,11 +427,11 @@ export function AlertDetailPanel({
                 </button>
               </div>
               <div className="space-y-3">
-                {recommendation.remediation_steps.map((step) => (
+                {recommendation.remediationSteps.map((step) => (
                   <RemediationStepCard
-                    key={step.step_number}
+                    key={step.stepNumber}
                     step={step}
-                    remediation={getRemediationForStep(step.step_number)}
+                    remediation={getRemediationForStep(step.stepNumber)}
                     onApprove={onApprove}
                     onReject={onReject}
                   />
@@ -440,14 +440,14 @@ export function AlertDetailPanel({
             </section>
 
             {/* Runbook Reference */}
-            {recommendation.runbook_reference && (
+            {recommendation.runbookReference && (
               <section>
                 <h3 className="text-sm font-medium text-gray-900 dark:text-white mb-2">
                   Runbook
                 </h3>
                 <a
                   data-testid="runbook-link"
-                  href={recommendation.runbook_reference}
+                  href={recommendation.runbookReference}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-center gap-1 text-sm text-blue-600 dark:text-blue-400 hover:underline"
@@ -461,8 +461,8 @@ export function AlertDetailPanel({
             {/* Model Info */}
             <div className="text-xs text-gray-500 dark:text-gray-500 pt-4 border-t border-gray-200 dark:border-gray-700">
               <span>
-                Generated by {recommendation.model_used} •{" "}
-                {formatRelativeTime(recommendation.generated_at)}
+                Generated by {recommendation.modelUsed} •{" "}
+                {formatRelativeTime(recommendation.generatedAt)}
               </span>
             </div>
           </>

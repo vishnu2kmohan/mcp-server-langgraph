@@ -12,12 +12,12 @@ import { Provider } from "react-redux";
 import { configureStore } from "@reduxjs/toolkit";
 import { CostPage } from "./CostPage";
 
-// Mock RTK Query hooks
+// Mock RTK Query hooks - camelCase per ADR-0091 Phase 6 (RTK Query transforms)
 vi.mock("../api", () => ({
   useGetCostSummaryQuery: vi.fn(() => ({
     data: {
-      total_cost: 125.5,
-      total_tokens: 50000,
+      totalCost: 125.5,
+      totalTokens: 50000,
     },
     isLoading: false,
     isError: false,
@@ -54,6 +54,7 @@ const mockSubscribeSession = vi.fn();
 const mockSubscribeUser = vi.fn();
 const mockClearBudgetWarnings = vi.fn();
 
+// Mock useCostTrackingWebSocket - camelCase per ADR-0091 Phase 6 (WebSocket transforms)
 vi.mock("../hooks/useCostTrackingWebSocket", () => ({
   useCostTrackingWebSocket: vi.fn(() => ({
     status: "connected" as const,
@@ -162,6 +163,7 @@ describe("CostPage Real-time Integration", () => {
     it("should show reconnecting status when WebSocket is reconnecting", async () => {
       const { useCostTrackingWebSocket } =
         await import("../hooks/useCostTrackingWebSocket");
+      // camelCase per ADR-0091 Phase 6 (WebSocket transforms)
       vi.mocked(useCostTrackingWebSocket).mockReturnValue({
         status: "reconnecting" as const,
         sessionCosts: {},
@@ -200,13 +202,14 @@ describe("CostPage Real-time Integration", () => {
     it("should display session cost from WebSocket", async () => {
       const { useCostTrackingWebSocket } =
         await import("../hooks/useCostTrackingWebSocket");
+      // camelCase per ADR-0091 Phase 6 (WebSocket transforms)
       vi.mocked(useCostTrackingWebSocket).mockReturnValue({
         status: "connected" as const,
         sessionCosts: {
           "session-1": {
-            session_id: "session-1",
-            total_cost: 5.25,
-            token_count: 2000,
+            sessionId: "session-1",
+            totalCost: 5.25,
+            tokenCount: 2000,
             model: "gpt-4",
           },
         },
@@ -245,23 +248,24 @@ describe("CostPage Real-time Integration", () => {
     it("should display budget warnings when received", async () => {
       const { useCostTrackingWebSocket } =
         await import("../hooks/useCostTrackingWebSocket");
+      // camelCase per ADR-0091 Phase 6 (WebSocket transforms)
       vi.mocked(useCostTrackingWebSocket).mockReturnValue({
         status: "connected" as const,
         sessionCosts: {},
         userBudget: {
-          user_id: "user-1",
-          budget_limit: 100,
-          current_usage: 85,
+          userId: "user-1",
+          budgetLimit: 100,
+          currentUsage: 85,
           remaining: 15,
         },
         subscribedSessions: new Set<string>(),
         subscribedUsers: new Set(["user-1"]),
         budgetWarnings: [
           {
-            user_id: "user-1",
+            userId: "user-1",
             threshold: 80,
-            current_usage: 85,
-            budget_limit: 100,
+            currentUsage: 85,
+            budgetLimit: 100,
             message: "You have used 85% of your monthly budget",
           },
         ],
@@ -296,13 +300,14 @@ describe("CostPage Real-time Integration", () => {
     it("should display user budget progress bar", async () => {
       const { useCostTrackingWebSocket } =
         await import("../hooks/useCostTrackingWebSocket");
+      // camelCase per ADR-0091 Phase 6 (WebSocket transforms)
       vi.mocked(useCostTrackingWebSocket).mockReturnValue({
         status: "connected" as const,
         sessionCosts: {},
         userBudget: {
-          user_id: "user-1",
-          budget_limit: 100,
-          current_usage: 65,
+          userId: "user-1",
+          budgetLimit: 100,
+          currentUsage: 65,
           remaining: 35,
         },
         subscribedSessions: new Set<string>(),
@@ -423,6 +428,7 @@ describe("CostPage Real-time Integration", () => {
     it("should display WebSocket error state", async () => {
       const { useCostTrackingWebSocket } =
         await import("../hooks/useCostTrackingWebSocket");
+      // camelCase per ADR-0091 Phase 6 (WebSocket transforms)
       vi.mocked(useCostTrackingWebSocket).mockReturnValue({
         status: "error" as const,
         sessionCosts: {},

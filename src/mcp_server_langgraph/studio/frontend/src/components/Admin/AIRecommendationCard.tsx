@@ -119,19 +119,19 @@ function LoadingSkeleton() {
 }
 
 interface StepCardProps {
-  step: AIRecommendation["remediation_steps"][0];
+  step: AIRecommendation["remediationSteps"][0];
 }
 
 function StepCard({ step }: StepCardProps) {
   return (
     <div
-      data-testid={`step-${step.step_number}`}
+      data-testid={`step-${step.stepNumber}`}
       className="p-3 border border-gray-200 dark:border-gray-700 rounded-lg"
     >
       <div className="flex items-center gap-2 mb-2">
         {/* Step Number */}
         <span className="flex items-center justify-center w-5 h-5 rounded-full bg-blue-500 text-white text-xs font-medium">
-          {step.step_number}
+          {step.stepNumber}
         </span>
 
         {/* Action */}
@@ -141,18 +141,18 @@ function StepCard({ step }: StepCardProps) {
 
         {/* Risk Level */}
         <span
-          data-testid={`step-${step.step_number}-risk`}
+          data-testid={`step-${step.stepNumber}-risk`}
           className={`text-xs px-1.5 py-0.5 rounded ${getRiskBgColor(
-            step.risk_level,
+            step.riskLevel,
           )} text-white`}
         >
-          {step.risk_level}
+          {step.riskLevel}
         </span>
 
         {/* Requires Approval */}
-        {step.requires_approval && (
+        {step.requiresApproval && (
           <span
-            data-testid={`requires-approval-${step.step_number}`}
+            data-testid={`requires-approval-${step.stepNumber}`}
             className="flex items-center gap-1 text-xs text-orange-600 dark:text-orange-400"
           >
             <ShieldCheck className="w-3 h-3" />
@@ -253,7 +253,7 @@ export function AIRecommendationCard({
     );
   }
 
-  const stale = isStale(recommendation.generated_at, staleThresholdMs);
+  const stale = isStale(recommendation.generatedAt, staleThresholdMs);
 
   return (
     <div
@@ -268,7 +268,7 @@ export function AIRecommendationCard({
             AI Recommendation
           </h3>
           <span className="text-xs text-gray-500 dark:text-gray-400">
-            via {recommendation.model_used}
+            via {recommendation.modelUsed}
           </span>
         </div>
         <button
@@ -297,7 +297,7 @@ export function AIRecommendationCard({
             Root Cause Analysis
           </h4>
           <p className="text-sm text-gray-600 dark:text-gray-400 bg-gray-50 dark:bg-gray-800/50 p-3 rounded-lg">
-            {recommendation.root_cause_analysis}
+            {recommendation.rootCauseAnalysis}
           </p>
         </section>
 
@@ -307,8 +307,8 @@ export function AIRecommendationCard({
             Remediation Steps
           </h4>
           <div className="space-y-2">
-            {recommendation.remediation_steps.map((step) => (
-              <StepCard key={step.step_number} step={step} />
+            {recommendation.remediationSteps.map((step) => (
+              <StepCard key={step.stepNumber} step={step} />
             ))}
           </div>
         </section>
@@ -326,10 +326,10 @@ export function AIRecommendationCard({
               <span
                 data-testid="overall-risk-badge"
                 className={`text-xs px-2 py-0.5 rounded-full text-white ${getRiskBgColor(
-                  recommendation.risk_assessment.overall_risk,
+                  recommendation.riskAssessment.overallRisk,
                 )}`}
               >
-                {recommendation.risk_assessment.overall_risk}
+                {recommendation.riskAssessment.overallRisk}
               </span>
             </div>
             <div>
@@ -337,7 +337,7 @@ export function AIRecommendationCard({
                 Impact:{" "}
               </span>
               <span className="text-sm text-gray-700 dark:text-gray-300">
-                {recommendation.risk_assessment.impact_analysis}
+                {recommendation.riskAssessment.impactAnalysis}
               </span>
             </div>
             <div>
@@ -345,17 +345,17 @@ export function AIRecommendationCard({
                 Rollback:{" "}
               </span>
               <code className="text-xs bg-gray-100 dark:bg-gray-700 px-1 py-0.5 rounded">
-                {recommendation.risk_assessment.rollback_plan}
+                {recommendation.riskAssessment.rollbackPlan}
               </code>
             </div>
           </div>
         </section>
 
         {/* Runbook Link */}
-        {recommendation.runbook_reference && (
+        {recommendation.runbookReference && (
           <a
             data-testid="runbook-link"
-            href={recommendation.runbook_reference}
+            href={recommendation.runbookReference}
             target="_blank"
             rel="noopener noreferrer"
             className="flex items-center gap-1 text-sm text-blue-600 dark:text-blue-400 hover:underline"
@@ -370,7 +370,7 @@ export function AIRecommendationCard({
       <div className="flex items-center gap-2 px-4 py-2 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/30 text-xs text-gray-500 dark:text-gray-400">
         <Clock className="w-3 h-3" />
         <span data-testid="generated-at">
-          Generated {formatRelativeTime(recommendation.generated_at)}
+          Generated {formatRelativeTime(recommendation.generatedAt)}
         </span>
         {stale && (
           <span

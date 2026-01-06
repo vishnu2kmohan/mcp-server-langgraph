@@ -71,7 +71,7 @@ export const createMockWorkflow = (
 export const createMockSession = (
   overrides: Partial<Session> = {},
 ): Session => ({
-  id: `session-${crypto.randomUUID().slice(0, 8)}`, // Changed from session_id
+  id: `session-${crypto.randomUUID().slice(0, 8)}`,
   name: "Test Session",
   status: "active",
   created_at: new Date().toISOString(),
@@ -197,6 +197,7 @@ export const mockFeatureFlags: FeatureFlags = {
   observability: true,
   code_export: true,
   ai_suggestions: true,
+  show_chat_avatars: true, // Chat UI avatars for user and assistant
   llm_suggestions: true, // DEPRECATED: use suggestion_strategy
   suggestion_strategy: "llm", // Sprint Block 5: "llm" | "heuristic" | "hybrid"
   multi_agent_strategy: "orchestrator", // Sprint Block 5: "orchestrator" | "peer" | "hybrid"

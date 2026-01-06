@@ -20,8 +20,8 @@ export interface LogEntry {
   level: LogLevel;
   service: string;
   message: string;
-  trace_id?: string;
-  span_id?: string;
+  traceId?: string;
+  spanId?: string;
   attributes?: Record<string, unknown>;
 }
 
@@ -173,10 +173,10 @@ function LogRow({ log, onJumpToTrace }: LogRowProps): React.ReactElement {
   }, [log]);
 
   const handleJumpToTrace = useCallback(() => {
-    if (log.trace_id) {
-      onJumpToTrace?.(log.trace_id);
+    if (log.traceId) {
+      onJumpToTrace?.(log.traceId);
     }
-  }, [log.trace_id, onJumpToTrace]);
+  }, [log.traceId, onJumpToTrace]);
 
   const hasAttributes =
     log.attributes && Object.keys(log.attributes).length > 0;
@@ -264,19 +264,19 @@ function LogRow({ log, onJumpToTrace }: LogRowProps): React.ReactElement {
       </div>
 
       {/* Trace correlation */}
-      {(log.trace_id || log.span_id) && (
+      {(log.traceId || log.spanId) && (
         <div className="mt-1 ml-[72px] flex items-center gap-3 text-xs">
-          {log.trace_id && (
+          {log.traceId && (
             <span className="font-mono text-gray-500 dark:text-gray-400">
-              trace_id: {log.trace_id}
+              traceId: {log.traceId}
             </span>
           )}
-          {log.span_id && (
+          {log.spanId && (
             <span className="font-mono text-gray-500 dark:text-gray-400">
-              span_id: {log.span_id}
+              spanId: {log.spanId}
             </span>
           )}
-          {log.trace_id && onJumpToTrace && (
+          {log.traceId && onJumpToTrace && (
             <button
               onClick={handleJumpToTrace}
               className="text-blue-500 hover:text-blue-600 hover:underline"
@@ -346,8 +346,8 @@ export function LogsTab({
         (l) =>
           l.message.toLowerCase().includes(term) ||
           l.service.toLowerCase().includes(term) ||
-          l.trace_id?.toLowerCase().includes(term) ||
-          l.span_id?.toLowerCase().includes(term),
+          l.traceId?.toLowerCase().includes(term) ||
+          l.spanId?.toLowerCase().includes(term),
       );
     }
 

@@ -8,7 +8,12 @@
 import { createApi } from "@reduxjs/toolkit/query/react";
 
 import { baseQueryWithReauth } from "./baseQueryWithReauth";
-import { transformCursorPaginatedResponse } from "./transforms";
+import {
+  transformCamelToSnake,
+  transformCursorPaginatedResponse,
+  transformSnakeToCamel,
+  type SnakeToCamelCaseDeep,
+} from "./transforms";
 
 // Import types from centralized location
 import type {
@@ -16,27 +21,45 @@ import type {
   CursorPaginatedFrontendResponse,
   Workflow,
   WorkflowSummary,
+  WorkflowSummaryCamelCase,
+  WorkflowCamelCase,
+  WorkflowVersionCamelCase,
+  WorkflowSharesResponseCamelCase,
   Session,
+  SessionCamelCase,
   SessionConfigUpdateRequest,
   Message,
+  MessageCamelCase,
   FeatureFlags,
   CostSummary,
+  CostSummaryCamelCase,
   ModelCostData,
+  ModelCostDataCamelCase,
   TraceSpan,
+  TraceSpanCamelCase,
   TraceDetail,
+  TraceDetailCamelCase,
   TraceListItem,
+  TraceListItemCamelCase,
   LogEntry,
+  LogEntryCamelCase,
   ObservabilityMetrics,
+  ObservabilityMetricsCamelCase,
   ObservabilityAlert,
+  ObservabilityAlertCamelCase,
   ObservabilityAlertRule,
+  ObservabilityAlertRuleCamelCase,
   AlertListParams,
   AlertRulesListParams,
   PaginatedResponse,
+  PaginatedResponseCamelCase,
   PagePaginatedResponse,
   ChatCompletionRequest,
   ChatCompletionResponse,
   Project,
   ProjectDetail,
+  ProjectDetailCamelCase,
+  ProjectCamelCase,
   WorkflowListParams,
   SessionListParams,
   TraceListParams,
@@ -53,14 +76,19 @@ import type {
   VectorTextUpsertRequest,
   VectorTextUpsertResponse,
   AgentConfig,
+  AgentConfigCamelCase,
   ThinkingBudgetUpdateRequest,
   ThinkingBudgetUpdateResponse,
   AgentMetricsResponse,
+  AgentMetricsResponseCamelCase,
   AuditLogEntry,
   AuditLogListParams,
   HealthStatus,
+  HealthStatusCamelCase,
   HEARTAggregateMetrics,
+  HEARTAggregateMetricsCamelCase,
   BootstrapWorkflowResponse,
+  BootstrapWorkflowResponseCamelCase,
   WorkflowSharesResponse,
   AddWorkflowShareRequest,
   RemoveWorkflowShareRequest,
@@ -105,6 +133,7 @@ import type {
   MessageRatingResponse,
   // Admin User Management
   AdminUser,
+  AdminUserCamelCase,
   AdminUserListParams,
   AdminUserListResponse,
   CreateAdminUserRequest,
@@ -113,11 +142,14 @@ import type {
   WorkflowExecution,
   WorkflowExecutionListParams,
   WorkflowExecutionListResponse,
+  WorkflowExecutionListResponseCamelCase,
   // Notification Preferences
   NotificationPreferences,
+  NotificationPreferencesCamelCase,
   UpdateNotificationPreferencesRequest,
   // User Preferences
   UserPreferences,
+  UserPreferencesCamelCase,
   UserPreferencesUpdate,
   // Session Export
   SessionExportRequest,
@@ -140,7 +172,9 @@ import type {
   ListPendingAgentRequestsParams,
   // MCP Protocol Types
   McpResourceListResponse,
+  McpResourceCamelCase,
   McpResourceContentResponse,
+  McpResourceContentItemCamelCase,
   McpReadResourceRequest,
   McpToolListResponse,
   McpInvokeToolRequest,
@@ -156,19 +190,101 @@ import type {
   McpTask,
   // Organizational Cost Attribution
   OrganizationCostResponse,
+  OrganizationCostResponseCamelCase,
   ProjectCostBreakdown,
+  ProjectCostBreakdownCamelCase,
   TeamCostResponse,
+  TeamCostResponseCamelCase,
   OrganizationalCostParams,
   // Budget Status & Forecasting
   BudgetStatusResponse,
+  BudgetStatusResponseCamelCase,
   BudgetStatusParams,
   CostForecastResponse,
+  CostForecastResponseCamelCase,
   CostForecastParams,
 } from "../types/api";
 
 // Import generated API types for type safety (prevents type drift)
 import type { components } from "../types/generated-api";
 type UserInfoResponse = components["schemas"]["UserInfoResponse"];
+// CamelCase version for frontend use (after transformSnakeToCamel transformation)
+type UserInfoResponseCamelCase = SnakeToCamelCaseDeep<UserInfoResponse>;
+
+// =============================================================================
+// AI UX Generated Types (ADR-0091: Use generated types at API boundary)
+// =============================================================================
+
+/** Request type for POST /api/v1/ai/nudges/recommend */
+type NudgeRecommendRequest = components["schemas"]["NudgeRecommendRequest"];
+/** Response type for POST /api/v1/ai/nudges/recommend */
+type NudgeRecommendResponse = components["schemas"]["NudgeRecommendResponse"];
+
+/** Request type for POST /api/v1/ai/onboarding/personalize */
+type OnboardingPersonalizeRequest =
+  components["schemas"]["OnboardingPersonalizeRequest"];
+/** Response type for POST /api/v1/ai/onboarding/personalize */
+type OnboardingPersonalizeResponse =
+  components["schemas"]["OnboardingPersonalizeResponse"];
+
+/** Request type for POST /api/v1/ai/persona/analyze */
+type PersonaAnalyzeRequest = components["schemas"]["PersonaAnalyzeRequest"];
+/** Response type for POST /api/v1/ai/persona/analyze */
+type PersonaAnalyzeResponse = components["schemas"]["PersonaAnalyzeResponse"];
+
+/** Request type for POST /api/v1/ai/disclosure/analyze */
+type DisclosureAnalyzeRequest =
+  components["schemas"]["DisclosureAnalyzeRequest"];
+/** Response type for POST /api/v1/ai/disclosure/analyze */
+type DisclosureAnalyzeResponse =
+  components["schemas"]["DisclosureAnalyzeResponse"];
+
+/** Request type for POST /api/v1/ai/empty-state/suggestions */
+type EmptyStateSuggestionsRequest =
+  components["schemas"]["EmptyStateSuggestionsRequest"];
+/** Response type for POST /api/v1/ai/empty-state/suggestions */
+type EmptyStateSuggestionsResponse =
+  components["schemas"]["EmptyStateSuggestionsResponse"];
+
+/** Request type for POST /api/v1/ai/errors/analyze */
+type ErrorAnalyzeRequest = components["schemas"]["ErrorAnalyzeRequest"];
+/** Response type for POST /api/v1/ai/errors/analyze */
+type ErrorAnalyzeResponse = components["schemas"]["ErrorAnalyzeResponse"];
+
+/** Response type for GET /api/v1/ai/metrics/insights */
+type MetricsInsightsResponse = components["schemas"]["MetricsInsightsResponse"];
+
+/** Request type for POST /api/v1/ai/composite/analyze */
+type CompositeAnalysisRequest =
+  components["schemas"]["CompositeAnalysisRequest"];
+/** Response type for POST /api/v1/ai/composite/analyze */
+type CompositeAnalysisResponse =
+  components["schemas"]["CompositeAnalysisResponse"];
+
+/** Request type for POST /api/v1/ai/composite/batch */
+type BatchCompositeRequest = components["schemas"]["BatchCompositeRequest"];
+/** Response type for POST /api/v1/ai/composite/batch */
+type BatchCompositeResponse = components["schemas"]["BatchCompositeResponse"];
+
+/** Request type for POST /api/v1/studio/analyze */
+type StudioAnalyzeRequest = components["schemas"]["StudioAnalyzeRequest"];
+/** Response type for POST /api/v1/studio/analyze */
+type StudioAnalyzeResponse = components["schemas"]["StudioAnalyzeResponse"];
+
+// =============================================================================
+// Auth Generated Types (ADR-0091: Use generated types at API boundary)
+// =============================================================================
+
+/** Response type for POST /api/v1/login */
+type LoginResponse = components["schemas"]["LoginResponse"];
+/** Response type for POST /api/v1/logout */
+type LogoutResponse = components["schemas"]["LogoutResponse"];
+/** Request type for POST /api/v1/logout */
+type LogoutRequest = components["schemas"]["LogoutRequest"];
+/** Response type for GET /api/v1/identity-providers */
+type IdentityProvidersListResponse =
+  components["schemas"]["IdentityProvidersListResponse"];
+
 import type {
   CanvasArtifact,
   ArtifactVersion,
@@ -181,22 +297,28 @@ import type {
 } from "../types/artifacts";
 import type {
   MCPConnection,
+  MCPConnectionCamelCase,
   MCPConnectionCreate,
   MCPConnectionUpdate,
   MCPConnectionTestResult,
   OAuth2StartResponse,
   ConnectionListResponse,
+  ConnectionListResponseCamelCase,
   ConnectionFilterOptions,
   AggregatedToolsResponse,
   AggregatedResourcesResponse,
   AggregatedPromptsResponse,
   AggregatedServersResponse,
+  AggregatedServersResponseCamelCase,
   ServerCapabilitySummary,
   AggregatedTool,
+  AggregatedToolCamelCase,
   AggregatedResource,
+  AggregatedResourceCamelCase,
   AggregatedPrompt,
+  AggregatedPromptCamelCase,
 } from "../types/connection";
-import type { ServerConfig } from "../types/session";
+import type { ServerConfig, ServerConfigCamelCase } from "../types/session";
 
 // Re-export types for backward compatibility
 export type {
@@ -209,6 +331,7 @@ export type {
   CostSummary,
   ModelCostData,
   TraceSpan,
+  TraceSpanCamelCase,
   TraceDetail,
   TraceListItem,
   LogEntry,
@@ -266,7 +389,26 @@ export type {
   // Session Export
   SessionExportRequest,
   ExportFormat,
+  // AI UX Analysis Types (ADR-0091)
+  PersonaAnalyzeRequest,
+  PersonaAnalyzeResponse,
+  DisclosureAnalyzeRequest,
+  DisclosureAnalyzeResponse,
+  EmptyStateSuggestionsRequest,
+  EmptyStateSuggestionsResponse,
+  ErrorAnalyzeRequest,
+  ErrorAnalyzeResponse,
+  MetricsInsightsResponse,
+  CompositeAnalysisRequest,
+  CompositeAnalysisResponse,
+  BatchCompositeRequest,
+  BatchCompositeResponse,
+  StudioAnalyzeRequest,
+  StudioAnalyzeResponse,
 };
+
+// Re-export transform functions for use in hooks and components
+export { transformSnakeToCamel, transformCamelToSnake } from "./transforms";
 
 /**
  * Helper to filter undefined values from params object
@@ -351,6 +493,9 @@ export const api = createApi({
   endpoints: (builder) => ({
     // Feature Flags
     // Sprint 4: Accept optional role param to get role-specific feature flags
+    // NOTE: Do NOT apply transformSnakeToCamel here - feature flag names are
+    // snake_case by design (e.g., "studio_canvas_shell") and are looked up
+    // throughout the codebase using these exact names.
     getFeatureFlags: builder.query<FeatureFlags, { role?: string } | void>({
       query: (params) => ({
         url: "/features",
@@ -363,17 +508,21 @@ export const api = createApi({
     // Server Configuration (12-Factor App - frontend hydration)
     // Fetches backend-configured defaults (model, max_tokens, etc.)
     // to ensure frontend reflects the actual backend configuration.
-    getServerConfig: builder.query<ServerConfig, void>({
+    getServerConfig: builder.query<ServerConfigCamelCase, void>({
       query: () => "/config/defaults",
+      transformResponse: (response: ServerConfig) =>
+        transformSnakeToCamel(response),
       // Keep cached for 30 minutes - server config rarely changes at runtime
       keepUnusedDataFor: 1800,
     }),
 
     // Workflows
     listWorkflows: builder.query<
-      CursorPaginatedFrontendResponse<WorkflowSummary>,
+      CursorPaginatedFrontendResponse<WorkflowSummaryCamelCase>,
       WorkflowListParams
     >({
+      // Note: transformCursorPaginatedResponse returns SnakeToCamelCaseDeep<WorkflowSummary>
+      // which equals WorkflowSummaryCamelCase
       query: (params) => ({
         url: "/workflows",
         params: filterParams({
@@ -401,13 +550,15 @@ export const api = createApi({
           : [{ type: "Workflow", id: "LIST" }],
     }),
 
-    getWorkflow: builder.query<Workflow, string>({
+    getWorkflow: builder.query<WorkflowCamelCase, string>({
       query: (id) => `/workflows/${id}`,
+      transformResponse: (response: Workflow) =>
+        transformSnakeToCamel(response) as unknown as WorkflowCamelCase,
       providesTags: (_result, _error, id) => [{ type: "Workflow", id }],
     }),
 
     createWorkflow: builder.mutation<
-      Workflow,
+      WorkflowCamelCase,
       {
         name: string;
         description?: string;
@@ -418,13 +569,15 @@ export const api = createApi({
       query: (body) => ({
         url: "/workflows",
         method: "POST",
-        body,
+        body: transformCamelToSnake(body),
       }),
+      transformResponse: (response: Workflow) =>
+        transformSnakeToCamel(response),
       invalidatesTags: [{ type: "Workflow", id: "LIST" }],
     }),
 
     updateWorkflow: builder.mutation<
-      Workflow,
+      WorkflowCamelCase,
       {
         id: string;
         name?: string;
@@ -436,8 +589,10 @@ export const api = createApi({
       query: ({ id, ...body }) => ({
         url: `/workflows/${id}`,
         method: "PUT",
-        body,
+        body: transformCamelToSnake(body),
       }),
+      transformResponse: (response: Workflow) =>
+        transformSnakeToCamel(response),
       invalidatesTags: (_result, _error, { id }) => [
         { type: "Workflow", id },
         { type: "Workflow", id: "LIST" },
@@ -456,17 +611,28 @@ export const api = createApi({
     }),
 
     // Bootstrap workflow from session
-    bootstrapWorkflow: builder.mutation<BootstrapWorkflowResponse, string>({
+    bootstrapWorkflow: builder.mutation<
+      BootstrapWorkflowResponseCamelCase,
+      string
+    >({
       query: (sessionId) => ({
         url: `/sessions/${sessionId}/bootstrap-workflow`,
         method: "POST",
       }),
+      transformResponse: (response: BootstrapWorkflowResponse) =>
+        transformSnakeToCamel(
+          response,
+        ) as unknown as BootstrapWorkflowResponseCamelCase,
       invalidatesTags: [{ type: "Workflow", id: "LIST" }],
     }),
 
     // Workflow Sharing
-    getWorkflowShares: builder.query<WorkflowSharesResponse, string>({
+    getWorkflowShares: builder.query<WorkflowSharesResponseCamelCase, string>({
       query: (workflowId) => `/workflows/${workflowId}/shares`,
+      transformResponse: (response: WorkflowSharesResponse) =>
+        transformSnakeToCamel(
+          response,
+        ) as unknown as WorkflowSharesResponseCamelCase,
       providesTags: (_result, _error, workflowId) => [
         { type: "Workflow", id: `SHARES-${workflowId}` },
       ],
@@ -530,8 +696,12 @@ export const api = createApi({
 
     // Workflow Version History (Plan: greedy-wiggling-marshmallow.md, Phase 3)
     // Fetches all versions for a workflow
-    getWorkflowVersions: builder.query<WorkflowVersion[], string>({
+    getWorkflowVersions: builder.query<WorkflowVersionCamelCase[], string>({
       query: (workflowId) => `/workflows/${workflowId}/versions`,
+      transformResponse: (response: WorkflowVersion[]) =>
+        transformSnakeToCamel(
+          response,
+        ) as unknown as WorkflowVersionCamelCase[],
       providesTags: (_result, _error, workflowId) => [
         { type: "Workflow", id: `${workflowId}-versions` },
       ],
@@ -567,8 +737,12 @@ export const api = createApi({
     }),
 
     // Shared Workflows (read-only access for standard users)
-    getSharedWorkflows: builder.query<WorkflowSummary[], void>({
+    getSharedWorkflows: builder.query<WorkflowSummaryCamelCase[], void>({
       query: () => "/workflows/shared-with-me",
+      transformResponse: (response: WorkflowSummary[]) =>
+        transformSnakeToCamel(
+          response,
+        ) as unknown as WorkflowSummaryCamelCase[],
       providesTags: (result) =>
         result
           ? [
@@ -580,7 +754,7 @@ export const api = createApi({
 
     // Sessions
     listSessions: builder.query<
-      CursorPaginatedFrontendResponse<Session>,
+      CursorPaginatedFrontendResponse<SessionCamelCase>,
       SessionListParams
     >({
       query: (params) => ({
@@ -609,20 +783,24 @@ export const api = createApi({
           : [{ type: "Session", id: "LIST" }],
     }),
 
-    getSession: builder.query<Session, string>({
+    getSession: builder.query<SessionCamelCase, string>({
       query: (id) => `/sessions/${id}`,
+      transformResponse: (response: Session) =>
+        transformSnakeToCamel(response) as unknown as SessionCamelCase,
       providesTags: (_result, _error, id) => [{ type: "Session", id }],
     }),
 
     createSession: builder.mutation<
-      Session,
-      { name: string; workflow_id?: string }
+      SessionCamelCase,
+      { name: string; workflowId?: string }
     >({
       query: (body) => ({
         url: "/sessions",
         method: "POST",
-        body,
+        body: transformCamelToSnake(body),
       }),
+      transformResponse: (response: Session) =>
+        transformSnakeToCamel(response) as unknown as SessionCamelCase,
       invalidatesTags: [{ type: "Session", id: "LIST" }],
     }),
 
@@ -661,8 +839,10 @@ export const api = createApi({
     }),
 
     // Messages
-    getSessionMessages: builder.query<Message[], string>({
+    getSessionMessages: builder.query<MessageCamelCase[], string>({
       query: (sessionId) => `/sessions/${sessionId}/messages`,
+      transformResponse: (response: Message[]) =>
+        transformSnakeToCamel(response) as unknown as MessageCamelCase[],
       providesTags: (_result, _error, sessionId) => [
         { type: "Message", id: `SESSION-${sessionId}` },
       ],
@@ -685,7 +865,7 @@ export const api = createApi({
     }),
 
     // Cost
-    getCostSummary: builder.query<CostSummary, { period?: string }>({
+    getCostSummary: builder.query<CostSummaryCamelCase, { period?: string }>({
       query: ({ period = "30d" }) => {
         const { start_date, end_date } = periodToDateRange(period);
         return {
@@ -693,10 +873,15 @@ export const api = createApi({
           params: filterParams({ start_date, end_date }),
         };
       },
+      transformResponse: (response: CostSummary) =>
+        transformSnakeToCamel(response) as unknown as CostSummaryCamelCase,
       providesTags: ["Cost"],
     }),
 
-    getCostByModel: builder.query<ModelCostData[], { period?: string }>({
+    getCostByModel: builder.query<
+      ModelCostDataCamelCase[],
+      { period?: string }
+    >({
       query: ({ period = "30d" }) => {
         const { start_date, end_date } = periodToDateRange(period);
         return {
@@ -704,12 +889,14 @@ export const api = createApi({
           params: filterParams({ start_date, end_date }),
         };
       },
+      transformResponse: (response: ModelCostData[]) =>
+        transformSnakeToCamel(response) as unknown as ModelCostDataCamelCase[],
       providesTags: ["Cost"],
     }),
 
     // Observability
     listTraces: builder.query<
-      PaginatedResponse<TraceListItem>,
+      PaginatedResponseCamelCase<TraceListItemCamelCase>,
       TraceListParams
     >({
       query: (params) => ({
@@ -730,15 +917,24 @@ export const api = createApi({
           end_time: params.end_time,
         }),
       }),
+      transformResponse: (response: PaginatedResponse<TraceListItem>) =>
+        transformSnakeToCamel(
+          response,
+        ) as unknown as PaginatedResponseCamelCase<TraceListItemCamelCase>,
       providesTags: ["Trace"],
     }),
 
-    getTrace: builder.query<TraceDetail, string>({
+    getTrace: builder.query<TraceDetailCamelCase, string>({
       query: (id) => `/observability/traces/${id}`,
+      transformResponse: (response: TraceDetail) =>
+        transformSnakeToCamel(response) as unknown as TraceDetailCamelCase,
       providesTags: (_result, _error, id) => [{ type: "Trace", id }],
     }),
 
-    listLogs: builder.query<PaginatedResponse<LogEntry>, LogListParams>({
+    listLogs: builder.query<
+      PaginatedResponse<LogEntryCamelCase>,
+      LogListParams
+    >({
       query: (params) => ({
         url: "/observability/logs",
         params: filterParams({
@@ -753,17 +949,25 @@ export const api = createApi({
           end_time: params.end_time,
         }),
       }),
+      transformResponse: (response: PaginatedResponse<LogEntry>) =>
+        transformSnakeToCamel(
+          response,
+        ) as unknown as PaginatedResponse<LogEntryCamelCase>,
       providesTags: ["Trace"], // Using Trace tag for now, could add 'Log' tag
     }),
 
-    getMetrics: builder.query<ObservabilityMetrics, void>({
+    getMetrics: builder.query<ObservabilityMetricsCamelCase, void>({
       query: () => "/observability/metrics",
+      transformResponse: (response: ObservabilityMetrics) =>
+        transformSnakeToCamel(
+          response,
+        ) as unknown as ObservabilityMetricsCamelCase,
       providesTags: ["Trace"], // Metrics are related to traces
     }),
 
     // Alerts (LGTM Stack - Grafana Unified Alerting)
     listAlerts: builder.query<
-      PaginatedResponse<ObservabilityAlert>,
+      PaginatedResponse<ObservabilityAlertCamelCase>,
       AlertListParams
     >({
       query: (params) => ({
@@ -775,16 +979,24 @@ export const api = createApi({
           limit: params.limit ?? 100,
         }),
       }),
+      transformResponse: (response: PaginatedResponse<ObservabilityAlert>) =>
+        transformSnakeToCamel(
+          response,
+        ) as unknown as PaginatedResponse<ObservabilityAlertCamelCase>,
       providesTags: ["Alert"],
     }),
 
-    getAlert: builder.query<ObservabilityAlert, string>({
+    getAlert: builder.query<ObservabilityAlertCamelCase, string>({
       query: (id) => `/observability/alerts/${id}`,
+      transformResponse: (response: ObservabilityAlert) =>
+        transformSnakeToCamel(
+          response,
+        ) as unknown as ObservabilityAlertCamelCase,
       providesTags: (_result, _error, id) => [{ type: "Alert", id }],
     }),
 
     listAlertRules: builder.query<
-      ObservabilityAlertRule[],
+      ObservabilityAlertRuleCamelCase[],
       AlertRulesListParams
     >({
       query: (params) => ({
@@ -794,6 +1006,10 @@ export const api = createApi({
           limit: params?.limit ?? 100,
         }),
       }),
+      transformResponse: (response: ObservabilityAlertRule[]) =>
+        transformSnakeToCamel(
+          response,
+        ) as unknown as ObservabilityAlertRuleCamelCase[],
       providesTags: ["AlertRule"],
     }),
 
@@ -827,32 +1043,38 @@ export const api = createApi({
           : [{ type: "Project", id: "LIST" }],
     }),
 
-    getProject: builder.query<ProjectDetail, string>({
+    getProject: builder.query<ProjectDetailCamelCase, string>({
       query: (id) => `/projects/${id}`,
+      transformResponse: (response: ProjectDetail) =>
+        transformSnakeToCamel(response) as unknown as ProjectDetailCamelCase,
       providesTags: (_result, _error, id) => [{ type: "Project", id }],
     }),
 
     createProject: builder.mutation<
-      Project,
-      { name: string; description?: string; organization_id?: string }
+      ProjectCamelCase,
+      { name: string; description?: string; organizationId?: string }
     >({
       query: (body) => ({
         url: "/projects",
         method: "POST",
-        body,
+        body: transformCamelToSnake(body),
       }),
+      transformResponse: (response: Project) =>
+        transformSnakeToCamel(response) as unknown as ProjectCamelCase,
       invalidatesTags: [{ type: "Project", id: "LIST" }],
     }),
 
     updateProject: builder.mutation<
-      Project,
+      ProjectCamelCase,
       { id: string; name?: string; description?: string; status?: string }
     >({
       query: ({ id, ...body }) => ({
         url: `/projects/${id}`,
         method: "PUT",
-        body,
+        body: transformCamelToSnake(body),
       }),
+      transformResponse: (response: Project) =>
+        transformSnakeToCamel(response) as unknown as ProjectCamelCase,
       invalidatesTags: (_result, _error, { id }) => [
         { type: "Project", id },
         { type: "Project", id: "LIST" },
@@ -1024,12 +1246,15 @@ export const api = createApi({
           params: filterParams({ start_date, end_date }),
         };
       },
+      transformResponse: (response: CostHistoryPoint[]) =>
+        transformSnakeToCamel(response),
       providesTags: ["Cost"],
     }),
 
     // Organizational Cost Attribution
+    // ADR-0091 Phase 6: camelCase params → snake_case API
     getCostByOrganization: builder.query<
-      OrganizationCostResponse[],
+      OrganizationCostResponseCamelCase[],
       OrganizationalCostParams | void
     >({
       query: (params) => {
@@ -1037,16 +1262,20 @@ export const api = createApi({
         return {
           url: "/cost/summary/by-organization",
           params: filterParams({
-            start_date: p.start_date,
-            end_date: p.end_date,
+            start_date: p.startDate,
+            end_date: p.endDate,
           }),
         };
       },
+      transformResponse: (response: OrganizationCostResponse[]) =>
+        transformSnakeToCamel(
+          response,
+        ) as unknown as OrganizationCostResponseCamelCase[],
       providesTags: ["Cost"],
     }),
 
     getCostByProject: builder.query<
-      ProjectCostBreakdown[],
+      ProjectCostBreakdownCamelCase[],
       OrganizationalCostParams | void
     >({
       query: (params) => {
@@ -1054,17 +1283,21 @@ export const api = createApi({
         return {
           url: "/cost/summary/by-project",
           params: filterParams({
-            organization_id: p.organization_id,
-            start_date: p.start_date,
-            end_date: p.end_date,
+            organization_id: p.organizationId,
+            start_date: p.startDate,
+            end_date: p.endDate,
           }),
         };
       },
+      transformResponse: (response: ProjectCostBreakdown[]) =>
+        transformSnakeToCamel(
+          response,
+        ) as unknown as ProjectCostBreakdownCamelCase[],
       providesTags: ["Cost"],
     }),
 
     getCostByTeam: builder.query<
-      TeamCostResponse[],
+      TeamCostResponseCamelCase[],
       OrganizationalCostParams | void
     >({
       query: (params) => {
@@ -1072,36 +1305,50 @@ export const api = createApi({
         return {
           url: "/cost/summary/by-team",
           params: filterParams({
-            organization_id: p.organization_id,
-            project_id: p.project_id,
-            start_date: p.start_date,
-            end_date: p.end_date,
+            organization_id: p.organizationId,
+            project_id: p.projectId,
+            start_date: p.startDate,
+            end_date: p.endDate,
           }),
         };
       },
+      transformResponse: (response: TeamCostResponse[]) =>
+        transformSnakeToCamel(
+          response,
+        ) as unknown as TeamCostResponseCamelCase[],
       providesTags: ["Cost"],
     }),
 
     // Budget Status & Forecasting
-    getBudgetStatus: builder.query<BudgetStatusResponse, BudgetStatusParams>({
+    getBudgetStatus: builder.query<
+      BudgetStatusResponseCamelCase,
+      BudgetStatusParams
+    >({
       query: ({ entity_type, entity_id }) => ({
         url: "/cost/budget/status",
         params: filterParams({ entity_type, entity_id }),
       }),
+      transformResponse: (response: BudgetStatusResponse) =>
+        transformSnakeToCamel(response),
       providesTags: ["Cost"],
     }),
 
-    getCostForecast: builder.query<CostForecastResponse, CostForecastParams>({
+    getCostForecast: builder.query<
+      CostForecastResponseCamelCase,
+      CostForecastParams
+    >({
       query: ({ entity_type, entity_id }) => ({
         url: "/cost/budget/forecast",
         params: filterParams({ entity_type, entity_id }),
       }),
+      transformResponse: (response: CostForecastResponse) =>
+        transformSnakeToCamel(response),
       providesTags: ["Cost"],
     }),
 
     // Connections
     listConnections: builder.query<
-      ConnectionListResponse,
+      ConnectionListResponseCamelCase,
       ConnectionFilterOptions | void
     >({
       query: (params = {}) => ({
@@ -1117,6 +1364,13 @@ export const api = createApi({
           sort_order: params?.sort_order ?? "desc",
         }),
       }),
+      transformResponse: (
+        response: ConnectionListResponse,
+      ): ConnectionListResponseCamelCase =>
+        ({
+          ...transformSnakeToCamel(response),
+          items: response.items.map((item) => transformSnakeToCamel(item)),
+        }) as unknown as ConnectionListResponseCamelCase,
       providesTags: (result) =>
         result?.items
           ? [
@@ -1129,29 +1383,38 @@ export const api = createApi({
           : [{ type: "Connection", id: "LIST" }],
     }),
 
-    getConnection: builder.query<MCPConnection, string>({
+    getConnection: builder.query<MCPConnectionCamelCase, string>({
       query: (id) => `/connections/${id}`,
+      transformResponse: (response: MCPConnection) =>
+        transformSnakeToCamel(response),
       providesTags: (_result, _error, id) => [{ type: "Connection", id }],
     }),
 
-    createConnection: builder.mutation<MCPConnection, MCPConnectionCreate>({
+    createConnection: builder.mutation<
+      MCPConnectionCamelCase,
+      MCPConnectionCreate
+    >({
       query: (body) => ({
         url: "/connections",
         method: "POST",
-        body,
+        body: transformCamelToSnake(body),
       }),
+      transformResponse: (response: MCPConnection) =>
+        transformSnakeToCamel(response),
       invalidatesTags: [{ type: "Connection", id: "LIST" }],
     }),
 
     updateConnection: builder.mutation<
-      MCPConnection,
+      MCPConnectionCamelCase,
       { id: string } & MCPConnectionUpdate
     >({
       query: ({ id, ...body }) => ({
         url: `/connections/${id}`,
         method: "PUT",
-        body,
+        body: transformCamelToSnake(body),
       }),
+      transformResponse: (response: MCPConnection) =>
+        transformSnakeToCamel(response),
       invalidatesTags: (_result, _error, { id }) => [
         { type: "Connection", id },
         { type: "Connection", id: "LIST" },
@@ -1190,21 +1453,28 @@ export const api = createApi({
 
     /** List all tools aggregated from registered external MCP servers */
     listAggregatedTools: builder.query<
-      AggregatedToolsResponse,
+      { tools: AggregatedToolCamelCase[]; totalCount: number },
       string | undefined
     >({
       query: (serverName) =>
         serverName
           ? `/mcp/aggregated/tools?server_name=${encodeURIComponent(serverName)}`
           : "/mcp/aggregated/tools",
+      transformResponse: (response: AggregatedToolsResponse) =>
+        transformSnakeToCamel(response) as unknown as {
+          tools: AggregatedToolCamelCase[];
+          totalCount: number;
+        },
       providesTags: ["Connection"], // Invalidate when connections change
       keepUnusedDataFor: 60, // 1 minute - tools can change
     }),
 
     /** Get a specific tool by qualified name */
-    getAggregatedTool: builder.query<AggregatedTool, string>({
+    getAggregatedTool: builder.query<AggregatedToolCamelCase, string>({
       query: (qualifiedName) =>
         `/mcp/aggregated/tools/${encodeURIComponent(qualifiedName)}`,
+      transformResponse: (response: AggregatedTool) =>
+        transformSnakeToCamel(response) as unknown as AggregatedToolCamelCase,
       providesTags: (_result, _error, qualifiedName) => [
         { type: "Connection", id: qualifiedName },
       ],
@@ -1212,21 +1482,30 @@ export const api = createApi({
 
     /** List all resources aggregated from registered external MCP servers */
     listAggregatedResources: builder.query<
-      AggregatedResourcesResponse,
+      { resources: AggregatedResourceCamelCase[]; totalCount: number },
       string | undefined
     >({
       query: (serverName) =>
         serverName
           ? `/mcp/aggregated/resources?server_name=${encodeURIComponent(serverName)}`
           : "/mcp/aggregated/resources",
+      transformResponse: (response: AggregatedResourcesResponse) =>
+        transformSnakeToCamel(response) as unknown as {
+          resources: AggregatedResourceCamelCase[];
+          totalCount: number;
+        },
       providesTags: ["Connection"],
       keepUnusedDataFor: 60,
     }),
 
     /** Get a specific resource by qualified name */
-    getAggregatedResource: builder.query<AggregatedResource, string>({
+    getAggregatedResource: builder.query<AggregatedResourceCamelCase, string>({
       query: (qualifiedName) =>
         `/mcp/aggregated/resources/${encodeURIComponent(qualifiedName)}`,
+      transformResponse: (response: AggregatedResource) =>
+        transformSnakeToCamel(
+          response,
+        ) as unknown as AggregatedResourceCamelCase,
       providesTags: (_result, _error, qualifiedName) => [
         { type: "Connection", id: qualifiedName },
       ],
@@ -1234,29 +1513,43 @@ export const api = createApi({
 
     /** List all prompts aggregated from registered external MCP servers */
     listAggregatedPrompts: builder.query<
-      AggregatedPromptsResponse,
+      { prompts: AggregatedPromptCamelCase[]; totalCount: number },
       string | undefined
     >({
       query: (serverName) =>
         serverName
           ? `/mcp/aggregated/prompts?server_name=${encodeURIComponent(serverName)}`
           : "/mcp/aggregated/prompts",
+      transformResponse: (response: AggregatedPromptsResponse) =>
+        transformSnakeToCamel(response) as unknown as {
+          prompts: AggregatedPromptCamelCase[];
+          totalCount: number;
+        },
       providesTags: ["Connection"],
       keepUnusedDataFor: 60,
     }),
 
     /** Get a specific prompt by qualified name */
-    getAggregatedPrompt: builder.query<AggregatedPrompt, string>({
+    getAggregatedPrompt: builder.query<AggregatedPromptCamelCase, string>({
       query: (qualifiedName) =>
         `/mcp/aggregated/prompts/${encodeURIComponent(qualifiedName)}`,
+      transformResponse: (response: AggregatedPrompt) =>
+        transformSnakeToCamel(response) as unknown as AggregatedPromptCamelCase,
       providesTags: (_result, _error, qualifiedName) => [
         { type: "Connection", id: qualifiedName },
       ],
     }),
 
     /** List all registered MCP servers with capability counts */
-    listAggregatedServers: builder.query<AggregatedServersResponse, void>({
+    listAggregatedServers: builder.query<
+      AggregatedServersResponseCamelCase,
+      void
+    >({
       query: () => "/mcp/aggregated/servers",
+      transformResponse: (response: AggregatedServersResponse) =>
+        transformSnakeToCamel(
+          response,
+        ) as unknown as AggregatedServersResponseCamelCase,
       providesTags: ["Connection"],
       keepUnusedDataFor: 60,
     }),
@@ -1340,8 +1633,10 @@ export const api = createApi({
     }),
 
     // Agents
-    getAgentConfig: builder.query<AgentConfig, void>({
+    getAgentConfig: builder.query<AgentConfigCamelCase, void>({
       query: () => "/agents/config",
+      transformResponse: (response: AgentConfig) =>
+        transformSnakeToCamel(response),
       providesTags: ["Agent"],
       keepUnusedDataFor: 300, // 5 minutes - agent config rarely changes
     }),
@@ -1361,7 +1656,7 @@ export const api = createApi({
 
     // Agent metrics
     getAgentMetrics: builder.query<
-      AgentMetricsResponse,
+      AgentMetricsResponseCamelCase,
       { time_range_hours?: number } | void
     >({
       query: (params) => ({
@@ -1370,6 +1665,10 @@ export const api = createApi({
           ? { time_range_hours: params.time_range_hours ?? 24 }
           : {},
       }),
+      transformResponse: (response: AgentMetricsResponse) =>
+        transformSnakeToCamel(
+          response,
+        ) as unknown as AgentMetricsResponseCamelCase,
       providesTags: ["Agent"],
       keepUnusedDataFor: 60, // 1 minute - metrics refresh more frequently
     }),
@@ -1416,8 +1715,10 @@ export const api = createApi({
           : [{ type: "AdminUser", id: "LIST" }],
     }),
 
-    getAdminUser: builder.query<AdminUser, string>({
+    getAdminUser: builder.query<AdminUserCamelCase, string>({
       query: (userId) => `/admin/users/${userId}`,
+      transformResponse: (response: AdminUser) =>
+        transformSnakeToCamel(response),
       providesTags: (_result, _error, userId) => [
         { type: "AdminUser", id: userId },
       ],
@@ -1457,7 +1758,7 @@ export const api = createApi({
 
     // Workflow Executions
     listWorkflowExecutions: builder.query<
-      WorkflowExecutionListResponse,
+      WorkflowExecutionListResponseCamelCase,
       WorkflowExecutionListParams
     >({
       query: (params) => ({
@@ -1468,6 +1769,14 @@ export const api = createApi({
           cursor: params.cursor,
         }),
       }),
+      transformResponse: (
+        response: WorkflowExecutionListResponse,
+      ): WorkflowExecutionListResponseCamelCase =>
+        ({
+          items: response.items.map((item) => transformSnakeToCamel(item)),
+          total: response.total,
+          nextCursor: response.next_cursor,
+        }) as unknown as WorkflowExecutionListResponseCamelCase,
       providesTags: (result, _error, params) =>
         result?.items
           ? [
@@ -1492,14 +1801,16 @@ export const api = createApi({
     }),
 
     // Health
-    getHealth: builder.query<HealthStatus, void>({
+    getHealth: builder.query<HealthStatusCamelCase, void>({
       query: () => "/health",
+      transformResponse: (response: HealthStatus) =>
+        transformSnakeToCamel(response) as unknown as HealthStatusCamelCase,
       keepUnusedDataFor: 30, // 30 seconds - health status can change
     }),
 
     // HEART Metrics
     getHeartMetrics: builder.query<
-      HEARTAggregateMetrics,
+      HEARTAggregateMetricsCamelCase,
       { period?: string; app?: string }
     >({
       query: (params = {}) => ({
@@ -1509,6 +1820,10 @@ export const api = createApi({
           app: params.app,
         }),
       }),
+      transformResponse: (response: HEARTAggregateMetrics) =>
+        transformSnakeToCamel(
+          response,
+        ) as unknown as HEARTAggregateMetricsCamelCase,
     }),
 
     // Workflow Templates
@@ -1625,29 +1940,20 @@ export const api = createApi({
     // Current User Info (for persona detection)
     // Uses generated UserInfoResponse type for type safety (prevents drift)
     // Sprint 4 extended fields: api_version, sub_persona, visible_modules, feature_flags
-    getCurrentUser: builder.query<UserInfoResponse, void>({
+    // ADR-0091 Phase 6: Return camelCase type after transformation
+    // Cast through unknown because transformSnakeToCamel returns T but actually transforms keys
+    getCurrentUser: builder.query<UserInfoResponseCamelCase, void>({
       query: () => "/me",
+      transformResponse: (response: UserInfoResponse) =>
+        transformSnakeToCamel(response) as unknown as UserInfoResponseCamelCase,
     }),
 
-    // Native Login (ROPC grant - no Keycloak UI redirect)
+    /**
+     * Native Login (ROPC grant - no Keycloak UI redirect)
+     * Request/Response types from generated-api.ts (ADR-0091)
+     */
     login: builder.mutation<
-      {
-        access_token: string;
-        refresh_token?: string;
-        token_type: string;
-        expires_in: number;
-        user: {
-          user_id: string;
-          username: string;
-          email?: string;
-          first_name?: string;
-          last_name?: string;
-          display_name?: string;
-          roles: string[];
-          persona: "admin" | "developer" | "user";
-          keycloak_id?: string;
-        };
-      },
+      LoginResponse,
       { username: string; password: string }
     >({
       query: (credentials) => ({
@@ -1657,11 +1963,11 @@ export const api = createApi({
       }),
     }),
 
-    // Native Logout (token revocation - no Keycloak UI redirect)
-    logout: builder.mutation<
-      { success: boolean; message: string; keycloak_logout_url?: string },
-      { refresh_token?: string } | void
-    >({
+    /**
+     * Native Logout (token revocation - no Keycloak UI redirect)
+     * Request/Response types from generated-api.ts (ADR-0091)
+     */
+    logout: builder.mutation<LogoutResponse, LogoutRequest | void>({
       query: (body) => ({
         url: "/logout",
         method: "POST",
@@ -1669,23 +1975,11 @@ export const api = createApi({
       }),
     }),
 
-    // Identity Provider Discovery (SSO IdPs for login page)
-    getIdentityProviders: builder.query<
-      {
-        identity_providers: Array<{
-          alias: string;
-          display_name: string;
-          provider_type: "social" | "enterprise";
-          provider_id: string;
-          icon: string;
-          login_url: string;
-        }>;
-        has_social_login: boolean;
-        has_enterprise_sso: boolean;
-        error?: string;
-      },
-      void
-    >({
+    /**
+     * Identity Provider Discovery (SSO IdPs for login page)
+     * Response type from generated-api.ts (ADR-0091)
+     */
+    getIdentityProviders: builder.query<IdentityProvidersListResponse, void>({
       query: () => "/identity-providers",
       keepUnusedDataFor: 3600, // 1 hour - identity providers are very stable
     }),
@@ -1718,12 +2012,20 @@ export const api = createApi({
     }),
 
     // Notification Preferences
-    getNotificationPreferences: builder.query<NotificationPreferences, void>({
+    getNotificationPreferences: builder.query<
+      NotificationPreferencesCamelCase,
+      void
+    >({
       query: () => "/notifications/preferences",
+      transformResponse: (response: NotificationPreferences) =>
+        transformSnakeToCamel(
+          response,
+        ) as unknown as NotificationPreferencesCamelCase,
       providesTags: ["NotificationPreferences"],
       keepUnusedDataFor: 120, // 2 minutes - user preferences
     }),
 
+    // ADR-0091 Phase 6: Transform camelCase request body to snake_case for backend
     updateNotificationPreferences: builder.mutation<
       NotificationPreferences,
       UpdateNotificationPreferencesRequest
@@ -1731,7 +2033,7 @@ export const api = createApi({
       query: (body) => ({
         url: "/notifications/preferences",
         method: "PUT",
-        body,
+        body: transformCamelToSnake(body),
       }),
       invalidatesTags: ["NotificationPreferences"],
     }),
@@ -2276,8 +2578,10 @@ export const api = createApi({
     /**
      * Get current user's preferences
      */
-    getUserPreferences: builder.query<UserPreferences, void>({
+    getUserPreferences: builder.query<UserPreferencesCamelCase, void>({
       query: () => "/preferences",
+      transformResponse: (response: UserPreferences) =>
+        transformSnakeToCamel(response),
       providesTags: ["UserPreferences"],
       keepUnusedDataFor: 120, // 2 minutes - user preferences
     }),
@@ -2373,7 +2677,7 @@ export const api = createApi({
         url: "/remediations/pending",
         params: filterParams({
           status: params.status,
-          alert_id: params.alert_id,
+          alert_id: params.alertId,
           severity: params.severity,
           limit: params.limit ?? 50,
           cursor: params.cursor,
@@ -2382,9 +2686,9 @@ export const api = createApi({
       providesTags: (result) =>
         result?.items
           ? [
-              ...result.items.map(({ remediation_id }) => ({
+              ...result.items.map(({ remediationId }) => ({
                 type: "Remediation" as const,
-                id: remediation_id,
+                id: remediationId,
               })),
               { type: "Remediation", id: "PENDING" },
             ]
@@ -2402,7 +2706,7 @@ export const api = createApi({
         url: "/remediations/history",
         params: filterParams({
           status: params.status,
-          alert_id: params.alert_id,
+          alert_id: params.alertId,
           severity: params.severity,
           limit: params.limit ?? 50,
           cursor: params.cursor,
@@ -2411,9 +2715,9 @@ export const api = createApi({
       providesTags: (result) =>
         result?.items
           ? [
-              ...result.items.map(({ remediation_id }) => ({
+              ...result.items.map(({ remediationId }) => ({
                 type: "Remediation" as const,
-                id: remediation_id,
+                id: remediationId,
               })),
               { type: "Remediation", id: "HISTORY" },
             ]
@@ -2427,13 +2731,13 @@ export const api = createApi({
       RemediationRequest,
       ApproveRemediationRequest
     >({
-      query: ({ remediation_id, ...body }) => ({
-        url: `/remediations/${remediation_id}/approve`,
+      query: ({ remediationId, ...body }) => ({
+        url: `/remediations/${remediationId}/approve`,
         method: "POST",
-        body,
+        body: transformCamelToSnake(body),
       }),
-      invalidatesTags: (_result, _error, { remediation_id }) => [
-        { type: "Remediation", id: remediation_id },
+      invalidatesTags: (_result, _error, { remediationId }) => [
+        { type: "Remediation", id: remediationId },
         { type: "Remediation", id: "PENDING" },
         { type: "Remediation", id: "HISTORY" },
       ],
@@ -2446,13 +2750,13 @@ export const api = createApi({
       RemediationRequest,
       RejectRemediationRequest
     >({
-      query: ({ remediation_id, ...body }) => ({
-        url: `/remediations/${remediation_id}/reject`,
+      query: ({ remediationId, ...body }) => ({
+        url: `/remediations/${remediationId}/reject`,
         method: "POST",
-        body,
+        body: transformCamelToSnake(body),
       }),
-      invalidatesTags: (_result, _error, { remediation_id }) => [
-        { type: "Remediation", id: remediation_id },
+      invalidatesTags: (_result, _error, { remediationId }) => [
+        { type: "Remediation", id: remediationId },
         { type: "Remediation", id: "PENDING" },
         { type: "Remediation", id: "HISTORY" },
       ],
@@ -2494,6 +2798,8 @@ export const api = createApi({
      */
     getArtifact: builder.query<CanvasArtifact, string>({
       query: (id) => `/artifacts/${id}`,
+      transformResponse: (response: CanvasArtifact) =>
+        transformSnakeToCamel(response),
       providesTags: (_result, _error, id) => [{ type: "Artifact", id }],
     }),
 
@@ -2509,6 +2815,9 @@ export const api = createApi({
         method: "POST",
         body,
       }),
+      // ADR-0091 Phase 6: Transform snake_case response to camelCase
+      transformResponse: (response: Record<string, unknown>) =>
+        transformSnakeToCamel(response) as unknown as CreateArtifactResponse,
       invalidatesTags: [{ type: "Artifact", id: "LIST" }],
     }),
 
@@ -2524,6 +2833,9 @@ export const api = createApi({
         method: "PUT",
         body,
       }),
+      // ADR-0091 Phase 6: Transform snake_case response to camelCase
+      transformResponse: (response: Record<string, unknown>) =>
+        transformSnakeToCamel(response) as unknown as UpdateArtifactResponse,
       invalidatesTags: (_result, _error, { id }) => [
         { type: "Artifact", id },
         { type: "Artifact", id: "LIST" },
@@ -2566,6 +2878,9 @@ export const api = createApi({
         method: "POST",
         body: { new_name: newName },
       }),
+      // ADR-0091 Phase 6: Transform snake_case response to camelCase
+      transformResponse: (response: Record<string, unknown>) =>
+        transformSnakeToCamel(response) as unknown as ForkArtifactResponse,
       invalidatesTags: [{ type: "Artifact", id: "LIST" }],
     }),
 
@@ -2740,6 +3055,9 @@ export const api = createApi({
 
     /**
      * Analyze progressive disclosure level for UI complexity
+     *
+     * NOTE: Inline types retained - generated types differ from frontend hook contract.
+     * See ADR-0091 Phase 9 for alignment plan.
      */
     analyzeDisclosure: builder.mutation<
       {
@@ -2770,6 +3088,9 @@ export const api = createApi({
 
     /**
      * Get AI-generated suggestions for empty state screens
+     *
+     * NOTE: Inline types retained - generated types differ from frontend hook contract.
+     * See ADR-0091 Phase 9 for alignment plan.
      */
     getEmptyStateSuggestions: builder.mutation<
       {
@@ -2799,22 +3120,13 @@ export const api = createApi({
 
     /**
      * Get AI-generated nudge recommendations
+     *
+     * Maps to POST /api/v1/ai/nudges/recommend
+     * Request/Response types from generated-api.ts (ADR-0091)
      */
     getNudgeRecommendation: builder.mutation<
-      {
-        nudge_type: string;
-        message: string;
-        confidence: number;
-        action_cta?: string;
-        action_target?: string;
-        dismiss_duration_ms?: number;
-      },
-      {
-        context: string;
-        user_actions?: string[];
-        current_feature?: string;
-        persona?: string;
-      }
+      NudgeRecommendResponse,
+      NudgeRecommendRequest
     >({
       query: (body) => ({
         url: "/ai/nudges/recommend",
@@ -2825,6 +3137,9 @@ export const api = createApi({
 
     /**
      * Analyze error for recovery suggestions
+     *
+     * NOTE: Inline types retained - generated types differ from frontend hook contract.
+     * See ADR-0091 Phase 9 for alignment plan.
      */
     analyzeError: builder.mutation<
       {
@@ -2856,21 +3171,13 @@ export const api = createApi({
 
     /**
      * Personalize onboarding experience
+     *
+     * Maps to POST /api/v1/ai/onboarding/personalize
+     * Request/Response types from generated-api.ts (ADR-0091)
      */
     personalizeOnboarding: builder.mutation<
-      {
-        recommended_steps: string[];
-        skip_steps: string[];
-        estimated_duration_minutes: number;
-        personalization_applied: boolean;
-        reasoning?: string;
-      },
-      {
-        detected_persona?: string;
-        experience_level?: "beginner" | "intermediate" | "expert";
-        goals?: string[];
-        previous_tool_experience?: string[];
-      }
+      OnboardingPersonalizeResponse,
+      OnboardingPersonalizeRequest
     >({
       query: (body) => ({
         url: "/ai/onboarding/personalize",
@@ -2881,6 +3188,9 @@ export const api = createApi({
 
     /**
      * Get AI-generated insights from HEART metrics
+     *
+     * NOTE: Inline types retained - generated types differ from frontend hook contract.
+     * See ADR-0091 Phase 9 for alignment plan.
      */
     getMetricsInsights: builder.query<
       {
@@ -2912,23 +3222,13 @@ export const api = createApi({
 
     /**
      * Analyze user behavior for persona detection/validation
+     *
+     * Maps to POST /api/v1/ai/persona/analyze
+     * Request/Response types from generated-api.ts (ADR-0091)
      */
     analyzePersona: builder.mutation<
-      {
-        detected_persona: string;
-        confidence: number;
-        alternative_personas: Array<{
-          persona: string;
-          confidence: number;
-        }>;
-        behavior_indicators: Record<string, unknown>;
-        recommendation?: string;
-      },
-      {
-        behavior_data: Record<string, unknown>;
-        current_persona?: string;
-        session_id?: string;
-      }
+      PersonaAnalyzeResponse,
+      PersonaAnalyzeRequest
     >({
       query: (body) => ({
         url: "/ai/persona/analyze",
@@ -2940,8 +3240,8 @@ export const api = createApi({
     /**
      * Composite analysis combining multiple AI UX insights
      *
-     * Maps to POST /api/v1/ai/composite/analyze
-     * Request body matches CompositeAnalysisRequest schema
+     * NOTE: Inline types retained - generated types differ from frontend hook contract.
+     * See ADR-0091 Phase 9 for alignment plan.
      */
     analyzeComposite: builder.mutation<
       {
@@ -2996,6 +3296,9 @@ export const api = createApi({
 
     /**
      * Batch composite analysis for multiple contexts
+     *
+     * NOTE: Inline types retained - generated types differ from frontend hook contract.
+     * See ADR-0091 Phase 9 for alignment plan.
      */
     batchCompositeAnalysis: builder.mutation<
       {
@@ -3053,7 +3356,8 @@ export const api = createApi({
      * Supports all 8 task categories: UX, SESSION, CONVERSATION, CANVAS,
      * DIAGRAM, TRACE, HITL, COMMAND.
      *
-     * Reference: StudioShell AI Enhancement Analysis Plan
+     * NOTE: Inline types retained - generated types differ from frontend hook contract.
+     * See ADR-0091 Phase 9 for alignment plan.
      */
     studioAnalyze: builder.mutation<
       {
@@ -3092,8 +3396,15 @@ export const api = createApi({
      *
      * Cache: 5 minutes - resources are relatively static
      */
-    listMcpResources: builder.query<McpResourceListResponse, void>({
+    listMcpResources: builder.query<
+      { resources: McpResourceCamelCase[] },
+      void
+    >({
       query: () => "/mcp/resources",
+      transformResponse: (response: McpResourceListResponse) =>
+        transformSnakeToCamel(response) as unknown as {
+          resources: McpResourceCamelCase[];
+        },
       providesTags: [{ type: "Mcp", id: "RESOURCES" }],
       keepUnusedDataFor: 300, // 5 minutes
     }),
@@ -3102,7 +3413,7 @@ export const api = createApi({
      * Read MCP resource content by URI
      */
     readMcpResource: builder.mutation<
-      McpResourceContentResponse,
+      { contents: McpResourceContentItemCamelCase[] },
       McpReadResourceRequest
     >({
       query: ({ uri }) => ({
@@ -3110,6 +3421,10 @@ export const api = createApi({
         method: "GET",
         params: { uri },
       }),
+      transformResponse: (response: McpResourceContentResponse) =>
+        transformSnakeToCamel(response) as unknown as {
+          contents: McpResourceContentItemCamelCase[];
+        },
     }),
 
     /**

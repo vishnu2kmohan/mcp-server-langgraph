@@ -184,7 +184,7 @@ export function CostDocument({
                   </div>
                   <div className="flex items-baseline gap-2">
                     <span className="text-3xl font-bold text-gray-900 dark:text-gray-100">
-                      {formatCurrency(summary.total_cost)}
+                      {formatCurrency(summary.totalCost)}
                     </span>
                   </div>
                   <div className="mt-2 text-sm text-gray-500 dark:text-gray-400">
@@ -202,7 +202,7 @@ export function CostDocument({
                   </div>
                   <div className="flex items-baseline gap-2">
                     <span className="text-3xl font-bold text-gray-900 dark:text-gray-100">
-                      {formatNumber(summary.total_tokens ?? 0)}
+                      {formatNumber(summary.totalTokens ?? 0)}
                     </span>
                   </div>
                   <div className="mt-2 text-sm text-gray-500 dark:text-gray-400">
@@ -220,9 +220,9 @@ export function CostDocument({
                   </div>
                   <div className="flex items-baseline gap-2">
                     <span className="text-3xl font-bold text-gray-900 dark:text-gray-100">
-                      {summary.total_tokens && summary.total_tokens > 0
+                      {summary.totalTokens && summary.totalTokens > 0
                         ? formatCurrency(
-                            (summary.total_cost / summary.total_tokens) * 1000,
+                            (summary.totalCost / summary.totalTokens) * 1000,
                           )
                         : "$0.00"}
                     </span>

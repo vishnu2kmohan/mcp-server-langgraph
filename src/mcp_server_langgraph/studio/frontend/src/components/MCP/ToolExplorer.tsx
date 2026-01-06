@@ -40,10 +40,10 @@ export function ToolExplorer({ serverFilter, onInvoke }: ToolExplorerProps) {
 
     return data.tools.filter(
       (tool) =>
-        tool.qualified_name.toLowerCase().includes(term) ||
+        tool.qualifiedName.toLowerCase().includes(term) ||
         tool.name.toLowerCase().includes(term) ||
         tool.description.toLowerCase().includes(term) ||
-        tool.server_name.toLowerCase().includes(term),
+        tool.serverName.toLowerCase().includes(term),
     );
   }, [data?.tools, searchTerm]);
 
@@ -113,7 +113,7 @@ export function ToolExplorer({ serverFilter, onInvoke }: ToolExplorerProps) {
         ) : (
           filteredTools.map((tool) => (
             <Card
-              key={tool.qualified_name}
+              key={tool.qualifiedName}
               variant="default"
               padding="sm"
               className="hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
@@ -123,10 +123,10 @@ export function ToolExplorer({ serverFilter, onInvoke }: ToolExplorerProps) {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1">
                     <span className="font-mono text-sm font-medium text-gray-900 dark:text-gray-100">
-                      {tool.qualified_name}
+                      {tool.qualifiedName}
                     </span>
                     <Badge variant="outline" size="sm">
-                      {tool.server_name}
+                      {tool.serverName}
                     </Badge>
                   </div>
                   <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-2">
@@ -137,7 +137,7 @@ export function ToolExplorer({ serverFilter, onInvoke }: ToolExplorerProps) {
                 {/* Invoke button */}
                 <button
                   type="button"
-                  onClick={() => handleInvoke(tool.qualified_name)}
+                  onClick={() => handleInvoke(tool.qualifiedName)}
                   className={cn(
                     "shrink-0 px-3 py-1.5 text-sm font-medium rounded-md",
                     "bg-brand-primary text-white",

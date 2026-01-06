@@ -28,39 +28,39 @@ import alertReducer, { type Alert } from "../../store/slices/alertSlice";
 
 const mockAlerts: Alert[] = [
   {
-    alert_id: "alert-001",
+    alertId: "alert-001",
     name: "HighCPU",
     severity: "critical",
     state: "firing",
     message: "CPU usage above 90% for 5 minutes",
     labels: { service: "api-server", pod: "api-123" },
     annotations: { summary: "High CPU usage detected" },
-    started_at: "2024-01-15T10:30:00Z",
-    ended_at: null,
+    startedAt: "2024-01-15T10:30:00Z",
+    endedAt: null,
     fingerprint: "fp-001",
   },
   {
-    alert_id: "alert-002",
+    alertId: "alert-002",
     name: "HighMemory",
     severity: "warning",
     state: "firing",
     message: "Memory usage above 80%",
     labels: { service: "worker", pod: "worker-456" },
     annotations: { summary: "High memory usage" },
-    started_at: "2024-01-15T10:25:00Z",
-    ended_at: null,
+    startedAt: "2024-01-15T10:25:00Z",
+    endedAt: null,
     fingerprint: "fp-002",
   },
   {
-    alert_id: "alert-003",
+    alertId: "alert-003",
     name: "DiskFull",
     severity: "critical",
     state: "resolved",
     message: "Disk 95% full",
     labels: { service: "storage" },
     annotations: {},
-    started_at: "2024-01-15T09:00:00Z",
-    ended_at: "2024-01-15T10:00:00Z",
+    startedAt: "2024-01-15T09:00:00Z",
+    endedAt: "2024-01-15T10:00:00Z",
     fingerprint: "fp-003",
   },
 ];
@@ -509,15 +509,15 @@ describe("AlertsPanel", () => {
       // The mockAlerts with default filters shows firing alerts
       const alertsWithPodOnly: Alert[] = [
         {
-          alert_id: "alert-pod-only",
+          alertId: "alert-pod-only",
           name: "PodOnlyAlert",
           severity: "critical", // Use critical so default filters include it
           state: "firing", // Use firing so default filters include it
           message: "Pod issue",
           labels: { pod: "pod-xyz" }, // No service label, only pod
           annotations: {},
-          started_at: "2024-01-15T10:30:00Z",
-          ended_at: null,
+          startedAt: "2024-01-15T10:30:00Z",
+          endedAt: null,
           fingerprint: "fp-pod",
         },
       ];
@@ -532,15 +532,15 @@ describe("AlertsPanel", () => {
 
     it("should handle alert without any labels", () => {
       const alertNoLabels: Alert = {
-        alert_id: "alert-no-labels",
+        alertId: "alert-no-labels",
         name: "NoLabelAlert",
         severity: "warning",
         state: "firing",
         message: "Alert without labels",
         labels: {}, // No service or pod
         annotations: {},
-        started_at: "2024-01-15T10:30:00Z",
-        ended_at: null,
+        startedAt: "2024-01-15T10:30:00Z",
+        endedAt: null,
         fingerprint: "fp-no-label",
       };
       const store = createTestStore([alertNoLabels], true, {
@@ -555,15 +555,15 @@ describe("AlertsPanel", () => {
     it("should show resolved state badge", () => {
       // Create an alert with resolved state that matches default filters
       const resolvedAlert: Alert = {
-        alert_id: "alert-resolved",
+        alertId: "alert-resolved",
         name: "ResolvedAlert",
         severity: "critical",
         state: "resolved",
         message: "Issue resolved",
         labels: { service: "test-service" },
         annotations: {},
-        started_at: "2024-01-15T09:00:00Z",
-        ended_at: "2024-01-15T10:00:00Z",
+        startedAt: "2024-01-15T09:00:00Z",
+        endedAt: "2024-01-15T10:00:00Z",
         fingerprint: "fp-resolved",
       };
       const resolvedStore = createTestStore([resolvedAlert], true, {

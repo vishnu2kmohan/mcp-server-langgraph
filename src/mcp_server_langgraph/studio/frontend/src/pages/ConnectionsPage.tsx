@@ -55,8 +55,8 @@ import {
 import { useAppSelector } from "../store/hooks";
 import { selectPersona } from "../store/slices/personaSlice";
 import type {
-  MCPConnectionSummary,
-  MCPConnection,
+  MCPConnectionSummaryCamelCase,
+  MCPConnectionCamelCase,
   ConnectionStatus,
   AuthType,
   ConnectionSortField,
@@ -127,7 +127,7 @@ export function ConnectionsPage() {
   // Dialog state
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingConnection, setEditingConnection] = useState<
-    MCPConnection | undefined
+    MCPConnectionCamelCase | undefined
   >();
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
 
@@ -227,11 +227,14 @@ export function ConnectionsPage() {
     setDialogOpen(true);
   }, []);
 
-  const handleEditClick = useCallback((connection: MCPConnectionSummary) => {
-    // For editing, we need full connection data - for now use summary
-    setEditingConnection(connection as unknown as MCPConnection);
-    setDialogOpen(true);
-  }, []);
+  const handleEditClick = useCallback(
+    (connection: MCPConnectionSummaryCamelCase) => {
+      // For editing, we need full connection data - for now use summary
+      setEditingConnection(connection as unknown as MCPConnectionCamelCase);
+      setDialogOpen(true);
+    },
+    [],
+  );
 
   const handleDeleteClick = useCallback((id: string) => {
     setDeleteConfirmId(id);
@@ -303,7 +306,7 @@ export function ConnectionsPage() {
   const handleTemplateSelect = useCallback((template: unknown) => {
     setTemplateSelectorOpen(false);
     // Open connection dialog pre-filled with template data
-    setEditingConnection(template as unknown as MCPConnection);
+    setEditingConnection(template as unknown as MCPConnectionCamelCase);
     setDialogOpen(true);
   }, []);
 
@@ -673,8 +676,8 @@ export function ConnectionsPage() {
 
                     {/* Auth Type Badge */}
                     <span className="flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded-full bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300">
-                      {authIcons[connection.auth_type]}
-                      {connection.auth_type}
+                      {authIcons[connection.authType]}
+                      {connection.authType}
                     </span>
                   </div>
 
@@ -686,16 +689,16 @@ export function ConnectionsPage() {
                   {/* Stats (for connected servers) */}
                   {connection.status === "connected" && (
                     <div className="flex gap-4 text-sm text-gray-600 dark:text-gray-400">
-                      <span>{connection.tool_count} tools</span>
-                      <span>{connection.resource_count} resources</span>
-                      <span>{connection.prompt_count} prompts</span>
+                      <span>{connection.toolCount} tools</span>
+                      <span>{connection.resourceCount} resources</span>
+                      <span>{connection.promptCount} prompts</span>
                     </div>
                   )}
 
                   {/* Server info */}
-                  {connection.server_name && (
+                  {connection.serverName && (
                     <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
-                      Server: {connection.server_name}
+                      Server: {connection.serverName}
                     </p>
                   )}
                 </div>

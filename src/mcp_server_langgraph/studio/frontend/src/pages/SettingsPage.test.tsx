@@ -19,9 +19,11 @@ import {
 } from "@testing-library/react";
 import { Provider } from "react-redux";
 import { configureStore } from "@reduxjs/toolkit";
+import { MemoryRouter } from "react-router";
 import { SettingsPage } from "./SettingsPage";
 import personaReducer from "../store/slices/personaSlice";
 import authReducer, { initialAuthState } from "../store/slices/authSlice";
+import canvasReducer from "../store/slices/canvasSlice";
 import type { Persona } from "../store/slices/personaSlice";
 import type { User } from "../types/auth";
 
@@ -48,12 +50,13 @@ vi.mock("../api", async (importOriginal) => {
   const actual = await importOriginal<typeof import("../api")>();
   return {
     ...actual,
+    // camelCase per ADR-0091 Phase 6 (RTK Query transforms)
     useGetNotificationPreferencesQuery: () => ({
       data: {
-        info_enabled: true,
-        success_enabled: true,
-        warning_enabled: true,
-        error_enabled: true,
+        infoEnabled: true,
+        successEnabled: true,
+        warningEnabled: true,
+        errorEnabled: true,
       },
       isLoading: false,
       isError: false,
@@ -86,6 +89,7 @@ const createTestStore = (
     reducer: {
       persona: personaReducer,
       auth: authReducer,
+      canvas: canvasReducer,
     },
     preloadedState: {
       persona: {
@@ -121,7 +125,9 @@ const renderWithStore = (
     store,
     ...render(
       <Provider store={store}>
-        <SettingsPage />
+        <MemoryRouter>
+          <SettingsPage />
+        </MemoryRouter>
       </Provider>,
     ),
   };
@@ -626,8 +632,8 @@ describe("SettingsPage", () => {
         ok: true,
         json: async () => ({
           users: [
-            { id: "user-1", email: "alice@example.com", has_api_key: true },
-            { id: "user-2", email: "bob@example.com", has_api_key: false },
+            { id: "user-1", email: "alice@example.com", hasApiKey: true },
+            { id: "user-2", email: "bob@example.com", hasApiKey: false },
           ],
         }),
       });
@@ -647,7 +653,7 @@ describe("SettingsPage", () => {
         ok: true,
         json: async () => ({
           users: [
-            { id: "user-1", email: "alice@example.com", has_api_key: true },
+            { id: "user-1", email: "alice@example.com", hasApiKey: true },
           ],
         }),
       });
@@ -667,9 +673,7 @@ describe("SettingsPage", () => {
       global.fetch = vi.fn().mockResolvedValue({
         ok: true,
         json: async () => ({
-          users: [
-            { id: "user-2", email: "bob@example.com", has_api_key: false },
-          ],
+          users: [{ id: "user-2", email: "bob@example.com", hasApiKey: false }],
         }),
       });
 
@@ -705,7 +709,7 @@ describe("SettingsPage", () => {
           ok: true,
           json: async () => ({
             users: [
-              { id: "user-1", email: "alice@example.com", has_api_key: true },
+              { id: "user-1", email: "alice@example.com", hasApiKey: true },
             ],
           }),
         })
@@ -735,7 +739,7 @@ describe("SettingsPage", () => {
           ok: true,
           json: async () => ({
             users: [
-              { id: "user-2", email: "bob@example.com", has_api_key: false },
+              { id: "user-2", email: "bob@example.com", hasApiKey: false },
             ],
           }),
         })
@@ -779,8 +783,8 @@ describe("SettingsPage", () => {
         ok: true,
         json: async () => ({
           users: [
-            { id: "user-1", email: "alice@example.com", has_api_key: true },
-            { id: "user-2", email: "bob@example.com", has_api_key: false },
+            { id: "user-1", email: "alice@example.com", hasApiKey: true },
+            { id: "user-2", email: "bob@example.com", hasApiKey: false },
           ],
         }),
       });
@@ -801,9 +805,9 @@ describe("SettingsPage", () => {
         ok: true,
         json: async () => ({
           users: [
-            { id: "user-1", email: "alice@example.com", has_api_key: true },
-            { id: "user-2", email: "bob@example.com", has_api_key: false },
-            { id: "user-3", email: "charlie@example.com", has_api_key: true },
+            { id: "user-1", email: "alice@example.com", hasApiKey: true },
+            { id: "user-2", email: "bob@example.com", hasApiKey: false },
+            { id: "user-3", email: "charlie@example.com", hasApiKey: true },
           ],
         }),
       });
@@ -836,7 +840,7 @@ describe("SettingsPage", () => {
         ok: true,
         json: async () => ({
           users: [
-            { id: "user-1", email: "alice@example.com", has_api_key: true },
+            { id: "user-1", email: "alice@example.com", hasApiKey: true },
           ],
         }),
       });
@@ -856,6 +860,61 @@ describe("SettingsPage", () => {
       await waitFor(() => {
         expect(screen.queryByText("alice@example.com")).not.toBeInTheDocument();
         expect(screen.getByText(/no users match/i)).toBeInTheDocument();
+      });
+    });
+  });
+
+  describe("Layout Reset (Sprint 1.2)", () => {
+    it("should display Panel Layout section in Appearance tab", () => {
+      renderWithStore();
+
+      // Click on Appearance tab
+      fireEvent.click(screen.getByText("Appearance"));
+
+      // Should show Panel Layout section
+      expect(screen.getByText("Panel Layout")).toBeInTheDocument();
+    });
+
+    it("should display Reset to Persona Defaults button", () => {
+      renderWithStore();
+
+      // Click on Appearance tab
+      fireEvent.click(screen.getByText("Appearance"));
+
+      // Should show Reset button
+      expect(
+        screen.getByRole("button", { name: /reset to persona defaults/i }),
+      ).toBeInTheDocument();
+    });
+
+    it("should display description text for layout reset", () => {
+      renderWithStore();
+
+      // Click on Appearance tab
+      fireEvent.click(screen.getByText("Appearance"));
+
+      // Should show description
+      expect(
+        screen.getByText(/restore your panel layout to the default/i),
+      ).toBeInTheDocument();
+    });
+
+    it("should dispatch resetToDefaults when Reset button is clicked", async () => {
+      const { store } = renderWithStore();
+
+      // Click on Appearance tab
+      fireEvent.click(screen.getByText("Appearance"));
+
+      // Click the Reset button
+      const resetButton = screen.getByRole("button", {
+        name: /reset to persona defaults/i,
+      });
+      fireEvent.click(resetButton);
+
+      // Verify that hasCustomLayout was reset to false
+      await waitFor(() => {
+        const state = store.getState();
+        expect(state.canvas.hasCustomLayout).toBe(false);
       });
     });
   });

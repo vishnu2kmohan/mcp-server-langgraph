@@ -190,8 +190,8 @@ export function RemediationApprovalDialog({
   const handleApprove = () => {
     setValidationError(null);
     onApprove({
-      remediation_id: remediation.remediation_id,
-      approved_by: currentUser,
+      remediationId: remediation.remediationId,
+      approvedBy: currentUser,
       reason: reason.trim() || undefined,
     });
   };
@@ -212,10 +212,10 @@ export function RemediationApprovalDialog({
 
     setValidationError(null);
     onReject({
-      remediation_id: remediation.remediation_id,
-      rejected_by: currentUser,
+      remediationId: remediation.remediationId,
+      rejectedBy: currentUser,
       reason: selectedRejectionReason,
-      reason_detail:
+      reasonDetail:
         selectedRejectionReason === "other"
           ? rejectionDetail.trim()
           : undefined,
@@ -226,7 +226,7 @@ export function RemediationApprovalDialog({
     return null;
   }
 
-  const isHighRisk = remediation.risk_level === "high";
+  const isHighRisk = remediation.riskLevel === "high";
   const isLoading = isApproving || isRejecting;
 
   return (
@@ -270,7 +270,7 @@ export function RemediationApprovalDialog({
           {/* Alert Info */}
           <div className="flex items-center gap-2">
             <span className="font-medium text-gray-900 dark:text-white">
-              {remediation.alert_name}
+              {remediation.alertName}
             </span>
             <span
               data-testid="severity-badge"
@@ -289,7 +289,7 @@ export function RemediationApprovalDialog({
                 data-testid="step-number"
                 className="flex items-center justify-center w-6 h-6 rounded-full bg-blue-500 text-white text-sm font-medium"
               >
-                {remediation.step_number}
+                {remediation.stepNumber}
               </span>
               <span className="font-medium text-gray-900 dark:text-white">
                 {remediation.action.charAt(0).toUpperCase() +
@@ -298,10 +298,10 @@ export function RemediationApprovalDialog({
               <span
                 data-testid="risk-level"
                 className={`text-xs px-2 py-0.5 rounded-full ${getRiskColor(
-                  remediation.risk_level,
+                  remediation.riskLevel,
                 )}`}
               >
-                {remediation.risk_level}
+                {remediation.riskLevel}
               </span>
             </div>
 
@@ -342,7 +342,7 @@ export function RemediationApprovalDialog({
               <div>
                 <p className="text-sm text-gray-600 dark:text-gray-400">
                   <strong>Impact:</strong>{" "}
-                  {recommendation.risk_assessment.impact_analysis}
+                  {recommendation.riskAssessment.impactAnalysis}
                 </p>
               </div>
             </div>
@@ -352,7 +352,7 @@ export function RemediationApprovalDialog({
                 <p className="text-sm text-gray-600 dark:text-gray-400">
                   <strong>Rollback:</strong>{" "}
                   <code className="text-xs bg-gray-100 dark:bg-gray-700 px-1 py-0.5 rounded">
-                    {recommendation.risk_assessment.rollback_plan}
+                    {recommendation.riskAssessment.rollbackPlan}
                   </code>
                 </p>
               </div>

@@ -131,6 +131,7 @@ export function WorkflowsPage() {
   );
 
   // Accumulate executions when new data arrives (for pagination)
+  // RTK Query transformResponse already converts to camelCase
   useEffect(() => {
     if (executionsData?.items) {
       if (!executionsCursor) {
@@ -167,10 +168,10 @@ export function WorkflowsPage() {
 
   // Handle load more (pagination)
   const handleLoadMoreExecutions = useCallback(() => {
-    if (executionsData?.next_cursor && !isFetching) {
-      setExecutionsCursor(executionsData.next_cursor);
+    if (executionsData?.nextCursor && !isFetching) {
+      setExecutionsCursor(executionsData.nextCursor);
     }
-  }, [executionsData?.next_cursor, isFetching]);
+  }, [executionsData?.nextCursor, isFetching]);
 
   // Real-time WebSocket updates for workflow execution
   // Only connect when we have a workflow and the execution panel is visible
@@ -614,7 +615,7 @@ export function WorkflowsPage() {
             isLoading={isLoadingExecutions || isFetching}
             onSelectExecution={handleSelectExecution}
             onLoadMore={handleLoadMoreExecutions}
-            hasMore={!!executionsData?.next_cursor}
+            hasMore={!!executionsData?.nextCursor}
             selectedExecutionId={selectedExecutionId ?? undefined}
           />
         )}

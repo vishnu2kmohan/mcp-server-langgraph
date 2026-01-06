@@ -26,7 +26,7 @@ import {
   useGetWorkflowVersionsQuery,
   useRestoreWorkflowVersionMutation,
 } from "../../api";
-import type { WorkflowVersion } from "../../types";
+import type { WorkflowVersionCamelCase } from "../../types/api";
 import { cn } from "../../utils/cn";
 
 // =============================================================================
@@ -39,7 +39,7 @@ export interface WorkflowVersionHistoryProps {
   /** Currently active version ID */
   currentVersionId?: string;
   /** Callback when a version is selected for preview */
-  onVersionSelect?: (version: WorkflowVersion) => void;
+  onVersionSelect?: (version: WorkflowVersionCamelCase) => void;
   /** Enable diff comparison mode */
   enableDiff?: boolean;
   /** Additional class name */
@@ -76,7 +76,7 @@ export function WorkflowVersionHistory({
 
   // Handle version selection
   const handleVersionClick = useCallback(
-    (version: WorkflowVersion) => {
+    (version: WorkflowVersionCamelCase) => {
       setSelectedVersionId(version.id);
       onVersionSelect?.(version);
     },
@@ -245,7 +245,7 @@ export function WorkflowVersionHistory({
                         />
                       )}
                       <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
-                        v{version.version_number}
+                        v{version.versionNumber}
                       </span>
                       {isCurrent && (
                         <span className="inline-flex items-center gap-1 px-1.5 py-0.5 text-xs font-medium bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 rounded">
@@ -256,30 +256,30 @@ export function WorkflowVersionHistory({
                     </div>
 
                     {/* Commit message */}
-                    {version.commit_message && (
+                    {version.commitMessage && (
                       <p className="mt-0.5 text-sm text-gray-700 dark:text-gray-300 truncate">
-                        {version.commit_message}
+                        {version.commitMessage}
                       </p>
                     )}
 
                     {/* Meta info */}
                     <div className="mt-1 flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
-                      <span>{version.created_by}</span>
+                      <span>{version.createdBy}</span>
                       <span>-</span>
-                      <span>{formatDate(version.created_at)}</span>
+                      <span>{formatDate(version.createdAt)}</span>
                     </div>
 
                     {/* Telemetry info */}
-                    {(version.prompt_version || version.prompt_model) && (
+                    {(version.promptVersion || version.promptModel) && (
                       <div className="mt-1 flex items-center gap-2 text-xs text-gray-400 dark:text-gray-500">
-                        {version.prompt_version && (
+                        {version.promptVersion && (
                           <span className="px-1.5 py-0.5 bg-gray-100 dark:bg-gray-800 rounded">
-                            {version.prompt_version}
+                            {version.promptVersion}
                           </span>
                         )}
-                        {version.prompt_model && (
+                        {version.promptModel && (
                           <span className="px-1.5 py-0.5 bg-gray-100 dark:bg-gray-800 rounded">
-                            {version.prompt_model}
+                            {version.promptModel}
                           </span>
                         )}
                       </div>

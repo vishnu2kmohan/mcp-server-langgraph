@@ -23,22 +23,22 @@ import type { AlertGroup, Alert } from "../../store/slices/alertSlice";
 // =============================================================================
 
 const createMockAlert = (overrides: Partial<Alert> = {}): Alert => ({
-  alert_id: `alert-${Math.random().toString(36).slice(2, 9)}`,
+  alertId: `alert-${Math.random().toString(36).slice(2, 9)}`,
   name: "TestAlert",
   severity: "critical",
   state: "firing",
   message: "Test alert message",
   labels: { service: "test-service" },
   annotations: {},
-  started_at: new Date().toISOString(),
-  ended_at: null,
+  startedAt: new Date().toISOString(),
+  endedAt: null,
   fingerprint: `fp-${Math.random().toString(36).slice(2, 9)}`,
   ...overrides,
 });
 
 const createMockGroup = (overrides: Partial<AlertGroup> = {}): AlertGroup => {
-  const alert1 = createMockAlert({ alert_id: "a1", name: "CPUHigh" });
-  const alert2 = createMockAlert({ alert_id: "a2", name: "CPUHigh" });
+  const alert1 = createMockAlert({ alertId: "a1", name: "CPUHigh" });
+  const alert2 = createMockAlert({ alertId: "a2", name: "CPUHigh" });
 
   return {
     groupKey: "api-server:CPUHigh",
@@ -186,11 +186,11 @@ describe("AlertGroupsPanel", () => {
 
     it("should show individual alerts when group is expanded", () => {
       const alert1 = createMockAlert({
-        alert_id: "a1",
+        alertId: "a1",
         message: "First alert",
       });
       const alert2 = createMockAlert({
-        alert_id: "a2",
+        alertId: "a2",
         message: "Second alert",
       });
       const groups = [
@@ -217,11 +217,11 @@ describe("AlertGroupsPanel", () => {
 
     it("should hide individual alerts when group is collapsed", () => {
       const alert1 = createMockAlert({
-        alert_id: "a1",
+        alertId: "a1",
         message: "First alert",
       });
       const alert2 = createMockAlert({
-        alert_id: "a2",
+        alertId: "a2",
         message: "Second alert",
       });
       const groups = [
@@ -275,7 +275,7 @@ describe("AlertGroupsPanel", () => {
     it("should call onSelectAlert when clicking an alert in expanded group", async () => {
       const user = userEvent.setup();
       const onSelectAlert = vi.fn();
-      const alert1 = createMockAlert({ alert_id: "a1" });
+      const alert1 = createMockAlert({ alertId: "a1" });
       const groups = [
         createMockGroup({
           groupKey: "api:CPUHigh",
@@ -300,8 +300,8 @@ describe("AlertGroupsPanel", () => {
     });
 
     it("should highlight selected alert", () => {
-      const alert1 = createMockAlert({ alert_id: "a1" });
-      const alert2 = createMockAlert({ alert_id: "a2" });
+      const alert1 = createMockAlert({ alertId: "a1" });
+      const alert2 = createMockAlert({ alertId: "a2" });
       const groups = [
         createMockGroup({
           groupKey: "api:CPUHigh",

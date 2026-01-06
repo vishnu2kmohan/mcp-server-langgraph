@@ -15,6 +15,7 @@ import { MemoryRouter } from "react-router";
 import React from "react";
 import { ConnectedConversationPanel } from "./ConnectedConversationPanel";
 import sessionReducer from "../store/slices/sessionSlice";
+import uiReducer from "../store/slices/uiSlice";
 import type { ChatLoaderData } from "../router/loaders";
 import type { Suggestion } from "../hooks/useAIRealTimeSuggestions";
 import { TelemetryProvider } from "../contexts/TelemetryContext";
@@ -110,6 +111,7 @@ const createTestStore = () => {
   return configureStore({
     reducer: {
       session: sessionReducer,
+      ui: uiReducer,
     },
     middleware: (getDefaultMiddleware) =>
       getDefaultMiddleware({ serializableCheck: false }),

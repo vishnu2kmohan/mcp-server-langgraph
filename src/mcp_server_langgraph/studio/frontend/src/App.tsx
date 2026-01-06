@@ -358,19 +358,20 @@ export function App() {
 
     if (userData) {
       // Dispatch hydrateFromServer to update persona state with all Sprint 4 fields
-      // This includes visible_modules, feature_flags, sub_persona, api_version
+      // This includes visibleModules, featureFlags, subPersona, apiVersion
       // Use persona from API (computed by backend) for consistent RBAC
+      // NOTE: API response is transformed by transformSnakeToCamel, so use camelCase
       dispatch(
         hydrateFromServer({
           username: userData.username || "Unknown",
           email: userData.email,
           roles: userData.roles || [],
           persona: userData.persona,
-          // Sprint 4 extended fields from server
-          subPersona: userData.sub_persona as SubPersona | null | undefined,
-          visibleModules: userData.visible_modules,
-          featureFlags: userData.feature_flags,
-          apiVersion: userData.api_version,
+          // Sprint 4 extended fields from server (camelCase after transform)
+          subPersona: userData.subPersona as SubPersona | null | undefined,
+          visibleModules: userData.visibleModules,
+          featureFlags: userData.featureFlags,
+          apiVersion: userData.apiVersion,
         }),
       );
     } else if (userError) {

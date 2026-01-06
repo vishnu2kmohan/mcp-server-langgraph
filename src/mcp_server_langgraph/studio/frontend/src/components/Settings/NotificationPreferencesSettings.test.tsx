@@ -58,11 +58,11 @@ const renderWithProvider = (component: React.ReactNode) => {
 
 describe("NotificationPreferencesSettings", () => {
   const mockPreferences = {
-    user_id: "user:alice",
-    info_enabled: true,
-    success_enabled: true,
-    warning_enabled: true,
-    error_enabled: true,
+    userId: "user:alice",
+    infoEnabled: true,
+    successEnabled: true,
+    warningEnabled: true,
+    errorEnabled: true,
   };
 
   const mockUpdateMutation = vi
@@ -127,8 +127,8 @@ describe("NotificationPreferencesSettings", () => {
     it("shows correct toggle states from preferences", () => {
       const customPreferences = {
         ...mockPreferences,
-        info_enabled: false,
-        success_enabled: true,
+        infoEnabled: false,
+        successEnabled: true,
       };
 
       mockUseGetNotificationPreferencesQuery.mockReturnValue({
@@ -170,7 +170,7 @@ describe("NotificationPreferencesSettings", () => {
 
       await waitFor(() => {
         expect(mockUpdateMutation).toHaveBeenCalledWith({
-          info_enabled: false,
+          infoEnabled: false,
         });
       });
     });
@@ -179,7 +179,7 @@ describe("NotificationPreferencesSettings", () => {
   describe("resetting preferences", () => {
     it("calls reset mutation when clicking reset button", async () => {
       mockUseGetNotificationPreferencesQuery.mockReturnValue({
-        data: { ...mockPreferences, info_enabled: false },
+        data: { ...mockPreferences, infoEnabled: false },
         isLoading: false,
         isError: false,
         refetch: mockRefetch,

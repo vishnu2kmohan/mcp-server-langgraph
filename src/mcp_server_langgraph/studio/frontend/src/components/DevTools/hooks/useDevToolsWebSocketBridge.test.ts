@@ -84,13 +84,13 @@ describe("useDevToolsWebSocketBridge", () => {
         severity: "critical",
         service: "api-gateway",
         message: "Error rate exceeded threshold",
-        started_at: "2024-01-01T12:00:00Z",
+        startedAt: "2024-01-01T12:00:00Z",
       };
 
       const event = mapAlertToEvent(alert);
 
       expect(event.type).toBe("alert");
-      expect(event.timestamp).toBe(new Date(alert.started_at).getTime());
+      expect(event.timestamp).toBe(new Date(alert.startedAt).getTime());
       expect(event.data).toEqual(alert);
     });
 
@@ -102,7 +102,7 @@ describe("useDevToolsWebSocketBridge", () => {
         severity: "critical",
         service: "api-gateway",
         message: "Error rate exceeded threshold",
-        started_at: "2024-01-01T12:00:00Z",
+        startedAt: "2024-01-01T12:00:00Z",
       };
 
       const event = mapAlertToEvent(alert);
@@ -341,7 +341,7 @@ describe("useDevToolsWebSocketBridge", () => {
           severity: "critical",
           service: "api-gateway",
           message: "Error rate exceeded threshold",
-          started_at: "2024-01-01T12:00:00Z",
+          startedAt: "2024-01-01T12:00:00Z",
         });
       });
 

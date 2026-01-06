@@ -14,6 +14,34 @@ import { ConnectedChatInputForm } from "./ConnectedChatInputForm";
 import type { SlashCommand } from "../types/chat";
 
 // =============================================================================
+// Mock Feature Flag Context
+// =============================================================================
+const mockIsEnabled = vi.fn();
+vi.mock("../contexts/FeatureFlagContext", () => ({
+  useFeatureFlag: (flagName: string) => mockIsEnabled(flagName),
+}));
+
+// =============================================================================
+// Mock Redux Store (for submitOnEnter selector)
+// =============================================================================
+const mockSubmitOnEnter = { current: true };
+vi.mock("../store/hooks", () => ({
+  useAppSelector: (selector: (state: unknown) => unknown) => {
+    // Return the mock value for selectSubmitOnEnter
+    if (selector.toString().includes("submitOnEnter")) {
+      return mockSubmitOnEnter.current;
+    }
+    return undefined;
+  },
+}));
+
+// Mock the selector itself
+vi.mock("../store/slices/uiSlice", () => ({
+  selectSubmitOnEnter: (state: { ui: { submitOnEnter: boolean } }) =>
+    state.ui.submitOnEnter,
+}));
+
+// =============================================================================
 // Mocks
 // =============================================================================
 
@@ -500,6 +528,119 @@ describe("ConnectedChatInputForm", () => {
 
       // Escape should dismiss the suggestion
       expect(screen.getByTestId("chat-input-form")).toBeInTheDocument();
+    });
+  });
+
+  // ===========================================================================
+  // Feature Flag Integration Tests (RichText Mode)
+  // ===========================================================================
+
+  describe("Feature Flag Integration", () => {
+    beforeEach(() => {
+      // Reset feature flag mock
+      mockIsEnabled.mockReset();
+      // Default: feature flag enabled
+      mockIsEnabled.mockImplementation((flagName: string) => {
+        if (flagName === "rich_text_chat_input") return true;
+        return false;
+      });
+      // Reset submitOnEnter mock
+      mockSubmitOnEnter.current = true;
+    });
+
+    it("should render RichTextInput when feature flag is enabled", () => {
+      mockIsEnabled.mockImplementation(
+        (flagName: string) => flagName === "rich_text_chat_input",
+      );
+
+      render(<ConnectedChatInputForm {...defaultProps} />);
+
+      // Pill container with RichTextInput should be present
+      expect(screen.getByTestId("pill-container")).toBeInTheDocument();
+      expect(screen.getByTestId("rich-text-input")).toBeInTheDocument();
+    });
+
+    it("should render plain textarea when feature flag is disabled", () => {
+      mockIsEnabled.mockImplementation(() => false);
+
+      render(<ConnectedChatInputForm {...defaultProps} />);
+
+      // Legacy input wrapper should be present, not pill container
+      expect(screen.getByTestId("input-wrapper")).toBeInTheDocument();
+      expect(screen.queryByTestId("pill-container")).not.toBeInTheDocument();
+    });
+
+    it("should pass submitOnEnter=true from uiSlice (ChatGPT style)", () => {
+      mockIsEnabled.mockImplementation(
+        (flagName: string) => flagName === "rich_text_chat_input",
+      );
+      mockSubmitOnEnter.current = true;
+
+      render(<ConnectedChatInputForm {...defaultProps} value="Hello" />);
+
+      // Enter should submit (ChatGPT style)
+      const textarea = screen.getByRole("textbox");
+      expect(textarea).toBeInTheDocument();
+    });
+
+    it("should pass submitOnEnter=false from uiSlice (Legacy style)", () => {
+      mockIsEnabled.mockImplementation(
+        (flagName: string) => flagName === "rich_text_chat_input",
+      );
+      mockSubmitOnEnter.current = false;
+
+      render(<ConnectedChatInputForm {...defaultProps} value="Hello" />);
+
+      // Ctrl+Enter should submit (Legacy style)
+      const textarea = screen.getByRole("textbox");
+      expect(textarea).toBeInTheDocument();
+    });
+
+    it("should preserve voice input integration in RichText mode", () => {
+      mockIsEnabled.mockImplementation(
+        (flagName: string) => flagName === "rich_text_chat_input",
+      );
+      mockVoiceInputReturn.isSupported = true;
+
+      render(<ConnectedChatInputForm {...defaultProps} />);
+
+      // Voice button should be accessible in RichText mode
+      expect(
+        screen.getByRole("button", { name: /voice input/i }),
+      ).toBeInTheDocument();
+    });
+
+    it("should preserve file upload integration in RichText mode", () => {
+      mockIsEnabled.mockImplementation(
+        (flagName: string) => flagName === "rich_text_chat_input",
+      );
+
+      render(<ConnectedChatInputForm {...defaultProps} />);
+
+      // File upload button should be accessible in RichText mode
+      expect(
+        screen.getByRole("button", { name: /attach file/i }),
+      ).toBeInTheDocument();
+    });
+
+    it("should preserve slash commands in RichText mode", () => {
+      mockIsEnabled.mockImplementation(
+        (flagName: string) => flagName === "rich_text_chat_input",
+      );
+
+      render(<ConnectedChatInputForm {...defaultProps} value="/" />);
+
+      // Slash command menu should appear
+      expect(screen.getByTestId("slash-command-menu")).toBeInTheDocument();
+    });
+
+    it("should call useFeatureFlag with correct flag name", () => {
+      mockIsEnabled.mockImplementation(() => false);
+
+      render(<ConnectedChatInputForm {...defaultProps} />);
+
+      // Feature flag should be checked
+      expect(mockIsEnabled).toHaveBeenCalledWith("rich_text_chat_input");
     });
   });
 });

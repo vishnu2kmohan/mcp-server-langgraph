@@ -67,4 +67,24 @@
   .scrollbar-thin::-webkit-scrollbar-thumb {
     @apply rounded-full bg-gray-400 dark:bg-gray-600;
   }
+
+  /* Chat UI shimmer animation for streaming indicators (Sprint 1.2) */
+  .animate-shimmer {
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(37, 99, 235, 0.1),
+      transparent
+    );
+    background-size: 200% 100%;
+    animation: shimmer 2s infinite;
+  }
+
+  /* Accessibility: Respect reduced motion preference (WCAG 2.1 AA) */
+  @media (prefers-reduced-motion: reduce) {
+    .animate-shimmer,
+    .animate-message-in {
+      animation: none;
+    }
+  }
 }

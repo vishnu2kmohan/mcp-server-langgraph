@@ -84,6 +84,16 @@ export default {
           light: '#f9fafb',
           dark: '#1e293b',
         },
+        // Chat UI semantic colors (Sprint 1.3 - scoped to chat, not global)
+        // Richer blue (#2563eb) as requested, without modifying global primary/brand
+        chat: {
+          accent: '#2563eb', // Blue-600 - richer blue for chat interactions
+          'accent-hover': '#1d4ed8', // Blue-700 - hover state
+          'user-bubble': '#2563eb', // User message background
+          'user-bubble-dark': '#1e40af', // User message dark mode
+          'ai-bubble': '#f9fafb', // Assistant message background (gray-50)
+          'ai-bubble-dark': '#1f2937', // Assistant message dark mode (gray-800)
+        },
       },
       fontFamily: {
         sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
@@ -97,6 +107,9 @@ export default {
         'scale-in': 'scaleIn 0.15s ease-out',
         'pulse-subtle': 'pulseSubtle 2s ease-in-out infinite',
         'spin-slow': 'spin 3s linear infinite',
+        // Chat UI animations (Sprint 1.1)
+        'shimmer': 'shimmer 2s infinite', // Streaming indicator shimmer
+        'message-in': 'slideInFromBottom 0.2s ease-out', // Message entry animation
       },
       keyframes: {
         fadeIn: {
@@ -122,6 +135,15 @@ export default {
         pulseSubtle: {
           '0%, 100%': { opacity: '1' },
           '50%': { opacity: '0.8' },
+        },
+        // Chat UI keyframes (Sprint 1.1)
+        shimmer: {
+          '0%': { backgroundPosition: '-200% 0' },
+          '100%': { backgroundPosition: '200% 0' },
+        },
+        slideInFromBottom: {
+          '0%': { transform: 'translateY(8px)', opacity: '0' },
+          '100%': { transform: 'translateY(0)', opacity: '1' },
         },
       },
       // Consistent border radius values

@@ -184,8 +184,12 @@ describe("ConsoleTab Performance", () => {
       fireEvent.click(expandButtons[0]);
 
       // Expanded data should be visible
+      // Note: Entries are sorted by timestamp ascending, so entry-49 appears first
+      // (entry-0 has highest timestamp, entry-49 has lowest)
       await waitFor(() => {
-        expect(screen.getByTestId("expanded-data-entry-0")).toBeInTheDocument();
+        expect(
+          screen.getByTestId("expanded-data-entry-49"),
+        ).toBeInTheDocument();
       });
     });
 

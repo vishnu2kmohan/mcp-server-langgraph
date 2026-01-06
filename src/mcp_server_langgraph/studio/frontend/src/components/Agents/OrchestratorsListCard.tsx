@@ -50,7 +50,7 @@ export function OrchestratorsListCard({
       <CardContent>
         <div className="space-y-3">
           {orchestrators.map((orchestrator) => {
-            const isEnabled = featureFlags[orchestrator.feature_flag] ?? false;
+            const isEnabled = featureFlags[orchestrator.featureFlag] ?? false;
 
             return (
               <div
@@ -66,7 +66,7 @@ export function OrchestratorsListCard({
                       <X size={16} className="text-gray-400" />
                     )}
                     <span className="font-medium text-gray-900 dark:text-gray-100">
-                      {orchestrator.display_name}
+                      {orchestrator.displayName}
                     </span>
                   </div>
                   <span
@@ -86,9 +86,9 @@ export function OrchestratorsListCard({
                 </p>
 
                 {/* Task Categories */}
-                {orchestrator.task_categories.length > 0 && (
+                {orchestrator.taskCategories.length > 0 && (
                   <div className="flex flex-wrap gap-1">
-                    {orchestrator.task_categories.map((category) => (
+                    {orchestrator.taskCategories.map((category) => (
                       <span
                         key={category}
                         className="px-2 py-0.5 text-xs bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 rounded"

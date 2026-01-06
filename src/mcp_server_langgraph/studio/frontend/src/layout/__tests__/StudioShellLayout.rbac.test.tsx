@@ -75,8 +75,13 @@ vi.mock(
   () => mockImplementations.useConversationIntelligence,
 );
 vi.mock("../../hooks/useHITLDialogs", () => mockImplementations.useHITLDialogs);
+vi.mock(
+  "../../hooks/useAIOnboarding",
+  () => mockImplementations.useAIOnboarding,
+);
 vi.mock("react-resizable-panels", () => mockResizablePanels);
 vi.mock("react-router", () => mockReactRouter);
+vi.mock("../ResponsiveLayout", () => mockImplementations.ResponsiveLayout);
 
 // Import TelemetryProvider (mocked version)
 import { TelemetryProvider } from "../../contexts/TelemetryContext";

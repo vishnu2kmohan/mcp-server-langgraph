@@ -6,3 +6,6 @@
 
 export { SessionList } from "./SessionList";
 export type { SessionListProps } from "./SessionList";
+
+export { SimilarSessionsPanel } from "./SimilarSessionsPanel";
+export type { SimilarSessionsPanelProps } from "./SimilarSessionsPanel";

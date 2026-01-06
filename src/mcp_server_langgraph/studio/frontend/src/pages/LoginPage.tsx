@@ -175,7 +175,7 @@ export function LoginPage() {
               </div>
 
               {/* SSO Identity Providers Section */}
-              {idpData && idpData.identity_providers.length > 0 && (
+              {idpData && (idpData.identity_providers?.length ?? 0) > 0 && (
                 <>
                   {/* Divider */}
                   <div className="relative mb-6">
@@ -191,7 +191,7 @@ export function LoginPage() {
 
                   {/* IdP Buttons */}
                   <div className="space-y-3">
-                    {idpData.identity_providers.map((provider) => (
+                    {idpData.identity_providers?.map((provider) => (
                       <a
                         key={provider.alias}
                         href={provider.login_url}

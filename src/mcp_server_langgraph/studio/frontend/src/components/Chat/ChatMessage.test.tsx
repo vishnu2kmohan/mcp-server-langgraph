@@ -40,7 +40,7 @@ describe("ChatMessage", () => {
     });
 
     it("should apply user message styling", () => {
-      const { container } = render(
+      render(
         <ChatMessage
           role="user"
           content="Test message"
@@ -48,8 +48,8 @@ describe("ChatMessage", () => {
         />,
       );
 
-      const messageDiv = container.querySelector('[data-role="user"]');
-      expect(messageDiv).toHaveClass("bg-blue-100");
+      const messageBubble = screen.getByTestId("message-bubble");
+      expect(messageBubble).toHaveClass("bg-chat-user-bubble");
     });
   });
 
@@ -81,7 +81,7 @@ describe("ChatMessage", () => {
     });
 
     it("should apply assistant message styling", () => {
-      const { container } = render(
+      render(
         <ChatMessage
           role="assistant"
           content="Test message"
@@ -89,8 +89,75 @@ describe("ChatMessage", () => {
         />,
       );
 
-      const messageDiv = container.querySelector('[data-role="assistant"]');
-      expect(messageDiv).toHaveClass("bg-gray-100");
+      const messageBubble = screen.getByTestId("message-bubble");
+      expect(messageBubble).toHaveClass("bg-chat-ai-bubble");
+    });
+  });
+
+  describe("Avatar (Sprint 3.1)", () => {
+    it("should render avatar by default (showAvatar=true)", () => {
+      render(
+        <ChatMessage
+          role="user"
+          content="Test message"
+          timestamp={new Date()}
+        />,
+      );
+
+      expect(screen.getByTestId("user-avatar")).toBeInTheDocument();
+    });
+
+    it("should not render avatar when showAvatar is false", () => {
+      render(
+        <ChatMessage
+          role="user"
+          content="Test message"
+          timestamp={new Date()}
+          showAvatar={false}
+        />,
+      );
+
+      expect(screen.queryByTestId("user-avatar")).not.toBeInTheDocument();
+    });
+
+    it("should render user avatar when showAvatar is true", () => {
+      render(
+        <ChatMessage
+          role="user"
+          content="Test message"
+          timestamp={new Date()}
+          showAvatar={true}
+        />,
+      );
+
+      expect(screen.getByTestId("user-avatar")).toBeInTheDocument();
+    });
+
+    it("should render assistant avatar when showAvatar is true", () => {
+      render(
+        <ChatMessage
+          role="assistant"
+          content="Test response"
+          timestamp={new Date()}
+          showAvatar={true}
+        />,
+      );
+
+      expect(screen.getByTestId("assistant-avatar")).toBeInTheDocument();
+    });
+
+    it("should display user initials in avatar", () => {
+      render(
+        <ChatMessage
+          role="user"
+          content="Test message"
+          timestamp={new Date()}
+          showAvatar={true}
+          userInitials="JD"
+        />,
+      );
+
+      expect(screen.getByText("JD")).toBeInTheDocument();
     });
   });
 

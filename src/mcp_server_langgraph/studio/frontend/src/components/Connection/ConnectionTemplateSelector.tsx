@@ -244,11 +244,13 @@ export function ConnectionTemplateSelector({
                 <h3 className="template-name">{template.name}</h3>
                 <p className="template-description">{template.description}</p>
                 <div className="template-meta">
+                  {/* eslint-disable no-restricted-syntax -- TODO: ADR-0091 Phase 6: Transform ConnectionTemplate to camelCase */}
                   <span
                     className={`auth-badge ${getAuthTypeBadgeClass(template.auth_type)}`}
                   >
                     {template.auth_type}
                   </span>
+                  {/* eslint-enable no-restricted-syntax */}
                   <span className="category-badge">{template.category}</span>
                 </div>
               </div>

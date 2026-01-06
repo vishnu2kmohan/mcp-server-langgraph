@@ -119,7 +119,7 @@ export interface UseAIOnboardingResult {
 /**
  * Map experience level from signup context to RTK Query format
  */
-function inferExperienceLevel(
+function _inferExperienceLevel(
   initialActions: string[],
 ): "beginner" | "intermediate" | "expert" {
   // Advanced users typically have more targeted initial actions
@@ -169,6 +169,11 @@ export function useAIOnboarding(
 
   /**
    * Fetch personalization from AI backend via RTK Query
+   *
+   * Schema: OnboardingPersonalizeRequest (ai_ux.py:307)
+   * - user_id: str (required)
+   * - initial_actions: list[str] (optional)
+   * - signup_context: SignupContext | None (optional)
    */
   const fetchPersonalization = useCallback(async () => {
     setIsLoading(true);
@@ -176,45 +181,31 @@ export function useAIOnboarding(
 
     try {
       const data = await personalizeOnboarding({
-        detected_persona: userId,
-        experience_level: inferExperienceLevel(initialActions),
-        goals: initialActions,
-        previous_tool_experience: signupContext?.referrer
-          ? [signupContext.referrer]
+        user_id: userId || "anonymous",
+        initial_actions: initialActions,
+        signup_context: signupContext
+          ? {
+              referrer: signupContext.referrer,
+              utm_source: signupContext.utm_source,
+            }
           : undefined,
       }).unwrap();
 
-      // Transform RTK Query response to hook's expected format
-      // RTK Query returns: recommended_steps, skip_steps, estimated_duration_minutes, personalization_applied, reasoning
-      // Hook expects: detected_intent, confidence, recommended_path, skip_steps, persona_prediction
-
-      // Infer detected intent from recommended steps
-      const firstStep = data.recommended_steps?.[0];
-      const inferredIntent = firstStep
-        ? firstStep.includes("template")
-          ? "build_chatbot"
-          : firstStep.includes("tour")
-            ? "general_exploration"
-            : "documentation_seeker"
-        : "general_exploration";
-
-      setDetectedIntent(inferredIntent);
-      // Use personalization_applied as a confidence proxy
-      setConfidence(data.personalization_applied ? 0.85 : 0.65);
-      // Transform string steps to OnboardingStep objects
+      // OnboardingPersonalizeResponse from generated-api.ts (ADR-0091)
+      // Fields: detected_intent, confidence, recommended_path, skip_steps?, persona_prediction?
+      setDetectedIntent(data.detected_intent);
+      setConfidence(data.confidence);
+      // Transform generated OnboardingStep[] to hook's OnboardingStep format
       setRecommendedPath(
-        (data.recommended_steps || []).map((step) => ({
-          step,
-          guided: true,
+        (data.recommended_path || []).map((step) => ({
+          step: step.step,
+          guided: step.guided,
+          focus: step.focus ?? undefined,
+          template: step.template ?? undefined,
         })),
       );
       setSkipSteps(data.skip_steps || []);
-      // Infer persona from experience level or first step
-      setPersonaPrediction(
-        inferExperienceLevel(initialActions) === "expert"
-          ? "alice-builder"
-          : "bob",
-      );
+      setPersonaPrediction(data.persona_prediction ?? null);
     } catch (err) {
       const errorToSet =
         err instanceof Error

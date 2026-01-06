@@ -41,29 +41,29 @@ const createTestStore = (
           ...Array(criticalCount)
             .fill(null)
             .map((_, i) => ({
-              alert_id: `crit-${i}`,
+              alertId: `crit-${i}`,
               name: `Critical${i}`,
               severity: "critical" as const,
               state: "firing" as const,
               message: "Critical alert",
               labels: {},
               annotations: {},
-              started_at: new Date().toISOString(),
-              ended_at: null,
+              startedAt: new Date().toISOString(),
+              endedAt: null,
               fingerprint: `fp-crit-${i}`,
             })),
           ...Array(warningCount)
             .fill(null)
             .map((_, i) => ({
-              alert_id: `warn-${i}`,
+              alertId: `warn-${i}`,
               name: `Warning${i}`,
               severity: "warning" as const,
               state: "firing" as const,
               message: "Warning alert",
               labels: {},
               annotations: {},
-              started_at: new Date().toISOString(),
-              ended_at: null,
+              startedAt: new Date().toISOString(),
+              endedAt: null,
               fingerprint: `fp-warn-${i}`,
             })),
         ],

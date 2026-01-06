@@ -15,7 +15,7 @@
  */
 
 import { redirect, type LoaderFunctionArgs } from "react-router";
-import type { Session, ChatMessage } from "../../types";
+import type { SessionCamelCase, ChatMessage } from "../../types";
 import type { CanvasArtifact, ArtifactVersion } from "../../types/artifacts";
 import { getAuthToken, storage, STORAGE_KEYS } from "../../utils/storage";
 import {
@@ -27,10 +27,13 @@ import { devLogger } from "../../utils/devLogger";
 import { saveCurrentRouteAsIntended } from "../../utils/intendedRoute";
 import {
   transformApiMessageToClient,
+  transformApiConfig,
   isApiMessage,
   type ApiMessage,
+  transformApiArtifactToClient,
   transformApiArtifactsToClient,
 } from "../../utils/apiTransforms";
+import { DEFAULT_SESSION_CONFIG } from "../../types/session";
 
 const logger = devLogger.withPrefix("[canvasLoaders]");
 
@@ -39,13 +42,13 @@ const logger = devLogger.withPrefix("[canvasLoaders]");
 // =============================================================================
 
 export interface SessionsLoaderData {
-  sessions: Session[];
+  sessions: SessionCamelCase[];
   error?: string;
 }
 
 export interface ChatLoaderData {
   sessionId: string | null;
-  session?: Session;
+  session?: SessionCamelCase;
   messages: ChatMessage[];
   artifacts: CanvasArtifact[];
   error?: string;
@@ -192,17 +195,25 @@ export async function sessionsLoader(
     logger.warn("Sessions validation warnings", validation.warnings);
   }
 
-  // Use validated API data directly (Session type uses snake_case)
+  // Transform API data (snake_case) to SessionCamelCase type
   // Config is optional and may be a partial object from the API
   // Backend uses CursorPaginatedResponse format with 'data' field
-  const sessions: Session[] = validation.data.data.map((apiSession) => ({
-    id: apiSession.id,
-    name: apiSession.name || "Untitled",
-    status: (apiSession.status as Session["status"]) || "active",
-    created_at: apiSession.created_at,
-    updated_at: apiSession.updated_at,
-    config: apiSession.config as Session["config"],
-  }));
+  const sessions: SessionCamelCase[] = validation.data.data.map(
+    (apiSession) => ({
+      id: apiSession.id,
+      name: apiSession.name || "Untitled",
+      status: (apiSession.status as SessionCamelCase["status"]) || "active",
+      createdAt: apiSession.created_at,
+      updatedAt: apiSession.updated_at,
+      // ADR-0091 Phase 6: Transform snake_case config to camelCase
+      // Type assertion needed: SessionConfig (from session.ts) uses modelName/modelProvider
+      // while ApiSessionConfigCamelCase uses model. Cast through unknown.
+      config: {
+        ...DEFAULT_SESSION_CONFIG,
+        ...transformApiConfig(apiSession.config),
+      } as unknown as SessionCamelCase["config"],
+    }),
+  );
 
   return { sessions };
 }
@@ -238,22 +249,28 @@ export async function chatLoader({
     ),
   ]);
 
-  // Validate session response - keep API format (snake_case)
-  // useSessionSync will transform to client format (camelCase) via apiTransforms
-  let validatedSession: Session | undefined;
+  // Validate session response - transform to SessionCamelCase
+  let validatedSession: SessionCamelCase | undefined;
   if (sessionResult) {
     const sessionValidation = validateSession(sessionResult);
     if (sessionValidation.success) {
-      // Use validated API data directly (Session type uses snake_case)
+      // Transform API data (snake_case) to SessionCamelCase type
       // Config is optional and may be a partial object from the API
       validatedSession = {
         id: sessionValidation.data.id,
         name: sessionValidation.data.name || "Untitled",
         status:
-          (sessionValidation.data.status as Session["status"]) || "active",
-        created_at: sessionValidation.data.created_at,
-        updated_at: sessionValidation.data.updated_at,
-        config: sessionValidation.data.config as Session["config"],
+          (sessionValidation.data.status as SessionCamelCase["status"]) ||
+          "active",
+        createdAt: sessionValidation.data.created_at,
+        updatedAt: sessionValidation.data.updated_at,
+        // ADR-0091 Phase 6: Transform snake_case config to camelCase
+        // Type assertion needed: SessionConfig (from session.ts) uses modelName/modelProvider
+        // while ApiSessionConfigCamelCase uses model. Cast through unknown.
+        config: {
+          ...DEFAULT_SESSION_CONFIG,
+          ...transformApiConfig(sessionValidation.data.config),
+        } as unknown as SessionCamelCase["config"],
       };
     } else {
       logger.warn("Session validation failed", sessionValidation.errors);
@@ -310,16 +327,21 @@ export async function artifactLoader({
 
   // Parallel fetch artifact and versions
   const [artifactResult, versionsResult] = await Promise.all([
-    fetchJson<CanvasArtifact>(`${API_BASE}/artifacts/${artifactId}`),
+    fetchJson<Record<string, unknown>>(`${API_BASE}/artifacts/${artifactId}`),
     fetchJson<ArtifactVersion[]>(
       `${API_BASE}/artifacts/${artifactId}/versions`,
     ),
   ]);
 
+  // ADR-0091 Phase 6: Transform snake_case API response to camelCase
+  const artifact = artifactResult
+    ? transformApiArtifactToClient(artifactResult)
+    : null;
+
   return {
-    artifact: artifactResult,
+    artifact,
     versions: versionsResult ?? [],
-    error: !artifactResult ? "Artifact not found" : undefined,
+    error: !artifact ? "Artifact not found" : undefined,
   };
 }
 

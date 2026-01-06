@@ -14,9 +14,14 @@ import {
   selectPersona,
   selectPersonaLoading,
   selectVisibleModules,
+  selectSubPersona,
 } from "../../store/slices/personaSlice";
 import type { Persona } from "../../types/auth";
-import type { ModuleId } from "../../persona/PersonaVariants";
+import {
+  PERSONA_DEFAULT_VIEW,
+  getDefaultView,
+  type ModuleId,
+} from "../../persona/PersonaVariants";
 
 export interface PersonaGuardProps {
   /** Required personas to access this route */
@@ -40,16 +45,12 @@ export interface ModuleGuardProps {
   children?: React.ReactNode;
 }
 
-/** Default routes for each persona */
-const PERSONA_DEFAULT_ROUTES: Record<Persona, string> = {
-  admin: "/studio/admin/dashboard",
-  developer: "/studio/workflows",
-  user: "/studio/chat",
-};
-
 /**
  * PersonaGuard wraps routes that require specific personas.
  * Redirects to persona-appropriate default route if not authorized.
+ *
+ * Sprint 5: Uses PersonaVariants as source of truth for default routes,
+ * supporting sub-persona-specific default views (e.g., alice-analyst → /studio/observability).
  */
 export function PersonaGuard({
   allowedPersonas,
@@ -57,6 +58,7 @@ export function PersonaGuard({
   children,
 }: PersonaGuardProps) {
   const persona = useAppSelector(selectPersona);
+  const subPersona = useAppSelector(selectSubPersona);
   const isLoading = useAppSelector(selectPersonaLoading);
 
   // While loading persona info, show loading spinner
@@ -80,7 +82,13 @@ export function PersonaGuard({
   }
 
   // Redirect to fallback or persona-appropriate default route
-  const redirectPath = fallbackPath || PERSONA_DEFAULT_ROUTES[persona];
+  // Use sub-persona for more specific routing (e.g., alice-analyst → /studio/observability)
+  // Falls back to base persona if sub-persona not found in PersonaVariants
+  const redirectPath =
+    fallbackPath ||
+    (subPersona ? getDefaultView(subPersona) : null) ||
+    PERSONA_DEFAULT_VIEW[persona] ||
+    "/studio/chat";
   return <Navigate to={redirectPath} replace />;
 }
 
@@ -90,13 +98,16 @@ export function PersonaGuard({
  *
  * This is preferred over PersonaGuard for routes tied to specific features,
  * as it respects the server-side RBAC configuration.
+ *
+ * Sprint 5: Uses PersonaVariants as source of truth for default routes.
  */
 export function ModuleGuard({
   requiredModule,
-  fallbackPath = "/studio/chat",
+  fallbackPath,
   children,
 }: ModuleGuardProps) {
   const persona = useAppSelector(selectPersona);
+  const subPersona = useAppSelector(selectSubPersona);
   const isLoading = useAppSelector(selectPersonaLoading);
   const visibleModules = useAppSelector(selectVisibleModules);
 
@@ -120,7 +131,12 @@ export function ModuleGuard({
   }
 
   // Redirect to fallback or persona-appropriate default route
-  const redirectPath = fallbackPath || PERSONA_DEFAULT_ROUTES[persona];
+  // Use sub-persona for more specific routing, with fallback chain
+  const redirectPath =
+    fallbackPath ||
+    (subPersona ? getDefaultView(subPersona) : null) ||
+    PERSONA_DEFAULT_VIEW[persona] ||
+    "/studio/chat";
   return <Navigate to={redirectPath} replace />;
 }
 

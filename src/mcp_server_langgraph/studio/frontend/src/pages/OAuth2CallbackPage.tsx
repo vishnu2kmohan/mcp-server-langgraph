@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import { authenticatedFetch } from "../utils/authenticatedFetch";
 import { saveCurrentRouteAsIntended } from "../utils/intendedRoute";
+import { transformSnakeToCamel } from "../api/transforms";
 
 type CallbackState = "processing" | "success" | "error";
 
@@ -118,8 +119,10 @@ export function OAuth2CallbackPage() {
         return;
       }
 
-      const data = await response.json();
-      setConnectionId(data.connection_id);
+      const rawData = await response.json();
+      // Transform snake_case to camelCase per ADR-0091 Phase 6
+      const data = transformSnakeToCamel<{ connectionId: string }>(rawData);
+      setConnectionId(data.connectionId);
       setState("success");
 
       // Redirect to connections page after a brief delay

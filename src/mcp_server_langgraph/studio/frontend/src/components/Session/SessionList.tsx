@@ -448,7 +448,7 @@ export function SessionList({
           {group.topic}
         </span>
         <span className="text-xs text-gray-400 dark:text-gray-500">
-          ({group.session_ids.length})
+          ({group.sessionIds.length})
         </span>
       </div>
     </li>
@@ -498,7 +498,7 @@ export function SessionList({
       // Render each group with its sessions
       aiGroups.forEach((group) => {
         elements.push(renderGroupHeader(group));
-        group.session_ids.forEach((sessionId) => {
+        group.sessionIds.forEach((sessionId) => {
           const session = sessionMap.get(sessionId);
           if (session) {
             // Apply search filter

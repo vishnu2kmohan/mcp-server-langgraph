@@ -45,16 +45,16 @@ export interface TraceAnomalyOptions {
 
 export interface TraceAnomaly {
   type: string;
-  step_name: string;
+  stepName: string;
   severity: "error" | "warning" | "info";
   message: string;
-  suggested_fix?: string;
+  suggestedFix?: string;
 }
 
 export interface TraceBottleneck {
-  step_name: string;
-  duration_ms: number;
-  percentage_of_total: number;
+  stepName: string;
+  durationMs: number;
+  percentageOfTotal: number;
 }
 
 export interface TraceAnomalyResult {

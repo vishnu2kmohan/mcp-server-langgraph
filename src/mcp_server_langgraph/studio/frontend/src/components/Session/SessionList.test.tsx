@@ -509,7 +509,7 @@ describe("SessionList", () => {
         groups: [
           {
             topic: "Development",
-            session_ids: ["session-1", "session-2"],
+            sessionIds: ["session-1", "session-2"],
             confidence: 0.9,
           },
         ],
@@ -591,7 +591,7 @@ describe("SessionList", () => {
         groups: [
           {
             topic: "Development",
-            session_ids: ["session-1"],
+            sessionIds: ["session-1"],
             confidence: 0.9,
           },
         ],

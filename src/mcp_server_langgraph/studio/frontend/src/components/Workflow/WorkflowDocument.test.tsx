@@ -11,7 +11,6 @@ import { MemoryRouter } from "react-router";
 import { configureStore } from "@reduxjs/toolkit";
 import { WorkflowDocument } from "./WorkflowDocument";
 import workflowReducer from "../../store/slices/workflowSlice";
-import uiReducer from "../../store/slices/uiSlice";
 
 // Mock React Flow
 vi.mock("reactflow", () => ({
@@ -45,11 +44,11 @@ vi.mock("./ExecutionTracePanel", () => ({
 }));
 
 // Create test store with preloaded state
+// Note: WorkflowDocument only uses workflowSlice, not uiSlice
 const createTestStore = (workflowName?: string) => {
   return configureStore({
     reducer: {
       workflow: workflowReducer,
-      ui: uiReducer,
     },
     preloadedState: workflowName
       ? {
@@ -78,11 +77,6 @@ const createTestStore = (workflowName?: string) => {
             executionLogs: [],
             isReadOnly: false,
             canExecute: true,
-          },
-          ui: {
-            sidebarCollapsed: false,
-            rightSidebarCollapsed: false,
-            bottomPanelCollapsed: false,
           },
         }
       : undefined,

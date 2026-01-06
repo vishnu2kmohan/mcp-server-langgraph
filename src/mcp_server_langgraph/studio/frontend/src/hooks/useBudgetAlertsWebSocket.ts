@@ -18,7 +18,11 @@
 import { useState, useCallback, useRef, useMemo, useEffect } from "react";
 import { useRealtimeSync, type ConnectionStatus } from "./useRealtimeSync";
 import { useAppDispatch, useAppSelector } from "../store/hooks";
-import { logout, selectIsAuthenticated } from "../store/slices/authSlice";
+import {
+  logout,
+  selectIsAuthenticated,
+  selectWebSocketPermissions,
+} from "../store/slices/authSlice";
 import { addNotification } from "../store/slices/notificationSlice";
 import { buildWebSocketUrl, WS_ENDPOINTS } from "../utils/websocket";
 import { reportWebSocketMetrics } from "../utils/websocketTelemetry";
@@ -188,6 +192,10 @@ export function useBudgetAlertsWebSocket(
   // Redux dispatch for token expiration handling
   const dispatch = useAppDispatch();
   const isAuthenticated = useAppSelector(selectIsAuthenticated);
+  const wsPermissions = useAppSelector(selectWebSocketPermissions);
+
+  // Check if user has permission for budget alerts WebSocket
+  const hasBudgetAlertsPermission = wsPermissions?.budget_alerts ?? false;
 
   // State
   const [alerts, setAlerts] = useState<BudgetAlert[]>([]);
@@ -203,14 +211,18 @@ export function useBudgetAlertsWebSocket(
     callbacksRef.current = { onAlert, onSubscribed };
   }, [onAlert, onSubscribed]);
 
-  // Compute WebSocket URL
+  // Compute WebSocket URL - only generate URL when authenticated AND has permission
   const wsUrl = useMemo(
-    () => url ?? getDefaultWebSocketUrl(isAuthenticated),
-    [url, isAuthenticated],
+    () =>
+      isAuthenticated && hasBudgetAlertsPermission
+        ? (url ?? getDefaultWebSocketUrl(true))
+        : "",
+    [url, isAuthenticated, hasBudgetAlertsPermission],
   );
 
-  // Track effective enabled state
-  const effectiveEnabled = enabled && isAuthenticated;
+  // Track effective enabled state - requires auth and permission
+  const effectiveEnabled =
+    enabled && isAuthenticated && hasBudgetAlertsPermission;
 
   // Handle incoming messages using centralized type guards
   const handleMessage = useCallback((data: unknown) => {

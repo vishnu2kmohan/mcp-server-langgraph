@@ -28,45 +28,45 @@ import type { AIRecommendation } from "../../types/api";
 // =============================================================================
 
 const mockRecommendation: AIRecommendation = {
-  recommendation_id: "rec-001",
-  alert_id: "alert-001",
-  root_cause_analysis:
+  recommendationId: "rec-001",
+  alertId: "alert-001",
+  rootCauseAnalysis:
     "The API server is experiencing a memory leak in the request handler, causing increased CPU usage due to garbage collection pressure.",
-  remediation_steps: [
+  remediationSteps: [
     {
-      step_number: 1,
+      stepNumber: 1,
       action: "scale",
       description: "Scale up replicas to handle current load",
       command: "kubectl scale deployment api-server --replicas=5",
-      requires_approval: true,
-      risk_level: "low",
+      requiresApproval: true,
+      riskLevel: "low",
     },
     {
-      step_number: 2,
+      stepNumber: 2,
       action: "restart",
       description: "Rolling restart to clear memory",
       command: "kubectl rollout restart deployment api-server",
-      requires_approval: true,
-      risk_level: "medium",
+      requiresApproval: true,
+      riskLevel: "medium",
     },
     {
-      step_number: 3,
+      stepNumber: 3,
       action: "investigate",
       description: "Profile memory usage for root cause",
       command: null,
-      requires_approval: false,
-      risk_level: "low",
+      requiresApproval: false,
+      riskLevel: "low",
     },
   ],
-  risk_assessment: {
-    overall_risk: "medium",
-    impact_analysis:
+  riskAssessment: {
+    overallRisk: "medium",
+    impactAnalysis:
       "Brief service interruption during restart, mitigated by scaling first",
-    rollback_plan: "kubectl rollout undo deployment api-server",
+    rollbackPlan: "kubectl rollout undo deployment api-server",
   },
-  runbook_reference: "https://runbooks.example.com/high-cpu",
-  generated_at: "2024-01-15T10:35:00Z",
-  model_used: "claude-3-5-sonnet",
+  runbookReference: "https://runbooks.example.com/high-cpu",
+  generatedAt: "2024-01-15T10:35:00Z",
+  modelUsed: "claude-3-5-sonnet",
 };
 
 const defaultProps: AIRecommendationCardProps = {
@@ -215,9 +215,9 @@ describe("AIRecommendationCard", () => {
     it("should style high risk badge red", () => {
       const highRiskRecommendation = {
         ...mockRecommendation,
-        risk_assessment: {
-          ...mockRecommendation.risk_assessment,
-          overall_risk: "high" as const,
+        riskAssessment: {
+          ...mockRecommendation.riskAssessment,
+          overallRisk: "high" as const,
         },
       };
       render(
@@ -235,9 +235,9 @@ describe("AIRecommendationCard", () => {
     it("should style low risk badge green", () => {
       const lowRiskRecommendation = {
         ...mockRecommendation,
-        risk_assessment: {
-          ...mockRecommendation.risk_assessment,
-          overall_risk: "low" as const,
+        riskAssessment: {
+          ...mockRecommendation.riskAssessment,
+          overallRisk: "low" as const,
         },
       };
       render(
@@ -295,7 +295,7 @@ describe("AIRecommendationCard", () => {
       // Create a recommendation that's more than 1 hour old
       const oldRecommendation = {
         ...mockRecommendation,
-        generated_at: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(), // 2 hours ago
+        generatedAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(), // 2 hours ago
       };
       render(
         <AIRecommendationCard
@@ -310,7 +310,7 @@ describe("AIRecommendationCard", () => {
     it("should not show stale indicator for fresh recommendations", () => {
       const freshRecommendation = {
         ...mockRecommendation,
-        generated_at: new Date(Date.now() - 5 * 60 * 1000).toISOString(), // 5 minutes ago
+        generatedAt: new Date(Date.now() - 5 * 60 * 1000).toISOString(), // 5 minutes ago
       };
       render(
         <AIRecommendationCard
@@ -351,7 +351,7 @@ describe("AIRecommendationCard", () => {
     it("should not render runbook link when not available", () => {
       const noRunbookRecommendation = {
         ...mockRecommendation,
-        runbook_reference: null,
+        runbookReference: null,
       };
       render(
         <AIRecommendationCard

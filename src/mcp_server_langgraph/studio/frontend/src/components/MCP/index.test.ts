@@ -12,32 +12,9 @@ describe("MCP Module Exports", () => {
     vi.clearAllMocks();
   });
 
-  describe("Synchronous Components", () => {
-    it("should export AddConnectionDialog", () => {
-      expect(mcpModule.AddConnectionDialog).toBeDefined();
-      expect(typeof mcpModule.AddConnectionDialog).toBe("function");
-    });
-
-    it("should export ToolInvocationDialog", () => {
-      expect(mcpModule.ToolInvocationDialog).toBeDefined();
-      expect(typeof mcpModule.ToolInvocationDialog).toBe("function");
-    });
-
-    it("should export ResourceViewer", () => {
-      expect(mcpModule.ResourceViewer).toBeDefined();
-      expect(typeof mcpModule.ResourceViewer).toBe("function");
-    });
-
-    it("should export PromptTester", () => {
-      expect(mcpModule.PromptTester).toBeDefined();
-      expect(typeof mcpModule.PromptTester).toBe("function");
-    });
-
-    it("should export ElicitationDialog", () => {
-      expect(mcpModule.ElicitationDialog).toBeDefined();
-      expect(typeof mcpModule.ElicitationDialog).toBe("function");
-    });
-  });
+  // Note: MCP module only exports lazy components for code-splitting
+  // Synchronous component exports were removed in favor of lazy-only pattern
+  // Type exports (e.g., AddConnectionDialogProps) are type-only and don't appear at runtime
 
   describe("Lazy Components", () => {
     it("should export LazyAddConnectionDialog", () => {
@@ -61,49 +38,34 @@ describe("MCP Module Exports", () => {
     });
   });
 
-  describe("Aggregated Capabilities Components (MCP 2025-11-25)", () => {
-    it("should export AggregatedCapabilitiesPanel", () => {
-      expect(mcpModule.AggregatedCapabilitiesPanel).toBeDefined();
-      expect(typeof mcpModule.AggregatedCapabilitiesPanel).toBe("function");
+  describe("Lazy Aggregated Capabilities Components (MCP 2025-11-25)", () => {
+    it("should export LazyAggregatedCapabilitiesPanel", () => {
+      expect(mcpModule.LazyAggregatedCapabilitiesPanel).toBeDefined();
     });
 
-    it("should export MCPServerCard", () => {
-      expect(mcpModule.MCPServerCard).toBeDefined();
-      expect(typeof mcpModule.MCPServerCard).toBe("function");
+    it("should export LazyMCPServerCard", () => {
+      expect(mcpModule.LazyMCPServerCard).toBeDefined();
     });
 
-    it("should export ToolExplorer", () => {
-      expect(mcpModule.ToolExplorer).toBeDefined();
-      expect(typeof mcpModule.ToolExplorer).toBe("function");
+    it("should export LazyToolExplorer", () => {
+      expect(mcpModule.LazyToolExplorer).toBeDefined();
     });
 
-    it("should export ResourceBrowser", () => {
-      expect(mcpModule.ResourceBrowser).toBeDefined();
-      expect(typeof mcpModule.ResourceBrowser).toBe("function");
+    it("should export LazyResourceBrowser", () => {
+      expect(mcpModule.LazyResourceBrowser).toBeDefined();
     });
 
-    it("should export PromptLibrary", () => {
-      expect(mcpModule.PromptLibrary).toBeDefined();
-      expect(typeof mcpModule.PromptLibrary).toBe("function");
+    it("should export LazyPromptLibrary", () => {
+      expect(mcpModule.LazyPromptLibrary).toBeDefined();
     });
   });
 
   describe("Module Completeness", () => {
-    it("should export all expected components", () => {
+    it("should export all expected lazy components", () => {
+      // Note: Only lazy exports appear at runtime
+      // Type-only exports (e.g., AddConnectionDialogProps) don't appear
       const expectedExports = [
-        // Synchronous exports
-        "AddConnectionDialog",
-        "ToolInvocationDialog",
-        "ResourceViewer",
-        "PromptTester",
-        "ElicitationDialog",
-        // Aggregated capabilities (MCP 2025-11-25)
-        "AggregatedCapabilitiesPanel",
-        "MCPServerCard",
-        "ToolExplorer",
-        "ResourceBrowser",
-        "PromptLibrary",
-        // Lazy exports
+        // Lazy exports (code-split, loaded on demand)
         "LazyAddConnectionDialog",
         "LazyToolInvocationDialog",
         "LazyResourceViewer",
@@ -122,9 +84,11 @@ describe("MCP Module Exports", () => {
       }
     });
 
-    it("should have stable public API with 20 exports", () => {
+    it("should have stable public API with 10 lazy exports", () => {
+      // Note: Type-only exports (10) don't appear at runtime
+      // Only the 10 lazy component exports are counted
       const exportCount = Object.keys(mcpModule).length;
-      expect(exportCount).toBe(20);
+      expect(exportCount).toBe(10);
     });
   });
 });

@@ -81,3 +81,84 @@ export type { AgentExecutionTracePanelProps } from "./AgentExecutionTracePanel";
 
 export { AgentTraceToggleButton } from "./AgentTraceToggleButton";
 export type { AgentTraceToggleButtonProps } from "./AgentTraceToggleButton";
+
+// =============================================================================
+// User Interaction & Feedback Components
+// =============================================================================
+
+export { ChatSuggestions } from "./ChatSuggestions";
+export type { ChatSuggestionsProps, ChatSuggestion } from "./ChatSuggestions";
+
+export { ResponseRating } from "./ResponseRating";
+export type { ResponseRatingProps, RatingValue } from "./ResponseRating";
+
+export { RichTextInput } from "./RichTextInput";
+export type { RichTextInputProps, MentionOption } from "./RichTextInput";
+
+export { TokenUsageDisplay } from "./TokenUsageDisplay";
+export type {
+  TokenUsageDisplayProps,
+  ModelProvider,
+} from "./TokenUsageDisplay";
+
+// =============================================================================
+// Core Chat Components
+// =============================================================================
+
+export { ChatInputForm } from "./ChatInputForm";
+export type { ChatInputFormProps } from "./ChatInputForm";
+
+export { ChatMessages } from "./ChatMessages";
+export type {
+  ChatMessagesProps,
+  Message,
+  AgentExecutionTrace,
+} from "./ChatMessages";
+
+export { MarkdownContent } from "./MarkdownContent";
+export type { MarkdownContentProps } from "./MarkdownContent";
+
+export { MessageActions } from "./MessageActions";
+export type { MessageActionsProps } from "./MessageActions";
+
+export { CodeBlock } from "./CodeBlock";
+export type { CodeBlockProps } from "./CodeBlock";
+
+// =============================================================================
+// LLM Thinking & Visualization Components
+// =============================================================================
+
+export { LLMThinkingTrace } from "./LLMThinkingTrace";
+export type { LLMThinkingTraceProps } from "./LLMThinkingTrace";
+
+export { LangGraphNodeVisualization } from "./LangGraphNodeVisualization";
+export type { LangGraphNodeVisualizationProps } from "./LangGraphNodeVisualization";
+
+export { ReasoningEffortSelector } from "./ReasoningEffortSelector";
+export type { ReasoningEffortSelectorProps } from "./ReasoningEffortSelector";
+
+// =============================================================================
+// Command & Template Components
+// =============================================================================
+
+export { SlashCommandMenu } from "./SlashCommandMenu";
+export type { SlashCommandMenuProps, SlashCommand } from "./SlashCommandMenu";
+
+export { StylePresets } from "./StylePresets";
+export type {
+  StylePresetsProps,
+  StylePreset,
+  PresetName,
+} from "./StylePresets";
+
+// =============================================================================
+// Workflow Integration Components
+// =============================================================================
+
+export { SaveAsWorkflowButton } from "./SaveAsWorkflowButton";
+
+// =============================================================================
+// Routing Components
+// =============================================================================
+
+export { ChatSessionRedirect } from "./ChatSessionRedirect";

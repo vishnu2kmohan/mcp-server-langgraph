@@ -12,13 +12,13 @@ import { configureStore } from "@reduxjs/toolkit";
 import { CostDocument } from "./CostDocument";
 import uiReducer from "../../store/slices/uiSlice";
 
-// Mock RTK Query hooks
+// Mock RTK Query hooks - camelCase per ADR-0091 Phase 6
 vi.mock("../../api", () => ({
   useGetCostSummaryQuery: () => ({
     data: {
-      total_cost: 125.5,
-      total_tokens: 50000,
-      request_count: 250,
+      totalCost: 125.5,
+      totalTokens: 50000,
+      requestCount: 250,
     },
     isLoading: false,
     isError: false,

@@ -112,7 +112,7 @@ export function AuditEventPanel({ maxHeight = "400px" }: AuditEventPanelProps) {
       ((currentFilter.categories && currentFilter.categories.length > 0) ||
         (currentFilter.regulations && currentFilter.regulations.length > 0) ||
         (currentFilter.actors && currentFilter.actors.length > 0) ||
-        (currentFilter.event_types && currentFilter.event_types.length > 0))
+        (currentFilter.eventTypes && currentFilter.eventTypes.length > 0))
     );
   }, [currentFilter]);
 
@@ -346,7 +346,7 @@ export function AuditEventPanel({ maxHeight = "400px" }: AuditEventPanelProps) {
         ) : (
           <div className="divide-y divide-gray-100 dark:divide-gray-700">
             {events.map((event) => (
-              <AuditEventItem key={event.event_id} event={event} />
+              <AuditEventItem key={event.eventId} event={event} />
             ))}
           </div>
         )}
@@ -394,7 +394,7 @@ function AuditEventItem({ event }: AuditEventItemProps) {
               {event.category}
             </span>
             <span className="text-xs text-gray-500 dark:text-gray-400">
-              {event.event_type}
+              {event.eventType}
             </span>
             {event.regulation && (
               <span className="px-1.5 py-0.5 text-[10px] font-medium bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300 rounded">

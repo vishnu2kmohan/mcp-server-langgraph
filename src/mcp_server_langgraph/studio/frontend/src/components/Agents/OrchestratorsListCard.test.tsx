@@ -39,28 +39,28 @@ function createTestStoreWithPersona(persona: "admin" | "developer" | "user") {
   });
 }
 
-// Mock orchestrators data (matches backend ORCHESTRATOR_REGISTRY)
+// Mock orchestrators data (camelCase per ADR-0091)
 const mockOrchestrators: OrchestratorInfo[] = [
   {
     name: "Orchestrator",
-    display_name: "Multi-Agent Orchestrator",
+    displayName: "Multi-Agent Orchestrator",
     description: "Lead agent that decomposes complex tasks",
-    feature_flag: "enable_multi_agent_orchestration",
-    task_categories: ["decomposition", "delegation", "synthesis"],
+    featureFlag: "enable_multi_agent_orchestration",
+    taskCategories: ["decomposition", "delegation", "synthesis"],
   },
   {
     name: "StudioOrchestrator",
-    display_name: "Studio AI Orchestrator",
+    displayName: "Studio AI Orchestrator",
     description: "Unified Studio AI orchestration",
-    feature_flag: "enable_studio_ai",
-    task_categories: ["UX", "SESSION", "CONVERSATION", "CANVAS"],
+    featureFlag: "enable_studio_ai",
+    taskCategories: ["UX", "SESSION", "CONVERSATION", "CANVAS"],
   },
   {
     name: "LoopAgent",
-    display_name: "Loop Agent",
+    displayName: "Loop Agent",
     description: "Iterative task execution agent",
-    feature_flag: "enable_loop_agent",
-    task_categories: ["iteration", "refinement"],
+    featureFlag: "enable_loop_agent",
+    taskCategories: ["iteration", "refinement"],
   },
 ];
 

@@ -278,17 +278,17 @@ export function DevToolsPanel({ className }: DevToolsPanelProps) {
   // Transform spans to TracesTab format
   const traceSpans: TraceSpan[] = useMemo(() => {
     return rawSpans.map((span) => ({
-      span_id: span.spanId,
-      trace_id: span.traceId,
-      parent_span_id: span.parentSpanId ?? null,
+      spanId: span.spanId,
+      traceId: span.traceId,
+      parentSpanId: span.parentSpanId ?? null,
       name: span.name,
-      start_time: new Date(span.startTime).getTime(),
-      duration_ms: span.endTime
+      startTime: new Date(span.startTime).getTime(),
+      durationMs: span.endTime
         ? new Date(span.endTime).getTime() - new Date(span.startTime).getTime()
         : 0,
       status: span.status.toLowerCase() as "ok" | "error" | "unset",
-      service_name: (span.attributes?.service_name as string) || undefined,
-      depth: 0, // Will be calculated by TracesTab based on parent_span_id
+      serviceName: (span.attributes?.service_name as string) || undefined,
+      depth: 0, // Will be calculated by TracesTab based on parentSpanId
       attributes: span.attributes,
     }));
   }, [rawSpans]);
@@ -297,11 +297,11 @@ export function DevToolsPanel({ className }: DevToolsPanelProps) {
   const traceList: TraceListItem[] = useMemo(() => {
     if (!tracesData?.items) return [];
     return tracesData.items.map((trace) => ({
-      trace_id: trace.trace_id,
+      traceId: trace.traceId,
       name: trace.name || "Unknown",
-      start_time: trace.start_time ? new Date(trace.start_time).getTime() : 0,
-      duration_ms: trace.duration_ms ?? 0,
-      span_count: trace.span_count ?? 0,
+      startTime: trace.startTime ? new Date(trace.startTime).getTime() : 0,
+      durationMs: trace.durationMs ?? 0,
+      spanCount: trace.spanCount ?? 0,
       status: (trace.status as "ok" | "error" | "unset") ?? "unset",
     }));
   }, [tracesData]);
@@ -310,7 +310,7 @@ export function DevToolsPanel({ className }: DevToolsPanelProps) {
   const alertsList = useMemo(() => {
     if (!alertsData?.items) return [];
     return alertsData.items.map((alert) => ({
-      id: alert.alert_id,
+      id: alert.alertId,
       name: alert.name,
       state: alert.state as "firing" | "pending" | "resolved" | "silenced",
       severity: (alert.severity === "error" ? "critical" : alert.severity) as
@@ -319,9 +319,9 @@ export function DevToolsPanel({ className }: DevToolsPanelProps) {
         | "info",
       service: alert.labels?.service || "unknown",
       message: alert.message,
-      started_at: alert.started_at || new Date().toISOString(),
-      resolved_at: alert.ended_at ?? undefined,
-      generator_url: alert.generator_url ?? undefined,
+      startedAt: alert.startedAt || new Date().toISOString(),
+      resolvedAt: alert.endedAt ?? undefined,
+      generatorUrl: alert.generatorUrl ?? undefined,
       labels: alert.labels,
     }));
   }, [alertsData]);
@@ -348,52 +348,52 @@ export function DevToolsPanel({ className }: DevToolsPanelProps) {
     return [
       {
         name: "requests_total",
-        value: metricsData.requests_total,
+        value: metricsData.requestsTotal,
         unit: "req",
         trend: "stable" as const,
         change: 0,
-        sparkline: [metricsData.requests_total],
+        sparkline: [metricsData.requestsTotal],
       },
       {
         name: "errors_total",
-        value: metricsData.errors_total,
+        value: metricsData.errorsTotal,
         unit: "err",
         trend:
-          metricsData.errors_total > 0 ? ("up" as const) : ("stable" as const),
+          metricsData.errorsTotal > 0 ? ("up" as const) : ("stable" as const),
         change: 0,
-        sparkline: [metricsData.errors_total],
+        sparkline: [metricsData.errorsTotal],
       },
       {
         name: "avg_latency",
-        value: Math.round(metricsData.avg_latency_ms),
+        value: Math.round(metricsData.avgLatencyMs),
         unit: "ms",
         trend: "stable" as const,
         change: 0,
-        sparkline: [metricsData.avg_latency_ms],
+        sparkline: [metricsData.avgLatencyMs],
       },
       {
         name: "p99_latency",
-        value: Math.round(metricsData.p99_latency_ms),
+        value: Math.round(metricsData.p99LatencyMs),
         unit: "ms",
         trend: "stable" as const,
         change: 0,
-        sparkline: [metricsData.p99_latency_ms],
+        sparkline: [metricsData.p99LatencyMs],
       },
       {
         name: "tokens_used",
-        value: metricsData.tokens_used,
+        value: metricsData.tokensUsed,
         unit: "tokens",
         trend: "stable" as const,
         change: 0,
-        sparkline: [metricsData.tokens_used],
+        sparkline: [metricsData.tokensUsed],
       },
       {
         name: "active_sessions",
-        value: metricsData.active_sessions,
+        value: metricsData.activeSessions,
         unit: "sessions",
         trend: "stable" as const,
         change: 0,
-        sparkline: [metricsData.active_sessions],
+        sparkline: [metricsData.activeSessions],
       },
     ];
   }, [metricsData]);

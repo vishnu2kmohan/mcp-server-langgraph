@@ -123,12 +123,12 @@ export function ObservabilityDocument({
   // Map traces to component format
   const traces =
     tracesData?.items?.map((trace) => ({
-      id: trace.trace_id,
+      id: trace.traceId,
       name: trace.name,
-      duration: trace.duration_ms ?? 0,
+      duration: trace.durationMs ?? 0,
       status: (trace.status ?? "success") as "success" | "error" | "running",
-      timestamp: trace.start_time ?? new Date().toISOString(),
-      spans: trace.span_count ?? 0,
+      timestamp: trace.startTime ?? new Date().toISOString(),
+      spans: trace.spanCount ?? 0,
     })) ?? [];
 
   const logs = logsData?.items ?? [];
@@ -426,7 +426,7 @@ export function ObservabilityDocument({
                     Total Requests
                   </h3>
                   <div className="text-2xl font-semibold text-gray-900 dark:text-gray-100">
-                    {(metrics.requests_total ?? 0).toLocaleString()}
+                    {(metrics.requestsTotal ?? 0).toLocaleString()}
                   </div>
                 </div>
                 <div className="p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
@@ -434,7 +434,7 @@ export function ObservabilityDocument({
                     Total Errors
                   </h3>
                   <div className="text-2xl font-semibold text-red-600 dark:text-red-400">
-                    {(metrics.errors_total ?? 0).toLocaleString()}
+                    {(metrics.errorsTotal ?? 0).toLocaleString()}
                   </div>
                 </div>
                 <div className="p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
@@ -442,7 +442,7 @@ export function ObservabilityDocument({
                     Avg Latency
                   </h3>
                   <div className="text-2xl font-semibold text-gray-900 dark:text-gray-100">
-                    {metrics.avg_latency_ms ?? 0}ms
+                    {metrics.avgLatencyMs ?? 0}ms
                   </div>
                 </div>
                 <div className="p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
@@ -450,7 +450,7 @@ export function ObservabilityDocument({
                     P99 Latency
                   </h3>
                   <div className="text-2xl font-semibold text-gray-900 dark:text-gray-100">
-                    {metrics.p99_latency_ms ?? 0}ms
+                    {metrics.p99LatencyMs ?? 0}ms
                   </div>
                 </div>
                 <div className="p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
@@ -458,7 +458,7 @@ export function ObservabilityDocument({
                     Tokens Used
                   </h3>
                   <div className="text-2xl font-semibold text-gray-900 dark:text-gray-100">
-                    {(metrics.tokens_used ?? 0).toLocaleString()}
+                    {(metrics.tokensUsed ?? 0).toLocaleString()}
                   </div>
                 </div>
                 <div className="p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
@@ -466,7 +466,7 @@ export function ObservabilityDocument({
                     Active Sessions
                   </h3>
                   <div className="text-2xl font-semibold text-gray-900 dark:text-gray-100">
-                    {metrics.active_sessions ?? 0}
+                    {metrics.activeSessions ?? 0}
                   </div>
                 </div>
               </div>

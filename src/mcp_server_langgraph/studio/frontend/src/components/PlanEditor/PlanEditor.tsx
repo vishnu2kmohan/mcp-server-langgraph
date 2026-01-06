@@ -32,31 +32,31 @@ export type PlanStatus = "awaiting_approval" | "approved" | "rejected";
 
 export interface ExecutionPlanView {
   /** Unique plan identifier */
-  plan_id: string;
+  planId: string;
   /** Session this plan belongs to */
-  session_id: string;
+  sessionId: string;
   /** Current plan status */
   status: PlanStatus;
   /** Task complexity level */
   complexity: string;
   /** Risk level assessment */
-  risk_level: string;
+  riskLevel: string;
   /** Type of task */
-  task_type: string;
+  taskType: string;
   /** Model for execution */
-  executor_model: string;
+  executorModel: string;
   /** Model for critique */
-  critic_model: string;
+  criticModel: string;
   /** Estimated cost in USD */
-  estimated_cost: string;
+  estimatedCost: string;
   /** Original user message */
   message: string;
   /** Tools required for execution */
-  tools_needed: string[];
+  toolsNeeded: string[];
   /** Thinking budget level */
-  thinking_budget: string;
+  thinkingBudget: string;
   /** Number of critique rounds */
-  critique_rounds: number;
+  critiqueRounds: number;
   /** Orchestrator pattern */
   orchestrator: string;
 }
@@ -140,8 +140,8 @@ export function PlanEditor({
 }: PlanEditorProps) {
   // Local state for editable fields
   const [orchestrator, setOrchestrator] = useState(plan.orchestrator);
-  const [thinkingBudget, setThinkingBudget] = useState(plan.thinking_budget);
-  const [critiqueRounds, setCritiqueRounds] = useState(plan.critique_rounds);
+  const [thinkingBudget, setThinkingBudget] = useState(plan.thinkingBudget);
+  const [critiqueRounds, setCritiqueRounds] = useState(plan.critiqueRounds);
 
   // Handle configuration changes
   const handleOrchestratorChange = (
@@ -155,7 +155,7 @@ export function PlanEditor({
     e: React.ChangeEvent<HTMLSelectElement>,
   ) => {
     setThinkingBudget(e.target.value);
-    onSave({ thinking_budget: e.target.value });
+    onSave({ thinkingBudget: e.target.value });
   };
 
   const handleCritiqueRoundsChange = (
@@ -164,7 +164,7 @@ export function PlanEditor({
     const value = parseInt(e.target.value, 10);
     if (!isNaN(value) && value >= 0 && value <= 3) {
       setCritiqueRounds(value);
-      onSave({ critique_rounds: value });
+      onSave({ critiqueRounds: value });
     }
   };
 
@@ -190,13 +190,13 @@ export function PlanEditor({
           <div>
             <span className="text-gray-500 dark:text-gray-400">Plan ID:</span>
             <span className="ml-2 font-mono text-gray-900 dark:text-white">
-              {plan.plan_id}
+              {plan.planId}
             </span>
           </div>
           <div>
             <span className="text-gray-500 dark:text-gray-400">Session:</span>
             <span className="ml-2 font-mono text-gray-900 dark:text-white">
-              {plan.session_id}
+              {plan.sessionId}
             </span>
           </div>
         </div>
@@ -218,9 +218,9 @@ export function PlanEditor({
               Risk:
             </span>
             <span
-              className={`px-2 py-0.5 rounded text-xs font-medium ${getRiskLevelColor(plan.risk_level)}`}
+              className={`px-2 py-0.5 rounded text-xs font-medium ${getRiskLevelColor(plan.riskLevel)}`}
             >
-              {plan.risk_level}
+              {plan.riskLevel}
             </span>
           </div>
         </div>
@@ -233,7 +233,7 @@ export function PlanEditor({
               Estimated Cost:
             </span>
             <span className="font-mono text-sm text-gray-900 dark:text-white">
-              ${plan.estimated_cost}
+              ${plan.estimatedCost}
             </span>
           </div>
           <div className="flex items-center gap-2">
@@ -242,7 +242,7 @@ export function PlanEditor({
               Executor:
             </span>
             <span className="font-mono text-sm text-gray-900 dark:text-white">
-              {plan.executor_model}
+              {plan.executorModel}
             </span>
           </div>
         </div>
@@ -254,7 +254,7 @@ export function PlanEditor({
             <span>Tools Needed:</span>
           </div>
           <div className="flex flex-wrap gap-2">
-            {plan.tools_needed.map((tool) => (
+            {plan.toolsNeeded.map((tool) => (
               <span
                 key={tool}
                 className="px-2 py-1 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded text-xs font-mono"

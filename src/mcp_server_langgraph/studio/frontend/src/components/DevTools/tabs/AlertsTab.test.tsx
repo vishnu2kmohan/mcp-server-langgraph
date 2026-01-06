@@ -41,8 +41,8 @@ const mockAlerts = [
     severity: "critical" as const,
     service: "api-gateway",
     message: "Error rate exceeded 5% threshold (current: 7.2%)",
-    started_at: new Date(Date.now() - 5 * 60 * 1000).toISOString(),
-    generator_url: "/grafana/alerting/alert-1/view",
+    startedAt: new Date(Date.now() - 5 * 60 * 1000).toISOString(),
+    generatorUrl: "/grafana/alerting/alert-1/view",
   },
   {
     id: "alert-2",
@@ -51,8 +51,8 @@ const mockAlerts = [
     severity: "warning" as const,
     service: "db-service",
     message: "Query latency approaching threshold (current: 450ms/500ms)",
-    started_at: new Date(Date.now() - 2 * 60 * 1000).toISOString(),
-    generator_url: "/grafana/alerting/alert-2/view",
+    startedAt: new Date(Date.now() - 2 * 60 * 1000).toISOString(),
+    generatorUrl: "/grafana/alerting/alert-2/view",
   },
   {
     id: "alert-3",
@@ -61,8 +61,8 @@ const mockAlerts = [
     severity: "warning" as const,
     service: "worker-01",
     message: "Memory usage returned to normal (peak: 92%, current: 65%)",
-    started_at: new Date(Date.now() - 15 * 60 * 1000).toISOString(),
-    resolved_at: new Date(Date.now() - 10 * 60 * 1000).toISOString(),
+    startedAt: new Date(Date.now() - 15 * 60 * 1000).toISOString(),
+    resolvedAt: new Date(Date.now() - 10 * 60 * 1000).toISOString(),
   },
 ];
 

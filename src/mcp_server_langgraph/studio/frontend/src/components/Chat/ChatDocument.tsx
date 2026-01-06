@@ -25,6 +25,7 @@ import {
   selectIsLoadingSession,
   selectIsSending,
 } from "../../store/slices/sessionSlice";
+import { selectSubmitOnEnter } from "../../store/slices/uiSlice";
 import {
   useStreamingChat,
   type ReasoningEffortLevel,
@@ -42,16 +43,22 @@ import {
   ChatMessages,
   type Message,
   type AgentExecutionTrace,
+  type RatingValue,
+  type ModelProvider,
 } from "./ChatMessages";
 import type { FollowUpSuggestion } from "./AIFollowUpSuggestions";
 import { ChatInputForm } from "./ChatInputForm";
+import { ChatSuggestions, type ChatSuggestion } from "./ChatSuggestions";
+import type { MentionOption } from "./RichTextInput";
 import {
   StylePresets,
   type StylePreset,
   type PresetName,
 } from "./StylePresets";
 import { Loader2, MessageSquare } from "lucide-react";
+// SlashCommandMenu and ReasoningEffortSelector handled internally by ChatInputForm
 import { useFeatureFlag } from "../../contexts/FeatureFlagContext";
+import { useSubmitMessageRatingMutation } from "../../api";
 
 // =============================================================================
 // Thinking Model Detection
@@ -93,6 +100,17 @@ function modelSupportsThinking(modelName: string): boolean {
 function cn(...classes: (string | undefined | boolean)[]): string {
   return classes.filter(Boolean).join(" ");
 }
+
+/**
+ * Default suggestions for new conversations.
+ * These help users understand what the AI can do.
+ */
+const DEFAULT_CHAT_SUGGESTIONS: ChatSuggestion[] = [
+  { id: "1", text: "Explain a concept", category: "learn", icon: "book" },
+  { id: "2", text: "Write some code", category: "code", icon: "code" },
+  { id: "3", text: "Help me debug", category: "help", icon: "help" },
+  { id: "4", text: "Analyze this data", category: "analyze", icon: "search" },
+];
 
 // =============================================================================
 // Types
@@ -155,6 +173,12 @@ export interface ChatDocumentProps {
   showStylePresets?: boolean;
   /** Callback when style preset changes */
   onStylePresetChange?: (preset: StylePreset) => void;
+  /** Enable rich text editing mode (markdown formatting, mentions) */
+  enableRichTextMode?: boolean;
+  /** Mention options for rich text input (@model, @file references) */
+  richTextMentionOptions?: MentionOption[];
+  /** Maximum character length for rich text input */
+  richTextMaxLength?: number;
 }
 
 // =============================================================================
@@ -174,6 +198,9 @@ export function ChatDocument({
   onTemplateSelect,
   showStylePresets = false,
   onStylePresetChange,
+  enableRichTextMode = true,
+  richTextMentionOptions,
+  richTextMaxLength,
 }: ChatDocumentProps) {
   const [input, setInput] = useState("");
   const [selectedModel, setSelectedModel] = useState<string>(
@@ -184,22 +211,35 @@ export function ChatDocument({
     null,
   );
   // LLM Thinking / Reasoning effort state
+  // Note (Sprint 4 audit): enableThinking gates whether reasoningEffort is passed to the LLM.
+  // - In RichTextInput mode (default): Always enabled, toggle not rendered (thinking is valuable)
+  // - In ChatInputForm mode: Toggle available via onEnableThinkingChange prop
+  // DO NOT remove enableThinking state - it's actively used to gate reasoningEffort in startStream calls.
   const [reasoningEffort, setReasoningEffort] =
     useState<ReasoningEffortLevel>("medium");
   const [enableThinking, setEnableThinking] = useState(true);
   const [isThinkingExpanded, setIsThinkingExpanded] = useState(false);
   // Style preset state
   const [activePreset, setActivePreset] = useState<PresetName>("balanced");
+  // Message ratings state (local state + backend persistence via RTK Query)
+  const [messageRatings, setMessageRatings] = useState<
+    Record<string, RatingValue>
+  >({});
+  // RTK Query mutation for persisting ratings to backend
+  const [submitRating, { isLoading: isRatingSubmitting }] =
+    useSubmitMessageRatingMutation();
   const dispatch = useAppDispatch();
 
   // Feature flags
   const enableInteractiveArtifacts = useFeatureFlag("interactive_artifacts");
   const enableAiSuggestions = useFeatureFlag("ai_suggestions");
+  const showChatAvatars = useFeatureFlag("show_chat_avatars");
 
   // Redux selectors
   const currentSession = useAppSelector(selectCurrentSession);
   const isLoadingSession = useAppSelector(selectIsLoadingSession);
   const isSending = useAppSelector(selectIsSending);
+  const submitOnEnter = useAppSelector(selectSubmitOnEnter);
 
   // MCP connection hook
   const { connectionMode: _connectionMode } = useMCPConnection({
@@ -258,9 +298,7 @@ export function ChatDocument({
   // URL content fetch hook for #<url> patterns
   // Auto-fetch with debounce for smoother UX while typing
   const {
-    detectedUrls: _detectedUrls,
     detectUrls,
-    fetchUrl: _fetchUrl,
     fetchedContent,
     loadingUrls,
     clearUrl: clearFetchedUrl,
@@ -524,6 +562,89 @@ Type \`/\` to see available commands.`,
     [onStylePresetChange],
   );
 
+  // Handle message rating - persists to backend via RTK Query
+  const handleRateMessage = useCallback(
+    (messageId: string, rating: RatingValue) => {
+      // Update local state immediately for responsive UI (optimistic update)
+      setMessageRatings((prev) => ({
+        ...prev,
+        [messageId]: rating,
+      }));
+
+      // Persist to backend if we have a valid session
+      if (currentSession?.id) {
+        // Map frontend RatingValue to backend format
+        const backendRating =
+          rating === "up" ? "up" : rating === "down" ? "down" : null;
+
+        submitRating({
+          session_id: currentSession.id,
+          message_id: messageId,
+          rating: backendRating,
+        })
+          .unwrap()
+          .catch((error) => {
+            // Revert optimistic update on failure
+            setMessageRatings((prev) => {
+              const updated = { ...prev };
+              delete updated[messageId];
+              return updated;
+            });
+            toast.error("Failed to save rating", {
+              description:
+                error instanceof Error ? error.message : "Please try again",
+              duration: 3000,
+            });
+          });
+      }
+    },
+    [currentSession?.id, submitRating],
+  );
+
+  // Handle rating feedback (for negative ratings) - persists to backend
+  const handleRatingFeedback = useCallback(
+    (messageId: string, feedback: string) => {
+      // Get current rating for this message
+      const currentRating = messageRatings[messageId];
+
+      // Persist feedback with rating to backend
+      if (currentSession?.id && currentRating) {
+        submitRating({
+          session_id: currentSession.id,
+          message_id: messageId,
+          rating: currentRating === "up" ? "up" : "down",
+          feedback, // Include feedback text
+        })
+          .unwrap()
+          .then(() => {
+            toast.success("Thank you for your feedback!", { duration: 2000 });
+          })
+          .catch(() => {
+            toast.error("Failed to save feedback", { duration: 3000 });
+          });
+      } else {
+        // Fallback for local-only feedback
+        toast.success("Thank you for your feedback!", { duration: 2000 });
+      }
+    },
+    [currentSession?.id, messageRatings, submitRating],
+  );
+
+  // Determine model provider from selected model for cost calculation
+  const modelProvider: ModelProvider = useMemo(() => {
+    const modelLower = (model || selectedModel || "").toLowerCase();
+    if (modelLower.includes("claude") || modelLower.includes("anthropic")) {
+      return "anthropic";
+    }
+    if (modelLower.includes("gemini") || modelLower.includes("google")) {
+      return "google";
+    }
+    if (modelLower.includes("azure")) {
+      return "azure";
+    }
+    return "openai"; // default
+  }, [model, selectedModel]);
+
   // Construct agent execution trace from streaming usage data and LangGraph nodes
   const agentExecutionTrace: AgentExecutionTrace | undefined = useMemo(() => {
     // Show trace if streaming, has usage, or has LangGraph nodes
@@ -597,6 +718,14 @@ Type \`/\` to see available commands.`,
         ...(thinkingContent && { thinkingContent }),
         ...(thinkingTokens && { thinkingTokens }),
         ...(model && { modelName: model }),
+        // Persist token usage for cost tracking and display
+        ...(usage && {
+          usage: {
+            promptTokens: usage.promptTokens,
+            completionTokens: usage.completionTokens,
+            totalTokens: usage.promptTokens + usage.completionTokens,
+          },
+        }),
       };
       dispatch(addMessage(assistantMessage));
       clearContent();
@@ -610,6 +739,7 @@ Type \`/\` to see available commands.`,
     thinkingContent,
     thinkingTokens,
     model,
+    usage,
   ]);
 
   // Sync voice transcript to input field
@@ -745,7 +875,7 @@ Type \`/\` to see available commands.`,
     );
   }
 
-  // No session state
+  // No session state - show suggestions to help users get started
   if (!currentSession) {
     return (
       <div
@@ -759,7 +889,19 @@ Type \`/\` to see available commands.`,
       >
         <MessageSquare size={64} className="mb-4 opacity-50" />
         <h2 className="text-xl font-semibold mb-2">No Active Session</h2>
-        <p className="text-sm">Select or create a session to start chatting.</p>
+        <p className="text-sm mb-6">
+          Select or create a session to start chatting.
+        </p>
+        <ChatSuggestions
+          suggestions={DEFAULT_CHAT_SUGGESTIONS}
+          onSelect={(text) => {
+            // User clicked a suggestion but no session exists
+            // The parent component should handle session creation
+            toast.info(`Create a new session to ask: "${text}"`);
+          }}
+          title="Try asking about..."
+          compact
+        />
       </div>
     );
   }
@@ -798,6 +940,17 @@ Type \`/\` to see available commands.`,
         onSuggestionSelect={handleSuggestionSelect}
         onSuggestionFeedback={handleSuggestionFeedback}
         suggestionsLoading={suggestionsLoading}
+        // Response Rating props
+        messageRatings={messageRatings}
+        onRateMessage={handleRateMessage}
+        onRatingFeedback={handleRatingFeedback}
+        isRatingSubmitting={isRatingSubmitting}
+        // Token Usage Display props
+        showTokenUsage={true}
+        modelProvider={modelProvider}
+        showCost={false}
+        // Avatar props (show_chat_avatars feature flag)
+        showAvatars={showChatAvatars}
       />
 
       {/* Style Presets Selector */}
@@ -811,7 +964,7 @@ Type \`/\` to see available commands.`,
         </div>
       )}
 
-      {/* Input Form */}
+      {/* Input Form - Consolidated to ChatInputForm with RichText mode */}
       <ChatInputForm
         input={input}
         onInputChange={setInput}
@@ -831,6 +984,11 @@ Type \`/\` to see available commands.`,
         onSelectFiles={selectFiles}
         onRemoveFile={removeFile}
         dragHandlers={dragHandlers}
+        // RichText mode props (Phase 6 consolidation)
+        enableRichTextMode={enableRichTextMode}
+        submitOnEnter={submitOnEnter}
+        mentionOptions={richTextMentionOptions}
+        richTextMaxLength={richTextMaxLength}
         // Reasoning effort / thinking props
         modelSupportsThinking={modelSupportsThinking(model || "")}
         reasoningEffort={reasoningEffort}
@@ -854,7 +1012,7 @@ Type \`/\` to see available commands.`,
         // Slash commands props
         slashCommands={enableSlashCommands ? slashCommands : undefined}
         onSlashCommandSelect={handleSlashCommandSelect}
-        // Inline AI suggestions props (Sprint 6 - VSCode Copilot style)
+        // Inline AI suggestions props (VSCode Copilot style)
         enableInlineSuggestions={enableAiSuggestions}
         inlineSuggestion={inlineSuggestion}
         isSuggestionLoading={isSuggestionLoading}

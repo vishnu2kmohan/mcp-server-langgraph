@@ -22,9 +22,9 @@ export interface Alert {
   severity: AlertSeverity;
   service: string;
   message: string;
-  started_at: string;
-  resolved_at?: string;
-  generator_url?: string;
+  startedAt: string;
+  resolvedAt?: string;
+  generatorUrl?: string;
   labels?: Record<string, string>;
 }
 
@@ -198,10 +198,10 @@ function AlertCard({ alert, onSilence }: AlertCardProps): React.ReactElement {
   const [showDetails, setShowDetails] = useState(false);
 
   const handleOpenGrafana = useCallback(() => {
-    if (alert.generator_url) {
-      window.open(alert.generator_url, "_blank");
+    if (alert.generatorUrl) {
+      window.open(alert.generatorUrl, "_blank");
     }
-  }, [alert.generator_url]);
+  }, [alert.generatorUrl]);
 
   const handleSilence = useCallback(() => {
     onSilence?.(alert.id);
@@ -232,7 +232,7 @@ function AlertCard({ alert, onSilence }: AlertCardProps): React.ReactElement {
             {alert.service}
           </span>
           <span className="text-sm text-gray-400 dark:text-gray-500">
-            {formatRelativeTime(alert.started_at)}
+            {formatRelativeTime(alert.startedAt)}
           </span>
         </div>
       </div>
@@ -244,7 +244,7 @@ function AlertCard({ alert, onSilence }: AlertCardProps): React.ReactElement {
 
       {/* Actions */}
       <div className="mt-3 flex items-center gap-2 flex-wrap">
-        {alert.generator_url && (
+        {alert.generatorUrl && (
           <button
             onClick={handleOpenGrafana}
             className="px-3 py-1 text-sm bg-orange-500 text-white rounded hover:bg-orange-600 transition-colors flex items-center gap-1"
@@ -313,14 +313,14 @@ function AlertCard({ alert, onSilence }: AlertCardProps): React.ReactElement {
             <div>
               <dt className="text-gray-500 dark:text-gray-400">Started</dt>
               <dd className="text-gray-900 dark:text-white">
-                {new Date(alert.started_at).toLocaleString()}
+                {new Date(alert.startedAt).toLocaleString()}
               </dd>
             </div>
-            {alert.resolved_at && (
+            {alert.resolvedAt && (
               <div>
                 <dt className="text-gray-500 dark:text-gray-400">Resolved</dt>
                 <dd className="text-gray-900 dark:text-white">
-                  {new Date(alert.resolved_at).toLocaleString()}
+                  {new Date(alert.resolvedAt).toLocaleString()}
                 </dd>
               </div>
             )}
@@ -377,7 +377,7 @@ export function AlertsTab({
     // Filter by timeline time window
     if (timeline?.timeWindow) {
       result = result.filter((alert) => {
-        const startTime = new Date(alert.started_at).getTime();
+        const startTime = new Date(alert.startedAt).getTime();
         return (
           startTime >= timeline.timeWindow!.start &&
           startTime <= timeline.timeWindow!.end

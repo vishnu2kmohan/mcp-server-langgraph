@@ -26,13 +26,11 @@ import authReducer from "../store/slices/authSlice";
 // =============================================================================
 // Types for Testing
 // =============================================================================
-
 interface _StudioTask {
   category: string;
   type: string;
   data?: Record<string, unknown>;
 }
-
 interface StudioAnalysisResult {
   task_type: string;
   success: boolean;
@@ -40,7 +38,6 @@ interface StudioAnalysisResult {
   confidence?: number;
   error?: string;
 }
-
 interface _UseStudioAIResult {
   results: StudioAnalysisResult[] | null;
   analyses: Record<string, unknown>;
@@ -56,7 +53,6 @@ interface _UseStudioAIResult {
 // =============================================================================
 // Mock Setup
 // =============================================================================
-
 // Mock hook implementation
 const mockUseStudioAI = vi.fn();
 vi.mock("./useStudioAI", () => ({
@@ -67,7 +63,6 @@ vi.mock("./useStudioAI", () => ({
 // =============================================================================
 // Test Store Setup
 // =============================================================================
-
 const createTestStore = () =>
   configureStore({
     reducer: {
@@ -105,7 +100,6 @@ const createTestStore = () =>
       },
     },
   });
-
 const wrapper = ({ children }: { children: React.ReactNode }) => (
   <Provider store={createTestStore()}>{children}</Provider>
 );
@@ -113,17 +107,14 @@ const wrapper = ({ children }: { children: React.ReactNode }) => (
 // =============================================================================
 // Tests
 // =============================================================================
-
 describe("useStudioAI", () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
-
   afterEach(() => {
     cleanup();
     vi.clearAllMocks();
   });
-
   describe("hook structure", () => {
     it("returns expected result shape", () => {
       mockUseStudioAI.mockReturnValue({
@@ -137,7 +128,6 @@ describe("useStudioAI", () => {
         refetch: vi.fn(),
         getResult: vi.fn(),
       });
-
       const { result } = renderHook(
         () =>
           mockUseStudioAI({
@@ -147,7 +137,6 @@ describe("useStudioAI", () => {
           }),
         { wrapper },
       );
-
       expect(result.current).toHaveProperty("results");
       expect(result.current).toHaveProperty("analyses");
       expect(result.current).toHaveProperty("crossInsights");
@@ -158,7 +147,6 @@ describe("useStudioAI", () => {
       expect(result.current).toHaveProperty("refetch");
       expect(result.current).toHaveProperty("getResult");
     });
-
     it("accepts required options", () => {
       const options = {
         userId: "user-123",
@@ -177,7 +165,6 @@ describe("useStudioAI", () => {
         refetch: vi.fn(),
         getResult: vi.fn(),
       });
-
       const { result } = renderHook(() => mockUseStudioAI(options), {
         wrapper,
       });
@@ -185,7 +172,6 @@ describe("useStudioAI", () => {
       expect(mockUseStudioAI).toHaveBeenCalledWith(options);
       expect(result.current.isLoading).toBe(true);
     });
-
     it("accepts optional persona parameter", () => {
       const options = {
         userId: "user-123",
@@ -205,15 +191,12 @@ describe("useStudioAI", () => {
         refetch: vi.fn(),
         getResult: vi.fn(),
       });
-
       renderHook(() => mockUseStudioAI(options), { wrapper });
-
       expect(mockUseStudioAI).toHaveBeenCalledWith(
         expect.objectContaining({ persona: "alice-builder" }),
       );
     });
   });
-
   describe("task-based API", () => {
     it("supports UX category tasks", () => {
       mockUseStudioAI.mockReturnValue({
@@ -242,7 +225,6 @@ describe("useStudioAI", () => {
         refetch: vi.fn(),
         getResult: vi.fn(),
       });
-
       const { result } = renderHook(
         () =>
           mockUseStudioAI({
@@ -252,12 +234,10 @@ describe("useStudioAI", () => {
           }),
         { wrapper },
       );
-
       expect(result.current.results).toHaveLength(1);
       expect(result.current.results?.[0].task_type).toBe("persona_analysis");
       expect(result.current.analyses).toHaveProperty("persona_analysis");
     });
-
     it("supports SESSION category tasks", () => {
       mockUseStudioAI.mockReturnValue({
         results: [
@@ -284,7 +264,6 @@ describe("useStudioAI", () => {
         refetch: vi.fn(),
         getResult: vi.fn(),
       });
-
       const { result } = renderHook(
         () =>
           mockUseStudioAI({
@@ -296,10 +275,8 @@ describe("useStudioAI", () => {
           }),
         { wrapper },
       );
-
       expect(result.current.results?.[0].task_type).toBe("session_summarize");
     });
-
     it("supports CONVERSATION category tasks", () => {
       mockUseStudioAI.mockReturnValue({
         results: [
@@ -323,7 +300,6 @@ describe("useStudioAI", () => {
         refetch: vi.fn(),
         getResult: vi.fn(),
       });
-
       const { result } = renderHook(
         () =>
           mockUseStudioAI({
@@ -339,10 +315,8 @@ describe("useStudioAI", () => {
           }),
         { wrapper },
       );
-
       expect(result.current.results?.[0].task_type).toBe("intent_detect");
     });
-
     it("supports CANVAS category tasks", () => {
       mockUseStudioAI.mockReturnValue({
         results: [
@@ -366,7 +340,6 @@ describe("useStudioAI", () => {
         refetch: vi.fn(),
         getResult: vi.fn(),
       });
-
       const { result } = renderHook(
         () =>
           mockUseStudioAI({
@@ -382,12 +355,10 @@ describe("useStudioAI", () => {
           }),
         { wrapper },
       );
-
       expect(result.current.results?.[0].task_type).toBe(
         "artifact_suggest_type",
       );
     });
-
     it("supports multiple tasks in parallel", () => {
       mockUseStudioAI.mockReturnValue({
         results: [
@@ -426,7 +397,6 @@ describe("useStudioAI", () => {
         refetch: vi.fn(),
         getResult: vi.fn(),
       });
-
       const { result } = renderHook(
         () =>
           mockUseStudioAI({
@@ -440,12 +410,10 @@ describe("useStudioAI", () => {
           }),
         { wrapper },
       );
-
       expect(result.current.results).toHaveLength(3);
       expect(result.current.crossInsights).toHaveLength(2);
     });
   });
-
   describe("getResult accessor", () => {
     it("returns result for existing task type", () => {
       const mockGetResult = vi.fn((taskType: string) => {
@@ -459,7 +427,6 @@ describe("useStudioAI", () => {
         }
         return undefined;
       });
-
       mockUseStudioAI.mockReturnValue({
         results: [
           {
@@ -478,7 +445,6 @@ describe("useStudioAI", () => {
         refetch: vi.fn(),
         getResult: mockGetResult,
       });
-
       const { result } = renderHook(
         () =>
           mockUseStudioAI({
@@ -488,16 +454,13 @@ describe("useStudioAI", () => {
           }),
         { wrapper },
       );
-
       const personaResult = result.current.getResult("persona_analysis");
       expect(personaResult).toBeDefined();
       expect(personaResult?.task_type).toBe("persona_analysis");
       expect(personaResult?.data).toHaveProperty("detected_persona");
     });
-
     it("returns undefined for non-existent task type", () => {
       const mockGetResult = vi.fn(() => undefined);
-
       mockUseStudioAI.mockReturnValue({
         results: [],
         analyses: {},
@@ -509,7 +472,6 @@ describe("useStudioAI", () => {
         refetch: vi.fn(),
         getResult: mockGetResult,
       });
-
       const { result } = renderHook(
         () =>
           mockUseStudioAI({
@@ -519,12 +481,10 @@ describe("useStudioAI", () => {
           }),
         { wrapper },
       );
-
       const missingResult = result.current.getResult("nonexistent_task");
       expect(missingResult).toBeUndefined();
     });
   });
-
   describe("cross insights", () => {
     it("returns cross insights when multiple analyses are requested", () => {
       mockUseStudioAI.mockReturnValue({
@@ -552,7 +512,6 @@ describe("useStudioAI", () => {
         refetch: vi.fn(),
         getResult: vi.fn(),
       });
-
       const { result } = renderHook(
         () =>
           mockUseStudioAI({
@@ -565,12 +524,10 @@ describe("useStudioAI", () => {
           }),
         { wrapper },
       );
-
       expect(result.current.crossInsights).toHaveLength(2);
       expect(result.current.crossInsights[0]).toContain("alice-builder");
     });
   });
-
   describe("failed analyses", () => {
     it("tracks failed task types", () => {
       mockUseStudioAI.mockReturnValue({
@@ -598,7 +555,6 @@ describe("useStudioAI", () => {
         refetch: vi.fn(),
         getResult: vi.fn(),
       });
-
       const { result } = renderHook(
         () =>
           mockUseStudioAI({
@@ -611,12 +567,10 @@ describe("useStudioAI", () => {
           }),
         { wrapper },
       );
-
       expect(result.current.failedAnalyses).toContain("diagram_to_code");
       expect(result.current.failedAnalyses).not.toContain("persona_analysis");
     });
   });
-
   describe("cost tracking", () => {
     it("returns total cost as string", () => {
       mockUseStudioAI.mockReturnValue({
@@ -630,7 +584,6 @@ describe("useStudioAI", () => {
         refetch: vi.fn(),
         getResult: vi.fn(),
       });
-
       const { result } = renderHook(
         () =>
           mockUseStudioAI({
@@ -640,12 +593,10 @@ describe("useStudioAI", () => {
           }),
         { wrapper },
       );
-
       expect(typeof result.current.totalCost).toBe("string");
       expect(result.current.totalCost).toBe("0.0125");
     });
   });
-
   describe("loading state", () => {
     it("shows loading state while fetching", () => {
       mockUseStudioAI.mockReturnValue({
@@ -659,7 +610,6 @@ describe("useStudioAI", () => {
         refetch: vi.fn(),
         getResult: vi.fn(),
       });
-
       const { result } = renderHook(
         () =>
           mockUseStudioAI({
@@ -669,11 +619,9 @@ describe("useStudioAI", () => {
           }),
         { wrapper },
       );
-
       expect(result.current.isLoading).toBe(true);
       expect(result.current.results).toBeNull();
     });
-
     it("shows not loading when complete", () => {
       mockUseStudioAI.mockReturnValue({
         results: [],
@@ -686,7 +634,6 @@ describe("useStudioAI", () => {
         refetch: vi.fn(),
         getResult: vi.fn(),
       });
-
       const { result } = renderHook(
         () =>
           mockUseStudioAI({
@@ -696,11 +643,9 @@ describe("useStudioAI", () => {
           }),
         { wrapper },
       );
-
       expect(result.current.isLoading).toBe(false);
     });
   });
-
   describe("error handling", () => {
     it("handles API errors gracefully", () => {
       mockUseStudioAI.mockReturnValue({
@@ -714,7 +659,6 @@ describe("useStudioAI", () => {
         refetch: vi.fn(),
         getResult: vi.fn(),
       });
-
       const { result } = renderHook(
         () =>
           mockUseStudioAI({
@@ -724,12 +668,10 @@ describe("useStudioAI", () => {
           }),
         { wrapper },
       );
-
       expect(result.current.error).not.toBeNull();
       expect(result.current.error?.message).toBe("Studio AI analysis failed");
       expect(result.current.results).toBeNull();
     });
-
     it("clears error on successful retry", () => {
       mockUseStudioAI.mockReturnValue({
         results: [
@@ -748,7 +690,6 @@ describe("useStudioAI", () => {
         refetch: vi.fn(),
         getResult: vi.fn(),
       });
-
       const { result } = renderHook(
         () =>
           mockUseStudioAI({
@@ -758,12 +699,10 @@ describe("useStudioAI", () => {
           }),
         { wrapper },
       );
-
       expect(result.current.error).toBeNull();
       expect(result.current.results).not.toBeNull();
     });
   });
-
   describe("refetch functionality", () => {
     it("has a refetch function", () => {
       const refetchFn = vi.fn();
@@ -778,7 +717,6 @@ describe("useStudioAI", () => {
         refetch: refetchFn,
         getResult: vi.fn(),
       });
-
       const { result } = renderHook(
         () =>
           mockUseStudioAI({
@@ -788,13 +726,11 @@ describe("useStudioAI", () => {
           }),
         { wrapper },
       );
-
       expect(typeof result.current.refetch).toBe("function");
       result.current.refetch();
       expect(refetchFn).toHaveBeenCalledTimes(1);
     });
   });
-
   describe("enabled flag", () => {
     it("does not fetch when enabled is false", () => {
       mockUseStudioAI.mockReturnValue({
@@ -808,7 +744,6 @@ describe("useStudioAI", () => {
         refetch: vi.fn(),
         getResult: vi.fn(),
       });
-
       const { result } = renderHook(
         () =>
           mockUseStudioAI({
@@ -819,11 +754,9 @@ describe("useStudioAI", () => {
           }),
         { wrapper },
       );
-
       expect(result.current.isLoading).toBe(false);
       expect(result.current.results).toBeNull();
     });
-
     it("fetches when enabled is true", () => {
       mockUseStudioAI.mockReturnValue({
         results: [],
@@ -836,7 +769,6 @@ describe("useStudioAI", () => {
         refetch: vi.fn(),
         getResult: vi.fn(),
       });
-
       const { result } = renderHook(
         () =>
           mockUseStudioAI({
@@ -847,11 +779,9 @@ describe("useStudioAI", () => {
           }),
         { wrapper },
       );
-
       expect(result.current.isLoading).toBe(true);
     });
   });
-
   describe("empty tasks", () => {
     it("returns empty results for empty tasks array", () => {
       mockUseStudioAI.mockReturnValue({
@@ -865,7 +795,6 @@ describe("useStudioAI", () => {
         refetch: vi.fn(),
         getResult: vi.fn(),
       });
-
       const { result } = renderHook(
         () =>
           mockUseStudioAI({
@@ -875,13 +804,11 @@ describe("useStudioAI", () => {
           }),
         { wrapper },
       );
-
       expect(result.current.results).toEqual([]);
       expect(result.current.analyses).toEqual({});
       expect(result.current.isLoading).toBe(false);
     });
   });
-
   describe("HITL category tasks", () => {
     it("supports risk_assess task type", () => {
       mockUseStudioAI.mockReturnValue({
@@ -908,7 +835,6 @@ describe("useStudioAI", () => {
         refetch: vi.fn(),
         getResult: vi.fn(),
       });
-
       const { result } = renderHook(
         () =>
           mockUseStudioAI({
@@ -924,12 +850,10 @@ describe("useStudioAI", () => {
           }),
         { wrapper },
       );
-
       expect(result.current.results?.[0].task_type).toBe("risk_assess");
       expect(result.current.analyses).toHaveProperty("risk_assess");
     });
   });
-
   describe("COMMAND category tasks", () => {
     it("supports command_interpret task type", () => {
       mockUseStudioAI.mockReturnValue({
@@ -955,7 +879,6 @@ describe("useStudioAI", () => {
         refetch: vi.fn(),
         getResult: vi.fn(),
       });
-
       const { result } = renderHook(
         () =>
           mockUseStudioAI({
@@ -971,11 +894,9 @@ describe("useStudioAI", () => {
           }),
         { wrapper },
       );
-
       expect(result.current.results?.[0].task_type).toBe("command_interpret");
     });
   });
-
   describe("TRACE category tasks", () => {
     it("supports trace_summarize task type", () => {
       mockUseStudioAI.mockReturnValue({
@@ -1001,7 +922,6 @@ describe("useStudioAI", () => {
         refetch: vi.fn(),
         getResult: vi.fn(),
       });
-
       const { result } = renderHook(
         () =>
           mockUseStudioAI({
@@ -1017,11 +937,9 @@ describe("useStudioAI", () => {
           }),
         { wrapper },
       );
-
       expect(result.current.results?.[0].task_type).toBe("trace_summarize");
     });
   });
-
   describe("DIAGRAM category tasks", () => {
     it("supports diagram_to_code task type", () => {
       mockUseStudioAI.mockReturnValue({
@@ -1047,7 +965,6 @@ describe("useStudioAI", () => {
         refetch: vi.fn(),
         getResult: vi.fn(),
       });
-
       const { result } = renderHook(
         () =>
           mockUseStudioAI({
@@ -1063,7 +980,6 @@ describe("useStudioAI", () => {
           }),
         { wrapper },
       );
-
       expect(result.current.results?.[0].task_type).toBe("diagram_to_code");
     });
   });

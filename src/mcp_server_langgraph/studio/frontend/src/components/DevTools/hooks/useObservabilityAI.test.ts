@@ -72,9 +72,9 @@ describe("useObservabilityAI", () => {
   describe("correlateAlerts", () => {
     it("should group related alerts by time proximity", () => {
       const alerts = [
-        { id: "a1", started_at: "2024-01-01T12:00:00Z", service: "api" },
-        { id: "a2", started_at: "2024-01-01T12:00:30Z", service: "db" },
-        { id: "a3", started_at: "2024-01-01T14:00:00Z", service: "api" },
+        { id: "a1", startedAt: "2024-01-01T12:00:00Z", service: "api" },
+        { id: "a2", startedAt: "2024-01-01T12:00:30Z", service: "db" },
+        { id: "a3", startedAt: "2024-01-01T14:00:00Z", service: "api" },
       ];
 
       const correlations = correlateAlerts(alerts);
@@ -89,10 +89,10 @@ describe("useObservabilityAI", () => {
       const alerts = [
         {
           id: "a1",
-          started_at: "2024-01-01T12:00:00Z",
+          startedAt: "2024-01-01T12:00:00Z",
           service: "api-gateway",
         },
-        { id: "a2", started_at: "2024-01-01T12:00:30Z", service: "db-primary" },
+        { id: "a2", startedAt: "2024-01-01T12:00:30Z", service: "db-primary" },
       ];
 
       const correlations = correlateAlerts(alerts);

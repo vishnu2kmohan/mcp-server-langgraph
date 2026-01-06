@@ -16,44 +16,44 @@ import type { Trace, Span } from "./types";
 
 const mockSpans: Span[] = [
   {
-    span_id: "span-1",
+    spanId: "span-1",
     name: "HTTP POST /api/chat",
-    start_time: 1704067200000,
-    duration_ms: 150,
+    startTime: 1704067200000,
+    durationMs: 150,
     status: "ok",
     depth: 0,
     attributes: { "http.method": "POST", "http.url": "/api/chat" },
     events: [],
   },
   {
-    span_id: "span-2",
+    spanId: "span-2",
     name: "LLM Inference",
-    start_time: 1704067200020,
-    duration_ms: 100,
+    startTime: 1704067200020,
+    durationMs: 100,
     status: "ok",
     depth: 1,
     attributes: { "llm.model": "gpt-4", "llm.tokens": 1250 },
     events: [{ name: "token_generated", timestamp: 1704067200050 }],
   },
   {
-    span_id: "span-3",
+    spanId: "span-3",
     name: "Database Query",
-    start_time: 1704067200130,
-    duration_ms: 15,
+    startTime: 1704067200130,
+    durationMs: 15,
     status: "error",
     depth: 1,
     attributes: { "db.statement": "SELECT * FROM sessions" },
     events: [],
-    error_message: "Connection timeout",
+    errorMessage: "Connection timeout",
   },
 ];
 
 const mockTrace: Trace = {
-  trace_id: "trace-123",
+  traceId: "trace-123",
   spans: mockSpans,
-  start_time: 1704067200000,
-  end_time: 1704067200150,
-  duration_ms: 150,
+  startTime: 1704067200000,
+  endTime: 1704067200150,
+  durationMs: 150,
 };
 
 describe("TraceViewer", () => {

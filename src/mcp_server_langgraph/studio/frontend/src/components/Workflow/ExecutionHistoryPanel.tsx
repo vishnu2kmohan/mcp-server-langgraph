@@ -16,12 +16,12 @@ import {
 
 export interface WorkflowExecution {
   id: string;
-  workflow_id: string;
+  workflowId: string;
   status: "pending" | "running" | "completed" | "failed";
-  started_at: string;
-  completed_at?: string | null;
-  input_data?: Record<string, unknown> | null;
-  output_data?: Record<string, unknown> | null;
+  startedAt: string;
+  completedAt?: string | null;
+  inputData?: Record<string, unknown> | null;
+  outputData?: Record<string, unknown> | null;
   error?: string | null;
 }
 
@@ -183,11 +183,11 @@ export function ExecutionHistoryPanel({
                       <span className="text-sm font-medium text-gray-900 dark:text-white capitalize">
                         {execution.status}
                       </span>
-                      {execution.completed_at && (
+                      {execution.completedAt && (
                         <span className="text-xs text-gray-500 dark:text-gray-400">
                           {formatDuration(
-                            execution.started_at,
-                            execution.completed_at,
+                            execution.startedAt,
+                            execution.completedAt,
                           )}
                         </span>
                       )}
@@ -196,7 +196,7 @@ export function ExecutionHistoryPanel({
                     <div className="flex items-center gap-2 mt-1">
                       <Clock className="w-3 h-3 text-gray-400" />
                       <span className="text-xs text-gray-500 dark:text-gray-400">
-                        {formatTime(execution.started_at)}
+                        {formatTime(execution.startedAt)}
                       </span>
                     </div>
 

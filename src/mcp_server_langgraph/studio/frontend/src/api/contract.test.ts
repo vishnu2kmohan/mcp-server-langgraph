@@ -1,16 +1,9 @@
 /**
  * API Contract Tests
  *
- * These tests validate that frontend TypeScript types match backend API responses.
- * They help catch schema mismatches between frontend and backend before production.
- *
- * Contract tests verify:
- * - Response shape matches TypeScript interfaces
- * - Required fields are present
- * - Field types are correct
- * - Nullable fields are handled
+ * Validates frontend TypeScript types match backend API responses.
+ * Verifies: response shape, required fields, field types, nullable fields
  */
-
 import { describe, it, expect, afterEach, vi } from "vitest";
 import type {
   HealthStatus,
@@ -30,10 +23,6 @@ import type {
   PagePaginatedResponse,
 } from "../types/api";
 
-/**
- * Type guard functions for runtime validation
- */
-
 function isHealthStatus(obj: unknown): obj is HealthStatus {
   if (typeof obj !== "object" || obj === null) return false;
   const o = obj as Record<string, unknown>;
@@ -44,7 +33,6 @@ function isHealthStatus(obj: unknown): obj is HealthStatus {
     (o.uptime_seconds === undefined || typeof o.uptime_seconds === "number")
   );
 }
-
 function isHEARTAggregateMetrics(obj: unknown): obj is HEARTAggregateMetrics {
   if (typeof obj !== "object" || obj === null) return false;
   const o = obj as Record<string, unknown>;
@@ -61,7 +49,6 @@ function isHEARTAggregateMetrics(obj: unknown): obj is HEARTAggregateMetrics {
       typeof o.task_success_rate === "number")
   );
 }
-
 function isCostSummary(obj: unknown): obj is CostSummary {
   if (typeof obj !== "object" || obj === null) return false;
   const o = obj as Record<string, unknown>;
@@ -72,7 +59,6 @@ function isCostSummary(obj: unknown): obj is CostSummary {
       typeof o.total_tokens === "number")
   );
 }
-
 function isModelCostData(obj: unknown): obj is ModelCostData {
   if (typeof obj !== "object" || obj === null) return false;
   const o = obj as Record<string, unknown>;
@@ -82,25 +68,21 @@ function isModelCostData(obj: unknown): obj is ModelCostData {
     typeof o.requests === "number"
   );
 }
-
 function isCostHistoryPoint(obj: unknown): obj is CostHistoryPoint {
   if (typeof obj !== "object" || obj === null) return false;
   const o = obj as Record<string, unknown>;
   return typeof o.date === "string" && typeof o.cost === "number";
 }
-
 function isVectorCollection(obj: unknown): obj is VectorCollection {
   if (typeof obj !== "object" || obj === null) return false;
   const o = obj as Record<string, unknown>;
   return typeof o.name === "string" && typeof o.vectors_count === "number";
 }
-
 function isVectorSearchResult(obj: unknown): obj is VectorSearchResult {
   if (typeof obj !== "object" || obj === null) return false;
   const o = obj as Record<string, unknown>;
   return typeof o.id === "string" && typeof o.score === "number";
 }
-
 function isVectorTextUpsertResponse(
   obj: unknown,
 ): obj is VectorTextUpsertResponse {
@@ -108,7 +90,6 @@ function isVectorTextUpsertResponse(
   const o = obj as Record<string, unknown>;
   return typeof o.success === "boolean" && typeof o.point_id === "string";
 }
-
 function isAgentConfig(obj: unknown): obj is AgentConfig {
   if (typeof obj !== "object" || obj === null) return false;
   const o = obj as Record<string, unknown>;
@@ -120,7 +101,6 @@ function isAgentConfig(obj: unknown): obj is AgentConfig {
     Array.isArray(o.tools)
   );
 }
-
 function isAuditLogEntry(obj: unknown): obj is AuditLogEntry {
   if (typeof obj !== "object" || obj === null) return false;
   const o = obj as Record<string, unknown>;
@@ -133,50 +113,39 @@ function isAuditLogEntry(obj: unknown): obj is AuditLogEntry {
     typeof o.resource_id === "string"
   );
 }
-
 function isWorkflowSummary(obj: unknown): obj is WorkflowSummary {
   if (typeof obj !== "object" || obj === null) return false;
   const o = obj as Record<string, unknown>;
   return typeof o.id === "string" && typeof o.name === "string";
 }
-
 function isSession(obj: unknown): obj is Session {
   if (typeof obj !== "object" || obj === null) return false;
   const o = obj as Record<string, unknown>;
   return typeof o.session_id === "string";
 }
-
 function isProject(obj: unknown): obj is Project {
   if (typeof obj !== "object" || obj === null) return false;
   const o = obj as Record<string, unknown>;
   return typeof o.id === "string" && typeof o.name === "string";
 }
-
-// =============================================================================
-// Type guards for new endpoints
-// =============================================================================
-
 // SUS Surveys
 interface SUSSurveyResponse {
   id: string;
   sus_score: number;
   recorded_at: string;
 }
-
 interface ScoreDistribution {
   excellent: number;
   good: number;
   ok: number;
   poor: number;
 }
-
 interface SUSSummaryResponse {
   timeframe: string;
   avg_score: number | null;
   response_count: number;
   score_distribution: ScoreDistribution;
 }
-
 function isSUSSurveyResponse(obj: unknown): obj is SUSSurveyResponse {
   if (typeof obj !== "object" || obj === null) return false;
   const o = obj as Record<string, unknown>;
@@ -186,7 +155,6 @@ function isSUSSurveyResponse(obj: unknown): obj is SUSSurveyResponse {
     typeof o.recorded_at === "string"
   );
 }
-
 function isScoreDistribution(obj: unknown): obj is ScoreDistribution {
   if (typeof obj !== "object" || obj === null) return false;
   const o = obj as Record<string, unknown>;
@@ -197,7 +165,6 @@ function isScoreDistribution(obj: unknown): obj is ScoreDistribution {
     typeof o.poor === "number"
   );
 }
-
 function isSUSSummaryResponse(obj: unknown): obj is SUSSummaryResponse {
   if (typeof obj !== "object" || obj === null) return false;
   const o = obj as Record<string, unknown>;
@@ -208,14 +175,12 @@ function isSUSSummaryResponse(obj: unknown): obj is SUSSummaryResponse {
     isScoreDistribution(o.score_distribution)
   );
 }
-
 // HEART Analytics
 interface MetricTrackingResponse {
   success: boolean;
   metric_id: string;
   recorded_at: string;
 }
-
 interface HEARTAnalyticsSummary {
   period: string;
   happiness?: unknown;
@@ -224,7 +189,6 @@ interface HEARTAnalyticsSummary {
   retention?: unknown;
   task_success?: unknown;
 }
-
 function isMetricTrackingResponse(obj: unknown): obj is MetricTrackingResponse {
   if (typeof obj !== "object" || obj === null) return false;
   const o = obj as Record<string, unknown>;
@@ -234,27 +198,23 @@ function isMetricTrackingResponse(obj: unknown): obj is MetricTrackingResponse {
     typeof o.recorded_at === "string"
   );
 }
-
 function isHEARTAnalyticsSummary(obj: unknown): obj is HEARTAnalyticsSummary {
   if (typeof obj !== "object" || obj === null) return false;
   const o = obj as Record<string, unknown>;
   return typeof o.period === "string";
 }
-
 // Compliance Reports
 interface ComplianceReport {
   regulation: string;
   generated_at: string;
   time_range: { start: string; end: string };
 }
-
 interface ComplianceSummaryResponse {
   generated_at: string;
   regulations: string[];
   overall_status: string;
   findings: unknown[];
 }
-
 function isComplianceReport(obj: unknown): obj is ComplianceReport {
   if (typeof obj !== "object" || obj === null) return false;
   const o = obj as Record<string, unknown>;
@@ -265,7 +225,6 @@ function isComplianceReport(obj: unknown): obj is ComplianceReport {
     o.time_range !== null
   );
 }
-
 function isComplianceSummary(obj: unknown): obj is ComplianceSummaryResponse {
   if (typeof obj !== "object" || obj === null) return false;
   const o = obj as Record<string, unknown>;
@@ -276,18 +235,15 @@ function isComplianceSummary(obj: unknown): obj is ComplianceSummaryResponse {
     Array.isArray(o.findings)
   );
 }
-
 // Connection Templates
 interface TemplateCategory {
   id: string;
   name: string;
   description: string;
 }
-
 interface CategoryListResponse {
   categories: TemplateCategory[];
 }
-
 interface ConnectionTemplate {
   id: string;
   name: string;
@@ -297,11 +253,9 @@ interface ConnectionTemplate {
   default_url: string;
   auth_type: "none" | "api_key" | "oauth2";
 }
-
 interface TemplateListResponse {
   templates: ConnectionTemplate[];
 }
-
 function isTemplateCategory(obj: unknown): obj is TemplateCategory {
   if (typeof obj !== "object" || obj === null) return false;
   const o = obj as Record<string, unknown>;
@@ -311,13 +265,11 @@ function isTemplateCategory(obj: unknown): obj is TemplateCategory {
     typeof o.description === "string"
   );
 }
-
 function isCategoryListResponse(obj: unknown): obj is CategoryListResponse {
   if (typeof obj !== "object" || obj === null) return false;
   const o = obj as Record<string, unknown>;
   return Array.isArray(o.categories) && o.categories.every(isTemplateCategory);
 }
-
 function isConnectionTemplate(obj: unknown): obj is ConnectionTemplate {
   if (typeof obj !== "object" || obj === null) return false;
   const o = obj as Record<string, unknown>;
@@ -331,13 +283,11 @@ function isConnectionTemplate(obj: unknown): obj is ConnectionTemplate {
     ["none", "api_key", "oauth2"].includes(o.auth_type as string)
   );
 }
-
 function isTemplateListResponse(obj: unknown): obj is TemplateListResponse {
   if (typeof obj !== "object" || obj === null) return false;
   const o = obj as Record<string, unknown>;
   return Array.isArray(o.templates) && o.templates.every(isConnectionTemplate);
 }
-
 // Connection Audit
 interface ConnectionAuditLogEntry {
   id: string;
@@ -347,12 +297,10 @@ interface ConnectionAuditLogEntry {
   user_id: string;
   details?: unknown;
 }
-
 interface ConnectionAuditLogListResponse {
   logs: ConnectionAuditLogEntry[];
   total: number;
 }
-
 function isConnectionAuditLogEntry(
   obj: unknown,
 ): obj is ConnectionAuditLogEntry {
@@ -366,7 +314,6 @@ function isConnectionAuditLogEntry(
     typeof o.user_id === "string"
   );
 }
-
 function isAuditLogListResponse(
   obj: unknown,
 ): obj is ConnectionAuditLogListResponse {
@@ -378,13 +325,11 @@ function isAuditLogListResponse(
     typeof o.total === "number"
   );
 }
-
 // Connections Bulk
 interface BulkDeleteResponse {
   deleted_count: number;
   failed_ids?: string[];
 }
-
 interface ConnectionTestResult {
   connection_id: string;
   success: boolean;
@@ -393,12 +338,10 @@ interface ConnectionTestResult {
   tool_count: number;
   error?: string | null;
 }
-
 interface BulkTestResponse {
   results: ConnectionTestResult[];
   not_found?: string[];
 }
-
 interface BulkStatusResponse {
   updated_count: number;
   failed_ids?: string[];
@@ -927,6 +870,161 @@ describe("API Contract Tests", () => {
         tool_count: 0,
       };
       expect(isConnectionTestResult(validResponse)).toBe(true);
+    });
+  });
+
+  // ==========================================================================
+  // AUTH ENDPOINTS CONTRACT TESTS (ADR-0091: Uses generated types)
+  // ==========================================================================
+
+  describe("Auth Endpoints (Generated Types)", () => {
+    // Type definitions from generated-api.ts (ADR-0091)
+    // These match components["schemas"]["LoginResponse"], etc.
+    interface LoginResponse {
+      access_token: string;
+      refresh_token?: string | null;
+      token_type: string;
+      expires_in: number;
+    }
+
+    interface LogoutResponse {
+      success: boolean;
+      message?: string | null;
+    }
+
+    interface IdentityProvider {
+      alias: string;
+      display_name: string;
+      icon: string;
+      login_url: string;
+    }
+
+    interface IdentityProvidersListResponse {
+      identity_providers?: IdentityProvider[];
+    }
+
+    function isLoginResponse(obj: unknown): obj is LoginResponse {
+      if (typeof obj !== "object" || obj === null) return false;
+      const o = obj as Record<string, unknown>;
+      return (
+        typeof o.access_token === "string" &&
+        (o.refresh_token === undefined ||
+          o.refresh_token === null ||
+          typeof o.refresh_token === "string") &&
+        typeof o.token_type === "string" &&
+        typeof o.expires_in === "number"
+      );
+    }
+
+    function isLogoutResponse(obj: unknown): obj is LogoutResponse {
+      if (typeof obj !== "object" || obj === null) return false;
+      const o = obj as Record<string, unknown>;
+      return (
+        typeof o.success === "boolean" &&
+        (o.message === undefined ||
+          o.message === null ||
+          typeof o.message === "string")
+      );
+    }
+
+    function isIdentityProvider(obj: unknown): obj is IdentityProvider {
+      if (typeof obj !== "object" || obj === null) return false;
+      const o = obj as Record<string, unknown>;
+      return (
+        typeof o.alias === "string" &&
+        typeof o.display_name === "string" &&
+        typeof o.icon === "string" &&
+        typeof o.login_url === "string"
+      );
+    }
+
+    function isIdentityProvidersListResponse(
+      obj: unknown,
+    ): obj is IdentityProvidersListResponse {
+      if (typeof obj !== "object" || obj === null) return false;
+      const o = obj as Record<string, unknown>;
+      return (
+        o.identity_providers === undefined ||
+        (Array.isArray(o.identity_providers) &&
+          o.identity_providers.every(isIdentityProvider))
+      );
+    }
+
+    it("should validate LoginResponse schema", () => {
+      const validResponse = {
+        access_token: "test-access-token-placeholder",
+        refresh_token: "test-refresh-token-placeholder",
+        token_type: "Bearer",
+        expires_in: 3600,
+      };
+      expect(isLoginResponse(validResponse)).toBe(true);
+    });
+
+    it("should allow null refresh_token in LoginResponse", () => {
+      const responseWithNull = {
+        access_token: "test-access-token-placeholder",
+        refresh_token: null,
+        token_type: "Bearer",
+        expires_in: 3600,
+      };
+      expect(isLoginResponse(responseWithNull)).toBe(true);
+    });
+
+    it("should validate LogoutResponse schema", () => {
+      const validResponse = {
+        success: true,
+        message: "Successfully logged out",
+      };
+      expect(isLogoutResponse(validResponse)).toBe(true);
+    });
+
+    it("should allow minimal LogoutResponse", () => {
+      const minimalResponse = {
+        success: true,
+      };
+      expect(isLogoutResponse(minimalResponse)).toBe(true);
+    });
+
+    it("should validate IdentityProvider schema", () => {
+      const validProvider = {
+        alias: "google",
+        display_name: "Sign in with Google",
+        icon: "google",
+        login_url: "/api/v1/auth/login?kc_idp_hint=google",
+      };
+      expect(isIdentityProvider(validProvider)).toBe(true);
+    });
+
+    it("should validate IdentityProvidersListResponse schema", () => {
+      const validResponse = {
+        identity_providers: [
+          {
+            alias: "google",
+            display_name: "Sign in with Google",
+            icon: "google",
+            login_url: "/api/v1/auth/login?kc_idp_hint=google",
+          },
+          {
+            alias: "github",
+            display_name: "Sign in with GitHub",
+            icon: "github",
+            login_url: "/api/v1/auth/login?kc_idp_hint=github",
+          },
+        ],
+      };
+      expect(isIdentityProvidersListResponse(validResponse)).toBe(true);
+    });
+
+    it("should allow empty identity_providers array", () => {
+      const emptyResponse = {
+        identity_providers: [],
+      };
+      expect(isIdentityProvidersListResponse(emptyResponse)).toBe(true);
+    });
+
+    it("should allow undefined identity_providers (optional field)", () => {
+      const minimalResponse = {};
+      expect(isIdentityProvidersListResponse(minimalResponse)).toBe(true);
     });
   });
 

@@ -12,6 +12,17 @@ import {
   setAuthTokens,
   clearAuthTokens,
 } from "./storage";
+import {
+  mockData,
+  timeConstants,
+  setupQuotaExceededError,
+  setupNSErrorQuotaReached,
+  setupGenericError,
+  setupStorageError,
+  setupQuotaExceededErrorForMigration as _setupQuotaExceededErrorForMigration,
+  setupLocalStorageDisabledError,
+  setupStorageQuotaExceededError,
+} from "./storage.fixtures";
 
 describe("storage", () => {
   beforeEach(() => {
@@ -24,273 +35,159 @@ describe("storage", () => {
   });
 
   describe("get", () => {
-    it("returns undefined for non-existent key", () => {
-      const result = storage.get("nonexistent");
-      expect(result).toBeUndefined();
+    it("returns undefined or default for non-existent key", () => {
+      expect(storage.get("nonexistent")).toBeUndefined();
+      expect(storage.get("nonexistent", "default")).toBe("default");
     });
 
-    it("returns default value for non-existent key", () => {
-      const result = storage.get("nonexistent", "default");
-      expect(result).toBe("default");
+    it("parses JSON objects and arrays", () => {
+      localStorage.setItem(
+        "studio-test",
+        JSON.stringify(mockData.simpleObject),
+      );
+      expect(storage.get<{ foo: string }>("test")).toEqual(
+        mockData.simpleObject,
+      );
+      localStorage.setItem("studio-test", JSON.stringify(mockData.simpleArray));
+      expect(storage.get<number[]>("test")).toEqual(mockData.simpleArray);
     });
 
-    it("parses JSON objects", () => {
-      localStorage.setItem("studio-test", JSON.stringify({ foo: "bar" }));
-      const result = storage.get<{ foo: string }>("test");
-      expect(result).toEqual({ foo: "bar" });
-    });
-
-    it("parses JSON arrays", () => {
-      localStorage.setItem("studio-test", JSON.stringify([1, 2, 3]));
-      const result = storage.get<number[]>("test");
-      expect(result).toEqual([1, 2, 3]);
-    });
-
-    it("returns string values as-is when not valid JSON", () => {
+    it("handles string values and legacy keys", () => {
       localStorage.setItem("studio-test", "plain-string");
-      const result = storage.get<string>("test");
-      expect(result).toBe("plain-string");
-    });
-
-    it("handles prefixed keys", () => {
+      expect(storage.get<string>("test")).toBe("plain-string");
       localStorage.setItem("studio-theme", "dark");
-      const result = storage.get<string>("studio-theme");
-      expect(result).toBe("dark");
-    });
-
-    it("supports legacy keys without prefix", () => {
+      expect(storage.get<string>("studio-theme")).toBe("dark");
       localStorage.setItem("legacy-key", "value");
-      const result = storage.get<string>("legacy-key");
-      expect(result).toBe("value");
+      expect(storage.get<string>("legacy-key")).toBe("value");
     });
 
     describe("with options object", () => {
-      it("accepts defaultValue in options", () => {
-        const result = storage.get("missing", { defaultValue: "fallback" });
-        expect(result).toBe("fallback");
-      });
-
-      it("uses validator to validate value", () => {
+      it("accepts defaultValue and validator", () => {
+        expect(storage.get("missing", { defaultValue: "fallback" })).toBe(
+          "fallback",
+        );
         localStorage.setItem("studio-num", JSON.stringify(42));
         const isNumber = (v: unknown): v is number => typeof v === "number";
-        const result = storage.get<number>("num", { validator: isNumber });
-        expect(result).toBe(42);
-      });
-
-      it("returns defaultValue when validator fails", () => {
+        expect(storage.get<number>("num", { validator: isNumber })).toBe(42);
         localStorage.setItem("studio-num", JSON.stringify("not-a-number"));
-        const isNumber = (v: unknown): v is number => typeof v === "number";
-        const result = storage.get<number>("num", {
-          validator: isNumber,
-          defaultValue: 0,
-        });
-        expect(result).toBe(0);
+        expect(
+          storage.get<number>("num", { validator: isNumber, defaultValue: 0 }),
+        ).toBe(0);
       });
 
-      it("returns defaultValue when expectObject but value is string", () => {
+      it("handles expectObject option", () => {
         localStorage.setItem("studio-pref", JSON.stringify("string-value"));
-        const result = storage.get<object>("pref", {
-          expectObject: true,
-          defaultValue: {},
-        });
-        expect(result).toEqual({});
-      });
-
-      it("returns defaultValue when expectObject but value is null", () => {
+        expect(
+          storage.get<object>("pref", { expectObject: true, defaultValue: {} }),
+        ).toEqual({});
         localStorage.setItem("studio-pref", JSON.stringify(null));
-        const result = storage.get<object>("pref", {
-          expectObject: true,
-          defaultValue: { empty: true },
-        });
-        expect(result).toEqual({ empty: true });
-      });
-
-      it("returns parsed object when expectObject is true", () => {
+        expect(
+          storage.get<object>("pref", {
+            expectObject: true,
+            defaultValue: { empty: true },
+          }),
+        ).toEqual({ empty: true });
         localStorage.setItem("studio-pref", JSON.stringify({ theme: "dark" }));
-        const result = storage.get<{ theme: string }>("pref", {
-          expectObject: true,
-        });
-        expect(result).toEqual({ theme: "dark" });
-      });
-
-      it("returns defaultValue when expectObject and JSON parse fails", () => {
+        expect(
+          storage.get<{ theme: string }>("pref", { expectObject: true }),
+        ).toEqual({ theme: "dark" });
         localStorage.setItem("studio-broken", "not-json");
-        const result = storage.get<object>("broken", {
-          expectObject: true,
-          defaultValue: { empty: true },
-        });
-        expect(result).toEqual({ empty: true });
+        expect(
+          storage.get<object>("broken", {
+            expectObject: true,
+            defaultValue: { empty: true },
+          }),
+        ).toEqual({ empty: true });
       });
     });
   });
 
   describe("set", () => {
-    it("stores string values", () => {
-      const success = storage.set("test", "value");
-      expect(success).toBe(true);
+    it("stores various value types", () => {
+      expect(storage.set("test", "value")).toBe(true);
       expect(localStorage.getItem("studio-test")).toBe("value");
-    });
-
-    it("stores object values as JSON", () => {
-      const success = storage.set("test", { foo: "bar" });
-      expect(success).toBe(true);
+      expect(storage.set("test", mockData.simpleObject)).toBe(true);
       expect(localStorage.getItem("studio-test")).toBe('{"foo":"bar"}');
-    });
-
-    it("stores array values as JSON", () => {
-      const success = storage.set("test", [1, 2, 3]);
-      expect(success).toBe(true);
+      expect(storage.set("test", mockData.simpleArray)).toBe(true);
       expect(localStorage.getItem("studio-test")).toBe("[1,2,3]");
-    });
-
-    it("handles prefixed keys correctly", () => {
       storage.set("studio-theme", "dark");
       expect(localStorage.getItem("studio-theme")).toBe("dark");
-    });
-
-    it("stores boolean values", () => {
       storage.set("test", true);
       expect(localStorage.getItem("studio-test")).toBe("true");
-    });
-
-    it("stores number values", () => {
       storage.set("test", 42);
       expect(localStorage.getItem("studio-test")).toBe("42");
     });
 
-    it("handles quota exceeded error", () => {
-      const originalSetItem = localStorage.setItem;
-      localStorage.setItem = vi.fn(() => {
-        const error = new DOMException("Quota exceeded", "QuotaExceededError");
-        throw error;
-      });
-
-      const result = storage.set("big-data", "x".repeat(10000));
-      expect(result).toBe(false);
-
-      localStorage.setItem = originalSetItem;
-    });
-
-    it("handles NS_ERROR_DOM_QUOTA_REACHED error", () => {
-      const originalSetItem = localStorage.setItem;
-      localStorage.setItem = vi.fn(() => {
-        const error = new DOMException("Quota", "NS_ERROR_DOM_QUOTA_REACHED");
-        throw error;
-      });
-
-      const result = storage.set("test", "value");
-      expect(result).toBe(false);
-
-      localStorage.setItem = originalSetItem;
-    });
-
-    it("handles other storage errors", () => {
-      const originalSetItem = localStorage.setItem;
-      localStorage.setItem = vi.fn(() => {
-        throw new Error("Unknown error");
-      });
-
-      const result = storage.set("test", "value");
-      expect(result).toBe(false);
-
-      localStorage.setItem = originalSetItem;
+    it("handles storage errors", () => {
+      const original = localStorage.setItem;
+      localStorage.setItem = vi.fn(setupQuotaExceededError);
+      expect(storage.set("big-data", "x".repeat(10000))).toBe(false);
+      localStorage.setItem = vi.fn(setupNSErrorQuotaReached);
+      expect(storage.set("test", "value")).toBe(false);
+      localStorage.setItem = vi.fn(setupGenericError);
+      expect(storage.set("test", "value")).toBe(false);
+      localStorage.setItem = original;
     });
   });
 
   describe("remove", () => {
-    it("removes prefixed key", () => {
+    it("removes keys with and without prefix", () => {
       localStorage.setItem("studio-test", "value");
       storage.remove("test");
       expect(localStorage.getItem("studio-test")).toBeNull();
-    });
-
-    it("removes key with explicit prefix", () => {
       localStorage.setItem("studio-theme", "dark");
       storage.remove("studio-theme");
       expect(localStorage.getItem("studio-theme")).toBeNull();
-    });
-
-    it("handles non-existent key gracefully", () => {
       expect(() => storage.remove("nonexistent")).not.toThrow();
-    });
-
-    it("removes legacy key when key does not start with studio-", () => {
       localStorage.setItem("studio-legacy", "prefixed");
       localStorage.setItem("legacy", "not-prefixed");
-
       storage.remove("legacy");
-
       expect(localStorage.getItem("studio-legacy")).toBeNull();
       expect(localStorage.getItem("legacy")).toBeNull();
     });
   });
 
   describe("clear", () => {
-    it("clears all studio-prefixed keys", () => {
+    it("clears studio keys and handles auth tokens", () => {
       localStorage.setItem("studio-a", "1");
       localStorage.setItem("studio-b", "2");
       localStorage.setItem("other", "3");
-
       storage.clear();
-
       expect(localStorage.getItem("studio-a")).toBeNull();
       expect(localStorage.getItem("studio-b")).toBeNull();
       expect(localStorage.getItem("other")).toBe("3");
-    });
-
-    it("optionally clears auth tokens", () => {
       localStorage.setItem("access_token", "token");
       localStorage.setItem("refresh_token", "refresh");
       localStorage.setItem("auth_token", "auth");
-
       storage.clear(true);
-
       expect(localStorage.getItem("access_token")).toBeNull();
       expect(localStorage.getItem("refresh_token")).toBeNull();
       expect(localStorage.getItem("auth_token")).toBeNull();
-    });
-
-    it("preserves auth tokens by default", () => {
       localStorage.setItem("access_token", "token");
       localStorage.setItem("studio-test", "value");
-
       storage.clear();
-
       expect(localStorage.getItem("access_token")).toBe("token");
     });
   });
 
-  describe("keys", () => {
-    it("returns empty array when no keys", () => {
+  describe("keys and stats", () => {
+    it("keys returns studio-prefixed keys only", () => {
       expect(storage.keys()).toEqual([]);
-    });
-
-    it("returns only studio-prefixed keys", () => {
       localStorage.setItem("studio-a", "1");
       localStorage.setItem("studio-b", "2");
       localStorage.setItem("other", "3");
-
       const keys = storage.keys();
-
       expect(keys).toContain("studio-a");
       expect(keys).toContain("studio-b");
       expect(keys).not.toContain("other");
     });
-  });
 
-  describe("stats", () => {
-    it("returns zero stats when empty", () => {
-      const stats = storage.stats();
-      expect(stats).toEqual({ usedBytes: 0, keyCount: 0 });
-    });
-
-    it("counts only studio-prefixed keys", () => {
+    it("stats counts studio keys only", () => {
+      expect(storage.stats()).toEqual({ usedBytes: 0, keyCount: 0 });
       localStorage.setItem("studio-a", "1");
       localStorage.setItem("studio-b", "22");
       localStorage.setItem("other", "333");
-
       const stats = storage.stats();
-
       expect(stats.keyCount).toBe(2);
       expect(stats.usedBytes).toBeGreaterThan(0);
     });
@@ -298,283 +195,135 @@ describe("storage", () => {
 });
 
 describe("STORAGE_KEYS", () => {
-  it("has consistent prefixes", () => {
-    // Most keys should have studio- prefix
+  it("has consistent prefixes and legacy auth keys", () => {
     expect(STORAGE_KEYS.THEME).toMatch(/^studio-/);
     expect(STORAGE_KEYS.PREFERENCES).toMatch(/^studio-/);
     expect(STORAGE_KEYS.WORKSPACE).toMatch(/^studio-/);
     expect(STORAGE_KEYS.ONBOARDING).toMatch(/^studio-/);
-  });
-
-  it("has legacy auth keys without prefix", () => {
-    // Auth tokens are legacy and don't have prefix
     expect(STORAGE_KEYS.ACCESS_TOKEN).not.toMatch(/^studio-/);
     expect(STORAGE_KEYS.REFRESH_TOKEN).not.toMatch(/^studio-/);
     expect(STORAGE_KEYS.AUTH_TOKEN).not.toMatch(/^studio-/);
   });
 });
 
-describe("getAuthToken", () => {
-  beforeEach(() => {
-    localStorage.clear();
-  });
+describe("Auth token helpers", () => {
+  beforeEach(() => localStorage.clear());
+  afterEach(() => localStorage.clear());
 
-  afterEach(() => {
-    localStorage.clear();
-  });
-
-  it("returns null when no tokens", () => {
+  it("getAuthToken returns tokens with fallback", () => {
     expect(getAuthToken()).toBeNull();
-  });
-
-  it("returns access_token when available", () => {
     localStorage.setItem("access_token", "test-token");
     expect(getAuthToken()).toBe("test-token");
-  });
-
-  it("falls back to auth_token", () => {
+    localStorage.clear();
     localStorage.setItem("auth_token", "legacy-token");
     expect(getAuthToken()).toBe("legacy-token");
-  });
-
-  it("prefers access_token over auth_token", () => {
     localStorage.setItem("access_token", "new-token");
-    localStorage.setItem("auth_token", "old-token");
     expect(getAuthToken()).toBe("new-token");
   });
-});
 
-describe("setAuthTokens", () => {
-  beforeEach(() => {
-    localStorage.clear();
-  });
-
-  afterEach(() => {
-    localStorage.clear();
-  });
-
-  it("sets access_token and auth_token", () => {
+  it("setAuthTokens sets tokens", () => {
     setAuthTokens("token123");
-
     expect(localStorage.getItem("access_token")).toBe("token123");
     expect(localStorage.getItem("auth_token")).toBe("token123");
-  });
-
-  it("optionally sets refresh_token", () => {
     setAuthTokens("access", "refresh");
-
     expect(localStorage.getItem("access_token")).toBe("access");
     expect(localStorage.getItem("refresh_token")).toBe("refresh");
   });
-});
 
-describe("clearAuthTokens", () => {
-  beforeEach(() => {
-    localStorage.clear();
-  });
-
-  afterEach(() => {
-    localStorage.clear();
-  });
-
-  it("removes all auth tokens", () => {
+  it("clearAuthTokens removes all tokens", () => {
     localStorage.setItem("access_token", "a");
     localStorage.setItem("refresh_token", "r");
     localStorage.setItem("auth_token", "l");
-
     clearAuthTokens();
-
     expect(localStorage.getItem("access_token")).toBeNull();
     expect(localStorage.getItem("refresh_token")).toBeNull();
     expect(localStorage.getItem("auth_token")).toBeNull();
   });
 });
 
-// =============================================================================
-// Enhanced STORAGE_KEYS Tests
-// =============================================================================
-
 describe("STORAGE_KEYS - comprehensive", () => {
-  it("includes keys for all migrated hooks", () => {
-    // Progressive disclosure
+  it("includes all required keys with proper prefixes", () => {
     expect(STORAGE_KEYS.DISCLOSURE_STATE).toBeDefined();
     expect(STORAGE_KEYS.DISCLOSURE_STATE).toMatch(/^studio-/);
-
-    // Nudges
     expect(STORAGE_KEYS.NUDGE_HISTORY).toBeDefined();
     expect(STORAGE_KEYS.NUDGE_HISTORY).toMatch(/^studio-/);
-
-    // Offline queue
     expect(STORAGE_KEYS.OFFLINE_QUEUE).toBeDefined();
     expect(STORAGE_KEYS.OFFLINE_QUEUE).toMatch(/^studio-/);
-  });
-
-  it("includes keys for canvas state", () => {
     expect(STORAGE_KEYS.CANVAS_LAYOUT).toBeDefined();
     expect(STORAGE_KEYS.CANVAS_ZOOM).toBeDefined();
-  });
-
-  it("includes keys for AI features", () => {
     expect(STORAGE_KEYS.AI_SUGGESTIONS_CACHE).toBeDefined();
     expect(STORAGE_KEYS.AI_CONTEXT_HISTORY).toBeDefined();
-  });
-
-  it("provides type safety - StorageKeyEnum type", () => {
-    // These should be valid StorageKey values
     const key: StorageKey = STORAGE_KEYS.THEME;
     expect(key).toBe("studio-theme");
   });
 });
 
-// =============================================================================
-// TTL/Expiration Support Tests
-// =============================================================================
-
-describe("storage.setWithTTL and getWithTTL", () => {
+describe("storage TTL support", () => {
   beforeEach(() => {
     localStorage.clear();
     vi.useFakeTimers();
   });
-
   afterEach(() => {
     localStorage.clear();
     vi.useRealTimers();
   });
 
-  describe("setWithTTL", () => {
-    it("stores value with expiration metadata", () => {
-      storage.setWithTTL("cache-key", { data: "test" }, 60000); // 60 seconds
-
-      const stored = localStorage.getItem("studio-cache-key");
-      expect(stored).toBeTruthy();
-
-      const parsed = JSON.parse(stored!);
-      expect(parsed.__value).toEqual({ data: "test" });
-      expect(parsed.__expiresAt).toBeDefined();
-      expect(typeof parsed.__expiresAt).toBe("number");
-    });
-
-    it("calculates correct expiration timestamp", () => {
-      const now = Date.now();
-      vi.setSystemTime(now);
-
-      storage.setWithTTL("test", "value", 5000); // 5 seconds
-
-      const stored = JSON.parse(localStorage.getItem("studio-test")!);
-      expect(stored.__expiresAt).toBe(now + 5000);
-    });
-
-    it("returns true on success", () => {
-      const result = storage.setWithTTL("key", "value", 1000);
-      expect(result).toBe(true);
-    });
-
-    it("handles complex objects", () => {
-      const complexData = {
-        users: [{ id: 1, name: "Test" }],
-        metadata: { version: 2 },
-      };
-      storage.setWithTTL("complex", complexData, 10000);
-
-      const stored = JSON.parse(localStorage.getItem("studio-complex")!);
-      expect(stored.__value).toEqual(complexData);
-    });
+  it("setWithTTL stores with expiration metadata", () => {
+    storage.setWithTTL("cache-key", { data: "test" }, timeConstants.ONE_MINUTE);
+    const stored = localStorage.getItem("studio-cache-key");
+    expect(stored).toBeTruthy();
+    const parsed = JSON.parse(stored!);
+    expect(parsed.__value).toEqual({ data: "test" });
+    expect(parsed.__expiresAt).toBeDefined();
+    expect(typeof parsed.__expiresAt).toBe("number");
+    const now = Date.now();
+    vi.setSystemTime(now);
+    storage.setWithTTL("test", "value", timeConstants.FIVE_SECONDS);
+    const stored2 = JSON.parse(localStorage.getItem("studio-test")!);
+    expect(stored2.__expiresAt).toBe(now + timeConstants.FIVE_SECONDS);
+    expect(storage.setWithTTL("key", "value", timeConstants.ONE_SECOND)).toBe(
+      true,
+    );
+    storage.setWithTTL(
+      "complex",
+      mockData.complexObject,
+      timeConstants.TEN_SECONDS,
+    );
+    expect(JSON.parse(localStorage.getItem("studio-complex")!).__value).toEqual(
+      mockData.complexObject,
+    );
   });
 
-  describe("getWithTTL", () => {
-    it("returns value when not expired", () => {
-      const now = Date.now();
-      vi.setSystemTime(now);
-
-      storage.setWithTTL("fresh", "fresh-value", 60000);
-
-      // Advance 30 seconds (still valid)
-      vi.advanceTimersByTime(30000);
-
-      const result = storage.getWithTTL<string>("fresh");
-      expect(result).toBe("fresh-value");
-    });
-
-    it("returns undefined when expired", () => {
-      const now = Date.now();
-      vi.setSystemTime(now);
-
-      storage.setWithTTL("expiring", "will-expire", 5000);
-
-      // Advance 6 seconds (expired)
-      vi.advanceTimersByTime(6000);
-
-      const result = storage.getWithTTL<string>("expiring");
-      expect(result).toBeUndefined();
-    });
-
-    it("returns default value when expired", () => {
-      const now = Date.now();
-      vi.setSystemTime(now);
-
-      storage.setWithTTL("expiring", "old", 1000);
-      vi.advanceTimersByTime(2000);
-
-      const result = storage.getWithTTL<string>("expiring", "default");
-      expect(result).toBe("default");
-    });
-
-    it("removes expired key from storage", () => {
-      const now = Date.now();
-      vi.setSystemTime(now);
-
-      storage.setWithTTL("cleanup", "data", 1000);
-      vi.advanceTimersByTime(2000);
-
-      storage.getWithTTL("cleanup");
-
-      // Key should be cleaned up
-      expect(localStorage.getItem("studio-cleanup")).toBeNull();
-    });
-
-    it("returns undefined for non-existent key", () => {
-      const result = storage.getWithTTL("nonexistent");
-      expect(result).toBeUndefined();
-    });
-
-    it("returns undefined for non-TTL value (no __expiresAt)", () => {
-      // Regular storage.set (not setWithTTL)
-      storage.set("regular", { data: "test" });
-
-      const result = storage.getWithTTL("regular");
-      expect(result).toBeUndefined();
-    });
-
-    it("handles malformed TTL data gracefully", () => {
-      localStorage.setItem(
-        "studio-malformed",
-        JSON.stringify({ broken: true }),
-      );
-
-      const result = storage.getWithTTL("malformed", "fallback");
-      expect(result).toBe("fallback");
-    });
+  it("getWithTTL handles expiration correctly", () => {
+    const now = Date.now();
+    vi.setSystemTime(now);
+    storage.setWithTTL("fresh", "fresh-value", timeConstants.ONE_MINUTE);
+    vi.advanceTimersByTime(timeConstants.THIRTY_SECONDS);
+    expect(storage.getWithTTL<string>("fresh")).toBe("fresh-value");
+    storage.setWithTTL("expiring", "will-expire", timeConstants.FIVE_SECONDS);
+    vi.advanceTimersByTime(6000);
+    expect(storage.getWithTTL<string>("expiring")).toBeUndefined();
+    storage.setWithTTL("expiring2", "old", timeConstants.ONE_SECOND);
+    vi.advanceTimersByTime(2000);
+    expect(storage.getWithTTL<string>("expiring2", "default")).toBe("default");
+    storage.setWithTTL("cleanup", "data", timeConstants.ONE_SECOND);
+    vi.advanceTimersByTime(2000);
+    storage.getWithTTL("cleanup");
+    expect(localStorage.getItem("studio-cleanup")).toBeNull();
+    expect(storage.getWithTTL("nonexistent")).toBeUndefined();
+    storage.set("regular", { data: "test" });
+    expect(storage.getWithTTL("regular")).toBeUndefined();
+    localStorage.setItem("studio-malformed", JSON.stringify({ broken: true }));
+    expect(storage.getWithTTL("malformed", "fallback")).toBe("fallback");
   });
 
-  describe("TTL edge cases", () => {
-    it("handles zero TTL (immediately expires)", () => {
-      storage.setWithTTL("instant", "gone", 0);
-
-      vi.advanceTimersByTime(1);
-
-      const result = storage.getWithTTL("instant");
-      expect(result).toBeUndefined();
-    });
-
-    it("handles very long TTL", () => {
-      const oneYear = 365 * 24 * 60 * 60 * 1000;
-      storage.setWithTTL("long-term", "persistent", oneYear);
-
-      vi.advanceTimersByTime(oneYear - 1000);
-
-      const result = storage.getWithTTL<string>("long-term");
-      expect(result).toBe("persistent");
-    });
+  it("handles TTL edge cases", () => {
+    storage.setWithTTL("instant", "gone", 0);
+    vi.advanceTimersByTime(1);
+    expect(storage.getWithTTL("instant")).toBeUndefined();
+    storage.setWithTTL("long-term", "persistent", timeConstants.ONE_YEAR);
+    vi.advanceTimersByTime(timeConstants.ONE_YEAR - 1000);
+    expect(storage.getWithTTL<string>("long-term")).toBe("persistent");
   });
 });
 
@@ -587,285 +336,144 @@ describe("sessionStore", () => {
     sessionStorage.clear();
     vi.clearAllMocks();
   });
+  afterEach(() => sessionStorage.clear());
 
-  afterEach(() => {
-    sessionStorage.clear();
+  it("get handles various scenarios", () => {
+    expect(sessionStore.get("missing")).toBeUndefined();
+    expect(sessionStore.get("missing", "default")).toBe("default");
+    sessionStorage.setItem(
+      "studio-session-test",
+      JSON.stringify(mockData.simpleObject),
+    );
+    expect(sessionStore.get<{ foo: string }>("session-test")).toEqual(
+      mockData.simpleObject,
+    );
+    sessionStorage.setItem("studio-session-str", "plain-string");
+    expect(sessionStore.get<string>("session-str")).toBe("plain-string");
+    sessionStorage.setItem("studio-session-data", "value");
+    expect(sessionStore.get<string>("studio-session-data")).toBe("value");
+    const getItemSpy = vi
+      .spyOn(sessionStorage, "getItem")
+      .mockImplementation(setupStorageError);
+    expect(sessionStore.get<string>("test", "fallback")).toBe("fallback");
+    getItemSpy.mockRestore();
   });
 
-  describe("get", () => {
-    it("returns undefined for non-existent key", () => {
-      const result = sessionStore.get("missing");
-      expect(result).toBeUndefined();
-    });
-
-    it("returns default value for non-existent key", () => {
-      const result = sessionStore.get("missing", "default");
-      expect(result).toBe("default");
-    });
-
-    it("parses JSON objects", () => {
-      sessionStorage.setItem(
-        "studio-session-test",
-        JSON.stringify({ foo: "bar" }),
-      );
-      const result = sessionStore.get<{ foo: string }>("session-test");
-      expect(result).toEqual({ foo: "bar" });
-    });
-
-    it("returns string values as-is", () => {
-      sessionStorage.setItem("studio-session-str", "plain-string");
-      const result = sessionStore.get<string>("session-str");
-      expect(result).toBe("plain-string");
-    });
-
-    it("handles prefixed keys", () => {
-      sessionStorage.setItem("studio-session-data", "value");
-      const result = sessionStore.get<string>("studio-session-data");
-      expect(result).toBe("value");
-    });
-
-    it("returns default value and logs warning when getItem throws", () => {
-      // First call allows availability check to pass (uses setItem/removeItem with "__session_test__")
-      // Then mock getItem to throw
-      const getItemSpy = vi
-        .spyOn(sessionStorage, "getItem")
-        .mockImplementation(() => {
-          throw new Error("Storage error");
-        });
-
-      const result = sessionStore.get<string>("test", "fallback");
-
-      expect(result).toBe("fallback");
-      getItemSpy.mockRestore();
-    });
+  it("set stores values and handles errors", () => {
+    expect(sessionStore.set("test", "value")).toBe(true);
+    expect(sessionStorage.getItem("studio-test")).toBe("value");
+    sessionStore.set("obj", { key: "value" });
+    expect(sessionStorage.getItem("studio-obj")).toBe('{"key":"value"}');
+    sessionStore.set("arr", mockData.simpleArray);
+    expect(sessionStorage.getItem("studio-arr")).toBe("[1,2,3]");
+    const setItemSpy = vi
+      .spyOn(sessionStorage, "setItem")
+      .mockImplementationOnce(() => undefined)
+      .mockImplementationOnce(() => {
+        throw new Error("QuotaExceededError");
+      });
+    expect(sessionStore.set("test", "value")).toBe(false);
+    setItemSpy.mockRestore();
   });
 
-  describe("set", () => {
-    it("stores string values", () => {
-      const success = sessionStore.set("test", "value");
-      expect(success).toBe(true);
-      expect(sessionStorage.getItem("studio-test")).toBe("value");
-    });
-
-    it("stores object values as JSON", () => {
-      sessionStore.set("obj", { key: "value" });
-      expect(sessionStorage.getItem("studio-obj")).toBe('{"key":"value"}');
-    });
-
-    it("stores arrays as JSON", () => {
-      sessionStore.set("arr", [1, 2, 3]);
-      expect(sessionStorage.getItem("studio-arr")).toBe("[1,2,3]");
-    });
-
-    it("returns false and logs error when setItem throws", () => {
-      // First call allows availability check to pass (uses "__session_test__" key)
-      // Second call is the actual set operation which throws
-      const setItemSpy = vi
-        .spyOn(sessionStorage, "setItem")
-        .mockImplementationOnce(() => undefined) // Allow availability check
-        .mockImplementationOnce(() => {
-          throw new Error("QuotaExceededError");
-        });
-
-      const result = sessionStore.set("test", "value");
-
-      expect(result).toBe(false);
-      setItemSpy.mockRestore();
-    });
+  it("remove and clear handle keys correctly", () => {
+    sessionStorage.setItem("studio-test", "value");
+    sessionStore.remove("test");
+    expect(sessionStorage.getItem("studio-test")).toBeNull();
+    sessionStorage.setItem("studio-test", "value");
+    const removeItemSpy = vi
+      .spyOn(sessionStorage, "removeItem")
+      .mockImplementationOnce(() => undefined)
+      .mockImplementationOnce(setupStorageError);
+    expect(() => sessionStore.remove("test")).not.toThrow();
+    removeItemSpy.mockRestore();
+    sessionStorage.setItem("studio-a", "1");
+    sessionStorage.setItem("studio-b", "2");
+    sessionStorage.setItem("other", "3");
+    sessionStore.clear();
+    expect(sessionStorage.getItem("studio-a")).toBeNull();
+    expect(sessionStorage.getItem("studio-b")).toBeNull();
+    expect(sessionStorage.getItem("other")).toBe("3");
+    sessionStorage.setItem("studio-test", "1");
+    const removeItemSpy2 = vi
+      .spyOn(sessionStorage, "removeItem")
+      .mockImplementationOnce(() => undefined)
+      .mockImplementation(setupStorageQuotaExceededError);
+    expect(() => sessionStore.clear()).not.toThrow();
+    removeItemSpy2.mockRestore();
   });
 
-  describe("remove", () => {
-    it("removes session storage key", () => {
-      sessionStorage.setItem("studio-test", "value");
-      sessionStore.remove("test");
-      expect(sessionStorage.getItem("studio-test")).toBeNull();
-    });
-
-    it("handles errors gracefully when removeItem throws", () => {
-      // Setup initial state
-      sessionStorage.setItem("studio-test", "value");
-
-      // First call allows availability check to pass
-      // Second call is the actual remove operation which throws
-      const removeItemSpy = vi
-        .spyOn(sessionStorage, "removeItem")
-        .mockImplementationOnce(() => undefined) // Allow availability check
-        .mockImplementationOnce(() => {
-          throw new Error("Storage error");
-        });
-
-      // Should not throw
-      expect(() => sessionStore.remove("test")).not.toThrow();
-
-      removeItemSpy.mockRestore();
-    });
-  });
-
-  describe("clear", () => {
-    it("clears all studio-prefixed session keys", () => {
-      sessionStorage.setItem("studio-a", "1");
-      sessionStorage.setItem("studio-b", "2");
-      sessionStorage.setItem("other", "3");
-
-      sessionStore.clear();
-
-      expect(sessionStorage.getItem("studio-a")).toBeNull();
-      expect(sessionStorage.getItem("studio-b")).toBeNull();
-      expect(sessionStorage.getItem("other")).toBe("3");
-    });
-
-    it("handles errors gracefully during clear", () => {
-      // Setup initial state
-      sessionStorage.setItem("studio-test", "1");
-
-      // First call allows availability check to pass
-      // Subsequent calls are actual removes which throw
-      const removeItemSpy = vi
-        .spyOn(sessionStorage, "removeItem")
-        .mockImplementationOnce(() => undefined) // Allow availability check
-        .mockImplementation(() => {
-          throw new Error("Storage quota exceeded");
-        });
-
-      // Should not throw
-      expect(() => sessionStore.clear()).not.toThrow();
-
-      // Restore spy properly to avoid polluting other tests
-      removeItemSpy.mockRestore();
-    });
-  });
-
-  describe("keys", () => {
-    it("returns only studio-prefixed session keys", () => {
-      sessionStorage.setItem("studio-x", "1");
-      sessionStorage.setItem("studio-y", "2");
-      sessionStorage.setItem("other", "3");
-
-      const keys = sessionStore.keys();
-
-      expect(keys).toContain("studio-x");
-      expect(keys).toContain("studio-y");
-      expect(keys).not.toContain("other");
-    });
+  it("keys returns studio-prefixed keys only", () => {
+    sessionStorage.setItem("studio-x", "1");
+    sessionStorage.setItem("studio-y", "2");
+    sessionStorage.setItem("other", "3");
+    const keys = sessionStore.keys();
+    expect(keys).toContain("studio-x");
+    expect(keys).toContain("studio-y");
+    expect(keys).not.toContain("other");
   });
 });
-
-// =============================================================================
-// Session Storage with TTL Tests
-// =============================================================================
 
 describe("sessionStore TTL support", () => {
   beforeEach(() => {
     sessionStorage.clear();
     vi.useFakeTimers();
   });
-
   afterEach(() => {
     sessionStorage.clear();
     vi.useRealTimers();
   });
 
-  it("supports setWithTTL", () => {
-    sessionStore.setWithTTL("session-cache", { temp: "data" }, 30000);
-
+  it("supports TTL operations", () => {
+    sessionStore.setWithTTL(
+      "session-cache",
+      { temp: "data" },
+      timeConstants.THIRTY_SECONDS,
+    );
     const stored = sessionStorage.getItem("studio-session-cache");
     expect(stored).toBeTruthy();
-
     const parsed = JSON.parse(stored!);
     expect(parsed.__value).toEqual({ temp: "data" });
     expect(parsed.__expiresAt).toBeDefined();
-  });
-
-  it("supports getWithTTL - returns value when fresh", () => {
-    sessionStore.setWithTTL("fresh", "data", 10000);
-
-    vi.advanceTimersByTime(5000);
-
-    const result = sessionStore.getWithTTL<string>("fresh");
-    expect(result).toBe("data");
-  });
-
-  it("supports getWithTTL - returns undefined when expired", () => {
-    sessionStore.setWithTTL("expiring", "data", 5000);
-
+    sessionStore.setWithTTL("fresh", "data", timeConstants.TEN_SECONDS);
+    vi.advanceTimersByTime(timeConstants.FIVE_SECONDS);
+    expect(sessionStore.getWithTTL<string>("fresh")).toBe("data");
+    sessionStore.setWithTTL("expiring", "data", timeConstants.FIVE_SECONDS);
     vi.advanceTimersByTime(6000);
-
-    const result = sessionStore.getWithTTL("expiring");
-    expect(result).toBeUndefined();
-  });
-
-  it("getWithTTL returns default value when data is not a TTL wrapper", () => {
-    // Store a plain value (not a TTL wrapper)
+    expect(sessionStore.getWithTTL("expiring")).toBeUndefined();
     sessionStorage.setItem(
       "studio-plain-value",
-      JSON.stringify({ foo: "bar" }),
+      JSON.stringify(mockData.simpleObject),
     );
-
-    const result = sessionStore.getWithTTL<string>(
-      "plain-value",
+    expect(sessionStore.getWithTTL<string>("plain-value", "default-val")).toBe(
       "default-val",
     );
-    expect(result).toBe("default-val");
-  });
-
-  it("getWithTTL returns default value on JSON parse error", () => {
-    // Store invalid JSON
     sessionStorage.setItem("studio-invalid-json", "not-valid-json{");
-
-    const result = sessionStore.getWithTTL<string>("invalid-json", "fallback");
-    expect(result).toBe("fallback");
-  });
-
-  it("getWithTTL returns data when using already-prefixed key", () => {
-    // Store directly with prefixed key
+    expect(sessionStore.getWithTTL<string>("invalid-json", "fallback")).toBe(
+      "fallback",
+    );
     const wrapper = {
       __value: "prefixed-data",
-      __expiresAt: Date.now() + 10000,
+      __expiresAt: Date.now() + timeConstants.TEN_SECONDS,
     };
     sessionStorage.setItem("studio-prefixed-ttl", JSON.stringify(wrapper));
-
-    // getWithTTL should find it when passed the prefixed key
-    const result = sessionStore.getWithTTL<string>("studio-prefixed-ttl");
-    expect(result).toBe("prefixed-data");
+    expect(sessionStore.getWithTTL<string>("studio-prefixed-ttl")).toBe(
+      "prefixed-data",
+    );
   });
 });
 
-// =============================================================================
-// Hook Storage Key Integration Tests
-// =============================================================================
-
 describe("STORAGE_KEYS - hook integration", () => {
-  it("STORAGE_KEYS.NUDGE_HISTORY matches expected key format", () => {
-    // useNudges should use this key
+  it("validates hook storage key formats", () => {
     expect(STORAGE_KEYS.NUDGE_HISTORY).toBe("studio-nudge_history");
-  });
-
-  it("STORAGE_KEYS.DISCLOSURE_STATE matches expected key format", () => {
-    // useProgressiveDisclosure should use this key
     expect(STORAGE_KEYS.DISCLOSURE_STATE).toBe("studio-disclosure_state");
-  });
-
-  it("STORAGE_KEYS.OFFLINE_QUEUE matches expected key format", () => {
-    // useOfflineQueue should use this key as default
     expect(STORAGE_KEYS.OFFLINE_QUEUE).toBe("studio-offline_queue");
-  });
-
-  it("STORAGE_KEYS.AI_SUGGESTIONS_CACHE matches expected format", () => {
-    // AI suggestions should use TTL cache with this key
     expect(STORAGE_KEYS.AI_SUGGESTIONS_CACHE).toBe(
       "studio-ai-suggestions-cache",
     );
-  });
-
-  it("STORAGE_KEYS.SESSION_SYNC_STATE matches expected format", () => {
-    // useSessionSync can use sessionStore with this key for temporary data
     expect(STORAGE_KEYS.SESSION_SYNC_STATE).toBe("studio-session-sync-state");
   });
 });
-
-// =============================================================================
-// AI Suggestions Cache with TTL Tests
-// =============================================================================
 
 describe("AI suggestions cache pattern", () => {
   beforeEach(() => {
@@ -873,83 +481,53 @@ describe("AI suggestions cache pattern", () => {
     sessionStorage.clear();
     vi.useFakeTimers();
   });
-
   afterEach(() => {
     localStorage.clear();
     sessionStorage.clear();
     vi.useRealTimers();
   });
 
-  it("can cache AI suggestions with 5-minute TTL", () => {
-    const suggestions = [
-      {
-        id: "1",
-        type: "completion",
-        content: "test suggestion",
-        confidence: 0.9,
-      },
-    ];
-
-    // Cache with 5 min TTL
-    const TTL_5_MIN = 5 * 60 * 1000;
+  it("caches AI suggestions with TTL and expiration", () => {
     storage.setWithTTL(
       STORAGE_KEYS.AI_SUGGESTIONS_CACHE,
-      suggestions,
-      TTL_5_MIN,
+      mockData.aiSuggestions,
+      timeConstants.FIVE_MINUTES,
     );
-
-    // Should be available immediately
-    const cached = storage.getWithTTL<typeof suggestions>(
-      STORAGE_KEYS.AI_SUGGESTIONS_CACHE,
-    );
-    expect(cached).toEqual(suggestions);
-  });
-
-  it("AI suggestions cache expires after TTL", () => {
-    const suggestions = [{ id: "1", content: "test" }];
-    const TTL_5_MIN = 5 * 60 * 1000;
-
+    expect(
+      storage.getWithTTL<typeof mockData.aiSuggestions>(
+        STORAGE_KEYS.AI_SUGGESTIONS_CACHE,
+      ),
+    ).toEqual(mockData.aiSuggestions);
     storage.setWithTTL(
       STORAGE_KEYS.AI_SUGGESTIONS_CACHE,
-      suggestions,
-      TTL_5_MIN,
+      mockData.aiSuggestionSimple,
+      timeConstants.FIVE_MINUTES,
     );
-
-    // Advance time past TTL
-    vi.advanceTimersByTime(TTL_5_MIN + 1000);
-
-    const cached = storage.getWithTTL(STORAGE_KEYS.AI_SUGGESTIONS_CACHE);
-    expect(cached).toBeUndefined();
-  });
-
-  it("sessionStore is suitable for per-session AI context", () => {
-    const context = { sessionId: "123", artifactId: "456" };
-
-    sessionStore.set(STORAGE_KEYS.AI_CONTEXT_HISTORY, context);
-
-    const retrieved = sessionStore.get<typeof context>(
-      STORAGE_KEYS.AI_CONTEXT_HISTORY,
-    );
-    expect(retrieved).toEqual(context);
-  });
-
-  it("sessionStore with TTL for temporary AI preferences", () => {
-    const tempPrefs = { autoSuggest: true, model: "claude-3" };
-    const TTL_30_MIN = 30 * 60 * 1000;
-
-    sessionStore.setWithTTL(STORAGE_KEYS.AI_PREFERENCES, tempPrefs, TTL_30_MIN);
-
-    // Still valid at 25 min
-    vi.advanceTimersByTime(25 * 60 * 1000);
-    const prefs = sessionStore.getWithTTL<typeof tempPrefs>(
+    vi.advanceTimersByTime(timeConstants.FIVE_MINUTES + 1000);
+    expect(
+      storage.getWithTTL(STORAGE_KEYS.AI_SUGGESTIONS_CACHE),
+    ).toBeUndefined();
+    sessionStore.set(STORAGE_KEYS.AI_CONTEXT_HISTORY, mockData.aiContext);
+    expect(
+      sessionStore.get<typeof mockData.aiContext>(
+        STORAGE_KEYS.AI_CONTEXT_HISTORY,
+      ),
+    ).toEqual(mockData.aiContext);
+    sessionStore.setWithTTL(
       STORAGE_KEYS.AI_PREFERENCES,
+      mockData.aiPreferences,
+      timeConstants.THIRTY_MINUTES,
     );
-    expect(prefs).toEqual(tempPrefs);
-
-    // Expired at 35 min
-    vi.advanceTimersByTime(10 * 60 * 1000);
-    const expired = sessionStore.getWithTTL(STORAGE_KEYS.AI_PREFERENCES);
-    expect(expired).toBeUndefined();
+    vi.advanceTimersByTime(timeConstants.TWENTY_FIVE_MINUTES);
+    expect(
+      sessionStore.getWithTTL<typeof mockData.aiPreferences>(
+        STORAGE_KEYS.AI_PREFERENCES,
+      ),
+    ).toEqual(mockData.aiPreferences);
+    vi.advanceTimersByTime(timeConstants.TEN_MINUTES);
+    expect(
+      sessionStore.getWithTTL(STORAGE_KEYS.AI_PREFERENCES),
+    ).toBeUndefined();
   });
 });
 
@@ -962,205 +540,87 @@ describe("storage.migrate", () => {
     localStorage.clear();
     vi.clearAllMocks();
   });
+  afterEach(() => localStorage.clear());
 
-  afterEach(() => {
-    localStorage.clear();
-  });
-
-  it("migrates value from legacy key to new key", () => {
-    // Set up legacy key (without prefix)
-    localStorage.setItem("old_preferences", JSON.stringify({ theme: "dark" }));
-
-    // Migrate to new key
-    const migrated = storage.migrate(
+  it("migrates legacy keys and handles edge cases", () => {
+    localStorage.setItem(
       "old_preferences",
-      STORAGE_KEYS.PREFERENCES,
+      JSON.stringify(mockData.legacyPreferences),
     );
-
-    expect(migrated).toBe(true);
-
-    // New key should have the value
-    const newValue = storage.get<{ theme: string }>(STORAGE_KEYS.PREFERENCES);
-    expect(newValue).toEqual({ theme: "dark" });
-
-    // Legacy key should be removed
+    expect(storage.migrate("old_preferences", STORAGE_KEYS.PREFERENCES)).toBe(
+      true,
+    );
+    expect(storage.get<{ theme: string }>(STORAGE_KEYS.PREFERENCES)).toEqual(
+      mockData.legacyPreferences,
+    );
     expect(localStorage.getItem("old_preferences")).toBeNull();
-  });
-
-  it("returns false if legacy key does not exist", () => {
-    const migrated = storage.migrate(
-      "nonexistent_key",
-      STORAGE_KEYS.PREFERENCES,
+    expect(storage.migrate("nonexistent_key", STORAGE_KEYS.PREFERENCES)).toBe(
+      false,
     );
-
-    expect(migrated).toBe(false);
-  });
-
-  it("does not overwrite if target key already exists", () => {
-    // Set up both keys
-    localStorage.setItem("old_key", JSON.stringify({ old: true }));
-    storage.set(STORAGE_KEYS.PREFERENCES, { new: true });
-
-    // Attempt migration
-    const migrated = storage.migrate("old_key", STORAGE_KEYS.PREFERENCES);
-
-    expect(migrated).toBe(false);
-
-    // New key should keep original value
-    const value = storage.get<{ new: boolean }>(STORAGE_KEYS.PREFERENCES);
-    expect(value).toEqual({ new: true });
-  });
-
-  it("supports force option to overwrite target", () => {
-    // Set up both keys
-    localStorage.setItem("old_key", JSON.stringify({ old: true }));
-    storage.set(STORAGE_KEYS.PREFERENCES, { new: true });
-
-    // Force migration
-    const migrated = storage.migrate("old_key", STORAGE_KEYS.PREFERENCES, {
-      force: true,
-    });
-
-    expect(migrated).toBe(true);
-
-    // New key should have old value
-    const value = storage.get<{ old: boolean }>(STORAGE_KEYS.PREFERENCES);
-    expect(value).toEqual({ old: true });
-  });
-
-  it("handles string values (non-JSON)", () => {
+    localStorage.setItem("old_key", JSON.stringify(mockData.oldKeyData));
+    storage.set(STORAGE_KEYS.PREFERENCES, mockData.newKeyData);
+    expect(storage.migrate("old_key", STORAGE_KEYS.PREFERENCES)).toBe(false);
+    expect(storage.get<{ new: boolean }>(STORAGE_KEYS.PREFERENCES)).toEqual(
+      mockData.newKeyData,
+    );
+    expect(
+      storage.migrate("old_key", STORAGE_KEYS.PREFERENCES, { force: true }),
+    ).toBe(true);
+    expect(storage.get<{ old: boolean }>(STORAGE_KEYS.PREFERENCES)).toEqual(
+      mockData.oldKeyData,
+    );
     localStorage.setItem("old_theme", "dark");
-
-    const migrated = storage.migrate("old_theme", STORAGE_KEYS.THEME);
-
-    expect(migrated).toBe(true);
+    expect(storage.migrate("old_theme", STORAGE_KEYS.THEME)).toBe(true);
     expect(storage.get<string>(STORAGE_KEYS.THEME)).toBe("dark");
-  });
-
-  it("returns false when localStorage throws during migration", () => {
-    // Set up legacy key
-    localStorage.setItem("old_key", JSON.stringify({ value: "data" }));
-
-    // Save original and track call count
-    const originalSetItem = window.localStorage.setItem.bind(
-      window.localStorage,
-    );
+    localStorage.setItem("old_key", JSON.stringify(mockData.migrationData));
+    const original = window.localStorage.setItem.bind(window.localStorage);
     let callCount = 0;
-
-    // First call allows availability check, second call (the actual setItem) throws
     window.localStorage.setItem = vi.fn((key: string, value: string) => {
       callCount++;
-      if (callCount === 1) {
-        // Allow availability check (uses "__storage_test__")
-        return originalSetItem(key, value);
-      }
-      // Throw on subsequent calls (the migration setItem)
+      if (callCount === 1) return original(key, value);
       throw new Error("QuotaExceededError");
     });
-
-    const migrated = storage.migrate("old_key", STORAGE_KEYS.PREFERENCES);
-
-    expect(migrated).toBe(false);
-
-    // Restore
-    window.localStorage.setItem = originalSetItem;
+    expect(storage.migrate("old_key", STORAGE_KEYS.PREFERENCES)).toBe(false);
+    window.localStorage.setItem = original;
   });
 });
 
-// =============================================================================
-// Storage Quota Monitoring Tests
-// =============================================================================
+describe("storage quota monitoring", () => {
+  beforeEach(() => localStorage.clear());
+  afterEach(() => localStorage.clear());
 
-describe("storage.getQuotaInfo", () => {
-  beforeEach(() => {
-    localStorage.clear();
-  });
-
-  afterEach(() => {
-    localStorage.clear();
-  });
-
-  it("returns current usage statistics", () => {
-    // Add some data
+  it("getQuotaInfo returns usage statistics", () => {
     storage.set("test1", { data: "value1" });
     storage.set("test2", { data: "value2" });
-
     const quota = storage.getQuotaInfo();
-
     expect(quota.usedBytes).toBeGreaterThan(0);
     expect(quota.keyCount).toBeGreaterThanOrEqual(2);
     expect(quota.percentUsed).toBeGreaterThanOrEqual(0);
     expect(quota.percentUsed).toBeLessThanOrEqual(100);
-  });
-
-  it("returns estimated available space", () => {
-    const quota = storage.getQuotaInfo();
-
     expect(quota.estimatedQuota).toBeGreaterThan(0);
     expect(quota.availableBytes).toBeGreaterThan(0);
-  });
-
-  it("identifies largest keys", () => {
-    // Add data of varying sizes
     storage.set("small", "a");
     storage.set("medium", "a".repeat(100));
     storage.set("large", "a".repeat(1000));
-
-    const quota = storage.getQuotaInfo();
-
-    expect(quota.largestKeys).toBeDefined();
-    expect(quota.largestKeys.length).toBeGreaterThan(0);
-    expect(quota.largestKeys[0].key).toBe("studio-large");
+    const quota2 = storage.getQuotaInfo();
+    expect(quota2.largestKeys).toBeDefined();
+    expect(quota2.largestKeys.length).toBeGreaterThan(0);
+    expect(quota2.largestKeys[0].key).toBe("studio-large");
+    const original = window.localStorage.setItem;
+    window.localStorage.setItem = vi.fn(setupLocalStorageDisabledError);
+    const quota3 = storage.getQuotaInfo();
+    expect(quota3.usedBytes).toBe(0);
+    expect(quota3.keyCount).toBe(0);
+    expect(quota3.percentUsed).toBe(0);
+    expect(quota3.largestKeys).toEqual([]);
+    window.localStorage.setItem = original;
   });
 
-  it("returns empty quota info when localStorage is unavailable", () => {
-    // Mock window.localStorage.setItem to throw on availability check
-    const originalSetItem = window.localStorage.setItem;
-    window.localStorage.setItem = vi.fn(() => {
-      throw new Error("localStorage disabled");
-    });
-
-    const quota = storage.getQuotaInfo();
-
-    expect(quota.usedBytes).toBe(0);
-    expect(quota.keyCount).toBe(0);
-    expect(quota.percentUsed).toBe(0);
-    expect(quota.largestKeys).toEqual([]);
-
-    // Restore
-    window.localStorage.setItem = originalSetItem;
-  });
-});
-
-describe("storage.isNearQuota", () => {
-  beforeEach(() => {
-    localStorage.clear();
-  });
-
-  afterEach(() => {
-    localStorage.clear();
-  });
-
-  it("returns false when storage is mostly empty", () => {
+  it("isNearQuota checks quota thresholds", () => {
     storage.set("small", "test");
-
-    const nearQuota = storage.isNearQuota();
-
-    expect(nearQuota).toBe(false);
-  });
-
-  it("accepts custom threshold percentage", () => {
-    // Verify the API works with custom threshold
-    const nearQuota = storage.isNearQuota(0.001); // 0.1% threshold
-
-    // Even a small amount of data could trigger this
-    expect(typeof nearQuota).toBe("boolean");
-  });
-
-  it("uses default 90% threshold", () => {
-    // With mostly empty storage, should be false
-    const nearQuota = storage.isNearQuota();
-    expect(nearQuota).toBe(false);
+    expect(storage.isNearQuota()).toBe(false);
+    expect(typeof storage.isNearQuota(0.001)).toBe("boolean");
+    expect(storage.isNearQuota()).toBe(false);
   });
 });
 
@@ -1169,92 +629,44 @@ describe("storage.cleanup", () => {
     localStorage.clear();
     vi.useFakeTimers();
   });
-
   afterEach(() => {
     localStorage.clear();
     vi.useRealTimers();
   });
 
-  it("removes expired TTL entries", () => {
+  it("removes expired TTL entries and handles edge cases", () => {
     const now = Date.now();
     vi.setSystemTime(now);
-
-    // Set up some TTL entries
-    storage.setWithTTL("fresh", "still-valid", 60000); // 60s TTL
-    storage.setWithTTL("stale", "should-expire", 1000); // 1s TTL
-
-    // Advance time past the shorter TTL
-    vi.advanceTimersByTime(5000);
-
-    // Run cleanup
+    storage.setWithTTL("fresh", "still-valid", timeConstants.ONE_MINUTE);
+    storage.setWithTTL("stale", "should-expire", timeConstants.ONE_SECOND);
+    vi.advanceTimersByTime(timeConstants.FIVE_SECONDS);
     const result = storage.cleanup();
-
     expect(result.removedCount).toBeGreaterThanOrEqual(1);
     expect(result.freedBytes).toBeGreaterThan(0);
-
-    // Fresh entry should still exist
-    const fresh = storage.getWithTTL<string>("fresh");
-    expect(fresh).toBe("still-valid");
-
-    // Stale entry should be gone
-    const stale = storage.getWithTTL<string>("stale");
-    expect(stale).toBeUndefined();
-  });
-
-  it("returns cleanup result shape", () => {
-    // Verify the API exists and returns expected shape
-    const result = storage.cleanup({ maxAge: 1000 });
-
-    expect(result).toHaveProperty("removedCount");
-    expect(result).toHaveProperty("freedBytes");
-  });
-
-  it("returns zero when no expired entries", () => {
-    const now = Date.now();
+    expect(storage.getWithTTL<string>("fresh")).toBe("still-valid");
+    expect(storage.getWithTTL<string>("stale")).toBeUndefined();
+    const result2 = storage.cleanup({ maxAge: 1000 });
+    expect(result2).toHaveProperty("removedCount");
+    expect(result2).toHaveProperty("freedBytes");
     vi.setSystemTime(now);
-
-    // Set up non-expired entries
-    storage.setWithTTL("valid1", "data1", 60000);
-    storage.setWithTTL("valid2", "data2", 60000);
-
-    const result = storage.cleanup();
-
-    expect(result.removedCount).toBe(0);
-    expect(result.freedBytes).toBe(0);
-  });
-
-  it("handles mixed expired and valid entries", () => {
-    const now = Date.now();
+    storage.setWithTTL("valid1", "data1", timeConstants.ONE_MINUTE);
+    storage.setWithTTL("valid2", "data2", timeConstants.ONE_MINUTE);
+    const result3 = storage.cleanup();
+    expect(result3.removedCount).toBe(0);
+    expect(result3.freedBytes).toBe(0);
     vi.setSystemTime(now);
-
-    // Set up mixed entries
-    storage.setWithTTL("valid", "still-good", 60000);
-    storage.setWithTTL("expired1", "bye1", 1000);
+    storage.setWithTTL("valid", "still-good", timeConstants.ONE_MINUTE);
+    storage.setWithTTL("expired1", "bye1", timeConstants.ONE_SECOND);
     storage.setWithTTL("expired2", "bye2", 2000);
-
-    // Advance past both short TTLs
     vi.advanceTimersByTime(3000);
-
-    const result = storage.cleanup();
-
-    expect(result.removedCount).toBe(2);
-    expect(result.freedBytes).toBeGreaterThan(0);
-
-    // Valid entry remains
+    const result4 = storage.cleanup();
+    expect(result4.removedCount).toBe(2);
+    expect(result4.freedBytes).toBeGreaterThan(0);
     expect(storage.getWithTTL<string>("valid")).toBe("still-good");
-  });
-
-  it("returns zero counts when localStorage is unavailable", () => {
-    // Mock localStorage.setItem to throw, making isLocalStorageAvailable() return false
     const setItemSpy = vi
       .spyOn(localStorage, "setItem")
-      .mockImplementation(() => {
-        throw new Error("localStorage disabled");
-      });
-
-    const result = storage.cleanup();
-
-    expect(result).toEqual({ removedCount: 0, freedBytes: 0 });
+      .mockImplementation(setupLocalStorageDisabledError);
+    expect(storage.cleanup()).toEqual({ removedCount: 0, freedBytes: 0 });
     setItemSpy.mockRestore();
   });
 });

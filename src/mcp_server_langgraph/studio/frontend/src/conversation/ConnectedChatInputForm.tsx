@@ -19,6 +19,9 @@ import {
 } from "../components/Chat/ChatInputForm";
 import { useFileUpload } from "../hooks/useFileUpload";
 import { useVoiceInput } from "../hooks/useVoiceInput";
+import { useFeatureFlag } from "../contexts/FeatureFlagContext";
+import { useAppSelector } from "../store/hooks";
+import { selectSubmitOnEnter } from "../store/slices/uiSlice";
 
 // =============================================================================
 // Types
@@ -90,6 +93,12 @@ export function ConnectedChatInputForm({
   onDismissSuggestion,
   autoFocus = false,
 }: ConnectedChatInputFormProps) {
+  // =============================================================================
+  // Feature Flags & UI State
+  // =============================================================================
+  const enableRichTextMode = useFeatureFlag("rich_text_chat_input");
+  const submitOnEnter = useAppSelector(selectSubmitOnEnter);
+
   // =============================================================================
   // File Upload Hook
   // =============================================================================
@@ -216,6 +225,9 @@ export function ConnectedChatInputForm({
       onDismissSuggestion={onDismissSuggestion}
       // Auto-focus
       autoFocus={autoFocus}
+      // RichText mode (feature flag + user preference)
+      enableRichTextMode={enableRichTextMode}
+      submitOnEnter={submitOnEnter}
     />
   );
 }

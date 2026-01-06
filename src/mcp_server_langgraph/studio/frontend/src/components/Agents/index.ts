@@ -11,3 +11,4 @@ export { FeatureFlagsCard } from "./FeatureFlagsCard";
 export { OrchestratorsListCard } from "./OrchestratorsListCard";
 export { TaskMappingCard } from "./TaskMappingCard";
 export { LLMProvidersCard } from "./LLMProvidersCard";
+export { AgentMetricsCard } from "./AgentMetricsCard";

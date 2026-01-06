@@ -52,25 +52,33 @@ describe("RichTextInput", () => {
       ).toBeInTheDocument();
     });
 
-    it("should render formatting toolbar", () => {
-      render(<RichTextInput onSubmit={mockOnSubmit} />);
+    it("should render formatting toolbar when expanded", () => {
+      render(
+        <RichTextInput onSubmit={mockOnSubmit} defaultToolbarExpanded={true} />,
+      );
       expect(screen.getByTestId("formatting-toolbar")).toBeInTheDocument();
     });
 
-    it("should render bold button", () => {
-      render(<RichTextInput onSubmit={mockOnSubmit} />);
+    it("should render bold button when toolbar expanded", () => {
+      render(
+        <RichTextInput onSubmit={mockOnSubmit} defaultToolbarExpanded={true} />,
+      );
       expect(screen.getByRole("button", { name: /bold/i })).toBeInTheDocument();
     });
 
-    it("should render italic button", () => {
-      render(<RichTextInput onSubmit={mockOnSubmit} />);
+    it("should render italic button when toolbar expanded", () => {
+      render(
+        <RichTextInput onSubmit={mockOnSubmit} defaultToolbarExpanded={true} />,
+      );
       expect(
         screen.getByRole("button", { name: /italic/i }),
       ).toBeInTheDocument();
     });
 
-    it("should render code button", () => {
-      render(<RichTextInput onSubmit={mockOnSubmit} />);
+    it("should render code button when toolbar expanded", () => {
+      render(
+        <RichTextInput onSubmit={mockOnSubmit} defaultToolbarExpanded={true} />,
+      );
       expect(
         screen.getByRole("button", { name: /^code$/i }),
       ).toBeInTheDocument();
@@ -109,7 +117,9 @@ describe("RichTextInput", () => {
   describe("text formatting", () => {
     it("should wrap selected text with bold markers", async () => {
       const user = userEvent.setup();
-      render(<RichTextInput onSubmit={mockOnSubmit} />);
+      render(
+        <RichTextInput onSubmit={mockOnSubmit} defaultToolbarExpanded={true} />,
+      );
 
       const input = screen.getByRole("textbox") as HTMLTextAreaElement;
       await user.type(input, "Hello world");
@@ -125,7 +135,9 @@ describe("RichTextInput", () => {
 
     it("should wrap selected text with italic markers", async () => {
       const user = userEvent.setup();
-      render(<RichTextInput onSubmit={mockOnSubmit} />);
+      render(
+        <RichTextInput onSubmit={mockOnSubmit} defaultToolbarExpanded={true} />,
+      );
 
       const input = screen.getByRole("textbox") as HTMLTextAreaElement;
       await user.type(input, "Hello world");
@@ -141,7 +153,9 @@ describe("RichTextInput", () => {
 
     it("should wrap selected text with inline code markers", async () => {
       const user = userEvent.setup();
-      render(<RichTextInput onSubmit={mockOnSubmit} />);
+      render(
+        <RichTextInput onSubmit={mockOnSubmit} defaultToolbarExpanded={true} />,
+      );
 
       const input = screen.getByRole("textbox") as HTMLTextAreaElement;
       await user.type(input, "Use the function test");
@@ -157,7 +171,9 @@ describe("RichTextInput", () => {
 
     it("should insert markers at cursor when no text selected", async () => {
       const user = userEvent.setup();
-      render(<RichTextInput onSubmit={mockOnSubmit} />);
+      render(
+        <RichTextInput onSubmit={mockOnSubmit} defaultToolbarExpanded={true} />,
+      );
 
       const input = screen.getByRole("textbox") as HTMLTextAreaElement;
       input.focus();
@@ -211,15 +227,74 @@ describe("RichTextInput", () => {
   });
 
   describe("submit handling", () => {
-    it("should submit on Cmd/Ctrl+Enter", async () => {
-      const user = userEvent.setup();
-      render(<RichTextInput onSubmit={mockOnSubmit} />);
+    describe("submitOnEnter=true (default, ChatGPT-style)", () => {
+      it("should submit on Enter", async () => {
+        const user = userEvent.setup();
+        render(<RichTextInput onSubmit={mockOnSubmit} submitOnEnter={true} />);
 
-      const input = screen.getByRole("textbox");
-      await user.type(input, "Test message");
-      await user.keyboard("{Control>}{Enter}{/Control}");
+        const input = screen.getByRole("textbox");
+        await user.type(input, "Test message");
+        await user.keyboard("{Enter}");
 
-      expect(mockOnSubmit).toHaveBeenCalledWith("Test message");
+        expect(mockOnSubmit).toHaveBeenCalledWith("Test message");
+      });
+
+      it("should not submit on Shift+Enter (allows newline)", async () => {
+        const user = userEvent.setup();
+        render(<RichTextInput onSubmit={mockOnSubmit} submitOnEnter={true} />);
+
+        const input = screen.getByRole("textbox");
+        await user.type(input, "Test message");
+        await user.keyboard("{Shift>}{Enter}{/Shift}");
+
+        expect(mockOnSubmit).not.toHaveBeenCalled();
+      });
+
+      it("should clear input after successful submit", async () => {
+        const user = userEvent.setup();
+        render(<RichTextInput onSubmit={mockOnSubmit} submitOnEnter={true} />);
+
+        const input = screen.getByRole("textbox");
+        await user.type(input, "Test message");
+        await user.keyboard("{Enter}");
+
+        expect(input).toHaveValue("");
+      });
+    });
+
+    describe("submitOnEnter=false (legacy, Ctrl+Enter style)", () => {
+      it("should submit on Ctrl+Enter", async () => {
+        const user = userEvent.setup();
+        render(<RichTextInput onSubmit={mockOnSubmit} submitOnEnter={false} />);
+
+        const input = screen.getByRole("textbox");
+        await user.type(input, "Test message");
+        await user.keyboard("{Control>}{Enter}{/Control}");
+
+        expect(mockOnSubmit).toHaveBeenCalledWith("Test message");
+      });
+
+      it("should not submit on Enter alone", async () => {
+        const user = userEvent.setup();
+        render(<RichTextInput onSubmit={mockOnSubmit} submitOnEnter={false} />);
+
+        const input = screen.getByRole("textbox");
+        await user.type(input, "Test message");
+        await user.keyboard("{Enter}");
+
+        expect(mockOnSubmit).not.toHaveBeenCalled();
+      });
+
+      it("should clear input after successful submit", async () => {
+        const user = userEvent.setup();
+        render(<RichTextInput onSubmit={mockOnSubmit} submitOnEnter={false} />);
+
+        const input = screen.getByRole("textbox");
+        await user.type(input, "Test message");
+        await user.keyboard("{Control>}{Enter}{/Control}");
+
+        expect(input).toHaveValue("");
+      });
     });
 
     it("should not submit empty input", async () => {
@@ -228,20 +303,9 @@ describe("RichTextInput", () => {
 
       const input = screen.getByRole("textbox");
       input.focus();
-      await user.keyboard("{Control>}{Enter}{/Control}");
+      await user.keyboard("{Enter}");
 
       expect(mockOnSubmit).not.toHaveBeenCalled();
-    });
-
-    it("should clear input after successful submit", async () => {
-      const user = userEvent.setup();
-      render(<RichTextInput onSubmit={mockOnSubmit} />);
-
-      const input = screen.getByRole("textbox");
-      await user.type(input, "Test message");
-      await user.keyboard("{Control>}{Enter}{/Control}");
-
-      expect(input).toHaveValue("");
     });
   });
 
@@ -334,8 +398,10 @@ describe("RichTextInput", () => {
   });
 
   describe("code block", () => {
-    it("should render code block button", () => {
-      render(<RichTextInput onSubmit={mockOnSubmit} />);
+    it("should render code block button when toolbar expanded", () => {
+      render(
+        <RichTextInput onSubmit={mockOnSubmit} defaultToolbarExpanded={true} />,
+      );
       expect(
         screen.getByRole("button", { name: /code block/i }),
       ).toBeInTheDocument();
@@ -343,7 +409,9 @@ describe("RichTextInput", () => {
 
     it("should insert code block template", async () => {
       const user = userEvent.setup();
-      render(<RichTextInput onSubmit={mockOnSubmit} />);
+      render(
+        <RichTextInput onSubmit={mockOnSubmit} defaultToolbarExpanded={true} />,
+      );
 
       const codeBlockButton = screen.getByRole("button", {
         name: /code block/i,
@@ -356,7 +424,9 @@ describe("RichTextInput", () => {
 
     it("should wrap selected text in code block", async () => {
       const user = userEvent.setup();
-      render(<RichTextInput onSubmit={mockOnSubmit} />);
+      render(
+        <RichTextInput onSubmit={mockOnSubmit} defaultToolbarExpanded={true} />,
+      );
 
       const input = screen.getByRole("textbox") as HTMLTextAreaElement;
       await user.type(input, "const x = 1;");
@@ -377,8 +447,14 @@ describe("RichTextInput", () => {
       expect(screen.getByRole("textbox")).toBeDisabled();
     });
 
-    it("should disable formatting buttons when disabled", () => {
-      render(<RichTextInput onSubmit={mockOnSubmit} disabled />);
+    it("should disable formatting buttons when disabled and toolbar expanded", () => {
+      render(
+        <RichTextInput
+          onSubmit={mockOnSubmit}
+          disabled
+          defaultToolbarExpanded={true}
+        />,
+      );
       expect(screen.getByRole("button", { name: /bold/i })).toBeDisabled();
       expect(screen.getByRole("button", { name: /italic/i })).toBeDisabled();
       expect(screen.getByRole("button", { name: /^code$/i })).toBeDisabled();
@@ -392,8 +468,10 @@ describe("RichTextInput", () => {
       expect(results).toHaveNoViolations();
     });
 
-    it("should have accessible labels for formatting buttons", () => {
-      render(<RichTextInput onSubmit={mockOnSubmit} />);
+    it("should have accessible labels for formatting buttons when toolbar expanded", () => {
+      render(
+        <RichTextInput onSubmit={mockOnSubmit} defaultToolbarExpanded={true} />,
+      );
 
       expect(
         screen.getByRole("button", { name: /bold/i }),
@@ -406,9 +484,11 @@ describe("RichTextInput", () => {
       ).toHaveAccessibleName();
     });
 
-    it("should support keyboard navigation in toolbar", async () => {
+    it("should support keyboard navigation in toolbar when expanded", async () => {
       const user = userEvent.setup();
-      render(<RichTextInput onSubmit={mockOnSubmit} />);
+      render(
+        <RichTextInput onSubmit={mockOnSubmit} defaultToolbarExpanded={true} />,
+      );
 
       const boldButton = screen.getByRole("button", { name: /bold/i });
       boldButton.focus();
@@ -465,6 +545,293 @@ describe("RichTextInput", () => {
       await user.type(input, "Hello");
 
       expect(screen.getByText("5 / 100")).toBeInTheDocument();
+    });
+  });
+
+  describe("collapsible toolbar (Sprint 2.4)", () => {
+    it("should render toolbar toggle button", () => {
+      render(<RichTextInput onSubmit={mockOnSubmit} />);
+      expect(
+        screen.getByRole("button", { name: /toggle formatting/i }),
+      ).toBeInTheDocument();
+    });
+
+    it("should hide formatting toolbar by default (collapsed)", () => {
+      render(<RichTextInput onSubmit={mockOnSubmit} />);
+
+      // Toggle button should be visible
+      expect(
+        screen.getByRole("button", { name: /toggle formatting/i }),
+      ).toBeInTheDocument();
+
+      // Formatting buttons should be hidden initially
+      expect(
+        screen.queryByRole("button", { name: /bold/i }),
+      ).not.toBeInTheDocument();
+    });
+
+    it("should show formatting toolbar when toggle is clicked", async () => {
+      const user = userEvent.setup();
+      render(<RichTextInput onSubmit={mockOnSubmit} />);
+
+      const toggleButton = screen.getByRole("button", {
+        name: /toggle formatting/i,
+      });
+      await user.click(toggleButton);
+
+      // Formatting toolbar should now be visible
+      expect(screen.getByTestId("formatting-toolbar")).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: /bold/i })).toBeInTheDocument();
+      expect(
+        screen.getByRole("button", { name: /italic/i }),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByRole("button", { name: /^code$/i }),
+      ).toBeInTheDocument();
+    });
+
+    it("should hide formatting toolbar when toggle is clicked again", async () => {
+      const user = userEvent.setup();
+      render(<RichTextInput onSubmit={mockOnSubmit} />);
+
+      const toggleButton = screen.getByRole("button", {
+        name: /toggle formatting/i,
+      });
+
+      // Open toolbar
+      await user.click(toggleButton);
+      expect(screen.getByRole("button", { name: /bold/i })).toBeInTheDocument();
+
+      // Close toolbar
+      await user.click(toggleButton);
+      expect(
+        screen.queryByRole("button", { name: /bold/i }),
+      ).not.toBeInTheDocument();
+    });
+
+    it("should toggle toolbar with Ctrl+Shift+F keyboard shortcut", async () => {
+      const user = userEvent.setup();
+      render(<RichTextInput onSubmit={mockOnSubmit} />);
+
+      const input = screen.getByRole("textbox");
+      input.focus();
+
+      // Initially collapsed
+      expect(
+        screen.queryByRole("button", { name: /bold/i }),
+      ).not.toBeInTheDocument();
+
+      // Press Ctrl+Shift+F to expand
+      await user.keyboard("{Control>}{Shift>}f{/Shift}{/Control}");
+      expect(screen.getByRole("button", { name: /bold/i })).toBeInTheDocument();
+
+      // Press Ctrl+Shift+F again to collapse
+      await user.keyboard("{Control>}{Shift>}f{/Shift}{/Control}");
+      expect(
+        screen.queryByRole("button", { name: /bold/i }),
+      ).not.toBeInTheDocument();
+    });
+
+    it("should show + icon when collapsed and - icon when expanded", async () => {
+      const user = userEvent.setup();
+      render(<RichTextInput onSubmit={mockOnSubmit} />);
+
+      const toggleButton = screen.getByRole("button", {
+        name: /toggle formatting/i,
+      });
+
+      // Should show plus icon when collapsed
+      expect(
+        toggleButton.querySelector("[data-testid='plus-icon']"),
+      ).toBeInTheDocument();
+
+      await user.click(toggleButton);
+
+      // Should show minus icon when expanded
+      expect(
+        toggleButton.querySelector("[data-testid='minus-icon']"),
+      ).toBeInTheDocument();
+    });
+
+    it("should render toolbar visible when defaultExpanded prop is true", () => {
+      render(
+        <RichTextInput onSubmit={mockOnSubmit} defaultToolbarExpanded={true} />,
+      );
+
+      // Formatting buttons should be visible
+      expect(screen.getByRole("button", { name: /bold/i })).toBeInTheDocument();
+      expect(
+        screen.getByRole("button", { name: /italic/i }),
+      ).toBeInTheDocument();
+    });
+
+    it("should still apply formatting when toolbar is expanded", async () => {
+      const user = userEvent.setup();
+      render(<RichTextInput onSubmit={mockOnSubmit} />);
+
+      // Expand toolbar
+      const toggleButton = screen.getByRole("button", {
+        name: /toggle formatting/i,
+      });
+      await user.click(toggleButton);
+
+      // Type and select text
+      const input = screen.getByRole("textbox") as HTMLTextAreaElement;
+      await user.type(input, "Hello world");
+      input.setSelectionRange(6, 11);
+
+      // Click bold
+      const boldButton = screen.getByRole("button", { name: /bold/i });
+      await user.click(boldButton);
+
+      expect(input.value).toContain("**world**");
+    });
+
+    it("should have accessible toggle button with aria-expanded", async () => {
+      const user = userEvent.setup();
+      render(<RichTextInput onSubmit={mockOnSubmit} />);
+
+      const toggleButton = screen.getByRole("button", {
+        name: /toggle formatting/i,
+      });
+
+      // Should indicate collapsed state
+      expect(toggleButton).toHaveAttribute("aria-expanded", "false");
+
+      await user.click(toggleButton);
+
+      // Should indicate expanded state
+      expect(toggleButton).toHaveAttribute("aria-expanded", "true");
+    });
+
+    it("should announce toolbar state change to screen readers", async () => {
+      const user = userEvent.setup();
+      render(<RichTextInput onSubmit={mockOnSubmit} />);
+
+      const toggleButton = screen.getByRole("button", {
+        name: /toggle formatting/i,
+      });
+
+      // Check for live region
+      await user.click(toggleButton);
+
+      // Look for the status announcement
+      const liveRegion = document.querySelector('[role="status"]');
+      expect(liveRegion).toBeInTheDocument();
+    });
+  });
+
+  describe("inline suggestions", () => {
+    it("should render inline suggestion overlay when provided", () => {
+      render(
+        <RichTextInput
+          onSubmit={mockOnSubmit}
+          value="Hello "
+          enableInlineSuggestions={true}
+          inlineSuggestion="world"
+        />,
+      );
+
+      expect(
+        screen.getByTestId("inline-suggestion-overlay"),
+      ).toBeInTheDocument();
+    });
+
+    it("should not show inline suggestion when disabled", () => {
+      render(
+        <RichTextInput
+          onSubmit={mockOnSubmit}
+          value="Hello "
+          enableInlineSuggestions={false}
+          inlineSuggestion="world"
+        />,
+      );
+
+      expect(
+        screen.queryByTestId("inline-suggestion-overlay"),
+      ).not.toBeInTheDocument();
+    });
+
+    it("should not show inline suggestion when value is empty", () => {
+      render(
+        <RichTextInput
+          onSubmit={mockOnSubmit}
+          value=""
+          enableInlineSuggestions={true}
+          inlineSuggestion="world"
+        />,
+      );
+
+      expect(
+        screen.queryByTestId("inline-suggestion-overlay"),
+      ).not.toBeInTheDocument();
+    });
+
+    it("should accept suggestion on Tab key", async () => {
+      const user = userEvent.setup();
+      const mockAccept = vi.fn();
+      render(
+        <RichTextInput
+          onSubmit={mockOnSubmit}
+          value="Hello "
+          enableInlineSuggestions={true}
+          inlineSuggestion="world"
+          onAcceptSuggestion={mockAccept}
+        />,
+      );
+
+      const input = screen.getByRole("textbox");
+      await user.click(input);
+      await user.keyboard("{Tab}");
+
+      expect(mockAccept).toHaveBeenCalledWith("world");
+    });
+
+    it("should dismiss suggestion on Escape key", async () => {
+      const user = userEvent.setup();
+      const mockDismiss = vi.fn();
+      render(
+        <RichTextInput
+          onSubmit={mockOnSubmit}
+          value="Hello "
+          enableInlineSuggestions={true}
+          inlineSuggestion="world"
+          onDismissSuggestion={mockDismiss}
+        />,
+      );
+
+      const input = screen.getByRole("textbox");
+      await user.click(input);
+      await user.keyboard("{Escape}");
+
+      expect(mockDismiss).toHaveBeenCalled();
+    });
+
+    it("should show loading indicator when suggestion is loading", () => {
+      render(
+        <RichTextInput
+          onSubmit={mockOnSubmit}
+          value="Hello "
+          enableInlineSuggestions={true}
+          isSuggestionLoading={true}
+        />,
+      );
+
+      expect(screen.getByTestId("suggestion-loading")).toBeInTheDocument();
+    });
+
+    it("should show Tab hint when suggestion is visible", () => {
+      render(
+        <RichTextInput
+          onSubmit={mockOnSubmit}
+          value="Hello "
+          enableInlineSuggestions={true}
+          inlineSuggestion="world"
+        />,
+      );
+
+      expect(screen.getByTestId("suggestion-hint")).toBeInTheDocument();
+      expect(screen.getByText(/tab/i)).toBeInTheDocument();
     });
   });
 });

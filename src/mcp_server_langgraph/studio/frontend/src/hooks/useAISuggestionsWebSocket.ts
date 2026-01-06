@@ -19,7 +19,11 @@
 import { useState, useCallback, useRef, useMemo, useEffect } from "react";
 import { useRealtimeSync, type ConnectionStatus } from "./useRealtimeSync";
 import { useAppDispatch, useAppSelector } from "../store/hooks";
-import { logout, selectIsAuthenticated } from "../store/slices/authSlice";
+import {
+  logout,
+  selectIsAuthenticated,
+  selectWebSocketPermissions,
+} from "../store/slices/authSlice";
 import { addNotification } from "../store/slices/notificationSlice";
 import { buildWebSocketUrl, WS_ENDPOINTS } from "../utils/websocket";
 import {
@@ -202,6 +206,10 @@ export function useAISuggestionsWebSocket(
   // Redux dispatch for token expiration handling
   const dispatch = useAppDispatch();
   const isAuthenticated = useAppSelector(selectIsAuthenticated);
+  const wsPermissions = useAppSelector(selectWebSocketPermissions);
+
+  // Check if user has permission for AI suggestions WebSocket
+  const hasAISuggestionsPermission = wsPermissions?.ai_suggestions ?? false;
 
   // State
   const [currentSuggestion, setCurrentSuggestion] =
@@ -219,14 +227,18 @@ export function useAISuggestionsWebSocket(
     callbacksRef.current = { onSuggestion, onError };
   }, [sessionId, onSuggestion, onError]);
 
-  // Compute WebSocket URL
+  // Compute WebSocket URL - only generate URL when authenticated AND has permission
   const wsUrl = useMemo(
-    () => url ?? getDefaultWebSocketUrl(isAuthenticated),
-    [url, isAuthenticated],
+    () =>
+      isAuthenticated && hasAISuggestionsPermission
+        ? (url ?? getDefaultWebSocketUrl(true))
+        : "",
+    [url, isAuthenticated, hasAISuggestionsPermission],
   );
 
-  // Track effective enabled state
-  const effectiveEnabled = enabled && isAuthenticated;
+  // Track effective enabled state - requires auth and permission
+  const effectiveEnabled =
+    enabled && isAuthenticated && hasAISuggestionsPermission;
 
   // Handle incoming messages using centralized type guards
   const handleMessage = useCallback((data: unknown) => {

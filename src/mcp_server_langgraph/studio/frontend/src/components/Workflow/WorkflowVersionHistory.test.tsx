@@ -27,50 +27,50 @@ import {
 import { WorkflowVersionHistory } from "./WorkflowVersionHistory";
 import workflowReducer from "../../store/slices/workflowSlice";
 
-// Mock data
+// Mock data - camelCase per ADR-0091 Phase 6
 const mockVersions = [
   {
     id: "v3",
-    workflow_id: "wf-123",
-    version_number: 3,
-    graph_json: {
+    workflowId: "wf-123",
+    versionNumber: 3,
+    graphJson: {
       nodes: [
         { id: "start", type: "start" },
         { id: "end", type: "end" },
       ],
       edges: [{ id: "e1", source: "start", target: "end" }],
     },
-    commit_message: "Added end node",
-    created_by: "alice",
-    created_at: "2024-01-03T12:00:00Z",
-    prompt_version: "v1",
-    prompt_model: "claude-opus-4-5",
+    commitMessage: "Added end node",
+    createdBy: "alice",
+    createdAt: "2024-01-03T12:00:00Z",
+    promptVersion: "v1",
+    promptModel: "claude-opus-4-5",
   },
   {
     id: "v2",
-    workflow_id: "wf-123",
-    version_number: 2,
-    graph_json: {
+    workflowId: "wf-123",
+    versionNumber: 2,
+    graphJson: {
       nodes: [{ id: "start", type: "start" }],
       edges: [],
     },
-    commit_message: "Added start node",
-    created_by: "alice",
-    created_at: "2024-01-02T12:00:00Z",
-    prompt_version: "v1",
-    prompt_model: "claude-opus-4-5",
+    commitMessage: "Added start node",
+    createdBy: "alice",
+    createdAt: "2024-01-02T12:00:00Z",
+    promptVersion: "v1",
+    promptModel: "claude-opus-4-5",
   },
   {
     id: "v1",
-    workflow_id: "wf-123",
-    version_number: 1,
-    graph_json: {
+    workflowId: "wf-123",
+    versionNumber: 1,
+    graphJson: {
       nodes: [],
       edges: [],
     },
-    commit_message: "Initial version",
-    created_by: "system",
-    created_at: "2024-01-01T12:00:00Z",
+    commitMessage: "Initial version",
+    createdBy: "system",
+    createdAt: "2024-01-01T12:00:00Z",
   },
 ];
 

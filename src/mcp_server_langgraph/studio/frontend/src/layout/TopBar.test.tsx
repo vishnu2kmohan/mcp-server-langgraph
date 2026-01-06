@@ -267,6 +267,72 @@ describe("TopBar", () => {
     });
   });
 
+  describe("section title (Sprint 2.3 - Wayfinding)", () => {
+    it("should display section title when provided", () => {
+      const store = createTestStore();
+      render(<TopBar sectionTitle="Observability" />, {
+        wrapper: createWrapper(store),
+      });
+
+      // Should show section title as breadcrumb after app title
+      expect(screen.getByText("Observability")).toBeInTheDocument();
+    });
+
+    it("should not display breadcrumb separator when no section title", () => {
+      const store = createTestStore();
+      render(<TopBar />, { wrapper: createWrapper(store) });
+
+      // Should not have the separator
+      expect(screen.queryByTestId("section-separator")).not.toBeInTheDocument();
+    });
+
+    it("should display section title with separator", () => {
+      const store = createTestStore();
+      render(<TopBar sectionTitle="Workflows" />, {
+        wrapper: createWrapper(store),
+      });
+
+      // Should have the separator and section title
+      expect(screen.getByTestId("section-separator")).toBeInTheDocument();
+      expect(screen.getByTestId("section-title")).toBeInTheDocument();
+      expect(screen.getByTestId("section-title")).toHaveTextContent(
+        "Workflows",
+      );
+    });
+
+    it("should display sub-persona badge when provided", () => {
+      const store = createTestStore();
+      render(<TopBar subPersonaBadge="alice-analyst" />, {
+        wrapper: createWrapper(store),
+      });
+
+      // Should show sub-persona badge
+      expect(screen.getByTestId("sub-persona-badge")).toBeInTheDocument();
+      expect(screen.getByTestId("sub-persona-badge")).toHaveTextContent(
+        "alice-analyst",
+      );
+    });
+
+    it("should not display sub-persona badge when not provided", () => {
+      const store = createTestStore();
+      render(<TopBar />, { wrapper: createWrapper(store) });
+
+      expect(screen.queryByTestId("sub-persona-badge")).not.toBeInTheDocument();
+    });
+
+    it("should display both section title and sub-persona badge when both provided", () => {
+      const store = createTestStore();
+      render(<TopBar sectionTitle="Cost" subPersonaBadge="alice-analyst" />, {
+        wrapper: createWrapper(store),
+      });
+
+      expect(screen.getByTestId("section-title")).toHaveTextContent("Cost");
+      expect(screen.getByTestId("sub-persona-badge")).toHaveTextContent(
+        "alice-analyst",
+      );
+    });
+  });
+
   describe("accessibility", () => {
     it("should have role banner", () => {
       const store = createTestStore();

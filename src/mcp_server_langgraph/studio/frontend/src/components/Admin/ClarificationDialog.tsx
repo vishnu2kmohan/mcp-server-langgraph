@@ -14,7 +14,8 @@
  * Reference: Plan - Confidence-Based Human-in-the-Loop (HITL) for Multi-Agent Orchestrator
  */
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
+import { useFocusTrap } from "../../hooks/useFocusTrap";
 import {
   X,
   HelpCircle,
@@ -73,6 +74,10 @@ export function ClarificationDialog({
 }: ClarificationDialogProps) {
   const [textValue, setTextValue] = useState("");
   const [selectedOptionId, setSelectedOptionId] = useState<string | null>(null);
+
+  // Focus trap for WCAG 2.1 AA compliance (Sprint 5.2)
+  const dialogRef = useRef<HTMLDivElement>(null);
+  useFocusTrap(dialogRef, isOpen);
 
   // Reset state when dialog opens/closes
   useEffect(() => {
@@ -147,6 +152,7 @@ export function ClarificationDialog({
 
   return (
     <div
+      ref={dialogRef}
       role="dialog"
       aria-modal="true"
       className="fixed inset-0 z-50 flex items-center justify-center"

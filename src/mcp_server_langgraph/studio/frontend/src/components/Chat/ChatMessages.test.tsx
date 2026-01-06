@@ -208,4 +208,46 @@ describe("ChatMessages", () => {
       expect(results).toHaveNoViolations();
     });
   });
+
+  describe("Avatar Display (show_chat_avatars feature)", () => {
+    it("should not render avatars by default", () => {
+      render(<ChatMessages messages={mockMessages} />);
+
+      expect(screen.queryByTestId("user-avatar")).not.toBeInTheDocument();
+      expect(screen.queryByTestId("assistant-avatar")).not.toBeInTheDocument();
+    });
+
+    it("should render user avatar when showAvatars is true", () => {
+      render(<ChatMessages messages={mockMessages} showAvatars={true} />);
+
+      expect(screen.getByTestId("user-avatar")).toBeInTheDocument();
+    });
+
+    it("should render assistant avatar when showAvatars is true", () => {
+      render(<ChatMessages messages={mockMessages} showAvatars={true} />);
+
+      expect(screen.getByTestId("assistant-avatar")).toBeInTheDocument();
+    });
+
+    it("should display user initials in avatar when provided", () => {
+      render(
+        <ChatMessages
+          messages={mockMessages}
+          showAvatars={true}
+          userInitials="JD"
+        />,
+      );
+
+      expect(screen.getByText("JD")).toBeInTheDocument();
+    });
+
+    it("should render bot icon for assistant avatar", () => {
+      render(<ChatMessages messages={mockMessages} showAvatars={true} />);
+
+      const assistantAvatar = screen.getByTestId("assistant-avatar");
+      expect(assistantAvatar).toBeInTheDocument();
+      // Avatar should contain bot icon (svg)
+      expect(assistantAvatar.querySelector("svg")).toBeInTheDocument();
+    });
+  });
 });

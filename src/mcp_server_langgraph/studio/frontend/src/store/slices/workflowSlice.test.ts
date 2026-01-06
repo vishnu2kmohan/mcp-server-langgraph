@@ -3,7 +3,6 @@
  *
  * TDD tests for workflow Redux slice.
  */
-
 import { describe, it, expect, beforeEach, vi, afterEach } from "vitest";
 import { configureStore } from "@reduxjs/toolkit";
 import workflowReducer, {
@@ -51,7 +50,6 @@ import workflowReducer, {
 } from "./workflowSlice";
 import type { WorkflowSliceState } from "./workflowSlice";
 import type { WorkflowNode } from "../../types/workflow";
-
 // Helper to create a test store
 const createTestStore = (preloadedState?: Partial<WorkflowSliceState>) => {
   return configureStore({
@@ -61,7 +59,6 @@ const createTestStore = (preloadedState?: Partial<WorkflowSliceState>) => {
       : undefined,
   });
 };
-
 // Mock node for testing
 const mockNode: WorkflowNode = {
   id: "node-1",
@@ -73,188 +70,152 @@ const mockNode: WorkflowNode = {
     config: {},
   },
 };
-
 describe("workflowSlice", () => {
   const mockFetch = vi.fn();
-
   beforeEach(() => {
     mockFetch.mockReset();
     vi.stubGlobal("fetch", mockFetch);
   });
-
   afterEach(() => {
     vi.unstubAllGlobals();
     vi.clearAllMocks();
   });
-
   describe("Initial State", () => {
     it("should have null metadata initially", () => {
       const store = createTestStore();
       expect(selectWorkflowMetadata(store.getState())).toBeNull();
     });
-
     it("should have empty nodes array initially", () => {
       const store = createTestStore();
       expect(selectWorkflowNodes(store.getState())).toEqual([]);
     });
-
     it("should have empty edges array initially", () => {
       const store = createTestStore();
       expect(selectWorkflowEdges(store.getState())).toEqual([]);
     });
-
     it("should have empty selection initially", () => {
       const store = createTestStore();
       expect(selectSelectedNodeIds(store.getState())).toEqual([]);
     });
-
     it("should not be dirty initially", () => {
       const store = createTestStore();
       expect(selectIsDirty(store.getState())).toBe(false);
     });
-
     it("should have idle execution state initially", () => {
       const store = createTestStore();
       expect(selectExecutionState(store.getState())).toBe("idle");
     });
   });
-
   describe("createWorkflow", () => {
     it("should create a new workflow with metadata", () => {
       const store = createTestStore();
       store.dispatch(
         createWorkflow({ name: "Test Workflow", description: "A test" }),
       );
-
       const metadata = selectWorkflowMetadata(store.getState());
       expect(metadata).not.toBeNull();
       expect(metadata?.name).toBe("Test Workflow");
       expect(metadata?.description).toBe("A test");
       expect(metadata?.version).toBe(1);
     });
-
     it("should reset nodes and edges", () => {
       const store = createTestStore({
         nodes: [mockNode],
         edges: [{ id: "e1", source: "n1", target: "n2" }],
       });
       store.dispatch(createWorkflow({ name: "New Workflow" }));
-
       expect(selectWorkflowNodes(store.getState())).toEqual([]);
       expect(selectWorkflowEdges(store.getState())).toEqual([]);
     });
   });
-
   describe("Node Operations", () => {
     describe("addNode", () => {
       it("should add a node with the given type and position", () => {
         const store = createTestStore();
         store.dispatch(addNode("llm", { x: 100, y: 200 }));
-
         const nodes = selectWorkflowNodes(store.getState());
         expect(nodes).toHaveLength(1);
         expect(nodes[0].data.nodeType).toBe("llm");
         expect(nodes[0].position).toEqual({ x: 100, y: 200 });
       });
-
       it("should use default label if not provided", () => {
         const store = createTestStore();
         store.dispatch(addNode("tool", { x: 0, y: 0 }));
-
         const nodes = selectWorkflowNodes(store.getState());
         expect(nodes[0].data.label).toBe("Tool");
       });
-
       it("should use custom label if provided", () => {
         const store = createTestStore();
         store.dispatch(addNode("tool", { x: 0, y: 0 }, "Custom Label"));
-
         const nodes = selectWorkflowNodes(store.getState());
         expect(nodes[0].data.label).toBe("Custom Label");
       });
-
       it("should set isDirty to true", () => {
         const store = createTestStore();
         store.dispatch(addNode("llm", { x: 0, y: 0 }));
-
         expect(selectIsDirty(store.getState())).toBe(true);
       });
     });
-
     describe("updateNode", () => {
       it("should update node data", () => {
         const store = createTestStore({ nodes: [mockNode] });
         store.dispatch(
           updateNode({ nodeId: "node-1", data: { label: "Updated Label" } }),
         );
-
         const nodes = selectWorkflowNodes(store.getState());
         expect(nodes[0].data.label).toBe("Updated Label");
       });
-
       it("should preserve other data fields", () => {
         const store = createTestStore({ nodes: [mockNode] });
         store.dispatch(
           updateNode({ nodeId: "node-1", data: { label: "Updated" } }),
         );
-
         const nodes = selectWorkflowNodes(store.getState());
         expect(nodes[0].data.nodeType).toBe("llm");
       });
-
       it("should do nothing if nodeId is not found", () => {
         const store = createTestStore({ nodes: [mockNode] });
         store.dispatch(
           updateNode({ nodeId: "non-existent", data: { label: "Updated" } }),
         );
-
         const nodes = selectWorkflowNodes(store.getState());
         expect(nodes).toHaveLength(1);
         expect(nodes[0].data.label).toBe("Test Node");
         expect(selectIsDirty(store.getState())).toBe(false);
       });
     });
-
     describe("deleteNode", () => {
       it("should remove the node", () => {
         const store = createTestStore({ nodes: [mockNode] });
         store.dispatch(deleteNode("node-1"));
-
         expect(selectWorkflowNodes(store.getState())).toHaveLength(0);
       });
-
       it("should remove connected edges where node is source", () => {
         const store = createTestStore({
           nodes: [mockNode, { ...mockNode, id: "node-2" }],
           edges: [{ id: "edge-1", source: "node-1", target: "node-2" }],
         });
         store.dispatch(deleteNode("node-1"));
-
         expect(selectWorkflowEdges(store.getState())).toHaveLength(0);
       });
-
       it("should remove connected edges where node is target", () => {
         const store = createTestStore({
           nodes: [mockNode, { ...mockNode, id: "node-2" }],
           edges: [{ id: "edge-1", source: "node-2", target: "node-1" }],
         });
         store.dispatch(deleteNode("node-1"));
-
         expect(selectWorkflowEdges(store.getState())).toHaveLength(0);
       });
-
       it("should remove deleted node from selection", () => {
         const store = createTestStore({
           nodes: [mockNode, { ...mockNode, id: "node-2" }],
           selectedNodeIds: ["node-1", "node-2"],
         });
         store.dispatch(deleteNode("node-1"));
-
         // node-1 should be removed from selection
         expect(selectSelectedNodeIds(store.getState())).toEqual(["node-2"]);
       });
     });
-
     describe("deleteNodes", () => {
       it("should remove multiple nodes", () => {
         const store = createTestStore({
@@ -265,12 +226,10 @@ describe("workflowSlice", () => {
           ],
         });
         store.dispatch(deleteNodes(["node-1", "node-2"]));
-
         const nodes = selectWorkflowNodes(store.getState());
         expect(nodes).toHaveLength(1);
         expect(nodes[0].id).toBe("node-3");
       });
-
       it("should remove deleted nodes from selection", () => {
         const store = createTestStore({
           nodes: [
@@ -281,11 +240,9 @@ describe("workflowSlice", () => {
           selectedNodeIds: ["node-1", "node-2", "node-3"],
         });
         store.dispatch(deleteNodes(["node-1", "node-2"]));
-
         // Only node-3 should remain in selection
         expect(selectSelectedNodeIds(store.getState())).toEqual(["node-3"]);
       });
-
       it("should remove connected edges when deleting nodes", () => {
         const store = createTestStore({
           nodes: [
@@ -299,13 +256,11 @@ describe("workflowSlice", () => {
           ],
         });
         store.dispatch(deleteNodes(["node-2"]));
-
         // Both edges should be removed since they connect to node-2
         expect(selectWorkflowEdges(store.getState())).toHaveLength(0);
       });
     });
   });
-
   describe("Edge Operations", () => {
     describe("addEdge", () => {
       it("should add an edge between nodes", () => {
@@ -313,31 +268,25 @@ describe("workflowSlice", () => {
           nodes: [mockNode, { ...mockNode, id: "node-2" }],
         });
         store.dispatch(addEdge("node-1", "node-2"));
-
         const edges = selectWorkflowEdges(store.getState());
         expect(edges).toHaveLength(1);
         expect(edges[0].source).toBe("node-1");
         expect(edges[0].target).toBe("node-2");
       });
-
       it("should prevent self-loops", () => {
         const store = createTestStore({ nodes: [mockNode] });
         store.dispatch(addEdge("node-1", "node-1"));
-
         expect(selectWorkflowEdges(store.getState())).toHaveLength(0);
       });
     });
-
     describe("deleteEdge", () => {
       it("should remove the edge", () => {
         const store = createTestStore({
           edges: [{ id: "edge-1", source: "node-1", target: "node-2" }],
         });
         store.dispatch(deleteEdge("edge-1"));
-
         expect(selectWorkflowEdges(store.getState())).toHaveLength(0);
       });
-
       it("should remove deleted edge from selection", () => {
         const store = createTestStore({
           edges: [
@@ -347,34 +296,28 @@ describe("workflowSlice", () => {
           selectedEdgeIds: ["edge-1", "edge-2"],
         });
         store.dispatch(deleteEdge("edge-1"));
-
         // edge-1 should be removed from selection
         expect(selectSelectedEdgeIds(store.getState())).toEqual(["edge-2"]);
       });
     });
   });
-
   describe("Position Updates", () => {
     it("should update node positions", () => {
       const store = createTestStore({ nodes: [mockNode] });
       store.dispatch(
         updateNodePositions([{ id: "node-1", position: { x: 500, y: 600 } }]),
       );
-
       const nodes = selectWorkflowNodes(store.getState());
       expect(nodes[0].position).toEqual({ x: 500, y: 600 });
     });
-
     it("should preserve positions for nodes not in update map", () => {
       const node1 = { ...mockNode, id: "node-1", position: { x: 100, y: 100 } };
       const node2 = { ...mockNode, id: "node-2", position: { x: 200, y: 200 } };
       const store = createTestStore({ nodes: [node1, node2] });
-
       // Only update node-1, node-2 should keep its position
       store.dispatch(
         updateNodePositions([{ id: "node-1", position: { x: 999, y: 999 } }]),
       );
-
       const nodes = selectWorkflowNodes(store.getState());
       expect(nodes.find((n) => n.id === "node-1")?.position).toEqual({
         x: 999,
@@ -386,67 +329,53 @@ describe("workflowSlice", () => {
       });
     });
   });
-
   describe("Selection", () => {
     it("should set selected nodes", () => {
       const store = createTestStore();
       store.dispatch(setSelectedNodes(["node-1", "node-2"]));
-
       expect(selectSelectedNodeIds(store.getState())).toEqual([
         "node-1",
         "node-2",
       ]);
     });
-
     it("should set selected edges", () => {
       const store = createTestStore();
       store.dispatch(setSelectedEdges(["edge-1"]));
-
       expect(store.getState().workflow.selectedEdgeIds).toEqual(["edge-1"]);
     });
-
     it("should clear selection", () => {
       const store = createTestStore({
         selectedNodeIds: ["node-1"],
         selectedEdgeIds: ["edge-1"],
       });
       store.dispatch(clearSelection());
-
       expect(selectSelectedNodeIds(store.getState())).toEqual([]);
       expect(store.getState().workflow.selectedEdgeIds).toEqual([]);
     });
   });
-
   describe("Undo/Redo", () => {
     it("should take snapshot", () => {
       const store = createTestStore({ nodes: [mockNode] });
       store.dispatch(takeSnapshot());
-
       expect(selectCanUndo(store.getState())).toBe(true);
     });
-
     it("should undo to previous state", () => {
       const store = createTestStore({ nodes: [mockNode] });
       store.dispatch(takeSnapshot());
       store.dispatch(addNode("tool", { x: 0, y: 0 }));
-
       expect(selectWorkflowNodes(store.getState())).toHaveLength(2);
-
       store.dispatch(undo());
       expect(selectWorkflowNodes(store.getState())).toHaveLength(1);
       expect(selectCanRedo(store.getState())).toBe(true);
     });
-
     it("should redo undone action", () => {
       const store = createTestStore({ nodes: [mockNode] });
       store.dispatch(takeSnapshot());
       store.dispatch(addNode("tool", { x: 0, y: 0 }));
       store.dispatch(undo());
       store.dispatch(redo());
-
       expect(selectWorkflowNodes(store.getState())).toHaveLength(2);
     });
-
     it("should cap history at MAX_HISTORY_SIZE (50)", () => {
       const store = createTestStore({ nodes: [mockNode] });
 

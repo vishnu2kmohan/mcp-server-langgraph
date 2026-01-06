@@ -40,8 +40,8 @@ const mockLogs = [
     level: "info" as const,
     service: "api-gateway",
     message: "Request received",
-    trace_id: "abc123",
-    span_id: "def456",
+    traceId: "abc123",
+    spanId: "def456",
     attributes: { method: "POST", path: "/api/v1/chat" },
   },
   {
@@ -50,9 +50,9 @@ const mockLogs = [
     level: "debug" as const,
     service: "llm-service",
     message: "Token prediction started",
-    trace_id: "abc123",
-    span_id: "ghi789",
-    attributes: { model: "gpt-4", estimated_tokens: 1500 },
+    traceId: "abc123",
+    spanId: "ghi789",
+    attributes: { model: "gpt-4", estimatedTokens: 1500 },
   },
   {
     id: "log-3",
@@ -60,8 +60,8 @@ const mockLogs = [
     level: "error" as const,
     service: "db-service",
     message: "Connection timeout",
-    trace_id: "abc123",
-    span_id: "jkl012",
+    traceId: "abc123",
+    spanId: "jkl012",
     attributes: { error: "ETIMEDOUT", host: "db-primary" },
   },
   {
@@ -70,9 +70,9 @@ const mockLogs = [
     level: "warning" as const,
     service: "cache-service",
     message: "Cache miss rate increasing",
-    trace_id: "xyz789",
-    span_id: "mno345",
-    attributes: { miss_rate: "15%" },
+    traceId: "xyz789",
+    spanId: "mno345",
+    attributes: { missRate: "15%" },
   },
 ];
 

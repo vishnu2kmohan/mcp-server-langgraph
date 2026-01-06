@@ -10,7 +10,11 @@
 import { useState, useCallback, useRef, useMemo, useEffect } from "react";
 import { useRealtimeSync } from "./useRealtimeSync";
 import { useAppDispatch, useAppSelector } from "../store/hooks";
-import { logout, selectIsAuthenticated } from "../store/slices/authSlice";
+import {
+  logout,
+  selectIsAuthenticated,
+  selectWebSocketPermissions,
+} from "../store/slices/authSlice";
 import { addNotification } from "../store/slices/notificationSlice";
 import { getAuthToken } from "../utils/storage";
 import { buildWebSocketUrl, WS_ENDPOINTS } from "../utils/websocket";
@@ -19,6 +23,7 @@ import {
   PROTOCOL_VERSION_MISMATCH_NOTIFICATION,
   showProtocolVersionMismatchToast,
 } from "../utils/websocketAuth";
+import { transformSnakeToCamel } from "../api/transforms";
 
 // =============================================================================
 // Types
@@ -26,20 +31,22 @@ import {
 
 /**
  * Session cost information
+ * camelCase per ADR-0091 Phase 6 (WebSocket transforms)
  */
 export interface SessionCost {
-  session_id: string;
-  total_cost: number;
-  token_count: number;
+  sessionId: string;
+  totalCost: number;
+  tokenCount: number;
   model?: string;
   provider?: string;
 }
 
 /**
  * Individual cost event from an LLM operation
+ * camelCase per ADR-0091 Phase 6 (WebSocket transforms)
  */
 export interface CostEvent {
-  session_id: string;
+  sessionId: string;
   cost: number;
   model: string;
   tokens: {
@@ -52,23 +59,25 @@ export interface CostEvent {
 
 /**
  * User budget information
+ * camelCase per ADR-0091 Phase 6 (WebSocket transforms)
  */
 export interface UserBudget {
-  user_id: string;
-  budget_limit: number;
-  current_usage: number;
+  userId: string;
+  budgetLimit: number;
+  currentUsage: number;
   remaining: number;
   period?: string;
 }
 
 /**
  * Budget warning alert
+ * camelCase per ADR-0091 Phase 6 (WebSocket transforms)
  */
 export interface BudgetWarning {
-  user_id: string;
+  userId: string;
   threshold: number;
-  current_usage: number;
-  budget_limit?: number;
+  currentUsage: number;
+  budgetLimit?: number;
   message: string;
   timestamp?: string;
 }
@@ -200,19 +209,23 @@ export function useCostTrackingWebSocket(
 
   // Get auth state and token for WebSocket authentication
   const isAuthenticated = useAppSelector(selectIsAuthenticated);
+  const wsPermissions = useAppSelector(selectWebSocketPermissions);
   // Track token changes to trigger URL regeneration on refresh
   const authToken = isAuthenticated ? (getAuthToken() ?? undefined) : undefined;
 
-  // Compute WebSocket URL - only generate URL when authenticated
-  // Passing empty string prevents connection attempt before auth is ready
+  // Check if user has permission for cost tracking WebSocket
+  const hasCostTrackingPermission = wsPermissions?.cost_tracking ?? false;
+
+  // Compute WebSocket URL - only generate URL when authenticated AND has permission
+  // Passing empty string prevents connection attempt before auth is ready or if unauthorized
   const url = useMemo(
     () =>
-      isAuthenticated
+      isAuthenticated && hasCostTrackingPermission
         ? (customUrl ?? buildWebSocketUrl(WS_ENDPOINTS.COST, {}, true))
         : "",
     // authToken dependency ensures URL regenerates when token is refreshed
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [customUrl, authToken, isAuthenticated],
+    [customUrl, authToken, isAuthenticated, hasCostTrackingPermission],
   );
 
   // State
@@ -245,67 +258,83 @@ export function useCostTrackingWebSocket(
     onError,
   };
 
-  // Handle incoming messages
+  // Handle incoming messages - transforms snake_case to camelCase per ADR-0091
   const handleMessage = useCallback((data: unknown) => {
     const message = data as ServerMessage;
 
     switch (message.type) {
-      case "session_total":
+      case "session_total": {
+        const transformed = transformSnakeToCamel<SessionCost>(message.payload);
         setSessionCosts((prev) => ({
           ...prev,
-          [message.payload.session_id]: message.payload,
+          [transformed.sessionId]: transformed,
         }));
-        callbacksRef.current.onSessionTotal?.(message.payload);
+        callbacksRef.current.onSessionTotal?.(transformed);
         break;
+      }
 
-      case "cost_event":
+      case "cost_event": {
+        const transformed = transformSnakeToCamel<CostEvent>(message.payload);
         // Update session cost if available
         setSessionCosts((prev) => {
-          const existing = prev[message.payload.session_id];
+          const existing = prev[transformed.sessionId];
           if (existing) {
             return {
               ...prev,
-              [message.payload.session_id]: {
+              [transformed.sessionId]: {
                 ...existing,
-                total_cost: existing.total_cost + message.payload.cost,
-                token_count:
-                  existing.token_count +
-                  message.payload.tokens.input +
-                  message.payload.tokens.output,
+                totalCost: existing.totalCost + transformed.cost,
+                tokenCount:
+                  existing.tokenCount +
+                  transformed.tokens.input +
+                  transformed.tokens.output,
               },
             };
           }
           return prev;
         });
-        callbacksRef.current.onCostEvent?.(message.payload);
+        callbacksRef.current.onCostEvent?.(transformed);
         break;
+      }
 
-      case "user_budget":
-        setUserBudget(message.payload);
-        callbacksRef.current.onUserBudget?.(message.payload);
+      case "user_budget": {
+        const transformed = transformSnakeToCamel<UserBudget>(message.payload);
+        setUserBudget(transformed);
+        callbacksRef.current.onUserBudget?.(transformed);
         break;
+      }
 
-      case "budget_warning":
-        setBudgetWarnings((prev) => [...prev, message.payload]);
-        callbacksRef.current.onBudgetWarning?.(message.payload);
+      case "budget_warning": {
+        const transformed = transformSnakeToCamel<BudgetWarning>(
+          message.payload,
+        );
+        setBudgetWarnings((prev) => [...prev, transformed]);
+        callbacksRef.current.onBudgetWarning?.(transformed);
         break;
+      }
 
-      case "unsubscribed":
-        if (message.payload.session_id) {
+      case "unsubscribed": {
+        // Server payload uses snake_case - access directly
+        const payload = message.payload as {
+          session_id?: string;
+          user_id?: string;
+        };
+        if (payload.session_id) {
           setSubscribedSessions((prev) => {
             const next = new Set(prev);
-            next.delete(message.payload.session_id!);
+            next.delete(payload.session_id!);
             return next;
           });
         }
-        if (message.payload.user_id) {
+        if (payload.user_id) {
           setSubscribedUsers((prev) => {
             const next = new Set(prev);
-            next.delete(message.payload.user_id!);
+            next.delete(payload.user_id!);
             return next;
           });
         }
         break;
+      }
 
       case "error":
         setError(message.payload.message);

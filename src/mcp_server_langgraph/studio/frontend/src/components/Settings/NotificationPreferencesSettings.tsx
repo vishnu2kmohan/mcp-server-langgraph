@@ -72,11 +72,7 @@ export function NotificationPreferencesSettings() {
     useResetNotificationPreferencesMutation();
 
   const handleToggle = async (
-    field:
-      | "info_enabled"
-      | "success_enabled"
-      | "warning_enabled"
-      | "error_enabled",
+    field: "infoEnabled" | "successEnabled" | "warningEnabled" | "errorEnabled",
     enabled: boolean,
   ) => {
     try {
@@ -149,32 +145,32 @@ export function NotificationPreferencesSettings() {
       <NotificationTypeToggle
         label="Info Notifications"
         description="General information and updates"
-        enabled={preferences?.info_enabled ?? true}
-        onChange={(enabled) => handleToggle("info_enabled", enabled)}
+        enabled={preferences?.infoEnabled ?? true}
+        onChange={(enabled) => handleToggle("infoEnabled", enabled)}
         disabled={isDisabled}
       />
 
       <NotificationTypeToggle
         label="Success Notifications"
         description="Confirmations when operations complete successfully"
-        enabled={preferences?.success_enabled ?? true}
-        onChange={(enabled) => handleToggle("success_enabled", enabled)}
+        enabled={preferences?.successEnabled ?? true}
+        onChange={(enabled) => handleToggle("successEnabled", enabled)}
         disabled={isDisabled}
       />
 
       <NotificationTypeToggle
         label="Warning Notifications"
         description="Alerts about potential issues or important information"
-        enabled={preferences?.warning_enabled ?? true}
-        onChange={(enabled) => handleToggle("warning_enabled", enabled)}
+        enabled={preferences?.warningEnabled ?? true}
+        onChange={(enabled) => handleToggle("warningEnabled", enabled)}
         disabled={isDisabled}
       />
 
       <NotificationTypeToggle
         label="Error Notifications"
         description="Critical errors that require your attention"
-        enabled={preferences?.error_enabled ?? true}
-        onChange={(enabled) => handleToggle("error_enabled", enabled)}
+        enabled={preferences?.errorEnabled ?? true}
+        onChange={(enabled) => handleToggle("errorEnabled", enabled)}
         disabled={isDisabled}
       />
     </div>

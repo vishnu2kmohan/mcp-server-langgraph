@@ -21,7 +21,7 @@ export interface SpanData {
 
 export interface AlertData {
   id: string;
-  started_at: string;
+  startedAt: string;
   service: string;
   message?: string;
 }
@@ -147,16 +147,15 @@ export function correlateAlerts(alerts: AlertData[]): AlertCorrelation[] {
 
   // Sort by time
   const sorted = [...alerts].sort(
-    (a, b) =>
-      new Date(a.started_at).getTime() - new Date(b.started_at).getTime(),
+    (a, b) => new Date(a.startedAt).getTime() - new Date(b.startedAt).getTime(),
   );
 
   const correlations: AlertCorrelation[] = [];
   let currentGroup: AlertData[] = [sorted[0]];
 
   for (let i = 1; i < sorted.length; i++) {
-    const prevTime = new Date(sorted[i - 1].started_at).getTime();
-    const currTime = new Date(sorted[i].started_at).getTime();
+    const prevTime = new Date(sorted[i - 1].startedAt).getTime();
+    const currTime = new Date(sorted[i].startedAt).getTime();
 
     if (currTime - prevTime <= CORRELATION_WINDOW_MS) {
       currentGroup.push(sorted[i]);
@@ -166,9 +165,9 @@ export function correlateAlerts(alerts: AlertData[]): AlertCorrelation[] {
           alerts: currentGroup.map((a) => a.id),
           services: [...new Set(currentGroup.map((a) => a.service))],
           timeWindow: {
-            start: new Date(currentGroup[0].started_at).getTime(),
+            start: new Date(currentGroup[0].startedAt).getTime(),
             end: new Date(
-              currentGroup[currentGroup.length - 1].started_at,
+              currentGroup[currentGroup.length - 1].startedAt,
             ).getTime(),
           },
         });
@@ -183,9 +182,9 @@ export function correlateAlerts(alerts: AlertData[]): AlertCorrelation[] {
       alerts: currentGroup.map((a) => a.id),
       services: [...new Set(currentGroup.map((a) => a.service))],
       timeWindow: {
-        start: new Date(currentGroup[0].started_at).getTime(),
+        start: new Date(currentGroup[0].startedAt).getTime(),
         end: new Date(
-          currentGroup[currentGroup.length - 1].started_at,
+          currentGroup[currentGroup.length - 1].startedAt,
         ).getTime(),
       },
     });

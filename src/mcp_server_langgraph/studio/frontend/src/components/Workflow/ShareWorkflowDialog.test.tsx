@@ -43,15 +43,16 @@ const mockUpdatePublic = vi.fn(() => ({ unwrap: mockUpdatePublicUnwrap }));
 
 import * as apiModule from "../../api";
 
+// Mock RTK Query hooks - camelCase per ADR-0091 Phase 6
 vi.mock("../../api", () => ({
   useGetWorkflowSharesQuery: vi.fn(() => ({
     data: {
       shares: [
-        { user_id: "user-1", email: "alice@example.com", permission: "edit" },
-        { user_id: "user-2", email: "bob@example.com", permission: "view" },
+        { userId: "user-1", email: "alice@example.com", permission: "edit" },
+        { userId: "user-2", email: "bob@example.com", permission: "view" },
       ],
-      is_public: false,
-      share_link: null,
+      isPublic: false,
+      shareLink: null,
     },
     isLoading: false,
     error: null,
@@ -106,21 +107,22 @@ describe("ShareWorkflowDialog", () => {
 
   const mockOnClose = vi.fn();
 
+  // camelCase per ADR-0091 Phase 6
   const defaultSharesData = {
     shares: [
       {
-        user_id: "user-1",
+        userId: "user-1",
         email: "alice@example.com",
         permission: "edit" as const,
       },
       {
-        user_id: "user-2",
+        userId: "user-2",
         email: "bob@example.com",
         permission: "view" as const,
       },
     ],
-    is_public: false,
-    share_link: null,
+    isPublic: false,
+    shareLink: null,
   };
 
   beforeEach(() => {
@@ -131,8 +133,8 @@ describe("ShareWorkflowDialog", () => {
     mockAddShareUnwrap.mockResolvedValue({ success: true });
     mockRemoveShareUnwrap.mockResolvedValue(undefined);
     mockUpdatePublicUnwrap.mockResolvedValue({
-      is_public: true,
-      share_link: "https://example.com/share/abc123",
+      isPublic: true,
+      shareLink: "https://example.com/share/abc123",
     });
 
     mockedUseGetWorkflowSharesQuery.mockReturnValue({
@@ -671,8 +673,8 @@ describe("ShareWorkflowDialog", () => {
       mockedUseGetWorkflowSharesQuery.mockReturnValue({
         data: {
           shares: [],
-          is_public: true,
-          share_link: "https://example.com/share/abc123",
+          isPublic: true,
+          shareLink: "https://example.com/share/abc123",
         },
         isLoading: false,
         error: null,
@@ -726,7 +728,7 @@ describe("ShareWorkflowDialog", () => {
       await waitFor(() => {
         expect(mockUpdatePublic).toHaveBeenCalledWith({
           workflow_id: "wf-1",
-          is_public: true, // Toggling from false to true
+          is_public: true, // Toggling from false to true (snake_case for API request)
         });
       });
     });
@@ -735,8 +737,8 @@ describe("ShareWorkflowDialog", () => {
       mockedUseGetWorkflowSharesQuery.mockReturnValue({
         data: {
           shares: [],
-          is_public: true,
-          share_link: "https://example.com/share/abc123",
+          isPublic: true,
+          shareLink: "https://example.com/share/abc123",
         },
         isLoading: false,
         error: null,
@@ -780,8 +782,8 @@ describe("ShareWorkflowDialog", () => {
       mockedUseGetWorkflowSharesQuery.mockReturnValue({
         data: {
           shares: [],
-          is_public: true,
-          share_link: "https://example.com/share/abc123",
+          isPublic: true,
+          shareLink: "https://example.com/share/abc123",
         },
         isLoading: false,
         error: null,
@@ -835,8 +837,8 @@ describe("ShareWorkflowDialog", () => {
       mockedUseGetWorkflowSharesQuery.mockReturnValue({
         data: {
           shares: [],
-          is_public: true,
-          share_link: "https://example.com/share/abc123",
+          isPublic: true,
+          shareLink: "https://example.com/share/abc123",
         },
         isLoading: false,
         error: null,
@@ -860,8 +862,8 @@ describe("ShareWorkflowDialog", () => {
       mockedUseGetWorkflowSharesQuery.mockReturnValue({
         data: {
           shares: [],
-          is_public: true,
-          share_link: "https://example.com/share/abc123",
+          isPublic: true,
+          shareLink: "https://example.com/share/abc123",
         },
         isLoading: false,
         error: null,
@@ -893,8 +895,8 @@ describe("ShareWorkflowDialog", () => {
       mockedUseGetWorkflowSharesQuery.mockReturnValue({
         data: {
           shares: [],
-          is_public: true,
-          share_link: "https://example.com/share/abc123",
+          isPublic: true,
+          shareLink: "https://example.com/share/abc123",
         },
         isLoading: false,
         error: null,
@@ -920,8 +922,8 @@ describe("ShareWorkflowDialog", () => {
       mockedUseGetWorkflowSharesQuery.mockReturnValue({
         data: {
           shares: [],
-          is_public: false,
-          share_link: null,
+          isPublic: false,
+          shareLink: null,
         },
         isLoading: false,
         error: null,
@@ -959,7 +961,7 @@ describe("ShareWorkflowDialog", () => {
   });
 
   describe("Permission Options", () => {
-    it("should have view option", async () => {
+    it("should have view, edit, and execute options", async () => {
       renderWithProvider(
         <ShareWorkflowDialog
           open={true}
@@ -975,43 +977,7 @@ describe("ShareWorkflowDialog", () => {
           opt.getAttribute("value"),
         );
         expect(optionValues).toContain("view");
-      });
-    });
-
-    it("should have edit option", async () => {
-      renderWithProvider(
-        <ShareWorkflowDialog
-          open={true}
-          onClose={mockOnClose}
-          workflow={mockWorkflow}
-        />,
-      );
-
-      await waitFor(() => {
-        const select = screen.getByTestId("permission-select");
-        const options = select.querySelectorAll("option");
-        const optionValues = Array.from(options).map((opt) =>
-          opt.getAttribute("value"),
-        );
         expect(optionValues).toContain("edit");
-      });
-    });
-
-    it("should have execute option", async () => {
-      renderWithProvider(
-        <ShareWorkflowDialog
-          open={true}
-          onClose={mockOnClose}
-          workflow={mockWorkflow}
-        />,
-      );
-
-      await waitFor(() => {
-        const select = screen.getByTestId("permission-select");
-        const options = select.querySelectorAll("option");
-        const optionValues = Array.from(options).map((opt) =>
-          opt.getAttribute("value"),
-        );
         expect(optionValues).toContain("execute");
       });
     });

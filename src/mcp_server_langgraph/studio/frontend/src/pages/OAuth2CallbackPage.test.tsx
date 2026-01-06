@@ -137,17 +137,13 @@ describe("OAuth2CallbackPage", () => {
       );
 
       await waitFor(() => {
-        expect(mockFetch).toHaveBeenCalledWith(
-          "/api/v1/connections/oauth/callback",
-          expect.objectContaining({
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-          }),
-        );
+        expect(mockFetch).toHaveBeenCalled();
       });
 
-      // Verify the body contains the correct parameters
+      // Verify the call was made to the correct endpoint with correct method and body
       const callArgs = mockFetch.mock.calls[0];
+      expect(callArgs[0]).toBe("/api/v1/connections/oauth/callback");
+      expect(callArgs[1].method).toBe("POST");
       const body = JSON.parse(callArgs[1].body);
       expect(body.code).toBe("test-code");
       expect(body.state).toBe("test-state");

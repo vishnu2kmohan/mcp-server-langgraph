@@ -296,7 +296,7 @@ describe("AddConnectionDialog", () => {
             description: "Zapier MCP integration",
             url: "https://mcp.zapier.com",
             transport: "streamable_http",
-            auth_type: "none",
+            authType: "none",
           }),
         );
       });
@@ -335,7 +335,7 @@ describe("AddConnectionDialog", () => {
       });
     });
 
-    it("should include api_key when api_key auth is selected", async () => {
+    it("should include apiKey when api_key auth is selected", async () => {
       render(<AddConnectionDialog {...defaultProps} />);
 
       const nameInput = screen.getByLabelText(/name/i);
@@ -356,8 +356,8 @@ describe("AddConnectionDialog", () => {
       await waitFor(() => {
         expect(mockOnSubmit).toHaveBeenCalledWith(
           expect.objectContaining({
-            auth_type: "api_key",
-            api_key: "sk-test-12345",
+            authType: "api_key",
+            apiKey: "sk-test-12345",
           }),
         );
       });
@@ -387,9 +387,9 @@ describe("AddConnectionDialog", () => {
       await waitFor(() => {
         expect(mockOnSubmit).toHaveBeenCalledWith(
           expect.objectContaining({
-            auth_type: "oauth2",
-            oauth2_client_id: "client-123",
-            oauth2_scopes: ["read", "write"],
+            authType: "oauth2",
+            oauth2ClientId: "client-123",
+            oauth2Scopes: ["read", "write"],
           }),
         );
       });

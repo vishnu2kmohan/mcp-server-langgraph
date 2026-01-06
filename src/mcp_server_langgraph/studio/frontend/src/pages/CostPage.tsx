@@ -132,28 +132,30 @@ export function CostPage({
     );
 
   // Transform API response to component props format
+  // API now returns camelCase (after transformSnakeToCamel in RTK Query)
   const budgetStatus: BudgetStatus | null = budgetStatusData
     ? {
-        entityType: budgetStatusData.entity_type,
-        entityId: budgetStatusData.entity_id,
+        entityType: budgetStatusData.entityType,
+        entityId: budgetStatusData.entityId,
         status: budgetStatusData.status,
-        percentUsed: budgetStatusData.percent_used,
-        currentSpend: budgetStatusData.current_spend.toString(),
+        percentUsed: budgetStatusData.percentUsed,
+        currentSpend: budgetStatusData.currentSpend.toString(),
         remaining: budgetStatusData.remaining.toString(),
-        monthlyLimitUsd: budgetStatusData.monthly_limit.toString(),
+        monthlyLimitUsd: budgetStatusData.monthlyLimit.toString(),
         message: budgetStatusData.message,
       }
     : null;
 
+  // API now returns camelCase (after transformSnakeToCamel in RTK Query)
   const costForecast: CostForecast | null = forecastData
     ? {
-        projectedTotal: forecastData.projected_total.toString(),
-        confidenceLow: forecastData.confidence_low.toString(),
-        confidenceHigh: forecastData.confidence_high.toString(),
+        projectedTotal: forecastData.projectedTotal.toString(),
+        confidenceLow: forecastData.confidenceLow.toString(),
+        confidenceHigh: forecastData.confidenceHigh.toString(),
         trend: forecastData.trend,
-        daysAnalyzed: forecastData.days_analyzed,
+        daysAnalyzed: forecastData.daysAnalyzed,
         message: forecastData.message,
-        monthlyLimit: forecastData.monthly_limit.toString(),
+        monthlyLimit: forecastData.monthlyLimit.toString(),
       }
     : null;
 
@@ -527,22 +529,21 @@ export function CostPage({
           <div className="relative h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
             <div
               className={`absolute left-0 top-0 h-full rounded-full transition-all ${
-                (userBudget.current_usage / userBudget.budget_limit) * 100 >= 90
+                (userBudget.currentUsage / userBudget.budgetLimit) * 100 >= 90
                   ? "bg-red-500"
-                  : (userBudget.current_usage / userBudget.budget_limit) *
-                        100 >=
+                  : (userBudget.currentUsage / userBudget.budgetLimit) * 100 >=
                       75
                     ? "bg-amber-500"
                     : "bg-blue-500"
               }`}
               style={{
-                width: `${Math.min(100, (userBudget.current_usage / userBudget.budget_limit) * 100)}%`,
+                width: `${Math.min(100, (userBudget.currentUsage / userBudget.budgetLimit) * 100)}%`,
               }}
             />
           </div>
           <div className="flex items-center justify-between mt-2 text-xs text-gray-500 dark:text-gray-400">
-            <span>${userBudget.current_usage.toFixed(2)} used</span>
-            <span>${userBudget.budget_limit.toFixed(2)} limit</span>
+            <span>${userBudget.currentUsage.toFixed(2)} used</span>
+            <span>${userBudget.budgetLimit.toFixed(2)} limit</span>
           </div>
         </div>
       )}
@@ -635,7 +636,7 @@ export function CostPage({
                   </div>
                   <div className="flex items-baseline gap-2">
                     <span className="text-3xl font-bold text-gray-900 dark:text-gray-100">
-                      {formatCurrency(summary.total_cost)}
+                      {formatCurrency(summary.totalCost)}
                     </span>
                   </div>
                   <div className="mt-2 text-sm text-gray-500 dark:text-gray-400">
@@ -653,7 +654,7 @@ export function CostPage({
                   </div>
                   <div className="flex items-baseline gap-2">
                     <span className="text-3xl font-bold text-gray-900 dark:text-gray-100">
-                      {formatNumber(summary.total_tokens ?? 0)}
+                      {formatNumber(summary.totalTokens ?? 0)}
                     </span>
                   </div>
                   <div className="mt-2 text-sm text-gray-500 dark:text-gray-400">
@@ -671,9 +672,9 @@ export function CostPage({
                   </div>
                   <div className="flex items-baseline gap-2">
                     <span className="text-3xl font-bold text-gray-900 dark:text-gray-100">
-                      {summary.total_tokens && summary.total_tokens > 0
+                      {summary.totalTokens && summary.totalTokens > 0
                         ? formatCurrency(
-                            (summary.total_cost / summary.total_tokens) * 1000,
+                            (summary.totalCost / summary.totalTokens) * 1000,
                           )
                         : "$0.00"}
                     </span>
@@ -758,12 +759,12 @@ export function CostPage({
                 <div className="divide-y divide-gray-200 dark:divide-gray-700">
                   {liveSessionCostsList.map((session) => (
                     <div
-                      key={session.session_id}
+                      key={session.sessionId}
                       className="px-6 py-4 flex items-center justify-between"
                     >
                       <div>
                         <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
-                          {session.session_id.slice(0, 8)}...
+                          {session.sessionId.slice(0, 8)}...
                         </span>
                         {session.model && (
                           <span className="ml-2 text-xs text-gray-500 dark:text-gray-400">
@@ -773,10 +774,10 @@ export function CostPage({
                       </div>
                       <div className="text-right">
                         <div className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-                          {formatCurrency(session.total_cost)}
+                          {formatCurrency(session.totalCost)}
                         </div>
                         <div className="text-xs text-gray-500 dark:text-gray-400">
-                          {formatNumber(session.token_count)} tokens
+                          {formatNumber(session.tokenCount)} tokens
                         </div>
                       </div>
                     </div>

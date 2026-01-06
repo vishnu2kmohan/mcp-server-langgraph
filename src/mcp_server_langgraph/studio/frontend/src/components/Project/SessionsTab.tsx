@@ -19,8 +19,8 @@ import { saveCurrentRouteAsIntended } from "../../utils/intendedRoute";
 export interface SessionRef {
   id: string;
   name: string;
-  message_count: number;
-  created_at: string | null;
+  messageCount: number;
+  createdAt: string | null;
 }
 
 export interface SessionsTabProps {
@@ -162,7 +162,7 @@ export function SessionsTab({
     }
 
     const session = await createResponse.json();
-    const sessionId = session.session_id || session.id;
+    const sessionId = session.sessionId || session.id;
 
     // Step 2: Add the session to the project
     const addResponse = await authenticatedFetch(
@@ -303,7 +303,7 @@ export function SessionsTab({
                   {session.name}
                 </div>
                 <div className="text-sm text-gray-500 dark:text-gray-400">
-                  {session.message_count} messages
+                  {session.messageCount} messages
                 </div>
               </div>
               <div className="flex items-center gap-2">

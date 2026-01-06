@@ -35,11 +35,11 @@ vi.mock("react-router", async () => {
 // Mock fetch
 const mockFetch = vi.fn();
 
-// Mock workflow data
+// Mock workflow data (camelCase per ADR-0091 Phase 6)
 const mockWorkflows = [
-  { id: "wf-1", name: "Workflow One", created_at: "2025-01-01T00:00:00Z" },
-  { id: "wf-2", name: "Workflow Two", created_at: "2025-01-02T00:00:00Z" },
-  { id: "wf-3", name: "Workflow Three", created_at: null },
+  { id: "wf-1", name: "Workflow One", createdAt: "2025-01-01T00:00:00Z" },
+  { id: "wf-2", name: "Workflow Two", createdAt: "2025-01-02T00:00:00Z" },
+  { id: "wf-3", name: "Workflow Three", createdAt: null },
 ];
 
 describe("WorkflowsTab", () => {

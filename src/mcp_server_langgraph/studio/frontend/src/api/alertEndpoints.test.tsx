@@ -42,58 +42,58 @@ describe("Alert API Types", () => {
   describe("AIRecommendation type", () => {
     it("should have correct structure", () => {
       const recommendation: AIRecommendation = {
-        recommendation_id: "rec-001",
-        alert_id: "alert-001",
-        root_cause_analysis: "Memory leak detected",
-        remediation_steps: [
+        recommendationId: "rec-001",
+        alertId: "alert-001",
+        rootCauseAnalysis: "Memory leak detected",
+        remediationSteps: [
           {
-            step_number: 1,
+            stepNumber: 1,
             action: "restart",
             description: "Restart the service",
             command: "kubectl rollout restart",
-            requires_approval: true,
-            risk_level: "low",
+            requiresApproval: true,
+            riskLevel: "low",
           },
         ],
-        risk_assessment: {
-          overall_risk: "medium",
-          impact_analysis: "Brief downtime expected",
-          rollback_plan: "Rollback to previous version",
+        riskAssessment: {
+          overallRisk: "medium",
+          impactAnalysis: "Brief downtime expected",
+          rollbackPlan: "Rollback to previous version",
         },
-        runbook_reference: "https://runbooks.example.com",
-        generated_at: "2024-01-15T10:30:00Z",
-        model_used: "claude-3-5-sonnet",
+        runbookReference: "https://runbooks.example.com",
+        generatedAt: "2024-01-15T10:30:00Z",
+        modelUsed: "claude-3-5-sonnet",
       };
 
-      expect(recommendation.recommendation_id).toBe("rec-001");
-      expect(recommendation.remediation_steps).toHaveLength(1);
-      expect(recommendation.risk_assessment.overall_risk).toBe("medium");
+      expect(recommendation.recommendationId).toBe("rec-001");
+      expect(recommendation.remediationSteps).toHaveLength(1);
+      expect(recommendation.riskAssessment.overallRisk).toBe("medium");
     });
   });
 
   describe("RemediationStep type", () => {
     it("should have all required fields", () => {
       const step: RemediationStep = {
-        step_number: 1,
+        stepNumber: 1,
         action: "scale",
         description: "Scale up replicas",
         command: "kubectl scale --replicas=5",
-        requires_approval: true,
-        risk_level: "medium",
+        requiresApproval: true,
+        riskLevel: "medium",
       };
 
-      expect(step.step_number).toBe(1);
-      expect(step.requires_approval).toBe(true);
+      expect(step.stepNumber).toBe(1);
+      expect(step.requiresApproval).toBe(true);
     });
 
     it("should allow null command", () => {
       const step: RemediationStep = {
-        step_number: 1,
+        stepNumber: 1,
         action: "manual",
         description: "Manual verification required",
         command: null,
-        requires_approval: true,
-        risk_level: "high",
+        requiresApproval: true,
+        riskLevel: "high",
       };
 
       expect(step.command).toBeNull();
@@ -132,43 +132,43 @@ describe("Alert API Types", () => {
   describe("RemediationRequest type", () => {
     it("should have correct structure", () => {
       const request: RemediationRequest = {
-        remediation_id: "rem-001",
-        alert_id: "alert-001",
-        alert_name: "HighCPU",
+        remediationId: "rem-001",
+        alertId: "alert-001",
+        alertName: "HighCPU",
         severity: "critical",
-        step_number: 1,
+        stepNumber: 1,
         action: "restart",
         description: "Restart service",
         command: "kubectl rollout restart",
-        risk_level: "low",
+        riskLevel: "low",
         status: "pending",
-        requested_at: "2024-01-15T10:30:00Z",
-        approved_by: null,
-        approved_at: null,
+        requestedAt: "2024-01-15T10:30:00Z",
+        approvedBy: null,
+        approvedAt: null,
         reason: null,
-        recommendation_id: "rec-001",
+        recommendationId: "rec-001",
       };
 
       expect(request.status).toBe("pending");
-      expect(request.approved_by).toBeNull();
+      expect(request.approvedBy).toBeNull();
     });
   });
 
   describe("ApproveRemediationRequest type", () => {
     it("should have required fields", () => {
       const request: ApproveRemediationRequest = {
-        remediation_id: "rem-001",
-        approved_by: "admin@example.com",
+        remediationId: "rem-001",
+        approvedBy: "admin@example.com",
       };
 
-      expect(request.remediation_id).toBe("rem-001");
-      expect(request.approved_by).toBe("admin@example.com");
+      expect(request.remediationId).toBe("rem-001");
+      expect(request.approvedBy).toBe("admin@example.com");
     });
 
     it("should allow optional reason", () => {
       const request: ApproveRemediationRequest = {
-        remediation_id: "rem-001",
-        approved_by: "admin@example.com",
+        remediationId: "rem-001",
+        approvedBy: "admin@example.com",
         reason: "Approved after review",
       };
 
@@ -179,8 +179,8 @@ describe("Alert API Types", () => {
   describe("RejectRemediationRequest type", () => {
     it("should require reason", () => {
       const request: RejectRemediationRequest = {
-        remediation_id: "rem-001",
-        rejected_by: "admin@example.com",
+        remediationId: "rem-001",
+        rejectedBy: "admin@example.com",
         reason: "Too risky without more investigation",
       };
 
@@ -195,7 +195,7 @@ describe("Alert API Types", () => {
 
       const paramsWithFilters: RemediationListParams = {
         status: "pending",
-        alert_id: "alert-001",
+        alertId: "alert-001",
         severity: "critical",
         limit: 50,
         cursor: "cursor123",
@@ -281,13 +281,13 @@ describe("Alert API Contract Tests", () => {
     if (typeof obj !== "object" || obj === null) return false;
     const o = obj as Record<string, unknown>;
     return (
-      typeof o.recommendation_id === "string" &&
-      typeof o.alert_id === "string" &&
-      typeof o.root_cause_analysis === "string" &&
-      Array.isArray(o.remediation_steps) &&
-      typeof o.risk_assessment === "object" &&
-      typeof o.generated_at === "string" &&
-      typeof o.model_used === "string"
+      typeof o.recommendationId === "string" &&
+      typeof o.alertId === "string" &&
+      typeof o.rootCauseAnalysis === "string" &&
+      Array.isArray(o.remediationSteps) &&
+      typeof o.riskAssessment === "object" &&
+      typeof o.generatedAt === "string" &&
+      typeof o.modelUsed === "string"
     );
   }
 
@@ -298,11 +298,11 @@ describe("Alert API Contract Tests", () => {
     if (typeof obj !== "object" || obj === null) return false;
     const o = obj as Record<string, unknown>;
     return (
-      typeof o.remediation_id === "string" &&
-      typeof o.alert_id === "string" &&
-      typeof o.alert_name === "string" &&
+      typeof o.remediationId === "string" &&
+      typeof o.alertId === "string" &&
+      typeof o.alertName === "string" &&
       (o.severity === "critical" || o.severity === "warning") &&
-      typeof o.step_number === "number" &&
+      typeof o.stepNumber === "number" &&
       typeof o.action === "string" &&
       typeof o.status === "string"
     );
@@ -310,18 +310,18 @@ describe("Alert API Contract Tests", () => {
 
   it("should validate AIRecommendation shape", () => {
     const validRecommendation = {
-      recommendation_id: "rec-001",
-      alert_id: "alert-001",
-      root_cause_analysis: "Root cause",
-      remediation_steps: [],
-      risk_assessment: {
-        overall_risk: "low",
-        impact_analysis: "",
-        rollback_plan: "",
+      recommendationId: "rec-001",
+      alertId: "alert-001",
+      rootCauseAnalysis: "Root cause",
+      remediationSteps: [],
+      riskAssessment: {
+        overallRisk: "low",
+        impactAnalysis: "",
+        rollbackPlan: "",
       },
-      runbook_reference: null,
-      generated_at: "2024-01-01",
-      model_used: "claude",
+      runbookReference: null,
+      generatedAt: "2024-01-01",
+      modelUsed: "claude",
     };
 
     expect(isAIRecommendation(validRecommendation)).toBe(true);
@@ -329,7 +329,7 @@ describe("Alert API Contract Tests", () => {
 
   it("should reject invalid AIRecommendation shape", () => {
     const invalidRecommendation = {
-      recommendation_id: "rec-001",
+      recommendationId: "rec-001",
       // missing required fields
     };
 
@@ -338,21 +338,21 @@ describe("Alert API Contract Tests", () => {
 
   it("should validate RemediationRequest shape", () => {
     const validRequest = {
-      remediation_id: "rem-001",
-      alert_id: "alert-001",
-      alert_name: "HighCPU",
+      remediationId: "rem-001",
+      alertId: "alert-001",
+      alertName: "HighCPU",
       severity: "critical",
-      step_number: 1,
+      stepNumber: 1,
       action: "restart",
       description: "Restart",
       command: null,
-      risk_level: "low",
+      riskLevel: "low",
       status: "pending",
-      requested_at: "2024-01-01",
-      approved_by: null,
-      approved_at: null,
+      requestedAt: "2024-01-01",
+      approvedBy: null,
+      approvedAt: null,
       reason: null,
-      recommendation_id: "rec-001",
+      recommendationId: "rec-001",
     };
 
     expect(isRemediationRequest(validRequest)).toBe(true);
@@ -360,7 +360,7 @@ describe("Alert API Contract Tests", () => {
 
   it("should reject invalid RemediationRequest shape", () => {
     const invalidRequest = {
-      remediation_id: "rem-001",
+      remediationId: "rem-001",
       severity: "info", // invalid severity for remediations
     };
 

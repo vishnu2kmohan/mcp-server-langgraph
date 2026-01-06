@@ -14,7 +14,8 @@
  * Reference: Plan - Confidence-Based Human-in-the-Loop (HITL) for Multi-Agent Orchestrator
  */
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
+import { useFocusTrap } from "../../hooks/useFocusTrap";
 import {
   X,
   AlertTriangle,
@@ -155,6 +156,10 @@ export function AgentApprovalDialog({
 }: AgentApprovalDialogProps) {
   const [reason, setReason] = useState("");
 
+  // Focus trap for WCAG 2.1 AA compliance (Sprint 5.2)
+  const dialogRef = useRef<HTMLDivElement>(null);
+  useFocusTrap(dialogRef, isOpen);
+
   // Sprint 6: HITL Intelligence hooks
   const {
     riskScore,
@@ -235,6 +240,7 @@ export function AgentApprovalDialog({
 
   return (
     <div
+      ref={dialogRef}
       role="dialog"
       aria-modal="true"
       className="fixed inset-0 z-50 flex items-center justify-center"

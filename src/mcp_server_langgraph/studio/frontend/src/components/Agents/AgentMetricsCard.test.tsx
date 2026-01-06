@@ -18,7 +18,7 @@ import { Provider } from "react-redux";
 import { configureStore } from "@reduxjs/toolkit";
 import { AgentMetricsCard } from "./AgentMetricsCard";
 import personaReducer from "../../store/slices/personaSlice";
-import type { AgentMetricsResponse } from "../../types/api";
+import type { AgentMetricsResponseCamelCase } from "../../types/api";
 
 // Mock the API hook
 const mockRefetch = vi.fn();
@@ -53,30 +53,30 @@ function createTestStoreWithPersona(persona: "admin" | "developer" | "user") {
   });
 }
 
-// Mock metrics data
-const mockMetrics: AgentMetricsResponse = {
+// Mock metrics data (camelCase per ADR-0091)
+const mockMetrics: AgentMetricsResponseCamelCase = {
   timestamp: "2025-12-27T12:00:00Z",
-  time_range_hours: 24,
+  timeRangeHours: 24,
   orchestrator: {
-    total_executions: 1000,
-    successful_executions: 950,
-    failed_executions: 50,
-    avg_duration_ms: 1500.5,
-    p50_duration_ms: 1200.0,
-    p95_duration_ms: 2500.0,
-    p99_duration_ms: 3000.0,
+    totalExecutions: 1000,
+    successfulExecutions: 950,
+    failedExecutions: 50,
+    avgDurationMs: 1500.5,
+    p50DurationMs: 1200.0,
+    p95DurationMs: 2500.0,
+    p99DurationMs: 3000.0,
   },
   hitl: {
-    total_requests: 100,
-    approved_count: 85,
-    rejected_count: 10,
-    pending_count: 5,
-    avg_response_latency_ms: 5000.0,
+    totalRequests: 100,
+    approvedCount: 85,
+    rejectedCount: 10,
+    pendingCount: 5,
+    avgResponseLatencyMs: 5000.0,
   },
   cost: {
-    total_cost_usd: 125.5,
-    total_tokens: 2500000,
-    avg_cost_per_request_usd: 0.1255,
+    totalCostUsd: 125.5,
+    totalTokens: 2500000,
+    avgCostPerRequestUsd: 0.1255,
   },
 };
 

@@ -23,33 +23,37 @@ import React from "react";
 
 import { useAINudges } from "./useAINudges";
 import nudgeReducer from "../store/slices/nudgeSlice";
+import authReducer from "../store/slices/authSlice";
 import type { NudgePriority, NudgeType } from "./useNudges";
 import { api } from "../api";
 
 // =============================================================================
-// Test Data (RTK Query format)
+// Test Data (Generated NudgeRecommendResponse format - ADR-0091)
 // =============================================================================
 
-// RTK Query returns: { nudge_type, message, confidence, action_cta, trigger_delay_ms }
+// Generated NudgeRecommendResponse: { should_show, confidence, nudge? }
 const mockNudgeRecommendation = {
-  nudge_type: "tooltip",
-  message: "Pro tip: Press Cmd+K for quick search",
+  should_show: true,
   confidence: 0.88,
-  action_cta: "Try it now",
-  trigger_delay_ms: 5000,
+  nudge: {
+    id: "nudge-123",
+    type: "tooltip",
+    message: "Pro tip: Press Cmd+K for quick search",
+    priority: "medium",
+    show_after_ms: 5000,
+    target_element: null,
+  },
 };
 
 const mockNoNudgeRecommendation = {
-  nudge_type: "",
-  message: "",
+  should_show: false,
   confidence: 0.2,
-  action_cta: undefined,
-  trigger_delay_ms: undefined,
+  nudge: null,
 };
 
-// Keep old format for reference - these types are unused now
-type _OldNudgeType = NudgeType;
-type _OldNudgePriority = NudgePriority;
+// Keep type references for test validation
+type _TestNudgeType = NudgeType;
+type _TestNudgePriority = NudgePriority;
 
 // =============================================================================
 // Test Utilities
@@ -59,6 +63,7 @@ function createTestStore() {
   return configureStore({
     reducer: {
       nudge: nudgeReducer,
+      auth: authReducer,
       [api.reducerPath]: api.reducer,
     },
     middleware: (getDefaultMiddleware) =>
@@ -162,8 +167,8 @@ describe("useAINudges", () => {
         expect(result.current.recommendation).not.toBeNull();
       });
 
-      // Nudge ID is now generated dynamically (nudge-{timestamp})
-      expect(result.current.recommendation?.nudge?.id).toMatch(/^nudge-\d+$/);
+      // Nudge ID comes from backend response (ADR-0091)
+      expect(result.current.recommendation?.nudge?.id).toBe("nudge-123");
       expect(result.current.recommendation?.confidence).toBe(0.88);
     });
 
@@ -400,10 +405,11 @@ describe("useAINudges", () => {
     });
   });
 
-  describe("Fogg Model Integration", () => {
-    it("includes context and persona in request via RTK Query", async () => {
-      // Note: RTK Query uses different request fields: current_feature, persona
-      // The original motivation/ability fields are mapped to persona
+  describe("Request Schema Compliance", () => {
+    it("sends correct schema fields matching backend NudgeRecommendRequest", async () => {
+      // ADR-0091: Request matches backend Pydantic schema (ai_ux.py:205)
+      // Required: user_id, current_context { page, action?, time_on_page? }
+      // Optional: nudge_history
       let capturedBody: Record<string, unknown> | null = null;
       server.use(
         http.post("*/api/v1/ai/nudges/recommend", async ({ request }) => {
@@ -431,9 +437,17 @@ describe("useAINudges", () => {
         expect(capturedBody).not.toBeNull();
       });
 
-      // RTK Query sends current_feature and persona instead
-      expect(capturedBody?.current_feature).toBe("chat");
-      expect(capturedBody?.persona).toBe("intermediate");
+      // Validate schema matches backend NudgeRecommendRequest
+      expect(capturedBody?.user_id).toBeDefined();
+      expect(capturedBody?.current_context).toBeDefined();
+
+      const currentContext = capturedBody?.current_context as Record<
+        string,
+        unknown
+      >;
+      expect(currentContext?.page).toBe("chat");
+      expect(currentContext?.action).toBeDefined(); // "viewing"
+      expect(capturedBody?.nudge_history).toBeDefined(); // Array
     });
   });
 });

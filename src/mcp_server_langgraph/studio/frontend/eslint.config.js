@@ -247,33 +247,42 @@ export default tseslint.config(
       'no-restricted-syntax': 'off',
     },
   },
-  // Override for components that consume API data - pending Phase 5 migration
-  // These consume backend types directly (Agents, Workflow, Session, Project, MCP, Cost, Observability)
-  // Full camelCase migration requires RTK Query transformResponse (tracked in ADR-0091 Phase 5)
+  // ADR-0091 Phase 6: Component overrides for snake_case property access
+  // RTK Query transformResponse is applied to core endpoints.
+  // These overrides remain until component code is updated to use camelCase property access.
+  // Track progress in ADR-0091 Phase 6 section.
+  //
+  // COMPLETED (overrides removed - 2026-01-05):
+  // - Agents/*.tsx - All camelCase ✓
+  // - MCP/*.tsx - All camelCase ✓
+  // - Observability/*.tsx - All camelCase ✓
+  // - PlanEditor/*.tsx - All camelCase ✓
+  // - Analytics/*.tsx - All camelCase ✓
+  // - Connection/*.tsx - All camelCase ✓
+  // - DevTools/**/*.tsx, *.ts - All camelCase ✓
+  // - Workflow/*.tsx - All camelCase ✓
+  // - Project/*.tsx - All camelCase ✓
+  // - SessionNav.tsx - All camelCase ✓
+  // - Chat/SaveAsWorkflowButton.tsx - All camelCase ✓
+  // - Cost/*.tsx - All camelCase ✓
+  // - Insights/*.tsx - All camelCase ✓
+  // - Session/*.tsx - All camelCase ✓
+  // - conversation/*.tsx - All camelCase ✓
   {
     files: [
-      '**/components/Agents/*.tsx',
-      '**/components/Chat/SaveAsWorkflowButton.tsx',
-      '**/components/Connection/*.tsx',
-      '**/components/Cost/*.tsx',
-      '**/components/DevTools/**/*.tsx',
-      '**/components/DevTools/**/*.ts',
-      '**/components/Insights/*.tsx',
-      '**/components/MCP/*.tsx',
-      '**/components/Observability/*.tsx',
-      '**/components/PlanEditor/*.tsx',
-      '**/components/Project/*.tsx',
-      '**/components/Session/*.tsx',
-      '**/components/Workflow/*.tsx',
-      '**/conversation/*.tsx',
-      '**/layout/*.tsx',
-      '**/pages/*.tsx',
+      // API Boundary Components - intentionally access snake_case from raw API responses
+      // These transform data at the boundary (e.g., transformExecution in WorkflowsPage)
+      '**/layout/*.tsx', // StudioShellLayout uses Admin HITL types (snake_case callbacks)
+      '**/pages/*.tsx', // Pages access raw API responses before transformation
     ],
     rules: {
       'no-restricted-syntax': 'off',
     },
   },
-  // ADR-0091 Phase 4 Complete: Targeted overrides for API boundary components
-  // Phase 5 will add RTK Query transformResponse to migrate from snake_case to camelCase
-  // See ADR-0091 for full migration tracking
+  // ADR-0091 Phase 6 Status:
+  // - Transform functions: COMPLETE (transformSnakeToCamel, transformCamelToSnake)
+  // - RTK Query transforms: COMPLETE (core endpoints have transformResponse)
+  // - Component updates: COMPLETE (16 component directories migrated)
+  // - ESLint cleanup: COMPLETE (16 directories removed from override)
+  // - Remaining overrides: layout/*.tsx, pages/*.tsx (API boundary components)
 );

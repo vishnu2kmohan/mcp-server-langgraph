@@ -187,7 +187,7 @@ export function ConnectionHealthDashboard({
           className="bg-yellow-50 dark:bg-yellow-900/20 rounded-lg p-3 text-center"
         >
           <div className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">
-            {summary.auth_required}
+            {summary.authRequired}
           </div>
           <div className="text-sm text-gray-500 dark:text-gray-400">
             Auth Required
@@ -264,15 +264,15 @@ function ConnectionHealthItem({
           {/* Stats for connected */}
           {connection.status === "connected" && (
             <div className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-              {connection.tool_count} tools · {connection.resource_count}{" "}
-              resources · {connection.prompt_count} prompts
+              {connection.toolCount} tools · {connection.resourceCount}{" "}
+              resources · {connection.promptCount} prompts
             </div>
           )}
 
           {/* Error message */}
-          {connection.last_error && (
+          {connection.lastError && (
             <div className="text-xs text-red-500 dark:text-red-400 mt-0.5">
-              {connection.last_error}
+              {connection.lastError}
             </div>
           )}
         </div>

@@ -151,20 +151,20 @@ export function AlertGroupsPanel({
               <div className="divide-y divide-gray-100 dark:divide-gray-700">
                 {group.alerts.map((alert: Alert) => (
                   <div
-                    key={alert.alert_id}
+                    key={alert.alertId}
                     role="button"
                     tabIndex={0}
                     className={`p-3 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors ${
-                      selectedAlertId === alert.alert_id
+                      selectedAlertId === alert.alertId
                         ? "border-l-4 border-blue-500 bg-blue-50 dark:bg-blue-900/20"
                         : "border-l-4 border-transparent"
                     }`}
-                    data-testid={`alert-item-${alert.alert_id}`}
-                    onClick={() => onSelectAlert(alert.alert_id)}
+                    data-testid={`alert-item-${alert.alertId}`}
+                    onClick={() => onSelectAlert(alert.alertId)}
                     onKeyDown={(e) => {
                       if (e.key === "Enter" || e.key === " ") {
                         e.preventDefault();
-                        onSelectAlert(alert.alert_id);
+                        onSelectAlert(alert.alertId);
                       }
                     }}
                   >
@@ -174,7 +174,7 @@ export function AlertGroupsPanel({
                           {alert.message}
                         </p>
                         <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                          Started: {new Date(alert.started_at).toLocaleString()}
+                          Started: {new Date(alert.startedAt).toLocaleString()}
                         </p>
                       </div>
                     </div>

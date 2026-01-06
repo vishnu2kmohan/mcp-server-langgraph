@@ -3,7 +3,13 @@
  *
  * Type definitions for MCP server connection management.
  * Supports OAuth2 and API Key authentication per MCP 2025-03-26 spec.
+ *
+ * ADR-0091 Phase 6: Types use snake_case to match backend API responses.
+ * RTK Query transforms responses to camelCase at runtime.
+ * Use `*CamelCase` type aliases for frontend components.
  */
+
+import type { SnakeToCamelCaseDeep } from "../api/transforms";
 
 // ==============================================================================
 // Auth Types
@@ -95,18 +101,22 @@ export interface MCPConnectionSummary {
 // Request Models
 // ==============================================================================
 
-/** Request model for creating an MCP connection */
+/**
+ * Request model for creating an MCP connection
+ *
+ * ADR-0091 Phase 6: Uses camelCase - transformed to snake_case at API boundary
+ */
 export interface MCPConnectionCreate {
   name: string;
   description?: string | null;
   url: string;
   transport?: TransportProtocol;
-  auth_type?: AuthType;
-  api_key?: string | null;
-  oauth2_client_id?: string | null;
-  oauth2_client_secret?: string | null;
-  oauth2_scopes?: string[] | null;
-  project_id?: string | null;
+  authType?: AuthType;
+  apiKey?: string | null;
+  oauth2ClientId?: string | null;
+  oauth2ClientSecret?: string | null;
+  oauth2Scopes?: string[] | null;
+  projectId?: string | null;
   /** For stdio transport: command to execute */
   command?: string | null;
   /** For stdio transport: command arguments */
@@ -305,4 +315,61 @@ export interface AggregatedServersResponse {
   total_tools: number;
   total_resources: number;
   total_prompts: number;
+}
+
+// ==============================================================================
+// ADR-0091 Phase 6: CamelCase Type Aliases (for transformed responses)
+// ==============================================================================
+
+/**
+ * OAuth2Config type with camelCase keys (after RTK Query transformation).
+ */
+export type OAuth2ConfigCamelCase = SnakeToCamelCaseDeep<OAuth2Config>;
+
+/**
+ * AggregatedTool type with camelCase keys (after RTK Query transformation).
+ */
+export type AggregatedToolCamelCase = SnakeToCamelCaseDeep<AggregatedTool>;
+
+/**
+ * AggregatedResource type with camelCase keys (after RTK Query transformation).
+ */
+export type AggregatedResourceCamelCase =
+  SnakeToCamelCaseDeep<AggregatedResource>;
+
+/**
+ * AggregatedPrompt type with camelCase keys (after RTK Query transformation).
+ */
+export type AggregatedPromptCamelCase = SnakeToCamelCaseDeep<AggregatedPrompt>;
+
+/**
+ * ServerCapabilitySummary type with camelCase keys (after RTK Query transformation).
+ */
+export type ServerCapabilitySummaryCamelCase =
+  SnakeToCamelCaseDeep<ServerCapabilitySummary>;
+
+/**
+ * AggregatedServersResponse type with camelCase keys (after RTK Query transformation).
+ */
+export type AggregatedServersResponseCamelCase =
+  SnakeToCamelCaseDeep<AggregatedServersResponse>;
+
+/**
+ * MCPConnection type with camelCase keys (after RTK Query transformation).
+ */
+export type MCPConnectionCamelCase = SnakeToCamelCaseDeep<MCPConnection>;
+
+/**
+ * MCPConnectionSummary type with camelCase keys (after RTK Query transformation).
+ */
+export type MCPConnectionSummaryCamelCase =
+  SnakeToCamelCaseDeep<MCPConnectionSummary>;
+
+/**
+ * ConnectionListResponse type with camelCase keys (after RTK Query transformation).
+ */
+export interface ConnectionListResponseCamelCase {
+  items: MCPConnectionSummaryCamelCase[];
+  total: number;
+  cursor: string | null;
 }

@@ -13,7 +13,7 @@ import { ProjectDocument } from "./ProjectDocument";
 import projectReducer from "../../store/slices/projectSlice";
 import uiReducer from "../../store/slices/uiSlice";
 
-// Mock RTK Query hooks
+// Mock RTK Query hooks - camelCase per ADR-0091 Phase 6
 vi.mock("../../api", () => ({
   useGetProjectQuery: (id: string | undefined) => {
     if (!id) {
@@ -31,13 +31,13 @@ vi.mock("../../api", () => ({
         name: `Test Project ${id}`,
         description: "A test project",
         status: "active",
-        owner_id: "user-123",
-        owner_name: "Test User",
-        session_count: 5,
-        workflow_count: 3,
-        connection_count: 2,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
+        ownerId: "user-123",
+        ownerName: "Test User",
+        sessionCount: 5,
+        workflowCount: 3,
+        connectionCount: 2,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
       },
       isLoading: false,
       isError: false,

@@ -19,7 +19,7 @@ import {
   KeyboardEvent,
   ChangeEvent,
 } from "react";
-import { Bold, Italic, Code, FileCode } from "lucide-react";
+import { Bold, Italic, Code, FileCode, Plus, Minus } from "lucide-react";
 
 // ==============================================================================
 // Types
@@ -48,6 +48,29 @@ export interface RichTextInputProps {
   disabled?: boolean;
   /** Additional CSS classes */
   className?: string;
+  /**
+   * Keyboard submit behavior (Sprint 5.2)
+   * - true: Enter = submit, Shift+Enter = newline (ChatGPT style)
+   * - false: Ctrl/Cmd+Enter = submit, Enter = newline (default, legacy)
+   */
+  submitOnEnter?: boolean;
+  /**
+   * Whether toolbar is expanded by default (Sprint 2.4)
+   * - false: Toolbar collapsed, show + button to expand (default)
+   * - true: Toolbar expanded, show formatting buttons
+   */
+  defaultToolbarExpanded?: boolean;
+  // Inline Suggestions props (Sprint 3.3)
+  /** Enable inline AI suggestions (ghost text) */
+  enableInlineSuggestions?: boolean;
+  /** Current suggestion text to display as ghost text */
+  inlineSuggestion?: string;
+  /** Callback when user accepts suggestion (Tab key) */
+  onAcceptSuggestion?: (suggestion: string) => void;
+  /** Callback when user dismisses suggestion (Escape key) */
+  onDismissSuggestion?: () => void;
+  /** Whether suggestion is loading */
+  isSuggestionLoading?: boolean;
 }
 
 // ==============================================================================
@@ -120,11 +143,22 @@ export function RichTextInput({
   maxLength,
   disabled = false,
   className = "",
+  submitOnEnter = true,
+  defaultToolbarExpanded = false,
+  // Inline Suggestions props
+  enableInlineSuggestions = false,
+  inlineSuggestion,
+  onAcceptSuggestion,
+  onDismissSuggestion,
+  isSuggestionLoading = false,
 }: RichTextInputProps) {
   const [internalValue, setInternalValue] = useState("");
   const [showMentions, setShowMentions] = useState(false);
   const [mentionFilter, setMentionFilter] = useState("");
   const [mentionStartPos, setMentionStartPos] = useState(0);
+  const [toolbarExpanded, setToolbarExpanded] = useState(
+    defaultToolbarExpanded,
+  );
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -241,26 +275,72 @@ export function RichTextInput({
   // Handle keyboard events
   const handleKeyDown = useCallback(
     (e: KeyboardEvent<HTMLTextAreaElement>) => {
-      // Submit on Ctrl/Cmd+Enter
-      if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
-        e.preventDefault();
-        if (value.trim()) {
-          onSubmit(value);
-          setValue("");
-          setShowMentions(false);
+      // Submit handling based on user preference (Sprint 5.2)
+      if (e.key === "Enter") {
+        if (submitOnEnter) {
+          // ChatGPT-style: Enter = submit, Shift+Enter = newline
+          if (!e.shiftKey && !e.ctrlKey && !e.metaKey) {
+            e.preventDefault();
+            if (value.trim()) {
+              onSubmit(value);
+              setValue("");
+              setShowMentions(false);
+            }
+            return;
+          }
+        } else {
+          // Legacy-style: Ctrl/Cmd+Enter = submit
+          if (e.ctrlKey || e.metaKey) {
+            e.preventDefault();
+            if (value.trim()) {
+              onSubmit(value);
+              setValue("");
+              setShowMentions(false);
+            }
+            return;
+          }
         }
+      }
+
+      // Tab to accept inline suggestion (Sprint 3.3)
+      if (
+        e.key === "Tab" &&
+        enableInlineSuggestions &&
+        inlineSuggestion &&
+        onAcceptSuggestion
+      ) {
+        e.preventDefault();
+        onAcceptSuggestion(inlineSuggestion);
         return;
       }
 
-      // Close mentions on Escape
-      if (e.key === "Escape" && showMentions) {
-        e.preventDefault();
-        setShowMentions(false);
-        return;
+      // Escape to close mentions or dismiss inline suggestion
+      if (e.key === "Escape") {
+        if (showMentions) {
+          e.preventDefault();
+          setShowMentions(false);
+          return;
+        }
+        if (
+          enableInlineSuggestions &&
+          inlineSuggestion &&
+          onDismissSuggestion
+        ) {
+          e.preventDefault();
+          onDismissSuggestion();
+          return;
+        }
       }
 
       // Formatting shortcuts
       if (e.ctrlKey || e.metaKey) {
+        // Ctrl+Shift+F to toggle toolbar (Sprint 2.4)
+        if (e.shiftKey && e.key.toLowerCase() === "f") {
+          e.preventDefault();
+          setToolbarExpanded((prev) => !prev);
+          return;
+        }
+
         switch (e.key.toLowerCase()) {
           case "b":
             e.preventDefault();
@@ -285,6 +365,11 @@ export function RichTextInput({
       handleBold,
       handleItalic,
       handleCode,
+      submitOnEnter,
+      enableInlineSuggestions,
+      inlineSuggestion,
+      onAcceptSuggestion,
+      onDismissSuggestion,
     ],
   );
 
@@ -326,58 +411,93 @@ export function RichTextInput({
 
   return (
     <div ref={containerRef} className={`relative ${className}`}>
-      {/* Formatting toolbar */}
-      <div
-        data-testid="formatting-toolbar"
-        className="flex items-center gap-1 mb-2 p-1 border-b border-gray-200 dark:border-gray-700"
-        role="toolbar"
-        aria-label="Text formatting"
-      >
+      {/* Formatting toolbar toggle and toolbar (Sprint 2.4 - collapsible) */}
+      <div className="flex items-center gap-1 mb-2 p-1 border-b border-gray-200 dark:border-gray-700">
+        {/* Toggle button - always visible */}
         <button
           type="button"
-          onClick={handleBold}
-          disabled={disabled}
-          className="p-1.5 rounded hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
-          aria-label="Bold"
-          title="Bold (Ctrl+B)"
+          onClick={() => setToolbarExpanded((prev) => !prev)}
+          className="p-1.5 rounded hover:bg-gray-100 dark:hover:bg-gray-700"
+          aria-label="Toggle formatting toolbar"
+          aria-expanded={toolbarExpanded}
+          title={
+            toolbarExpanded
+              ? "Hide formatting (Ctrl+Shift+F)"
+              : "Show formatting (Ctrl+Shift+F)"
+          }
         >
-          <Bold className="w-4 h-4" aria-hidden="true" />
+          {toolbarExpanded ? (
+            <Minus
+              className="w-4 h-4"
+              aria-hidden="true"
+              data-testid="minus-icon"
+            />
+          ) : (
+            <Plus
+              className="w-4 h-4"
+              aria-hidden="true"
+              data-testid="plus-icon"
+            />
+          )}
         </button>
 
-        <button
-          type="button"
-          onClick={handleItalic}
-          disabled={disabled}
-          className="p-1.5 rounded hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
-          aria-label="Italic"
-          title="Italic (Ctrl+I)"
-        >
-          <Italic className="w-4 h-4" aria-hidden="true" />
-        </button>
+        {/* Formatting buttons - only visible when expanded */}
+        {toolbarExpanded && (
+          <div
+            data-testid="formatting-toolbar"
+            className="flex items-center gap-1 transition-opacity duration-150"
+            role="toolbar"
+            aria-label="Text formatting"
+          >
+            <div className="w-px h-4 bg-gray-300 dark:bg-gray-600 mx-1" />
 
-        <button
-          type="button"
-          onClick={handleCode}
-          disabled={disabled}
-          className="p-1.5 rounded hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
-          aria-label="Code"
-          title="Inline code (Ctrl+`)"
-        >
-          <Code className="w-4 h-4" aria-hidden="true" />
-        </button>
+            <button
+              type="button"
+              onClick={handleBold}
+              disabled={disabled}
+              className="p-1.5 rounded hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              aria-label="Bold"
+              title="Bold (Ctrl+B)"
+            >
+              <Bold className="w-4 h-4" aria-hidden="true" />
+            </button>
 
-        <div className="w-px h-4 bg-gray-300 dark:bg-gray-600 mx-1" />
+            <button
+              type="button"
+              onClick={handleItalic}
+              disabled={disabled}
+              className="p-1.5 rounded hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              aria-label="Italic"
+              title="Italic (Ctrl+I)"
+            >
+              <Italic className="w-4 h-4" aria-hidden="true" />
+            </button>
 
-        <button
-          type="button"
-          onClick={applyCodeBlock}
-          disabled={disabled}
-          className="p-1.5 rounded hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
-          aria-label="Code block"
-          title="Code block"
-        >
-          <FileCode className="w-4 h-4" aria-hidden="true" />
-        </button>
+            <button
+              type="button"
+              onClick={handleCode}
+              disabled={disabled}
+              className="p-1.5 rounded hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              aria-label="Code"
+              title="Inline code (Ctrl+`)"
+            >
+              <Code className="w-4 h-4" aria-hidden="true" />
+            </button>
+
+            <div className="w-px h-4 bg-gray-300 dark:bg-gray-600 mx-1" />
+
+            <button
+              type="button"
+              onClick={applyCodeBlock}
+              disabled={disabled}
+              className="p-1.5 rounded hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              aria-label="Code block"
+              title="Code block"
+            >
+              <FileCode className="w-4 h-4" aria-hidden="true" />
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Text input */}
@@ -436,6 +556,40 @@ export function RichTextInput({
             ))}
           </div>
         )}
+
+        {/* Inline Suggestion Overlay (Sprint 3.3) */}
+        {enableInlineSuggestions && value && inlineSuggestion && (
+          <div
+            data-testid="inline-suggestion-overlay"
+            className="absolute left-0 top-0 pointer-events-none p-3 text-gray-400 dark:text-gray-500"
+            aria-hidden="true"
+          >
+            <span className="invisible">{value}</span>
+            <span className="text-gray-400 dark:text-gray-500 opacity-60">
+              {inlineSuggestion}
+            </span>
+          </div>
+        )}
+
+        {/* Suggestion Loading Indicator (Sprint 3.3) */}
+        {enableInlineSuggestions && isSuggestionLoading && (
+          <div
+            data-testid="suggestion-loading"
+            className="absolute right-3 top-3"
+          >
+            <div className="w-4 h-4 border-2 border-gray-300 dark:border-gray-600 border-t-blue-500 rounded-full animate-spin" />
+          </div>
+        )}
+
+        {/* Suggestion Hint (Sprint 3.3) */}
+        {enableInlineSuggestions && value && inlineSuggestion && (
+          <div
+            data-testid="suggestion-hint"
+            className="absolute right-3 bottom-3 text-xs text-gray-400 dark:text-gray-500 bg-white dark:bg-gray-800 px-1.5 py-0.5 rounded"
+          >
+            <kbd className="font-mono text-xs">Tab</kbd> to accept
+          </div>
+        )}
       </div>
 
       {/* Character count */}
@@ -447,6 +601,18 @@ export function RichTextInput({
           {value.length} / {maxLength}
         </div>
       )}
+
+      {/* Live region for screen reader announcements (accessibility) */}
+      <div
+        role="status"
+        aria-live="polite"
+        aria-atomic="true"
+        className="sr-only"
+      >
+        {toolbarExpanded
+          ? "Formatting toolbar expanded"
+          : "Formatting toolbar collapsed"}
+      </div>
     </div>
   );
 }

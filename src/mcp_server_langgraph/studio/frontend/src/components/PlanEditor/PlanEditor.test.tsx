@@ -11,19 +11,19 @@ import { PlanEditor, type ExecutionPlanView } from "./PlanEditor";
 
 describe("PlanEditor", () => {
   const samplePlan: ExecutionPlanView = {
-    plan_id: "plan-123",
-    session_id: "session-456",
+    planId: "plan-123",
+    sessionId: "session-456",
     status: "awaiting_approval",
     complexity: "complicated",
-    risk_level: "medium",
-    task_type: "code",
-    executor_model: "gemini-3-flash",
-    critic_model: "claude-haiku-4-5-20251001",
-    estimated_cost: "0.05",
+    riskLevel: "medium",
+    taskType: "code",
+    executorModel: "gemini-3-flash",
+    criticModel: "claude-haiku-4-5-20251001",
+    estimatedCost: "0.05",
     message: "Help me refactor this code",
-    tools_needed: ["file_read", "file_write"],
-    thinking_budget: "medium",
-    critique_rounds: 1,
+    toolsNeeded: ["file_read", "file_write"],
+    thinkingBudget: "medium",
+    critiqueRounds: 1,
     orchestrator: "standard",
   };
 

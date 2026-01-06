@@ -24,54 +24,55 @@ vi.mock("../../api", () => ({
 
 import * as apiModule from "../../api";
 
+// Mock data uses camelCase (ADR-0091 Phase 6) - matches RTK Query transformResponse output
 const mockOrgCosts = [
   {
-    organization_id: "organization:acme",
-    total_cost: 500.0,
-    total_tokens: 100000,
-    request_count: 250,
+    organizationId: "organization:acme",
+    totalCost: 500.0,
+    totalTokens: 100000,
+    requestCount: 250,
   },
   {
-    organization_id: "organization:globex",
-    total_cost: 300.0,
-    total_tokens: 60000,
-    request_count: 150,
+    organizationId: "organization:globex",
+    totalCost: 300.0,
+    totalTokens: 60000,
+    requestCount: 150,
   },
 ];
 
 const mockProjectCosts = [
   {
-    project_id: "project:alpha",
-    organization_id: "organization:acme",
-    total_cost: 250.0,
-    total_tokens: 50000,
-    request_count: 125,
+    projectId: "project:alpha",
+    organizationId: "organization:acme",
+    totalCost: 250.0,
+    totalTokens: 50000,
+    requestCount: 125,
   },
   {
-    project_id: "project:beta",
-    organization_id: "organization:acme",
-    total_cost: 250.0,
-    total_tokens: 50000,
-    request_count: 125,
+    projectId: "project:beta",
+    organizationId: "organization:acme",
+    totalCost: 250.0,
+    totalTokens: 50000,
+    requestCount: 125,
   },
 ];
 
 const mockTeamCosts = [
   {
-    team_id: "team:engineering",
-    organization_id: "organization:acme",
-    project_id: "project:alpha",
-    total_cost: 150.0,
-    total_tokens: 30000,
-    request_count: 75,
+    teamId: "team:engineering",
+    organizationId: "organization:acme",
+    projectId: "project:alpha",
+    totalCost: 150.0,
+    totalTokens: 30000,
+    requestCount: 75,
   },
   {
-    team_id: "team:data",
-    organization_id: "organization:acme",
-    project_id: "project:alpha",
-    total_cost: 100.0,
-    total_tokens: 20000,
-    request_count: 50,
+    teamId: "team:data",
+    organizationId: "organization:acme",
+    projectId: "project:alpha",
+    totalCost: 100.0,
+    totalTokens: 20000,
+    requestCount: 50,
   },
 ];
 

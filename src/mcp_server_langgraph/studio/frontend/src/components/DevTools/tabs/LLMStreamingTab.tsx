@@ -253,9 +253,11 @@ export function LLMStreamingTab({
       // Active streams first, then by start time
       if (a.status === "active" && b.status !== "active") return -1;
       if (a.status !== "active" && b.status === "active") return 1;
+      /* eslint-disable no-restricted-syntax -- TODO: ADR-0091 Phase 6: Transform ActiveStream to camelCase */
       return (
         new Date(b.started_at).getTime() - new Date(a.started_at).getTime()
       );
+      /* eslint-enable no-restricted-syntax */
     });
   }, [activeStreams]);
 

@@ -24,10 +24,10 @@ import { Provider } from "react-redux";
 import { configureStore } from "@reduxjs/toolkit";
 import { VectorsPage } from "./VectorsPage";
 
-// Mock data
+// Mock data - camelCase per ADR-0091 Phase 6 (RTK Query transforms)
 const mockCollections = [
-  { name: "documents", vectors_count: 100 },
-  { name: "images", vectors_count: 50 },
+  { name: "documents", vectorsCount: 100 },
+  { name: "images", vectorsCount: 50 },
 ];
 
 const mockSearchResults = [
@@ -263,7 +263,7 @@ describe("VectorsPage", () => {
 
     it("should display collection details", () => {
       mockedUseListVectorCollectionsQuery.mockReturnValue({
-        data: [{ name: "documents", vectors_count: 100 }],
+        data: [{ name: "documents", vectorsCount: 100 }],
         isLoading: false,
         isFetching: false,
         error: null,
@@ -354,7 +354,7 @@ describe("VectorsPage", () => {
   describe("Delete Collection", () => {
     it("should have delete button for each collection", () => {
       mockedUseListVectorCollectionsQuery.mockReturnValue({
-        data: [{ name: "documents", vectors_count: 100 }],
+        data: [{ name: "documents", vectorsCount: 100 }],
         isLoading: false,
         isFetching: false,
         error: null,
@@ -367,7 +367,7 @@ describe("VectorsPage", () => {
 
     it("should show confirmation dialog before deleting", async () => {
       mockedUseListVectorCollectionsQuery.mockReturnValue({
-        data: [{ name: "documents", vectors_count: 100 }],
+        data: [{ name: "documents", vectorsCount: 100 }],
         isLoading: false,
         isFetching: false,
         error: null,
@@ -392,7 +392,7 @@ describe("VectorsPage", () => {
       });
 
       mockedUseListVectorCollectionsQuery.mockReturnValue({
-        data: [{ name: "documents", vectors_count: 100 }],
+        data: [{ name: "documents", vectorsCount: 100 }],
         isLoading: false,
         isFetching: false,
         error: null,
@@ -745,7 +745,7 @@ describe("VectorsPage", () => {
 
     it("should call upsert API when form submitted", async () => {
       const mockUpsertFn = vi.fn().mockReturnValue({
-        unwrap: () => Promise.resolve({ success: true, point_id: "point-123" }),
+        unwrap: () => Promise.resolve({ success: true, pointId: "point-123" }),
       });
 
       mockedUseUpsertVectorTextMutation.mockReturnValue([
@@ -784,7 +784,7 @@ describe("VectorsPage", () => {
 
     it("should show success message after upsert", async () => {
       const mockUpsertFn = vi.fn().mockReturnValue({
-        unwrap: () => Promise.resolve({ success: true, point_id: "point-123" }),
+        unwrap: () => Promise.resolve({ success: true, pointId: "point-123" }),
       });
 
       mockedUseUpsertVectorTextMutation.mockReturnValue([
@@ -868,7 +868,7 @@ describe("VectorsPage", () => {
 
     it("should clear form after successful upsert", async () => {
       const mockUpsertFn = vi.fn().mockReturnValue({
-        unwrap: () => Promise.resolve({ success: true, point_id: "point-123" }),
+        unwrap: () => Promise.resolve({ success: true, pointId: "point-123" }),
       });
 
       mockedUseUpsertVectorTextMutation.mockReturnValue([

@@ -96,6 +96,8 @@ export interface paths {
      * Check Skill Updates
      * @description Check for available skill updates.
      *
+     *     Requires admin authorization.
+     *
      *     Returns:
      *         Dict with list of available updates
      */
@@ -120,6 +122,8 @@ export interface paths {
     /**
      * Apply Skill Updates
      * @description Apply all available skill updates.
+     *
+     *     Requires admin authorization.
      *
      *     Returns:
      *         Dict with list of applied updates
@@ -233,6 +237,99 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/v1/admin/users/{user_id}/api-key": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get User Api Key
+     * @description Get the API key for a user (masked for security).
+     *
+     *     Returns a masked version of the API key for display purposes.
+     *     The full key is only returned when generating a new key.
+     *
+     *     Args:
+     *         user_id: Username or user_id
+     *
+     *     Returns:
+     *         UserApiKeyResponse with masked_key
+     */
+    get: operations["get_user_api_key_api_v1_admin_users__user_id__api_key_get"];
+    put?: never;
+    /**
+     * Generate User Api Key
+     * @description Generate a new API key for a user.
+     *
+     *     This invalidates any existing API key and generates a new one.
+     *     The full key is returned only once - it cannot be retrieved later.
+     *
+     *     Args:
+     *         user_id: Username or user_id
+     *
+     *     Returns:
+     *         UserApiKeyResponse with the new api_key (full key)
+     */
+    post: operations["generate_user_api_key_api_v1_admin_users__user_id__api_key_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/agents/background": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List background tasks
+     * @description Get a list of all background tasks for the current user.
+     */
+    get: operations["list_background_tasks_api_v1_agents_background_get"];
+    put?: never;
+    /**
+     * Submit a background agent task
+     * @description Submit a new background agent task for asynchronous execution.
+     *
+     *         The task will be queued and executed by the appropriate agent type.
+     *         Returns immediately with a task ID for status tracking.
+     */
+    post: operations["submit_background_task_api_v1_agents_background_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/agents/background/{task_id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get background task status
+     * @description Get the status of a specific background task.
+     */
+    get: operations["get_background_task_api_v1_agents_background__task_id__get"];
+    put?: never;
+    post?: never;
+    /**
+     * Cancel a background task
+     * @description Cancel a queued or running background task.
+     */
+    delete: operations["cancel_background_task_api_v1_agents_background__task_id__delete"];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/v1/agents/config": {
     parameters: {
       query?: never;
@@ -244,9 +341,9 @@ export interface paths {
      * Get Agent Config
      * @description Get current agent configuration.
      *
-     *     Returns the current model settings, verification settings,
-     *     list of available tools from the MCP server, and extended
-     *     configuration (thinking budget, feature flags).
+     *     Requires authentication. Returns the current model settings,
+     *     verification settings, list of available tools from the MCP server,
+     *     and extended configuration (thinking budget, feature flags).
      *
      *     Returns:
      *         AgentConfigResponse with current agent configuration.
@@ -277,7 +374,7 @@ export interface paths {
      * Patch Thinking Budget
      * @description Update thinking budget configuration (PATCH).
      *
-     *     Allows updating thinking budget settings:
+     *     Requires authentication. Allows updating thinking budget settings:
      *     - enabled: Enable/disable thinking budget feature
      *     - default_level: Set default thinking level (low, medium, high, ultra)
      *
@@ -300,8 +397,8 @@ export interface paths {
      * Get Agent Metrics
      * @description Get agent orchestration metrics.
      *
-     *     Queries the metrics backend (Prometheus/Mimir) for orchestrator,
-     *     HITL, and cost metrics over the specified time range.
+     *     Requires authentication. Queries the metrics backend (Prometheus/Mimir)
+     *     for orchestrator, HITL, and cost metrics over the specified time range.
      *
      *     Args:
      *         time_range_hours: Time range for metrics in hours (default: 24)
@@ -505,6 +602,66 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/v1/ai/ai/artifact-name": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Generate artifact name
+     * @description Generates a machine-friendly programmatic name from artifact content using heuristics and LLM.
+     */
+    post: operations["generate_artifact_name_endpoint_api_v1_ai_ai_artifact_name_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/ai/canvas/{action}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Execute Canvas Action
+     * @description Execute an AI-assisted canvas action (save, export, analyze)
+     */
+    post: operations["execute_canvas_action_api_v1_ai_canvas__action__post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/ai/chat-suggestions": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Get Chat Inline Suggestions
+     * @description Get AI-powered inline suggestions for chat input completion
+     */
+    post: operations["get_chat_suggestions_api_v1_ai_chat_suggestions_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/v1/ai/composite/analyze": {
     parameters: {
       query?: never;
@@ -639,6 +796,26 @@ export interface paths {
      * @description Fetch and extract content from a URL for chat context
      */
     post: operations["fetch_url_content_api_v1_ai_fetch_url_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/ai/interpret-command": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Interpret Natural Language Command
+     * @description Interpret a natural language command and determine the intended action
+     */
+    post: operations["interpret_command_api_v1_ai_interpret_command_post"];
     delete?: never;
     options?: never;
     head?: never;
@@ -812,13 +989,17 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    get?: never;
+    /**
+     * Get AI Suggestions for Artifact
+     * @description Fetch AI-powered suggestions for a specific artifact (code analysis)
+     */
+    get: operations["get_artifact_suggestions_api_v1_ai_suggestions_get"];
     put?: never;
     /**
-     * Get AI Suggestions
+     * Generate AI Suggestions
      * @description Unified endpoint for AI-powered suggestions (chat follow-up, workflow optimization)
      */
-    post: operations["get_ai_suggestions_api_v1_ai_suggestions_post"];
+    post: operations["generate_ai_suggestions_api_v1_ai_suggestions_post"];
     delete?: never;
     options?: never;
     head?: never;
@@ -898,7 +1079,7 @@ export interface paths {
      * Track Suggestion Interaction
      * @description Track user interactions with suggestions (click, dismiss, view)
      */
-    post: operations["track_suggestion_interaction_api_v1_ai_suggestions_track_post"];
+    post: operations["track_suggestion_interaction_endpoint_api_v1_ai_suggestions_track_post"];
     delete?: never;
     options?: never;
     head?: never;
@@ -979,6 +1160,133 @@ export interface paths {
      * @description Force regenerate AI recommendation for an alert.
      */
     post: operations["regenerate_alert_recommendation_api_v1_alerts__alert_id__recommendation_regenerate_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/analytics/heart": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Heart Metrics
+     * @description Get aggregated HEART metrics.
+     *
+     *     Args:
+     *         timeframe: Time period (7d, 30d, 90d)
+     *         persona: Optional persona filter (admin, developer, user)
+     *
+     *     Returns:
+     *         Aggregated HEART metrics for the specified timeframe.
+     */
+    get: operations["get_heart_metrics_api_v1_analytics_heart_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/analytics/heart/adoption": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Track Adoption
+     * @description Track adoption metric (onboarding steps, feature discovery).
+     */
+    post: operations["track_adoption_api_v1_analytics_heart_adoption_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/analytics/heart/engagement": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Track Engagement
+     * @description Track engagement metric (session duration, features used).
+     */
+    post: operations["track_engagement_api_v1_analytics_heart_engagement_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/analytics/heart/happiness": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Track Happiness
+     * @description Track happiness metric (NPS, CSAT).
+     */
+    post: operations["track_happiness_api_v1_analytics_heart_happiness_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/analytics/heart/retention": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Track Retention
+     * @description Track retention metric (return visits).
+     */
+    post: operations["track_retention_api_v1_analytics_heart_retention_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/analytics/heart/task-success": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Track Task Success
+     * @description Track task success metric (completion rates, errors).
+     */
+    post: operations["track_task_success_api_v1_analytics_heart_task_success_post"];
     delete?: never;
     options?: never;
     head?: never;
@@ -1692,6 +2000,121 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/v1/auth/switch-org": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Switch Organization
+     * @description Switch the user's current organization context
+     */
+    post: operations["switch_organization_api_v1_auth_switch_org_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/cache/prefix/{prefix}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    /**
+     * Invalidate Prefix
+     * @description Invalidate all keys matching prefix.
+     *
+     *     Uses SCAN-based pattern deletion for efficiency.
+     *
+     *     Note: This route must be defined BEFORE /{key:path} to ensure proper matching.
+     *
+     *     Args:
+     *         prefix: Key prefix to invalidate
+     *         cache: CacheService dependency
+     *         user: Authenticated user
+     *
+     *     Returns:
+     *         CacheInvalidateResponse with deleted count
+     */
+    delete: operations["invalidate_prefix_api_v1_cache_prefix__prefix__delete"];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/cache/{key}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Cached Value
+     * @description Get cached value for frontend (user-scoped).
+     *
+     *     The cache key is automatically prefixed with the user ID to ensure
+     *     isolation between users.
+     *
+     *     Args:
+     *         key: Cache key (will be prefixed with user ID)
+     *         cache: CacheService dependency
+     *         user: Authenticated user
+     *
+     *     Returns:
+     *         CacheResponse with hit status and value if found
+     */
+    get: operations["get_cached_value_api_v1_cache__key__get"];
+    /**
+     * Set Cached Value
+     * @description Set cached value for frontend (user-scoped).
+     *
+     *     The cache key is automatically prefixed with the user ID to ensure
+     *     isolation between users. TTL is enforced with a maximum of 1 hour.
+     *
+     *     Args:
+     *         key: Cache key (will be prefixed with user ID)
+     *         request: Cache set request with value and optional TTL
+     *         cache: CacheService dependency
+     *         user: Authenticated user
+     *
+     *     Returns:
+     *         CacheResponse with success status
+     *
+     *     Raises:
+     *         HTTPException 413: If value exceeds size limit
+     *         HTTPException 400: If value is not JSON-serializable
+     */
+    put: operations["set_cached_value_api_v1_cache__key__put"];
+    post?: never;
+    /**
+     * Delete Cached Value
+     * @description Delete cached value for frontend.
+     *
+     *     Args:
+     *         key: Cache key (will be prefixed with user ID)
+     *         cache: CacheService dependency
+     *         user: Authenticated user
+     *
+     *     Returns:
+     *         CacheResponse with success status
+     */
+    delete: operations["delete_cached_value_api_v1_cache__key__delete"];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/v1/chat/completions": {
     parameters: {
       query?: never;
@@ -1705,9 +2128,12 @@ export interface paths {
      * Create Completion
      * @description Create a chat completion.
      *
+     *     Requires authentication. The user must be authenticated to create completions.
+     *
      *     Sends messages to the LLM and returns the assistant's response.
      *
      *     Raises:
+     *         HTTPException 401: When authentication is required
      *         HTTPException 428: When MCP requires user elicitation (authentication, consent)
      *         HTTPException 403: When permission is denied
      *         HTTPException 503: When MCP server is unavailable
@@ -1732,6 +2158,8 @@ export interface paths {
      * Create Stream
      * @description Create a streaming chat completion.
      *
+     *     Requires authentication. The user must be authenticated to create streams.
+     *
      *     Sends messages to the LLM and streams the response as Server-Sent Events.
      */
     post: operations["create_stream_api_v1_chat_completions_stream_post"];
@@ -1752,7 +2180,11 @@ export interface paths {
      * Get History
      * @description Get chat history for a session.
      *
-     *     Returns all messages in chronological order.
+     *     Requires authentication. Returns all messages in chronological order.
+     *
+     *     Note: In a full implementation, this would also verify the user has
+     *     access to this specific session (owner/viewer). Currently requires
+     *     only authentication.
      */
     get: operations["get_history_api_v1_chat__session_id__history_get"];
     put?: never;
@@ -1965,6 +2397,49 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/v1/config/defaults": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Defaults
+     * @description Get server default configuration for frontend hydration.
+     *
+     *     Returns a dictionary containing the default configuration values
+     *     sourced from the server's environment configuration (settings).
+     *
+     *     This endpoint is critical for 12-Factor App compliance:
+     *     - Frontend should fetch this at startup
+     *     - Values come from environment/settings, not hardcoded
+     *     - Ensures frontend reflects actual backend configuration
+     *
+     *     Returns:
+     *         Dictionary with:
+     *         - model_name: Default LLM model name from settings
+     *         - model_provider: Inferred provider (openai, anthropic, google, azure)
+     *         - max_tokens: Default max tokens from settings
+     *         - temperature: Default temperature (0.7)
+     *
+     *     Example Response:
+     *         {
+     *             "model_name": "gemini-2.5-flash",
+     *             "model_provider": "google",
+     *             "max_tokens": 8192,
+     *             "temperature": 0.7
+     *         }
+     */
+    get: operations["get_defaults_api_v1_config_defaults_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/v1/connection-templates": {
     parameters: {
       query?: never;
@@ -1975,6 +2450,8 @@ export interface paths {
     /**
      * List Templates
      * @description List all available connection templates.
+     *
+     *     Requires user authentication.
      *
      *     Supports filtering by category, authentication type, and search.
      */
@@ -1998,6 +2475,8 @@ export interface paths {
      * List Categories
      * @description List all template categories.
      *
+     *     Requires user authentication.
+     *
      *     Returns list of categories that templates can belong to.
      */
     get: operations["list_categories_api_v1_connection_templates_categories_get"];
@@ -2019,6 +2498,8 @@ export interface paths {
     /**
      * Get Template
      * @description Get a specific template by ID.
+     *
+     *     Requires user authentication.
      *
      *     Returns full template details including configuration fields.
      */
@@ -2044,6 +2525,8 @@ export interface paths {
      * Apply Template
      * @description Apply a template to create a pre-filled connection configuration.
      *
+     *     Requires user authentication.
+     *
      *     Takes the template and user-provided values to generate a connection
      *     configuration that can be used to create a new connection.
      */
@@ -2065,6 +2548,8 @@ export interface paths {
      * List Connections
      * @description List MCP connections for the current user.
      *
+     *     Requires authentication. Returns connections owned by the user.
+     *
      *     Supports:
      *     - Pagination: cursor, limit (cursor-based for efficient large result sets)
      *     - Filtering: status, auth_type, project_id
@@ -2076,6 +2561,8 @@ export interface paths {
     /**
      * Create Connection
      * @description Create a new MCP connection.
+     *
+     *     Requires authentication. The connection is created with the current user as owner.
      *
      *     Supports three authentication types:
      *     - none: No authentication
@@ -2099,6 +2586,8 @@ export interface paths {
     /**
      * Export Audit Logs
      * @description Export audit logs in JSON or CSV format.
+     *
+     *     Requires admin authorization.
      *
      *     Supports the same filters as the query endpoint. Results are returned
      *     as a downloadable file.
@@ -2129,6 +2618,8 @@ export interface paths {
      * Log Audit Event
      * @description Log an audit event for a connection operation.
      *
+     *     Requires admin authorization.
+     *
      *     Records the event with timestamp, actor information, and optional details.
      *     Automatically captures IP address and user agent from headers.
      */
@@ -2149,6 +2640,8 @@ export interface paths {
     /**
      * Query Audit Logs
      * @description Query audit logs with filtering and pagination.
+     *
+     *     Requires admin authorization.
      *
      *     Supports filtering by resource type, resource ID, actor, event type,
      *     and time range. Results are paginated with limit and offset.
@@ -2175,6 +2668,8 @@ export interface paths {
     /**
      * Delete Old Audit Logs
      * @description Delete audit logs older than the specified retention period.
+     *
+     *     Requires admin authorization.
      *
      *     This is used for maintenance and compliance with data retention policies.
      */
@@ -2298,12 +2793,16 @@ export interface paths {
      * Get Connection
      * @description Get a specific MCP connection by ID.
      *
+     *     Requires 'viewer' access to the connection (owner or shared viewer).
+     *
      *     Returns full connection details (without sensitive credentials).
      */
     get: operations["get_connection_api_v1_connections__connection_id__get"];
     /**
      * Update Connection
      * @description Update an MCP connection.
+     *
+     *     Requires 'owner' access to the connection.
      *
      *     Note: Authentication changes require separate endpoints for security.
      */
@@ -2312,6 +2811,8 @@ export interface paths {
     /**
      * Delete Connection
      * @description Delete an MCP connection.
+     *
+     *     Requires 'owner' access to the connection.
      *
      *     Also removes associated secrets (API keys, OAuth2 tokens).
      */
@@ -2331,6 +2832,8 @@ export interface paths {
     /**
      * Get Connection Audit Log
      * @description Get audit log for a specific connection.
+     *
+     *     Requires admin authorization.
      *
      *     Returns the audit trail for a connection, ordered by timestamp descending.
      */
@@ -2378,6 +2881,8 @@ export interface paths {
      * Start Oauth2 Flow
      * @description Start OAuth2 authorization flow for a connection.
      *
+     *     Requires 'owner' access to the connection.
+     *
      *     Uses PKCE (Proof Key for Code Exchange) for security.
      *     Returns the authorization URL and state parameter.
      */
@@ -2400,6 +2905,8 @@ export interface paths {
     /**
      * Test Connection
      * @description Test an MCP connection.
+     *
+     *     Requires 'owner' access to the connection.
      *
      *     Attempts to connect to the MCP server and retrieve server info.
      *     Updates connection status based on result.
@@ -2434,6 +2941,129 @@ export interface paths {
      * @description Delete the project context file.
      */
     delete: operations["delete_context_api_v1_context_delete"];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/cost/budget/anomaly": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Detect Cost Anomaly
+     * @description Detect cost anomalies for an entity.
+     *
+     *     Uses statistical methods (Z-score) to identify unusual spending patterns
+     *     compared to historical data.
+     */
+    get: operations["detect_cost_anomaly_api_v1_cost_budget_anomaly_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/cost/budget/forecast": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Cost Forecast
+     * @description Get cost forecast for an entity.
+     *
+     *     Projects end-of-month spend based on current usage trends.
+     */
+    get: operations["get_cost_forecast_api_v1_cost_budget_forecast_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/cost/budget/status": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Budget Status
+     * @description Get budget status for an entity.
+     *
+     *     Checks current spend against budget thresholds and returns status.
+     */
+    get: operations["get_budget_status_api_v1_cost_budget_status_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/cost/budgets": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List Budgets
+     * @description List all budgets.
+     *
+     *     Optionally filter by entity type.
+     */
+    get: operations["list_budgets_api_v1_cost_budgets_get"];
+    put?: never;
+    /**
+     * Create Budget
+     * @description Create a new budget.
+     *
+     *     Returns 409 Conflict if a budget already exists for the entity.
+     */
+    post: operations["create_budget_api_v1_cost_budgets_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/cost/budgets/{entity_type}/{entity_id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    /**
+     * Update Budget
+     * @description Update an existing budget.
+     *
+     *     Returns 404 Not Found if the budget doesn't exist.
+     */
+    put: operations["update_budget_api_v1_cost_budgets__entity_type___entity_id__put"];
+    post?: never;
+    /**
+     * Delete Budget
+     * @description Delete a budget.
+     *
+     *     Returns 404 Not Found if the budget doesn't exist.
+     */
+    delete: operations["delete_budget_api_v1_cost_budgets__entity_type___entity_id__delete"];
     options?: never;
     head?: never;
     patch?: never;
@@ -2483,6 +3113,29 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/v1/cost/records": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Records
+     * @description Get paginated cost records with filtering.
+     *
+     *     Supports filtering by organizational hierarchy and other dimensions.
+     *     Returns paginated results with cursor for next page.
+     */
+    get: operations["get_records_api_v1_cost_records_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/v1/cost/summary": {
     parameters: {
       query?: never;
@@ -2497,6 +3150,72 @@ export interface paths {
      *     Returns total cost and token usage for the specified period.
      */
     get: operations["get_summary_api_v1_cost_summary_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/cost/summary/by-organization": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Cost By Organization
+     * @description Get cost summary grouped by organization.
+     *
+     *     Returns cost aggregated by organization_id.
+     */
+    get: operations["get_cost_by_organization_api_v1_cost_summary_by_organization_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/cost/summary/by-project": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Cost By Project
+     * @description Get cost summary grouped by project.
+     *
+     *     Optionally filter by organization first.
+     */
+    get: operations["get_cost_by_project_api_v1_cost_summary_by_project_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/cost/summary/by-team": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Cost By Team
+     * @description Get cost summary grouped by team.
+     *
+     *     Optionally filter by organization and/or project.
+     */
+    get: operations["get_cost_by_team_api_v1_cost_summary_by_team_get"];
     put?: never;
     post?: never;
     delete?: never;
@@ -2539,6 +3258,87 @@ export interface paths {
      *         }
      */
     get: operations["get_features_api_v1_features_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/feedback/hallucination": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Submit Hallucination Report
+     * @description Report a hallucination in an AI response.
+     *
+     *     Requires user authentication.
+     *
+     *     Use this endpoint when the AI:
+     *     - Made a factually incorrect statement
+     *     - Provided outdated information
+     *     - Cited a non-existent source
+     *     - Exhibited other hallucination behavior
+     */
+    post: operations["submit_hallucination_report_api_v1_feedback_hallucination_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/feedback/message": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Submit Message Feedback
+     * @description Submit feedback for a message (thumbs up/down).
+     *
+     *     Requires user authentication.
+     *
+     *     Use this endpoint to rate AI responses as helpful or unhelpful.
+     *     Optionally provide a reason for the rating.
+     */
+    post: operations["submit_message_feedback_api_v1_feedback_message_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/feedback/summary": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Feedback Summary
+     * @description Get aggregated feedback summary.
+     *
+     *     Requires user authentication.
+     *
+     *     Args:
+     *         timeframe: Time period for aggregation (7d, 30d, 90d)
+     *
+     *     Returns:
+     *         Aggregated feedback metrics including positive rate and hallucination counts.
+     */
+    get: operations["get_feedback_summary_api_v1_feedback_summary_get"];
     put?: never;
     post?: never;
     delete?: never;
@@ -2758,6 +3558,166 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/v1/mcp/aggregated/prompts": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List aggregated prompts
+     * @description Get all prompts from all registered MCP servers
+     */
+    get: operations["list_aggregated_prompts_api_v1_mcp_aggregated_prompts_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/mcp/aggregated/prompts/{qualified_name}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get prompt by qualified name
+     * @description Get a specific prompt by its qualified name (server:name)
+     */
+    get: operations["get_aggregated_prompt_api_v1_mcp_aggregated_prompts__qualified_name__get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/mcp/aggregated/resources": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List aggregated resources
+     * @description Get all resources from all registered MCP servers
+     */
+    get: operations["list_aggregated_resources_api_v1_mcp_aggregated_resources_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/mcp/aggregated/resources/{qualified_name}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get resource by qualified name
+     * @description Get a specific resource by its qualified name (server:uri)
+     */
+    get: operations["get_aggregated_resource_api_v1_mcp_aggregated_resources__qualified_name__get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/mcp/aggregated/servers": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List all registered servers
+     * @description Get summary of all registered MCP servers and their capabilities
+     */
+    get: operations["list_aggregated_servers_api_v1_mcp_aggregated_servers_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/mcp/aggregated/servers/{server_name}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get server capabilities
+     * @description Get capability summary for a specific server
+     */
+    get: operations["get_server_capabilities_api_v1_mcp_aggregated_servers__server_name__get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/mcp/aggregated/tools": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List aggregated tools
+     * @description Get all tools from all registered MCP servers
+     */
+    get: operations["list_aggregated_tools_api_v1_mcp_aggregated_tools_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/mcp/aggregated/tools/{qualified_name}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get tool by qualified name
+     * @description Get a specific tool by its qualified name (server:tool)
+     */
+    get: operations["get_aggregated_tool_api_v1_mcp_aggregated_tools__qualified_name__get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/v1/mcp/elicitation": {
     parameters: {
       query?: never;
@@ -2770,6 +3730,8 @@ export interface paths {
     /**
      * Create Elicitation
      * @description Request user input via form elicitation.
+     *
+     *     Requires user authentication.
      *
      *     Allows the server to request structured input from the user.
      */
@@ -2792,6 +3754,8 @@ export interface paths {
     /**
      * Create Url Elicitation
      * @description Request user to navigate to a URL.
+     *
+     *     Requires user authentication.
      *
      *     Useful for OAuth flows or handling sensitive data.
      */
@@ -2843,6 +3807,8 @@ export interface paths {
      * List Prompts
      * @description List available MCP prompts.
      *
+     *     Requires user authentication.
+     *
      *     Returns all prompts (workflow templates) exposed by the MCP server.
      */
     get: operations["list_prompts_api_v1_mcp_prompts_get"];
@@ -2887,6 +3853,8 @@ export interface paths {
      * List Resources
      * @description List available MCP resources.
      *
+     *     Requires user authentication.
+     *
      *     Returns all resources exposed by the MCP server.
      */
     get: operations["list_resources_api_v1_mcp_resources_get"];
@@ -2908,6 +3876,8 @@ export interface paths {
     /**
      * Read Resource
      * @description Read a resource by URI.
+     *
+     *     Requires user authentication.
      *
      *     Returns the content of the specified resource.
      */
@@ -2933,6 +3903,8 @@ export interface paths {
      * Create Sampling
      * @description Request LLM completion via MCP sampling.
      *
+     *     Requires user authentication.
+     *
      *     This is a server-initiated request for the client to sample from an LLM.
      *     Useful for agent patterns where the server needs LLM assistance.
      */
@@ -2953,6 +3925,8 @@ export interface paths {
     /**
      * List Tasks
      * @description List active MCP tasks.
+     *
+     *     Requires user authentication.
      *
      *     Returns all currently active tasks (experimental feature).
      */
@@ -2975,6 +3949,8 @@ export interface paths {
     /**
      * Get Task
      * @description Get task status.
+     *
+     *     Requires user authentication.
      *
      *     Returns the current status of a task.
      */
@@ -3000,9 +3976,86 @@ export interface paths {
      * Cancel Task
      * @description Cancel a running task.
      *
+     *     Requires user authentication.
+     *
      *     Attempts to cancel the specified task.
      */
     post: operations["cancel_task_api_v1_mcp_tasks__task_id__cancel_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/mcp/tasks/{task_id}/result": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Task Result
+     * @description Get task result (blocks until complete).
+     *
+     *     Requires user authentication.
+     *
+     *     Waits for the task to reach a terminal status, then returns the result.
+     *     Per MCP 2025-11-25 spec: tasks/result.
+     */
+    get: operations["get_task_result_api_v1_mcp_tasks__task_id__result_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/mcp/tools": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List Tools
+     * @description List available MCP tools.
+     *
+     *     Requires user authentication.
+     *
+     *     Returns all tools exposed by the MCP server.
+     *     Used as REST fallback when WebSocket is unavailable.
+     */
+    get: operations["list_tools_api_v1_mcp_tools_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/mcp/tools/call": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Call Tool
+     * @description Call an MCP tool.
+     *
+     *     Requires user authentication.
+     *
+     *     Executes the specified tool with the given arguments.
+     *     Used as REST fallback when WebSocket is unavailable.
+     */
+    post: operations["call_tool_api_v1_mcp_tools_call_post"];
     delete?: never;
     options?: never;
     head?: never;
@@ -3074,6 +4127,126 @@ export interface paths {
      *     Returns the full UserInfoResponse with updated values.
      */
     patch: operations["update_persona_preferences_api_v1_me_preferences_patch"];
+    trace?: never;
+  };
+  "/api/v1/memory/checkpoint": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List Checkpoints
+     * @description List checkpoints with optional phase filter.
+     */
+    get: operations["list_checkpoints_api_v1_memory_checkpoint_get"];
+    put?: never;
+    /**
+     * Create Checkpoint
+     * @description Create a new phase checkpoint.
+     *
+     *     Requires enable_agentic_memory feature flag.
+     */
+    post: operations["create_checkpoint_api_v1_memory_checkpoint_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/memory/checkpoint/latest": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Latest Checkpoint
+     * @description Get the most recent checkpoint.
+     */
+    get: operations["get_latest_checkpoint_api_v1_memory_checkpoint_latest_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/memory/checkpoint/summary": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Session Summary
+     * @description Get session summary from all checkpoints.
+     */
+    get: operations["get_session_summary_api_v1_memory_checkpoint_summary_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/memory/notes": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List Notes
+     * @description List notes with optional search/filter.
+     *
+     *     Args:
+     *         query: Search query for note content
+     *         category: Filter by category
+     */
+    get: operations["list_notes_api_v1_memory_notes_get"];
+    put?: never;
+    /**
+     * Create Note
+     * @description Create a new structured note.
+     *
+     *     Requires enable_agentic_memory feature flag.
+     */
+    post: operations["create_note_api_v1_memory_notes_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/memory/notes/{note_id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Note
+     * @description Get a note by ID.
+     */
+    get: operations["get_note_api_v1_memory_notes__note_id__get"];
+    put?: never;
+    post?: never;
+    /**
+     * Delete Note
+     * @description Delete a note by ID.
+     */
+    delete: operations["delete_note_api_v1_memory_notes__note_id__delete"];
+    options?: never;
+    head?: never;
+    patch?: never;
     trace?: never;
   };
   "/api/v1/metrics/dashboard": {
@@ -3361,6 +4534,8 @@ export interface paths {
      * List Alerts
      * @description List alerts with filtering.
      *
+     *     Requires 'viewer' access to 'observability:default'.
+     *
      *     Supports:
      *     - Filtering: state, severity, service_name, workflow_id, project_id
      *     - Limit: max number of alerts to return
@@ -3388,6 +4563,8 @@ export interface paths {
      * List Alert Rules
      * @description List configured alerting rules.
      *
+     *     Requires 'viewer' access to 'observability:default'.
+     *
      *     Returns the alerting rules configured in the monitoring system.
      */
     get: operations["list_alert_rules_api_v1_observability_alerts_rules_get"];
@@ -3410,6 +4587,8 @@ export interface paths {
      * Get Alert
      * @description Get a specific alert by ID.
      *
+     *     Requires 'viewer' access to 'observability:default'.
+     *
      *     Returns the alert details including labels, annotations, and timing.
      */
     get: operations["get_alert_api_v1_observability_alerts__alert_id__get"];
@@ -3431,6 +4610,8 @@ export interface paths {
     /**
      * List Logs
      * @description List logs with cursor-based pagination.
+     *
+     *     Requires 'viewer' access to 'observability:default'.
      *
      *     Supports:
      *     - Pagination: cursor, limit
@@ -3460,6 +4641,8 @@ export interface paths {
      * Get Metrics
      * @description Get metrics summary.
      *
+     *     Requires 'viewer' access to 'observability:default'.
+     *
      *     Returns aggregate metrics for the specified period.
      */
     get: operations["get_metrics_api_v1_observability_metrics_get"];
@@ -3481,6 +4664,8 @@ export interface paths {
     /**
      * Get Metrics By Session
      * @description Get aggregated metrics for a specific session.
+     *
+     *     Requires 'viewer' access to 'observability:default'.
      *
      *     Computes metrics from traces associated with this session:
      *     - total_requests: Total number of traces/requests in the session
@@ -3510,6 +4695,8 @@ export interface paths {
      * Get Metrics By User
      * @description Get aggregated metrics for a specific user.
      *
+     *     Requires 'viewer' access to 'observability:default'.
+     *
      *     Computes metrics from traces associated with this user:
      *     - total_requests: Total number of traces/requests by this user
      *     - total_sessions: Number of unique sessions by this user
@@ -3538,6 +4725,8 @@ export interface paths {
      * Get Metrics By Workflow
      * @description Get aggregated metrics for a specific workflow.
      *
+     *     Requires 'viewer' access to 'observability:default'.
+     *
      *     Computes metrics from traces associated with this workflow:
      *     - total_executions: Total number of workflow executions
      *     - total_errors: Number of executions with errors
@@ -3547,6 +4736,39 @@ export interface paths {
      *     This endpoint uses Tempo TraceQL to aggregate spans by workflow_id attribute.
      */
     get: operations["get_metrics_by_workflow_api_v1_observability_metrics_by_workflow__workflow_id__get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/observability/metrics/llm-streaming": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Llm Streaming Metrics
+     * @description Get aggregated LLM streaming metrics.
+     *
+     *     Requires 'viewer' access to 'observability:default'.
+     *
+     *     Returns metrics for LLM streaming operations including:
+     *     - Time To First Chunk (TTFC) percentiles
+     *     - Inter-chunk latency percentiles
+     *     - Streaming duration and success rate
+     *     - Total chunks emitted
+     *
+     *     These metrics are collected via Prometheus histograms and support
+     *     SLA monitoring (TTFC p95 < 2s, inter-chunk p95 < 250ms).
+     *
+     *     Metrics require the `FF_ENABLE_STREAMING_METRICS=true` feature flag.
+     */
+    get: operations["get_llm_streaming_metrics_api_v1_observability_metrics_llm_streaming_get"];
     put?: never;
     post?: never;
     delete?: never;
@@ -3565,6 +4787,8 @@ export interface paths {
     /**
      * List Traces
      * @description List traces with cursor-based pagination.
+     *
+     *     Requires 'viewer' access to 'observability:default'.
      *
      *     Supports:
      *     - Pagination: cursor, limit
@@ -3593,6 +4817,8 @@ export interface paths {
     /**
      * Get Trace
      * @description Get a specific trace by ID.
+     *
+     *     Requires 'viewer' access to 'observability:default'.
      *
      *     Returns the complete trace with all spans.
      */
@@ -4321,11 +5547,16 @@ export interface paths {
      * @description Delete a session.
      *
      *     Requires authentication. Only the session owner can delete it.
+     *     Also invalidates the Redis session cost cache to prevent stale data.
      */
     delete: operations["delete_session_api_v1_sessions__session_id__delete"];
     options?: never;
     head?: never;
-    patch?: never;
+    /**
+     * Update session metadata
+     * @description Update the session name and/or description (preserves session_id UUID)
+     */
+    patch: operations["update_session_metadata_api_v1_sessions__session_id__patch"];
     trace?: never;
   };
   "/api/v1/sessions/{session_id}/bootstrap-workflow": {
@@ -4402,6 +5633,34 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/v1/sessions/{session_id}/interrupt": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Check interrupt status
+     * @description Check whether a session is currently interrupted.
+     */
+    get: operations["check_interrupt_api_v1_sessions__session_id__interrupt_get"];
+    put?: never;
+    /**
+     * Signal session interrupt
+     * @description Signal that a session should stop execution. Running operations will stop at the next checkpoint.
+     */
+    post: operations["signal_interrupt_api_v1_sessions__session_id__interrupt_post"];
+    /**
+     * Clear session interrupt
+     * @description Clear the interrupt flag for a session, allowing it to proceed normally.
+     */
+    delete: operations["clear_interrupt_api_v1_sessions__session_id__interrupt_delete"];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/v1/sessions/{session_id}/messages": {
     parameters: {
       query?: never;
@@ -4467,6 +5726,40 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/v1/sessions/{session_id}/trace": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Session Trace
+     * @description Get the execution trace for a session.
+     *
+     *     Returns trace data for debugging and monitoring agent execution.
+     *     Used by DevTools AgentTraceTab in the frontend.
+     *
+     *     Retrieves traces from Grafana Tempo filtered by session_id tag.
+     *     Gracefully degrades to empty trace if Tempo is unavailable.
+     *
+     *     Args:
+     *         session_id: The session to get trace for
+     *         request: FastAPI request for dependency injection
+     *         tempo_client: Tempo tracing client for trace retrieval
+     *
+     *     Returns:
+     *         Execution trace data (empty if no trace available)
+     */
+    get: operations["get_session_trace_api_v1_sessions__session_id__trace_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/v1/studio/analyze": {
     parameters: {
       query?: never;
@@ -4493,6 +5786,33 @@ export interface paths {
      *         Returns synthesized cross-category insights.
      */
     post: operations["analyze_api_v1_studio_analyze_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/studio/genui": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Generate dynamic UI widgets using AI
+     * @description Generate dynamic UI widgets based on prompts and data.
+     *
+     *         Supports task types:
+     *         - generate_widget: Create chart/table/text widgets from prompts
+     *         - render_data: Transform raw data into widget format
+     *         - execute_form: Handle form submission with AI validation
+     *
+     *         Returns synthesized widget layout.
+     */
+    post: operations["generate_ui_api_v1_studio_genui_post"];
     delete?: never;
     options?: never;
     head?: never;
@@ -4611,6 +5931,63 @@ export interface paths {
      *     Permanently deletes the workflow. This action cannot be undone.
      */
     delete: operations["delete_workflow_api_v1_studio_workflows__workflow_id__delete"];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/surveys/sus": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Submit Sus Survey
+     * @description Submit a SUS survey.
+     *
+     *     Requires user authentication.
+     *
+     *     The SUS consists of 10 questions with 5-point Likert scale responses:
+     *     1 = Strongly Disagree, 5 = Strongly Agree
+     *
+     *     Questions alternate between positive and negative phrasing:
+     *     - Odd questions (1,3,5,7,9): Positive phrasing
+     *     - Even questions (2,4,6,8,10): Negative phrasing
+     */
+    post: operations["submit_sus_survey_api_v1_surveys_sus_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/surveys/sus/summary": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Sus Summary
+     * @description Get aggregated SUS survey results.
+     *
+     *     Requires user authentication.
+     *
+     *     Args:
+     *         timeframe: Time period for aggregation (7d, 30d, 90d)
+     *
+     *     Returns:
+     *         Aggregated SUS metrics including average score and distribution.
+     */
+    get: operations["get_sus_summary_api_v1_surveys_sus_summary_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
     options?: never;
     head?: never;
     patch?: never;
@@ -4940,6 +6317,12 @@ export interface paths {
      * List Workflows
      * @description List all workflows with cursor-based pagination.
      *
+     *     Requires authentication. Users can see:
+     *     - Their own workflows
+     *     - Workflows shared with them
+     *     - Public workflows
+     *     - Admins can see all workflows
+     *
      *     Supports:
      *     - Pagination: cursor, limit
      *     - Filtering: status, owner_id
@@ -4954,6 +6337,7 @@ export interface paths {
      * Create Workflow
      * @description Create a new workflow.
      *
+     *     Requires authentication. The authenticated user becomes the workflow owner.
      *     The workflow is created with the provided name, description, nodes, and edges.
      */
     post: operations["create_workflow_api_v1_workflows_post"];
@@ -4976,7 +6360,8 @@ export interface paths {
      * Generate Workflow
      * @description Generate a workflow from session history or text prompt.
      *
-     *     Uses AI to analyze the provided source and generate a workflow definition.
+     *     Requires authentication. Uses AI to analyze the provided source and
+     *     generate a workflow definition.
      *     Exactly one of session_id or prompt must be provided.
      */
     post: operations["generate_workflow_api_v1_workflows_generate_post"];
@@ -5041,6 +6426,7 @@ export interface paths {
      * Get Workflow
      * @description Get a specific workflow by ID.
      *
+     *     Requires viewer access to the workflow (owner, editor, shared, or admin).
      *     Returns the complete workflow data including nodes and edges.
      */
     get: operations["get_workflow_api_v1_workflows__workflow_id__get"];
@@ -5048,6 +6434,7 @@ export interface paths {
      * Update Workflow
      * @description Update an existing workflow.
      *
+     *     Requires editor access to the workflow (owner, editor, or admin).
      *     Only the provided fields are updated; others remain unchanged.
      */
     put: operations["update_workflow_api_v1_workflows__workflow_id__put"];
@@ -5056,9 +6443,76 @@ export interface paths {
      * Delete Workflow
      * @description Delete a workflow.
      *
+     *     Requires owner access to the workflow. Only the owner or admin can delete.
      *     This permanently removes the workflow and cannot be undone.
      */
     delete: operations["delete_workflow_api_v1_workflows__workflow_id__delete"];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/workflows/{workflow_id}/execute": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Execute Workflow
+     * @description Execute a workflow.
+     *
+     *     Requires executor access to the workflow (owner, executor, or admin).
+     *     Starts workflow execution and returns an execution ID that can be
+     *     used to track progress via GET /workflows/{workflow_id}/execution.
+     *
+     *     The execution runs asynchronously in the background. Poll the
+     *     GET /workflows/{workflow_id}/execution endpoint to track progress.
+     *
+     *     Example:
+     *         ```
+     *         POST /api/v1/workflows/wf-123/execute
+     *         {
+     *             "nodes": [...],
+     *             "edges": [...],
+     *             "input_data": {...}
+     *         }
+     *         ```
+     */
+    post: operations["execute_workflow_api_v1_workflows__workflow_id__execute_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/workflows/{workflow_id}/execution": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Workflow Execution Status
+     * @description Get the current execution status of a workflow.
+     *
+     *     Requires viewer access to the workflow.
+     *     Returns the steps and their status for tracking workflow progress
+     *     in real-time or polling mode.
+     *
+     *     Example:
+     *         ```
+     *         GET /api/v1/workflows/wf-123/execution
+     *         ```
+     */
+    get: operations["get_workflow_execution_status_api_v1_workflows__workflow_id__execution_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
     options?: never;
     head?: never;
     patch?: never;
@@ -5455,9 +6909,8 @@ export interface components {
       /**
        * Model Used
        * @description LLM model used to generate the explanation
-       * @default gpt-4o-mini
        */
-      model_used: string;
+      model_used?: string;
       /**
        * Reasoning Trace
        * @description Key steps in the agent's reasoning process
@@ -5583,6 +7036,27 @@ export interface components {
       permission: "view" | "edit" | "execute";
     };
     /**
+     * AdoptionMetric
+     * @description Adoption metric submission.
+     */
+    AdoptionMetric: {
+      /**
+       * Completed
+       * @description Whether step was completed
+       */
+      completed: boolean;
+      /**
+       * Step
+       * @description Onboarding or feature step name
+       */
+      step: string;
+      /**
+       * Step Index
+       * @description Step index in flow
+       */
+      step_index: number;
+    };
+    /**
      * AdoptionMetrics
      * @description Adoption metrics
      */
@@ -5597,6 +7071,21 @@ export interface components {
        * @description Completed onboarding steps
        */
       onboarding_steps_completed?: string[];
+    };
+    /**
+     * AdoptionSummary
+     * @description Aggregated adoption metrics.
+     */
+    AdoptionSummary: {
+      /** Feature Adoption */
+      feature_adoption?: {
+        [key: string]: number;
+      };
+      /**
+       * Onboarding Completion Rate
+       * @default 0
+       */
+      onboarding_completion_rate: number;
     };
     /**
      * AgentConfigResponse
@@ -6073,6 +7562,22 @@ export interface components {
       status: string;
     };
     /**
+     * AllServersResponse
+     * @description Response for all servers summary.
+     */
+    AllServersResponse: {
+      /** Servers */
+      servers: components["schemas"]["ServerCapabilitiesResponse"][];
+      /** Total Prompts */
+      total_prompts: number;
+      /** Total Resources */
+      total_resources: number;
+      /** Total Servers */
+      total_servers: number;
+      /** Total Tools */
+      total_tools: number;
+    };
+    /**
      * AlternativeSuggestion
      * @description Safer alternative action the agent could take.
      *
@@ -6100,6 +7605,42 @@ export interface components {
        * @description Trade-off or limitation of this alternative
        */
       trade_off: string;
+    };
+    /**
+     * AnomalyDetectionResponse
+     * @description Response model for cost anomaly detection.
+     */
+    AnomalyDetectionResponse: {
+      /**
+       * Is Anomaly
+       * @description Whether an anomaly was detected
+       */
+      is_anomaly: boolean;
+      /**
+       * Mean
+       * @description Historical mean cost
+       */
+      mean: number;
+      /**
+       * Message
+       * @description Human-readable explanation
+       */
+      message: string;
+      /**
+       * Severity
+       * @description Severity: none, warning, critical
+       */
+      severity: string;
+      /**
+       * Std Dev
+       * @description Historical standard deviation
+       */
+      std_dev: number;
+      /**
+       * Z Score
+       * @description Z-score (standard deviations from mean)
+       */
+      z_score: number;
     };
     /**
      * ApplyTemplateRequest
@@ -6191,7 +7732,17 @@ export interface components {
       content: string;
       /** @description Content type */
       content_type: components["schemas"]["ContentType"];
+      /**
+       * Description
+       * @description Description explaining the artifact purpose or context
+       */
+      description?: string | null;
       edit_metadata?: components["schemas"]["EditMetadata"] | null;
+      /**
+       * Name
+       * @description Machine-friendly programmatic name (separate from display title)
+       */
+      name?: string | null;
       /**
        * Session Id
        * @description Associated session ID
@@ -6215,6 +7766,11 @@ export interface components {
     ArtifactCreateResponse: {
       /** Created At */
       created_at: string;
+      /**
+       * Description
+       * @default
+       */
+      description: string;
       /** Id */
       id: string;
       /** Version */
@@ -6241,6 +7797,38 @@ export interface components {
       version: number;
     };
     /**
+     * ArtifactNameRequest
+     * @description Request for artifact name generation.
+     */
+    ArtifactNameRequest: {
+      /**
+       * Content
+       * @description The artifact content to analyze
+       */
+      content: string;
+      /**
+       * Language
+       * @description Programming language (for code artifacts)
+       */
+      language?: string | null;
+      /**
+       * Type
+       * @description Artifact type (code, mermaid, svg, json, etc.)
+       */
+      type: string;
+    };
+    /**
+     * ArtifactNameResponse
+     * @description Response with generated artifact name.
+     */
+    ArtifactNameResponse: {
+      /**
+       * Name
+       * @description Generated machine-friendly name
+       */
+      name: string;
+    };
+    /**
      * ArtifactResponse
      * @description Full artifact response model.
      */
@@ -6251,9 +7839,16 @@ export interface components {
       content_type: string;
       /** Created At */
       created_at: string;
+      /**
+       * Description
+       * @default
+       */
+      description: string;
       edit_metadata?: components["schemas"]["EditMetadata"] | null;
       /** Id */
       id: string;
+      /** Name */
+      name?: string | null;
       /** Session Id */
       session_id: string;
       /** Title */
@@ -6268,6 +7863,44 @@ export interface components {
       version: number;
     };
     /**
+     * ArtifactSuggestion
+     * @description A single AI suggestion for an artifact.
+     */
+    ArtifactSuggestion: {
+      /**
+       * Confidence
+       * @description Confidence score
+       */
+      confidence: number;
+      /**
+       * Content
+       * @description Suggestion content
+       */
+      content: string;
+      /**
+       * Id
+       * @description Unique suggestion ID
+       */
+      id: string;
+      /**
+       * Type
+       * @description Suggestion type
+       * @enum {string}
+       */
+      type: "completion" | "refactor" | "fix" | "explain";
+    };
+    /**
+     * ArtifactSuggestionsResponse
+     * @description Response for GET /api/v1/ai/suggestions endpoint.
+     */
+    ArtifactSuggestionsResponse: {
+      /**
+       * Suggestions
+       * @description List of AI suggestions
+       */
+      suggestions?: components["schemas"]["ArtifactSuggestion"][];
+    };
+    /**
      * ArtifactUpdateRequest
      * @description Request body for updating an artifact.
      */
@@ -6277,7 +7910,17 @@ export interface components {
        * @description New content
        */
       content?: string | null;
+      /**
+       * Description
+       * @description Description explaining the artifact purpose or context
+       */
+      description?: string | null;
       edit_metadata?: components["schemas"]["EditMetadata"] | null;
+      /**
+       * Name
+       * @description Machine-friendly programmatic name (separate from display title)
+       */
+      name?: string | null;
       /** Title */
       title?: string | null;
     };
@@ -6286,6 +7929,11 @@ export interface components {
      * @description Response for artifact update.
      */
     ArtifactUpdateResponse: {
+      /**
+       * Description
+       * @default
+       */
+      description: string;
       /** Id */
       id: string;
       /** Updated At */
@@ -6408,6 +8056,110 @@ export interface components {
        * @description Human-readable error description
        */
       error_description?: string | null;
+    };
+    /**
+     * BackgroundTaskListResponse
+     * @description Response model for listing background tasks.
+     */
+    BackgroundTaskListResponse: {
+      /**
+       * Tasks
+       * @description List of background tasks
+       */
+      tasks?: components["schemas"]["BackgroundTaskResponse"][];
+      /**
+       * Total Count
+       * @description Total number of tasks
+       * @default 0
+       */
+      total_count: number;
+    };
+    /**
+     * BackgroundTaskRequest
+     * @description Request model for submitting a background task.
+     */
+    BackgroundTaskRequest: {
+      /**
+       * Agent Type
+       * @description Type of agent (code_analysis, documentation, testing, etc.)
+       * @default general
+       */
+      agent_type: string;
+      /**
+       * Data
+       * @description Task-specific data and parameters
+       */
+      data?: {
+        [key: string]: unknown;
+      };
+      /**
+       * Name
+       * @description Human-readable name for the agent task
+       */
+      name: string;
+      /**
+       * Priority
+       * @description Task priority (low, normal, high)
+       * @default normal
+       */
+      priority: string;
+      /**
+       * Task
+       * @description Description of the task to perform
+       */
+      task: string;
+    };
+    /**
+     * BackgroundTaskResponse
+     * @description Response model for a background task.
+     */
+    BackgroundTaskResponse: {
+      /**
+       * Artifacts
+       * @description List of artifact IDs generated by the task
+       */
+      artifacts?: string[];
+      /**
+       * Completed At
+       * @description Unix timestamp when completed
+       */
+      completed_at?: number | null;
+      /**
+       * Error
+       * @description Error message if failed
+       */
+      error?: string | null;
+      /**
+       * Id
+       * @description Unique task identifier
+       */
+      id: string;
+      /**
+       * Name
+       * @description Human-readable name for the agent task
+       */
+      name: string;
+      /**
+       * Progress
+       * @description Progress percentage (0-100)
+       * @default 0
+       */
+      progress: number;
+      /**
+       * Started At
+       * @description Unix timestamp (milliseconds) when task was started
+       */
+      started_at: number;
+      /**
+       * Status
+       * @description Task status (queued, running, completed, failed, disabled, etc.)
+       */
+      status: string;
+      /**
+       * Task
+       * @description Description of the task
+       */
+      task: string;
     };
     /**
      * BatchApprovalResponse
@@ -6546,6 +8298,21 @@ export interface components {
        */
       request_ids: string[];
     };
+    /** Body_list_alerts_api_v1_alerts__get */
+    Body_list_alerts_api_v1_alerts__get: {
+      /** Severity */
+      severity?: components["schemas"]["AlertSeverity"][] | null;
+      /** State */
+      state?: components["schemas"]["AlertState"][] | null;
+    };
+    /** Body_native_logout_api_v1_auth_logout_post */
+    Body_native_logout_api_v1_auth_logout_post: {
+      /**
+       * Refresh Token
+       * @description Refresh token to revoke
+       */
+      refresh_token?: string | null;
+    };
     /**
      * BootstrapRequest
      * @description Request body for bootstrapping a workflow from a session.
@@ -6601,6 +8368,179 @@ export interface components {
       nodes?: {
         [key: string]: unknown;
       }[];
+    };
+    /**
+     * BudgetCreateRequest
+     * @description Request model for creating a budget.
+     */
+    BudgetCreateRequest: {
+      /**
+       * Critical Threshold
+       * @description Critical threshold (0.0-1.0)
+       * @default 1
+       */
+      critical_threshold: number;
+      /**
+       * Description
+       * @description Budget description
+       */
+      description?: string | null;
+      /**
+       * Entity Id
+       * @description Entity identifier
+       */
+      entity_id: string;
+      /**
+       * Entity Type
+       * @description Entity type: organization, project, team, user
+       * @enum {string}
+       */
+      entity_type: "organization" | "project" | "team" | "user";
+      /**
+       * Monthly Limit Usd
+       * @description Monthly budget limit in USD
+       */
+      monthly_limit_usd: string;
+      /**
+       * Name
+       * @description Human-readable budget name
+       */
+      name?: string | null;
+      /**
+       * Warning Threshold
+       * @description Warning threshold (0.0-1.0)
+       * @default 0.8
+       */
+      warning_threshold: number;
+    };
+    /**
+     * BudgetListResponse
+     * @description Response model for budget list.
+     */
+    BudgetListResponse: {
+      /**
+       * Budgets
+       * @description List of budgets
+       */
+      budgets: components["schemas"]["BudgetResponse"][];
+    };
+    /**
+     * BudgetResponse
+     * @description Response model for a single budget.
+     */
+    BudgetResponse: {
+      /**
+       * Critical Threshold
+       * @description Critical threshold
+       */
+      critical_threshold: number;
+      /**
+       * Description
+       * @description Budget description
+       */
+      description?: string | null;
+      /**
+       * Entity Id
+       * @description Entity identifier
+       */
+      entity_id: string;
+      /**
+       * Entity Type
+       * @description Entity type
+       */
+      entity_type: string;
+      /**
+       * Monthly Limit Usd
+       * @description Monthly budget limit in USD
+       */
+      monthly_limit_usd: string;
+      /**
+       * Name
+       * @description Budget name
+       */
+      name?: string | null;
+      /**
+       * Warning Threshold
+       * @description Warning threshold
+       */
+      warning_threshold: number;
+    };
+    /**
+     * BudgetStatusResponse
+     * @description Response model for budget status check.
+     */
+    BudgetStatusResponse: {
+      /**
+       * Current Spend
+       * @description Current spend in USD
+       */
+      current_spend: number;
+      /**
+       * Entity Id
+       * @description Entity identifier
+       */
+      entity_id: string;
+      /**
+       * Entity Type
+       * @description Entity type: organization, project, team, user
+       */
+      entity_type: string;
+      /**
+       * Message
+       * @description Human-readable status message
+       */
+      message: string;
+      /**
+       * Monthly Limit
+       * @description Monthly budget limit in USD
+       */
+      monthly_limit: number;
+      /**
+       * Percent Used
+       * @description Percentage of budget used
+       */
+      percent_used: number;
+      /**
+       * Remaining
+       * @description Remaining budget in USD
+       */
+      remaining: number;
+      /**
+       * Status
+       * @description Budget status: ok, warning, critical, exceeded
+       */
+      status: string;
+    };
+    /**
+     * BudgetUpdateRequest
+     * @description Request model for updating a budget.
+     */
+    BudgetUpdateRequest: {
+      /**
+       * Critical Threshold
+       * @description Critical threshold (0.0-1.0)
+       */
+      critical_threshold?: number | null;
+      /**
+       * Description
+       * @description Budget description
+       */
+      description?: string | null;
+      /**
+       * Monthly Limit Usd
+       * @description Monthly budget limit in USD
+       */
+      monthly_limit_usd?: string | null;
+      /**
+       * Name
+       * @description Human-readable budget name
+       */
+      name?: string | null;
+      /**
+       * Warning Threshold
+       * @description Warning threshold (0.0-1.0)
+       */
+      warning_threshold?: number | null;
     };
     /**
      * BulkDeleteRequest
@@ -6674,6 +8614,162 @@ export interface components {
       not_found?: string[];
       /** Results */
       results: components["schemas"]["ConnectionTestResult"][];
+    };
+    /**
+     * CacheInvalidateResponse
+     * @description Response for prefix invalidation.
+     */
+    CacheInvalidateResponse: {
+      /**
+       * Deleted Count
+       * @description Number of keys deleted
+       */
+      deleted_count: number;
+      /**
+       * Prefix
+       * @description Prefix that was invalidated
+       */
+      prefix: string;
+    };
+    /**
+     * CacheResponse
+     * @description Response for cache operations.
+     */
+    CacheResponse: {
+      /**
+       * Hit
+       * @description Whether cache hit occurred (GET only)
+       */
+      hit?: boolean | null;
+      /**
+       * Key
+       * @description Cache key (without user prefix)
+       */
+      key: string;
+      /**
+       * Success
+       * @description Whether operation succeeded (PUT/DELETE)
+       */
+      success?: boolean | null;
+      /**
+       * Value
+       * @description Cached value (GET only)
+       */
+      value?: unknown | null;
+    };
+    /**
+     * CacheSetRequest
+     * @description Request body for setting a cached value.
+     */
+    CacheSetRequest: {
+      /**
+       * Ttl Seconds
+       * @description TTL in seconds (default: 300, max: 3600)
+       */
+      ttl_seconds?: number | null;
+      /**
+       * Value
+       * @description Value to cache (must be JSON-serializable)
+       */
+      value: unknown;
+    };
+    /**
+     * CancelTaskResponse
+     * @description Response model for canceling a task.
+     */
+    CancelTaskResponse: {
+      /**
+       * Message
+       * @description Status message
+       * @default
+       */
+      message: string;
+      /**
+       * Success
+       * @description Whether cancellation was successful
+       */
+      success: boolean;
+      /**
+       * Task Id
+       * @description ID of the canceled task
+       */
+      task_id?: string | null;
+    };
+    /**
+     * CanvasActionRequest
+     * @description Request for canvas action.
+     */
+    CanvasActionRequest: {
+      /**
+       * Artifact Id
+       * @description Artifact identifier
+       */
+      artifact_id?: string | null;
+      /**
+       * Canvas Id
+       * @description Canvas identifier
+       */
+      canvas_id?: string | null;
+      /**
+       * Content
+       * @description Artifact content to process
+       */
+      content?: string | null;
+      /**
+       * Content Type
+       * @description Content type (code, markdown, etc.)
+       */
+      content_type?: string | null;
+      /**
+       * Format
+       * @description Export format (png, svg, json)
+       */
+      format?: string | null;
+      /**
+       * Language
+       * @description Programming language for code content
+       */
+      language?: string | null;
+      /**
+       * Session Id
+       * @description Session identifier for context
+       */
+      session_id?: string | null;
+      /**
+       * State
+       * @description Canvas state data
+       */
+      state?: {
+        [key: string]: unknown;
+      } | null;
+    };
+    /**
+     * CanvasActionResponse
+     * @description Response from canvas action.
+     */
+    CanvasActionResponse: {
+      /**
+       * Content
+       * @description Generated/processed content for AI actions
+       */
+      content?: string | null;
+      /**
+       * Data
+       * @description Action result data
+       */
+      data?: {
+        [key: string]: unknown;
+      } | null;
+      /**
+       * Message
+       * @description Status message
+       */
+      message?: string | null;
+      /**
+       * Success
+       * @description Whether the action succeeded
+       */
+      success: boolean;
     };
     /**
      * CategoryListResponse
@@ -6805,6 +8901,61 @@ export interface components {
       role: "user" | "assistant" | "system";
     };
     /**
+     * ChatSuggestion
+     * @description A single chat suggestion.
+     */
+    ChatSuggestion: {
+      /**
+       * Confidence
+       * @description Confidence score 0-1
+       * @default 0.7
+       */
+      confidence: number;
+      /**
+       * Reasoning
+       * @description Why this suggestion was made
+       */
+      reasoning?: string | null;
+      /**
+       * Text
+       * @description The suggested text completion
+       */
+      text: string;
+    };
+    /**
+     * ChatSuggestionsRequest
+     * @description Request for chat inline suggestions.
+     */
+    ChatSuggestionsRequest: {
+      /**
+       * Input Text
+       * @description The user's partial input text
+       */
+      input_text: string;
+      /**
+       * Max Suggestions
+       * @description Maximum suggestions to return
+       * @default 3
+       */
+      max_suggestions: number;
+      /**
+       * Session Id
+       * @description Session ID for context
+       */
+      session_id?: string | null;
+    };
+    /**
+     * ChatSuggestionsResponse
+     * @description Response with chat suggestions.
+     */
+    ChatSuggestionsResponse: {
+      /**
+       * Suggestions
+       * @description List of suggested completions
+       */
+      suggestions?: components["schemas"]["ChatSuggestion"][];
+    };
+    /**
      * ChatUsage
      * @description Token usage information.
      */
@@ -6824,6 +8975,34 @@ export interface components {
        * @description Total tokens used
        */
       total_tokens?: number | null;
+    };
+    /**
+     * CheckpointResponse
+     * @description Response containing a checkpoint.
+     */
+    CheckpointResponse: {
+      /** Artifacts */
+      artifacts: string[];
+      /** Created At */
+      created_at: string;
+      /** Id */
+      id: string;
+      /** Metadata */
+      metadata: {
+        [key: string]: unknown;
+      };
+      /** Phase */
+      phase: string;
+      /** Summary */
+      summary: string;
+    };
+    /**
+     * CheckpointsListResponse
+     * @description Response containing a list of checkpoints.
+     */
+    CheckpointsListResponse: {
+      /** Checkpoints */
+      checkpoints: components["schemas"]["CheckpointResponse"][];
     };
     /**
      * ClarificationOption
@@ -7441,6 +9620,77 @@ export interface components {
       total_tokens: number;
     };
     /**
+     * CostRecordResponse
+     * @description Response model for individual cost record.
+     */
+    CostRecordResponse: {
+      /**
+       * Completion Tokens
+       * @description Completion tokens
+       */
+      completion_tokens: number;
+      /**
+       * Estimated Cost Usd
+       * @description Estimated cost in USD
+       */
+      estimated_cost_usd: number;
+      /**
+       * Feature
+       * @description Feature tag
+       */
+      feature?: string | null;
+      /**
+       * Model
+       * @description Model name
+       */
+      model: string;
+      /**
+       * Organization Id
+       * @description Organization ID
+       */
+      organization_id?: string | null;
+      /**
+       * Project Id
+       * @description Project ID
+       */
+      project_id?: string | null;
+      /**
+       * Prompt Tokens
+       * @description Prompt tokens
+       */
+      prompt_tokens: number;
+      /**
+       * Provider
+       * @description Provider name
+       */
+      provider: string;
+      /**
+       * Session Id
+       * @description Session identifier
+       */
+      session_id: string;
+      /**
+       * Team Id
+       * @description Team ID
+       */
+      team_id?: string | null;
+      /**
+       * Timestamp
+       * @description Timestamp (ISO format)
+       */
+      timestamp: string;
+      /**
+       * Total Tokens
+       * @description Total tokens
+       */
+      total_tokens: number;
+      /**
+       * User Id
+       * @description User identifier
+       */
+      user_id: string;
+    };
+    /**
      * CostSummaryResponse
      * @description Response model for cost summary.
      */
@@ -7520,6 +9770,34 @@ export interface components {
       name: string;
     };
     /**
+     * CreateCheckpointRequest
+     * @description Request to create a checkpoint.
+     */
+    CreateCheckpointRequest: {
+      /**
+       * Artifacts
+       * @description Artifact references
+       */
+      artifacts?: string[];
+      /**
+       * Metadata
+       * @description Additional metadata
+       */
+      metadata?: {
+        [key: string]: unknown;
+      };
+      /**
+       * Phase
+       * @description Phase name
+       */
+      phase: string;
+      /**
+       * Summary
+       * @description Phase completion summary
+       */
+      summary: string;
+    };
+    /**
      * CreateCollectionRequest
      * @description Request to create a new collection.
      */
@@ -7531,6 +9809,35 @@ export interface components {
       name: string;
       /** @description Vector configuration */
       vectors: components["schemas"]["VectorConfig"];
+    };
+    /**
+     * CreateNoteRequest
+     * @description Request to create a note.
+     */
+    CreateNoteRequest: {
+      /**
+       * Category
+       * @description Note category
+       * @default general
+       */
+      category: string;
+      /**
+       * Content
+       * @description Note content
+       */
+      content: string;
+      /**
+       * Metadata
+       * @description Additional metadata
+       */
+      metadata?: {
+        [key: string]: unknown;
+      };
+      /**
+       * Tags
+       * @description Note tags
+       */
+      tags?: string[];
     };
     /**
      * CreateServicePrincipalRequest
@@ -8003,6 +10310,27 @@ export interface components {
       suggestions: components["schemas"]["EmptyStateSuggestion"][];
     };
     /**
+     * EngagementMetric
+     * @description Engagement metric submission.
+     */
+    EngagementMetric: {
+      /**
+       * Duration Seconds
+       * @description Session duration in seconds
+       */
+      duration_seconds: number;
+      /**
+       * Features Used
+       * @description Features used during session
+       */
+      features_used?: string[];
+      /**
+       * Session Id
+       * @description Session identifier
+       */
+      session_id: string;
+    };
+    /**
      * EngagementMetrics
      * @description Engagement metrics
      */
@@ -8024,6 +10352,27 @@ export interface components {
        * @description Session duration in milliseconds
        */
       session_duration_ms: number;
+    };
+    /**
+     * EngagementSummary
+     * @description Aggregated engagement metrics.
+     */
+    EngagementSummary: {
+      /**
+       * Active Users
+       * @default 0
+       */
+      active_users: number;
+      /**
+       * Avg Session Duration Seconds
+       * @default 0
+       */
+      avg_session_duration_seconds: number;
+      /**
+       * Sessions Per User
+       * @default 0
+       */
+      sessions_per_user: number;
     };
     /**
      * ErrorAnalyzeRequest
@@ -8180,6 +10529,67 @@ export interface components {
       workflow_id: string;
     };
     /**
+     * ExecutionStep
+     * @description A single step in workflow execution.
+     */
+    ExecutionStep: {
+      /**
+       * Duration
+       * @description Duration in milliseconds
+       * @default 0
+       */
+      duration: number;
+      /**
+       * Endtime
+       * @description End timestamp (epoch ms)
+       */
+      endTime?: number | null;
+      /**
+       * Error
+       * @description Error message if failed
+       */
+      error?: string | null;
+      /**
+       * Id
+       * @description Step ID
+       */
+      id: string;
+      /**
+       * Input
+       * @description Input data
+       */
+      input?: {
+        [key: string]: unknown;
+      } | null;
+      /**
+       * Nodeid
+       * @description Node ID in the workflow
+       */
+      nodeId: string;
+      /**
+       * Nodename
+       * @description Node display name
+       */
+      nodeName: string;
+      /**
+       * Output
+       * @description Output data
+       */
+      output?: {
+        [key: string]: unknown;
+      } | null;
+      /**
+       * Starttime
+       * @description Start timestamp (epoch ms)
+       */
+      startTime?: number | null;
+      /**
+       * Status
+       * @description Step status (pending, running, completed, error, skipped)
+       */
+      status: string;
+    };
+    /**
      * ExplanationType
      * @description Type of AI explanation.
      *
@@ -8284,6 +10694,40 @@ export interface components {
       success: boolean;
     };
     /**
+     * FeedbackSummaryResponse
+     * @description Aggregated feedback summary.
+     */
+    FeedbackSummaryResponse: {
+      hallucination_categories?: components["schemas"]["HallucinationCategoryCounts"];
+      /**
+       * Hallucination Reports
+       * @default 0
+       */
+      hallucination_reports: number;
+      /**
+       * Negative Count
+       * @default 0
+       */
+      negative_count: number;
+      /**
+       * Positive Count
+       * @default 0
+       */
+      positive_count: number;
+      /**
+       * Positive Rate
+       * @default 0
+       */
+      positive_rate: number;
+      /** Timeframe */
+      timeframe: string;
+      /**
+       * Total Feedback
+       * @default 0
+       */
+      total_feedback: number;
+    };
+    /**
      * FeedbackType
      * @description Feedback types for suggestions.
      * @enum {string}
@@ -8296,6 +10740,85 @@ export interface components {
     FindSimilarResponse: {
       /** Results */
       results: components["schemas"]["SemanticSearchResult"][];
+    };
+    /**
+     * ForecastResponse
+     * @description Response model for cost forecast.
+     */
+    ForecastResponse: {
+      /**
+       * Confidence High
+       * @description Upper bound of confidence interval
+       */
+      confidence_high: number;
+      /**
+       * Confidence Low
+       * @description Lower bound of confidence interval
+       */
+      confidence_low: number;
+      /**
+       * Days Analyzed
+       * @description Number of days of data analyzed
+       */
+      days_analyzed: number;
+      /**
+       * Message
+       * @description Human-readable forecast summary
+       */
+      message: string;
+      /**
+       * Projected Total
+       * @description Projected total spend for the period
+       */
+      projected_total: number;
+      /**
+       * Trend
+       * @description Trend direction: increasing, decreasing, stable
+       */
+      trend: string;
+    };
+    /**
+     * GenUIRequest
+     * @description Request model for GenUI widget generation.
+     */
+    GenUIRequest: {
+      /**
+       * Tasks
+       * @description List of GenUI tasks (generate_widget, render_data, execute_form)
+       */
+      tasks?: {
+        [key: string]: unknown;
+      }[];
+    };
+    /**
+     * GenUIResponse
+     * @description Response model for GenUI widget generation.
+     */
+    GenUIResponse: {
+      /**
+       * Errors
+       * @description Errors encountered during generation
+       */
+      errors?: string[] | null;
+      /**
+       * Layout
+       * @description Suggested layout for widgets
+       * @default single
+       */
+      layout: string;
+      /**
+       * Total Count
+       * @description Total number of widgets generated
+       * @default 0
+       */
+      total_count: number;
+      /**
+       * Widgets
+       * @description Generated widget configurations
+       */
+      widgets?: {
+        [key: string]: unknown;
+      }[];
     };
     /**
      * GenerateTitleRequest
@@ -8390,6 +10913,114 @@ export interface components {
       detail?: components["schemas"]["ValidationError"][];
     };
     /**
+     * HallucinationCategory
+     * @description Categories of hallucinations.
+     * @enum {string}
+     */
+    HallucinationCategory:
+      | "factual_error"
+      | "outdated_info"
+      | "made_up_source"
+      | "other";
+    /**
+     * HallucinationCategoryCounts
+     * @description Counts by hallucination category.
+     */
+    HallucinationCategoryCounts: {
+      /**
+       * Factual Error
+       * @default 0
+       */
+      factual_error: number;
+      /**
+       * Made Up Source
+       * @default 0
+       */
+      made_up_source: number;
+      /**
+       * Other
+       * @default 0
+       */
+      other: number;
+      /**
+       * Outdated Info
+       * @default 0
+       */
+      outdated_info: number;
+    };
+    /**
+     * HallucinationReportRequest
+     * @description Hallucination report submission request.
+     */
+    HallucinationReportRequest: {
+      /** @description Type of hallucination */
+      category: components["schemas"]["HallucinationCategory"];
+      /**
+       * Description
+       * @description User description of the issue
+       */
+      description: string;
+      /**
+       * Message Id
+       * @description ID of the message containing hallucination
+       */
+      message_id: string;
+      /**
+       * Session Id
+       * @description Session ID for context
+       */
+      session_id: string;
+      /**
+       * @description Severity level
+       * @default medium
+       */
+      severity: components["schemas"]["Severity"];
+    };
+    /**
+     * HallucinationReportResponse
+     * @description Hallucination report response.
+     */
+    HallucinationReportResponse: {
+      /** Id */
+      id: string;
+      /**
+       * Recorded At
+       * Format: date-time
+       */
+      recorded_at?: string;
+      /**
+       * Status
+       * @default received
+       */
+      status: string;
+    };
+    /**
+     * HappinessMetric
+     * @description Happiness metric submission.
+     */
+    HappinessMetric: {
+      /**
+       * Context
+       * @description Context where feedback was given
+       */
+      context?: string | null;
+      /**
+       * Csat Score
+       * @description Customer Satisfaction Score
+       */
+      csat_score?: number | null;
+      /**
+       * Feedback
+       * @description Optional feedback text
+       */
+      feedback?: string | null;
+      /**
+       * Nps Score
+       * @description Net Promoter Score
+       */
+      nps_score?: number | null;
+    };
+    /**
      * HappinessMetrics
      * @description Happiness metrics
      */
@@ -8404,6 +11035,21 @@ export interface components {
        * @description Satisfaction rating (1-5)
        */
       satisfaction_score?: number | null;
+    };
+    /**
+     * HappinessSummary
+     * @description Aggregated happiness metrics.
+     */
+    HappinessSummary: {
+      /** Csat Score Avg */
+      csat_score_avg?: number | null;
+      /** Nps Score Avg */
+      nps_score_avg?: number | null;
+      /**
+       * Response Count
+       * @default 0
+       */
+      response_count: number;
     };
     /**
      * HealthCheckResult
@@ -8447,6 +11093,21 @@ export interface components {
        * Format: date-time
        */
       timestamp?: string;
+    };
+    /**
+     * HeartSummary
+     * @description Complete HEART metrics summary.
+     */
+    HeartSummary: {
+      adoption?: components["schemas"]["AdoptionSummary"];
+      engagement?: components["schemas"]["EngagementSummary"];
+      happiness?: components["schemas"]["HappinessSummary"];
+      /** Persona */
+      persona?: string | null;
+      retention?: components["schemas"]["RetentionSummary"];
+      task_success?: components["schemas"]["TaskSuccessSummary"];
+      /** Timeframe */
+      timeframe: string;
     };
     /**
      * HistoryResponse
@@ -8543,6 +11204,154 @@ export interface components {
       verified_at?: string | null;
     };
     /**
+     * InterpretCommandRequest
+     * @description Request to interpret a natural language command.
+     */
+    InterpretCommandRequest: {
+      /**
+       * Command
+       * @description The natural language command to interpret
+       */
+      command: string;
+      /**
+       * Context
+       * @description Additional context
+       */
+      context?: {
+        [key: string]: unknown;
+      } | null;
+      /**
+       * Session Id
+       * @description Session ID for context
+       */
+      session_id?: string | null;
+    };
+    /**
+     * InterpretCommandResponse
+     * @description Response with interpreted command.
+     */
+    InterpretCommandResponse: {
+      /**
+       * Action
+       * @description The primary action
+       */
+      action: string;
+      /**
+       * Alternatives
+       * @description Alternative interpretations
+       */
+      alternatives?: components["schemas"]["InterpretedAction"][];
+      /**
+       * Confidence
+       * @description Interpretation confidence
+       */
+      confidence: number;
+      /**
+       * Intent
+       * @description The detected intent
+       */
+      intent: string;
+      /**
+       * Parameters
+       * @description Extracted parameters
+       */
+      parameters?: {
+        [key: string]: unknown;
+      };
+    };
+    /**
+     * InterpretedAction
+     * @description The interpreted action from a command.
+     */
+    InterpretedAction: {
+      /**
+       * Action
+       * @description The action to perform
+       */
+      action: string;
+      /**
+       * Confidence
+       * @description Confidence in interpretation
+       * @default 0.8
+       */
+      confidence: number;
+      /**
+       * Intent
+       * @description The detected user intent
+       */
+      intent: string;
+      /**
+       * Parameters
+       * @description Action parameters
+       */
+      parameters?: {
+        [key: string]: unknown;
+      };
+      /**
+       * Suggestion
+       * @description Suggested UI action
+       */
+      suggestion?: string | null;
+    };
+    /**
+     * InterruptClearResponse
+     * @description Response for interrupt clear operation.
+     */
+    InterruptClearResponse: {
+      /**
+       * Cleared
+       * @description Whether interrupt was cleared
+       */
+      cleared: boolean;
+      /**
+       * Message
+       * @description Human-readable status message
+       */
+      message: string;
+      /**
+       * Session Id
+       * @description Session that was cleared
+       */
+      session_id: string;
+    };
+    /**
+     * InterruptSignalResponse
+     * @description Response for interrupt signal operation.
+     */
+    InterruptSignalResponse: {
+      /**
+       * Interrupted
+       * @description Whether interrupt was signaled
+       */
+      interrupted: boolean;
+      /**
+       * Message
+       * @description Human-readable status message
+       */
+      message: string;
+      /**
+       * Session Id
+       * @description Session that was interrupted
+       */
+      session_id: string;
+    };
+    /**
+     * InterruptStatusResponse
+     * @description Response for interrupt status check.
+     */
+    InterruptStatusResponse: {
+      /**
+       * Interrupted
+       * @description Current interrupt status
+       */
+      interrupted: boolean;
+      /**
+       * Session Id
+       * @description Session ID checked
+       */
+      session_id: string;
+    };
+    /**
      * IntrospectionRequest
      * @description Token Introspection Request (RFC 7662).
      */
@@ -8613,6 +11422,83 @@ export interface components {
        * @description Username of the token subject
        */
       username?: string | null;
+    };
+    /**
+     * LLMStreamingMetricsResponse
+     * @description Response model for LLM streaming metrics.
+     *
+     *     Provides aggregated metrics for LLM streaming operations including
+     *     Time To First Chunk (TTFC), inter-chunk latency, and streaming duration.
+     *
+     *     These metrics are collected via Prometheus and can be used to:
+     *     - Monitor streaming SLA compliance
+     *     - Compare provider performance
+     *     - Identify degradation patterns
+     */
+    LLMStreamingMetricsResponse: {
+      /**
+       * Duration Avg Seconds
+       * @description Average streaming duration in seconds
+       */
+      duration_avg_seconds?: number | null;
+      /**
+       * Feature Enabled
+       * @description Whether streaming metrics feature flag is enabled
+       * @default true
+       */
+      feature_enabled: boolean;
+      /**
+       * Inter Chunk Latency P50 Seconds
+       * @description P50 inter-chunk latency in seconds
+       */
+      inter_chunk_latency_p50_seconds?: number | null;
+      /**
+       * Inter Chunk Latency P95 Seconds
+       * @description P95 inter-chunk latency in seconds (SLA threshold: 0.25s)
+       */
+      inter_chunk_latency_p95_seconds?: number | null;
+      /**
+       * Model
+       * @description Model filter (gpt-4, claude-3-opus, etc.)
+       */
+      model?: string | null;
+      /**
+       * Provider
+       * @description LLM provider filter (openai, anthropic, google, etc.)
+       */
+      provider?: string | null;
+      /**
+       * Success Rate
+       * @description Streaming success rate (0.0-1.0)
+       */
+      success_rate?: number | null;
+      /**
+       * Total Chunks
+       * @description Total chunks emitted across all streams
+       * @default 0
+       */
+      total_chunks: number;
+      /**
+       * Total Streams
+       * @description Total number of streaming operations
+       * @default 0
+       */
+      total_streams: number;
+      /**
+       * Ttfc P50 Seconds
+       * @description P50 (median) Time To First Chunk in seconds
+       */
+      ttfc_p50_seconds?: number | null;
+      /**
+       * Ttfc P95 Seconds
+       * @description P95 Time To First Chunk in seconds (SLA threshold: 2s)
+       */
+      ttfc_p95_seconds?: number | null;
+      /**
+       * Ttfc P99 Seconds
+       * @description P99 Time To First Chunk in seconds
+       */
+      ttfc_p99_seconds?: number | null;
     };
     /**
      * ListArtifactsResponse
@@ -8947,6 +11833,43 @@ export interface components {
       total: number;
     };
     /**
+     * MessageFeedbackRequest
+     * @description Message feedback submission request.
+     */
+    MessageFeedbackRequest: {
+      /**
+       * Message Id
+       * @description ID of the message
+       */
+      message_id: string;
+      /** @description Positive or negative rating */
+      rating: components["schemas"]["Rating"];
+      /**
+       * Reason
+       * @description Optional reason for rating
+       */
+      reason?: string | null;
+      /**
+       * Session Id
+       * @description Session ID for context
+       */
+      session_id: string;
+    };
+    /**
+     * MessageFeedbackResponse
+     * @description Message feedback response.
+     */
+    MessageFeedbackResponse: {
+      /** Id */
+      id: string;
+      rating: components["schemas"]["Rating"];
+      /**
+       * Recorded At
+       * Format: date-time
+       */
+      recorded_at?: string;
+    };
+    /**
      * MessageRatingRequest
      * @description Request body for rating a message.
      */
@@ -9094,6 +12017,19 @@ export interface components {
       predicted: number;
     };
     /**
+     * MetricResponse
+     * @description Response for metric submission.
+     */
+    MetricResponse: {
+      /** Id */
+      id: string;
+      /**
+       * Recorded At
+       * Format: date-time
+       */
+      recorded_at?: string;
+    };
+    /**
      * MetricsInsightsResponse
      * @description Response with metrics insights.
      */
@@ -9131,6 +12067,18 @@ export interface components {
      */
     MetricsResponse: {
       /**
+       * Active Sessions
+       * @description Number of active sessions
+       * @default 0
+       */
+      active_sessions: number;
+      /**
+       * Avg Latency Ms
+       * @description Average latency in milliseconds
+       * @default 0
+       */
+      avg_latency_ms: number;
+      /**
        * Errors Total
        * @description Total errors
        */
@@ -9151,10 +12099,22 @@ export interface components {
        */
       latency_p99?: number | null;
       /**
+       * P99 Latency Ms
+       * @description P99 latency in milliseconds
+       * @default 0
+       */
+      p99_latency_ms: number;
+      /**
        * Requests Total
        * @description Total requests
        */
       requests_total: number;
+      /**
+       * Tokens Used
+       * @description Total tokens used
+       * @default 0
+       */
+      tokens_used: number;
     };
     /**
      * ModelCostResponse
@@ -9304,6 +12264,34 @@ export interface components {
        * @description List of available node types
        */
       node_types: string[];
+    };
+    /**
+     * NoteResponse
+     * @description Response containing a note.
+     */
+    NoteResponse: {
+      /** Category */
+      category: string;
+      /** Content */
+      content: string;
+      /** Created At */
+      created_at: string;
+      /** Id */
+      id: string;
+      /** Metadata */
+      metadata: {
+        [key: string]: unknown;
+      };
+      /** Tags */
+      tags: string[];
+    };
+    /**
+     * NotesListResponse
+     * @description Response containing a list of notes.
+     */
+    NotesListResponse: {
+      /** Notes */
+      notes: components["schemas"]["NoteResponse"][];
     };
     /**
      * NotificationResponse
@@ -9574,6 +12562,32 @@ export interface components {
       total_executions: number;
     };
     /**
+     * OrganizationCostResponse
+     * @description Response model for cost grouped by organization.
+     */
+    OrganizationCostResponse: {
+      /**
+       * Organization Id
+       * @description Organization identifier
+       */
+      organization_id: string;
+      /**
+       * Request Count
+       * @description Number of requests
+       */
+      request_count: number;
+      /**
+       * Total Cost
+       * @description Total cost in USD
+       */
+      total_cost: number;
+      /**
+       * Total Tokens
+       * @description Total tokens used
+       */
+      total_tokens: number;
+    };
+    /**
      * PARRequest
      * @description Pushed Authorization Request (RFC 9126).
      */
@@ -9647,6 +12661,27 @@ export interface components {
        * @description Total number of matching entries
        */
       total: number;
+    };
+    /**
+     * PaginatedCostRecordsResponse
+     * @description Paginated response for cost records.
+     */
+    PaginatedCostRecordsResponse: {
+      /**
+       * Next Cursor
+       * @description Cursor for next page
+       */
+      next_cursor?: string | null;
+      /**
+       * Records
+       * @description List of cost records
+       */
+      records: components["schemas"]["CostRecordResponse"][];
+      /**
+       * Total Count
+       * @description Total record count
+       */
+      total_count?: number | null;
     };
     /**
      * PaginatedExecutionResponse
@@ -9935,6 +12970,37 @@ export interface components {
       project_id: string;
       /** Total Cost */
       total_cost: number;
+    };
+    /**
+     * ProjectCostResponse
+     * @description Response model for cost grouped by project.
+     */
+    ProjectCostResponse: {
+      /**
+       * Organization Id
+       * @description Parent organization
+       */
+      organization_id?: string | null;
+      /**
+       * Project Id
+       * @description Project identifier
+       */
+      project_id: string;
+      /**
+       * Request Count
+       * @description Number of requests
+       */
+      request_count: number;
+      /**
+       * Total Cost
+       * @description Total cost in USD
+       */
+      total_cost: number;
+      /**
+       * Total Tokens
+       * @description Total tokens used
+       */
+      total_tokens: number;
     };
     /**
      * ProjectCostSummaryResponse
@@ -10305,7 +13371,7 @@ export interface components {
        * Prompts
        * @description List of prompts
        */
-      prompts: components["schemas"]["PromptResponse"][];
+      prompts: components["schemas"]["mcp_server_langgraph__api__v1__mcp__PromptResponse"][];
     };
     /**
      * PromptMessageResponse
@@ -10326,25 +13392,14 @@ export interface components {
       role: string;
     };
     /**
-     * PromptResponse
-     * @description Response model for a prompt.
+     * PromptsListResponse
+     * @description Response for listing aggregated prompts.
      */
-    PromptResponse: {
-      /**
-       * Arguments
-       * @description Prompt arguments
-       */
-      arguments?: components["schemas"]["PromptArgumentResponse"][];
-      /**
-       * Description
-       * @description Prompt description
-       */
-      description: string;
-      /**
-       * Name
-       * @description Prompt name
-       */
-      name: string;
+    PromptsListResponse: {
+      /** Prompts */
+      prompts: components["schemas"]["mcp_server_langgraph__api__v1__mcp_aggregated__PromptResponse"][];
+      /** Total Count */
+      total_count: number;
     };
     /**
      * ProtectedResourceMetadataResponse
@@ -10451,6 +13506,12 @@ export interface components {
       /** @description Subscription keys */
       keys: components["schemas"]["PushSubscriptionKeys"];
     };
+    /**
+     * Rating
+     * @description Rating values for message feedback.
+     * @enum {string}
+     */
+    Rating: "positive" | "negative";
     /**
      * RatingValue
      * @description Rating values for message feedback.
@@ -10629,6 +13690,18 @@ export interface components {
        */
       description: string;
       /**
+       * Had Constraints
+       * @description Whether rejection constraints were used in recommendation
+       * @default false
+       */
+      had_constraints: boolean;
+      /**
+       * Had Fewshot
+       * @description Whether few-shot examples were used in recommendation
+       * @default false
+       */
+      had_fewshot: boolean;
+      /**
        * Reason
        * @description Reason for rejection
        */
@@ -10716,38 +13789,17 @@ export interface components {
        * Resources
        * @description List of resources
        */
-      resources: components["schemas"]["ResourceResponse"][];
+      resources: components["schemas"]["mcp_server_langgraph__api__v1__mcp__ResourceResponse"][];
     };
     /**
-     * ResourceResponse
-     * @description Response model for a single resource.
+     * ResourcesListResponse
+     * @description Response for listing aggregated resources.
      */
-    ResourceResponse: {
-      /**
-       * Description
-       * @description Resource description
-       */
-      description?: string | null;
-      /**
-       * Mime Type
-       * @description MIME type
-       */
-      mime_type?: string | null;
-      /**
-       * Name
-       * @description Resource name
-       */
-      name: string;
-      /**
-       * Title
-       * @description Human-readable title
-       */
-      title?: string | null;
-      /**
-       * Uri
-       * @description Resource URI
-       */
-      uri: string;
+    ResourcesListResponse: {
+      /** Resources */
+      resources: components["schemas"]["mcp_server_langgraph__api__v1__mcp_aggregated__ResourceResponse"][];
+      /** Total Count */
+      total_count: number;
     };
     /**
      * RetentionApplyResponse
@@ -10770,6 +13822,22 @@ export interface components {
       retention_days: number;
     };
     /**
+     * RetentionMetric
+     * @description Retention metric submission.
+     */
+    RetentionMetric: {
+      /**
+       * Days Since Last Visit
+       * @description Days since last visit
+       */
+      days_since_last_visit: number;
+      /**
+       * Return Visit
+       * @description Whether this is a return visit
+       */
+      return_visit: boolean;
+    };
+    /**
      * RetentionMetrics
      * @description Retention metrics
      */
@@ -10784,6 +13852,22 @@ export interface components {
        * @description Number of return visits
        */
       return_visits: number;
+    };
+    /**
+     * RetentionSummary
+     * @description Aggregated retention metrics.
+     */
+    RetentionSummary: {
+      /**
+       * D30 Retention
+       * @default 0
+       */
+      d30_retention: number;
+      /**
+       * D7 Retention
+       * @default 0
+       */
+      d7_retention: number;
     };
     /**
      * RotateAPIKeyResponse
@@ -11112,6 +14196,48 @@ export interface components {
       userType?: string | null;
     };
     /**
+     * SUSSummaryResponse
+     * @description Aggregated SUS survey results.
+     */
+    SUSSummaryResponse: {
+      /** Avg Score */
+      avg_score?: number | null;
+      /**
+       * Response Count
+       * @default 0
+       */
+      response_count: number;
+      score_distribution?: components["schemas"]["ScoreDistribution"];
+      /** Timeframe */
+      timeframe: string;
+    };
+    /**
+     * SUSSurveyRequest
+     * @description SUS survey submission request.
+     */
+    SUSSurveyRequest: {
+      /**
+       * Responses
+       * @description 10 SUS responses (1-5 scale)
+       */
+      responses: number[];
+    };
+    /**
+     * SUSSurveyResponse
+     * @description SUS survey submission response.
+     */
+    SUSSurveyResponse: {
+      /** Id */
+      id: string;
+      /**
+       * Recorded At
+       * Format: date-time
+       */
+      recorded_at?: string;
+      /** Sus Score */
+      sus_score: number;
+    };
+    /**
      * SamplingRequest
      * @description Request model for sampling.
      */
@@ -11264,6 +14390,36 @@ export interface components {
       timed_out?: boolean | null;
     };
     /**
+     * ScoreDistribution
+     * @description Distribution of SUS scores by category.
+     */
+    ScoreDistribution: {
+      /**
+       * Excellent
+       * @description 80.3+ scores
+       * @default 0
+       */
+      excellent: number;
+      /**
+       * Good
+       * @description 68-80.2 scores
+       * @default 0
+       */
+      good: number;
+      /**
+       * Ok
+       * @description 51-67 scores
+       * @default 0
+       */
+      ok: number;
+      /**
+       * Poor
+       * @description <51 scores
+       * @default 0
+       */
+      poor: number;
+    };
+    /**
      * SearchRequest
      * @description Request to search vectors.
      */
@@ -11323,6 +14479,20 @@ export interface components {
       title?: string | null;
     };
     /**
+     * ServerCapabilitiesResponse
+     * @description Response for server capability summary.
+     */
+    ServerCapabilitiesResponse: {
+      /** Prompt Count */
+      prompt_count: number;
+      /** Resource Count */
+      resource_count: number;
+      /** Server Name */
+      server_name: string;
+      /** Tool Count */
+      tool_count: number;
+    };
+    /**
      * ServicePrincipalResponse
      * @description Response containing service principal details
      */
@@ -11349,20 +14519,25 @@ export interface components {
     /**
      * SessionConfigResponse
      * @description Response model for session configuration.
+     *
+     *     Defaults are sourced from application settings following 12-Factor App principles:
+     *     - III. Config: Store config in the environment
+     *     - DRY: Single source of truth for LLM configuration
+     *
+     *     The model_validator ensures defaults come from settings at instantiation time,
+     *     allowing environment-specific configuration without code changes.
      */
     SessionConfigResponse: {
       /**
        * Max Tokens
        * @description Max tokens per response
-       * @default 1000
        */
-      max_tokens: number;
+      max_tokens?: number | null;
       /**
        * Model
        * @description LLM model to use
-       * @default gpt-4o-mini
        */
-      model: string;
+      model?: string | null;
       /**
        * Temperature
        * @description Sampling temperature
@@ -11399,6 +14574,11 @@ export interface components {
      * @description Request body for creating a session.
      */
     SessionCreateRequest: {
+      /**
+       * Description
+       * @description Session description or context
+       */
+      description?: string | null;
       /**
        * Name
        * @description Session name
@@ -11496,6 +14676,12 @@ export interface components {
        */
       created_at?: string | null;
       /**
+       * Description
+       * @description Session description or context
+       * @default
+       */
+      description: string;
+      /**
        * Id
        * @description Session ID
        */
@@ -11534,6 +14720,75 @@ export interface components {
      * @enum {string}
      */
     SessionStatus: "active" | "archived" | "deleted";
+    /**
+     * SessionSummaryResponse
+     * @description Response containing session summary.
+     */
+    SessionSummaryResponse: {
+      /** Summary */
+      summary: string;
+    };
+    /**
+     * SessionTraceResponse
+     * @description Response model for session execution trace (GET /sessions/{id}/trace).
+     *
+     *     Matches frontend's AgentExecutionTrace type for compatibility.
+     *     Used by DevTools AgentTraceTab for debugging and monitoring.
+     */
+    SessionTraceResponse: {
+      /**
+       * Current Node
+       * @description Currently executing node ID
+       */
+      current_node?: string | null;
+      /**
+       * End Time
+       * @description Trace end timestamp (epoch ms)
+       */
+      end_time?: number | null;
+      /**
+       * Raw Output
+       * @description Raw output from last execution
+       */
+      raw_output?: string | null;
+      /**
+       * Start Time
+       * @description Trace start timestamp (epoch ms)
+       */
+      start_time?: number | null;
+      /**
+       * Steps
+       * @description Execution steps
+       */
+      steps?: components["schemas"]["TraceStep"][];
+      /** @description Token usage statistics */
+      tokens?: components["schemas"]["TraceTokenUsage"] | null;
+    };
+    /**
+     * SessionUpdateRequest
+     * @description Request body for updating session metadata (rename and description).
+     *
+     *     Used by PATCH /sessions/{session_id} for updating session metadata.
+     *     Preserves the session_id while updating the display name or description.
+     */
+    SessionUpdateRequest: {
+      /**
+       * Description
+       * @description Session description or context
+       */
+      description?: string | null;
+      /**
+       * Name
+       * @description New session name
+       */
+      name?: string | null;
+    };
+    /**
+     * Severity
+     * @description Severity levels for reports.
+     * @enum {string}
+     */
+    Severity: "low" | "medium" | "high";
     /**
      * SignupContext
      * @description Context from signup.
@@ -11868,6 +15123,38 @@ export interface components {
      */
     SuggestionType: "chat_followup" | "workflow";
     /**
+     * SwitchOrgRequest
+     * @description Request to switch organization context.
+     */
+    SwitchOrgRequest: {
+      /**
+       * Orgid
+       * @description Target organization ID
+       */
+      orgId: string;
+    };
+    /**
+     * SwitchOrgResponse
+     * @description Response confirming organization switch.
+     */
+    SwitchOrgResponse: {
+      /**
+       * Message
+       * @description Status message
+       */
+      message?: string | null;
+      /**
+       * Org Id
+       * @description The organization ID that was switched to
+       */
+      org_id: string;
+      /**
+       * Success
+       * @description Whether the switch was successful
+       */
+      success: boolean;
+    };
+    /**
      * TaskListResponse
      * @description Response model for listing tasks.
      */
@@ -11964,6 +15251,90 @@ export interface components {
        * @description TTL in milliseconds
        */
       ttl?: number | null;
+    };
+    /**
+     * TaskSuccessMetric
+     * @description Task success metric submission.
+     */
+    TaskSuccessMetric: {
+      /**
+       * Duration Seconds
+       * @description Task duration in seconds
+       */
+      duration_seconds: number;
+      /**
+       * Error Count
+       * @description Number of errors encountered
+       * @default 0
+       */
+      error_count: number;
+      /**
+       * Error Message
+       * @description Error message if failed
+       */
+      error_message?: string | null;
+      /**
+       * Success
+       * @description Whether task was successful
+       */
+      success: boolean;
+      /**
+       * Task Id
+       * @description Task identifier
+       */
+      task_id: string;
+    };
+    /**
+     * TaskSuccessSummary
+     * @description Aggregated task success metrics.
+     */
+    TaskSuccessSummary: {
+      /**
+       * Avg Task Duration Seconds
+       * @default 0
+       */
+      avg_task_duration_seconds: number;
+      /**
+       * Overall Success Rate
+       * @default 0
+       */
+      overall_success_rate: number;
+    };
+    /**
+     * TeamCostResponse
+     * @description Response model for cost grouped by team.
+     */
+    TeamCostResponse: {
+      /**
+       * Organization Id
+       * @description Parent organization
+       */
+      organization_id?: string | null;
+      /**
+       * Project Id
+       * @description Parent project
+       */
+      project_id?: string | null;
+      /**
+       * Request Count
+       * @description Number of requests
+       */
+      request_count: number;
+      /**
+       * Team Id
+       * @description Team identifier
+       */
+      team_id: string;
+      /**
+       * Total Cost
+       * @description Total cost in USD
+       */
+      total_cost: number;
+      /**
+       * Total Tokens
+       * @description Total tokens used
+       */
+      total_tokens: number;
     };
     /**
      * TemplateCategory
@@ -12253,6 +15624,67 @@ export interface components {
       token_type: string;
     };
     /**
+     * ToolCallContentItem
+     * @description A single content item in a tool result.
+     */
+    ToolCallContentItem: {
+      /**
+       * Data
+       * @description Base64 encoded data
+       */
+      data?: string | null;
+      /**
+       * Mimetype
+       * @description MIME type for binary content
+       */
+      mimeType?: string | null;
+      /**
+       * Text
+       * @description Text content
+       */
+      text?: string | null;
+      /**
+       * Type
+       * @description Content type (text, image, resource)
+       */
+      type: string;
+    };
+    /**
+     * ToolCallRequest
+     * @description Request model for calling a tool.
+     */
+    ToolCallRequest: {
+      /**
+       * Arguments
+       * @description Tool arguments
+       */
+      arguments?: {
+        [key: string]: unknown;
+      };
+      /**
+       * Name
+       * @description Tool name to call
+       */
+      name: string;
+    };
+    /**
+     * ToolCallResponse
+     * @description Response model for tool call result.
+     */
+    ToolCallResponse: {
+      /**
+       * Content
+       * @description Result content items
+       */
+      content: components["schemas"]["ToolCallContentItem"][];
+      /**
+       * Iserror
+       * @description Whether the call resulted in an error
+       * @default false
+       */
+      isError: boolean;
+    };
+    /**
      * ToolInfo
      * @description Tool information for display.
      */
@@ -12267,6 +15699,27 @@ export interface components {
        * @description Tool name
        */
       name: string;
+    };
+    /**
+     * ToolListResponse
+     * @description Response model for listing tools.
+     */
+    ToolListResponse: {
+      /**
+       * Tools
+       * @description List of available tools
+       */
+      tools: components["schemas"]["mcp_server_langgraph__api__v1__mcp__ToolResponse"][];
+    };
+    /**
+     * ToolsListResponse
+     * @description Response for listing aggregated tools.
+     */
+    ToolsListResponse: {
+      /** Tools */
+      tools: components["schemas"]["mcp_server_langgraph__api__v1__mcp_aggregated__ToolResponse"][];
+      /** Total Count */
+      total_count: number;
     };
     /**
      * TraceResponse
@@ -12308,6 +15761,45 @@ export interface components {
        * @description Trace ID
        */
       trace_id: string;
+    };
+    /**
+     * TraceStep
+     * @description A single step in an agent execution trace.
+     */
+    TraceStep: {
+      /**
+       * Duration
+       * @description Duration in milliseconds
+       */
+      duration?: number | null;
+      /**
+       * Name
+       * @description Step name (e.g., node name in LangGraph)
+       */
+      name: string;
+      /**
+       * Status
+       * @description Step status (pending, running, completed, failed)
+       */
+      status: string;
+    };
+    /**
+     * TraceTokenUsage
+     * @description Token usage statistics for a trace.
+     */
+    TraceTokenUsage: {
+      /**
+       * Input
+       * @description Input tokens consumed
+       * @default 0
+       */
+      input: number;
+      /**
+       * Output
+       * @description Output tokens generated
+       * @default 0
+       */
+      output: number;
     };
     /**
      * UIAdaptation
@@ -12523,6 +16015,32 @@ export interface components {
        * @description The URL that was fetched
        */
       url: string;
+    };
+    /**
+     * UserApiKeyResponse
+     * @description Response with user API key information.
+     */
+    UserApiKeyResponse: {
+      /**
+       * Api Key
+       * @description The API key (full key on generation)
+       */
+      api_key?: string | null;
+      /**
+       * Created At
+       * @description Creation timestamp (epoch ms)
+       */
+      created_at?: number | null;
+      /**
+       * Masked Key
+       * @description Masked key for display
+       */
+      masked_key?: string | null;
+      /**
+       * User Id
+       * @description The user ID
+       */
+      user_id: string;
     };
     /**
      * UserContext
@@ -13020,6 +16538,90 @@ export interface components {
        * @description Workflow nodes
        */
       nodes?: components["schemas"]["mcp_server_langgraph__api__v1__workflows__WorkflowNode"][];
+      /**
+       * Title
+       * @description Human-friendly display title (defaults to name)
+       */
+      title?: string | null;
+    };
+    /**
+     * WorkflowExecuteRequest
+     * @description Request to execute a workflow.
+     */
+    WorkflowExecuteRequest: {
+      /**
+       * Edges
+       * @description Workflow edges
+       */
+      edges?: {
+        [key: string]: unknown;
+      }[];
+      /**
+       * Input Data
+       * @description Input data for the workflow
+       */
+      input_data?: {
+        [key: string]: unknown;
+      } | null;
+      /**
+       * Nodes
+       * @description Workflow nodes
+       */
+      nodes?: {
+        [key: string]: unknown;
+      }[];
+    };
+    /**
+     * WorkflowExecuteResponse
+     * @description Response from workflow execution.
+     */
+    WorkflowExecuteResponse: {
+      /**
+       * Execution Id
+       * @description The execution ID
+       */
+      execution_id: string;
+      /**
+       * Message
+       * @description Status message
+       */
+      message?: string | null;
+      /**
+       * Status
+       * @description Execution status
+       */
+      status: string;
+    };
+    /**
+     * WorkflowExecutionResponse
+     * @description Response with workflow execution status.
+     */
+    WorkflowExecutionResponse: {
+      /**
+       * Currentstepid
+       * @description Currently executing step ID
+       */
+      currentStepId?: string | null;
+      /**
+       * Endtime
+       * @description Execution end time (epoch ms)
+       */
+      endTime?: number | null;
+      /**
+       * Starttime
+       * @description Execution start time (epoch ms)
+       */
+      startTime?: number | null;
+      /**
+       * Status
+       * @description Overall execution status
+       */
+      status: string;
+      /**
+       * Steps
+       * @description Execution steps
+       */
+      steps?: components["schemas"]["ExecutionStep"][];
     };
     /**
      * WorkflowListResponse
@@ -13172,21 +16774,11 @@ export interface components {
       nodes?:
         | components["schemas"]["mcp_server_langgraph__api__v1__workflows__WorkflowNode"][]
         | null;
-    };
-    /** Body_list_alerts_api_v1_alerts__get */
-    fastapi___compat__v2__Body_list_alerts_api_v1_alerts__get: {
-      /** Severity */
-      severity?: components["schemas"]["AlertSeverity"][] | null;
-      /** State */
-      state?: components["schemas"]["AlertState"][] | null;
-    };
-    /** Body_native_logout_api_v1_auth_logout_post */
-    fastapi___compat__v2__Body_native_logout_api_v1_auth_logout_post: {
       /**
-       * Refresh Token
-       * @description Refresh token to revoke
+       * Title
+       * @description Human-friendly display title
        */
-      refresh_token?: string | null;
+      title?: string | null;
     };
     /**
      * WorkflowEdge
@@ -13357,6 +16949,183 @@ export interface components {
       total: number;
     };
     /**
+     * PromptResponse
+     * @description Response model for a prompt.
+     */
+    mcp_server_langgraph__api__v1__mcp__PromptResponse: {
+      /**
+       * Arguments
+       * @description Prompt arguments
+       */
+      arguments?: components["schemas"]["PromptArgumentResponse"][];
+      /**
+       * Description
+       * @description Prompt description
+       */
+      description: string;
+      /**
+       * Name
+       * @description Prompt name
+       */
+      name: string;
+    };
+    /**
+     * ResourceResponse
+     * @description Response model for a single resource.
+     */
+    mcp_server_langgraph__api__v1__mcp__ResourceResponse: {
+      /**
+       * Description
+       * @description Resource description
+       */
+      description?: string | null;
+      /**
+       * Mime Type
+       * @description MIME type
+       */
+      mime_type?: string | null;
+      /**
+       * Name
+       * @description Resource name
+       */
+      name: string;
+      /**
+       * Title
+       * @description Human-readable title
+       */
+      title?: string | null;
+      /**
+       * Uri
+       * @description Resource URI
+       */
+      uri: string;
+    };
+    /**
+     * ToolResponse
+     * @description Response model for a single tool.
+     */
+    mcp_server_langgraph__api__v1__mcp__ToolResponse: {
+      /**
+       * Description
+       * @description Tool description
+       */
+      description: string;
+      /**
+       * Inputschema
+       * @description JSON Schema for tool input
+       */
+      inputSchema?: {
+        [key: string]: unknown;
+      } | null;
+      /**
+       * Name
+       * @description Tool name
+       */
+      name: string;
+    };
+    /**
+     * PromptResponse
+     * @description Response model for a prompt definition.
+     */
+    mcp_server_langgraph__api__v1__mcp_aggregated__PromptResponse: {
+      /**
+       * Arguments
+       * @description Prompt arguments
+       */
+      arguments?: {
+        [key: string]: unknown;
+      }[];
+      /**
+       * Description
+       * @description Optional description
+       */
+      description?: string | null;
+      /**
+       * Name
+       * @description Prompt name
+       */
+      name: string;
+      /**
+       * Qualified Name
+       * @description Fully qualified name (server:name)
+       */
+      qualified_name: string;
+      /**
+       * Server Name
+       * @description Name of the MCP server
+       */
+      server_name: string;
+    };
+    /**
+     * ResourceResponse
+     * @description Response model for a resource definition.
+     */
+    mcp_server_langgraph__api__v1__mcp_aggregated__ResourceResponse: {
+      /**
+       * Description
+       * @description Optional description
+       */
+      description?: string | null;
+      /**
+       * Mime Type
+       * @description MIME type
+       */
+      mime_type?: string | null;
+      /**
+       * Name
+       * @description Resource name
+       */
+      name: string;
+      /**
+       * Qualified Name
+       * @description Fully qualified name (server:uri)
+       */
+      qualified_name: string;
+      /**
+       * Server Name
+       * @description Name of the MCP server
+       */
+      server_name: string;
+      /**
+       * Uri
+       * @description Resource URI
+       */
+      uri: string;
+    };
+    /**
+     * ToolResponse
+     * @description Response model for a tool definition.
+     */
+    mcp_server_langgraph__api__v1__mcp_aggregated__ToolResponse: {
+      /**
+       * Description
+       * @description Tool description
+       */
+      description: string;
+      /**
+       * Input Schema
+       * @description JSON Schema for parameters
+       */
+      input_schema?: {
+        [key: string]: unknown;
+      };
+      /**
+       * Name
+       * @description Tool name
+       */
+      name: string;
+      /**
+       * Qualified Name
+       * @description Fully qualified name (server:tool)
+       */
+      qualified_name: string;
+      /**
+       * Server Name
+       * @description Name of the MCP server
+       */
+      server_name: string;
+    };
+    /**
      * ConnectionListResponse
      * @description Response model for listing connections in a project.
      */
@@ -13453,6 +17222,12 @@ export interface components {
       nodes?: {
         [key: string]: unknown;
       }[];
+      /**
+       * Title
+       * @description Human-friendly display title
+       * @default
+       */
+      title: string;
       /**
        * Updated At
        * @description Last update timestamp
@@ -13768,6 +17543,185 @@ export interface operations {
           [name: string]: unknown;
         };
         content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  get_user_api_key_api_v1_admin_users__user_id__api_key_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        user_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["UserApiKeyResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  generate_user_api_key_api_v1_admin_users__user_id__api_key_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        user_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["UserApiKeyResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  list_background_tasks_api_v1_agents_background_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["BackgroundTaskListResponse"];
+        };
+      };
+    };
+  };
+  submit_background_task_api_v1_agents_background_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["BackgroundTaskRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["BackgroundTaskResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  get_background_task_api_v1_agents_background__task_id__get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        task_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json":
+            | components["schemas"]["BackgroundTaskResponse"]
+            | null;
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  cancel_background_task_api_v1_agents_background__task_id__delete: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        task_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["CancelTaskResponse"];
+        };
       };
       /** @description Validation Error */
       422: {
@@ -14171,6 +18125,107 @@ export interface operations {
       };
     };
   };
+  generate_artifact_name_endpoint_api_v1_ai_ai_artifact_name_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["ArtifactNameRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ArtifactNameResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  execute_canvas_action_api_v1_ai_canvas__action__post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        action: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["CanvasActionRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["CanvasActionResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  get_chat_suggestions_api_v1_ai_chat_suggestions_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["ChatSuggestionsRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ChatSuggestionsResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
   composite_analyze_api_v1_ai_composite_analyze_post: {
     parameters: {
       query?: never;
@@ -14389,6 +18444,39 @@ export interface operations {
         };
         content: {
           "application/json": components["schemas"]["UrlFetchResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  interpret_command_api_v1_ai_interpret_command_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["InterpretCommandRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["InterpretCommandResponse"];
         };
       };
       /** @description Validation Error */
@@ -14640,7 +18728,38 @@ export interface operations {
       };
     };
   };
-  get_ai_suggestions_api_v1_ai_suggestions_post: {
+  get_artifact_suggestions_api_v1_ai_suggestions_get: {
+    parameters: {
+      query?: {
+        artifactId?: string | null;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ArtifactSuggestionsResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  generate_ai_suggestions_api_v1_ai_suggestions_post: {
     parameters: {
       query?: never;
       header?: never;
@@ -14772,7 +18891,7 @@ export interface operations {
       };
     };
   };
-  track_suggestion_interaction_api_v1_ai_suggestions_track_post: {
+  track_suggestion_interaction_endpoint_api_v1_ai_suggestions_track_post: {
     parameters: {
       query?: never;
       header?: never;
@@ -14814,7 +18933,7 @@ export interface operations {
     };
     requestBody?: {
       content: {
-        "application/json": components["schemas"]["fastapi___compat__v2__Body_list_alerts_api_v1_alerts__get"];
+        "application/json": components["schemas"]["Body_list_alerts_api_v1_alerts__get"];
       };
     };
     responses: {
@@ -14920,6 +19039,203 @@ export interface operations {
         };
         content: {
           "application/json": components["schemas"]["AIRecommendation"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  get_heart_metrics_api_v1_analytics_heart_get: {
+    parameters: {
+      query?: {
+        timeframe?: string;
+        persona?: string | null;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HeartSummary"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  track_adoption_api_v1_analytics_heart_adoption_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["AdoptionMetric"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["MetricResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  track_engagement_api_v1_analytics_heart_engagement_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["EngagementMetric"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["MetricResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  track_happiness_api_v1_analytics_heart_happiness_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["HappinessMetric"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["MetricResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  track_retention_api_v1_analytics_heart_retention_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["RetentionMetric"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["MetricResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  track_task_success_api_v1_analytics_heart_task_success_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["TaskSuccessMetric"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["MetricResponse"];
         };
       };
       /** @description Validation Error */
@@ -15829,7 +20145,7 @@ export interface operations {
     };
     requestBody?: {
       content: {
-        "application/json": components["schemas"]["fastapi___compat__v2__Body_native_logout_api_v1_auth_logout_post"];
+        "application/json": components["schemas"]["Body_native_logout_api_v1_auth_logout_post"];
       };
     };
     responses: {
@@ -15906,6 +20222,167 @@ export interface operations {
         };
         content: {
           "application/json": components["schemas"]["TokenResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  switch_organization_api_v1_auth_switch_org_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["SwitchOrgRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["SwitchOrgResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  invalidate_prefix_api_v1_cache_prefix__prefix__delete: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        prefix: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["CacheInvalidateResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  get_cached_value_api_v1_cache__key__get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        key: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["CacheResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  set_cached_value_api_v1_cache__key__put: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        key: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["CacheSetRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["CacheResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  delete_cached_value_api_v1_cache__key__delete: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        key: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["CacheResponse"];
         };
       };
       /** @description Validation Error */
@@ -16267,6 +20744,28 @@ export interface operations {
       };
     };
   };
+  get_defaults_api_v1_config_defaults_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            [key: string]: unknown;
+          };
+        };
+      };
+    };
+  };
   list_templates_api_v1_connection_templates_get: {
     parameters: {
       query?: {
@@ -16417,9 +20916,7 @@ export interface operations {
         /** @description Sort order */
         sort_order?: "asc" | "desc";
       };
-      header?: {
-        "X-User-ID"?: string | null;
-      };
+      header?: never;
       path?: never;
       cookie?: never;
     };
@@ -16448,9 +20945,7 @@ export interface operations {
   create_connection_api_v1_connections_post: {
     parameters: {
       query?: never;
-      header?: {
-        "X-User-ID"?: string | null;
-      };
+      header?: never;
       path?: never;
       cookie?: never;
     };
@@ -16804,9 +21299,7 @@ export interface operations {
   update_connection_api_v1_connections__connection_id__put: {
     parameters: {
       query?: never;
-      header?: {
-        "X-User-ID"?: string | null;
-      };
+      header?: never;
       path: {
         connection_id: string;
       };
@@ -16841,9 +21334,7 @@ export interface operations {
   delete_connection_api_v1_connections__connection_id__delete: {
     parameters: {
       query?: never;
-      header?: {
-        "X-User-ID"?: string | null;
-      };
+      header?: never;
       path: {
         connection_id: string;
       };
@@ -16975,9 +21466,7 @@ export interface operations {
   test_connection_api_v1_connections__connection_id__test_post: {
     parameters: {
       query?: never;
-      header?: {
-        "X-User-ID"?: string | null;
-      };
+      header?: never;
       path: {
         connection_id: string;
       };
@@ -17102,6 +21591,241 @@ export interface operations {
       };
     };
   };
+  detect_cost_anomaly_api_v1_cost_budget_anomaly_get: {
+    parameters: {
+      query: {
+        /** @description Entity type: organization, project, team, user */
+        entity_type: "organization" | "project" | "team" | "user";
+        /** @description Entity identifier */
+        entity_id: string;
+        /** @description Days of history to analyze */
+        days?: number;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["AnomalyDetectionResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  get_cost_forecast_api_v1_cost_budget_forecast_get: {
+    parameters: {
+      query: {
+        /** @description Entity type: organization, project, team, user */
+        entity_type: "organization" | "project" | "team" | "user";
+        /** @description Entity identifier */
+        entity_id: string;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ForecastResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  get_budget_status_api_v1_cost_budget_status_get: {
+    parameters: {
+      query: {
+        /** @description Entity type: organization, project, team, user */
+        entity_type: "organization" | "project" | "team" | "user";
+        /** @description Entity identifier */
+        entity_id: string;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["BudgetStatusResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  list_budgets_api_v1_cost_budgets_get: {
+    parameters: {
+      query?: {
+        /** @description Filter by entity type */
+        entity_type?: ("organization" | "project" | "team" | "user") | null;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["BudgetListResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  create_budget_api_v1_cost_budgets_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["BudgetCreateRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["BudgetResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  update_budget_api_v1_cost_budgets__entity_type___entity_id__put: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        entity_type: "organization" | "project" | "team" | "user";
+        entity_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["BudgetUpdateRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["BudgetResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  delete_budget_api_v1_cost_budgets__entity_type___entity_id__delete: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        entity_type: "organization" | "project" | "team" | "user";
+        entity_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
   get_by_model_api_v1_cost_by_model_get: {
     parameters: {
       query?: {
@@ -17170,6 +21894,62 @@ export interface operations {
       };
     };
   };
+  get_records_api_v1_cost_records_get: {
+    parameters: {
+      query?: {
+        /** @description Pagination cursor */
+        cursor?: string | null;
+        /** @description Records per page */
+        limit?: number;
+        /** @description Sort field: timestamp|total_tokens|estimated_cost_usd */
+        sort_by?: string;
+        /** @description Sort order: asc|desc */
+        sort_order?: string;
+        /** @description Filter by organization */
+        organization_id?: string | null;
+        /** @description Filter by project */
+        project_id?: string | null;
+        /** @description Filter by team */
+        team_id?: string | null;
+        /** @description Filter by user */
+        user_id?: string | null;
+        /** @description Filter by model */
+        model?: string | null;
+        /** @description Filter by provider */
+        provider?: string | null;
+        /** @description Filter by session */
+        session_id?: string | null;
+        /** @description Start date (YYYY-MM-DD) */
+        start_date?: string | null;
+        /** @description End date (YYYY-MM-DD) */
+        end_date?: string | null;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["PaginatedCostRecordsResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
   get_summary_api_v1_cost_summary_get: {
     parameters: {
       query?: {
@@ -17204,6 +21984,114 @@ export interface operations {
       };
     };
   };
+  get_cost_by_organization_api_v1_cost_summary_by_organization_get: {
+    parameters: {
+      query?: {
+        /** @description Start date (YYYY-MM-DD) */
+        start_date?: string | null;
+        /** @description End date (YYYY-MM-DD) */
+        end_date?: string | null;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["OrganizationCostResponse"][];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  get_cost_by_project_api_v1_cost_summary_by_project_get: {
+    parameters: {
+      query?: {
+        /** @description Filter by organization */
+        organization_id?: string | null;
+        /** @description Start date (YYYY-MM-DD) */
+        start_date?: string | null;
+        /** @description End date (YYYY-MM-DD) */
+        end_date?: string | null;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ProjectCostResponse"][];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  get_cost_by_team_api_v1_cost_summary_by_team_get: {
+    parameters: {
+      query?: {
+        /** @description Filter by organization */
+        organization_id?: string | null;
+        /** @description Filter by project */
+        project_id?: string | null;
+        /** @description Start date (YYYY-MM-DD) */
+        start_date?: string | null;
+        /** @description End date (YYYY-MM-DD) */
+        end_date?: string | null;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["TeamCostResponse"][];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
   get_features_api_v1_features_get: {
     parameters: {
       query?: {
@@ -17223,8 +22111,105 @@ export interface operations {
         };
         content: {
           "application/json": {
-            [key: string]: boolean;
+            [key: string]: boolean | string;
           };
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  submit_hallucination_report_api_v1_feedback_hallucination_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["HallucinationReportRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HallucinationReportResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  submit_message_feedback_api_v1_feedback_message_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["MessageFeedbackRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["MessageFeedbackResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  get_feedback_summary_api_v1_feedback_summary_get: {
+    parameters: {
+      query?: {
+        timeframe?: string;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["FeedbackSummaryResponse"];
         };
       };
       /** @description Validation Error */
@@ -17411,6 +22396,243 @@ export interface operations {
         };
         content: {
           "application/json": components["schemas"]["LogoutResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  list_aggregated_prompts_api_v1_mcp_aggregated_prompts_get: {
+    parameters: {
+      query?: {
+        server_name?: string | null;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["PromptsListResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  get_aggregated_prompt_api_v1_mcp_aggregated_prompts__qualified_name__get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        qualified_name: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["mcp_server_langgraph__api__v1__mcp_aggregated__PromptResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  list_aggregated_resources_api_v1_mcp_aggregated_resources_get: {
+    parameters: {
+      query?: {
+        server_name?: string | null;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ResourcesListResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  get_aggregated_resource_api_v1_mcp_aggregated_resources__qualified_name__get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        qualified_name: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["mcp_server_langgraph__api__v1__mcp_aggregated__ResourceResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  list_aggregated_servers_api_v1_mcp_aggregated_servers_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["AllServersResponse"];
+        };
+      };
+    };
+  };
+  get_server_capabilities_api_v1_mcp_aggregated_servers__server_name__get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        server_name: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ServerCapabilitiesResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  list_aggregated_tools_api_v1_mcp_aggregated_tools_get: {
+    parameters: {
+      query?: {
+        server_name?: string | null;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ToolsListResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  get_aggregated_tool_api_v1_mcp_aggregated_tools__qualified_name__get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        qualified_name: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["mcp_server_langgraph__api__v1__mcp_aggregated__ToolResponse"];
         };
       };
       /** @description Validation Error */
@@ -17746,6 +22968,90 @@ export interface operations {
       };
     };
   };
+  get_task_result_api_v1_mcp_tasks__task_id__result_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        task_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ToolCallResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  list_tools_api_v1_mcp_tools_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ToolListResponse"];
+        };
+      };
+    };
+  };
+  call_tool_api_v1_mcp_tools_call_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["ToolCallRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ToolCallResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
   get_me_api_v1_me_get: {
     parameters: {
       query?: never;
@@ -17787,6 +23093,235 @@ export interface operations {
         content: {
           "application/json": components["schemas"]["UserInfoResponse"];
         };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  list_checkpoints_api_v1_memory_checkpoint_get: {
+    parameters: {
+      query?: {
+        phase?: string | null;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["CheckpointsListResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  create_checkpoint_api_v1_memory_checkpoint_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["CreateCheckpointRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["CheckpointResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  get_latest_checkpoint_api_v1_memory_checkpoint_latest_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["CheckpointResponse"];
+        };
+      };
+    };
+  };
+  get_session_summary_api_v1_memory_checkpoint_summary_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["SessionSummaryResponse"];
+        };
+      };
+    };
+  };
+  list_notes_api_v1_memory_notes_get: {
+    parameters: {
+      query?: {
+        query?: string | null;
+        category?: string | null;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["NotesListResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  create_note_api_v1_memory_notes_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["CreateNoteRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["NoteResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  get_note_api_v1_memory_notes__note_id__get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        note_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["NoteResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  delete_note_api_v1_memory_notes__note_id__delete: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        note_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
       };
       /** @description Validation Error */
       422: {
@@ -18448,6 +23983,42 @@ export interface operations {
         };
         content: {
           "application/json": components["schemas"]["WorkflowMetricsResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  get_llm_streaming_metrics_api_v1_observability_metrics_llm_streaming_get: {
+    parameters: {
+      query?: {
+        /** @description Filter by provider (openai, anthropic, google) */
+        provider?: string | null;
+        /** @description Filter by model family */
+        model?: string | null;
+        /** @description Time range for metrics aggregation */
+        time_range?: "5m" | "15m" | "1h" | "6h" | "24h";
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["LLMStreamingMetricsResponse"];
         };
       };
       /** @description Validation Error */
@@ -19953,6 +25524,41 @@ export interface operations {
       };
     };
   };
+  update_session_metadata_api_v1_sessions__session_id__patch: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        session_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["SessionUpdateRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["SessionResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
   bootstrap_workflow_api_v1_sessions__session_id__bootstrap_workflow_post: {
     parameters: {
       query?: never;
@@ -20045,6 +25651,99 @@ export interface operations {
         };
         content: {
           "application/json": unknown;
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  check_interrupt_api_v1_sessions__session_id__interrupt_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        session_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["InterruptStatusResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  signal_interrupt_api_v1_sessions__session_id__interrupt_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        session_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["InterruptSignalResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  clear_interrupt_api_v1_sessions__session_id__interrupt_delete: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        session_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["InterruptClearResponse"];
         };
       };
       /** @description Validation Error */
@@ -20191,6 +25890,37 @@ export interface operations {
       };
     };
   };
+  get_session_trace_api_v1_sessions__session_id__trace_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        session_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["SessionTraceResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
   analyze_api_v1_studio_analyze_post: {
     parameters: {
       query?: never;
@@ -20211,6 +25941,39 @@ export interface operations {
         };
         content: {
           "application/json": components["schemas"]["StudioAnalyzeResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  generate_ui_api_v1_studio_genui_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["GenUIRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["GenUIResponse"];
         };
       };
       /** @description Validation Error */
@@ -20413,6 +26176,70 @@ export interface operations {
           [name: string]: unknown;
         };
         content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  submit_sus_survey_api_v1_surveys_sus_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["SUSSurveyRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["SUSSurveyResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  get_sus_summary_api_v1_surveys_sus_summary_get: {
+    parameters: {
+      query?: {
+        timeframe?: string;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["SUSSummaryResponse"];
+        };
       };
       /** @description Validation Error */
       422: {
@@ -21108,6 +26935,72 @@ export interface operations {
           [name: string]: unknown;
         };
         content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  execute_workflow_api_v1_workflows__workflow_id__execute_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        workflow_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["WorkflowExecuteRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["WorkflowExecuteResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  get_workflow_execution_status_api_v1_workflows__workflow_id__execution_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        workflow_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["WorkflowExecutionResponse"];
+        };
       };
       /** @description Validation Error */
       422: {

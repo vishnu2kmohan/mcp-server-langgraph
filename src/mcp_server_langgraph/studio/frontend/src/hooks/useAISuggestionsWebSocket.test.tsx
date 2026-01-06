@@ -21,14 +21,15 @@ vi.mock("./useRealtimeSync", () => ({
   useRealtimeSync: (options: unknown) => mockUseRealtimeSync(options),
 }));
 
-// Mock auth
+// Mock auth - useAppSelector must call the selector to get proper mocked values
 vi.mock("../store/hooks", () => ({
-  useAppSelector: () => true,
+  useAppSelector: (selector: () => unknown) => selector(),
   useAppDispatch: () => vi.fn(),
 }));
 
 vi.mock("../store/slices/authSlice", () => ({
   selectIsAuthenticated: () => true,
+  selectWebSocketPermissions: () => ({ ai_suggestions: true }),
   logout: () => ({ type: "auth/logout" }),
 }));
 

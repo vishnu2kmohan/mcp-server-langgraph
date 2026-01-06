@@ -30,17 +30,17 @@ export type ThinkingBudget = "none" | "light" | "medium" | "deep";
 export type SortOption = "popularity" | "success_rate" | "recent";
 
 export interface PlanTemplate {
-  template_id: string;
+  templateId: string;
   name: string;
   description: string;
   orchestrator: OrchestratorType;
-  thinking_budget: ThinkingBudget;
-  critique_rounds: number;
-  auto_approve: boolean;
-  created_by: string;
-  created_at: string;
-  use_count: number;
-  success_rate: number;
+  thinkingBudget: ThinkingBudget;
+  critiqueRounds: number;
+  autoApprove: boolean;
+  createdBy: string;
+  createdAt: string;
+  useCount: number;
+  successRate: number;
   tags: string[];
 }
 
@@ -127,8 +127,8 @@ function TemplateCard({
       </p>
 
       <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
-        <span>{template.use_count} uses</span>
-        <span>{Math.round(template.success_rate * 100)}% success</span>
+        <span>{template.useCount} uses</span>
+        <span>{Math.round(template.successRate * 100)}% success</span>
       </div>
 
       {template.tags.length > 0 && (
@@ -418,9 +418,9 @@ export function PlanSearch({
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {templates.map((template) => (
               <TemplateCard
-                key={template.template_id}
+                key={template.templateId}
                 template={template}
-                isSelected={template.template_id === selectedTemplateId}
+                isSelected={template.templateId === selectedTemplateId}
                 onClick={() => onSelect(template)}
               />
             ))}

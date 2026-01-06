@@ -286,6 +286,7 @@ export function ProjectsPage() {
   // Derive data from query result
   const projects = projectsResponse?.items ?? [];
   const total = projectsResponse?.total ?? 0;
+  // snake_case from API response types
   const totalPages = projectsResponse?.total_pages ?? 1;
 
   // Handler for sort changes

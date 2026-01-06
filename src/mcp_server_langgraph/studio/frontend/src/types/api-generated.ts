@@ -75,6 +75,70 @@ export type ApiArtifactVersionResponse =
   components["schemas"]["ArtifactVersionResponse"];
 
 // =============================================================================
+// AI UX Request/Response Types (ADR-0091)
+// =============================================================================
+
+/**
+ * Nudge recommendation request
+ * POST /api/v1/ai/nudges/recommend
+ * Backend: NudgeRecommendRequest (ai_ux.py:205)
+ */
+export type ApiNudgeRecommendRequest =
+  components["schemas"]["NudgeRecommendRequest"];
+
+/**
+ * Nudge recommendation response
+ * POST /api/v1/ai/nudges/recommend
+ */
+export type ApiNudgeRecommendResponse =
+  components["schemas"]["NudgeRecommendResponse"];
+
+/**
+ * Nudge context for recommendation
+ */
+export type ApiNudgeContext = components["schemas"]["NudgeContext"];
+
+/**
+ * Nudge history item for fatigue prevention
+ */
+export type ApiNudgeHistoryItem = components["schemas"]["NudgeHistoryItem"];
+
+/**
+ * Onboarding personalization request
+ * POST /api/v1/ai/onboarding/personalize
+ * Backend: OnboardingPersonalizeRequest (ai_ux.py:307)
+ */
+export type ApiOnboardingPersonalizeRequest =
+  components["schemas"]["OnboardingPersonalizeRequest"];
+
+/**
+ * Onboarding personalization response
+ * POST /api/v1/ai/onboarding/personalize
+ */
+export type ApiOnboardingPersonalizeResponse =
+  components["schemas"]["OnboardingPersonalizeResponse"];
+
+/**
+ * Signup context for onboarding personalization
+ */
+export type ApiSignupContext = components["schemas"]["SignupContext"];
+
+/**
+ * Persona analysis request
+ * POST /api/v1/ai/persona/analyze
+ * Backend: PersonaAnalyzeRequest (ai_ux.py:373)
+ */
+export type ApiPersonaAnalyzeRequest =
+  components["schemas"]["PersonaAnalyzeRequest"];
+
+/**
+ * Persona analysis response
+ * POST /api/v1/ai/persona/analyze
+ */
+export type ApiPersonaAnalyzeResponse =
+  components["schemas"]["PersonaAnalyzeResponse"];
+
+// =============================================================================
 // Operation Response Types
 // =============================================================================
 

@@ -77,7 +77,7 @@ export function ThinkingBudgetCard({ data }: ThinkingBudgetCardProps) {
 
   // Edit mode state
   const [isEditing, setIsEditing] = useState(false);
-  const [editLevel, setEditLevel] = useState(data?.default_level ?? "medium");
+  const [editLevel, setEditLevel] = useState(data?.defaultLevel ?? "medium");
   const [editEnabled, setEditEnabled] = useState(data?.enabled ?? true);
 
   // RTK Query mutation
@@ -96,7 +96,7 @@ export function ThinkingBudgetCard({ data }: ThinkingBudgetCardProps) {
 
   // Enter edit mode
   const handleEdit = () => {
-    setEditLevel(data.default_level);
+    setEditLevel(data.defaultLevel);
     setEditEnabled(data.enabled);
     setIsEditing(true);
   };
@@ -243,9 +243,9 @@ export function ThinkingBudgetCard({ data }: ThinkingBudgetCardProps) {
               Default Level
             </p>
             <span
-              className={`inline-flex px-2 py-1 text-sm font-medium rounded ${getLevelColorClass(data.default_level)}`}
+              className={`inline-flex px-2 py-1 text-sm font-medium rounded ${getLevelColorClass(data.defaultLevel)}`}
             >
-              {data.default_level}
+              {data.defaultLevel}
             </span>
           </div>
         )}
@@ -256,7 +256,7 @@ export function ThinkingBudgetCard({ data }: ThinkingBudgetCardProps) {
             Complexity Mapping
           </p>
           <div className="grid grid-cols-2 gap-2">
-            {Object.entries(data.complexity_mapping).map(
+            {Object.entries(data.complexityMapping).map(
               ([complexity, level]) => (
                 <div
                   key={complexity}
@@ -297,7 +297,7 @@ export function ThinkingBudgetCard({ data }: ThinkingBudgetCardProps) {
                     {levelInfo.level}
                   </span>
                   <span className="text-xs text-gray-500 dark:text-gray-400">
-                    {levelInfo.other_models_tokens.toLocaleString()} tokens
+                    {levelInfo.otherModelsTokens.toLocaleString()} tokens
                   </span>
                 </div>
                 <p className="text-xs text-gray-600 dark:text-gray-400">

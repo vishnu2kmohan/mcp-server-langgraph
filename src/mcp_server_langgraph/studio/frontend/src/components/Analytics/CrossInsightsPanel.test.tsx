@@ -51,20 +51,20 @@ describe("CrossInsightsPanel", () => {
   });
 
   const mockPersonaResult: PersonaAnalysisResult = {
-    assigned_persona: "bob",
-    detected_persona: "alice-builder",
+    assignedPersona: "bob",
+    detectedPersona: "alice-builder",
     confidence: 0.85,
-    behavior_signals: ["Advanced feature usage", "Long sessions"],
+    behaviorSignals: ["Advanced feature usage", "Long sessions"],
     recommendation: "Consider upgrading to developer role",
-    ui_adaptations: [{ feature: "workflow_builder", action: "unlock" }],
+    uiAdaptations: [{ feature: "workflow_builder", action: "unlock" }],
   };
 
   const mockDisclosureResult: DisclosureAnalysisResult = {
-    current_level: "intermediate",
-    recommended_level: "advanced",
+    currentLevel: "intermediate",
+    recommendedLevel: "advanced",
     confidence: 0.82,
-    unlock_features: ["custom_agents", "advanced_filters"],
-    personalized_message: "Ready for advanced features!",
+    unlockFeatures: ["custom_agents", "advanced_filters"],
+    personalizedMessage: "Ready for advanced features!",
   };
 
   const mockCrossInsights = [

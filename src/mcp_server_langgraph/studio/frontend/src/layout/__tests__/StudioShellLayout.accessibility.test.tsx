@@ -80,8 +80,13 @@ vi.mock(
   () => mockImplementations.useConversationIntelligence,
 );
 vi.mock("../../hooks/useHITLDialogs", () => mockImplementations.useHITLDialogs);
+vi.mock(
+  "../../hooks/useAIOnboarding",
+  () => mockImplementations.useAIOnboarding,
+);
 vi.mock("react-resizable-panels", () => mockResizablePanels);
 vi.mock("react-router", () => mockReactRouter);
+vi.mock("../ResponsiveLayout", () => mockImplementations.ResponsiveLayout);
 
 // Import TelemetryProvider (mocked version)
 import { TelemetryProvider } from "../../contexts/TelemetryContext";
@@ -254,6 +259,65 @@ describe("StudioShellLayout - Accessibility", () => {
 
       const activityBar = screen.getByTestId("activity-bar");
       expect(activityBar).toBeInTheDocument();
+    });
+  });
+
+  describe("Skip-to-Content Link (WCAG 2.4.1)", () => {
+    it("should have a skip-to-content link as the first focusable element", async () => {
+      renderWithProviders(createTestStore());
+
+      await waitFor(() => {
+        expect(screen.getByTestId("studio-shell")).toBeInTheDocument();
+      });
+
+      // THEN: The skip-to-content link should exist
+      const skipLink = screen.getByRole("link", {
+        name: /skip to main content/i,
+      });
+      expect(skipLink).toBeInTheDocument();
+    });
+
+    it("skip-to-content link should be visually hidden until focused", async () => {
+      renderWithProviders(createTestStore());
+
+      await waitFor(() => {
+        expect(screen.getByTestId("studio-shell")).toBeInTheDocument();
+      });
+
+      // THEN: The skip link should have sr-only class for visual hiding
+      const skipLink = screen.getByRole("link", {
+        name: /skip to main content/i,
+      });
+      expect(skipLink).toHaveClass("sr-only");
+    });
+
+    it("skip-to-content link should target main content area", async () => {
+      renderWithProviders(createTestStore());
+
+      await waitFor(() => {
+        expect(screen.getByTestId("studio-shell")).toBeInTheDocument();
+      });
+
+      // THEN: The skip link should point to #main-content
+      const skipLink = screen.getByRole("link", {
+        name: /skip to main content/i,
+      });
+      expect(skipLink).toHaveAttribute("href", "#main-content");
+    });
+
+    it("skip-to-content link should become visible when focused", async () => {
+      renderWithProviders(createTestStore());
+
+      await waitFor(() => {
+        expect(screen.getByTestId("studio-shell")).toBeInTheDocument();
+      });
+
+      // THEN: The skip link should have focus:not-sr-only class
+      const skipLink = screen.getByRole("link", {
+        name: /skip to main content/i,
+      });
+      // Check for presence of focus visibility classes
+      expect(skipLink.className).toContain("focus:not-sr-only");
     });
   });
 

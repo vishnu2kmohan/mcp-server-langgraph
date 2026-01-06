@@ -27,8 +27,8 @@ const mockTemplates = [
     name: "GitHub",
     description: "Access GitHub repositories, issues, and pull requests",
     icon: "github",
-    auth_type: "oauth2",
-    default_url: "https://api.github.com/mcp",
+    authType: "oauth2",
+    defaultUrl: "https://api.github.com/mcp",
     category: "development",
   },
   {
@@ -36,8 +36,8 @@ const mockTemplates = [
     name: "Slack",
     description: "Access Slack workspaces, channels, and messages",
     icon: "slack",
-    auth_type: "oauth2",
-    default_url: "https://slack.com/api/mcp",
+    authType: "oauth2",
+    defaultUrl: "https://slack.com/api/mcp",
     category: "communication",
   },
   {
@@ -45,8 +45,8 @@ const mockTemplates = [
     name: "Filesystem",
     description: "Access local filesystem for reading and writing files",
     icon: "folder",
-    auth_type: "none",
-    default_url: "http://localhost:3001",
+    authType: "none",
+    defaultUrl: "http://localhost:3001",
     category: "local",
   },
   {
@@ -54,8 +54,8 @@ const mockTemplates = [
     name: "Custom API",
     description: "Connect to any MCP server using API key authentication",
     icon: "key",
-    auth_type: "api_key",
-    default_url: "https://your-mcp-server.example.com",
+    authType: "api_key",
+    defaultUrl: "https://your-mcp-server.example.com",
     category: "custom",
   },
 ];

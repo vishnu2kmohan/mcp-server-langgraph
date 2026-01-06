@@ -10,6 +10,7 @@ import { useNavigate } from "react-router";
 import { useAppDispatch, useAppSelector } from "../store/hooks";
 import { selectUser } from "../store/slices/authSlice";
 import { selectPersona, setPersona } from "../store/slices/personaSlice";
+import { resetToDefaults } from "../store/slices/canvasSlice";
 import type { Persona } from "../store/slices/personaSlice";
 import { usePushNotifications } from "../hooks/usePushNotifications";
 import { NotificationPreferencesSettings } from "../components/Settings/NotificationPreferencesSettings";
@@ -32,6 +33,8 @@ import {
   Search,
   BellOff,
   ScrollText,
+  LayoutGrid,
+  RotateCcw,
 } from "lucide-react";
 import { AuditEventPanel } from "../components/Settings/AuditEventPanel";
 import { authenticatedFetch } from "../utils/authenticatedFetch";
@@ -46,10 +49,11 @@ type SettingsTab =
   | "manage-keys"
   | "audit-log";
 
+// camelCase per ADR-0091 Phase 6 (RTK Query transforms)
 interface ManagedUser {
   id: string;
   email: string;
-  has_api_key: boolean;
+  hasApiKey: boolean;
 }
 
 export function SettingsPage() {
@@ -415,7 +419,7 @@ export function SettingsPage() {
 
             {/* Appearance Tab */}
             {activeTab === "appearance" && (
-              <div className="space-y-4">
+              <div className="space-y-6">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-4">
                     Theme
@@ -437,6 +441,34 @@ export function SettingsPage() {
                         </div>
                       </button>
                     ))}
+                  </div>
+                </div>
+
+                {/* Panel Layout Section (Sprint 1.2) */}
+                <div className="p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+                  <div className="flex items-start gap-3">
+                    <LayoutGrid
+                      size={24}
+                      className="text-gray-500 dark:text-gray-400 flex-shrink-0 mt-0.5"
+                    />
+                    <div className="flex-1">
+                      <h3 className="font-medium text-gray-900 dark:text-gray-100 mb-1">
+                        Panel Layout
+                      </h3>
+                      <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+                        Restore your panel layout to the default configuration
+                        for your current persona. This will reset session nav,
+                        conversation, and canvas panel sizes.
+                      </p>
+                      <button
+                        type="button"
+                        onClick={() => dispatch(resetToDefaults())}
+                        className="flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+                      >
+                        <RotateCcw size={16} />
+                        Reset to Persona Defaults
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -582,14 +614,14 @@ export function SettingsPage() {
                               {managedUser.email}
                             </p>
                             <p className="text-sm text-gray-500 dark:text-gray-400">
-                              {managedUser.has_api_key
+                              {managedUser.hasApiKey
                                 ? "Has API Key"
                                 : "No API Key"}
                             </p>
                           </div>
                         </div>
                         <div>
-                          {managedUser.has_api_key ? (
+                          {managedUser.hasApiKey ? (
                             <button
                               onClick={() => handleRevokeKey(managedUser.id)}
                               aria-label="Revoke"

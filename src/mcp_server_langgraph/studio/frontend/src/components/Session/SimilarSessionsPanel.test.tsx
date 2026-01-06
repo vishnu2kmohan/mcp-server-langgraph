@@ -87,14 +87,14 @@ describe("SimilarSessionsPanel", () => {
       mockUseSessionSimilarity.mockReturnValue({
         similarSessions: [
           {
-            session_id: "similar-1",
-            similarity_score: 0.85,
-            common_topics: ["React", "TypeScript"],
+            sessionId: "similar-1",
+            similarityScore: 0.85,
+            commonTopics: ["React", "TypeScript"],
           },
           {
-            session_id: "similar-2",
-            similarity_score: 0.72,
-            common_topics: ["Testing"],
+            sessionId: "similar-2",
+            similarityScore: 0.72,
+            commonTopics: ["Testing"],
           },
         ],
         isLoading: false,
@@ -147,9 +147,9 @@ describe("SimilarSessionsPanel", () => {
       mockUseSessionSimilarity.mockReturnValue({
         similarSessions: [
           {
-            session_id: "similar-1",
-            similarity_score: 0.85,
-            common_topics: ["React"],
+            sessionId: "similar-1",
+            similarityScore: 0.85,
+            commonTopics: ["React"],
           },
         ],
         isLoading: false,
@@ -223,9 +223,9 @@ describe("SimilarSessionsPanel", () => {
       mockUseSessionSimilarity.mockReturnValue({
         similarSessions: [
           {
-            session_id: "similar-1",
-            similarity_score: 0.85,
-            common_topics: ["React", "TypeScript", "Testing"],
+            sessionId: "similar-1",
+            similarityScore: 0.85,
+            commonTopics: ["React", "TypeScript", "Testing"],
           },
         ],
         isLoading: false,
@@ -256,9 +256,9 @@ describe("SimilarSessionsPanel", () => {
       mockUseSessionSimilarity.mockReturnValue({
         similarSessions: [
           {
-            session_id: "similar-1",
-            similarity_score: 0.85,
-            common_topics: ["React"],
+            sessionId: "similar-1",
+            similarityScore: 0.85,
+            commonTopics: ["React"],
           },
         ],
         isLoading: false,

@@ -10,15 +10,13 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render, screen, waitFor, cleanup } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { Provider } from "react-redux";
-import { configureStore } from "@reduxjs/toolkit";
-import { MemoryRouter, Routes, Route } from "react-router";
-import React from "react";
 import { ConnectedConversationPanel } from "./ConnectedConversationPanel";
-import sessionReducer from "../store/slices/sessionSlice";
 import type { ChatLoaderData } from "../router/loaders";
-import type { ChatMessage } from "./MessageBubble";
-import { TelemetryProvider } from "../contexts/TelemetryContext";
+import {
+  createTestStore,
+  createMockMessage,
+  createWrapper,
+} from "./ConnectedConversationPanel.fixtures";
 
 // =============================================================================
 // Mocks
@@ -144,52 +142,6 @@ vi.mock("../hooks/useConversationIntelligence", () => ({
     refetch: vi.fn(),
   })),
 }));
-
-// =============================================================================
-// Test Setup
-// =============================================================================
-
-const createTestStore = (initialState?: Partial<{ session: unknown }>) => {
-  return configureStore({
-    reducer: {
-      session: sessionReducer,
-    },
-    preloadedState: initialState,
-  });
-};
-
-const createMockMessage = (
-  overrides: Partial<ChatMessage> = {},
-): ChatMessage => ({
-  id: "msg-1",
-  role: "user",
-  content: "Hello, how are you?",
-  timestamp: Date.now(),
-  ...overrides,
-});
-
-interface WrapperProps {
-  children: React.ReactNode;
-}
-
-const createWrapper = (store: ReturnType<typeof createTestStore>) => {
-  return function Wrapper({ children }: WrapperProps) {
-    return (
-      <Provider store={store}>
-        <TelemetryProvider>
-          <MemoryRouter>
-            <Routes>
-              <Route
-                path="/"
-                element={<div data-testid="router-wrapper">{children}</div>}
-              />
-            </Routes>
-          </MemoryRouter>
-        </TelemetryProvider>
-      </Provider>
-    );
-  };
-};
 
 // =============================================================================
 // Tests

@@ -26,10 +26,10 @@ import personaReducer from "../store/slices/personaSlice";
 import authReducer, { initialAuthState } from "../store/slices/authSlice";
 import { PersonaProvider } from "../persona/PersonaContext";
 
-// Mock RTK Query hooks
+// Mock RTK Query hooks - camelCase per ADR-0091 Phase 6
 const mockSummaryData = {
-  total_cost: 125.5,
-  total_tokens: 500000,
+  totalCost: 125.5,
+  totalTokens: 500000,
   period: "week",
 };
 
@@ -51,27 +51,27 @@ const mockHistoryData = [
 
 const mockRefetch = vi.fn();
 
-// Mock budget status data
+// Mock budget status data - camelCase per ADR-0091 Phase 6
 const mockBudgetStatusData = {
   status: "ok" as const,
-  percent_used: 45.5,
-  current_spend: 455.0,
+  percentUsed: 45.5,
+  currentSpend: 455.0,
   remaining: 545.0,
-  monthly_limit: 1000.0,
-  entity_type: "user" as const,
-  entity_id: "user:test-user",
+  monthlyLimit: 1000.0,
+  entityType: "user" as const,
+  entityId: "user:test-user",
   message: "Budget usage is within normal limits",
 };
 
-// Mock cost forecast data
+// Mock cost forecast data - camelCase per ADR-0091 Phase 6
 const mockForecastData = {
-  projected_total: 850.0,
-  confidence_low: 720.0,
-  confidence_high: 980.0,
+  projectedTotal: 850.0,
+  confidenceLow: 720.0,
+  confidenceHigh: 980.0,
   trend: "stable" as const,
-  days_analyzed: 14,
+  daysAnalyzed: 14,
   message: "Based on 14 days of data, projected spend is on track",
-  monthly_limit: 1000.0,
+  monthlyLimit: 1000.0,
 };
 
 // Import the mocked module for type-safe mocking

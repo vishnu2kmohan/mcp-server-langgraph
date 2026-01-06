@@ -26,7 +26,8 @@
     "generate-types:check": "openapi-typescript ../../../../api/openapi.json --dry-run",
     "validate:test-cleanup": "tsx scripts/validate-test-cleanup.ts",
     "test:sharded": "bash scripts/run-tests-sharded.sh",
-    "test:shard": "VITEST_MAX_FORKS=2 NODE_OPTIONS='--max-old-space-size=8192 --expose-gc' vitest run"
+    "test:shard": "VITEST_MAX_FORKS=2 NODE_OPTIONS='--max-old-space-size=8192 --expose-gc' vitest run",
+    "test:ci": "VITEST_HEAP_SIZE=4096 VITEST_MAX_FORKS=1 NODE_OPTIONS='--max-old-space-size=4096 --expose-gc' vitest run"
   },
   "dependencies": {
     "@codesandbox/sandpack-react": "^2.20.0",

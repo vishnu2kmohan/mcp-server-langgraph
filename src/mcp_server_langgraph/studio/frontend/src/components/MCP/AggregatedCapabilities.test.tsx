@@ -26,63 +26,63 @@ import { configureStore } from "@reduxjs/toolkit";
 const mockAggregatedTools = {
   tools: [
     {
-      qualified_name: "github:create_issue",
-      server_name: "github",
+      qualifiedName: "github:create_issue",
+      serverName: "github",
       name: "create_issue",
       description: "Create a GitHub issue",
-      input_schema: {
+      inputSchema: {
         type: "object",
         properties: { title: { type: "string" } },
       },
     },
     {
-      qualified_name: "github:list_repos",
-      server_name: "github",
+      qualifiedName: "github:list_repos",
+      serverName: "github",
       name: "list_repos",
       description: "List GitHub repositories",
-      input_schema: { type: "object", properties: {} },
+      inputSchema: { type: "object", properties: {} },
     },
     {
-      qualified_name: "slack:send_message",
-      server_name: "slack",
+      qualifiedName: "slack:send_message",
+      serverName: "slack",
       name: "send_message",
       description: "Send a Slack message",
-      input_schema: {
+      inputSchema: {
         type: "object",
         properties: { channel: { type: "string" } },
       },
     },
   ],
-  total_count: 3,
+  totalCount: 3,
 };
 
 const mockAggregatedResources = {
   resources: [
     {
-      qualified_name: "github:repo://owner/repo",
-      server_name: "github",
+      qualifiedName: "github:repo://owner/repo",
+      serverName: "github",
       uri: "repo://owner/repo",
       name: "Repository",
       description: "GitHub repository resource",
-      mime_type: "application/json",
+      mimeType: "application/json",
     },
     {
-      qualified_name: "config:config://settings",
-      server_name: "config",
+      qualifiedName: "config:config://settings",
+      serverName: "config",
       uri: "config://settings",
       name: "Settings",
       description: "Application settings",
-      mime_type: "application/json",
+      mimeType: "application/json",
     },
   ],
-  total_count: 2,
+  totalCount: 2,
 };
 
 const mockAggregatedPrompts = {
   prompts: [
     {
-      qualified_name: "assistant:code_review",
-      server_name: "assistant",
+      qualifiedName: "assistant:code_review",
+      serverName: "assistant",
       name: "code_review",
       description: "Review code for issues",
       arguments: [
@@ -91,42 +91,42 @@ const mockAggregatedPrompts = {
       ],
     },
     {
-      qualified_name: "assistant:summarize",
-      server_name: "assistant",
+      qualifiedName: "assistant:summarize",
+      serverName: "assistant",
       name: "summarize",
       description: "Summarize content",
       arguments: [],
     },
   ],
-  total_count: 2,
+  totalCount: 2,
 };
 
 const mockServers = {
   servers: [
     {
-      server_name: "github",
-      tool_count: 2,
-      resource_count: 1,
-      prompt_count: 0,
+      serverName: "github",
+      toolCount: 2,
+      resourceCount: 1,
+      promptCount: 0,
     },
-    { server_name: "slack", tool_count: 1, resource_count: 0, prompt_count: 0 },
+    { serverName: "slack", toolCount: 1, resourceCount: 0, promptCount: 0 },
     {
-      server_name: "config",
-      tool_count: 0,
-      resource_count: 1,
-      prompt_count: 0,
+      serverName: "config",
+      toolCount: 0,
+      resourceCount: 1,
+      promptCount: 0,
     },
     {
-      server_name: "assistant",
-      tool_count: 0,
-      resource_count: 0,
-      prompt_count: 2,
+      serverName: "assistant",
+      toolCount: 0,
+      resourceCount: 0,
+      promptCount: 2,
     },
   ],
-  total_servers: 4,
-  total_tools: 3,
-  total_resources: 2,
-  total_prompts: 2,
+  totalServers: 4,
+  totalTools: 3,
+  totalResources: 2,
+  totalPrompts: 2,
 };
 
 // Mock the API with filter support
@@ -134,10 +134,10 @@ const mockServers = {
 vi.mock("../../api", () => ({
   useListAggregatedToolsQuery: vi.fn((serverName?: string) => {
     const tools = serverName
-      ? mockAggregatedTools.tools.filter((t) => t.server_name === serverName)
+      ? mockAggregatedTools.tools.filter((t) => t.serverName === serverName)
       : mockAggregatedTools.tools;
     return {
-      data: { tools, total_count: tools.length },
+      data: { tools, totalCount: tools.length },
       isLoading: false,
       error: null,
       refetch: vi.fn(),
@@ -146,11 +146,11 @@ vi.mock("../../api", () => ({
   useListAggregatedResourcesQuery: vi.fn((serverName?: string) => {
     const resources = serverName
       ? mockAggregatedResources.resources.filter(
-          (r) => r.server_name === serverName,
+          (r) => r.serverName === serverName,
         )
       : mockAggregatedResources.resources;
     return {
-      data: { resources, total_count: resources.length },
+      data: { resources, totalCount: resources.length },
       isLoading: false,
       error: null,
       refetch: vi.fn(),
@@ -158,12 +158,10 @@ vi.mock("../../api", () => ({
   }),
   useListAggregatedPromptsQuery: vi.fn((serverName?: string) => {
     const prompts = serverName
-      ? mockAggregatedPrompts.prompts.filter(
-          (p) => p.server_name === serverName,
-        )
+      ? mockAggregatedPrompts.prompts.filter((p) => p.serverName === serverName)
       : mockAggregatedPrompts.prompts;
     return {
-      data: { prompts, total_count: prompts.length },
+      data: { prompts, totalCount: prompts.length },
       isLoading: false,
       error: null,
       refetch: vi.fn(),
@@ -177,10 +175,10 @@ vi.mock("../../api", () => ({
   })),
   useGetServerCapabilitiesQuery: vi.fn(() => ({
     data: {
-      server_name: "github",
-      tool_count: 2,
-      resource_count: 1,
-      prompt_count: 0,
+      serverName: "github",
+      toolCount: 2,
+      resourceCount: 1,
+      promptCount: 0,
     },
     isLoading: false,
     error: null,

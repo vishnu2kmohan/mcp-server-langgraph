@@ -60,6 +60,30 @@ vi.mock("../../hooks/useTraceWebSocket", () => ({
   }),
 }));
 
+// Mock RTK Query hooks - camelCase per ADR-0091 Phase 6
+vi.mock("../../api", () => ({
+  useListTracesQuery: () => ({
+    data: { items: [] },
+    isLoading: false,
+    error: null,
+  }),
+  useGetMetricsQuery: () => ({
+    data: null,
+    isLoading: false,
+    error: null,
+  }),
+  useListAlertsQuery: () => ({
+    data: { items: [] },
+    isLoading: false,
+    error: null,
+  }),
+  useListLogsQuery: () => ({
+    data: { items: [] },
+    isLoading: false,
+    error: null,
+  }),
+}));
+
 describe("DevToolsPanel", () => {
   // Create a test store
   function createTestStore(

@@ -14,7 +14,11 @@
 import { useState, useCallback, useRef, useMemo, useEffect } from "react";
 import { useRealtimeSync, type ConnectionStatus } from "./useRealtimeSync";
 import { useAppDispatch, useAppSelector } from "../store/hooks";
-import { logout, selectIsAuthenticated } from "../store/slices/authSlice";
+import {
+  logout,
+  selectIsAuthenticated,
+  selectWebSocketPermissions,
+} from "../store/slices/authSlice";
 import { addNotification } from "../store/slices/notificationSlice";
 import { buildWebSocketUrl, WS_ENDPOINTS } from "../utils/websocket";
 import {
@@ -291,6 +295,10 @@ export function useMCPWebSocket(
 
   const dispatch = useAppDispatch();
   const isAuthenticated = useAppSelector(selectIsAuthenticated);
+  const wsPermissions = useAppSelector(selectWebSocketPermissions);
+
+  // Check if user has permission for MCP WebSocket
+  const hasMCPAggregatedPermission = wsPermissions?.mcp_aggregated ?? false;
 
   // State
   const [isInitialized, setIsInitialized] = useState(false);
@@ -330,14 +338,20 @@ export function useMCPWebSocket(
   }, [onStreamingChunk, onStreamingStart, onStreamingEnd]);
 
   // Compute WebSocket URL - token is included automatically when using authenticated endpoint
+  // Only generate URL when authenticated AND has permission
   const wsUrl = useMemo(
-    () => url ?? getDefaultMCPWebSocketUrl(authenticated && isAuthenticated),
-    [url, authenticated, isAuthenticated],
+    () =>
+      isAuthenticated && hasMCPAggregatedPermission
+        ? (url ?? getDefaultMCPWebSocketUrl(authenticated))
+        : "",
+    [url, authenticated, isAuthenticated, hasMCPAggregatedPermission],
   );
 
-  // Track effective enabled state - only connect when authenticated (for authenticated endpoints)
-  // WebSocket requires valid auth token, so we only connect when authenticated
-  const effectiveEnabled = authenticated ? enabled && isAuthenticated : enabled;
+  // Track effective enabled state - only connect when authenticated AND has permission (for authenticated endpoints)
+  // WebSocket requires valid auth token and authorization
+  const effectiveEnabled = authenticated
+    ? enabled && isAuthenticated && hasMCPAggregatedPermission
+    : enabled;
 
   // Track previous effective enabled state to detect changes
   const prevEnabledRef = useRef(effectiveEnabled);

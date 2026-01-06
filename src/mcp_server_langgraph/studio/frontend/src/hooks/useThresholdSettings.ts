@@ -16,12 +16,17 @@ import { useState, useCallback } from "react";
 import { useNavigate } from "react-router";
 import { authenticatedFetch } from "../utils/authenticatedFetch";
 import { saveCurrentRouteAsIntended } from "../utils/intendedRoute";
+import {
+  transformSnakeToCamel,
+  transformCamelToSnake,
+} from "../api/transforms";
 
 // =============================================================================
 // Types
 // =============================================================================
 
-export interface ThresholdRecommendation {
+/** Backend snake_case response */
+interface ThresholdRecommendationBackend {
   current_threshold: number;
   recommended_threshold: number;
   reason: string;
@@ -29,7 +34,17 @@ export interface ThresholdRecommendation {
   sample_size: number;
 }
 
-export interface UserThresholdSettings {
+/** Frontend camelCase recommendation */
+export interface ThresholdRecommendation {
+  currentThreshold: number;
+  recommendedThreshold: number;
+  reason: string;
+  confidenceLevel: number;
+  sampleSize: number;
+}
+
+/** Backend snake_case response */
+interface UserThresholdSettingsBackend {
   user_id: string;
   base_threshold: number;
   adjusted_threshold: number;
@@ -38,11 +53,22 @@ export interface UserThresholdSettings {
   max_threshold: number;
 }
 
+/** Frontend camelCase settings */
+export interface UserThresholdSettings {
+  userId: string;
+  baseThreshold: number;
+  adjustedThreshold: number;
+  autoAdjustEnabled: boolean;
+  minThreshold: number;
+  maxThreshold: number;
+}
+
+/** Frontend request with camelCase properties */
 export interface UpdateThresholdSettingsRequest {
-  base_threshold?: number;
-  auto_adjust_enabled?: boolean;
-  min_threshold?: number;
-  max_threshold?: number;
+  baseThreshold?: number;
+  autoAdjustEnabled?: boolean;
+  minThreshold?: number;
+  maxThreshold?: number;
 }
 
 export interface UseThresholdSettingsReturn {
@@ -119,9 +145,12 @@ export function useThresholdSettings(): UseThresholdSettingsReturn {
           return null;
         }
 
-        const data = await response.json();
-        setRecommendation(data as ThresholdRecommendation);
-        return data as ThresholdRecommendation;
+        const data = (await response.json()) as ThresholdRecommendationBackend;
+        const transformed = transformSnakeToCamel(
+          data,
+        ) as unknown as ThresholdRecommendation;
+        setRecommendation(transformed);
+        return transformed;
       } catch (err) {
         const errorMessage =
           err instanceof Error ? err.message : "Failed to fetch recommendation";
@@ -155,9 +184,12 @@ export function useThresholdSettings(): UseThresholdSettingsReturn {
           return null;
         }
 
-        const data = await response.json();
-        setSettings(data as UserThresholdSettings);
-        return data as UserThresholdSettings;
+        const data = (await response.json()) as UserThresholdSettingsBackend;
+        const transformed = transformSnakeToCamel(
+          data,
+        ) as unknown as UserThresholdSettings;
+        setSettings(transformed);
+        return transformed;
       } catch (err) {
         const errorMessage =
           err instanceof Error ? err.message : "Failed to fetch settings";
@@ -179,11 +211,13 @@ export function useThresholdSettings(): UseThresholdSettingsReturn {
       setError(null);
 
       try {
+        // Transform camelCase request body to snake_case for backend
+        const backendBody = transformCamelToSnake(updates);
         const response = await authenticatedFetch(
           `${API_BASE}/agents/requests/threshold/settings`,
           {
             method: "PUT",
-            body: JSON.stringify(updates),
+            body: JSON.stringify(backendBody),
             onAuthFailure: handleAuthFailure,
           },
         );
@@ -194,9 +228,12 @@ export function useThresholdSettings(): UseThresholdSettingsReturn {
           return null;
         }
 
-        const data = await response.json();
-        setSettings(data as UserThresholdSettings);
-        return data as UserThresholdSettings;
+        const data = (await response.json()) as UserThresholdSettingsBackend;
+        const transformed = transformSnakeToCamel(
+          data,
+        ) as unknown as UserThresholdSettings;
+        setSettings(transformed);
+        return transformed;
       } catch (err) {
         const errorMessage =
           err instanceof Error ? err.message : "Failed to update settings";
@@ -220,7 +257,7 @@ export function useThresholdSettings(): UseThresholdSettingsReturn {
       }
 
       return updateSettings({
-        base_threshold: recommendation.recommended_threshold,
+        baseThreshold: recommendation.recommendedThreshold,
       });
     }, [recommendation, updateSettings]);
 

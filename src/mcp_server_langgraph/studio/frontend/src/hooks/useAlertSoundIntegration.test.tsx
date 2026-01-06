@@ -60,15 +60,15 @@ const createWrapper = (store: ReturnType<typeof createTestStore>) => {
 
 // Sample critical alert
 const createCriticalAlert = (id: string): Alert => ({
-  alert_id: id,
+  alertId: id,
   name: "HighCPUUsage",
   severity: "critical",
   state: "firing",
   message: "CPU usage above 90%",
   labels: {},
   annotations: {},
-  started_at: new Date().toISOString(),
-  ended_at: null,
+  startedAt: new Date().toISOString(),
+  endedAt: null,
   fingerprint: `fp-${id}`,
 });
 

@@ -272,10 +272,10 @@ export function AgentExecutionTracePanel({
                     key={idx}
                     className="text-yellow-600 dark:text-yellow-300 text-xs font-sans flex items-center justify-between"
                   >
-                    <span>{bottleneck.step_name}</span>
+                    <span>{bottleneck.stepName}</span>
                     <span className="font-mono">
-                      {bottleneck.duration_ms}ms (
-                      {bottleneck.percentage_of_total}%)
+                      {bottleneck.durationMs}ms ({bottleneck.percentageOfTotal}
+                      %)
                     </span>
                   </li>
                 ))}
@@ -310,11 +310,11 @@ export function AgentExecutionTracePanel({
                     {anomaly.severity}
                   </span>
                   <div className="flex-1">
-                    <span className="font-semibold">{anomaly.step_name}:</span>{" "}
+                    <span className="font-semibold">{anomaly.stepName}:</span>{" "}
                     {anomaly.message}
-                    {anomaly.suggested_fix && (
+                    {anomaly.suggestedFix && (
                       <p className="mt-1 text-gray-600 dark:text-gray-400 italic">
-                        Suggestion: {anomaly.suggested_fix}
+                        Suggestion: {anomaly.suggestedFix}
                       </p>
                     )}
                   </div>

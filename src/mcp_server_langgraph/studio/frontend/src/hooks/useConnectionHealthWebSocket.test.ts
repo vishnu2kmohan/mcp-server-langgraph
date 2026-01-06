@@ -131,10 +131,10 @@ describe("useConnectionHealthWebSocket", () => {
           name: "Test Connection",
           url: "http://localhost:3000",
           status: "connected",
-          auth_type: "api_key",
-          tool_count: 5,
-          resource_count: 3,
-          prompt_count: 2,
+          authType: "api_key",
+          toolCount: 5,
+          resourceCount: 3,
+          promptCount: 2,
         },
       ];
 
@@ -155,10 +155,10 @@ describe("useConnectionHealthWebSocket", () => {
           name: "Test Connection",
           url: "http://localhost:3000",
           status: "connected",
-          auth_type: "api_key",
-          tool_count: 5,
-          resource_count: 3,
-          prompt_count: 2,
+          authType: "api_key",
+          toolCount: 5,
+          resourceCount: 3,
+          promptCount: 2,
         },
       ];
 
@@ -173,7 +173,7 @@ describe("useConnectionHealthWebSocket", () => {
       const updatedConnection: ConnectionHealth = {
         ...initialConnections[0],
         status: "disconnected",
-        last_error: "Connection timeout",
+        lastError: "Connection timeout",
       };
 
       act(() => {
@@ -184,7 +184,7 @@ describe("useConnectionHealthWebSocket", () => {
       });
 
       expect(result.current.connections[0].status).toBe("disconnected");
-      expect(result.current.connections[0].last_error).toBe(
+      expect(result.current.connections[0].lastError).toBe(
         "Connection timeout",
       );
     });
@@ -197,10 +197,10 @@ describe("useConnectionHealthWebSocket", () => {
         name: "New Connection",
         url: "http://example.com",
         status: "connecting",
-        auth_type: "oauth2",
-        tool_count: 0,
-        resource_count: 0,
-        prompt_count: 0,
+        authType: "oauth2",
+        toolCount: 0,
+        resourceCount: 0,
+        promptCount: 0,
       };
 
       act(() => {
@@ -346,11 +346,11 @@ describe("useConnectionHealthWebSocket", () => {
         name: "Test",
         url: "http://test.com",
         status: "error",
-        auth_type: "none",
-        tool_count: 0,
-        resource_count: 0,
-        prompt_count: 0,
-        last_error: "Timeout",
+        authType: "none",
+        toolCount: 0,
+        resourceCount: 0,
+        promptCount: 0,
+        lastError: "Timeout",
       };
 
       act(() => {
@@ -370,10 +370,10 @@ describe("useConnectionHealthWebSocket", () => {
           name: "Test",
           url: "http://test.com",
           status: "connected",
-          auth_type: "api_key",
-          tool_count: 5,
-          resource_count: 3,
-          prompt_count: 2,
+          authType: "api_key",
+          toolCount: 5,
+          resourceCount: 3,
+          promptCount: 2,
         },
       ];
 
@@ -522,10 +522,10 @@ describe("useConnectionHealthWebSocket", () => {
           name: "Test",
           url: "http://test.com",
           status: "connected",
-          auth_type: "api_key",
-          tool_count: 5,
-          resource_count: 3,
-          prompt_count: 2,
+          authType: "api_key",
+          toolCount: 5,
+          resourceCount: 3,
+          promptCount: 2,
         },
       ];
 
@@ -553,40 +553,40 @@ describe("useConnectionHealthWebSocket", () => {
           name: "A",
           url: "",
           status: "connected",
-          auth_type: "",
-          tool_count: 0,
-          resource_count: 0,
-          prompt_count: 0,
+          authType: "",
+          toolCount: 0,
+          resourceCount: 0,
+          promptCount: 0,
         },
         {
           id: "2",
           name: "B",
           url: "",
           status: "connected",
-          auth_type: "",
-          tool_count: 0,
-          resource_count: 0,
-          prompt_count: 0,
+          authType: "",
+          toolCount: 0,
+          resourceCount: 0,
+          promptCount: 0,
         },
         {
           id: "3",
           name: "C",
           url: "",
           status: "disconnected",
-          auth_type: "",
-          tool_count: 0,
-          resource_count: 0,
-          prompt_count: 0,
+          authType: "",
+          toolCount: 0,
+          resourceCount: 0,
+          promptCount: 0,
         },
         {
           id: "4",
           name: "D",
           url: "",
           status: "error",
-          auth_type: "",
-          tool_count: 0,
-          resource_count: 0,
-          prompt_count: 0,
+          authType: "",
+          toolCount: 0,
+          resourceCount: 0,
+          promptCount: 0,
         },
       ];
 
@@ -609,20 +609,20 @@ describe("useConnectionHealthWebSocket", () => {
           name: "First",
           url: "",
           status: "connected",
-          auth_type: "",
-          tool_count: 0,
-          resource_count: 0,
-          prompt_count: 0,
+          authType: "",
+          toolCount: 0,
+          resourceCount: 0,
+          promptCount: 0,
         },
         {
           id: "conn-2",
           name: "Second",
           url: "",
           status: "connected",
-          auth_type: "",
-          tool_count: 0,
-          resource_count: 0,
-          prompt_count: 0,
+          authType: "",
+          toolCount: 0,
+          resourceCount: 0,
+          promptCount: 0,
         },
       ];
 

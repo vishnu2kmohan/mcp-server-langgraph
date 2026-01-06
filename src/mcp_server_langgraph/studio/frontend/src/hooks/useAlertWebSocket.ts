@@ -20,6 +20,7 @@ import {
   logout,
   selectIsAuthenticated,
   selectIsInitializing,
+  selectWebSocketPermissions,
 } from "../store/slices/authSlice";
 import { addAlert, type Alert } from "../store/slices/alertSlice";
 import { addNotification } from "../store/slices/notificationSlice";
@@ -30,6 +31,7 @@ import {
   PROTOCOL_VERSION_MISMATCH_NOTIFICATION,
   showProtocolVersionMismatchToast,
 } from "../utils/websocketAuth";
+import { transformSnakeToCamel } from "../api/transforms";
 
 // =============================================================================
 // Types
@@ -94,7 +96,7 @@ function isAlertMessage(data: unknown): data is AlertMessage {
   if (typeof msg.payload !== "object" || msg.payload === null) return false;
   const payload = msg.payload as Record<string, unknown>;
   return (
-    typeof payload.alert_id === "string" &&
+    typeof payload.alertId === "string" &&
     typeof payload.name === "string" &&
     typeof payload.severity === "string" &&
     typeof payload.state === "string"
@@ -113,7 +115,7 @@ function isAlertBatchMessage(data: unknown): data is AlertBatchMessage {
   if (msg.payload.length > 0) {
     const first = msg.payload[0] as Record<string, unknown>;
     return (
-      typeof first.alert_id === "string" &&
+      typeof first.alertId === "string" &&
       typeof first.name === "string" &&
       typeof first.severity === "string" &&
       typeof first.state === "string"
@@ -190,21 +192,28 @@ export function useAlertWebSocket(
   const dispatch = useAppDispatch();
   const isAuthenticated = useAppSelector(selectIsAuthenticated);
   const isInitializing = useAppSelector(selectIsInitializing);
+  const wsPermissions = useAppSelector(selectWebSocketPermissions);
 
   // Auth is ready when: authenticated AND not still initializing
   // This prevents WebSocket connection attempts during auth validation
   // which can cause "connection interrupted" errors during page load
   const isAuthReady = isAuthenticated && !isInitializing;
 
-  // Compute WebSocket URL - only generate URL when auth is ready
-  // Passing empty string prevents connection attempt before auth is validated
+  // Check if user has permission for alerts WebSocket (admin only)
+  // This prevents connection attempts to endpoints the user isn't authorized for,
+  // fixing the issue where alice's chat doesn't load due to alert WS auth failure.
+  // Reference: GitHub issue - Chat doesn't load due to alert WS auth failure
+  const hasAlertPermission = wsPermissions?.alerts ?? false;
+
+  // Compute WebSocket URL - only generate URL when auth is ready AND user has permission
+  // Passing empty string prevents connection attempt before auth is validated or if unauthorized
   // The buildWebSocketUrl utility fetches the auth token internally when includeAuthToken=true
   const wsUrl = useMemo(
     () =>
-      isAuthReady
+      isAuthReady && hasAlertPermission
         ? (url ?? getDefaultWebSocketUrl(true /* includeAuthToken */))
         : "",
-    [url, isAuthReady],
+    [url, isAuthReady, hasAlertPermission],
   );
 
   // Handle incoming messages
@@ -217,14 +226,18 @@ export function useAlertWebSocket(
       }
 
       if (message.type === "alert") {
-        dispatch(addAlert(message.payload));
+        // Transform snake_case to camelCase per ADR-0091
+        const alert = transformSnakeToCamel(message.payload) as Alert;
+        dispatch(addAlert(alert));
 
         // Show toast for critical alerts
-        if (showToasts && message.payload.severity === "critical") {
-          showCriticalAlertToast(message.payload);
+        if (showToasts && alert.severity === "critical") {
+          showCriticalAlertToast(alert);
         }
       } else if (message.type === "alert_batch") {
-        for (const alert of message.payload) {
+        for (const rawAlert of message.payload) {
+          // Transform snake_case to camelCase per ADR-0091
+          const alert = transformSnakeToCamel(rawAlert) as Alert;
           dispatch(addAlert(alert));
 
           // Show toast for critical alerts
@@ -258,9 +271,10 @@ export function useAlertWebSocket(
     },
   });
 
-  // Track if enabled - if not auth-ready or explicitly disabled, override status
-  // WebSocket requires valid auth token and completed auth initialization
-  const effectiveEnabled = enabled && isAuthReady;
+  // Track if enabled - if not auth-ready, no permission, or explicitly disabled, override status
+  // WebSocket requires valid auth token, completed auth initialization, AND authorization
+  // This prevents connection attempts to endpoints the user isn't authorized for
+  const effectiveEnabled = enabled && isAuthReady && hasAlertPermission;
 
   // Report WebSocket metrics for observability
   useEffect(() => {

@@ -41,6 +41,13 @@ vi.mock("../api", () => ({
     mockUpdateThinkingBudget,
     { isLoading: false },
   ],
+  // Mock for AgentMetricsCard (added to AgentsPage)
+  useGetAgentMetricsQuery: () => ({
+    data: null,
+    isLoading: false,
+    error: null,
+    refetch: vi.fn(),
+  }),
 }));
 
 import { useGetAgentConfigQuery } from "../api";
@@ -72,12 +79,12 @@ function AgentsPageTestWrapper({ children }: { children: ReactNode }) {
   );
 }
 
-// Default mock data
+// Default mock data - uses camelCase to match API response after transformSnakeToCamel
 const mockConfig = {
   model: "gemini-2.5-flash",
   provider: "google",
   temperature: 0.7,
-  verification_enabled: true,
+  verificationEnabled: true,
   tools: [
     { name: "calculator", description: "Perform calculations" },
     { name: "web_search", description: "Search the web" },

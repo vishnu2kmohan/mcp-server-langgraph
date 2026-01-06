@@ -39,28 +39,28 @@ function createTestStoreWithPersona(persona: "admin" | "developer" | "user") {
   });
 }
 
-// Mock orchestrators data
+// Mock orchestrators data (camelCase per ADR-0091)
 const mockOrchestrators: OrchestratorInfo[] = [
   {
     name: "StudioOrchestrator",
-    display_name: "Studio AI Orchestrator",
+    displayName: "Studio AI Orchestrator",
     description: "Unified Studio AI orchestration",
-    feature_flag: "enable_studio_ai",
-    task_categories: ["UX", "SESSION", "CONVERSATION", "CANVAS", "DIAGRAM"],
+    featureFlag: "enable_studio_ai",
+    taskCategories: ["UX", "SESSION", "CONVERSATION", "CANVAS", "DIAGRAM"],
   },
   {
     name: "ExplanationOrchestrator",
-    display_name: "Explanation Orchestrator",
+    displayName: "Explanation Orchestrator",
     description: "Generates AI-powered explanations for HITL dialogs",
-    feature_flag: "enable_ai_explanations",
-    task_categories: ["uncertainty", "risk", "alternatives", "evidence"],
+    featureFlag: "enable_ai_explanations",
+    taskCategories: ["uncertainty", "risk", "alternatives", "evidence"],
   },
   {
     name: "AlertOrchestrator",
-    display_name: "Alert Orchestrator",
+    displayName: "Alert Orchestrator",
     description: "Orchestrates alert analysis tasks",
-    feature_flag: "enable_orchestrated_alert_analysis",
-    task_categories: ["correlation", "root_cause", "recommendations"],
+    featureFlag: "enable_orchestrated_alert_analysis",
+    taskCategories: ["correlation", "root_cause", "recommendations"],
   },
 ];
 

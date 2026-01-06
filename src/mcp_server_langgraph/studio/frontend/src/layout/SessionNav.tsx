@@ -23,11 +23,12 @@ import {
   Clock,
 } from "lucide-react";
 import type { SessionsLoaderData } from "../router/loaders";
-import type { Session } from "../types";
+import type { SessionCamelCase as Session } from "../types";
 import { cn } from "../utils/cn";
 import { useNewChat } from "../hooks/useNewChat";
 import { AISessionCard } from "./AISessionCard";
 import { InlineEdit } from "../components/UI/InlineEdit";
+import { SimilarSessionsPanel } from "../components/Session/SimilarSessionsPanel";
 import {
   ContextMenu,
   type ContextMenuItem,
@@ -68,7 +69,7 @@ export function groupSessionsByDate(sessions: Session[]): GroupedSessions {
   const groups: GroupedSessions = { today: [], yesterday: [], older: [] };
 
   for (const session of sessions) {
-    const sessionDate = new Date(session.created_at);
+    const sessionDate = new Date(session.createdAt);
     const sessionDay = new Date(
       sessionDate.getFullYear(),
       sessionDate.getMonth(),
@@ -113,6 +114,10 @@ export interface SessionNavProps {
   enableHover?: boolean;
   /** Session metadata for hover details */
   sessionMetadata?: SessionMetadataMap;
+  /** Enable Similar Sessions Panel (AI-powered) */
+  enableSimilarSessions?: boolean;
+  /** Optional mapping of session IDs to display names for similar sessions */
+  similarSessionNames?: Record<string, string>;
 }
 
 /** Helper to format relative time */
@@ -152,6 +157,8 @@ export const SessionNav = forwardRef<HTMLElement, SessionNavProps>(
       onDeleteSession,
       enableHover = false,
       sessionMetadata = {},
+      enableSimilarSessions = false,
+      similarSessionNames = {},
     },
     ref,
   ) {
@@ -192,6 +199,20 @@ export const SessionNav = forwardRef<HTMLElement, SessionNavProps>(
       [filteredSessions],
     );
 
+    // Compute session names map for SimilarSessionsPanel
+    // Uses provided prop or derives from available sessions
+    const sessionNamesMap = useMemo(() => {
+      if (Object.keys(similarSessionNames).length > 0) {
+        return similarSessionNames;
+      }
+      // Build map from available sessions
+      const map: Record<string, string> = {};
+      for (const session of sessions) {
+        map[session.id] = session.name || `Session ${session.id.slice(0, 8)}`;
+      }
+      return map;
+    }, [similarSessionNames, sessions]);
+
     const handleSessionClick = useCallback(
       (session: Session) => {
         navigate(`/studio/chat/${session.id}`);
@@ -210,6 +231,14 @@ export const SessionNav = forwardRef<HTMLElement, SessionNavProps>(
       [],
     );
 
+    // Navigate to a similar session when clicked
+    const handleSimilarSessionSelect = useCallback(
+      (sessionId: string) => {
+        navigate(`/studio/chat/${sessionId}`);
+      },
+      [navigate],
+    );
+
     const renderSessionItem = (session: Session) => {
       // Use AISessionCard when AI is enabled
       if (enableAI) {
@@ -221,7 +250,7 @@ export const SessionNav = forwardRef<HTMLElement, SessionNavProps>(
               userId={userId}
               showSummary={showSummary}
               showTopics={showTopics}
-              timestamp={new Date(session.created_at)}
+              timestamp={new Date(session.createdAt)}
               onClick={(id) => navigate(`/studio/chat/${id}`)}
               isActive={session.id === currentSessionId}
               enableAI
@@ -261,7 +290,7 @@ export const SessionNav = forwardRef<HTMLElement, SessionNavProps>(
 
       // Get session metadata for hover tooltip
       const metadata = sessionMetadata[session.id];
-      const createdAt = new Date(session.created_at);
+      const createdAt = new Date(session.createdAt);
 
       // Build hover tooltip content
       const hoverContent = (
@@ -458,6 +487,19 @@ export const SessionNav = forwardRef<HTMLElement, SessionNavProps>(
             </>
           )}
         </div>
+
+        {/* Similar Sessions Panel - shown at bottom when enabled */}
+        {enableSimilarSessions && currentSessionId && (
+          <div className="border-t border-gray-200 dark:border-gray-700">
+            <SimilarSessionsPanel
+              sessionId={currentSessionId}
+              userId={userId}
+              sessionNames={sessionNamesMap}
+              onSessionSelect={handleSimilarSessionSelect}
+              limit={5}
+            />
+          </div>
+        )}
       </nav>
     );
   },

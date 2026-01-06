@@ -47,12 +47,29 @@ vi.mock("../hooks/useNewChat", () => ({
   }),
 }));
 
-// Mock useSessionIntelligence hooks (for AISessionCard)
+// Mock useSessionIntelligence hooks (for AISessionCard and SimilarSessionsPanel)
 vi.mock("../hooks/useSessionIntelligence", () => ({
   useSessionSummary: vi.fn(() => ({
     summary: "Test AI summary for session",
     keyTopics: ["React", "testing"],
     messageCount: 10,
+    isLoading: false,
+    error: null,
+    refetch: vi.fn(),
+  })),
+  useSessionSimilarity: vi.fn(() => ({
+    similarSessions: [
+      {
+        sessionId: "similar-session-1",
+        similarityScore: 0.85,
+        commonTopics: ["React", "TypeScript"],
+      },
+      {
+        sessionId: "similar-session-2",
+        similarityScore: 0.72,
+        commonTopics: ["Testing"],
+      },
+    ],
     isLoading: false,
     error: null,
     refetch: vi.fn(),
@@ -64,23 +81,26 @@ const mockSessions: Session[] = [
   {
     id: "session-1",
     name: "Today's Chat",
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-    project_id: "project-1",
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    projectId: "project-1",
+    status: "active",
   },
   {
     id: "session-2",
     name: "Yesterday's Chat",
-    created_at: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
-    updated_at: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
-    project_id: "project-1",
+    createdAt: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
+    updatedAt: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
+    projectId: "project-1",
+    status: "active",
   },
   {
     id: "session-3",
     name: "Older Chat",
-    created_at: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
-    updated_at: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
-    project_id: "project-1",
+    createdAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
+    updatedAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
+    projectId: "project-1",
+    status: "active",
   },
 ];
 
@@ -323,9 +343,10 @@ describe("groupSessionsByDate", () => {
       {
         id: "1",
         name: "Today",
-        created_at: today.toISOString(),
-        updated_at: today.toISOString(),
-        project_id: "p1",
+        createdAt: today.toISOString(),
+        updatedAt: today.toISOString(),
+        projectId: "p1",
+        status: "active",
       },
     ];
 
@@ -341,9 +362,10 @@ describe("groupSessionsByDate", () => {
       {
         id: "1",
         name: "Yesterday",
-        created_at: yesterday.toISOString(),
-        updated_at: yesterday.toISOString(),
-        project_id: "p1",
+        createdAt: yesterday.toISOString(),
+        updatedAt: yesterday.toISOString(),
+        projectId: "p1",
+        status: "active",
       },
     ];
 
@@ -359,9 +381,10 @@ describe("groupSessionsByDate", () => {
       {
         id: "1",
         name: "Last Week",
-        created_at: lastWeek.toISOString(),
-        updated_at: lastWeek.toISOString(),
-        project_id: "p1",
+        createdAt: lastWeek.toISOString(),
+        updatedAt: lastWeek.toISOString(),
+        projectId: "p1",
+        status: "active",
       },
     ];
 
@@ -414,6 +437,112 @@ describe("SessionNav Inline Editing", () => {
 // =============================================================================
 // Session Hover Details Tests (Sprint Block 4)
 // =============================================================================
+
+// =============================================================================
+// Similar Sessions Panel Integration Tests (Sprint 2)
+// =============================================================================
+
+describe("SessionNav Similar Sessions Integration", () => {
+  let store: ReturnType<typeof createTestStore>;
+
+  beforeEach(() => {
+    store = createTestStore();
+    mockNavigate.mockClear();
+  });
+
+  afterEach(() => {
+    cleanup();
+  });
+
+  it("should render SimilarSessionsPanel when enableSimilarSessions is true", () => {
+    const Wrapper = createWrapper(store);
+    render(
+      <Wrapper>
+        <SessionNav enableSimilarSessions userId="test-user" />
+      </Wrapper>,
+    );
+
+    // Should render the SimilarSessionsPanel with heading
+    expect(screen.getByText("Similar Sessions")).toBeInTheDocument();
+  });
+
+  it("should not render SimilarSessionsPanel when enableSimilarSessions is false", () => {
+    const Wrapper = createWrapper(store);
+    render(
+      <Wrapper>
+        <SessionNav enableSimilarSessions={false} />
+      </Wrapper>,
+    );
+
+    // Should not show similar sessions
+    expect(screen.queryByText("Similar Sessions")).not.toBeInTheDocument();
+  });
+
+  it("should display similar sessions from hook data", () => {
+    const Wrapper = createWrapper(store);
+    render(
+      <Wrapper>
+        <SessionNav enableSimilarSessions userId="test-user" />
+      </Wrapper>,
+    );
+
+    // Should show similarity scores (from mock: 85% and 72%)
+    expect(screen.getByText("85%")).toBeInTheDocument();
+    expect(screen.getByText("72%")).toBeInTheDocument();
+  });
+
+  it("should display common topics as badges", () => {
+    const Wrapper = createWrapper(store);
+    render(
+      <Wrapper>
+        <SessionNav enableSimilarSessions userId="test-user" />
+      </Wrapper>,
+    );
+
+    // Should show common topics from mock data
+    expect(screen.getByText("React")).toBeInTheDocument();
+    expect(screen.getByText("TypeScript")).toBeInTheDocument();
+    expect(screen.getByText("Testing")).toBeInTheDocument();
+  });
+
+  it("should navigate when similar session is clicked", async () => {
+    const user = userEvent.setup();
+    const Wrapper = createWrapper(store);
+    render(
+      <Wrapper>
+        <SessionNav enableSimilarSessions userId="test-user" />
+      </Wrapper>,
+    );
+
+    // Click on a similar session
+    const similarSession = screen.getByText("similar-session-1");
+    await user.click(similarSession);
+
+    expect(mockNavigate).toHaveBeenCalledWith("/studio/chat/similar-session-1");
+  });
+
+  it("should pass session names to SimilarSessionsPanel", () => {
+    const Wrapper = createWrapper(store);
+    const sessionNames = {
+      "similar-session-1": "My First Session",
+      "similar-session-2": "Another Session",
+    };
+
+    render(
+      <Wrapper>
+        <SessionNav
+          enableSimilarSessions
+          userId="test-user"
+          similarSessionNames={sessionNames}
+        />
+      </Wrapper>,
+    );
+
+    // Should display custom session names instead of IDs
+    expect(screen.getByText("My First Session")).toBeInTheDocument();
+    expect(screen.getByText("Another Session")).toBeInTheDocument();
+  });
+});
 
 describe("SessionNav Hover Details", () => {
   let store: ReturnType<typeof createTestStore>;

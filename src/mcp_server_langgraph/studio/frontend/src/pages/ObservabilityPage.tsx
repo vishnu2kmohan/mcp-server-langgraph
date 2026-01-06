@@ -37,11 +37,15 @@ import {
   useListAlertsQuery,
   useListSessionsQuery,
   useListWorkflowsQuery,
-  type TraceSpan as ApiTraceSpan,
+  type TraceSpanCamelCase as ApiTraceSpan,
 } from "../api";
 import { SkeletonList, ErrorState } from "../components/UI";
 import { TraceViewer } from "../components/Observability/TraceViewer";
-import { WebSocketMetricsPanel } from "../components/WebSocketMetrics/WebSocketMetricsPanel";
+import {
+  WebSocketMetricsPanel,
+  WebSocketHealthIndicator,
+} from "../components/WebSocketMetrics";
+import { TraceCanvas } from "../components/Trace";
 import type { Trace, Span, SpanEvent } from "../components/Observability/types";
 import { useAppDispatch, useAppSelector } from "../store/hooks";
 import { selectUsername, selectPersona } from "../store/slices/personaSlice";
@@ -144,6 +148,9 @@ export function ObservabilityPage() {
 
   // Pagination cursor (local state - not persisted)
   const [cursor, setCursor] = useState<string | undefined>(undefined);
+
+  // TraceCanvas state (real-time trace visualization)
+  const [showTraceCanvas, setShowTraceCanvas] = useState(false);
 
   // Dispatch helpers (wrap actions for cleaner code)
   const setActiveTab = useCallback(
@@ -309,42 +316,42 @@ export function ObservabilityPage() {
   // Map API trace to TraceViewer format
   const selectedTrace: Trace | null = selectedTraceData
     ? {
-        trace_id: selectedTraceData.trace_id,
+        traceId: selectedTraceData.traceId,
         spans:
           selectedTraceData.spans?.map(
             (span: ApiTraceSpan, idx: number): Span => ({
-              span_id: span.span_id || `span-${idx}`,
+              spanId: span.spanId || `span-${idx}`,
               name: span.name || "Unknown",
-              start_time: new Date(span.start_time).getTime(),
-              duration_ms: span.duration_ms || 0,
+              startTime: new Date(span.startTime).getTime(),
+              durationMs: span.durationMs || 0,
               status: span.status as "ok" | "error" | "unset",
               depth: span.depth || 0,
               attributes: span.attributes || {},
               events: (span.events as SpanEvent[]) || [],
-              error_message: span.error_message ?? undefined,
-              parent_span_id: span.parent_span_id ?? undefined,
+              errorMessage: span.errorMessage ?? undefined,
+              parentSpanId: span.parentSpanId ?? undefined,
             }),
           ) || [],
-        start_time: selectedTraceData.start_time
-          ? new Date(selectedTraceData.start_time).getTime()
+        startTime: selectedTraceData.startTime
+          ? new Date(selectedTraceData.startTime).getTime()
           : Date.now(),
-        end_time: selectedTraceData.end_time
-          ? new Date(selectedTraceData.end_time).getTime()
+        endTime: selectedTraceData.endTime
+          ? new Date(selectedTraceData.endTime).getTime()
           : Date.now(),
-        duration_ms: selectedTraceData.duration_ms ?? 0,
-        service_name: selectedTraceData.service_name,
+        durationMs: selectedTraceData.durationMs ?? 0,
+        serviceName: selectedTraceData.serviceName,
       }
     : null;
 
   // Map traces to component format
   const traces =
     tracesData?.items.map((trace) => ({
-      id: trace.trace_id,
+      id: trace.traceId,
       name: trace.name,
-      duration: trace.duration_ms ?? 0,
+      duration: trace.durationMs ?? 0,
       status: (trace.status ?? "success") as "success" | "error" | "running",
-      timestamp: trace.start_time ?? new Date().toISOString(),
-      spans: trace.span_count ?? 0,
+      timestamp: trace.startTime ?? new Date().toISOString(),
+      spans: trace.spanCount ?? 0,
     })) ?? [];
 
   // Map logs to component format
@@ -472,13 +479,20 @@ export function ObservabilityPage() {
               Monitor traces, logs, and metrics for your AI agents
             </p>
           </div>
-          <button
-            onClick={handleRefresh}
-            className="flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
-          >
-            <RefreshCw size={16} />
-            Refresh
-          </button>
+          <div className="flex items-center gap-4">
+            <WebSocketHealthIndicator
+              showLabel
+              autoRefresh
+              refreshInterval={10000}
+            />
+            <button
+              onClick={handleRefresh}
+              className="flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+            >
+              <RefreshCw size={16} />
+              Refresh
+            </button>
+          </div>
         </div>
       </header>
 
@@ -657,7 +671,7 @@ export function ObservabilityPage() {
                             <div className="flex items-center gap-3 mt-1 text-sm text-gray-500 dark:text-gray-400">
                               <span className="flex items-center gap-1">
                                 <Clock size={14} />
-                                {new Date(session.created_at).toLocaleString()}
+                                {new Date(session.createdAt).toLocaleString()}
                               </span>
                               <span className="font-mono text-xs">
                                 {session.id.slice(0, 8)}...
@@ -725,7 +739,7 @@ export function ObservabilityPage() {
                             <div className="flex items-center gap-3 mt-1 text-sm text-gray-500 dark:text-gray-400">
                               <span className="flex items-center gap-1">
                                 <Clock size={14} />
-                                {new Date(workflow.created_at).toLocaleString()}
+                                {new Date(workflow.createdAt).toLocaleString()}
                               </span>
                               {workflow.description && (
                                 <span className="truncate max-w-xs">
@@ -738,10 +752,10 @@ export function ObservabilityPage() {
                         <div className="flex items-center gap-2">
                           <span className="flex items-center gap-1 px-2 py-1 text-xs rounded-full bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">
                             <Activity size={12} />
-                            {workflow.node_count} nodes
+                            {workflow.nodeCount} nodes
                           </span>
                           <span className="flex items-center gap-1 px-2 py-1 text-xs rounded-full bg-gray-100 text-gray-700 dark:bg-gray-900/30 dark:text-gray-400">
-                            {workflow.edge_count} edges
+                            {workflow.edgeCount} edges
                           </span>
                           <ExternalLink size={16} className="text-gray-400" />
                         </div>
@@ -755,6 +769,42 @@ export function ObservabilityPage() {
             {/* Distributed Traces Tab */}
             {activeTab === "traces" && (
               <div className="space-y-4">
+                {/* Real-time Trace Canvas Toggle */}
+                <div className="flex items-center justify-between p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+                  <div className="flex items-center gap-3">
+                    <Activity size={20} className="text-indigo-500" />
+                    <div>
+                      <h3 className="font-medium text-gray-900 dark:text-gray-100">
+                        Real-time Trace Canvas
+                      </h3>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">
+                        Live visualization of trace spans via WebSocket
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => setShowTraceCanvas(!showTraceCanvas)}
+                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                      showTraceCanvas
+                        ? "bg-indigo-600 text-white hover:bg-indigo-700"
+                        : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
+                    }`}
+                  >
+                    {showTraceCanvas ? "Hide Canvas" : "Show Canvas"}
+                  </button>
+                </div>
+
+                {/* TraceCanvas - Real-time ReactFlow visualization */}
+                {showTraceCanvas && (
+                  <div className="h-[400px] bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+                    <TraceCanvas
+                      sessionId={sessionIdFilter || undefined}
+                      autoConnect={true}
+                      className="w-full h-full"
+                    />
+                  </div>
+                )}
+
                 {traces.length === 0 ? (
                   <div className="text-center py-12 text-gray-500 dark:text-gray-400">
                     No traces found
@@ -801,10 +851,10 @@ export function ObservabilityPage() {
                       </div>
                     ))}
                     {/* Load More Button */}
-                    {tracesData?.next_cursor && (
+                    {tracesData?.nextCursor && (
                       <div className="flex justify-center pt-4">
                         <button
-                          onClick={() => setCursor(tracesData.next_cursor)}
+                          onClick={() => setCursor(tracesData.nextCursor)}
                           disabled={isTracesFetching}
                           className="flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 disabled:opacity-50"
                         >
@@ -969,11 +1019,11 @@ export function ObservabilityPage() {
                                           .map((bottleneck, idx) => (
                                             <Tooltip
                                               key={idx}
-                                              content={`${bottleneck.duration_ms}ms (${bottleneck.percentage_of_total}% of total)`}
+                                              content={`${bottleneck.durationMs}ms (${bottleneck.percentageOfTotal}% of total)`}
                                               position="top"
                                             >
                                               <span className="inline-block px-2 py-0.5 text-xs bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 rounded cursor-help">
-                                                {bottleneck.step_name}
+                                                {bottleneck.stepName}
                                               </span>
                                             </Tooltip>
                                           ))}
@@ -993,7 +1043,7 @@ export function ObservabilityPage() {
                                             <Tooltip
                                               key={idx}
                                               content={
-                                                anomaly.suggested_fix ||
+                                                anomaly.suggestedFix ||
                                                 anomaly.message
                                               }
                                               position="top"
@@ -1008,7 +1058,7 @@ export function ObservabilityPage() {
                                                       : "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300"
                                                 }`}
                                               >
-                                                {anomaly.step_name}:{" "}
+                                                {anomaly.stepName}:{" "}
                                                 {anomaly.message}
                                               </div>
                                             </Tooltip>
@@ -1105,7 +1155,7 @@ export function ObservabilityPage() {
                     Total Requests
                   </h3>
                   <div className="text-2xl font-semibold text-gray-900 dark:text-gray-100">
-                    {(metrics.requests_total ?? 0).toLocaleString()}
+                    {(metrics.requestsTotal ?? 0).toLocaleString()}
                   </div>
                 </div>
                 <div className="p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
@@ -1113,7 +1163,7 @@ export function ObservabilityPage() {
                     Total Errors
                   </h3>
                   <div className="text-2xl font-semibold text-red-600 dark:text-red-400">
-                    {(metrics.errors_total ?? 0).toLocaleString()}
+                    {(metrics.errorsTotal ?? 0).toLocaleString()}
                   </div>
                 </div>
                 <div className="p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
@@ -1121,7 +1171,7 @@ export function ObservabilityPage() {
                     Avg Latency
                   </h3>
                   <div className="text-2xl font-semibold text-gray-900 dark:text-gray-100">
-                    {metrics.avg_latency_ms ?? 0}ms
+                    {metrics.avgLatencyMs ?? 0}ms
                   </div>
                 </div>
                 <div className="p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
@@ -1129,7 +1179,7 @@ export function ObservabilityPage() {
                     P99 Latency
                   </h3>
                   <div className="text-2xl font-semibold text-gray-900 dark:text-gray-100">
-                    {metrics.p99_latency_ms ?? 0}ms
+                    {metrics.p99LatencyMs ?? 0}ms
                   </div>
                 </div>
                 <div className="p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
@@ -1137,7 +1187,7 @@ export function ObservabilityPage() {
                     Tokens Used
                   </h3>
                   <div className="text-2xl font-semibold text-gray-900 dark:text-gray-100">
-                    {(metrics.tokens_used ?? 0).toLocaleString()}
+                    {(metrics.tokensUsed ?? 0).toLocaleString()}
                   </div>
                 </div>
                 <div className="p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
@@ -1145,7 +1195,7 @@ export function ObservabilityPage() {
                     Active Sessions
                   </h3>
                   <div className="text-2xl font-semibold text-gray-900 dark:text-gray-100">
-                    {metrics.active_sessions ?? 0}
+                    {metrics.activeSessions ?? 0}
                   </div>
                 </div>
               </div>
@@ -1260,7 +1310,7 @@ export function ObservabilityPage() {
                 ) : (
                   alerts.map((alert) => (
                     <div
-                      key={alert.alert_id}
+                      key={alert.alertId}
                       className="p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 hover:border-blue-500 transition-colors"
                     >
                       <div className="flex items-start justify-between">
@@ -1287,11 +1337,11 @@ export function ObservabilityPage() {
                                 "No description"}
                             </p>
                             <div className="flex items-center gap-3 mt-2 text-sm text-gray-500 dark:text-gray-400">
-                              {alert.started_at && (
+                              {alert.startedAt && (
                                 <span className="flex items-center gap-1">
                                   <Clock size={14} />
                                   Started{" "}
-                                  {new Date(alert.started_at).toLocaleString()}
+                                  {new Date(alert.startedAt).toLocaleString()}
                                 </span>
                               )}
                               {alert.labels?.service && (
@@ -1314,9 +1364,9 @@ export function ObservabilityPage() {
                           >
                             {alert.state}
                           </span>
-                          {alert.generator_url && (
+                          {alert.generatorUrl && (
                             <a
-                              href={alert.generator_url}
+                              href={alert.generatorUrl}
                               target="_blank"
                               rel="noopener noreferrer"
                               className="p-1 text-gray-400 hover:text-blue-500 transition-colors"

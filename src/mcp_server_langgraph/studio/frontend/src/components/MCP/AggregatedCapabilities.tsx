@@ -190,19 +190,14 @@ export function AggregatedCapabilitiesPanel({
     );
   }
 
-  const {
-    total_servers,
-    total_tools,
-    total_resources,
-    total_prompts,
-    servers,
-  } = serversData ?? {
-    total_servers: 0,
-    total_tools: 0,
-    total_resources: 0,
-    total_prompts: 0,
-    servers: [],
-  };
+  const { totalServers, totalTools, totalResources, totalPrompts, servers } =
+    serversData ?? {
+      totalServers: 0,
+      totalTools: 0,
+      totalResources: 0,
+      totalPrompts: 0,
+      servers: [],
+    };
 
   return (
     <Card variant="elevated" padding="none">
@@ -213,13 +208,13 @@ export function AggregatedCapabilitiesPanel({
             <CardTitle>Aggregated Capabilities</CardTitle>
             {/* Stats summary */}
             <div className="flex items-center gap-3 text-sm text-gray-600 dark:text-gray-400">
-              <span>{total_servers} servers</span>
+              <span>{totalServers} servers</span>
               <span className="text-gray-300 dark:text-gray-600">|</span>
-              <span>{total_tools} tools</span>
+              <span>{totalTools} tools</span>
               <span className="text-gray-300 dark:text-gray-600">|</span>
-              <span>{total_resources} resources</span>
+              <span>{totalResources} resources</span>
               <span className="text-gray-300 dark:text-gray-600">|</span>
-              <span>{total_prompts} prompts</span>
+              <span>{totalPrompts} prompts</span>
               <span className="text-gray-300 dark:text-gray-600">|</span>
               {/* Real-time sync indicator */}
               <span
@@ -328,11 +323,11 @@ export function AggregatedCapabilitiesPanel({
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             {servers.map((server) => (
               <MCPServerCard
-                key={server.server_name}
-                serverName={server.server_name}
-                toolCount={server.tool_count}
-                resourceCount={server.resource_count}
-                promptCount={server.prompt_count}
+                key={server.serverName}
+                serverName={server.serverName}
+                toolCount={server.toolCount}
+                resourceCount={server.resourceCount}
+                promptCount={server.promptCount}
                 onSelect={handleServerSelect}
               />
             ))}

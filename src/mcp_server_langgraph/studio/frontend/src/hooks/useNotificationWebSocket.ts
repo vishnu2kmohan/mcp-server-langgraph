@@ -15,6 +15,7 @@ import {
   logout,
   selectIsAuthenticated,
   selectIsInitializing,
+  selectWebSocketPermissions,
 } from "../store/slices/authSlice";
 import { addNotification } from "../store/slices/notificationSlice";
 import type { AddNotificationPayload } from "../store/slices/notificationSlice";
@@ -108,21 +109,26 @@ export function useNotificationWebSocket(
   const dispatch = useAppDispatch();
   const isAuthenticated = useAppSelector(selectIsAuthenticated);
   const isInitializing = useAppSelector(selectIsInitializing);
+  const wsPermissions = useAppSelector(selectWebSocketPermissions);
 
   // Auth is ready when: authenticated AND not still initializing
   // This prevents WebSocket connection attempts during auth validation
   // which can cause "connection interrupted" errors during page load
   const isAuthReady = isAuthenticated && !isInitializing;
 
-  // Compute WebSocket URL - only generate URL when auth is ready
-  // Passing empty string prevents connection attempt before auth is validated
+  // Check if user has permission for notifications WebSocket
+  // This prevents connection attempts to endpoints the user isn't authorized for
+  const hasNotificationPermission = wsPermissions?.notifications ?? false;
+
+  // Compute WebSocket URL - only generate URL when auth is ready AND user has permission
+  // Passing empty string prevents connection attempt before auth is validated or if unauthorized
   // The buildWebSocketUrl utility fetches the auth token internally when includeAuthToken=true
   const wsUrl = useMemo(
     () =>
-      isAuthReady
+      isAuthReady && hasNotificationPermission
         ? (url ?? getDefaultWebSocketUrl(true /* includeAuthToken */))
         : "",
-    [url, isAuthReady],
+    [url, isAuthReady, hasNotificationPermission],
   );
 
   // Handle incoming messages
@@ -156,9 +162,9 @@ export function useNotificationWebSocket(
     },
   });
 
-  // Track if enabled - if not auth-ready or explicitly disabled, override status
-  // WebSocket requires valid auth token and completed auth initialization
-  const effectiveEnabled = enabled && isAuthReady;
+  // Track if enabled - if not auth-ready, no permission, or explicitly disabled, override status
+  // WebSocket requires valid auth token, completed auth initialization, AND authorization
+  const effectiveEnabled = enabled && isAuthReady && hasNotificationPermission;
 
   // Report WebSocket metrics for observability
   useEffect(() => {

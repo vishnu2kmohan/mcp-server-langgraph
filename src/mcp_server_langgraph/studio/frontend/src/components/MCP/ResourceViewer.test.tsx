@@ -45,21 +45,21 @@ const MOCK_RESOURCES = {
       name: "README.md",
       title: "Project README",
       description: "Main project documentation",
-      mime_type: "text/markdown",
+      mimeType: "text/markdown",
     },
     {
       uri: "file:///project/src/main.ts",
       name: "main.ts",
       title: "Main Entry",
       description: "Application entry point",
-      mime_type: "text/typescript",
+      mimeType: "text/typescript",
     },
     {
       uri: "file:///project/logo.png",
       name: "logo.png",
       title: "Logo",
       description: "Project logo",
-      mime_type: "image/png",
+      mimeType: "image/png",
     },
   ],
 };
@@ -68,7 +68,7 @@ const MOCK_TEXT_CONTENT = {
   contents: [
     {
       uri: "file:///project/README.md",
-      mime_type: "text/markdown",
+      mimeType: "text/markdown",
       text: "# Project README\n\nThis is the project documentation.",
       blob: null,
     },
@@ -79,7 +79,7 @@ const MOCK_BINARY_CONTENT = {
   contents: [
     {
       uri: "file:///project/logo.png",
-      mime_type: "image/png",
+      mimeType: "image/png",
       text: null,
       blob: "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==",
     },

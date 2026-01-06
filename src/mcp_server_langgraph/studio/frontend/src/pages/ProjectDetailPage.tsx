@@ -252,9 +252,9 @@ interface ConnectionRef {
 }
 
 interface ProjectMember {
-  user_id: string;
+  userId: string;
   role: string;
-  added_at: string;
+  addedAt: string;
 }
 
 type TabType =
@@ -309,20 +309,20 @@ export function ProjectDetailPage() {
       id: "sessions",
       label: "Sessions",
       icon: <MessageSquare className="w-4 h-4" />,
-      count: project?.session_count,
+      count: project?.sessionCount,
     },
     {
       id: "workflows",
       label: "Workflows",
       icon: <GitBranch className="w-4 h-4" />,
-      count: project?.workflow_count,
+      count: project?.workflowCount,
       featureFlag: "enable_workflows_feature",
     },
     {
       id: "connections",
       label: "Connections",
       icon: <Plug className="w-4 h-4" />,
-      count: project?.connection_count,
+      count: project?.connectionCount,
     },
     {
       id: "observability",
@@ -354,9 +354,9 @@ export function ProjectDetailPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     featureFlags,
-    project?.session_count,
-    project?.workflow_count,
-    project?.connection_count,
+    project?.sessionCount,
+    project?.workflowCount,
+    project?.connectionCount,
     project?.members?.length,
   ]);
 
@@ -1046,10 +1046,10 @@ function MembersTab({
                 </div>
                 <div>
                   <div className="font-medium text-gray-900 dark:text-gray-100">
-                    {member.user_id}
+                    {member.userId}
                   </div>
                   <div className="text-sm text-gray-500 dark:text-gray-400">
-                    Added {new Date(member.added_at).toLocaleDateString()}
+                    Added {new Date(member.addedAt).toLocaleDateString()}
                   </div>
                 </div>
               </div>
@@ -1057,7 +1057,7 @@ function MembersTab({
                 {member.role !== "owner" && (
                   <button
                     aria-label="Remove member"
-                    onClick={() => handleRemoveMember(member.user_id)}
+                    onClick={() => handleRemoveMember(member.userId)}
                     className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded"
                   >
                     <Trash2 className="w-4 h-4" />

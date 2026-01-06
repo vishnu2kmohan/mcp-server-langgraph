@@ -26,6 +26,8 @@ import uiReducer, {
   selectSidebarCollapsed,
   selectTheme,
   selectSidebarOpen,
+  setSubmitOnEnter,
+  selectSubmitOnEnter,
 } from "./uiSlice";
 
 // Mock crypto.randomUUID
@@ -43,6 +45,7 @@ describe("uiSlice", () => {
     activeView: "workflows" as const,
     notifications: [],
     sidebarCollapsed: false,
+    submitOnEnter: true, // Sprint 5.1: ChatGPT-style Enter to send
   };
 
   beforeEach(() => {
@@ -338,6 +341,7 @@ describe("uiSlice", () => {
         isLoading: false,
         activeView: "workflows" as const,
         notifications: [],
+        submitOnEnter: true,
       },
     };
 
@@ -351,6 +355,24 @@ describe("uiSlice", () => {
 
     it("selectSidebarOpen should return sidebarOpen state", () => {
       expect(selectSidebarOpen(mockState)).toBe(true);
+    });
+
+    it("selectSubmitOnEnter should return submitOnEnter state", () => {
+      expect(selectSubmitOnEnter(mockState)).toBe(true);
+    });
+  });
+
+  describe("setSubmitOnEnter", () => {
+    it("should set submitOnEnter to false", () => {
+      const state = { ...initialState, submitOnEnter: true };
+      const result = uiReducer(state, setSubmitOnEnter(false));
+      expect(result.submitOnEnter).toBe(false);
+    });
+
+    it("should set submitOnEnter to true", () => {
+      const state = { ...initialState, submitOnEnter: false };
+      const result = uiReducer(state, setSubmitOnEnter(true));
+      expect(result.submitOnEnter).toBe(true);
     });
   });
 });

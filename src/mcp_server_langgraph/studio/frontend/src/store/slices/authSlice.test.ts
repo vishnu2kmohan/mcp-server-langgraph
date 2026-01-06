@@ -976,7 +976,6 @@ describe("authSlice", () => {
 
       const store = createTestStore({ tokens: expiredTokens });
       const result = await store.dispatch(getAccessToken());
-
       expect(result.payload).toBe("new-access-token");
     });
 

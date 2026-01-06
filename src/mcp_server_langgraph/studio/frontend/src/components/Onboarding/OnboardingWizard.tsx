@@ -14,7 +14,8 @@
  * - Offers skip suggestions for advanced users
  */
 
-import { useState, useCallback, useEffect, useMemo } from "react";
+import { useState, useCallback, useEffect, useMemo, useRef } from "react";
+import { useFocusTrap } from "../../hooks/useFocusTrap";
 import {
   Sparkles,
   ArrowRight,
@@ -132,6 +133,10 @@ export function OnboardingWizard({
   const [selectedTemplate, setSelectedTemplate] =
     useState<WorkflowTemplate | null>(null);
   const [scratchSelected, setScratchSelected] = useState(false);
+
+  // Focus trap for WCAG 2.1 AA compliance (Sprint 5.2)
+  const dialogRef = useRef<HTMLDivElement>(null);
+  useFocusTrap(dialogRef, isOpen);
   const [hasAppliedAISuggestions, setHasAppliedAISuggestions] = useState(false);
 
   const totalSteps = 4;
@@ -249,6 +254,7 @@ export function OnboardingWizard({
 
   return (
     <div
+      ref={dialogRef}
       role="dialog"
       aria-modal="true"
       aria-labelledby="wizard-title"

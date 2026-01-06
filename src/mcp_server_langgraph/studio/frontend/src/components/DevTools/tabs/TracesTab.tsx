@@ -25,27 +25,27 @@ import { useTimelineContext } from "../context/DevToolsTimelineProvider";
 // =============================================================================
 
 export interface TraceListItem {
-  trace_id: string;
+  traceId: string;
   name: string;
-  start_time: number;
-  duration_ms: number;
-  span_count: number;
-  service_name?: string;
+  startTime: number;
+  durationMs: number;
+  spanCount: number;
+  serviceName?: string;
   status: "ok" | "error" | "unset";
 }
 
 export interface TraceSpan {
-  span_id: string;
-  trace_id: string;
-  parent_span_id: string | null;
+  spanId: string;
+  traceId: string;
+  parentSpanId: string | null;
   name: string;
-  start_time: number;
-  duration_ms: number;
+  startTime: number;
+  durationMs: number;
   status: "ok" | "error" | "unset";
-  service_name?: string;
+  serviceName?: string;
   depth: number;
   attributes: Record<string, unknown>;
-  error_message?: string;
+  errorMessage?: string;
 }
 
 export interface TracesTabProps {
@@ -133,10 +133,9 @@ function SpanRow({
 }: SpanRowProps) {
   const leftOffset =
     totalDuration > 0
-      ? ((span.start_time - traceStartTime) / totalDuration) * 100
+      ? ((span.startTime - traceStartTime) / totalDuration) * 100
       : 0;
-  const width =
-    totalDuration > 0 ? (span.duration_ms / totalDuration) * 100 : 0;
+  const width = totalDuration > 0 ? (span.durationMs / totalDuration) * 100 : 0;
 
   return (
     <div
@@ -145,7 +144,7 @@ function SpanRow({
         isSelected && "bg-blue-50 dark:bg-blue-900/20",
       )}
       onClick={onClick}
-      data-span-id={span.span_id}
+      data-span-id={span.spanId}
     >
       {/* Span name with depth indentation */}
       <div
@@ -158,12 +157,12 @@ function SpanRow({
 
       {/* Service name */}
       <div className="text-xs text-gray-500 dark:text-gray-400 min-w-[100px] truncate">
-        {span.service_name || "-"}
+        {span.serviceName || "-"}
       </div>
 
       {/* Duration */}
       <div className="text-xs text-gray-500 dark:text-gray-400 min-w-[60px]">
-        {formatDuration(span.duration_ms)}
+        {formatDuration(span.durationMs)}
       </div>
 
       {/* Timing bar with status-based coloring */}
@@ -176,7 +175,7 @@ function SpanRow({
             // Use status color for error spans, duration color otherwise
             span.status === "error"
               ? getStatusColor(span.status)
-              : getDurationColor(span.duration_ms, totalDuration),
+              : getDurationColor(span.durationMs, totalDuration),
           )}
           style={{
             left: `${Math.max(0, leftOffset)}%`,
@@ -213,13 +212,13 @@ function SpanDetails({ span, onClose }: SpanDetailsProps) {
 
       <dl className="grid grid-cols-2 gap-2 text-sm">
         <dt className="text-gray-500 dark:text-gray-400">Span ID</dt>
-        <dd className="font-mono text-xs">{span.span_id}</dd>
+        <dd className="font-mono text-xs">{span.spanId}</dd>
 
         <dt className="text-gray-500 dark:text-gray-400">Service</dt>
-        <dd>{span.service_name || "-"}</dd>
+        <dd>{span.serviceName || "-"}</dd>
 
         <dt className="text-gray-500 dark:text-gray-400">Duration</dt>
-        <dd>{formatDuration(span.duration_ms)}</dd>
+        <dd>{formatDuration(span.durationMs)}</dd>
 
         <dt className="text-gray-500 dark:text-gray-400">Status</dt>
         <dd className="flex items-center gap-1">
@@ -227,10 +226,10 @@ function SpanDetails({ span, onClose }: SpanDetailsProps) {
           {span.status}
         </dd>
 
-        {span.error_message && (
+        {span.errorMessage && (
           <>
             <dt className="text-gray-500 dark:text-gray-400">Error</dt>
-            <dd className="text-red-500">{span.error_message}</dd>
+            <dd className="text-red-500">{span.errorMessage}</dd>
           </>
         )}
       </dl>
@@ -280,9 +279,9 @@ export function TracesTab({
     if (!timeline.timeWindow) return traces;
 
     return traces.filter((trace) => {
-      const traceEnd = trace.start_time + trace.duration_ms;
+      const traceEnd = trace.startTime + trace.durationMs;
       return (
-        trace.start_time <= timeline.timeWindow!.end &&
+        trace.startTime <= timeline.timeWindow!.end &&
         traceEnd >= timeline.timeWindow!.start
       );
     });
@@ -296,8 +295,8 @@ export function TracesTab({
         const lowerSearch = searchTerm.toLowerCase();
         if (
           !trace.name.toLowerCase().includes(lowerSearch) &&
-          !trace.trace_id.toLowerCase().includes(lowerSearch) &&
-          !trace.service_name?.toLowerCase().includes(lowerSearch)
+          !trace.traceId.toLowerCase().includes(lowerSearch) &&
+          !trace.serviceName?.toLowerCase().includes(lowerSearch)
         ) {
           return false;
         }
@@ -309,7 +308,7 @@ export function TracesTab({
       }
 
       // Service filter
-      if (serviceFilter !== "all" && trace.service_name !== serviceFilter) {
+      if (serviceFilter !== "all" && trace.serviceName !== serviceFilter) {
         return false;
       }
 
@@ -320,7 +319,7 @@ export function TracesTab({
   // Get unique services for filter
   const services = useMemo(() => {
     const uniqueServices = new Set(
-      traces.map((t) => t.service_name).filter(Boolean),
+      traces.map((t) => t.serviceName).filter(Boolean),
     );
     return Array.from(uniqueServices) as string[];
   }, [traces]);
@@ -330,20 +329,20 @@ export function TracesTab({
     const traceId = selectedTraceId ?? localSelectedTraceId;
     if (!traceId) return [];
     return spans
-      .filter((s) => s.trace_id === traceId)
-      .sort((a, b) => a.start_time - b.start_time);
+      .filter((s) => s.traceId === traceId)
+      .sort((a, b) => a.startTime - b.startTime);
   }, [spans, selectedTraceId, localSelectedTraceId]);
 
   // Get selected trace data
   const selectedTrace = useMemo(() => {
     const traceId = selectedTraceId ?? localSelectedTraceId;
-    return traces.find((t) => t.trace_id === traceId);
+    return traces.find((t) => t.traceId === traceId);
   }, [traces, selectedTraceId, localSelectedTraceId]);
 
   // Get selected span
   const selectedSpan = useMemo(() => {
     if (!selectedSpanId) return null;
-    return spans.find((s) => s.span_id === selectedSpanId) ?? null;
+    return spans.find((s) => s.spanId === selectedSpanId) ?? null;
   }, [spans, selectedSpanId]);
 
   // Handlers
@@ -547,13 +546,13 @@ export function TracesTab({
               </button>
               <span className="font-medium">{selectedTrace?.name}</span>
               <span className="text-xs text-gray-500 dark:text-gray-400">
-                {selectedTrace?.trace_id.slice(0, 8)}...
+                {selectedTrace?.traceId.slice(0, 8)}...
               </span>
               <span className="text-xs text-gray-500 dark:text-gray-400">
-                {formatDuration(selectedTrace?.duration_ms ?? 0)}
+                {formatDuration(selectedTrace?.durationMs ?? 0)}
               </span>
               <span className="text-xs text-gray-500 dark:text-gray-400">
-                {selectedTrace?.span_count} spans
+                {selectedTrace?.spanCount} spans
               </span>
             </div>
 
@@ -570,12 +569,12 @@ export function TracesTab({
               {/* Span rows */}
               {selectedTraceSpans.map((span) => (
                 <SpanRow
-                  key={span.span_id}
+                  key={span.spanId}
                   span={span}
-                  totalDuration={selectedTrace?.duration_ms ?? 1}
-                  traceStartTime={selectedTrace?.start_time ?? 0}
-                  isSelected={selectedSpanId === span.span_id}
-                  onClick={() => handleSpanSelect(span.span_id)}
+                  totalDuration={selectedTrace?.durationMs ?? 1}
+                  traceStartTime={selectedTrace?.startTime ?? 0}
+                  isSelected={selectedSpanId === span.spanId}
+                  onClick={() => handleSpanSelect(span.spanId)}
                 />
               ))}
             </div>
@@ -604,31 +603,31 @@ export function TracesTab({
             ) : (
               filteredTraces.map((trace) => (
                 <div
-                  key={trace.trace_id}
+                  key={trace.traceId}
                   data-trace
                   data-status={trace.status}
                   className={cn(
                     "flex items-center gap-4 p-3 border-b border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/50 cursor-pointer",
                     trace.status === "error" && "bg-red-50 dark:bg-red-900/10",
                   )}
-                  onClick={() => handleTraceSelect(trace.trace_id)}
+                  onClick={() => handleTraceSelect(trace.traceId)}
                 >
                   {getStatusIcon(trace.status)}
 
                   <div className="flex-1 min-w-0">
                     <div className="font-medium truncate">{trace.name}</div>
                     <div className="text-xs text-gray-500 dark:text-gray-400">
-                      {trace.trace_id.slice(0, 16)}...
-                      {trace.service_name && ` • ${trace.service_name}`}
+                      {trace.traceId.slice(0, 16)}...
+                      {trace.serviceName && ` • ${trace.serviceName}`}
                     </div>
                   </div>
 
                   <div className="text-sm text-gray-500 dark:text-gray-400">
-                    {formatDuration(trace.duration_ms)}
+                    {formatDuration(trace.durationMs)}
                   </div>
 
                   <div className="text-xs text-gray-400">
-                    {trace.span_count} spans
+                    {trace.spanCount} spans
                   </div>
 
                   <ChevronRight className="h-4 w-4 text-gray-400" />

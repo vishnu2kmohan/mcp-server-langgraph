@@ -28,6 +28,10 @@ import { AlertBadge } from "./AlertBadge";
 export interface TopBarProps {
   /** Custom title (default: "Agent Studio") */
   title?: string;
+  /** Section title derived from current route (Sprint 2.3 - Wayfinding) */
+  sectionTitle?: string;
+  /** Sub-persona badge for more granular role display (Sprint 2.3) */
+  subPersonaBadge?: string;
   /** Callback when user menu is triggered */
   onUserMenuClick?: () => void;
   /** Callback when alert badge is clicked (navigates to admin alerts) */
@@ -65,6 +69,8 @@ function getPersonaBadgeColor(persona: string): string {
 
 export function TopBar({
   title = "Agent Studio",
+  sectionTitle,
+  subPersonaBadge,
   onUserMenuClick,
   onAlertClick,
   pendingApprovals,
@@ -101,11 +107,39 @@ export function TopBar({
         className,
       )}
     >
-      {/* Left: App branding */}
+      {/* Left: App branding with optional section breadcrumb */}
       <div data-testid="app-branding" className="flex items-center gap-2">
         <span className="font-semibold text-gray-900 dark:text-white">
           {title}
         </span>
+        {sectionTitle && (
+          <>
+            <span
+              data-testid="section-separator"
+              className="text-gray-400 dark:text-gray-500"
+              aria-hidden="true"
+            >
+              /
+            </span>
+            <span
+              data-testid="section-title"
+              className="text-sm font-medium text-gray-600 dark:text-gray-300"
+            >
+              {sectionTitle}
+            </span>
+          </>
+        )}
+        {subPersonaBadge && (
+          <span
+            data-testid="sub-persona-badge"
+            className={cn(
+              "ml-2 px-2 py-0.5 rounded-full text-xs font-medium",
+              "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300",
+            )}
+          >
+            {subPersonaBadge}
+          </span>
+        )}
       </div>
 
       {/* Right: User info and menu */}

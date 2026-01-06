@@ -2,10 +2,12 @@
  * AI UX Schema Contract Tests
  *
  * TDD contract tests ensuring MSW handlers return data matching
- * RTK Query API schema definitions.
+ * generated OpenAPI types (ADR-0091).
  *
  * These tests validate that mock responses match the expected API contract,
  * preventing schema drift between mocks and actual API expectations.
+ *
+ * IMPORTANT: All types imported from generated-api.ts to ensure contract alignment.
  */
 
 import {
@@ -19,6 +21,7 @@ import {
 } from "vitest";
 import { setupServer } from "msw/node";
 import { aiHandlers } from "../mocks/handlers/aiHandlers";
+import type { components } from "../types/generated-api";
 
 // Set up MSW server with AI handlers
 const server = setupServer(...aiHandlers);
@@ -31,10 +34,24 @@ afterEach(() => {
 afterAll(() => server.close());
 
 /**
- * Schema definitions from RTK Query (api/index.ts)
- * These are the canonical schemas that MSW handlers must match.
+ * Generated schema types from OpenAPI spec (ADR-0091)
+ * Using generated types ensures tests break if backend contract changes.
  */
 
+// Nudge types
+type Nudge = components["schemas"]["Nudge"];
+type NudgeRecommendResponse = components["schemas"]["NudgeRecommendResponse"];
+
+// Onboarding types
+type OnboardingStep = components["schemas"]["OnboardingStep"];
+type OnboardingPersonalizeResponse =
+  components["schemas"]["OnboardingPersonalizeResponse"];
+
+// Persona types
+type PersonaAnalyzeResponse = components["schemas"]["PersonaAnalyzeResponse"];
+type UIAdaptation = components["schemas"]["UIAdaptation"];
+
+// Empty state suggestion types (not in generated types, kept as local interface)
 interface EmptyStateSuggestionSchema {
   title: string;
   description: string;
@@ -49,6 +66,7 @@ interface EmptyStateSuggestionsResponse {
   context_hint?: string;
 }
 
+// Disclosure types (not in generated types, kept as local interface)
 interface DisclosureAnalyzeResponse {
   current_level: string;
   recommended_level: string;
@@ -58,15 +76,7 @@ interface DisclosureAnalyzeResponse {
   reasoning?: string;
 }
 
-interface NudgeRecommendationResponse {
-  nudge_type: string;
-  message: string;
-  confidence: number;
-  action_cta?: string;
-  action_target?: string;
-  dismiss_duration_ms?: number;
-}
-
+// Error analysis types (not in generated types, kept as local interface)
 interface ErrorAnalyzeResponse {
   error_type: string;
   recovery_steps: Array<{
@@ -79,14 +89,6 @@ interface ErrorAnalyzeResponse {
   auto_recoverable: boolean;
   suggested_action?: string;
   confidence: number;
-}
-
-interface OnboardingPersonalizeResponse {
-  recommended_steps: string[];
-  skip_steps: string[];
-  estimated_duration_minutes: number;
-  personalization_applied: boolean;
-  reasoning?: string;
 }
 
 describe("AI UX API Schema Contract Tests", () => {
@@ -194,38 +196,57 @@ describe("AI UX API Schema Contract Tests", () => {
   });
 
   describe("POST /api/v1/ai/nudges/recommend", () => {
-    it("should return response matching NudgeRecommendationResponse schema", async () => {
+    it("should return response matching generated NudgeRecommendResponse schema", async () => {
       const response = await fetch("/api/v1/ai/nudges/recommend", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          context: "chat",
-          current_feature: "chat-input",
+          user_id: "test-user",
+          current_context: {
+            page: "chat",
+            action: "viewing",
+          },
         }),
       });
 
       expect(response.ok).toBe(true);
-      const data: NudgeRecommendationResponse = await response.json();
+      const data: NudgeRecommendResponse = await response.json();
 
-      expect(data).toHaveProperty("nudge_type");
-      expect(typeof data.nudge_type).toBe("string");
-
-      expect(data).toHaveProperty("message");
-      expect(typeof data.message).toBe("string");
+      // Validate required fields from generated schema
+      expect(data).toHaveProperty("should_show");
+      expect(typeof data.should_show).toBe("boolean");
 
       expect(data).toHaveProperty("confidence");
       expect(typeof data.confidence).toBe("number");
+      expect(data.confidence).toBeGreaterThanOrEqual(0);
+      expect(data.confidence).toBeLessThanOrEqual(1);
 
-      if (data.action_cta !== undefined) {
-        expect(typeof data.action_cta).toBe("string");
-      }
+      // Validate nudge object when present
+      if (data.nudge !== null && data.nudge !== undefined) {
+        const nudge: Nudge = data.nudge;
 
-      if (data.action_target !== undefined) {
-        expect(typeof data.action_target).toBe("string");
-      }
+        expect(nudge).toHaveProperty("id");
+        expect(typeof nudge.id).toBe("string");
 
-      if (data.dismiss_duration_ms !== undefined) {
-        expect(typeof data.dismiss_duration_ms).toBe("number");
+        expect(nudge).toHaveProperty("type");
+        expect(typeof nudge.type).toBe("string");
+
+        expect(nudge).toHaveProperty("message");
+        expect(typeof nudge.message).toBe("string");
+
+        expect(nudge).toHaveProperty("priority");
+        expect(typeof nudge.priority).toBe("string");
+
+        expect(nudge).toHaveProperty("show_after_ms");
+        expect(typeof nudge.show_after_ms).toBe("number");
+
+        // target_element is optional
+        if (
+          nudge.target_element !== undefined &&
+          nudge.target_element !== null
+        ) {
+          expect(typeof nudge.target_element).toBe("string");
+        }
       }
     });
   });
@@ -283,33 +304,113 @@ describe("AI UX API Schema Contract Tests", () => {
   });
 
   describe("POST /api/v1/ai/onboarding/personalize", () => {
-    it("should return response matching OnboardingPersonalizeResponse schema", async () => {
+    it("should return response matching generated OnboardingPersonalizeResponse schema", async () => {
       const response = await fetch("/api/v1/ai/onboarding/personalize", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          detected_persona: "developer",
-          experience_level: "intermediate",
+          user_id: "test-user",
+          initial_actions: ["viewed_workflows", "clicked_templates"],
         }),
       });
 
       expect(response.ok).toBe(true);
       const data: OnboardingPersonalizeResponse = await response.json();
 
-      expect(data).toHaveProperty("recommended_steps");
-      expect(Array.isArray(data.recommended_steps)).toBe(true);
+      // Validate required fields from generated schema
+      expect(data).toHaveProperty("detected_intent");
+      expect(typeof data.detected_intent).toBe("string");
 
-      expect(data).toHaveProperty("skip_steps");
-      expect(Array.isArray(data.skip_steps)).toBe(true);
+      expect(data).toHaveProperty("confidence");
+      expect(typeof data.confidence).toBe("number");
+      expect(data.confidence).toBeGreaterThanOrEqual(0);
+      expect(data.confidence).toBeLessThanOrEqual(1);
 
-      expect(data).toHaveProperty("estimated_duration_minutes");
-      expect(typeof data.estimated_duration_minutes).toBe("number");
+      expect(data).toHaveProperty("recommended_path");
+      expect(Array.isArray(data.recommended_path)).toBe(true);
 
-      expect(data).toHaveProperty("personalization_applied");
-      expect(typeof data.personalization_applied).toBe("boolean");
+      // Validate each step in recommended_path
+      for (const step of data.recommended_path) {
+        const typedStep: OnboardingStep = step;
 
-      if (data.reasoning !== undefined) {
-        expect(typeof data.reasoning).toBe("string");
+        expect(typedStep).toHaveProperty("step");
+        expect(typeof typedStep.step).toBe("string");
+
+        expect(typedStep).toHaveProperty("guided");
+        expect(typeof typedStep.guided).toBe("boolean");
+
+        // focus is optional
+        if (typedStep.focus !== undefined && typedStep.focus !== null) {
+          expect(typeof typedStep.focus).toBe("string");
+        }
+
+        // template is optional
+        if (typedStep.template !== undefined && typedStep.template !== null) {
+          expect(typeof typedStep.template).toBe("string");
+        }
+      }
+
+      // skip_steps is optional
+      if (data.skip_steps !== undefined) {
+        expect(Array.isArray(data.skip_steps)).toBe(true);
+      }
+
+      // persona_prediction is optional
+      if (
+        data.persona_prediction !== undefined &&
+        data.persona_prediction !== null
+      ) {
+        expect(typeof data.persona_prediction).toBe("string");
+      }
+    });
+  });
+
+  describe("POST /api/v1/ai/persona/analyze", () => {
+    it("should return response matching generated PersonaAnalyzeResponse schema", async () => {
+      const response = await fetch("/api/v1/ai/persona/analyze", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          user_id: "test-user",
+          assigned_persona: "bob",
+          recent_actions: ["viewed_workflows", "edited_workflow"],
+          feature_usage: { workflow_builder: 25, traces: 10 },
+        }),
+      });
+
+      expect(response.ok).toBe(true);
+      const data: PersonaAnalyzeResponse = await response.json();
+
+      // Validate required fields from generated schema
+      expect(data).toHaveProperty("assigned_persona");
+      expect(typeof data.assigned_persona).toBe("string");
+
+      expect(data).toHaveProperty("detected_persona");
+      expect(typeof data.detected_persona).toBe("string");
+
+      expect(data).toHaveProperty("confidence");
+      expect(typeof data.confidence).toBe("number");
+      expect(data.confidence).toBeGreaterThanOrEqual(0);
+      expect(data.confidence).toBeLessThanOrEqual(1);
+
+      expect(data).toHaveProperty("behavior_signals");
+      expect(Array.isArray(data.behavior_signals)).toBe(true);
+
+      // recommendation is optional
+      if (data.recommendation !== undefined && data.recommendation !== null) {
+        expect(typeof data.recommendation).toBe("string");
+      }
+
+      // ui_adaptations is optional
+      if (data.ui_adaptations !== undefined) {
+        expect(Array.isArray(data.ui_adaptations)).toBe(true);
+        for (const adaptation of data.ui_adaptations) {
+          const typedAdaptation: UIAdaptation = adaptation;
+          expect(typedAdaptation).toHaveProperty("feature");
+          expect(typeof typedAdaptation.feature).toBe("string");
+          expect(typedAdaptation).toHaveProperty("action");
+          expect(typeof typedAdaptation.action).toBe("string");
+        }
       }
     });
   });

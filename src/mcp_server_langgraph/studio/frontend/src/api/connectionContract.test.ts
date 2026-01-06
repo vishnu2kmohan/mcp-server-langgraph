@@ -511,74 +511,13 @@ afterEach(() => {
   vi.clearAllMocks();
 });
 
-// =============================================================================
-// Schema Type Definitions (matching backend Pydantic models)
-// =============================================================================
-
-type TransportProtocol = "streamable_http" | "stdio";
-type AuthType = "none" | "api_key" | "oauth2";
-type ConnectionStatus =
-  | "disconnected"
-  | "connecting"
-  | "connected"
-  | "error"
-  | "auth_required";
-
-interface MCPConnectionSummary {
-  id: string;
-  name: string;
-  url: string;
-  transport: TransportProtocol;
-  auth_type: AuthType;
-  status: ConnectionStatus;
-  server_name: string | null;
-  tool_count: number;
-  resource_count: number;
-  prompt_count: number;
-  last_connected_at: string | null;
-  created_at: string;
-}
-
-interface MCPConnection extends MCPConnectionSummary {
-  description: string | null;
-  oauth2_config: {
-    client_id: string | null;
-    authorization_url: string | null;
-    token_url: string | null;
-    scopes: string[];
-  } | null;
-  command: string | null;
-  args: string[] | null;
-  env: Record<string, string> | null;
-  last_error: string | null;
-  server_version: string | null;
-  server_capabilities: Record<string, unknown> | null;
-  owner_id: string;
-  organization_id: string | null;
-  project_id: string | null;
-  updated_at: string;
-}
-
-interface ConnectionListResponse {
-  items: MCPConnectionSummary[];
-  total: number;
-  cursor: string | null;
-}
-
-interface MCPConnectionTestResult {
-  success: boolean;
-  server_name: string | null;
-  server_version: string | null;
-  tool_count: number;
-  resource_count: number;
-  prompt_count: number;
-  error: string | null;
-}
-
-interface OAuth2StartResponse {
-  authorization_url: string;
-  state: string;
-}
+// Import types from connection module (avoid duplication)
+import type {
+  MCPConnection,
+  ConnectionListResponse,
+  MCPConnectionTestResult,
+  OAuth2StartResponse,
+} from "../types/connection";
 
 // =============================================================================
 // Contract Tests

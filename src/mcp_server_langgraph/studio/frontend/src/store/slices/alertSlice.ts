@@ -65,42 +65,43 @@ export type RemediationStatus = "pending" | "approved" | "rejected";
 /**
  * Alert data structure (matching backend Alert model)
  *
- * Field names match backend broadcaster.py alert_to_message():
- * - started_at: ISO8601 timestamp when alert started
- * - ended_at: ISO8601 timestamp when alert resolved (null if still firing)
+ * ADR-0091 Phase 6: Uses camelCase - data is transformed at WebSocket boundary.
+ * Backend broadcaster.py returns snake_case, useAlertWebSocket transforms to camelCase.
  */
 export interface Alert {
-  alert_id: string;
+  alertId: string;
   name: string;
   severity: AlertSeverity;
   state: AlertState;
   message: string;
   labels: Record<string, string>;
   annotations: Record<string, string>;
-  started_at: string;
-  ended_at: string | null;
+  startedAt: string;
+  endedAt: string | null;
   fingerprint: string;
 }
 
 /**
  * Remediation request data structure (matching backend RemediationRequest)
+ *
+ * ADR-0091 Phase 6: Uses camelCase - data is transformed at API/WebSocket boundary.
  */
 export interface RemediationRequest {
-  remediation_id: string;
-  alert_id: string;
-  alert_name: string;
+  remediationId: string;
+  alertId: string;
+  alertName: string;
   severity: string;
-  step_number: number;
+  stepNumber: number;
   action: string;
   description: string;
   command: string | null;
-  risk_level: string;
+  riskLevel: string;
   status: RemediationStatus;
-  requested_at: string;
-  approved_by: string | null;
-  approved_at: string | null;
+  requestedAt: string;
+  approvedBy: string | null;
+  approvedAt: string | null;
   reason: string | null;
-  recommendation_id: string | null;
+  recommendationId: string | null;
 }
 
 /**
@@ -179,7 +180,7 @@ const alertSlice = createSlice({
      */
     addAlert: (state, action: PayloadAction<Alert>) => {
       const existingIndex = state.alerts.findIndex(
-        (a) => a.alert_id === action.payload.alert_id,
+        (a) => a.alertId === action.payload.alertId,
       );
 
       if (existingIndex !== -1) {
@@ -204,7 +205,7 @@ const alertSlice = createSlice({
       action: PayloadAction<Partial<Alert> & { alert_id: string }>,
     ) => {
       const index = state.alerts.findIndex(
-        (a) => a.alert_id === action.payload.alert_id,
+        (a) => a.alertId === action.payload.alertId,
       );
 
       if (index !== -1) {
@@ -219,7 +220,7 @@ const alertSlice = createSlice({
      * Remove an alert by id
      */
     removeAlert: (state, action: PayloadAction<string>) => {
-      state.alerts = state.alerts.filter((a) => a.alert_id !== action.payload);
+      state.alerts = state.alerts.filter((a) => a.alertId !== action.payload);
 
       // Clear selection if removed alert was selected
       if (state.selectedAlertId === action.payload) {
@@ -242,7 +243,7 @@ const alertSlice = createSlice({
       action: PayloadAction<RemediationRequest>,
     ) => {
       const existingIndex = state.pendingRemediations.findIndex(
-        (r) => r.remediation_id === action.payload.remediation_id,
+        (r) => r.remediationId === action.payload.remediationId,
       );
 
       if (existingIndex === -1) {
@@ -260,7 +261,7 @@ const alertSlice = createSlice({
       >,
     ) => {
       const index = state.pendingRemediations.findIndex(
-        (r) => r.remediation_id === action.payload.remediation_id,
+        (r) => r.remediationId === action.payload.remediationId,
       );
 
       if (index !== -1) {
@@ -279,7 +280,7 @@ const alertSlice = createSlice({
      */
     removePendingRemediation: (state, action: PayloadAction<string>) => {
       state.pendingRemediations = state.pendingRemediations.filter(
-        (r) => r.remediation_id !== action.payload,
+        (r) => r.remediationId !== action.payload,
       );
     },
 
@@ -331,7 +332,7 @@ const alertSlice = createSlice({
       // Clear selection if removed alert was selected
       if (
         state.selectedAlertId &&
-        !state.alerts.some((a) => a.alert_id === state.selectedAlertId)
+        !state.alerts.some((a) => a.alertId === state.selectedAlertId)
       ) {
         state.selectedAlertId = null;
       }
@@ -384,7 +385,7 @@ export const selectSelectedAlertId = (state: RootState): string | null =>
 export const selectSelectedAlert = createSelector(
   [selectAlerts, selectSelectedAlertId],
   (alerts, selectedId): Alert | undefined =>
-    selectedId ? alerts.find((a) => a.alert_id === selectedId) : undefined,
+    selectedId ? alerts.find((a) => a.alertId === selectedId) : undefined,
 );
 
 /**
@@ -503,12 +504,12 @@ export const selectAlertGroups = createSelector(
       // Sort by started_at to find most recent
       const sortedByTime = [...groupAlerts].sort(
         (a, b) =>
-          new Date(b.started_at).getTime() - new Date(a.started_at).getTime(),
+          new Date(b.startedAt).getTime() - new Date(a.startedAt).getTime(),
       );
 
       // Get timestamps
       const timestamps = groupAlerts.map((a) =>
-        new Date(a.started_at).getTime(),
+        new Date(a.startedAt).getTime(),
       );
       const firstFiredAt = new Date(Math.min(...timestamps)).toISOString();
       const lastUpdatedAt = new Date(Math.max(...timestamps)).toISOString();

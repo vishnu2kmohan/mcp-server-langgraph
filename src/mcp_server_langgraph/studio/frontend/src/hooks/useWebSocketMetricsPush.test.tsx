@@ -26,13 +26,22 @@ const createTestStore = (authenticated = true) =>
     },
     preloadedState: {
       auth: {
-        isAuthenticated: authenticated,
         user: authenticated
           ? { id: "test-user", email: "test@example.com" }
           : null,
-        token: authenticated ? "test-token" : null,
-        refreshToken: null,
-        expiresAt: null,
+        // tokens must be an object with accessToken, refreshToken, etc.
+        // The hook checks `state.auth.tokens?.accessToken`
+        tokens: authenticated
+          ? {
+              accessToken: "test-token",
+              refreshToken: "test-refresh-token",
+              expiresAt: Date.now() + 3600000,
+              refreshExpiresAt: Date.now() + 86400000,
+            }
+          : null,
+        currentOrg: null,
+        organizations: [],
+        isInitializing: false,
         isLoading: false,
         error: null,
       },

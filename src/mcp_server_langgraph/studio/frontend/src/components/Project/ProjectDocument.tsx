@@ -145,7 +145,7 @@ export function ProjectDocument({
     {
       icon: MessageSquare,
       label: "Sessions",
-      count: project?.session_count ?? 0,
+      count: project?.sessionCount ?? 0,
       path: `/studio/chat?project=${projectId}`,
       color: "text-blue-600 dark:text-blue-400",
       bgColor: "bg-blue-50 dark:bg-blue-900/20",
@@ -153,7 +153,7 @@ export function ProjectDocument({
     {
       icon: GitBranch,
       label: "Workflows",
-      count: project?.workflow_count ?? 0,
+      count: project?.workflowCount ?? 0,
       path: `/studio/workflows?project=${projectId}`,
       color: "text-purple-600 dark:text-purple-400",
       bgColor: "bg-purple-50 dark:bg-purple-900/20",
@@ -161,7 +161,7 @@ export function ProjectDocument({
     {
       icon: Plug,
       label: "Connections",
-      count: project?.connection_count ?? 0,
+      count: project?.connectionCount ?? 0,
       path: `/studio/connections/mcp?project=${projectId}`,
       color: "text-green-600 dark:text-green-400",
       bgColor: "bg-green-50 dark:bg-green-900/20",
@@ -228,7 +228,7 @@ export function ProjectDocument({
                 <User size={16} className="text-gray-400" />
                 <span className="text-gray-600 dark:text-gray-400">Owner:</span>
                 <span className="text-gray-900 dark:text-gray-100">
-                  {project?.owner_name || project?.owner_id || "Unknown"}
+                  {project?.ownerName || project?.ownerId || "Unknown"}
                 </span>
               </div>
               <div className="flex items-center gap-2 text-sm">
@@ -237,7 +237,7 @@ export function ProjectDocument({
                   Created:
                 </span>
                 <span className="text-gray-900 dark:text-gray-100">
-                  {formatDate(project?.created_at)}
+                  {formatDate(project?.createdAt)}
                 </span>
               </div>
               <div className="flex items-center gap-2 text-sm">
@@ -246,7 +246,7 @@ export function ProjectDocument({
                   Updated:
                 </span>
                 <span className="text-gray-900 dark:text-gray-100">
-                  {formatDate(project?.updated_at)}
+                  {formatDate(project?.updatedAt)}
                 </span>
               </div>
             </div>

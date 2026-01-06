@@ -8,7 +8,7 @@
 import { useState, useEffect } from "react";
 import { Save, Loader2, CheckCircle, ExternalLink } from "lucide-react";
 import { useBootstrapWorkflowMutation } from "../../api";
-import type { BootstrapWorkflowResponse } from "../../types/api";
+import type { BootstrapWorkflowResponseCamelCase } from "../../types/api";
 
 interface SaveAsWorkflowButtonProps {
   sessionId: string;
@@ -20,9 +20,8 @@ export function SaveAsWorkflowButton({
   disabled = false,
 }: SaveAsWorkflowButtonProps) {
   const [bootstrapWorkflow, { isLoading }] = useBootstrapWorkflowMutation();
-  const [success, setSuccess] = useState<BootstrapWorkflowResponse | null>(
-    null,
-  );
+  const [success, setSuccess] =
+    useState<BootstrapWorkflowResponseCamelCase | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -117,7 +116,7 @@ export function SaveAsWorkflowButton({
                 {success.name}
               </p>
               <a
-                href={`/studio/workflows?id=${success.workflow_id}`}
+                href={`/studio/workflows?id=${success.workflowId}`}
                 className="inline-flex items-center gap-1 mt-2 text-sm text-green-600 dark:text-green-400 hover:underline"
               >
                 View Workflow

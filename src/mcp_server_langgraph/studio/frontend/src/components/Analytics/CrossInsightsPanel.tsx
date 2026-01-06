@@ -119,12 +119,12 @@ export function CrossInsightsPanel({
   // Check for persona mismatch
   const hasPersonaMismatch =
     hasPersonaResult &&
-    personaResult.assigned_persona !== personaResult.detected_persona;
+    personaResult.assignedPersona !== personaResult.detectedPersona;
 
   // Check for disclosure upgrade
   const hasDisclosureUpgrade =
     hasDisclosureResult &&
-    disclosureResult.current_level !== disclosureResult.recommended_level;
+    disclosureResult.currentLevel !== disclosureResult.recommendedLevel;
 
   return (
     <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm">
@@ -208,12 +208,12 @@ export function CrossInsightsPanel({
                     <p className="text-xs text-amber-700 dark:text-amber-300 mt-1">
                       Assigned:{" "}
                       <span className="font-medium">
-                        {personaResult.assigned_persona}
+                        {personaResult.assignedPersona}
                       </span>
                       {" → "}
                       Detected:{" "}
                       <span className="font-medium">
-                        {personaResult.detected_persona}
+                        {personaResult.detectedPersona}
                       </span>
                     </p>
                     {personaResult.recommendation && (
@@ -236,17 +236,17 @@ export function CrossInsightsPanel({
                     <p className="text-xs text-blue-700 dark:text-blue-300 mt-1">
                       Current:{" "}
                       <span className="font-medium">
-                        {disclosureResult.current_level}
+                        {disclosureResult.currentLevel}
                       </span>
                       {" → "}
                       Recommended:{" "}
                       <span className="font-medium">
-                        {disclosureResult.recommended_level}
+                        {disclosureResult.recommendedLevel}
                       </span>
                     </p>
-                    {disclosureResult.personalized_message && (
+                    {disclosureResult.personalizedMessage && (
                       <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">
-                        {disclosureResult.personalized_message}
+                        {disclosureResult.personalizedMessage}
                       </p>
                     )}
                   </div>
@@ -274,14 +274,14 @@ export function CrossInsightsPanel({
               )}
 
               {/* UI Adaptations from persona */}
-              {personaResult?.ui_adaptations &&
-                personaResult.ui_adaptations.length > 0 && (
+              {personaResult?.uiAdaptations &&
+                personaResult.uiAdaptations.length > 0 && (
                   <div>
                     <h4 className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">
                       Recommended Adaptations
                     </h4>
                     <div className="flex flex-wrap gap-2">
-                      {personaResult.ui_adaptations.map((adaptation, index) => (
+                      {personaResult.uiAdaptations.map((adaptation, index) => (
                         <span
                           key={index}
                           className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200"
@@ -298,23 +298,21 @@ export function CrossInsightsPanel({
                 )}
 
               {/* Features to unlock from disclosure */}
-              {disclosureResult?.unlock_features &&
-                disclosureResult.unlock_features.length > 0 && (
+              {disclosureResult?.unlockFeatures &&
+                disclosureResult.unlockFeatures.length > 0 && (
                   <div>
                     <h4 className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">
                       Features to Unlock
                     </h4>
                     <div className="flex flex-wrap gap-2">
-                      {disclosureResult.unlock_features.map(
-                        (feature, index) => (
-                          <span
-                            key={index}
-                            className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-200"
-                          >
-                            {feature}
-                          </span>
-                        ),
-                      )}
+                      {disclosureResult.unlockFeatures.map((feature, index) => (
+                        <span
+                          key={index}
+                          className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-200"
+                        >
+                          {feature}
+                        </span>
+                      ))}
                     </div>
                   </div>
                 )}

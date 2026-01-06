@@ -16,7 +16,7 @@ import { saveCurrentRouteAsIntended } from "../../utils/intendedRoute";
 // Sort Types
 // ============================================================================
 
-type SortField = "name" | "created_at";
+type SortField = "name" | "createdAt";
 type SortOrder = "asc" | "desc";
 
 // ============================================================================
@@ -26,7 +26,7 @@ type SortOrder = "asc" | "desc";
 export interface WorkflowRef {
   id: string;
   name: string;
-  created_at: string | null;
+  createdAt: string | null;
 }
 
 export interface WorkflowsTabProps {
@@ -155,7 +155,7 @@ export function WorkflowsTab({
 
   // Search and sort state
   const [searchQuery, setSearchQuery] = useState("");
-  const [sortBy, setSortBy] = useState<SortField>("created_at");
+  const [sortBy, setSortBy] = useState<SortField>("createdAt");
   const [sortOrder, setSortOrder] = useState<SortOrder>("desc");
 
   // Filter and sort workflows
@@ -171,10 +171,10 @@ export function WorkflowsTab({
     // Sort
     result.sort((a, b) => {
       // Handle null dates - always put them at the end
-      if (sortBy === "created_at") {
-        if (!a.created_at && !b.created_at) return 0;
-        if (!a.created_at) return 1; // a (null) goes after b
-        if (!b.created_at) return -1; // b (null) goes after a
+      if (sortBy === "createdAt") {
+        if (!a.createdAt && !b.createdAt) return 0;
+        if (!a.createdAt) return 1; // a (null) goes after b
+        if (!b.createdAt) return -1; // b (null) goes after a
       }
 
       let compareVal = 0;
@@ -182,11 +182,10 @@ export function WorkflowsTab({
         case "name":
           compareVal = a.name.localeCompare(b.name);
           break;
-        case "created_at":
+        case "createdAt":
         default:
           compareVal =
-            new Date(a.created_at!).getTime() -
-            new Date(b.created_at!).getTime();
+            new Date(a.createdAt!).getTime() - new Date(b.createdAt!).getTime();
           break;
       }
       return sortOrder === "asc" ? compareVal : -compareVal;
@@ -342,7 +341,7 @@ export function WorkflowsTab({
             onChange={handleSortChange}
             className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
           >
-            <option value="created_at">Date Created</option>
+            <option value="createdAt">Date Created</option>
             <option value="name">Name</option>
           </select>
         </div>
@@ -383,9 +382,9 @@ export function WorkflowsTab({
                 <div className="font-medium text-gray-900 dark:text-gray-100">
                   {workflow.name}
                 </div>
-                {workflow.created_at && (
+                {workflow.createdAt && (
                   <div className="text-sm text-gray-500 dark:text-gray-400">
-                    Created {new Date(workflow.created_at).toLocaleDateString()}
+                    Created {new Date(workflow.createdAt).toLocaleDateString()}
                   </div>
                 )}
               </div>

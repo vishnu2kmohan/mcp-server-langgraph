@@ -10,8 +10,16 @@
 
 import { useState, useCallback, useRef, useMemo, useEffect } from "react";
 import { useRealtimeSync } from "./useRealtimeSync";
+import {
+  transformSnakeToCamel,
+  transformCamelToSnake,
+} from "../api/transforms";
 import { useAppDispatch, useAppSelector } from "../store/hooks";
-import { logout, selectIsAuthenticated } from "../store/slices/authSlice";
+import {
+  logout,
+  selectIsAuthenticated,
+  selectWebSocketPermissions,
+} from "../store/slices/authSlice";
 import { addNotification } from "../store/slices/notificationSlice";
 import { getAuthToken } from "../utils/storage";
 import { buildWebSocketUrl, WS_ENDPOINTS } from "../utils/websocket";
@@ -26,9 +34,9 @@ import { reportWebSocketMetrics } from "../utils/websocketTelemetry";
 // =============================================================================
 
 /**
- * Audit event structure matching backend schema
+ * Audit event structure matching backend schema (snake_case)
  */
-export interface AuditEvent {
+export interface AuditEventBackend {
   event_id: string;
   timestamp: string;
   category: string;
@@ -40,9 +48,23 @@ export interface AuditEvent {
 }
 
 /**
- * Filter for audit events
+ * Audit event structure for frontend (camelCase)
  */
-export interface AuditFilter {
+export interface AuditEvent {
+  eventId: string;
+  timestamp: string;
+  category: string;
+  eventType: string;
+  actor: string;
+  resource?: string;
+  regulation?: string;
+  details?: Record<string, unknown>;
+}
+
+/**
+ * Filter for audit events (backend snake_case)
+ */
+export interface AuditFilterBackend {
   categories?: string[];
   regulations?: string[];
   actors?: string[];
@@ -50,11 +72,21 @@ export interface AuditFilter {
 }
 
 /**
- * Filter updated message from server
+ * Filter for audit events (frontend camelCase)
+ */
+export interface AuditFilter {
+  categories?: string[];
+  regulations?: string[];
+  actors?: string[];
+  eventTypes?: string[];
+}
+
+/**
+ * Filter updated message from server (uses backend snake_case filter)
  */
 interface FilterUpdatedMessage {
   type: "filter_updated";
-  filter: AuditFilter;
+  filter: AuditFilterBackend;
 }
 
 /**
@@ -125,19 +157,23 @@ export function useAuditWebSocket(
 
   // Get auth state and token for WebSocket authentication
   const isAuthenticated = useAppSelector(selectIsAuthenticated);
+  const wsPermissions = useAppSelector(selectWebSocketPermissions);
   // Track token changes to trigger URL regeneration on refresh
   const authToken = isAuthenticated ? (getAuthToken() ?? undefined) : undefined;
 
-  // Compute WebSocket URL - only generate URL when authenticated
-  // Passing empty string prevents connection attempt before auth is ready
+  // Check if user has permission for audit WebSocket
+  const hasAuditPermission = wsPermissions?.audit ?? false;
+
+  // Compute WebSocket URL - only generate URL when authenticated AND has permission
+  // Passing empty string prevents connection attempt before auth is ready or if unauthorized
   const url = useMemo(
     () =>
-      isAuthenticated
+      isAuthenticated && hasAuditPermission
         ? (customUrl ?? buildWebSocketUrl(WS_ENDPOINTS.AUDIT, {}, true))
         : "",
     // authToken dependency ensures URL regenerates when token is refreshed
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [customUrl, authToken, isAuthenticated],
+    [customUrl, authToken, isAuthenticated, hasAuditPermission],
   );
 
   // State
@@ -163,28 +199,33 @@ export function useAuditWebSocket(
 
   // Handle incoming messages
   const handleMessage = useCallback((data: unknown) => {
-    const message = data as FilterUpdatedMessage | AuditEvent;
+    const message = data as FilterUpdatedMessage | AuditEventBackend;
 
     // Check if it's a filter_updated message
     if ("type" in message && message.type === "filter_updated") {
-      setCurrentFilter(message.filter);
-      // Track active filter for restoration on reconnect
+      // Transform backend filter to frontend camelCase
+      const camelCaseFilter = transformSnakeToCamel(
+        message.filter,
+      ) as unknown as AuditFilter;
+      setCurrentFilter(camelCaseFilter);
+      // Track active filter for restoration on reconnect (keep backend format)
       // Empty filter means no filter (cleared)
       const hasActiveFilter =
         message.filter &&
         Object.keys(message.filter).some(
           (key) =>
-            Array.isArray(message.filter[key as keyof AuditFilter]) &&
-            (message.filter[key as keyof AuditFilter] as string[]).length > 0,
+            Array.isArray(message.filter[key as keyof AuditFilterBackend]) &&
+            (message.filter[key as keyof AuditFilterBackend] as string[])
+              .length > 0,
         );
-      activeFilterRef.current = hasActiveFilter ? message.filter : null;
-      callbacksRef.current.onFilterUpdated?.(message.filter);
+      activeFilterRef.current = hasActiveFilter ? camelCaseFilter : null;
+      callbacksRef.current.onFilterUpdated?.(camelCaseFilter);
       return;
     }
 
-    // Otherwise, it's an audit event
-    const event = message as AuditEvent;
-    if (!event.event_id) {
+    // Otherwise, it's an audit event (backend format)
+    const backendEvent = message as AuditEventBackend;
+    if (!backendEvent.event_id) {
       return; // Not a valid event
     }
 
@@ -192,6 +233,9 @@ export function useAuditWebSocket(
     if (isPausedRef.current) {
       return;
     }
+
+    // Transform to frontend camelCase format
+    const event = transformSnakeToCamel(backendEvent) as unknown as AuditEvent;
 
     // Add event to the front (newest first)
     setEvents((prevEvents) => {
@@ -208,9 +252,10 @@ export function useAuditWebSocket(
 
   // Handle connection established - restore filter
   const handleConnect = useCallback(() => {
-    // Restore filter on reconnect
+    // Restore filter on reconnect (transform to snake_case for backend)
     if (activeFilterRef.current) {
-      sendRef.current(activeFilterRef.current);
+      const backendFilter = transformCamelToSnake(activeFilterRef.current);
+      sendRef.current(backendFilter);
     }
   }, []);
 
@@ -255,7 +300,9 @@ export function useAuditWebSocket(
     (filter: AuditFilter) => {
       // Track filter immediately for restoration on reconnect
       activeFilterRef.current = filter;
-      send(filter);
+      // Transform to snake_case before sending to backend
+      const backendFilter = transformCamelToSnake(filter);
+      send(backendFilter);
     },
     [send],
   );

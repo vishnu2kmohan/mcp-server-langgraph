@@ -51,9 +51,9 @@ export function LLMProvidersCard({ providers }: LLMProvidersCardProps) {
               <div className="flex-1">
                 <div className="flex items-center gap-2">
                   <h3 className="font-medium text-gray-900 dark:text-gray-100">
-                    {provider.display_name}
+                    {provider.displayName}
                   </h3>
-                  {provider.requires_api_key ? (
+                  {provider.requiresApiKey ? (
                     <span className="flex items-center gap-1 px-2 py-0.5 text-xs bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 rounded">
                       <Key size={12} />
                       API Key Required
@@ -76,7 +76,7 @@ export function LLMProvidersCard({ providers }: LLMProvidersCardProps) {
                 Supported Model Types:
               </div>
               <div className="flex flex-wrap gap-1">
-                {provider.supported_model_types.map((modelType) => (
+                {provider.supportedModelTypes.map((modelType) => (
                   <span
                     key={modelType}
                     className="px-2 py-0.5 text-xs bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded"
@@ -87,10 +87,9 @@ export function LLMProvidersCard({ providers }: LLMProvidersCardProps) {
               </div>
             </div>
 
-            {provider.api_key_env_var && (
+            {provider.apiKeyEnvVar && (
               <div className="mt-2 text-xs text-gray-400 dark:text-gray-500">
-                Env:{" "}
-                <code className="font-mono">{provider.api_key_env_var}</code>
+                Env: <code className="font-mono">{provider.apiKeyEnvVar}</code>
               </div>
             )}
           </div>

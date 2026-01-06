@@ -12,7 +12,7 @@
  * - AI-powered navigation predictions (Sprint 6)
  */
 /* eslint-disable react-refresh/only-export-components -- Exports NavItem types and constants alongside component */
-import { useCallback, useMemo, useEffect, forwardRef } from "react";
+import { useCallback, useMemo, useEffect, forwardRef, useState } from "react";
 import { useNavigate, useLocation } from "react-router";
 import {
   MessageSquare,
@@ -31,6 +31,8 @@ import {
   Plug,
   ClipboardCheck,
   Scale,
+  ChevronDown,
+  ChevronRight,
 } from "lucide-react";
 import { useAppDispatch, useAppSelector } from "../store/hooks";
 import {
@@ -47,6 +49,7 @@ import {
   trackPageVisit,
 } from "../store/slices/sessionSlice";
 import { cn } from "../utils/cn";
+import { storage, STORAGE_KEYS } from "../utils/storage";
 import { useNavPrediction } from "../hooks/useUXIntelligence";
 
 // =============================================================================
@@ -58,11 +61,52 @@ export interface NavItem {
   icon: React.ReactNode;
   label: string;
   path?: string;
+  /** Group this item belongs to (for collapsible groups) */
+  group?: NavGroupId;
+}
+
+/** Navigation group identifiers */
+export type NavGroupId = "core" | "ai-data" | "observability" | "admin";
+
+/** Navigation group metadata */
+export interface NavGroup {
+  id: NavGroupId;
+  label: string;
+  items: string[]; // Nav item IDs in this group
 }
 
 // =============================================================================
 // Navigation Constants
 // =============================================================================
+
+/**
+ * NAV_GROUPS - Navigation group definitions for collapsible sections
+ *
+ * Organized by functional groups for logical user journey.
+ * Each group contains item IDs that belong to it.
+ */
+export const NAV_GROUPS: NavGroup[] = [
+  {
+    id: "core",
+    label: "Core",
+    items: ["projects", "chat", "workflows"],
+  },
+  {
+    id: "ai-data",
+    label: "AI & Data",
+    items: ["agents", "mcp", "vectors", "connections", "files"],
+  },
+  {
+    id: "observability",
+    label: "Observability",
+    items: ["observability", "cost"],
+  },
+  {
+    id: "admin",
+    label: "Admin",
+    items: ["admin", "audit", "compliance"],
+  },
+];
 
 /**
  * NAV_ITEMS - Main navigation items (persona-filtered)
@@ -80,18 +124,21 @@ export const NAV_ITEMS: NavItem[] = [
     icon: <FolderKanban size={20} />,
     label: "Projects",
     path: "/studio/projects",
+    group: "core",
   },
   {
     id: "chat",
     icon: <MessageSquare size={20} />,
     label: "Chat",
     path: "/studio/chat",
+    group: "core",
   },
   {
     id: "workflows",
     icon: <GitBranch size={20} />,
     label: "Workflows",
     path: "/studio/workflows",
+    group: "core",
   },
   // === AI & Data ===
   {
@@ -99,30 +146,35 @@ export const NAV_ITEMS: NavItem[] = [
     icon: <Cpu size={20} />,
     label: "Agents",
     path: "/studio/agents",
+    group: "ai-data",
   },
   {
     id: "mcp",
     icon: <Database size={20} />,
     label: "MCP",
     path: "/studio/mcp",
+    group: "ai-data",
   },
   {
     id: "vectors",
     icon: <Boxes size={20} />,
     label: "Vectors",
     path: "/studio/vectors",
+    group: "ai-data",
   },
   {
     id: "connections",
     icon: <Plug size={20} />,
     label: "Connections",
     path: "/studio/connections",
+    group: "ai-data",
   },
   {
     id: "files",
     icon: <FileText size={20} />,
     label: "Files",
     path: "/studio/files",
+    group: "ai-data",
   },
   // === Observability ===
   {
@@ -130,12 +182,14 @@ export const NAV_ITEMS: NavItem[] = [
     icon: <Activity size={20} />,
     label: "Observability",
     path: "/studio/observability",
+    group: "observability",
   },
   {
     id: "cost",
     icon: <DollarSign size={20} />,
     label: "Cost",
     path: "/studio/cost",
+    group: "observability",
   },
   // === Admin (persona-gated) ===
   {
@@ -143,18 +197,21 @@ export const NAV_ITEMS: NavItem[] = [
     icon: <Shield size={20} />,
     label: "Admin",
     path: "/studio/admin",
+    group: "admin",
   },
   {
     id: "audit",
     icon: <ClipboardCheck size={20} />,
     label: "Audit",
     path: "/studio/audit",
+    group: "admin",
   },
   {
     id: "compliance",
     icon: <Scale size={20} />,
     label: "Compliance",
     path: "/studio/compliance",
+    group: "admin",
   },
 ];
 
@@ -189,23 +246,55 @@ export const KNOWN_NAV_IDS: Set<string> = new Set([
 // Component
 // =============================================================================
 
+/** Type for collapsed groups state */
+type CollapsedGroupsState = Record<NavGroupId, boolean>;
+
 export interface ActivityBarProps {
   className?: string;
   /** Enable AI-powered navigation predictions (Sprint 6) */
   enableAI?: boolean;
   /** Reorder navigation items based on AI predictions */
   reorderByPrediction?: boolean;
+  /** Enable collapsible navigation groups (Sprint 4.2) */
+  enableCollapsibleGroups?: boolean;
 }
 
 export const ActivityBar = forwardRef<HTMLElement, ActivityBarProps>(
   function ActivityBar(
-    { className, enableAI = false, reorderByPrediction = false },
+    {
+      className,
+      enableAI = false,
+      reorderByPrediction = false,
+      enableCollapsibleGroups = false,
+    },
     ref,
   ) {
     const dispatch = useAppDispatch();
     const navigate = useNavigate();
     const location = useLocation();
     const activeNavItem = useAppSelector(selectActiveNavItem);
+
+    // Sprint 4.2: Collapsible groups state with storage persistence
+    const [collapsedGroups, setCollapsedGroups] =
+      useState<CollapsedGroupsState>(() => {
+        if (!enableCollapsibleGroups) {
+          return {} as CollapsedGroupsState;
+        }
+        return (
+          storage.get<CollapsedGroupsState>(
+            STORAGE_KEYS.ACTIVITY_BAR_COLLAPSED_GROUPS,
+          ) ?? ({} as CollapsedGroupsState)
+        );
+      });
+
+    // Toggle group collapse state
+    const toggleGroupCollapse = useCallback((groupId: NavGroupId) => {
+      setCollapsedGroups((prev) => {
+        const next = { ...prev, [groupId]: !prev[groupId] };
+        storage.set(STORAGE_KEYS.ACTIVITY_BAR_COLLAPSED_GROUPS, next);
+        return next;
+      });
+    }, []);
 
     // RBAC: Get allowed sidebar items from persona slice (deny-by-default)
     const allowedItems = useAppSelector(selectSidebarItems);
@@ -291,6 +380,22 @@ export const ActivityBar = forwardRef<HTMLElement, ActivityBarProps>(
       [allowedItems],
     );
 
+    // Sprint 4.2: Compute visible groups with their filtered items (for collapsible mode)
+    const visibleGroups = useMemo(() => {
+      if (!enableCollapsibleGroups) return [];
+
+      return NAV_GROUPS.map((group) => {
+        // Filter items in this group by RBAC permissions
+        const groupItems = NAV_ITEMS.filter(
+          (item) => item.group === group.id && allowedItems.includes(item.id),
+        );
+        return {
+          ...group,
+          visibleItems: groupItems,
+        };
+      }).filter((group) => group.visibleItems.length > 0); // Only show groups with visible items
+    }, [enableCollapsibleGroups, allowedItems]);
+
     const handleNavClick = useCallback(
       (item: NavItem) => {
         dispatch(setActiveNavItem(item.id));
@@ -326,47 +431,142 @@ export const ActivityBar = forwardRef<HTMLElement, ActivityBarProps>(
         )}
       >
         {/* Main navigation icons - RBAC filtered */}
-        <div
-          className="flex flex-col gap-1"
-          role="group"
-          aria-label="Primary navigation"
-        >
-          {visibleNavItems.map((item) => {
-            const isPredicted = predictedItemIds.has(item.id);
-            return (
-              <button
-                key={item.id}
-                type="button"
-                data-testid={`nav-${item.id}`}
-                aria-label={item.label}
-                title={isPredicted ? `${item.label} (Suggested)` : item.label}
-                onClick={() => handleNavClick(item)}
-                className={cn(
-                  "p-2 rounded-lg transition-all relative",
-                  "focus:outline-none focus:ring-2 focus:ring-primary-500",
-                  activeNavItem === item.id &&
-                    "bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300",
-                  activeNavItem !== item.id &&
-                    "text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700",
-                )}
-              >
-                {item.icon}
-                {/* AI Prediction Indicator */}
-                {enableAI && isPredicted && !predictionsLoading && (
-                  <span
-                    data-testid="nav-prediction-indicator"
+        {/* Sprint 4.2: Render as collapsible groups or flat list */}
+        {enableCollapsibleGroups ? (
+          /* Collapsible Groups Mode */
+          <div
+            className="flex flex-col gap-0.5"
+            role="group"
+            aria-label="Primary navigation"
+          >
+            {visibleGroups.map((group) => {
+              const isCollapsed = collapsedGroups[group.id] ?? false;
+              return (
+                <div key={group.id} className="flex flex-col gap-0.5">
+                  {/* Group Header (collapsible) */}
+                  <button
+                    type="button"
+                    data-testid={`nav-group-${group.id}`}
+                    aria-label={`${group.label} group`}
+                    aria-expanded={!isCollapsed}
+                    aria-controls={`nav-group-items-${group.id}`}
+                    title={`${group.label} (${isCollapsed ? "Expand" : "Collapse"})`}
+                    onClick={() => toggleGroupCollapse(group.id)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        toggleGroupCollapse(group.id);
+                      }
+                    }}
                     className={cn(
-                      "absolute -top-0.5 -right-0.5 w-2 h-2",
-                      "bg-amber-400 dark:bg-amber-500 rounded-full",
-                      "animate-pulse",
+                      "p-1.5 rounded-lg transition-all flex items-center justify-center",
+                      "text-gray-400 dark:text-gray-500",
+                      "hover:bg-gray-200 dark:hover:bg-gray-700",
+                      "focus:outline-none focus:ring-2 focus:ring-primary-500",
                     )}
-                    aria-label="AI suggested"
-                  />
-                )}
-              </button>
-            );
-          })}
-        </div>
+                  >
+                    {isCollapsed ? (
+                      <ChevronRight size={14} />
+                    ) : (
+                      <ChevronDown size={14} />
+                    )}
+                  </button>
+
+                  {/* Group Items (shown when expanded) */}
+                  {!isCollapsed && (
+                    <div
+                      id={`nav-group-items-${group.id}`}
+                      className="flex flex-col gap-0.5"
+                    >
+                      {group.visibleItems.map((item) => {
+                        const isPredicted = predictedItemIds.has(item.id);
+                        return (
+                          <button
+                            key={item.id}
+                            type="button"
+                            data-testid={`nav-${item.id}`}
+                            aria-label={item.label}
+                            title={
+                              isPredicted
+                                ? `${item.label} (Suggested)`
+                                : item.label
+                            }
+                            onClick={() => handleNavClick(item)}
+                            className={cn(
+                              "p-2 rounded-lg transition-all relative",
+                              "focus:outline-none focus:ring-2 focus:ring-primary-500",
+                              activeNavItem === item.id &&
+                                "bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300",
+                              activeNavItem !== item.id &&
+                                "text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700",
+                            )}
+                          >
+                            {item.icon}
+                            {/* AI Prediction Indicator */}
+                            {enableAI && isPredicted && !predictionsLoading && (
+                              <span
+                                data-testid="nav-prediction-indicator"
+                                className={cn(
+                                  "absolute -top-0.5 -right-0.5 w-2 h-2",
+                                  "bg-amber-400 dark:bg-amber-500 rounded-full",
+                                  "animate-pulse",
+                                )}
+                                aria-label="AI suggested"
+                              />
+                            )}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        ) : (
+          /* Flat List Mode (default) */
+          <div
+            className="flex flex-col gap-1"
+            role="group"
+            aria-label="Primary navigation"
+          >
+            {visibleNavItems.map((item) => {
+              const isPredicted = predictedItemIds.has(item.id);
+              return (
+                <button
+                  key={item.id}
+                  type="button"
+                  data-testid={`nav-${item.id}`}
+                  aria-label={item.label}
+                  title={isPredicted ? `${item.label} (Suggested)` : item.label}
+                  onClick={() => handleNavClick(item)}
+                  className={cn(
+                    "p-2 rounded-lg transition-all relative",
+                    "focus:outline-none focus:ring-2 focus:ring-primary-500",
+                    activeNavItem === item.id &&
+                      "bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300",
+                    activeNavItem !== item.id &&
+                      "text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700",
+                  )}
+                >
+                  {item.icon}
+                  {/* AI Prediction Indicator */}
+                  {enableAI && isPredicted && !predictionsLoading && (
+                    <span
+                      data-testid="nav-prediction-indicator"
+                      className={cn(
+                        "absolute -top-0.5 -right-0.5 w-2 h-2",
+                        "bg-amber-400 dark:bg-amber-500 rounded-full",
+                        "animate-pulse",
+                      )}
+                      aria-label="AI suggested"
+                    />
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        )}
 
         {/* Spacer */}
         <div className="flex-1" aria-hidden="true" />

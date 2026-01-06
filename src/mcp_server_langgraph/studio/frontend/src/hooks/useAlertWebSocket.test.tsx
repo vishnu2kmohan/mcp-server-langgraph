@@ -139,15 +139,15 @@ const createMockAlertMessage = (
 ): AlertMessage => ({
   type: "alert",
   payload: {
-    alert_id: `alert-${Math.random().toString(36).slice(2, 9)}`,
+    alertId: `alert-${Math.random().toString(36).slice(2, 9)}`,
     name: "TestAlert",
     severity: "critical",
     state: "firing",
     message: "Test alert message",
     labels: { service: "test-service" },
     annotations: {},
-    started_at: new Date().toISOString(),
-    ended_at: null,
+    startedAt: new Date().toISOString(),
+    endedAt: null,
     fingerprint: `fp-${Math.random().toString(36).slice(2, 9)}`,
     ...overrides,
   },
@@ -213,7 +213,7 @@ describe("useAlertWebSocket", () => {
         wrapper: createWrapper(store),
       });
 
-      const alertMessage = createMockAlertMessage({ alert_id: "alert-123" });
+      const alertMessage = createMockAlertMessage({ alertId: "alert-123" });
 
       act(() => {
         mockOnMessage?.(alertMessage);
@@ -222,7 +222,7 @@ describe("useAlertWebSocket", () => {
       await waitFor(() => {
         const alerts = selectAlerts(store.getState());
         expect(alerts).toHaveLength(1);
-        expect(alerts[0].alert_id).toBe("alert-123");
+        expect(alerts[0].alertId).toBe("alert-123");
       });
     });
 
@@ -233,7 +233,7 @@ describe("useAlertWebSocket", () => {
 
       // First message - add alert
       const alertMessage = createMockAlertMessage({
-        alert_id: "alert-123",
+        alertId: "alert-123",
         state: "firing",
       });
 
@@ -243,7 +243,7 @@ describe("useAlertWebSocket", () => {
 
       // Second message - update same alert
       const updateMessage = createMockAlertMessage({
-        alert_id: "alert-123",
+        alertId: "alert-123",
         state: "resolved",
       });
 
@@ -266,9 +266,9 @@ describe("useAlertWebSocket", () => {
       const batchMessage = {
         type: "alert_batch",
         payload: [
-          createMockAlertMessage({ alert_id: "alert-1" }).payload,
-          createMockAlertMessage({ alert_id: "alert-2" }).payload,
-          createMockAlertMessage({ alert_id: "alert-3" }).payload,
+          createMockAlertMessage({ alertId: "alert-1" }).payload,
+          createMockAlertMessage({ alertId: "alert-2" }).payload,
+          createMockAlertMessage({ alertId: "alert-3" }).payload,
         ],
       };
 

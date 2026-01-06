@@ -133,19 +133,19 @@ export function DevToolsWebSocketObserver({
     if (!enabled) return;
 
     for (const alert of alerts) {
-      if (!processedAlertIds.current.has(alert.alert_id)) {
-        processedAlertIds.current.add(alert.alert_id);
+      if (!processedAlertIds.current.has(alert.alertId)) {
+        processedAlertIds.current.add(alert.alertId);
 
         handleAlert({
-          id: alert.alert_id,
+          id: alert.alertId,
           name: alert.name,
           state: alert.state,
           severity: alert.severity,
           service: (alert as { service?: string }).service || "unknown",
           message: alert.message,
-          started_at: alert.started_at,
-          resolved_at: (alert as { resolved_at?: string }).resolved_at,
-          generator_url: (alert as { generator_url?: string }).generator_url,
+          startedAt: alert.startedAt,
+          resolvedAt: (alert as { resolvedAt?: string }).resolvedAt,
+          generatorUrl: (alert as { generatorUrl?: string }).generatorUrl,
         });
       }
     }

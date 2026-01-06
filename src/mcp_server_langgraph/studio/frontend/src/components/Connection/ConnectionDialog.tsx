@@ -12,7 +12,7 @@
 
 import { useState, useEffect } from "react";
 import type {
-  MCPConnection,
+  MCPConnectionCamelCase,
   MCPConnectionCreate,
   AuthType,
 } from "../../types/connection";
@@ -26,7 +26,7 @@ interface ConnectionDialogProps {
   open: boolean;
   onClose: () => void;
   onSuccess: () => void;
-  connection?: MCPConnection;
+  connection?: MCPConnectionCamelCase;
   projectId?: string;
 }
 
@@ -70,10 +70,10 @@ export function ConnectionDialog({
         setName(connection.name);
         setUrl(connection.url);
         setDescription(connection.description || "");
-        setAuthType(connection.auth_type);
-        if (connection.oauth2_config) {
-          setClientId(connection.oauth2_config.client_id || "");
-          setScopes(connection.oauth2_config.scopes.join(" "));
+        setAuthType(connection.authType);
+        if (connection.oauth2Config) {
+          setClientId(connection.oauth2Config.clientId || "");
+          setScopes(connection.oauth2Config.scopes.join(" "));
         }
       } else {
         setName("");
@@ -132,22 +132,23 @@ export function ConnectionDialog({
           url,
         }).unwrap();
       } else {
+        // Build connection data (camelCase - transformed at API boundary per ADR-0091)
         const data: MCPConnectionCreate = {
           name,
           url,
           description: description || null,
-          auth_type: authType,
-          project_id: projectId || null,
+          authType: authType,
+          projectId: projectId || null,
         };
 
         if (authType === "api_key") {
-          data.api_key = apiKey;
+          data.apiKey = apiKey;
         }
 
         if (authType === "oauth2") {
-          data.oauth2_client_id = clientId;
-          data.oauth2_client_secret = clientSecret || null;
-          data.oauth2_scopes = scopes.split(/\s+/).filter(Boolean);
+          data.oauth2ClientId = clientId;
+          data.oauth2ClientSecret = clientSecret || null;
+          data.oauth2Scopes = scopes.split(/\s+/).filter(Boolean);
         }
 
         await createConnection(data).unwrap();

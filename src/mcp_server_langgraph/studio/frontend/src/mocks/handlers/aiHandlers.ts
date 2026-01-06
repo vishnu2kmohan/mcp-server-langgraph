@@ -103,21 +103,43 @@ interface DisclosureAnalysisResponse {
   personalized_message: string;
 }
 
-// Nudge recommendation types (Phase 6.3) - matches RTK Query API schema
-interface NudgeRecommendRequest {
-  context: string;
-  user_actions?: string[];
-  current_feature?: string;
-  persona?: string;
+// Nudge recommendation types (Phase 6.3) - matches generated OpenAPI types (ADR-0091)
+// NudgeContext from generated-api.ts
+interface NudgeContext {
+  page: string;
+  action?: string;
+  time_on_page?: number;
 }
 
-interface NudgeRecommendResponse {
-  nudge_type: string;
+// NudgeHistoryItem from generated-api.ts
+interface NudgeHistoryItem {
+  id: string;
+  action: string;
+  shown_at: string;
+}
+
+// NudgeRecommendRequest from generated-api.ts
+interface NudgeRecommendRequest {
+  user_id: string;
+  current_context: NudgeContext;
+  nudge_history?: NudgeHistoryItem[];
+}
+
+// Nudge from generated-api.ts
+interface Nudge {
+  id: string;
+  type: string;
   message: string;
+  priority: string;
+  show_after_ms: number;
+  target_element?: string | null;
+}
+
+// NudgeRecommendResponse from generated-api.ts
+interface NudgeRecommendResponse {
+  should_show: boolean;
   confidence: number;
-  action_cta?: string;
-  action_target?: string;
-  dismiss_duration_ms?: number;
+  nudge?: Nudge | null;
 }
 
 /**
@@ -568,53 +590,58 @@ const disclosureRecommendations: Record<
 };
 
 /**
- * Nudge catalog (Phase 6.3) - matches RTK Query API schema
+ * Nudge catalog (Phase 6.3) - matches generated OpenAPI types (ADR-0091)
  */
 interface NudgeCatalogEntry {
-  nudge_type: string;
+  id: string;
+  type: string;
   message: string;
+  priority: string;
+  show_after_ms: number;
+  target_element?: string | null;
   confidence: number;
-  action_cta?: string;
-  action_target?: string;
-  dismiss_duration_ms?: number;
   context_match: string[]; // contexts this nudge applies to
 }
 
 const nudgeCatalog: NudgeCatalogEntry[] = [
   {
-    nudge_type: "keyboard_shortcut",
+    id: "nudge-keyboard-shortcut",
+    type: "tooltip",
     message: "Pro tip: Press Cmd+K for quick search",
+    priority: "medium",
+    show_after_ms: 5000,
+    target_element: null,
     confidence: 0.85,
-    action_cta: "Try it",
-    action_target: "keyboard-shortcut-dialog",
-    dismiss_duration_ms: 30000,
     context_match: ["chat", "workflows", "projects"],
   },
   {
-    nudge_type: "feature_discovery",
+    id: "nudge-feature-discovery",
+    type: "tooltip",
     message: "Build your first workflow to automate tasks",
+    priority: "high",
+    show_after_ms: 10000,
+    target_element: null,
     confidence: 0.92,
-    action_cta: "Create workflow",
-    action_target: "/studio/workflows/new",
-    dismiss_duration_ms: 60000,
     context_match: ["workflows", "chat"],
   },
   {
-    nudge_type: "canvas_hint",
+    id: "nudge-canvas-hint",
+    type: "tooltip",
     message: "Toggle the canvas panel to see visual representations",
+    priority: "low",
+    show_after_ms: 3000,
+    target_element: "canvas-toggle",
     confidence: 0.78,
-    action_cta: "Show canvas",
-    action_target: "toggle-canvas",
-    dismiss_duration_ms: 15000,
     context_match: ["chat", "sessions"],
   },
   {
-    nudge_type: "observability_intro",
+    id: "nudge-observability-intro",
+    type: "tooltip",
     message: "Explore traces and logs in the Observability tab",
+    priority: "medium",
+    show_after_ms: 8000,
+    target_element: null,
     confidence: 0.82,
-    action_cta: "View traces",
-    action_target: "/studio/observability",
-    dismiss_duration_ms: 45000,
     context_match: ["workflows", "traces"],
   },
 ];
@@ -877,13 +904,14 @@ export const aiHandlers = [
 
   /**
    * POST /api/v1/ai/nudges/recommend - AI-powered nudge recommendations (Phase 6.3)
-   * Returns a nudge recommendation matching RTK Query API schema
+   * Returns response matching generated OpenAPI NudgeRecommendResponse (ADR-0091)
    */
   http.post("/api/v1/ai/nudges/recommend", async ({ request }) => {
     await delay(100);
 
     const body = (await request.json()) as NudgeRecommendRequest;
-    const context = body.context || "chat";
+    // Extract page from current_context (generated schema format)
+    const context = body.current_context?.page || "chat";
 
     // Find a nudge matching the current context
     const matchingNudge = nudgeCatalog.find((nudge) =>
@@ -893,14 +921,18 @@ export const aiHandlers = [
     // Use the matching nudge or default to first one
     const selectedNudge = matchingNudge || nudgeCatalog[0];
 
-    // Return response matching RTK Query API schema
+    // Return response matching generated NudgeRecommendResponse schema
     const response: NudgeRecommendResponse = {
-      nudge_type: selectedNudge.nudge_type,
-      message: selectedNudge.message,
+      should_show: true,
       confidence: selectedNudge.confidence,
-      action_cta: selectedNudge.action_cta,
-      action_target: selectedNudge.action_target,
-      dismiss_duration_ms: selectedNudge.dismiss_duration_ms,
+      nudge: {
+        id: selectedNudge.id,
+        type: selectedNudge.type,
+        message: selectedNudge.message,
+        priority: selectedNudge.priority,
+        show_after_ms: selectedNudge.show_after_ms,
+        target_element: selectedNudge.target_element,
+      },
     };
 
     return HttpResponse.json(response);
@@ -908,78 +940,93 @@ export const aiHandlers = [
 
   /**
    * POST /api/v1/ai/onboarding/personalize - AI-powered onboarding personalization (Phase 6.5)
-   * Returns response matching RTK Query API schema
+   * Returns response matching generated OpenAPI OnboardingPersonalizeResponse (ADR-0091)
    */
   http.post("/api/v1/ai/onboarding/personalize", async ({ request }) => {
     await delay(100);
 
+    // OnboardingPersonalizeRequest from generated-api.ts
     interface OnboardingRequest {
-      detected_persona?: string;
-      experience_level?: string;
+      user_id: string;
+      initial_actions?: string[];
+      signup_context?: {
+        referrer?: string;
+        utm_source?: string;
+      } | null;
     }
 
+    // OnboardingStep from generated-api.ts
+    interface OnboardingStep {
+      step: string;
+      guided: boolean;
+      focus?: string | null;
+      template?: string | null;
+    }
+
+    // OnboardingPersonalizeResponse from generated-api.ts
     interface OnboardingResponse {
-      recommended_steps: string[];
-      skip_steps: string[];
-      estimated_duration_minutes: number;
-      personalization_applied: boolean;
-      reasoning?: string;
+      detected_intent: string;
+      confidence: number;
+      recommended_path: OnboardingStep[];
+      skip_steps?: string[];
+      persona_prediction?: string | null;
     }
 
     const body = (await request.json()) as OnboardingRequest;
-    const detectedPersona = body.detected_persona || "general";
-    const experienceLevel = body.experience_level || "beginner";
+    const initialActions = body.initial_actions || [];
+    const hasDevActions = initialActions.some(
+      (a) => a.includes("workflow") || a.includes("api") || a.includes("debug"),
+    );
+    const hasAnalyticsActions = initialActions.some(
+      (a) => a.includes("trace") || a.includes("metric") || a.includes("log"),
+    );
 
-    // Personalize based on persona and experience level
-    if (detectedPersona === "developer" || experienceLevel === "advanced") {
+    // Personalize based on initial actions
+    if (hasDevActions) {
       const response: OnboardingResponse = {
-        recommended_steps: [
-          "api_overview",
-          "workflow_builder_intro",
-          "advanced_configuration",
-          "observability_setup",
+        detected_intent: "build_workflows",
+        confidence: 0.88,
+        recommended_path: [
+          { step: "api_overview", guided: true, focus: "api" },
+          { step: "workflow_builder_intro", guided: true, focus: "workflows" },
+          { step: "advanced_configuration", guided: false },
+          { step: "observability_setup", guided: true, focus: "traces" },
         ],
         skip_steps: ["basic_intro", "what_is_ai", "simple_examples"],
-        estimated_duration_minutes: 8,
-        personalization_applied: true,
-        reasoning: "Developer persona detected with advanced experience level",
+        persona_prediction: "alice-builder",
       };
       return HttpResponse.json(response);
     }
 
-    if (detectedPersona === "analyst" || experienceLevel === "intermediate") {
+    if (hasAnalyticsActions) {
       const response: OnboardingResponse = {
-        recommended_steps: [
-          "welcome_tour",
-          "trace_exploration",
-          "metrics_dashboard",
-          "custom_reports",
+        detected_intent: "analyze_data",
+        confidence: 0.82,
+        recommended_path: [
+          { step: "welcome_tour", guided: true },
+          { step: "trace_exploration", guided: true, focus: "traces" },
+          { step: "metrics_dashboard", guided: true, focus: "metrics" },
+          { step: "custom_reports", guided: false },
         ],
         skip_steps: ["basic_intro"],
-        estimated_duration_minutes: 12,
-        personalization_applied: true,
-        reasoning: "Analyst persona with intermediate experience",
+        persona_prediction: "alice-analyst",
       };
       return HttpResponse.json(response);
     }
 
     // Default: beginner experience
     const response: OnboardingResponse = {
-      recommended_steps: [
-        "welcome_tour",
-        "basic_intro",
-        "first_chat",
-        "explore_features",
-        "help_resources",
+      detected_intent: "explore_features",
+      confidence: 0.75,
+      recommended_path: [
+        { step: "welcome_tour", guided: true },
+        { step: "basic_intro", guided: true },
+        { step: "first_chat", guided: true, focus: "chat" },
+        { step: "explore_features", guided: false },
+        { step: "help_resources", guided: false },
       ],
       skip_steps: [],
-      estimated_duration_minutes: 15,
-      personalization_applied:
-        experienceLevel !== "beginner" || detectedPersona !== "general",
-      reasoning:
-        experienceLevel === "beginner"
-          ? "Standard onboarding for new users"
-          : "Personalized based on detected experience level",
+      persona_prediction: "bob",
     };
     return HttpResponse.json(response);
   }),

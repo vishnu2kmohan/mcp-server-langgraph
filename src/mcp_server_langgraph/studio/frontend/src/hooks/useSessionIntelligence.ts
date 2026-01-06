@@ -18,7 +18,7 @@
  */
 
 import { useState, useEffect, useCallback, useRef } from "react";
-import { useStudioAnalyzeMutation } from "../api";
+import { useStudioAnalyzeMutation, transformSnakeToCamel } from "../api";
 
 // =============================================================================
 // Types
@@ -31,7 +31,7 @@ export interface SessionGroup {
   /** Topic name for the group */
   topic: string;
   /** Session IDs in this group */
-  session_ids: string[];
+  sessionIds: string[];
   /** Confidence score (0-1) */
   confidence: number;
 }
@@ -41,11 +41,11 @@ export interface SessionGroup {
  */
 export interface SimilarSession {
   /** Session ID */
-  session_id: string;
+  sessionId: string;
   /** Similarity score (0-1) */
-  similarity_score: number;
+  similarityScore: number;
   /** Common topics between sessions */
-  common_topics: string[];
+  commonTopics: string[];
 }
 
 /**
@@ -283,12 +283,21 @@ export function useSessionGroups(
 
       const groupResult = data.analyses?.session_group as
         | {
-            groups?: SessionGroup[];
+            groups?: Array<{
+              topic: string;
+              session_ids: string[];
+              confidence: number;
+            }>;
             ungrouped?: string[];
           }
         | undefined;
       if (groupResult) {
-        setGroups(groupResult.groups || []);
+        // Transform snake_case API response to camelCase
+        setGroups(
+          (groupResult.groups || []).map((g) =>
+            transformSnakeToCamel(g),
+          ) as unknown as SessionGroup[],
+        );
         setUngrouped(groupResult.ungrouped || []);
       }
     } catch (err) {
@@ -381,11 +390,20 @@ export function useSessionSimilarity(
 
       const similarResult = data.analyses?.session_similarity as
         | {
-            similar_sessions?: SimilarSession[];
+            similar_sessions?: Array<{
+              session_id: string;
+              similarity_score: number;
+              common_topics: string[];
+            }>;
           }
         | undefined;
-      if (similarResult) {
-        setSimilarSessions(similarResult.similar_sessions || []);
+      if (similarResult?.similar_sessions) {
+        // Transform snake_case API response to camelCase
+        setSimilarSessions(
+          similarResult.similar_sessions.map((s) =>
+            transformSnakeToCamel(s),
+          ) as unknown as SimilarSession[],
+        );
       }
     } catch (err) {
       setError(

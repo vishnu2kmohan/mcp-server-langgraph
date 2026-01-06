@@ -27,6 +27,11 @@ import {
   Loader2,
   Sparkles,
 } from "lucide-react";
+import { useAppDispatch, useAppSelector } from "../../store/hooks";
+import {
+  selectSubmitOnEnter,
+  setSubmitOnEnter,
+} from "../../store/slices/uiSlice";
 import { usePreferences } from "../../contexts/PreferencesContext";
 import {
   DEFAULT_KEYBOARD_SHORTCUTS,
@@ -118,6 +123,10 @@ export function SettingsPanel({ className = "", onClose }: SettingsPanelProps) {
 
   // State for auto-adjust toggle (local, will be synced to backend)
   const [autoAdjustEnabled, setAutoAdjustEnabled] = useState(false);
+
+  // Redux state for keyboard preference (Sprint 5.3)
+  const dispatch = useAppDispatch();
+  const submitOnEnter = useAppSelector(selectSubmitOnEnter);
 
   // ---------------------------------------------------------------------------
   // Keyboard navigation for tabs
@@ -260,6 +269,38 @@ export function SettingsPanel({ className = "", onClose }: SettingsPanelProps) {
           <span
             className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
               preferences.general.autoScroll ? "translate-x-6" : "translate-x-1"
+            }`}
+          />
+        </button>
+      </div>
+
+      {/* Keyboard shortcut: Enter to send (Sprint 5.3) */}
+      <div className="flex items-center justify-between">
+        <div className="flex flex-col">
+          <label
+            htmlFor="submit-on-enter-toggle"
+            className="text-sm font-medium text-gray-700 dark:text-gray-300"
+          >
+            Press Enter to send messages
+          </label>
+          <span className="text-xs text-gray-500 dark:text-gray-400">
+            {submitOnEnter
+              ? "Shift+Enter for new line"
+              : "Use Ctrl+Enter to send"}
+          </span>
+        </div>
+        <button
+          id="submit-on-enter-toggle"
+          role="switch"
+          aria-checked={submitOnEnter}
+          onClick={() => dispatch(setSubmitOnEnter(!submitOnEnter))}
+          className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+            submitOnEnter ? "bg-blue-600" : "bg-gray-300"
+          }`}
+        >
+          <span
+            className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+              submitOnEnter ? "translate-x-6" : "translate-x-1"
             }`}
           />
         </button>
@@ -895,7 +936,7 @@ export function SettingsPanel({ className = "", onClose }: SettingsPanelProps) {
             onClick={() => {
               const newValue = !autoAdjustEnabled;
               setAutoAdjustEnabled(newValue);
-              updateThresholdSettings({ auto_adjust_enabled: newValue });
+              updateThresholdSettings({ autoAdjustEnabled: newValue });
             }}
             disabled={!preferences.hitl.enabled}
             className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 ${
@@ -918,15 +959,15 @@ export function SettingsPanel({ className = "", onClose }: SettingsPanelProps) {
                 <Sparkles size={16} className="text-blue-500" />
                 <span className="text-sm font-medium text-blue-800 dark:text-blue-200">
                   Recommended:{" "}
-                  {Math.round(recommendation.recommended_threshold * 100)}%
+                  {Math.round(recommendation.recommendedThreshold * 100)}%
                 </span>
               </div>
               <p className="text-xs text-blue-700 dark:text-blue-300 mb-2">
                 {recommendation.reason}
               </p>
               <p className="text-xs text-gray-500">
-                Based on {recommendation.sample_size} approval decisions
-                (confidence: {Math.round(recommendation.confidence_level * 100)}
+                Based on {recommendation.sampleSize} approval decisions
+                (confidence: {Math.round(recommendation.confidenceLevel * 100)}
                 %)
               </p>
             </div>
@@ -959,7 +1000,7 @@ export function SettingsPanel({ className = "", onClose }: SettingsPanelProps) {
                 const result = await applyRecommendation();
                 if (result) {
                   updateHITLPreferences({
-                    confidenceThreshold: result.adjusted_threshold,
+                    confidenceThreshold: result.adjustedThreshold,
                   });
                 }
               }}

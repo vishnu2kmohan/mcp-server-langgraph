@@ -31,7 +31,7 @@ import type { AIRecommendation, RemediationRequest } from "../../types/api";
 // =============================================================================
 
 const mockAlert: Alert = {
-  alert_id: "alert-001",
+  alertId: "alert-001",
   name: "HighCPU",
   severity: "critical",
   state: "firing",
@@ -41,61 +41,61 @@ const mockAlert: Alert = {
     summary: "High CPU usage detected",
     runbook_url: "https://runbooks.example.com/high-cpu",
   },
-  started_at: "2024-01-15T10:30:00Z",
-  ended_at: null,
+  startedAt: "2024-01-15T10:30:00Z",
+  endedAt: null,
   fingerprint: "fp-001",
 };
 
 const mockRecommendation: AIRecommendation = {
-  recommendation_id: "rec-001",
-  alert_id: "alert-001",
-  root_cause_analysis:
+  recommendationId: "rec-001",
+  alertId: "alert-001",
+  rootCauseAnalysis:
     "The API server is experiencing memory leak in the request handler, causing increased CPU usage due to garbage collection pressure.",
-  remediation_steps: [
+  remediationSteps: [
     {
-      step_number: 1,
+      stepNumber: 1,
       action: "scale",
       description: "Scale up replicas to handle current load",
       command: "kubectl scale deployment api-server --replicas=5",
-      requires_approval: true,
-      risk_level: "low",
+      requiresApproval: true,
+      riskLevel: "low",
     },
     {
-      step_number: 2,
+      stepNumber: 2,
       action: "restart",
       description: "Rolling restart to clear memory",
       command: "kubectl rollout restart deployment api-server",
-      requires_approval: true,
-      risk_level: "medium",
+      requiresApproval: true,
+      riskLevel: "medium",
     },
   ],
-  risk_assessment: {
-    overall_risk: "medium",
-    impact_analysis:
+  riskAssessment: {
+    overallRisk: "medium",
+    impactAnalysis:
       "Brief service interruption during restart, mitigated by scaling first",
-    rollback_plan: "kubectl rollout undo deployment api-server",
+    rollbackPlan: "kubectl rollout undo deployment api-server",
   },
-  runbook_reference: "https://runbooks.example.com/high-cpu",
-  generated_at: "2024-01-15T10:35:00Z",
-  model_used: "claude-3-5-sonnet",
+  runbookReference: "https://runbooks.example.com/high-cpu",
+  generatedAt: "2024-01-15T10:35:00Z",
+  modelUsed: "claude-3-5-sonnet",
 };
 
 const mockPendingRemediation: RemediationRequest = {
-  remediation_id: "rem-001",
-  alert_id: "alert-001",
-  alert_name: "HighCPU",
+  remediationId: "rem-001",
+  alertId: "alert-001",
+  alertName: "HighCPU",
   severity: "critical",
-  step_number: 1,
+  stepNumber: 1,
   action: "scale",
   description: "Scale up replicas to handle current load",
   command: "kubectl scale deployment api-server --replicas=5",
-  risk_level: "low",
+  riskLevel: "low",
   status: "pending",
-  requested_at: "2024-01-15T10:36:00Z",
-  approved_by: null,
-  approved_at: null,
+  requestedAt: "2024-01-15T10:36:00Z",
+  approvedBy: null,
+  approvedAt: null,
   reason: null,
-  recommendation_id: "rec-001",
+  recommendationId: "rec-001",
 };
 
 // =============================================================================
@@ -414,7 +414,7 @@ describe("AlertDetailPanel", () => {
     it("should not render runbook link when not available", () => {
       const noRunbookRecommendation = {
         ...mockRecommendation,
-        runbook_reference: null,
+        runbookReference: null,
       };
       renderWithStore(
         <AlertDetailPanel

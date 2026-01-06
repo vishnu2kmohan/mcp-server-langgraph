@@ -69,9 +69,9 @@ describe("SaveAsWorkflowButton", () => {
     vi.clearAllMocks();
     vi.useRealTimers();
 
-    // Reset to default successful mock
+    // Reset to default successful mock (camelCase - matches transformed response)
     mockUnwrap.mockResolvedValue({
-      workflow_id: "workflow-123",
+      workflowId: "workflow-123",
       name: "My Workflow",
     });
     mockedUseBootstrapWorkflowMutation.mockReturnValue([
@@ -291,9 +291,9 @@ describe("SaveAsWorkflowButton", () => {
       mockUnwrap.mockRejectedValueOnce({
         data: { detail: "Error" },
       });
-      // Second call succeeds
+      // Second call succeeds (camelCase - matches transformed response)
       mockUnwrap.mockResolvedValueOnce({
-        workflow_id: "workflow-123",
+        workflowId: "workflow-123",
         name: "My Workflow",
       });
 

@@ -49,8 +49,8 @@ export function TraceViewer({
 
   // Calculate timeline scale
   const timelineScale = useMemo(() => {
-    if (!trace || trace.duration_ms === 0) return 1;
-    return 100 / trace.duration_ms; // percentage per millisecond
+    if (!trace || trace.durationMs === 0) return 1;
+    return 100 / trace.durationMs; // percentage per millisecond
   }, [trace]);
 
   if (isLoading) {
@@ -78,10 +78,10 @@ export function TraceViewer({
       <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
         <div>
           <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-            Trace: {trace.trace_id}
+            Trace: {trace.traceId}
           </h2>
           <p className="text-sm text-gray-500 dark:text-gray-400">
-            Total Duration: {trace.duration_ms}ms | {trace.spans.length} spans
+            Total Duration: {trace.durationMs}ms | {trace.spans.length} spans
           </p>
         </div>
 
@@ -127,11 +127,11 @@ export function TraceViewer({
             <ul role="list" className="space-y-1">
               {filteredSpans.map((span) => (
                 <SpanRow
-                  key={span.span_id}
+                  key={span.spanId}
                   span={span}
                   trace={trace}
                   timelineScale={timelineScale}
-                  isSelected={selectedSpan?.span_id === span.span_id}
+                  isSelected={selectedSpan?.spanId === span.spanId}
                   onClick={() => setSelectedSpan(span)}
                 />
               ))}
@@ -166,14 +166,14 @@ function SpanRow({
   isSelected,
   onClick,
 }: SpanRowProps) {
-  const barOffset = (span.start_time - trace.start_time) * timelineScale;
-  const barWidth = Math.max(span.duration_ms * timelineScale, 2);
+  const barOffset = (span.startTime - trace.startTime) * timelineScale;
+  const barWidth = Math.max(span.durationMs * timelineScale, 2);
   const isError = span.status === "error";
 
   return (
     <li
       role="listitem"
-      data-testid={`span-row-${span.span_id}`}
+      data-testid={`span-row-${span.spanId}`}
       onClick={onClick}
       className={`flex items-center gap-4 p-2 rounded cursor-pointer transition-colors ${
         isSelected
@@ -183,7 +183,7 @@ function SpanRow({
     >
       {/* Status indicator */}
       <div
-        data-testid={`span-status-${span.span_id}`}
+        data-testid={`span-status-${span.spanId}`}
         className={`w-2 h-2 rounded-full flex-shrink-0 ${
           isError ? "bg-red-500" : "bg-green-500"
         }`}
@@ -197,7 +197,7 @@ function SpanRow({
       {/* Timeline bar */}
       <div className="flex-1 h-6 bg-gray-100 dark:bg-gray-700 rounded relative">
         <div
-          data-testid={`span-bar-${span.span_id}`}
+          data-testid={`span-bar-${span.spanId}`}
           className={`absolute h-full rounded ${
             isError ? "bg-red-400" : "bg-blue-400"
           }`}
@@ -210,7 +210,7 @@ function SpanRow({
 
       {/* Duration */}
       <div className="flex-shrink-0 w-20 text-right text-sm text-gray-500 dark:text-gray-400">
-        {span.duration_ms}ms
+        {span.durationMs}ms
       </div>
     </li>
   );
@@ -244,18 +244,18 @@ function SpanDetails({ span, onClose }: SpanDetailsProps) {
           </button>
         </div>
         <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-          Duration: {span.duration_ms}ms
+          Duration: {span.durationMs}ms
         </p>
       </div>
 
       {/* Error Message */}
-      {isError && span.error_message && (
+      {isError && span.errorMessage && (
         <div className="p-4 bg-red-50 dark:bg-red-900/20 border-b border-red-100 dark:border-red-800">
           <p className="text-sm font-medium text-red-800 dark:text-red-200">
             Error
           </p>
           <p className="text-sm text-red-600 dark:text-red-300 mt-1">
-            {span.error_message}
+            {span.errorMessage}
           </p>
         </div>
       )}

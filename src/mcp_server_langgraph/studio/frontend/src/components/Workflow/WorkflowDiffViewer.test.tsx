@@ -19,31 +19,31 @@ import workflowReducer from "../../store/slices/workflowSlice";
 // Mock data
 const mockVersionA = {
   id: "v1",
-  workflow_id: "wf-123",
-  version_number: 1,
-  graph_json: {
+  workflowId: "wf-123",
+  versionNumber: 1,
+  graphJson: {
     nodes: [{ id: "start", type: "start", data: { label: "Start" } }],
     edges: [],
   },
-  commit_message: "Initial version",
-  created_by: "alice",
-  created_at: "2024-01-01T12:00:00Z",
+  commitMessage: "Initial version",
+  createdBy: "alice",
+  createdAt: "2024-01-01T12:00:00Z",
 };
 
 const mockVersionB = {
   id: "v2",
-  workflow_id: "wf-123",
-  version_number: 2,
-  graph_json: {
+  workflowId: "wf-123",
+  versionNumber: 2,
+  graphJson: {
     nodes: [
       { id: "start", type: "start", data: { label: "Start" } },
       { id: "end", type: "end", data: { label: "End" } },
     ],
     edges: [{ id: "e1", source: "start", target: "end" }],
   },
-  commit_message: "Added end node",
-  created_by: "alice",
-  created_at: "2024-01-02T12:00:00Z",
+  commitMessage: "Added end node",
+  createdBy: "alice",
+  createdAt: "2024-01-02T12:00:00Z",
 };
 
 // Create a mock store

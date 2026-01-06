@@ -86,6 +86,12 @@ export const STORAGE_KEYS = {
   // DevTools Panel
   DEVTOOLS_COLLAPSED: "studio-devtools-collapsed",
   DEVTOOLS_HEIGHT: "studio-devtools-height",
+
+  // Chat Input Preferences (Sprint 5.1)
+  SUBMIT_ON_ENTER: "studio-submit-on-enter",
+
+  // ActivityBar State (Sprint 4.2)
+  ACTIVITY_BAR_COLLAPSED_GROUPS: "activity-bar-collapsed-groups",
 } as const;
 
 // Type for storage keys

@@ -4,12 +4,50 @@
  * Tests for the virtualized message list component.
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { render, screen, fireEvent, cleanup } from "@testing-library/react";
+import {
+  render,
+  screen,
+  fireEvent,
+  cleanup,
+  act,
+} from "@testing-library/react";
 import { axe, toHaveNoViolations } from "jest-axe";
 import { MessageList } from "./MessageList";
 import type { ChatMessage } from "./MessageBubble";
 
 expect.extend(toHaveNoViolations);
+
+// =============================================================================
+// Mocks
+// =============================================================================
+
+/**
+ * Mock InteractiveChart to avoid Recharts rendering issues in jsdom.
+ * Recharts requires valid container dimensions which jsdom doesn't provide,
+ * causing "width(-1) and height(-1)" warnings.
+ */
+vi.mock("../components/Chat/InteractiveChart", () => ({
+  InteractiveChart: ({ chartData }: { chartData: { type: string } }) => (
+    <div data-testid="mock-interactive-chart" data-chart-type={chartData?.type}>
+      Mock Chart
+    </div>
+  ),
+}));
+
+// =============================================================================
+// Helpers
+// =============================================================================
+
+/**
+ * Helper to wait for lazy-loaded Suspense components to settle.
+ * Uses act() to properly wrap async state updates and prevent React warnings.
+ */
+const waitForSuspense = async () => {
+  // Allow multiple event loop cycles for Suspense to resolve
+  await act(async () => {
+    await new Promise((resolve) => setTimeout(resolve, 50));
+  });
+};
 
 // =============================================================================
 // Test Data
@@ -340,12 +378,16 @@ describe("MessageList", () => {
   describe("Accessibility", () => {
     it("should have no accessibility violations", async () => {
       const { container } = render(<MessageList messages={mockMessages} />);
+      // Wait for any lazy-loaded Suspense components to settle
+      await waitForSuspense();
       const results = await axe(container);
       expect(results).toHaveNoViolations();
     });
 
     it("should have no accessibility violations when empty", async () => {
       const { container } = render(<MessageList messages={[]} />);
+      // Wait for any lazy-loaded Suspense components to settle
+      await waitForSuspense();
       const results = await axe(container);
       expect(results).toHaveNoViolations();
     });
@@ -354,6 +396,8 @@ describe("MessageList", () => {
       const { container } = render(
         <MessageList messages={mockMessages} isLoading />,
       );
+      // Wait for any lazy-loaded Suspense components to settle
+      await waitForSuspense();
       const results = await axe(container);
       expect(results).toHaveNoViolations();
     });
@@ -362,6 +406,8 @@ describe("MessageList", () => {
       const { container } = render(
         <MessageList messages={mockMessages} isStreaming />,
       );
+      // Wait for any lazy-loaded Suspense components to settle
+      await waitForSuspense();
       const results = await axe(container);
       expect(results).toHaveNoViolations();
     });

@@ -14,6 +14,7 @@ import { Provider } from "react-redux";
 import { configureStore } from "@reduxjs/toolkit";
 import { MemoryRouter } from "react-router";
 import { ActivityBar, NAV_ITEMS, BOTTOM_ITEMS } from "./ActivityBar";
+import { storage, STORAGE_KEYS } from "../utils/storage";
 import canvasReducer from "../store/slices/canvasSlice";
 import personaReducer from "../store/slices/personaSlice";
 import sessionReducer, {
@@ -410,6 +411,249 @@ describe("ActivityBar", () => {
       // Even though URL is /studio/admin, it shouldn't crash
       // and chat should remain as default since admin is not allowed
       expect(screen.getByTestId("nav-chat")).toBeInTheDocument();
+    });
+  });
+
+  describe("Collapsible Groups (Sprint 4.2)", () => {
+    it("should render group headers when enableCollapsibleGroups is true", () => {
+      const store = createTestStore();
+      render(<ActivityBar enableCollapsibleGroups={true} />, {
+        wrapper: createWrapper(store),
+      });
+
+      // Should render group headers
+      expect(screen.getByTestId("nav-group-core")).toBeInTheDocument();
+      expect(screen.getByTestId("nav-group-ai-data")).toBeInTheDocument();
+      expect(screen.getByTestId("nav-group-observability")).toBeInTheDocument();
+    });
+
+    it("should NOT render group headers when enableCollapsibleGroups is false", () => {
+      const store = createTestStore();
+      render(<ActivityBar enableCollapsibleGroups={false} />, {
+        wrapper: createWrapper(store),
+      });
+
+      // Should not render group headers
+      expect(screen.queryByTestId("nav-group-core")).not.toBeInTheDocument();
+      expect(screen.queryByTestId("nav-group-ai-data")).not.toBeInTheDocument();
+    });
+
+    it("should collapse group when group header is clicked", async () => {
+      const user = userEvent.setup();
+      const store = createTestStore();
+      render(<ActivityBar enableCollapsibleGroups={true} />, {
+        wrapper: createWrapper(store),
+      });
+
+      // AI & Data group should initially show its items
+      expect(screen.getByTestId("nav-agents")).toBeInTheDocument();
+      expect(screen.getByTestId("nav-mcp")).toBeInTheDocument();
+
+      // Click the AI & Data group header to collapse it
+      const aiDataHeader = screen.getByTestId("nav-group-ai-data");
+      await user.click(aiDataHeader);
+
+      // Items should be hidden after collapse
+      expect(screen.queryByTestId("nav-agents")).not.toBeInTheDocument();
+      expect(screen.queryByTestId("nav-mcp")).not.toBeInTheDocument();
+    });
+
+    it("should expand collapsed group when group header is clicked again", async () => {
+      const user = userEvent.setup();
+      const store = createTestStore();
+      render(<ActivityBar enableCollapsibleGroups={true} />, {
+        wrapper: createWrapper(store),
+      });
+
+      const aiDataHeader = screen.getByTestId("nav-group-ai-data");
+
+      // Collapse the group
+      await user.click(aiDataHeader);
+      expect(screen.queryByTestId("nav-agents")).not.toBeInTheDocument();
+
+      // Expand the group
+      await user.click(aiDataHeader);
+      expect(screen.getByTestId("nav-agents")).toBeInTheDocument();
+    });
+
+    it("should persist collapsed state in localStorage", async () => {
+      const user = userEvent.setup();
+      const store = createTestStore();
+
+      // Clear any existing state first
+      storage.remove(STORAGE_KEYS.ACTIVITY_BAR_COLLAPSED_GROUPS);
+
+      render(<ActivityBar enableCollapsibleGroups={true} />, {
+        wrapper: createWrapper(store),
+      });
+
+      // Collapse a group
+      const aiDataHeader = screen.getByTestId("nav-group-ai-data");
+      await user.click(aiDataHeader);
+
+      // Verify storage was updated with the collapsed state
+      const storedState = storage.get<Record<string, boolean>>(
+        STORAGE_KEYS.ACTIVITY_BAR_COLLAPSED_GROUPS,
+      );
+      expect(storedState).not.toBeNull();
+      expect(storedState?.["ai-data"]).toBe(true);
+
+      // Cleanup
+      storage.remove(STORAGE_KEYS.ACTIVITY_BAR_COLLAPSED_GROUPS);
+    });
+
+    it("should restore collapsed state from localStorage on mount", () => {
+      // Pre-set storage with collapsed state
+      storage.set(STORAGE_KEYS.ACTIVITY_BAR_COLLAPSED_GROUPS, {
+        "ai-data": true,
+      });
+
+      const store = createTestStore();
+      render(<ActivityBar enableCollapsibleGroups={true} />, {
+        wrapper: createWrapper(store),
+      });
+
+      // AI & Data items should be hidden (group is collapsed from storage)
+      expect(screen.queryByTestId("nav-agents")).not.toBeInTheDocument();
+      expect(screen.queryByTestId("nav-mcp")).not.toBeInTheDocument();
+
+      // Core items should still be visible (not collapsed)
+      expect(screen.getByTestId("nav-chat")).toBeInTheDocument();
+
+      storage.remove(STORAGE_KEYS.ACTIVITY_BAR_COLLAPSED_GROUPS);
+    });
+
+    it("should still apply RBAC filtering within collapsed groups", () => {
+      // User persona has limited access
+      const store = configureStore({
+        reducer: {
+          canvas: canvasReducer,
+          persona: personaReducer,
+          session: sessionReducer,
+        },
+        preloadedState: {
+          persona: {
+            persona: "user",
+            subPersona: "bob",
+            username: "bob",
+            email: "bob@example.com",
+            permissions: [],
+            isPersonaLoading: false,
+            visibleModules: [],
+            featureFlags: {},
+            apiVersion: null,
+          },
+          session: { ...initialSessionState },
+        },
+      });
+
+      render(<ActivityBar enableCollapsibleGroups={true} />, {
+        wrapper: createWrapper(store),
+      });
+
+      // Admin group should not be shown (no items for user persona)
+      expect(screen.queryByTestId("nav-group-admin")).not.toBeInTheDocument();
+      expect(screen.queryByTestId("nav-admin")).not.toBeInTheDocument();
+    });
+
+    it("should not render empty groups after RBAC filtering", () => {
+      // Create a store where only certain items are visible
+      const store = configureStore({
+        reducer: {
+          canvas: canvasReducer,
+          persona: personaReducer,
+          session: sessionReducer,
+        },
+        preloadedState: {
+          persona: {
+            persona: "developer",
+            subPersona: null,
+            username: "dev",
+            email: "dev@example.com",
+            permissions: [],
+            isPersonaLoading: false,
+            visibleModules: [],
+            featureFlags: {},
+            apiVersion: null,
+          },
+          session: { ...initialSessionState },
+        },
+      });
+
+      render(<ActivityBar enableCollapsibleGroups={true} />, {
+        wrapper: createWrapper(store),
+      });
+
+      // Developer persona shouldn't see admin group
+      expect(screen.queryByTestId("nav-group-admin")).not.toBeInTheDocument();
+    });
+
+    it("should display AI prediction hints within collapsed groups", async () => {
+      const useNavPrediction = await import("../hooks/useUXIntelligence").then(
+        (m) => m.useNavPrediction,
+      );
+
+      // Mock predictions for an item in AI & Data group
+      vi.mocked(useNavPrediction).mockReturnValue({
+        predictedItems: [{ id: "agents", score: 0.9 }],
+        isLoading: false,
+        error: null,
+        lastUpdated: null,
+        refetch: vi.fn(),
+      });
+
+      const store = createTestStore();
+      render(<ActivityBar enableCollapsibleGroups={true} enableAI={true} />, {
+        wrapper: createWrapper(store),
+      });
+
+      // AI & Data group should show prediction indicator on the group header
+      // when a child item is predicted
+      const aiDataHeader = screen.getByTestId("nav-group-ai-data");
+      expect(aiDataHeader).toBeInTheDocument();
+
+      // The agents item should have prediction indicator
+      expect(screen.getByTestId("nav-agents")).toBeInTheDocument();
+      expect(
+        screen.getByTestId("nav-prediction-indicator"),
+      ).toBeInTheDocument();
+    });
+
+    it("should have accessible group headers with aria-expanded", async () => {
+      const user = userEvent.setup();
+      const store = createTestStore();
+      render(<ActivityBar enableCollapsibleGroups={true} />, {
+        wrapper: createWrapper(store),
+      });
+
+      const coreHeader = screen.getByTestId("nav-group-core");
+
+      // Initially expanded
+      expect(coreHeader).toHaveAttribute("aria-expanded", "true");
+
+      // After click, collapsed
+      await user.click(coreHeader);
+      expect(coreHeader).toHaveAttribute("aria-expanded", "false");
+    });
+
+    it("should be keyboard navigable with Enter key to toggle groups", async () => {
+      const user = userEvent.setup();
+      const store = createTestStore();
+      render(<ActivityBar enableCollapsibleGroups={true} />, {
+        wrapper: createWrapper(store),
+      });
+
+      // Tab to first group header
+      await user.tab();
+      const coreHeader = screen.getByTestId("nav-group-core");
+      expect(coreHeader).toHaveFocus();
+
+      // Press Enter to toggle
+      await user.keyboard("{Enter}");
+      expect(coreHeader).toHaveAttribute("aria-expanded", "false");
+
+      // Chat should be hidden
+      expect(screen.queryByTestId("nav-chat")).not.toBeInTheDocument();
     });
   });
 });

@@ -65,6 +65,7 @@ import {
   type StoredNudge,
   type NudgeStats,
 } from "../store/slices/nudgeSlice";
+import { selectUser } from "../store/slices/authSlice";
 import type { Nudge, NudgeType, NudgePriority } from "./useNudges";
 import { useGetNudgeRecommendationMutation } from "../api";
 
@@ -124,64 +125,10 @@ export interface UseAINudgesResult {
 }
 
 // =============================================================================
-// API Response Types (snake_case from backend)
-// =============================================================================
-
-interface NudgeRecommendationResponse {
-  nudge: {
-    id: string;
-    type: NudgeType;
-    target_element?: string;
-    message: string;
-    priority: NudgePriority;
-    show_after_ms?: number;
-    category: string;
-  } | null;
-  should_show: boolean;
-  confidence: number;
-  reasoning?: string;
-  timing?: {
-    optimal_delay_ms: number;
-    urgency: "low" | "medium" | "high";
-  };
-}
-
-// =============================================================================
 // Constants
 // =============================================================================
 
 const DEFAULT_DEBOUNCE_MS = 500;
-
-// =============================================================================
-// Helper Functions
-// =============================================================================
-
-function _transformResponse(
-  response: NudgeRecommendationResponse,
-): NudgeRecommendation {
-  return {
-    nudge: response.nudge
-      ? {
-          id: response.nudge.id,
-          type: response.nudge.type,
-          targetElement: response.nudge.target_element,
-          message: response.nudge.message,
-          priority: response.nudge.priority,
-          showAfterMs: response.nudge.show_after_ms,
-          category: response.nudge.category,
-        }
-      : null,
-    shouldShow: response.should_show,
-    confidence: response.confidence,
-    reasoning: response.reasoning,
-    timing: response.timing
-      ? {
-          optimalDelayMs: response.timing.optimal_delay_ms,
-          urgency: response.timing.urgency,
-        }
-      : undefined,
-  };
-}
 
 function toStoredNudge(nudge: Nudge): StoredNudge {
   return {
@@ -207,7 +154,7 @@ export function useAINudges(
     pageContext,
     maxPerSession = 5,
     userMotivation: _userMotivation,
-    userAbility,
+    userAbility: _userAbility,
     debounceMs = DEFAULT_DEBOUNCE_MS,
   } = options;
 
@@ -216,6 +163,7 @@ export function useAINudges(
     useGetNudgeRecommendationMutation();
 
   const dispatch = useAppDispatch();
+  const currentUser = useAppSelector(selectUser);
   const activeNudge = useAppSelector(selectActiveNudge);
   const history = useAppSelector(selectNudgeHistory);
   const canShowMore = useAppSelector(selectCanShowMoreNudges);
@@ -246,44 +194,49 @@ export function useAINudges(
     setError(null);
 
     try {
-      const data = (await fetchNudgeRecommendation({
-        context: pageContext || "default",
-        current_feature: pageContext,
-        persona: userAbility,
-      }).unwrap()) as {
-        nudge_type: string;
-        message: string;
-        confidence: number;
-        action_cta?: string;
-        action_target?: string;
-        dismiss_duration_ms?: number;
-        trigger_delay_ms?: number;
-      };
+      // Build nudge history for fatigue prevention
+      // NudgeHistoryEntry has: id, action ("shown"|"dismissed"|"accepted"), timestamp
+      const nudgeHistoryItems = history.slice(0, 10).map((h) => ({
+        id: h.id,
+        shown_at: new Date(h.timestamp).toISOString(),
+        action: h.action === "shown" ? "dismissed" : h.action,
+      }));
+
+      // Request matches NudgeRecommendRequest from generated-api.ts (ADR-0091)
+      const data = await fetchNudgeRecommendation({
+        user_id: currentUser?.id || "anonymous",
+        current_context: {
+          page: pageContext || "default",
+          action: "viewing",
+          time_on_page: 0,
+        },
+        nudge_history: nudgeHistoryItems,
+      }).unwrap();
 
       if (!mountedRef.current) return;
 
-      // Transform RTK Query response to hook's expected format
-      // RTK Query returns: { nudge_type, message, confidence, action_cta, trigger_delay_ms }
-      // Hook expects: NudgeRecommendation with nudge, shouldShow, confidence, etc.
-      const nudge: Nudge | null = data.nudge_type
+      // Transform generated NudgeRecommendResponse to hook's expected format
+      // Response structure: { should_show, confidence, nudge?: { id, type, message, priority, show_after_ms } }
+      const nudge: Nudge | null = data.nudge
         ? {
-            id: `nudge-${Date.now()}`,
-            type: data.nudge_type as NudgeType,
-            message: data.message,
-            priority: "medium" as NudgePriority,
-            category: data.nudge_type,
-            showAfterMs: data.trigger_delay_ms,
+            id: data.nudge.id,
+            type: data.nudge.type as NudgeType,
+            message: data.nudge.message,
+            priority: data.nudge.priority as NudgePriority,
+            category: data.nudge.type,
+            showAfterMs: data.nudge.show_after_ms,
+            targetElement: data.nudge.target_element ?? undefined,
           }
         : null;
 
       const transformed: NudgeRecommendation = {
         nudge,
-        shouldShow: data.confidence >= 0.5 && !!nudge,
+        shouldShow: data.should_show,
         confidence: data.confidence,
         reasoning: undefined,
-        timing: data.trigger_delay_ms
+        timing: nudge?.showAfterMs
           ? {
-              optimalDelayMs: data.trigger_delay_ms,
+              optimalDelayMs: nudge.showAfterMs,
               urgency:
                 data.confidence >= 0.8
                   ? "high"
@@ -325,10 +278,11 @@ export function useAINudges(
     }
   }, [
     pageContext,
-    userAbility,
     canShowMore,
     dispatch,
     fetchNudgeRecommendation,
+    currentUser?.id,
+    history,
   ]);
 
   /**

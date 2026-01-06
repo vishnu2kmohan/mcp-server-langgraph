@@ -4,17 +4,110 @@
  * TDD tests for the conversation panel orchestrator component.
  * ConversationPanel combines MessageList, ChatInput, FollowUpSuggestions,
  * and SlashCommandMenu into a cohesive chat experience.
+ *
+ * Note: ConnectedChatInputForm is mocked to isolate ConversationPanel testing
+ * from Redux dependencies (ADR-0093 Phase 6 consolidation).
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render, screen, waitFor, cleanup } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { axe, toHaveNoViolations } from "jest-axe";
-import { ConversationPanel } from "./ConversationPanel";
 import type { ChatMessage } from "./MessageBubble";
 import type { Suggestion } from "./FollowUpSuggestions";
 import type { SlashCommand } from "../components/Chat/ChatInputForm";
 
 expect.extend(toHaveNoViolations);
+
+// =============================================================================
+// Mock ConnectedChatInputForm
+// =============================================================================
+// ConnectedChatInputForm uses Redux hooks (selectSubmitOnEnter from uiSlice)
+// and useFeatureFlag. We mock it to isolate ConversationPanel testing.
+
+const mockConnectedChatInputForm = vi.fn();
+
+vi.mock("./ConnectedChatInputForm", () => ({
+  ConnectedChatInputForm: (props: Record<string, unknown>) => {
+    mockConnectedChatInputForm(props);
+    const {
+      value,
+      onChange,
+      onSubmit,
+      isProcessing,
+      autoFocus,
+      slashCommands,
+      onSlashCommand,
+    } = props as {
+      value?: string;
+      onChange?: (v: string) => void;
+      onSubmit?: (v: string) => void;
+      isProcessing?: boolean;
+      autoFocus?: boolean;
+      slashCommands?: SlashCommand[];
+      onSlashCommand?: (cmd: SlashCommand) => void;
+    };
+
+    return (
+      <div data-testid="chat-input-container">
+        <textarea
+          data-testid="chat-input"
+          value={value || ""}
+          onChange={(e) => onChange?.(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" && !e.shiftKey) {
+              e.preventDefault();
+              if (value) {
+                onSubmit?.(value);
+              }
+            }
+          }}
+          disabled={isProcessing}
+          autoFocus={autoFocus}
+          aria-label="Chat input"
+        />
+        {/* Slash command menu when input starts with / */}
+        {value?.startsWith("/") &&
+          slashCommands &&
+          slashCommands.length > 0 && (
+            <div data-testid="slash-command-menu">
+              {slashCommands
+                .filter(
+                  (cmd: SlashCommand) =>
+                    !value ||
+                    value === "/" ||
+                    cmd.name
+                      .toLowerCase()
+                      .includes(value.slice(1).toLowerCase()),
+                )
+                .map((cmd: SlashCommand) => (
+                  <button
+                    key={cmd.name}
+                    type="button"
+                    onClick={() => {
+                      onSlashCommand?.(cmd);
+                      onChange?.("");
+                    }}
+                  >
+                    /{cmd.name}
+                  </button>
+                ))}
+            </div>
+          )}
+        <button
+          data-testid="send-button"
+          type="button"
+          onClick={() => value && onSubmit?.(value)}
+          disabled={isProcessing}
+        >
+          Send
+        </button>
+      </div>
+    );
+  },
+}));
+
+// Import after mock
+import { ConversationPanel } from "./ConversationPanel";
 
 // =============================================================================
 // Mock Data
@@ -57,6 +150,7 @@ describe("ConversationPanel", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    mockConnectedChatInputForm.mockClear();
   });
 
   afterEach(() => {
@@ -400,11 +494,15 @@ describe("ConversationPanel", () => {
         />,
       );
 
-      // Tab through suggestions
+      // When autoFocus is true, input starts with focus
+      const input = screen.getByRole("textbox");
+      expect(document.activeElement).toBe(input);
+
+      // Tab moves forward to next element in DOM order (Send button after input)
       await userEvent.tab();
 
-      // Should be on first suggestion chip
-      expect(document.activeElement).toHaveTextContent("Tell me more about X");
+      // Should be on the send button (next focusable element after input)
+      expect(document.activeElement).toHaveTextContent("Send");
     });
   });
 

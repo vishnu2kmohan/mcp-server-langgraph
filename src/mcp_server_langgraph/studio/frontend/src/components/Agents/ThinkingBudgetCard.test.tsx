@@ -48,37 +48,37 @@ function createTestStoreWithPersona(persona: "admin" | "developer" | "user") {
   });
 }
 
-// Mock thinking budget data
+// Mock thinking budget data (camelCase per ADR-0091 Phase 6)
 const mockThinkingBudgetDefaults: ThinkingBudgetDefaults = {
   enabled: true,
-  default_level: "medium",
+  defaultLevel: "medium",
   levels: [
     {
       level: "low",
-      claude_opus_effort: "low",
-      other_models_tokens: 1024,
+      claudeOpusEffort: "low",
+      otherModelsTokens: 1024,
       description: "Quick responses for simple tasks",
     },
     {
       level: "medium",
-      claude_opus_effort: "medium",
-      other_models_tokens: 8192,
+      claudeOpusEffort: "medium",
+      otherModelsTokens: 8192,
       description: "Balanced thinking for typical tasks",
     },
     {
       level: "high",
-      claude_opus_effort: "high",
-      other_models_tokens: 32768,
+      claudeOpusEffort: "high",
+      otherModelsTokens: 32768,
       description: "Deep reasoning for complex tasks",
     },
     {
       level: "ultra",
-      claude_opus_effort: "high",
-      other_models_tokens: 131072,
+      claudeOpusEffort: "high",
+      otherModelsTokens: 131072,
       description: "Maximum reasoning for the most complex tasks",
     },
   ],
-  complexity_mapping: {
+  complexityMapping: {
     simple: "low",
     complicated: "medium",
     complex: "high",

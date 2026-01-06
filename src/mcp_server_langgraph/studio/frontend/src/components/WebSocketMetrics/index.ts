@@ -6,3 +6,9 @@
 
 export { WebSocketMetricsPanel } from "./WebSocketMetricsPanel";
 export type { WebSocketMetricsPanelProps } from "./WebSocketMetricsPanel";
+
+export { WebSocketHealthIndicator } from "./WebSocketHealthIndicator";
+export type {
+  WebSocketHealthIndicatorProps,
+  HealthStatus,
+} from "./WebSocketHealthIndicator";

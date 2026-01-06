@@ -107,9 +107,9 @@ export function AgentMetricsCard() {
   }
 
   const successRate =
-    data.orchestrator.total_executions > 0
-      ? (data.orchestrator.successful_executions /
-          data.orchestrator.total_executions) *
+    data.orchestrator.totalExecutions > 0
+      ? (data.orchestrator.successfulExecutions /
+          data.orchestrator.totalExecutions) *
         100
       : 0;
 
@@ -123,7 +123,7 @@ export function AgentMetricsCard() {
         </div>
         <div className="flex items-center gap-2">
           <span className="px-2 py-1 text-xs bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 rounded-full">
-            {data.time_range_hours}h
+            {data.timeRangeHours}h
           </span>
           <button
             onClick={() => refetch()}
@@ -145,7 +145,7 @@ export function AgentMetricsCard() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded">
               <div className="text-2xl font-bold text-gray-900 dark:text-white">
-                {formatNumber(data.orchestrator.total_executions)}
+                {formatNumber(data.orchestrator.totalExecutions)}
               </div>
               <div className="text-xs text-gray-500">Total Executions</div>
             </div>
@@ -157,13 +157,13 @@ export function AgentMetricsCard() {
             </div>
             <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded">
               <div className="text-2xl font-bold text-gray-900 dark:text-white">
-                {data.orchestrator.avg_duration_ms.toFixed(1)}
+                {data.orchestrator.avgDurationMs.toFixed(1)}
               </div>
               <div className="text-xs text-gray-500">Avg Duration (ms)</div>
             </div>
             <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded">
               <div className="text-2xl font-bold text-red-600">
-                {formatNumber(data.orchestrator.failed_executions)}
+                {formatNumber(data.orchestrator.failedExecutions)}
               </div>
               <div className="text-xs text-gray-500">Failed</div>
             </div>
@@ -179,7 +179,7 @@ export function AgentMetricsCard() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded">
               <div className="text-2xl font-bold text-gray-900 dark:text-white">
-                {formatNumber(data.hitl.total_requests)}
+                {formatNumber(data.hitl.totalRequests)}
               </div>
               <div className="text-xs text-gray-500">Total Requests</div>
             </div>
@@ -187,7 +187,7 @@ export function AgentMetricsCard() {
               <CheckCircle size={20} className="text-green-500" />
               <div>
                 <div className="text-xl font-bold text-green-600">
-                  {formatNumber(data.hitl.approved_count)}
+                  {formatNumber(data.hitl.approvedCount)}
                 </div>
                 <div className="text-xs text-gray-500">Approved</div>
               </div>
@@ -196,7 +196,7 @@ export function AgentMetricsCard() {
               <XCircle size={20} className="text-red-500" />
               <div>
                 <div className="text-xl font-bold text-red-600">
-                  {formatNumber(data.hitl.rejected_count)}
+                  {formatNumber(data.hitl.rejectedCount)}
                 </div>
                 <div className="text-xs text-gray-500">Rejected</div>
               </div>
@@ -205,7 +205,7 @@ export function AgentMetricsCard() {
               <Clock size={20} className="text-yellow-500" />
               <div>
                 <div className="text-xl font-bold text-yellow-600">
-                  {formatNumber(data.hitl.pending_count)}
+                  {formatNumber(data.hitl.pendingCount)}
                 </div>
                 <div className="text-xs text-gray-500">Pending</div>
               </div>
@@ -222,19 +222,19 @@ export function AgentMetricsCard() {
           <div className="grid grid-cols-3 gap-4">
             <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded">
               <div className="text-2xl font-bold text-gray-900 dark:text-white">
-                {formatCurrency(data.cost.total_cost_usd)}
+                {formatCurrency(data.cost.totalCostUsd)}
               </div>
               <div className="text-xs text-gray-500">Total Cost</div>
             </div>
             <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded">
               <div className="text-2xl font-bold text-gray-900 dark:text-white">
-                {formatNumber(data.cost.total_tokens)}
+                {formatNumber(data.cost.totalTokens)}
               </div>
               <div className="text-xs text-gray-500">Total Tokens</div>
             </div>
             <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded">
               <div className="text-2xl font-bold text-gray-900 dark:text-white">
-                {formatCurrency(data.cost.avg_cost_per_request_usd)}
+                {formatCurrency(data.cost.avgCostPerRequestUsd)}
               </div>
               <div className="text-xs text-gray-500">Avg/Request</div>
             </div>

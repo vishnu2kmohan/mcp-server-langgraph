@@ -499,4 +499,48 @@ describe("apiTransforms", () => {
       expect(result.modelName).toBeUndefined();
     });
   });
+
+  // ===========================================================================
+  // Contract Tests: Loader ↔ Validator Boundary (ADR-0091 Phase 6 Findings)
+  // ===========================================================================
+  // These tests validate that components across the transformation boundary
+  // use consistent data formats.
+
+  describe("Contract: Loader output ↔ isApiSession validation", () => {
+    /**
+     * Finding 2 (HIGH): Chat loader builds camelCase sessions but isApiSession
+     * expects snake_case. This causes session validation to fail silently.
+     *
+     * This test documents the expected behavior AFTER the fix.
+     */
+    it("should accept camelCase session from loader (createdAt/updatedAt)", () => {
+      // Loader output format (camelCase)
+      const loaderSession = {
+        id: "session-123",
+        name: "Test Session",
+        status: "active",
+        createdAt: "2025-01-15T10:00:00Z", // camelCase from loader
+        updatedAt: "2025-01-15T11:00:00Z", // camelCase from loader
+        config: { maxTokens: 8192 },
+      };
+
+      // After fix: isApiSession should accept EITHER format
+      // Currently fails - this test documents expected behavior
+      expect(isApiSession(loaderSession)).toBe(true);
+    });
+
+    it("should accept snake_case session from API", () => {
+      // API response format (snake_case)
+      const apiSession = {
+        id: "session-123",
+        name: "Test Session",
+        status: "active",
+        created_at: "2025-01-15T10:00:00Z",
+        updated_at: "2025-01-15T11:00:00Z",
+        config: { max_tokens: 8192 },
+      };
+
+      expect(isApiSession(apiSession)).toBe(true);
+    });
+  });
 });

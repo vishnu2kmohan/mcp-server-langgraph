@@ -127,7 +127,7 @@ export function AdminDashboard({
 
   // Alert API hooks
   const { data: recommendation, isLoading: recommendationLoading } =
-    useGetAlertRecommendationQuery(selectedAlert?.alert_id ?? "", {
+    useGetAlertRecommendationQuery(selectedAlert?.alertId ?? "", {
       skip: !selectedAlert,
     });
   const [approveRemediation, { isLoading: isApproving }] =
@@ -151,28 +151,28 @@ export function AdminDashboard({
     // Only critical and warning alerts can have remediations
     const remediationSeverity =
       selectedAlert.severity === "info" ? "warning" : selectedAlert.severity;
-    return recommendation.remediation_steps.map((step) => ({
-      remediation_id: `${recommendation.recommendation_id}-step-${step.step_number}`,
-      alert_id: selectedAlert.alert_id,
-      alert_name: selectedAlert.name,
+    return recommendation.remediationSteps.map((step) => ({
+      remediationId: `${recommendation.recommendationId}-step-${step.stepNumber}`,
+      alertId: selectedAlert.alertId,
+      alertName: selectedAlert.name,
       severity: remediationSeverity as "warning" | "critical",
-      step_number: step.step_number,
+      stepNumber: step.stepNumber,
       action: step.action,
       description: step.description,
       command: step.command ?? null,
-      risk_level: step.risk_level,
+      riskLevel: step.riskLevel,
       status: "pending" as const,
-      requested_at: recommendation.generated_at,
-      approved_by: null,
-      approved_at: null,
+      requestedAt: recommendation.generatedAt,
+      approvedBy: null,
+      approvedAt: null,
       reason: null,
-      recommendation_id: recommendation.recommendation_id,
+      recommendationId: recommendation.recommendationId,
     }));
   }, [recommendation, selectedAlert]);
 
   // Find remediation for dialog
   const selectedRemediation = pendingRemediations.find(
-    (r) => r.remediation_id === selectedRemediationForDialog,
+    (r) => r.remediationId === selectedRemediationForDialog,
   );
 
   // Alert handlers
@@ -228,7 +228,7 @@ export function AdminDashboard({
 
   const handleRegenerate = () => {
     if (selectedAlert) {
-      regenerateRecommendation(selectedAlert.alert_id);
+      regenerateRecommendation(selectedAlert.alertId);
     }
   };
 

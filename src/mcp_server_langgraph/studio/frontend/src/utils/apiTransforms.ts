@@ -29,15 +29,20 @@ const logger = devLogger.withPrefix("[apiTransforms]");
 
 /**
  * API Session format (snake_case from backend)
+ * Also accepts camelCase variants for loader compatibility (ADR-0091 Phase 6)
  */
 export interface ApiSession {
   id: string;
   name?: string;
   status?: string;
-  created_at: string;
-  updated_at: string;
+  // Accept both snake_case (backend API) and camelCase (loader output)
+  created_at?: string;
+  updated_at?: string;
+  createdAt?: string;
+  updatedAt?: string;
   config?: ApiSessionConfig;
   organization_id?: string;
+  organizationId?: string;
 }
 
 /**
@@ -101,6 +106,7 @@ export { DEFAULT_SESSION_CONFIG };
 
 /**
  * Type guard to check if a value is a valid ApiSession
+ * ADR-0091 Phase 6: Accepts both snake_case (API) and camelCase (loader) formats
  */
 export function isApiSession(value: unknown): value is ApiSession {
   if (value === null || value === undefined) {
@@ -118,11 +124,17 @@ export function isApiSession(value: unknown): value is ApiSession {
     return false;
   }
 
-  if (typeof obj.created_at !== "string") {
+  // Accept either snake_case (created_at) or camelCase (createdAt)
+  const hasCreatedAt =
+    typeof obj.created_at === "string" || typeof obj.createdAt === "string";
+  if (!hasCreatedAt) {
     return false;
   }
 
-  if (typeof obj.updated_at !== "string") {
+  // Accept either snake_case (updated_at) or camelCase (updatedAt)
+  const hasUpdatedAt =
+    typeof obj.updated_at === "string" || typeof obj.updatedAt === "string";
+  if (!hasUpdatedAt) {
     return false;
   }
 
@@ -135,9 +147,17 @@ export function isApiSession(value: unknown): value is ApiSession {
     return false;
   }
 
+  // Accept either snake_case or camelCase for organization_id
   if (
     obj.organization_id !== undefined &&
     typeof obj.organization_id !== "string"
+  ) {
+    return false;
+  }
+
+  if (
+    obj.organizationId !== undefined &&
+    typeof obj.organizationId !== "string"
   ) {
     return false;
   }
@@ -147,6 +167,7 @@ export function isApiSession(value: unknown): value is ApiSession {
 
 /**
  * Validate API session and return typed result
+ * ADR-0091 Phase 6: Accepts both snake_case and camelCase formats
  */
 export function validateApiSession(
   value: unknown,
@@ -164,9 +185,15 @@ export function validateApiSession(
     const obj = value as Record<string, unknown>;
     if (typeof obj.id !== "string") {
       error = "Missing or invalid 'id' field";
-    } else if (typeof obj.created_at !== "string") {
+    } else if (
+      typeof obj.created_at !== "string" &&
+      typeof obj.createdAt !== "string"
+    ) {
       error = "Missing or invalid 'created_at' field";
-    } else if (typeof obj.updated_at !== "string") {
+    } else if (
+      typeof obj.updated_at !== "string" &&
+      typeof obj.updatedAt !== "string"
+    ) {
       error = "Missing or invalid 'updated_at' field";
     }
   }
@@ -227,13 +254,21 @@ export function transformApiConfig(
 }
 
 /**
- * Transform API session (snake_case) to ClientSession (camelCase)
+ * Transform API session (snake_case or camelCase) to ClientSession (camelCase)
+ * ADR-0091 Phase 6: Handles both formats from API and loader
  */
 export function transformApiSessionToClient(
   apiSession: ApiSession,
   messages: ChatMessage[],
 ): ClientSession {
   const apiConfig = transformApiConfig(apiSession.config);
+
+  // Support both snake_case (API) and camelCase (loader) timestamp formats
+  const createdAtStr = apiSession.created_at ?? apiSession.createdAt ?? "";
+  const updatedAtStr = apiSession.updated_at ?? apiSession.updatedAt ?? "";
+
+  // Support both snake_case and camelCase organization_id
+  const orgId = apiSession.organization_id ?? apiSession.organizationId;
 
   return {
     id: apiSession.id,
@@ -243,9 +278,9 @@ export function transformApiSessionToClient(
       ...apiConfig,
     },
     messages,
-    createdAt: new Date(apiSession.created_at).getTime(),
-    updatedAt: new Date(apiSession.updated_at).getTime(),
-    organizationId: apiSession.organization_id,
+    createdAt: new Date(createdAtStr).getTime(),
+    updatedAt: new Date(updatedAtStr).getTime(),
+    organizationId: orgId,
   };
 }
 

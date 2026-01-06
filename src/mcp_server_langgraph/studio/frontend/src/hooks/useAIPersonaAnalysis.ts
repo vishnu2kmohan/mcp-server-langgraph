@@ -141,6 +141,12 @@ export function useAIPersonaAnalysis(
 
   /**
    * Fetch persona analysis from AI backend via RTK Query
+   *
+   * Schema: PersonaAnalyzeRequest (ai_ux.py:373)
+   * - user_id: str (required)
+   * - assigned_persona: str (required)
+   * - recent_actions: list[str] (optional)
+   * - feature_usage: dict[str, int] (optional)
    */
   const fetchAnalysis = useCallback(async () => {
     setIsLoading(true);
@@ -148,41 +154,27 @@ export function useAIPersonaAnalysis(
 
     try {
       const data = await analyzePersonaMutation({
-        behavior_data: {
-          user_id: userId,
-          recent_actions: recentActions,
-          feature_usage: featureUsage,
-        },
-        current_persona: assignedPersonaFromStore,
+        user_id: userId || "anonymous",
+        assigned_persona: assignedPersonaFromStore,
+        recent_actions: recentActions,
+        feature_usage: featureUsage,
       }).unwrap();
 
-      // Transform RTK Query response to hook's expected format
-      setAssignedPersona(assignedPersonaFromStore);
-      setDetectedPersona(data.detected_persona || null);
-      setConfidence(data.confidence || 0);
+      // PersonaAnalyzeResponse from generated-api.ts (ADR-0091)
+      // Fields: assigned_persona, detected_persona, confidence, behavior_signals, recommendation?, ui_adaptations?
+      setAssignedPersona(data.assigned_persona);
+      setDetectedPersona(data.detected_persona);
+      setConfidence(data.confidence);
+      setBehaviorSignals(data.behavior_signals || []);
+      setRecommendation(data.recommendation ?? null);
 
-      // Extract behavior signals from behavior_indicators keys
-      const signals = data.behavior_indicators
-        ? Object.keys(data.behavior_indicators).map((key) =>
-            key.replace(/_/g, " "),
-          )
-        : [];
-      setBehaviorSignals(signals);
-
-      setRecommendation(data.recommendation || null);
-
-      // Generate UI adaptations based on alternative personas
-      // RTK Query doesn't return ui_adaptations directly, so derive from alternatives
-      const adaptations: UIAdaptation[] = [];
-      if (data.alternative_personas && data.alternative_personas.length > 0) {
-        // Suggest promoting features from detected persona if confidence is high
-        if (data.confidence > 0.7) {
-          adaptations.push({
-            feature: data.detected_persona,
-            action: "promote",
-          });
-        }
-      }
+      // Map generated UIAdaptation[] to hook's UIAdaptation format
+      const adaptations: UIAdaptation[] = (data.ui_adaptations || []).map(
+        (adaptation) => ({
+          feature: adaptation.feature,
+          action: adaptation.action as UIAdaptation["action"],
+        }),
+      );
       setUiAdaptations(adaptations);
     } catch (err) {
       const errorToSet =

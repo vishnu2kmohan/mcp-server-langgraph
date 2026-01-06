@@ -44,11 +44,11 @@ export function ResourceBrowser({
 
     return data.resources.filter(
       (resource) =>
-        resource.qualified_name.toLowerCase().includes(term) ||
+        resource.qualifiedName.toLowerCase().includes(term) ||
         resource.uri.toLowerCase().includes(term) ||
         resource.name.toLowerCase().includes(term) ||
         (resource.description?.toLowerCase().includes(term) ?? false) ||
-        resource.server_name.toLowerCase().includes(term),
+        resource.serverName.toLowerCase().includes(term),
     );
   }, [data?.resources, searchTerm]);
 
@@ -118,7 +118,7 @@ export function ResourceBrowser({
         ) : (
           filteredResources.map((resource) => (
             <Card
-              key={resource.qualified_name}
+              key={resource.qualifiedName}
               variant="default"
               padding="sm"
               className="hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
@@ -128,10 +128,10 @@ export function ResourceBrowser({
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1">
                     <span className="font-mono text-sm font-medium text-gray-900 dark:text-gray-100">
-                      {resource.qualified_name}
+                      {resource.qualifiedName}
                     </span>
                     <Badge variant="outline" size="sm">
-                      {resource.server_name}
+                      {resource.serverName}
                     </Badge>
                   </div>
                   <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
@@ -142,9 +142,9 @@ export function ResourceBrowser({
                       {resource.description}
                     </p>
                   )}
-                  {resource.mime_type && (
+                  {resource.mimeType && (
                     <Badge variant="default" size="sm" className="mt-1">
-                      {resource.mime_type}
+                      {resource.mimeType}
                     </Badge>
                   )}
                 </div>
@@ -152,7 +152,7 @@ export function ResourceBrowser({
                 {/* View button */}
                 <button
                   type="button"
-                  onClick={() => handleView(resource.qualified_name)}
+                  onClick={() => handleView(resource.qualifiedName)}
                   className={cn(
                     "shrink-0 px-3 py-1.5 text-sm font-medium rounded-md",
                     "bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200",

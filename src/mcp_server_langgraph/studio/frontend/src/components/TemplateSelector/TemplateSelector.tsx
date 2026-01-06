@@ -30,15 +30,15 @@ export type OrchestratorType = "standard" | "swarm" | "studio" | "ux" | "alert";
 export type ThinkingBudget = "none" | "light" | "medium" | "deep";
 
 export interface TemplateOption {
-  template_id: string;
+  templateId: string;
   name: string;
   description: string;
   orchestrator: OrchestratorType;
-  thinking_budget: ThinkingBudget;
-  critique_rounds: number;
-  auto_approve: boolean;
-  use_count: number;
-  success_rate: number;
+  thinkingBudget: ThinkingBudget;
+  critiqueRounds: number;
+  autoApprove: boolean;
+  useCount: number;
+  successRate: number;
 }
 
 export interface OrchestratorConfig {
@@ -122,7 +122,7 @@ function TemplatePreview({
           <Brain className="w-3 h-3 text-gray-400" />
           <span className="text-gray-500 dark:text-gray-400">Thinking:</span>
           <span className="font-medium text-gray-900 dark:text-white">
-            {template.thinking_budget}
+            {template.thinkingBudget}
           </span>
         </div>
 
@@ -130,7 +130,7 @@ function TemplatePreview({
           <MessageSquare className="w-3 h-3 text-gray-400" />
           <span className="text-gray-500 dark:text-gray-400">Critique:</span>
           <span className="font-medium text-gray-900 dark:text-white">
-            {template.critique_rounds} rounds
+            {template.critiqueRounds} rounds
           </span>
         </div>
 
@@ -138,7 +138,7 @@ function TemplatePreview({
           <CheckCircle className="w-3 h-3 text-gray-400" />
           <span className="text-gray-500 dark:text-gray-400">Success:</span>
           <span className="font-medium text-green-600 dark:text-green-400">
-            {Math.round(template.success_rate * 100)}%
+            {Math.round(template.successRate * 100)}%
           </span>
         </div>
       </div>
@@ -159,9 +159,7 @@ export function TemplateSelector({
 }: TemplateSelectorProps) {
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
-  const selectedTemplate = suggestions.find(
-    (t) => t.template_id === selectedId,
-  );
+  const selectedTemplate = suggestions.find((t) => t.templateId === selectedId);
 
   const handleChipClick = (templateId: string) => {
     setSelectedId(selectedId === templateId ? null : templateId);
@@ -172,9 +170,9 @@ export function TemplateSelector({
 
     onApply({
       orchestrator: selectedTemplate.orchestrator,
-      thinkingBudget: selectedTemplate.thinking_budget,
-      critiqueRounds: selectedTemplate.critique_rounds,
-      autoApprove: selectedTemplate.auto_approve,
+      thinkingBudget: selectedTemplate.thinkingBudget,
+      critiqueRounds: selectedTemplate.critiqueRounds,
+      autoApprove: selectedTemplate.autoApprove,
     });
   };
 
@@ -231,10 +229,10 @@ export function TemplateSelector({
           <div className="flex flex-wrap gap-2">
             {suggestions.map((template) => (
               <TemplateChip
-                key={template.template_id}
+                key={template.templateId}
                 template={template}
-                isSelected={selectedId === template.template_id}
-                onClick={() => handleChipClick(template.template_id)}
+                isSelected={selectedId === template.templateId}
+                onClick={() => handleChipClick(template.templateId)}
                 disabled={isLoading}
               />
             ))}

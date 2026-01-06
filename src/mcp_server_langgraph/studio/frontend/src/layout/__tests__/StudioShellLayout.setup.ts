@@ -119,6 +119,11 @@ export const mockHITLState = {
   pendingClarifications: [] as unknown[],
 };
 
+/** Breakpoint mock state for ResponsiveLayout integration testing */
+export const mockBreakpointState = {
+  currentBreakpoint: "xl" as "sm" | "md" | "lg" | "xl",
+};
+
 // =============================================================================
 // MOCK FUNCTIONS - Shared mock function instances
 // =============================================================================
@@ -218,6 +223,9 @@ export function resetAllMocks(): void {
   mockHITLState.isClarificationSubmitting = false;
   mockHITLState.pendingApprovals = [];
   mockHITLState.pendingClarifications = [];
+
+  // Reset breakpoint state
+  mockBreakpointState.currentBreakpoint = "xl";
 
   // Clear all mock function calls
   vi.clearAllMocks();
@@ -394,6 +402,17 @@ export const mockImplementations = {
     }),
   },
 
+  useAIOnboarding: {
+    useAIOnboarding: () => ({
+      detectedIntent: null,
+      confidence: 0,
+      recommendedPath: [],
+      skipSteps: [],
+      personaPrediction: null,
+      isLoading: false,
+    }),
+  },
+
   usePersonaRouting: {
     usePersonaRouting: () => ({
       isAuthenticated: true,
@@ -493,6 +512,26 @@ export const mockImplementations = {
       { isLoading: false, isError: false, isSuccess: false },
     ],
     api: { reducerPath: "api", reducer: () => ({}), middleware: () => [] },
+  },
+
+  ResponsiveLayout: {
+    useBreakpoint: () => mockBreakpointState.currentBreakpoint,
+    ResponsiveLayout: ({
+      children,
+      className,
+    }: {
+      children: React.ReactNode;
+      className?: string;
+    }) =>
+      React.createElement(
+        "div",
+        {
+          "data-testid": "responsive-layout",
+          "data-breakpoint": mockBreakpointState.currentBreakpoint,
+          className,
+        },
+        children,
+      ),
   },
 };
 

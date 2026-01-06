@@ -268,7 +268,11 @@ export const PERSONA_VISIBLE_MODULES: Record<string, ModuleId[]> = {
 // =============================================================================
 
 export const PERSONA_DEFAULT_VIEW: Record<string, string> = {
+  // Base personas
   admin: "/studio/admin",
+  developer: "/studio/workflows",
+  user: "/studio/chat",
+  // Sub-personas with specific default views
   "security-admin": "/studio/compliance",
   auditor: "/studio/audit",
   "alice-builder": "/studio/chat",

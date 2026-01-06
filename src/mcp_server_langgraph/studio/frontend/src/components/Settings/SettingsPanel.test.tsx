@@ -18,10 +18,14 @@ import { render, screen, waitFor, cleanup } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { axe, toHaveNoViolations } from "jest-axe";
 import React from "react";
+import { MemoryRouter } from "react-router";
+import { Provider } from "react-redux";
+import { configureStore } from "@reduxjs/toolkit";
 import { SettingsPanel } from "./SettingsPanel";
 import { PreferencesProvider } from "../../contexts/PreferencesContext";
 import { STORAGE_KEYS } from "../../utils/storage";
 import { fullCleanup } from "../../test/testIsolation";
+import uiReducer from "../../store/slices/uiSlice";
 
 // Helper to flush pending promises (prevents act() warnings)
 const flushPromises = () => new Promise((resolve) => setTimeout(resolve, 0));
@@ -31,9 +35,24 @@ expect.extend(toHaveNoViolations);
 // Storage key used by the context - use centralized key
 const STORAGE_KEY = STORAGE_KEYS.PREFERENCES;
 
-// Helper to create wrapper with preferences provider
+// Create a test store with ui slice
+const createTestStore = () =>
+  configureStore({
+    reducer: {
+      ui: uiReducer,
+    },
+  });
+
+// Helper to create wrapper with preferences provider, router, and Redux store
 const renderWithProvider = (ui: React.ReactElement) => {
-  return render(<PreferencesProvider>{ui}</PreferencesProvider>);
+  const store = createTestStore();
+  return render(
+    <Provider store={store}>
+      <MemoryRouter>
+        <PreferencesProvider>{ui}</PreferencesProvider>
+      </MemoryRouter>
+    </Provider>,
+  );
 };
 
 describe("SettingsPanel", () => {

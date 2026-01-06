@@ -22,16 +22,17 @@ import {
 
 /**
  * Map backend HEART aggregate metrics to frontend HEARTMetrics format
+ * ADR-0091 Phase 9: Now expects camelCase keys after transformSnakeToCamel
  */
 function mapHeartMetrics(
   data:
     | {
-        nps_score_avg?: number | null;
-        satisfaction_avg?: number | null;
-        avg_session_duration_ms?: number | null;
-        new_users_count?: number;
-        avg_return_visits?: number | null;
-        task_success_rate?: number | null;
+        npsScoreAvg?: number | null;
+        satisfactionAvg?: number | null;
+        avgSessionDurationMs?: number | null;
+        newUsersCount?: number;
+        avgReturnVisits?: number | null;
+        taskSuccessRate?: number | null;
       }
     | undefined,
 ): HEARTMetrics {
@@ -47,24 +48,24 @@ function mapHeartMetrics(
 
   return {
     // Happiness: Use NPS or satisfaction score (scale to 0-100)
-    happiness: data.nps_score_avg
-      ? Math.round(data.nps_score_avg * 10)
-      : data.satisfaction_avg
-        ? Math.round(data.satisfaction_avg * 20)
+    happiness: data.npsScoreAvg
+      ? Math.round(data.npsScoreAvg * 10)
+      : data.satisfactionAvg
+        ? Math.round(data.satisfactionAvg * 20)
         : 0,
     // Engagement: Derive from session duration (normalize to 0-100)
-    engagement: data.avg_session_duration_ms
-      ? Math.min(100, Math.round((data.avg_session_duration_ms / 60000) * 10))
+    engagement: data.avgSessionDurationMs
+      ? Math.min(100, Math.round((data.avgSessionDurationMs / 60000) * 10))
       : 0,
     // Adoption: Use new users count (capped at 100)
-    adoption: Math.min(100, data.new_users_count ?? 0),
+    adoption: Math.min(100, data.newUsersCount ?? 0),
     // Retention: Use average return visits (scale to 0-100)
-    retention: data.avg_return_visits
-      ? Math.min(100, Math.round(data.avg_return_visits * 10))
+    retention: data.avgReturnVisits
+      ? Math.min(100, Math.round(data.avgReturnVisits * 10))
       : 0,
     // Task Success: Convert rate to percentage
-    taskSuccess: data.task_success_rate
-      ? Math.round(data.task_success_rate * 100)
+    taskSuccess: data.taskSuccessRate
+      ? Math.round(data.taskSuccessRate * 100)
       : 0,
   };
 }
@@ -132,8 +133,8 @@ export function AdminDashboardPage() {
   // Map health data to SystemHealth format
   const systemHealth: SystemHealth = {
     status: healthData?.status === "healthy" ? "healthy" : "degraded",
-    uptime: healthData?.uptime_seconds
-      ? Math.round((healthData.uptime_seconds / 86400) * 100) / 100 // days to percentage
+    uptime: healthData?.uptimeSeconds
+      ? Math.round((healthData.uptimeSeconds / 86400) * 100) / 100 // days to percentage
       : 99.9,
     activeUsers: 0, // Not available in health endpoint
     activeSessions: 0, // Not available in health endpoint

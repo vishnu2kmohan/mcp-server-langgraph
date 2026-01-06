@@ -57,25 +57,29 @@ export type DisclosureLevel =
 
 /**
  * Persona analysis result
+ *
+ * ADR-0091 Phase 6: Uses camelCase - data transformed at API boundary
  */
 export interface PersonaAnalysisResult {
-  assigned_persona: string;
-  detected_persona: string;
+  assignedPersona: string;
+  detectedPersona: string;
   confidence: number;
-  behavior_signals: string[];
+  behaviorSignals: string[];
   recommendation: string | null;
-  ui_adaptations: Array<{ feature: string; action: string }>;
+  uiAdaptations: Array<{ feature: string; action: string }>;
 }
 
 /**
  * Disclosure analysis result
+ *
+ * ADR-0091 Phase 6: Uses camelCase - data transformed at API boundary
  */
 export interface DisclosureAnalysisResult {
-  current_level: DisclosureLevel;
-  recommended_level: DisclosureLevel;
+  currentLevel: DisclosureLevel;
+  recommendedLevel: DisclosureLevel;
   confidence: number;
-  unlock_features: string[];
-  personalized_message: string;
+  unlockFeatures: string[];
+  personalizedMessage: string;
 }
 
 /**
@@ -255,30 +259,29 @@ export function useBatchCompositeAnalysis(
       // Response matches CompositeAnalysisResponse schema from backend
       // data.persona_result, data.disclosure_result, data.error_result, data.cross_insights, data.confidence
 
-      // Set persona result directly (already matches expected format)
+      // Transform snake_case API response to camelCase (ADR-0091)
       if (data.persona_result) {
         setPersonaResult({
-          assigned_persona: data.persona_result.assigned_persona,
-          detected_persona: data.persona_result.detected_persona,
+          assignedPersona: data.persona_result.assigned_persona,
+          detectedPersona: data.persona_result.detected_persona,
           confidence: data.persona_result.confidence,
-          behavior_signals: data.persona_result.behavior_signals || [],
+          behaviorSignals: data.persona_result.behavior_signals || [],
           recommendation: data.persona_result.recommendation,
-          ui_adaptations: data.persona_result.ui_adaptations || [],
+          uiAdaptations: data.persona_result.ui_adaptations || [],
         });
       } else {
         setPersonaResult(null);
       }
 
-      // Set disclosure result
+      // Transform snake_case API response to camelCase (ADR-0091)
       if (data.disclosure_result) {
         setDisclosureResult({
-          current_level: data.disclosure_result
-            .current_level as DisclosureLevel,
-          recommended_level: data.disclosure_result
+          currentLevel: data.disclosure_result.current_level as DisclosureLevel,
+          recommendedLevel: data.disclosure_result
             .recommended_level as DisclosureLevel,
           confidence: data.disclosure_result.confidence,
-          unlock_features: data.disclosure_result.unlock_features || [],
-          personalized_message:
+          unlockFeatures: data.disclosure_result.unlock_features || [],
+          personalizedMessage:
             data.disclosure_result.personalized_message || "",
         });
       } else {

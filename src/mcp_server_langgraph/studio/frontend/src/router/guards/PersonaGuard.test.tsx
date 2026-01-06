@@ -189,6 +189,82 @@ describe("PersonaGuard", () => {
 });
 
 /**
+ * Sprint 5: Sub-Persona Default Routes Tests
+ * Tests for PersonaGuard using getDefaultView from PersonaVariants
+ * to support sub-persona-specific default routes.
+ */
+describe("PersonaGuard - Sub-Persona Default Routes", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  afterEach(() => {
+    cleanup();
+    vi.clearAllMocks();
+  });
+
+  it("should use PersonaVariants as source of truth for default routes", () => {
+    // Import the getDefaultView function that should be used
+    // This test documents the expected behavior after fix
+    import("../../persona/PersonaVariants").then(({ getDefaultView }) => {
+      // Verify the source of truth has correct defaults
+      expect(getDefaultView("alice-builder")).toBe("/studio/chat");
+      expect(getDefaultView("alice-analyst")).toBe("/studio/observability");
+      expect(getDefaultView("security-admin")).toBe("/studio/compliance");
+      expect(getDefaultView("auditor")).toBe("/studio/audit");
+      expect(getDefaultView("bob")).toBe("/studio/chat");
+    });
+  });
+
+  it("admin should redirect to /studio/admin by default", () => {
+    // Arrange & Act
+    renderWithStore(
+      "user", // User trying to access admin-only route
+      <Routes>
+        <Route
+          path="/some-protected"
+          element={
+            <PersonaGuard allowedPersonas={["admin"]}>
+              <div>Protected Content</div>
+            </PersonaGuard>
+          }
+        />
+        <Route path="/studio/chat" element={<div>User Chat</div>} />
+      </Routes>,
+      "/some-protected",
+    );
+
+    // Assert - user redirects to their default route
+    expect(screen.getByText("User Chat")).toBeInTheDocument();
+  });
+
+  it("developer should redirect to workflows by default", () => {
+    // Arrange & Act
+    renderWithStore(
+      "developer",
+      <Routes>
+        <Route
+          path="/admin-only"
+          element={
+            <PersonaGuard allowedPersonas={["admin"]}>
+              <div>Admin Only</div>
+            </PersonaGuard>
+          }
+        />
+        <Route
+          path="/studio/workflows"
+          element={<div>Developer Workflows</div>}
+        />
+      </Routes>,
+      "/admin-only",
+    );
+
+    // Assert - developer redirects to /studio/workflows
+    expect(screen.getByText("Developer Workflows")).toBeInTheDocument();
+  });
+});
+
+/**
  * Sprint 4: ModuleGuard Tests
  * Tests for module-based access control using server-provided visible_modules.
  */

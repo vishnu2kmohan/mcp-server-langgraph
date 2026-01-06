@@ -35,7 +35,7 @@ export function TaskMappingCard({
 
   // Calculate total task categories across all orchestrators
   const totalCategories = orchestrators.reduce(
-    (sum, orch) => sum + (orch.task_categories?.length ?? 0),
+    (sum, orch) => sum + (orch.taskCategories?.length ?? 0),
     0,
   );
 
@@ -71,9 +71,8 @@ export function TaskMappingCard({
           </thead>
           <tbody>
             {orchestrators.map((orchestrator) => {
-              const isEnabled =
-                featureFlags[orchestrator.feature_flag] ?? false;
-              const categoryCount = orchestrator.task_categories?.length ?? 0;
+              const isEnabled = featureFlags[orchestrator.featureFlag] ?? false;
+              const categoryCount = orchestrator.taskCategories?.length ?? 0;
 
               return (
                 <tr
@@ -82,7 +81,7 @@ export function TaskMappingCard({
                 >
                   <td className="py-3 px-3">
                     <div className="font-medium text-gray-900 dark:text-gray-100">
-                      {orchestrator.display_name}
+                      {orchestrator.displayName}
                     </div>
                     <div className="text-xs text-gray-500 dark:text-gray-400">
                       {orchestrator.description}
@@ -90,7 +89,7 @@ export function TaskMappingCard({
                   </td>
                   <td className="py-3 px-3">
                     <div className="flex flex-wrap gap-1">
-                      {orchestrator.task_categories?.map((category) => (
+                      {orchestrator.taskCategories?.map((category) => (
                         <span
                           key={category}
                           className="px-2 py-0.5 text-xs bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded"

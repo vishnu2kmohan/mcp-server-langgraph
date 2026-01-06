@@ -21,7 +21,11 @@
 
 import { useCallback, useEffect, useState, useMemo, useRef } from "react";
 import { useAppDispatch, useAppSelector } from "../store/hooks";
-import { logout, selectIsAuthenticated } from "../store/slices/authSlice";
+import {
+  logout,
+  selectIsAuthenticated,
+  selectWebSocketPermissions,
+} from "../store/slices/authSlice";
 import { addNotification } from "../store/slices/notificationSlice";
 import { devLogger } from "../utils/devLogger";
 import { buildWebSocketUrl, WS_ENDPOINTS } from "../utils/websocket";
@@ -94,6 +98,10 @@ export function useTraceWebSocket(
 
   // Get auth state for WebSocket authentication
   const isAuthenticated = useAppSelector(selectIsAuthenticated);
+  const wsPermissions = useAppSelector(selectWebSocketPermissions);
+
+  // Check if user has permission for traces WebSocket
+  const hasTracePermission = wsPermissions?.traces ?? false;
 
   // State for spans and events
   const [spans, setSpans] = useState<TraceSpan[]>([]);
@@ -103,12 +111,12 @@ export function useTraceWebSocket(
   const [shouldConnect, setShouldConnect] = useState(autoConnect);
   const hasSentSubscribeRef = useRef(false);
 
-  // Build WebSocket URL
+  // Build WebSocket URL - only connect if authenticated AND has permission
   const wsUrl = useMemo(() => {
-    if (!shouldConnect || !isAuthenticated) return "";
+    if (!shouldConnect || !isAuthenticated || !hasTracePermission) return "";
     const endpoint = sessionId ? `${url}/${sessionId}` : url;
     return buildWebSocketUrl(endpoint, {}, true);
-  }, [url, sessionId, shouldConnect, isAuthenticated]);
+  }, [url, sessionId, shouldConnect, isAuthenticated, hasTracePermission]);
 
   // Message handler
   const handleMessage = useCallback((data: unknown) => {
@@ -223,13 +231,13 @@ export function useTraceWebSocket(
   // Derive isConnected from status
   const isConnected = status === "connected";
 
-  // Manual connect function
+  // Manual connect function - only connect if authenticated AND has permission
   const connect = useCallback(() => {
-    if (!isAuthenticated) {
+    if (!isAuthenticated || !hasTracePermission) {
       return;
     }
     setShouldConnect(true);
-  }, [isAuthenticated]);
+  }, [isAuthenticated, hasTracePermission]);
 
   // Manual disconnect function
   const disconnect = useCallback(() => {
@@ -243,12 +251,12 @@ export function useTraceWebSocket(
     setEvents([]);
   }, []);
 
-  // Handle autoConnect changes
+  // Handle autoConnect changes - only auto-connect if has permission
   useEffect(() => {
-    if (autoConnect && isAuthenticated) {
+    if (autoConnect && isAuthenticated && hasTracePermission) {
       setShouldConnect(true);
     }
-  }, [autoConnect, isAuthenticated]);
+  }, [autoConnect, isAuthenticated, hasTracePermission]);
 
   // Cleanup on unmount
   useEffect(() => {

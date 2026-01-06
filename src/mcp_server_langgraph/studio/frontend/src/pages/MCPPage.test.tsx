@@ -112,7 +112,6 @@ describe("MCPPage", () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
-
   afterEach(() => {
     cleanup();
     vi.clearAllMocks();
@@ -121,21 +120,16 @@ describe("MCPPage", () => {
   describe("Header", () => {
     it("should display page title", () => {
       renderWithStore();
-
       expect(screen.getByText("MCP Explorer")).toBeInTheDocument();
     });
-
     it("should show Disconnected when no servers connected", () => {
       renderWithStore();
-
       expect(screen.getByText("Disconnected")).toBeInTheDocument();
     });
-
     it("should show Connected when servers are connected", () => {
       renderWithStore({
         servers: { "server-1": mockServer },
       });
-
       expect(screen.getByText("Connected")).toBeInTheDocument();
     });
   });
@@ -143,25 +137,18 @@ describe("MCPPage", () => {
   describe("Tabs", () => {
     it("should have Tools tab", () => {
       renderWithStore();
-
       expect(screen.getByText("Tools")).toBeInTheDocument();
     });
-
     it("should have Resources tab", () => {
       renderWithStore();
-
       expect(screen.getByText("Resources")).toBeInTheDocument();
     });
-
     it("should have Prompts tab", () => {
       renderWithStore();
-
       expect(screen.getByText("Prompts")).toBeInTheDocument();
     });
-
     it("should have Servers tab", () => {
       renderWithStore();
-
       expect(screen.getByText("Servers")).toBeInTheDocument();
     });
   });
@@ -177,16 +164,12 @@ describe("MCPPage", () => {
         { name: "search", description: "Search the web", inputSchema: {} },
       ];
       const serverWithTools: ServerEntry = { ...mockServer, tools };
-
       renderWithStore({ servers: { "server-1": serverWithTools } });
-
       expect(screen.getByText("calculator")).toBeInTheDocument();
       expect(screen.getByText("Perform calculations")).toBeInTheDocument();
     });
-
     it("should show empty state when no tools", () => {
       renderWithStore();
-
       expect(screen.getByText("No tools found")).toBeInTheDocument();
     });
   });
@@ -194,22 +177,17 @@ describe("MCPPage", () => {
   describe("Search", () => {
     it("should have search input", () => {
       renderWithStore();
-
       expect(screen.getByPlaceholderText(/Search tools/)).toBeInTheDocument();
     });
-
     it("should filter tools by search query", () => {
       const tools: MCPTool[] = [
         { name: "calculator", description: "Math operations", inputSchema: {} },
         { name: "weather", description: "Weather data", inputSchema: {} },
       ];
       const serverWithTools: ServerEntry = { ...mockServer, tools };
-
       renderWithStore({ servers: { "server-1": serverWithTools } });
-
       const searchInput = screen.getByPlaceholderText(/Search tools/);
       fireEvent.change(searchInput, { target: { value: "calc" } });
-
       expect(screen.getByText("calculator")).toBeInTheDocument();
       expect(screen.queryByText("weather")).not.toBeInTheDocument();
     });
@@ -218,27 +196,18 @@ describe("MCPPage", () => {
   describe("Servers Tab", () => {
     it("should switch to servers tab when clicked", () => {
       renderWithStore();
-
       fireEvent.click(screen.getByText("Servers"));
-
-      // Should see add connection button
       expect(screen.getByText("Add MCP Connection")).toBeInTheDocument();
     });
-
     it("should show Add MCP Connection button", () => {
       renderWithStore();
-
       fireEvent.click(screen.getByText("Servers"));
-
       const addButton = screen.getByText("Add MCP Connection");
       expect(addButton).toBeInTheDocument();
     });
-
     it("should show no servers message when empty", () => {
       renderWithStore();
-
       fireEvent.click(screen.getByText("Servers"));
-
       expect(screen.getByText("No servers configured")).toBeInTheDocument();
     });
   });
@@ -249,14 +218,10 @@ describe("MCPPage", () => {
         { uri: "file://test.txt", name: "test.txt", mimeType: "text/plain" },
       ];
       const serverWithResources: ServerEntry = { ...mockServer, resources };
-
       renderWithStore({ servers: { "server-1": serverWithResources } });
-
       fireEvent.click(screen.getByText("Resources"));
-
       expect(screen.getByText("test.txt")).toBeInTheDocument();
     });
-
     it("should filter resources by search query", () => {
       const resources: MCPResource[] = [
         { uri: "file://doc.txt", name: "document.txt", mimeType: "text/plain" },
@@ -267,15 +232,10 @@ describe("MCPPage", () => {
         },
       ];
       const serverWithResources: ServerEntry = { ...mockServer, resources };
-
       renderWithStore({ servers: { "server-1": serverWithResources } });
-
       fireEvent.click(screen.getByText("Resources"));
-
-      // Search input placeholder changes based on active tab
       const searchInput = screen.getByPlaceholderText(/Search/);
       fireEvent.change(searchInput, { target: { value: "doc" } });
-
       expect(screen.getByText("document.txt")).toBeInTheDocument();
       expect(screen.queryByText("data.json")).not.toBeInTheDocument();
     });
@@ -287,29 +247,20 @@ describe("MCPPage", () => {
         { name: "summarize", description: "Summarize text" },
       ];
       const serverWithPrompts: ServerEntry = { ...mockServer, prompts };
-
       renderWithStore({ servers: { "server-1": serverWithPrompts } });
-
       fireEvent.click(screen.getByText("Prompts"));
-
       expect(screen.getByText("summarize")).toBeInTheDocument();
     });
-
     it("should filter prompts by search query", () => {
       const prompts: MCPPrompt[] = [
         { name: "summarize", description: "Summarize text" },
         { name: "translate", description: "Translate text" },
       ];
       const serverWithPrompts: ServerEntry = { ...mockServer, prompts };
-
       renderWithStore({ servers: { "server-1": serverWithPrompts } });
-
       fireEvent.click(screen.getByText("Prompts"));
-
-      // Search input placeholder changes based on active tab
       const searchInput = screen.getByPlaceholderText(/Search/);
       fireEvent.change(searchInput, { target: { value: "sum" } });
-
       expect(screen.getByText("summarize")).toBeInTheDocument();
       expect(screen.queryByText("translate")).not.toBeInTheDocument();
     });
@@ -328,16 +279,11 @@ describe("MCPPage", () => {
         },
       ];
       const serverWithTools: ServerEntry = { ...mockServer, tools };
-
       renderWithStore({ servers: { "server-1": serverWithTools } });
-
-      // Click on the tool to expand it
       const expandButton = screen.getByText("calculator").closest("button");
       if (expandButton) {
         fireEvent.click(expandButton);
       }
-
-      // After expanding, should show input schema
       expect(screen.getByText("calculator")).toBeInTheDocument();
     });
   });
@@ -345,20 +291,14 @@ describe("MCPPage", () => {
   describe("Error State", () => {
     it("should display error when present", () => {
       renderWithStore({ error: "Connection failed" });
-
       expect(screen.getByText(/Connection failed/)).toBeInTheDocument();
     });
-
     it("should have accessible error alert", () => {
       renderWithStore({ error: "Connection failed" });
-
-      // Error should have role="alert" for screen readers
       expect(screen.getByRole("alert")).toBeInTheDocument();
     });
-
     it("should have dismiss button for error", () => {
       renderWithStore({ error: "Connection failed" });
-
       expect(
         screen.getByRole("button", { name: /dismiss/i }),
       ).toBeInTheDocument();
@@ -368,8 +308,6 @@ describe("MCPPage", () => {
   describe("Connecting State", () => {
     it("should show connecting indicator when connecting", () => {
       renderWithStore({ isConnecting: true });
-
-      // Check for connecting state (spinning icon or text)
       expect(document.querySelector(".animate-spin")).toBeInTheDocument();
     });
   });
@@ -380,20 +318,13 @@ describe("MCPPage", () => {
         ...mockServer,
         tools: [{ name: "tool1", description: "A tool", inputSchema: {} }],
       };
-
       renderWithStore({ servers: { "server-1": serverWithTools } });
-
       fireEvent.click(screen.getByText("Servers"));
-
       expect(screen.getByText("http://localhost:3000")).toBeInTheDocument();
     });
-
     it("should show remove button for servers", () => {
       renderWithStore({ servers: { "server-1": mockServer } });
-
       fireEvent.click(screen.getByText("Servers"));
-
-      // There should be a remove/disconnect button
       const buttons = screen.getAllByRole("button");
       expect(buttons.length).toBeGreaterThan(0);
     });
@@ -403,42 +334,29 @@ describe("MCPPage", () => {
         ...mockServer,
         status: "connected",
       };
-
       renderWithStore({ servers: { "server-1": connectedServer } });
-
       fireEvent.click(screen.getByText("Servers"));
-
-      // Find the server entry container and verify it contains the Connected status
-      // There will be a header "Connected" text and a status "Connected" text in server row
       const serverRow = screen
         .getByText("http://localhost:3000")
         .closest('[class*="rounded-lg"]');
       expect(serverRow).toHaveTextContent("Connected");
     });
-
     it("should show Error status for servers with error status", () => {
       const errorServer: ServerEntry = {
         ...mockServer,
         status: "error",
       };
-
       renderWithStore({ servers: { "server-1": errorServer } });
-
       fireEvent.click(screen.getByText("Servers"));
-
       expect(screen.getByText("Error")).toBeInTheDocument();
     });
-
     it("should show Connecting status for connecting servers", () => {
       const connectingServer: ServerEntry = {
         ...mockServer,
         status: "connecting",
       };
-
       renderWithStore({ servers: { "server-1": connectingServer } });
-
       fireEvent.click(screen.getByText("Servers"));
-
       expect(screen.getByText("Connecting")).toBeInTheDocument();
     });
 
@@ -447,28 +365,21 @@ describe("MCPPage", () => {
         ...mockServer,
         id: "primary-server",
       };
-
       renderWithStore({
         servers: { "primary-server": primaryServer },
         primaryServerId: "primary-server",
       });
-
       fireEvent.click(screen.getByText("Servers"));
-
       expect(screen.getByText("(Primary)")).toBeInTheDocument();
     });
-
     it("should display server error message when present", () => {
       const serverWithError: ServerEntry = {
         ...mockServer,
         status: "error",
         error: "Connection timeout exceeded",
       };
-
       renderWithStore({ servers: { "server-1": serverWithError } });
-
       fireEvent.click(screen.getByText("Servers"));
-
       expect(
         screen.getByText("Connection timeout exceeded"),
       ).toBeInTheDocument();
@@ -488,25 +399,16 @@ describe("MCPPage", () => {
         },
       ];
       const serverWithTools: ServerEntry = { ...mockServer, tools };
-
       renderWithStore({ servers: { "server-1": serverWithTools } });
-
-      // Click to expand
       const expandButton = screen.getByText("expand-test").closest("button");
       expect(expandButton).toBeInTheDocument();
       if (expandButton) {
         fireEvent.click(expandButton);
       }
-
-      // Should show Parameters header
       expect(screen.getByText("Parameters")).toBeInTheDocument();
-
-      // Click again to collapse
       if (expandButton) {
         fireEvent.click(expandButton);
       }
-
-      // Should not show Parameters header
       expect(screen.queryByText("Parameters")).not.toBeInTheDocument();
     });
   });
@@ -514,15 +416,9 @@ describe("MCPPage", () => {
   describe("Error Dismissal", () => {
     it("should dispatch clearMCPError when dismiss button clicked", () => {
       const { store } = renderWithStore({ error: "Test error message" });
-
-      // Verify error is shown
       expect(screen.getByText("Test error message")).toBeInTheDocument();
-
-      // Click dismiss button
       const dismissButton = screen.getByRole("button", { name: /dismiss/i });
       fireEvent.click(dismissButton);
-
-      // Check that the error was cleared in store
       const state = store.getState();
       expect(state.mcp.error).toBeNull();
     });
@@ -531,25 +427,15 @@ describe("MCPPage", () => {
   describe("Add Connection Dialog", () => {
     it("should open add connection dialog when button clicked", async () => {
       renderWithStore();
-
-      // Go to Servers tab
       fireEvent.click(screen.getByText("Servers"));
-
-      // Click Add MCP Connection button
       fireEvent.click(screen.getByText("Add MCP Connection"));
-
-      // Dialog should be open - look for the dialog role
       const dialog = await screen.findByRole("dialog");
       expect(dialog).toBeInTheDocument();
     });
-
     it("should show dialog heading when opened", async () => {
       renderWithStore();
-
       fireEvent.click(screen.getByText("Servers"));
       fireEvent.click(screen.getByText("Add MCP Connection"));
-
-      // Look for dialog heading (there are two "Add MCP Connection" texts - button and dialog title)
       const dialog = await screen.findByRole("dialog");
       expect(dialog).toHaveTextContent("Add MCP Connection");
     });
@@ -558,28 +444,19 @@ describe("MCPPage", () => {
   describe("Search Placeholder", () => {
     it("should show correct placeholder for resources tab", () => {
       renderWithStore();
-
       fireEvent.click(screen.getByText("Resources"));
-
       expect(
         screen.getByPlaceholderText(/Search resources/),
       ).toBeInTheDocument();
     });
-
     it("should show correct placeholder for prompts tab", () => {
       renderWithStore();
-
       fireEvent.click(screen.getByText("Prompts"));
-
       expect(screen.getByPlaceholderText(/Search prompts/)).toBeInTheDocument();
     });
-
     it("should not show search on servers tab", () => {
       renderWithStore();
-
       fireEvent.click(screen.getByText("Servers"));
-
-      // Search input should not be present on servers tab
       expect(screen.queryByPlaceholderText(/Search/)).not.toBeInTheDocument();
     });
   });
@@ -587,17 +464,12 @@ describe("MCPPage", () => {
   describe("Empty States", () => {
     it("should show no resources message when empty", () => {
       renderWithStore();
-
       fireEvent.click(screen.getByText("Resources"));
-
       expect(screen.getByText("No resources found")).toBeInTheDocument();
     });
-
     it("should show no prompts message when empty", () => {
       renderWithStore();
-
       fireEvent.click(screen.getByText("Prompts"));
-
       expect(screen.getByText("No prompts found")).toBeInTheDocument();
     });
   });
@@ -610,24 +482,17 @@ describe("MCPPage", () => {
         { name: "tool3", description: "Tool 3", inputSchema: {} },
       ];
       const serverWithTools: ServerEntry = { ...mockServer, tools };
-
       renderWithStore({ servers: { "server-1": serverWithTools } });
-
-      // Should show "3" in the Tools tab badge
       const toolsTab = screen.getByText("Tools").closest("button");
       expect(toolsTab).toHaveTextContent("3");
     });
-
     it("should show correct resource count in tab badge", () => {
       const resources: MCPResource[] = [
         { uri: "file://a.txt", name: "a.txt", mimeType: "text/plain" },
         { uri: "file://b.txt", name: "b.txt", mimeType: "text/plain" },
       ];
       const serverWithResources: ServerEntry = { ...mockServer, resources };
-
       renderWithStore({ servers: { "server-1": serverWithResources } });
-
-      // Should show "2" in the Resources tab badge
       const resourcesTab = screen.getByText("Resources").closest("button");
       expect(resourcesTab).toHaveTextContent("2");
     });
@@ -637,20 +502,16 @@ describe("MCPPage", () => {
     describe("Tool Invocation Dialog", () => {
       it("should show invoke tool button in header actions", () => {
         renderWithStore();
-
         expect(
           screen.getByRole("button", { name: /invoke tool/i }),
         ).toBeInTheDocument();
       });
-
       it("should open tool invocation dialog when button clicked", async () => {
         renderWithStore();
-
         const invokeButton = screen.getByRole("button", {
           name: /invoke tool/i,
         });
         fireEvent.click(invokeButton);
-
         const dialog = await screen.findByRole("dialog");
         expect(dialog).toHaveTextContent(/invoke tool/i);
       });
@@ -659,20 +520,16 @@ describe("MCPPage", () => {
     describe("Resource Viewer Dialog", () => {
       it("should show view resources button in header actions", () => {
         renderWithStore();
-
         expect(
           screen.getByRole("button", { name: /view resources/i }),
         ).toBeInTheDocument();
       });
-
       it("should open resource viewer dialog when button clicked", async () => {
         renderWithStore();
-
         const viewButton = screen.getByRole("button", {
           name: /view resources/i,
         });
         fireEvent.click(viewButton);
-
         const dialog = await screen.findByRole("dialog");
         expect(dialog).toHaveTextContent(/resource viewer/i);
       });
@@ -681,18 +538,14 @@ describe("MCPPage", () => {
     describe("Prompt Tester Dialog", () => {
       it("should show test prompt button in header actions", () => {
         renderWithStore();
-
         expect(
           screen.getByRole("button", { name: /test prompt/i }),
         ).toBeInTheDocument();
       });
-
       it("should open prompt tester dialog when button clicked", async () => {
         renderWithStore();
-
         const testButton = screen.getByRole("button", { name: /test prompt/i });
         fireEvent.click(testButton);
-
         const dialog = await screen.findByRole("dialog");
         expect(dialog).toHaveTextContent(/prompt tester/i);
       });
@@ -701,20 +554,16 @@ describe("MCPPage", () => {
     describe("Elicitation Dialog", () => {
       it("should show elicitation button in header actions", () => {
         renderWithStore();
-
         expect(
           screen.getByRole("button", { name: /request input/i }),
         ).toBeInTheDocument();
       });
-
       it("should open elicitation dialog when button clicked", async () => {
         renderWithStore();
-
         const elicitButton = screen.getByRole("button", {
           name: /request input/i,
         });
         fireEvent.click(elicitButton);
-
         const dialog = await screen.findByRole("dialog");
         expect(dialog).toHaveTextContent(/request user input/i);
       });
@@ -736,52 +585,36 @@ describe("MCPPage", () => {
 
     it("should open tool invocation dialog with Cmd+Shift+T", async () => {
       renderWithStore();
-
       document.dispatchEvent(
         createKeyboardEvent("t", { metaKey: true, shiftKey: true }),
       );
-
       const dialog = await screen.findByRole("dialog");
       expect(dialog).toHaveTextContent(/invoke tool/i);
     });
-
     it("should open resource viewer with Cmd+Shift+R", async () => {
       renderWithStore();
-
       document.dispatchEvent(
         createKeyboardEvent("r", { metaKey: true, shiftKey: true }),
       );
-
       const dialog = await screen.findByRole("dialog");
       expect(dialog).toHaveTextContent(/resource viewer/i);
     });
-
     it("should open prompt tester with Cmd+Shift+P", async () => {
       renderWithStore();
-
       document.dispatchEvent(
         createKeyboardEvent("p", { metaKey: true, shiftKey: true }),
       );
-
       const dialog = await screen.findByRole("dialog");
       expect(dialog).toHaveTextContent(/prompt tester/i);
     });
-
     it("should close active dialog with Escape", async () => {
       renderWithStore();
-
-      // First open a dialog
       document.dispatchEvent(
         createKeyboardEvent("t", { metaKey: true, shiftKey: true }),
       );
-
       const dialog = await screen.findByRole("dialog");
       expect(dialog).toBeInTheDocument();
-
-      // Then close with Escape
       document.dispatchEvent(createKeyboardEvent("Escape"));
-
-      // Dialog should be closed (may take a moment)
       await vi.waitFor(() => {
         expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
       });
@@ -818,12 +651,10 @@ describe("MCPPage", () => {
 
     it("should show WebSocket connection status indicator", () => {
       renderWithStore();
-
       const wsIndicator = screen.getByTestId("mcp-ws-status-indicator");
       expect(wsIndicator).toBeInTheDocument();
-      expect(wsIndicator).toHaveClass("bg-green-500"); // connected = green
+      expect(wsIndicator).toHaveClass("bg-green-500");
     });
-
     it("should show yellow indicator when WebSocket is connecting", () => {
       mockUseMCPWebSocket.mockReturnValue({
         status: "connecting" as const,
@@ -844,13 +675,10 @@ describe("MCPPage", () => {
         disconnect: vi.fn(),
         reconnect: vi.fn(),
       });
-
       renderWithStore();
-
       const wsIndicator = screen.getByTestId("mcp-ws-status-indicator");
       expect(wsIndicator).toHaveClass("bg-yellow-500");
     });
-
     it("should show gray indicator when WebSocket is disconnected", () => {
       mockUseMCPWebSocket.mockReturnValue({
         status: "disconnected" as const,
@@ -871,13 +699,10 @@ describe("MCPPage", () => {
         disconnect: vi.fn(),
         reconnect: vi.fn(),
       });
-
       renderWithStore();
-
       const wsIndicator = screen.getByTestId("mcp-ws-status-indicator");
       expect(wsIndicator).toHaveClass("bg-gray-400");
     });
-
     it("should show server info when WebSocket is initialized", () => {
       mockUseMCPWebSocket.mockReturnValue({
         status: "connected" as const,
@@ -898,17 +723,13 @@ describe("MCPPage", () => {
         disconnect: vi.fn(),
         reconnect: vi.fn(),
       });
-
       renderWithStore();
-
-      // The WebSocket indicator should have a title showing server info
       const wsIndicator = screen.getByTestId("mcp-ws-status-indicator");
       expect(wsIndicator).toHaveAttribute(
         "title",
         expect.stringContaining("Production MCP"),
       );
     });
-
     it("should handle WebSocket error gracefully", () => {
       mockUseMCPWebSocket.mockReturnValue({
         status: "error" as const,
@@ -929,12 +750,8 @@ describe("MCPPage", () => {
         disconnect: vi.fn(),
         reconnect: vi.fn(),
       });
-
       renderWithStore();
-
-      // Should still render the page
       expect(screen.getByText("MCP Explorer")).toBeInTheDocument();
-      // Indicator should show error state (gray)
       const wsIndicator = screen.getByTestId("mcp-ws-status-indicator");
       expect(wsIndicator).toHaveClass("bg-gray-400");
     });
@@ -1006,15 +823,11 @@ describe("MCPPage", () => {
         disconnect: vi.fn(),
         reconnect: vi.fn(),
       });
-
       renderWithStore();
-
-      // Should show task indicator
       const taskIndicator = screen.getByTestId("mcp-task-indicator");
       expect(taskIndicator).toBeInTheDocument();
       expect(taskIndicator).toHaveTextContent("2");
     });
-
     it("should not show task indicator when no tasks", () => {
       mockUseMCPTaskWebSocket.mockReturnValue({
         status: "connected" as const,
@@ -1028,14 +841,10 @@ describe("MCPPage", () => {
         disconnect: vi.fn(),
         reconnect: vi.fn(),
       });
-
       renderWithStore();
-
-      // Should not show task indicator
       const taskIndicator = screen.queryByTestId("mcp-task-indicator");
       expect(taskIndicator).not.toBeInTheDocument();
     });
-
     it("should highlight running tasks with pulse animation", () => {
       mockUseMCPTaskWebSocket.mockReturnValue({
         status: "connected" as const,
@@ -1058,13 +867,10 @@ describe("MCPPage", () => {
         disconnect: vi.fn(),
         reconnect: vi.fn(),
       });
-
       renderWithStore();
-
       const taskIndicator = screen.getByTestId("mcp-task-indicator");
       expect(taskIndicator).toHaveClass("animate-pulse");
     });
-
     it("should not pulse when only completed tasks", () => {
       mockUseMCPTaskWebSocket.mockReturnValue({
         status: "connected" as const,
@@ -1087,9 +893,7 @@ describe("MCPPage", () => {
         disconnect: vi.fn(),
         reconnect: vi.fn(),
       });
-
       renderWithStore();
-
       const taskIndicator = screen.getByTestId("mcp-task-indicator");
       expect(taskIndicator).not.toHaveClass("animate-pulse");
     });

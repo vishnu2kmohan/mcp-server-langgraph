@@ -30,9 +30,9 @@ export interface AlertData {
   severity: string;
   service: string;
   message: string;
-  started_at: string;
-  resolved_at?: string;
-  generator_url?: string;
+  startedAt: string;
+  resolvedAt?: string;
+  generatorUrl?: string;
 }
 
 export interface MetricData {
@@ -113,7 +113,7 @@ export function mapTraceSpanToEvent(span: TraceSpan): TimelineEvent {
  * Map alert to timeline event
  */
 export function mapAlertToEvent(alert: AlertData): TimelineEvent {
-  const timestamp = new Date(alert.started_at).getTime();
+  const timestamp = new Date(alert.startedAt).getTime();
 
   return {
     id: generateEventId(),

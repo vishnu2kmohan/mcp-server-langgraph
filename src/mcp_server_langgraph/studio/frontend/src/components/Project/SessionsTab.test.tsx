@@ -34,21 +34,21 @@ vi.mock("react-router", async () => {
 // Mock fetch
 const mockFetch = vi.fn();
 
-// Mock session data
+// Mock session data (camelCase per ADR-0091 Phase 6)
 const mockSessions = [
   {
     id: "sess-1",
     name: "Session One",
-    message_count: 10,
-    created_at: "2025-01-01T00:00:00Z",
+    messageCount: 10,
+    createdAt: "2025-01-01T00:00:00Z",
   },
   {
     id: "sess-2",
     name: "Session Two",
-    message_count: 5,
-    created_at: "2025-01-02T00:00:00Z",
+    messageCount: 5,
+    createdAt: "2025-01-02T00:00:00Z",
   },
-  { id: "sess-3", name: "Session Three", message_count: 0, created_at: null },
+  { id: "sess-3", name: "Session Three", messageCount: 0, createdAt: null },
 ];
 
 describe("SessionsTab", () => {

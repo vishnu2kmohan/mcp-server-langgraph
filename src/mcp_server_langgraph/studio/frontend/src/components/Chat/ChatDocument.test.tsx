@@ -21,6 +21,7 @@ import {
 import { Provider } from "react-redux";
 import { configureStore } from "@reduxjs/toolkit";
 import { MemoryRouter } from "react-router";
+import { createTestUIState } from "../../store/slices/__tests__/uiSlice.fixtures";
 
 // Mock hooks
 const mockStartStream = vi.fn();
@@ -173,6 +174,7 @@ import sessionReducer, {
   type SessionState,
 } from "../../store/slices/sessionSlice";
 import personaReducer from "../../store/slices/personaSlice";
+import uiReducer from "../../store/slices/uiSlice";
 import type { ClientSession } from "../../types/session";
 
 // Default session state for tests
@@ -215,6 +217,7 @@ function createTestStore(
     reducer: {
       session: sessionReducer,
       persona: personaReducer,
+      ui: uiReducer,
     },
     preloadedState: {
       session: { ...defaultSessionState, ...overrides.session },
@@ -225,6 +228,7 @@ function createTestStore(
         permissions: [],
         isPersonaLoading: false,
       },
+      ui: createTestUIState(),
     },
   });
 }
@@ -264,30 +268,15 @@ describe("ChatDocument", () => {
   });
 
   describe("basic rendering", () => {
-    it("should render the chat document container", () => {
+    it("should render container with input and without panels", () => {
       renderWithProviders(<ChatDocument sessionId="session-123" />, {
         sessionOverrides: { currentSession: mockSession },
       });
 
       expect(screen.getByTestId("chat-document")).toBeInTheDocument();
-    });
-
-    it("should render without panels (no SessionPanel or ContextPanel)", () => {
-      renderWithProviders(<ChatDocument sessionId="session-123" />, {
-        sessionOverrides: { currentSession: mockSession },
-      });
-
-      // Should not have side panels
+      expect(screen.getByRole("textbox")).toBeInTheDocument();
       expect(screen.queryByTestId("session-panel")).not.toBeInTheDocument();
       expect(screen.queryByTestId("context-panel")).not.toBeInTheDocument();
-    });
-
-    it("should render chat input", () => {
-      renderWithProviders(<ChatDocument sessionId="session-123" />, {
-        sessionOverrides: { currentSession: mockSession },
-      });
-
-      expect(screen.getByRole("textbox")).toBeInTheDocument();
     });
   });
 
@@ -630,53 +619,23 @@ describe("ChatDocument", () => {
   });
 
   describe("Model Selector Integration", () => {
-    it("should accept showModelSelector prop", () => {
-      renderWithProviders(
-        <ChatDocument sessionId="session-123" showModelSelector={true} />,
-        {
-          sessionOverrides: { currentSession: mockSession },
-        },
-      );
-
-      expect(screen.getByTestId("chat-document")).toBeInTheDocument();
-    });
-
-    it("should render model selector when showModelSelector is true", () => {
-      renderWithProviders(
-        <ChatDocument sessionId="session-123" showModelSelector={true} />,
-        {
-          sessionOverrides: { currentSession: mockSession },
-        },
-      );
-
-      expect(screen.getByTestId("model-selector")).toBeInTheDocument();
-    });
-
-    it("should not render model selector when showModelSelector is false", () => {
-      renderWithProviders(
-        <ChatDocument sessionId="session-123" showModelSelector={false} />,
-        {
-          sessionOverrides: { currentSession: mockSession },
-        },
-      );
-
-      expect(screen.queryByTestId("model-selector")).not.toBeInTheDocument();
-    });
-
-    it("should accept onModelChange callback prop", () => {
-      const onModelChange = vi.fn();
-      renderWithProviders(
+    it("should render when showModelSelector=true and hide when false", () => {
+      const { unmount } = renderWithProviders(
         <ChatDocument
           sessionId="session-123"
           showModelSelector={true}
-          onModelChange={onModelChange}
+          onModelChange={vi.fn()}
         />,
-        {
-          sessionOverrides: { currentSession: mockSession },
-        },
+        { sessionOverrides: { currentSession: mockSession } },
       );
-
       expect(screen.getByTestId("model-selector")).toBeInTheDocument();
+
+      unmount();
+      renderWithProviders(
+        <ChatDocument sessionId="session-123" showModelSelector={false} />,
+        { sessionOverrides: { currentSession: mockSession } },
+      );
+      expect(screen.queryByTestId("model-selector")).not.toBeInTheDocument();
     });
   });
 
@@ -728,36 +687,18 @@ describe("ChatDocument", () => {
   });
 
   describe("Style Presets Integration", () => {
-    it("should accept showStylePresets prop", () => {
-      renderWithProviders(
+    it("should show when showStylePresets=true and hide when false", () => {
+      const { unmount } = renderWithProviders(
         <ChatDocument sessionId="session-123" showStylePresets={true} />,
-        {
-          sessionOverrides: { currentSession: mockSession },
-        },
+        { sessionOverrides: { currentSession: mockSession } },
       );
-
-      expect(screen.getByTestId("chat-document")).toBeInTheDocument();
-    });
-
-    it("should show style presets when showStylePresets is true", () => {
-      renderWithProviders(
-        <ChatDocument sessionId="session-123" showStylePresets={true} />,
-        {
-          sessionOverrides: { currentSession: mockSession },
-        },
-      );
-
       expect(screen.getByTestId("style-presets-container")).toBeInTheDocument();
-    });
 
-    it("should not show style presets when showStylePresets is false", () => {
+      unmount();
       renderWithProviders(
         <ChatDocument sessionId="session-123" showStylePresets={false} />,
-        {
-          sessionOverrides: { currentSession: mockSession },
-        },
+        { sessionOverrides: { currentSession: mockSession } },
       );
-
       expect(
         screen.queryByTestId("style-presets-container"),
       ).not.toBeInTheDocument();

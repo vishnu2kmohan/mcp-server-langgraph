@@ -43,23 +43,23 @@ export function OrganizationCostDashboard({
     projectId,
   );
 
-  // Build params for queries
+  // Build params for queries (camelCase per ADR-0091 Phase 6)
   const orgParams: OrganizationalCostParams = {
-    start_date: startDate,
-    end_date: endDate,
+    startDate: startDate,
+    endDate: endDate,
   };
 
   const projectParams: OrganizationalCostParams = {
-    organization_id: selectedOrg,
-    start_date: startDate,
-    end_date: endDate,
+    organizationId: selectedOrg,
+    startDate: startDate,
+    endDate: endDate,
   };
 
   const teamParams: OrganizationalCostParams = {
-    organization_id: selectedOrg,
-    project_id: selectedProject,
-    start_date: startDate,
-    end_date: endDate,
+    organizationId: selectedOrg,
+    projectId: selectedProject,
+    startDate: startDate,
+    endDate: endDate,
   };
 
   // RTK Query hooks
@@ -118,11 +118,11 @@ export function OrganizationCostDashboard({
 
   // Calculate totals
   const totalOrgCost =
-    orgCosts?.reduce((sum, org) => sum + org.total_cost, 0) ?? 0;
+    orgCosts?.reduce((sum, org) => sum + org.totalCost, 0) ?? 0;
   const _totalOrgTokens =
-    orgCosts?.reduce((sum, org) => sum + org.total_tokens, 0) ?? 0;
+    orgCosts?.reduce((sum, org) => sum + org.totalTokens, 0) ?? 0;
   const totalOrgRequests =
-    orgCosts?.reduce((sum, org) => sum + org.request_count, 0) ?? 0;
+    orgCosts?.reduce((sum, org) => sum + org.requestCount, 0) ?? 0;
 
   return (
     <div className="space-y-6">
@@ -268,28 +268,28 @@ export function OrganizationCostDashboard({
                   <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
                     {orgCosts?.map((org) => (
                       <tr
-                        key={org.organization_id}
-                        onClick={() => handleOrgClick(org.organization_id)}
+                        key={org.organizationId}
+                        onClick={() => handleOrgClick(org.organizationId)}
                         className="cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/50"
                       >
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-100">
                           <div className="flex items-center gap-2">
                             <Building2 size={16} className="text-gray-400" />
-                            {org.organization_id.replace("organization:", "")}
+                            {org.organizationId.replace("organization:", "")}
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-gray-900 dark:text-gray-100">
-                          {formatCurrency(org.total_cost)}
+                          {formatCurrency(org.totalCost)}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-gray-500 dark:text-gray-400">
-                          {formatNumber(org.total_tokens)}
+                          {formatNumber(org.totalTokens)}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-gray-500 dark:text-gray-400">
-                          {formatNumber(org.request_count)}
+                          {formatNumber(org.requestCount)}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-gray-500 dark:text-gray-400">
                           {totalOrgCost > 0
-                            ? `${((org.total_cost / totalOrgCost) * 100).toFixed(1)}%`
+                            ? `${((org.totalCost / totalOrgCost) * 100).toFixed(1)}%`
                             : "0%"}
                         </td>
                       </tr>
@@ -350,28 +350,28 @@ export function OrganizationCostDashboard({
                   <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
                     {projectCosts?.map((proj) => (
                       <tr
-                        key={proj.project_id}
-                        onClick={() => handleProjectClick(proj.project_id)}
+                        key={proj.projectId}
+                        onClick={() => handleProjectClick(proj.projectId)}
                         className="cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/50"
                       >
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-100">
                           <div className="flex items-center gap-2">
                             <Folder size={16} className="text-gray-400" />
-                            {proj.project_id.replace("project:", "")}
+                            {proj.projectId.replace("project:", "")}
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                          {proj.organization_id?.replace("organization:", "") ??
+                          {proj.organizationId?.replace("organization:", "") ??
                             "—"}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-gray-900 dark:text-gray-100">
-                          {formatCurrency(proj.total_cost)}
+                          {formatCurrency(proj.totalCost)}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-gray-500 dark:text-gray-400">
-                          {formatNumber(proj.total_tokens)}
+                          {formatNumber(proj.totalTokens)}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-gray-500 dark:text-gray-400">
-                          {formatNumber(proj.request_count)}
+                          {formatNumber(proj.requestCount)}
                         </td>
                       </tr>
                     ))}
@@ -431,30 +431,30 @@ export function OrganizationCostDashboard({
                   <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
                     {teamCosts?.map((team) => (
                       <tr
-                        key={team.team_id}
+                        key={team.teamId}
                         className="hover:bg-gray-50 dark:hover:bg-gray-700/50"
                       >
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-100">
                           <div className="flex items-center gap-2">
                             <Users size={16} className="text-gray-400" />
-                            {team.team_id.replace("team:", "")}
+                            {team.teamId.replace("team:", "")}
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                          {team.organization_id?.replace("organization:", "") ??
+                          {team.organizationId?.replace("organization:", "") ??
                             "—"}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                          {team.project_id?.replace("project:", "") ?? "—"}
+                          {team.projectId?.replace("project:", "") ?? "—"}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-gray-900 dark:text-gray-100">
-                          {formatCurrency(team.total_cost)}
+                          {formatCurrency(team.totalCost)}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-gray-500 dark:text-gray-400">
-                          {formatNumber(team.total_tokens)}
+                          {formatNumber(team.totalTokens)}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-gray-500 dark:text-gray-400">
-                          {formatNumber(team.request_count)}
+                          {formatNumber(team.requestCount)}
                         </td>
                       </tr>
                     ))}

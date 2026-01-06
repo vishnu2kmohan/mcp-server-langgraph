@@ -10,7 +10,11 @@
 import { useState, useCallback, useRef, useMemo, useEffect } from "react";
 import { useRealtimeSync } from "./useRealtimeSync";
 import { useAppDispatch, useAppSelector } from "../store/hooks";
-import { logout, selectIsAuthenticated } from "../store/slices/authSlice";
+import {
+  logout,
+  selectIsAuthenticated,
+  selectWebSocketPermissions,
+} from "../store/slices/authSlice";
 import { addNotification } from "../store/slices/notificationSlice";
 import { getAuthToken } from "../utils/storage";
 import { buildWebSocketUrl, WS_ENDPOINTS } from "../utils/websocket";
@@ -179,19 +183,23 @@ export function useHeartMetricsWebSocket(
 
   // Get auth state and token for WebSocket authentication
   const isAuthenticated = useAppSelector(selectIsAuthenticated);
+  const wsPermissions = useAppSelector(selectWebSocketPermissions);
   // Track token changes to trigger URL regeneration on refresh
   const authToken = isAuthenticated ? (getAuthToken() ?? undefined) : undefined;
 
-  // Compute WebSocket URL - only generate URL when authenticated
-  // Passing empty string prevents connection attempt before auth is ready
+  // Check if user has permission for HEART metrics WebSocket
+  const hasHeartMetricsPermission = wsPermissions?.heart_metrics ?? false;
+
+  // Compute WebSocket URL - only generate URL when authenticated AND has permission
+  // Passing empty string prevents connection attempt before auth is ready or if unauthorized
   const url = useMemo(
     () =>
-      isAuthenticated
+      isAuthenticated && hasHeartMetricsPermission
         ? (customUrl ?? buildWebSocketUrl(WS_ENDPOINTS.METRICS_HEART, {}, true))
         : "",
     // authToken dependency ensures URL regenerates when token is refreshed
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [customUrl, authToken, isAuthenticated],
+    [customUrl, authToken, isAuthenticated, hasHeartMetricsPermission],
   );
 
   // State

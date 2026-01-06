@@ -117,13 +117,13 @@ export function AddConnectionDialog({
         return;
       }
 
-      // Build connection data
+      // Build connection data (camelCase - transformed at API boundary per ADR-0091)
       const data: MCPConnectionCreate = {
         name: name.trim(),
         description: description.trim() || undefined,
         url: url.trim(),
         transport,
-        auth_type: authType,
+        authType: authType,
       };
 
       // Add stdio fields if applicable
@@ -152,15 +152,15 @@ export function AddConnectionDialog({
 
       // Add auth fields if applicable
       if (authType === "api_key" && apiKey.trim()) {
-        data.api_key = apiKey.trim();
+        data.apiKey = apiKey.trim();
       }
 
       if (authType === "oauth2") {
         if (oauth2ClientId.trim()) {
-          data.oauth2_client_id = oauth2ClientId.trim();
+          data.oauth2ClientId = oauth2ClientId.trim();
         }
         if (oauth2Scopes.trim()) {
-          data.oauth2_scopes = oauth2Scopes.trim().split(/\s+/);
+          data.oauth2Scopes = oauth2Scopes.trim().split(/\s+/);
         }
       }
 

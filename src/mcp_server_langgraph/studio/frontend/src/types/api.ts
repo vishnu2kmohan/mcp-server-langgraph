@@ -3,7 +3,13 @@
  *
  * All API request/response types are defined here to ensure consistency
  * across the application and avoid duplication.
+ *
+ * ADR-0091 Phase 6: Types use snake_case to match backend API responses.
+ * RTK Query transforms responses to camelCase at runtime.
+ * Use `SnakeToCamelCaseDeep<T>` to get the frontend-friendly type.
  */
+
+import type { SnakeToCamelCaseDeep } from "../api/transforms";
 
 // =============================================================================
 // Common Types
@@ -58,6 +64,19 @@ export interface PaginatedResponse<T> {
   limit: number;
   cursor?: string;
   next_cursor?: string;
+}
+
+/**
+ * CamelCase version of PaginatedResponse for transformed API responses.
+ * ADR-0091 Phase 6: Use this type when RTK Query applies transformSnakeToCamel.
+ */
+export interface PaginatedResponseCamelCase<T> {
+  items: T[];
+  /** @deprecated Cursor pagination does not provide total. Use `count` instead. */
+  total?: number;
+  limit: number;
+  cursor?: string;
+  nextCursor?: string;
 }
 
 /**
@@ -238,6 +257,8 @@ export interface FeatureFlags {
   url_content_fetch?: boolean;
   /** Enable slash commands */
   slash_commands?: boolean;
+  /** Enable rich text input with formatting toolbar (bold, italic, code, mentions) */
+  rich_text_chat_input?: boolean;
   /** Enable style presets */
   style_presets?: boolean;
 
@@ -371,6 +392,12 @@ export interface BootstrapWorkflowResponse {
   name: string;
 }
 
+/**
+ * BootstrapWorkflowResponse with camelCase keys (after RTK Query transformation).
+ */
+export type BootstrapWorkflowResponseCamelCase =
+  SnakeToCamelCaseDeep<BootstrapWorkflowResponse>;
+
 // Workflow Sharing
 export interface WorkflowShare {
   user_id: string;
@@ -469,6 +496,31 @@ export interface GenerateWorkflowFromChatResponse {
   plan?: Record<string, unknown>;
 }
 
+// -----------------------------------------------------------------------------
+// ADR-0091 Phase 6: CamelCase Workflow Types (for transformed responses)
+// -----------------------------------------------------------------------------
+
+/**
+ * Workflow type with camelCase keys (after RTK Query transformation).
+ */
+export type WorkflowCamelCase = SnakeToCamelCaseDeep<Workflow>;
+
+/**
+ * WorkflowSummary type with camelCase keys (after RTK Query transformation).
+ */
+export type WorkflowSummaryCamelCase = SnakeToCamelCaseDeep<WorkflowSummary>;
+
+/**
+ * WorkflowVersion type with camelCase keys (after RTK Query transformation).
+ */
+export type WorkflowVersionCamelCase = SnakeToCamelCaseDeep<WorkflowVersion>;
+
+/**
+ * WorkflowSharesResponse type with camelCase keys (after RTK Query transformation).
+ */
+export type WorkflowSharesResponseCamelCase =
+  SnakeToCamelCaseDeep<WorkflowSharesResponse>;
+
 // =============================================================================
 // Sessions
 // =============================================================================
@@ -492,23 +544,61 @@ export interface SessionConfigUpdateRequest {
   max_tokens?: number;
 }
 
+/**
+ * Session type matching backend API response (snake_case).
+ * Use SessionCamelCase for frontend code after RTK Query transformation.
+ */
 export interface Session {
-  id: string; // Changed from session_id to match REST convention
+  id: string;
   name: string;
   workflow_id?: string;
   user_id?: string;
-  status: "active" | "archived" | "deleted"; // Constrained to valid values
+  project_id?: string;
+  status: "active" | "archived" | "deleted";
   created_at: string;
   updated_at: string;
   config?: ApiSessionConfig;
 }
 
+/**
+ * SessionRef type matching backend API response (snake_case).
+ * Use SessionRefCamelCase for frontend code after RTK Query transformation.
+ */
 export interface SessionRef {
   id: string;
   name: string;
   message_count: number;
   created_at: string | null;
 }
+
+// -----------------------------------------------------------------------------
+// ADR-0091 Phase 6: CamelCase Session Types (for transformed responses)
+// -----------------------------------------------------------------------------
+
+/**
+ * Session type with camelCase keys (after RTK Query transformation).
+ *
+ * Use this type in components that consume data from RTK Query endpoints
+ * with `transformResponse: transformSnakeToCamel`.
+ *
+ * @example
+ * ```typescript
+ * const { data } = useGetSessionQuery(sessionId);
+ * // data is SessionCamelCase, not Session
+ * console.log(data?.createdAt); // camelCase property access
+ * ```
+ */
+export type SessionCamelCase = SnakeToCamelCaseDeep<Session>;
+
+/**
+ * SessionRef type with camelCase keys (after RTK Query transformation).
+ */
+export type SessionRefCamelCase = SnakeToCamelCaseDeep<SessionRef>;
+
+/**
+ * ApiSessionConfig type with camelCase keys (after RTK Query transformation).
+ */
+export type ApiSessionConfigCamelCase = SnakeToCamelCaseDeep<ApiSessionConfig>;
 
 // =============================================================================
 // Messages & Chat
@@ -552,6 +642,26 @@ export interface TokenUsage {
   completion_tokens: number;
   total_tokens: number;
 }
+
+// -----------------------------------------------------------------------------
+// ADR-0091 Phase 6: CamelCase Message/Chat Types (for transformed responses)
+// -----------------------------------------------------------------------------
+
+/**
+ * Message type with camelCase keys (after RTK Query transformation).
+ */
+export type MessageCamelCase = SnakeToCamelCaseDeep<Message>;
+
+/**
+ * ChatCompletionResponse type with camelCase keys (after RTK Query transformation).
+ */
+export type ChatCompletionResponseCamelCase =
+  SnakeToCamelCaseDeep<ChatCompletionResponse>;
+
+/**
+ * TokenUsage type with camelCase keys (after RTK Query transformation).
+ */
+export type TokenUsageCamelCase = SnakeToCamelCaseDeep<TokenUsage>;
 
 // =============================================================================
 // Projects
@@ -597,6 +707,25 @@ export interface ConnectionRef {
   status: string;
 }
 
+// -----------------------------------------------------------------------------
+// ADR-0091 Phase 6: CamelCase Project Types (for transformed responses)
+// -----------------------------------------------------------------------------
+
+/**
+ * Project type with camelCase keys (after RTK Query transformation).
+ */
+export type ProjectCamelCase = SnakeToCamelCaseDeep<Project>;
+
+/**
+ * ProjectDetail type with camelCase keys (after RTK Query transformation).
+ */
+export type ProjectDetailCamelCase = SnakeToCamelCaseDeep<ProjectDetail>;
+
+/**
+ * ProjectMember type with camelCase keys (after RTK Query transformation).
+ */
+export type ProjectMemberCamelCase = SnakeToCamelCaseDeep<ProjectMember>;
+
 // =============================================================================
 // Cost & Billing
 // =============================================================================
@@ -633,6 +762,20 @@ export interface CostData {
   completionTokens: number;
   sessionCount: number;
 }
+
+// -----------------------------------------------------------------------------
+// ADR-0091 Phase 6: CamelCase Cost Types (for transformed responses)
+// -----------------------------------------------------------------------------
+
+/**
+ * CostSummary type with camelCase keys (after RTK Query transformation).
+ */
+export type CostSummaryCamelCase = SnakeToCamelCaseDeep<CostSummary>;
+
+/**
+ * ModelCostData type with camelCase keys (after RTK Query transformation).
+ */
+export type ModelCostDataCamelCase = SnakeToCamelCaseDeep<ModelCostData>;
 
 // =============================================================================
 // Observability
@@ -825,6 +968,49 @@ export interface ProjectModelCost {
   tokens: number;
 }
 
+// -----------------------------------------------------------------------------
+// ADR-0091 Phase 6: CamelCase Observability Types (for transformed responses)
+// -----------------------------------------------------------------------------
+
+/**
+ * TraceSpan type with camelCase keys (after RTK Query transformation).
+ */
+export type TraceSpanCamelCase = SnakeToCamelCaseDeep<TraceSpan>;
+
+/**
+ * TraceDetail type with camelCase keys (after RTK Query transformation).
+ */
+export type TraceDetailCamelCase = SnakeToCamelCaseDeep<TraceDetail>;
+
+/**
+ * TraceListItem type with camelCase keys (after RTK Query transformation).
+ */
+export type TraceListItemCamelCase = SnakeToCamelCaseDeep<TraceListItem>;
+
+/**
+ * ObservabilityMetrics type with camelCase keys (after RTK Query transformation).
+ */
+export type ObservabilityMetricsCamelCase =
+  SnakeToCamelCaseDeep<ObservabilityMetrics>;
+
+/**
+ * ObservabilityAlert type with camelCase keys (after RTK Query transformation).
+ */
+export type ObservabilityAlertCamelCase =
+  SnakeToCamelCaseDeep<ObservabilityAlert>;
+
+/**
+ * LogEntry type with camelCase keys (after RTK Query transformation).
+ */
+export type LogEntryCamelCase = SnakeToCamelCaseDeep<LogEntry>;
+
+/**
+ * ObservabilityAlertRule type with camelCase keys (after RTK Query transformation).
+ * ADR-0091 Phase 9: Added for transform consistency.
+ */
+export type ObservabilityAlertRuleCamelCase =
+  SnakeToCamelCaseDeep<ObservabilityAlertRule>;
+
 // =============================================================================
 // Organizational Cost Attribution (new endpoints)
 // =============================================================================
@@ -867,12 +1053,14 @@ export interface TeamCostResponse {
 
 /**
  * Parameters for organizational cost queries
+ *
+ * ADR-0091 Phase 6: Uses camelCase - transformed to snake_case at API boundary
  */
 export interface OrganizationalCostParams {
-  organization_id?: string;
-  project_id?: string;
-  start_date?: string;
-  end_date?: string;
+  organizationId?: string;
+  projectId?: string;
+  startDate?: string;
+  endDate?: string;
 }
 
 // =============================================================================
@@ -923,6 +1111,39 @@ export interface CostForecastParams {
   entity_type: "organization" | "project" | "team" | "user";
   entity_id: string;
 }
+
+// -----------------------------------------------------------------------------
+// ADR-0091 Phase 6: CamelCase Cost Attribution Types (for transformed responses)
+// -----------------------------------------------------------------------------
+
+/**
+ * OrganizationCostResponse type with camelCase keys (after RTK Query transformation).
+ */
+export type OrganizationCostResponseCamelCase =
+  SnakeToCamelCaseDeep<OrganizationCostResponse>;
+
+/**
+ * ProjectCostBreakdown type with camelCase keys (after RTK Query transformation).
+ */
+export type ProjectCostBreakdownCamelCase =
+  SnakeToCamelCaseDeep<ProjectCostBreakdown>;
+
+/**
+ * TeamCostResponse type with camelCase keys (after RTK Query transformation).
+ */
+export type TeamCostResponseCamelCase = SnakeToCamelCaseDeep<TeamCostResponse>;
+
+/**
+ * BudgetStatusResponse type with camelCase keys (after RTK Query transformation).
+ */
+export type BudgetStatusResponseCamelCase =
+  SnakeToCamelCaseDeep<BudgetStatusResponse>;
+
+/**
+ * CostForecastResponse type with camelCase keys (after RTK Query transformation).
+ */
+export type CostForecastResponseCamelCase =
+  SnakeToCamelCaseDeep<CostForecastResponse>;
 
 /**
  * Add project member request
@@ -1046,29 +1267,34 @@ export interface VectorTextUpsertResponse {
 /**
  * Information about a specific thinking level
  */
+/**
+ * ADR-0091 Phase 6: Uses camelCase - data transformed at API boundary
+ */
 export interface ThinkingLevelInfo {
   /** Thinking level (low, medium, high, ultra) */
   level: string;
   /** Effort parameter for Claude Opus 4.5 (low, medium, high) */
-  claude_opus_effort: string;
+  claudeOpusEffort: string;
   /** Token budget for non-Opus models */
-  other_models_tokens: number;
+  otherModelsTokens: number;
   /** Description of this thinking level */
   description: string;
 }
 
 /**
  * Thinking budget default configuration
+ *
+ * ADR-0091 Phase 6: Uses camelCase - data transformed at API boundary
  */
 export interface ThinkingBudgetDefaults {
   /** Whether thinking budget is enabled */
   enabled: boolean;
   /** Default thinking level (low, medium, high, ultra) */
-  default_level: string;
+  defaultLevel: string;
   /** Available thinking levels with model-specific behavior */
   levels: ThinkingLevelInfo[];
   /** Task complexity to thinking level mapping */
-  complexity_mapping: Record<string, string>;
+  complexityMapping: Record<string, string>;
 }
 
 /**
@@ -1094,6 +1320,12 @@ export interface AgentConfig {
   /** List of supported LLM providers (optional) */
   providers?: ProviderInfo[] | null;
 }
+
+/**
+ * AgentConfig with camelCase keys for frontend use.
+ * Used after transformSnakeToCamel transformation.
+ */
+export type AgentConfigCamelCase = SnakeToCamelCaseDeep<AgentConfig>;
 
 /**
  * Request for updating thinking budget configuration
@@ -1128,37 +1360,39 @@ export interface AgentTool {
 /**
  * Information about an orchestrator
  * Matches backend OrchestratorInfo from agents/registry.py
+ * Note: Uses camelCase per ADR-0091 (transformed at API boundary)
  */
 export interface OrchestratorInfo {
   /** Orchestrator class name */
   name: string;
   /** Human-readable display name */
-  display_name: string;
+  displayName: string;
   /** Description of orchestrator purpose */
   description: string;
   /** Feature flag controlling this orchestrator */
-  feature_flag: string;
+  featureFlag: string;
   /** Task categories this orchestrator handles */
-  task_categories: string[];
+  taskCategories: string[];
 }
 
 /**
  * Information about an LLM provider
  * Matches backend ProviderInfo from llm/providers.py
+ * Note: Uses camelCase per ADR-0091 (transformed at API boundary)
  */
 export interface ProviderInfo {
   /** Provider identifier (e.g., "anthropic") */
   name: string;
   /** Human-readable display name */
-  display_name: string;
+  displayName: string;
   /** Description of the provider */
   description: string;
   /** Model types this provider supports */
-  supported_model_types: string[];
+  supportedModelTypes: string[];
   /** Whether this provider requires an API key */
-  requires_api_key: boolean;
+  requiresApiKey: boolean;
   /** Environment variable name for API key */
-  api_key_env_var: string | null;
+  apiKeyEnvVar: string | null;
 }
 
 // =============================================================================
@@ -1233,6 +1467,32 @@ export interface AgentMetricsResponse {
   cost: CostMetrics;
 }
 
+// -----------------------------------------------------------------------------
+// ADR-0091 Phase 6: CamelCase Agent Metrics Types (for transformed responses)
+// -----------------------------------------------------------------------------
+
+/**
+ * AgentMetricsResponse type with camelCase keys (after RTK Query transformation).
+ */
+export type AgentMetricsResponseCamelCase =
+  SnakeToCamelCaseDeep<AgentMetricsResponse>;
+
+/**
+ * OrchestratorMetrics type with camelCase keys (after RTK Query transformation).
+ */
+export type OrchestratorMetricsCamelCase =
+  SnakeToCamelCaseDeep<OrchestratorMetrics>;
+
+/**
+ * HITLMetrics type with camelCase keys (after RTK Query transformation).
+ */
+export type HITLMetricsCamelCase = SnakeToCamelCaseDeep<HITLMetrics>;
+
+/**
+ * CostMetrics type with camelCase keys (after RTK Query transformation).
+ */
+export type CostMetricsCamelCase = SnakeToCamelCaseDeep<CostMetrics>;
+
 // =============================================================================
 // Audit Logs
 // =============================================================================
@@ -1295,6 +1555,23 @@ export interface HEARTAggregateMetrics {
   avg_return_visits?: number | null;
   avg_days_active?: number | null;
 }
+
+// -----------------------------------------------------------------------------
+// ADR-0091 Phase 9: CamelCase Health & Metrics Types (for transformed responses)
+// -----------------------------------------------------------------------------
+
+/**
+ * HealthStatus type with camelCase keys (after RTK Query transformation).
+ * ADR-0091 Phase 9: Added for transform consistency.
+ */
+export type HealthStatusCamelCase = SnakeToCamelCaseDeep<HealthStatus>;
+
+/**
+ * HEARTAggregateMetrics type with camelCase keys (after RTK Query transformation).
+ * ADR-0091 Phase 9: Added for transform consistency.
+ */
+export type HEARTAggregateMetricsCamelCase =
+  SnakeToCamelCaseDeep<HEARTAggregateMetrics>;
 
 // =============================================================================
 // AI Suggestions
@@ -1518,6 +1795,12 @@ export interface AdminUser {
 }
 
 /**
+ * AdminUser with camelCase keys for frontend use.
+ * Used after transformSnakeToCamel transformation.
+ */
+export type AdminUserCamelCase = SnakeToCamelCaseDeep<AdminUser>;
+
+/**
  * Admin user list query parameters
  */
 export interface AdminUserListParams {
@@ -1587,12 +1870,27 @@ export interface WorkflowExecutionListResponse {
   next_cursor?: string | null;
 }
 
+/**
+ * WorkflowExecution type with camelCase keys (after RTK Query transformation).
+ */
+export type WorkflowExecutionCamelCase =
+  SnakeToCamelCaseDeep<WorkflowExecution>;
+
+/**
+ * WorkflowExecutionListResponse type with camelCase keys (after RTK Query transformation).
+ */
+export interface WorkflowExecutionListResponseCamelCase {
+  items: WorkflowExecutionCamelCase[];
+  total: number;
+  nextCursor?: string | null;
+}
+
 // =============================================================================
 // Notification Preferences
 // =============================================================================
 
 /**
- * User notification preferences
+ * User notification preferences (backend snake_case)
  */
 export interface NotificationPreferences {
   user_id: string;
@@ -1600,6 +1898,17 @@ export interface NotificationPreferences {
   success_enabled: boolean;
   warning_enabled: boolean;
   error_enabled: boolean;
+}
+
+/**
+ * User notification preferences (frontend camelCase)
+ */
+export interface NotificationPreferencesCamelCase {
+  userId: string;
+  infoEnabled: boolean;
+  successEnabled: boolean;
+  warningEnabled: boolean;
+  errorEnabled: boolean;
 }
 
 /**
@@ -1645,6 +1954,12 @@ export interface UserPreferences {
   // Keyboard Shortcuts
   keyboard_shortcuts: Record<string, string>;
 }
+
+/**
+ * UserPreferences with camelCase keys for frontend use.
+ * Used after transformSnakeToCamel transformation.
+ */
+export type UserPreferencesCamelCase = SnakeToCamelCaseDeep<UserPreferences>;
 
 /**
  * Request to update user preferences (partial update)
@@ -1704,66 +2019,71 @@ export type RemediationStatus =
 
 /**
  * A single remediation step recommended by AI
+ * Note: Uses camelCase per ADR-0091 (transformed at API boundary)
  */
 export interface RemediationStep {
-  step_number: number;
+  stepNumber: number;
   action: string;
   description: string;
   command: string | null;
-  requires_approval: boolean;
-  risk_level: RiskLevel;
+  requiresApproval: boolean;
+  riskLevel: RiskLevel;
 }
 
 /**
  * Risk assessment for a recommendation
+ * Note: Uses camelCase per ADR-0091 (transformed at API boundary)
  */
 export interface RiskAssessment {
-  overall_risk: RiskLevel;
-  impact_analysis: string;
-  rollback_plan: string;
+  overallRisk: RiskLevel;
+  impactAnalysis: string;
+  rollbackPlan: string;
 }
 
 /**
  * AI-generated recommendation for an alert
+ * Note: Uses camelCase per ADR-0091 (transformed at API boundary)
  */
 export interface AIRecommendation {
-  recommendation_id: string;
-  alert_id: string;
-  root_cause_analysis: string;
-  remediation_steps: RemediationStep[];
-  risk_assessment: RiskAssessment;
-  runbook_reference: string | null;
-  generated_at: string;
-  model_used: string;
+  recommendationId: string;
+  alertId: string;
+  rootCauseAnalysis: string;
+  remediationSteps: RemediationStep[];
+  riskAssessment: RiskAssessment;
+  runbookReference: string | null;
+  generatedAt: string;
+  modelUsed: string;
 }
 
 /**
  * A remediation request pending approval
+ * Note: Uses camelCase per ADR-0091 (transformed at API boundary)
  */
 export interface RemediationRequest {
-  remediation_id: string;
-  alert_id: string;
-  alert_name: string;
+  remediationId: string;
+  alertId: string;
+  alertName: string;
   severity: "critical" | "warning";
-  step_number: number;
+  stepNumber: number;
   action: string;
   description: string;
   command: string | null;
-  risk_level: RiskLevel;
+  riskLevel: RiskLevel;
   status: RemediationStatus;
-  requested_at: string;
-  approved_by: string | null;
-  approved_at: string | null;
+  requestedAt: string;
+  approvedBy: string | null;
+  approvedAt: string | null;
   reason: string | null;
-  recommendation_id: string;
+  recommendationId: string;
 }
 
 /**
  * Remediation list query parameters
+ * Note: Uses camelCase per ADR-0091 (transformed at API boundary)
  */
 export interface RemediationListParams {
   status?: RemediationStatus;
-  alert_id?: string;
+  alertId?: string;
   severity?: "critical" | "warning";
   limit?: number;
   cursor?: string;
@@ -1771,21 +2091,23 @@ export interface RemediationListParams {
 
 /**
  * Request to approve a remediation
+ * Note: Uses camelCase per ADR-0091 (transformed at API boundary)
  */
 export interface ApproveRemediationRequest {
-  remediation_id: string;
-  approved_by: string;
+  remediationId: string;
+  approvedBy: string;
   reason?: string;
 }
 
 /**
  * Request to reject a remediation
+ * Note: Uses camelCase per ADR-0091 (transformed at API boundary)
  */
 export interface RejectRemediationRequest {
-  remediation_id: string;
-  rejected_by: string;
+  remediationId: string;
+  rejectedBy: string;
   reason: RejectionReason;
-  reason_detail?: string;
+  reasonDetail?: string;
 }
 
 /**
@@ -1995,7 +2317,7 @@ export interface ListPendingAgentRequestsParams {
 // =============================================================================
 
 /**
- * MCP Resource
+ * MCP Resource (backend snake_case)
  */
 export interface McpResource {
   uri: string;
@@ -2006,6 +2328,17 @@ export interface McpResource {
 }
 
 /**
+ * MCP Resource (frontend camelCase)
+ */
+export interface McpResourceCamelCase {
+  uri: string;
+  name: string;
+  title?: string | null;
+  description?: string | null;
+  mimeType?: string | null;
+}
+
+/**
  * Response for listing MCP resources
  */
 export interface McpResourceListResponse {
@@ -2013,11 +2346,21 @@ export interface McpResourceListResponse {
 }
 
 /**
- * MCP Resource content item
+ * MCP Resource content item (backend snake_case)
  */
 export interface McpResourceContentItem {
   uri: string;
   mime_type?: string | null;
+  text?: string | null;
+  blob?: string | null;
+}
+
+/**
+ * MCP Resource content item (frontend camelCase)
+ */
+export interface McpResourceContentItemCamelCase {
+  uri: string;
+  mimeType?: string | null;
   text?: string | null;
   blob?: string | null;
 }
