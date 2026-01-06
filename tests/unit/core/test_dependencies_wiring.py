@@ -272,3 +272,52 @@ class TestIntegrationPoints:
         # Should not raise
         server = get_mcp_server()
         assert server is not None
+
+
+# ============================================================================
+# DATABASE SESSION DEPENDENCY TESTS
+# ============================================================================
+
+
+@pytest.mark.xdist_group(name="test_dependencies_wiring")
+class TestDatabaseSessionDependencies:
+    """Validate database session dependencies are properly exported."""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
+
+    def test_get_async_session_importable_from_dependencies(self):
+        """get_async_session should be importable from core.dependencies.
+
+        This test validates that code using:
+            from mcp_server_langgraph.core.dependencies import get_async_session
+
+        will not raise an ImportError. This is required by api/v1/user.py
+        for fetching/saving user preferences outside FastAPI request context.
+        """
+        try:
+            from mcp_server_langgraph.core.dependencies import get_async_session
+
+            assert get_async_session is not None
+            assert callable(get_async_session)
+        except ImportError as e:
+            pytest.fail(f"Failed to import get_async_session from core.dependencies: {e}")
+
+    def test_get_async_session_is_async_generator(self):
+        """get_async_session should be an async generator function."""
+        from mcp_server_langgraph.core.dependencies import get_async_session
+        import inspect
+
+        # Should be an async generator function
+        assert inspect.isasyncgenfunction(get_async_session)
+
+    def test_get_db_session_importable_from_dependencies(self):
+        """get_db_session should remain importable for FastAPI routes."""
+        try:
+            from mcp_server_langgraph.core.dependencies import get_db_session
+
+            assert get_db_session is not None
+            assert callable(get_db_session)
+        except ImportError as e:
+            pytest.fail(f"Failed to import get_db_session from core.dependencies: {e}")

@@ -400,6 +400,15 @@ async def create_lifespan(container: ApplicationContainer | None = None) -> Asyn
         except Exception as e:
             logger.warning(f"Error closing observability query clients: {e}")
 
+        # Cleanup all centralized service clients (PostgreSQL registry, CacheService, Qdrant)
+        # This handles the URL-keyed engine registry and shared clients
+        try:
+            from mcp_server_langgraph.lifecycle.cleanup import cleanup_all_clients
+
+            await cleanup_all_clients()
+        except Exception as e:
+            logger.warning(f"Error in centralized client cleanup: {e}")
+
         # Reset LiteLLM callbacks
         from mcp_server_langgraph.llm.otel_integration import (
             reset_cost_tracking_configuration,

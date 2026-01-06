@@ -11,17 +11,16 @@ import asyncio
 import base64
 import time
 from datetime import datetime, timedelta, UTC
-from functools import lru_cache
 from typing import Any
 
 from cryptography.fernet import Fernet
 from langchain_core.embeddings import Embeddings
 from langchain_core.messages import BaseMessage, SystemMessage
 from pydantic import BaseModel, Field
-from qdrant_client import QdrantClient
 from qdrant_client.models import Distance, FieldCondition, Filter, MatchValue, PointStruct, VectorParams
 
 from mcp_server_langgraph.core.config import settings
+from mcp_server_langgraph.storage.vectors.factory import get_shared_async_qdrant_client
 from mcp_server_langgraph.observability.telemetry import logger, metrics, tracer
 from mcp_server_langgraph.utils.response_optimizer import count_tokens
 
@@ -30,41 +29,69 @@ def _create_embeddings(
     provider: str,
     model_name: str,
     google_api_key: str | None = None,
+    openai_api_key: str | None = None,
+    huggingface_token: str | None = None,
     task_type: str | None = None,
 ) -> Embeddings:
     """
     Create embeddings instance based on provider.
 
     Args:
-        provider: "google" for Gemini API or "local" for sentence-transformers
-        model_name: Model name (e.g., "models/text-embedding-004" or "all-MiniLM-L6-v2")
+        provider: One of "google_vertex", "google", "openai", "local", "huggingface"
+        model_name: Model name (provider-specific)
         google_api_key: Google API key (required for "google" provider)
-        task_type: Task type for Google embeddings optimization
+        openai_api_key: OpenAI API key (required for "openai" provider)
+        huggingface_token: HuggingFace token (optional for "huggingface" provider)
+        task_type: Task type for embedding optimization (Google providers only)
 
     Returns:
         Embeddings instance
 
     Raises:
-        ValueError: If provider is unsupported or required API key is missing
+        ValueError: If provider is unsupported or required credentials are missing
+        ImportError: If required dependencies are not installed
     """
-    if provider == "google":
+    if provider == "google_vertex":
+        # Vertex AI embeddings using GCP Application Default Credentials
         try:
-            from langchain_google_genai import GoogleGenerativeAIEmbeddings
+            from langchain_google_vertexai import VertexAIEmbeddings
         except ImportError:
             msg = (
-                "langchain-google-genai is required for Google embeddings. "
-                "Add 'langchain-google-genai' to pyproject.toml dependencies, then run: uv sync"
+                "langchain-google-vertexai is required for google_vertex embeddings. "
+                "Install with: uv add langchain-google-vertexai"
             )
             raise ImportError(msg)
 
+        gcp_project = getattr(settings, "gcp_project_id", None)
+        gcp_location = getattr(settings, "gcp_location", "us-central1")
+
+        embeddings: Embeddings = VertexAIEmbeddings(
+            model_name=model_name,
+            project=gcp_project,
+            location=gcp_location,
+        )
+
+        logger.info(
+            "Initialized Vertex AI embeddings",
+            extra={"model": model_name, "project": gcp_project, "location": gcp_location},
+        )
+        return embeddings
+
+    elif provider == "google":
+        # Google AI Studio embeddings (requires API key)
+        try:
+            from langchain_google_genai import GoogleGenerativeAIEmbeddings
+        except ImportError:
+            msg = "langchain-google-genai is required for google embeddings. Install with: uv add langchain-google-genai"
+            raise ImportError(msg)
+
         if not google_api_key:
-            msg = "GOOGLE_API_KEY is required for Google embeddings. Set via environment variable or Infisical."
+            msg = "GOOGLE_API_KEY is required for google embeddings."
             raise ValueError(msg)
 
-        # Create Google embeddings with task type optimization
         from pydantic import SecretStr
 
-        embeddings: Embeddings = GoogleGenerativeAIEmbeddings(
+        embeddings = GoogleGenerativeAIEmbeddings(
             model=model_name,
             google_api_key=SecretStr(google_api_key),
             task_type=task_type or "RETRIEVAL_DOCUMENT",
@@ -74,10 +101,33 @@ def _create_embeddings(
             "Initialized Google Gemini embeddings",
             extra={"model": model_name, "task_type": task_type},
         )
+        return embeddings
 
+    elif provider == "openai":
+        # OpenAI embeddings (requires API key)
+        try:
+            from langchain_openai import OpenAIEmbeddings
+        except ImportError:
+            msg = "langchain-openai is required for openai embeddings. Install with: uv add langchain-openai"
+            raise ImportError(msg)
+
+        if not openai_api_key:
+            msg = "OPENAI_API_KEY is required for openai embeddings."
+            raise ValueError(msg)
+
+        embeddings = OpenAIEmbeddings(
+            model=model_name,
+            openai_api_key=openai_api_key,
+        )
+
+        logger.info(
+            "Initialized OpenAI embeddings",
+            extra={"model": model_name},
+        )
         return embeddings
 
     elif provider == "local":
+        # Local sentence-transformers (no API key needed)
         try:
             from sentence_transformers import SentenceTransformer
 
@@ -103,18 +153,39 @@ def _create_embeddings(
                 "Initialized local sentence-transformers embeddings",
                 extra={"model": model_name},
             )
-
             return embeddings
 
         except ImportError:
-            msg = (
-                "sentence-transformers is required for local embeddings. "
-                "Add 'sentence-transformers' to pyproject.toml dependencies, then run: uv sync"
-            )
+            msg = "sentence-transformers is required for local embeddings. Install with: uv add sentence-transformers"
             raise ImportError(msg)
 
+    elif provider == "huggingface":
+        # HuggingFace embeddings (optional token for private models)
+        try:
+            from langchain_huggingface import HuggingFaceEmbeddings
+        except ImportError:
+            msg = "langchain-huggingface is required for huggingface embeddings. Install with: uv add langchain-huggingface"
+            raise ImportError(msg)
+
+        # Build model kwargs with optional token
+        model_kwargs: dict[str, Any] = {}
+        if huggingface_token:
+            model_kwargs["token"] = huggingface_token
+
+        embeddings = HuggingFaceEmbeddings(
+            model_name=model_name,
+            model_kwargs=model_kwargs,
+        )
+
+        logger.info(
+            "Initialized HuggingFace embeddings",
+            extra={"model": model_name, "has_token": bool(huggingface_token)},
+        )
+        return embeddings
+
     else:
-        msg = f"Unsupported embedding provider: {provider}. Supported providers: 'google', 'local'"
+        supported = "'google_vertex', 'google', 'openai', 'local', 'huggingface'"
+        msg = f"Unsupported embedding provider: {provider}. Supported: {supported}"
         raise ValueError(msg)
 
 
@@ -213,22 +284,30 @@ class DynamicContextLoader:
                 msg = f"Invalid encryption key format: {e}. Generate with: Fernet.generate_key()"
                 raise ValueError(msg)
 
-        # Initialize Qdrant client
-        self.client = QdrantClient(host=self.qdrant_url, port=self.qdrant_port)
+        # Client will be lazily initialized on first async use
+        # Uses shared async Qdrant client (singleton) for proper lifecycle management
+        # Note: Custom qdrant_url/qdrant_port parameters are preserved for logging
+        # but the shared client uses settings for actual connection
+        self._client: Any = None
+        self._collection_ensured = False
 
         # Initialize embeddings
         self.embedder = _create_embeddings(
             provider=self.embedding_provider,
             model_name=self.embedding_model_name,
             google_api_key=settings.google_api_key,
+            openai_api_key=getattr(settings, "openai_api_key", None),
+            huggingface_token=getattr(settings, "huggingface_token", None),
             task_type=settings.embedding_task_type,
         )
 
-        # Create collection if it doesn't exist
-        self._ensure_collection_exists()
+        # Note: Collection creation moved to async _ensure_collection_initialized()
+        # which is called lazily on first async operation
 
-        # LRU cache for loaded contexts
-        self._load_context_cached = lru_cache(maxsize=cache_size)(self._load_context_impl)
+        # Simple dict cache for loaded contexts (async-compatible)
+        # Using dict instead of lru_cache since _load_context_impl is now async
+        self._context_cache: dict[str, LoadedContext] = {}
+        self._cache_size = cache_size
 
         logger.info(
             "DynamicContextLoader initialized",
@@ -287,20 +366,42 @@ class DynamicContextLoader:
         expiry_date = datetime.now(UTC) + timedelta(days=self.retention_days)
         return expiry_date.timestamp()
 
-    def _ensure_collection_exists(self) -> None:
-        """Create Qdrant collection if it doesn't exist."""
+    async def _get_client(self) -> Any:
+        """Get the async Qdrant client, initializing if needed.
+
+        Lazily initializes the shared async client on first use
+        and ensures the collection exists.
+
+        Returns:
+            AsyncQdrantClient instance
+        """
+        if self._client is None:
+            self._client = await get_shared_async_qdrant_client()
+
+        if not self._collection_ensured:
+            await self._ensure_collection_exists()
+
+        return self._client
+
+    async def _ensure_collection_exists(self) -> None:
+        """Create Qdrant collection if it doesn't exist (async)."""
+        if self._collection_ensured:
+            return
+
         try:
-            collections = self.client.get_collections().collections
-            exists = any(c.name == self.collection_name for c in collections)
+            collections = await self._client.get_collections()
+            exists = any(c.name == self.collection_name for c in collections.collections)
 
             if not exists:
-                self.client.create_collection(
+                await self._client.create_collection(
                     collection_name=self.collection_name,
                     vectors_config=VectorParams(size=self.embedding_dim, distance=Distance.COSINE),
                 )
                 logger.info(f"Created Qdrant collection: {self.collection_name}")
             else:
                 logger.info(f"Qdrant collection exists: {self.collection_name}")
+
+            self._collection_ensured = True
         except Exception as e:
             logger.error(f"Failed to ensure Qdrant collection: {e}", exc_info=True)
             raise
@@ -355,8 +456,9 @@ class DynamicContextLoader:
                     },
                 )
 
-                # Upsert to Qdrant
-                await asyncio.to_thread(self.client.upsert, collection_name=self.collection_name, points=[point])
+                # Upsert to Qdrant using async client
+                client = await self._get_client()
+                await client.upsert(collection_name=self.collection_name, points=[point])
 
                 logger.info(f"Indexed context: {ref_id}", extra={"ref_type": ref_type, "summary": summary})
                 metrics.successful_calls.add(1, {"operation": "index_context", "type": ref_type})
@@ -400,9 +502,9 @@ class DynamicContextLoader:
                 if ref_type_filter:
                     search_filter = Filter(must=[FieldCondition(key="ref_type", match=MatchValue(value=ref_type_filter))])
 
-                # Search Qdrant
-                results = await asyncio.to_thread(
-                    self.client.search,  # type: ignore[attr-defined]
+                # Search Qdrant using async client
+                client = await self._get_client()
+                results = await client.search(
                     collection_name=self.collection_name,
                     query_vector=query_embedding,  # Already a list from embed_query
                     limit=top_k,
@@ -513,17 +615,30 @@ class DynamicContextLoader:
         with tracer.start_as_current_span("context.load") as span:
             span.set_attribute("ref_id", reference.ref_id)
 
-            # Use cached implementation
-            loaded = await asyncio.to_thread(self._load_context_cached, reference.ref_id)
+            # Check cache first
+            if reference.ref_id in self._context_cache:
+                loaded = self._context_cache[reference.ref_id]
+                span.set_attribute("cache_hit", True)
+            else:
+                # Load from Qdrant
+                loaded = await self._load_context_impl(reference.ref_id)
+
+                # Add to cache with LRU eviction
+                if len(self._context_cache) >= self._cache_size:
+                    # Remove oldest entry (first key in dict - approximates LRU)
+                    oldest_key = next(iter(self._context_cache))
+                    del self._context_cache[oldest_key]
+                self._context_cache[reference.ref_id] = loaded
+                span.set_attribute("cache_hit", False)
 
             span.set_attribute("token_count", loaded.token_count)
             metrics.successful_calls.add(1, {"operation": "load_context", "type": reference.ref_type})
 
             return loaded
 
-    def _load_context_impl(self, ref_id: str) -> LoadedContext:
+    async def _load_context_impl(self, ref_id: str) -> LoadedContext:
         """
-        Implementation of context loading (cached).
+        Implementation of context loading (async).
 
         Args:
             ref_id: Reference ID to load
@@ -532,8 +647,9 @@ class DynamicContextLoader:
             Loaded context
         """
         try:
-            # Retrieve from Qdrant
-            results = self.client.retrieve(collection_name=self.collection_name, ids=[ref_id])
+            # Retrieve from Qdrant using async client
+            client = await self._get_client()
+            results = await client.retrieve(collection_name=self.collection_name, ids=[ref_id])
 
             if not results:
                 msg = f"Context not found: {ref_id}"
@@ -641,11 +757,11 @@ class DynamicContextLoader:
             # Use feature flag threshold if not specified
             threshold = dedup_threshold or feature_flags.context_deduplication_threshold
 
+            client = await self._get_client()
             for ref in references:
                 # Get the embedding for this context from Qdrant
                 try:
-                    results = await asyncio.to_thread(
-                        self.client.retrieve,
+                    results = await client.retrieve(
                         collection_name=self.collection_name,
                         ids=[ref.ref_id],
                         with_vectors=True,
@@ -665,7 +781,7 @@ class DynamicContextLoader:
                         if isinstance(raw_vector, list) and raw_vector:
                             # Check if it's list[float] (dense) or list[list[float]] (multi)
                             if isinstance(raw_vector[0], float):
-                                embedding = raw_vector  # type: ignore[assignment]
+                                embedding = raw_vector
                             # Skip dict and list[list] as we only use dense vectors
 
                     # Check for semantic duplicates

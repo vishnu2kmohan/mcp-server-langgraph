@@ -41,7 +41,7 @@ class StorageState:
         """
         Cleanup storage resources.
 
-        Stops schedulers gracefully.
+        Stops schedulers gracefully and closes preferences repository.
         """
         if self.retention_scheduler is not None:
             try:
@@ -54,6 +54,12 @@ class StorageState:
                 self.audit_scheduler.stop()  # sync method
             except Exception as e:
                 logger.debug("Operation failed: %s", e)
+
+        if self.preferences_repository is not None:
+            try:
+                await self.preferences_repository.aclose()
+            except Exception as e:
+                logger.debug("Preferences repository close failed: %s", e)
 
 
 def create_preferences_repository(

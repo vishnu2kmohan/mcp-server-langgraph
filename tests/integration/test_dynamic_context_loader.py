@@ -7,7 +7,7 @@ Tests semantic search, indexing, progressive discovery, and caching.
 import gc
 import os
 import time
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from langchain_core.messages import SystemMessage
@@ -24,14 +24,17 @@ pytestmark = [pytest.mark.integration]
 
 @pytest.fixture
 def mock_qdrant_client():
-    """Mock Qdrant client for testing"""
-    with patch("mcp_server_langgraph.core.dynamic_context_loader.QdrantClient") as mock:
+    """Mock async Qdrant client for testing via shared async client singleton"""
+    with patch("mcp_server_langgraph.core.dynamic_context_loader.get_shared_async_qdrant_client") as mock:
         client = MagicMock()
 
-        # Mock collection existence check
-        client.get_collections.return_value.collections = []
+        # Mock collection existence check - now async
+        mock_collections = MagicMock()
+        mock_collections.collections = []
+        client.get_collections = AsyncMock(return_value=mock_collections)
+        client.create_collection = AsyncMock(return_value=None)
 
-        # Mock search results
+        # Mock search results - now async
         mock_results = [
             MagicMock(
                 id="ref_1",
@@ -54,8 +57,11 @@ def mock_qdrant_client():
                 },
             ),
         ]
-        client.search.return_value = mock_results
+        client.search = AsyncMock(return_value=mock_results)
+        client.upsert = AsyncMock(return_value=None)
+        client.retrieve = AsyncMock(return_value=[])
 
+        # get_shared_async_qdrant_client() is async, so mock must return coroutine
         mock.return_value = client
         yield client
 
@@ -120,7 +126,10 @@ class TestDynamicContextLoader:
         assert context_loader.embedding_provider == "google"
         assert context_loader.embedding_dim == 768
 
-        # Verify collection creation was attempted
+        # Client is lazily initialized - trigger it by calling _get_client()
+        await context_loader._get_client()
+
+        # Verify collection creation was attempted after lazy init
         mock_qdrant_client.get_collections.assert_called_once()
 
     @pytest.mark.asyncio

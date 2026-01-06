@@ -502,9 +502,20 @@ class FeatureFlags(BaseSettings):
         description="Enable slash commands (/) for quick actions and workflow templates in chat input",
     )
 
+    enable_rich_text_chat_input: bool = Field(
+        default=True,
+        description="Use RichTextInput with formatting toolbar (bold, italic, code, mentions) in chat input. "
+        "When disabled, uses plain textarea input. Set FF_ENABLE_RICH_TEXT_CHAT_INPUT=false to revert.",
+    )
+
     enable_style_presets: bool = Field(
         default=True,
         description="Enable response style presets selector in chat (concise, detailed, etc.)",
+    )
+
+    show_chat_avatars: bool = Field(
+        default=True,
+        description="Show user and assistant avatars in chat messages (Sprint 3.1 feature)",
     )
 
     # UX Enhancement Features (Priority 1-3 from competitive analysis)
@@ -551,6 +562,18 @@ class FeatureFlags(BaseSettings):
     enable_theme_customization: bool = Field(
         default=True,
         description="Enable theme customization (light/dark/system)",
+    )
+
+    # Sprint 4.1: Panel Zoom/Maximize (StudioShell UX Plan)
+    enable_panel_zoom: bool = Field(
+        default=True,
+        description="Enable panel zoom/maximize feature for full-width panel views",
+    )
+
+    # Sprint 5.1: Mobile Drawer Navigation (StudioShell UX Plan)
+    enable_mobile_drawer: bool = Field(
+        default=True,
+        description="Enable mobile drawer navigation for small screens",
     )
 
     enable_confirmation_dialogs: bool = Field(
@@ -1249,6 +1272,12 @@ class FeatureFlags(BaseSettings):
         description="Enable batch composite analysis (runs persona, disclosure, error analyses in parallel)",
     )
 
+    enable_insights_session_dismissal: bool = Field(
+        default=True,
+        description="Enable session-based dismissal for CrossInsightsPanel (resets on session change). "
+        "When False, dismissal persists across sessions via localStorage.",
+    )
+
     # =========================================================================
     # Plan Editor Features (Phase 5b - Prompt Architecture ADR-0089)
     # =========================================================================
@@ -1616,7 +1645,9 @@ class FeatureFlags(BaseSettings):
             "interactive_artifacts": self.enable_interactive_artifacts,
             "url_content_fetch": self.enable_url_content_fetch,
             "slash_commands": self.enable_slash_commands,
+            "rich_text_chat_input": self.enable_rich_text_chat_input,
             "style_presets": self.enable_style_presets,
+            "show_chat_avatars": self.show_chat_avatars,
             # UX Enhancement Features
             "user_preferences_sync": self.enable_user_preferences_sync,
             "session_export": self.enable_session_export,
@@ -1627,6 +1658,8 @@ class FeatureFlags(BaseSettings):
             "command_palette": self.enable_command_palette,
             "keyboard_shortcuts": self.enable_keyboard_shortcuts,
             "theme_customization": self.enable_theme_customization,
+            "panel_zoom": self.enable_panel_zoom,
+            "mobile_drawer": self.enable_mobile_drawer,
             "confirmation_dialogs": self.enable_confirmation_dialogs,
             # AI UX Features (Phase 6 AI-Native Integration)
             "ai_ux": self.enable_ai_ux,  # Master AI UX toggle
@@ -1635,11 +1668,14 @@ class FeatureFlags(BaseSettings):
             "ai_disclosure": self.enable_ai_disclosure,
             "ai_empty_states": self.enable_ai_empty_states,
             "ai_nudges": self.enable_ai_nudges,
+            "nudges": self.enable_ai_nudges,  # Alias for frontend compatibility
             "ai_error_recovery": self.enable_ai_error_recovery,
             "ai_onboarding": self.enable_ai_onboarding,
             "ai_metrics_insights": self.enable_ai_metrics_insights,
             "ai_persona_analysis": self.enable_ai_persona_analysis,
+            "persona_analysis": self.enable_ai_persona_analysis,  # Alias for frontend compatibility
             "batch_composite_analysis": self.enable_batch_composite_analysis,
+            "insights_session_dismissal": self.enable_insights_session_dismissal,
             # HITL Features
             "agent_hitl": self.enable_agent_hitl,
             # Granular Intelligence Flags (StudioShell AI)

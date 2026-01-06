@@ -559,6 +559,46 @@ async def get_db_session() -> AsyncGenerator[AsyncSession, None]:
             await session.close()
 
 
+async def get_async_session() -> AsyncGenerator[AsyncSession, None]:
+    """
+    Get an async database session for use outside FastAPI request context.
+
+    This is an alias for get_db_session that can be used with async iteration
+    pattern in non-FastAPI contexts (e.g., WebSocket handlers, background tasks).
+
+    Yields:
+        AsyncSession: Database session
+
+    Example:
+        async for session in get_async_session():
+            repo = UserPreferencesRepository(session)
+            prefs = await repo.get_preferences(user_id)
+
+    Note:
+        For FastAPI route handlers, prefer using get_db_session with Depends():
+            @router.get("/items")
+            async def get_items(session: AsyncSession = Depends(get_db_session)):
+                ...
+    """
+    from mcp_server_langgraph.database.session import get_session_maker
+
+    database_url = settings.database_url
+
+    if not database_url:
+        raise RuntimeError("DATABASE_URL is not configured. Set the DATABASE_URL environment variable.")
+
+    session_maker = get_session_maker(database_url)
+    async with session_maker() as session:
+        try:
+            yield session
+            await session.commit()
+        except Exception:
+            await session.rollback()
+            raise
+        finally:
+            await session.close()
+
+
 def get_project_repository(
     session: AsyncSession = Depends(get_db_session),
 ) -> ProjectRepository:

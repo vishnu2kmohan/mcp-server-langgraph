@@ -258,18 +258,8 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     except Exception as e:
         logger.warning(f"Error closing OpenFGA client: {e}")
 
-    # Cleanup session service connections (Postgres and Redis)
-    try:
-        from mcp_server_langgraph.api.v1.sessions import _postgres_engine, _redis_client
-
-        if _postgres_engine:
-            await _postgres_engine.dispose()
-            logger.info("Session service PostgreSQL engine closed")
-        if _redis_client:
-            await _redis_client.close()
-            logger.info("Session service Redis client closed")
-    except Exception as e:
-        logger.warning(f"Error closing session service connections: {e}")
+    # Note: Session service cleanup is handled by cleanup_all_clients() below
+    # via cleanup_session_service() - no need for manual cleanup here
 
     # Close observability query clients (Grafana, Tempo, Loki, Prometheus)
     try:
@@ -279,6 +269,15 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         logger.info("Observability query clients closed")
     except Exception as e:
         logger.warning(f"Error closing observability query clients: {e}")
+
+    # Cleanup all centralized service clients (PostgreSQL registry, CacheService, Qdrant)
+    # This handles the URL-keyed engine registry and shared clients
+    try:
+        from mcp_server_langgraph.lifecycle.cleanup import cleanup_all_clients
+
+        await cleanup_all_clients()
+    except Exception as e:
+        logger.warning(f"Error in centralized client cleanup: {e}")
 
     # Cleanup storage layer (audit schedulers, etc.)
     try:
