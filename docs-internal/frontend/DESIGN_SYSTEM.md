@@ -78,15 +78,29 @@ src/
 
 ```
 src/
+├── components/
+│   └── Common/
+│       └── KeyboardShortcutOverlay.tsx  # Keyboard shortcuts overlay
 ├── hooks/
-│   ├── usePermission.ts     # Permission-based UI
-│   ├── usePersonaTheme.ts   # Persona theming
-│   └── useHeartMetricsTracker.ts  # Enhanced metrics with persona
+│   ├── usePermission.ts           # Permission-based UI
+│   ├── usePersonaTheme.ts         # Persona theming
+│   ├── useHeartMetricsTracker.ts  # Enhanced metrics with persona
+│   ├── useFocusTrap.ts            # Modal focus management (WCAG 2.1)
+│   └── useKeyboardShortcuts.ts    # Global keyboard shortcut handler
+├── layout/
+│   ├── StudioShellLayout.tsx      # Main shell container
+│   ├── ActivityBar.tsx            # RBAC-filtered navigation with collapsible groups
+│   ├── SessionNav.tsx             # Session navigation panel
+│   ├── TopBar.tsx                 # Header with section title
+│   ├── ResponsiveLayout.tsx       # Breakpoint detection
+│   ├── MobileDrawer.tsx           # Mobile navigation drawer
+│   └── HamburgerMenu.tsx          # Mobile menu trigger
 ├── store/
 │   └── slices/
-│       └── personaSlice.ts  # Persona state management
+│       ├── personaSlice.ts        # Persona state management
+│       └── canvasSlice.ts         # Panel sizes, collapse states, hasCustomLayout
 └── persona/
-    └── PersonaVariants.ts   # Persona configuration
+    └── PersonaVariants.ts         # Persona configuration + default presets
 ```
 
 ## Design Tokens
@@ -206,18 +220,44 @@ persona.*    - Persona display names
 
 ## Accessibility
 
-All components comply with **WCAG 2.2 AA**:
+All components comply with **WCAG 2.1 AA**:
 
 - Focus-visible styles (`:focus-visible` with ring)
 - ARIA attributes for interactive elements
 - Keyboard navigation support
 - Screen reader announcements
 
+### Layout Accessibility Features
+
+| Feature | Component | WCAG Criterion |
+|---------|-----------|----------------|
+| Skip-to-content link | `StudioShellLayout` | 2.4.1 Bypass Blocks |
+| Focus trap in modals | `useFocusTrap` hook | 2.1.2 No Keyboard Trap |
+| Keyboard shortcuts | `useKeyboardShortcuts` | 2.1.1 Keyboard |
+| Collapsible groups | `ActivityBar` | 4.1.2 Name, Role, Value |
+
+### Keyboard Shortcuts
+
+Press `?` or `Shift+?` to display the shortcuts overlay.
+
+| Shortcut | Action |
+|----------|--------|
+| `Ctrl/Cmd+K` | Open command palette |
+| `Ctrl/Cmd+/` | Toggle canvas panel |
+| `Ctrl/Cmd+Shift+I` | Toggle DevTools |
+| `Ctrl/Cmd+Shift+F` | Toggle focus mode |
+| `?` | Show shortcuts overlay |
+
+See [KEYBOARD_SHORTCUTS.md](./KEYBOARD_SHORTCUTS.md) for complete reference.
+
 ### Testing
 
 - **Unit tests:** jest-axe for component-level a11y
 - **E2E tests:** @axe-core/playwright for page-level a11y
 - **Dev tools:** A11yDevTools for real-time violations
+- **Dedicated suite:** `StudioShellLayout.accessibility.test.tsx`
+
+See [ACCESSIBILITY_IMPLEMENTATION.md](./ACCESSIBILITY_IMPLEMENTATION.md) for full compliance details.
 
 ## Metrics Collection
 

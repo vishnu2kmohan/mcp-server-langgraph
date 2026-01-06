@@ -14,6 +14,7 @@ __tests__/
 ├── README.md                               # This file
 ├── StudioShellLayout.setup.ts              # Shared mocks, utilities, and helpers
 ├── StudioShellLayout.core.test.tsx         # Core rendering and structure tests
+├── StudioShellLayout.navigation.test.tsx   # Navigation interactivity tests
 ├── StudioShellLayout.ai.test.tsx           # AI interpretation, nudges, persona
 ├── StudioShellLayout.panels.test.tsx       # Panel visibility, collapse, responsive
 ├── StudioShellLayout.rbac.test.tsx         # RBAC, persona-based navigation
@@ -24,13 +25,14 @@ __tests__/
 
 | File | Tests | Description |
 |------|-------|-------------|
-| `core.test.tsx` | 13 | Basic rendering, structure, initial state |
+| `core.test.tsx` | 26 | Basic rendering, structure, initial state, responsive layout |
+| `navigation.test.tsx` | 4 | Navigation interactivity (clicking nav items) |
 | `ai.test.tsx` | 8 | AI interpretation, nudges, persona mismatch |
 | `panels.test.tsx` | 18 | Panel visibility, collapse states, responsive |
 | `rbac.test.tsx` | 9 | RBAC, persona-based navigation filtering |
-| `accessibility.test.tsx` | 10 | WCAG 2.1 AA, axe-core, accessible labels |
+| `accessibility.test.tsx` | 14 | WCAG 2.1 AA, axe-core, accessible labels |
 
-**Total: 58 tests** across 5 split files
+**Total: 79 tests** across 6 split files
 
 ## Shared Setup (`StudioShellLayout.setup.ts`)
 
