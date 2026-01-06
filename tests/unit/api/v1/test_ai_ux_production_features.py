@@ -15,7 +15,7 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 
 from mcp_server_langgraph.api.v1.ai_ux import (
-    ErrorInfo,
+    ErrorAnalyzeRequest,
     DisclosureAnalyzeRequest,
     CompositeAnalysisRequest,
 )
@@ -40,49 +40,59 @@ class TestRedisCacheIntegration:
 
     @pytest.mark.asyncio
     async def test_error_analysis_checks_redis_cache_first(self) -> None:
-        """Error analysis should check Redis cache before calling LLM."""
+        """Error analysis should check Redis cache before calling LLM.
+
+        ADR-0091 Phase 9: Uses aligned ErrorAnalyzeRequest schema.
+        """
         service = create_test_service()
         service.redis_cache = AsyncMock()  # noqa: async-mock-config
         service.redis_cache.get = AsyncMock(return_value=None)  # Cache miss
 
-        error_info = ErrorInfo(
-            name="ServerError",
-            message="500 Internal Server Error",
+        request = ErrorAnalyzeRequest(
+            error_code="ServerError",
+            error_message="500 Internal Server Error",
+            context={"persona": "admin"},
         )
 
         # analyze_error should check cache first (feature to implement)
-        result = await service.analyze_error(error_info, user_context={"persona": "admin"})
+        result = await service.analyze_error(request)
 
         # Result should be returned (from heuristics since no LLM)
         assert result is not None
 
     @pytest.mark.asyncio
     async def test_error_analysis_returns_cached_result(self) -> None:
-        """Error analysis should return cached result if available."""
+        """Error analysis should return cached result if available.
+
+        ADR-0091 Phase 9: Uses aligned ErrorAnalyzeRequest/Response schema.
+        """
         service = create_test_service()
 
         # Cached response won't work with current implementation
         # This is a feature request - Redis cache integration
-        error_info = ErrorInfo(
-            name="TimeoutError",
-            message="Request timed out",
+        request = ErrorAnalyzeRequest(
+            error_code="TimeoutError",
+            error_message="Request timed out",
         )
 
-        result = await service.analyze_error(error_info, user_context={})
+        result = await service.analyze_error(request)
 
         # Should return a result (from heuristics)
+        # ADR-0091: Uses error_type instead of classification
         assert result is not None
-        assert result.classification is not None
+        assert result.error_type is not None
 
     @pytest.mark.asyncio
     async def test_disclosure_analysis_caches_result(self) -> None:
-        """Disclosure analysis should cache successful results."""
+        """Disclosure analysis should cache successful results.
+
+        ADR-0091 Phase 9: Uses aligned DisclosureAnalyzeRequest schema.
+        """
         service = create_test_service()
 
         request = DisclosureAnalyzeRequest(
-            user_id="user-123",
-            session_history=[],
-            feature_usage={},
+            current_level="beginner",
+            persona="bob",
         )
 
         # Should be able to analyze without errors
@@ -174,17 +184,20 @@ class TestCircuitBreaker:
 
     @pytest.mark.asyncio
     async def test_circuit_opens_after_consecutive_failures(self) -> None:
-        """Circuit should open after configured number of failures."""
+        """Circuit should open after configured number of failures.
+
+        ADR-0091 Phase 9: Uses aligned ErrorAnalyzeRequest schema.
+        """
         service = create_test_service()
 
         # Service should handle errors gracefully with heuristic fallback
-        error_info = ErrorInfo(
-            name="ServerError",
-            message="500 Internal Server Error",
+        request = ErrorAnalyzeRequest(
+            error_code="ServerError",
+            error_message="500 Internal Server Error",
         )
 
         # Even without circuit breaker, service should not crash
-        result = await service.analyze_error(error_info, user_context={})
+        result = await service.analyze_error(request)
         assert result is not None
 
     @pytest.mark.asyncio
@@ -202,18 +215,22 @@ class TestCircuitBreaker:
 
     @pytest.mark.asyncio
     async def test_fallback_used_when_circuit_open(self) -> None:
-        """When circuit is open, heuristic fallback should be used."""
+        """When circuit is open, heuristic fallback should be used.
+
+        ADR-0091 Phase 9: Uses aligned ErrorAnalyzeRequest/Response schema.
+        """
         service = create_test_service()
 
-        error_info = ErrorInfo(
-            name="RateLimitError",
-            message="429 Too Many Requests",
+        request = ErrorAnalyzeRequest(
+            error_code="RateLimitError",
+            error_message="429 Too Many Requests",
         )
 
         # Should still return a result using heuristics
-        result = await service.analyze_error(error_info, user_context={})
+        # ADR-0091: Uses error_type instead of classification
+        result = await service.analyze_error(request)
         assert result is not None
-        assert result.classification is not None
+        assert result.error_type is not None
 
 
 @pytest.mark.xdist_group(name="ai_ux_production")

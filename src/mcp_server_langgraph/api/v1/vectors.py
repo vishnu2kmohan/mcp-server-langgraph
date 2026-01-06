@@ -88,13 +88,20 @@ class UpsertPointsRequest(BaseModel):
 # initialized during app lifespan (async initialization pattern)
 
 
-def get_qdrant_client() -> Any:
-    """Get Qdrant client instance."""
-    # Lazy import to avoid import errors if qdrant-client not installed
-    from qdrant_client import QdrantClient
+async def get_qdrant_client() -> Any:
+    """Get shared async Qdrant client instance (singleton).
 
-    qdrant_url = os.getenv("QDRANT_URL", "http://localhost:6333")
-    return QdrantClient(url=qdrant_url)
+    Uses the shared async client from factory.py to avoid creating
+    a new client per request, which would cause connection exhaustion.
+
+    Returns:
+        AsyncQdrantClient instance for non-blocking vector operations.
+    """
+    from mcp_server_langgraph.storage.vectors.factory import (
+        get_shared_async_qdrant_client,
+    )
+
+    return await get_shared_async_qdrant_client()
 
 
 def get_embedding_model() -> Any:
@@ -282,7 +289,7 @@ async def list_collections(
     Requires: viewer permission on vector_store:default
     """
     try:
-        collections = qdrant.get_collections()
+        collections = await qdrant.get_collections()
         return {
             "collections": [
                 {"name": c.name, "vectors_count": getattr(c, "vectors_count", None)} for c in collections.collections
@@ -316,7 +323,7 @@ async def create_collection(
     }
 
     try:
-        qdrant.create_collection(
+        await qdrant.create_collection(
             collection_name=request.name,
             vectors_config=VectorParams(
                 size=request.vectors.size,
@@ -353,7 +360,7 @@ async def delete_collection(
     Requires: owner permission on vector_store:default
     """
     try:
-        qdrant.delete_collection(collection_name=collection_name)
+        await qdrant.delete_collection(collection_name=collection_name)
 
         logger.info(
             "Collection deleted",
@@ -384,7 +391,7 @@ async def search_vectors(
     Requires: viewer permission on vector_store:default
     """
     try:
-        results = qdrant.search(
+        results = await qdrant.search(
             collection_name=request.collection_name,
             query_vector=request.query_vector,
             limit=request.limit,
@@ -439,7 +446,7 @@ async def upsert_points(
                 )
             )
 
-        qdrant.upsert(
+        await qdrant.upsert(
             collection_name=request.collection_name,
             points=points,
         )
@@ -482,7 +489,7 @@ async def search_vectors_by_text(
         query_vector = embeddings.embed_query(request.query_text)
 
         # Search Qdrant with the embedding
-        results = qdrant.search(
+        results = await qdrant.search(
             collection_name=request.collection_name,
             query_vector=query_vector,
             limit=request.limit,
@@ -543,7 +550,7 @@ async def upsert_vector_by_text(
         )
 
         # Upsert to Qdrant
-        qdrant.upsert(
+        await qdrant.upsert(
             collection_name=request.collection_name,
             points=[point],
         )

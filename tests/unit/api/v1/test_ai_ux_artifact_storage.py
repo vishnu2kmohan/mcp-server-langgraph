@@ -253,14 +253,17 @@ class TestAIUXServiceArtifactIntegration:
 
     @pytest.mark.asyncio
     async def test_analyze_error_stores_to_artifact_storage(self, mock_llm_factory, mock_settings, artifact_storage):
-        """analyze_error should optionally store results to ArtifactStorage."""
+        """analyze_error should optionally store results to ArtifactStorage.
+
+        ADR-0091 Phase 9: Uses aligned ErrorAnalyzeRequest schema.
+        """
         from mcp_server_langgraph.api.v1.ai_ux_service import AIUXService
-        from mcp_server_langgraph.api.v1.ai_ux import ErrorInfo
+        from mcp_server_langgraph.api.v1.ai_ux import ErrorAnalyzeRequest
 
         # Set up mock to return a valid response
         mock_llm_factory.ainvoke = AsyncMock(
             return_value=AIMessage(
-                content='{"category": "timeout", "subcategory": "request", "confidence": 0.9, "root_cause": "slow server", "suggestions": []}'
+                content='{"error_type": "timeout", "confidence": 0.9, "auto_recoverable": true, "recovery_steps": []}'
             )
         )
 
@@ -269,8 +272,11 @@ class TestAIUXServiceArtifactIntegration:
             settings=mock_settings,
         )
 
-        error = ErrorInfo(name="TimeoutError", message="Request timed out")
-        result = await service.analyze_error(error, None)
+        request = ErrorAnalyzeRequest(
+            error_code="TimeoutError",
+            error_message="Request timed out",
+        )
+        result = await service.analyze_error(request)
 
         # Result should be returned
         assert result is not None

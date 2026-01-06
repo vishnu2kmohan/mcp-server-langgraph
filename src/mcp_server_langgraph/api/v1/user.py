@@ -26,8 +26,29 @@ from pydantic import BaseModel, Field
 from mcp_server_langgraph.auth.middleware import get_current_user
 from mcp_server_langgraph.auth.token_denylist import TokenDenylist
 from mcp_server_langgraph.core.config import settings
-from mcp_server_langgraph.core.dependencies import get_token_denylist
+from mcp_server_langgraph.core.dependencies import get_openfga_client, get_token_denylist
 from mcp_server_langgraph.observability.telemetry import logger
+
+# WebSocket authorization requirements mapping
+# Maps frontend permission key to (object_type, object_id, required_relation)
+# These correspond to WebSocketConfig settings in ws_router.py
+WEBSOCKET_PERMISSIONS_MAP: dict[str, tuple[str, str, str]] = {
+    "alerts": ("dashboard", "alerts", "admin"),  # Admin only
+    "notifications": ("chat", "notifications", "viewer"),
+    "devtools": ("dashboard", "devtools", "viewer"),
+    "audit": ("logs", "audit", "viewer"),
+    "mcp_tasks": ("mcp", "websocket", "user"),
+    "mcp_aggregated": ("mcp", "aggregated-capabilities", "viewer"),
+    "connections_health": ("mcp_connection", "health", "viewer"),
+    "connections_realtime": ("mcp_connection", "realtime", "viewer"),
+    "heart_metrics": ("observability", "heart", "viewer"),
+    "cost_tracking": ("cost", "usage", "viewer"),
+    "budget_alerts": ("cost", "budget", "viewer"),
+    "agent_requests": ("workflow", "hitl", "editor"),
+    "ai_suggestions": ("ai", "suggestions", "user"),
+    "orchestrator_status": ("ai", "orchestrator", "viewer"),
+    "traces": ("traces", "stream", "viewer"),
+}
 
 user_router = APIRouter(tags=["user"])
 
@@ -67,6 +88,67 @@ class LogoutResponse(BaseModel):
     message: str = Field(..., description="Status message")
 
 
+class WebSocketPermissions(BaseModel):
+    """
+    WebSocket endpoint permissions for the current user.
+
+    Contains boolean permissions for each WebSocket endpoint, determined via
+    OpenFGA batch check. Enables frontend to conditionally connect only to
+    authorized WebSocket endpoints, preventing unnecessary connection attempts.
+
+    Reference: GitHub issue - Chat doesn't load due to alert WS auth failure
+    """
+
+    # Dashboard WebSockets
+    alerts: bool = Field(default=False, description="Admin-only alert stream (/ws/alerts)")
+    devtools: bool = Field(default=False, description="DevTools panel (/ws/devtools)")
+
+    # Chat WebSockets
+    notifications: bool = Field(default=False, description="Notifications stream (/ws/notifications)")
+
+    # Audit/Logs WebSockets
+    audit: bool = Field(default=False, description="Audit event stream (/ws/audit)")
+
+    # MCP WebSockets
+    mcp_tasks: bool = Field(default=False, description="MCP task updates (/ws/mcp/tasks)")
+    mcp_aggregated: bool = Field(default=False, description="MCP capability changes (/ws/mcp/aggregated)")
+
+    # Connection WebSockets
+    connections_health: bool = Field(default=False, description="Connection health (/ws/connections/health)")
+    connections_realtime: bool = Field(default=False, description="Connection realtime (/ws/connections/realtime)")
+
+    # Observability WebSockets
+    heart_metrics: bool = Field(default=False, description="HEART metrics stream (/ws/metrics/heart)")
+    traces: bool = Field(default=False, description="Trace span stream (/ws/traces)")
+
+    # Cost WebSockets
+    cost_tracking: bool = Field(default=False, description="Cost tracking (/ws/usage/cost)")
+    budget_alerts: bool = Field(default=False, description="Budget alerts (/ws/budget/alerts)")
+
+    # Agent WebSockets
+    agent_requests: bool = Field(default=False, description="HITL agent requests (/ws/agents/requests)")
+
+    # AI WebSockets
+    ai_suggestions: bool = Field(default=False, description="AI suggestions (/ws/ai/suggestions)")
+    orchestrator_status: bool = Field(default=False, description="Orchestrator status (/ws/orchestrator/status)")
+
+
+class WebSocketPermissionsResponse(BaseModel):
+    """
+    Container for WebSocket permissions with metadata.
+
+    Includes caching information to enable frontend to cache permissions
+    and reduce OpenFGA load.
+    """
+
+    websocket_permissions: WebSocketPermissions = Field(
+        default_factory=WebSocketPermissions,
+        description="Permission flags for each WebSocket endpoint",
+    )
+    cached: bool = Field(default=False, description="Whether result was served from cache")
+    expires_at: str | None = Field(None, description="ISO8601 timestamp when permissions expire")
+
+
 class UserInfoResponse(BaseModel):
     """
     Current user information response.
@@ -76,6 +158,9 @@ class UserInfoResponse(BaseModel):
     - sub_persona: Specific persona variant (alice-builder, etc.)
     - visible_modules: List of modules this persona can access
     - feature_flags: Feature flags for this user/persona
+
+    Extended to include websocket_permissions for frontend-aware WebSocket auth:
+    - websocket_permissions: Boolean permissions for each WebSocket endpoint
     """
 
     user_id: str = Field(..., description="User identifier in OpenFGA format (user:username)")
@@ -93,6 +178,12 @@ class UserInfoResponse(BaseModel):
     sub_persona: str | None = Field(None, description="Specific persona variant (alice-builder, alice-analyst, etc.)")
     visible_modules: list[str] = Field(default_factory=list, description="List of modules this persona can access")
     feature_flags: dict[str, bool] = Field(default_factory=dict, description="Feature flags for this user/persona")
+
+    # WebSocket permissions (enables frontend to only connect to authorized endpoints)
+    websocket_permissions: WebSocketPermissions | None = Field(
+        default=None,
+        description="Permissions for each WebSocket endpoint (prevents unauthorized connection attempts)",
+    )
 
 
 class PersonaPreferencesUpdate(BaseModel):
@@ -475,6 +566,84 @@ async def save_user_preferences_to_db(
         }
 
 
+async def get_websocket_permissions(user_id: str) -> WebSocketPermissions:
+    """
+    Get WebSocket permissions for a user via OpenFGA batch check.
+
+    Checks all WebSocket endpoint permissions in parallel for efficiency.
+    Falls back to fail-closed (all False) if OpenFGA is unavailable.
+
+    Args:
+        user_id: User identifier in OpenFGA format (e.g., "user:alice")
+
+    Returns:
+        WebSocketPermissions with boolean flags for each WebSocket endpoint.
+
+    Example:
+        >>> perms = await get_websocket_permissions("user:alice")
+        >>> perms.alerts  # False (alice lacks admin on dashboard:alerts)
+        >>> perms.notifications  # True (alice has viewer on chat:notifications)
+    """
+    import asyncio
+
+    try:
+        openfga_client = get_openfga_client()
+    except Exception as e:
+        logger.warning(
+            f"OpenFGA client unavailable, returning fail-closed permissions: {e}",
+            extra={"user_id": user_id},
+        )
+        return WebSocketPermissions()
+
+    permissions: dict[str, bool] = {}
+
+    async def check_single_permission(key: str, object_type: str, object_id: str, relation: str) -> tuple[str, bool]:
+        """Check a single permission and return (key, result)."""
+        try:
+            resource = f"{object_type}:{object_id}"
+            allowed = await openfga_client.check_permission(
+                user=user_id,
+                relation=relation,
+                object=resource,
+                critical=False,  # Fail-open for individual checks (resilience)
+            )
+            return (key, allowed)
+        except Exception as e:
+            logger.debug(
+                f"Permission check failed for {key}, defaulting to False: {e}",
+                extra={"user_id": user_id, "resource": f"{object_type}:{object_id}"},
+            )
+            return (key, False)
+
+    # Run all permission checks in parallel
+    tasks = [
+        check_single_permission(key, object_type, object_id, relation)
+        for key, (object_type, object_id, relation) in WEBSOCKET_PERMISSIONS_MAP.items()
+    ]
+
+    results = await asyncio.gather(*tasks, return_exceptions=True)
+
+    # Process results
+    for result in results:
+        if isinstance(result, Exception):
+            logger.warning(f"Permission check exception: {result}")
+            continue
+        key, allowed = result
+        permissions[key] = allowed
+
+    logger.info(
+        "WebSocket permissions checked",
+        extra={
+            "user_id": user_id,
+            "permissions": permissions,
+            "allowed_count": sum(1 for v in permissions.values() if v),
+            "total_count": len(WEBSOCKET_PERMISSIONS_MAP),
+        },
+    )
+
+    return WebSocketPermissions(**permissions)
+
+
 @user_router.get("/me")
 async def get_me(
     user: dict[str, Any] = Depends(get_current_user),
@@ -492,10 +661,12 @@ async def get_me(
     - visible_modules: Modules accessible to this persona (Sprint 4)
     - feature_flags: Feature flags for this user (Sprint 4)
     - api_version: API version for client compatibility (Sprint 4)
+    - websocket_permissions: WebSocket endpoint permissions (Sprint 5)
 
     The frontend uses this endpoint on mount to:
     1. Detect user's persona based on roles
     2. Configure sidebar navigation items
+    3. Enable/disable WebSocket connections based on permissions
     3. Set up route access control
     """
     roles = user.get("roles", [])
@@ -521,6 +692,9 @@ async def get_me(
     # Get feature flags from preferences
     feature_flags = prefs.get("feature_flags", {})
 
+    # Get WebSocket permissions via OpenFGA batch check
+    websocket_permissions = await get_websocket_permissions(user_id)
+
     return UserInfoResponse(
         user_id=user_id,
         username=user.get("username", ""),
@@ -536,6 +710,8 @@ async def get_me(
         sub_persona=sub_persona,
         visible_modules=visible_modules,
         feature_flags=feature_flags,
+        # Sprint 5: WebSocket permissions (enables frontend-aware auth)
+        websocket_permissions=websocket_permissions,
     )
 
 

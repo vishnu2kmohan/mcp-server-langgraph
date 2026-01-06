@@ -1406,6 +1406,37 @@ def set_session_service(service: SessionService) -> None:
     _session_service = service
 
 
+async def cleanup_session_service() -> None:
+    """
+    Cleanup the session service and its underlying clients.
+
+    Closes Redis client and disposes PostgreSQL engine (idempotent).
+    Safe to call multiple times. Should be called during shutdown.
+    """
+    global _session_service, _redis_client, _postgres_engine
+
+    # Close Redis client if exists
+    if _redis_client is not None:
+        try:
+            await _redis_client.aclose()
+            logger.info("Session service Redis client closed")
+        except Exception as e:
+            logger.warning(f"Failed to close session Redis client: {e}")
+        _redis_client = None
+
+    # Dispose PostgreSQL engine if exists
+    if _postgres_engine is not None:
+        try:
+            await _postgres_engine.dispose()
+            logger.info("Session service PostgreSQL engine disposed")
+        except Exception as e:
+            logger.warning(f"Failed to dispose session PostgreSQL engine: {e}")
+        _postgres_engine = None
+
+    # Reset service singleton
+    _session_service = None
+
+
 # Endpoints
 
 

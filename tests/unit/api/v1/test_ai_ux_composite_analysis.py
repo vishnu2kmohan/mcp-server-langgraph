@@ -315,9 +315,9 @@ class TestCrossInsightsGeneration:
         )
 
         # Simulate persona suggesting advanced, disclosure at beginner
+        # ADR-0091 Phase 9: current_level and recommended_level are strings
         from mcp_server_langgraph.api.v1.ai_ux import (
             DisclosureAnalyzeResponse,
-            DisclosureLevel,
             PersonaAnalyzeResponse,
         )
 
@@ -331,11 +331,11 @@ class TestCrossInsightsGeneration:
         )
 
         disclosure_result = DisclosureAnalyzeResponse(
-            current_level=DisclosureLevel.BEGINNER,
-            recommended_level=DisclosureLevel.BEGINNER,
+            current_level="beginner",
+            recommended_level="beginner",
             confidence=0.9,
             unlock_features=[],
-            personalized_message=None,
+            personalized_message="Keep learning!",
         )
 
         insights = service._generate_cross_insights(
@@ -353,7 +353,6 @@ class TestCrossInsightsGeneration:
         from mcp_server_langgraph.api.v1.ai_ux_service import AIUXService
         from mcp_server_langgraph.api.v1.ai_ux import (
             DisclosureAnalyzeResponse,
-            DisclosureLevel,
             PersonaAnalyzeResponse,
         )
 
@@ -372,9 +371,10 @@ class TestCrossInsightsGeneration:
             ui_adaptations=[],
         )
 
+        # ADR-0091 Phase 9: current_level and recommended_level are strings
         disclosure_result = DisclosureAnalyzeResponse(
-            current_level=DisclosureLevel.INTERMEDIATE,
-            recommended_level=DisclosureLevel.INTERMEDIATE,
+            current_level="intermediate",
+            recommended_level="intermediate",
             confidence=0.92,
             unlock_features=[],
         )

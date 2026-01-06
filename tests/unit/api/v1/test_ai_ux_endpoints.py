@@ -94,13 +94,13 @@ class TestDisclosureAnalyzer:
         GIVEN the AI UX router
         WHEN calling POST /api/v1/ai/disclosure/analyze
         THEN should return a valid response (not 404).
+
+        ADR-0091 Phase 9: Uses aligned DisclosureAnalyzeRequest schema.
         """
         response = await client.post(
             "/api/v1/ai/disclosure/analyze",
             json={
-                "user_id": "user-123",
-                "session_history": [],
-                "feature_usage": {},
+                "current_level": "beginner",  # Required field per ADR-0091
             },
         )
         assert response.status_code != 404
@@ -111,19 +111,21 @@ class TestDisclosureAnalyzer:
         GIVEN a user with intermediate feature usage
         WHEN analyzing disclosure level
         THEN should return level recommendation with confidence.
+
+        ADR-0091 Phase 9: Uses aligned DisclosureAnalyzeRequest with user_behavior.
         """
         response = await client.post(
             "/api/v1/ai/disclosure/analyze",
             json={
-                "user_id": "user-123",
-                "session_history": [
-                    {"page": "/workflows", "duration_ms": 60000},
-                    {"page": "/chat", "duration_ms": 120000},
-                ],
-                "feature_usage": {
-                    "chat": 50,
-                    "workflows": 10,
-                    "mcp": 2,
+                "current_level": "intermediate",  # Required field
+                "persona": "alice-builder",
+                "user_behavior": {
+                    "feature_usage": {
+                        "chat": 50,
+                        "workflows": 10,
+                        "mcp": 2,
+                    },
+                    "session_count": 15,
                 },
             },
         )
@@ -183,6 +185,8 @@ class TestEmptyStateSuggestions:
         GIVEN a context and persona
         WHEN requesting empty state suggestions
         THEN should return actionable suggestions.
+
+        ADR-0091 Phase 9: Uses aligned EmptyStateSuggestionsResponse schema.
         """
         response = await client.post(
             "/api/v1/ai/empty-state/suggestions",
@@ -198,8 +202,11 @@ class TestEmptyStateSuggestions:
         assert isinstance(data["suggestions"], list)
         if data["suggestions"]:
             suggestion = data["suggestions"][0]
-            assert "text" in suggestion
-            assert "action" in suggestion
+            # ADR-0091: Aligned schema uses title/description/action_type/action_target
+            assert "title" in suggestion
+            assert "description" in suggestion
+            assert "action_type" in suggestion
+            assert "action_target" in suggestion
 
 
 # =============================================================================
@@ -277,14 +284,14 @@ class TestErrorAnalysis:
         GIVEN the AI UX router
         WHEN calling POST /api/v1/ai/errors/analyze
         THEN should return a valid response (not 404).
+
+        ADR-0091 Phase 9: Uses aligned ErrorAnalyzeRequest schema.
         """
         response = await client.post(
             "/api/v1/ai/errors/analyze",
             json={
-                "error": {
-                    "message": "Connection timeout",
-                    "name": "TimeoutError",
-                },
+                "error_code": "TimeoutError",
+                "error_message": "Connection timeout",
             },
         )
         assert response.status_code != 404
@@ -294,17 +301,17 @@ class TestErrorAnalysis:
         """
         GIVEN an error object
         WHEN analyzing the error
-        THEN should return classification and suggestions.
+        THEN should return error type and recovery steps.
+
+        ADR-0091 Phase 9: Uses aligned ErrorAnalyzeRequest/Response schema.
         """
         response = await client.post(
             "/api/v1/ai/errors/analyze",
             json={
-                "error": {
-                    "message": "Network request failed: timeout",
-                    "name": "NetworkError",
-                    "stack_trace": "at fetch() line 42",
-                },
-                "user_context": {
+                "error_code": "NetworkError",
+                "error_message": "Network request failed: timeout",
+                "stack_trace": "at fetch() line 42",
+                "context": {
                     "persona": "alice-builder",
                     "recent_actions": ["save_workflow", "test_run"],
                 },
@@ -312,11 +319,11 @@ class TestErrorAnalysis:
         )
         assert response.status_code == 200
         data = response.json()
-        assert "classification" in data
-        assert "category" in data["classification"]
-        assert "confidence" in data["classification"]
-        assert "root_cause" in data
-        assert "suggestions" in data
+        # ADR-0091: Aligned schema uses error_type, recovery_steps, auto_recoverable
+        assert "error_type" in data
+        assert "recovery_steps" in data
+        assert "auto_recoverable" in data
+        assert "confidence" in data
 
 
 # =============================================================================
@@ -398,13 +405,18 @@ class TestMetricsInsights:
         """
         GIVEN metrics data
         WHEN requesting insights
-        THEN should return AI-generated insights and predictions.
+        THEN should return AI-generated insights and health status.
+
+        ADR-0091 Phase 9: Uses aligned MetricsInsightsResponse schema.
         """
         response = await client.get("/api/v1/ai/metrics/insights")
         assert response.status_code == 200
         data = response.json()
+        # ADR-0091: Aligned schema uses happiness_score, insights, overall_health, recommendations
+        assert "happiness_score" in data
         assert "insights" in data
-        assert "predictions" in data
+        assert "overall_health" in data
+        assert "recommendations" in data
 
 
 # =============================================================================

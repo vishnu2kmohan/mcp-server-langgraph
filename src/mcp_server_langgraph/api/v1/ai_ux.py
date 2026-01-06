@@ -20,7 +20,7 @@ Reference: UX Audit Plan - Phase 6 AI-Native Integration
 
 import warnings
 from enum import Enum
-from typing import TYPE_CHECKING, Annotated, Any
+from typing import TYPE_CHECKING, Annotated, Any, Literal
 
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel, Field
@@ -95,6 +95,10 @@ class DisclosureLevel(str, Enum):
     EXPERT = "expert"
 
 
+# ADR-0091 Phase 9: Literal type for string-based disclosure levels (type safety without enum overhead)
+DisclosureLevelStr = Literal["beginner", "intermediate", "advanced", "expert"]
+
+
 class ErrorCategory(str, Enum):
     """Error classification categories."""
 
@@ -133,22 +137,40 @@ class SessionHistoryItem(BaseModel):
     duration_ms: int = 0
 
 
-class DisclosureAnalyzeRequest(BaseModel):
-    """Request for disclosure level analysis."""
+class UserBehavior(BaseModel):
+    """User behavior data for disclosure analysis (ADR-0091 Phase 9 aligned)."""
 
-    user_id: str = Field(..., description="User identifier")
-    session_history: list[SessionHistoryItem] = Field(default_factory=list, description="Recent session history")
-    feature_usage: dict[str, int] = Field(default_factory=dict, description="Feature usage counts")
+    feature_usage: dict[str, int] = Field(default_factory=dict)
+    session_count: int = 0
+    avg_session_duration: int | None = None
+
+
+class DisclosureAnalyzeRequest(BaseModel):
+    """Request for disclosure level analysis (ADR-0091 Phase 9 aligned).
+
+    Aligned with frontend inline type in api/index.ts.
+    Uses DisclosureLevelStr Literal type for type safety.
+    """
+
+    current_level: DisclosureLevelStr = Field(..., description="Current disclosure level")
+    persona: str | None = Field(default=None, description="User persona")
+    context: dict[str, Any] | None = Field(default=None, description="Additional context")
+    user_behavior: UserBehavior | None = Field(default=None, description="User behavior data")
 
 
 class DisclosureAnalyzeResponse(BaseModel):
-    """Response from disclosure level analysis."""
+    """Response from disclosure level analysis (ADR-0091 Phase 9 aligned).
 
-    current_level: DisclosureLevel
-    recommended_level: DisclosureLevel
+    Aligned with frontend inline type in api/index.ts.
+    Uses DisclosureLevelStr Literal type for type safety without enum overhead.
+    """
+
+    current_level: DisclosureLevelStr = Field(..., description="Current disclosure level")
+    recommended_level: DisclosureLevelStr = Field(..., description="Recommended disclosure level")
     confidence: float = Field(ge=0, le=1)
     unlock_features: list[str] = Field(default_factory=list)
-    personalized_message: str | None = None
+    personalized_message: str = Field(default="", description="Personalized message for the user")
+    reasoning: str | None = Field(default=None, description="Optional reasoning for the recommendation")
 
 
 # =============================================================================
@@ -156,29 +178,49 @@ class DisclosureAnalyzeResponse(BaseModel):
 # =============================================================================
 
 
+class EmptyStateActionType(str, Enum):
+    """Action types for empty state suggestions (ADR-0091 Phase 9 aligned)."""
+
+    NAVIGATE = "navigate"
+    CREATE = "create"
+    LEARN = "learn"
+    IMPORT = "import"
+
+
 class EmptyStateSuggestionsRequest(BaseModel):
-    """Request for empty state suggestions."""
+    """Request for empty state suggestions (ADR-0091 Phase 9 aligned).
+
+    Aligned with frontend inline type in api/index.ts.
+    """
 
     context: str = Field(..., description="Page context (e.g., 'workflows', 'sessions')")
-    persona: str = Field(..., description="User persona")
-    session_id: str | None = None
-    history: list[dict[str, Any]] = Field(default_factory=list)
+    persona: str | None = Field(default=None, description="User persona")
+    previous_actions: list[str] | None = Field(default=None, description="Previous user actions")
+    available_actions: list[str] | None = Field(default=None, description="Available actions in this context")
 
 
 class EmptyStateSuggestion(BaseModel):
-    """A single empty state suggestion."""
+    """A single empty state suggestion (ADR-0091 Phase 9 aligned).
 
-    text: str
-    action: SuggestionAction
-    target: str | None = None
-    confidence: float = Field(ge=0, le=1, default=0.8)
-    category: str = "default"
+    Aligned with frontend inline type in api/index.ts.
+    """
+
+    title: str = Field(..., description="Suggestion title")
+    description: str = Field(..., description="Suggestion description")
+    action_type: EmptyStateActionType = Field(..., description="Type of action")
+    action_target: str = Field(..., description="Target path or action identifier")
+    icon: str | None = Field(default=None, description="Optional icon identifier")
+    priority: int = Field(default=1, ge=1, description="Priority order (lower = higher priority)")
 
 
 class EmptyStateSuggestionsResponse(BaseModel):
-    """Response with empty state suggestions."""
+    """Response with empty state suggestions (ADR-0091 Phase 9 aligned).
+
+    Aligned with frontend inline type in api/index.ts.
+    """
 
     suggestions: list[EmptyStateSuggestion]
+    context_hint: str | None = Field(default=None, description="Optional hint for the context")
 
 
 # =============================================================================
@@ -195,11 +237,11 @@ class NudgeContext(BaseModel):
 
 
 class NudgeHistoryItem(BaseModel):
-    """A single nudge history entry."""
+    """A single nudge history entry (ADR-0091 Phase 9 aligned)."""
 
-    id: str
-    shown_at: str
-    action: str = "dismissed"  # 'accepted' | 'dismissed'
+    nudge_id: str = Field(..., description="ID of the nudge that was shown")
+    shown_at: str = Field(..., description="ISO timestamp when nudge was shown")
+    action: str | None = Field(default=None, description="User action: 'accepted', 'dismissed', or null")
 
 
 class NudgeRecommendRequest(BaseModel):
@@ -234,8 +276,55 @@ class NudgeRecommendResponse(BaseModel):
 # =============================================================================
 
 
+class ErrorRecoveryActionType(str, Enum):
+    """Action types for error recovery (ADR-0091 Phase 9 aligned)."""
+
+    AUTOMATIC = "automatic"
+    MANUAL = "manual"
+    CONTACT_SUPPORT = "contact_support"
+
+
+class ErrorAnalyzeRequest(BaseModel):
+    """Request for error analysis (ADR-0091 Phase 9 aligned).
+
+    Aligned with frontend inline type in api/index.ts.
+    """
+
+    error_code: str = Field(..., description="Error code identifier")
+    error_message: str = Field(..., description="Human-readable error message")
+    context: dict[str, Any] | None = Field(default=None, description="Additional context about the error")
+    stack_trace: str | None = Field(default=None, description="Stack trace if available")
+
+
+class RecoveryStep(BaseModel):
+    """A recovery step for an error (ADR-0091 Phase 9 aligned).
+
+    Aligned with frontend inline type in api/index.ts.
+    """
+
+    step_number: int = Field(..., ge=1, description="Step order number")
+    title: str = Field(..., description="Step title")
+    description: str = Field(..., description="Step description")
+    action_type: ErrorRecoveryActionType = Field(..., description="Type of action required")
+    action_target: str | None = Field(default=None, description="Target path or action identifier")
+
+
+class ErrorAnalyzeResponse(BaseModel):
+    """Response from error analysis (ADR-0091 Phase 9 aligned).
+
+    Aligned with frontend inline type in api/index.ts.
+    """
+
+    error_type: str = Field(..., description="Classified error type")
+    recovery_steps: list[RecoveryStep] = Field(default_factory=list, description="Ordered recovery steps")
+    auto_recoverable: bool = Field(..., description="Whether the error can be auto-recovered")
+    suggested_action: str | None = Field(default=None, description="Primary suggested action")
+    confidence: float = Field(ge=0, le=1, description="Confidence in the analysis")
+
+
+# Legacy models kept for backward compatibility (deprecated)
 class ErrorInfo(BaseModel):
-    """Information about an error."""
+    """Information about an error (deprecated - use ErrorAnalyzeRequest instead)."""
 
     message: str
     name: str = "Error"
@@ -243,22 +332,15 @@ class ErrorInfo(BaseModel):
 
 
 class UserContext(BaseModel):
-    """User context for error analysis."""
+    """User context for error analysis (deprecated)."""
 
     persona: str | None = None
     session_id: str | None = None
     recent_actions: list[str] = Field(default_factory=list)
 
 
-class ErrorAnalyzeRequest(BaseModel):
-    """Request for error analysis."""
-
-    error: ErrorInfo
-    user_context: UserContext | None = None
-
-
 class ErrorClassification(BaseModel):
-    """Error classification result."""
+    """Error classification result (deprecated)."""
 
     category: ErrorCategory
     subcategory: str = "general"
@@ -266,7 +348,7 @@ class ErrorClassification(BaseModel):
 
 
 class RecoverySuggestion(BaseModel):
-    """A recovery suggestion for an error."""
+    """A recovery suggestion for an error (deprecated - use RecoveryStep instead)."""
 
     action: SuggestionAction
     label: str
@@ -276,20 +358,11 @@ class RecoverySuggestion(BaseModel):
 
 
 class SimilarIssue(BaseModel):
-    """A similar resolved issue."""
+    """A similar resolved issue (deprecated)."""
 
     id: str
     resolution: str
     success_rate: float = Field(ge=0, le=1)
-
-
-class ErrorAnalyzeResponse(BaseModel):
-    """Response from error analysis."""
-
-    classification: ErrorClassification
-    root_cause: str
-    suggestions: list[RecoverySuggestion]
-    similar_issues: list[SimilarIssue] = Field(default_factory=list)
 
 
 # =============================================================================
@@ -298,10 +371,15 @@ class ErrorAnalyzeResponse(BaseModel):
 
 
 class SignupContext(BaseModel):
-    """Context from signup."""
+    """Context from signup (ADR-0091 Phase 9 aligned).
 
-    referrer: str | None = None
-    utm_source: str | None = None
+    Aligned with frontend inline type in api/index.ts.
+    """
+
+    referrer: str | None = Field(default=None, description="Referrer source")
+    utm_source: str | None = Field(default=None, description="UTM source")
+    utm_campaign: str | None = Field(default=None, description="UTM campaign")
+    utm_medium: str | None = Field(default=None, description="UTM medium")
 
 
 class OnboardingPersonalizeRequest(BaseModel):
@@ -336,8 +414,70 @@ class OnboardingPersonalizeResponse(BaseModel):
 # =============================================================================
 
 
+class MetricsInsightCategory(str, Enum):
+    """Categories for metrics insights (ADR-0091 Phase 9 aligned)."""
+
+    HAPPINESS = "happiness"
+    ENGAGEMENT = "engagement"
+    ADOPTION = "adoption"
+    RETENTION = "retention"
+    TASK_SUCCESS = "task_success"
+
+
+class MetricsInsightTrend(str, Enum):
+    """Trend directions for insights (ADR-0091 Phase 9 aligned)."""
+
+    IMPROVING = "improving"
+    STABLE = "stable"
+    DECLINING = "declining"
+
+
+class MetricsInsightPriority(str, Enum):
+    """Priority levels for insights (ADR-0091 Phase 9 aligned)."""
+
+    HIGH = "high"
+    MEDIUM = "medium"
+    LOW = "low"
+
+
+class OverallHealth(str, Enum):
+    """Overall health status (ADR-0091 Phase 9 aligned)."""
+
+    EXCELLENT = "excellent"
+    GOOD = "good"
+    NEEDS_ATTENTION = "needs_attention"
+    CRITICAL = "critical"
+
+
 class MetricInsight(BaseModel):
-    """A single metric insight."""
+    """A single metric insight (ADR-0091 Phase 9 aligned).
+
+    Aligned with frontend inline type in api/index.ts.
+    """
+
+    category: MetricsInsightCategory = Field(..., description="HEART dimension category")
+    title: str = Field(..., description="Insight title")
+    description: str = Field(..., description="Insight description")
+    trend: MetricsInsightTrend = Field(..., description="Current trend direction")
+    priority: MetricsInsightPriority = Field(..., description="Priority level")
+    suggested_action: str | None = Field(default=None, description="Suggested action to take")
+
+
+class MetricsInsightsResponse(BaseModel):
+    """Response with metrics insights (ADR-0091 Phase 9 aligned).
+
+    Aligned with frontend inline type in api/index.ts.
+    """
+
+    happiness_score: float = Field(..., ge=0, le=10, description="Overall happiness score (0-10)")
+    insights: list[MetricInsight] = Field(default_factory=list, description="List of metric insights")
+    overall_health: OverallHealth = Field(..., description="Overall system health status")
+    recommendations: list[str] = Field(default_factory=list, description="Actionable recommendations")
+
+
+# Legacy models kept for backward compatibility (deprecated)
+class LegacyMetricInsight(BaseModel):
+    """A single metric insight (deprecated - use MetricInsight instead)."""
 
     type: str  # 'anomaly' | 'trend' | 'pattern'
     dimension: str  # HEART dimension
@@ -349,20 +489,13 @@ class MetricInsight(BaseModel):
 
 
 class MetricPrediction(BaseModel):
-    """A metric prediction."""
+    """A metric prediction (deprecated - not used in aligned schema)."""
 
     metric: str
     current: float
     predicted: float
     confidence: float = Field(ge=0, le=1)
     drivers: list[str] = Field(default_factory=list)
-
-
-class MetricsInsightsResponse(BaseModel):
-    """Response with metrics insights."""
-
-    insights: list[MetricInsight]
-    predictions: list[MetricPrediction]
 
 
 # =============================================================================
@@ -495,8 +628,10 @@ async def analyze_disclosure(
     Analyze user's disclosure level based on behavior patterns.
 
     Uses AIUXService for progressive disclosure analysis.
+    ADR-0091 Phase 9: Request schema aligned with frontend.
     """
-    logger.info(f"Analyzing disclosure level for user {body.user_id}")
+    user_id = current_user.get("sub", "unknown")
+    logger.info(f"Analyzing disclosure level for user {user_id} at level {body.current_level}")
     return await service.analyze_disclosure(body)
 
 
@@ -554,9 +689,10 @@ async def analyze_error(
 
     Uses LLM for intelligent error classification when available,
     falls back to rule-based heuristics otherwise.
+    ADR-0091 Phase 9: Request schema aligned with frontend.
     """
-    logger.info(f"Analyzing error: {body.error.name} - {body.error.message}")
-    return await service.analyze_error(body.error, body.user_context)
+    logger.info(f"Analyzing error: {body.error_code} - {body.error_message}")
+    return await service.analyze_error(body)
 
 
 @ai_ux_router.post(

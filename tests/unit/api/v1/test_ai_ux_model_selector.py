@@ -161,9 +161,12 @@ class TestModelSelectionByService:
 
     @pytest.mark.asyncio
     async def test_error_analysis_uses_simple_tier(self, mock_llm_factory, mock_settings, mock_model_selector):
-        """Error analysis uses simple tier (fast pattern matching)."""
+        """Error analysis uses simple tier (fast pattern matching).
+
+        ADR-0091 Phase 9: Uses aligned ErrorAnalyzeRequest schema.
+        """
         from mcp_server_langgraph.api.v1.ai_ux_service import AIUXService
-        from mcp_server_langgraph.api.v1.ai_ux import ErrorInfo, UserContext
+        from mcp_server_langgraph.api.v1.ai_ux import ErrorAnalyzeRequest
 
         mock_llm_factory.ainvoke = AsyncMock(return_value=AIMessage(content=SAMPLE_ERROR_LLM_RESPONSE))
 
@@ -173,19 +176,25 @@ class TestModelSelectionByService:
             model_selector=mock_model_selector,
         )
 
-        error = ErrorInfo(name="TimeoutError", message="Request timed out")
-        user_context = UserContext(persona="bob")
+        request = ErrorAnalyzeRequest(
+            error_code="TimeoutError",
+            error_message="Request timed out",
+            context={"persona": "bob"},
+        )
 
-        await service.analyze_error(error, user_context)
+        await service.analyze_error(request)
 
         # Verify ModelSelector was called with simple complexity
         mock_model_selector.select_model.assert_called_with("simple")
 
     @pytest.mark.asyncio
     async def test_disclosure_analysis_uses_complicated_tier(self, mock_llm_factory, mock_settings, mock_model_selector):
-        """Disclosure analysis uses complicated tier (behavior analysis)."""
+        """Disclosure analysis uses complicated tier (behavior analysis).
+
+        ADR-0091 Phase 9: Uses aligned DisclosureAnalyzeRequest schema.
+        """
         from mcp_server_langgraph.api.v1.ai_ux_service import AIUXService
-        from mcp_server_langgraph.api.v1.ai_ux import DisclosureAnalyzeRequest
+        from mcp_server_langgraph.api.v1.ai_ux import DisclosureAnalyzeRequest, UserBehavior
 
         mock_llm_factory.ainvoke = AsyncMock(return_value=AIMessage(content=SAMPLE_DISCLOSURE_LLM_RESPONSE))
 
@@ -196,9 +205,12 @@ class TestModelSelectionByService:
         )
 
         request = DisclosureAnalyzeRequest(
-            user_id="test-user",
-            session_history=[{"page": "/workflows", "duration": 120}],
-            feature_usage={"workflow_builder": 5},
+            current_level="intermediate",
+            persona="alice-builder",
+            user_behavior=UserBehavior(
+                feature_usage={"workflow_builder": 5},
+                session_count=10,
+            ),
         )
 
         await service.analyze_disclosure(request)
@@ -236,9 +248,12 @@ class TestModelSelectionFallback:
 
     @pytest.mark.asyncio
     async def test_uses_default_model_without_selector(self, mock_llm_factory, mock_settings):
-        """Service uses default model when ModelSelector not provided."""
+        """Service uses default model when ModelSelector not provided.
+
+        ADR-0091 Phase 9: Uses aligned ErrorAnalyzeRequest schema.
+        """
         from mcp_server_langgraph.api.v1.ai_ux_service import AIUXService
-        from mcp_server_langgraph.api.v1.ai_ux import ErrorInfo
+        from mcp_server_langgraph.api.v1.ai_ux import ErrorAnalyzeRequest
 
         mock_llm_factory.ainvoke = AsyncMock(return_value=AIMessage(content=SAMPLE_ERROR_LLM_RESPONSE))
 
@@ -248,17 +263,23 @@ class TestModelSelectionFallback:
             # No model_selector provided
         )
 
-        error = ErrorInfo(name="Error", message="Test error")
-        await service.analyze_error(error, None)
+        request = ErrorAnalyzeRequest(
+            error_code="Error",
+            error_message="Test error",
+        )
+        await service.analyze_error(request)
 
         # LLM should still be called (using default factory)
         mock_llm_factory.ainvoke.assert_called_once()
 
     @pytest.mark.asyncio
     async def test_handles_model_selector_exception(self, mock_llm_factory, mock_settings, mock_model_selector):
-        """Service gracefully handles ModelSelector exceptions."""
+        """Service gracefully handles ModelSelector exceptions.
+
+        ADR-0091 Phase 9: Uses aligned ErrorAnalyzeRequest schema.
+        """
         from mcp_server_langgraph.api.v1.ai_ux_service import AIUXService
-        from mcp_server_langgraph.api.v1.ai_ux import ErrorInfo
+        from mcp_server_langgraph.api.v1.ai_ux import ErrorAnalyzeRequest
 
         # Make selector raise exception
         mock_model_selector.select_model.side_effect = Exception("Model selection failed")
@@ -270,9 +291,12 @@ class TestModelSelectionFallback:
             model_selector=mock_model_selector,
         )
 
-        error = ErrorInfo(name="Error", message="Test error")
+        request = ErrorAnalyzeRequest(
+            error_code="Error",
+            error_message="Test error",
+        )
         # Should not raise, falls back to default model
-        result = await service.analyze_error(error, None)
+        result = await service.analyze_error(request)
 
         # Result should be returned (either from LLM or heuristics)
         assert result is not None

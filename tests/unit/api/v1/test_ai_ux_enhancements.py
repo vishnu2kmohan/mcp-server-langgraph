@@ -37,77 +37,93 @@ class TestCoverageImprovements:
 
     @pytest.mark.asyncio
     async def test_error_analysis_403_forbidden(self) -> None:
-        """Test error analysis handles 403 forbidden errors."""
-        from mcp_server_langgraph.api.v1.ai_ux import ErrorInfo
+        """Test error analysis handles 403 forbidden errors.
+
+        ADR-0091 Phase 9: Uses aligned ErrorAnalyzeRequest schema.
+        """
+        from mcp_server_langgraph.api.v1.ai_ux import ErrorAnalyzeRequest
         from mcp_server_langgraph.api.v1.ai_ux_service import AIUXService
 
         service = AIUXService(llm_factory=None, settings=MagicMock())
 
-        error_info = ErrorInfo(
-            name="ForbiddenError",
-            message="403 Forbidden - You don't have access",
+        request = ErrorAnalyzeRequest(
+            error_code="ForbiddenError",
+            error_message="403 Forbidden - You don't have access",
         )
 
-        result = await service.analyze_error(error_info, user_context=None)
+        result = await service.analyze_error(request)
 
-        assert result.classification.category.value == "authorization"
-        assert result.classification.subcategory == "permission_denied"
-        assert "permission" in result.root_cause.lower()
+        # ADR-0091: Aligned schema uses error_type instead of classification
+        assert result.error_type == "authorization"
+        assert result.auto_recoverable is False
+        assert len(result.recovery_steps) > 0
 
     @pytest.mark.asyncio
     async def test_error_analysis_429_rate_limit(self) -> None:
-        """Test error analysis handles 429 rate limit errors."""
-        from mcp_server_langgraph.api.v1.ai_ux import ErrorInfo
+        """Test error analysis handles 429 rate limit errors.
+
+        ADR-0091 Phase 9: Uses aligned ErrorAnalyzeRequest schema.
+        """
+        from mcp_server_langgraph.api.v1.ai_ux import ErrorAnalyzeRequest
         from mcp_server_langgraph.api.v1.ai_ux_service import AIUXService
 
         service = AIUXService(llm_factory=None, settings=MagicMock())
 
-        error_info = ErrorInfo(
-            name="RateLimitError",
-            message="429 Too Many Requests - rate limit exceeded",
+        request = ErrorAnalyzeRequest(
+            error_code="RateLimitError",
+            error_message="429 Too Many Requests - rate limit exceeded",
         )
 
-        result = await service.analyze_error(error_info, user_context=None)
+        result = await service.analyze_error(request)
 
-        assert result.classification.category.value == "quota"
-        assert result.classification.subcategory == "rate_limit"
-        assert any(s.action.value == "wait" for s in result.suggestions)
+        # ADR-0091: Aligned schema uses error_type and recovery_steps
+        assert result.error_type == "quota"
+        assert result.auto_recoverable is True  # Rate limit errors are recoverable by waiting
+        assert any("wait" in step.title.lower() or "wait" in step.description.lower() for step in result.recovery_steps)
 
     @pytest.mark.asyncio
     async def test_error_analysis_network_error(self) -> None:
-        """Test error analysis handles network connection errors."""
-        from mcp_server_langgraph.api.v1.ai_ux import ErrorInfo
+        """Test error analysis handles network connection errors.
+
+        ADR-0091 Phase 9: Uses aligned ErrorAnalyzeRequest schema.
+        """
+        from mcp_server_langgraph.api.v1.ai_ux import ErrorAnalyzeRequest
         from mcp_server_langgraph.api.v1.ai_ux_service import AIUXService
 
         service = AIUXService(llm_factory=None, settings=MagicMock())
 
-        error_info = ErrorInfo(
-            name="NetworkError",
-            message="Network connection failed - unable to reach server",
+        request = ErrorAnalyzeRequest(
+            error_code="NetworkError",
+            error_message="Network connection failed - unable to reach server",
         )
 
-        result = await service.analyze_error(error_info, user_context=None)
+        result = await service.analyze_error(request)
 
-        assert result.classification.category.value == "network"
-        assert "connection" in result.root_cause.lower() or "connect" in result.root_cause.lower()
+        # ADR-0091: Aligned schema uses error_type
+        assert result.error_type == "network"
+        assert len(result.recovery_steps) > 0
 
     @pytest.mark.asyncio
     async def test_error_analysis_500_server_error(self) -> None:
-        """Test error analysis handles 500 internal server errors."""
-        from mcp_server_langgraph.api.v1.ai_ux import ErrorInfo
+        """Test error analysis handles 500 internal server errors.
+
+        ADR-0091 Phase 9: Uses aligned ErrorAnalyzeRequest schema.
+        """
+        from mcp_server_langgraph.api.v1.ai_ux import ErrorAnalyzeRequest
         from mcp_server_langgraph.api.v1.ai_ux_service import AIUXService
 
         service = AIUXService(llm_factory=None, settings=MagicMock())
 
-        error_info = ErrorInfo(
-            name="ServerError",
-            message="500 Internal Server Error occurred",
+        request = ErrorAnalyzeRequest(
+            error_code="ServerError",
+            error_message="500 Internal Server Error occurred",
         )
 
-        result = await service.analyze_error(error_info, user_context=None)
+        result = await service.analyze_error(request)
 
-        assert result.classification.category.value == "server"
-        assert result.classification.subcategory == "internal_error"
+        # ADR-0091: Aligned schema uses error_type
+        assert result.error_type == "server"
+        assert len(result.recovery_steps) > 0
 
     @pytest.mark.asyncio
     async def test_streaming_handles_persona_exception(self) -> None:

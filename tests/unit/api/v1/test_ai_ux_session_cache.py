@@ -138,7 +138,7 @@ class TestSessionContextStorage:
             feature_usage={"workflow_builder": 5},
         )
 
-        result = await service.analyze_persona(request, session_id="session-456")
+        _result = await service.analyze_persona(request, session_id="session-456")
 
         # Result should be stored to artifact storage
         stored = artifact_storage.retrieve("session-456", "persona_analysis")
@@ -147,9 +147,13 @@ class TestSessionContextStorage:
 
     @pytest.mark.asyncio
     async def test_error_analysis_stores_to_session(self, mock_llm_factory, mock_settings, artifact_storage):
-        """Error analysis stores results to session context."""
+        """Error analysis stores results to session context.
+
+        ADR-0091 Phase 9: Uses aligned ErrorAnalyzeRequest schema.
+        Session storage extracts session_id from request.context.
+        """
         from mcp_server_langgraph.api.v1.ai_ux_service import AIUXService
-        from mcp_server_langgraph.api.v1.ai_ux import ErrorInfo, UserContext
+        from mcp_server_langgraph.api.v1.ai_ux import ErrorAnalyzeRequest
 
         mock_llm_factory.ainvoke = AsyncMock(return_value=AIMessage(content=SAMPLE_ERROR_LLM_RESPONSE))
 
@@ -159,10 +163,14 @@ class TestSessionContextStorage:
             artifact_storage=artifact_storage,
         )
 
-        error = ErrorInfo(name="TimeoutError", message="Request timed out")
-        user_context = UserContext(persona="bob", session_id="session-456")
+        request = ErrorAnalyzeRequest(
+            error_code="TimeoutError",
+            error_message="Request timed out",
+            context={"persona": "bob", "session_id": "session-456"},
+        )
 
-        result = await service.analyze_error(error, user_context, session_id="session-456")
+        # Note: analyze_error doesn't take session_id - context is passed in request
+        _result = await service.analyze_error(request)
 
         # Result should be stored to artifact storage
         stored = artifact_storage.retrieve("session-456", "error_analysis")
@@ -222,7 +230,7 @@ class TestCrossServiceContextRetrieval:
             current_context={"page": "/workflows", "action": "view"},
         )
 
-        result = await service.recommend_nudge(request, session_id="session-456")
+        _result = await service.recommend_nudge(request, session_id="session-456")
 
         # Service should have access to persona context
         persona_context = service.get_session_context("session-456", "persona_analysis")
@@ -266,10 +274,14 @@ class TestSessionContextAccumulation:
 
     @pytest.mark.asyncio
     async def test_multiple_analyses_accumulate_in_session(self, mock_llm_factory, mock_settings, artifact_storage):
-        """Multiple analyses accumulate in session context."""
+        """Multiple analyses accumulate in session context.
+
+        ADR-0091 Phase 9: Uses aligned ErrorAnalyzeRequest schema.
+        Session storage extracts session_id from request.context.
+        """
         from mcp_server_langgraph.api.v1.ai_ux_service import AIUXService
         from mcp_server_langgraph.api.v1.ai_ux import (
-            ErrorInfo,
+            ErrorAnalyzeRequest,
             PersonaAnalyzeRequest,
         )
 
@@ -289,8 +301,13 @@ class TestSessionContextAccumulation:
 
         # Second: error analysis
         mock_llm_factory.ainvoke = AsyncMock(return_value=AIMessage(content=SAMPLE_ERROR_LLM_RESPONSE))
-        error = ErrorInfo(name="TimeoutError", message="Request timed out")
-        await service.analyze_error(error, None, session_id="session-456")
+        error_request = ErrorAnalyzeRequest(
+            error_code="TimeoutError",
+            error_message="Request timed out",
+            context={"session_id": "session-456"},
+        )
+        # Note: analyze_error doesn't take session_id - context is passed in request
+        await service.analyze_error(error_request)
 
         # Both should be in session context
         all_artifacts = artifact_storage.list_for_task("session-456")

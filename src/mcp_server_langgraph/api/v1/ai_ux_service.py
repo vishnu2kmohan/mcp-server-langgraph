@@ -212,27 +212,28 @@ from mcp_server_langgraph.api.v1.ai_ux import (
     DisclosureAnalyzeRequest,
     DisclosureAnalyzeResponse,
     DisclosureLevel,
+    EmptyStateActionType,
     EmptyStateSuggestion,
     EmptyStateSuggestionsRequest,
     EmptyStateSuggestionsResponse,
+    ErrorAnalyzeRequest,
     ErrorAnalyzeResponse,
-    ErrorCategory,
-    ErrorClassification,
-    ErrorInfo,
+    ErrorRecoveryActionType,
     MetricInsight,
-    MetricPrediction,
+    MetricsInsightCategory,
+    MetricsInsightPriority,
+    MetricsInsightTrend,
     MetricsInsightsResponse,
     NudgeRecommendRequest,
     NudgeRecommendResponse,
     OnboardingPersonalizeRequest,
     OnboardingPersonalizeResponse,
     OnboardingStep,
+    OverallHealth,
     PersonaAnalyzeRequest,
     PersonaAnalyzeResponse,
-    RecoverySuggestion,
-    SuggestionAction,
+    RecoveryStep,
     UIAdaptation,
-    UserContext,
 )
 from mcp_server_langgraph.observability.telemetry import logger
 from mcp_server_langgraph.resilience.circuit_breaker import (
@@ -803,9 +804,7 @@ class AIUXService(StaleWhileRevalidateMixin):
 
     async def analyze_error(
         self,
-        error: ErrorInfo,
-        user_context: UserContext | None,
-        session_id: str | None = None,
+        request: ErrorAnalyzeRequest,
     ) -> ErrorAnalyzeResponse:
         """
         Analyze an error and provide recovery suggestions.
@@ -813,13 +812,13 @@ class AIUXService(StaleWhileRevalidateMixin):
         Uses LLM for intelligent analysis when available, falls back to
         heuristics otherwise. Responses are cached to reduce LLM costs.
 
+        ADR-0091 Phase 9: Signature aligned with frontend ErrorAnalyzeRequest schema.
+
         Args:
-            error: Error information to analyze
-            user_context: Optional user context for personalization
-            session_id: Optional session ID for context storage
+            request: Error analysis request containing error_code, error_message, context, stack_trace
 
         Returns:
-            Error analysis response with recovery suggestions
+            Error analysis response with error_type, recovery_steps, auto_recoverable, etc.
         """
         method_name = "error_analysis"
         result: ErrorAnalyzeResponse
@@ -832,16 +831,13 @@ class AIUXService(StaleWhileRevalidateMixin):
                     extra={"method": method_name, "circuit_state": "open"},
                 )
                 ai_ux_llm_fallbacks_total.labels(method=method_name).inc()
-                result = self._analyze_error_heuristic(error)
+                result = self._analyze_error_heuristic(request)
             else:
                 # Select model based on complexity
                 self._select_model_for_method(method_name)
 
-                # Create composite cache key from error and context
-                cache_request = {
-                    "error": error.model_dump(),
-                    "user_context": user_context.model_dump() if user_context else None,
-                }
+                # Create composite cache key from request
+                cache_request = request.model_dump()
                 # Check cache first
                 cached = self._get_cached_response(method_name, cache_request)
                 if cached is not None:
@@ -849,46 +845,48 @@ class AIUXService(StaleWhileRevalidateMixin):
 
                 # Use protected LLM call with circuit breaker
                 result = await self._protected_llm_call(
-                    llm_fn=lambda: self._analyze_error_with_llm(error, user_context),
-                    fallback_fn=lambda: self._analyze_error_heuristic(error),
+                    llm_fn=lambda: self._analyze_error_with_llm(request),
+                    fallback_fn=lambda: self._analyze_error_heuristic(request),
                     method_name=method_name,
                 )
                 # Cache the result if it came from LLM (not fallback)
                 if result and not self.is_circuit_open():
                     self._cache_response(method_name, cache_request, result)
         else:
-            result = self._analyze_error_heuristic(error)
+            result = self._analyze_error_heuristic(request)
 
-        # Store to session context if session_id provided
+        # Store to session context if session_id provided in context
+        # ADR-0091 Phase 9: Extract session_id from context for session storage
+        session_id = None
+        if request.context and isinstance(request.context, dict):
+            session_id = request.context.get("session_id")
         self._store_to_session(
             session_id,
             "error_analysis",
             result.model_dump(),
-            metadata={"error_name": error.name},
+            metadata={"error_code": request.error_code},
         )
 
         return result
 
     async def _analyze_error_with_llm(
         self,
-        error: ErrorInfo,
-        user_context: UserContext | None,
+        request: ErrorAnalyzeRequest,
     ) -> ErrorAnalyzeResponse:
-        """Analyze error using LLM."""
-        # Build prompt
-        user_prompt = f"""Error to analyze:
-- Name: {error.name}
-- Message: {error.message}
-"""
-        if error.stack_trace:
-            user_prompt += f"- Stack trace: {error.stack_trace[:500]}...\n"
+        """Analyze error using LLM.
 
-        if user_context:
-            user_prompt += f"""
-User context:
-- Persona: {user_context.persona or "unknown"}
-- Recent actions: {", ".join(user_context.recent_actions) if user_context.recent_actions else "none"}
+        ADR-0091 Phase 9: Updated to use ErrorAnalyzeRequest and return aligned response.
+        """
+        # Build prompt with new request fields
+        user_prompt = f"""Error to analyze:
+- Error Code: {request.error_code}
+- Error Message: {request.error_message}
 """
+        if request.stack_trace:
+            user_prompt += f"- Stack trace: {request.stack_trace[:500]}...\n"
+
+        if request.context:
+            user_prompt += f"- Context: {json.dumps(request.context, default=str)[:200]}\n"
 
         messages = [
             SystemMessage(content=ERROR_ANALYSIS_SYSTEM_PROMPT),
@@ -906,146 +904,148 @@ User context:
         parsed = self._parse_json_response(content)
         if not parsed:
             logger.warning("Failed to parse LLM response, falling back to heuristics")
-            return self._analyze_error_heuristic(error)
+            return self._analyze_error_heuristic(request)
 
-        # Build response from parsed JSON
+        # Build response from parsed JSON - ADR-0091 Phase 9 aligned structure
+        recovery_steps = [
+            RecoveryStep(
+                step_number=i + 1,
+                title=s.get("title", s.get("label", "Recovery Step")),
+                description=s.get("description", s.get("guidance", "Follow this step")),
+                action_type=ErrorRecoveryActionType(s.get("action_type", "manual")),
+                action_target=s.get("action_target"),
+            )
+            for i, s in enumerate(parsed.get("recovery_steps", parsed.get("suggestions", [])))
+        ]
+
         return ErrorAnalyzeResponse(
-            classification=ErrorClassification(
-                category=ErrorCategory(parsed.get("category", "unknown")),
-                subcategory=parsed.get("subcategory", "general"),
-                confidence=parsed.get("confidence", 0.5),
-            ),
-            root_cause=parsed.get("root_cause", "An error occurred"),
-            suggestions=[
-                RecoverySuggestion(
-                    action=SuggestionAction(s.get("action", "retry")),
-                    label=s.get("label", "Try again"),
-                    guidance=s.get("guidance"),
-                    estimated_success=s.get("estimated_success", 0.5),
-                    wait_time=s.get("wait_time"),
-                )
-                for s in parsed.get("suggestions", [])
-            ],
-            similar_issues=[],
+            error_type=parsed.get("error_type", parsed.get("category", "unknown")),
+            recovery_steps=recovery_steps,
+            auto_recoverable=parsed.get("auto_recoverable", False),
+            suggested_action=parsed.get("suggested_action"),
+            confidence=parsed.get("confidence", 0.5),
         )
 
-    def _analyze_error_heuristic(self, error: ErrorInfo) -> ErrorAnalyzeResponse:
-        """Analyze error using rule-based heuristics."""
-        error_msg = error.message.lower()
+    def _analyze_error_heuristic(self, request: ErrorAnalyzeRequest) -> ErrorAnalyzeResponse:
+        """Analyze error using rule-based heuristics.
 
-        # Classify error based on patterns
-        if "timeout" in error_msg or "timed out" in error_msg:
-            classification = ErrorClassification(
-                category=ErrorCategory.TIMEOUT,
-                subcategory="request_timeout",
-                confidence=0.95,
-            )
-            root_cause = "The server took too long to respond"
-            suggestions = [
-                RecoverySuggestion(
-                    action=SuggestionAction.RETRY,
-                    label="Try again",
-                    estimated_success=0.8,
+        ADR-0091 Phase 9: Updated to use ErrorAnalyzeRequest and return aligned response.
+        """
+        # Combine error_code and error_message for pattern matching
+        error_text = f"{request.error_code} {request.error_message}".lower()
+
+        # Classify error based on patterns and build recovery steps
+        if "timeout" in error_text or "timed out" in error_text:
+            error_type = "timeout"
+            confidence = 0.95
+            auto_recoverable = True
+            suggested_action = "Try again"
+            recovery_steps = [
+                RecoveryStep(
+                    step_number=1,
+                    title="Retry the request",
+                    description="The server took too long to respond. Try again.",
+                    action_type=ErrorRecoveryActionType.AUTOMATIC,
                 ),
-                RecoverySuggestion(
-                    action=SuggestionAction.SIMPLIFY,
-                    label="Simplify your request",
-                    guidance="Try sending a shorter message",
-                    estimated_success=0.7,
-                ),
-            ]
-        elif "401" in error_msg or "unauthorized" in error_msg or "authentication" in error_msg:
-            classification = ErrorClassification(
-                category=ErrorCategory.AUTHENTICATION,
-                subcategory="session_expired",
-                confidence=0.92,
-            )
-            root_cause = "Your session has expired"
-            suggestions = [
-                RecoverySuggestion(
-                    action=SuggestionAction.NAVIGATE,
-                    label="Sign in again",
-                    estimated_success=0.95,
+                RecoveryStep(
+                    step_number=2,
+                    title="Simplify your request",
+                    description="Try sending a shorter message or simpler query.",
+                    action_type=ErrorRecoveryActionType.MANUAL,
                 ),
             ]
-        elif "403" in error_msg or "forbidden" in error_msg or "permission" in error_msg:
-            classification = ErrorClassification(
-                category=ErrorCategory.AUTHORIZATION,
-                subcategory="permission_denied",
-                confidence=0.9,
-            )
-            root_cause = "You don't have permission to perform this action"
-            suggestions = [
-                RecoverySuggestion(
-                    action=SuggestionAction.CONTACT,
-                    label="Contact administrator",
-                    guidance="Request access from your admin",
-                    estimated_success=0.6,
+        elif "401" in error_text or "unauthorized" in error_text or "authentication" in error_text:
+            error_type = "authentication"
+            confidence = 0.92
+            auto_recoverable = False
+            suggested_action = "Sign in again"
+            recovery_steps = [
+                RecoveryStep(
+                    step_number=1,
+                    title="Sign in again",
+                    description="Your session has expired. Please sign in again.",
+                    action_type=ErrorRecoveryActionType.MANUAL,
+                    action_target="/login",
                 ),
             ]
-        elif "429" in error_msg or "rate limit" in error_msg or "too many" in error_msg:
-            classification = ErrorClassification(
-                category=ErrorCategory.QUOTA,
-                subcategory="rate_limit",
-                confidence=0.95,
-            )
-            root_cause = "Too many requests. Please wait before trying again."
-            suggestions = [
-                RecoverySuggestion(
-                    action=SuggestionAction.WAIT,
-                    label="Wait 60 seconds",
-                    wait_time=60000,
-                    estimated_success=0.9,
+        elif "403" in error_text or "forbidden" in error_text or "permission" in error_text:
+            error_type = "authorization"
+            confidence = 0.9
+            auto_recoverable = False
+            suggested_action = "Contact administrator"
+            recovery_steps = [
+                RecoveryStep(
+                    step_number=1,
+                    title="Contact administrator",
+                    description="You don't have permission to perform this action. Request access from your admin.",
+                    action_type=ErrorRecoveryActionType.CONTACT_SUPPORT,
                 ),
             ]
-        elif "network" in error_msg or "connection" in error_msg or "offline" in error_msg:
-            classification = ErrorClassification(
-                category=ErrorCategory.NETWORK,
-                subcategory="connection_failed",
-                confidence=0.88,
-            )
-            root_cause = "Unable to connect to the server"
-            suggestions = [
-                RecoverySuggestion(
-                    action=SuggestionAction.RETRY,
-                    label="Try again",
-                    estimated_success=0.75,
+        elif "429" in error_text or "rate limit" in error_text or "too many" in error_text:
+            error_type = "quota"
+            confidence = 0.95
+            auto_recoverable = True
+            suggested_action = "Wait and retry"
+            recovery_steps = [
+                RecoveryStep(
+                    step_number=1,
+                    title="Wait 60 seconds",
+                    description="Too many requests. Please wait before trying again.",
+                    action_type=ErrorRecoveryActionType.AUTOMATIC,
                 ),
             ]
-        elif "500" in error_msg or "internal" in error_msg or "server error" in error_msg:
-            classification = ErrorClassification(
-                category=ErrorCategory.SERVER,
-                subcategory="internal_error",
-                confidence=0.85,
-            )
-            root_cause = "The server encountered an unexpected error"
-            suggestions = [
-                RecoverySuggestion(
-                    action=SuggestionAction.RETRY,
-                    label="Try again",
-                    estimated_success=0.7,
+        elif "network" in error_text or "connection" in error_text or "offline" in error_text:
+            error_type = "network"
+            confidence = 0.88
+            auto_recoverable = True
+            suggested_action = "Check connection and retry"
+            recovery_steps = [
+                RecoveryStep(
+                    step_number=1,
+                    title="Check your connection",
+                    description="Unable to connect to the server. Check your network connection.",
+                    action_type=ErrorRecoveryActionType.MANUAL,
+                ),
+                RecoveryStep(
+                    step_number=2,
+                    title="Retry the request",
+                    description="Try the request again once your connection is restored.",
+                    action_type=ErrorRecoveryActionType.AUTOMATIC,
+                ),
+            ]
+        elif "500" in error_text or "internal" in error_text or "server error" in error_text:
+            error_type = "server"
+            confidence = 0.85
+            auto_recoverable = True
+            suggested_action = "Retry later"
+            recovery_steps = [
+                RecoveryStep(
+                    step_number=1,
+                    title="Wait and retry",
+                    description="The server encountered an unexpected error. Please try again in a moment.",
+                    action_type=ErrorRecoveryActionType.AUTOMATIC,
                 ),
             ]
         else:
-            classification = ErrorClassification(
-                category=ErrorCategory.UNKNOWN,
-                subcategory="unclassified",
-                confidence=0.5,
-            )
-            root_cause = "An unexpected error occurred"
-            suggestions = [
-                RecoverySuggestion(
-                    action=SuggestionAction.RETRY,
-                    label="Try again",
-                    estimated_success=0.6,
+            error_type = "unknown"
+            confidence = 0.5
+            auto_recoverable = True
+            suggested_action = "Try again"
+            recovery_steps = [
+                RecoveryStep(
+                    step_number=1,
+                    title="Try again",
+                    description="An unexpected error occurred. Please try again.",
+                    action_type=ErrorRecoveryActionType.AUTOMATIC,
                 ),
             ]
 
         return ErrorAnalyzeResponse(
-            classification=classification,
-            root_cause=root_cause,
-            suggestions=suggestions,
-            similar_issues=[],
+            error_type=error_type,
+            recovery_steps=recovery_steps,
+            auto_recoverable=auto_recoverable,
+            suggested_action=suggested_action,
+            confidence=confidence,
         )
 
     # =========================================================================
@@ -1101,7 +1101,7 @@ User context:
         """Get empty state suggestions using LLM."""
         user_prompt = f"""Page context: {request.context}
 User persona: {request.persona}
-Session history: {request.history if request.history else "none"}
+Previous actions: {request.previous_actions if request.previous_actions else "none"}
 
 Generate 2-3 personalized suggestions to help this user get started."""
 
@@ -1119,66 +1119,72 @@ Generate 2-3 personalized suggestions to help this user get started."""
             logger.warning("Failed to parse LLM response, falling back to heuristics")
             return self._get_empty_state_suggestions_heuristic(request)
 
+        # ADR-0091 Phase 9: Use aligned EmptyStateSuggestion fields
         return EmptyStateSuggestionsResponse(
             suggestions=[
                 EmptyStateSuggestion(
-                    text=s.get("text", "Get started"),
-                    action=SuggestionAction(s.get("action", "navigate")),
-                    target=s.get("target"),
-                    confidence=s.get("confidence", 0.8),
-                    category=s.get("category", "default"),
+                    title=s.get("title", s.get("text", "Get started")),
+                    description=s.get("description", s.get("text", "")),
+                    action_type=EmptyStateActionType(s.get("action_type", s.get("action", "navigate"))),
+                    action_target=s.get("action_target", s.get("target", "")),
+                    icon=s.get("icon"),
+                    priority=i + 1,
                 )
-                for s in parsed.get("suggestions", [])
-            ]
+                for i, s in enumerate(parsed.get("suggestions", []))
+            ],
+            context_hint=parsed.get("context_hint"),
         )
 
     def _get_empty_state_suggestions_heuristic(
         self,
         request: EmptyStateSuggestionsRequest,
     ) -> EmptyStateSuggestionsResponse:
-        """Get empty state suggestions using heuristics."""
+        """Get empty state suggestions using heuristics.
+
+        ADR-0091 Phase 9: Updated to use aligned EmptyStateSuggestion fields.
+        """
         suggestions_map: dict[str, list[EmptyStateSuggestion]] = {
             "workflows": [
                 EmptyStateSuggestion(
-                    text="Create your first workflow from a template",
-                    action=SuggestionAction.NAVIGATE,
-                    target="/studio/workflows/new?template=basic-chatbot",
-                    confidence=0.92,
-                    category="onboarding",
+                    title="Create your first workflow from a template",
+                    description="Build an AI workflow using our visual editor and pre-built templates.",
+                    action_type=EmptyStateActionType.NAVIGATE,
+                    action_target="/studio/workflows/new?template=basic-chatbot",
+                    priority=1,
                 ),
                 EmptyStateSuggestion(
-                    text="Import an existing workflow",
-                    action=SuggestionAction.MODAL,
-                    target="import-workflow",
-                    confidence=0.78,
-                    category="alternative",
+                    title="Import an existing workflow",
+                    description="Import a workflow from a JSON file or another project.",
+                    action_type=EmptyStateActionType.IMPORT,
+                    action_target="import-workflow",
+                    priority=2,
                 ),
             ],
             "sessions": [
                 EmptyStateSuggestion(
-                    text="Start a new conversation",
-                    action=SuggestionAction.NAVIGATE,
-                    target="/studio/chat",
-                    confidence=0.95,
-                    category="primary",
+                    title="Start a new conversation",
+                    description="Begin chatting with your AI assistant.",
+                    action_type=EmptyStateActionType.NAVIGATE,
+                    action_target="/studio/chat",
+                    priority=1,
                 ),
             ],
             "projects": [
                 EmptyStateSuggestion(
-                    text="Create your first project",
-                    action=SuggestionAction.NAVIGATE,
-                    target="/studio/projects/new",
-                    confidence=0.9,
-                    category="onboarding",
+                    title="Create your first project",
+                    description="Organize your workflows and sessions into a project.",
+                    action_type=EmptyStateActionType.NAVIGATE,
+                    action_target="/studio/projects/new",
+                    priority=1,
                 ),
             ],
             "traces": [
                 EmptyStateSuggestion(
-                    text="Run a workflow to see traces",
-                    action=SuggestionAction.NAVIGATE,
-                    target="/studio/workflows",
-                    confidence=0.85,
-                    category="prerequisite",
+                    title="Run a workflow to see traces",
+                    description="Execute a workflow to view its execution traces and debug information.",
+                    action_type=EmptyStateActionType.NAVIGATE,
+                    action_target="/studio/workflows",
+                    priority=1,
                 ),
             ],
         }
@@ -1190,13 +1196,24 @@ Generate 2-3 personalized suggestions to help this user get started."""
             suggestions.insert(
                 0,
                 EmptyStateSuggestion(
-                    text="Explore the workflow builder",
-                    action=SuggestionAction.NAVIGATE,
-                    target="/studio/workflows/builder",
-                    confidence=0.88,
-                    category="featured",
+                    title="Explore the workflow builder",
+                    description="Use the visual workflow builder to create custom AI workflows.",
+                    action_type=EmptyStateActionType.NAVIGATE,
+                    action_target="/studio/workflows/builder",
+                    priority=1,
                 ),
             )
+            # Adjust priorities for existing suggestions
+            for i, suggestion in enumerate(suggestions[1:], start=2):
+                # Create new suggestion with updated priority
+                suggestions[i - 1] = EmptyStateSuggestion(
+                    title=suggestion.title,
+                    description=suggestion.description,
+                    action_type=suggestion.action_type,
+                    action_target=suggestion.action_target,
+                    icon=suggestion.icon,
+                    priority=i,
+                )
 
         return EmptyStateSuggestionsResponse(suggestions=suggestions)
 
@@ -1417,16 +1434,25 @@ Analyze if the user's behavior matches their assigned persona."""
         self,
         request: DisclosureAnalyzeRequest,
     ) -> DisclosureAnalyzeResponse:
-        """Analyze disclosure level using LLM."""
-        session_info = ""
-        if request.session_history:
-            pages = [s.page for s in request.session_history]
-            session_info = f"- Session history: {', '.join(pages)}\n"
+        """Analyze disclosure level using LLM.
+
+        ADR-0091 Phase 9: Updated to use aligned DisclosureAnalyzeRequest fields.
+        """
+        # Build context info from new schema fields
+        context_info = ""
+        if request.context:
+            context_info = f"- Context: {json.dumps(request.context, default=str)[:200]}\n"
+
+        # Get feature usage from user_behavior if available
+        feature_usage = {}
+        if request.user_behavior:
+            feature_usage = request.user_behavior.feature_usage
 
         user_prompt = f"""User disclosure analysis:
-- User ID: {request.user_id}
-- Feature usage: {json.dumps(request.feature_usage) if request.feature_usage else "{}"}
-{session_info}
+- Current level: {request.current_level}
+- Persona: {request.persona or "unknown"}
+- Feature usage: {json.dumps(feature_usage) if feature_usage else "{}"}
+{context_info}
 Analyze the user's expertise level and recommend an appropriate disclosure level."""
 
         messages = [
@@ -1444,64 +1470,73 @@ Analyze the user's expertise level and recommend an appropriate disclosure level
             return self._analyze_disclosure_heuristic(request)
 
         return DisclosureAnalyzeResponse(
-            current_level=DisclosureLevel(parsed.get("current_level", "beginner")),
-            recommended_level=DisclosureLevel(parsed.get("recommended_level", "beginner")),
+            current_level=parsed.get("current_level", request.current_level),
+            recommended_level=parsed.get("recommended_level", request.current_level),
             confidence=parsed.get("confidence", 0.5),
             unlock_features=parsed.get("unlock_features", []),
-            personalized_message=parsed.get("personalized_message"),
+            personalized_message=parsed.get("personalized_message", ""),
+            reasoning=parsed.get("reasoning"),
         )
 
     def _analyze_disclosure_heuristic(
         self,
         request: DisclosureAnalyzeRequest,
     ) -> DisclosureAnalyzeResponse:
-        """Analyze disclosure level using heuristics."""
-        # Calculate feature usage score
-        total_usage = sum(request.feature_usage.values())
-        advanced_features = ["workflows", "mcp", "agents", "traces"]
-        advanced_usage = sum(request.feature_usage.get(f, 0) for f in advanced_features)
+        """Analyze disclosure level using heuristics.
 
-        # Determine current and recommended levels
+        ADR-0091 Phase 9: Updated to use aligned DisclosureAnalyzeRequest fields.
+        """
+        # Get feature usage from user_behavior if available
+        feature_usage: dict[str, int] = {}
+        if request.user_behavior:
+            feature_usage = request.user_behavior.feature_usage
+
+        # Calculate feature usage score
+        total_usage = sum(feature_usage.values()) if feature_usage else 0
+        advanced_features = ["workflows", "mcp", "agents", "traces"]
+        advanced_usage = sum(feature_usage.get(f, 0) for f in advanced_features)
+
+        # Determine current and recommended levels (use string values for ADR-0091)
         if total_usage < 10:
-            current_level = DisclosureLevel.BEGINNER
-            recommended_level = DisclosureLevel.BEGINNER
+            current_level = DisclosureLevel.BEGINNER.value
+            recommended_level = DisclosureLevel.BEGINNER.value
             confidence = 0.9
         elif total_usage < 50:
-            current_level = DisclosureLevel.BEGINNER
+            current_level = DisclosureLevel.BEGINNER.value
             if advanced_usage > 5:
-                recommended_level = DisclosureLevel.INTERMEDIATE
+                recommended_level = DisclosureLevel.INTERMEDIATE.value
                 confidence = 0.75
             else:
-                recommended_level = DisclosureLevel.BEGINNER
+                recommended_level = DisclosureLevel.BEGINNER.value
                 confidence = 0.85
         elif total_usage < 200:
-            current_level = DisclosureLevel.INTERMEDIATE
+            current_level = DisclosureLevel.INTERMEDIATE.value
             if advanced_usage > 20:
-                recommended_level = DisclosureLevel.ADVANCED
+                recommended_level = DisclosureLevel.ADVANCED.value
                 confidence = 0.8
             else:
-                recommended_level = DisclosureLevel.INTERMEDIATE
+                recommended_level = DisclosureLevel.INTERMEDIATE.value
                 confidence = 0.85
         else:
-            current_level = DisclosureLevel.ADVANCED
+            current_level = DisclosureLevel.ADVANCED.value
             if advanced_usage > 100:
-                recommended_level = DisclosureLevel.EXPERT
+                recommended_level = DisclosureLevel.EXPERT.value
                 confidence = 0.7
             else:
-                recommended_level = DisclosureLevel.ADVANCED
+                recommended_level = DisclosureLevel.ADVANCED.value
                 confidence = 0.8
 
         # Determine unlock features
-        unlock_features = []
-        if recommended_level in [DisclosureLevel.INTERMEDIATE, DisclosureLevel.ADVANCED]:
+        unlock_features: list[str] = []
+        if recommended_level in [DisclosureLevel.INTERMEDIATE.value, DisclosureLevel.ADVANCED.value]:
             unlock_features.extend(["workflows", "traces"])
-        if recommended_level in [DisclosureLevel.ADVANCED, DisclosureLevel.EXPERT]:
+        if recommended_level in [DisclosureLevel.ADVANCED.value, DisclosureLevel.EXPERT.value]:
             unlock_features.extend(["mcp", "agents", "workflow_builder"])
 
-        # Generate personalized message
-        message = None
+        # Generate personalized message (empty string if no upgrade, per ADR-0091)
+        message = ""
         if current_level != recommended_level:
-            message = f"You've shown proficiency with advanced features. Ready to unlock {recommended_level.value} mode?"
+            message = f"You've shown proficiency with advanced features. Ready to unlock {recommended_level} mode?"
 
         return DisclosureAnalyzeResponse(
             current_level=current_level,
@@ -1578,7 +1613,8 @@ Analyze the user's expertise level and recommend an appropriate disclosure level
 
         history_info = ""
         if request.nudge_history:
-            history_items = [f"- {h.id}: {h.action} at {h.shown_at}" for h in request.nudge_history[-5:]]
+            # ADR-0091 Phase 9: Use nudge_id instead of id
+            history_items = [f"- {h.nudge_id}: {h.action} at {h.shown_at}" for h in request.nudge_history[-5:]]
             history_info = "Recent nudge history:\n" + "\n".join(history_items)
 
         user_prompt = f"""Nudge recommendation request:
@@ -1639,7 +1675,8 @@ Should a nudge be shown? If so, what nudge?"""
         page = request.current_context.page
 
         if page == "/chat" and time_on_page >= 30000:
-            already_shown = any(n.id == "keyboard-shortcuts" for n in request.nudge_history)
+            # ADR-0091 Phase 9: Use nudge_id instead of id
+            already_shown = any(n.nudge_id == "keyboard-shortcuts" for n in request.nudge_history)
             if not already_shown:
                 return NudgeRecommendResponse(
                     should_show=True,
@@ -1828,7 +1865,10 @@ Determine the user's intent and recommend an onboarding path."""
             return self._get_metrics_insights_heuristic()
 
     async def _get_metrics_insights_with_llm(self) -> MetricsInsightsResponse:
-        """Get HEART metrics insights using LLM."""
+        """Get HEART metrics insights using LLM.
+
+        ADR-0091 Phase 9: Updated to use aligned MetricsInsightsResponse schema.
+        """
         user_prompt = """Generate insights from the following HEART metrics data:
 
 Current metrics snapshot:
@@ -1854,59 +1894,53 @@ Compare with last period and generate actionable insights."""
             logger.warning("Failed to parse LLM response, falling back to heuristics")
             return self._get_metrics_insights_heuristic()
 
+        # ADR-0091 Phase 9: Use new aligned schema fields
         return MetricsInsightsResponse(
+            happiness_score=parsed.get("happiness_score", 7.0),
             insights=[
                 MetricInsight(
-                    type=i.get("type", "trend"),
-                    dimension=i.get("dimension", "engagement"),
-                    message=i.get("message", ""),
-                    severity=i.get("severity", "info"),
-                    sentiment=i.get("sentiment", "neutral"),
-                    suggested_actions=i.get("suggested_actions", []),
-                    detected_at=i.get("detected_at"),
+                    category=MetricsInsightCategory(i.get("category", "engagement")),
+                    title=i.get("title", i.get("message", "Insight")),
+                    description=i.get("description", i.get("message", "")),
+                    trend=MetricsInsightTrend(i.get("trend", "stable")),
+                    priority=MetricsInsightPriority(i.get("priority", "medium")),
+                    suggested_action=i.get("suggested_action"),
                 )
                 for i in parsed.get("insights", [])
             ],
-            predictions=[
-                MetricPrediction(
-                    metric=p.get("metric", ""),
-                    current=p.get("current", 0),
-                    predicted=p.get("predicted", 0),
-                    confidence=p.get("confidence", 0.5),
-                    drivers=p.get("drivers", []),
-                )
-                for p in parsed.get("predictions", [])
-            ],
+            overall_health=OverallHealth(parsed.get("overall_health", "good")),
+            recommendations=parsed.get("recommendations", []),
         )
 
     def _get_metrics_insights_heuristic(self) -> MetricsInsightsResponse:
-        """Get HEART metrics insights using heuristics."""
+        """Get HEART metrics insights using heuristics.
+
+        ADR-0091 Phase 9: Updated to use aligned MetricsInsightsResponse schema.
+        """
         return MetricsInsightsResponse(
+            happiness_score=7.5,
             insights=[
                 MetricInsight(
-                    type="trend",
-                    dimension="engagement",
-                    message="Session duration increased 15% this week",
-                    severity="info",
-                    sentiment="positive",
+                    category=MetricsInsightCategory.ENGAGEMENT,
+                    title="Session Duration Increase",
+                    description="Session duration increased 15% this week",
+                    trend=MetricsInsightTrend.IMPROVING,
+                    priority=MetricsInsightPriority.LOW,
                 ),
                 MetricInsight(
-                    type="pattern",
-                    dimension="adoption",
-                    message="Workflow builder adoption growing among developer personas",
-                    severity="info",
-                    sentiment="positive",
-                    suggested_actions=["Promote workflow templates", "Add more tutorials"],
+                    category=MetricsInsightCategory.ADOPTION,
+                    title="Workflow Builder Adoption Growing",
+                    description="Workflow builder adoption growing among developer personas",
+                    trend=MetricsInsightTrend.IMPROVING,
+                    priority=MetricsInsightPriority.MEDIUM,
+                    suggested_action="Promote workflow templates and add more tutorials",
                 ),
             ],
-            predictions=[
-                MetricPrediction(
-                    metric="30_day_retention",
-                    current=0.65,
-                    predicted=0.72,
-                    confidence=0.75,
-                    drivers=["improved_onboarding", "nudge_system"],
-                ),
+            overall_health=OverallHealth.GOOD,
+            recommendations=[
+                "Promote workflow templates",
+                "Add more tutorials",
+                "Consider improving onboarding flow",
             ],
         )
 
@@ -1936,7 +1970,6 @@ Compare with last period and generate actionable insights."""
         from mcp_server_langgraph.api.v1.ai_ux import (
             CompositeAnalysisResponse,
             DisclosureAnalyzeRequest,
-            ErrorInfo,
             PersonaAnalyzeRequest,
         )
 
@@ -1986,10 +2019,16 @@ Compare with last period and generate actionable insights."""
         # Run disclosure analysis if requested
         if request.include_disclosure and request.disclosure_data:
             try:
+                # ADR-0091 Phase 9: Use aligned DisclosureAnalyzeRequest schema
+                from mcp_server_langgraph.api.v1.ai_ux import UserBehavior
+
                 disclosure_req = DisclosureAnalyzeRequest(
-                    user_id=request.user_id,
-                    feature_usage=request.disclosure_data.get("feature_usage", {}),
-                    session_history=[],
+                    current_level=request.disclosure_data.get("current_level", "beginner"),
+                    persona=request.disclosure_data.get("persona"),
+                    context=request.disclosure_data.get("context"),
+                    user_behavior=UserBehavior(
+                        feature_usage=request.disclosure_data.get("feature_usage", {}),
+                    ),
                 )
                 disclosure_result = await self.analyze_disclosure(disclosure_req)
                 # Store disclosure result to session
@@ -2001,15 +2040,18 @@ Compare with last period and generate actionable insights."""
             except Exception as e:
                 logger.warning(f"Disclosure analysis failed in composite: {e}")
 
-        # Run error analysis if requested
+        # Run error analysis if requested (ADR-0091 Phase 9: use ErrorAnalyzeRequest)
         if request.include_error and request.error_data:
             try:
-                error_info = ErrorInfo(
-                    name=request.error_data.get("name", "UnknownError"),
-                    message=request.error_data.get("message", "An error occurred"),
+                error_request = ErrorAnalyzeRequest(
+                    error_code=request.error_data.get("error_code", request.error_data.get("name", "UNKNOWN_ERROR")),
+                    error_message=request.error_data.get(
+                        "error_message", request.error_data.get("message", "An error occurred")
+                    ),
+                    context=request.error_data.get("context"),
                     stack_trace=request.error_data.get("stack_trace"),
                 )
-                error_result = await self.analyze_error(error_info, None, session_id=session_id)
+                error_result = await self.analyze_error(error_request)
             except Exception as e:
                 logger.warning(f"Error analysis failed in composite: {e}")
 
@@ -2065,7 +2107,6 @@ Compare with last period and generate actionable insights."""
         """
         from mcp_server_langgraph.api.v1.ai_ux import (
             DisclosureAnalyzeRequest,
-            ErrorInfo,
             PersonaAnalyzeRequest,
         )
 
@@ -2098,10 +2139,16 @@ Compare with last period and generate actionable insights."""
         # Run disclosure analysis if requested
         if request.include_disclosure and request.disclosure_data:
             try:
+                # ADR-0091 Phase 9: Use aligned DisclosureAnalyzeRequest schema
+                from mcp_server_langgraph.api.v1.ai_ux import UserBehavior
+
                 disclosure_req = DisclosureAnalyzeRequest(
-                    user_id=request.user_id,
-                    feature_usage=request.disclosure_data.get("feature_usage", {}),
-                    session_history=[],
+                    current_level=request.disclosure_data.get("current_level", "beginner"),
+                    persona=request.disclosure_data.get("persona"),
+                    context=request.disclosure_data.get("context"),
+                    user_behavior=UserBehavior(
+                        feature_usage=request.disclosure_data.get("feature_usage", {}),
+                    ),
                 )
                 disclosure_result = await self.analyze_disclosure(disclosure_req)
                 self._store_to_session(
@@ -2117,15 +2164,18 @@ Compare with last period and generate actionable insights."""
                 logger.warning(f"Disclosure analysis failed in streaming composite: {e}")
                 yield {"type": "disclosure_error", "error": str(e)}
 
-        # Run error analysis if requested
+        # Run error analysis if requested (ADR-0091 Phase 9: use ErrorAnalyzeRequest)
         if request.include_error and request.error_data:
             try:
-                error_info = ErrorInfo(
-                    name=request.error_data.get("name", "UnknownError"),
-                    message=request.error_data.get("message", "An error occurred"),
+                error_request = ErrorAnalyzeRequest(
+                    error_code=request.error_data.get("error_code", request.error_data.get("name", "UNKNOWN_ERROR")),
+                    error_message=request.error_data.get(
+                        "error_message", request.error_data.get("message", "An error occurred")
+                    ),
+                    context=request.error_data.get("context"),
                     stack_trace=request.error_data.get("stack_trace"),
                 )
-                error_result = await self.analyze_error(error_info, None, session_id=session_id)
+                error_result = await self.analyze_error(error_request)
                 yield {
                     "type": "error_complete",
                     "result": error_result.model_dump(),
@@ -2602,19 +2652,18 @@ Compare with last period and generate actionable insights."""
         Returns:
             List of cross-service insight strings
         """
-        from mcp_server_langgraph.api.v1.ai_ux import DisclosureLevel
-
         insights: list[str] = []
 
         # Persona-Disclosure mismatch detection
         if persona_result and disclosure_result:
             # If persona suggests advanced user but disclosure is beginner
+            # ADR-0091 Phase 9: current_level is now a string, not an enum
             if persona_result.detected_persona != persona_result.assigned_persona and persona_result.confidence > 0.8:
-                if disclosure_result.current_level == DisclosureLevel.BEGINNER:
+                if disclosure_result.current_level == "beginner":
                     insights.append(
                         f"Persona mismatch detected: User behaves like "
                         f"'{persona_result.detected_persona}' but disclosure level is "
-                        f"'{disclosure_result.current_level.value}'. Consider upgrade."
+                        f"'{disclosure_result.current_level}'. Consider upgrade."
                     )
 
             # If both suggest upgrade
@@ -2625,9 +2674,9 @@ Compare with last period and generate actionable insights."""
             ):
                 insights.append("Both persona and disclosure analyses suggest this user is ready for advanced features.")
 
-        # Error pattern insights
+        # Error pattern insights (ADR-0091 Phase 9: use error_type instead of classification)
         if error_result and persona_result:
-            if error_result.classification.category.value in ["timeout", "quota"]:
+            if error_result.error_type in ["timeout", "quota"]:
                 if persona_result.detected_persona in ["alice-builder", "alice-devops"]:
                     insights.append("Power user experiencing resource limits. Consider suggesting optimization techniques.")
 
@@ -2669,7 +2718,8 @@ Compare with last period and generate actionable insights."""
             weights.append(1.0)
 
         if error_result:
-            confidences.append(error_result.classification.confidence)
+            # ADR-0091 Phase 9: use error_result.confidence directly
+            confidences.append(error_result.confidence)
             weights.append(0.8)  # Error analysis slightly lower weight
 
         if not confidences:
