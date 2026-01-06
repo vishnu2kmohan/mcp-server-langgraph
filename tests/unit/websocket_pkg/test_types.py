@@ -220,6 +220,57 @@ class TestMessageEnvelope:
 
         assert envelope.timestamp is None
 
+    def test_from_dict_numeric_timestamp_milliseconds(self) -> None:
+        """GIVEN numeric timestamp in ms (JavaScript Date.now()) WHEN from_dict THEN parses correctly."""
+        from mcp_server_langgraph.websocket.types import MessageEnvelope
+
+        # JavaScript Date.now() returns milliseconds since epoch
+        # Example: 1736105445000 = 2025-01-05T15:30:45 UTC
+        js_timestamp_ms = 1736105445000
+        data = {"type": "ping", "timestamp": js_timestamp_ms}
+        envelope = MessageEnvelope.from_dict(data)
+
+        assert envelope.timestamp is not None
+        assert envelope.timestamp.year == 2025
+        assert envelope.timestamp.month == 1
+        assert envelope.timestamp.day == 5
+
+    def test_from_dict_numeric_timestamp_seconds(self) -> None:
+        """GIVEN numeric timestamp in seconds (Unix epoch) WHEN from_dict THEN parses correctly."""
+        from mcp_server_langgraph.websocket.types import MessageEnvelope
+
+        # Unix timestamp in seconds
+        unix_timestamp_sec = 1736105445
+        data = {"type": "ping", "timestamp": unix_timestamp_sec}
+        envelope = MessageEnvelope.from_dict(data)
+
+        assert envelope.timestamp is not None
+        assert envelope.timestamp.year == 2025
+        assert envelope.timestamp.month == 1
+        assert envelope.timestamp.day == 5
+
+    def test_from_dict_numeric_timestamp_float(self) -> None:
+        """GIVEN numeric timestamp as float WHEN from_dict THEN parses correctly."""
+        from mcp_server_langgraph.websocket.types import MessageEnvelope
+
+        # Float timestamp (common in some APIs)
+        float_timestamp = 1736105445.123
+        data = {"type": "ping", "timestamp": float_timestamp}
+        envelope = MessageEnvelope.from_dict(data)
+
+        assert envelope.timestamp is not None
+        assert envelope.timestamp.year == 2025
+
+    def test_from_dict_invalid_timestamp_type(self) -> None:
+        """GIVEN invalid timestamp type (dict) WHEN from_dict THEN timestamp is None."""
+        from mcp_server_langgraph.websocket.types import MessageEnvelope
+
+        data = {"type": "test", "timestamp": {"invalid": "value"}}
+        envelope = MessageEnvelope.from_dict(data)
+
+        # Should gracefully handle invalid types by returning None
+        assert envelope.timestamp is None
+
 
 @pytest.mark.xdist_group(name="websocket_types")
 class TestAuthUser:

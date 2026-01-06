@@ -9,82 +9,317 @@ from typing import Annotated
 import httpx
 from langchain_core.tools import tool
 from pydantic import Field
-from qdrant_client import QdrantClient
 
 from mcp_server_langgraph.core.config import settings
 from mcp_server_langgraph.core.constants import MESSAGE_PREVIEW_LENGTH
 from mcp_server_langgraph.observability.telemetry import logger, metrics
 
 
+# Supported embedding providers
+SUPPORTED_PROVIDERS = {"google_vertex", "google", "openai", "local", "huggingface"}
+
+
+def _validate_semantic_search_config() -> tuple[bool, str | None]:
+    """
+    Validate configuration for semantic search.
+
+    Returns:
+        (is_valid, error_guidance) - If invalid, error_guidance contains setup instructions.
+    """
+    # Core Qdrant settings
+    qdrant_url = getattr(settings, "qdrant_url", None)
+
+    if not qdrant_url:
+        return False, _build_qdrant_guidance()
+
+    # Embedding settings
+    provider = getattr(settings, "embedding_provider", None)
+    model_name = getattr(settings, "embedding_model_name", None)
+    dimensions = getattr(settings, "embedding_dimensions", None)
+
+    if not provider or not model_name or not dimensions:
+        return False, _build_embedding_guidance(provider)
+
+    # Validate provider is supported
+    if provider not in SUPPORTED_PROVIDERS:
+        return False, _build_unsupported_provider_guidance(provider)
+
+    # Provider-specific validation
+    if provider == "google_vertex":
+        # Uses ADC - no explicit key needed, but check for langchain_google_vertexai
+        try:
+            import langchain_google_vertexai  # noqa: F401
+        except ImportError:
+            return False, _build_google_vertex_guidance()
+
+    elif provider == "google":
+        if not getattr(settings, "google_api_key", None):
+            return False, _build_google_api_guidance()
+
+    elif provider == "openai":
+        if not getattr(settings, "openai_api_key", None):
+            return False, _build_openai_guidance()
+
+    elif provider == "local":
+        try:
+            import sentence_transformers  # noqa: F401
+        except ImportError:
+            return False, _build_local_guidance()
+
+    elif provider == "huggingface":
+        try:
+            import langchain_huggingface  # noqa: F401
+        except ImportError:
+            return False, _build_huggingface_guidance()
+
+    return True, None
+
+
+def _build_qdrant_guidance() -> str:
+    return """Knowledge base search not configured: Qdrant not available.
+
+Required environment variables:
+  QDRANT_URL=localhost (or http://qdrant:6333 in Docker)
+  QDRANT_PORT=6333
+  QDRANT_COLLECTION_NAME=mcp_context
+  ENABLE_DYNAMIC_CONTEXT_LOADING=true
+
+See: .env.example"""
+
+
+def _build_embedding_guidance(provider: str | None) -> str:
+    return f"""Knowledge base search not configured: Embedding provider incomplete.
+
+Current provider: {provider or "not set"}
+
+Required environment variables:
+  EMBEDDING_PROVIDER=google_vertex | google | openai | local | huggingface
+  EMBEDDING_MODEL_NAME=<model-name>
+  EMBEDDING_DIMENSIONS=<dimensions>
+
+Provider examples:
+  google_vertex: text-embedding-005 (768)
+  google: models/text-embedding-004 (768)
+  openai: text-embedding-3-small (1536)
+  local: all-MiniLM-L6-v2 (384)
+  huggingface: sentence-transformers/all-mpnet-base-v2 (768)"""
+
+
+def _build_google_vertex_guidance() -> str:
+    return """Knowledge base search not configured: langchain-google-vertexai not installed.
+
+EMBEDDING_PROVIDER=google_vertex requires:
+  uv add langchain-google-vertexai
+
+Then configure:
+  EMBEDDING_MODEL_NAME=text-embedding-005
+  EMBEDDING_DIMENSIONS=768
+
+Auth: Uses GCP Application Default Credentials (ADC).
+  - GKE: Uses Workload Identity Federation automatically
+  - Local: Run `gcloud auth application-default login`"""
+
+
+def _build_google_api_guidance() -> str:
+    return """Knowledge base search not configured: Missing Google API key.
+
+EMBEDDING_PROVIDER=google requires:
+  GOOGLE_API_KEY=your-api-key
+
+Get your key at: https://aistudio.google.com/apikey
+
+Then configure:
+  EMBEDDING_MODEL_NAME=models/text-embedding-004
+  EMBEDDING_DIMENSIONS=768"""
+
+
+def _build_openai_guidance() -> str:
+    return """Knowledge base search not configured: Missing OpenAI API key.
+
+EMBEDDING_PROVIDER=openai requires:
+  OPENAI_API_KEY=your-api-key
+
+Get your key at: https://platform.openai.com/api-keys
+
+Then configure:
+  EMBEDDING_MODEL_NAME=text-embedding-3-small
+  EMBEDDING_DIMENSIONS=1536"""
+
+
+def _build_local_guidance() -> str:
+    return """Knowledge base search not configured: sentence-transformers not installed.
+
+EMBEDDING_PROVIDER=local requires:
+  uv add sentence-transformers
+
+Then configure:
+  EMBEDDING_MODEL_NAME=all-MiniLM-L6-v2
+  EMBEDDING_DIMENSIONS=384"""
+
+
+def _build_huggingface_guidance() -> str:
+    return """Knowledge base search not configured: langchain-huggingface not installed.
+
+EMBEDDING_PROVIDER=huggingface requires:
+  uv add langchain-huggingface
+
+Then configure:
+  EMBEDDING_MODEL_NAME=sentence-transformers/all-mpnet-base-v2
+  EMBEDDING_DIMENSIONS=768
+
+Optional (for private models):
+  HF_TOKEN=your-huggingface-token"""
+
+
+def _build_unsupported_provider_guidance(provider: str) -> str:
+    return f"""Knowledge base search not configured: Unsupported embedding provider.
+
+Current provider: {provider}
+
+Supported providers:
+  - google_vertex: GCP Vertex AI (ADC auth)
+  - google: Google AI Studio (GOOGLE_API_KEY)
+  - openai: OpenAI (OPENAI_API_KEY)
+  - local: sentence-transformers (no auth)
+  - huggingface: HuggingFace (optional HF_TOKEN)
+
+Set EMBEDDING_PROVIDER to one of the above."""
+
+
+def _format_references(refs: list) -> str:
+    """Format references as concise markdown summaries."""
+    if not refs:
+        return "No results found."
+
+    lines = [f"Found {len(refs)} result(s):\n"]
+    for i, ref in enumerate(refs, 1):
+        score = f"{ref.relevance_score:.2f}" if ref.relevance_score else "N/A"
+        lines.append(f"{i}. **{ref.summary}** (score: {score})")
+        lines.append(f"   Type: {ref.ref_type} | ID: {ref.ref_id}")
+
+    lines.append("\n💡 Set `load_full_content=True` to retrieve full content")
+    return "\n".join(lines)
+
+
+def _format_loaded_contexts(loaded: list) -> str:
+    """Format loaded contexts as compact text."""
+    if not loaded:
+        return "No content loaded."
+
+    total_tokens = sum(ctx.token_count for ctx in loaded)
+    lines = [f"Loaded {len(loaded)} context(s) ({total_tokens} tokens):\n"]
+
+    for ctx in loaded:
+        ref = ctx.reference
+        lines.append(f"### {ref.summary} ({ref.ref_type})")
+        lines.append(f'<context id="{ref.ref_id}">\n{ctx.content}\n</context>\n')
+
+    return "\n".join(lines)
+
+
 @tool
-def search_knowledge_base(
+async def search_knowledge_base(
     query: Annotated[str, Field(description="Search query to find relevant information")],
-    limit: Annotated[int, Field(ge=1, le=20, description="Maximum number of results (1-20)")] = 5,
+    limit: Annotated[int, Field(ge=1, le=20, description="Maximum results (1-20)")] = 5,
+    load_full_content: Annotated[bool, Field(description="Load full content (more tokens) or just summaries")] = False,
 ) -> str:
     """
-    Search internal knowledge base for relevant information.
+    Search internal knowledge base using semantic similarity.
+
+    Returns relevance-ranked results. By default returns concise summaries.
+    Set load_full_content=True for complete content (uses more tokens).
 
     Use this to find:
     - Documentation and guides
     - Previous conversations and context
     - System configuration
     - Frequently asked questions
-
-    Returns top matching results with relevance scores.
     """
     try:
         logger.info("Knowledge base search invoked", extra={"query": query, "limit": limit})
         metrics.tool_calls.add(1, {"tool": "search_knowledge_base"})
 
-        # Check if Qdrant is configured
-        if not hasattr(settings, "qdrant_url") or not settings.qdrant_url:
-            return """Knowledge base search not configured.
+        # 1. Validate config
+        is_valid, guidance = _validate_semantic_search_config()
+        if not is_valid:
+            return guidance  # type: ignore[return-value]
 
-To enable:
-1. Deploy Qdrant vector database
-2. Set QDRANT_URL and QDRANT_PORT in .env
-3. Set ENABLE_DYNAMIC_CONTEXT_LOADING=true
-4. Index your knowledge base documents
+        # 2. Search using DynamicContextLoader
+        from mcp_server_langgraph.core.dynamic_context_loader import DynamicContextLoader
 
-See: docs/advanced/dynamic-context.md"""
+        loader = DynamicContextLoader()
+        refs = await loader.semantic_search(query, top_k=limit)
 
-        # Query Qdrant for semantic search
-        try:
-            client = QdrantClient(  # noqa: F841
-                url=settings.qdrant_url,
-                port=getattr(settings, "qdrant_port", 6333),
-            )
+        # 3. Format (progressive disclosure)
+        max_tokens = getattr(settings, "dynamic_context_max_tokens", 2000)
+        if load_full_content:
+            loaded = await loader.load_batch(refs, max_tokens=max_tokens)
+            result = _format_loaded_contexts(loaded)
+        else:
+            result = _format_references(refs)
 
-            # Use configured collection or default
-            collection_name = getattr(settings, "qdrant_collection_name", "mcp_context")
-
-            # Perform semantic search (requires embeddings)
-            # Note: This assumes documents are already indexed
-            # For full implementation, add embedding generation here
-
-            results_text = f"""Knowledge base search: "{query}"
-
-Connected to Qdrant at {settings.qdrant_url}:{getattr(settings, "qdrant_port", 6333)}
-Collection: {collection_name}
-
-Note: Semantic search requires embeddings and indexed documents.
-Configure EMBEDDING_PROVIDER and index your knowledge base.
-
-For setup: See docs/advanced/dynamic-context.md"""
-
-            logger.info("Knowledge base search completed", extra={"query": query})
-            return results_text
-
-        except Exception as e:
-            logger.warning(f"Qdrant query failed: {e}")
-            return f"""Knowledge base search error: {e}
-
-Verify Qdrant is running and accessible at {settings.qdrant_url}"""
+        logger.info(
+            "Knowledge base search completed",
+            extra={"query": query, "results": len(refs), "load_full": load_full_content},
+        )
+        return result
 
     except Exception as e:
-        error_msg = f"Error searching knowledge base: {e}"
-        logger.error(error_msg, exc_info=True)
-        return f"Error: {e}"
+        error_msg = f"Search error: {e}"
+        logger.error(f"Semantic search failed: {e}", exc_info=True)
+        return error_msg
+
+
+@tool
+async def explore_knowledge_iteratively(
+    initial_query: Annotated[str, Field(description="Starting search query")],
+    expansion_terms: Annotated[list[str] | None, Field(description="Terms to expand search in later iterations")] = None,
+    max_iterations: Annotated[int, Field(ge=1, le=5, description="Search iterations (1-5)")] = 3,
+    load_full_content: Annotated[bool, Field()] = False,
+) -> str:
+    """
+    Progressively discover knowledge through iterative refinement.
+
+    Use when initial search doesn't find enough results or you need
+    to explore related topics. Returns deduplicated, aggregated results.
+    """
+    try:
+        logger.info(
+            "Iterative knowledge exploration invoked",
+            extra={"query": initial_query, "iterations": max_iterations},
+        )
+        metrics.tool_calls.add(1, {"tool": "explore_knowledge_iteratively"})
+
+        is_valid, guidance = _validate_semantic_search_config()
+        if not is_valid:
+            return guidance  # type: ignore[return-value]
+
+        from mcp_server_langgraph.core.dynamic_context_loader import DynamicContextLoader
+
+        loader = DynamicContextLoader()
+        refs = await loader.progressive_discover(
+            initial_query=initial_query,
+            max_iterations=max_iterations,
+            expansion_keywords=expansion_terms,
+        )
+
+        max_tokens = getattr(settings, "dynamic_context_max_tokens", 2000)
+        if load_full_content:
+            loaded = await loader.load_batch(refs, max_tokens=max_tokens)
+            result = _format_loaded_contexts(loaded)
+        else:
+            result = _format_references(refs)
+
+        logger.info(
+            "Iterative exploration completed",
+            extra={"query": initial_query, "results": len(refs)},
+        )
+        return result
+
+    except Exception as e:
+        error_msg = f"Search error: {e}"
+        logger.error(f"Progressive search failed: {e}", exc_info=True)
+        return error_msg
 
 
 @tool
@@ -111,9 +346,9 @@ async def web_search(
         metrics.tool_calls.add(1, {"tool": "web_search"})
 
         # Check for configured web search API key
+        # Note: Brave Search API support can be added when needed
         serper_api_key = getattr(settings, "serper_api_key", None)
         tavily_api_key = getattr(settings, "tavily_api_key", None)
-        brave_api_key = getattr(settings, "brave_api_key", None)  # noqa: F841
 
         # Try Tavily API (recommended for AI applications)
         if tavily_api_key:
@@ -125,13 +360,14 @@ async def web_search(
                         timeout=30.0,
                     )
                     response.raise_for_status()
-                    data = await response.json()
+                    # Note: httpx Response.json() is NOT async
+                    data = response.json()
 
                     results = [f'Web search: "{query}"\n']
-                    for i, result in enumerate(data.get("results", [])[:num_results], 1):
-                        results.append(f"\n{i}. {result.get('title', 'No title')}")
-                        results.append(f"   {result.get('content', 'No snippet')[:MESSAGE_PREVIEW_LENGTH]}...")
-                        results.append(f"   URL: {result.get('url', 'N/A')}")
+                    for i, result_item in enumerate(data.get("results", [])[:num_results], 1):
+                        results.append(f"\n{i}. {result_item.get('title', 'No title')}")
+                        results.append(f"   {result_item.get('content', 'No snippet')[:MESSAGE_PREVIEW_LENGTH]}...")
+                        results.append(f"   URL: {result_item.get('url', 'N/A')}")
 
                     logger.info("Tavily web search completed", extra={"results": len(data.get("results", []))})
                     return "\n".join(results) if results else "No results found"
@@ -151,13 +387,14 @@ async def web_search(
                         timeout=30.0,
                     )
                     response.raise_for_status()
-                    data = await response.json()
+                    # Note: httpx Response.json() is NOT async
+                    data = response.json()
 
                     results = [f'Web search: "{query}"\n']
-                    for i, result in enumerate(data.get("organic", [])[:num_results], 1):
-                        results.append(f"\n{i}. {result.get('title', 'No title')}")
-                        results.append(f"   {result.get('snippet', 'No snippet')}")
-                        results.append(f"   URL: {result.get('link', 'N/A')}")
+                    for i, result_item in enumerate(data.get("organic", [])[:num_results], 1):
+                        results.append(f"\n{i}. {result_item.get('title', 'No title')}")
+                        results.append(f"   {result_item.get('snippet', 'No snippet')}")
+                        results.append(f"   URL: {result_item.get('link', 'N/A')}")
 
                     logger.info("Serper web search completed", extra={"results": len(data.get("organic", []))})
                     return "\n".join(results) if results else "No results found"

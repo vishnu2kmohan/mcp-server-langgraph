@@ -187,14 +187,56 @@ class MessageEnvelope:
     def from_dict(cls, data: dict[str, Any]) -> MessageEnvelope:
         """Create from dictionary (JSON deserialization)."""
         timestamp = None
-        if "timestamp" in data and data["timestamp"]:
-            timestamp = datetime.fromisoformat(data["timestamp"])
+        ts_value = data.get("timestamp")
+        if ts_value:
+            timestamp = cls._parse_timestamp(ts_value)
         return cls(
             type=data.get("type", "unknown"),
             payload=data.get("payload"),
             id=data.get("id"),
             timestamp=timestamp,
         )
+
+    @staticmethod
+    def _parse_timestamp(ts_value: Any) -> datetime | None:
+        """
+        Parse timestamp from various formats.
+
+        Handles:
+        - ISO format strings (e.g., "2025-01-15T12:30:45+00:00")
+        - Numeric timestamps in seconds (Unix epoch)
+        - Numeric timestamps in milliseconds (JavaScript Date.now())
+        - Float timestamps
+
+        Args:
+            ts_value: The timestamp value to parse.
+
+        Returns:
+            Parsed datetime or None if parsing fails.
+        """
+        from datetime import UTC
+
+        if isinstance(ts_value, str):
+            try:
+                return datetime.fromisoformat(ts_value)
+            except ValueError:
+                return None
+        elif isinstance(ts_value, (int, float)):
+            try:
+                # JavaScript Date.now() returns milliseconds (13+ digits)
+                # Unix timestamps in seconds are ~10 digits (until year 2286)
+                # Threshold: 10^12 = year 33658 in seconds, but 2001 in milliseconds
+                if ts_value > 1e12:
+                    # Milliseconds - convert to seconds
+                    ts_value = ts_value / 1000
+                return datetime.fromtimestamp(ts_value, tz=UTC)
+            except (ValueError, OSError, OverflowError):
+                # OSError: timestamp out of range
+                # OverflowError: timestamp too large
+                return None
+        else:
+            # Unsupported type (dict, list, etc.)
+            return None
 
 
 @dataclass

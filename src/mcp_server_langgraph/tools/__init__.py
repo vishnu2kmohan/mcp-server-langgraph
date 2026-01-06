@@ -32,7 +32,11 @@ from mcp_server_langgraph.tools.write_file_tools import write_file
 from mcp_server_langgraph.tools.defer_loading import DEFERRED_TOOLS
 from mcp_server_langgraph.tools.filesystem_tools import list_directory, read_file, search_files
 from mcp_server_langgraph.tools.screenshot_tools import capture_screenshot
-from mcp_server_langgraph.tools.search_tools import search_knowledge_base, web_search
+from mcp_server_langgraph.tools.search_tools import (
+    explore_knowledge_iteratively,
+    search_knowledge_base,
+    web_search,
+)
 from mcp_server_langgraph.tools.web_fetch_tools import web_fetch
 
 
@@ -103,6 +107,11 @@ def get_all_tools(settings_override: Any | None = None) -> list[BaseTool]:
         tools.append(write_file)
         # Network fetch (with SSRF protections)
         tools.append(web_fetch)
+
+    # Progressive knowledge exploration (conditional on dynamic context loading)
+    # This is a UX choice to reduce tool clutter when semantic search is disabled
+    if getattr(effective_settings, "enable_dynamic_context_loading", False):
+        tools.append(explore_knowledge_iteratively)
 
     # Code execution tools (conditional on configuration)
     if effective_settings.enable_code_execution:
@@ -219,6 +228,7 @@ __all__ = [
     "calculator",
     "capture_screenshot",
     "divide",
+    "explore_knowledge_iteratively",
     # Computer Use tools
     "fill_form",
     "get_element_info",
