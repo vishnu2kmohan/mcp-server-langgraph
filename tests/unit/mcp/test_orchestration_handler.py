@@ -202,7 +202,7 @@ class TestOrchestrationOperationDispatch:
         handler = OrchestrationToolHandler()
         handler._handle_decompose = AsyncMock(return_value={"subtasks": []})
 
-        result = await handler.handle_operation("decompose", {"task": "test task"})
+        await handler.handle_operation("decompose", {"task": "test task"})
         handler._handle_decompose.assert_called_once()
 
     @pytest.mark.asyncio
@@ -215,7 +215,7 @@ class TestOrchestrationOperationDispatch:
         handler = OrchestrationToolHandler()
         handler._handle_execute = AsyncMock(return_value={"results": []})
 
-        result = await handler.handle_operation("execute", {"task_id": "task-123"})
+        await handler.handle_operation("execute", {"task_id": "task-123"})
         handler._handle_execute.assert_called_once()
 
     @pytest.mark.asyncio
@@ -228,7 +228,7 @@ class TestOrchestrationOperationDispatch:
         handler = OrchestrationToolHandler()
         handler._handle_status = AsyncMock(return_value={"status": "pending"})
 
-        result = await handler.handle_operation("status", {"task_id": "task-123"})
+        await handler.handle_operation("status", {"task_id": "task-123"})
         handler._handle_status.assert_called_once()
 
     @pytest.mark.asyncio
@@ -241,7 +241,7 @@ class TestOrchestrationOperationDispatch:
         handler = OrchestrationToolHandler()
         handler._handle_cancel = AsyncMock(return_value={"cancelled": True})
 
-        result = await handler.handle_operation("cancel", {"task_id": "task-123"})
+        await handler.handle_operation("cancel", {"task_id": "task-123"})
         handler._handle_cancel.assert_called_once()
 
     @pytest.mark.asyncio

@@ -56,7 +56,6 @@ class TestLLMRateLimiting:
 
         # Get the token bucket for verification
         bucket = get_provider_token_bucket("openai")
-        initial_tokens = bucket.tokens
 
         # Mock the litellm acompletion to avoid real API call
         mock_response = MagicMock()
@@ -106,7 +105,6 @@ class TestLLMRateLimiting:
         mock_response.usage = MagicMock(prompt_tokens=10, completion_tokens=5)
 
         acquire_called = False
-        original_acquire = bucket.acquire
 
         async def mock_acquire(tokens: float = 1, timeout: float | None = None) -> None:
             nonlocal acquire_called
@@ -419,7 +417,7 @@ class TestLLMRateLimitErrorHandling:
             patch("mcp_server_langgraph.llm.factory.acompletion", side_effect=mock_with_rate_limit),
             patch("asyncio.sleep", new_callable=AsyncMock),
         ):
-            result = await factory.ainvoke([{"role": "user", "content": "Hello"}])
+            await factory.ainvoke([{"role": "user", "content": "Hello"}])
 
             # Verify retry happened
             assert call_count >= 3
@@ -465,7 +463,7 @@ class TestLLMRateLimitErrorHandling:
             patch("mcp_server_langgraph.llm.factory.acompletion", side_effect=mock_with_overload),
             patch("asyncio.sleep", new_callable=AsyncMock),
         ):
-            result = await factory.ainvoke([{"role": "user", "content": "Hello"}])
+            await factory.ainvoke([{"role": "user", "content": "Hello"}])
 
             # Verify retries happened (3 attempts: 2 failures + 1 success)
             assert call_count == 3

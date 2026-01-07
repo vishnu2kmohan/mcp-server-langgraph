@@ -226,7 +226,7 @@ class TestParallelNodeExecution:
 
         start = time.time()
         result = await compiled.ainvoke(initial_state)
-        elapsed = time.time() - start
+        time.time() - start
 
         # Graph should execute (timing may vary but should complete)
         assert result is not None

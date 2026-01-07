@@ -245,7 +245,7 @@ class TestVAPIDKeyRotation:
             key_repository=mock_repo,
             overlap_days=7,  # Keep old key valid for 7 days
         )
-        new_key = await service.rotate()
+        await service.rotate()
 
         # Old key should have expiry set
         mock_repo.set_expiry.assert_called_once()

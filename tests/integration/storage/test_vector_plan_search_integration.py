@@ -8,7 +8,7 @@ Tests the full integration of:
 """
 
 import gc
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import patch
 
 import pytest
 
@@ -290,9 +290,7 @@ class TestVectorProviderFactoryIntegration:
         )
 
         # Default settings should return InMemory
-        with patch(
-            "mcp_server_langgraph.core.config.settings"
-        ) as mock_settings:
+        with patch("mcp_server_langgraph.core.config.settings") as mock_settings:
             mock_settings.vector_search_provider = "inmemory"
             provider = get_vector_provider_from_settings()
             assert isinstance(provider, InMemoryVectorProvider)

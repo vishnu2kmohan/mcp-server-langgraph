@@ -123,7 +123,7 @@ class TestCostResilienceIntegration:
         )
 
         # Track initial cost
-        initial_cost = tracker.get_session_cost(session_id)
+        tracker.get_session_cost(session_id)
 
         # Mock execute to succeed
         with patch.object(subagent, "execute") as mock_execute:

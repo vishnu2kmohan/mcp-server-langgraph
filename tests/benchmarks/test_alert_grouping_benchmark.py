@@ -12,7 +12,7 @@ import random
 import time
 import uuid
 from datetime import UTC, datetime, timedelta
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import pytest
 
@@ -21,6 +21,9 @@ from mcp_server_langgraph.observability.query.interfaces import (
     AlertSeverity,
     AlertState,
 )
+
+if TYPE_CHECKING:
+    from mcp_server_langgraph.alerts.correlation import CorrelatedAlert
 
 pytestmark = pytest.mark.benchmark
 

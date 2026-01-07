@@ -201,7 +201,7 @@ class TestServiceAdapterCreateArtifact:
             "content_type": "code",
             "edit_metadata": {"edited_by": "user"},
         }
-        result = await adapter.create_artifact(data, TEST_USER_ID)
+        await adapter.create_artifact(data, TEST_USER_ID)
 
         # Assert
         mock_composite.create.assert_awaited_once()
@@ -270,7 +270,7 @@ class TestServiceAdapterUpdateArtifact:
             "title": "Updated Title",
             "edit_metadata": {"edited_by": "ai-suggestion"},
         }
-        result = await adapter.update_artifact(TEST_ARTIFACT_ID, data, TEST_USER_ID)
+        await adapter.update_artifact(TEST_ARTIFACT_ID, data, TEST_USER_ID)
 
         # Assert
         mock_composite.update.assert_awaited_once_with(
@@ -399,7 +399,7 @@ class TestServiceAdapterFork:
         adapter = CompositeArtifactsServiceAdapter(mock_composite)
 
         # Act
-        result = await adapter.fork_artifact(
+        await adapter.fork_artifact(
             TEST_ARTIFACT_ID,
             "Forked Artifact",
             TEST_USER_ID,

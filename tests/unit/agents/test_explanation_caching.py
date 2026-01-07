@@ -127,7 +127,7 @@ class TestExplanationCacheOperations:
             cache=mock_cache,
         )
 
-        explanation = await orchestrator.generate_explanation_cached(
+        await orchestrator.generate_explanation_cached(
             approval_id="test-123",
             agent_name="FileAgent",
             proposed_action="Delete files",

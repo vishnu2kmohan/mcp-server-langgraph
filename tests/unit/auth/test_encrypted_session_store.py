@@ -102,7 +102,7 @@ class TestEncryptedSessionStore:
         key2 = b"1" * 32
 
         store1 = EncryptedSessionStore(encryption_key=key1, backend="memory")
-        session_id = await store1.create(
+        await store1.create(
             user_id="user-123",
             username="alice",
             roles=["user"],
@@ -111,7 +111,7 @@ class TestEncryptedSessionStore:
         )
 
         # Create new store with different key - should fail to decrypt
-        store2 = EncryptedSessionStore(encryption_key=key2, backend="memory")
+        EncryptedSessionStore(encryption_key=key2, backend="memory")
         # Note: This test may need adjustment based on implementation
         # The stores use different in-memory backends, so this tests the concept
 

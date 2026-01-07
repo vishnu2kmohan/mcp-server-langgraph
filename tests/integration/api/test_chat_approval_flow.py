@@ -13,7 +13,7 @@ from __future__ import annotations
 import gc
 from decimal import Decimal
 from typing import Any
-from unittest.mock import AsyncMock, patch
+from unittest.mock import patch
 
 import pytest
 from fastapi import FastAPI

@@ -310,7 +310,7 @@ class TestMCPSTDIOTransportListTools:
 
         with patch("asyncio.create_subprocess_exec", return_value=mock_process):
             await session.connect()
-            tools = await session.list_tools()
+            await session.list_tools()
 
         # Find the tools/list request in written data
         tools_requests = [json.loads(d.decode()) for d in written_data if b"tools/list" in d]

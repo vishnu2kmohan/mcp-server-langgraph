@@ -10,9 +10,8 @@ TDD: These tests define the expected behavior BEFORE implementation.
 from __future__ import annotations
 
 import gc
-import os
 from typing import Any
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
@@ -132,8 +131,10 @@ class TestBroadcastingSpanProcessor:
 
         # Verify session.id was extracted
         if captured_span_data:
-            assert "session.id" in captured_span_data[0].get("attributes", {}) or \
-                   captured_span_data[0].get("session_id") == "session-abc-123"
+            assert (
+                "session.id" in captured_span_data[0].get("attributes", {})
+                or captured_span_data[0].get("session_id") == "session-abc-123"
+            )
 
     def test_on_start_is_noop(self) -> None:
         """
@@ -196,7 +197,6 @@ class TestBroadcastingSpanProcessor:
         THEN it should include trace_id, span_id, name, duration, status, attributes.
         """
         from mcp_server_langgraph.observability.broadcasting_span_processor import (
-            BroadcastingSpanProcessor,
             span_to_broadcast_dict,
         )
 
@@ -207,7 +207,7 @@ class TestBroadcastingSpanProcessor:
         mock_span.get_span_context.return_value.span_id = 0xFEDCBA0987654321
         mock_span.parent = None
         mock_span.start_time = 1000000000  # 1 second in nanoseconds
-        mock_span.end_time = 1150000000   # 1.15 seconds (150ms duration)
+        mock_span.end_time = 1150000000  # 1.15 seconds (150ms duration)
         mock_span.status.status_code.name = "OK"
         mock_span.attributes = {
             "session.id": "sess-123",
@@ -291,9 +291,7 @@ class TestBroadcastingSpanProcessorTelemetryRegistration:
         """Force GC to prevent mock accumulation in xdist workers."""
         gc.collect()
 
-    def test_telemetry_registers_broadcasting_span_processor(
-        self, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
+    def test_telemetry_registers_broadcasting_span_processor(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """
         GIVEN ObservabilityConfig is initialized
         WHEN tracing is set up
@@ -340,12 +338,9 @@ class TestBroadcastingSpanProcessorTelemetryRegistration:
         span_processors = getattr(active_processor, "_span_processors", [])
 
         # Check if any processor is a BroadcastingSpanProcessor
-        broadcasting_processors = [
-            p for p in span_processors if isinstance(p, BroadcastingSpanProcessor)
-        ]
+        broadcasting_processors = [p for p in span_processors if isinstance(p, BroadcastingSpanProcessor)]
         assert len(broadcasting_processors) >= 1, (
-            f"BroadcastingSpanProcessor not found in span processors. "
-            f"Found: {[type(p).__name__ for p in span_processors]}"
+            f"BroadcastingSpanProcessor not found in span processors. Found: {[type(p).__name__ for p in span_processors]}"
         )
 
         # Cleanup
@@ -370,9 +365,7 @@ class TestOTELToWebSocketWiringIntegration:
         """Force GC to prevent mock accumulation in xdist workers."""
         gc.collect()
 
-    def test_otel_span_reaches_trace_broadcaster_via_telemetry_init(
-        self, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
+    def test_otel_span_reaches_trace_broadcaster_via_telemetry_init(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """
         GIVEN ObservabilityConfig initializes telemetry
         WHEN a span is created and ends
@@ -431,9 +424,7 @@ class TestOTELToWebSocketWiringIntegration:
         )
 
         # Verify session.id attribute is captured
-        assert recent_span["attributes"].get("session.id") == "wiring-test-session", (
-            f"session.id not captured correctly"
-        )
+        assert recent_span["attributes"].get("session.id") == "wiring-test-session", "session.id not captured correctly"
 
         # Cleanup
         provider.shutdown()

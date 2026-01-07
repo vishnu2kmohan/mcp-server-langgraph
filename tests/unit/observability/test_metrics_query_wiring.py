@@ -66,19 +66,13 @@ class TestMetricsQueryWiring:
 
         # Verify correct metric names are used
         # http_requests_total is the actual counter from middleware/metrics.py
-        assert "http_requests_total" in source, (
-            "Metrics query should use 'http_requests_total' not 'requests_total'"
-        )
+        assert "http_requests_total" in source, "Metrics query should use 'http_requests_total' not 'requests_total'"
 
         # agent_active_sessions is the actual gauge from health/checks.py
-        assert "agent_active_sessions" in source, (
-            "Metrics query should use 'agent_active_sessions' not 'active_sessions'"
-        )
+        assert "agent_active_sessions" in source, "Metrics query should use 'agent_active_sessions' not 'active_sessions'"
 
         # llm_tokens_total is the actual counter from llm/metrics.py
-        assert "llm_tokens_total" in source, (
-            "Metrics query should use 'llm_tokens_total'"
-        )
+        assert "llm_tokens_total" in source, "Metrics query should use 'llm_tokens_total'"
 
     def test_metrics_queries_use_sum_aggregation(self) -> None:
         """
@@ -95,15 +89,9 @@ class TestMetricsQueryWiring:
         source = inspect.getsource(obs_module)
 
         # All aggregate queries should use sum()
-        assert "sum(http_requests_total)" in source, (
-            "http_requests_total query should use sum() aggregation"
-        )
-        assert "sum(llm_tokens_total)" in source, (
-            "llm_tokens_total query should use sum() aggregation"
-        )
-        assert "sum(agent_active_sessions)" in source, (
-            "agent_active_sessions query should use sum() aggregation"
-        )
+        assert "sum(http_requests_total)" in source, "http_requests_total query should use sum() aggregation"
+        assert "sum(llm_tokens_total)" in source, "llm_tokens_total query should use sum() aggregation"
+        assert "sum(agent_active_sessions)" in source, "agent_active_sessions query should use sum() aggregation"
 
     def test_error_query_filters_5xx_status(self) -> None:
         """
@@ -120,9 +108,7 @@ class TestMetricsQueryWiring:
         source = inspect.getsource(obs_module)
 
         # Error query should filter for 5xx status codes
-        assert 'status=~"5.."' in source, (
-            "Error query should filter for 5xx status codes using status=~'5..'"
-        )
+        assert 'status=~"5.."' in source, "Error query should filter for 5xx status codes using status=~'5..'"
 
 
 class TestLokiQueryWiring:
@@ -156,12 +142,8 @@ class TestLokiQueryWiring:
         source = inspect.getsource(obs_module)
 
         # Log queries should use underscore notation
-        assert 'attribute="session_id"' in source, (
-            "Log query should use 'session_id' (underscore) for Loki"
-        )
-        assert 'attribute="user_id"' in source, (
-            "Log query should use 'user_id' (underscore) for Loki"
-        )
+        assert 'attribute="session_id"' in source, "Log query should use 'session_id' (underscore) for Loki"
+        assert 'attribute="user_id"' in source, "Log query should use 'user_id' (underscore) for Loki"
 
     def test_trace_queries_use_dot_notation(self) -> None:
         """
@@ -179,12 +161,8 @@ class TestLokiQueryWiring:
 
         # Trace queries should use dot notation (OTEL semantic convention)
         # These appear in search_by_attribute calls for Tempo
-        assert '"session.id"' in source, (
-            "Trace query should use 'session.id' (OTEL dot notation)"
-        )
-        assert '"user.id"' in source, (
-            "Trace query should use 'user.id' (OTEL dot notation)"
-        )
+        assert '"session.id"' in source, "Trace query should use 'session.id' (OTEL dot notation)"
+        assert '"user.id"' in source, "Trace query should use 'user.id' (OTEL dot notation)"
 
 
 class TestAlloyLokiLabelConfiguration:
@@ -207,12 +185,8 @@ class TestAlloyLokiLabelConfiguration:
 
         This test reads the Alloy config and verifies consistency.
         """
-        import os
 
-        alloy_config_path = os.path.join(
-            os.path.dirname(__file__),
-            "..", "..", "..", "docker", "alloy", "config.alloy"
-        )
+        alloy_config_path = os.path.join(os.path.dirname(__file__), "..", "..", "..", "docker", "alloy", "config.alloy")
         alloy_config_path = os.path.normpath(alloy_config_path)
 
         if not os.path.exists(alloy_config_path):

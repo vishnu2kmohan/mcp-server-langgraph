@@ -65,7 +65,7 @@ class TestRouterTracing:
                 message="CPU usage high",
             )
 
-            result = router.route(alert)
+            router.route(alert)
 
             # Verify span was created
             mock_tracer_obj.start_as_current_span.assert_called()
@@ -117,7 +117,7 @@ class TestRouterTracing:
                 message="CPU usage high",
             )
 
-            result = await router.route_async(alert)
+            await router.route_async(alert)
 
             # Verify span was created (route is called internally)
             mock_tracer_obj.start_as_current_span.assert_called()
@@ -158,7 +158,7 @@ class TestRouterTracing:
                 started_at=datetime.now(UTC) - timedelta(minutes=20),
             )
 
-            result = router.check_escalation(alert)
+            router.check_escalation(alert)
 
             # Verify span was created
             mock_tracer_obj.start_as_current_span.assert_called()
@@ -195,7 +195,7 @@ class TestRouterTracing:
                 message="CPU usage warning",
             )
 
-            result = router.route(alert)
+            router.route(alert)
 
             # Verify filtered attribute was set
             mock_span.set_attribute.assert_any_call("routing.filtered", True)

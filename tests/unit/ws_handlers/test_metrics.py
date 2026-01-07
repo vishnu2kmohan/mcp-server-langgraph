@@ -235,7 +235,7 @@ class TestWebSocketMetricsOpenTelemetry:
             mock_meter = MagicMock()
             mock_get_meter.return_value = mock_meter
 
-            metrics = WebSocketMetrics(endpoint_name="test", enable_otel=True)
+            WebSocketMetrics(endpoint_name="test", enable_otel=True)
 
             mock_get_meter.assert_called_once()
 

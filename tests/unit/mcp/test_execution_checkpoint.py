@@ -60,7 +60,7 @@ class TestExecutionCheckpointIntegration:
                 mock_flags.enable_sdk_file_checkpointing = True
 
                 span = MagicMock()
-                result = await handler.handle_execute_python(
+                await handler.handle_execute_python(
                     arguments={"code": "print(42)", "execution_id": "exec_123"},
                     span=span,
                     user_id="test-user",
@@ -91,7 +91,7 @@ class TestExecutionCheckpointIntegration:
                 mock_flags.enable_sdk_file_checkpointing = False
 
                 span = MagicMock()
-                result = await handler.handle_execute_python(
+                await handler.handle_execute_python(
                     arguments={"code": "print(42)"},
                     span=span,
                     user_id="test-user",
@@ -129,7 +129,7 @@ class TestExecutionCheckpointIntegration:
                     mock_get_journal.return_value = mock_journal
 
                     span = MagicMock()
-                    result = await handler.handle_execute_python(
+                    await handler.handle_execute_python(
                         arguments={"code": "x = 1", "execution_id": "exec_789"},
                         span=span,
                         user_id="test-user",

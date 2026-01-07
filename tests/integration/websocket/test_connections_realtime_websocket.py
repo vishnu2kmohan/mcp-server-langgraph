@@ -22,7 +22,6 @@ from fastapi import FastAPI, WebSocket
 from starlette.testclient import TestClient
 
 from mcp_server_langgraph.websocket.handlers.connections_realtime import (
-    ConnectionServiceProtocol,
     ConnectionsRealtimeHandler,
 )
 from mcp_server_langgraph.websocket.types import WebSocketConfig
@@ -180,20 +179,14 @@ class TestConnectionsRealtimeWebSocketConnection:
 
     def test_websocket_connection_succeeds(self, test_client: TestClient) -> None:
         """Test that WebSocket connection can be established."""
-        with test_client.websocket_connect(
-            "/api/v1/ws/connections-realtime?v=1.0.0"
-        ) as ws:
+        with test_client.websocket_connect("/api/v1/ws/connections-realtime?v=1.0.0") as ws:
             # Connection successful, should receive initial connection list
             response = ws.receive_json()
             assert response["type"] == "connection_list"
 
-    def test_websocket_receives_initial_connection_list(
-        self, test_client: TestClient
-    ) -> None:
+    def test_websocket_receives_initial_connection_list(self, test_client: TestClient) -> None:
         """Test that client receives connection list on connect."""
-        with test_client.websocket_connect(
-            "/api/v1/ws/connections-realtime?v=1.0.0"
-        ) as ws:
+        with test_client.websocket_connect("/api/v1/ws/connections-realtime?v=1.0.0") as ws:
             response = ws.receive_json()
 
             assert response["type"] == "connection_list"
@@ -217,16 +210,16 @@ class TestConnectionsRealtimeSubscription:
 
     def test_subscribe_to_specific_connection(self, test_client: TestClient) -> None:
         """Test subscribing to a specific connection."""
-        with test_client.websocket_connect(
-            "/api/v1/ws/connections-realtime?v=1.0.0"
-        ) as ws:
+        with test_client.websocket_connect("/api/v1/ws/connections-realtime?v=1.0.0") as ws:
             ws.receive_json()  # Consume initial connection list
 
-            ws.send_json({
-                "type": "subscribe",
-                "id": "test-1",
-                "payload": {"connection_id": "conn-1"},
-            })
+            ws.send_json(
+                {
+                    "type": "subscribe",
+                    "id": "test-1",
+                    "payload": {"connection_id": "conn-1"},
+                }
+            )
             response = ws.receive_json()
 
             assert response["type"] == "connection_status"
@@ -234,40 +227,36 @@ class TestConnectionsRealtimeSubscription:
             assert response["payload"]["connection"]["id"] == "conn-1"
             assert response["payload"]["connection"]["name"] == "Production Server"
 
-    def test_subscribe_to_nonexistent_connection_returns_error(
-        self, test_client: TestClient
-    ) -> None:
+    def test_subscribe_to_nonexistent_connection_returns_error(self, test_client: TestClient) -> None:
         """Test subscribing to nonexistent connection returns error."""
-        with test_client.websocket_connect(
-            "/api/v1/ws/connections-realtime?v=1.0.0"
-        ) as ws:
+        with test_client.websocket_connect("/api/v1/ws/connections-realtime?v=1.0.0") as ws:
             ws.receive_json()  # Consume initial connection list
 
-            ws.send_json({
-                "type": "subscribe",
-                "id": "test-2",
-                "payload": {"connection_id": "nonexistent"},
-            })
+            ws.send_json(
+                {
+                    "type": "subscribe",
+                    "id": "test-2",
+                    "payload": {"connection_id": "nonexistent"},
+                }
+            )
             response = ws.receive_json()
 
             assert response["type"] == "error"
             assert response["id"] == "test-2"
             assert response["payload"]["code"] == "connection_not_found"
 
-    def test_subscribe_missing_connection_id_returns_error(
-        self, test_client: TestClient
-    ) -> None:
+    def test_subscribe_missing_connection_id_returns_error(self, test_client: TestClient) -> None:
         """Test subscribing without connection_id returns error."""
-        with test_client.websocket_connect(
-            "/api/v1/ws/connections-realtime?v=1.0.0"
-        ) as ws:
+        with test_client.websocket_connect("/api/v1/ws/connections-realtime?v=1.0.0") as ws:
             ws.receive_json()  # Consume initial connection list
 
-            ws.send_json({
-                "type": "subscribe",
-                "id": "test-3",
-                "payload": {},
-            })
+            ws.send_json(
+                {
+                    "type": "subscribe",
+                    "id": "test-3",
+                    "payload": {},
+                }
+            )
             response = ws.receive_json()
 
             assert response["type"] == "error"
@@ -285,16 +274,16 @@ class TestConnectionsRealtimeSubscribeAll:
 
     def test_subscribe_all_succeeds(self, test_client: TestClient) -> None:
         """Test subscribing to all connections."""
-        with test_client.websocket_connect(
-            "/api/v1/ws/connections-realtime?v=1.0.0"
-        ) as ws:
+        with test_client.websocket_connect("/api/v1/ws/connections-realtime?v=1.0.0") as ws:
             ws.receive_json()  # Consume initial connection list
 
-            ws.send_json({
-                "type": "subscribe_all",
-                "id": "test-4",
-                "payload": {},
-            })
+            ws.send_json(
+                {
+                    "type": "subscribe_all",
+                    "id": "test-4",
+                    "payload": {},
+                }
+            )
             response = ws.receive_json()
 
             assert response["type"] == "subscribed_all"
@@ -312,25 +301,27 @@ class TestConnectionsRealtimeUnsubscribe:
 
     def test_unsubscribe_from_connection(self, test_client: TestClient) -> None:
         """Test unsubscribing from a connection."""
-        with test_client.websocket_connect(
-            "/api/v1/ws/connections-realtime?v=1.0.0"
-        ) as ws:
+        with test_client.websocket_connect("/api/v1/ws/connections-realtime?v=1.0.0") as ws:
             ws.receive_json()  # Consume initial connection list
 
             # First subscribe
-            ws.send_json({
-                "type": "subscribe",
-                "id": "test-5",
-                "payload": {"connection_id": "conn-1"},
-            })
+            ws.send_json(
+                {
+                    "type": "subscribe",
+                    "id": "test-5",
+                    "payload": {"connection_id": "conn-1"},
+                }
+            )
             ws.receive_json()  # Consume connection_status
 
             # Then unsubscribe
-            ws.send_json({
-                "type": "unsubscribe",
-                "id": "test-6",
-                "payload": {"connection_id": "conn-1"},
-            })
+            ws.send_json(
+                {
+                    "type": "unsubscribe",
+                    "id": "test-6",
+                    "payload": {"connection_id": "conn-1"},
+                }
+            )
             response = ws.receive_json()
 
             assert response["type"] == "unsubscribed"
@@ -346,20 +337,18 @@ class TestConnectionsRealtimeHealthCheck:
         """Force GC to prevent mock accumulation in xdist workers."""
         gc.collect()
 
-    def test_request_health_check_for_connected_server(
-        self, test_client: TestClient
-    ) -> None:
+    def test_request_health_check_for_connected_server(self, test_client: TestClient) -> None:
         """Test health check for connected server."""
-        with test_client.websocket_connect(
-            "/api/v1/ws/connections-realtime?v=1.0.0"
-        ) as ws:
+        with test_client.websocket_connect("/api/v1/ws/connections-realtime?v=1.0.0") as ws:
             ws.receive_json()  # Consume initial connection list
 
-            ws.send_json({
-                "type": "request_health_check",
-                "id": "test-7",
-                "payload": {"connection_id": "conn-1"},
-            })
+            ws.send_json(
+                {
+                    "type": "request_health_check",
+                    "id": "test-7",
+                    "payload": {"connection_id": "conn-1"},
+                }
+            )
             response = ws.receive_json()
 
             assert response["type"] == "health_check_result"
@@ -369,20 +358,18 @@ class TestConnectionsRealtimeHealthCheck:
             assert response["payload"]["status"] == "connected"
             assert "latency_ms" in response["payload"]
 
-    def test_request_health_check_for_disconnected_server(
-        self, test_client: TestClient
-    ) -> None:
+    def test_request_health_check_for_disconnected_server(self, test_client: TestClient) -> None:
         """Test health check for disconnected server."""
-        with test_client.websocket_connect(
-            "/api/v1/ws/connections-realtime?v=1.0.0"
-        ) as ws:
+        with test_client.websocket_connect("/api/v1/ws/connections-realtime?v=1.0.0") as ws:
             ws.receive_json()  # Consume initial connection list
 
-            ws.send_json({
-                "type": "request_health_check",
-                "id": "test-8",
-                "payload": {"connection_id": "conn-2"},
-            })
+            ws.send_json(
+                {
+                    "type": "request_health_check",
+                    "id": "test-8",
+                    "payload": {"connection_id": "conn-2"},
+                }
+            )
             response = ws.receive_json()
 
             assert response["type"] == "health_check_result"
@@ -390,20 +377,18 @@ class TestConnectionsRealtimeHealthCheck:
             assert response["payload"]["healthy"] is False
             assert response["payload"]["status"] == "disconnected"
 
-    def test_request_health_check_for_error_server(
-        self, test_client: TestClient
-    ) -> None:
+    def test_request_health_check_for_error_server(self, test_client: TestClient) -> None:
         """Test health check for server in error state."""
-        with test_client.websocket_connect(
-            "/api/v1/ws/connections-realtime?v=1.0.0"
-        ) as ws:
+        with test_client.websocket_connect("/api/v1/ws/connections-realtime?v=1.0.0") as ws:
             ws.receive_json()  # Consume initial connection list
 
-            ws.send_json({
-                "type": "request_health_check",
-                "id": "test-9",
-                "payload": {"connection_id": "conn-3"},
-            })
+            ws.send_json(
+                {
+                    "type": "request_health_check",
+                    "id": "test-9",
+                    "payload": {"connection_id": "conn-3"},
+                }
+            )
             response = ws.receive_json()
 
             assert response["type"] == "health_check_result"
@@ -411,20 +396,18 @@ class TestConnectionsRealtimeHealthCheck:
             assert response["payload"]["healthy"] is False
             assert response["payload"]["status"] == "error"
 
-    def test_request_health_check_missing_connection_id_returns_error(
-        self, test_client: TestClient
-    ) -> None:
+    def test_request_health_check_missing_connection_id_returns_error(self, test_client: TestClient) -> None:
         """Test health check without connection_id returns error."""
-        with test_client.websocket_connect(
-            "/api/v1/ws/connections-realtime?v=1.0.0"
-        ) as ws:
+        with test_client.websocket_connect("/api/v1/ws/connections-realtime?v=1.0.0") as ws:
             ws.receive_json()  # Consume initial connection list
 
-            ws.send_json({
-                "type": "request_health_check",
-                "id": "test-10",
-                "payload": {},
-            })
+            ws.send_json(
+                {
+                    "type": "request_health_check",
+                    "id": "test-10",
+                    "payload": {},
+                }
+            )
             response = ws.receive_json()
 
             assert response["type"] == "error"
@@ -440,20 +423,18 @@ class TestConnectionsRealtimeErrorHandling:
         """Force GC to prevent mock accumulation in xdist workers."""
         gc.collect()
 
-    def test_unknown_message_type_returns_error(
-        self, test_client: TestClient
-    ) -> None:
+    def test_unknown_message_type_returns_error(self, test_client: TestClient) -> None:
         """Test that unknown message type returns error."""
-        with test_client.websocket_connect(
-            "/api/v1/ws/connections-realtime?v=1.0.0"
-        ) as ws:
+        with test_client.websocket_connect("/api/v1/ws/connections-realtime?v=1.0.0") as ws:
             ws.receive_json()  # Consume initial connection list
 
-            ws.send_json({
-                "type": "invalid_type",
-                "id": "test-11",
-                "payload": {},
-            })
+            ws.send_json(
+                {
+                    "type": "invalid_type",
+                    "id": "test-11",
+                    "payload": {},
+                }
+            )
             response = ws.receive_json()
 
             assert response["type"] == "error"
@@ -476,9 +457,7 @@ class TestConnectionsRealtimeMessageFormats:
         #   type: "connection_list",
         #   connections: [{ id, name, url, auth_type, status, ... }]
         # }
-        with test_client.websocket_connect(
-            "/api/v1/ws/connections-realtime?v=1.0.0"
-        ) as ws:
+        with test_client.websocket_connect("/api/v1/ws/connections-realtime?v=1.0.0") as ws:
             response = ws.receive_json()
 
             # Verify structure
@@ -497,16 +476,16 @@ class TestConnectionsRealtimeMessageFormats:
 
     def test_connection_status_message_format(self, test_client: TestClient) -> None:
         """Test connection_status message format."""
-        with test_client.websocket_connect(
-            "/api/v1/ws/connections-realtime?v=1.0.0"
-        ) as ws:
+        with test_client.websocket_connect("/api/v1/ws/connections-realtime?v=1.0.0") as ws:
             ws.receive_json()  # Consume initial list
 
-            ws.send_json({
-                "type": "subscribe",
-                "id": "format-test",
-                "payload": {"connection_id": "conn-1"},
-            })
+            ws.send_json(
+                {
+                    "type": "subscribe",
+                    "id": "format-test",
+                    "payload": {"connection_id": "conn-1"},
+                }
+            )
             response = ws.receive_json()
 
             # Verify structure
@@ -515,20 +494,18 @@ class TestConnectionsRealtimeMessageFormats:
             assert "connection" in response["payload"]
             assert "id" in response["payload"]["connection"]
 
-    def test_health_check_result_message_format(
-        self, test_client: TestClient
-    ) -> None:
+    def test_health_check_result_message_format(self, test_client: TestClient) -> None:
         """Test health_check_result message format."""
-        with test_client.websocket_connect(
-            "/api/v1/ws/connections-realtime?v=1.0.0"
-        ) as ws:
+        with test_client.websocket_connect("/api/v1/ws/connections-realtime?v=1.0.0") as ws:
             ws.receive_json()  # Consume initial list
 
-            ws.send_json({
-                "type": "request_health_check",
-                "id": "format-test-2",
-                "payload": {"connection_id": "conn-1"},
-            })
+            ws.send_json(
+                {
+                    "type": "request_health_check",
+                    "id": "format-test-2",
+                    "payload": {"connection_id": "conn-1"},
+                }
+            )
             response = ws.receive_json()
 
             # Verify structure
@@ -541,16 +518,16 @@ class TestConnectionsRealtimeMessageFormats:
 
     def test_error_message_format(self, test_client: TestClient) -> None:
         """Test error message format."""
-        with test_client.websocket_connect(
-            "/api/v1/ws/connections-realtime?v=1.0.0"
-        ) as ws:
+        with test_client.websocket_connect("/api/v1/ws/connections-realtime?v=1.0.0") as ws:
             ws.receive_json()  # Consume initial list
 
-            ws.send_json({
-                "type": "subscribe",
-                "id": "format-test-3",
-                "payload": {},  # Missing connection_id
-            })
+            ws.send_json(
+                {
+                    "type": "subscribe",
+                    "id": "format-test-3",
+                    "payload": {},  # Missing connection_id
+                }
+            )
             response = ws.receive_json()
 
             assert response["type"] == "error"

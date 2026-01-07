@@ -274,7 +274,7 @@ class TestPromptSearchWithMockEmbeddings:
         index = PromptIndex(embedding_service=InMemoryEmbeddingService())
         # Explicitly NOT calling build()
 
-        results = await search_prompts("test", index=index, top_k=5)
+        await search_prompts("test", index=index, top_k=5)
 
         # Should have auto-built the index
         assert index.is_built

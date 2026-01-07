@@ -31,7 +31,7 @@ class TestSDKSkillsIntegration:
         from mcp_server_langgraph.sdk import LangGraphAgentClient
         from mcp_server_langgraph.skills import SkillRegistry
 
-        client = LangGraphAgentClient()
+        LangGraphAgentClient()
         registry = SkillRegistry()
 
         # Skills registry should be accessible from SDK context

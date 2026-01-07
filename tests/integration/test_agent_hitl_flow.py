@@ -634,7 +634,7 @@ class TestHITLAIExplanationIntegration:
             EXPLANATION_ANALYSIS_TYPES,
         )
 
-        orchestrator = ExplanationOrchestrator()
+        ExplanationOrchestrator()
 
         # Verify analysis types are defined
         assert "uncertainty_analysis" in EXPLANATION_ANALYSIS_TYPES

@@ -8,10 +8,9 @@ approval before execution.
 from __future__ import annotations
 
 import gc
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta, UTC
 from decimal import Decimal
 from typing import TYPE_CHECKING
-from uuid import uuid4
 
 import pytest
 
@@ -232,7 +231,7 @@ class TestExecutionPlanModel:
         """Test ExecutionPlan has created_at and expires_at fields."""
         from mcp_server_langgraph.core.models.execution_plan import ExecutionPlan
 
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         expires = now + timedelta(hours=1)
 
         plan = ExecutionPlan(
@@ -362,8 +361,8 @@ class TestExecutionPlanMethods:
         """Test is_expired property."""
         from mcp_server_langgraph.core.models.execution_plan import ExecutionPlan
 
-        past = datetime.now(timezone.utc) - timedelta(hours=2)
-        future = datetime.now(timezone.utc) + timedelta(hours=1)
+        past = datetime.now(UTC) - timedelta(hours=2)
+        future = datetime.now(UTC) + timedelta(hours=1)
 
         expired_plan = ExecutionPlan(
             plan_id="plan-expired",

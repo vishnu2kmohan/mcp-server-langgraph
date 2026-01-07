@@ -84,7 +84,7 @@ class TestExplanationMetrics:
         """Test that cache hit is recorded correctly."""
         from mcp_server_langgraph.agents.metrics import record_explanation_generation
 
-        with patch("mcp_server_langgraph.agents.metrics.explanation_generation_counter") as mock_counter:
+        with patch("mcp_server_langgraph.agents.metrics.explanation_generation_counter"):
             with patch("mcp_server_langgraph.agents.metrics.explanation_cache_counter") as mock_cache:
                 record_explanation_generation(
                     approval_id="test-approval-456",
@@ -103,7 +103,7 @@ class TestExplanationMetrics:
         """Test that cache miss is recorded correctly."""
         from mcp_server_langgraph.agents.metrics import record_explanation_generation
 
-        with patch("mcp_server_langgraph.agents.metrics.explanation_generation_counter") as mock_counter:
+        with patch("mcp_server_langgraph.agents.metrics.explanation_generation_counter"):
             with patch("mcp_server_langgraph.agents.metrics.explanation_cache_counter") as mock_cache:
                 record_explanation_generation(
                     approval_id="test-approval-789",
@@ -122,7 +122,7 @@ class TestExplanationMetrics:
         """Test that failed generation is recorded with error type."""
         from mcp_server_langgraph.agents.metrics import record_explanation_generation
 
-        with patch("mcp_server_langgraph.agents.metrics.explanation_generation_counter") as mock_counter:
+        with patch("mcp_server_langgraph.agents.metrics.explanation_generation_counter"):
             with patch("mcp_server_langgraph.agents.metrics.explanation_error_counter") as mock_error:
                 record_explanation_generation(
                     approval_id="test-approval-fail",

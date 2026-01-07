@@ -32,7 +32,6 @@ from mcp_server_langgraph.websocket.handlers.heart_metrics import (
     HEART_DIMENSIONS,
     VALID_TIME_RANGES,
     HeartMetricsHandler,
-    HeartMetricsServiceProtocol,
 )
 from mcp_server_langgraph.websocket.types import WebSocketConfig
 
@@ -159,9 +158,7 @@ class MockHeartMetricsService:
             {"time_range": time_range, "error": "No data available"},
         )
 
-    async def get_dimension_metrics(
-        self, dimension: str, time_range: str = "24h"
-    ) -> dict[str, Any]:
+    async def get_dimension_metrics(self, dimension: str, time_range: str = "24h") -> dict[str, Any]:
         """Get metrics for a specific dimension."""
         return self.dimension_metrics.get(
             dimension,
@@ -218,9 +215,7 @@ class TestHeartMetricsWebSocketConnection:
             response = ws.receive_json()
             assert response["type"] == "metrics_snapshot"
 
-    def test_websocket_receives_initial_snapshot_on_connect(
-        self, test_client: TestClient
-    ) -> None:
+    def test_websocket_receives_initial_snapshot_on_connect(self, test_client: TestClient) -> None:
         """Test that client receives metrics snapshot on connect."""
         with test_client.websocket_connect("/api/v1/ws/heart-metrics?v=1.0.0") as ws:
             response = ws.receive_json()
@@ -247,18 +242,18 @@ class TestHeartMetricsTimeRange:
         """Force GC to prevent mock accumulation in xdist workers."""
         gc.collect()
 
-    def test_set_time_range_returns_new_snapshot(
-        self, test_client: TestClient
-    ) -> None:
+    def test_set_time_range_returns_new_snapshot(self, test_client: TestClient) -> None:
         """Test that setting time range returns new snapshot."""
         with test_client.websocket_connect("/api/v1/ws/heart-metrics?v=1.0.0") as ws:
             ws.receive_json()  # Consume initial snapshot
 
-            ws.send_json({
-                "type": "set_time_range",
-                "id": "test-1",
-                "payload": {"time_range": "7d"},
-            })
+            ws.send_json(
+                {
+                    "type": "set_time_range",
+                    "id": "test-1",
+                    "payload": {"time_range": "7d"},
+                }
+            )
             response = ws.receive_json()
 
             assert response["type"] == "metrics_snapshot"
@@ -266,18 +261,18 @@ class TestHeartMetricsTimeRange:
             assert response["payload"]["time_range"] == "7d"
             assert "metrics" in response["payload"]
 
-    def test_set_invalid_time_range_returns_error(
-        self, test_client: TestClient
-    ) -> None:
+    def test_set_invalid_time_range_returns_error(self, test_client: TestClient) -> None:
         """Test that invalid time range returns error."""
         with test_client.websocket_connect("/api/v1/ws/heart-metrics?v=1.0.0") as ws:
             ws.receive_json()  # Consume initial snapshot
 
-            ws.send_json({
-                "type": "set_time_range",
-                "id": "test-2",
-                "payload": {"time_range": "invalid"},
-            })
+            ws.send_json(
+                {
+                    "type": "set_time_range",
+                    "id": "test-2",
+                    "payload": {"time_range": "invalid"},
+                }
+            )
             response = ws.receive_json()
 
             assert response["type"] == "error"
@@ -287,21 +282,19 @@ class TestHeartMetricsTimeRange:
     def test_all_valid_time_ranges_work(self, test_client: TestClient) -> None:
         """Test that all valid time ranges are accepted."""
         for time_range in VALID_TIME_RANGES:
-            with test_client.websocket_connect(
-                "/api/v1/ws/heart-metrics?v=1.0.0"
-            ) as ws:
+            with test_client.websocket_connect("/api/v1/ws/heart-metrics?v=1.0.0") as ws:
                 ws.receive_json()  # Consume initial snapshot
 
-                ws.send_json({
-                    "type": "set_time_range",
-                    "id": f"test-{time_range}",
-                    "payload": {"time_range": time_range},
-                })
+                ws.send_json(
+                    {
+                        "type": "set_time_range",
+                        "id": f"test-{time_range}",
+                        "payload": {"time_range": time_range},
+                    }
+                )
                 response = ws.receive_json()
 
-                assert response["type"] == "metrics_snapshot", (
-                    f"Failed for time_range={time_range}"
-                )
+                assert response["type"] == "metrics_snapshot", f"Failed for time_range={time_range}"
                 assert response["payload"]["time_range"] == time_range
 
 
@@ -313,18 +306,18 @@ class TestHeartMetricsDimensionSubscription:
         """Force GC to prevent mock accumulation in xdist workers."""
         gc.collect()
 
-    def test_subscribe_dimension_returns_metrics(
-        self, test_client: TestClient
-    ) -> None:
+    def test_subscribe_dimension_returns_metrics(self, test_client: TestClient) -> None:
         """Test that subscribing to a dimension returns dimension metrics."""
         with test_client.websocket_connect("/api/v1/ws/heart-metrics?v=1.0.0") as ws:
             ws.receive_json()  # Consume initial snapshot
 
-            ws.send_json({
-                "type": "subscribe_dimension",
-                "id": "test-3",
-                "payload": {"dimension": "happiness"},
-            })
+            ws.send_json(
+                {
+                    "type": "subscribe_dimension",
+                    "id": "test-3",
+                    "payload": {"dimension": "happiness"},
+                }
+            )
             response = ws.receive_json()
 
             assert response["type"] == "dimension_update"
@@ -336,53 +329,51 @@ class TestHeartMetricsDimensionSubscription:
     def test_subscribe_all_valid_dimensions(self, test_client: TestClient) -> None:
         """Test that all valid HEART dimensions can be subscribed."""
         for dimension in HEART_DIMENSIONS:
-            with test_client.websocket_connect(
-                "/api/v1/ws/heart-metrics?v=1.0.0"
-            ) as ws:
+            with test_client.websocket_connect("/api/v1/ws/heart-metrics?v=1.0.0") as ws:
                 ws.receive_json()  # Consume initial snapshot
 
-                ws.send_json({
-                    "type": "subscribe_dimension",
-                    "id": f"test-{dimension}",
-                    "payload": {"dimension": dimension},
-                })
+                ws.send_json(
+                    {
+                        "type": "subscribe_dimension",
+                        "id": f"test-{dimension}",
+                        "payload": {"dimension": dimension},
+                    }
+                )
                 response = ws.receive_json()
 
-                assert response["type"] == "dimension_update", (
-                    f"Failed for dimension={dimension}"
-                )
+                assert response["type"] == "dimension_update", f"Failed for dimension={dimension}"
                 assert response["payload"]["dimension"] == dimension
 
-    def test_subscribe_invalid_dimension_returns_error(
-        self, test_client: TestClient
-    ) -> None:
+    def test_subscribe_invalid_dimension_returns_error(self, test_client: TestClient) -> None:
         """Test that invalid dimension returns error."""
         with test_client.websocket_connect("/api/v1/ws/heart-metrics?v=1.0.0") as ws:
             ws.receive_json()  # Consume initial snapshot
 
-            ws.send_json({
-                "type": "subscribe_dimension",
-                "id": "test-4",
-                "payload": {"dimension": "invalid_dimension"},
-            })
+            ws.send_json(
+                {
+                    "type": "subscribe_dimension",
+                    "id": "test-4",
+                    "payload": {"dimension": "invalid_dimension"},
+                }
+            )
             response = ws.receive_json()
 
             assert response["type"] == "error"
             assert response["id"] == "test-4"
             assert response["payload"]["code"] == "invalid_dimension"
 
-    def test_subscribe_missing_dimension_returns_error(
-        self, test_client: TestClient
-    ) -> None:
+    def test_subscribe_missing_dimension_returns_error(self, test_client: TestClient) -> None:
         """Test that missing dimension returns error."""
         with test_client.websocket_connect("/api/v1/ws/heart-metrics?v=1.0.0") as ws:
             ws.receive_json()  # Consume initial snapshot
 
-            ws.send_json({
-                "type": "subscribe_dimension",
-                "id": "test-5",
-                "payload": {},
-            })
+            ws.send_json(
+                {
+                    "type": "subscribe_dimension",
+                    "id": "test-5",
+                    "payload": {},
+                }
+            )
             response = ws.receive_json()
 
             assert response["type"] == "error"
@@ -404,19 +395,23 @@ class TestHeartMetricsUnsubscribe:
             ws.receive_json()  # Consume initial snapshot
 
             # First subscribe
-            ws.send_json({
-                "type": "subscribe_dimension",
-                "id": "test-6",
-                "payload": {"dimension": "engagement"},
-            })
+            ws.send_json(
+                {
+                    "type": "subscribe_dimension",
+                    "id": "test-6",
+                    "payload": {"dimension": "engagement"},
+                }
+            )
             ws.receive_json()  # Consume dimension_update
 
             # Then unsubscribe
-            ws.send_json({
-                "type": "unsubscribe_dimension",
-                "id": "test-7",
-                "payload": {"dimension": "engagement"},
-            })
+            ws.send_json(
+                {
+                    "type": "unsubscribe_dimension",
+                    "id": "test-7",
+                    "payload": {"dimension": "engagement"},
+                }
+            )
             response = ws.receive_json()
 
             assert response["type"] == "unsubscribed"
@@ -432,18 +427,18 @@ class TestHeartMetricsErrorHandling:
         """Force GC to prevent mock accumulation in xdist workers."""
         gc.collect()
 
-    def test_unknown_message_type_returns_error(
-        self, test_client: TestClient
-    ) -> None:
+    def test_unknown_message_type_returns_error(self, test_client: TestClient) -> None:
         """Test that unknown message type returns error."""
         with test_client.websocket_connect("/api/v1/ws/heart-metrics?v=1.0.0") as ws:
             ws.receive_json()  # Consume initial snapshot
 
-            ws.send_json({
-                "type": "invalid_type",
-                "id": "test-8",
-                "payload": {},
-            })
+            ws.send_json(
+                {
+                    "type": "invalid_type",
+                    "id": "test-8",
+                    "payload": {},
+                }
+            )
             response = ws.receive_json()
 
             assert response["type"] == "error"
@@ -501,11 +496,13 @@ class TestHeartMetricsMessageFormats:
         with test_client.websocket_connect("/api/v1/ws/heart-metrics?v=1.0.0") as ws:
             ws.receive_json()  # Consume initial snapshot
 
-            ws.send_json({
-                "type": "subscribe_dimension",
-                "id": "format-test",
-                "payload": {"dimension": "task_success"},
-            })
+            ws.send_json(
+                {
+                    "type": "subscribe_dimension",
+                    "id": "format-test",
+                    "payload": {"dimension": "task_success"},
+                }
+            )
             response = ws.receive_json()
 
             # Verify structure
@@ -520,11 +517,13 @@ class TestHeartMetricsMessageFormats:
         with test_client.websocket_connect("/api/v1/ws/heart-metrics?v=1.0.0") as ws:
             ws.receive_json()  # Consume initial snapshot
 
-            ws.send_json({
-                "type": "subscribe_dimension",
-                "id": "format-test-2",
-                "payload": {},  # Missing dimension
-            })
+            ws.send_json(
+                {
+                    "type": "subscribe_dimension",
+                    "id": "format-test-2",
+                    "payload": {},  # Missing dimension
+                }
+            )
             response = ws.receive_json()
 
             assert response["type"] == "error"
@@ -544,9 +543,9 @@ class TestHeartMetricsConstants:
     def test_heart_dimensions_includes_all_five(self) -> None:
         """Test that HEART_DIMENSIONS includes all 5 dimensions."""
         expected = {"happiness", "engagement", "adoption", "retention", "task_success"}
-        assert HEART_DIMENSIONS == expected
+        assert expected == HEART_DIMENSIONS
 
     def test_valid_time_ranges_includes_common_ranges(self) -> None:
         """Test that VALID_TIME_RANGES includes common time ranges."""
         expected = {"1h", "6h", "24h", "7d", "30d", "90d"}
-        assert VALID_TIME_RANGES == expected
+        assert expected == VALID_TIME_RANGES

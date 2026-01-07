@@ -23,7 +23,7 @@ from __future__ import annotations
 import gc
 import json
 from typing import TYPE_CHECKING
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 from langchain_core.messages import AIMessage, HumanMessage
@@ -71,10 +71,12 @@ class TestLLMFactoryValidatedInvokeSuccess:
         factory = LLMFactory(model_name="gpt-4", provider="openai")
 
         # Mock the underlying ainvoke to return valid JSON
-        valid_response = json.dumps({
-            "content": "Hello, world!",
-            "confidence": 0.95,
-        })
+        valid_response = json.dumps(
+            {
+                "content": "Hello, world!",
+                "confidence": 0.95,
+            }
+        )
 
         with patch.object(factory, "ainvoke", new_callable=AsyncMock) as mock_ainvoke:
             mock_ainvoke.return_value = AIMessage(content=valid_response)
@@ -98,12 +100,14 @@ class TestLLMFactoryValidatedInvokeSuccess:
 
         factory = LLMFactory(model_name="gpt-4", provider="openai")
 
-        valid_response = json.dumps({
-            "content": "Test response content",
-            "confidence": 0.85,
-            "requires_clarification": False,
-            "sources": ["source1", "source2"],
-        })
+        valid_response = json.dumps(
+            {
+                "content": "Test response content",
+                "confidence": 0.85,
+                "requires_clarification": False,
+                "sources": ["source1", "source2"],
+            }
+        )
 
         with patch.object(factory, "ainvoke", new_callable=AsyncMock) as mock_ainvoke:
             mock_ainvoke.return_value = AIMessage(content=valid_response)
@@ -128,9 +132,9 @@ class TestLLMFactoryValidatedInvokeSuccess:
         factory = LLMFactory(model_name="gpt-4", provider="openai")
 
         # Response wrapped in markdown code block
-        markdown_response = '''```json
+        markdown_response = """```json
 {"content": "Test", "confidence": 0.9}
-```'''
+```"""
 
         with patch.object(factory, "ainvoke", new_callable=AsyncMock) as mock_ainvoke:
             mock_ainvoke.return_value = AIMessage(content=markdown_response)
@@ -183,9 +187,11 @@ class TestLLMFactoryValidatedInvokeFailure:
         factory = LLMFactory(model_name="gpt-4", provider="openai")
 
         # Missing required 'content' field
-        invalid_schema_response = json.dumps({
-            "confidence": 0.5,
-        })
+        invalid_schema_response = json.dumps(
+            {
+                "confidence": 0.5,
+            }
+        )
 
         with patch.object(factory, "ainvoke", new_callable=AsyncMock) as mock_ainvoke:
             mock_ainvoke.return_value = AIMessage(content=invalid_schema_response)
@@ -208,10 +214,12 @@ class TestLLMFactoryValidatedInvokeFailure:
         factory = LLMFactory(model_name="gpt-4", provider="openai")
 
         # Confidence > 1.0 violates constraint
-        constraint_violation_response = json.dumps({
-            "content": "Test",
-            "confidence": 1.5,  # Invalid: > 1.0
-        })
+        constraint_violation_response = json.dumps(
+            {
+                "content": "Test",
+                "confidence": 1.5,  # Invalid: > 1.0
+            }
+        )
 
         with patch.object(factory, "ainvoke", new_callable=AsyncMock) as mock_ainvoke:
             mock_ainvoke.return_value = AIMessage(content=constraint_violation_response)
@@ -300,16 +308,16 @@ class TestLLMFactoryValidatedInvokeMetrics:
 
         factory = LLMFactory(model_name="gpt-4", provider="openai")
 
-        valid_response = json.dumps({
-            "content": "Test",
-            "confidence": 0.9,
-        })
+        valid_response = json.dumps(
+            {
+                "content": "Test",
+                "confidence": 0.9,
+            }
+        )
 
         with (
             patch.object(factory, "ainvoke", new_callable=AsyncMock) as mock_ainvoke,
-            patch(
-                "mcp_server_langgraph.core.prompts.validation._record_validation_metric"
-            ) as mock_metric,
+            patch("mcp_server_langgraph.core.prompts.validation._record_validation_metric") as mock_metric,
         ):
             mock_ainvoke.return_value = AIMessage(content=valid_response)
 
@@ -330,16 +338,16 @@ class TestLLMFactoryValidatedInvokeMetrics:
 
         factory = LLMFactory(model_name="gpt-4", provider="openai")
 
-        valid_response = json.dumps({
-            "content": "Test",
-            "confidence": 0.9,
-        })
+        valid_response = json.dumps(
+            {
+                "content": "Test",
+                "confidence": 0.9,
+            }
+        )
 
         with (
             patch.object(factory, "ainvoke", new_callable=AsyncMock) as mock_ainvoke,
-            patch(
-                "mcp_server_langgraph.core.prompts.telemetry.record_prompt_usage"
-            ) as mock_telemetry,
+            patch("mcp_server_langgraph.core.prompts.telemetry.record_prompt_usage") as mock_telemetry,
         ):
             mock_ainvoke.return_value = AIMessage(content=valid_response)
 

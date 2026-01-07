@@ -179,7 +179,7 @@ class TestSDKCompleteWorkflow:
             hook_registry=registry,
         )
 
-        result = await client.call_tool("search", {"query": "test query"})
+        await client.call_tool("search", {"query": "test query"})
 
         # Verify the hook transformed the input
         assert "[SANITIZED]" in captured_input["query"]
@@ -217,7 +217,7 @@ class TestSDKCompleteWorkflow:
         )
 
         # Phase 3: Verify
-        result3 = await client.call_tool("execute_phase", {"phase": "verify", "data": result2})
+        await client.call_tool("execute_phase", {"phase": "verify", "data": result2})
         await client.checkpoint_session(
             session_id=session_id,
             phase="verify",
@@ -322,7 +322,7 @@ class TestSDKCompleteWorkflow:
         # Create a working client using multiple exports
         server = create_default_server()
         registry = SecurityHookRegistry()
-        state_manager = AgentStateManager()
+        AgentStateManager()
 
         # Register a custom hook
         async def custom_hook(input_data: dict, tool_use_id: str, context: dict) -> HookResult:

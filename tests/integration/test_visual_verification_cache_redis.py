@@ -415,7 +415,7 @@ class TestVisualVerificationRetryIntegration:
 
             mock_llm.ainvoke.return_value = MagicMock(content="OVERALL: 0.9\nFEEDBACK: OK")
 
-            result = await verifier.verify_with_visual(
+            await verifier.verify_with_visual(
                 url="https://example.com",
                 expected_state="Page loads",
             )
@@ -583,7 +583,7 @@ FEEDBACK: OK"""
 
             mock_llm.ainvoke.return_value = MagicMock(content="OVERALL: 0.9\nFEEDBACK: OK")
 
-            result = await verifier.verify_with_visual(
+            await verifier.verify_with_visual(
                 url="https://example.com",
                 expected_state="Page loads",
             )
@@ -630,7 +630,7 @@ FEEDBACK: OK"""
 
             mock_llm.ainvoke.return_value = MagicMock(content="OVERALL: 0.9\nFEEDBACK: OK")
 
-            result = await verifier.verify_with_visual(
+            await verifier.verify_with_visual(
                 url="https://example.com",
                 expected_state="Page loads",
                 use_screenshot_cache=False,

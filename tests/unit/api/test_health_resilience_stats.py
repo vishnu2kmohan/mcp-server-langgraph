@@ -79,7 +79,7 @@ class TestHealthResilienceStats:
 
         # Reset and create bulkhead for a provider
         reset_all_adaptive_bulkheads()
-        bulkhead = get_provider_adaptive_bulkhead("openai")
+        get_provider_adaptive_bulkhead("openai")
 
         stats = get_resilience_stats()
 
@@ -190,7 +190,7 @@ class TestRateLimitStatsInHealth:
 
         # Reset and create token bucket for a provider
         reset_all_token_buckets()
-        bucket = get_provider_token_bucket("anthropic")
+        get_provider_token_bucket("anthropic")
 
         stats = get_resilience_stats()
 
@@ -215,7 +215,7 @@ class TestRateLimitStatsInHealth:
 
         # Reset and create fresh bucket
         reset_all_token_buckets()
-        bucket = get_provider_token_bucket("openai")
+        get_provider_token_bucket("openai")
 
         stats = get_resilience_stats()
 

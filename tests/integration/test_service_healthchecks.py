@@ -140,7 +140,7 @@ class TestServiceHealthcheckConfiguration:
             "netcat",
         ]
 
-        uses_tcp_only = any(pattern in healthcheck_cmd for pattern in tcp_only_patterns) and not uses_http
+        any(pattern in healthcheck_cmd for pattern in tcp_only_patterns) and not uses_http
 
         assert uses_http, (
             f"🔴 RED: Qdrant uses TCP-only healthcheck, should use HTTP endpoint.\n\n"
@@ -314,7 +314,7 @@ class TestServiceHealthcheckConfiguration:
             if not service:
                 continue
 
-            healthcheck = service.get("healthcheck", {})
+            service.get("healthcheck", {})
             healthcheck_cmd = get_healthcheck_command(service)
 
             if healthcheck_cmd is None:

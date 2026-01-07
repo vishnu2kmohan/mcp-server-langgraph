@@ -222,7 +222,7 @@ class TestCorrelationTracing:
             ]
 
             # Correlate alerts
-            groups = engine.correlate_by_label(alerts, "service")
+            engine.correlate_by_label(alerts, "service")
 
             # Verify span was created
             mock_tracer_obj.start_as_current_span.assert_called()
@@ -266,7 +266,7 @@ class TestCorrelationTracing:
             ]
 
             # Correlate alerts by time
-            groups = engine.correlate_by_time(alerts, window_minutes=10)
+            engine.correlate_by_time(alerts, window_minutes=10)
 
             # Verify span was created
             mock_tracer_obj.start_as_current_span.assert_called()
@@ -314,7 +314,7 @@ class TestCorrelationTracing:
             ]
 
             # Detect patterns
-            result = engine.detect_pattern(alerts)
+            engine.detect_pattern(alerts)
 
             # Verify span was created
             mock_tracer_obj.start_as_current_span.assert_called()
@@ -367,7 +367,7 @@ class TestExecutorTracing:
             )
 
             # Execute remediation
-            result = await executor.execute(request)
+            await executor.execute(request)
 
             # Verify span was created
             mock_tracer_obj.start_as_current_span.assert_called()
@@ -523,7 +523,7 @@ class TestTracingEdgeCases:
                 ),
             ]
 
-            result = engine.detect_pattern(alerts)
+            engine.detect_pattern(alerts)
 
             # Verify span was created
             mock_tracer_obj.start_as_current_span.assert_called()

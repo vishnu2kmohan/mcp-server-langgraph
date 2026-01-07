@@ -15,7 +15,6 @@ from __future__ import annotations
 import gc
 from datetime import UTC, datetime, timedelta
 from typing import Any, Generator
-from unittest.mock import AsyncMock
 
 import jwt
 import pytest
@@ -23,7 +22,6 @@ from fastapi import FastAPI, WebSocket
 from starlette.testclient import TestClient
 
 from mcp_server_langgraph.websocket.handlers.cost_tracking import (
-    CostServiceProtocol,
     CostTrackingHandler,
 )
 from mcp_server_langgraph.websocket.types import WebSocketConfig
@@ -168,16 +166,16 @@ class TestCostTrackingWebSocketConnection:
             # Connection successful
             assert ws is not None
 
-    def test_websocket_subscribe_session_returns_cost(
-        self, test_client: TestClient
-    ) -> None:
+    def test_websocket_subscribe_session_returns_cost(self, test_client: TestClient) -> None:
         """Test that subscribing to a session returns current cost."""
         with test_client.websocket_connect("/api/v1/ws/cost-tracking?v=1.0.0") as ws:
-            ws.send_json({
-                "type": "subscribe_session",
-                "id": "test-1",
-                "payload": {"session_id": "session-123"},
-            })
+            ws.send_json(
+                {
+                    "type": "subscribe_session",
+                    "id": "test-1",
+                    "payload": {"session_id": "session-123"},
+                }
+            )
             response = ws.receive_json()
 
             assert response["type"] == "session_total"
@@ -186,32 +184,32 @@ class TestCostTrackingWebSocketConnection:
             assert response["payload"]["total_cost"] == 0.0523
             assert response["payload"]["total_tokens"] == 1500
 
-    def test_websocket_subscribe_session_unknown_returns_zero(
-        self, test_client: TestClient
-    ) -> None:
+    def test_websocket_subscribe_session_unknown_returns_zero(self, test_client: TestClient) -> None:
         """Test that subscribing to unknown session returns zero cost."""
         with test_client.websocket_connect("/api/v1/ws/cost-tracking?v=1.0.0") as ws:
-            ws.send_json({
-                "type": "subscribe_session",
-                "id": "test-2",
-                "payload": {"session_id": "unknown-session"},
-            })
+            ws.send_json(
+                {
+                    "type": "subscribe_session",
+                    "id": "test-2",
+                    "payload": {"session_id": "unknown-session"},
+                }
+            )
             response = ws.receive_json()
 
             assert response["type"] == "session_total"
             assert response["payload"]["session_id"] == "unknown-session"
             assert response["payload"]["total_cost"] == 0.0
 
-    def test_websocket_subscribe_session_missing_id_returns_error(
-        self, test_client: TestClient
-    ) -> None:
+    def test_websocket_subscribe_session_missing_id_returns_error(self, test_client: TestClient) -> None:
         """Test that subscribe_session without session_id returns error."""
         with test_client.websocket_connect("/api/v1/ws/cost-tracking?v=1.0.0") as ws:
-            ws.send_json({
-                "type": "subscribe_session",
-                "id": "test-3",
-                "payload": {},
-            })
+            ws.send_json(
+                {
+                    "type": "subscribe_session",
+                    "id": "test-3",
+                    "payload": {},
+                }
+            )
             response = ws.receive_json()
 
             assert response["type"] == "error"
@@ -227,16 +225,16 @@ class TestCostTrackingUserBudget:
         """Force GC to prevent mock accumulation in xdist workers."""
         gc.collect()
 
-    def test_websocket_subscribe_user_returns_budget(
-        self, test_client: TestClient
-    ) -> None:
+    def test_websocket_subscribe_user_returns_budget(self, test_client: TestClient) -> None:
         """Test that subscribing to user budget returns budget status."""
         with test_client.websocket_connect("/api/v1/ws/cost-tracking?v=1.0.0") as ws:
-            ws.send_json({
-                "type": "subscribe_user",
-                "id": "test-4",
-                "payload": {"user_id": "user:alice"},
-            })
+            ws.send_json(
+                {
+                    "type": "subscribe_user",
+                    "id": "test-4",
+                    "payload": {"user_id": "user:alice"},
+                }
+            )
             response = ws.receive_json()
 
             assert response["type"] == "user_budget"
@@ -246,16 +244,16 @@ class TestCostTrackingUserBudget:
             assert response["payload"]["current_usage"] == 12.50
             assert response["payload"]["percentage_used"] == 25.0
 
-    def test_websocket_subscribe_user_unknown_returns_default(
-        self, test_client: TestClient
-    ) -> None:
+    def test_websocket_subscribe_user_unknown_returns_default(self, test_client: TestClient) -> None:
         """Test that subscribing to unknown user returns default budget."""
         with test_client.websocket_connect("/api/v1/ws/cost-tracking?v=1.0.0") as ws:
-            ws.send_json({
-                "type": "subscribe_user",
-                "id": "test-5",
-                "payload": {"user_id": "user:unknown"},
-            })
+            ws.send_json(
+                {
+                    "type": "subscribe_user",
+                    "id": "test-5",
+                    "payload": {"user_id": "user:unknown"},
+                }
+            )
             response = ws.receive_json()
 
             assert response["type"] == "user_budget"
@@ -263,16 +261,16 @@ class TestCostTrackingUserBudget:
             assert response["payload"]["budget_limit"] == 100.0
             assert response["payload"]["current_usage"] == 0.0
 
-    def test_websocket_subscribe_user_missing_id_returns_error(
-        self, test_client: TestClient
-    ) -> None:
+    def test_websocket_subscribe_user_missing_id_returns_error(self, test_client: TestClient) -> None:
         """Test that subscribe_user without user_id returns error."""
         with test_client.websocket_connect("/api/v1/ws/cost-tracking?v=1.0.0") as ws:
-            ws.send_json({
-                "type": "subscribe_user",
-                "id": "test-6",
-                "payload": {},
-            })
+            ws.send_json(
+                {
+                    "type": "subscribe_user",
+                    "id": "test-6",
+                    "payload": {},
+                }
+            )
             response = ws.receive_json()
 
             assert response["type"] == "error"
@@ -292,19 +290,23 @@ class TestCostTrackingUnsubscribe:
         """Test unsubscribing from session cost updates."""
         with test_client.websocket_connect("/api/v1/ws/cost-tracking?v=1.0.0") as ws:
             # First subscribe
-            ws.send_json({
-                "type": "subscribe_session",
-                "id": "test-7",
-                "payload": {"session_id": "session-123"},
-            })
+            ws.send_json(
+                {
+                    "type": "subscribe_session",
+                    "id": "test-7",
+                    "payload": {"session_id": "session-123"},
+                }
+            )
             ws.receive_json()  # Consume session_total response
 
             # Then unsubscribe
-            ws.send_json({
-                "type": "unsubscribe",
-                "id": "test-8",
-                "payload": {"session_id": "session-123"},
-            })
+            ws.send_json(
+                {
+                    "type": "unsubscribe",
+                    "id": "test-8",
+                    "payload": {"session_id": "session-123"},
+                }
+            )
             response = ws.receive_json()
 
             assert response["type"] == "unsubscribed"
@@ -315,19 +317,23 @@ class TestCostTrackingUnsubscribe:
         """Test unsubscribing from user budget updates."""
         with test_client.websocket_connect("/api/v1/ws/cost-tracking?v=1.0.0") as ws:
             # First subscribe
-            ws.send_json({
-                "type": "subscribe_user",
-                "id": "test-9",
-                "payload": {"user_id": "user:alice"},
-            })
+            ws.send_json(
+                {
+                    "type": "subscribe_user",
+                    "id": "test-9",
+                    "payload": {"user_id": "user:alice"},
+                }
+            )
             ws.receive_json()  # Consume user_budget response
 
             # Then unsubscribe
-            ws.send_json({
-                "type": "unsubscribe",
-                "id": "test-10",
-                "payload": {"user_id": "user:alice"},
-            })
+            ws.send_json(
+                {
+                    "type": "unsubscribe",
+                    "id": "test-10",
+                    "payload": {"user_id": "user:alice"},
+                }
+            )
             response = ws.receive_json()
 
             assert response["type"] == "unsubscribed"
@@ -343,16 +349,16 @@ class TestCostTrackingErrorHandling:
         """Force GC to prevent mock accumulation in xdist workers."""
         gc.collect()
 
-    def test_websocket_unknown_message_type_returns_error(
-        self, test_client: TestClient
-    ) -> None:
+    def test_websocket_unknown_message_type_returns_error(self, test_client: TestClient) -> None:
         """Test that unknown message type returns error."""
         with test_client.websocket_connect("/api/v1/ws/cost-tracking?v=1.0.0") as ws:
-            ws.send_json({
-                "type": "invalid_type",
-                "id": "test-11",
-                "payload": {},
-            })
+            ws.send_json(
+                {
+                    "type": "invalid_type",
+                    "id": "test-11",
+                    "payload": {},
+                }
+            )
             response = ws.receive_json()
 
             assert response["type"] == "error"
@@ -383,11 +389,13 @@ class TestCostTrackingMessageFormats:
         #   }
         # }
         with test_client.websocket_connect("/api/v1/ws/cost-tracking?v=1.0.0") as ws:
-            ws.send_json({
-                "type": "subscribe_session",
-                "id": "format-test",
-                "payload": {"session_id": "session-123"},
-            })
+            ws.send_json(
+                {
+                    "type": "subscribe_session",
+                    "id": "format-test",
+                    "payload": {"session_id": "session-123"},
+                }
+            )
             response = ws.receive_json()
 
             # Verify structure
@@ -412,11 +420,13 @@ class TestCostTrackingMessageFormats:
         #   }
         # }
         with test_client.websocket_connect("/api/v1/ws/cost-tracking?v=1.0.0") as ws:
-            ws.send_json({
-                "type": "subscribe_user",
-                "id": "format-test-2",
-                "payload": {"user_id": "user:alice"},
-            })
+            ws.send_json(
+                {
+                    "type": "subscribe_user",
+                    "id": "format-test-2",
+                    "payload": {"user_id": "user:alice"},
+                }
+            )
             response = ws.receive_json()
 
             # Verify structure
@@ -431,11 +441,13 @@ class TestCostTrackingMessageFormats:
     def test_unsubscribed_message_format(self, test_client: TestClient) -> None:
         """Test unsubscribed message format."""
         with test_client.websocket_connect("/api/v1/ws/cost-tracking?v=1.0.0") as ws:
-            ws.send_json({
-                "type": "unsubscribe",
-                "id": "format-test-3",
-                "payload": {"session_id": "session-123"},
-            })
+            ws.send_json(
+                {
+                    "type": "unsubscribe",
+                    "id": "format-test-3",
+                    "payload": {"session_id": "session-123"},
+                }
+            )
             response = ws.receive_json()
 
             assert response["type"] == "unsubscribed"
@@ -445,11 +457,13 @@ class TestCostTrackingMessageFormats:
     def test_error_message_format(self, test_client: TestClient) -> None:
         """Test error message format."""
         with test_client.websocket_connect("/api/v1/ws/cost-tracking?v=1.0.0") as ws:
-            ws.send_json({
-                "type": "subscribe_session",
-                "id": "format-test-4",
-                "payload": {},  # Missing session_id
-            })
+            ws.send_json(
+                {
+                    "type": "subscribe_session",
+                    "id": "format-test-4",
+                    "payload": {},  # Missing session_id
+                }
+            )
             response = ws.receive_json()
 
             assert response["type"] == "error"

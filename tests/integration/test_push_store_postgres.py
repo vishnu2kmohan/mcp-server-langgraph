@@ -618,7 +618,7 @@ class TestPostgresPushStoreEdgeCases:
             return key_suffix
 
         # Run saves concurrently
-        results = await asyncio.gather(
+        await asyncio.gather(
             save_subscription("first"),
             save_subscription("second"),
         )

@@ -8,9 +8,8 @@ Supports pgvector (Postgres) and Qdrant implementations.
 from __future__ import annotations
 
 import gc
-from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any
-from unittest.mock import AsyncMock, MagicMock, patch
+from typing import TYPE_CHECKING
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
@@ -184,15 +183,9 @@ class TestInMemoryVectorProvider:
 
         provider = InMemoryVectorProvider()
 
-        await provider.upsert(
-            "test", "doc-1", [1.0, 0.0, 0.0], {"category": "A", "status": "active"}
-        )
-        await provider.upsert(
-            "test", "doc-2", [0.9, 0.1, 0.0], {"category": "B", "status": "active"}
-        )
-        await provider.upsert(
-            "test", "doc-3", [0.8, 0.2, 0.0], {"category": "A", "status": "inactive"}
-        )
+        await provider.upsert("test", "doc-1", [1.0, 0.0, 0.0], {"category": "A", "status": "active"})
+        await provider.upsert("test", "doc-2", [0.9, 0.1, 0.0], {"category": "B", "status": "active"})
+        await provider.upsert("test", "doc-3", [0.8, 0.2, 0.0], {"category": "A", "status": "inactive"})
 
         results = await provider.search(
             collection="test",
@@ -301,9 +294,7 @@ class TestVectorProviderFactory:
         )
 
         mock_pool = MagicMock()
-        provider = get_vector_provider(
-            provider_type="pgvector", connection_pool=mock_pool
-        )
+        provider = get_vector_provider(provider_type="pgvector", connection_pool=mock_pool)
         assert isinstance(provider, PgVectorProvider)
 
     def test_factory_creates_qdrant_with_client(self) -> None:
@@ -369,7 +360,7 @@ class TestPgVectorProvider:
             )
 
             assert hasattr(PgVectorProvider, "upsert")
-            assert callable(getattr(PgVectorProvider, "upsert"))
+            assert callable(PgVectorProvider.upsert)
         except ImportError:
             pytest.skip("pgvector dependencies not available")
 
@@ -381,7 +372,7 @@ class TestPgVectorProvider:
             )
 
             assert hasattr(PgVectorProvider, "search")
-            assert callable(getattr(PgVectorProvider, "search"))
+            assert callable(PgVectorProvider.search)
         except ImportError:
             pytest.skip("pgvector dependencies not available")
 
@@ -393,7 +384,7 @@ class TestPgVectorProvider:
             )
 
             assert hasattr(PgVectorProvider, "delete")
-            assert callable(getattr(PgVectorProvider, "delete"))
+            assert callable(PgVectorProvider.delete)
         except ImportError:
             pytest.skip("pgvector dependencies not available")
 
@@ -409,9 +400,7 @@ class TestPgVectorProvider:
             mock_conn = AsyncMock()
 
             # Set up async context manager for pool.acquire()
-            mock_pool.acquire.return_value.__aenter__ = AsyncMock(
-                return_value=mock_conn
-            )
+            mock_pool.acquire.return_value.__aenter__ = AsyncMock(return_value=mock_conn)
             mock_pool.acquire.return_value.__aexit__ = AsyncMock()
             mock_conn.execute = AsyncMock()
 
@@ -442,13 +431,9 @@ class TestPgVectorProvider:
             mock_cursor = MagicMock()
 
             # Set up async context managers
-            mock_pool.acquire.return_value.__aenter__ = AsyncMock(
-                return_value=mock_conn
-            )
+            mock_pool.acquire.return_value.__aenter__ = AsyncMock(return_value=mock_conn)
             mock_pool.acquire.return_value.__aexit__ = AsyncMock()
-            mock_conn.cursor.return_value.__aenter__ = AsyncMock(
-                return_value=mock_cursor
-            )
+            mock_conn.cursor.return_value.__aenter__ = AsyncMock(return_value=mock_cursor)
             mock_conn.cursor.return_value.__aexit__ = AsyncMock()
             mock_cursor.execute = AsyncMock()
             mock_cursor.fetchall = AsyncMock(
@@ -522,7 +507,7 @@ class TestQdrantVectorProvider:
             )
 
             assert hasattr(QdrantVectorProvider, "upsert")
-            assert callable(getattr(QdrantVectorProvider, "upsert"))
+            assert callable(QdrantVectorProvider.upsert)
         except ImportError:
             pytest.skip("qdrant dependencies not available")
 
@@ -534,7 +519,7 @@ class TestQdrantVectorProvider:
             )
 
             assert hasattr(QdrantVectorProvider, "search")
-            assert callable(getattr(QdrantVectorProvider, "search"))
+            assert callable(QdrantVectorProvider.search)
         except ImportError:
             pytest.skip("qdrant dependencies not available")
 
@@ -546,7 +531,7 @@ class TestQdrantVectorProvider:
             )
 
             assert hasattr(QdrantVectorProvider, "delete")
-            assert callable(getattr(QdrantVectorProvider, "delete"))
+            assert callable(QdrantVectorProvider.delete)
         except ImportError:
             pytest.skip("qdrant dependencies not available")
 

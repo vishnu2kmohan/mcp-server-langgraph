@@ -385,7 +385,7 @@ class TestPushFallbackQueueIntegration:
             actions=[{"action": "view", "title": "View"}],
         )
 
-        queued = await queue.enqueue(
+        await queue.enqueue(
             message=original_message,
             subscription_endpoint="https://fcm.googleapis.com/fcm/send/abc",
             user_id="admin-1",

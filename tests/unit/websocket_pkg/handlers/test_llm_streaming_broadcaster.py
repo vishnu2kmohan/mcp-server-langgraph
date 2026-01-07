@@ -17,7 +17,6 @@ This broadcaster enables:
 from __future__ import annotations
 
 import gc
-from typing import Any
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest

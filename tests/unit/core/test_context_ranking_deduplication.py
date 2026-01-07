@@ -180,7 +180,7 @@ class TestContextRankingLogic:
         ranker = ContextRanker()
 
         now = datetime.now(UTC).timestamp()
-        one_hour_ago = now - 3600
+        now - 3600
         one_day_ago = now - 86400
 
         ctx_now = ContextReference(

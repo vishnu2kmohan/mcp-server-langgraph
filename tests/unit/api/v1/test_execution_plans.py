@@ -9,11 +9,9 @@ from __future__ import annotations
 import gc
 from decimal import Decimal
 from typing import TYPE_CHECKING
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import patch
 
 import pytest
-from fastapi import FastAPI
-from fastapi.testclient import TestClient
 
 from mcp_server_langgraph.core.models.execution_plan import ExecutionPlan
 
@@ -109,9 +107,7 @@ class TestListPendingPlans:
         gc.collect()
 
     @pytest.mark.asyncio
-    async def test_list_pending_returns_empty_when_no_plans(
-        self, mock_repo, mock_user
-    ) -> None:
+    async def test_list_pending_returns_empty_when_no_plans(self, mock_repo, mock_user) -> None:
         """Test list_pending returns empty list when no plans exist."""
         from mcp_server_langgraph.api.v1.execution_plans import list_pending_plans
 
@@ -125,9 +121,7 @@ class TestListPendingPlans:
         assert result == []
 
     @pytest.mark.asyncio
-    async def test_list_pending_returns_only_pending_plans(
-        self, mock_repo, mock_user, sample_pending_plan
-    ) -> None:
+    async def test_list_pending_returns_only_pending_plans(self, mock_repo, mock_user, sample_pending_plan) -> None:
         """Test list_pending returns only awaiting_approval plans."""
         from mcp_server_langgraph.api.v1.execution_plans import list_pending_plans
 
@@ -167,9 +161,7 @@ class TestGetPlan:
         gc.collect()
 
     @pytest.mark.asyncio
-    async def test_get_plan_returns_plan(
-        self, mock_repo, mock_user, sample_pending_plan
-    ) -> None:
+    async def test_get_plan_returns_plan(self, mock_repo, mock_user, sample_pending_plan) -> None:
         """Test get_plan returns the plan when found."""
         from mcp_server_langgraph.api.v1.execution_plans import get_plan
 
@@ -179,16 +171,12 @@ class TestGetPlan:
             "mcp_server_langgraph.api.v1.execution_plans.get_plan_repo",
             return_value=mock_repo,
         ):
-            result = await get_plan(
-                plan_id=sample_pending_plan.plan_id, current_user=mock_user
-            )
+            result = await get_plan(plan_id=sample_pending_plan.plan_id, current_user=mock_user)
 
         assert result["plan_id"] == sample_pending_plan.plan_id
 
     @pytest.mark.asyncio
-    async def test_get_plan_raises_404_when_not_found(
-        self, mock_repo, mock_user
-    ) -> None:
+    async def test_get_plan_raises_404_when_not_found(self, mock_repo, mock_user) -> None:
         """Test get_plan raises 404 when plan not found."""
         from fastapi import HTTPException
 
@@ -213,9 +201,7 @@ class TestApprovePlan:
         gc.collect()
 
     @pytest.mark.asyncio
-    async def test_approve_plan_updates_status(
-        self, mock_repo, mock_user, sample_pending_plan
-    ) -> None:
+    async def test_approve_plan_updates_status(self, mock_repo, mock_user, sample_pending_plan) -> None:
         """Test approve_plan changes status to approved."""
         from mcp_server_langgraph.api.v1.execution_plans import approve_plan
 
@@ -225,17 +211,13 @@ class TestApprovePlan:
             "mcp_server_langgraph.api.v1.execution_plans.get_plan_repo",
             return_value=mock_repo,
         ):
-            result = await approve_plan(
-                plan_id=sample_pending_plan.plan_id, current_user=mock_user
-            )
+            result = await approve_plan(plan_id=sample_pending_plan.plan_id, current_user=mock_user)
 
         assert result["status"] == "approved"
         assert result["approved_by"] == "user-123"
 
     @pytest.mark.asyncio
-    async def test_approve_plan_raises_404_when_not_found(
-        self, mock_repo, mock_user
-    ) -> None:
+    async def test_approve_plan_raises_404_when_not_found(self, mock_repo, mock_user) -> None:
         """Test approve_plan raises 404 when plan not found."""
         from fastapi import HTTPException
 
@@ -251,9 +233,7 @@ class TestApprovePlan:
         assert exc_info.value.status_code == 404
 
     @pytest.mark.asyncio
-    async def test_approve_plan_raises_409_when_already_approved(
-        self, mock_repo, mock_user
-    ) -> None:
+    async def test_approve_plan_raises_409_when_already_approved(self, mock_repo, mock_user) -> None:
         """Test approve_plan raises 409 when plan already approved."""
         from fastapi import HTTPException
 
@@ -291,9 +271,7 @@ class TestRejectPlan:
         gc.collect()
 
     @pytest.mark.asyncio
-    async def test_reject_plan_updates_status(
-        self, mock_repo, mock_user, sample_pending_plan
-    ) -> None:
+    async def test_reject_plan_updates_status(self, mock_repo, mock_user, sample_pending_plan) -> None:
         """Test reject_plan changes status to rejected."""
         from mcp_server_langgraph.api.v1.execution_plans import (
             RejectRequest,
@@ -319,9 +297,7 @@ class TestRejectPlan:
         assert result["rejection_reason"] == "Too expensive"
 
     @pytest.mark.asyncio
-    async def test_reject_plan_raises_404_when_not_found(
-        self, mock_repo, mock_user
-    ) -> None:
+    async def test_reject_plan_raises_404_when_not_found(self, mock_repo, mock_user) -> None:
         """Test reject_plan raises 404 when plan not found."""
         from fastapi import HTTPException
 
@@ -346,9 +322,7 @@ class TestRejectPlan:
         assert exc_info.value.status_code == 404
 
     @pytest.mark.asyncio
-    async def test_reject_plan_raises_409_when_already_rejected(
-        self, mock_repo, mock_user
-    ) -> None:
+    async def test_reject_plan_raises_409_when_already_rejected(self, mock_repo, mock_user) -> None:
         """Test reject_plan raises 409 when plan already rejected."""
         from fastapi import HTTPException
 
@@ -395,9 +369,7 @@ class TestListBySession:
         gc.collect()
 
     @pytest.mark.asyncio
-    async def test_list_by_session_returns_session_plans(
-        self, mock_repo, mock_user, sample_pending_plan
-    ) -> None:
+    async def test_list_by_session_returns_session_plans(self, mock_repo, mock_user, sample_pending_plan) -> None:
         """Test list_by_session returns only plans for the session."""
         from mcp_server_langgraph.api.v1.execution_plans import list_session_plans
 
@@ -422,9 +394,7 @@ class TestListBySession:
             "mcp_server_langgraph.api.v1.execution_plans.get_plan_repo",
             return_value=mock_repo,
         ):
-            result = await list_session_plans(
-                session_id="session-456", current_user=mock_user
-            )
+            result = await list_session_plans(session_id="session-456", current_user=mock_user)
 
         assert len(result) == 1
         assert result[0]["plan_id"] == sample_pending_plan.plan_id
@@ -465,9 +435,7 @@ class TestSaveAsTemplate:
         assert any("template" in route for route in routes)
 
     @pytest.mark.asyncio
-    async def test_save_as_template_creates_template(
-        self, mock_repo, mock_user, sample_approved_plan
-    ) -> None:
+    async def test_save_as_template_creates_template(self, mock_repo, mock_user, sample_approved_plan) -> None:
         """Test save_as_template creates a new template from approved plan."""
         from mcp_server_langgraph.api.v1.execution_plans import (
             SaveAsTemplateRequest,
@@ -505,9 +473,7 @@ class TestSaveAsTemplate:
         assert "template_id" in result
 
     @pytest.mark.asyncio
-    async def test_save_as_template_raises_404_when_plan_not_found(
-        self, mock_repo, mock_user
-    ) -> None:
+    async def test_save_as_template_raises_404_when_plan_not_found(self, mock_repo, mock_user) -> None:
         """Test save_as_template raises 404 when plan not found."""
         from fastapi import HTTPException
 
@@ -544,9 +510,7 @@ class TestSaveAsTemplate:
         assert exc_info.value.status_code == 404
 
     @pytest.mark.asyncio
-    async def test_save_as_template_raises_400_when_plan_not_approved(
-        self, mock_repo, mock_user, sample_pending_plan
-    ) -> None:
+    async def test_save_as_template_raises_400_when_plan_not_approved(self, mock_repo, mock_user, sample_pending_plan) -> None:
         """Test save_as_template raises 400 when plan is not approved."""
         from fastapi import HTTPException
 
@@ -586,9 +550,7 @@ class TestSaveAsTemplate:
         assert exc_info.value.status_code == 400
 
     @pytest.mark.asyncio
-    async def test_save_as_template_copies_plan_configuration(
-        self, mock_repo, mock_user, sample_approved_plan
-    ) -> None:
+    async def test_save_as_template_copies_plan_configuration(self, mock_repo, mock_user, sample_approved_plan) -> None:
         """Test save_as_template copies complexity, risk, task type from plan."""
         from mcp_server_langgraph.api.v1.execution_plans import (
             SaveAsTemplateRequest,
@@ -627,9 +589,7 @@ class TestSaveAsTemplate:
         assert result["created_by"] == "user-123"
 
     @pytest.mark.asyncio
-    async def test_save_as_template_records_created_by(
-        self, mock_repo, mock_user, sample_approved_plan
-    ) -> None:
+    async def test_save_as_template_records_created_by(self, mock_repo, mock_user, sample_approved_plan) -> None:
         """Test save_as_template records the user who created it."""
         from mcp_server_langgraph.api.v1.execution_plans import (
             SaveAsTemplateRequest,

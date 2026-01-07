@@ -13,8 +13,12 @@ Performance Targets:
 import gc
 from pathlib import Path
 from tempfile import TemporaryDirectory
+from typing import TYPE_CHECKING
 
 import pytest
+
+if TYPE_CHECKING:
+    from mcp_server_langgraph.skills.models import Skill
 
 # Domain marker only - benchmark/performance markers auto-applied by conftest.py
 pytestmark = pytest.mark.skills

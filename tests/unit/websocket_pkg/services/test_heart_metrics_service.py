@@ -50,9 +50,7 @@ class TestHeartMetricsServiceSnapshot:
 
         adapter = HeartMetricsServiceAdapter(metrics_client=mock_client)
 
-        with patch(
-            "mcp_server_langgraph.websocket.services.heart_metrics.get_feature_flags"
-        ) as mock_flags:
+        with patch("mcp_server_langgraph.websocket.services.heart_metrics.get_feature_flags") as mock_flags:
             mock_flags.return_value = MagicMock(enable_websocket_enhanced_metrics=True)
             result = await adapter.get_current_snapshot("24h")
 
@@ -67,9 +65,7 @@ class TestHeartMetricsServiceSnapshot:
         """get_current_snapshot returns stub data when no Prometheus client."""
         adapter = HeartMetricsServiceAdapter(metrics_client=None)
 
-        with patch(
-            "mcp_server_langgraph.websocket.services.heart_metrics.get_feature_flags"
-        ) as mock_flags:
+        with patch("mcp_server_langgraph.websocket.services.heart_metrics.get_feature_flags") as mock_flags:
             mock_flags.return_value = MagicMock(enable_websocket_enhanced_metrics=True)
             result = await adapter.get_current_snapshot("24h")
 
@@ -89,9 +85,7 @@ class TestHeartMetricsServiceSnapshot:
 
         adapter = HeartMetricsServiceAdapter(metrics_client=mock_client)
 
-        with patch(
-            "mcp_server_langgraph.websocket.services.heart_metrics.get_feature_flags"
-        ) as mock_flags:
+        with patch("mcp_server_langgraph.websocket.services.heart_metrics.get_feature_flags") as mock_flags:
             mock_flags.return_value = MagicMock(enable_websocket_enhanced_metrics=True)
             result = await adapter.get_current_snapshot("7d")
 
@@ -105,9 +99,7 @@ class TestHeartMetricsServiceSnapshot:
         """get_current_snapshot returns minimal data when enhanced metrics disabled."""
         adapter = HeartMetricsServiceAdapter(metrics_client=None)
 
-        with patch(
-            "mcp_server_langgraph.websocket.services.heart_metrics.get_feature_flags"
-        ) as mock_flags:
+        with patch("mcp_server_langgraph.websocket.services.heart_metrics.get_feature_flags") as mock_flags:
             mock_flags.return_value = MagicMock(enable_websocket_enhanced_metrics=False)
             result = await adapter.get_current_snapshot("24h")
 
@@ -129,9 +121,7 @@ class TestHeartMetricsServiceSnapshot:
 
         adapter = HeartMetricsServiceAdapter(metrics_client=mock_client)
 
-        with patch(
-            "mcp_server_langgraph.websocket.services.heart_metrics.get_feature_flags"
-        ) as mock_flags:
+        with patch("mcp_server_langgraph.websocket.services.heart_metrics.get_feature_flags") as mock_flags:
             mock_flags.return_value = MagicMock(enable_websocket_enhanced_metrics=True)
             result = await adapter.get_current_snapshot("24h")
 
@@ -239,9 +229,6 @@ class TestHeartMetricsServiceSingleton:
 
     def test_reset_clears_singleton(self) -> None:
         """reset_websocket_heart_metrics_service clears the singleton."""
-        from mcp_server_langgraph.websocket.services.heart_metrics import (
-            _websocket_heart_metrics_service,
-        )
 
         # After reset, singleton should be None
         reset_websocket_heart_metrics_service()
@@ -258,9 +245,7 @@ class TestHeartMetricsServiceSingleton:
         )
 
         # Patch at the import location (inside get_websocket_heart_metrics_service)
-        with patch(
-            "mcp_server_langgraph.observability.query.factory.get_metrics_client"
-        ) as mock_get_client:
+        with patch("mcp_server_langgraph.observability.query.factory.get_metrics_client") as mock_get_client:
             mock_get_client.return_value = None
 
             service1 = get_websocket_heart_metrics_service()
@@ -294,9 +279,7 @@ class TestHeartMetricsPrometheusIntegration:
 
         adapter = HeartMetricsServiceAdapter(metrics_client=mock_client)
 
-        with patch(
-            "mcp_server_langgraph.websocket.services.heart_metrics.get_feature_flags"
-        ) as mock_flags:
+        with patch("mcp_server_langgraph.websocket.services.heart_metrics.get_feature_flags") as mock_flags:
             mock_flags.return_value = MagicMock(enable_websocket_enhanced_metrics=True)
             await adapter.get_current_snapshot("24h")
 
@@ -331,9 +314,7 @@ class TestHeartMetricsPrometheusIntegration:
 
         adapter = HeartMetricsServiceAdapter(metrics_client=mock_client)
 
-        with patch(
-            "mcp_server_langgraph.websocket.services.heart_metrics.get_feature_flags"
-        ) as mock_flags:
+        with patch("mcp_server_langgraph.websocket.services.heart_metrics.get_feature_flags") as mock_flags:
             mock_flags.return_value = MagicMock(enable_websocket_enhanced_metrics=True)
             result = await adapter.get_current_snapshot("24h")
 
@@ -356,9 +337,7 @@ class TestHeartMetricsPrometheusIntegration:
 
         adapter = HeartMetricsServiceAdapter(metrics_client=mock_client)
 
-        with patch(
-            "mcp_server_langgraph.websocket.services.heart_metrics.get_feature_flags"
-        ) as mock_flags:
+        with patch("mcp_server_langgraph.websocket.services.heart_metrics.get_feature_flags") as mock_flags:
             mock_flags.return_value = MagicMock(enable_websocket_enhanced_metrics=True)
             result = await adapter.get_current_snapshot("24h")
 

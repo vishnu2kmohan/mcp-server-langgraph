@@ -165,7 +165,6 @@ class TestUXOrchestratorE2E:
         from mcp_server_langgraph.agents.ux_orchestrator import UXOrchestrator
 
         TASK_DELAY_MS = 50  # 50ms per task
-        NUM_TASKS = 3
 
         mock_service = MagicMock()
 
@@ -180,7 +179,7 @@ class TestUXOrchestratorE2E:
         orchestrator = UXOrchestrator(ai_ux_service=mock_service)
 
         start_time = time.time()
-        result = await orchestrator.run_composite_analysis(
+        await orchestrator.run_composite_analysis(
             user_id="perf-test-user",
             session_id="perf-session",
             include_persona=True,
@@ -359,7 +358,7 @@ class TestAlertOrchestratorE2E:
         )
 
         start_time = time.time()
-        result = await orchestrator.analyze_alerts(
+        await orchestrator.analyze_alerts(
             alert_ids=["alert-1", "alert-2"],
             include_correlation=True,
             include_root_cause=True,

@@ -81,18 +81,19 @@ class TestFactoryValidationWorkflow:
         THEN correctly parses and validates the response
         """
         from mcp_server_langgraph.core.prompts.schemas import ResponseOutput
-        from mcp_server_langgraph.core.prompts.validation import validate_output
         from mcp_server_langgraph.llm.factory import LLMFactory
 
         factory = LLMFactory(model_name="gpt-4", provider="openai")
 
         # Valid response that matches ResponseOutput schema
-        valid_response = json.dumps({
-            "content": "Integration test response",
-            "confidence": 0.85,
-            "requires_clarification": False,
-            "sources": ["test_source"],
-        })
+        valid_response = json.dumps(
+            {
+                "content": "Integration test response",
+                "confidence": 0.85,
+                "requires_clarification": False,
+                "sources": ["test_source"],
+            }
+        )
 
         with patch.object(factory, "ainvoke", new_callable=AsyncMock) as mock_ainvoke:
             mock_ainvoke.return_value = AIMessage(content=valid_response)
@@ -117,12 +118,14 @@ class TestFactoryValidationWorkflow:
         """
         from mcp_server_langgraph.core.prompts.validation import validate_output
 
-        valid_data = json.dumps({
-            "content": "Complex data",
-            "confidence": 0.75,
-            "tags": ["tag1", "tag2"],
-            "metadata": {"key": "value"},
-        })
+        valid_data = json.dumps(
+            {
+                "content": "Complex data",
+                "confidence": 0.75,
+                "tags": ["tag1", "tag2"],
+                "metadata": {"key": "value"},
+            }
+        )
 
         result = validate_output(
             content=valid_data,
@@ -144,10 +147,12 @@ class TestFactoryValidationWorkflow:
         """
         from mcp_server_langgraph.core.prompts.validation import validate_output
 
-        nested_data = json.dumps({
-            "outer": "outer_value",
-            "inner": {"value": "inner_value"},
-        })
+        nested_data = json.dumps(
+            {
+                "outer": "outer_value",
+                "inner": {"value": "inner_value"},
+            }
+        )
 
         result = validate_output(
             content=nested_data,
@@ -177,9 +182,9 @@ class TestFactoryValidationErrorHandling:
         """
         from mcp_server_langgraph.core.prompts.validation import validate_output
 
-        markdown_wrapped = '''```json
+        markdown_wrapped = """```json
 {"value": "test"}
-```'''
+```"""
 
         result = validate_output(
             content=markdown_wrapped,
@@ -199,13 +204,13 @@ class TestFactoryValidationErrorHandling:
         """
         from mcp_server_langgraph.core.prompts.validation import validate_output
 
-        multi_block = '''Here's the output:
+        multi_block = """Here's the output:
 
 ```json
 {"value": "extracted"}
 ```
 
-Additional text after.'''
+Additional text after."""
 
         result = validate_output(
             content=multi_block,
@@ -247,10 +252,12 @@ Additional text after.'''
         """
         from mcp_server_langgraph.core.prompts.validation import validate_output
 
-        violation = json.dumps({
-            "content": "test",
-            "confidence": 2.0,  # > 1.0 violates le=1.0
-        })
+        violation = json.dumps(
+            {
+                "content": "test",
+                "confidence": 2.0,  # > 1.0 violates le=1.0
+            }
+        )
 
         result = validate_output(
             content=violation,
@@ -345,9 +352,7 @@ class TestFactoryValidationTelemetry:
 
         with (
             patch.object(factory, "ainvoke", new_callable=AsyncMock) as mock_ainvoke,
-            patch(
-                "mcp_server_langgraph.core.prompts.telemetry.record_prompt_usage"
-            ) as mock_telemetry,
+            patch("mcp_server_langgraph.core.prompts.telemetry.record_prompt_usage") as mock_telemetry,
         ):
             mock_ainvoke.return_value = AIMessage(content=valid_response)
 
@@ -376,9 +381,7 @@ class TestFactoryValidationTelemetry:
 
         with (
             patch.object(factory, "ainvoke", new_callable=AsyncMock) as mock_ainvoke,
-            patch(
-                "mcp_server_langgraph.core.prompts.validation._record_validation_metric"
-            ) as mock_metric,
+            patch("mcp_server_langgraph.core.prompts.validation._record_validation_metric") as mock_metric,
         ):
             mock_ainvoke.return_value = AIMessage(content="invalid json")
 
@@ -413,16 +416,18 @@ class TestFactoryValidationProductionPatterns:
 
         from mcp_server_langgraph.core.prompts.validation import validate_output
 
-        router_response = json.dumps({
-            "complexity": "complicated",
-            "risk": "medium",
-            "task_type": "code",
-            "tools_needed": ["code_executor", "file_reader"],
-            "suggested_orchestrator": "standard",
-            "critique_rounds": 2,
-            "thinking_budget": "medium",
-            "confidence": 0.85,
-        })
+        router_response = json.dumps(
+            {
+                "complexity": "complicated",
+                "risk": "medium",
+                "task_type": "code",
+                "tools_needed": ["code_executor", "file_reader"],
+                "suggested_orchestrator": "standard",
+                "critique_rounds": 2,
+                "thinking_budget": "medium",
+                "confidence": 0.85,
+            }
+        )
 
         # Create a schema matching RouterOutput
         class RouterOutput(BaseModel):
@@ -455,19 +460,21 @@ class TestFactoryValidationProductionPatterns:
         from mcp_server_langgraph.core.prompts.schemas import VerificationOutput
         from mcp_server_langgraph.core.prompts.validation import validate_output
 
-        verification_response = json.dumps({
-            "accuracy": 0.9,
-            "completeness": 0.85,
-            "clarity": 0.88,
-            "relevance": 0.92,
-            "safety": 1.0,
-            "sources": 0.7,
-            "overall": 0.87,
-            "critical_issues": [],
-            "suggestions": ["Add more examples"],
-            "requires_refinement": False,
-            "feedback": "Good response overall",
-        })
+        verification_response = json.dumps(
+            {
+                "accuracy": 0.9,
+                "completeness": 0.85,
+                "clarity": 0.88,
+                "relevance": 0.92,
+                "safety": 1.0,
+                "sources": 0.7,
+                "overall": 0.87,
+                "critical_issues": [],
+                "suggestions": ["Add more examples"],
+                "requires_refinement": False,
+                "feedback": "Good response overall",
+            }
+        )
 
         result = validate_output(
             content=verification_response,
@@ -490,19 +497,21 @@ class TestFactoryValidationProductionPatterns:
         from mcp_server_langgraph.core.prompts.validation import validate_output
 
         # Match the actual ErrorAnalysisOutput schema fields
-        error_response = json.dumps({
-            "category": "network",  # Required: Literal category
-            "subcategory": "timeout",  # Required: More specific classification
-            "confidence": 0.85,  # Required: Classification confidence 0.0-1.0
-            "root_cause": "Network timeout during API call",  # Required
-            "suggestions": [
-                {
-                    "action": "retry",  # Literal from RecoverySuggestion
-                    "label": "Retry with exponential backoff",
-                    "estimated_success": 0.8,  # Required: Estimated success probability
-                }
-            ],
-        })
+        error_response = json.dumps(
+            {
+                "category": "network",  # Required: Literal category
+                "subcategory": "timeout",  # Required: More specific classification
+                "confidence": 0.85,  # Required: Classification confidence 0.0-1.0
+                "root_cause": "Network timeout during API call",  # Required
+                "suggestions": [
+                    {
+                        "action": "retry",  # Literal from RecoverySuggestion
+                        "label": "Retry with exponential backoff",
+                        "estimated_success": 0.8,  # Required: Estimated success probability
+                    }
+                ],
+            }
+        )
 
         result = validate_output(
             content=error_response,

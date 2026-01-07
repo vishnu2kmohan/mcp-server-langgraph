@@ -331,7 +331,7 @@ class TestFeatureFlagEnforcement:
         from mcp_server_langgraph.core.feature_flags import FeatureFlags
 
         # Create a fresh FeatureFlags instance to pick up env changes
-        fresh_flags = FeatureFlags()
+        FeatureFlags()
 
         hooks_called = False
 

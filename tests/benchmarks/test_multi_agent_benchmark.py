@@ -89,7 +89,7 @@ class TestOrchestratorBenchmarks:
 
     def test_benchmark_task_decomposition(self, benchmark):
         """Benchmark decomposing a task into subtasks."""
-        orchestrator = Orchestrator()
+        Orchestrator()
 
         def create_decomposition():
             return TaskDecomposition(

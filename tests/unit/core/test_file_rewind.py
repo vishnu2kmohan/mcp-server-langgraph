@@ -266,7 +266,7 @@ class TestFileRewindMultipleChanges:
             file_path.write_text("v3")
 
             # Rewind should restore to original (v1)
-            result = await rewind.rewind_to(checkpoint_id)
+            await rewind.rewind_to(checkpoint_id)
 
             # First recorded content should be final restored content
             assert file_path.read_text() == "v1"

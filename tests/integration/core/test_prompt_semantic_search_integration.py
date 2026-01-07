@@ -21,7 +21,7 @@ References:
 from __future__ import annotations
 
 import gc
-from unittest.mock import AsyncMock, patch
+from unittest.mock import patch
 
 import pytest
 
@@ -157,9 +157,7 @@ class TestSearchPromptsAPIIntegration:
 
         # Patch the feature_flags instance in the feature_flags module
         mock_flags = FeatureFlags(enable_plan_search=False)
-        with patch(
-            "mcp_server_langgraph.core.feature_flags.feature_flags", mock_flags
-        ):
+        with patch("mcp_server_langgraph.core.feature_flags.feature_flags", mock_flags):
             results = await search_prompts(
                 "any query",
                 index=index,
@@ -184,9 +182,7 @@ class TestSearchPromptsAPIIntegration:
         await index.build()
 
         mock_flags = FeatureFlags(enable_plan_search=True)
-        with patch(
-            "mcp_server_langgraph.core.feature_flags.feature_flags", mock_flags
-        ):
+        with patch("mcp_server_langgraph.core.feature_flags.feature_flags", mock_flags):
             results = await search_prompts(
                 "router classification",
                 index=index,
@@ -222,9 +218,7 @@ class TestKeywordFallbackIntegration:
         await index.build()
 
         # Now make embed fail for the query
-        with patch.object(
-            embedding_service, "embed", side_effect=Exception("Embedding failed")
-        ):
+        with patch.object(embedding_service, "embed", side_effect=Exception("Embedding failed")):
             results = await search_prompts(
                 "error analysis",
                 index=index,
@@ -234,7 +228,7 @@ class TestKeywordFallbackIntegration:
 
             # Should fall back to keyword search and find results
             # with "error" in the name
-            result_names = [r.prompt_name for r in results]
+            [r.prompt_name for r in results]
             # Keyword search should still work
             assert isinstance(results, list)
 
@@ -296,7 +290,7 @@ class TestPromptCategoriesIntegration:
         WHEN examining all indexed prompts
         THEN each prompt has a category assigned
         """
-        from mcp_server_langgraph.core.prompts.search import PROMPT_CATEGORIES, PromptIndex
+        from mcp_server_langgraph.core.prompts.search import PromptIndex
         from mcp_server_langgraph.llm.embeddings import InMemoryEmbeddingService
 
         embedding_service = InMemoryEmbeddingService(dimensions=768)

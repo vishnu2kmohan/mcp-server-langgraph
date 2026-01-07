@@ -318,9 +318,8 @@ class TestApprovalMetricsTracking:
         )
         queue._remediations["rem-123"] = request
 
-        with patch("mcp_server_langgraph.api.v1.remediation_approvals.record_recommendation_approval") as mock_record:
+        with patch("mcp_server_langgraph.api.v1.remediation_approvals.record_recommendation_approval"):
             # Import and call the approve endpoint logic
-            from mcp_server_langgraph.api.v1.remediation_approvals import ApproveRequest
 
             result = await queue.approve_with_feedback(
                 remediation_id="rem-123",

@@ -7,7 +7,7 @@ TDD: These tests define the contract for reusable execution plan templates.
 from __future__ import annotations
 
 import gc
-from datetime import datetime, timezone
+from datetime import datetime
 from typing import TYPE_CHECKING
 
 import pytest

@@ -46,7 +46,7 @@ def generate_text_with_pii(length: int, pii_count: int = 5) -> str:
     filler_parts = []
     current_length = 0
 
-    pii_per_segment = max(1, pii_count // 5)
+    max(1, pii_count // 5)
     pii_index = 0
 
     while current_length < length:

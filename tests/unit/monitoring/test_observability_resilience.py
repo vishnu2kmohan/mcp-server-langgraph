@@ -93,7 +93,7 @@ class TestPrometheusClientRetryLogic:
             client._initialized = True
 
             # Should retry and succeed
-            results = await client.query("up")
+            await client.query("up")
 
             # Should have made 3 attempts
             assert call_count == 3

@@ -233,7 +233,7 @@ class TestInterruptWithAsyncContext:
             await asyncio.sleep(0.03)
             await controller.signal_interrupt(session_id)
 
-        asyncio.create_task(interrupt_after_delay())
+        interrupt_task = asyncio.create_task(interrupt_after_delay())
 
         with pytest.raises(InterruptedOperationError):
             await task

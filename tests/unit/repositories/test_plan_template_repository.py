@@ -7,7 +7,6 @@ TDD: These tests define the contract for plan template storage with semantic sea
 from __future__ import annotations
 
 import gc
-from datetime import datetime, timezone
 from typing import TYPE_CHECKING
 
 import pytest
@@ -15,7 +14,7 @@ import pytest
 pytestmark = pytest.mark.unit
 
 if TYPE_CHECKING:
-    pass
+    from mcp_server_langgraph.core.models.plan_template import PlanTemplate
 
 
 @pytest.mark.xdist_group(name="plan_template_repository")
