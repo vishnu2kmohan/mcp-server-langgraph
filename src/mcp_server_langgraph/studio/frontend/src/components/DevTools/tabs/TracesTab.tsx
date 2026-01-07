@@ -405,7 +405,7 @@ export function TracesTab({
   return (
     <div
       data-testid="traces-tab"
-      className={cn("flex flex-col h-full", className)}
+      className={cn("flex flex-col h-full overflow-hidden", className)}
     >
       {/* Toolbar */}
       <div className="flex items-center gap-2 p-2 border-b border-gray-200 dark:border-gray-700">
@@ -559,7 +559,7 @@ export function TracesTab({
             {/* Waterfall view */}
             <div data-testid="trace-waterfall" className="flex-1 overflow-auto">
               {/* Timeline header */}
-              <div className="flex items-center gap-2 py-1 px-2 text-xs text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">
+              <div className="sticky top-0 z-10 flex items-center gap-2 py-1 px-2 text-xs text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">
                 <div className="min-w-[200px] max-w-[300px]">Span</div>
                 <div className="min-w-[100px]">Service</div>
                 <div className="min-w-[60px]">Duration</div>
@@ -591,7 +591,7 @@ export function TracesTab({
           // Trace list
           <div>
             {filteredTraces.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-12 text-gray-500 dark:text-gray-400">
+              <div className="flex flex-col items-center justify-center min-h-full text-center text-gray-500 dark:text-gray-400 p-8">
                 <Clock className="h-12 w-12 mb-4 opacity-50" />
                 <p>No traces found</p>
                 {searchTerm && (

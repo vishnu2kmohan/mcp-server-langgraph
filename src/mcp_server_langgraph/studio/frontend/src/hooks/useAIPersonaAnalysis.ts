@@ -73,6 +73,8 @@ export interface UseAIPersonaAnalysisOptions {
 
 /** Default timeout for AI requests */
 const DEFAULT_TIMEOUT_MS = 5000;
+const EMPTY_RECENT_ACTIONS: string[] = [];
+const EMPTY_FEATURE_USAGE: FeatureUsage = {};
 
 /**
  * Hook result
@@ -113,11 +115,16 @@ export function useAIPersonaAnalysis(
 ): UseAIPersonaAnalysisResult {
   const {
     userId,
-    recentActions = [],
-    featureUsage = {},
+    recentActions: recentActionsProp,
+    featureUsage: featureUsageProp,
     enabled = true,
     timeoutMs: _timeoutMs = DEFAULT_TIMEOUT_MS, // Kept for API compatibility
   } = options;
+
+  // Avoid recreating default array/object literals on every render
+  // (which can cause effect re-runs and duplicate requests on mount).
+  const recentActions = recentActionsProp ?? EMPTY_RECENT_ACTIONS;
+  const featureUsage = featureUsageProp ?? EMPTY_FEATURE_USAGE;
 
   // RTK Query mutation
   const [analyzePersonaMutation, { isLoading: isMutationLoading }] =
@@ -218,6 +225,9 @@ export function useAIPersonaAnalysis(
 
     // Only fetch once per hook instance
     if (!hasFetchedRef.current) {
+      // Mark as fetched before the async call to avoid duplicate requests during rapid re-renders
+      // (e.g., layout-level hooks initializing, StrictMode double-invoke, etc.).
+      hasFetchedRef.current = true;
       fetchAnalysis();
     }
   }, [enabled, fetchAnalysis, assignedPersonaFromStore]);

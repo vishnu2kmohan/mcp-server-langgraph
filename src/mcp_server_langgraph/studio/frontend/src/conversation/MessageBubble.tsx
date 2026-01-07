@@ -4,7 +4,7 @@
  * Individual chat message bubble with user/assistant styling,
  * code block support, and action buttons.
  */
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, memo } from "react";
 import { User, Bot, Copy, Check } from "lucide-react";
 import type { ChatMessage } from "../types";
 import { cn } from "../utils/cn";
@@ -139,7 +139,7 @@ function TypingIndicator() {
 // Component
 // =============================================================================
 
-export function MessageBubble({
+function MessageBubbleImpl({
   message,
   showTimestamp = false,
   isTyping = false,
@@ -270,3 +270,6 @@ export function MessageBubble({
     </div>
   );
 }
+
+export const MessageBubble = memo(MessageBubbleImpl);
+MessageBubble.displayName = "MessageBubble";

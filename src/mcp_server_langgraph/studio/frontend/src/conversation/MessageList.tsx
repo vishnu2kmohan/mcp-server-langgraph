@@ -68,6 +68,14 @@ export function MessageList({
 }: MessageListProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const endRef = useRef<HTMLDivElement>(null);
+  const scrollRafRef = useRef<number | null>(null);
+
+  const lastMessage = messages[messages.length - 1];
+  const streamingContentKey =
+    isStreaming &&
+    (lastMessage?.isStreaming || lastMessage?.id === "streaming-message")
+      ? lastMessage.content.length
+      : 0;
 
   // Group messages if enabled
   const messageGroups = useMemo(
@@ -75,16 +83,56 @@ export function MessageList({
     [messages, groupMessages],
   );
 
-  // Auto-scroll to bottom when new messages arrive (unless user scrolled up)
+  // Auto-scroll to bottom when new messages arrive (unless user scrolled up).
+  // During streaming, keep the bottom pinned without continuously animating.
   useEffect(() => {
-    if (!isScrolledUp && endRef.current?.scrollIntoView) {
-      endRef.current.scrollIntoView({ behavior: "smooth" });
+    if (isScrolledUp) return;
+    if (typeof endRef.current?.scrollIntoView !== "function") return;
+
+    const behavior: ScrollBehavior = isStreaming ? "auto" : "smooth";
+
+    if (scrollRafRef.current !== null) {
+      if (typeof cancelAnimationFrame === "function") {
+        cancelAnimationFrame(scrollRafRef.current);
+      } else {
+        window.clearTimeout(scrollRafRef.current);
+      }
     }
-  }, [messages, isScrolledUp]);
+
+    const schedule =
+      typeof requestAnimationFrame === "function"
+        ? (cb: () => void) => requestAnimationFrame(() => cb())
+        : (cb: () => void) => window.setTimeout(cb, 0);
+
+    scrollRafRef.current = schedule(() => {
+      endRef.current?.scrollIntoView({ behavior, block: "end" });
+      scrollRafRef.current = null;
+    });
+
+    return () => {
+      if (scrollRafRef.current !== null) {
+        if (typeof cancelAnimationFrame === "function") {
+          cancelAnimationFrame(scrollRafRef.current);
+        } else {
+          window.clearTimeout(scrollRafRef.current);
+        }
+        scrollRafRef.current = null;
+      }
+    };
+  }, [
+    messages.length,
+    lastMessage?.id,
+    streamingContentKey,
+    isStreaming,
+    isScrolledUp,
+  ]);
 
   const handleScrollToBottom = () => {
     if (endRef.current?.scrollIntoView) {
-      endRef.current.scrollIntoView({ behavior: "smooth" });
+      endRef.current.scrollIntoView({
+        behavior: isStreaming ? "auto" : "smooth",
+        block: "end",
+      });
     }
     onScrollToBottom?.();
   };
@@ -93,6 +141,10 @@ export function MessageList({
   const renderMessage = (message: ChatMessage) => {
     // For assistant messages with rich content enabled, use MarkdownContent
     if (message.role === "assistant" && enableRichContent) {
+      const isStreamingMessage =
+        isStreaming &&
+        (message.isStreaming || message.id === "streaming-message");
+
       return (
         <div
           key={message.id}
@@ -119,10 +171,14 @@ export function MessageList({
                 </div>
               }
             >
-              <MarkdownContent
-                content={message.content}
-                enableInteractiveArtifacts
-              />
+              {isStreamingMessage ? (
+                <div className="whitespace-pre-wrap">{message.content}</div>
+              ) : (
+                <MarkdownContent
+                  content={message.content}
+                  enableInteractiveArtifacts
+                />
+              )}
             </ErrorBoundary>
           </div>
         </div>

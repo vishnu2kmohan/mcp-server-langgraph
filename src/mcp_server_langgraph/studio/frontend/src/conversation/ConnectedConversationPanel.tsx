@@ -296,11 +296,11 @@ export const ConnectedConversationPanel = forwardRef<
   // Get current session from Redux (contains optimistic updates)
   const currentSession = useAppSelector(selectCurrentSession);
 
-  // Combine Redux messages with loader data and streaming content for display
+  // Combine Redux messages with loader data for display.
   // CRITICAL: Redux currentSession.messages contains optimistic updates (user messages added immediately)
   // Loader data may be stale until revalidation completes
   // Use Redux as the primary source, with deduplication to handle overlap
-  const messages = useMemo(() => {
+  const baseMessages = useMemo(() => {
     // Primary source: Redux state (has optimistic updates)
     const reduxMessages = currentSession?.messages ?? [];
 
@@ -321,30 +321,27 @@ export const ConnectedConversationPanel = forwardRef<
     }
 
     // Convert back to array and sort by timestamp
-    const mergedMessages = Array.from(messageMap.values()).sort(
+    return Array.from(messageMap.values()).sort(
       (a, b) => (a.timestamp ?? 0) - (b.timestamp ?? 0),
     );
+  }, [currentSession?.messages, loaderData?.messages]);
 
-    // If streaming, append a temporary assistant message with the current content
+  // Append the streaming message separately so we don't re-merge/re-sort on every chunk.
+  const messages = useMemo(() => {
     if (isStreaming && streamingContent) {
       return [
-        ...mergedMessages,
+        ...baseMessages,
         {
           id: "streaming-message",
           role: "assistant" as const,
           content: streamingContent,
-          timestamp: Date.now(), // Use number timestamp for type compatibility
+          timestamp: Date.now(),
+          isStreaming: true,
         },
       ];
     }
-
-    return mergedMessages;
-  }, [
-    currentSession?.messages,
-    loaderData?.messages,
-    isStreaming,
-    streamingContent,
-  ]);
+    return baseMessages;
+  }, [baseMessages, isStreaming, streamingContent]);
 
   // =============================================================================
   // Session Auto-Naming
@@ -355,7 +352,7 @@ export const ConnectedConversationPanel = forwardRef<
   // based on their content instead of staying "New Chat"
   useSessionAutoName({
     sessionId: sessionId ?? currentSession?.id,
-    messages: messages.map((m) => ({ role: m.role, content: m.content })),
+    messages: baseMessages.map((m) => ({ role: m.role, content: m.content })),
     currentName: currentSession?.name,
     enabled: true,
   });

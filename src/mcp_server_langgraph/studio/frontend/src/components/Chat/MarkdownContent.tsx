@@ -21,7 +21,7 @@
  * ```
  */
 
-import { useMemo, lazy, Suspense, useState, useEffect } from "react";
+import { useMemo, lazy, Suspense, useState, useEffect, memo } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import remarkMath from "remark-math";
@@ -205,7 +205,7 @@ export interface MarkdownContentProps {
 /**
  * Markdown renderer with custom components
  */
-export function MarkdownContent({
+function MarkdownContentImpl({
   content,
   enableInteractiveArtifacts = true,
   isStreaming = false,
@@ -464,5 +464,8 @@ export function MarkdownContent({
     </ReactMarkdown>
   );
 }
+
+export const MarkdownContent = memo(MarkdownContentImpl);
+MarkdownContent.displayName = "MarkdownContent";
 
 export default MarkdownContent;

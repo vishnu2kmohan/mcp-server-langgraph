@@ -89,6 +89,7 @@ interface ConsoleEntryRowProps {
   isFocused: boolean;
   onToggleExpand: () => void;
   onCopy: () => void;
+  virtualIndex?: number;
   style?: React.CSSProperties;
   measureRef?: (node: HTMLDivElement | null) => void;
 }
@@ -99,6 +100,7 @@ function ConsoleEntryRow({
   isFocused,
   onToggleExpand,
   onCopy,
+  virtualIndex,
   style,
   measureRef,
 }: ConsoleEntryRowProps) {
@@ -134,6 +136,9 @@ function ConsoleEntryRow({
   return (
     <div
       ref={measureRef}
+      // @tanstack/react-virtual requires `data-index` on the measured element.
+      // Without it, row heights never get measured and expanded rows overlap.
+      data-index={virtualIndex}
       data-testid={`console-entry-${entry.id}`}
       data-focused={isFocused}
       className={cn(
@@ -191,7 +196,9 @@ function ConsoleEntryRow({
         </span>
 
         {/* Message */}
-        <span className="flex-1 text-sm break-all">{entry.message}</span>
+        <span className="flex-1 min-w-0 text-sm whitespace-pre-wrap break-words">
+          {entry.message}
+        </span>
 
         {/* Copy button (visible on hover) */}
         {isHovered && (
@@ -433,7 +440,7 @@ export function ConsoleTab({
   return (
     <div
       data-testid="console-tab"
-      className="flex flex-col h-full bg-white dark:bg-gray-900"
+      className="flex flex-col h-full min-h-0 bg-white dark:bg-gray-900"
     >
       {/* Toolbar */}
       <div className="flex items-center gap-2 px-2 py-1 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
@@ -535,7 +542,7 @@ export function ConsoleTab({
           tabIndex={0}
           onKeyDown={handleKeyDown}
           onClick={() => setFocusedIndex(0)}
-          className="flex-1 overflow-y-auto focus:outline-none"
+          className="flex-1 min-h-0 overflow-y-auto focus:outline-none"
         >
           {shouldVirtualize ? (
             /* Virtualized rendering for large lists */
@@ -556,6 +563,7 @@ export function ConsoleTab({
                     isFocused={focusedIndex === virtualRow.index}
                     onToggleExpand={() => toggleExpand(entry.id)}
                     onCopy={() => copyMessage(entry.message)}
+                    virtualIndex={virtualRow.index}
                     measureRef={virtualizer.measureElement}
                     style={{
                       position: "absolute",

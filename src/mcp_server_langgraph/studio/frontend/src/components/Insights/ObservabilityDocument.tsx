@@ -305,7 +305,8 @@ export function ObservabilityDocument({
             {/* Trace count */}
             {tracesData && (
               <span className="text-sm text-gray-500 dark:text-gray-400 ml-auto">
-                {traces.length} of {tracesData.total} traces
+                Showing {traces.length} traces
+                {tracesData.hasNext ? " (more available)" : ""}
               </span>
             )}
           </div>

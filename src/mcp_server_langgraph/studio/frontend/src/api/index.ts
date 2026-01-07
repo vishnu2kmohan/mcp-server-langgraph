@@ -52,7 +52,6 @@ import type {
   AlertListParams,
   AlertRulesListParams,
   PaginatedResponse,
-  PaginatedResponseCamelCase,
   PagePaginatedResponse,
   ChatCompletionRequest,
   ChatCompletionResponse,
@@ -900,7 +899,7 @@ export const api = createApi({
 
     // Observability
     listTraces: builder.query<
-      PaginatedResponseCamelCase<TraceListItemCamelCase>,
+      CursorPaginatedFrontendResponse<TraceListItemCamelCase>,
       TraceListParams
     >({
       query: (params) => ({
@@ -921,10 +920,9 @@ export const api = createApi({
           end_time: params.end_time,
         }),
       }),
-      transformResponse: (response: PaginatedResponse<TraceListItem>) =>
-        transformSnakeToCamel(
-          response,
-        ) as unknown as PaginatedResponseCamelCase<TraceListItemCamelCase>,
+      transformResponse: (
+        response: BackendCursorPaginatedResponse<TraceListItem>,
+      ) => transformCursorPaginatedResponse(response),
       providesTags: ["Trace"],
     }),
 
@@ -936,7 +934,7 @@ export const api = createApi({
     }),
 
     listLogs: builder.query<
-      PaginatedResponse<LogEntryCamelCase>,
+      CursorPaginatedFrontendResponse<LogEntryCamelCase>,
       LogListParams
     >({
       query: (params) => ({
@@ -953,10 +951,8 @@ export const api = createApi({
           end_time: params.end_time,
         }),
       }),
-      transformResponse: (response: PaginatedResponse<LogEntry>) =>
-        transformSnakeToCamel(
-          response,
-        ) as unknown as PaginatedResponse<LogEntryCamelCase>,
+      transformResponse: (response: BackendCursorPaginatedResponse<LogEntry>) =>
+        transformCursorPaginatedResponse(response),
       providesTags: ["Trace"], // Using Trace tag for now, could add 'Log' tag
     }),
 
@@ -971,7 +967,7 @@ export const api = createApi({
 
     // Alerts (LGTM Stack - Grafana Unified Alerting)
     listAlerts: builder.query<
-      PaginatedResponse<ObservabilityAlertCamelCase>,
+      CursorPaginatedFrontendResponse<ObservabilityAlertCamelCase>,
       AlertListParams
     >({
       query: (params) => ({
@@ -983,10 +979,9 @@ export const api = createApi({
           limit: params.limit ?? 100,
         }),
       }),
-      transformResponse: (response: PaginatedResponse<ObservabilityAlert>) =>
-        transformSnakeToCamel(
-          response,
-        ) as unknown as PaginatedResponse<ObservabilityAlertCamelCase>,
+      transformResponse: (
+        response: BackendCursorPaginatedResponse<ObservabilityAlert>,
+      ) => transformCursorPaginatedResponse(response),
       providesTags: ["Alert"],
     }),
 

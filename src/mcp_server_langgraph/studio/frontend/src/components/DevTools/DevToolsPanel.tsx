@@ -221,7 +221,7 @@ export function DevToolsPanel({ className }: DevToolsPanelProps) {
   const { contextLabel, context, entityId } = useDevToolsContext();
 
   // Trace WebSocket - auto-connect when DevTools is open and traces tab available
-  const { spans: rawSpans, isConnected: traceConnected } = useTraceWebSocket({
+  const { spans: rawSpans } = useTraceWebSocket({
     autoConnect: !collapsed && availableTabs.includes("traces"),
   });
 
@@ -240,14 +240,23 @@ export function DevToolsPanel({ className }: DevToolsPanelProps) {
 
   // RTK Query hooks for OTEL tabs - skip when collapsed or tab not active
   // These provide real-time API data to the observability tabs
+  const traceListParams = useMemo(() => {
+    return {
+      limit: 50,
+      // Context-aware trace scoping: session/workflow contexts show only related traces.
+      // Global context remains unfiltered.
+      session_id: context === "session" ? (entityId ?? undefined) : undefined,
+      workflow_id: context === "workflow" ? (entityId ?? undefined) : undefined,
+    };
+  }, [context, entityId]);
+
   const {
     data: tracesData,
     isLoading: isTracesLoading,
     error: tracesError,
-  } = useListTracesQuery(
-    { limit: 50 },
-    { skip: collapsed || activeTab !== "traces" },
-  );
+  } = useListTracesQuery(traceListParams, {
+    skip: collapsed || activeTab !== "traces",
+  });
 
   const {
     data: metricsData,
@@ -275,9 +284,27 @@ export function DevToolsPanel({ className }: DevToolsPanelProps) {
     { skip: collapsed || activeTab !== "logs" },
   );
 
+  // Filter WebSocket spans by context (when possible)
+  const filteredRawSpans = useMemo(() => {
+    if (context !== "session" || !entityId) return rawSpans;
+
+    return rawSpans.filter((span) => {
+      const attributes = span.attributes ?? {};
+      // OTEL semantic attributes use dot notation; Alloy exports with underscores.
+      // session_id is a raw OTEL attribute name, not a transformed API response field.
+      const sessionAttr =
+        (attributes["session.id"] as string | undefined) ??
+        // eslint-disable-next-line no-restricted-syntax -- raw OTEL attribute
+        (attributes.session_id as string | undefined) ??
+        (attributes.sessionId as string | undefined);
+
+      return sessionAttr === entityId;
+    });
+  }, [context, entityId, rawSpans]);
+
   // Transform spans to TracesTab format
   const traceSpans: TraceSpan[] = useMemo(() => {
-    return rawSpans.map((span) => ({
+    return filteredRawSpans.map((span) => ({
       spanId: span.spanId,
       traceId: span.traceId,
       parentSpanId: span.parentSpanId ?? null,
@@ -291,7 +318,7 @@ export function DevToolsPanel({ className }: DevToolsPanelProps) {
       depth: 0, // Will be calculated by TracesTab based on parentSpanId
       attributes: span.attributes,
     }));
-  }, [rawSpans]);
+  }, [filteredRawSpans]);
 
   // Transform API traces to TracesTab format
   const traceList: TraceListItem[] = useMemo(() => {
@@ -435,7 +462,10 @@ export function DevToolsPanel({ className }: DevToolsPanelProps) {
     switch (activeTab) {
       case "console":
         return (
-          <div data-testid="devtools-tab-content-console">
+          <div
+            data-testid="devtools-tab-content-console"
+            className="h-full min-h-0"
+          >
             <Suspense fallback={<TabContentLoader />}>
               <ConsoleTabContent
                 filter={consoleFilter}
@@ -449,7 +479,10 @@ export function DevToolsPanel({ className }: DevToolsPanelProps) {
         );
       case "network":
         return (
-          <div data-testid="devtools-tab-content-network">
+          <div
+            data-testid="devtools-tab-content-network"
+            className="h-full min-h-0"
+          >
             <Suspense fallback={<TabContentLoader />}>
               <NetworkTabContent
                 contextEntityId={entityId}
@@ -461,7 +494,10 @@ export function DevToolsPanel({ className }: DevToolsPanelProps) {
         );
       case "state":
         return (
-          <div data-testid="devtools-tab-content-state">
+          <div
+            data-testid="devtools-tab-content-state"
+            className="h-full min-h-0"
+          >
             <Suspense fallback={<TabContentLoader />}>
               <StateTabContent context={context} contextEntityId={entityId} />
             </Suspense>
@@ -469,7 +505,10 @@ export function DevToolsPanel({ className }: DevToolsPanelProps) {
         );
       case "problems":
         return (
-          <div data-testid="devtools-tab-content-problems">
+          <div
+            data-testid="devtools-tab-content-problems"
+            className="h-full min-h-0"
+          >
             <Suspense fallback={<TabContentLoader />}>
               <ProblemsTabContent compact />
             </Suspense>
@@ -477,7 +516,10 @@ export function DevToolsPanel({ className }: DevToolsPanelProps) {
         );
       case "agent-trace":
         return (
-          <div data-testid="devtools-tab-content-agent-trace">
+          <div
+            data-testid="devtools-tab-content-agent-trace"
+            className="h-full min-h-0"
+          >
             <Suspense fallback={<TabContentLoader />}>
               <AgentTraceTabContent sessionId={entityId ?? ""} />
             </Suspense>
@@ -485,7 +527,10 @@ export function DevToolsPanel({ className }: DevToolsPanelProps) {
         );
       case "execution-trace":
         return (
-          <div data-testid="devtools-tab-content-execution-trace">
+          <div
+            data-testid="devtools-tab-content-execution-trace"
+            className="h-full min-h-0"
+          >
             <Suspense fallback={<TabContentLoader />}>
               <ExecutionTraceTabContent workflowId={entityId ?? ""} />
             </Suspense>
@@ -493,7 +538,10 @@ export function DevToolsPanel({ className }: DevToolsPanelProps) {
         );
       case "ai-insights":
         return (
-          <div data-testid="devtools-tab-content-ai-insights">
+          <div
+            data-testid="devtools-tab-content-ai-insights"
+            className="h-full min-h-0"
+          >
             <Suspense fallback={<TabContentLoader />}>
               <AIInsightsTabContent
                 context={context}
@@ -505,15 +553,16 @@ export function DevToolsPanel({ className }: DevToolsPanelProps) {
       // OTEL Observability tabs - wired to RTK Query hooks
       case "traces":
         return (
-          <div data-testid="devtools-tab-content-traces">
+          <div
+            data-testid="devtools-tab-content-traces"
+            className="h-full min-h-0"
+          >
             <Suspense fallback={<TabContentLoader />}>
               <TracesTabContent
                 traces={traceList}
                 spans={traceSpans}
-                isLoading={
-                  isTracesLoading ||
-                  (!traceConnected && traceSpans.length === 0)
-                }
+                // Trace list comes from the REST API; real-time spans are optional (WS permission-gated).
+                isLoading={isTracesLoading}
                 error={tracesError ? String(tracesError) : undefined}
               />
             </Suspense>
@@ -521,7 +570,10 @@ export function DevToolsPanel({ className }: DevToolsPanelProps) {
         );
       case "metrics":
         return (
-          <div data-testid="devtools-tab-content-metrics">
+          <div
+            data-testid="devtools-tab-content-metrics"
+            className="h-full min-h-0"
+          >
             <Suspense fallback={<TabContentLoader />}>
               <MetricsTabContent
                 metrics={metricsList}
@@ -533,7 +585,10 @@ export function DevToolsPanel({ className }: DevToolsPanelProps) {
         );
       case "alerts":
         return (
-          <div data-testid="devtools-tab-content-alerts">
+          <div
+            data-testid="devtools-tab-content-alerts"
+            className="h-full min-h-0"
+          >
             <Suspense fallback={<TabContentLoader />}>
               <AlertsTabContent
                 alerts={alertsList}
@@ -545,7 +600,10 @@ export function DevToolsPanel({ className }: DevToolsPanelProps) {
         );
       case "logs":
         return (
-          <div data-testid="devtools-tab-content-logs">
+          <div
+            data-testid="devtools-tab-content-logs"
+            className="h-full min-h-0"
+          >
             <Suspense fallback={<TabContentLoader />}>
               <LogsTabContent
                 logs={logsList}
@@ -557,7 +615,10 @@ export function DevToolsPanel({ className }: DevToolsPanelProps) {
         );
       case "ws-metrics":
         return (
-          <div data-testid="devtools-tab-content-ws-metrics">
+          <div
+            data-testid="devtools-tab-content-ws-metrics"
+            className="h-full min-h-0"
+          >
             <Suspense fallback={<TabContentLoader />}>
               <WsMetricsTabContent />
             </Suspense>
@@ -724,7 +785,7 @@ export function DevToolsPanel({ className }: DevToolsPanelProps) {
           role="tabpanel"
           id={`tabpanel-${activeTab}`}
           aria-labelledby={`tab-${activeTab}`}
-          className="flex-1 overflow-auto"
+          className="flex-1 min-h-0 overflow-auto"
         >
           {renderTabContent()}
         </div>
