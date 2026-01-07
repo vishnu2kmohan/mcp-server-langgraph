@@ -231,7 +231,9 @@ bulkhead_active_operations{service}
 - Circuit breaker state changes → alerts
 - Retry exhaustion → error logs with full context
 - Timeout violations → distributed traces
-- Grafana dashboard: `monitoring/grafana/dashboards/resilience.json`
+- Grafana dashboards:
+  - `monitoring/grafana/dashboards/Resilience/resilience-patterns.json` - Circuit breakers, retries, timeouts
+  - `monitoring/grafana/dashboards/Resilience/golden-signals-dashboard.json` - SRE golden signals (latency, traffic, errors, saturation)
 
 ## Consequences
 
@@ -313,7 +315,7 @@ bulkhead_active_operations{service}
 
 ### Phase 3: Observability (Week 3)
 - [ ] Implement resilience metrics in `resilience/metrics.py`
-- [ ] Create Grafana dashboard `resilience.json`
+- [x] Create Grafana dashboards `Resilience/resilience-patterns.json` and `Resilience/golden-signals-dashboard.json`
 - [ ] Add circuit breaker state change alerts
 - [ ] Integrate with OpenTelemetry tracing
 - [ ] Write integration tests with failure injection

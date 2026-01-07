@@ -700,16 +700,16 @@ for result in results:
 
 ```bash
 # Navigate to Grafana → Dashboards → Import
-# Upload: monitoring/grafana/dashboards/sla-monitoring.json
-# Upload: monitoring/grafana/dashboards/soc2-compliance.json
+# Upload: monitoring/grafana/dashboards/Compliance/sla-monitoring.json
+# Upload: monitoring/grafana/dashboards/Compliance/soc2-compliance.json
 ```
 
 **Option 2: Kubernetes ConfigMap**
 
 ```bash
 kubectl create configmap grafana-dashboards \
-  --from-file=monitoring/grafana/dashboards/sla-monitoring.json \
-  --from-file=monitoring/grafana/dashboards/soc2-compliance.json \
+  --from-file=monitoring/grafana/dashboards/Compliance/sla-monitoring.json \
+  --from-file=monitoring/grafana/dashboards/Compliance/soc2-compliance.json \
   -n monitoring
 ```
 
@@ -901,8 +901,8 @@ await start_compliance_scheduler(
 # Dashboards → Import
 
 # Import:
-# - monitoring/grafana/dashboards/sla-monitoring.json
-# - monitoring/grafana/dashboards/soc2-compliance.json
+# - monitoring/grafana/dashboards/Compliance/sla-monitoring.json
+# - monitoring/grafana/dashboards/Compliance/soc2-compliance.json
 ```
 
 ### 4. Test GDPR Endpoints

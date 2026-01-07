@@ -252,7 +252,7 @@ Models are normalized to families for cardinality control:
 | `src/mcp_server_langgraph/llm/streaming_metrics.py` | New module |
 | `src/mcp_server_langgraph/llm/llm_factory.py` | Instrumentation in `astream()` |
 | `src/mcp_server_langgraph/core/feature_flags.py` | Add `enable_streaming_metrics` |
-| `monitoring/grafana/dashboards/Application/llm-streaming.json` | Dashboard |
+| `monitoring/grafana/dashboards/WebSocket/llm-streaming.json` | Dashboard |
 | `monitoring/prometheus/rules/streaming-sla-alerts.yml` | Alert rules |
 | `deployments/monitoring/alertmanager/alertmanager-config.yaml` | Routing |
 

@@ -861,7 +861,7 @@ studio_ai_circuit_breaker_state{category}
 
 ### Grafana Dashboard
 
-**Dashboard**: `monitoring/grafana/dashboards/Application/studio-ai-intelligence.json`
+**Dashboard**: `monitoring/grafana/dashboards/AI/studio-ai-intelligence.json`
 
 **Panels**:
 - Request rate by category
