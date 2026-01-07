@@ -220,9 +220,14 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     # Initialize observability query clients (Grafana, Tempo, Loki, Prometheus)
     # Required for /api/v1/observability/* endpoints
     try:
-        from mcp_server_langgraph.observability.query.factory import init_query_clients
+        from mcp_server_langgraph.observability.query.factory import (
+            get_tracing_client,
+            init_query_clients,
+        )
 
         await init_query_clients()
+        # Expose Tempo query client for legacy DI dependencies (e.g., /sessions/{id}/trace)
+        app.state.tempo_client = get_tracing_client()
         logger.info("Observability query clients initialized successfully")
     except Exception as e:
         logger.warning(f"Observability query clients initialization failed: {e}")
@@ -382,6 +387,27 @@ app.add_middleware(
 # NOTE: Use standard logging.getLogger() here instead of observability logger
 # because this code runs at module import time, before lifespan initializes observability
 _module_logger = logging.getLogger(__name__)
+
+# ------------------------------------------------------------------------------
+# DevTools + Metrics Middleware (StudioShell DevTools)
+# ------------------------------------------------------------------------------
+# NOTE: These middleware are added here (not only in app_factory.py) because the
+# test/dev stack runs `uvicorn mcp_server_langgraph.mcp.server_streamable:app`.
+try:
+    from mcp_server_langgraph.middleware.devtools_emitter import DevToolsNetworkMiddleware
+
+    app.add_middleware(DevToolsNetworkMiddleware)
+    _module_logger.info("DevToolsNetworkMiddleware enabled (DevTools Network tab)")
+except Exception as e:
+    _module_logger.warning(f"Failed to enable DevToolsNetworkMiddleware: {e}")
+
+try:
+    from mcp_server_langgraph.middleware.metrics import MetricsMiddleware
+
+    app.add_middleware(MetricsMiddleware)
+    _module_logger.info("MetricsMiddleware enabled (Prometheus /metrics)")
+except Exception as e:
+    _module_logger.warning(f"Failed to enable MetricsMiddleware: {e}")
 try:
     from slowapi.errors import RateLimitExceeded
 

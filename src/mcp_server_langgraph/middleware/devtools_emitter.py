@@ -136,6 +136,7 @@ class DevToolsNetworkMiddleware(BaseHTTPMiddleware):
                     "id": request_id,
                     "method": request.method,
                     "url": str(request.url.path),
+                    "status": "pending",
                     "startTime": int(start_time * 1000),
                     "requestHeaders": dict(request.headers),
                 },
@@ -250,10 +251,15 @@ class DevToolsLoggingHandler(logging.Handler):
                 "level": self._map_level(record.levelno),
                 "message": message,
                 "timestamp": int(record.created * 1000),
-                "source": record.name,
-                "logger": record.name,
-                "filename": record.filename,
-                "lineno": record.lineno,
+                # Frontend expects a bounded source enum (system/api/mcp/notification/execution/websocket)
+                "source": "system",
+                # Provide structured context for expanded view without breaking the ConsoleEntry contract
+                "data": {
+                    "logger": record.name,
+                    "filename": record.filename,
+                    "lineno": record.lineno,
+                    "function": record.funcName,
+                },
             }
 
             # Schedule the broadcast (don't block) - task runs independently
