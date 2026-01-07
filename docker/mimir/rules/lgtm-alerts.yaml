@@ -1,17 +1,12 @@
-# LGTM Stack Alerting Rules for Mimir Ruler
-# ===========================================
+# LGTM Stack Alerting Rules
+# ==========================
 # Alerting rules for monitoring the observability stack itself
 # and all services in the MCP Server LangGraph deployment.
-#
-# Rules are loaded by Mimir's built-in ruler.
-# Reference: https://grafana.com/docs/mimir/latest/references/architecture/components/ruler/
 #
 # Alert Severity Levels:
 #   - critical: Immediate action required, service is down
 #   - warning: Degraded performance, action needed soon
 #   - info: Informational, may need investigation
-
-namespace: lgtm-stack
 
 groups:
   # ===========================================================================
@@ -271,7 +266,7 @@ groups:
         annotations:
           summary: "MCP Server is down"
           description: "MCP Server has been down for more than 2 minutes."
-          runbook_url: "https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/monitoring/runbooks/langgraph-agent-health.md#servicedown"
+          runbook_url: "https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/monitoring/runbooks/langgraph-agent-health.md#mcpserverdown"
 
       # Keycloak down
       - alert: KeycloakDown
