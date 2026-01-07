@@ -9,6 +9,17 @@ Provides progressive loading of codebase context:
 This enables efficient context management for code-related tasks.
 
 ADR Reference: adr/adr-0092-hierarchical-capability-architecture.md
+
+TODO(Phase 3.6): Replace keyword scoring with embedding-based semantic search.
+Current Implementation:
+    Uses keyword matching in _score_file_relevance() which has limited effectiveness.
+
+Deferred Status:
+    This module is not currently integrated into the main application. Once an
+    integration point is established, implement vector-based file relevance scoring
+    similar to DynamicContextLoader's semantic_search pattern.
+
+See: Audit plan finding #11 - Codebase Loader keyword scoring
 """
 
 from __future__ import annotations
