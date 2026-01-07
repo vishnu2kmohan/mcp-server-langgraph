@@ -508,6 +508,14 @@ class FeatureFlags(BaseSettings):
         "When disabled, uses plain textarea input. Set FF_ENABLE_RICH_TEXT_CHAT_INPUT=false to revert.",
     )
 
+    enable_kb_focus: bool = Field(
+        default=True,
+        description="Enable Knowledge Base focus mode selector in chat input (Perplexity-style). "
+        "Allows users to focus searches on All, Knowledge Base only, or Web only. "
+        "Requires DynamicContextLoader and Qdrant to be configured. "
+        "Set FF_ENABLE_KB_FOCUS=false to disable.",
+    )
+
     enable_style_presets: bool = Field(
         default=True,
         description="Enable response style presets selector in chat (concise, detailed, etc.)",
@@ -851,6 +859,13 @@ class FeatureFlags(BaseSettings):
     enable_semantic_deduplication: bool = Field(
         default=True,
         description="Deduplicate semantically similar contexts to reduce redundancy",
+    )
+
+    enable_progressive_context_discovery: bool = Field(
+        default=False,
+        description="Use progressive discovery for complex multi-entity queries. "
+        "When enabled, complex queries trigger iterative search refinement "
+        "instead of single-pass semantic search. Default False for backward compatibility.",
     )
 
     context_deduplication_threshold: float = Field(
@@ -1646,6 +1661,7 @@ class FeatureFlags(BaseSettings):
             "url_content_fetch": self.enable_url_content_fetch,
             "slash_commands": self.enable_slash_commands,
             "rich_text_chat_input": self.enable_rich_text_chat_input,
+            "kb_focus": self.enable_kb_focus,
             "style_presets": self.enable_style_presets,
             "show_chat_avatars": self.show_chat_avatars,
             # UX Enhancement Features

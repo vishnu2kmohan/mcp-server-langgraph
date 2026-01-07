@@ -41,7 +41,7 @@ class AgentState(TypedDict):
     State for the agent graph.
 
     Implements full agentic loop state management:
-    - Context: messages, compaction status
+    - Context: messages, compaction status, kb_focus
     - Routing: next_action, confidence, reasoning
     - Verification: verification results, refinement attempts
     - Metadata: user_id, request_id
@@ -58,6 +58,8 @@ class AgentState(TypedDict):
     # Context management
     compaction_applied: bool | None
     original_message_count: int | None
+    # KB Focus Mode: "all", "kb_only", "web_only", "none" (ADR-0094)
+    kb_focus: str | None
 
     # Verification and refinement
     verification_passed: bool | None
@@ -65,6 +67,156 @@ class AgentState(TypedDict):
     verification_feedback: str | None
     refinement_attempts: int | None
     user_request: str | None
+
+
+# Comparison keywords that indicate multi-faceted queries
+_COMPARISON_KEYWORDS = frozenset(
+    {
+        "compare",
+        "vs",
+        "versus",
+        "differ",
+        "difference",
+        "differences",
+        "contrast",
+        "between",
+        "relationship",
+        "compare to",
+        "compared to",
+    }
+)
+
+
+def is_complex_query(query: str) -> bool:
+    """Detect if a query is complex (multi-entity, comparison, or long).
+
+    Complex queries benefit from progressive discovery, which performs
+    iterative refinement of search results.
+
+    Args:
+        query: The user's query text
+
+    Returns:
+        True if the query is complex, False otherwise
+
+    Complexity indicators:
+    - Contains comparison keywords (vs, differ, contrast)
+    - Long queries (>30 words, likely multi-faceted)
+    - Multiple explicit entities (detected by simple heuristics)
+    """
+    query_lower = query.lower()
+    words = query.split()
+
+    # Long queries are typically complex
+    if len(words) > 30:
+        return True
+
+    # Check for comparison keywords
+    for keyword in _COMPARISON_KEYWORDS:
+        if keyword in query_lower:
+            return True
+
+    # Multiple "and" or "or" connectors suggest multiple topics
+    connector_count = query_lower.count(" and ") + query_lower.count(" or ")
+    return connector_count >= 2
+
+
+async def _load_dynamic_context_impl(
+    state: dict[str, Any],
+    context_loader: Any,
+    top_k: int = 3,
+    max_tokens: int = 2000,
+    enable_progressive: bool = False,
+) -> dict[str, Any]:
+    """
+    Load dynamic context based on user request.
+
+    This function is extracted for testability. It handles:
+    - KB focus mode filtering
+    - Context search and loading
+    - Progressive discovery for complex queries (when enabled)
+    - Event dispatch for observability
+
+    Args:
+        state: Current agent state with messages and kb_focus
+        context_loader: DynamicContextLoader instance
+        top_k: Maximum number of context items to retrieve
+        max_tokens: Maximum tokens for context
+        enable_progressive: Enable progressive discovery for complex queries
+
+    Returns:
+        Updated state with context messages inserted
+    """
+    from langchain_core.callbacks.manager import adispatch_custom_event
+
+    from mcp_server_langgraph.core.dynamic_context_loader import (
+        KBFocusMode,
+        search_and_load_context,
+    )
+    from mcp_server_langgraph.observability.telemetry import logger
+
+    last_message = state["messages"][-1]
+
+    if not isinstance(last_message, HumanMessage):
+        return {k: v for k, v in state.items() if k != "messages"}
+
+    # Extract kb_focus from state (ADR-0094: KB Focus Mode)
+    # Default to "all" if not specified for backward compatibility
+    kb_focus_raw = state.get("kb_focus", "all") or "all"
+    # Validate and cast to KBFocusMode (mypy type safety)
+    valid_modes: set[KBFocusMode] = {"all", "kb_only", "web_only", "none"}
+    kb_focus: KBFocusMode = kb_focus_raw if kb_focus_raw in valid_modes else "all"  # type: ignore[assignment]
+
+    # Skip context loading if kb_focus is "none"
+    if kb_focus == "none":
+        logger.info("Skipping dynamic context loading (kb_focus=none)")
+        return {k: v for k, v in state.items() if k != "messages"}
+
+    try:
+        logger.info("Loading dynamic context", extra={"kb_focus": kb_focus})
+        query = last_message.content if isinstance(last_message.content, str) else str(last_message.content)
+
+        # Use progressive discovery for complex queries when enabled
+        if enable_progressive and is_complex_query(query):
+            logger.info("Using progressive discovery for complex query")
+            # Use progressive_discover directly for iterative refinement
+            references = await context_loader.progressive_discover(
+                initial_query=query,
+                max_iterations=3,
+            )
+            # Load the discovered references
+            loaded_contexts = await context_loader.load_batch(references, max_tokens=max_tokens)
+        else:
+            # Default path: use search_and_load_context (semantic_search)
+            loaded_contexts = await search_and_load_context(
+                query=query,
+                loader=context_loader,
+                top_k=top_k,
+                max_tokens=max_tokens,
+                focus_mode=kb_focus,
+            )
+
+        if loaded_contexts:
+            # Calculate total tokens for event
+            total_tokens = sum(getattr(ctx, "token_count", 0) for ctx in loaded_contexts)
+
+            # Dispatch event for observability (chat.py:892 handles this)
+            await adispatch_custom_event(
+                "dynamic_context_loaded",
+                {"refs_count": len(loaded_contexts), "tokens_loaded": total_tokens},
+            )
+
+            context_messages = context_loader.to_messages(loaded_contexts)
+            current_messages = list(state["messages"])
+            messages_before = current_messages[:-1]
+            user_message = current_messages[-1]
+            state["messages"] = messages_before + context_messages + [user_message]
+            logger.info(f"Dynamic context loaded: {len(loaded_contexts)} contexts, {total_tokens} tokens")
+
+    except Exception as e:
+        logger.error(f"Dynamic context loading failed: {e}", exc_info=True)
+
+    return {k: v for k, v in state.items() if k != "messages"}
 
 
 def build_agent_graph(
@@ -155,32 +307,15 @@ def build_agent_graph(
         """Load relevant context dynamically based on user request."""
         # Note: This node is only added if enable_dynamic_context_loading=True
         # and context_loader was successfully initialized
-        last_message = state["messages"][-1]
-
-        if isinstance(last_message, HumanMessage) and context_loader:
-            try:
-                from mcp_server_langgraph.core.dynamic_context_loader import search_and_load_context
-
-                logger.info("Loading dynamic context")
-                query = last_message.content if isinstance(last_message.content, str) else str(last_message.content)
-                loaded_contexts = await search_and_load_context(
-                    query=query,
-                    loader=context_loader,
-                    top_k=3,
-                    max_tokens=2000,
-                )
-
-                if loaded_contexts:
-                    context_messages = context_loader.to_messages(loaded_contexts)
-                    current_messages = list(state["messages"])
-                    messages_before = current_messages[:-1]
-                    user_message = current_messages[-1]
-                    state["messages"] = messages_before + context_messages + [user_message]
-                    logger.info(f"Dynamic context loaded: {len(loaded_contexts)} contexts")
-
-            except Exception as e:
-                logger.error(f"Dynamic context loading failed: {e}", exc_info=True)
-
+        if context_loader:
+            top_k = getattr(effective_settings, "dynamic_context_top_k", 3)
+            max_tokens = getattr(effective_settings, "dynamic_context_max_tokens", 2000)
+            return await _load_dynamic_context_impl(
+                state=dict(state),
+                context_loader=context_loader,
+                top_k=top_k,
+                max_tokens=max_tokens,
+            )  # type: ignore[return-value]
         return {k: v for k, v in state.items() if k != "messages"}  # type: ignore[return-value]
 
     async def compact_context(state: AgentState) -> AgentState:

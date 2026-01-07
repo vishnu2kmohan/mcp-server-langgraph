@@ -11,7 +11,7 @@ import asyncio
 import base64
 import time
 from datetime import datetime, timedelta, UTC
-from typing import Any
+from typing import Any, Literal
 
 from cryptography.fernet import Fernet
 from langchain_core.embeddings import Embeddings
@@ -19,10 +19,78 @@ from langchain_core.messages import BaseMessage, SystemMessage
 from pydantic import BaseModel, Field
 from qdrant_client.models import Distance, FieldCondition, Filter, MatchValue, PointStruct, VectorParams
 
+# TODO(Phase 3.7): Refactor to use VectorSearchProvider abstraction instead of direct Qdrant imports.
+# Current implementation bypasses the VectorSearchProvider interface for these reasons:
+# 1. VectorSearchProvider lacks `retrieve()` API for point retrieval by ID
+# 2. This loader requires point retrieval + encryption/retention metadata access
+# 3. Needs interface extensions to VectorSearchProvider before migration
+# See: Audit plan finding #12 - VectorSearchProvider bypass
+# ADR candidate: Abstract point retrieval and metadata operations
+
 from mcp_server_langgraph.core.config import settings
 from mcp_server_langgraph.storage.vectors.factory import get_shared_async_qdrant_client
 from mcp_server_langgraph.observability.telemetry import logger, metrics, tracer
 from mcp_server_langgraph.utils.response_optimizer import count_tokens
+
+import os
+
+
+# Default embedding models for each provider
+_DEFAULT_EMBEDDING_MODELS: dict[str, str] = {
+    "google": "models/text-embedding-004",
+    "google_vertex": "textembedding-gecko@latest",
+    "openai": "text-embedding-3-small",
+    "huggingface": "sentence-transformers/all-MiniLM-L6-v2",
+    "local": "all-MiniLM-L6-v2",
+}
+
+
+def auto_detect_embedding_provider() -> str:
+    """Auto-detect embedding provider based on available API keys.
+
+    Checks for API keys in priority order:
+    1. GOOGLE_API_KEY -> "google" (recommended, lightweight)
+    2. OPENAI_API_KEY -> "openai" (high quality)
+    3. HF_TOKEN or HUGGINGFACE_TOKEN -> "huggingface" (wide model selection)
+    4. None -> "local" (fallback, requires sentence-transformers)
+
+    Returns:
+        Provider name: "google", "openai", "huggingface", or "local"
+
+    Example:
+        provider = auto_detect_embedding_provider()
+        model = get_default_embedding_model(provider)
+        embeddings = _create_embeddings(provider, model, ...)
+    """
+    # Check in priority order
+    if os.getenv("GOOGLE_API_KEY"):
+        return "google"
+
+    if os.getenv("OPENAI_API_KEY"):
+        return "openai"
+
+    if os.getenv("HF_TOKEN") or os.getenv("HUGGINGFACE_TOKEN"):
+        return "huggingface"
+
+    # Fallback to local (requires sentence-transformers)
+    return "local"
+
+
+def get_default_embedding_model(provider: str) -> str:
+    """Get the default embedding model for a provider.
+
+    Args:
+        provider: One of "google", "google_vertex", "openai", "huggingface", "local"
+
+    Returns:
+        Default model name for the provider
+
+    Raises:
+        ValueError: If provider is not recognized
+    """
+    if provider not in _DEFAULT_EMBEDDING_MODELS:
+        raise ValueError(f"Unknown embedding provider: {provider}. Supported: {list(_DEFAULT_EMBEDDING_MODELS.keys())}")
+    return _DEFAULT_EMBEDDING_MODELS[provider]
 
 
 def _create_embeddings(
@@ -474,6 +542,7 @@ class DynamicContextLoader:
         top_k: int = 5,
         ref_type_filter: str | None = None,
         min_score: float = 0.5,
+        tenant_id: str | None = None,
     ) -> list[ContextReference]:
         """
         Search for relevant context using semantic similarity.
@@ -485,22 +554,40 @@ class DynamicContextLoader:
             top_k: Number of results
             ref_type_filter: Optional filter by ref_type
             min_score: Minimum similarity score (0-1)
+            tenant_id: Tenant ID for multi-tenant isolation (ADR-0095).
+                       Required when enable_multi_tenant_isolation is True.
 
         Returns:
             List of context references sorted by relevance
+
+        Raises:
+            ValueError: If tenant_id is required but not provided
         """
         with tracer.start_as_current_span("context.semantic_search") as span:
             span.set_attribute("query", query)
             span.set_attribute("top_k", top_k)
 
+            # ADR-0095: Multi-tenant isolation validation
+            enable_tenant_isolation = getattr(settings, "enable_multi_tenant_isolation", False)
+            if enable_tenant_isolation and not tenant_id:
+                msg = "tenant_id required when multi-tenant isolation is enabled"
+                raise ValueError(msg)
+
             try:
                 # Generate query embedding using LangChain Embeddings interface
                 query_embedding = await asyncio.to_thread(self.embedder.embed_query, query)
 
-                # Build filter
-                search_filter = None
+                # Build filter with tenant isolation (ADR-0095)
+                must_conditions: list[FieldCondition] = []
+
+                # Add tenant filter if isolation is enabled
+                if enable_tenant_isolation and tenant_id:
+                    must_conditions.append(FieldCondition(key="tenant_id", match=MatchValue(value=tenant_id)))
+
                 if ref_type_filter:
-                    search_filter = Filter(must=[FieldCondition(key="ref_type", match=MatchValue(value=ref_type_filter))])
+                    must_conditions.append(FieldCondition(key="ref_type", match=MatchValue(value=ref_type_filter)))
+
+                search_filter = Filter(must=must_conditions) if must_conditions else None
 
                 # Search Qdrant using async client
                 client = await self._get_client()
@@ -512,16 +599,32 @@ class DynamicContextLoader:
                     score_threshold=min_score,
                 )
 
-                # Convert to ContextReferences
+                # Convert to ContextReferences with schema fallback
+                # Supports both rich schema (ref_id, ref_type, summary) and
+                # simple schema ({"text": ..., **metadata}) from KB ingestion
                 references = []
                 for result in results:
                     payload = result.payload
                     if payload is None:
                         continue
+
+                    # Extract with fallback for simple payloads
+                    ref_id = payload.get("ref_id") or str(result.id)
+                    ref_type = payload.get("ref_type", "document")
+
+                    # Generate summary from text if not provided
+                    if "summary" in payload:
+                        summary = payload["summary"]
+                    elif "text" in payload:
+                        text = payload["text"]
+                        summary = text[:100] + "..." if len(text) > 100 else text
+                    else:
+                        summary = f"Document {ref_id}"
+
                     ref = ContextReference(
-                        ref_id=payload["ref_id"],
-                        ref_type=payload["ref_type"],
-                        summary=payload["summary"],
+                        ref_id=ref_id,
+                        ref_type=ref_type,
+                        summary=summary,
                         metadata=payload.get("metadata", {}),
                         relevance_score=result.score,
                     )
@@ -549,9 +652,16 @@ class DynamicContextLoader:
         expansion_keywords: list[str] | None = None,
     ) -> list[ContextReference]:
         """
-        Progressive discovery: iteratively refine search based on results.
+        Iterative semantic discovery: refine search based on results.
 
-        Implements Anthropic's "Progressive Disclosure" pattern.
+        Performs multi-iteration semantic search, expanding and refining
+        the query based on discovered context. Useful for complex queries
+        that benefit from iterative exploration.
+
+        Note:
+            Despite the name, this implements iterative discovery/retrieval,
+            not UI-level progressive disclosure. The naming follows the
+            verb pattern used by semantic_search() and load_context().
 
         Args:
             initial_query: Starting search query
@@ -636,15 +746,26 @@ class DynamicContextLoader:
 
             return loaded
 
-    async def _load_context_impl(self, ref_id: str) -> LoadedContext:
+    async def _load_context_impl(
+        self,
+        ref_id: str,
+        tenant_id: str | None = None,
+    ) -> LoadedContext:
         """
         Implementation of context loading (async).
 
         Args:
             ref_id: Reference ID to load
+            tenant_id: Tenant ID for multi-tenant isolation (ADR-0095).
+                       If provided when isolation is enabled, validates document
+                       belongs to the requesting tenant.
 
         Returns:
             Loaded context
+
+        Raises:
+            ValueError: If context not found
+            PermissionError: If document belongs to different tenant
         """
         try:
             # Retrieve from Qdrant using async client
@@ -662,22 +783,50 @@ class DynamicContextLoader:
                 msg = f"Context payload is None: {ref_id}"
                 raise ValueError(msg)
 
+            # ADR-0095: Multi-tenant isolation validation
+            enable_tenant_isolation = getattr(settings, "enable_multi_tenant_isolation", False)
+            if enable_tenant_isolation and tenant_id:
+                doc_tenant_id = payload.get("tenant_id")
+                if doc_tenant_id and doc_tenant_id != tenant_id:
+                    msg = "Access denied: document belongs to different tenant"
+                    raise PermissionError(msg)
+
+            # Extract with fallback for simple payloads
+            # Supports both rich schema and simple {"text": ..., **metadata} from KB ingestion
+            extracted_ref_id = payload.get("ref_id") or str(result.id)
+            ref_type = payload.get("ref_type", "document")
+
+            # Generate summary from text if not provided
+            text_content = payload.get("text", "")
+            if "summary" in payload:
+                summary = payload["summary"]
+            elif text_content:
+                summary = text_content[:100] + "..." if len(text_content) > 100 else text_content
+            else:
+                summary = f"Document {extracted_ref_id}"
+
             reference = ContextReference(
-                ref_id=payload["ref_id"],
-                ref_type=payload["ref_type"],
-                summary=payload["summary"],
+                ref_id=extracted_ref_id,
+                ref_type=ref_type,
+                summary=summary,
                 metadata=payload.get("metadata", {}),
             )
 
+            # Get content with fallback to "text" field
             # Decrypt content if it was encrypted
-            stored_content = payload["content"]
+            stored_content = payload.get("content") or payload.get("text", "")
             is_encrypted = payload.get("encrypted", False)
             content = self._decrypt_content(stored_content) if is_encrypted else stored_content
+
+            # Get token count with estimation fallback (rough: chars / 4)
+            token_count = payload.get("token_count")
+            if token_count is None:
+                token_count = len(content) // 4 if content else 0
 
             loaded = LoadedContext(
                 reference=reference,
                 content=content,  # Decrypted content
-                token_count=payload["token_count"],
+                token_count=token_count,
                 loaded_at=time.time(),
             )
 
@@ -850,12 +999,17 @@ class DynamicContextLoader:
         return messages
 
 
+# Type alias for KB focus mode (Perplexity-style context retrieval control)
+KBFocusMode = Literal["all", "kb_only", "web_only", "none"]
+
+
 # Convenience functions
 async def search_and_load_context(
     query: str,
     loader: DynamicContextLoader | None = None,
     top_k: int = 3,
     max_tokens: int = 2000,
+    focus_mode: KBFocusMode = "all",
 ) -> list[LoadedContext]:
     """
     Search for context and load top results within token budget.
@@ -865,10 +1019,26 @@ async def search_and_load_context(
         loader: Context loader instance (creates new if None)
         top_k: Number of results to search for
         max_tokens: Maximum tokens to load
+        focus_mode: KB focus mode controlling context retrieval strategy.
+            - "all": Use both KB and web search (default)
+            - "kb_only": Only use KB/vector store for context
+            - "web_only": Skip KB search (return empty for this function)
+            - "none": Disable context augmentation (return empty)
 
     Returns:
         List of loaded contexts
     """
+    # Handle focus modes that skip KB search
+    if focus_mode == "none":
+        # No context augmentation - return empty list immediately
+        return []
+
+    if focus_mode == "web_only":
+        # Web-only mode - skip KB search, return empty
+        # (web search would be handled by a separate mechanism if implemented)
+        return []
+
+    # For "all" and "kb_only" modes, perform KB semantic search
     if loader is None:
         loader = DynamicContextLoader()
 

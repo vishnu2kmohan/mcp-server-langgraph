@@ -19,6 +19,10 @@ from mcp_server_langgraph.core.feature_flags import (
 # These don't run at runtime, so no heavy deps loaded
 if TYPE_CHECKING:
     from mcp_server_langgraph.core.agent import AgentState, create_agent_graph
+    from mcp_server_langgraph.core.dynamic_context_loader import (
+        auto_detect_embedding_provider,
+        get_default_embedding_model,
+    )
     from mcp_server_langgraph.core.file_journal import (
         Checkpoint,
         FileChangeRecord,
@@ -77,6 +81,9 @@ __all__ = [
     # Agent
     "AgentState",
     "create_agent_graph",
+    # Auto-Detection (Embedding Providers)
+    "auto_detect_embedding_provider",
+    "get_default_embedding_model",
     # Config
     "Settings",
     "settings",
@@ -153,6 +160,12 @@ def __getattr__(name: str):  # type: ignore[no-untyped-def]  # noqa: C901
         from mcp_server_langgraph.core import agent
 
         return getattr(agent, name)
+
+    # Auto-detection (embedding providers)
+    if name in ("auto_detect_embedding_provider", "get_default_embedding_model"):
+        from mcp_server_langgraph.core import dynamic_context_loader
+
+        return getattr(dynamic_context_loader, name)
 
     # File journal (imports msgspec, etc.)
     if name in (
