@@ -410,6 +410,40 @@ class ModelRegistry:
             max_thinking_tokens=65536,
         )
 
+        # Vertex AI Gemini preview models (gemini-3 is currently in preview)
+        self._models["vertex_ai/gemini-3-flash-preview"] = ModelCapabilities(
+            model_id="vertex_ai/gemini-3-flash-preview",
+            vendor="vertex_ai",
+            context_limit=1_000_000,
+            effective_limit=650_000,
+            max_output_tokens=65_000,
+            input_cost_per_1m=0.10,
+            output_cost_per_1m=0.40,
+            supports_vision=True,
+            supports_tools=True,
+            supports_streaming=True,
+            supports_json_mode=True,
+            tier="simple",
+            max_thinking_tokens=None,
+        )
+
+        self._models["vertex_ai/gemini-3-pro-preview"] = ModelCapabilities(
+            model_id="vertex_ai/gemini-3-pro-preview",
+            vendor="vertex_ai",
+            context_limit=2_000_000,
+            effective_limit=1_300_000,
+            max_output_tokens=65_000,
+            input_cost_per_1m=2.00,
+            output_cost_per_1m=12.00,
+            supports_vision=True,
+            supports_tools=True,
+            supports_streaming=True,
+            supports_extended_thinking=True,
+            supports_json_mode=True,
+            tier="complex",
+            max_thinking_tokens=65536,
+        )
+
         # Azure OpenAI models
         self._models["azure/gpt-5.2"] = ModelCapabilities(
             model_id="azure/gpt-5.2",
@@ -620,8 +654,10 @@ class ModelRegistry:
             KeyError: If no model is registered for the vendor
         """
         # Tier preference mapping for cost efficiency
-        # Some vendors use cheaper models for lower tiers
+        # Supports both vendor-native API names and Vertex AI model names
+        # Note: gemini-3 models are in preview, so Vertex AI uses -preview suffix
         tier_preferences: dict[str, dict[str, str]] = {
+            # Vendor-native API model names (direct API access)
             "google": {
                 "simple": "gemini-3-flash",
                 "complicated": "gemini-3-flash",  # Cost efficiency
@@ -637,10 +673,22 @@ class ModelRegistry:
                 "complicated": "gpt-5.2",  # Cost efficiency
                 "complex": "gpt-5.2-pro",
             },
+            # Vertex AI model names (Google Cloud unified access)
+            "vertex_ai": {
+                "simple": "vertex_ai/gemini-3-flash-preview",
+                "complicated": "vertex_ai/gemini-3-flash-preview",  # Cost efficiency
+                "complex": "vertex_ai/gemini-3-pro-preview",
+            },
             "vertex_ai_anthropic": {
-                "simple": "claude-haiku-4-5@20251001",
-                "complicated": "claude-sonnet-4-5@20250929",
-                "complex": "claude-opus-4-5@20251101",
+                "simple": "vertex_ai/claude-haiku-4-5@20251001",
+                "complicated": "vertex_ai/claude-sonnet-4-5@20250929",
+                "complex": "vertex_ai/claude-opus-4-5@20251101",
+            },
+            # Azure OpenAI model names
+            "azure": {
+                "simple": "azure/gpt-5.2",
+                "complicated": "azure/gpt-5.2",  # Cost efficiency
+                "complex": "azure/gpt-5.2-pro",
             },
         }
 

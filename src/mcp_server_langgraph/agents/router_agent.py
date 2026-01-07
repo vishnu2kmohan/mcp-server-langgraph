@@ -320,11 +320,13 @@ class RouterAgent:
 
 
 # Model tier mapping for executor/critic selection
-# These are derived from configuration, not hardcoded model IDs
+# Supports both vendor-native API names and Vertex AI model names
+# Note: gemini-3 models are in preview, so Vertex AI uses -preview suffix
 TIER_MODELS = {
+    # Vendor-native API model names (direct API access)
     "google": {
         "simple": "gemini-3-flash",
-        "complicated": "gemini-2.5-flash",
+        "complicated": "gemini-3-flash",
         "complex": "gemini-3-pro",
     },
     "anthropic": {
@@ -333,15 +335,35 @@ TIER_MODELS = {
         "complex": "claude-opus-4-5-20251101",
     },
     "openai": {
-        "simple": "gpt-4.1-mini",
+        "simple": "gpt-5.2",
         "complicated": "gpt-5.2",
         "complex": "gpt-5.2-pro",
+    },
+    # Vertex AI model names (Google Cloud unified access)
+    # Gemini models via Vertex AI (preview suffix required for gemini-3)
+    "vertex_ai": {
+        "simple": "vertex_ai/gemini-3-flash-preview",
+        "complicated": "vertex_ai/gemini-3-flash-preview",
+        "complex": "vertex_ai/gemini-3-pro-preview",
+    },
+    # Claude models via Vertex AI (uses @ version format)
+    "vertex_ai_anthropic": {
+        "simple": "vertex_ai/claude-haiku-4-5@20251001",
+        "complicated": "vertex_ai/claude-sonnet-4-5@20250929",
+        "complex": "vertex_ai/claude-opus-4-5@20251101",
+    },
+    # Azure OpenAI model names
+    "azure": {
+        "simple": "azure/gpt-5.2",
+        "complicated": "azure/gpt-5.2",
+        "complex": "azure/gpt-5.2-pro",
     },
 }
 
 # Default vendors for cross-vendor diversity
-DEFAULT_EXECUTOR_VENDOR = "google"
-DEFAULT_CRITIC_VENDOR = "anthropic"
+# Uses Vertex AI for unified billing and credential management
+DEFAULT_EXECUTOR_VENDOR = "vertex_ai"
+DEFAULT_CRITIC_VENDOR = "vertex_ai_anthropic"
 
 
 def select_executor_critic(
