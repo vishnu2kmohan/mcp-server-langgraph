@@ -182,7 +182,20 @@ services:
     image: timescale/timescaledb:2.17.2-pg16
     # Increase max_connections for pytest-xdist parallel workers (8 workers x ~10 connections each)
     # Default is 100, which causes TooManyConnectionsError during parallel test runs
-    command: postgres -c max_connections=200 -c shared_buffers=256MB
+    # JSON-structured logging for LGTM stack integration (Loki/Alloy parsing)
+    # PostgreSQL 15+ supports jsonlog destination for structured JSON output
+    # Reference: https://www.postgresql.org/docs/16/runtime-config-logging.html
+    command: >
+      postgres
+      -c max_connections=200
+      -c shared_buffers=256MB
+      -c logging_collector=on
+      -c log_destination=jsonlog
+      -c log_directory=/var/log/postgresql
+      -c log_filename=postgresql.json
+      -c log_statement=none
+      -c log_min_messages=warning
+      -c log_min_error_statement=error
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
@@ -288,6 +301,8 @@ services:
       - POSTGRES_DB=mcp_test
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
+      # JSON-structured logging for LGTM stack integration (Loki/Alloy parsing)
+      - LOG_FORMAT=json
     deploy:
       resources:
         limits:
@@ -313,6 +328,8 @@ services:
     environment:
       - OPENFGA_DATASTORE_ENGINE=postgres
       - OPENFGA_DATASTORE_URI=postgres://postgres:postgres@postgres-test:5432/openfga_test?sslmode=disable
+      # JSON-structured logging for LGTM stack integration (Loki/Alloy parsing)
+      - OPENFGA_LOG_FORMAT=json
     deploy:
       resources:
         limits:
@@ -447,6 +464,8 @@ services:
       - KEYCLOAK_REALM=default
       # Deprecated: Preshared key authentication (kept for rollback compatibility)
       - OPENFGA_PRESHARED_KEY=${OPENFGA_PRESHARED_KEY:-test-openfga-preshared-key}
+      # JSON-structured logging for LGTM stack integration (Loki/Alloy parsing)
+      - LOG_FORMAT=json
     deploy:
       resources:
         limits:
