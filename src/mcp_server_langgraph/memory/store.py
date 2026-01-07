@@ -16,10 +16,48 @@ from __future__ import annotations
 
 import uuid
 from dataclasses import dataclass, field
-from typing import Any
+from typing import TYPE_CHECKING, Any, Protocol
 
 from mcp_server_langgraph.core.scopes import CapabilityScope
 from mcp_server_langgraph.memory.tiers import MemoryTier
+
+if TYPE_CHECKING:
+    pass
+
+
+class EmbeddingServiceProtocol(Protocol):
+    """Protocol for embedding services (same as skills.search)."""
+
+    async def embed(self, text: str) -> list[float]:
+        """Embed text into a vector."""
+        ...
+
+
+class VectorProviderProtocol(Protocol):
+    """Protocol for vector search providers (same as skills.search)."""
+
+    async def upsert(
+        self,
+        *,
+        collection: str,
+        id: str,
+        vector: list[float],
+        metadata: dict[str, Any] | None = None,
+    ) -> None:
+        """Upsert a vector into the collection."""
+        ...
+
+    async def search(
+        self,
+        *,
+        collection: str,
+        query_vector: list[float],
+        limit: int = 10,
+        min_score: float = 0.0,
+        filters: dict[str, Any] | None = None,
+    ) -> list[dict[str, Any]]:
+        """Search for similar vectors."""
+        ...
 
 
 @dataclass
@@ -69,15 +107,42 @@ class MemoryStore:
         _session_memory: In-memory storage for SESSION tier (would use Redis in production)
         _durable_memory: In-memory storage for DURABLE tier (would use PostgreSQL in production)
         _artifact_memory: In-memory storage for ARTIFACT tier (would use versioned storage in production)
+        _embedding_service: Optional embedding service for semantic search
+        _vector_provider: Optional vector provider for semantic search
     """
 
-    def __init__(self) -> None:
-        """Initialize the memory store with tier-specific storage."""
+    COLLECTION: str = "memories"
+    DEFAULT_MIN_SCORE: float = 0.5
+
+    def __init__(
+        self,
+        embedding_service: EmbeddingServiceProtocol | None = None,
+        vector_provider: VectorProviderProtocol | None = None,
+    ) -> None:
+        """Initialize the memory store with tier-specific storage.
+
+        Args:
+            embedding_service: Optional embedding service for semantic search
+            vector_provider: Optional vector provider for semantic search
+        """
         # In-memory storage (would be replaced with actual backends in production)
         self._working_memory: dict[str, MemoryEntry] = {}
         self._session_memory: dict[str, MemoryEntry] = {}
         self._durable_memory: dict[str, MemoryEntry] = {}
         self._artifact_memory: dict[str, MemoryEntry] = {}
+        # Semantic search infrastructure
+        self._embedding_service = embedding_service
+        self._vector_provider = vector_provider
+
+    @property
+    def embedding_service(self) -> EmbeddingServiceProtocol | None:
+        """Get the embedding service."""
+        return self._embedding_service
+
+    @property
+    def vector_provider(self) -> VectorProviderProtocol | None:
+        """Get the vector provider."""
+        return self._vector_provider
 
     async def store(
         self,
@@ -110,6 +175,21 @@ class MemoryStore:
         storage = self._get_storage_for_tier(tier)
         storage[memory_id] = entry
 
+        # Index in vector store if configured (for semantic search)
+        if self._embedding_service and self._vector_provider:
+            vector = await self._embedding_service.embed(content)
+            await self._vector_provider.upsert(
+                collection=self.COLLECTION,
+                id=memory_id,
+                vector=vector,
+                metadata={
+                    "content": content,
+                    "tier": tier.value,
+                    "scope": scope.value,
+                    **(metadata or {}),
+                },
+            )
+
         return memory_id
 
     async def retrieve(self, memory_id: str) -> MemoryEntry | None:
@@ -141,17 +221,121 @@ class MemoryStore:
         scope: CapabilityScope,
         limit: int = 5,
         tiers: list[MemoryTier] | None = None,
+        enable_semantic: bool = False,
+        min_score: float | None = None,
     ) -> list[MemorySearchResult]:
-        """Get relevant memories using semantic search.
+        """Get relevant memories using semantic or keyword search.
 
-        Performs basic keyword matching for now. In production, this would
-        use vector embeddings for semantic similarity.
+        When enable_semantic=True and embedding_service/vector_provider are
+        configured, uses vector-based semantic similarity. Otherwise falls
+        back to keyword matching.
 
         Args:
             query: Search query
             scope: Capability scope to search within
             limit: Maximum number of results
             tiers: Optional list of tiers to search (all if None)
+            enable_semantic: Enable vector-based semantic search
+            min_score: Minimum similarity score threshold
+
+        Returns:
+            List of MemorySearchResult ordered by relevance
+        """
+        # Use semantic search if enabled and configured
+        if enable_semantic and self._embedding_service and self._vector_provider:
+            return await self._semantic_search(
+                query=query,
+                scope=scope,
+                limit=limit,
+                tiers=tiers,
+                min_score=min_score,
+            )
+
+        # Fall back to keyword matching
+        return await self._keyword_search(
+            query=query,
+            scope=scope,
+            limit=limit,
+            tiers=tiers,
+        )
+
+    async def _semantic_search(
+        self,
+        query: str,
+        scope: CapabilityScope,
+        limit: int = 5,
+        tiers: list[MemoryTier] | None = None,
+        min_score: float | None = None,
+    ) -> list[MemorySearchResult]:
+        """Perform vector-based semantic search.
+
+        Args:
+            query: Search query
+            scope: Capability scope to search within
+            limit: Maximum number of results
+            tiers: Optional list of tiers to search
+            min_score: Minimum similarity score threshold
+
+        Returns:
+            List of MemorySearchResult ordered by relevance
+        """
+        if not self._embedding_service or not self._vector_provider:
+            return []
+
+        effective_min_score = min_score if min_score is not None else self.DEFAULT_MIN_SCORE
+        search_tiers = tiers or list(MemoryTier)
+
+        # Build tier filter
+        tier_values = [tier.value for tier in search_tiers]
+        filters = {"tier": {"$in": tier_values}}
+
+        # Embed the query
+        query_vector = await self._embedding_service.embed(query)
+
+        # Search vector store
+        search_results = await self._vector_provider.search(
+            collection=self.COLLECTION,
+            query_vector=query_vector,
+            limit=limit,
+            min_score=effective_min_score,
+            filters=filters,
+        )
+
+        # Convert to MemorySearchResult
+        results: list[MemorySearchResult] = []
+        for result in search_results:
+            metadata = result.get("metadata", {})
+            tier_str = metadata.get("tier", MemoryTier.WORKING.value)
+            try:
+                tier = MemoryTier(tier_str)
+            except ValueError:
+                tier = MemoryTier.WORKING
+
+            results.append(
+                MemorySearchResult(
+                    id=result.get("id", ""),
+                    content=metadata.get("content", ""),
+                    score=result.get("score", 0.0),
+                    tier=tier,
+                )
+            )
+
+        return results
+
+    async def _keyword_search(
+        self,
+        query: str,
+        scope: CapabilityScope,
+        limit: int = 5,
+        tiers: list[MemoryTier] | None = None,
+    ) -> list[MemorySearchResult]:
+        """Perform keyword-based search (fallback when semantic not available).
+
+        Args:
+            query: Search query
+            scope: Capability scope to search within
+            limit: Maximum number of results
+            tiers: Optional list of tiers to search
 
         Returns:
             List of MemorySearchResult ordered by relevance
@@ -159,7 +343,7 @@ class MemoryStore:
         results: list[MemorySearchResult] = []
         search_tiers = tiers or list(MemoryTier)
 
-        # Simple keyword matching (would use vector search in production)
+        # Simple keyword matching
         query_lower = query.lower()
 
         for tier in search_tiers:
