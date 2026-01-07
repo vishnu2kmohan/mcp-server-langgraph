@@ -627,6 +627,8 @@ export interface ChatCompletionRequest {
   messages: Array<{ role: string; content: string }>;
   model?: string;
   stream?: boolean;
+  /** Knowledge Base focus mode: all, kb_only, web_only, or none */
+  kb_focus?: "all" | "kb_only" | "web_only" | "none";
 }
 
 export interface ChatCompletionResponse {
@@ -1572,6 +1574,51 @@ export type HealthStatusCamelCase = SnakeToCamelCaseDeep<HealthStatus>;
  */
 export type HEARTAggregateMetricsCamelCase =
   SnakeToCamelCaseDeep<HEARTAggregateMetrics>;
+
+// -----------------------------------------------------------------------------
+// KB Status Types (Knowledge Base / DynamicContextLoader)
+// -----------------------------------------------------------------------------
+
+/**
+ * KB status values
+ */
+export type KBStatusValue = "ready" | "misconfigured" | "unavailable";
+
+/**
+ * KB Status response from backend (snake_case).
+ */
+export interface KBStatusResponse {
+  status: KBStatusValue;
+  qdrant_connected: boolean;
+  collection_name?: string | null;
+  vectors_count?: number;
+  embedding_provider?: string | null;
+  embedding_model?: string | null;
+  embedding_dimensions?: number | null;
+  last_updated?: string | null;
+  context_token_budget?: number | null;
+  context_top_k?: number | null;
+  message?: string | null;
+}
+
+/**
+ * KBStatusResponse type with camelCase keys (after RTK Query transformation).
+ * ADR-0091: Added for transform consistency.
+ */
+export type KBStatusResponseCamelCase = SnakeToCamelCaseDeep<KBStatusResponse>;
+
+/**
+ * Knowledge Base context statistics.
+ * Used for displaying KB context usage in StatusBar and related components.
+ */
+export interface KBContextStats {
+  /** Number of context references loaded */
+  refsCount: number;
+  /** Tokens used for context */
+  tokensUsed: number;
+  /** Token budget limit */
+  tokenBudget: number;
+}
 
 // =============================================================================
 // AI Suggestions

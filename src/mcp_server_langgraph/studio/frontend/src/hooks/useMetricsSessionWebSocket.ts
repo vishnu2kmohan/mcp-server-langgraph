@@ -13,7 +13,7 @@ import { useAppDispatch, useAppSelector } from "../store/hooks";
 import { logout, selectIsAuthenticated } from "../store/slices/authSlice";
 import { addNotification } from "../store/slices/notificationSlice";
 import { getAuthToken } from "../utils/storage";
-import { buildWebSocketUrl } from "../utils/websocket";
+import { buildWebSocketUrl, WS_ENDPOINTS } from "../utils/websocket";
 import {
   PROTOCOL_VERSION_MISMATCH_NOTIFICATION,
   showProtocolVersionMismatchToast,
@@ -160,7 +160,7 @@ export function useMetricsSessionWebSocket(
     () =>
       isAuthenticated
         ? (customUrl ??
-          buildWebSocketUrl("/api/v1/ws/metrics/session" as never, {}, true))
+          buildWebSocketUrl(WS_ENDPOINTS.METRICS_SESSION, {}, true))
         : "",
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [customUrl, authToken, isAuthenticated],

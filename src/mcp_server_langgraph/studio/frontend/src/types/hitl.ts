@@ -7,12 +7,31 @@
  * - UI components (AgentApprovalDialog, ClarificationDialog)
  * - State management hooks (useHITLDialogs)
  *
- * Type naming convention:
+ * ## Type Naming Convention
+ *
  * - *Request: Data describing what the agent is asking for
  * - *Response: Data the user sends back
- * - *Payload: WebSocket message data
+ * - *Payload: WebSocket message data (snake_case from backend)
+ * - *PayloadCamelCase: Transformed payload for UI (per ADR-0091)
  * - UI suffix: Types used in UI layer
  * - API suffix: Types used in API/hook layer
+ *
+ * ## Barrel Export Pattern: Library-Style
+ *
+ * This module exports types and utilities forming a coherent public API.
+ * Following the "library-style" barrel pattern (see layout/index.ts):
+ *
+ * - **Types**: All HITL-related types are exported for use by consumers
+ * - **Conversion Utilities**: Helper functions to convert between formats
+ * - **snake_case vs camelCase**: Backend uses snake_case, UI uses camelCase
+ *
+ * ## ADR-0091 Compliance
+ *
+ * Per ADR-0091 API Response Transformation Strategy:
+ * - WebSocket payloads arrive in snake_case from backend
+ * - Hooks transform to camelCase before storing/calling callbacks
+ * - Dialog components may still use snake_case (legacy, being migrated)
+ * - Conversion functions bridge camelCase hooks to snake_case dialogs
  */
 
 // =============================================================================
@@ -91,6 +110,39 @@ export interface AIExplanation {
   cached?: boolean;
 }
 
+/**
+ * AI-generated explanation in camelCase format (ADR-0091)
+ * Use this type in UI components after API response transformation.
+ */
+export interface AIExplanationCamelCase {
+  /** Natural language explanation of why the agent is uncertain */
+  whyUncertain: string;
+  /** Risk analysis of potential negative outcomes */
+  whatCouldGoWrong: string;
+  /** List of safer alternative actions (optional) */
+  saferAlternatives?: Array<{
+    action: string;
+    confidence: number;
+    tradeOff: string;
+  }>;
+  /** Factors affecting the confidence score (optional) */
+  confidenceFactors?: Array<{
+    factor: string;
+    weight: number;
+    evidence: string;
+  }>;
+  /** Key steps in the agent's reasoning process (optional) */
+  reasoningTrace?: string[];
+  /** LLM model used to generate the explanation (optional) */
+  modelUsed?: string;
+  /** Timestamp when explanation was generated (optional) */
+  generatedAt?: string;
+  /** Time taken to generate explanation in milliseconds (optional) */
+  generationLatencyMs?: number;
+  /** Whether explanation was retrieved from cache (optional) */
+  cached?: boolean;
+}
+
 // =============================================================================
 // Clarification Option Types
 // =============================================================================
@@ -111,6 +163,7 @@ export interface ClarificationOption {
 
 /**
  * Approval request from an agent requiring human decision
+ * (snake_case - matches backend API format)
  */
 export interface AgentApprovalRequest {
   request_id: string;
@@ -133,6 +186,30 @@ export interface AgentApprovalRequest {
 }
 
 /**
+ * Approval request in camelCase format (ADR-0091)
+ * Use this type in UI components after API response transformation.
+ */
+export interface AgentApprovalRequestCamelCase {
+  requestId: string;
+  sessionId: string;
+  taskId: string;
+  agentName: string;
+  confidence: number;
+  threshold: number;
+  proposedAction: string;
+  triggerReason: string;
+  context: {
+    tokensUsed?: number;
+    timeElapsedSeconds?: number;
+    artifacts?: string[];
+    [key: string]: unknown;
+  };
+  requestedAt: string;
+  /** AI-generated explanation for HITL dialog (Phase 1 AI-Native Enhancement) */
+  aiExplanation?: AIExplanationCamelCase;
+}
+
+/**
  * Clarification request from an agent requiring human input
  */
 export interface AgentClarificationRequest {
@@ -147,6 +224,29 @@ export interface AgentClarificationRequest {
   required: boolean;
   context: Record<string, unknown>;
   requested_at: string;
+}
+
+/**
+ * Clarification request in camelCase format (ADR-0091)
+ * Use this type in UI components after API response transformation.
+ */
+export interface AgentClarificationRequestCamelCase {
+  requestId: string;
+  sessionId: string;
+  taskId: string;
+  agentName: string;
+  clarificationType: "text" | "choice" | "confirmation";
+  question: string;
+  options: Array<{
+    id: string;
+    label: string;
+    description?: string;
+    isRecommended?: boolean;
+  }>;
+  placeholder: string | null;
+  required: boolean;
+  context: Record<string, unknown>;
+  requestedAt: string;
 }
 
 // =============================================================================
@@ -167,6 +267,18 @@ export interface ClarificationUIResponse {
   selected_option_id?: string;
   confirmed?: boolean;
   responded_by: string;
+}
+
+/**
+ * UI-layer clarification response in camelCase (ADR-0091)
+ * Use this type in UI components after dialog migration.
+ */
+export interface ClarificationUIResponseCamelCase {
+  requestId: string;
+  value?: string;
+  selectedOptionId?: string;
+  confirmed?: boolean;
+  respondedBy: string;
 }
 
 /**
@@ -240,6 +352,56 @@ export interface ClarificationRequiredPayload {
 }
 
 // =============================================================================
+// CamelCase WebSocket Payload Types (ADR-0091 Phase 6)
+// =============================================================================
+
+/**
+ * CamelCase version of ApprovalRequiredPayload for UI components.
+ *
+ * Per ADR-0091, UI components should use camelCase types.
+ * The WebSocket hook transforms snake_case payloads to this format.
+ */
+export interface ApprovalRequiredPayloadCamelCase {
+  requestId: string;
+  sessionId: string;
+  taskId: string;
+  agentName: string;
+  confidence: number;
+  threshold: number;
+  proposedAction: string;
+  triggerReason: string;
+  context: Record<string, unknown>;
+  requestedAt: string;
+  /** AI-generated explanation for HITL dialog (Phase 1 AI-Native Enhancement) */
+  aiExplanation?: AIExplanationCamelCase;
+}
+
+/**
+ * CamelCase version of ClarificationRequiredPayload for UI components.
+ *
+ * Per ADR-0091, UI components should use camelCase types.
+ * The WebSocket hook transforms snake_case payloads to this format.
+ */
+export interface ClarificationRequiredPayloadCamelCase {
+  requestId: string;
+  sessionId: string;
+  taskId: string;
+  agentName: string;
+  clarificationType: "text" | "choice" | "confirmation";
+  question: string;
+  options: Array<{
+    id: string;
+    label: string;
+    description?: string;
+    isRecommended?: boolean;
+  }>;
+  placeholder: string | null;
+  required: boolean;
+  context: Record<string, unknown>;
+  requestedAt: string;
+}
+
+// =============================================================================
 // Type Conversion Utilities
 // =============================================================================
 
@@ -281,6 +443,47 @@ export function convertUIResponseToAPIResponse(
   return {
     request_id: uiResponse.request_id,
     responded_by: uiResponse.responded_by,
+    response_type: "text",
+    value: uiResponse.value,
+  };
+}
+
+/**
+ * Convert camelCase UI response to API response format (ADR-0091)
+ *
+ * Use this when the dialog is using camelCase types (after Phase 10 migration)
+ * but the API call still requires snake_case format.
+ *
+ * @param uiResponse - CamelCase response from ClarificationDialog component
+ * @returns Response formatted for the API (snake_case)
+ */
+export function convertUIResponseCamelCaseToAPIResponse(
+  uiResponse: ClarificationUIResponseCamelCase,
+): ClarificationAPIResponse {
+  // Determine response type based on which fields are set
+  // Priority: confirmed > choice > text
+  if (uiResponse.confirmed !== undefined) {
+    return {
+      request_id: uiResponse.requestId,
+      responded_by: uiResponse.respondedBy,
+      response_type: "confirm",
+      confirmed: uiResponse.confirmed,
+    };
+  }
+
+  if (uiResponse.selectedOptionId) {
+    return {
+      request_id: uiResponse.requestId,
+      responded_by: uiResponse.respondedBy,
+      response_type: "choice",
+      selected_option_id: uiResponse.selectedOptionId,
+    };
+  }
+
+  // Default to text
+  return {
+    request_id: uiResponse.requestId,
+    responded_by: uiResponse.respondedBy,
     response_type: "text",
     value: uiResponse.value,
   };
@@ -361,3 +564,19 @@ export function convertClarificationPayloadToRequest(
     requested_at: payload.requested_at,
   };
 }
+
+// =============================================================================
+// ADR-0091 Phase 10 Complete: Bridge Functions Removed
+// =============================================================================
+// The following deprecated bridge functions were removed (2026-01-06):
+// - convertApprovalPayloadCamelCaseToRequest()
+// - convertClarificationPayloadCamelCaseToRequest()
+//
+// Dialog components now accept camelCase payloads directly:
+// - AgentApprovalDialog uses AgentApprovalRequestCamelCase
+// - ClarificationDialog uses AgentClarificationRequestCamelCase
+// - BatchApprovalPanel uses AgentApprovalRequestCamelCase[]
+//
+// If you need snake_case conversion for backend API calls, use:
+// - convertUIResponseCamelCaseToAPIResponse() for clarification responses
+// - transformCamelToSnake() from api/transforms.ts for generic conversion

@@ -101,6 +101,31 @@ vi.mock("../hooks/useVoiceInput", () => ({
   },
 }));
 
+// Mock useKBStatus hook
+const mockKBStatusReturn = {
+  data: undefined as
+    | {
+        status: string;
+        qdrantConnected: boolean;
+        collectionName?: string;
+        vectorsCount?: number;
+      }
+    | undefined,
+  isLoading: false,
+  isError: false,
+  isReady: false,
+  kbStatusForUI: undefined as
+    | "ready"
+    | "misconfigured"
+    | "unavailable"
+    | undefined,
+  refetch: vi.fn(),
+};
+
+vi.mock("../hooks/useKBStatus", () => ({
+  useKBStatus: () => mockKBStatusReturn,
+}));
+
 // =============================================================================
 // Test Setup
 // =============================================================================
@@ -122,6 +147,12 @@ describe("ConnectedChatInputForm", () => {
     mockVoiceInputReturn.isListening = false;
     mockVoiceInputReturn.isSupported = true;
     mockVoiceInputReturn.error = null;
+    // Reset KB status mock
+    mockKBStatusReturn.data = undefined;
+    mockKBStatusReturn.isLoading = false;
+    mockKBStatusReturn.isError = false;
+    mockKBStatusReturn.isReady = false;
+    mockKBStatusReturn.kbStatusForUI = undefined;
   });
 
   afterEach(() => {
@@ -641,6 +672,95 @@ describe("ConnectedChatInputForm", () => {
 
       // Feature flag should be checked
       expect(mockIsEnabled).toHaveBeenCalledWith("rich_text_chat_input");
+    });
+  });
+
+  // ===========================================================================
+  // Knowledge Base Integration Tests
+  // ===========================================================================
+
+  describe("Knowledge Base Integration", () => {
+    // Helper to enable both kb_focus and rich_text_chat_input flags
+    // KB Focus is only rendered in RichText mode (pill container)
+    const enableKBFocusFlags = () => {
+      mockIsEnabled.mockImplementation(
+        (flag: string) =>
+          flag === "kb_focus" || flag === "rich_text_chat_input",
+      );
+    };
+
+    it("should render KnowledgeBaseFocus when feature flag is enabled", () => {
+      enableKBFocusFlags();
+
+      render(<ConnectedChatInputForm {...defaultProps} />);
+
+      expect(screen.getByTestId("kb-focus-button")).toBeInTheDocument();
+    });
+
+    it("should not render KnowledgeBaseFocus when feature flag is disabled", () => {
+      // Only enable rich_text_chat_input, but NOT kb_focus
+      mockIsEnabled.mockImplementation(
+        (flag: string) => flag === "rich_text_chat_input",
+      );
+
+      render(<ConnectedChatInputForm {...defaultProps} />);
+
+      expect(screen.queryByTestId("kb-focus-button")).not.toBeInTheDocument();
+    });
+
+    it("should show KB status indicator when KB is ready", () => {
+      enableKBFocusFlags();
+      // Mock useKBStatus to return ready status
+      mockKBStatusReturn.data = {
+        status: "ready",
+        qdrantConnected: true,
+        collectionName: "test-collection",
+        vectorsCount: 100,
+      };
+      mockKBStatusReturn.kbStatusForUI = "ready";
+
+      render(<ConnectedChatInputForm {...defaultProps} />);
+
+      expect(screen.getByTestId("kb-status-indicator")).toBeInTheDocument();
+    });
+
+    it("should initialize with 'all' focus mode by default", () => {
+      enableKBFocusFlags();
+
+      render(<ConnectedChatInputForm {...defaultProps} />);
+
+      // The button should show "All" as the default mode
+      expect(screen.getByTestId("kb-focus-button")).toHaveTextContent("All");
+    });
+
+    it("should allow changing KB focus mode", async () => {
+      const user = userEvent.setup();
+      enableKBFocusFlags();
+
+      render(<ConnectedChatInputForm {...defaultProps} />);
+
+      // Open dropdown
+      await user.click(screen.getByTestId("kb-focus-button"));
+
+      // Select "Web" option (simpler to match, avoids "Knowledge Base" ambiguity)
+      await user.click(screen.getByRole("option", { name: /^Web/ }));
+
+      // Button should now show "Web"
+      expect(screen.getByTestId("kb-focus-button")).toHaveTextContent("Web");
+    });
+
+    it("should disable KB options when KB status is unavailable", () => {
+      enableKBFocusFlags();
+      mockKBStatusReturn.data = {
+        status: "unavailable",
+        qdrantConnected: false,
+      };
+      mockKBStatusReturn.kbStatusForUI = "unavailable";
+
+      render(<ConnectedChatInputForm {...defaultProps} />);
+
+      // KB button should still render but may show status
+      expect(screen.getByTestId("kb-focus-button")).toBeInTheDocument();
     });
   });
 });

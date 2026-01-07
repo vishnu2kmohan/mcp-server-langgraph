@@ -23,42 +23,43 @@ import React from "react";
 // Mock Data
 // =============================================================================
 
+// Mock data uses camelCase per ADR-0091 API Response Transformation Strategy
 const mockApprovals = [
   {
-    request_id: "req-001",
-    session_id: "session-001",
-    task_id: "task-001",
-    agent_name: "Research Assistant",
+    requestId: "req-001",
+    sessionId: "session-001",
+    taskId: "task-001",
+    agentName: "Research Assistant",
     confidence: 0.65,
     threshold: 0.7,
-    proposed_action: "Send analysis report",
-    trigger_reason: "low_confidence",
-    context: { tokens_used: 1000 },
-    requested_at: "2024-01-15T10:36:00Z",
+    proposedAction: "Send analysis report",
+    triggerReason: "low_confidence",
+    context: { tokensUsed: 1000 },
+    requestedAt: "2024-01-15T10:36:00Z",
   },
   {
-    request_id: "req-002",
-    session_id: "session-001",
-    task_id: "task-002",
-    agent_name: "Data Analyst",
+    requestId: "req-002",
+    sessionId: "session-001",
+    taskId: "task-002",
+    agentName: "Data Analyst",
     confidence: 0.55,
     threshold: 0.7,
-    proposed_action: "Update database records",
-    trigger_reason: "destructive_action",
-    context: { tokens_used: 500 },
-    requested_at: "2024-01-15T10:37:00Z",
+    proposedAction: "Update database records",
+    triggerReason: "destructive_action",
+    context: { tokensUsed: 500 },
+    requestedAt: "2024-01-15T10:37:00Z",
   },
   {
-    request_id: "req-003",
-    session_id: "session-002",
-    task_id: "task-003",
-    agent_name: "API Agent",
+    requestId: "req-003",
+    sessionId: "session-002",
+    taskId: "task-003",
+    agentName: "API Agent",
     confidence: 0.68,
     threshold: 0.7,
-    proposed_action: "Call external API",
-    trigger_reason: "external_api",
-    context: { tokens_used: 200 },
-    requested_at: "2024-01-15T10:38:00Z",
+    proposedAction: "Call external API",
+    triggerReason: "external_api",
+    context: { tokensUsed: 200 },
+    requestedAt: "2024-01-15T10:38:00Z",
   },
 ];
 
@@ -469,7 +470,7 @@ describe("BatchApprovalPanel", () => {
       mockApprovals.forEach((approval) => {
         expect(
           screen.getByRole("checkbox", {
-            name: new RegExp(approval.agent_name, "i"),
+            name: new RegExp(approval.agentName, "i"),
           }),
         ).toBeInTheDocument();
       });

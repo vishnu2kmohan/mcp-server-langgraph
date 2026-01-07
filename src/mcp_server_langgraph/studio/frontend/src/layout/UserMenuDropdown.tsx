@@ -25,6 +25,7 @@ import {
 import { logout } from "../store/slices/authSlice";
 import { cn } from "../utils/cn";
 import { storage, STORAGE_KEYS } from "../utils/storage";
+import { transformSnakeToCamel } from "../api/transforms";
 
 // =============================================================================
 // Types
@@ -147,12 +148,16 @@ export function UserMenuDropdown({
       });
 
       if (response.ok) {
-        const data = await response.json();
+        // Transform snake_case API response to camelCase (ADR-0091)
+        const rawData = await response.json();
+        const data = transformSnakeToCamel<{ keycloakLogoutUrl?: string }>(
+          rawData,
+        );
         // Redirect to Keycloak logout URL to end SSO session
         // This ensures the user can log in as a different user
-        if (data.keycloak_logout_url) {
+        if (data.keycloakLogoutUrl) {
           // Add post_logout_redirect_uri to return to login page after Keycloak logout
-          const logoutUrl = new URL(data.keycloak_logout_url);
+          const logoutUrl = new URL(data.keycloakLogoutUrl);
           logoutUrl.searchParams.set(
             "post_logout_redirect_uri",
             `${window.location.origin}/login`,

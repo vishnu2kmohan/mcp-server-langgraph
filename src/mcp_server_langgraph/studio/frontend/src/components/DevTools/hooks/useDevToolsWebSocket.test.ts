@@ -13,7 +13,7 @@ import type {
   ConsoleEntry as _ConsoleEntry,
   NetworkEntry as _NetworkEntry,
 } from "../types";
-import type { ConnectionStatus } from "../../../hooks/useRealtimeSync";
+import type { WebSocketConnectionStatus } from "../../../hooks/useRealtimeSync";
 
 // =============================================================================
 // Mock useRealtimeSync
@@ -26,7 +26,7 @@ let mockOnMessage: ((data: unknown) => void) | undefined;
 let mockOnConnect: (() => void) | undefined;
 let _mockOnDisconnect: (() => void) | undefined;
 let _mockOnError: ((error: Error) => void) | undefined;
-let mockStatus: ConnectionStatus = "disconnected";
+let mockStatus: WebSocketConnectionStatus = "disconnected";
 let mockUrl: string | null = null;
 
 vi.mock("../../../hooks/useRealtimeSync", () => ({

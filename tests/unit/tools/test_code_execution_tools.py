@@ -2,7 +2,6 @@
 Unit tests for code execution tools
 
 Tests execute_python tool with mocked sandbox.
-Following TDD best practices - these tests should FAIL until implementation is complete.
 """
 
 import gc
@@ -10,14 +9,10 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-pytestmark = pytest.mark.unit
+from mcp_server_langgraph.execution import ExecutionResult
+from mcp_server_langgraph.tools.code_execution_tools import execute_python
 
-# This import will fail initially - that's expected in TDD!
-try:
-    from mcp_server_langgraph.execution import ExecutionResult
-    from mcp_server_langgraph.tools.code_execution_tools import execute_python
-except ImportError:
-    pytest.skip("Code execution tools not implemented yet", allow_module_level=True)
+pytestmark = pytest.mark.unit
 
 
 @pytest.mark.unit

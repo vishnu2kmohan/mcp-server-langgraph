@@ -13,6 +13,7 @@ export {
   useRealtimeSync,
   type UseRealtimeSyncOptions,
   type UseRealtimeSyncReturn,
+  type WebSocketConnectionStatus,
 } from "./useRealtimeSync";
 
 export { useMCPWebSocket } from "./useMCPWebSocket";
@@ -215,6 +216,8 @@ export { useSafeRouteLoaderData } from "./useSafeRouteLoaderData";
 
 export { usePersonaRouting } from "./usePersonaRouting";
 
+export { useBreadcrumb, type BreadcrumbItem } from "./useBreadcrumb";
+
 // =============================================================================
 // Permission Hooks
 // =============================================================================
@@ -311,14 +314,6 @@ export type {
   UseAIPersonaAnalysisOptions,
   UseAIPersonaAnalysisResult,
 } from "./useAIPersonaAnalysis";
-
-// Phase 6.3: AI-Driven Smart Nudges
-export { useAINudges } from "./useAINudges";
-export type {
-  NudgeRecommendation,
-  UseAINudgesOptions,
-  UseAINudgesResult,
-} from "./useAINudges";
 
 // Real-time AI Suggestions (WebSocket)
 export { useAIRealTimeSuggestions } from "./useAIRealTimeSuggestions";
@@ -430,7 +425,7 @@ export type {
   TraceBottleneck,
   TraceAnomalyResult,
   CostProjectionOptions,
-  CostBreakdown,
+  TraceTokenBreakdown,
   CostProjectionResult,
   TokenPredictionOptions,
   TokenPredictionResult,
@@ -475,14 +470,6 @@ export type {
   ClarificationResponse,
   UseHITLDialogsReturn,
 } from "./useHITLDialogs";
-
-// Batch approvals for HITL requests
-export { useBatchApprovals } from "./useBatchApprovals";
-export type {
-  BatchApprovalResult,
-  BatchApprovalResponse,
-  UseBatchApprovalsReturn,
-} from "./useBatchApprovals";
 
 // Rotating threshold settings
 export { useThresholdSettings } from "./useThresholdSettings";
@@ -562,3 +549,9 @@ export type {
   UsePersonaCacheInvalidationOptions,
   UsePersonaCacheInvalidationResult,
 } from "./usePersonaCacheInvalidation";
+
+// =============================================================================
+// Accessibility Hooks (Sprint 5.2: WCAG 2.1 AA Compliance)
+// =============================================================================
+
+export { useFocusTrap } from "./useFocusTrap";

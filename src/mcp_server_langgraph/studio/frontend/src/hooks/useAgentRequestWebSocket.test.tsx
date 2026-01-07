@@ -149,6 +149,12 @@ function createTestStore(isAuthenticated = true) {
               email: "test@example.com",
               roles: ["user"],
               persona: "user" as const,
+              // WebSocket permissions required for agent_requests connection
+              websocketPermissions: {
+                agent_requests: true,
+                cost_tracking: false,
+                session_events: false,
+              },
             }
           : null,
         tokens: null,
@@ -278,7 +284,19 @@ describe("useAgentRequestWebSocket", () => {
         });
       });
 
-      expect(onApprovalRequired).toHaveBeenCalledWith(mockApprovalPayload);
+      // Hook transforms snake_case → camelCase per ADR-0091
+      expect(onApprovalRequired).toHaveBeenCalledWith({
+        requestId: "req-001",
+        sessionId: "session-001",
+        taskId: "task-001",
+        agentName: "Research Assistant",
+        confidence: 0.65,
+        threshold: 0.7,
+        proposedAction: "Send report to API",
+        triggerReason: "low_confidence",
+        context: { tokensUsed: 1000 },
+        requestedAt: "2024-01-15T10:36:00Z",
+      });
     });
 
     it("should update pendingApprovals when message received", async () => {
@@ -298,7 +316,8 @@ describe("useAgentRequestWebSocket", () => {
       });
 
       expect(result.current.pendingApprovals).toHaveLength(1);
-      expect(result.current.pendingApprovals[0].request_id).toBe("req-001");
+      // Hook transforms to camelCase per ADR-0091
+      expect(result.current.pendingApprovals[0].requestId).toBe("req-001");
     });
   });
 
@@ -334,9 +353,20 @@ describe("useAgentRequestWebSocket", () => {
         });
       });
 
-      expect(onClarificationRequired).toHaveBeenCalledWith(
-        mockClarificationPayload,
-      );
+      // Hook transforms snake_case → camelCase per ADR-0091
+      expect(onClarificationRequired).toHaveBeenCalledWith({
+        requestId: "clar-001",
+        sessionId: "session-001",
+        taskId: "task-001",
+        agentName: "Data Analyst",
+        clarificationType: "choice",
+        question: "Which approach?",
+        options: [{ id: "fast", label: "Fast" }],
+        placeholder: null,
+        required: true,
+        context: {},
+        requestedAt: "2024-01-15T10:36:00Z",
+      });
     });
 
     it("should update pendingClarifications when message received", async () => {
@@ -356,7 +386,8 @@ describe("useAgentRequestWebSocket", () => {
       });
 
       expect(result.current.pendingClarifications).toHaveLength(1);
-      expect(result.current.pendingClarifications[0].request_id).toBe(
+      // Hook transforms to camelCase per ADR-0091
+      expect(result.current.pendingClarifications[0].requestId).toBe(
         "clar-001",
       );
     });
@@ -591,9 +622,9 @@ describe("useAgentRequestWebSocket", () => {
         simulateDisconnect();
       });
 
-      // Pending approvals should be preserved
+      // Pending approvals should be preserved (camelCase per ADR-0091)
       expect(result.current.pendingApprovals).toHaveLength(1);
-      expect(result.current.pendingApprovals[0].request_id).toBe("req-001");
+      expect(result.current.pendingApprovals[0].requestId).toBe("req-001");
     });
 
     it("should not send subscribe message if no sessionId provided", async () => {

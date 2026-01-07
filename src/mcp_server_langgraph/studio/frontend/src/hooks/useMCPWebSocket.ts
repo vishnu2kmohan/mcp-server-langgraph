@@ -12,7 +12,10 @@
  */
 
 import { useState, useCallback, useRef, useMemo, useEffect } from "react";
-import { useRealtimeSync, type ConnectionStatus } from "./useRealtimeSync";
+import {
+  useRealtimeSync,
+  type WebSocketConnectionStatus,
+} from "./useRealtimeSync";
 import { useAppDispatch, useAppSelector } from "../store/hooks";
 import {
   logout,
@@ -172,7 +175,7 @@ export interface UseMCPWebSocketOptions {
  */
 export interface UseMCPWebSocketReturn {
   /** Current connection status */
-  status: ConnectionStatus;
+  status: WebSocketConnectionStatus;
   /** Whether MCP initialize handshake is complete */
   isInitialized: boolean;
   /** Server info from initialize response */
@@ -433,7 +436,7 @@ export function useMCPWebSocket(
 
   // Track if enabled - if not authenticated or explicitly disabled, override status
   // WebSocket requires valid auth token, so we only connect when authenticated
-  const status: ConnectionStatus = effectiveEnabled
+  const status: WebSocketConnectionStatus = effectiveEnabled
     ? realtimeStatus
     : "disconnected";
 

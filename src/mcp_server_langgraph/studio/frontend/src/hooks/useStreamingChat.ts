@@ -43,11 +43,18 @@ export interface StreamingUsage {
 export type ReasoningEffortLevel = "low" | "medium" | "high";
 
 /**
+ * Knowledge Base focus mode for context retrieval
+ */
+export type KBFocusMode = "all" | "kb_only" | "web_only" | "none";
+
+/**
  * Options for starting a stream
  */
 export interface StartStreamOptions {
   /** Reasoning effort level for thinking models (low/medium/high) */
   reasoningEffort?: ReasoningEffortLevel;
+  /** Knowledge Base focus mode for context retrieval */
+  kbFocus?: KBFocusMode;
 }
 
 /**
@@ -305,6 +312,11 @@ export function useStreamingChat(): UseStreamingChatReturn {
       // Add reasoning effort if provided
       if (options?.reasoningEffort) {
         requestBody.reasoning_effort = options.reasoningEffort;
+      }
+
+      // Add KB focus mode if provided
+      if (options?.kbFocus) {
+        requestBody.kb_focus = options.kbFocus;
       }
 
       // Start the fetch + stream processing

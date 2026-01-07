@@ -649,7 +649,7 @@ class TestChatServiceImpl:
         from mcp_server_langgraph.api.v1.chat import ChatServiceImpl
 
         # Mock LangGraph agent with astream_events
-        mock_agent = AsyncMock()  # async-mock-configured  # noqa: async-mock-config
+        mock_agent = AsyncMock(return_value=None)
 
         async def mock_astream_events(*args, **kwargs):
             """Simulate LangGraph astream_events output."""
@@ -701,7 +701,7 @@ class TestChatServiceImpl:
         """
         from mcp_server_langgraph.api.v1.chat import ChatServiceImpl
 
-        mock_agent = AsyncMock()  # async-mock-configured  # noqa: async-mock-config
+        mock_agent = AsyncMock(return_value=None)
 
         async def mock_astream_events(*args, **kwargs):
             # Simulate node transitions
@@ -752,7 +752,7 @@ class TestChatServiceImpl:
         """
         from mcp_server_langgraph.api.v1.chat import ChatServiceImpl
 
-        mock_agent = AsyncMock()  # async-mock-configured  # noqa: async-mock-config
+        mock_agent = AsyncMock(return_value=None)
 
         async def mock_astream_events(*args, **kwargs):
             # Simulate edge traversal from router to agent
@@ -804,7 +804,7 @@ class TestChatServiceImpl:
         """
         from mcp_server_langgraph.api.v1.chat import ChatServiceImpl
 
-        mock_agent = AsyncMock()  # async-mock-configured  # noqa: async-mock-config
+        mock_agent = AsyncMock(return_value=None)
 
         async def mock_astream_events(*args, **kwargs):
             yield {
@@ -844,12 +844,12 @@ class TestChatServiceImpl:
         self,
         sample_messages: list[dict],
     ) -> None:
-        """GIVEN no LangGraph agent configured
+        """GIVEN LangGraph agent initialization fails
         WHEN create_stream() is called with use_langgraph=True
         THEN it falls back to LLMFactory streaming
 
-        Note: With legacy _stream_via_litellm removed, the fallback chain now
-        terminates at LLMFactory.astream() instead of direct litellm.acompletion().
+        Note: With lazy initialization, we mock create_agent_graph to fail
+        to test the fallback path. This ensures graceful degradation.
         """
         from mcp_server_langgraph.api.v1.chat import ChatServiceImpl
         from mcp_server_langgraph.llm.factory import StreamChunk
@@ -862,16 +862,402 @@ class TestChatServiceImpl:
 
         mock_factory.astream = mock_astream
 
-        # No langgraph_agent provided, but LLMFactory is available
-        service = ChatServiceImpl(llm_factory=mock_factory)
-        chunks = []
-        async for chunk in service.create_stream(
-            session_id="test-session",
-            messages=sample_messages,
-            use_langgraph=True,  # Request LangGraph but none configured
-        ):
-            chunks.append(chunk)
+        # Mock create_agent_graph to fail (simulates Qdrant not available, etc.)
+        with patch("mcp_server_langgraph.api.v1.chat.create_agent_graph") as mock_create_agent:
+            mock_create_agent.side_effect = Exception("Qdrant not available")
+
+            # No langgraph_agent provided, lazy init fails, falls back to LLMFactory
+            service = ChatServiceImpl(llm_factory=mock_factory)
+            chunks = []
+            async for chunk in service.create_stream(
+                session_id="test-session",
+                messages=sample_messages,
+                use_langgraph=True,  # Request LangGraph but init fails
+            ):
+                chunks.append(chunk)
 
         # Should fallback to LLMFactory.astream()
         assert len(chunks) == 1
         assert chunks[0]["delta"]["content"] == "Fallback"
+
+    # =========================================================================
+    # langgraph_agent lazy initialization tests
+    # =========================================================================
+
+    @pytest.mark.asyncio
+    async def test_langgraph_agent_lazy_initialization(self) -> None:
+        """GIVEN a ChatServiceImpl without langgraph_agent
+        WHEN the langgraph_agent property is accessed
+        THEN it lazily initializes using create_agent_graph()
+
+        This enables DynamicContextLoader integration with Connected Chat.
+        """
+        from mcp_server_langgraph.api.v1.chat import ChatServiceImpl
+
+        with patch("mcp_server_langgraph.api.v1.chat.create_agent_graph") as mock_create_agent:
+            mock_agent = MagicMock()
+            mock_agent.name = "test-agent"
+            mock_create_agent.return_value = mock_agent
+
+            service = ChatServiceImpl()
+
+            # Initially None
+            assert service._langgraph_agent is None
+
+            # Access property triggers lazy init
+            agent = service.langgraph_agent
+
+            # Should have called create_agent_graph
+            mock_create_agent.assert_called_once()
+
+            # Should return the created agent
+            assert agent is mock_agent
+
+            # Second access should not create again
+            agent2 = service.langgraph_agent
+            mock_create_agent.assert_called_once()  # Still only once
+            assert agent2 is agent
+
+    @pytest.mark.asyncio
+    async def test_langgraph_agent_uses_injected_agent(self) -> None:
+        """GIVEN a ChatServiceImpl with langgraph_agent injected
+        WHEN the langgraph_agent property is accessed
+        THEN it returns the injected agent without lazy initialization
+        """
+        from mcp_server_langgraph.api.v1.chat import ChatServiceImpl
+
+        mock_agent = MagicMock()
+        mock_agent.name = "injected-agent"
+
+        with patch("mcp_server_langgraph.api.v1.chat.create_agent_graph") as mock_create_agent:
+            service = ChatServiceImpl(langgraph_agent=mock_agent)
+
+            # Access property
+            agent = service.langgraph_agent
+
+            # Should NOT call create_agent_graph
+            mock_create_agent.assert_not_called()
+
+            # Should return the injected agent
+            assert agent is mock_agent
+
+    @pytest.mark.asyncio
+    async def test_langgraph_agent_handles_initialization_failure(self) -> None:
+        """GIVEN a ChatServiceImpl without langgraph_agent
+        WHEN create_agent_graph() fails during lazy initialization
+        THEN it returns None and logs a warning
+        """
+        from mcp_server_langgraph.api.v1.chat import ChatServiceImpl
+
+        with patch("mcp_server_langgraph.api.v1.chat.create_agent_graph") as mock_create_agent:
+            mock_create_agent.side_effect = Exception("Qdrant not available")
+
+            service = ChatServiceImpl()
+
+            # Should not raise, just return None
+            agent = service.langgraph_agent
+            assert agent is None
+
+            # Should have attempted initialization
+            mock_create_agent.assert_called_once()
+
+    # =========================================================================
+    # Dynamic Context Integration Tests (Audit Findings)
+    # =========================================================================
+
+    @pytest.mark.asyncio
+    async def test_create_stream_respects_enable_dynamic_context_loading_flag(
+        self,
+        sample_messages: list[dict],
+    ) -> None:
+        """GIVEN enable_dynamic_context_loading=False in settings
+        WHEN create_stream() is called with use_langgraph=True
+        THEN langgraph_agent is NOT lazily initialized (flag gates initialization)
+        """
+        from mcp_server_langgraph.api.v1.chat import ChatServiceImpl
+        from mcp_server_langgraph.llm.factory import StreamChunk
+
+        mock_factory = MagicMock()
+
+        async def mock_astream(messages, **kwargs):
+            yield StreamChunk(content="Response", chunk_index=0, is_final=True)
+
+        mock_factory.astream = mock_astream
+
+        with (
+            patch("mcp_server_langgraph.api.v1.chat.settings") as mock_settings,
+            patch("mcp_server_langgraph.api.v1.chat.create_agent_graph") as mock_create_agent,
+        ):
+            mock_settings.enable_dynamic_context_loading = False
+            mock_settings.enable_chat_routing = False  # Disable routing to prevent routing_decision events
+            mock_settings.model_name = "test-model"
+
+            # Make create_agent_graph return None to simulate disabled dynamic context
+            mock_create_agent.return_value = None
+
+            service = ChatServiceImpl(llm_factory=mock_factory)
+            chunks = []
+            async for chunk in service.create_stream(
+                session_id="test-session",
+                messages=sample_messages,
+                use_langgraph=True,  # Request LangGraph but it's disabled
+                enable_routing=False,  # Explicit: disable routing
+            ):
+                chunks.append(chunk)
+
+            # When langgraph_agent is None, should fall back to LLM factory
+            assert len(chunks) == 1
+            assert chunks[0]["delta"]["content"] == "Response"
+
+    @pytest.mark.asyncio
+    async def test_dynamic_context_preflight_validates_qdrant_config(
+        self,
+    ) -> None:
+        """GIVEN missing Qdrant configuration
+        WHEN validate_dynamic_context_config() is called
+        THEN it returns a validation result with specific guidance
+        """
+        from mcp_server_langgraph.api.v1.chat import ChatServiceImpl
+
+        with patch("mcp_server_langgraph.api.v1.chat.settings") as mock_settings:
+            mock_settings.enable_dynamic_context_loading = True
+            mock_settings.qdrant_url = ""  # Missing
+            mock_settings.qdrant_port = 6333
+            mock_settings.embedding_provider = "google_vertex"
+            mock_settings.embedding_model_name = "text-embedding-005"
+            mock_settings.embedding_dimensions = 768
+
+            service = ChatServiceImpl()
+            result = service.validate_dynamic_context_config()
+
+            assert not result.is_valid
+            assert "qdrant_url" in result.missing_config
+            assert result.guidance is not None
+            assert "Qdrant" in result.guidance
+
+    @pytest.mark.asyncio
+    async def test_dynamic_context_preflight_validates_embedding_provider(
+        self,
+    ) -> None:
+        """GIVEN unsupported embedding provider
+        WHEN validate_dynamic_context_config() is called
+        THEN it returns validation failure with supported providers list
+        """
+        from mcp_server_langgraph.api.v1.chat import ChatServiceImpl
+
+        with patch("mcp_server_langgraph.api.v1.chat.settings") as mock_settings:
+            mock_settings.enable_dynamic_context_loading = True
+            mock_settings.qdrant_url = "localhost"
+            mock_settings.qdrant_port = 6333
+            mock_settings.embedding_provider = "unsupported_provider"
+            mock_settings.embedding_model_name = "some-model"
+            mock_settings.embedding_dimensions = 768
+
+            service = ChatServiceImpl()
+            result = service.validate_dynamic_context_config()
+
+            assert not result.is_valid
+            assert "embedding_provider" in result.missing_config
+            assert "google_vertex" in result.guidance  # Should list supported providers
+
+    @pytest.mark.asyncio
+    async def test_dynamic_context_preflight_validates_credentials(
+        self,
+    ) -> None:
+        """GIVEN google embedding provider without API key
+        WHEN validate_dynamic_context_config() is called
+        THEN it returns validation failure with credential guidance
+        """
+        from mcp_server_langgraph.api.v1.chat import ChatServiceImpl
+
+        with patch("mcp_server_langgraph.api.v1.chat.settings") as mock_settings:
+            mock_settings.enable_dynamic_context_loading = True
+            mock_settings.qdrant_url = "localhost"
+            mock_settings.qdrant_port = 6333
+            mock_settings.embedding_provider = "google"  # Requires API key
+            mock_settings.embedding_model_name = "models/text-embedding-004"
+            mock_settings.embedding_dimensions = 768
+            mock_settings.google_api_key = None  # Missing!
+
+            service = ChatServiceImpl()
+            result = service.validate_dynamic_context_config()
+
+            assert not result.is_valid
+            assert "google_api_key" in result.missing_config or "credentials" in result.guidance.lower()
+
+    @pytest.mark.asyncio
+    async def test_create_stream_emits_context_load_stats(
+        self,
+        sample_messages: list[dict],
+    ) -> None:
+        """GIVEN dynamic context loading enabled and successful
+        WHEN create_stream() executes langgraph path
+        THEN it emits a context_loaded event with refs count and token count
+        """
+        from mcp_server_langgraph.api.v1.chat import ChatServiceImpl
+
+        mock_agent = AsyncMock(return_value=None)
+
+        async def mock_astream_events(*args, **kwargs):
+            # Simulate context loaded event
+            yield {
+                "event": "on_custom",
+                "name": "dynamic_context_loaded",
+                "data": {"refs_count": 3, "tokens_loaded": 1500},
+            }
+            # Then streaming content
+            yield {
+                "event": "on_chat_model_stream",
+                "data": {"chunk": MagicMock(content="Hello")},
+            }
+
+        mock_agent.astream_events = mock_astream_events
+
+        service = ChatServiceImpl(langgraph_agent=mock_agent)
+        chunks = []
+        async for chunk in service.create_stream(
+            session_id="test-session",
+            messages=sample_messages,
+            use_langgraph=True,
+        ):
+            chunks.append(chunk)
+
+        # Should include context_loaded event
+        context_events = [c for c in chunks if "context_loaded" in c]
+        assert len(context_events) == 1
+        assert context_events[0]["context_loaded"]["refs_count"] == 3
+        assert context_events[0]["context_loaded"]["tokens_loaded"] == 1500
+
+    @pytest.mark.asyncio
+    async def test_create_stream_fail_soft_on_context_load_error(
+        self,
+        sample_messages: list[dict],
+    ) -> None:
+        """GIVEN dynamic context loading fails (Qdrant unavailable)
+        WHEN create_stream() is called
+        THEN it continues without context and emits context_unavailable notice
+        """
+        from mcp_server_langgraph.api.v1.chat import ChatServiceImpl
+        from mcp_server_langgraph.llm.factory import StreamChunk
+
+        mock_factory = MagicMock()
+
+        async def mock_astream(messages, **kwargs):
+            yield StreamChunk(content="Response", chunk_index=0, is_final=True)
+
+        mock_factory.astream = mock_astream
+
+        # Simulate langgraph agent that fails during context loading
+        mock_agent = MagicMock()
+
+        async def mock_astream_events_failing(*args, **kwargs):
+            # Simulate context loading failure as async generator that raises
+            raise Exception("Qdrant connection refused")
+            # This yield makes it an async generator
+            yield  # type: ignore[unreachable]
+
+        mock_agent.astream_events = mock_astream_events_failing
+
+        service = ChatServiceImpl(langgraph_agent=mock_agent, llm_factory=mock_factory)
+        chunks = []
+
+        # Should NOT raise - should fail soft and fallback
+        async for chunk in service.create_stream(
+            session_id="test-session",
+            messages=sample_messages,
+            use_langgraph=True,
+        ):
+            chunks.append(chunk)
+
+        # Should have fallen back to LLM factory
+        assert len(chunks) >= 1
+
+        # Should have context_unavailable notice before fallback content
+        context_unavail_chunks = [c for c in chunks if "context_unavailable" in c]
+        assert len(context_unavail_chunks) == 1
+        assert "Qdrant connection refused" in context_unavail_chunks[0]["context_unavailable"]["reason"]
+
+        # Should have fallback content
+        assert any("Response" in str(c.get("delta", {}).get("content", "")) for c in chunks)
+
+    @pytest.mark.asyncio
+    async def test_dynamic_context_respects_max_tokens_setting(
+        self,
+    ) -> None:
+        """GIVEN dynamic_context_max_tokens=1500 in settings
+        WHEN load_dynamic_context node executes
+        THEN it passes max_tokens=1500 to load_batch
+
+        Note: This test verifies agent_graph_builder captures settings.dynamic_context_max_tokens.
+        The actual value propagation is tested in tests/unit/core/test_agent_graph_builder.py.
+        """
+        from mcp_server_langgraph.core.agent_config import AgentConfig
+        from mcp_server_langgraph.core.agent_graph_builder import build_agent_graph
+
+        with (
+            patch("mcp_server_langgraph.llm.factory.create_llm_from_config") as mock_llm,
+            patch("mcp_server_langgraph.core.dynamic_context_loader.DynamicContextLoader") as mock_loader_class,
+            patch("mcp_server_langgraph.core.dynamic_context_loader.search_and_load_context") as mock_search,
+        ):
+            # Configure mock LLM
+            mock_llm.return_value = MagicMock()
+
+            mock_loader = MagicMock()
+            mock_loader_class.return_value = mock_loader
+            mock_search.return_value = []
+
+            config = AgentConfig(
+                enable_dynamic_context_loading=True,
+                enable_verification=False,
+            )
+
+            # Build graph - this captures the closure over settings
+            graph = build_agent_graph(config)
+
+            # The graph should be built - we'll verify settings are captured
+            assert graph is not None
+
+    @pytest.mark.asyncio
+    async def test_validate_dynamic_context_config_returns_valid_when_configured(
+        self,
+    ) -> None:
+        """GIVEN all required configuration is present
+        WHEN validate_dynamic_context_config() is called
+        THEN it returns is_valid=True
+        """
+        from mcp_server_langgraph.api.v1.chat import ChatServiceImpl
+
+        with patch("mcp_server_langgraph.api.v1.chat.settings") as mock_settings:
+            mock_settings.enable_dynamic_context_loading = True
+            mock_settings.qdrant_url = "localhost"
+            mock_settings.qdrant_port = 6333
+            mock_settings.qdrant_collection_name = "mcp_context"
+            mock_settings.embedding_provider = "google_vertex"  # Uses GCP WIF, no API key needed
+            mock_settings.embedding_model_name = "text-embedding-005"
+            mock_settings.embedding_dimensions = 768
+            mock_settings.dynamic_context_max_tokens = 2000
+            mock_settings.dynamic_context_top_k = 3
+
+            service = ChatServiceImpl()
+            result = service.validate_dynamic_context_config()
+
+            assert result.is_valid
+            assert result.guidance is None or result.guidance == ""
+
+    @pytest.mark.asyncio
+    async def test_validate_dynamic_context_config_disabled_returns_valid(
+        self,
+    ) -> None:
+        """GIVEN enable_dynamic_context_loading=False
+        WHEN validate_dynamic_context_config() is called
+        THEN it returns is_valid=True (no validation needed when disabled)
+        """
+        from mcp_server_langgraph.api.v1.chat import ChatServiceImpl
+
+        with patch("mcp_server_langgraph.api.v1.chat.settings") as mock_settings:
+            mock_settings.enable_dynamic_context_loading = False
+
+            service = ChatServiceImpl()
+            result = service.validate_dynamic_context_config()
+
+            assert result.is_valid

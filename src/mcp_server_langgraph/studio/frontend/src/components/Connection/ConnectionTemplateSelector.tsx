@@ -7,12 +7,28 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { authenticatedFetch } from "../../utils/authenticatedFetch";
+import {
+  transformSnakeToCamel,
+  type SnakeToCamelCaseDeep,
+} from "../../api/transforms";
 
 // ============================================================================
 // Types
 // ============================================================================
 
-export interface ConnectionTemplate {
+/** Config field for template-specific settings */
+interface ConfigField {
+  name: string;
+  label: string;
+  type: "text" | "password" | "url" | "textarea";
+  required: boolean;
+  placeholder?: string;
+  description?: string;
+  default?: string;
+}
+
+/** Raw API response type (snake_case from backend) */
+interface ConnectionTemplateRaw {
   id: string;
   name: string;
   description: string;
@@ -24,15 +40,11 @@ export interface ConnectionTemplate {
   config_fields?: ConfigField[];
 }
 
-interface ConfigField {
-  name: string;
-  label: string;
-  type: "text" | "password" | "url" | "textarea";
-  required: boolean;
-  placeholder?: string;
-  description?: string;
-  default?: string;
-}
+/**
+ * Frontend-friendly connection template type (camelCase).
+ * Derived from ConnectionTemplateRaw via ADR-0091 Phase 6 type transformation.
+ */
+export type ConnectionTemplate = SnakeToCamelCaseDeep<ConnectionTemplateRaw>;
 
 interface TemplateCategory {
   id: string;
@@ -116,7 +128,11 @@ export function ConnectionTemplateSelector({
       const templatesData = await templatesRes.json();
       const categoriesData = await categoriesRes.json();
 
-      setTemplates(templatesData.templates || []);
+      // Transform snake_case API response to camelCase (ADR-0091 Phase 6)
+      const transformedTemplates = (templatesData.templates || []).map(
+        (t: ConnectionTemplateRaw) => transformSnakeToCamel(t),
+      );
+      setTemplates(transformedTemplates);
       setCategories(categoriesData.categories || []);
     } catch (err) {
       setError("Failed to load templates. Please try again.");
@@ -244,13 +260,11 @@ export function ConnectionTemplateSelector({
                 <h3 className="template-name">{template.name}</h3>
                 <p className="template-description">{template.description}</p>
                 <div className="template-meta">
-                  {/* eslint-disable no-restricted-syntax -- TODO: ADR-0091 Phase 6: Transform ConnectionTemplate to camelCase */}
                   <span
-                    className={`auth-badge ${getAuthTypeBadgeClass(template.auth_type)}`}
+                    className={`auth-badge ${getAuthTypeBadgeClass(template.authType)}`}
                   >
-                    {template.auth_type}
+                    {template.authType}
                   </span>
-                  {/* eslint-enable no-restricted-syntax */}
                   <span className="category-badge">{template.category}</span>
                 </div>
               </div>

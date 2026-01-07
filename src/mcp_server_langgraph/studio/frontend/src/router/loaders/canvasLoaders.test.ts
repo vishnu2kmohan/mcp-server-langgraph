@@ -78,7 +78,8 @@ describe("canvasLoaders", () => {
       expect(result.sessions).toHaveLength(2);
       expect(result.sessions[0].id).toBe("session-1");
       expect(result.sessions[0].name).toBe("Session 1");
-      expect(result.sessions[0].created_at).toBe("2024-01-01T00:00:00Z");
+      // Session is transformed to camelCase per ADR-0091
+      expect(result.sessions[0].createdAt).toBe("2024-01-01T00:00:00Z");
       expect(result.error).toBeUndefined();
       expect(mockFetch).toHaveBeenCalledWith(
         "/api/v1/sessions?limit=50",
@@ -178,7 +179,13 @@ describe("canvasLoaders", () => {
       expect(result.messages).toHaveLength(2);
       expect(result.messages[0].id).toBe("msg-1");
       expect(result.messages[0].content).toBe("Hello");
-      expect(result.artifacts).toEqual(mockArtifacts);
+      // Artifacts are transformed - check core properties
+      expect(result.artifacts).toHaveLength(1);
+      expect(result.artifacts[0]).toMatchObject({
+        id: "artifact-1",
+        type: "code",
+        content: "console.log('hello')",
+      });
     });
 
     it("should transform message timestamps", async () => {
@@ -366,7 +373,13 @@ describe("canvasLoaders", () => {
         createLoaderArgs({ artifactId: "artifact-1" }),
       );
 
-      expect(result.artifact).toEqual(mockArtifact);
+      // Artifact is transformed - check core properties
+      expect(result.artifact).toMatchObject({
+        id: "artifact-1",
+        type: "code",
+        content: 'console.log("test")',
+        version: 3,
+      });
       expect(result.versions).toEqual(mockVersions);
       expect(result.error).toBeUndefined();
     });
@@ -398,7 +411,12 @@ describe("canvasLoaders", () => {
         createLoaderArgs({ artifactId: "a1" }),
       );
 
-      expect(result.artifact).toEqual(mockArtifact);
+      // Artifact is transformed - check core properties
+      expect(result.artifact).toMatchObject({
+        id: "a1",
+        type: "code",
+        content: "test",
+      });
       expect(result.versions).toEqual([]);
     });
   });

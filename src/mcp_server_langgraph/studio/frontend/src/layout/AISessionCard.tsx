@@ -160,5 +160,3 @@ export function AISessionCard({
     </div>
   );
 }
-
-export default AISessionCard;

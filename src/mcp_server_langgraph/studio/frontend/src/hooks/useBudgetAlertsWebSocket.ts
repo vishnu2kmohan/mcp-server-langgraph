@@ -16,7 +16,10 @@
  */
 
 import { useState, useCallback, useRef, useMemo, useEffect } from "react";
-import { useRealtimeSync, type ConnectionStatus } from "./useRealtimeSync";
+import {
+  useRealtimeSync,
+  type WebSocketConnectionStatus,
+} from "./useRealtimeSync";
 import { useAppDispatch, useAppSelector } from "../store/hooks";
 import {
   logout,
@@ -89,7 +92,7 @@ export interface UseBudgetAlertsWebSocketOptions {
  */
 export interface UseBudgetAlertsWebSocketReturn {
   /** Current connection status */
-  status: ConnectionStatus;
+  status: WebSocketConnectionStatus;
   /** List of received budget alerts */
   alerts: BudgetAlert[];
   /** Whether currently subscribed */
@@ -292,7 +295,7 @@ export function useBudgetAlertsWebSocket(
   }, [effectiveEnabled, metrics]);
 
   // Override status if not enabled
-  const status: ConnectionStatus = effectiveEnabled
+  const status: WebSocketConnectionStatus = effectiveEnabled
     ? realtimeStatus
     : "disconnected";
 

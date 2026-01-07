@@ -48,7 +48,7 @@ export type { AIRecommendationCardProps } from "./AIRecommendationCard";
 export { AgentApprovalDialog } from "./AgentApprovalDialog";
 export type {
   AgentApprovalDialogProps,
-  AgentApprovalRequest,
+  AgentApprovalRequestCamelCase,
 } from "./AgentApprovalDialog";
 
 export { ClarificationDialog } from "./ClarificationDialog";

@@ -151,11 +151,12 @@ export function useNudges(options: UseNudgesOptions = {}): UseNudgesResult {
       const response = await authenticatedFetch(NUDGE_RECOMMEND_ENDPOINT, {
         method: "POST",
         body: JSON.stringify({
+          user_id: "current-user",
           current_context: {
-            page: pageContext,
+            page: pageContext || "default",
           },
           nudge_history: history.map((h) => ({
-            id: h.id,
+            nudge_id: h.id,
             shown_at: h.shownAt.toISOString(),
             action: h.action,
           })),

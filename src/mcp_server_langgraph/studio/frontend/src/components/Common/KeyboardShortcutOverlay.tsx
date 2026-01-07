@@ -10,9 +10,10 @@
  * - Closes on Escape, backdrop click, or close button
  * - Accessible modal dialog with proper ARIA attributes
  */
-import { useEffect, useCallback, useMemo } from "react";
+import { useEffect, useCallback, useMemo, useRef } from "react";
 import { X } from "lucide-react";
 import { cn } from "../../utils/cn";
+import { useFocusTrap } from "../../hooks/useFocusTrap";
 
 // =============================================================================
 // Types
@@ -115,6 +116,12 @@ export function KeyboardShortcutOverlay({
   isOpen,
   onClose,
 }: KeyboardShortcutOverlayProps) {
+  // Ref for focus trap
+  const dialogRef = useRef<HTMLDivElement>(null);
+
+  // Trap focus within dialog for accessibility
+  useFocusTrap(dialogRef, isOpen);
+
   // Handle escape key to close
   const handleKeyDown = useCallback(
     (event: KeyboardEvent) => {
@@ -200,6 +207,7 @@ export function KeyboardShortcutOverlay({
 
       {/* Dialog */}
       <div
+        ref={dialogRef}
         data-testid="keyboard-shortcut-overlay"
         role="dialog"
         aria-modal="true"

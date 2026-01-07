@@ -35,7 +35,7 @@ import {
   type Alert,
   type AlertFilters,
 } from "../../store/slices/alertSlice";
-import type { ConnectionStatus } from "../../hooks/useRealtimeSync";
+import type { WebSocketConnectionStatus } from "../../hooks/useRealtimeSync";
 import { AlertGroupsPanel } from "./AlertGroupsPanel";
 import { storage } from "../../utils/storage";
 
@@ -61,7 +61,7 @@ export interface AlertsPanelProps {
   /** Loading state */
   isLoading?: boolean;
   /** WebSocket connection status */
-  connectionStatus?: ConnectionStatus;
+  connectionStatus?: WebSocketConnectionStatus;
 }
 
 // =============================================================================
@@ -125,7 +125,7 @@ function getStateStyle(state: Alert["state"]): { bg: string; text: string } {
 /**
  * Get connection status color
  */
-function getConnectionColor(status?: ConnectionStatus): string {
+function getConnectionColor(status?: WebSocketConnectionStatus): string {
   switch (status) {
     case "connected":
       return "bg-green-500";

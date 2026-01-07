@@ -314,21 +314,19 @@ function ObservabilityPanel({
               <Clock size={14} />
               Slow Spans ({insights.traceAnomalies.slowSpans.length})
             </h3>
-            {/* eslint-disable no-restricted-syntax -- TODO: ADR-0091 Phase 6: Transform SlowSpan to camelCase */}
             <div className="space-y-1">
               {insights.traceAnomalies.slowSpans.map((span) => (
                 <div
-                  key={span.span_id}
+                  key={span.spanId}
                   className="text-xs p-2 bg-orange-50 dark:bg-orange-900/20 rounded flex justify-between"
                 >
                   <span className="font-mono">{span.name}</span>
                   <span className="text-orange-600 dark:text-orange-400">
-                    {span.duration_ms}ms
+                    {span.durationMs}ms
                   </span>
                 </div>
               ))}
             </div>
-            {/* eslint-enable no-restricted-syntax */}
           </div>
         )}
 

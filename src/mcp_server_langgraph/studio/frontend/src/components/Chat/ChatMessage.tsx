@@ -12,14 +12,10 @@ import { AIFollowUpSuggestions } from "./AIFollowUpSuggestions";
 import type { FollowUpSuggestion } from "./AIFollowUpSuggestions";
 import { ResponseRating, type RatingValue } from "./ResponseRating";
 import { TokenUsageDisplay, type ModelProvider } from "./TokenUsageDisplay";
+import type { SourceCitation } from "../../types/api";
 
-/**
- * Source citation for AI responses
- */
-export interface SourceCitation {
-  title: string;
-  url: string;
-}
+// Re-export for consumers
+export type { SourceCitation };
 
 export interface ChatMessageProps {
   role: "user" | "assistant" | "system";

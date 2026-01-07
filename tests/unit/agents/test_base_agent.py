@@ -376,14 +376,17 @@ class TestWorkerAgentRun:
 
     async def test_worker_agent_run_returns_agent_result(self) -> None:
         """Test WorkerAgent.run returns AgentResult."""
+        from langchain_core.messages import AIMessage
+
         from mcp_server_langgraph.agents.base_agent import AgentRequest, AgentResult
         from mcp_server_langgraph.agents.worker_agent import WorkerAgent
 
         mock_llm_factory = MagicMock()
-        mock_llm_factory.create_completion = AsyncMock(
-            return_value=MagicMock(
-                choices=[MagicMock(message=MagicMock(content="Response"))],
-                model="claude-opus-4-5-20251101",
+        # WorkerAgent now uses ainvoke which returns AIMessage
+        mock_llm_factory.ainvoke = AsyncMock(
+            return_value=AIMessage(
+                content="Response",
+                response_metadata={"model": "claude-opus-4-5-20251101"},
             )
         )
 
@@ -396,14 +399,17 @@ class TestWorkerAgentRun:
 
     async def test_worker_agent_run_sets_content(self) -> None:
         """Test WorkerAgent.run sets content from LLM response."""
+        from langchain_core.messages import AIMessage
+
         from mcp_server_langgraph.agents.base_agent import AgentRequest
         from mcp_server_langgraph.agents.worker_agent import WorkerAgent
 
         mock_llm_factory = MagicMock()
-        mock_llm_factory.create_completion = AsyncMock(
-            return_value=MagicMock(
-                choices=[MagicMock(message=MagicMock(content="I'm doing great!"))],
-                model="claude-opus-4-5-20251101",
+        # WorkerAgent now uses ainvoke which returns AIMessage
+        mock_llm_factory.ainvoke = AsyncMock(
+            return_value=AIMessage(
+                content="I'm doing great!",
+                response_metadata={"model": "claude-opus-4-5-20251101"},
             )
         )
 
@@ -417,14 +423,17 @@ class TestWorkerAgentRun:
 
     async def test_worker_agent_run_handles_cancel_event(self) -> None:
         """Test WorkerAgent.run respects cancel_event."""
+        from langchain_core.messages import AIMessage
+
         from mcp_server_langgraph.agents.base_agent import AgentRequest
         from mcp_server_langgraph.agents.worker_agent import WorkerAgent
 
         mock_llm_factory = MagicMock()
-        mock_llm_factory.create_completion = AsyncMock(
-            return_value=MagicMock(
-                choices=[MagicMock(message=MagicMock(content="Response"))],
-                model="claude-opus-4-5-20251101",
+        # WorkerAgent now uses ainvoke which returns AIMessage
+        mock_llm_factory.ainvoke = AsyncMock(
+            return_value=AIMessage(
+                content="Response",
+                response_metadata={"model": "claude-opus-4-5-20251101"},
             )
         )
 
@@ -447,7 +456,8 @@ class TestWorkerAgentRun:
         from mcp_server_langgraph.agents.worker_agent import WorkerAgent
 
         mock_llm_factory = MagicMock()
-        mock_llm_factory.create_completion = AsyncMock(side_effect=Exception("LLM Error"))
+        # WorkerAgent now uses ainvoke
+        mock_llm_factory.ainvoke = AsyncMock(side_effect=Exception("LLM Error"))
 
         agent = WorkerAgent(llm_factory=mock_llm_factory)
         request = AgentRequest(message="Hello")
@@ -460,14 +470,17 @@ class TestWorkerAgentRun:
 
     async def test_worker_agent_run_sets_model_used(self) -> None:
         """Test WorkerAgent.run sets model_used in result."""
+        from langchain_core.messages import AIMessage
+
         from mcp_server_langgraph.agents.base_agent import AgentRequest
         from mcp_server_langgraph.agents.worker_agent import WorkerAgent
 
         mock_llm_factory = MagicMock()
-        mock_llm_factory.create_completion = AsyncMock(
-            return_value=MagicMock(
-                choices=[MagicMock(message=MagicMock(content="Response"))],
-                model="claude-opus-4-5-20251101",
+        # WorkerAgent now uses ainvoke which returns AIMessage
+        mock_llm_factory.ainvoke = AsyncMock(
+            return_value=AIMessage(
+                content="Response",
+                response_metadata={"model": "claude-opus-4-5-20251101"},
             )
         )
 

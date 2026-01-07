@@ -39,6 +39,11 @@ import {
 } from "./ReasoningEffortSelector";
 import { SlashCommandMenu, type SlashCommand } from "./SlashCommandMenu";
 import { RichTextInput, type MentionOption } from "./RichTextInput";
+import {
+  KnowledgeBaseFocus,
+  type KBFocusMode,
+  type KBStatus,
+} from "./KnowledgeBaseFocus";
 
 // Re-export SlashCommand for external use
 export type { SlashCommand };
@@ -138,6 +143,19 @@ export interface ChatInputFormProps {
   mentionOptions?: MentionOption[];
   /** Maximum character length for RichTextInput */
   richTextMaxLength?: number;
+  // Knowledge Base Focus props (Perplexity-style Focus mode)
+  /** Whether to show the KB Focus dropdown */
+  showKBFocus?: boolean;
+  /** Current KB focus mode (all, kb_only, web_only, none) */
+  kbFocusValue?: KBFocusMode;
+  /** Callback when KB focus mode changes */
+  onKBFocusChange?: (mode: KBFocusMode) => void;
+  /** KB status for indicator (ready, misconfigured, unavailable) */
+  kbStatus?: KBStatus;
+  /** KB status message for tooltip (e.g., config guidance) */
+  kbStatusMessage?: string;
+  /** Whether to render KB Focus in compact mode (icon only) */
+  kbFocusCompact?: boolean;
 }
 
 export function ChatInputForm({
@@ -191,6 +209,13 @@ export function ChatInputForm({
   submitOnEnter = true,
   mentionOptions = [],
   richTextMaxLength,
+  // KB Focus props
+  showKBFocus = false,
+  kbFocusValue = "all",
+  onKBFocusChange,
+  kbStatus,
+  kbStatusMessage,
+  kbFocusCompact = false,
 }: ChatInputFormProps) {
   const [isModelDropdownOpen, setIsModelDropdownOpen] = useState(false);
   const [isVoiceBannerDismissed, setIsVoiceBannerDismissed] = useState(false);
@@ -639,6 +664,18 @@ export function ChatInputForm({
                       <Mic className="w-5 h-5" />
                     )}
                   </button>
+                )}
+
+                {/* Knowledge Base Focus selector (Perplexity-style) */}
+                {showKBFocus && onKBFocusChange && (
+                  <KnowledgeBaseFocus
+                    value={kbFocusValue}
+                    onChange={onKBFocusChange}
+                    disabled={isProcessing}
+                    kbStatus={kbStatus}
+                    kbStatusMessage={kbStatusMessage}
+                    compact={kbFocusCompact}
+                  />
                 )}
 
                 {/* Reasoning Effort Selector in controls row (RichText mode only) */}

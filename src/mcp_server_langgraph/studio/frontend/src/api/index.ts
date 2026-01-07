@@ -203,6 +203,9 @@ import type {
   CostForecastResponse,
   CostForecastResponseCamelCase,
   CostForecastParams,
+  // KB Status
+  KBStatusResponse,
+  KBStatusResponseCamelCase,
 } from "../types/api";
 
 // Import generated API types for type safety (prevents type drift)
@@ -276,7 +279,8 @@ type StudioAnalyzeResponse = components["schemas"]["StudioAnalyzeResponse"];
 // =============================================================================
 
 /** Response type for POST /api/v1/login */
-type LoginResponse = components["schemas"]["LoginResponse"];
+type LoginResponse =
+  components["schemas"]["mcp_server_langgraph__api__v1__user__LoginResponse"];
 /** Response type for POST /api/v1/logout */
 type LogoutResponse = components["schemas"]["LogoutResponse"];
 /** Request type for POST /api/v1/logout */
@@ -1808,6 +1812,14 @@ export const api = createApi({
       keepUnusedDataFor: 30, // 30 seconds - health status can change
     }),
 
+    // KB Status (Knowledge Base / DynamicContextLoader)
+    getKBStatus: builder.query<KBStatusResponseCamelCase, void>({
+      query: () => "/kb/status",
+      transformResponse: (response: KBStatusResponse) =>
+        transformSnakeToCamel(response) as unknown as KBStatusResponseCamelCase,
+      keepUnusedDataFor: 300, // 5 minutes - KB status is relatively stable
+    }),
+
     // HEART Metrics
     getHeartMetrics: builder.query<
       HEARTAggregateMetricsCamelCase,
@@ -2934,7 +2946,7 @@ export const api = createApi({
      * List pending agent HITL requests (approvals and clarifications)
      */
     listPendingAgentRequests: builder.query<
-      PendingAgentRequestsResponse,
+      SnakeToCamelCaseDeep<PendingAgentRequestsResponse>,
       ListPendingAgentRequestsParams | void
     >({
       query: (params) => ({
@@ -2943,16 +2955,18 @@ export const api = createApi({
           ? filterParams(params as Record<string, unknown>)
           : undefined,
       }),
+      transformResponse: (response: PendingAgentRequestsResponse) =>
+        transformSnakeToCamel(response),
       providesTags: (result) =>
         result
           ? [
-              ...(result.approvals ?? []).map(({ request_id }) => ({
+              ...(result.approvals ?? []).map(({ requestId }) => ({
                 type: "AgentRequest" as const,
-                id: request_id,
+                id: requestId,
               })),
-              ...(result.clarifications ?? []).map(({ request_id }) => ({
+              ...(result.clarifications ?? []).map(({ requestId }) => ({
                 type: "AgentRequest" as const,
-                id: request_id,
+                id: requestId,
               })),
               { type: "AgentRequest", id: "LIST" },
             ]
@@ -3663,6 +3677,7 @@ export const {
   useGetWorkflowExecutionQuery,
   // Health & Metrics
   useGetHealthQuery,
+  useGetKBStatusQuery,
   useGetHeartMetricsQuery,
   // Workflow Templates
   useGetWorkflowTemplatesQuery,

@@ -17,7 +17,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { renderHook, act, waitFor } from "@testing-library/react";
 import { useTraceWebSocket } from "./useTraceWebSocket";
 import { createTestWrapper, authenticatedAuthState } from "../test/testStore";
-import type { ConnectionStatus } from "./useRealtimeSync";
+import type { WebSocketConnectionStatus } from "./useRealtimeSync";
 
 // Create a wrapper with authenticated state (hook requires authentication)
 const wrapper = createTestWrapper({
@@ -32,7 +32,7 @@ let mockOnMessage: ((data: unknown) => void) | undefined;
 let mockOnConnect: (() => void) | undefined;
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 let mockOnDisconnect: (() => void) | undefined;
-let mockStatus: ConnectionStatus = "disconnected";
+let mockStatus: WebSocketConnectionStatus = "disconnected";
 
 vi.mock("./useRealtimeSync", () => ({
   useRealtimeSync: (options: {

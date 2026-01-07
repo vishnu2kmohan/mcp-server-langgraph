@@ -227,3 +227,171 @@ class TestMemoryStoreRetrieval:
         )
 
         assert len(results) <= 2
+
+
+@pytest.mark.unit
+@pytest.mark.xdist_group(name="memory_store_semantic")
+class TestMemoryStoreSemanticSearch:
+    """Tests for MemoryStore vector-based semantic search.
+
+    TDD: These tests define the contract for vector-based memory retrieval.
+    When embedding_service is provided, get_relevant uses semantic similarity.
+    """
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers."""
+        gc.collect()
+
+    def test_memory_store_accepts_embedding_service(self) -> None:
+        """Test MemoryStore accepts embedding_service parameter."""
+        from unittest.mock import MagicMock
+
+        from mcp_server_langgraph.memory.store import MemoryStore
+
+        mock_embeddings = MagicMock()
+        store = MemoryStore(embedding_service=mock_embeddings)
+
+        assert store.embedding_service is mock_embeddings
+
+    def test_memory_store_accepts_vector_provider(self) -> None:
+        """Test MemoryStore accepts vector_provider parameter."""
+        from unittest.mock import MagicMock
+
+        from mcp_server_langgraph.memory.store import MemoryStore
+
+        mock_provider = MagicMock()
+        store = MemoryStore(vector_provider=mock_provider)
+
+        assert store.vector_provider is mock_provider
+
+    def test_embedding_service_defaults_to_none(self) -> None:
+        """Test embedding_service defaults to None."""
+        from mcp_server_langgraph.memory.store import MemoryStore
+
+        store = MemoryStore()
+        assert store.embedding_service is None
+
+    @pytest.mark.asyncio
+    async def test_store_indexes_memory_when_embedding_service_provided(self) -> None:
+        """Test store() indexes memory for semantic search when configured."""
+        from unittest.mock import AsyncMock, MagicMock
+
+        from mcp_server_langgraph.core.scopes import CapabilityScope
+        from mcp_server_langgraph.memory.store import MemoryStore
+        from mcp_server_langgraph.memory.tiers import MemoryTier
+
+        mock_embeddings = MagicMock()
+        mock_embeddings.embed = AsyncMock(return_value=[0.1, 0.2, 0.3])
+
+        mock_provider = MagicMock()
+        mock_provider.upsert = AsyncMock(return_value=None)
+
+        store = MemoryStore(
+            embedding_service=mock_embeddings,
+            vector_provider=mock_provider,
+        )
+
+        await store.store(
+            content="Important memory about Python",
+            tier=MemoryTier.DURABLE,
+            scope=CapabilityScope.PROJECT,
+        )
+
+        # Should have called embed and upsert
+        mock_embeddings.embed.assert_called_once()
+        mock_provider.upsert.assert_called_once()
+
+    @pytest.mark.asyncio
+    async def test_get_relevant_uses_vector_search_when_configured(self) -> None:
+        """Test get_relevant() uses vector search when embedding_service is provided."""
+        from unittest.mock import AsyncMock, MagicMock
+
+        from mcp_server_langgraph.core.scopes import CapabilityScope
+        from mcp_server_langgraph.memory.store import MemoryStore
+
+        mock_embeddings = MagicMock()
+        mock_embeddings.embed = AsyncMock(return_value=[0.1, 0.2, 0.3])
+
+        mock_provider = MagicMock()
+        mock_provider.upsert = AsyncMock(return_value=None)
+        mock_provider.search = AsyncMock(
+            return_value=[
+                {
+                    "id": "memory-1",
+                    "score": 0.95,
+                    "metadata": {
+                        "content": "Python is great for ML",
+                        "tier": "DURABLE",
+                    },
+                }
+            ]
+        )
+
+        store = MemoryStore(
+            embedding_service=mock_embeddings,
+            vector_provider=mock_provider,
+        )
+
+        results = await store.get_relevant(
+            query="machine learning",
+            scope=CapabilityScope.PROJECT,
+            enable_semantic=True,
+        )
+
+        # Should have called search
+        mock_provider.search.assert_called_once()
+        assert len(results) > 0
+
+    @pytest.mark.asyncio
+    async def test_get_relevant_falls_back_to_keyword_when_not_configured(self) -> None:
+        """Test get_relevant() uses keyword matching when no embedding_service."""
+        from mcp_server_langgraph.core.scopes import CapabilityScope
+        from mcp_server_langgraph.memory.store import MemoryStore
+        from mcp_server_langgraph.memory.tiers import MemoryTier
+
+        store = MemoryStore()  # No embedding service
+
+        # Store a memory with keyword matching
+        await store.store(
+            content="Python programming language",
+            tier=MemoryTier.WORKING,
+            scope=CapabilityScope.TASK,
+        )
+
+        # Should still work with keyword fallback
+        results = await store.get_relevant(
+            query="Python",
+            scope=CapabilityScope.TASK,
+        )
+
+        assert len(results) > 0
+
+    @pytest.mark.asyncio
+    async def test_semantic_search_respects_min_score(self) -> None:
+        """Test semantic search filters by min_score."""
+        from unittest.mock import AsyncMock, MagicMock
+
+        from mcp_server_langgraph.core.scopes import CapabilityScope
+        from mcp_server_langgraph.memory.store import MemoryStore
+
+        mock_embeddings = MagicMock()
+        mock_embeddings.embed = AsyncMock(return_value=[0.1, 0.2, 0.3])
+
+        mock_provider = MagicMock()
+        mock_provider.search = AsyncMock(return_value=[])
+
+        store = MemoryStore(
+            embedding_service=mock_embeddings,
+            vector_provider=mock_provider,
+        )
+
+        await store.get_relevant(
+            query="test query",
+            scope=CapabilityScope.PROJECT,
+            enable_semantic=True,
+            min_score=0.8,
+        )
+
+        # Check min_score was passed to search
+        call_kwargs = mock_provider.search.call_args.kwargs
+        assert call_kwargs.get("min_score") == 0.8

@@ -358,18 +358,14 @@ class TestRouterAgentRoute:
 
     async def test_router_agent_route_returns_router_output(self) -> None:
         """Test RouterAgent.route returns RouterOutput."""
+        from langchain_core.messages import AIMessage
+
         from mcp_server_langgraph.agents.router_agent import RouterAgent, RouterOutput
 
         mock_llm_factory = MagicMock()
-        mock_llm_factory.create_completion = AsyncMock(
-            return_value=MagicMock(
-                choices=[
-                    MagicMock(
-                        message=MagicMock(
-                            content='{"complexity": "simple", "risk": "low", "task_type": "chat", "tools_needed": [], "suggested_orchestrator": "standard", "critique_rounds": 0, "thinking_budget": "none", "confidence": 0.9}'
-                        )
-                    )
-                ]
+        mock_llm_factory.ainvoke = AsyncMock(
+            return_value=AIMessage(
+                content='{"complexity": "simple", "risk": "low", "task_type": "chat", "tools_needed": [], "suggested_orchestrator": "standard", "critique_rounds": 0, "thinking_budget": "none", "confidence": 0.9}'
             )
         )
 
@@ -380,18 +376,14 @@ class TestRouterAgentRoute:
 
     async def test_router_agent_route_classifies_simple_chat(self) -> None:
         """Test RouterAgent classifies simple chat as low complexity."""
+        from langchain_core.messages import AIMessage
+
         from mcp_server_langgraph.agents.router_agent import RouterAgent
 
         mock_llm_factory = MagicMock()
-        mock_llm_factory.create_completion = AsyncMock(
-            return_value=MagicMock(
-                choices=[
-                    MagicMock(
-                        message=MagicMock(
-                            content='{"complexity": "simple", "risk": "low", "task_type": "chat", "tools_needed": [], "suggested_orchestrator": "standard", "critique_rounds": 0, "thinking_budget": "none", "confidence": 0.95}'
-                        )
-                    )
-                ]
+        mock_llm_factory.ainvoke = AsyncMock(
+            return_value=AIMessage(
+                content='{"complexity": "simple", "risk": "low", "task_type": "chat", "tools_needed": [], "suggested_orchestrator": "standard", "critique_rounds": 0, "thinking_budget": "none", "confidence": 0.95}'
             )
         )
 
@@ -404,12 +396,12 @@ class TestRouterAgentRoute:
 
     async def test_router_agent_route_handles_parse_error(self) -> None:
         """Test RouterAgent handles JSON parse errors gracefully."""
+        from langchain_core.messages import AIMessage
+
         from mcp_server_langgraph.agents.router_agent import RouterAgent
 
         mock_llm_factory = MagicMock()
-        mock_llm_factory.create_completion = AsyncMock(
-            return_value=MagicMock(choices=[MagicMock(message=MagicMock(content="invalid json"))])
-        )
+        mock_llm_factory.ainvoke = AsyncMock(return_value=AIMessage(content="invalid json"))
 
         agent = RouterAgent(llm_factory=mock_llm_factory)
         result = await agent.route(message="Hello")
@@ -423,7 +415,7 @@ class TestRouterAgentRoute:
         from mcp_server_langgraph.agents.router_agent import RouterAgent
 
         mock_llm_factory = MagicMock()
-        mock_llm_factory.create_completion = AsyncMock(side_effect=Exception("LLM unavailable"))
+        mock_llm_factory.ainvoke = AsyncMock(side_effect=Exception("LLM unavailable"))
 
         agent = RouterAgent(llm_factory=mock_llm_factory)
         result = await agent.route(message="Hello")
@@ -689,16 +681,12 @@ class TestRouterAgentTemplateSuggestion:
             InMemoryPlanTemplateRepository,
         )
 
+        from langchain_core.messages import AIMessage
+
         mock_llm_factory = MagicMock()
-        mock_llm_factory.create_completion = AsyncMock(
-            return_value=MagicMock(
-                choices=[
-                    MagicMock(
-                        message=MagicMock(
-                            content='{"complexity": "simple", "risk": "low", "task_type": "chat", "tools_needed": [], "suggested_orchestrator": "standard", "critique_rounds": 0, "thinking_budget": "none", "confidence": 0.9}'
-                        )
-                    )
-                ]
+        mock_llm_factory.ainvoke = AsyncMock(
+            return_value=AIMessage(
+                content='{"complexity": "simple", "risk": "low", "task_type": "chat", "tools_needed": [], "suggested_orchestrator": "standard", "critique_rounds": 0, "thinking_budget": "none", "confidence": 0.9}'
             )
         )
 
@@ -718,21 +706,17 @@ class TestRouterAgentTemplateSuggestion:
 
     async def test_route_with_template_suggestion_embeds_message(self) -> None:
         """Test route_with_template_suggestion embeds the user message."""
+        from langchain_core.messages import AIMessage
+
         from mcp_server_langgraph.agents.router_agent import RouterAgent
         from mcp_server_langgraph.repositories.plan_template import (
             InMemoryPlanTemplateRepository,
         )
 
         mock_llm_factory = MagicMock()
-        mock_llm_factory.create_completion = AsyncMock(
-            return_value=MagicMock(
-                choices=[
-                    MagicMock(
-                        message=MagicMock(
-                            content='{"complexity": "simple", "risk": "low", "task_type": "chat", "tools_needed": [], "suggested_orchestrator": "standard", "critique_rounds": 0, "thinking_budget": "none", "confidence": 0.9}'
-                        )
-                    )
-                ]
+        mock_llm_factory.ainvoke = AsyncMock(
+            return_value=AIMessage(
+                content='{"complexity": "simple", "risk": "low", "task_type": "chat", "tools_needed": [], "suggested_orchestrator": "standard", "critique_rounds": 0, "thinking_budget": "none", "confidence": 0.9}'
             )
         )
 
@@ -754,6 +738,8 @@ class TestRouterAgentTemplateSuggestion:
         self,
     ) -> None:
         """Test route_with_template_suggestion finds similar templates from repo."""
+        from langchain_core.messages import AIMessage
+
         from mcp_server_langgraph.agents.router_agent import RouterAgent
         from mcp_server_langgraph.core.models.plan_template import PlanTemplate
         from mcp_server_langgraph.repositories.plan_template import (
@@ -761,15 +747,9 @@ class TestRouterAgentTemplateSuggestion:
         )
 
         mock_llm_factory = MagicMock()
-        mock_llm_factory.create_completion = AsyncMock(
-            return_value=MagicMock(
-                choices=[
-                    MagicMock(
-                        message=MagicMock(
-                            content='{"complexity": "complicated", "risk": "medium", "task_type": "code", "tools_needed": [], "suggested_orchestrator": "standard", "critique_rounds": 1, "thinking_budget": "medium", "confidence": 0.85}'
-                        )
-                    )
-                ]
+        mock_llm_factory.ainvoke = AsyncMock(
+            return_value=AIMessage(
+                content='{"complexity": "complicated", "risk": "medium", "task_type": "code", "tools_needed": [], "suggested_orchestrator": "standard", "critique_rounds": 1, "thinking_budget": "medium", "confidence": 0.85}'
             )
         )
 
@@ -809,6 +789,8 @@ class TestRouterAgentTemplateSuggestion:
         self,
     ) -> None:
         """Test route_with_template_suggestion respects min_similarity threshold."""
+        from langchain_core.messages import AIMessage
+
         from mcp_server_langgraph.agents.router_agent import RouterAgent
         from mcp_server_langgraph.core.models.plan_template import PlanTemplate
         from mcp_server_langgraph.repositories.plan_template import (
@@ -816,15 +798,9 @@ class TestRouterAgentTemplateSuggestion:
         )
 
         mock_llm_factory = MagicMock()
-        mock_llm_factory.create_completion = AsyncMock(
-            return_value=MagicMock(
-                choices=[
-                    MagicMock(
-                        message=MagicMock(
-                            content='{"complexity": "simple", "risk": "low", "task_type": "chat", "tools_needed": [], "suggested_orchestrator": "standard", "critique_rounds": 0, "thinking_budget": "none", "confidence": 0.9}'
-                        )
-                    )
-                ]
+        mock_llm_factory.ainvoke = AsyncMock(
+            return_value=AIMessage(
+                content='{"complexity": "simple", "risk": "low", "task_type": "chat", "tools_needed": [], "suggested_orchestrator": "standard", "critique_rounds": 0, "thinking_budget": "none", "confidence": 0.9}'
             )
         )
 
@@ -863,6 +839,8 @@ class TestRouterAgentTemplateSuggestion:
 
     async def test_route_with_template_suggestion_limits_results(self) -> None:
         """Test route_with_template_suggestion respects max_suggestions limit."""
+        from langchain_core.messages import AIMessage
+
         from mcp_server_langgraph.agents.router_agent import RouterAgent
         from mcp_server_langgraph.core.models.plan_template import PlanTemplate
         from mcp_server_langgraph.repositories.plan_template import (
@@ -870,15 +848,9 @@ class TestRouterAgentTemplateSuggestion:
         )
 
         mock_llm_factory = MagicMock()
-        mock_llm_factory.create_completion = AsyncMock(
-            return_value=MagicMock(
-                choices=[
-                    MagicMock(
-                        message=MagicMock(
-                            content='{"complexity": "simple", "risk": "low", "task_type": "chat", "tools_needed": [], "suggested_orchestrator": "standard", "critique_rounds": 0, "thinking_budget": "none", "confidence": 0.9}'
-                        )
-                    )
-                ]
+        mock_llm_factory.ainvoke = AsyncMock(
+            return_value=AIMessage(
+                content='{"complexity": "simple", "risk": "low", "task_type": "chat", "tools_needed": [], "suggested_orchestrator": "standard", "critique_rounds": 0, "thinking_budget": "none", "confidence": 0.9}'
             )
         )
 

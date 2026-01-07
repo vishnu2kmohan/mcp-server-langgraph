@@ -14,7 +14,10 @@
  */
 
 import { useState, useCallback, useRef, useMemo, useEffect } from "react";
-import { useRealtimeSync, type ConnectionStatus } from "./useRealtimeSync";
+import {
+  useRealtimeSync,
+  type WebSocketConnectionStatus,
+} from "./useRealtimeSync";
 import { useAppDispatch, useAppSelector } from "../store/hooks";
 import { logout, selectIsAuthenticated } from "../store/slices/authSlice";
 import { addNotification } from "../store/slices/notificationSlice";
@@ -62,7 +65,7 @@ export interface UseMCPAggregatedUpdatesOptions {
  */
 export interface UseMCPAggregatedUpdatesReturn {
   /** Current connection status */
-  status: ConnectionStatus;
+  status: WebSocketConnectionStatus;
   /** Timestamp of last tools update notification */
   lastToolsUpdate: Date | null;
   /** Timestamp of last resources update notification */
@@ -222,7 +225,7 @@ export function useMCPAggregatedUpdates(
   }, [effectiveEnabled, metrics]);
 
   // Override status if not enabled
-  const status: ConnectionStatus = effectiveEnabled
+  const status: WebSocketConnectionStatus = effectiveEnabled
     ? realtimeStatus
     : "disconnected";
 

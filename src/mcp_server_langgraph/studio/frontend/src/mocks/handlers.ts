@@ -615,6 +615,23 @@ export const handlers = [
     });
   }),
 
+  // Agents Metrics (mock data for test environment - backend returns 503 when Prometheus unavailable)
+  http.get("/api/v1/agents/metrics", async () => {
+    await delay(100);
+    return HttpResponse.json({
+      total_requests: 1250,
+      successful_requests: 1180,
+      failed_requests: 70,
+      avg_latency_ms: 450,
+      p95_latency_ms: 1200,
+      p99_latency_ms: 2500,
+      requests_per_minute: 15.5,
+      active_agents: 3,
+      metrics_period: "1h",
+      last_updated: new Date().toISOString(),
+    });
+  }),
+
   // Vectors
   http.get("/api/v1/vectors/collections", async () => {
     await delay(100);

@@ -29,22 +29,22 @@ describe("useObservabilityAI", () => {
   describe("analyzeTraceAnomalies", () => {
     it("should identify slow spans", () => {
       const spans = [
-        { span_id: "s1", duration_ms: 50, name: "fast" },
-        { span_id: "s2", duration_ms: 5000, name: "slow" },
-        { span_id: "s3", duration_ms: 100, name: "normal" },
+        { spanId: "s1", durationMs: 50, name: "fast" },
+        { spanId: "s2", durationMs: 5000, name: "slow" },
+        { spanId: "s3", durationMs: 100, name: "normal" },
       ];
 
       const anomalies = analyzeTraceAnomalies(spans);
 
       expect(anomalies.slowSpans).toHaveLength(1);
-      expect(anomalies.slowSpans[0].span_id).toBe("s2");
+      expect(anomalies.slowSpans[0].spanId).toBe("s2");
     });
 
     it("should identify error patterns", () => {
       const spans = [
-        { span_id: "s1", status: "ok", name: "success" },
-        { span_id: "s2", status: "error", name: "failed" },
-        { span_id: "s3", status: "error", name: "failed" },
+        { spanId: "s1", durationMs: 50, status: "ok", name: "success" },
+        { spanId: "s2", durationMs: 50, status: "error", name: "failed" },
+        { spanId: "s3", durationMs: 50, status: "error", name: "failed" },
       ];
 
       const anomalies = analyzeTraceAnomalies(spans);
@@ -55,8 +55,8 @@ describe("useObservabilityAI", () => {
 
     it("should calculate performance percentiles", () => {
       const spans = Array.from({ length: 100 }, (_, i) => ({
-        span_id: `s${i}`,
-        duration_ms: (i + 1) * 10,
+        spanId: `s${i}`,
+        durationMs: (i + 1) * 10,
         name: "span",
         status: "ok",
       }));
@@ -139,10 +139,10 @@ describe("useObservabilityAI", () => {
         ],
         spans: [
           {
-            span_id: "s1",
+            spanId: "s1",
             name: "db.query",
             status: "error",
-            duration_ms: 30000,
+            durationMs: 30000,
           },
         ],
       };

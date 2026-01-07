@@ -134,12 +134,17 @@ describe("Route Coverage", () => {
         expect(definedRoutes).toContain("/studio/agents");
       });
 
-      it("/studio/traces route should exist", () => {
-        const tracesItem = NAV_ITEMS.find((item) => item.id === "traces");
-        expect(tracesItem).toBeDefined();
-        expect(tracesItem?.path).toBe("/studio/traces");
+      it("/studio/traces route should exist (redirects to observability)", () => {
+        // Traces is consolidated under observability (Sprint 7)
+        // /studio/traces redirects to /studio/observability/traces
+        // Nav item is "observability" not "traces"
+        const observabilityItem = NAV_ITEMS.find(
+          (item) => item.id === "observability",
+        );
+        expect(observabilityItem).toBeDefined();
+        expect(observabilityItem?.path).toBe("/studio/observability");
 
-        // This will FAIL until the route is added
+        // The redirect route exists in router
         expect(definedRoutes).toContain("/studio/traces");
       });
 

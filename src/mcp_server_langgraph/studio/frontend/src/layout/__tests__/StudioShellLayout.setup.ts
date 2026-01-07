@@ -124,6 +124,28 @@ export const mockBreakpointState = {
   currentBreakpoint: "xl" as "sm" | "md" | "lg" | "xl",
 };
 
+/** KB Status mock state (DynamicContextLoader integration) */
+export const mockKBStatusState = {
+  kbStatusForUI: "ready" as
+    | "ready"
+    | "misconfigured"
+    | "unavailable"
+    | "loading",
+  statusMessage: "Knowledge Base ready",
+  contextStats: undefined as
+    | { refsCount: number; tokensUsed: number; tokenBudget: number }
+    | undefined,
+  isLoading: false,
+  isError: false,
+  error: null as Error | null,
+  isReady: true,
+  isMisconfigured: false,
+  isUnavailable: false,
+  collectionName: "test-collection",
+  vectorsCount: 100,
+  skipCalled: false, // Tracks whether skip option was passed
+};
+
 // =============================================================================
 // MOCK FUNCTIONS - Shared mock function instances
 // =============================================================================
@@ -226,6 +248,20 @@ export function resetAllMocks(): void {
 
   // Reset breakpoint state
   mockBreakpointState.currentBreakpoint = "xl";
+
+  // Reset KB status state
+  mockKBStatusState.kbStatusForUI = "ready";
+  mockKBStatusState.statusMessage = "Knowledge Base ready";
+  mockKBStatusState.contextStats = undefined;
+  mockKBStatusState.isLoading = false;
+  mockKBStatusState.isError = false;
+  mockKBStatusState.error = null;
+  mockKBStatusState.isReady = true;
+  mockKBStatusState.isMisconfigured = false;
+  mockKBStatusState.isUnavailable = false;
+  mockKBStatusState.collectionName = "test-collection";
+  mockKBStatusState.vectorsCount = 100;
+  mockKBStatusState.skipCalled = false;
 
   // Clear all mock function calls
   vi.clearAllMocks();
@@ -511,7 +547,41 @@ export const mockImplementations = {
       })),
       { isLoading: false, isError: false, isSuccess: false },
     ],
+    useGetKBStatusQuery: () => ({
+      data: {
+        status: "ready",
+        collectionName: "test-collection",
+        vectorsCount: 100,
+      },
+      isLoading: false,
+      isError: false,
+      error: null,
+      refetch: vi.fn(),
+    }),
     api: { reducerPath: "api", reducer: () => ({}), middleware: () => [] },
+  },
+
+  useKBStatus: {
+    useKBStatus: (options?: { skip?: boolean }) => {
+      // Track whether skip was passed (for testing)
+      mockKBStatusState.skipCalled = options?.skip ?? false;
+      return {
+        data: undefined,
+        status: mockKBStatusState.kbStatusForUI,
+        statusMessage: mockKBStatusState.statusMessage,
+        isLoading: mockKBStatusState.isLoading,
+        isError: mockKBStatusState.isError,
+        error: mockKBStatusState.error,
+        isReady: mockKBStatusState.isReady,
+        isMisconfigured: mockKBStatusState.isMisconfigured,
+        isUnavailable: mockKBStatusState.isUnavailable,
+        collectionName: mockKBStatusState.collectionName,
+        vectorsCount: mockKBStatusState.vectorsCount,
+        contextStats: mockKBStatusState.contextStats,
+        kbStatusForUI: mockKBStatusState.kbStatusForUI,
+        refetch: vi.fn(),
+      };
+    },
   },
 
   ResponsiveLayout: {
@@ -630,6 +700,22 @@ export const mockReactRouter = {
     children: React.ReactNode;
     to: string;
   }) => React.createElement("a", { href: to, ...props }, children),
+  useMatches: () => [
+    {
+      id: "studio",
+      pathname: "/studio",
+      params: {},
+      data: {},
+      handle: { title: "Studio", breadcrumb: "Studio" },
+    },
+    {
+      id: "chat",
+      pathname: "/studio/chat",
+      params: {},
+      data: {},
+      handle: { title: "Chat", breadcrumb: "Chat" },
+    },
+  ],
 };
 
 /**

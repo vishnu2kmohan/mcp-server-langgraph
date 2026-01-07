@@ -65,11 +65,11 @@ export interface NavItem {
   group?: NavGroupId;
 }
 
-/** Navigation group identifiers */
-export type NavGroupId = "core" | "ai-data" | "observability" | "admin";
+/** Navigation group identifiers (internal to ActivityBar) */
+type NavGroupId = "core" | "ai-data" | "observability" | "admin";
 
-/** Navigation group metadata */
-export interface NavGroup {
+/** Navigation group metadata (internal to ActivityBar) */
+interface NavGroup {
   id: NavGroupId;
   label: string;
   items: string[]; // Nav item IDs in this group
@@ -84,8 +84,9 @@ export interface NavGroup {
  *
  * Organized by functional groups for logical user journey.
  * Each group contains item IDs that belong to it.
+ * (Internal to ActivityBar - not exported)
  */
-export const NAV_GROUPS: NavGroup[] = [
+const NAV_GROUPS: NavGroup[] = [
   {
     id: "core",
     label: "Core",
@@ -230,17 +231,10 @@ export const BOTTOM_ITEMS: NavItem[] = [
   },
 ];
 
-/**
- * KNOWN_NAV_IDS - Set of all valid navigation item IDs
- *
- * Used by selectSidebarItems to filter server-provided visible_modules
- * to only include IDs that have corresponding nav items.
- * This prevents invisible entries in the sidebar.
- */
-export const KNOWN_NAV_IDS: Set<string> = new Set([
-  ...NAV_ITEMS.map((item) => item.id),
-  ...BOTTOM_ITEMS.map((item) => item.id),
-]);
+// NOTE: KNOWN_NAV_IDS is now defined in navConstants.ts (single source of truth)
+// to avoid circular dependencies with React Router.
+// The NAV_ITEMS and BOTTOM_ITEMS arrays above should stay in sync with
+// NAV_ITEM_IDS and BOTTOM_ITEM_IDS in navConstants.ts.
 
 // =============================================================================
 // Component

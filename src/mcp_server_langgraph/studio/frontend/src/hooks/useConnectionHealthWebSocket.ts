@@ -24,20 +24,14 @@ import {
 } from "../utils/websocketAuth";
 import { reportWebSocketMetrics } from "../utils/websocketTelemetry";
 import { transformSnakeToCamel } from "../api/transforms";
+import type { ConnectionStatus } from "../types/connection";
+
+// Re-export for consumers
+export type { ConnectionStatus };
 
 // =============================================================================
 // Types
 // =============================================================================
-
-/**
- * Connection health status
- */
-export type ConnectionStatus =
-  | "connected"
-  | "disconnected"
-  | "connecting"
-  | "error"
-  | "auth_required";
 
 /**
  * Connection health structure matching backend schema

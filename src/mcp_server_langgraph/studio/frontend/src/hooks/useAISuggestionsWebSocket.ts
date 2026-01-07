@@ -17,7 +17,10 @@
  */
 
 import { useState, useCallback, useRef, useMemo, useEffect } from "react";
-import { useRealtimeSync, type ConnectionStatus } from "./useRealtimeSync";
+import {
+  useRealtimeSync,
+  type WebSocketConnectionStatus,
+} from "./useRealtimeSync";
 import { useAppDispatch, useAppSelector } from "../store/hooks";
 import {
   logout,
@@ -90,7 +93,7 @@ export interface UseAISuggestionsWebSocketOptions {
  */
 export interface UseAISuggestionsWebSocketReturn {
   /** Current connection status */
-  status: ConnectionStatus;
+  status: WebSocketConnectionStatus;
   /** Most recent suggestion */
   currentSuggestion: AISuggestion | null;
   /** Whether a suggestion request is pending */
@@ -291,7 +294,7 @@ export function useAISuggestionsWebSocket(
   }, [effectiveEnabled, metrics]);
 
   // Override status if not enabled
-  const status: ConnectionStatus = effectiveEnabled
+  const status: WebSocketConnectionStatus = effectiveEnabled
     ? realtimeStatus
     : "disconnected";
 

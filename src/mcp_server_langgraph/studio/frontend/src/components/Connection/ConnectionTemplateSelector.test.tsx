@@ -20,7 +20,47 @@ import { http, HttpResponse } from "msw";
 import { server } from "../../mocks/server";
 import { ConnectionTemplateSelector } from "./ConnectionTemplateSelector";
 
-// Mock data
+// Mock data - raw API response format (snake_case per ADR-0091)
+const mockTemplatesRaw = [
+  {
+    id: "github",
+    name: "GitHub",
+    description: "Access GitHub repositories, issues, and pull requests",
+    icon: "github",
+    auth_type: "oauth2",
+    default_url: "https://api.github.com/mcp",
+    category: "development",
+  },
+  {
+    id: "slack",
+    name: "Slack",
+    description: "Access Slack workspaces, channels, and messages",
+    icon: "slack",
+    auth_type: "oauth2",
+    default_url: "https://slack.com/api/mcp",
+    category: "communication",
+  },
+  {
+    id: "filesystem",
+    name: "Filesystem",
+    description: "Access local filesystem for reading and writing files",
+    icon: "folder",
+    auth_type: "none",
+    default_url: "http://localhost:3001",
+    category: "local",
+  },
+  {
+    id: "custom-api",
+    name: "Custom API",
+    description: "Connect to any MCP server using API key authentication",
+    icon: "key",
+    auth_type: "api_key",
+    default_url: "https://your-mcp-server.example.com",
+    category: "custom",
+  },
+];
+
+// Expected transformed data (camelCase for frontend)
 const mockTemplates = [
   {
     id: "github",
@@ -80,13 +120,14 @@ describe("ConnectionTemplateSelector", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     // Set up default handlers - note: component uses /connection-templates (hyphenated)
+    // API returns snake_case, component transforms to camelCase (ADR-0091)
     server.use(
       http.get("/api/v1/connection-templates", ({ request }) => {
         const url = new URL(request.url);
         if (url.pathname.includes("/categories")) {
           return HttpResponse.json({ categories: mockCategories });
         }
-        return HttpResponse.json({ templates: mockTemplates });
+        return HttpResponse.json({ templates: mockTemplatesRaw });
       }),
       http.get("/api/v1/connection-templates/categories", () => {
         return HttpResponse.json({ categories: mockCategories });
@@ -162,7 +203,10 @@ describe("ConnectionTemplateSelector", () => {
       });
 
       fireEvent.click(screen.getByText("GitHub"));
-      expect(onSelect).toHaveBeenCalledWith(mockTemplates[0]);
+      // Use toMatchObject to handle optional undefined fields from transform
+      expect(onSelect).toHaveBeenCalledWith(
+        expect.objectContaining(mockTemplates[0]),
+      );
     });
 
     it("should highlight selected template", async () => {

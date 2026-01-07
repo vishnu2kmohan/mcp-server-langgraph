@@ -549,11 +549,7 @@ class TestExploreKnowledgeIteratively:
     @pytest.mark.asyncio
     async def test_returns_config_guidance_when_not_configured(self):
         """Tool returns setup instructions when not configured."""
-        # Import will fail if tool doesn't exist yet (TDD - expected to fail initially)
-        try:
-            from mcp_server_langgraph.tools.search_tools import explore_knowledge_iteratively
-        except ImportError:
-            pytest.skip("explore_knowledge_iteratively not yet implemented")
+        from mcp_server_langgraph.tools.search_tools import explore_knowledge_iteratively
 
         with patch(
             "mcp_server_langgraph.tools.search_tools._validate_semantic_search_config",
@@ -565,10 +561,7 @@ class TestExploreKnowledgeIteratively:
     @pytest.mark.asyncio
     async def test_calls_progressive_discover(self):
         """Tool correctly calls DynamicContextLoader.progressive_discover."""
-        try:
-            from mcp_server_langgraph.tools.search_tools import explore_knowledge_iteratively
-        except ImportError:
-            pytest.skip("explore_knowledge_iteratively not yet implemented")
+        from mcp_server_langgraph.tools.search_tools import explore_knowledge_iteratively
 
         mock_refs = [
             MagicMock(ref_id="doc1", ref_type="doc", summary="Test doc 1", relevance_score=0.9),
@@ -604,10 +597,7 @@ class TestValidateSemanticSearchConfig:
 
     def test_returns_false_when_qdrant_url_missing(self):
         """Returns (False, guidance) when QDRANT_URL not set."""
-        try:
-            from mcp_server_langgraph.tools.search_tools import _validate_semantic_search_config
-        except ImportError:
-            pytest.skip("_validate_semantic_search_config not yet implemented")
+        from mcp_server_langgraph.tools.search_tools import _validate_semantic_search_config
 
         with patch("mcp_server_langgraph.tools.search_tools.settings") as mock_settings:
             mock_settings.qdrant_url = None
@@ -617,10 +607,7 @@ class TestValidateSemanticSearchConfig:
 
     def test_returns_false_when_embedding_provider_missing(self):
         """Returns (False, guidance) when EMBEDDING_PROVIDER not set."""
-        try:
-            from mcp_server_langgraph.tools.search_tools import _validate_semantic_search_config
-        except ImportError:
-            pytest.skip("_validate_semantic_search_config not yet implemented")
+        from mcp_server_langgraph.tools.search_tools import _validate_semantic_search_config
 
         with patch("mcp_server_langgraph.tools.search_tools.settings") as mock_settings:
             mock_settings.qdrant_url = "localhost"
@@ -633,10 +620,7 @@ class TestValidateSemanticSearchConfig:
 
     def test_returns_false_for_unsupported_provider(self):
         """Returns (False, guidance) for unsupported provider."""
-        try:
-            from mcp_server_langgraph.tools.search_tools import _validate_semantic_search_config
-        except ImportError:
-            pytest.skip("_validate_semantic_search_config not yet implemented")
+        from mcp_server_langgraph.tools.search_tools import _validate_semantic_search_config
 
         with patch("mcp_server_langgraph.tools.search_tools.settings") as mock_settings:
             mock_settings.qdrant_url = "localhost"
@@ -649,10 +633,7 @@ class TestValidateSemanticSearchConfig:
 
     def test_returns_false_when_google_api_key_missing(self):
         """Returns (False, guidance) when google provider but no API key."""
-        try:
-            from mcp_server_langgraph.tools.search_tools import _validate_semantic_search_config
-        except ImportError:
-            pytest.skip("_validate_semantic_search_config not yet implemented")
+        from mcp_server_langgraph.tools.search_tools import _validate_semantic_search_config
 
         with patch("mcp_server_langgraph.tools.search_tools.settings") as mock_settings:
             mock_settings.qdrant_url = "localhost"
@@ -666,10 +647,7 @@ class TestValidateSemanticSearchConfig:
 
     def test_returns_false_when_openai_api_key_missing(self):
         """Returns (False, guidance) when openai provider but no API key."""
-        try:
-            from mcp_server_langgraph.tools.search_tools import _validate_semantic_search_config
-        except ImportError:
-            pytest.skip("_validate_semantic_search_config not yet implemented")
+        from mcp_server_langgraph.tools.search_tools import _validate_semantic_search_config
 
         with patch("mcp_server_langgraph.tools.search_tools.settings") as mock_settings:
             mock_settings.qdrant_url = "localhost"
@@ -683,10 +661,7 @@ class TestValidateSemanticSearchConfig:
 
     def test_returns_true_when_google_vertex_configured(self):
         """Returns (True, None) when google_vertex properly configured with ADC."""
-        try:
-            from mcp_server_langgraph.tools.search_tools import _validate_semantic_search_config
-        except ImportError:
-            pytest.skip("_validate_semantic_search_config not yet implemented")
+        from mcp_server_langgraph.tools.search_tools import _validate_semantic_search_config
 
         with patch("mcp_server_langgraph.tools.search_tools.settings") as mock_settings:
             mock_settings.qdrant_url = "localhost"
@@ -703,10 +678,7 @@ class TestValidateSemanticSearchConfig:
 
     def test_returns_true_when_local_provider_configured(self):
         """Returns (True, None) when local provider with sentence-transformers."""
-        try:
-            from mcp_server_langgraph.tools.search_tools import _validate_semantic_search_config
-        except ImportError:
-            pytest.skip("_validate_semantic_search_config not yet implemented")
+        from mcp_server_langgraph.tools.search_tools import _validate_semantic_search_config
 
         with patch("mcp_server_langgraph.tools.search_tools.settings") as mock_settings:
             mock_settings.qdrant_url = "localhost"

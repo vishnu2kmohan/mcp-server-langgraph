@@ -25,32 +25,29 @@ import {
   AlertTriangle,
 } from "lucide-react";
 import type {
-  AgentClarificationRequest,
-  ClarificationUIResponse,
+  AgentClarificationRequestCamelCase,
+  ClarificationUIResponseCamelCase,
 } from "../../types/hitl";
 
 // =============================================================================
 // Types
 // =============================================================================
 
-// Re-export from canonical location for backwards compatibility
-export type {
-  ClarificationOption,
-  AgentClarificationRequest,
-} from "../../types/hitl";
+// Re-export camelCase type for external consumers (ADR-0091 Phase 10)
+export type { AgentClarificationRequestCamelCase } from "../../types/hitl";
 
-// Alias ClarificationUIResponse as ClarificationResponse for backwards compatibility
-export type ClarificationResponse = ClarificationUIResponse;
+// Alias for backwards compatibility
+export type ClarificationResponse = ClarificationUIResponseCamelCase;
 
 export interface ClarificationDialogProps {
-  /** The clarification request to display */
-  request: AgentClarificationRequest;
+  /** The clarification request to display (camelCase per ADR-0091) */
+  request: AgentClarificationRequestCamelCase;
   /** Whether the dialog is open */
   isOpen: boolean;
   /** Callback to close the dialog */
   onClose: () => void;
-  /** Callback when response is submitted */
-  onRespond: (response: ClarificationResponse) => void;
+  /** Callback when response is submitted (camelCase per ADR-0091) */
+  onRespond: (response: ClarificationUIResponseCamelCase) => void;
   /** Loading state for submission */
   isSubmitting?: boolean;
   /** Error message */
@@ -102,32 +99,32 @@ export function ClarificationDialog({
     return () => document.removeEventListener("keydown", handleKeyDown);
   }, [handleKeyDown]);
 
-  // Handle text submit
+  // Handle text submit (camelCase per ADR-0091)
   const handleTextSubmit = () => {
     onRespond({
-      request_id: request.request_id,
+      requestId: request.requestId,
       value: textValue,
-      responded_by: currentUser,
+      respondedBy: currentUser,
     });
   };
 
-  // Handle choice submit
+  // Handle choice submit (camelCase per ADR-0091)
   const handleChoiceSubmit = () => {
     if (selectedOptionId) {
       onRespond({
-        request_id: request.request_id,
-        selected_option_id: selectedOptionId,
-        responded_by: currentUser,
+        requestId: request.requestId,
+        selectedOptionId: selectedOptionId,
+        respondedBy: currentUser,
       });
     }
   };
 
-  // Handle confirmation
+  // Handle confirmation (camelCase per ADR-0091)
   const handleConfirmation = (confirmed: boolean) => {
     onRespond({
-      request_id: request.request_id,
+      requestId: request.requestId,
       confirmed,
-      responded_by: currentUser,
+      respondedBy: currentUser,
     });
   };
 
@@ -135,9 +132,9 @@ export function ClarificationDialog({
     return null;
   }
 
-  const isTextType = request.clarification_type === "text";
-  const isChoiceType = request.clarification_type === "choice";
-  const isConfirmationType = request.clarification_type === "confirmation";
+  const isTextType = request.clarificationType === "text";
+  const isChoiceType = request.clarificationType === "choice";
+  const isConfirmationType = request.clarificationType === "confirmation";
 
   const canSubmit = isTextType
     ? textValue.trim().length > 0 || !request.required
@@ -194,7 +191,7 @@ export function ClarificationDialog({
           <div className="text-sm text-gray-500 dark:text-gray-400">
             Agent:{" "}
             <strong className="text-gray-900 dark:text-white">
-              {request.agent_name}
+              {request.agentName}
             </strong>
           </div>
 
@@ -252,7 +249,7 @@ export function ClarificationDialog({
                     <span className="font-medium text-gray-900 dark:text-white">
                       {option.label}
                     </span>
-                    {option.is_recommended && (
+                    {option.isRecommended && (
                       <span className="text-xs px-2 py-0.5 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded">
                         Recommended
                       </span>

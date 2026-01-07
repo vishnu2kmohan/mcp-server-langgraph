@@ -13,7 +13,7 @@ import { useAppDispatch, useAppSelector } from "../store/hooks";
 import { logout, selectIsAuthenticated } from "../store/slices/authSlice";
 import { addNotification } from "../store/slices/notificationSlice";
 import { getAuthToken } from "../utils/storage";
-import { buildWebSocketUrl } from "../utils/websocket";
+import { buildWebSocketUrl, WS_ENDPOINTS } from "../utils/websocket";
 import {
   PROTOCOL_VERSION_MISMATCH_NOTIFICATION,
   showProtocolVersionMismatchToast,
@@ -78,18 +78,18 @@ export interface StreamingCompletedEvent {
 }
 
 /**
- * Active stream info
+ * Active stream info (camelCase for frontend use - ADR-0091 Phase 6)
  */
 export interface ActiveStream {
-  stream_id: string;
-  session_id: string;
+  streamId: string;
+  sessionId: string;
   model: string;
   provider: string;
-  started_at: string;
-  ttfc_ms?: number;
-  chunks_received: number;
-  total_chunk_size: number;
-  last_chunk_at?: string;
+  startedAt: string;
+  ttfcMs?: number;
+  chunksReceived: number;
+  totalChunkSize: number;
+  lastChunkAt?: string;
   status: StreamStatus;
 }
 
@@ -214,8 +214,7 @@ export function useLLMStreamingWebSocket(
   const url = useMemo(
     () =>
       isAuthenticated
-        ? (customUrl ??
-          buildWebSocketUrl("/api/v1/ws/llm/streaming" as never, {}, true))
+        ? (customUrl ?? buildWebSocketUrl(WS_ENDPOINTS.LLM_STREAMING, {}, true))
         : "",
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [customUrl, authToken, isAuthenticated],
@@ -258,13 +257,13 @@ export function useLLMStreamingWebSocket(
         setActiveStreams((prev) => {
           const next = new Map(prev);
           next.set(event.stream_id, {
-            stream_id: event.stream_id,
-            session_id: event.session_id,
+            streamId: event.stream_id,
+            sessionId: event.session_id,
             model: event.model,
             provider: event.provider,
-            started_at: event.timestamp,
-            chunks_received: 0,
-            total_chunk_size: 0,
+            startedAt: event.timestamp,
+            chunksReceived: 0,
+            totalChunkSize: 0,
             status: "active",
           });
           return next;
@@ -281,10 +280,10 @@ export function useLLMStreamingWebSocket(
           if (stream) {
             next.set(event.stream_id, {
               ...stream,
-              ttfc_ms: event.ttfc_ms,
-              chunks_received: 1,
-              total_chunk_size: event.chunk_size,
-              last_chunk_at: event.timestamp,
+              ttfcMs: event.ttfc_ms,
+              chunksReceived: 1,
+              totalChunkSize: event.chunk_size,
+              lastChunkAt: event.timestamp,
             });
           }
           return next;
@@ -301,9 +300,9 @@ export function useLLMStreamingWebSocket(
           if (stream) {
             next.set(event.stream_id, {
               ...stream,
-              chunks_received: stream.chunks_received + 1,
-              total_chunk_size: stream.total_chunk_size + event.chunk_size,
-              last_chunk_at: event.timestamp,
+              chunksReceived: stream.chunksReceived + 1,
+              totalChunkSize: stream.totalChunkSize + event.chunk_size,
+              lastChunkAt: event.timestamp,
             });
           }
           return next;

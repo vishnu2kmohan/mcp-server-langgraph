@@ -1,107 +1,106 @@
 /**
- * useFocusTrap Hook (Sprint 3.3)
+ * useFocusTrap Hook
  *
- * Traps keyboard focus within a container element, cycling through
- * focusable elements on Tab/Shift+Tab. Required for WCAG 2.1 AA
- * compliance for modal dialogs.
+ * Traps keyboard focus within a container element for accessibility.
+ * Used in modal dialogs to prevent focus from escaping.
  *
- * Usage:
- *   const ref = useRef<HTMLDivElement>(null);
- *   useFocusTrap(ref, isModalOpen);
+ * Features:
+ * - Traps Tab and Shift+Tab within container
+ * - Focuses first focusable element on activation
+ * - Cleans up event listeners on deactivation
+ * - Supports all standard focusable elements
  *
- *   return <div ref={ref}>...modal content...</div>;
+ * Reference: Plan - StudioShell UX Audit - Sprint 5.2
  */
-import { useEffect, type RefObject } from "react";
+
+import { useEffect, useCallback, type RefObject } from "react";
+
+// =============================================================================
+// Constants
+// =============================================================================
 
 /**
  * Selector for all focusable elements
  */
 const FOCUSABLE_SELECTOR = [
-  "button:not([disabled]):not([tabindex='-1'])",
-  "[href]:not([tabindex='-1'])",
-  "input:not([disabled]):not([tabindex='-1'])",
-  "select:not([disabled]):not([tabindex='-1'])",
-  "textarea:not([disabled]):not([tabindex='-1'])",
-  "[tabindex]:not([tabindex='-1'])",
-].join(", ");
+  "button:not([disabled])",
+  "[href]",
+  "input:not([disabled])",
+  "select:not([disabled])",
+  "textarea:not([disabled])",
+  '[tabindex]:not([tabindex="-1"])',
+].join(",");
+
+// =============================================================================
+// Hook
+// =============================================================================
 
 /**
- * Get all focusable elements within a container
- */
-function getFocusableElements(container: HTMLElement): HTMLElement[] {
-  const elements = container.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR);
-  return Array.from(elements).filter((el) => {
-    // Check if element is visible (hidden elements have display: none or visibility: hidden)
-    // Note: offsetParent is null in JSDOM, so we check computed styles instead
-    const style = window.getComputedStyle(el);
-    return style.display !== "none" && style.visibility !== "hidden";
-  });
-}
-
-/**
- * Hook to trap focus within a container element
+ * Traps focus within a container element.
  *
- * @param ref - React ref to the container element
- * @param isActive - Whether the focus trap is active
+ * @param ref - Ref to the container element
+ * @param isActive - Whether the trap is active
  */
 export function useFocusTrap(
-  ref: RefObject<HTMLElement>,
+  ref: RefObject<HTMLElement | null>,
   isActive: boolean,
 ): void {
+  /**
+   * Get all focusable elements within the container
+   */
+  const getFocusableElements = useCallback((): HTMLElement[] => {
+    if (!ref.current) return [];
+    const elements =
+      ref.current.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR);
+    return Array.from(elements);
+  }, [ref]);
+
+  /**
+   * Handle keydown events to trap Tab key
+   */
+  const handleKeyDown = useCallback(
+    (event: KeyboardEvent) => {
+      if (event.key !== "Tab") return;
+
+      const focusableElements = getFocusableElements();
+      if (focusableElements.length === 0) return;
+
+      const firstElement = focusableElements[0];
+      const lastElement = focusableElements[focusableElements.length - 1];
+
+      // Shift+Tab on first element -> cycle to last
+      if (event.shiftKey && document.activeElement === firstElement) {
+        event.preventDefault();
+        lastElement.focus();
+        return;
+      }
+
+      // Tab on last element -> cycle to first
+      if (!event.shiftKey && document.activeElement === lastElement) {
+        event.preventDefault();
+        firstElement.focus();
+        return;
+      }
+    },
+    [getFocusableElements],
+  );
+
   useEffect(() => {
-    if (!isActive || !ref.current) {
-      return;
+    const element = ref.current;
+    if (!element || !isActive) return;
+
+    // Focus the first focusable element when activated
+    const focusableElements = getFocusableElements();
+    if (focusableElements.length > 0) {
+      focusableElements[0].focus();
     }
 
-    const container = ref.current;
-    const focusableElements = getFocusableElements(container);
+    // Add keydown listener
+    element.addEventListener("keydown", handleKeyDown);
 
-    if (focusableElements.length === 0) {
-      return;
-    }
-
-    const firstElement = focusableElements[0];
-    // Note: lastElement is intentionally unused - we re-query in handleKeyDown for dynamic content
-    const _lastElement = focusableElements[focusableElements.length - 1];
-
-    // Focus the first element when trap is activated
-    firstElement?.focus();
-
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key !== "Tab") {
-        return;
-      }
-
-      // Re-query focusable elements in case DOM changed
-      const currentFocusable = getFocusableElements(container);
-      if (currentFocusable.length === 0) {
-        return;
-      }
-
-      const first = currentFocusable[0];
-      const last = currentFocusable[currentFocusable.length - 1];
-
-      if (event.shiftKey) {
-        // Shift+Tab: If on first element, move to last
-        if (document.activeElement === first) {
-          event.preventDefault();
-          last?.focus();
-        }
-      } else {
-        // Tab: If on last element, move to first
-        if (document.activeElement === last) {
-          event.preventDefault();
-          first?.focus();
-        }
-      }
-    };
-
-    container.addEventListener("keydown", handleKeyDown);
-
+    // Cleanup
     return () => {
-      container.removeEventListener("keydown", handleKeyDown);
+      element.removeEventListener("keydown", handleKeyDown);
     };
-  }, [ref, isActive]);
+  }, [ref, isActive, getFocusableElements, handleKeyDown]);
 }
-
-export default useFocusTrap;

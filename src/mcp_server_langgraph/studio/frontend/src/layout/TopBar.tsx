@@ -20,6 +20,8 @@ import { selectPersona, selectUsername } from "../store/slices/personaSlice";
 import { cn } from "../utils/cn";
 import { UserMenuDropdown } from "./UserMenuDropdown";
 import { AlertBadge } from "./AlertBadge";
+import { Breadcrumb } from "./Breadcrumb";
+import type { BreadcrumbItem } from "../hooks/useBreadcrumb";
 
 // =============================================================================
 // Types
@@ -28,8 +30,14 @@ import { AlertBadge } from "./AlertBadge";
 export interface TopBarProps {
   /** Custom title (default: "Agent Studio") */
   title?: string;
-  /** Section title derived from current route (Sprint 2.3 - Wayfinding) */
+  /**
+   * Section title derived from current route (Sprint 2.3 - Wayfinding)
+   * @deprecated Use `breadcrumbItems` instead. This prop is kept for backward compatibility
+   * but is no longer used by StudioShellLayout. All routes now use `handle.breadcrumb` metadata.
+   */
   sectionTitle?: string;
+  /** Breadcrumb items for deeper navigation hierarchy (Sprint 2.3 - Phase 2) */
+  breadcrumbItems?: BreadcrumbItem[];
   /** Sub-persona badge for more granular role display (Sprint 2.3) */
   subPersonaBadge?: string;
   /** Callback when user menu is triggered */
@@ -70,6 +78,7 @@ function getPersonaBadgeColor(persona: string): string {
 export function TopBar({
   title = "Agent Studio",
   sectionTitle,
+  breadcrumbItems,
   subPersonaBadge,
   onUserMenuClick,
   onAlertClick,
@@ -101,39 +110,60 @@ export function TopBar({
       data-testid="top-bar"
       role="banner"
       className={cn(
-        "flex items-center justify-between px-4 py-2",
+        "flex items-center gap-4 px-4 py-2",
         "bg-white dark:bg-gray-800",
         "border-b border-gray-200 dark:border-gray-700",
         className,
       )}
     >
-      {/* Left: App branding with optional section breadcrumb */}
-      <div data-testid="app-branding" className="flex items-center gap-2">
-        <span className="font-semibold text-gray-900 dark:text-white">
+      {/* Left: App branding with optional section breadcrumb - flex-1 to use available space */}
+      <div
+        data-testid="app-branding"
+        className="flex-1 min-w-0 flex items-center gap-3"
+      >
+        <span className="font-semibold text-gray-900 dark:text-white whitespace-nowrap">
           {title}
         </span>
-        {sectionTitle && (
+
+        {/* Prefer breadcrumbItems for deeper navigation, fallback to sectionTitle */}
+        {breadcrumbItems && breadcrumbItems.length > 0 ? (
           <>
             <span
               data-testid="section-separator"
-              className="text-gray-400 dark:text-gray-500"
+              className="text-gray-300 dark:text-gray-600"
+              aria-hidden="true"
+            >
+              /
+            </span>
+            <Breadcrumb items={breadcrumbItems} />
+          </>
+        ) : sectionTitle ? (
+          <nav
+            data-testid="breadcrumb-nav"
+            aria-label="Breadcrumb"
+            className="flex items-center gap-2"
+          >
+            <span
+              data-testid="section-separator"
+              className="text-gray-300 dark:text-gray-600"
               aria-hidden="true"
             >
               /
             </span>
             <span
               data-testid="section-title"
-              className="text-sm font-medium text-gray-600 dark:text-gray-300"
+              className="text-sm font-medium text-gray-600 dark:text-gray-300 truncate"
             >
               {sectionTitle}
             </span>
-          </>
-        )}
+          </nav>
+        ) : null}
+
         {subPersonaBadge && (
           <span
             data-testid="sub-persona-badge"
             className={cn(
-              "ml-2 px-2 py-0.5 rounded-full text-xs font-medium",
+              "ml-1 px-2 py-0.5 rounded-full text-xs font-medium whitespace-nowrap",
               "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300",
             )}
           >
@@ -142,8 +172,8 @@ export function TopBar({
         )}
       </div>
 
-      {/* Right: User info and menu */}
-      <div className="flex items-center gap-3">
+      {/* Right: User info and menu - flex-shrink-0 to prevent compression */}
+      <div className="flex-shrink-0 flex items-center gap-3">
         {/* Username */}
         {username && (
           <span className="text-sm text-gray-600 dark:text-gray-400">

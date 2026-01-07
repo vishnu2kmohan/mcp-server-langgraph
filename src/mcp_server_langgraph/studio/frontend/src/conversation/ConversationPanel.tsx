@@ -76,6 +76,11 @@ export interface ConversationPanelProps {
   onAcceptSuggestion?: (suggestion: string) => void;
   /** Callback when user dismisses suggestion (Escape key) */
   onDismissSuggestion?: () => void;
+  // KB Focus props (for controlled mode - lifting state to parent)
+  /** Controlled KB focus mode value */
+  kbFocusValue?: "all" | "kb_only" | "web_only" | "none";
+  /** Callback when KB focus mode changes */
+  onKBFocusChange?: (mode: "all" | "kb_only" | "web_only" | "none") => void;
 }
 
 // =============================================================================
@@ -176,6 +181,9 @@ export function ConversationPanel({
   isSuggestionLoading = false,
   onAcceptSuggestion,
   onDismissSuggestion,
+  // KB Focus props (controlled mode)
+  kbFocusValue,
+  onKBFocusChange,
 }: ConversationPanelProps) {
   const [inputValue, setInputValue] = useState("");
 
@@ -283,6 +291,9 @@ export function ConversationPanel({
           isSuggestionLoading={isSuggestionLoading}
           onAcceptSuggestion={onAcceptSuggestion}
           onDismissSuggestion={onDismissSuggestion}
+          // KB Focus mode (controlled by parent)
+          kbFocusValue={kbFocusValue}
+          onKBFocusChange={onKBFocusChange}
         />
       </div>
     </div>

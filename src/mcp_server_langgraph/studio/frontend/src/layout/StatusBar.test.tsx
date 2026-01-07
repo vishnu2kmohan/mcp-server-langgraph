@@ -771,6 +771,116 @@ describe("StatusBar", () => {
   });
 
   // =============================================================================
+  // Knowledge Base Status Indicator (Dynamic Context Integration)
+  // ADR: Show KB/Semantic context status in StatusBar
+  // =============================================================================
+  describe("knowledge base status indicator", () => {
+    it("should display KB status indicator when kbStatus is provided", () => {
+      render(<StatusBar kbStatus="ready" />);
+
+      const indicator = screen.getByTestId("kb-status-indicator");
+      expect(indicator).toBeInTheDocument();
+    });
+
+    it("should not display KB status indicator when kbStatus is undefined", () => {
+      render(<StatusBar />);
+
+      expect(
+        screen.queryByTestId("kb-status-indicator"),
+      ).not.toBeInTheDocument();
+    });
+
+    it("should show green indicator when kbStatus is ready", () => {
+      render(<StatusBar kbStatus="ready" />);
+
+      const indicator = screen.getByTestId("kb-status-indicator");
+      expect(indicator).toHaveClass("bg-green-500");
+    });
+
+    it("should show yellow indicator when kbStatus is misconfigured", () => {
+      render(<StatusBar kbStatus="misconfigured" />);
+
+      const indicator = screen.getByTestId("kb-status-indicator");
+      expect(indicator).toHaveClass("bg-yellow-500");
+    });
+
+    it("should show gray indicator when kbStatus is unavailable", () => {
+      render(<StatusBar kbStatus="unavailable" />);
+
+      const indicator = screen.getByTestId("kb-status-indicator");
+      expect(indicator).toHaveClass("bg-gray-400");
+    });
+
+    it("should display KB label text with status", () => {
+      render(<StatusBar kbStatus="ready" />);
+
+      expect(screen.getByText("KB")).toBeInTheDocument();
+    });
+
+    it("should show tooltip with kbStatusMessage when provided", () => {
+      render(
+        <StatusBar
+          kbStatus="misconfigured"
+          kbStatusMessage="Missing QDRANT_URL configuration"
+        />,
+      );
+
+      const indicator = screen.getByTestId("kb-status-indicator");
+      expect(indicator.closest("[title]")).toHaveAttribute(
+        "title",
+        expect.stringContaining("Missing QDRANT_URL"),
+      );
+    });
+
+    it("should show context stats when kbContextStats is provided", () => {
+      render(
+        <StatusBar
+          kbStatus="ready"
+          kbContextStats={{ refsCount: 3, tokensUsed: 1500, tokenBudget: 2000 }}
+        />,
+      );
+
+      // Should display refs count
+      expect(screen.getByText(/3 refs/i)).toBeInTheDocument();
+      // Should display token usage
+      expect(screen.getByText(/1,500/)).toBeInTheDocument();
+    });
+
+    it("should not show context stats when kbContextStats is undefined", () => {
+      render(<StatusBar kbStatus="ready" />);
+
+      expect(screen.queryByTestId("kb-context-stats")).not.toBeInTheDocument();
+    });
+
+    it("should have accessible aria-label for KB indicator", () => {
+      render(<StatusBar kbStatus="ready" />);
+
+      const indicator = screen.getByTestId("kb-status-indicator");
+      const container = indicator.closest("[role='status']");
+      expect(container).toHaveAttribute(
+        "aria-label",
+        expect.stringContaining("Knowledge"),
+      );
+    });
+
+    it("should show token budget usage percentage", () => {
+      render(
+        <StatusBar
+          kbStatus="ready"
+          kbContextStats={{ refsCount: 2, tokensUsed: 1500, tokenBudget: 2000 }}
+        />,
+      );
+
+      // Should show percentage or fraction
+      const statsElement = screen.getByTestId("kb-context-stats");
+      expect(statsElement).toHaveAttribute(
+        "title",
+        expect.stringContaining("75%"),
+      );
+    });
+  });
+
+  // =============================================================================
   // Tooltips (TDD RED - Tests should FAIL initially)
   // =============================================================================
   describe("tooltips", () => {

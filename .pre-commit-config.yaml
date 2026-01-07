@@ -1172,6 +1172,21 @@ repos:
       - Navigation links losing time context\n\n\
       Created: 2025-12-11 (Grafana dashboard audit)\n\
       See: scripts/validation/validate_grafana_dashboards.py\n"
+  - id: check-grafana-dashboard-sync
+    name: Check Grafana Dashboard Sync
+    entry: ./scripts/sync-grafana-dashboards.sh --check
+    language: script
+    files: ^(monitoring/grafana/dashboards/.*\.json|deployments/helm/.*/dashboards/.*\.json)$
+    pass_filenames: false
+    always_run: false
+    stages:
+    - pre-push
+    description: "Ensures Grafana dashboards are synchronized between locations:\n\n\
+      Canonical: monitoring/grafana/dashboards/ (source of truth)\n\
+      Helm:      deployments/helm/.../dashboards/ (synced copy)\n\n\
+      Run ./scripts/sync-grafana-dashboards.sh to sync if out of date.\n\n\
+      Created: 2025-01-07 (dashboard consolidation)\n\
+      See: scripts/sync-grafana-dashboards.sh\n"
   - id: validate-keycloak-realm
     name: Validate Keycloak Realm Configuration
     entry: uv run --frozen python -u scripts/validation/validate_keycloak_realm.py

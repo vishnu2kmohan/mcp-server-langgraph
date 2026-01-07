@@ -66,24 +66,24 @@ function renderWithProvider(ui: React.ReactElement) {
 // =============================================================================
 
 const mockActiveStream = {
-  stream_id: "stream-abc-123",
-  session_id: "test-session-123",
+  streamId: "stream-abc-123",
+  sessionId: "test-session-123",
   model: "gpt-4",
   provider: "openai",
-  started_at: new Date().toISOString(),
-  ttfc_ms: 150.5,
-  chunks_received: 10,
-  total_chunk_size: 256,
-  last_chunk_at: new Date().toISOString(),
+  startedAt: new Date().toISOString(),
+  ttfcMs: 150.5,
+  chunksReceived: 10,
+  totalChunkSize: 256,
+  lastChunkAt: new Date().toISOString(),
   status: "active" as const,
 };
 
 const mockCompletedStream = {
   ...mockActiveStream,
-  stream_id: "stream-def-456",
+  streamId: "stream-def-456",
   status: "success" as const,
-  ttfc_ms: 200.0,
-  chunks_received: 25,
+  ttfcMs: 200.0,
+  chunksReceived: 25,
 };
 
 // =============================================================================
@@ -135,7 +135,7 @@ describe("LLMStreamingTab", () => {
   describe("active streams", () => {
     it("should display active stream cards", () => {
       const activeStreams = new Map([
-        [mockActiveStream.stream_id, mockActiveStream],
+        [mockActiveStream.streamId, mockActiveStream],
       ]);
 
       mockUseLLMStreamingWebSocket.mockReturnValue({
@@ -156,7 +156,7 @@ describe("LLMStreamingTab", () => {
 
     it("should display TTFC metric", () => {
       const activeStreams = new Map([
-        [mockActiveStream.stream_id, mockActiveStream],
+        [mockActiveStream.streamId, mockActiveStream],
       ]);
 
       mockUseLLMStreamingWebSocket.mockReturnValue({
@@ -178,7 +178,7 @@ describe("LLMStreamingTab", () => {
 
     it("should display chunk count", () => {
       const activeStreams = new Map([
-        [mockActiveStream.stream_id, mockActiveStream],
+        [mockActiveStream.streamId, mockActiveStream],
       ]);
 
       mockUseLLMStreamingWebSocket.mockReturnValue({
@@ -199,7 +199,7 @@ describe("LLMStreamingTab", () => {
 
     it("should show active status indicator for streaming", () => {
       const activeStreams = new Map([
-        [mockActiveStream.stream_id, mockActiveStream],
+        [mockActiveStream.streamId, mockActiveStream],
       ]);
 
       mockUseLLMStreamingWebSocket.mockReturnValue({
@@ -278,8 +278,8 @@ describe("LLMStreamingTab", () => {
   describe("multiple streams", () => {
     it("should display multiple active streams", () => {
       const activeStreams = new Map([
-        [mockActiveStream.stream_id, mockActiveStream],
-        [mockCompletedStream.stream_id, mockCompletedStream],
+        [mockActiveStream.streamId, mockActiveStream],
+        [mockCompletedStream.streamId, mockCompletedStream],
       ]);
 
       mockUseLLMStreamingWebSocket.mockReturnValue({

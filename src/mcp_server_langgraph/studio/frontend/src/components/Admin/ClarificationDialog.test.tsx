@@ -27,71 +27,72 @@ import userEvent from "@testing-library/user-event";
 import {
   ClarificationDialog,
   type ClarificationDialogProps,
-  type AgentClarificationRequest,
+  type AgentClarificationRequestCamelCase,
 } from "./ClarificationDialog";
 
 // =============================================================================
 // Test Data
 // =============================================================================
 
-const mockTextClarificationRequest: AgentClarificationRequest = {
-  request_id: "clar-001",
-  session_id: "session-001",
-  task_id: "task-001",
-  agent_name: "Research Assistant",
-  clarification_type: "text",
+// Mock data uses camelCase per ADR-0091 Phase 10
+const mockTextClarificationRequest: AgentClarificationRequestCamelCase = {
+  requestId: "clar-001",
+  sessionId: "session-001",
+  taskId: "task-001",
+  agentName: "Research Assistant",
+  clarificationType: "text",
   question: "Which date range should I use for the analysis?",
   options: [],
   placeholder: "Enter date range (e.g., 2024-01-01 to 2024-12-31)",
   required: true,
   context: {
-    data_source: "sales_data",
+    dataSource: "sales_data",
   },
-  requested_at: "2024-01-15T10:36:00Z",
+  requestedAt: "2024-01-15T10:36:00Z",
 };
 
-const mockChoiceClarificationRequest: AgentClarificationRequest = {
-  request_id: "clar-002",
-  session_id: "session-001",
-  task_id: "task-002",
-  agent_name: "Data Analyst",
-  clarification_type: "choice",
+const mockChoiceClarificationRequest: AgentClarificationRequestCamelCase = {
+  requestId: "clar-002",
+  sessionId: "session-001",
+  taskId: "task-002",
+  agentName: "Data Analyst",
+  clarificationType: "choice",
   question: "Which analysis approach should I use?",
   options: [
     {
       id: "fast",
       label: "Fast Analysis",
       description: "~30 seconds, 85% accuracy",
-      is_recommended: false,
+      isRecommended: false,
     },
     {
       id: "thorough",
       label: "Thorough Analysis",
       description: "~5 minutes, 98% accuracy",
-      is_recommended: true,
+      isRecommended: true,
     },
   ],
   placeholder: null,
   required: true,
   context: {},
-  requested_at: "2024-01-15T10:36:00Z",
+  requestedAt: "2024-01-15T10:36:00Z",
 };
 
-const mockConfirmationRequest: AgentClarificationRequest = {
-  request_id: "clar-003",
-  session_id: "session-001",
-  task_id: "task-003",
-  agent_name: "File Manager",
-  clarification_type: "confirmation",
+const mockConfirmationRequest: AgentClarificationRequestCamelCase = {
+  requestId: "clar-003",
+  sessionId: "session-001",
+  taskId: "task-003",
+  agentName: "File Manager",
+  clarificationType: "confirmation",
   question: "This will delete 150 records. Are you sure you want to proceed?",
   options: [],
   placeholder: null,
   required: true,
   context: {
-    record_count: 150,
+    recordCount: 150,
     operation: "delete",
   },
-  requested_at: "2024-01-15T10:36:00Z",
+  requestedAt: "2024-01-15T10:36:00Z",
 };
 
 const defaultTextProps: ClarificationDialogProps = {
@@ -208,10 +209,11 @@ describe("ClarificationDialog", () => {
       await user.click(screen.getByTestId("submit-button"));
 
       await waitFor(() => {
+        // Callbacks use camelCase per ADR-0091 Phase 10
         expect(onRespond).toHaveBeenCalledWith({
-          request_id: "clar-001",
+          requestId: "clar-001",
           value: "2024-01-01 to 2024-06-30",
-          responded_by: "user@example.com",
+          respondedBy: "user@example.com",
         });
       });
     });
@@ -264,10 +266,11 @@ describe("ClarificationDialog", () => {
       await user.click(screen.getByTestId("submit-button"));
 
       await waitFor(() => {
+        // Callbacks use camelCase per ADR-0091 Phase 10
         expect(onRespond).toHaveBeenCalledWith({
-          request_id: "clar-002",
-          selected_option_id: "fast",
-          responded_by: "user@example.com",
+          requestId: "clar-002",
+          selectedOptionId: "fast",
+          respondedBy: "user@example.com",
         });
       });
     });
@@ -315,10 +318,11 @@ describe("ClarificationDialog", () => {
       await user.click(screen.getByTestId("confirm-yes"));
 
       await waitFor(() => {
+        // Callbacks use camelCase per ADR-0091 Phase 10
         expect(onRespond).toHaveBeenCalledWith({
-          request_id: "clar-003",
+          requestId: "clar-003",
           confirmed: true,
-          responded_by: "user@example.com",
+          respondedBy: "user@example.com",
         });
       });
     });
@@ -336,10 +340,11 @@ describe("ClarificationDialog", () => {
       await user.click(screen.getByTestId("confirm-no"));
 
       await waitFor(() => {
+        // Callbacks use camelCase per ADR-0091 Phase 10
         expect(onRespond).toHaveBeenCalledWith({
-          request_id: "clar-003",
+          requestId: "clar-003",
           confirmed: false,
-          responded_by: "user@example.com",
+          respondedBy: "user@example.com",
         });
       });
     });
@@ -403,14 +408,15 @@ describe("ClarificationDialog", () => {
     it("should display context information when available", () => {
       render(<ClarificationDialog {...defaultTextProps} />);
 
-      expect(screen.getByText(/sales_data/)).toBeInTheDocument();
+      // Context uses camelCase keys per ADR-0091 Phase 10
+      expect(screen.getByText(/dataSource/)).toBeInTheDocument();
     });
 
     it("should display destructive operation warning", () => {
       render(<ClarificationDialog {...defaultConfirmationProps} />);
 
-      // Context shows record_count and operation
-      expect(screen.getByText(/record_count/)).toBeInTheDocument();
+      // Context shows recordCount and operation (camelCase per ADR-0091 Phase 10)
+      expect(screen.getByText(/recordCount/)).toBeInTheDocument();
       // 150 appears in both question and context
       expect(screen.getAllByText(/150/).length).toBeGreaterThan(0);
     });

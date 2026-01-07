@@ -320,3 +320,250 @@ class TestLoadedSkillsResult:
 
         assert "stage1" in loaded.stages_used
         assert "stage2" in loaded.stages_used
+
+
+@pytest.mark.unit
+@pytest.mark.xdist_group(name="progressive_skill_loader_semantic")
+class TestProgressiveSkillLoaderSemanticSearch:
+    """Tests for ProgressiveSkillLoader stages 3/4: semantic search.
+
+    TDD: These tests define the contract for semantic skill discovery.
+    Stages 3/4 use SkillSearchTool for vector-based skill finding.
+    """
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers."""
+        gc.collect()
+
+    def test_progressive_skill_loader_accepts_skill_search_tool(self) -> None:
+        """Test ProgressiveSkillLoader accepts skill_search_tool parameter."""
+        from unittest.mock import MagicMock
+
+        from mcp_server_langgraph.skills.progressive_loader import ProgressiveSkillLoader
+
+        mock_tool = MagicMock()
+        loader = ProgressiveSkillLoader(skill_search_tool=mock_tool)
+
+        assert loader.skill_search_tool is mock_tool
+
+    def test_skill_search_tool_defaults_to_none(self) -> None:
+        """Test skill_search_tool defaults to None."""
+        from mcp_server_langgraph.skills.progressive_loader import ProgressiveSkillLoader
+
+        loader = ProgressiveSkillLoader()
+
+        assert loader.skill_search_tool is None
+
+    @pytest.mark.asyncio
+    async def test_stage3_semantic_fills_remaining_slots(self) -> None:
+        """GIVEN a loader with skill_search_tool and room after stages 1-2
+        WHEN load_for_task is called with enable_semantic=True
+        THEN semantic search fills remaining slots up to max_skills
+        """
+        from unittest.mock import AsyncMock, MagicMock
+
+        from mcp_server_langgraph.core.scopes import CapabilityScope
+        from mcp_server_langgraph.skills.models import Skill
+        from mcp_server_langgraph.skills.progressive_loader import ProgressiveSkillLoader
+        from mcp_server_langgraph.skills.search import SkillSearchResult
+
+        # Create mock search tool
+        mock_search_tool = MagicMock()
+        mock_search_tool.search = AsyncMock(
+            return_value=[
+                SkillSearchResult(
+                    skill_id="semantic-1",
+                    name="semantic-skill-1",
+                    description="Semantically relevant skill",
+                    score=0.9,
+                ),
+                SkillSearchResult(
+                    skill_id="semantic-2",
+                    name="semantic-skill-2",
+                    description="Another relevant skill",
+                    score=0.8,
+                ),
+            ]
+        )
+
+        # Create mock registry that returns skill when requested
+        mock_registry = MagicMock()
+        mock_registry.get_for_scope = MagicMock(
+            side_effect=lambda name, scope: Skill(name=name, description=f"Skill {name}")
+            if name.startswith("semantic-skill")
+            else None
+        )
+        mock_registry.list_for_scope = MagicMock(return_value=[])
+
+        loader = ProgressiveSkillLoader(
+            skill_registry=mock_registry,
+            skill_search_tool=mock_search_tool,
+        )
+
+        result = await loader.load_for_task(
+            task_description="Review code for security issues",
+            scope=CapabilityScope.TASK,
+            requested_skills=[],  # No explicit requests
+            max_skills=5,
+            enable_semantic=True,  # Enable stage 3/4
+        )
+
+        # Should have found skills via semantic search
+        mock_search_tool.search.assert_called_once()
+        assert len(result) > 0
+
+    @pytest.mark.asyncio
+    async def test_stage3_semantic_respects_min_score(self) -> None:
+        """Test semantic search respects minimum score threshold."""
+        from unittest.mock import AsyncMock, MagicMock
+
+        from mcp_server_langgraph.core.scopes import CapabilityScope
+        from mcp_server_langgraph.skills.models import Skill
+        from mcp_server_langgraph.skills.progressive_loader import ProgressiveSkillLoader
+        from mcp_server_langgraph.skills.search import SkillSearchResult
+
+        mock_search_tool = MagicMock()
+        mock_search_tool.search = AsyncMock(
+            return_value=[
+                SkillSearchResult(
+                    skill_id="high-score",
+                    name="high-score-skill",
+                    description="High relevance",
+                    score=0.95,
+                ),
+                SkillSearchResult(
+                    skill_id="low-score",
+                    name="low-score-skill",
+                    description="Low relevance",
+                    score=0.3,
+                ),
+            ]
+        )
+
+        mock_registry = MagicMock()
+        mock_registry.get_for_scope = MagicMock(side_effect=lambda name, scope: Skill(name=name, description=f"Skill {name}"))
+        mock_registry.list_for_scope = MagicMock(return_value=[])
+
+        loader = ProgressiveSkillLoader(
+            skill_registry=mock_registry,
+            skill_search_tool=mock_search_tool,
+        )
+
+        await loader.load_for_task(
+            task_description="Find relevant skills",
+            scope=CapabilityScope.TASK,
+            max_skills=5,
+            enable_semantic=True,
+            semantic_min_score=0.5,  # Filter low scores
+        )
+
+        # search should be called with min_score
+        call_kwargs = mock_search_tool.search.call_args.kwargs
+        assert call_kwargs.get("min_score") == 0.5
+
+    @pytest.mark.asyncio
+    async def test_stage3_semantic_skips_already_loaded_skills(self) -> None:
+        """Test semantic search doesn't duplicate skills from stages 1-2."""
+        from unittest.mock import AsyncMock, MagicMock
+
+        from mcp_server_langgraph.core.scopes import CapabilityScope
+        from mcp_server_langgraph.skills.hierarchical import HierarchicalSkillRegistry
+        from mcp_server_langgraph.skills.models import Skill
+        from mcp_server_langgraph.skills.progressive_loader import ProgressiveSkillLoader
+        from mcp_server_langgraph.skills.search import SkillSearchResult
+
+        # Real registry with explicit skill
+        registry = HierarchicalSkillRegistry()
+        explicit_skill = Skill(name="explicit-skill", description="Explicitly requested")
+        registry.register_for_scope(explicit_skill, CapabilityScope.PROJECT)
+
+        # Mock search returns the same skill as semantic match
+        mock_search_tool = MagicMock()
+        mock_search_tool.search = AsyncMock(
+            return_value=[
+                SkillSearchResult(
+                    skill_id="explicit-skill",
+                    name="explicit-skill",  # Same as explicit
+                    description="Explicitly requested",
+                    score=0.9,
+                ),
+            ]
+        )
+
+        loader = ProgressiveSkillLoader(
+            skill_registry=registry,
+            skill_search_tool=mock_search_tool,
+        )
+
+        result = await loader.load_for_task(
+            task_description="Task",
+            scope=CapabilityScope.TASK,
+            requested_skills=["explicit-skill"],
+            enable_semantic=True,
+        )
+
+        # Should only have the skill once
+        names = [s.name for s in result]
+        assert names.count("explicit-skill") == 1
+
+    @pytest.mark.asyncio
+    async def test_stage3_disabled_by_default(self) -> None:
+        """Test semantic search is disabled when enable_semantic=False."""
+        from unittest.mock import AsyncMock, MagicMock
+
+        from mcp_server_langgraph.core.scopes import CapabilityScope
+        from mcp_server_langgraph.skills.progressive_loader import ProgressiveSkillLoader
+
+        mock_search_tool = MagicMock()
+        mock_search_tool.search = AsyncMock(return_value=[])
+
+        loader = ProgressiveSkillLoader(skill_search_tool=mock_search_tool)
+
+        await loader.load_for_task(
+            task_description="Task",
+            scope=CapabilityScope.TASK,
+            # enable_semantic defaults to False
+        )
+
+        # Semantic search should NOT be called
+        mock_search_tool.search.assert_not_called()
+
+    @pytest.mark.asyncio
+    async def test_stage4_detailed_tracks_semantic_stage(self) -> None:
+        """Test load_for_task_detailed tracks stage3/stage4 in stages_used."""
+        from unittest.mock import AsyncMock, MagicMock
+
+        from mcp_server_langgraph.core.scopes import CapabilityScope
+        from mcp_server_langgraph.skills.models import Skill
+        from mcp_server_langgraph.skills.progressive_loader import ProgressiveSkillLoader
+        from mcp_server_langgraph.skills.search import SkillSearchResult
+
+        mock_search_tool = MagicMock()
+        mock_search_tool.search = AsyncMock(
+            return_value=[
+                SkillSearchResult(
+                    skill_id="semantic-1",
+                    name="semantic-skill",
+                    description="Relevant",
+                    score=0.9,
+                ),
+            ]
+        )
+
+        mock_registry = MagicMock()
+        mock_registry.get_for_scope = MagicMock(side_effect=lambda name, scope: Skill(name=name, description=f"Skill {name}"))
+        mock_registry.list_for_scope = MagicMock(return_value=[])
+
+        loader = ProgressiveSkillLoader(
+            skill_registry=mock_registry,
+            skill_search_tool=mock_search_tool,
+        )
+
+        result = await loader.load_for_task_detailed(
+            task_description="Find skills",
+            scope=CapabilityScope.TASK,
+            enable_semantic=True,
+        )
+
+        # Should track stage3 usage
+        assert "stage3" in result.stages_used

@@ -43,10 +43,10 @@ const mockInsights: AIInsight[] = [
 const mockObservabilityInsights = {
   traceAnomalies: {
     slowSpans: [
-      { span_id: "span-1", duration_ms: 1500, name: "db.query", status: "ok" },
+      { spanId: "span-1", durationMs: 1500, name: "db.query", status: "ok" },
       {
-        span_id: "span-2",
-        duration_ms: 2000,
+        spanId: "span-2",
+        durationMs: 2000,
         name: "llm.completion",
         status: "ok",
       },

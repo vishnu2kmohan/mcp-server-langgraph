@@ -320,11 +320,10 @@ class TestEditFileTool:
     # =========================================================================
 
     @pytest.mark.unit
-    @pytest.mark.xfail(strict=True, reason="TDD: EDIT_FILE_CREATE_BACKUP not yet implemented")
     def test_edit_file_creates_backup(self, temp_workspace: Path, existing_file: Path, sandbox_enabled_settings: MagicMock):
-        """GIVEN an existing file and backup enabled
+        """GIVEN an existing file and create_backup=True
         WHEN edit_file modifies the file
-        THEN a backup is created"""
+        THEN a backup is created with .bak extension"""
         from mcp_server_langgraph.tools.edit_file_tools import edit_file
 
         original_content = existing_file.read_text()
@@ -339,29 +338,21 @@ class TestEditFileTool:
                 "mcp_server_langgraph.tools.edit_file_tools.get_sandbox_runner",
                 return_value=mock_runner,
             ),
-            patch(
-                "mcp_server_langgraph.tools.edit_file_tools.EDIT_FILE_CREATE_BACKUP",
-                True,
-            ),
         ):
+            # Invoke tool - we verify backup creation below, not the result
             edit_file.invoke(
                 {
                     "file_path": str(existing_file),
                     "old_string": "Hello",
                     "new_string": "Goodbye",
+                    "create_backup": True,
                 }
             )
 
-        # Check backup exists
-        backup_candidates = [
-            existing_file.with_suffix(".txt.bak"),
-            existing_file.parent / f"{existing_file.name}.bak",
-        ]
-
-        backup_found = any(b.exists() for b in backup_candidates)
-        if backup_found:
-            backup_file = next(b for b in backup_candidates if b.exists())
-            assert backup_file.read_text() == original_content
+        # Verify backup was created
+        backup_file = existing_file.with_suffix(existing_file.suffix + ".bak")
+        assert backup_file.exists(), f"Backup file not created at {backup_file}"
+        assert backup_file.read_text() == original_content, "Backup should contain original content"
 
     # =========================================================================
     # Encoding Tests

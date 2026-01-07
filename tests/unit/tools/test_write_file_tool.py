@@ -261,12 +261,44 @@ class TestWriteFileTool:
     # =========================================================================
 
     @pytest.mark.unit
-    @pytest.mark.xfail(strict=True, reason="TDD: WRITE_FILE_CREATE_BACKUP not yet implemented")
-    def test_write_file_creates_backup_before_overwrite(self, temp_workspace: Path, existing_file: Path):
+    def test_write_file_creates_backup_before_overwrite(
+        self, temp_workspace: Path, existing_file: Path, sandbox_enabled_settings: MagicMock
+    ):
         """GIVEN an existing file and create_backup=True
         WHEN write_file overwrites the file
-        THEN a backup is created"""
-        pass  # Implementation pending
+        THEN a backup is created with .bak extension"""
+        from mcp_server_langgraph.tools.write_file_tools import write_file
+
+        original_content = existing_file.read_text()
+        new_content = "new content replaces original"
+        mock_runner = self._create_mock_sandbox_runner(temp_workspace)
+
+        with (
+            patch(
+                "mcp_server_langgraph.tools.write_file_tools.get_workspace_root",
+                return_value=temp_workspace,
+            ),
+            patch(
+                "mcp_server_langgraph.tools.write_file_tools.get_sandbox_runner",
+                return_value=mock_runner,
+            ),
+        ):
+            # Note: create_backup parameter doesn't exist yet - this test defines expected behavior
+            # We verify backup creation below, not the result
+            write_file.invoke(
+                {
+                    "file_path": str(existing_file),
+                    "content": new_content,
+                    "create_backup": True,  # This parameter doesn't exist yet
+                }
+            )
+
+        # Verify backup was created
+        backup_file = existing_file.with_suffix(existing_file.suffix + ".bak")
+        assert backup_file.exists(), f"Backup file not created at {backup_file}"
+        assert backup_file.read_text() == original_content, "Backup should contain original content"
+        # Verify original was overwritten
+        assert existing_file.read_text() == new_content
 
     # =========================================================================
     # Extension Validation Tests

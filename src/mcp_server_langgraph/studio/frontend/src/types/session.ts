@@ -15,7 +15,12 @@ import type { SnakeToCamelCaseDeep } from "../api/transforms";
 // ==============================================================================
 
 /** Supported LLM providers */
-export type ModelProvider = "openai" | "anthropic" | "google" | "azure";
+export type ModelProvider =
+  | "openai"
+  | "anthropic"
+  | "google"
+  | "azure"
+  | "unknown";
 
 /** Session configuration */
 export interface SessionConfig {
@@ -81,6 +86,23 @@ export interface ClientTokenUsage {
   promptTokens: number;
   completionTokens: number;
   totalTokens: number;
+}
+
+/**
+ * Token breakdown for StatusBar display.
+ * Alias for ClientTokenUsage - same structure, different semantic context.
+ */
+export type TokenBreakdown = ClientTokenUsage;
+
+/**
+ * Cost breakdown information for StatusBar display.
+ * Shows estimated cost and optional per-model breakdown.
+ */
+export interface CostBreakdown {
+  /** Estimated cost in USD */
+  estimatedCostUsd: number;
+  /** Cost by model (for multi-model sessions) */
+  byModel?: Record<string, { tokens: number; cost: number }>;
 }
 
 /** Agent transparency metadata */

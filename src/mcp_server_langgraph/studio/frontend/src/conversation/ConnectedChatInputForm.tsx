@@ -8,17 +8,20 @@
  * - Inline AI suggestions
  * - Reasoning effort selector (for thinking models)
  * - Model selector
+ * - Knowledge Base focus mode (Perplexity-style)
  *
  * This replaces the basic conversation/ChatInput.tsx and provides
  * a consistent, feature-rich chat experience throughout the app.
  */
-import { useCallback, useMemo } from "react";
+import { useCallback, useMemo, useState } from "react";
 import {
   ChatInputForm,
   type SlashCommand,
 } from "../components/Chat/ChatInputForm";
+import type { KBFocusMode } from "../components/Chat/KnowledgeBaseFocus";
 import { useFileUpload } from "../hooks/useFileUpload";
 import { useVoiceInput } from "../hooks/useVoiceInput";
+import { useKBStatus } from "../hooks/useKBStatus";
 import { useFeatureFlag } from "../contexts/FeatureFlagContext";
 import { useAppSelector } from "../store/hooks";
 import { selectSubmitOnEnter } from "../store/slices/uiSlice";
@@ -56,6 +59,10 @@ export interface ConnectedChatInputFormProps {
   onDismissSuggestion?: () => void;
   /** Auto-focus the textarea on mount */
   autoFocus?: boolean;
+  /** Controlled KB focus mode value (for lifting state to parent) */
+  kbFocusValue?: KBFocusMode;
+  /** Callback when KB focus mode changes (for lifting state to parent) */
+  onKBFocusChange?: (mode: KBFocusMode) => void;
 }
 
 // =============================================================================
@@ -92,12 +99,28 @@ export function ConnectedChatInputForm({
   onAcceptSuggestion,
   onDismissSuggestion,
   autoFocus = false,
+  kbFocusValue,
+  onKBFocusChange,
 }: ConnectedChatInputFormProps) {
   // =============================================================================
   // Feature Flags & UI State
   // =============================================================================
   const enableRichTextMode = useFeatureFlag("rich_text_chat_input");
+  const enableKBFocus = useFeatureFlag("kb_focus");
   const submitOnEnter = useAppSelector(selectSubmitOnEnter);
+
+  // =============================================================================
+  // Knowledge Base Status Hook
+  // =============================================================================
+  const { kbStatusForUI, statusMessage: kbStatusMessage } = useKBStatus({
+    skip: !enableKBFocus,
+  });
+
+  // KB focus mode state (internal fallback, use controlled if provided)
+  const [internalKbFocusMode, setInternalKbFocusMode] =
+    useState<KBFocusMode>("all");
+  // Use controlled value if provided, otherwise use internal state
+  const kbFocusMode = kbFocusValue ?? internalKbFocusMode;
 
   // =============================================================================
   // File Upload Hook
@@ -189,6 +212,16 @@ export function ConnectedChatInputForm({
     [onSlashCommand, onChange],
   );
 
+  const handleKBFocusModeChange = useCallback(
+    (mode: KBFocusMode) => {
+      // Update internal state (for uncontrolled mode)
+      setInternalKbFocusMode(mode);
+      // Notify parent (for controlled mode)
+      onKBFocusChange?.(mode);
+    },
+    [onKBFocusChange],
+  );
+
   // Memoize drag handlers to avoid re-renders
   const memoizedDragHandlers = useMemo(() => dragHandlers, [dragHandlers]);
 
@@ -228,6 +261,12 @@ export function ConnectedChatInputForm({
       // RichText mode (feature flag + user preference)
       enableRichTextMode={enableRichTextMode}
       submitOnEnter={submitOnEnter}
+      // Knowledge Base Focus (feature flag controlled)
+      showKBFocus={enableKBFocus}
+      kbFocusValue={kbFocusMode}
+      onKBFocusChange={handleKBFocusModeChange}
+      kbStatus={kbStatusForUI}
+      kbStatusMessage={kbStatusMessage}
     />
   );
 }

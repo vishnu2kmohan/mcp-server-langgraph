@@ -809,28 +809,22 @@ grafana:
   service:
     type: ClusterIP
     port: 80
-  # Dashboard provisioning
-  dashboardsProvider:
-    enabled: true
-  dashboardsConfigMaps:
-    - configMapName: grafana-dashboards
-      fileName: authentication.json
-    - configMapName: grafana-dashboards
-      fileName: keycloak.json
-    - configMapName: grafana-dashboards
-      fileName: langgraph-agent.json
-    - configMapName: grafana-dashboards
-      fileName: llm-performance.json
-    - configMapName: grafana-dashboards
-      fileName: openfga.json
-    - configMapName: grafana-dashboards
-      fileName: redis-sessions.json
-    - configMapName: grafana-dashboards
-      fileName: security.json
-    - configMapName: grafana-dashboards
-      fileName: sla-monitoring.json
-    - configMapName: grafana-dashboards
-      fileName: soc2-compliance.json
+  # Dashboard provisioning via sidecar
+  # Sidecar discovers ConfigMaps with grafana_dashboard: "1" label
+  # and organizes dashboards into folders based on grafana_folder annotation
+  sidecar:
+    dashboards:
+      enabled: true
+      label: grafana_dashboard
+      labelValue: "1"
+      folderAnnotation: grafana_folder
+      searchNamespace: null
+      provider:
+        foldersFromFilesStructure: false
+        allowUiUpdates: true
+  # Dashboard folders (8 categories, 36 dashboards total):
+  #   AI/, Application/, Auth/, Compliance/,
+  #   Infrastructure/, Overview/, Resilience/, WebSocket/
   # Datasource configuration
   datasources:
     datasources.yaml:

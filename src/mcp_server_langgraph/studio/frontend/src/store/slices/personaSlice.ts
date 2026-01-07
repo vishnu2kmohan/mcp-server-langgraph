@@ -11,6 +11,7 @@ import {
   PERSONA_DEFAULT_VIEW,
   type ModuleId,
 } from "../../persona/PersonaVariants";
+import { KNOWN_NAV_IDS } from "../../layout/navConstants";
 
 export type Persona = "admin" | "developer" | "user";
 
@@ -235,38 +236,10 @@ export const selectPersonaLoading = (state: PersonaRootState) =>
   state.persona.isPersonaLoading;
 
 /**
- * Known nav item IDs from ActivityBar.
- * Used to filter server-provided visibleModules to only include valid nav items.
- *
- * NOTE: This must stay in sync with NAV_ITEMS + BOTTOM_ITEMS in ActivityBar.tsx.
- * See ActivityBar.tsx for the authoritative list and KNOWN_NAV_IDS export.
- */
-const KNOWN_NAV_IDS = new Set([
-  // Core Work
-  "projects",
-  "chat",
-  "workflows",
-  // AI & Data
-  "agents",
-  "mcp",
-  "vectors",
-  "connections",
-  "files",
-  // Observability
-  "traces",
-  "observability",
-  "cost",
-  // Admin
-  "admin",
-  "audit",
-  "compliance",
-  // Bottom items
-  "help",
-  "settings",
-]);
-
-/**
  * Select sidebar items based on server-provided visibleModules or fallback config.
+ *
+ * Uses KNOWN_NAV_IDS imported from ActivityBar.tsx (single source of truth)
+ * to filter server-provided visibleModules to only include valid nav items.
  *
  * Priority:
  * 1. Server-provided visibleModules (filtered to known nav IDs)

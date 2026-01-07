@@ -30,11 +30,17 @@ import {
   showProtocolVersionMismatchToast,
 } from "../utils/websocketAuth";
 import { devLogger } from "../utils/devLogger";
-import { useRealtimeSync, type ConnectionStatus } from "./useRealtimeSync";
+import {
+  useRealtimeSync,
+  type WebSocketConnectionStatus,
+} from "./useRealtimeSync";
 import { reportWebSocketMetrics } from "../utils/websocketTelemetry";
+import { transformSnakeToCamel } from "../api/transforms";
 import type {
   ApprovalRequiredPayload,
   ClarificationRequiredPayload,
+  ApprovalRequiredPayloadCamelCase,
+  ClarificationRequiredPayloadCamelCase,
 } from "../types/hitl";
 
 // Create prefixed logger for this hook
@@ -45,13 +51,17 @@ const logger = devLogger.withPrefix("[AgentRequestWS]");
 // =============================================================================
 
 // Re-export from canonical location for backwards compatibility
+// Snake_case types are for parsing WebSocket messages (internal use)
+// CamelCase types are for UI components (ADR-0091)
 export type {
   ApprovalRequiredPayload,
   ClarificationRequiredPayload,
+  ApprovalRequiredPayloadCamelCase,
+  ClarificationRequiredPayloadCamelCase,
 } from "../types/hitl";
 
-// Re-export ConnectionStatus from useRealtimeSync for backwards compatibility
-export type { ConnectionStatus } from "./useRealtimeSync";
+// Re-export WebSocketConnectionStatus from useRealtimeSync
+export type { WebSocketConnectionStatus } from "./useRealtimeSync";
 
 // Note: ApprovalUpdatedPayload and ExecutionResumedPayload are WebSocket-specific
 // and not in the canonical hitl.ts types (they represent server-to-client events)
@@ -88,10 +98,12 @@ export interface UseAgentRequestWebSocketOptions {
   pingInterval?: number;
   /** Session ID to filter messages */
   sessionId?: string;
-  /** Callback for approval_required messages */
-  onApprovalRequired?: (payload: ApprovalRequiredPayload) => void;
-  /** Callback for clarification_required messages */
-  onClarificationRequired?: (payload: ClarificationRequiredPayload) => void;
+  /** Callback for approval_required messages (camelCase per ADR-0091) */
+  onApprovalRequired?: (payload: ApprovalRequiredPayloadCamelCase) => void;
+  /** Callback for clarification_required messages (camelCase per ADR-0091) */
+  onClarificationRequired?: (
+    payload: ClarificationRequiredPayloadCamelCase,
+  ) => void;
   /** Callback for approval_updated messages */
   onApprovalUpdated?: (payload: ApprovalUpdatedPayload) => void;
   /** Callback for execution_resumed messages */
@@ -100,11 +112,11 @@ export interface UseAgentRequestWebSocketOptions {
 
 export interface UseAgentRequestWebSocketReturn {
   /** Current connection status */
-  status: ConnectionStatus;
-  /** Pending approval requests */
-  pendingApprovals: ApprovalRequiredPayload[];
-  /** Pending clarification requests */
-  pendingClarifications: ClarificationRequiredPayload[];
+  status: WebSocketConnectionStatus;
+  /** Pending approval requests (camelCase per ADR-0091) */
+  pendingApprovals: ApprovalRequiredPayloadCamelCase[];
+  /** Pending clarification requests (camelCase per ADR-0091) */
+  pendingClarifications: ClarificationRequiredPayloadCamelCase[];
   /** Manually disconnect */
   disconnect: () => void;
   /** Manually reconnect */
@@ -268,11 +280,12 @@ export function useAgentRequestWebSocket(
   // Check if user has permission for agent requests WebSocket
   const hasAgentRequestsPermission = wsPermissions?.agent_requests ?? false;
 
+  // State uses camelCase types per ADR-0091
   const [pendingApprovals, setPendingApprovals] = useState<
-    ApprovalRequiredPayload[]
+    ApprovalRequiredPayloadCamelCase[]
   >([]);
   const [pendingClarifications, setPendingClarifications] = useState<
-    ClarificationRequiredPayload[]
+    ClarificationRequiredPayloadCamelCase[]
   >([]);
 
   // Refs for session tracking and ping interval
@@ -313,6 +326,7 @@ export function useAgentRequestWebSocket(
     enabled && isAuthenticated && hasAgentRequestsPermission;
 
   // Handle incoming messages (receives parsed data from useRealtimeSync)
+  // Transforms snake_case payloads to camelCase per ADR-0091
   const handleMessage = useCallback((data: unknown) => {
     const message = parseAgentRequestMessage(data);
 
@@ -321,20 +335,26 @@ export function useAgentRequestWebSocket(
     }
 
     switch (message.type) {
-      case "approval_required":
-        setPendingApprovals((prev) => [...prev, message.payload]);
-        callbacksRef.current.onApprovalRequired?.(message.payload);
+      case "approval_required": {
+        // Transform snake_case → camelCase per ADR-0091
+        const camelPayload = transformSnakeToCamel(message.payload);
+        setPendingApprovals((prev) => [...prev, camelPayload]);
+        callbacksRef.current.onApprovalRequired?.(camelPayload);
         break;
+      }
 
-      case "clarification_required":
-        setPendingClarifications((prev) => [...prev, message.payload]);
-        callbacksRef.current.onClarificationRequired?.(message.payload);
+      case "clarification_required": {
+        // Transform snake_case → camelCase per ADR-0091
+        const camelPayload = transformSnakeToCamel(message.payload);
+        setPendingClarifications((prev) => [...prev, camelPayload]);
+        callbacksRef.current.onClarificationRequired?.(camelPayload);
         break;
+      }
 
       case "approval_updated":
-        // Remove from pending
+        // Remove from pending (state uses camelCase requestId)
         setPendingApprovals((prev) =>
-          prev.filter((a) => a.request_id !== message.payload.request_id),
+          prev.filter((a) => a.requestId !== message.payload.request_id),
         );
         callbacksRef.current.onApprovalUpdated?.(message.payload);
         break;
@@ -418,7 +438,7 @@ export function useAgentRequestWebSocket(
   }, [effectiveEnabled, metrics]);
 
   // Determine effective status - override to disconnected if not enabled
-  const status: ConnectionStatus = effectiveEnabled
+  const status: WebSocketConnectionStatus = effectiveEnabled
     ? realtimeStatus
     : "disconnected";
 

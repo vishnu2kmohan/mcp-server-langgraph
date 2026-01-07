@@ -83,6 +83,7 @@ export const router = createBrowserRouter(
             { index: true, element: <Navigate to="chat" replace /> },
             {
               path: "projects",
+              handle: { breadcrumb: "Projects" },
               lazy: async () => {
                 const { ProjectsPage } = await import("../pages/ProjectsPage");
                 return { Component: ProjectsPage };
@@ -90,6 +91,10 @@ export const router = createBrowserRouter(
             },
             {
               path: "projects/:projectId",
+              handle: {
+                breadcrumb: (params: { projectId: string }) =>
+                  `Project: ${params.projectId.slice(0, 8)}`,
+              },
               lazy: async () => {
                 const { ProjectDetailPage } =
                   await import("../pages/ProjectDetailPage");
@@ -100,6 +105,7 @@ export const router = createBrowserRouter(
             // Shows owned workflows (editable) + shared workflows (read-only)
             {
               path: "workflows",
+              handle: { breadcrumb: "Workflows" },
               // Explicit Outlet element ensures React Router properly renders children
               element: <Outlet />,
               children: [
@@ -114,6 +120,7 @@ export const router = createBrowserRouter(
                 // Workflow builder/canvas - admin/developer only
                 {
                   path: "builder",
+                  handle: { breadcrumb: "Builder" },
                   element: (
                     <PersonaGuard allowedPersonas={["admin", "developer"]}>
                       <Outlet />
@@ -133,6 +140,10 @@ export const router = createBrowserRouter(
                 // View individual workflow (readonly for users, editable for admin/dev)
                 {
                   path: ":workflowId",
+                  handle: {
+                    breadcrumb: (params: { workflowId: string }) =>
+                      `Workflow: ${params.workflowId.slice(0, 8)}`,
+                  },
                   lazy: async () => {
                     const { WorkflowsPage } =
                       await import("../pages/WorkflowsPage");
@@ -178,6 +189,7 @@ export const router = createBrowserRouter(
             // MCP - admin/developer only
             {
               path: "mcp",
+              handle: { breadcrumb: "MCP" },
               element: (
                 <PersonaGuard allowedPersonas={["admin", "developer"]}>
                   <Outlet />
@@ -196,6 +208,7 @@ export const router = createBrowserRouter(
             // Connections section - admin/developer only
             {
               path: "connections",
+              handle: { breadcrumb: "Connections" },
               element: (
                 <PersonaGuard allowedPersonas={["admin", "developer"]}>
                   <Outlet />
@@ -212,6 +225,7 @@ export const router = createBrowserRouter(
                 },
                 {
                   path: "mcp",
+                  handle: { breadcrumb: "MCP" },
                   lazy: async () => {
                     const { MCPPage } = await import("../pages/MCPPage");
                     return { Component: MCPPage };
@@ -219,6 +233,7 @@ export const router = createBrowserRouter(
                 },
                 {
                   path: "agents",
+                  handle: { breadcrumb: "Agents" },
                   lazy: async () => {
                     const { AgentsPage } = await import("../pages/AgentsPage");
                     return { Component: AgentsPage };
@@ -226,6 +241,7 @@ export const router = createBrowserRouter(
                 },
                 {
                   path: "vectors",
+                  handle: { breadcrumb: "Vectors" },
                   lazy: async () => {
                     const { VectorsPage } =
                       await import("../pages/VectorsPage");
@@ -238,6 +254,7 @@ export const router = createBrowserRouter(
             // Supports tabs: /traces, /logs, /metrics, /alerts
             {
               path: "observability",
+              handle: { breadcrumb: "Observability" },
               element: (
                 <PersonaGuard allowedPersonas={["admin", "developer"]}>
                   <Outlet />
@@ -254,6 +271,7 @@ export const router = createBrowserRouter(
                 },
                 {
                   path: "traces",
+                  handle: { breadcrumb: "Traces" },
                   lazy: async () => {
                     const { ObservabilityPage } =
                       await import("../pages/ObservabilityPage");
@@ -262,6 +280,7 @@ export const router = createBrowserRouter(
                 },
                 {
                   path: "logs",
+                  handle: { breadcrumb: "Logs" },
                   lazy: async () => {
                     const { ObservabilityPage } =
                       await import("../pages/ObservabilityPage");
@@ -270,6 +289,7 @@ export const router = createBrowserRouter(
                 },
                 {
                   path: "metrics",
+                  handle: { breadcrumb: "Metrics" },
                   lazy: async () => {
                     const { ObservabilityPage } =
                       await import("../pages/ObservabilityPage");
@@ -278,6 +298,7 @@ export const router = createBrowserRouter(
                 },
                 {
                   path: "alerts",
+                  handle: { breadcrumb: "Alerts" },
                   lazy: async () => {
                     const { ObservabilityPage } =
                       await import("../pages/ObservabilityPage");
@@ -290,6 +311,7 @@ export const router = createBrowserRouter(
             // Renders AgentsPage directly - admin/developer only
             {
               path: "agents",
+              handle: { breadcrumb: "Agents" },
               element: (
                 <PersonaGuard allowedPersonas={["admin", "developer"]}>
                   <Outlet />
@@ -314,6 +336,7 @@ export const router = createBrowserRouter(
             // Renders VectorsPage directly - admin/developer only
             {
               path: "vectors",
+              handle: { breadcrumb: "Vectors" },
               element: (
                 <PersonaGuard allowedPersonas={["admin", "developer"]}>
                   <Outlet />
@@ -334,6 +357,7 @@ export const router = createBrowserRouter(
             // Renders ObservabilityPage with logs tab - admin/developer only
             {
               path: "logs",
+              handle: { breadcrumb: "Logs" },
               element: (
                 <PersonaGuard allowedPersonas={["admin", "developer"]}>
                   <Outlet />
@@ -354,6 +378,7 @@ export const router = createBrowserRouter(
             // Renders ObservabilityPage with metrics tab - admin/developer only
             {
               path: "metrics",
+              handle: { breadcrumb: "Metrics" },
               element: (
                 <PersonaGuard allowedPersonas={["admin", "developer"]}>
                   <Outlet />
@@ -374,6 +399,7 @@ export const router = createBrowserRouter(
             // Renders ObservabilityPage with alerts tab - admin/developer only
             {
               path: "alerts",
+              handle: { breadcrumb: "Alerts" },
               element: (
                 <PersonaGuard allowedPersonas={["admin", "developer"]}>
                   <Outlet />
@@ -392,6 +418,7 @@ export const router = createBrowserRouter(
             },
             {
               path: "settings",
+              handle: { breadcrumb: "Settings" },
               lazy: async () => {
                 const { SettingsPage } = await import("../pages/SettingsPage");
                 return { Component: SettingsPage };
@@ -399,6 +426,7 @@ export const router = createBrowserRouter(
             },
             {
               path: "cost",
+              handle: { breadcrumb: "Cost" },
               lazy: async () => {
                 const { CostPage } = await import("../pages/CostPage");
                 return { Component: CostPage };
@@ -408,6 +436,7 @@ export const router = createBrowserRouter(
             {
               id: "files",
               path: "files",
+              handle: { breadcrumb: "Files" },
               loader: filesLoader,
               lazy: async () => {
                 const { FilesPage } = await import("../pages/FilesPage");
@@ -417,6 +446,7 @@ export const router = createBrowserRouter(
             // Compliance - requires compliance:read permission
             {
               path: "compliance",
+              handle: { breadcrumb: "Compliance" },
               element: (
                 <PermissionGuard
                   requiredPermissions={["compliance:read"]}
@@ -441,6 +471,7 @@ export const router = createBrowserRouter(
             // Audit - requires audit:read permission
             {
               path: "audit",
+              handle: { breadcrumb: "Audit" },
               element: (
                 <PermissionGuard
                   requiredPermissions={["audit:read"]}
@@ -463,6 +494,7 @@ export const router = createBrowserRouter(
             // Analytics - HEART metrics dashboard (admin only)
             {
               path: "analytics",
+              handle: { breadcrumb: "Analytics" },
               element: (
                 <PermissionGuard
                   requiredPermissions={["admin:access"]}
@@ -485,6 +517,7 @@ export const router = createBrowserRouter(
             // Help - full help center
             {
               path: "help",
+              handle: { breadcrumb: "Help" },
               lazy: async () => {
                 const { HelpPage } = await import("../pages/HelpPage");
                 return { Component: HelpPage };
@@ -493,6 +526,7 @@ export const router = createBrowserRouter(
             // Admin routes nested under /studio/admin (lazy-loaded with PersonaGuard)
             {
               path: "admin",
+              handle: { breadcrumb: "Admin" },
               element: (
                 <PersonaGuard allowedPersonas={["admin"]}>
                   <Outlet />
@@ -502,6 +536,7 @@ export const router = createBrowserRouter(
                 { index: true, element: <Navigate to="dashboard" replace /> },
                 {
                   path: "dashboard",
+                  handle: { breadcrumb: "Dashboard" },
                   lazy: async () => {
                     const { AdminDashboardPage } =
                       await import("../pages/AdminDashboardPage");
@@ -510,6 +545,7 @@ export const router = createBrowserRouter(
                 },
                 {
                   path: "audit-logs",
+                  handle: { breadcrumb: "Audit Logs" },
                   lazy: async () => {
                     const { AuditLogPage } =
                       await import("../pages/AuditLogPage");

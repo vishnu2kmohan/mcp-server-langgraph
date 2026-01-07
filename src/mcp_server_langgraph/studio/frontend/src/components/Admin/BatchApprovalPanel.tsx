@@ -19,14 +19,14 @@
 import { useState, useMemo, useCallback } from "react";
 import { CheckCircle, XCircle, Loader2, AlertTriangle } from "lucide-react";
 import { cn } from "../../utils/cn";
-import type { AgentApprovalRequest } from "../../types/hitl";
+import type { AgentApprovalRequestCamelCase } from "../../types/hitl";
 
 // =============================================================================
 // Types
 // =============================================================================
 
-// Re-export AgentApprovalRequest as ApprovalRequest for backwards compatibility
-export type ApprovalRequest = AgentApprovalRequest;
+// Use camelCase type per ADR-0091
+export type ApprovalRequest = AgentApprovalRequestCamelCase;
 
 export interface BatchApprovalPanelProps {
   /** List of pending approval requests */
@@ -110,7 +110,7 @@ export function BatchApprovalPanel({
     if (allSelected) {
       setSelectedIds(new Set());
     } else {
-      setSelectedIds(new Set(approvals.map((a) => a.request_id)));
+      setSelectedIds(new Set(approvals.map((a) => a.requestId)));
     }
   }, [allSelected, approvals]);
 
@@ -258,12 +258,12 @@ export function BatchApprovalPanel({
       {/* Approval list */}
       <div className="divide-y divide-gray-200 dark:divide-gray-700 max-h-96 overflow-y-auto">
         {approvals.map((approval) => {
-          const isSelected = selectedIds.has(approval.request_id);
+          const isSelected = selectedIds.has(approval.requestId);
           const confidencePercent = Math.round(approval.confidence * 100);
 
           return (
             <div
-              key={approval.request_id}
+              key={approval.requestId}
               className={cn(
                 "flex items-center gap-4 p-4",
                 "hover:bg-gray-50 dark:hover:bg-gray-800/50",
@@ -274,11 +274,11 @@ export function BatchApprovalPanel({
               <label className="flex items-center cursor-pointer">
                 <input
                   type="checkbox"
-                  data-testid={`select-request-${approval.request_id}`}
+                  data-testid={`select-request-${approval.requestId}`}
                   checked={isSelected}
-                  onChange={() => handleToggleSelect(approval.request_id)}
+                  onChange={() => handleToggleSelect(approval.requestId)}
                   disabled={isLoading}
-                  aria-label={`Select ${approval.agent_name}`}
+                  aria-label={`Select ${approval.agentName}`}
                   className="w-4 h-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500 disabled:opacity-50"
                 />
               </label>
@@ -308,7 +308,7 @@ export function BatchApprovalPanel({
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
                   <span className="font-medium text-gray-900 dark:text-white">
-                    {approval.agent_name}
+                    {approval.agentName}
                   </span>
                   {approval.confidence < approval.threshold && (
                     <AlertTriangle
@@ -318,7 +318,7 @@ export function BatchApprovalPanel({
                   )}
                 </div>
                 <p className="text-sm text-gray-600 dark:text-gray-400 truncate">
-                  {approval.proposed_action}
+                  {approval.proposedAction}
                 </p>
               </div>
 
@@ -329,7 +329,7 @@ export function BatchApprovalPanel({
                   "bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300",
                 )}
               >
-                {approval.trigger_reason.replace(/_/g, " ")}
+                {approval.triggerReason.replace(/_/g, " ")}
               </span>
             </div>
           );

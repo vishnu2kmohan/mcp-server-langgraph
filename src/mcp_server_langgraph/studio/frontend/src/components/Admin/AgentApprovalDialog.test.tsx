@@ -30,9 +30,9 @@ import { configureStore } from "@reduxjs/toolkit";
 import {
   AgentApprovalDialog,
   type AgentApprovalDialogProps,
-  type AgentApprovalRequest,
+  type AgentApprovalRequestCamelCase,
 } from "./AgentApprovalDialog";
-import type { AIExplanation } from "../../types/hitl";
+import type { AIExplanationCamelCase } from "../../types/hitl";
 
 // Mock the API module for HITL Intelligence hooks
 vi.mock("../../api", () => ({
@@ -119,41 +119,43 @@ const renderWithProvider = (ui: React.ReactElement) => {
 // Test Data
 // =============================================================================
 
-const mockApprovalRequest: AgentApprovalRequest = {
-  request_id: "req-001",
-  session_id: "session-001",
-  task_id: "task-001",
-  agent_name: "Research Assistant",
+// Mock data uses camelCase per ADR-0091 Phase 10
+const mockApprovalRequest: AgentApprovalRequestCamelCase = {
+  requestId: "req-001",
+  sessionId: "session-001",
+  taskId: "task-001",
+  agentName: "Research Assistant",
   confidence: 0.65,
   threshold: 0.7,
-  proposed_action: "Send analysis report to external API",
-  trigger_reason: "low_confidence",
+  proposedAction: "Send analysis report to external API",
+  triggerReason: "low_confidence",
   context: {
-    tokens_used: 2450,
-    time_elapsed_seconds: 12,
+    tokensUsed: 2450,
+    timeElapsedSeconds: 12,
     artifacts: ["analysis.json", "chart.png"],
   },
-  requested_at: "2024-01-15T10:36:00Z",
+  requestedAt: "2024-01-15T10:36:00Z",
 };
 
-const mockAIExplanation: AIExplanation = {
-  why_uncertain:
+// AI explanation uses camelCase per ADR-0091 Phase 10
+const mockAIExplanation: AIExplanationCamelCase = {
+  whyUncertain:
     "The input query contains ambiguous terms that could refer to multiple entities.",
-  what_could_go_wrong:
+  whatCouldGoWrong:
     "May send data to the wrong external service if the target is misidentified.",
-  safer_alternatives: [
+  saferAlternatives: [
     {
       action: "Preview data before sending",
       confidence: 0.92,
-      trade_off: "Adds one extra confirmation step",
+      tradeOff: "Adds one extra confirmation step",
     },
     {
       action: "Send to staging API first",
       confidence: 0.95,
-      trade_off: "Delays production deployment",
+      tradeOff: "Delays production deployment",
     },
   ],
-  confidence_factors: [
+  confidenceFactors: [
     {
       factor: "ambiguous_input",
       weight: -0.2,
@@ -165,20 +167,20 @@ const mockAIExplanation: AIExplanation = {
       evidence: "Multiple external APIs match the request",
     },
   ],
-  reasoning_trace: [
+  reasoningTrace: [
     "Step 1: Parsed user query",
     "Step 2: Identified external API request",
     "Step 3: Detected ambiguity in target specification",
   ],
-  model_used: "gpt-4o-mini",
-  generated_at: "2024-01-15T10:35:30Z",
-  generation_latency_ms: 150.5,
+  modelUsed: "gpt-4o-mini",
+  generatedAt: "2024-01-15T10:35:30Z",
+  generationLatencyMs: 150.5,
   cached: false,
 };
 
-const mockApprovalRequestWithExplanation: AgentApprovalRequest = {
+const mockApprovalRequestWithExplanation: AgentApprovalRequestCamelCase = {
   ...mockApprovalRequest,
-  ai_explanation: mockAIExplanation,
+  aiExplanation: mockAIExplanation,
 };
 
 const defaultProps: AgentApprovalDialogProps = {
@@ -383,9 +385,10 @@ describe("AgentApprovalDialog", () => {
       fireEvent.click(screen.getByTestId("approve-button"));
 
       await waitFor(() => {
+        // Callbacks use camelCase per ADR-0091 Phase 10
         expect(onApprove).toHaveBeenCalledWith({
-          request_id: "req-001",
-          approved_by: "admin@example.com",
+          requestId: "req-001",
+          approvedBy: "admin@example.com",
           reason: undefined,
         });
       });
@@ -403,9 +406,10 @@ describe("AgentApprovalDialog", () => {
       await user.click(screen.getByTestId("approve-button"));
 
       await waitFor(() => {
+        // Callbacks use camelCase per ADR-0091 Phase 10
         expect(onApprove).toHaveBeenCalledWith({
-          request_id: "req-001",
-          approved_by: "admin@example.com",
+          requestId: "req-001",
+          approvedBy: "admin@example.com",
           reason: "Approved after review",
         });
       });
@@ -438,9 +442,10 @@ describe("AgentApprovalDialog", () => {
       fireEvent.click(screen.getByTestId("reject-button"));
 
       await waitFor(() => {
+        // Callbacks use camelCase per ADR-0091 Phase 10
         expect(onReject).toHaveBeenCalledWith({
-          request_id: "req-001",
-          rejected_by: "admin@example.com",
+          requestId: "req-001",
+          rejectedBy: "admin@example.com",
           reason: undefined,
         });
       });
@@ -455,9 +460,10 @@ describe("AgentApprovalDialog", () => {
       await user.click(screen.getByTestId("reject-button"));
 
       await waitFor(() => {
+        // Callbacks use camelCase per ADR-0091 Phase 10
         expect(onReject).toHaveBeenCalledWith({
-          request_id: "req-001",
-          rejected_by: "admin@example.com",
+          requestId: "req-001",
+          rejectedBy: "admin@example.com",
           reason: "Too risky",
         });
       });
@@ -513,7 +519,7 @@ describe("AgentApprovalDialog", () => {
     it("should explain destructive_action trigger", () => {
       const destructiveRequest = {
         ...mockApprovalRequest,
-        trigger_reason: "destructive_action",
+        triggerReason: "destructive_action",
       };
       render(
         <AgentApprovalDialog {...defaultProps} request={destructiveRequest} />,
@@ -525,7 +531,7 @@ describe("AgentApprovalDialog", () => {
     it("should explain external_api trigger", () => {
       const externalApiRequest = {
         ...mockApprovalRequest,
-        trigger_reason: "external_api",
+        triggerReason: "external_api",
       };
       render(
         <AgentApprovalDialog {...defaultProps} request={externalApiRequest} />,
@@ -666,12 +672,13 @@ describe("AgentApprovalDialog", () => {
       });
 
       it("should not display safer alternatives section when empty", () => {
-        const requestWithoutAlternatives: AgentApprovalRequest = {
+        // CamelCase per ADR-0091 Phase 10
+        const requestWithoutAlternatives: AgentApprovalRequestCamelCase = {
           ...mockApprovalRequest,
-          ai_explanation: {
-            why_uncertain: "Some uncertainty",
-            what_could_go_wrong: "Some risk",
-            safer_alternatives: [],
+          aiExplanation: {
+            whyUncertain: "Some uncertainty",
+            whatCouldGoWrong: "Some risk",
+            saferAlternatives: [],
           },
         };
         render(
@@ -716,12 +723,13 @@ describe("AgentApprovalDialog", () => {
       });
 
       it("should not display confidence factors section when empty", () => {
-        const requestWithoutFactors: AgentApprovalRequest = {
+        // CamelCase per ADR-0091 Phase 10
+        const requestWithoutFactors: AgentApprovalRequestCamelCase = {
           ...mockApprovalRequest,
-          ai_explanation: {
-            why_uncertain: "Some uncertainty",
-            what_could_go_wrong: "Some risk",
-            confidence_factors: [],
+          aiExplanation: {
+            whyUncertain: "Some uncertainty",
+            whatCouldGoWrong: "Some risk",
+            confidenceFactors: [],
           },
         };
         render(

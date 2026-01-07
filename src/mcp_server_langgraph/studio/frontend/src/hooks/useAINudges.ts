@@ -196,8 +196,9 @@ export function useAINudges(
     try {
       // Build nudge history for fatigue prevention
       // NudgeHistoryEntry has: id, action ("shown"|"dismissed"|"accepted"), timestamp
+      // Backend NudgeHistoryItem expects nudge_id, not id
       const nudgeHistoryItems = history.slice(0, 10).map((h) => ({
-        id: h.id,
+        nudge_id: h.id,
         shown_at: new Date(h.timestamp).toISOString(),
         action: h.action === "shown" ? "dismissed" : h.action,
       }));

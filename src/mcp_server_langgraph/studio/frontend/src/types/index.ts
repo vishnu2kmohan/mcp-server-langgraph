@@ -197,6 +197,11 @@ export type {
   McpTaskStatus,
   McpTask,
   McpTaskListResponse,
+  // KB Status
+  KBStatusValue,
+  KBStatusResponse,
+  KBStatusResponseCamelCase,
+  KBContextStats,
 } from "./api";
 export * from "./auth";
 export * from "./artifacts";

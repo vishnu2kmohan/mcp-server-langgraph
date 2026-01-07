@@ -12,11 +12,11 @@ import { useState, useEffect, useMemo, useCallback } from "react";
 // =============================================================================
 
 export interface SpanData {
-  span_id: string;
-  duration_ms: number;
+  spanId: string;
+  durationMs: number;
   name: string;
   status?: string;
-  service_name?: string;
+  serviceName?: string;
 }
 
 export interface AlertData {
@@ -108,7 +108,7 @@ const CORRELATION_WINDOW_MS = 5 * 60 * 1000; // 5 minutes
  */
 export function analyzeTraceAnomalies(spans: SpanData[]): TraceAnomalies {
   // Find slow spans (above threshold)
-  const slowSpans = spans.filter((s) => s.duration_ms > SLOW_THRESHOLD_MS);
+  const slowSpans = spans.filter((s) => s.durationMs > SLOW_THRESHOLD_MS);
 
   // Find error patterns
   const errorSpans = spans.filter((s) => s.status === "error");
@@ -122,7 +122,7 @@ export function analyzeTraceAnomalies(spans: SpanData[]): TraceAnomalies {
   );
 
   // Calculate percentiles
-  const durations = spans.map((s) => s.duration_ms).sort((a, b) => a - b);
+  const durations = spans.map((s) => s.durationMs).sort((a, b) => a - b);
   const getPercentile = (p: number) => {
     const index = Math.floor((p / 100) * durations.length);
     return durations[index] || 0;
@@ -277,7 +277,7 @@ export function generateRootCauseAnalysis(context: {
 
   // Analyze slow spans
   const slowDbSpans = context.spans.filter(
-    (s) => s.name?.includes("db") && (s.duration_ms || 0) > 5000,
+    (s) => s.name?.includes("db") && (s.durationMs || 0) > 5000,
   );
   if (slowDbSpans.length > 0) {
     rootCauses.push({

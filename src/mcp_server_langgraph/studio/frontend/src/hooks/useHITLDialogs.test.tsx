@@ -29,32 +29,32 @@ vi.mock("../contexts/FeatureFlagContext", () => ({
   useFeatureFlag: (flag: string) => mockUseFeatureFlag(flag),
 }));
 
-// Mock useAgentRequestWebSocket
+// Mock useAgentRequestWebSocket - uses camelCase per ADR-0091
 const mockWebSocketReturn = {
   pendingApprovals: [] as Array<{
-    request_id: string;
-    session_id: string;
-    task_id: string;
-    agent_name: string;
+    requestId: string;
+    sessionId: string;
+    taskId: string;
+    agentName: string;
     confidence: number;
     threshold: number;
-    proposed_action: string;
-    trigger_reason: string;
+    proposedAction: string;
+    triggerReason: string;
     context: Record<string, unknown>;
-    requested_at: string;
+    requestedAt: string;
   }>,
   pendingClarifications: [] as Array<{
-    request_id: string;
-    session_id: string;
-    task_id: string;
-    agent_name: string;
-    clarification_type: string;
+    requestId: string;
+    sessionId: string;
+    taskId: string;
+    agentName: string;
+    clarificationType: string;
     question: string;
     options?: string[];
     placeholder?: string;
     required: boolean;
     context: Record<string, unknown>;
-    requested_at: string;
+    requestedAt: string;
   }>,
   isConnected: true,
 };
@@ -111,32 +111,32 @@ const createWrapper = (store: ReturnType<typeof createTestStore>) => {
   );
 };
 
-// Sample approval payload
+// Sample approval payload (camelCase per ADR-0091)
 const sampleApproval = {
-  request_id: "req-1",
-  session_id: "session-1",
-  task_id: "task-1",
-  agent_name: "TestAgent",
+  requestId: "req-1",
+  sessionId: "session-1",
+  taskId: "task-1",
+  agentName: "TestAgent",
   confidence: 0.7,
   threshold: 0.8,
-  proposed_action: "Delete file",
-  trigger_reason: "Low confidence",
+  proposedAction: "Delete file",
+  triggerReason: "Low confidence",
   context: {},
-  requested_at: new Date().toISOString(),
+  requestedAt: new Date().toISOString(),
 };
 
-// Sample clarification payload
+// Sample clarification payload (camelCase per ADR-0091)
 const sampleClarification = {
-  request_id: "req-2",
-  session_id: "session-1",
-  task_id: "task-2",
-  agent_name: "TestAgent",
-  clarification_type: "choice",
+  requestId: "req-2",
+  sessionId: "session-1",
+  taskId: "task-2",
+  agentName: "TestAgent",
+  clarificationType: "choice",
   question: "Which option do you prefer?",
   options: ["Option A", "Option B"],
   required: true,
   context: {},
-  requested_at: new Date().toISOString(),
+  requestedAt: new Date().toISOString(),
 };
 
 describe("useHITLDialogs", () => {
@@ -210,7 +210,7 @@ describe("useHITLDialogs", () => {
       });
 
       expect(result.current.pendingApprovals).toHaveLength(1);
-      expect(result.current.pendingApprovals[0].request_id).toBe("req-1");
+      expect(result.current.pendingApprovals[0].requestId).toBe("req-1");
     });
 
     it("exposes pending clarifications from WebSocket", () => {
@@ -221,7 +221,7 @@ describe("useHITLDialogs", () => {
       });
 
       expect(result.current.pendingClarifications).toHaveLength(1);
-      expect(result.current.pendingClarifications[0].request_id).toBe("req-2");
+      expect(result.current.pendingClarifications[0].requestId).toBe("req-2");
     });
   });
 

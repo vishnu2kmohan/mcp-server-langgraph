@@ -102,7 +102,7 @@ class TestWorkerAgentToolResolution:
         llm_factory = MagicMock()
 
         # Mock capability provider
-        mock_provider = AsyncMock()  # noqa: async-mock-config
+        mock_provider = AsyncMock(return_value=None)
         mock_provider.get_tools = AsyncMock(
             return_value=[
                 ToolSpec(name="tool1", description="Tool 1"),
@@ -133,7 +133,7 @@ class TestWorkerAgentToolResolution:
 
         llm_factory = MagicMock()
 
-        mock_provider = AsyncMock()  # noqa: async-mock-config
+        mock_provider = AsyncMock(return_value=None)
         mock_provider.get_tools = AsyncMock(
             return_value=[
                 ToolSpec(name="user_tool", description="User tool"),
@@ -176,7 +176,7 @@ class TestWorkerAgentMergeStrategies:
         llm_factory = MagicMock()
 
         # Provider returns all requested tools
-        mock_provider = AsyncMock()  # noqa: async-mock-config
+        mock_provider = AsyncMock(return_value=None)
         mock_provider.get_tools = AsyncMock(
             return_value=[
                 ToolSpec(name="router_tool", description="Router tool"),
@@ -210,7 +210,7 @@ class TestWorkerAgentMergeStrategies:
 
         llm_factory = MagicMock()
 
-        mock_provider = AsyncMock()  # noqa: async-mock-config
+        mock_provider = AsyncMock(return_value=None)
         mock_provider.get_tools = AsyncMock(
             return_value=[
                 ToolSpec(name="common_tool", description="Common tool"),
@@ -242,7 +242,7 @@ class TestWorkerAgentMergeStrategies:
 
         llm_factory = MagicMock()
 
-        mock_provider = AsyncMock()  # noqa: async-mock-config
+        mock_provider = AsyncMock(return_value=None)
         mock_provider.get_tools = AsyncMock(
             return_value=[
                 ToolSpec(name="router_tool", description="Router tool"),
@@ -277,17 +277,16 @@ class TestWorkerAgentBackwardCompatibility:
     @pytest.mark.asyncio
     async def test_legacy_run_without_capability_provider(self) -> None:
         """Test WorkerAgent runs without capability_provider (legacy path)."""
+        from langchain_core.messages import AIMessage
+
         from mcp_server_langgraph.agents.base_agent import AgentRequest
         from mcp_server_langgraph.agents.worker_agent import WorkerAgent
 
-        # Mock LLM factory response
-        mock_response = MagicMock()
-        mock_response.choices = [MagicMock()]
-        mock_response.choices[0].message.content = "Hello, world!"
-        mock_response.model = "test-model"
+        # Mock LLM factory response using ainvoke (returns AIMessage)
+        mock_response = AIMessage(content="Hello, world!")
 
         llm_factory = MagicMock()
-        llm_factory.create_completion = AsyncMock(return_value=mock_response)
+        llm_factory.ainvoke = AsyncMock(return_value=mock_response)
 
         agent = WorkerAgent(llm_factory=llm_factory)
         request = AgentRequest(message="test")
@@ -300,17 +299,17 @@ class TestWorkerAgentBackwardCompatibility:
     @pytest.mark.asyncio
     async def test_run_handles_no_tools_gracefully(self) -> None:
         """Test WorkerAgent handles empty tools gracefully."""
+        from langchain_core.messages import AIMessage
+
         from mcp_server_langgraph.agents.base_agent import AgentRequest
         from mcp_server_langgraph.agents.worker_agent import WorkerAgent
         from mcp_server_langgraph.capabilities.provider import NullCapabilityProvider
 
-        mock_response = MagicMock()
-        mock_response.choices = [MagicMock()]
-        mock_response.choices[0].message.content = "Response without tools"
-        mock_response.model = "test-model"
+        # Mock LLM factory response using ainvoke (returns AIMessage)
+        mock_response = AIMessage(content="Response without tools")
 
         llm_factory = MagicMock()
-        llm_factory.create_completion = AsyncMock(return_value=mock_response)
+        llm_factory.ainvoke = AsyncMock(return_value=mock_response)
 
         agent = WorkerAgent(llm_factory=llm_factory, capability_provider=NullCapabilityProvider())
         request = AgentRequest(message="test", tools=[])
@@ -344,7 +343,7 @@ class TestWorkerAgentResolveCapabilities:
 
         llm_factory = MagicMock()
 
-        mock_provider = AsyncMock()  # noqa: async-mock-config
+        mock_provider = AsyncMock(return_value=None)
         mock_provider.get_tools = AsyncMock(return_value=[ToolSpec(name="tool1", description="Tool 1")])
         mock_provider.get_skills = AsyncMock(return_value=[SkillSpec(name="skill1", description="Skill 1")])
         mock_provider.get_memory = AsyncMock(return_value=MemoryContext())
@@ -379,3 +378,233 @@ class TestWorkerAgentResolveCapabilities:
         assert isinstance(capabilities, ResolvedCapabilities)
         assert capabilities.tools == []
         assert capabilities.skills == []
+
+
+@pytest.mark.unit
+@pytest.mark.xdist_group(name="worker_agent_run_capabilities")
+class TestWorkerAgentRunUsesCapabilities:
+    """Tests that run() actually wires and uses resolved capabilities.
+
+    TDD: These tests verify Finding 3.1 - _resolve_capabilities is called
+    during run() and the resolved tools are bound to the LLM.
+    """
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers."""
+        gc.collect()
+
+    @pytest.mark.asyncio
+    async def test_run_calls_resolve_capabilities_when_provider_set(self) -> None:
+        """GIVEN WorkerAgent with capability_provider
+        WHEN run() is called with tools in request
+        THEN _resolve_capabilities should be called
+        """
+        from langchain_core.messages import AIMessage
+        from unittest.mock import patch
+
+        from mcp_server_langgraph.agents.base_agent import AgentRequest
+        from mcp_server_langgraph.agents.worker_agent import WorkerAgent
+        from mcp_server_langgraph.capabilities.provider import (
+            MemoryContext,
+            ToolSpec,
+        )
+        from mcp_server_langgraph.core.scopes import CapabilityScope
+
+        mock_response = AIMessage(content="Tool response")
+
+        llm_factory = MagicMock()
+        llm_factory.ainvoke = AsyncMock(return_value=mock_response)
+
+        mock_provider = AsyncMock(return_value=None)
+        mock_provider.get_tools = AsyncMock(return_value=[ToolSpec(name="tool1", description="Tool")])
+        mock_provider.get_skills = AsyncMock(return_value=[])
+        mock_provider.get_memory = AsyncMock(return_value=MemoryContext())
+
+        agent = WorkerAgent(llm_factory=llm_factory, capability_provider=mock_provider)
+        request = AgentRequest(
+            message="test",
+            tools=["tool1"],
+            scope=CapabilityScope.TASK,
+        )
+
+        # Spy on _resolve_capabilities
+        with patch.object(agent, "_resolve_capabilities", wraps=agent._resolve_capabilities) as spy:
+            await agent.run(request)
+
+            # _resolve_capabilities should have been called
+            spy.assert_called_once_with(request)
+
+    @pytest.mark.asyncio
+    async def test_run_binds_resolved_tools_to_llm(self) -> None:
+        """GIVEN WorkerAgent with capability_provider
+        WHEN run() is called with tools
+        THEN the LLM should be called with bound tools
+        """
+        from langchain_core.messages import AIMessage
+
+        from mcp_server_langgraph.agents.base_agent import AgentRequest
+        from mcp_server_langgraph.agents.worker_agent import WorkerAgent
+        from mcp_server_langgraph.capabilities.provider import (
+            MemoryContext,
+            ToolSpec,
+        )
+        from mcp_server_langgraph.core.scopes import CapabilityScope
+
+        mock_response = AIMessage(content="Tool response")
+
+        # Create a proper LLM mock that can bind tools
+        llm_factory = MagicMock()
+        llm_factory.ainvoke = AsyncMock(return_value=mock_response)
+
+        # Capture if bind_tools was called (or tools passed to ainvoke)
+        ainvoke_kwargs_captured = {}
+
+        async def capture_ainvoke(messages, **kwargs):
+            ainvoke_kwargs_captured.update(kwargs)
+            return mock_response
+
+        llm_factory.ainvoke = capture_ainvoke
+
+        # Create tool spec with callable and schema
+        def dummy_tool(x: str) -> str:
+            return x
+
+        tool_spec = ToolSpec(
+            name="tool1",
+            description="Tool",
+            callable=dummy_tool,
+            schema={"type": "object", "properties": {"x": {"type": "string"}}},
+        )
+
+        mock_provider = AsyncMock(return_value=None)
+        mock_provider.get_tools = AsyncMock(return_value=[tool_spec])
+        mock_provider.get_skills = AsyncMock(return_value=[])
+        mock_provider.get_memory = AsyncMock(return_value=MemoryContext())
+
+        agent = WorkerAgent(llm_factory=llm_factory, capability_provider=mock_provider)
+        request = AgentRequest(
+            message="test",
+            tools=["tool1"],
+            scope=CapabilityScope.TASK,
+        )
+
+        await agent.run(request)
+
+        # Verify that tools were passed to ainvoke
+        # Implementation may pass tools as "tools" kwarg or use bind_tools
+        assert "tools" in ainvoke_kwargs_captured, "Tools should be passed to LLM ainvoke"
+
+    @pytest.mark.asyncio
+    async def test_run_injects_memory_context_into_messages(self) -> None:
+        """GIVEN WorkerAgent with capability_provider returning memory
+        WHEN run() is called
+        THEN memory context should be injected into messages
+        """
+        from langchain_core.messages import AIMessage, SystemMessage
+
+        from mcp_server_langgraph.agents.base_agent import AgentRequest
+        from mcp_server_langgraph.agents.worker_agent import WorkerAgent
+        from mcp_server_langgraph.capabilities.provider import (
+            MemoryContext,
+        )
+        from mcp_server_langgraph.core.scopes import CapabilityScope
+
+        mock_response = AIMessage(content="Memory-aware response")
+
+        # Capture messages passed to ainvoke
+        messages_captured = []
+
+        async def capture_ainvoke(messages, **kwargs):
+            messages_captured.extend(messages)
+            return mock_response
+
+        llm_factory = MagicMock()
+        llm_factory.ainvoke = capture_ainvoke
+
+        # Memory with relevant context
+        memory = MemoryContext(
+            relevant_memories=["User prefers Python", "Previous topic was TDD"],
+            working_memory={"summary": "Discussing software development"},
+        )
+
+        mock_provider = AsyncMock(return_value=None)
+        mock_provider.get_tools = AsyncMock(return_value=[])
+        mock_provider.get_skills = AsyncMock(return_value=[])
+        mock_provider.get_memory = AsyncMock(return_value=memory)
+
+        agent = WorkerAgent(llm_factory=llm_factory, capability_provider=mock_provider)
+        request = AgentRequest(
+            message="test",
+            scope=CapabilityScope.TASK,
+        )
+
+        await agent.run(request)
+
+        # Check that memory context was injected as system message
+        system_messages = [m for m in messages_captured if isinstance(m, SystemMessage)]
+        assert len(system_messages) > 0, "Memory context should be injected as SystemMessage"
+        # Verify memory content is in the system message
+        memory_content = " ".join(str(m.content) for m in system_messages)
+        assert "Python" in memory_content or "TDD" in memory_content, "Memory facts should appear in system message"
+
+    @pytest.mark.asyncio
+    async def test_run_skips_capability_resolution_when_no_provider(self) -> None:
+        """GIVEN WorkerAgent without capability_provider
+        WHEN run() is called
+        THEN it should work without calling capability resolution
+        """
+        from langchain_core.messages import AIMessage
+
+        from mcp_server_langgraph.agents.base_agent import AgentRequest
+        from mcp_server_langgraph.agents.worker_agent import WorkerAgent
+
+        mock_response = AIMessage(content="Legacy response")
+
+        llm_factory = MagicMock()
+        llm_factory.ainvoke = AsyncMock(return_value=mock_response)
+
+        agent = WorkerAgent(llm_factory=llm_factory)
+        request = AgentRequest(message="test")
+
+        result = await agent.run(request)
+
+        # Should succeed in legacy mode
+        assert result.success is True
+        assert result.content == "Legacy response"
+
+    @pytest.mark.asyncio
+    async def test_run_handles_empty_tools_gracefully(self) -> None:
+        """GIVEN WorkerAgent with capability_provider returning no tools
+        WHEN run() is called
+        THEN it should work without binding tools
+        """
+        from langchain_core.messages import AIMessage
+
+        from mcp_server_langgraph.agents.base_agent import AgentRequest
+        from mcp_server_langgraph.agents.worker_agent import WorkerAgent
+        from mcp_server_langgraph.capabilities.provider import (
+            MemoryContext,
+        )
+        from mcp_server_langgraph.core.scopes import CapabilityScope
+
+        mock_response = AIMessage(content="No tools response")
+
+        llm_factory = MagicMock()
+        llm_factory.ainvoke = AsyncMock(return_value=mock_response)
+
+        mock_provider = AsyncMock(return_value=None)
+        mock_provider.get_tools = AsyncMock(return_value=[])
+        mock_provider.get_skills = AsyncMock(return_value=[])
+        mock_provider.get_memory = AsyncMock(return_value=MemoryContext())
+
+        agent = WorkerAgent(llm_factory=llm_factory, capability_provider=mock_provider)
+        request = AgentRequest(
+            message="test",
+            tools=[],
+            scope=CapabilityScope.TASK,
+        )
+
+        result = await agent.run(request)
+
+        assert result.success is True
+        assert result.content == "No tools response"

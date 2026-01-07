@@ -1,65 +1,52 @@
 /**
- * Layout Module - Studio Canvas Shell Components
+ * Layout Module - Public API
  *
- * Phase 1: StudioShellLayout with resizable panels
- * Exports main layout component and sub-components.
+ * This barrel exports the public interface of the layout module.
+ * Internal components (ActivityBar, SessionNav, TopBar, StatusBar, etc.)
+ * are implementation details of StudioShellLayout and should be imported
+ * directly from their source files when needed within the layout module.
+ *
+ * External consumers should only use StudioShellLayout.
+ *
+ * ## Barrel Export Patterns (ADR-0091 Appendix)
+ *
+ * This codebase uses three valid barrel export patterns:
+ *
+ * 1. **RTK Query API Exports** (src/api/index.ts)
+ *    - Auto-generated hooks from RTK Query endpoints
+ *    - Many exports are expected (one per endpoint)
+ *    - Not all hooks are used in every file, but must be exported
+ *
+ * 2. **Code-Splitting Exports** (src/components/Admin/LazyComponents.tsx)
+ *    - Components exported for React.lazy() dynamic import
+ *    - Each export enables chunk splitting for performance
+ *    - Usage: `const Component = lazy(() => import('./LazyComponents').then(m => ({ default: m.Component })))`
+ *
+ * 3. **Library-Style Exports** (src/types/hitl.ts, this file)
+ *    - Types and utilities forming a coherent public API
+ *    - Consumers import the specific exports they need
+ *    - Internal types are NOT exported (file-local)
+ *
+ * ## This Barrel Pattern
+ *
+ * This layout barrel follows the library-style pattern:
+ * - Primary export: StudioShellLayout (main component)
+ * - Secondary exports: Navigation constants (for tests and store integration)
+ * - Internal components: NOT exported (implementation details)
  */
 
-// Main shell layout
+// =============================================================================
+// Main Shell Layout (Primary Export)
+// =============================================================================
+
 export { StudioShellLayout } from "./StudioShellLayout";
 
-// Activity bar (RBAC-aware navigation)
-export {
-  ActivityBar,
-  NAV_ITEMS,
-  BOTTOM_ITEMS,
-  type NavItem,
-  type ActivityBarProps,
-} from "./ActivityBar";
+// =============================================================================
+// Navigation Constants (for tests and store)
+// =============================================================================
 
-// Session navigation (time-travel grouped)
-export {
-  SessionNav,
-  groupSessionsByDate,
-  type SessionNavProps,
-  type GroupedSessions,
-} from "./SessionNav";
+// KNOWN_NAV_IDS from pure constants file (no React dependencies)
+export { KNOWN_NAV_IDS, NAV_ITEM_IDS, BOTTOM_ITEM_IDS } from "./navConstants";
 
-// Top bar (minimal header)
-export { TopBar, type TopBarProps } from "./TopBar";
-
-// Status bar (agent/connection status)
-export {
-  StatusBar,
-  type StatusBarProps,
-  type ConnectionStatus,
-} from "./StatusBar";
-
-// User menu dropdown
-export {
-  UserMenuDropdown,
-  type UserMenuDropdownProps,
-} from "./UserMenuDropdown";
-
-// Responsive layout utilities
-export {
-  ResponsiveLayout,
-  useBreakpoint,
-  type ResponsiveLayoutProps,
-  type Breakpoint,
-} from "./ResponsiveLayout";
-
-// Resize handle for panels
-export { ResizeHandle, type ResizeHandleProps } from "./ResizeHandle";
-
-// Feature flag toggle (dev utility)
-export {
-  FeatureFlagToggle,
-  type FeatureFlagToggleProps,
-} from "./FeatureFlagToggle";
-
-// Alert badge for header (ADR-0026)
-export { AlertBadge, type AlertBadgeProps } from "./AlertBadge";
-
-// AI Session Card (Sprint 2: Session Intelligence)
-export { AISessionCard, type AISessionCardProps } from "./AISessionCard";
+// NAV_ITEMS and BOTTOM_ITEMS with React icons from ActivityBar
+export { NAV_ITEMS, BOTTOM_ITEMS, type NavItem } from "./ActivityBar";

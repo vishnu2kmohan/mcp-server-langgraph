@@ -1,0 +1,181 @@
+"""
+LLM Streaming WebSocket Handler.
+
+Provides real-time LLM response streaming using the standardized WebSocketBase class.
+
+Features:
+    - Real-time token streaming from LLM responses
+    - Active stream tracking
+    - Stream cancellation support
+    - Token counting and metrics
+
+Message Types (Client -> Server):
+    - subscribe_stream: Subscribe to a streaming request by ID
+    - unsubscribe_stream: Stop receiving stream updates
+    - cancel_stream: Cancel an active stream
+    - ping: Keep-alive ping
+
+Response Types (Server -> Client):
+    - stream_token: Token chunk from LLM response
+    - stream_complete: Stream completion with metrics
+    - stream_error: Stream error
+    - stream_cancelled: Stream cancellation confirmation
+    - error: Error message
+"""
+
+from __future__ import annotations
+
+import logging
+from typing import TYPE_CHECKING, Any
+
+from mcp_server_langgraph.websocket.base import WebSocketBase
+from mcp_server_langgraph.websocket.types import (
+    AuthUser,
+    MessageEnvelope,
+    WebSocketConfig,
+)
+
+if TYPE_CHECKING:
+    pass
+
+logger = logging.getLogger(__name__)
+
+
+class LLMStreamingHandler(WebSocketBase):
+    """
+    WebSocket handler for real-time LLM streaming.
+
+    Extends WebSocketBase to provide LLM response streaming with the
+    standardized infrastructure (auth, rate limiting, metrics, etc.).
+
+    This handler supports the LLM_STREAMING endpoint in the frontend
+    for displaying real-time streaming tokens in the DevTools LLMStreamingTab.
+    """
+
+    def __init__(
+        self,
+        config: WebSocketConfig,
+    ) -> None:
+        """
+        Initialize the LLMStreaming handler.
+
+        Args:
+            config: WebSocket configuration with auth, rate limiting, etc.
+        """
+        super().__init__(config=config)
+        self._subscribed_streams: set[str] = set()
+
+    async def on_connect(self, user: AuthUser | None) -> None:
+        """Handle new WebSocket connection."""
+        logger.info(
+            "LLM streaming WebSocket connected",
+            extra={
+                "user_id": user.user_id if user else None,
+            },
+        )
+
+    async def on_disconnect(self, user: AuthUser | None) -> None:
+        """Handle WebSocket disconnection."""
+        self._subscribed_streams.clear()
+        logger.info(
+            "LLM streaming WebSocket disconnected",
+            extra={
+                "user_id": user.user_id if user else None,
+            },
+        )
+
+    async def on_message(
+        self,
+        message: MessageEnvelope,
+        user: AuthUser | None,
+    ) -> dict[str, Any] | None:
+        """
+        Handle incoming WebSocket messages.
+
+        Args:
+            message: The parsed message envelope
+            user: The authenticated user (if auth is required)
+
+        Returns:
+            Response dict to send back, or None for no response
+        """
+        message_type = message.type
+
+        if message_type == "subscribe_stream":
+            return await self._handle_subscribe(message, user)
+        elif message_type == "unsubscribe_stream":
+            return await self._handle_unsubscribe(message, user)
+        elif message_type == "cancel_stream":
+            return await self._handle_cancel(message, user)
+        elif message_type == "ping":
+            return {"type": "pong", "timestamp": message.timestamp}
+        else:
+            return {
+                "type": "error",
+                "code": "unknown_message_type",
+                "message": f"Unknown message type: {message_type}",
+            }
+
+    async def _handle_subscribe(
+        self,
+        message: MessageEnvelope,
+        user: AuthUser | None,
+    ) -> dict[str, Any]:
+        """Handle subscription to an LLM stream."""
+        payload = message.payload or {}
+        stream_id = payload.get("stream_id")
+
+        if not stream_id:
+            return {
+                "type": "error",
+                "code": "missing_stream_id",
+                "message": "stream_id is required",
+            }
+
+        self._subscribed_streams.add(stream_id)
+
+        return {
+            "type": "subscribed",
+            "stream_id": stream_id,
+        }
+
+    async def _handle_unsubscribe(
+        self,
+        message: MessageEnvelope,
+        user: AuthUser | None,
+    ) -> dict[str, Any]:
+        """Handle unsubscription from an LLM stream."""
+        payload = message.payload or {}
+        stream_id = payload.get("stream_id")
+
+        if stream_id and stream_id in self._subscribed_streams:
+            self._subscribed_streams.discard(stream_id)
+
+        return {
+            "type": "unsubscribed",
+            "stream_id": stream_id,
+        }
+
+    async def _handle_cancel(
+        self,
+        message: MessageEnvelope,
+        user: AuthUser | None,
+    ) -> dict[str, Any]:
+        """Handle cancellation of an LLM stream."""
+        payload = message.payload or {}
+        stream_id = payload.get("stream_id")
+
+        if not stream_id:
+            return {
+                "type": "error",
+                "code": "missing_stream_id",
+                "message": "stream_id is required for cancellation",
+            }
+
+        # Remove from subscriptions
+        self._subscribed_streams.discard(stream_id)
+
+        return {
+            "type": "stream_cancelled",
+            "stream_id": stream_id,
+        }

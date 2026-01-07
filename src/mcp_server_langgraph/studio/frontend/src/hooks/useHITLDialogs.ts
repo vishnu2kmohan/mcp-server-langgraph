@@ -23,10 +23,10 @@ import {
   useRejectAgentRequestMutation,
   useRespondToAgentRequestMutation,
 } from "../api";
-// Use consolidated HITL types
+// Use consolidated HITL types (camelCase per ADR-0091)
 import {
-  type ApprovalRequiredPayload,
-  type ClarificationRequiredPayload,
+  type ApprovalRequiredPayloadCamelCase,
+  type ClarificationRequiredPayloadCamelCase,
   type ClarificationAPIResponse,
 } from "../types/hitl";
 
@@ -38,6 +38,8 @@ export type ClarificationResponse = ClarificationAPIResponse;
 
 /**
  * Return type for the useHITLDialogs hook
+ *
+ * All payload types use camelCase per ADR-0091 API Response Transformation Strategy.
  */
 export interface UseHITLDialogsReturn {
   // Feature flag state
@@ -47,24 +49,24 @@ export interface UseHITLDialogsReturn {
   showApprovalDialog: boolean;
   showClarificationDialog: boolean;
 
-  // Active dialog content
-  activeApproval: ApprovalRequiredPayload | null;
-  activeClarification: ClarificationRequiredPayload | null;
+  // Active dialog content (camelCase per ADR-0091)
+  activeApproval: ApprovalRequiredPayloadCamelCase | null;
+  activeClarification: ClarificationRequiredPayloadCamelCase | null;
 
   // Loading states
   isApproving: boolean;
   isRejecting: boolean;
   isClarificationSubmitting: boolean;
 
-  // Pending requests from WebSocket
-  pendingApprovals: ApprovalRequiredPayload[];
-  pendingClarifications: ClarificationRequiredPayload[];
+  // Pending requests from WebSocket (camelCase per ADR-0091)
+  pendingApprovals: ApprovalRequiredPayloadCamelCase[];
+  pendingClarifications: ClarificationRequiredPayloadCamelCase[];
 
   // Dialog control functions
-  openApprovalDialog: (approval: ApprovalRequiredPayload) => void;
+  openApprovalDialog: (approval: ApprovalRequiredPayloadCamelCase) => void;
   closeApprovalDialog: () => void;
   openClarificationDialog: (
-    clarification: ClarificationRequiredPayload,
+    clarification: ClarificationRequiredPayloadCamelCase,
   ) => void;
   closeClarificationDialog: () => void;
 
@@ -130,11 +132,11 @@ export function useHITLDialogs(): UseHITLDialogsReturn {
   const [respondRequest, { isLoading: isClarificationSubmitting }] =
     useRespondToAgentRequestMutation();
 
-  // Dialog state
+  // Dialog state (camelCase types per ADR-0091)
   const [activeApproval, setActiveApproval] =
-    useState<ApprovalRequiredPayload | null>(null);
+    useState<ApprovalRequiredPayloadCamelCase | null>(null);
   const [activeClarification, setActiveClarification] =
-    useState<ClarificationRequiredPayload | null>(null);
+    useState<ClarificationRequiredPayloadCamelCase | null>(null);
   const [showApprovalDialog, setShowApprovalDialog] = useState(false);
   const [showClarificationDialog, setShowClarificationDialog] = useState(false);
 
@@ -143,16 +145,16 @@ export function useHITLDialogs(): UseHITLDialogsReturn {
     new Set(),
   );
 
-  // Handle approval required messages from WebSocket
+  // Handle approval required messages from WebSocket (camelCase per ADR-0091)
   const handleApprovalRequired = useCallback(
-    (payload: ApprovalRequiredPayload) => {
+    (payload: ApprovalRequiredPayloadCamelCase) => {
       setActiveApproval(payload);
       setShowApprovalDialog(true);
 
       // Update agent status in Redux
       dispatch(
         updateAgentStatus({
-          id: payload.task_id,
+          id: payload.taskId,
           status: "awaiting_approval",
         }),
       );
@@ -160,16 +162,16 @@ export function useHITLDialogs(): UseHITLDialogsReturn {
     [dispatch],
   );
 
-  // Handle clarification required messages from WebSocket
+  // Handle clarification required messages from WebSocket (camelCase per ADR-0091)
   const handleClarificationRequired = useCallback(
-    (payload: ClarificationRequiredPayload) => {
+    (payload: ClarificationRequiredPayloadCamelCase) => {
       setActiveClarification(payload);
       setShowClarificationDialog(true);
 
       // Update agent status in Redux
       dispatch(
         updateAgentStatus({
-          id: payload.task_id,
+          id: payload.taskId,
           status: "awaiting_clarification",
         }),
       );
@@ -189,12 +191,12 @@ export function useHITLDialogs(): UseHITLDialogsReturn {
     if (!enabled) return;
 
     // Prioritize approvals over clarifications
-    // Filter out dismissed requests so they don't auto-reopen
+    // Filter out dismissed requests so they don't auto-reopen (camelCase per ADR-0091)
     const undismissedApprovals = pendingApprovals.filter(
-      (a) => !dismissedRequestIds.has(a.request_id),
+      (a) => !dismissedRequestIds.has(a.requestId),
     );
     const undismissedClarifications = pendingClarifications.filter(
-      (c) => !dismissedRequestIds.has(c.request_id),
+      (c) => !dismissedRequestIds.has(c.requestId),
     );
 
     if (
@@ -230,47 +232,47 @@ export function useHITLDialogs(): UseHITLDialogsReturn {
     dismissedRequestIds,
   ]);
 
-  // Open approval dialog with specific request
+  // Open approval dialog with specific request (camelCase per ADR-0091)
   const openApprovalDialog = useCallback(
-    (approval: ApprovalRequiredPayload) => {
+    (approval: ApprovalRequiredPayloadCamelCase) => {
       setActiveApproval(approval);
       setShowApprovalDialog(true);
     },
     [],
   );
 
-  // Close approval dialog and track as dismissed
+  // Close approval dialog and track as dismissed (camelCase per ADR-0091)
   const closeApprovalDialog = useCallback(() => {
     if (activeApproval) {
       setDismissedRequestIds((prev) =>
-        new Set(prev).add(activeApproval.request_id),
+        new Set(prev).add(activeApproval.requestId),
       );
     }
     setShowApprovalDialog(false);
     setActiveApproval(null);
   }, [activeApproval]);
 
-  // Open clarification dialog with specific request
+  // Open clarification dialog with specific request (camelCase per ADR-0091)
   const openClarificationDialog = useCallback(
-    (clarification: ClarificationRequiredPayload) => {
+    (clarification: ClarificationRequiredPayloadCamelCase) => {
       setActiveClarification(clarification);
       setShowClarificationDialog(true);
     },
     [],
   );
 
-  // Close clarification dialog and track as dismissed
+  // Close clarification dialog and track as dismissed (camelCase per ADR-0091)
   const closeClarificationDialog = useCallback(() => {
     if (activeClarification) {
       setDismissedRequestIds((prev) =>
-        new Set(prev).add(activeClarification.request_id),
+        new Set(prev).add(activeClarification.requestId),
       );
     }
     setShowClarificationDialog(false);
     setActiveClarification(null);
   }, [activeClarification]);
 
-  // Handle approval action using RTK Query mutation
+  // Handle approval action using RTK Query mutation (camelCase per ADR-0091)
   const handleApprove = useCallback(
     async (
       requestId: string,
@@ -290,7 +292,7 @@ export function useHITLDialogs(): UseHITLDialogsReturn {
         // Success: Update agent status back to running
         dispatch(
           updateAgentStatus({
-            id: activeApproval.task_id,
+            id: activeApproval.taskId,
             status: "running",
           }),
         );
@@ -303,7 +305,7 @@ export function useHITLDialogs(): UseHITLDialogsReturn {
     [activeApproval, username, dispatch, approveRequest],
   );
 
-  // Handle rejection action using RTK Query mutation
+  // Handle rejection action using RTK Query mutation (camelCase per ADR-0091)
   const handleReject = useCallback(
     async (requestId: string, reason?: string) => {
       if (!activeApproval) return;
@@ -318,7 +320,7 @@ export function useHITLDialogs(): UseHITLDialogsReturn {
         // Success: Update agent status to failed
         dispatch(
           updateAgentStatus({
-            id: activeApproval.task_id,
+            id: activeApproval.taskId,
             status: "failed",
             error: reason || "Rejected by user",
           }),
@@ -332,7 +334,7 @@ export function useHITLDialogs(): UseHITLDialogsReturn {
     [activeApproval, username, dispatch, rejectRequest],
   );
 
-  // Handle clarification response using RTK Query mutation
+  // Handle clarification response using RTK Query mutation (camelCase per ADR-0091)
   const handleClarificationRespond = useCallback(
     async (response: ClarificationResponse) => {
       if (!activeClarification) return;
@@ -350,7 +352,7 @@ export function useHITLDialogs(): UseHITLDialogsReturn {
         // Success: Update agent status back to running
         dispatch(
           updateAgentStatus({
-            id: activeClarification.task_id,
+            id: activeClarification.taskId,
             status: "running",
           }),
         );

@@ -31,33 +31,33 @@ import {
   ThumbsUp,
   ThumbsDown,
 } from "lucide-react";
-import type { AgentApprovalRequest } from "../../types/hitl";
+import type { AgentApprovalRequestCamelCase } from "../../types/hitl";
 import { useRiskAssessment, useDecisionHistory } from "../../hooks";
 
 // =============================================================================
 // Types
 // =============================================================================
 
-// Re-export AgentApprovalRequest from canonical location for backwards compatibility
-export type { AgentApprovalRequest } from "../../types/hitl";
+// Re-export camelCase type for external consumers (ADR-0091 Phase 10)
+export type { AgentApprovalRequestCamelCase } from "../../types/hitl";
 
 export interface AgentApprovalDialogProps {
-  /** The approval request to display */
-  request: AgentApprovalRequest;
+  /** The approval request to display (camelCase per ADR-0091) */
+  request: AgentApprovalRequestCamelCase;
   /** Whether the dialog is open */
   isOpen: boolean;
   /** Callback to close the dialog */
   onClose: () => void;
-  /** Callback when request is approved */
+  /** Callback when request is approved (camelCase per ADR-0091) */
   onApprove: (data: {
-    request_id: string;
-    approved_by: string;
+    requestId: string;
+    approvedBy: string;
     reason?: string;
   }) => void;
-  /** Callback when request is rejected */
+  /** Callback when request is rejected (camelCase per ADR-0091) */
   onReject: (data: {
-    request_id: string;
-    rejected_by: string;
+    requestId: string;
+    rejectedBy: string;
     reason?: string;
   }) => void;
   /** Loading state for approval */
@@ -160,7 +160,7 @@ export function AgentApprovalDialog({
   const dialogRef = useRef<HTMLDivElement>(null);
   useFocusTrap(dialogRef, isOpen);
 
-  // Sprint 6: HITL Intelligence hooks
+  // Sprint 6: HITL Intelligence hooks (camelCase per ADR-0091)
   const {
     riskScore,
     riskLevel,
@@ -171,9 +171,9 @@ export function AgentApprovalDialog({
     isLoading: riskLoading,
   } = useRiskAssessment({
     userId,
-    requestId: request.request_id,
-    actionType: request.trigger_reason,
-    parameters: { proposed_action: request.proposed_action },
+    requestId: request.requestId,
+    actionType: request.triggerReason,
+    parameters: { proposedAction: request.proposedAction },
     enabled: enableAI && isOpen,
   });
 
@@ -185,7 +185,7 @@ export function AgentApprovalDialog({
     isLoading: historyLoading,
   } = useDecisionHistory({
     userId,
-    actionType: request.trigger_reason,
+    actionType: request.triggerReason,
     enabled: enableAI && isOpen,
   });
 
@@ -211,20 +211,20 @@ export function AgentApprovalDialog({
     return () => document.removeEventListener("keydown", handleKeyDown);
   }, [handleKeyDown]);
 
-  // Handle approve
+  // Handle approve (camelCase per ADR-0091)
   const handleApprove = () => {
     onApprove({
-      request_id: request.request_id,
-      approved_by: currentUser,
+      requestId: request.requestId,
+      approvedBy: currentUser,
       reason: reason.trim() || undefined,
     });
   };
 
-  // Handle reject
+  // Handle reject (camelCase per ADR-0091)
   const handleReject = () => {
     onReject({
-      request_id: request.request_id,
-      rejected_by: currentUser,
+      requestId: request.requestId,
+      rejectedBy: currentUser,
       reason: reason.trim() || undefined,
     });
   };
@@ -324,7 +324,7 @@ export function AgentApprovalDialog({
                   className="text-sm text-amber-600 dark:text-amber-400/80"
                 >
                   {getTriggerExplanation(
-                    request.trigger_reason,
+                    request.triggerReason,
                     request.confidence,
                     request.threshold,
                   )}
@@ -334,7 +334,8 @@ export function AgentApprovalDialog({
           )}
 
           {/* AI Explanation Section (AI-Native HITL Enhancement Phase 1) */}
-          {request.ai_explanation && (
+          {/* Uses camelCase properties per ADR-0091 */}
+          {request.aiExplanation && (
             <details
               data-testid="ai-explanation-section"
               className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg overflow-hidden"
@@ -346,7 +347,7 @@ export function AgentApprovalDialog({
               <div className="p-3 pt-0 space-y-3 text-sm">
                 {/* Why Uncertain */}
                 <p className="text-gray-700 dark:text-gray-300">
-                  {request.ai_explanation.why_uncertain}
+                  {request.aiExplanation.whyUncertain}
                 </p>
 
                 {/* What Could Go Wrong */}
@@ -356,20 +357,20 @@ export function AgentApprovalDialog({
                     What could go wrong:
                   </p>
                   <p className="text-gray-600 dark:text-gray-400 mt-1">
-                    {request.ai_explanation.what_could_go_wrong}
+                    {request.aiExplanation.whatCouldGoWrong}
                   </p>
                 </div>
 
                 {/* Safer Alternatives */}
-                {request.ai_explanation.safer_alternatives &&
-                  request.ai_explanation.safer_alternatives.length > 0 && (
+                {request.aiExplanation.saferAlternatives &&
+                  request.aiExplanation.saferAlternatives.length > 0 && (
                     <div>
                       <p className="font-medium text-gray-900 dark:text-white flex items-center gap-1">
                         <Lightbulb className="w-3.5 h-3.5 text-green-500" />
                         Safer alternatives:
                       </p>
                       <ul className="mt-1 space-y-1.5">
-                        {request.ai_explanation.safer_alternatives.map(
+                        {request.aiExplanation.saferAlternatives.map(
                           (alt, index) => (
                             <li
                               key={index}
@@ -382,7 +383,7 @@ export function AgentApprovalDialog({
                                 ({Math.round(alt.confidence * 100)}%)
                               </span>
                               <span className="text-gray-500 dark:text-gray-500 block text-xs">
-                                Trade-off: {alt.trade_off}
+                                Trade-off: {alt.tradeOff}
                               </span>
                             </li>
                           ),
@@ -392,15 +393,15 @@ export function AgentApprovalDialog({
                   )}
 
                 {/* Confidence Factors */}
-                {request.ai_explanation.confidence_factors &&
-                  request.ai_explanation.confidence_factors.length > 0 && (
+                {request.aiExplanation.confidenceFactors &&
+                  request.aiExplanation.confidenceFactors.length > 0 && (
                     <div>
                       <p className="font-medium text-gray-900 dark:text-white flex items-center gap-1">
                         <TrendingDown className="w-3.5 h-3.5 text-red-500" />
                         Confidence factors:
                       </p>
                       <ul className="mt-1 space-y-1">
-                        {request.ai_explanation.confidence_factors.map(
+                        {request.aiExplanation.confidenceFactors.map(
                           (factor, index) => (
                             <li
                               key={index}
@@ -623,7 +624,7 @@ export function AgentApprovalDialog({
                 data-testid="agent-name"
                 className="font-medium text-gray-900 dark:text-white"
               >
-                Agent: {request.agent_name}
+                Agent: {request.agentName}
               </span>
             </div>
 
@@ -635,29 +636,29 @@ export function AgentApprovalDialog({
                 data-testid="proposed-action"
                 className="text-sm text-gray-900 dark:text-white mt-1 p-2 bg-gray-100 dark:bg-gray-700 rounded"
               >
-                {request.proposed_action}
+                {request.proposedAction}
               </p>
             </div>
           </div>
 
           {/* Context Details */}
-          {(request.context.tokens_used ||
-            request.context.time_elapsed_seconds ||
+          {(request.context.tokensUsed ||
+            request.context.timeElapsedSeconds ||
             request.context.artifacts) && (
             <div className="space-y-2 text-sm">
-              {request.context.tokens_used && (
+              {request.context.tokensUsed && (
                 <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
                   <FileText className="w-4 h-4" />
                   <span>
-                    Tokens used: {formatNumber(request.context.tokens_used)}
+                    Tokens used: {formatNumber(request.context.tokensUsed)}
                   </span>
                 </div>
               )}
-              {request.context.time_elapsed_seconds && (
+              {request.context.timeElapsedSeconds && (
                 <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
                   <Clock className="w-4 h-4" />
                   <span>
-                    Time elapsed: {request.context.time_elapsed_seconds}s
+                    Time elapsed: {request.context.timeElapsedSeconds}s
                   </span>
                 </div>
               )}

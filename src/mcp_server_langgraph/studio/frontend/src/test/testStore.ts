@@ -176,6 +176,27 @@ export function createMinimalStore(
 // =============================================================================
 
 /**
+ * Default WebSocket permissions for authenticated test users.
+ * All permissions enabled for comprehensive test coverage.
+ */
+const testWebSocketPermissions = {
+  notifications: true,
+  alerts: true,
+  audit: true,
+  mcp_tasks: true,
+  mcp_aggregated: true,
+  connections_health: true,
+  connections_realtime: true,
+  heart_metrics: true,
+  traces: true,
+  cost_tracking: true,
+  budget_alerts: true,
+  agent_requests: true,
+  ai_suggestions: true,
+  orchestrator_status: true,
+};
+
+/**
  * Common authenticated user state for testing.
  * Reduces boilerplate in tests that need an authenticated user.
  *
@@ -187,11 +208,13 @@ export const authenticatedAuthState = {
   isInitializing: false,
   user: {
     id: "test-user-id",
+    username: "testuser",
     email: "test@example.com",
     name: "Test User",
     persona: "user",
     roles: ["user"],
     organizations: [],
+    websocketPermissions: testWebSocketPermissions,
   },
   tokens: {
     accessToken: "test-access-token",
@@ -208,11 +231,13 @@ export const adminAuthState = {
   isInitializing: false,
   user: {
     id: "admin-user-id",
+    username: "adminuser",
     email: "admin@example.com",
     name: "Admin User",
     persona: "admin",
     roles: ["admin", "user"],
     organizations: [],
+    websocketPermissions: testWebSocketPermissions,
   },
   tokens: {
     accessToken: "admin-test-access-token",

@@ -29,9 +29,11 @@ import {
 } from "../types/websocket-metrics";
 
 /**
- * Connection status type
+ * WebSocket connection status type.
+ * Note: This is different from types/connection.ts ConnectionStatus.
+ * Includes "reconnecting" for internal reconnection state tracking.
  */
-export type ConnectionStatus =
+export type WebSocketConnectionStatus =
   | "connecting"
   | "connected"
   | "disconnected"
@@ -86,7 +88,7 @@ export interface UseRealtimeSyncOptions {
  */
 export interface UseRealtimeSyncReturn {
   /** Current connection status */
-  status: ConnectionStatus;
+  status: WebSocketConnectionStatus;
   /** Number of reconnection attempts */
   reconnectAttempts: number;
   /** Timestamp of last received message */
@@ -169,7 +171,7 @@ export function useRealtimeSync(
     onProtocolVersionMismatch,
   } = options;
 
-  const [status, setStatus] = useState<ConnectionStatus>(
+  const [status, setStatus] = useState<WebSocketConnectionStatus>(
     url ? "connecting" : "disconnected",
   );
   const [reconnectAttempts, setReconnectAttempts] = useState(0);

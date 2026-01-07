@@ -69,11 +69,10 @@ import { useFeatureFlag } from "../contexts/FeatureFlagContext";
 import { useAIOrchestratorStatus } from "../hooks/useAIOrchestratorStatus";
 import { useCostTrackingWebSocket } from "../hooks/useCostTrackingWebSocket";
 import { useCanvasKeyboardNav } from "../hooks/useCanvasKeyboardNav";
-import type {
-  ConnectionStatus,
-  TokenBreakdown,
-  CostBreakdown,
-} from "./StatusBar";
+import { useKBStatus } from "../hooks/useKBStatus";
+import { useBreadcrumb } from "../hooks/useBreadcrumb";
+import type { ConnectionStatus } from "../types/connection";
+import type { TokenBreakdown, CostBreakdown } from "../types/session";
 import { NudgeTooltip } from "../components/Nudge";
 import { CrossInsightsPanel } from "../components/Analytics/CrossInsightsPanel";
 import { KeyboardShortcutOverlay } from "../components/Common/KeyboardShortcutOverlay";
@@ -84,12 +83,8 @@ import type {
 } from "../components/Onboarding/OnboardingWizard";
 import { AgentApprovalDialog } from "../components/Admin/AgentApprovalDialog";
 import { ClarificationDialog } from "../components/Admin/ClarificationDialog";
-// Use consolidated HITL types from types/hitl.ts
-import {
-  convertUIResponseToAPIResponse,
-  convertApprovalPayloadToRequest,
-  convertClarificationPayloadToRequest,
-} from "../types/hitl";
+// Use consolidated HITL types from types/hitl.ts (ADR-0091 Phase 10: dialogs use camelCase)
+import { convertUIResponseCamelCaseToAPIResponse } from "../types/hitl";
 
 // Import lazy-loaded AI components (Phase 4) - code-split for reduced bundle size
 import {
@@ -121,49 +116,6 @@ import {
 import { authenticatedFetch } from "../utils/authenticatedFetch";
 
 const logger = devLogger.withPrefix("[StudioShell]");
-
-// =============================================================================
-// Section Title Mapping (Sprint 2.3 - Wayfinding)
-// =============================================================================
-
-/**
- * Maps route pathnames to section titles for TopBar breadcrumb display.
- * Used to provide context for users on non-chat routes.
- */
-const SECTION_TITLES: Record<string, string> = {
-  "/studio/chat": "", // No section title for chat (default view)
-  "/studio/workflows": "Workflows",
-  "/studio/agents": "Agents",
-  "/studio/mcp": "MCP",
-  "/studio/vectors": "Vectors",
-  "/studio/connections": "Connections",
-  "/studio/files": "Files",
-  "/studio/traces": "Traces",
-  "/studio/observability": "Observability",
-  "/studio/cost": "Cost",
-  "/studio/admin": "Admin",
-  "/studio/audit": "Audit",
-  "/studio/compliance": "Compliance",
-  "/studio/settings": "Settings",
-  "/studio/help": "Help",
-  "/studio/projects": "Projects",
-};
-
-/**
- * Derives section title from pathname.
- * Falls back to empty string for unknown routes or chat routes.
- */
-function getSectionTitle(pathname: string): string {
-  // Exact match first
-  if (SECTION_TITLES[pathname] !== undefined) {
-    return SECTION_TITLES[pathname];
-  }
-  // Check for partial matches (e.g., /studio/chat/:sessionId → "")
-  const basePath = Object.keys(SECTION_TITLES).find(
-    (key) => pathname.startsWith(key + "/") || pathname === key,
-  );
-  return basePath ? (SECTION_TITLES[basePath] ?? "") : "";
-}
 
 // =============================================================================
 // Command Palette Commands
@@ -279,6 +231,17 @@ export function StudioShellLayout() {
   const panelZoomEnabled = useFeatureFlag("panel_zoom");
   // Sprint 5.1: Mobile drawer navigation feature flag
   const mobileDrawerEnabled = useFeatureFlag("mobile_drawer");
+  // KB Focus feature flag (DynamicContextLoader integration)
+  const kbFocusEnabled = useFeatureFlag("kb_focus");
+
+  // KB Status for StatusBar indicator (DynamicContextLoader integration)
+  const {
+    kbStatusForUI: kbStatus,
+    statusMessage: kbStatusMessage,
+    contextStats: kbContextStats,
+  } = useKBStatus({
+    skip: !kbFocusEnabled,
+  });
 
   // Sprint 5.1: Mobile drawer state
   const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
@@ -318,11 +281,10 @@ export function StudioShellLayout() {
   // Get current route for page context
   const location = useLocation();
 
-  // Sprint 2.3: Derive section title from pathname for TopBar breadcrumb
-  const sectionTitle = useMemo(
-    () => getSectionTitle(location.pathname),
-    [location.pathname],
-  );
+  // Sprint 2.3 Phase 2: Breadcrumb items for deeper navigation hierarchy
+  // Uses route handle.breadcrumb metadata for nested routes
+  // Note: Legacy SECTION_TITLES approach deprecated - all routes now use handle.breadcrumb
+  const breadcrumbItems = useBreadcrumb();
 
   // Get sub-persona for TopBar badge (more granular than base persona)
   const subPersona = useAppSelector(selectSubPersona);
@@ -844,7 +806,7 @@ export function StudioShellLayout() {
       </a>
 
       {/* TopBar - persona-aware header (hidden in focus mode) */}
-      {/* Sprint 2.3: sectionTitle provides wayfinding breadcrumb for non-chat routes */}
+      {/* Sprint 2.3 Phase 2: breadcrumbItems provides wayfinding via useBreadcrumb hook */}
       {/* Sprint 5.1: Add hamburger menu for mobile navigation */}
       {!focusModeEnabled && (
         <div className="flex items-center">
@@ -858,7 +820,9 @@ export function StudioShellLayout() {
             </div>
           )}
           <TopBar
-            sectionTitle={sectionTitle || undefined}
+            breadcrumbItems={
+              breadcrumbItems.length > 0 ? breadcrumbItems : undefined
+            }
             subPersonaBadge={subPersona || undefined}
             onUserMenuClick={handleUserMenuClick}
             pendingApprovals={
@@ -1095,6 +1059,9 @@ export function StudioShellLayout() {
           }
           devToolsCollapsed={devToolsCollapsed}
           onDevToolsToggle={() => dispatch(toggleDevTools())}
+          kbStatus={kbFocusEnabled ? kbStatus : undefined}
+          kbStatusMessage={kbFocusEnabled ? kbStatusMessage : undefined}
+          kbContextStats={kbFocusEnabled ? kbContextStats : undefined}
         />
       )}
 
@@ -1264,11 +1231,11 @@ export function StudioShellLayout() {
       {agentHitlEnabled && showApprovalDialog && activeApproval && (
         <div data-testid="agent-approval-dialog">
           <AgentApprovalDialog
-            request={convertApprovalPayloadToRequest(activeApproval)}
+            request={activeApproval}
             isOpen={showApprovalDialog}
             onClose={closeApprovalDialog}
-            onApprove={(data) => handleApprove(data.request_id, data.reason)}
-            onReject={(data) => handleReject(data.request_id, data.reason)}
+            onApprove={(data) => handleApprove(data.requestId, data.reason)}
+            onReject={(data) => handleReject(data.requestId, data.reason)}
             isApproving={isApproving}
             isRejecting={isRejecting}
             currentUser={username ?? undefined}
@@ -1280,12 +1247,12 @@ export function StudioShellLayout() {
       {agentHitlEnabled && showClarificationDialog && activeClarification && (
         <div data-testid="clarification-dialog">
           <ClarificationDialog
-            request={convertClarificationPayloadToRequest(activeClarification)}
+            request={activeClarification}
             isOpen={showClarificationDialog}
             onClose={closeClarificationDialog}
             onRespond={(response) =>
               handleClarificationRespond(
-                convertUIResponseToAPIResponse(response),
+                convertUIResponseCamelCaseToAPIResponse(response),
               )
             }
             isSubmitting={isClarificationSubmitting}

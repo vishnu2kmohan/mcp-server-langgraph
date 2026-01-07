@@ -52,6 +52,8 @@ from mcp_server_langgraph.websocket.handlers.orchestrator_status import (
     OrchestratorStatusHandler,
 )
 from mcp_server_langgraph.websocket.handlers.trace import TraceHandler
+from mcp_server_langgraph.websocket.handlers.metrics_session import MetricsSessionHandler
+from mcp_server_langgraph.websocket.handlers.llm_streaming import LLMStreamingHandler
 
 # Create the main WebSocket router
 ws_router = APIRouter(tags=["websocket"])
@@ -256,6 +258,80 @@ async def heart_metrics_websocket(websocket: WebSocket) -> None:
             message_timeout=30,
         ),
         metrics_service=get_websocket_heart_metrics_service(),
+    )
+    await handler.run(websocket)
+
+
+# =============================================================================
+# Metrics Session WebSocket Endpoint
+# =============================================================================
+
+
+@ws_router.websocket("/metrics/session")
+async def metrics_session_websocket(websocket: WebSocket) -> None:
+    """
+    WebSocket endpoint for real-time session-level metrics streaming.
+
+    URL: /api/v1/ws/metrics/session
+
+    Provides real-time session metrics including:
+    - Session duration tracking
+    - Token usage per session
+    - Session health indicators
+
+    Uses the standardized WebSocketBase infrastructure with:
+    - JWT authentication
+    - OpenFGA authorization
+    - OpenTelemetry tracing
+    - Metrics collection
+    """
+    handler = MetricsSessionHandler(
+        config=WebSocketConfig(
+            endpoint_name="metrics-session",
+            require_auth=True,
+            authz_resource_type="chat",
+            authz_resource_id="session-metrics",
+            authz_required_relation="viewer",
+            rate_limit_per_minute=200,
+            message_timeout=30,
+        ),
+    )
+    await handler.run(websocket)
+
+
+# =============================================================================
+# LLM Streaming WebSocket Endpoint
+# =============================================================================
+
+
+@ws_router.websocket("/llm/streaming")
+async def llm_streaming_websocket(websocket: WebSocket) -> None:
+    """
+    WebSocket endpoint for real-time LLM response streaming.
+
+    URL: /api/v1/ws/llm/streaming
+
+    Provides real-time streaming of LLM responses including:
+    - Token-by-token streaming
+    - Stream status updates
+    - Stream cancellation support
+
+    Uses the standardized WebSocketBase infrastructure with:
+    - JWT authentication
+    - OpenFGA authorization
+    - OpenTelemetry tracing
+    - Metrics collection
+    """
+    handler = LLMStreamingHandler(
+        config=WebSocketConfig(
+            endpoint_name="llm-streaming",
+            require_auth=True,
+            authz_resource_type="chat",
+            authz_resource_id="llm-streaming",
+            authz_required_relation="viewer",
+            rate_limit_per_minute=300,
+            message_timeout=60,
+        ),
     )
     await handler.run(websocket)
 

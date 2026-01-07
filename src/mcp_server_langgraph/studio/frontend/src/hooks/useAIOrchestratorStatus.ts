@@ -23,7 +23,10 @@
  */
 
 import { useState, useCallback, useRef, useMemo, useEffect } from "react";
-import { useRealtimeSync, type ConnectionStatus } from "./useRealtimeSync";
+import {
+  useRealtimeSync,
+  type WebSocketConnectionStatus,
+} from "./useRealtimeSync";
 import { useAppDispatch, useAppSelector } from "../store/hooks";
 import { logout, selectIsAuthenticated } from "../store/slices/authSlice";
 import { addNotification } from "../store/slices/notificationSlice";
@@ -101,7 +104,7 @@ export interface UseAIOrchestratorStatusReturn {
   /** Last error message */
   lastError?: string;
   /** WebSocket connection status */
-  connectionStatus: ConnectionStatus;
+  connectionStatus: WebSocketConnectionStatus;
   /** Status message formatted for StatusBar (undefined when idle) */
   statusForStatusBar?: string;
   /** Number of tasks waiting in queue */
@@ -411,7 +414,7 @@ export function useAIOrchestratorStatus(
   }, [effectiveEnabled, metrics]);
 
   // Override connection status if not enabled
-  const connectionStatus: ConnectionStatus = effectiveEnabled
+  const connectionStatus: WebSocketConnectionStatus = effectiveEnabled
     ? realtimeStatus
     : "disconnected";
 

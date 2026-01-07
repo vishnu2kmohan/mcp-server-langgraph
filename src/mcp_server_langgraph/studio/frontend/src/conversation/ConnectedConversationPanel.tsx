@@ -56,6 +56,7 @@ import { useInlineSuggestions } from "../hooks/useInlineSuggestions";
 import { useDebounce } from "../hooks/useDebounce";
 import { ConversationPanel } from "./ConversationPanel";
 import type { SlashCommand } from "../components/Chat/ChatInputForm";
+import type { KBFocusMode } from "../hooks/useStreamingChat";
 import type { ChatLoaderData } from "../router/loaders";
 import { devLogger } from "../utils/devLogger";
 import { cn } from "../utils/cn";
@@ -148,6 +149,9 @@ export const ConnectedConversationPanel = forwardRef<
     useState(false);
   const [isThinkingContentCollapsed, setIsThinkingContentCollapsed] =
     useState(false);
+
+  // KB focus mode state (lifted from ConnectedChatInputForm for API integration)
+  const [kbFocusMode, setKbFocusMode] = useState<KBFocusMode>("all");
 
   // =============================================================================
   // Streaming Chat (LLM Response Generation)
@@ -467,7 +471,8 @@ export const ConnectedConversationPanel = forwardRef<
 
         // 2. Start streaming response from LLM
         // This calls POST /api/v1/chat/completions/stream
-        startStream(effectiveSessionId, content);
+        // Pass KB focus mode to control context retrieval strategy
+        startStream(effectiveSessionId, content, { kbFocus: kbFocusMode });
 
         // 3. Trigger revalidation to sync loader data
         revalidateMessages();
@@ -478,7 +483,14 @@ export const ConnectedConversationPanel = forwardRef<
       // Clear input for next message
       setInputQuery("");
     },
-    [dispatch, revalidateMessages, sessionId, currentSession?.id, startStream],
+    [
+      dispatch,
+      revalidateMessages,
+      sessionId,
+      currentSession?.id,
+      startStream,
+      kbFocusMode,
+    ],
   );
 
   // Handle input change for intent detection and inline suggestions
@@ -864,6 +876,9 @@ export const ConnectedConversationPanel = forwardRef<
         isSuggestionLoading={isSuggestionLoading}
         onAcceptSuggestion={acceptInlineSuggestion}
         onDismissSuggestion={dismissInlineSuggestion}
+        // KB Focus mode (controlled - lifted from ConnectedChatInputForm)
+        kbFocusValue={kbFocusMode}
+        onKBFocusChange={setKbFocusMode}
       />
     </div>
   );

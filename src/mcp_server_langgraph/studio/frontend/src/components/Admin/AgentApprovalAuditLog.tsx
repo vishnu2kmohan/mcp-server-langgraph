@@ -20,13 +20,13 @@ import React, { useState, useMemo } from "react";
 
 export interface AuditEntry {
   id: string;
-  request_id: string;
-  agent_name: string;
+  requestId: string;
+  agentName: string;
   decision: "approved" | "rejected";
   confidence: number;
   threshold: number;
-  decided_by: string;
-  decided_at: string;
+  decidedBy: string;
+  decidedAt: string;
   reason: string | null;
 }
 
@@ -168,7 +168,7 @@ export function AgentApprovalAuditLog({
                     onClick={() => handleRowClick(entry.id)}
                     role="row"
                   >
-                    <td className="px-4 py-3 text-sm">{entry.agent_name}</td>
+                    <td className="px-4 py-3 text-sm">{entry.agentName}</td>
                     <td className="px-4 py-3">
                       <span
                         className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
@@ -195,10 +195,10 @@ export function AgentApprovalAuditLog({
                       </span>
                     </td>
                     <td className="px-4 py-3 text-sm text-gray-600">
-                      {entry.decided_by}
+                      {entry.decidedBy}
                     </td>
                     <td className="px-4 py-3 text-sm text-gray-500">
-                      {formatDate(entry.decided_at)}
+                      {formatDate(entry.decidedAt)}
                     </td>
                   </tr>
 
@@ -212,7 +212,7 @@ export function AgentApprovalAuditLog({
                               Request ID:
                             </span>{" "}
                             <span className="font-mono text-gray-600">
-                              {entry.request_id}
+                              {entry.requestId}
                             </span>
                           </div>
                           {entry.reason && (

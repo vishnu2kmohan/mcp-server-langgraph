@@ -15,45 +15,27 @@
  * - Keyboard shortcut hints
  * - Feature flag toggle (dev mode)
  */
-import { Cpu, Hash, ListTodo, AlertTriangle, Terminal } from "lucide-react";
+import {
+  Cpu,
+  Hash,
+  ListTodo,
+  AlertTriangle,
+  Terminal,
+  Database,
+} from "lucide-react";
 import { cn } from "../utils/cn";
 import { FeatureFlagToggle } from "./FeatureFlagToggle";
+import type { ConnectionStatus } from "../types/connection";
+import type {
+  ModelProvider,
+  TokenBreakdown,
+  CostBreakdown,
+} from "../types/session";
+import type { KBStatusValue, KBContextStats } from "../types/api";
 
 // =============================================================================
 // Types
 // =============================================================================
-
-export type ConnectionStatus =
-  | "connected"
-  | "disconnected"
-  | "connecting"
-  | "error";
-
-/** Token usage breakdown by type */
-export interface TokenBreakdown {
-  /** Input/prompt tokens */
-  promptTokens: number;
-  /** Output/completion tokens */
-  completionTokens: number;
-  /** Total tokens (promptTokens + completionTokens) */
-  totalTokens: number;
-}
-
-/** Cost breakdown information */
-export interface CostBreakdown {
-  /** Estimated cost in USD */
-  estimatedCostUsd: number;
-  /** Cost by model (for multi-model sessions) */
-  byModel?: Record<string, { tokens: number; cost: number }>;
-}
-
-/** Model provider type */
-export type ModelProvider =
-  | "openai"
-  | "anthropic"
-  | "google"
-  | "azure"
-  | "unknown";
 
 export interface StatusBarProps {
   /**
@@ -105,6 +87,12 @@ export interface StatusBarProps {
   onDevToolsToggle?: () => void;
   /** Number of problems/errors in DevTools */
   problemCount?: number;
+  /** Knowledge Base status (ready, misconfigured, unavailable) */
+  kbStatus?: KBStatusValue;
+  /** Knowledge Base status message (e.g., configuration guidance) */
+  kbStatusMessage?: string;
+  /** Knowledge Base context stats (refs count, token usage) */
+  kbContextStats?: KBContextStats;
   /** Additional CSS classes */
   className?: string;
 }
@@ -232,6 +220,61 @@ function deriveContextualStatus(
   }
 }
 
+/**
+ * Get KB status indicator color class
+ */
+function getKBStatusValueColor(status: KBStatusValue): string {
+  switch (status) {
+    case "ready":
+      return "bg-green-500";
+    case "misconfigured":
+      return "bg-yellow-500";
+    case "unavailable":
+      return "bg-gray-400";
+  }
+}
+
+/**
+ * Build KB tooltip message
+ */
+function buildKBTooltip(
+  status: KBStatusValue,
+  statusMessage?: string,
+  contextStats?: KBContextStats,
+): string {
+  const lines: string[] = [];
+
+  // Status line
+  switch (status) {
+    case "ready":
+      lines.push("Knowledge Base: Ready");
+      break;
+    case "misconfigured":
+      lines.push("Knowledge Base: Misconfigured");
+      break;
+    case "unavailable":
+      lines.push("Knowledge Base: Unavailable");
+      break;
+  }
+
+  // Add custom message if provided
+  if (statusMessage) {
+    lines.push(statusMessage);
+  }
+
+  // Add context stats if provided
+  if (contextStats) {
+    const usagePercent = Math.round(
+      (contextStats.tokensUsed / contextStats.tokenBudget) * 100,
+    );
+    lines.push(
+      `Context: ${contextStats.refsCount} refs, ${contextStats.tokensUsed.toLocaleString()}/${contextStats.tokenBudget.toLocaleString()} tokens (${usagePercent}%)`,
+    );
+  }
+
+  return lines.join("\n");
+}
+
 export function StatusBar({
   status,
   connectionStatus,
@@ -253,6 +296,9 @@ export function StatusBar({
   devToolsCollapsed = true,
   onDevToolsToggle,
   problemCount,
+  kbStatus,
+  kbStatusMessage,
+  kbContextStats,
   className,
 }: StatusBarProps) {
   // Check if we're in dev mode
@@ -352,6 +398,40 @@ export function StatusBar({
         )}
 
         {/* User indicator REMOVED - redundant with top-bar (userName prop deprecated) */}
+
+        {/* Knowledge Base status indicator */}
+        {kbStatus && (
+          <span
+            role="status"
+            aria-label={`Knowledge Base status: ${kbStatus}`}
+            title={buildKBTooltip(kbStatus, kbStatusMessage, kbContextStats)}
+            className="flex items-center gap-1.5 cursor-help"
+          >
+            <span
+              data-testid="kb-status-indicator"
+              className={cn(
+                "w-2 h-2 rounded-full",
+                getKBStatusValueColor(kbStatus),
+              )}
+            />
+            <Database
+              size={12}
+              aria-hidden="true"
+              className="text-gray-500 dark:text-gray-400"
+            />
+            <span>KB</span>
+            {kbContextStats && (
+              <span
+                data-testid="kb-context-stats"
+                title={`Context usage: ${Math.round((kbContextStats.tokensUsed / kbContextStats.tokenBudget) * 100)}%`}
+                className="text-gray-400 dark:text-gray-500"
+              >
+                {kbContextStats.refsCount} refs ·{" "}
+                {kbContextStats.tokensUsed.toLocaleString()}
+              </span>
+            )}
+          </span>
+        )}
 
         {/* Error message */}
         {errorMessage && (

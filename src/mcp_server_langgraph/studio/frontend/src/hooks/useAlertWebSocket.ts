@@ -24,7 +24,10 @@ import {
 } from "../store/slices/authSlice";
 import { addAlert, type Alert } from "../store/slices/alertSlice";
 import { addNotification } from "../store/slices/notificationSlice";
-import { useRealtimeSync, type ConnectionStatus } from "./useRealtimeSync";
+import {
+  useRealtimeSync,
+  type WebSocketConnectionStatus,
+} from "./useRealtimeSync";
 import { buildWebSocketUrl, WS_ENDPOINTS } from "../utils/websocket";
 import { reportWebSocketMetrics } from "../utils/websocketTelemetry";
 import {
@@ -54,7 +57,7 @@ export interface UseAlertWebSocketOptions {
  */
 export interface UseAlertWebSocketReturn {
   /** Current connection status */
-  status: ConnectionStatus;
+  status: WebSocketConnectionStatus;
   /** Manually disconnect */
   disconnect: () => void;
   /** Manually reconnect */
@@ -282,7 +285,7 @@ export function useAlertWebSocket(
       reportWebSocketMetrics("alerts", metrics);
     }
   }, [effectiveEnabled, metrics]);
-  const status: ConnectionStatus = effectiveEnabled
+  const status: WebSocketConnectionStatus = effectiveEnabled
     ? realtimeStatus
     : "disconnected";
 

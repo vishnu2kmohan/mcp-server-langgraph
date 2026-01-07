@@ -190,7 +190,7 @@ function StreamCard({ stream }: StreamCardProps): React.ReactElement {
           </span>
         </div>
         <span className="text-xs text-gray-500 dark:text-gray-400 font-mono">
-          {stream.stream_id.slice(0, 8)}...
+          {stream.streamId.slice(0, 8)}...
         </span>
       </div>
 
@@ -203,7 +203,7 @@ function StreamCard({ stream }: StreamCardProps): React.ReactElement {
             <span>TTFC</span>
           </div>
           <span className="font-mono text-sm font-medium text-gray-900 dark:text-white">
-            {formatDuration(stream.ttfc_ms)}
+            {formatDuration(stream.ttfcMs)}
           </span>
         </div>
 
@@ -214,7 +214,7 @@ function StreamCard({ stream }: StreamCardProps): React.ReactElement {
             <span>Chunks</span>
           </div>
           <span className="font-mono text-sm font-medium text-gray-900 dark:text-white">
-            {stream.chunks_received}
+            {stream.chunksReceived}
           </span>
         </div>
 
@@ -225,7 +225,7 @@ function StreamCard({ stream }: StreamCardProps): React.ReactElement {
             <span>Size</span>
           </div>
           <span className="font-mono text-sm font-medium text-gray-900 dark:text-white">
-            {stream.total_chunk_size} B
+            {stream.totalChunkSize} B
           </span>
         </div>
       </div>
@@ -253,11 +253,7 @@ export function LLMStreamingTab({
       // Active streams first, then by start time
       if (a.status === "active" && b.status !== "active") return -1;
       if (a.status !== "active" && b.status === "active") return 1;
-      /* eslint-disable no-restricted-syntax -- TODO: ADR-0091 Phase 6: Transform ActiveStream to camelCase */
-      return (
-        new Date(b.started_at).getTime() - new Date(a.started_at).getTime()
-      );
-      /* eslint-enable no-restricted-syntax */
+      return new Date(b.startedAt).getTime() - new Date(a.startedAt).getTime();
     });
   }, [activeStreams]);
 
@@ -298,7 +294,7 @@ export function LLMStreamingTab({
         ) : (
           <div className="space-y-3">
             {streamsList.map((stream) => (
-              <StreamCard key={stream.stream_id} stream={stream} />
+              <StreamCard key={stream.streamId} stream={stream} />
             ))}
           </div>
         )}

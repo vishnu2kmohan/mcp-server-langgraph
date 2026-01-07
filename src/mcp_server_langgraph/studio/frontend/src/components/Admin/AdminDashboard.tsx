@@ -42,7 +42,7 @@ import {
   useBatchApproveAgentRequestsMutation,
   useBatchRejectAgentRequestsMutation,
 } from "../../api";
-import type { ConnectionStatus } from "../../hooks/useRealtimeSync";
+import type { WebSocketConnectionStatus } from "../../hooks/useRealtimeSync";
 
 export interface SystemHealth {
   status: "healthy" | "degraded" | "unhealthy";
@@ -75,7 +75,7 @@ export interface AdminDashboardProps {
   // Alert props (optional for backwards compatibility)
   alertCount?: number;
   alertsLoading?: boolean;
-  alertConnectionStatus?: ConnectionStatus;
+  alertConnectionStatus?: WebSocketConnectionStatus;
 }
 
 type TabId = "overview" | "users" | "alerts" | "agent-requests";
@@ -275,13 +275,13 @@ export function AdminDashboard({
       ...entries.map((e) =>
         [
           e.id,
-          e.request_id,
-          e.agent_name,
+          e.requestId,
+          e.agentName,
           e.decision,
           (e.confidence * 100).toFixed(0) + "%",
           (e.threshold * 100).toFixed(0) + "%",
-          e.decided_by,
-          e.decided_at,
+          e.decidedBy,
+          e.decidedAt,
           e.reason ?? "",
         ].join(","),
       ),
@@ -326,7 +326,7 @@ export function AdminDashboard({
   };
 
   // Count pending agent requests
-  const pendingAgentRequestCount = pendingAgentRequests?.total_count ?? 0;
+  const pendingAgentRequestCount = pendingAgentRequests?.totalCount ?? 0;
 
   const tabs: {
     id: TabId;

@@ -21,7 +21,6 @@ import {
 // =============================================================================
 // Mocks
 // =============================================================================
-
 // Mock useRouteLoaderData
 const mockSessionLoaderData: ChatLoaderData = {
   sessionId: "session-123",
@@ -141,6 +140,26 @@ vi.mock("../hooks/useConversationIntelligence", () => ({
     error: null,
     refetch: vi.fn(),
   })),
+}));
+
+// Mock useKBStatus hook (DynamicContextLoader integration)
+vi.mock("../hooks/useKBStatus", () => ({
+  useKBStatus: () => ({
+    data: undefined,
+    status: "ready" as const,
+    statusMessage: "Knowledge Base ready",
+    isLoading: false,
+    isError: false,
+    error: null,
+    isReady: true,
+    isMisconfigured: false,
+    isUnavailable: false,
+    collectionName: "test-collection",
+    vectorsCount: 100,
+    contextStats: undefined,
+    kbStatusForUI: "ready" as const,
+    refetch: vi.fn(),
+  }),
 }));
 
 // =============================================================================

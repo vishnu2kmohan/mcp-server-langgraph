@@ -13,12 +13,14 @@
 
 import { useMemo } from "react";
 import { Zap, DollarSign } from "lucide-react";
+import type { ModelProvider } from "../../types/session";
+
+// Re-export for consumers
+export type { ModelProvider };
 
 // =============================================================================
 // Types
 // =============================================================================
-
-export type ModelProvider = "openai" | "anthropic" | "google" | "azure";
 
 export interface TokenUsageDisplayProps {
   /** Number of prompt/input tokens */
@@ -50,6 +52,7 @@ const COST_PER_1K_TOKENS: Record<
   anthropic: { input: 0.015, output: 0.075 },
   google: { input: 0.00025, output: 0.0005 },
   azure: { input: 0.01, output: 0.03 },
+  unknown: { input: 0, output: 0 }, // No cost for unknown provider
 };
 
 // =============================================================================

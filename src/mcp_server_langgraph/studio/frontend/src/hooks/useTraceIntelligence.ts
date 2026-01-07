@@ -73,7 +73,11 @@ export interface CostProjectionOptions {
   enabled?: boolean;
 }
 
-export interface CostBreakdown {
+/**
+ * Token breakdown for trace cost calculations.
+ * Note: Different from session.ts TraceTokenBreakdown which tracks USD estimates.
+ */
+export interface TraceTokenBreakdown {
   input_tokens: number;
   output_tokens: number;
 }
@@ -81,7 +85,7 @@ export interface CostBreakdown {
 export interface CostProjectionResult {
   currentCost: number | null;
   projectedCost: number | null;
-  costBreakdown: CostBreakdown | null;
+  costBreakdown: TraceTokenBreakdown | null;
   budgetRemaining: number | null;
   budgetPercentageUsed: number | null;
   estimatedRemainingMessages: number | null;
@@ -349,7 +353,7 @@ export function useCostProjection(
   const [result, setResult] = useState<{
     currentCost: number | null;
     projectedCost: number | null;
-    costBreakdown: CostBreakdown | null;
+    costBreakdown: TraceTokenBreakdown | null;
     budgetRemaining: number | null;
     budgetPercentageUsed: number | null;
     estimatedRemainingMessages: number | null;
@@ -395,7 +399,7 @@ export function useCostProjection(
         | {
             current_cost?: number;
             projected_cost?: number;
-            cost_breakdown?: CostBreakdown;
+            cost_breakdown?: TraceTokenBreakdown;
             budget_remaining?: number;
             budget_percentage_used?: number;
             estimated_remaining_messages?: number;

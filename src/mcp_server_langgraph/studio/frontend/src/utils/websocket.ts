@@ -159,12 +159,12 @@ export const WS_ENDPOINTS = {
 
   // Monitoring WebSocket endpoints
   METRICS_HEART: "/api/v1/ws/metrics/heart",
-  // METRICS_SESSION: "/api/v1/ws/metrics/session", // TODO: Add backend handler
+  METRICS_SESSION: "/api/v1/ws/metrics/session",
   COST: "/api/v1/ws/usage/cost",
   BUDGET_ALERTS: "/api/v1/ws/budget/alerts",
 
   // LLM Streaming WebSocket endpoints
-  // LLM_STREAMING: "/api/v1/ws/llm/streaming", // TODO: Add backend handler
+  LLM_STREAMING: "/api/v1/ws/llm/streaming",
 
   // Connections WebSocket endpoints
   CONNECTIONS_REALTIME: "/api/v1/ws/connections/realtime",
