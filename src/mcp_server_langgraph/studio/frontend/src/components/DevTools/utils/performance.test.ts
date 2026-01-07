@@ -6,6 +6,46 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { renderHook, act, waitFor } from "@testing-library/react";
 
+// Mock isTestMode BEFORE importing performance utilities
+// This ensures the devLogger created in performance.ts sees isTestMode() = false
+vi.mock("../../../utils/devLogger", async () => {
+  const actual = await vi.importActual<
+    typeof import("../../../utils/devLogger")
+  >("../../../utils/devLogger");
+  return {
+    ...actual,
+    // Override isTestMode to return false so logging works in tests
+    isTestMode: () => false,
+    // Re-create devLogger with the overridden isTestMode
+    devLogger: {
+      ...actual.devLogger,
+      withPrefix: (prefix: string) => ({
+        debug: (message: string, ...args: unknown[]) => {
+          // Only log in development mode (import.meta.env.DEV is true in vitest)
+          if (import.meta.env.DEV) {
+            console.debug(`${prefix} ${message}`, ...args);
+          }
+        },
+        log: (message: string, ...args: unknown[]) => {
+          if (import.meta.env.DEV) {
+            console.log(`${prefix} ${message}`, ...args);
+          }
+        },
+        warn: (message: string, ...args: unknown[]) => {
+          if (import.meta.env.DEV) {
+            console.warn(`${prefix} ${message}`, ...args);
+          }
+        },
+        error: (message: string, ...args: unknown[]) => {
+          if (import.meta.env.DEV) {
+            console.error(`${prefix} ${message}`, ...args);
+          }
+        },
+      }),
+    },
+  };
+});
+
 import {
   useBatchedUpdates,
   useDebouncedValue,

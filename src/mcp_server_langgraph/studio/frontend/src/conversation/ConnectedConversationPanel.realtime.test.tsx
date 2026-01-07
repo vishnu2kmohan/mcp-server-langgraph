@@ -83,6 +83,60 @@ vi.mock("../hooks/useConversationIntelligence", () => ({
   })),
 }));
 
+// Mock useKBStatus (used by ConnectedChatInputForm, requires RTK-Query)
+vi.mock("../hooks/useKBStatus", () => ({
+  useKBStatus: () => ({
+    data: undefined,
+    status: "ready" as const,
+    statusMessage: "Knowledge Base ready",
+    isLoading: false,
+    isError: false,
+    error: null,
+    isReady: true,
+    isMisconfigured: false,
+    isUnavailable: false,
+    collectionName: "test-collection",
+    vectorsCount: 100,
+    contextStats: undefined,
+    kbStatusForUI: "ready" as const,
+    refetch: vi.fn(),
+  }),
+}));
+
+// Mock useStreamingChat (used by ConnectedConversationPanel)
+vi.mock("../hooks/useStreamingChat", () => ({
+  useStreamingChat: () => ({
+    isStreaming: false,
+    streamingContent: "",
+    error: null,
+    thinkingContent: "",
+    usage: null,
+    thinkingTokens: null,
+    startStream: vi.fn(),
+    stopStream: vi.fn(),
+    clearContent: vi.fn(),
+    model: "gemini-2.5-flash",
+  }),
+}));
+
+// Mock useSessionAutoName
+vi.mock("../hooks/useSessionAutoName", () => ({
+  useSessionAutoName: () => ({
+    isGenerating: false,
+    isSuccess: false,
+    generatedTitle: undefined,
+    hasDefaultName: true,
+    error: undefined,
+  }),
+  default: () => ({
+    isGenerating: false,
+    isSuccess: false,
+    generatedTitle: undefined,
+    hasDefaultName: true,
+    error: undefined,
+  }),
+}));
+
 // Mock useAIRealTimeUXSuggestions
 const mockRequestSuggestions = vi.fn();
 const mockDismissSuggestion = vi.fn();
