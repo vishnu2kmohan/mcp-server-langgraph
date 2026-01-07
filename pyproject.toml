@@ -227,18 +227,26 @@ release-tools = [
 # EMBEDDING OPTIONS - Choose based on deployment strategy
 # ==============================================================================
 #
-# embeddings-api:     Lightweight (~0MB overhead) - Uses Google Gemini API
-#                     Already included in core dependencies via langchain-google-genai
-#                     Recommended for: Cloud deployments, cost-sensitive environments
-#                     Requires: GOOGLE_API_KEY environment variable
+# embeddings-api:        Lightweight (~0MB overhead) - Uses Google Gemini API
+#                        Already included in core dependencies via langchain-google-genai
+#                        Recommended for: Cloud deployments, cost-sensitive environments
+#                        Requires: GOOGLE_API_KEY environment variable
 #
-# embeddings-vertex:  Lightweight - Uses Google Vertex AI (GCP credentials/WIF)
-#                     Recommended for: GKE with Workload Identity Federation
-#                     Uses GCP OAuth scopes instead of API key
+# embeddings-vertex:     Lightweight - Uses Google Vertex AI (GCP credentials/WIF)
+#                        Recommended for: GKE with Workload Identity Federation
+#                        Uses GCP OAuth scopes instead of API key
 #
-# embeddings-local:   Heavy (~800MB overhead) - Self-hosted sentence-transformers
-#                     Includes: PyTorch, transformers, tokenizers
-#                     Recommended for: Air-gapped environments, data residency requirements
+# embeddings-openai:     Lightweight - Uses OpenAI Embeddings API
+#                        Recommended for: OpenAI-centric deployments
+#                        Requires: OPENAI_API_KEY environment variable
+#
+# embeddings-huggingface: Lightweight - Uses HuggingFace Inference API
+#                        Recommended for: Access to wide variety of models
+#                        Optional: HF_TOKEN for private models
+#
+# embeddings-local:      Heavy (~800MB overhead) - Self-hosted sentence-transformers
+#                        Includes: PyTorch, transformers, tokenizers
+#                        Recommended for: Air-gapped environments, data residency requirements
 #
 # ==============================================================================
 
@@ -256,6 +264,18 @@ embeddings-local = [
     # Self-hosted embeddings with full ML stack
     "sentence-transformers>=5.1.2",  # Updated 2025-11-28: Python 3.13 support
     "torch>=2.0.0,<3.0.0",  # Explicit PyTorch version control
+]
+
+embeddings-openai = [
+    # OpenAI embeddings (text-embedding-3-small, text-embedding-3-large)
+    # Requires: OPENAI_API_KEY environment variable
+    "langchain-openai>=0.3.0",
+]
+
+embeddings-huggingface = [
+    # HuggingFace embeddings (sentence-transformers models via HF API)
+    # Optional: HF_TOKEN for private models
+    "langchain-huggingface>=0.1.0",
 ]
 
 # Backwards compatibility alias
@@ -637,6 +657,7 @@ module = [
     "fakeredis.*",  # In-memory Redis fallback for testing
     "langchain_openai.*",  # OpenAI embeddings (separate package from langchain)
     "langchain_huggingface.*",  # HuggingFace embeddings (separate package from langchain)
+    "langchain_google_vertexai.*",  # Vertex AI embeddings (optional dependency)
 ]
 ignore_missing_imports = true
 # Disable additional strict checks for third-party libraries
@@ -909,6 +930,7 @@ markers = [
     "repository: Repository layer tests (data access, caching, CRUD operations)",
     "qdrant: Qdrant vector database tests (collections, search, upsert)",
     "vectors: Vector database API integration tests (Qdrant REST endpoints)",
+    "storage: Storage layer tests (generic storage backends, persistence, data access)",
     "core: Core module tests (config, feature flags, caching)",
     "requires_full_infrastructure: Tests requiring full Docker infrastructure (builder, playground, observability stack)",
     "journey: User journey tests (complete user workflows with HEART metrics)",
@@ -955,6 +977,7 @@ markers = [
     "canvas_intelligence: Canvas intelligence AI tests (code analysis, artifact suggestions)",
     "diagram_intelligence: Diagram intelligence AI tests (validation, diagram-to-code)",
     "conversation_intelligence: Conversation intelligence AI tests (intent, context, goals)",
+    "kb_focus: KB Focus Mode tests (ADR-0094, Perplexity-style context retrieval control)",
 ]
 # CODEX FINDING #4: Benchmark configuration
 # Benchmarks are DISABLED by default for fast test iteration (via --benchmark-disable in addopts)
