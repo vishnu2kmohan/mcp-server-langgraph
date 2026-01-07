@@ -472,7 +472,7 @@ COST_METRICS_QUERIES: dict[str, str] = {
 }
 
 
-def get_metrics_client() -> Any | None:
+def _get_metrics_client() -> Any | None:
     """
     Get the metrics client for querying Prometheus/Mimir.
 
@@ -480,9 +480,9 @@ def get_metrics_client() -> Any | None:
         MetricsQueryClient instance or None if not configured.
     """
     try:
-        from mcp_server_langgraph.observability.metrics_query import get_prometheus_client
+        from mcp_server_langgraph.observability.query import get_metrics_client
 
-        return get_prometheus_client()
+        return get_metrics_client()
     except ImportError:
         logger.warning("Metrics query client not available")
         return None
@@ -529,7 +529,7 @@ async def get_agent_metrics(
 
     from fastapi import HTTPException
 
-    client = get_metrics_client()
+    client = _get_metrics_client()
     if client is None:
         raise HTTPException(
             status_code=503,
