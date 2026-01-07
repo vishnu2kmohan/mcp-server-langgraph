@@ -941,3 +941,83 @@ class TestRunbookFileExistence:
                 + "\n\nRequired sections: "
                 + ", ".join(required_sections)
             )
+
+    def test_runbook_anchors_exist(self) -> None:
+        """Runbook URL anchors must have corresponding sections in the file.
+
+        When an alert's runbook_url contains an anchor (e.g., #authzproxydown),
+        that anchor must correspond to a heading in the runbook file.
+        This ensures on-call engineers can navigate directly to the relevant section.
+        """
+        runbook_anchor_issues: list[str] = []
+
+        for file_path, fmt in get_all_alert_files():
+            try:
+                content = file_path.read_text()
+                # fmt is "standard" or "k8s_crd", not "yaml"/"json"
+                # All alert files are YAML format
+                data = yaml.safe_load(content)
+            except Exception:
+                continue
+
+            # Handle k8s CRD format vs standard Prometheus format
+            if fmt == "k8s_crd":
+                groups = data.get("spec", {}).get("groups", [])
+            else:
+                groups = data.get("groups", [])
+            for group in groups:
+                rules = group.get("rules", [])
+                for alert in rules:
+                    if "alert" not in alert:
+                        continue
+
+                    alert_name = alert.get("alert", "")
+                    annotations = alert.get("annotations", {})
+                    runbook_url = annotations.get("runbook_url", "")
+
+                    # Check if URL has an anchor
+                    if runbook_url and "#" in runbook_url and "github.com" in runbook_url:
+                        # Extract path and anchor from URL
+                        # https://github.com/.../blob/main/monitoring/runbooks/file.md#anchor
+                        if "/blob/main/" in runbook_url:
+                            path_with_anchor = runbook_url.split("/blob/main/")[1]
+                            if "#" in path_with_anchor:
+                                runbook_path, anchor = path_with_anchor.split("#", 1)
+                                full_path = PROJECT_ROOT / runbook_path
+
+                                if full_path.exists():
+                                    runbook_content = full_path.read_text().lower()
+                                    # Anchors in GitHub are lowercase versions of headings
+                                    # Check for ## AnchorName heading pattern
+                                    anchor_lower = anchor.lower()
+                                    # GitHub anchor format: removes special chars, lowercases
+                                    # We check if there's a heading that would create this anchor
+                                    if f"## {anchor_lower}" not in runbook_content:
+                                        # Also try without ## (could be # or ###)
+                                        has_anchor = f"# {anchor_lower}" in runbook_content
+                                        if not has_anchor:
+                                            rel_path = str(file_path.relative_to(PROJECT_ROOT))
+                                            runbook_anchor_issues.append(
+                                                f"{rel_path}: {alert_name} -> #{anchor} (missing in {runbook_path})"
+                                            )
+
+        # Track known issues as technical debt - prevent regression
+        # As runbook sections are added, reduce this threshold to 0
+        known_missing_anchors = 10  # TODO: Reduce to 0 as anchors are added
+
+        if len(runbook_anchor_issues) > known_missing_anchors:
+            pytest.fail(
+                f"Found {len(runbook_anchor_issues)} alerts with missing runbook anchors "
+                f"(threshold: {known_missing_anchors}):\n"
+                + "\n".join(f"  ❌ {x}" for x in runbook_anchor_issues[:20])
+                + ("\n  ..." if len(runbook_anchor_issues) > 20 else "")
+                + "\n\nEach runbook anchor must have a corresponding ## heading in the file."
+                + "\n\nNOTE: New alerts MUST have corresponding runbook anchors. "
+                + "Reduce known_missing_anchors as you fix existing issues."
+            )
+        elif runbook_anchor_issues:
+            # Report as warning for visibility, but don't fail
+            print(
+                f"\n⚠️  {len(runbook_anchor_issues)} alerts have missing runbook anchors "
+                f"(allowed: {known_missing_anchors}):\n" + "\n".join(f"  - {x}" for x in runbook_anchor_issues[:10])
+            )

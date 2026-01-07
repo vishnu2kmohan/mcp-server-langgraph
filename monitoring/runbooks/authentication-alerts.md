@@ -261,3 +261,92 @@ severity: warning
 ### Escalation
 - **Security Team**: For permission model changes
 - **On-call SRE**: For sync issues
+
+---
+
+## AuthzProxyDown
+
+### Alert Definition
+```yaml
+alert: AuthzProxyDown
+expr: up{job=~".*authz.*proxy.*"} == 0
+for: 2m
+severity: critical
+```
+
+### Severity
+**CRITICAL** - Immediate response required
+
+### Impact
+- All authorization checks will fail or use fallback behavior
+- API requests may return 403 errors if authorization is required
+- New user permissions cannot be evaluated
+- Authorization proxy acts as middleware between application and OpenFGA
+
+### Diagnosis
+
+1. **Check Authz Proxy pod/container status**
+   ```bash
+   # Kubernetes
+   kubectl get pods -l app=authz-proxy -n auth
+   kubectl describe pod -l app=authz-proxy -n auth
+
+   # Docker Compose
+   docker compose ps authz-proxy
+   docker compose logs authz-proxy --tail=100
+   ```
+
+2. **Check Authz Proxy health endpoint**
+   ```bash
+   curl http://authz-proxy:8001/health
+   curl http://authz-proxy:8001/metrics
+   ```
+
+3. **Check OpenFGA connectivity**
+   ```bash
+   # Authz proxy depends on OpenFGA being available
+   curl http://openfga:8080/healthz
+   ```
+
+4. **Check Keycloak connectivity**
+   ```bash
+   # Authz proxy validates tokens against Keycloak
+   curl -k https://keycloak:8443/health/ready
+   ```
+
+5. **Review proxy logs for errors**
+   ```bash
+   # Look for connection errors, timeout errors, or auth failures
+   kubectl logs -l app=authz-proxy -n auth --tail=200 | grep -i error
+   ```
+
+### Resolution
+
+1. **If container is not running**
+   ```bash
+   # Kubernetes
+   kubectl rollout restart deployment/authz-proxy -n auth
+
+   # Docker Compose
+   docker compose restart authz-proxy
+   ```
+
+2. **If OpenFGA connection is failing**
+   - Verify OpenFGA is running and healthy
+   - Check network policies allow communication
+   - Verify OpenFGA store ID and model are configured correctly
+
+3. **If Keycloak connection is failing**
+   - Verify Keycloak is running and healthy
+   - Check OIDC configuration (issuer URL, client credentials)
+   - Verify JWKS endpoint is accessible
+
+4. **If resource exhaustion**
+   - Check memory and CPU limits
+   - Review connection pool settings
+   - Consider horizontal scaling
+
+### Escalation
+- **On-call SRE**: For infrastructure issues
+- **Security Team**: For authentication/authorization configuration issues
+- **Platform Team**: For proxy configuration or deployment issues
