@@ -1233,7 +1233,7 @@ services:
       # Alloy receives OTLP telemetry and forwards to Tempo (traces), Mimir (metrics), Loki (logs)
       - OTEL_EXPORTER_OTLP_ENDPOINT=http://alloy-test:4318
       - OTEL_SERVICE_NAME=mcp-server-langgraph
-      - OTEL_RESOURCE_ATTRIBUTES=service.namespace=mcp-test,deployment.environment=test
+      - OTEL_RESOURCE_ATTRIBUTES=service.namespace=agent-studio,deployment.environment=test
       # LGTM Stack configuration (Loki, Grafana, Tempo, Mimir)
       # Backend selection for observability query clients (concrete implementations, not stubs)
       - OBSERVABILITY_TRACING_BACKEND=tempo
@@ -2119,7 +2119,7 @@ services:
       # Alloy receives OTLP telemetry and forwards to Tempo (traces), Mimir (metrics), Loki (logs)
       - OTEL_EXPORTER_OTLP_ENDPOINT=http://alloy-test:4318
       - OTEL_SERVICE_NAME=authz-proxy-test
-      - OTEL_RESOURCE_ATTRIBUTES=service.namespace=mcp-test,deployment.environment=test
+      - OTEL_RESOURCE_ATTRIBUTES=service.namespace=agent-studio,deployment.environment=test
       - LOG_FORMAT=json
       # Disable console span/metric export (send to OTLP only, reduces log noise)
       - ENABLE_CONSOLE_EXPORT=false
