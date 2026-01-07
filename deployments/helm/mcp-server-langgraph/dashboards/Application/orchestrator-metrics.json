@@ -18,7 +18,7 @@
   "description": "Metrics for Multi-Agent Orchestrators (UX and Alert) - Phase 11-12 implementation",
   "editable": true,
   "fiscalYearStartMonth": 0,
-  "graphTooltip": 0,
+  "graphTooltip": 1,
   "id": null,
   "links": [
     {
@@ -26,7 +26,9 @@
       "icon": "external link",
       "includeVars": true,
       "keepTime": true,
-      "tags": ["mcp-server"],
+      "tags": [
+        "mcp-server"
+      ],
       "targetBlank": true,
       "title": "Related Dashboards",
       "type": "dashboards"
@@ -83,7 +85,9 @@
         "justifyMode": "auto",
         "orientation": "auto",
         "reduceOptions": {
-          "calcs": ["lastNotNull"],
+          "calcs": [
+            "lastNotNull"
+          ],
           "fields": "",
           "values": false
         },
@@ -141,7 +145,9 @@
         "justifyMode": "auto",
         "orientation": "auto",
         "reduceOptions": {
-          "calcs": ["lastNotNull"],
+          "calcs": [
+            "lastNotNull"
+          ],
           "fields": "",
           "values": false
         },
@@ -207,7 +213,9 @@
         "justifyMode": "auto",
         "orientation": "auto",
         "reduceOptions": {
-          "calcs": ["mean"],
+          "calcs": [
+            "mean"
+          ],
           "fields": "",
           "values": false
         },
@@ -265,7 +273,9 @@
         "justifyMode": "auto",
         "orientation": "auto",
         "reduceOptions": {
-          "calcs": ["mean"],
+          "calcs": [
+            "mean"
+          ],
           "fields": "",
           "values": false
         },
@@ -364,7 +374,10 @@
       "id": 11,
       "options": {
         "legend": {
-          "calcs": ["mean", "max"],
+          "calcs": [
+            "mean",
+            "max"
+          ],
           "displayMode": "table",
           "placement": "bottom",
           "showLegend": true
@@ -472,7 +485,10 @@
       "id": 12,
       "options": {
         "legend": {
-          "calcs": ["mean", "max"],
+          "calcs": [
+            "mean",
+            "max"
+          ],
           "displayMode": "table",
           "placement": "bottom",
           "showLegend": true
@@ -584,7 +600,10 @@
       "id": 21,
       "options": {
         "legend": {
-          "calcs": ["mean", "max"],
+          "calcs": [
+            "mean",
+            "max"
+          ],
           "displayMode": "table",
           "placement": "bottom",
           "showLegend": true
@@ -692,7 +711,10 @@
       "id": 22,
       "options": {
         "legend": {
-          "calcs": ["mean", "max"],
+          "calcs": [
+            "mean",
+            "max"
+          ],
           "displayMode": "table",
           "placement": "bottom",
           "showLegend": true
@@ -891,7 +913,10 @@
       "id": 32,
       "options": {
         "legend": {
-          "calcs": ["mean", "max"],
+          "calcs": [
+            "mean",
+            "max"
+          ],
           "displayMode": "table",
           "placement": "bottom",
           "showLegend": true
@@ -994,7 +1019,10 @@
       "id": 41,
       "options": {
         "legend": {
-          "calcs": ["mean", "max"],
+          "calcs": [
+            "mean",
+            "max"
+          ],
           "displayMode": "table",
           "placement": "bottom",
           "showLegend": true
@@ -1124,7 +1152,9 @@
       "id": 42,
       "options": {
         "legend": {
-          "calcs": ["sum"],
+          "calcs": [
+            "sum"
+          ],
           "displayMode": "table",
           "placement": "bottom",
           "showLegend": true
@@ -1161,7 +1191,12 @@
   ],
   "refresh": "30s",
   "schemaVersion": 38,
-  "tags": ["mcp-server", "orchestrator", "multi-agent", "agents"],
+  "tags": [
+    "mcp-server",
+    "orchestrator",
+    "multi-agent",
+    "agents"
+  ],
   "templating": {
     "list": [
       {
@@ -1188,7 +1223,20 @@
     "from": "now-1h",
     "to": "now"
   },
-  "timepicker": {},
+  "timepicker": {
+    "refresh_intervals": [
+      "5s",
+      "10s",
+      "30s",
+      "1m",
+      "5m",
+      "15m",
+      "30m",
+      "1h",
+      "2h",
+      "1d"
+    ]
+  },
   "timezone": "",
   "title": "Multi-Agent Orchestrator Metrics",
   "uid": "orchestrator-metrics",
