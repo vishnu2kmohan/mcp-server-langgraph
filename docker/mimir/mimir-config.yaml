@@ -26,6 +26,9 @@ server:
   http_listen_port: 9009
   grpc_listen_port: 9095
   log_level: warn
+  # JSON-structured logging for LGTM stack integration (Loki/Alloy parsing)
+  # Reference: https://grafana.com/docs/mimir/latest/configure/configuration-parameters/#server
+  log_format: json
 
 # Common storage for all components
 common:

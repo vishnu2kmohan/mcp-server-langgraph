@@ -16,6 +16,9 @@ server:
   http_listen_port: 3200
   grpc_listen_port: 9095
   log_level: warn
+  # JSON-structured logging for LGTM stack integration (Loki/Alloy parsing)
+  # Reference: https://grafana.com/docs/tempo/latest/configuration/#server
+  log_format: json
 
 # Distributor configuration
 distributor:
