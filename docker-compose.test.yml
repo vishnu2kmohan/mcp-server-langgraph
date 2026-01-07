@@ -917,6 +917,10 @@ services:
     image: oliver006/redis_exporter:v1.67.0-alpine
     # RESILIENCE: Auto-restart on failure for observability infrastructure
     restart: unless-stopped
+    # JSON-structured logging for LGTM stack integration (Loki/Alloy parsing)
+    # Reference: https://github.com/oliver006/redis_exporter
+    command:
+      - "--log-format=json"
     depends_on:
       redis-test:
         condition: service_healthy
@@ -1148,6 +1152,9 @@ services:
       # This prevents startup validation from blocking the server while dependencies
       # are being checked. Docker Compose health checks already ensure dependencies.
       - TESTING=true
+      # JSON-structured logging for LGTM stack integration (Loki/Alloy parsing)
+      # Default is already JSON but made explicit for documentation
+      - LOG_FORMAT=json
       # -----------------------------------------------------------------------
       # PostgreSQL Databases (all on postgres-test:5432)
       # -----------------------------------------------------------------------
