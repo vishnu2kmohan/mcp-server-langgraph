@@ -515,6 +515,23 @@ class ObservabilityConfig:
             unit="1",
         )
 
+        # Token usage metrics for conversation history (Phase 4.1 monitoring)
+        self.conversation_message_count = self.meter.create_histogram(
+            name="chat.conversation.message_count",
+            description="Number of messages in conversation history passed to LangGraph",
+            unit="1",
+        )
+        self.conversation_token_estimate = self.meter.create_histogram(
+            name="chat.conversation.token_estimate",
+            description="Estimated token count for conversation history",
+            unit="tokens",
+        )
+        self.conversation_by_role = self.meter.create_counter(
+            name="chat.conversation.messages_by_role",
+            description="Count of messages by role (system/user/assistant)",
+            unit="1",
+        )
+
     def _setup_logging(self, enable_file_logging: bool = False) -> None:
         """
         Configure structured logging with OpenTelemetry and optional log rotation.
