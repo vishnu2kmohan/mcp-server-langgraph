@@ -114,7 +114,9 @@ services:
       # Logging (configurable via environment variables for QUIET_LOGS support)
       # TRAEFIK_LOG_LEVEL: DEBUG, INFO, WARN, ERROR (default: INFO)
       # TRAEFIK_ACCESS_LOG: true/false (default: true)
+      # JSON-structured logging for LGTM stack integration (Loki/Alloy parsing)
       - "--log.level=${TRAEFIK_LOG_LEVEL:-INFO}"
+      - "--log.format=json"
       - "--accesslog=${TRAEFIK_ACCESS_LOG:-true}"
       - "--accesslog.format=json"
     ports:
@@ -536,6 +538,9 @@ services:
       # Note: KC_HEALTH_ENABLED=true and KC_METRICS_ENABLED=true are baked into the optimized image
       - KC_MANAGEMENT_ENABLED=true      # Enable management port (9000)
       - KC_LOG_LEVEL=warn               # Reduced logging
+      # JSON-structured logging for LGTM stack integration (Loki/Alloy parsing)
+      # Reference: https://www.keycloak.org/server/logging
+      - KC_LOG_CONSOLE_OUTPUT=json
 
       # Test-specific
       - TESTING=true
