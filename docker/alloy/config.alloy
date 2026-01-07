@@ -612,6 +612,19 @@ prometheus.scrape "langgraph_agent" {
   scrape_timeout  = "10s"
 }
 
+prometheus.scrape "authz_proxy" {
+  targets = [{
+    __address__ = "authz-proxy-test:8001",
+    service     = "authz-proxy-test",
+    job         = "authz-proxy",
+  }]
+  metrics_path = "/metrics"
+  forward_to   = [prometheus.remote_write.mimir.receiver]
+
+  scrape_interval = "15s"
+  scrape_timeout  = "10s"
+}
+
 // NOTE: mcp_builder and mcp_playground scrape targets removed (2025-12-27)
 // These services (builder-test:8001, playground-test:8002) no longer exist.
 // Their functionality has been consolidated into the main mcp-server-test service.
