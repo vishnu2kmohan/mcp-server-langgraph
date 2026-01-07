@@ -1330,6 +1330,12 @@ services:
       - FF_ENABLE_SEMANTIC_MEMORY_RETRIEVAL=true   # Vector-based memory search
       - FF_ENABLE_HITL_UNDO_ROLLBACK=true          # Reversible actions with undo
       # -----------------------------------------------------------------------
+      # Semantic Search Audit Feature Flags (ADR-0094/0095)
+      # -----------------------------------------------------------------------
+      - FF_ENABLE_MULTI_TENANT_ISOLATION=true      # Phase 2.2: Tenant isolation in vector search
+      - FF_ENABLE_PROGRESSIVE_CONTEXT_DISCOVERY=true  # Phase 3.2: Iterative semantic search
+      - FF_ENABLE_KB_FOCUS=true                    # ADR-0094: KB focus mode
+      # -----------------------------------------------------------------------
       # WebSocket Infrastructure (ADR-0068)
       # -----------------------------------------------------------------------
       - FF_ENABLE_WEBSOCKET_NEW_BASE=true          # New WebSocketBase infrastructure

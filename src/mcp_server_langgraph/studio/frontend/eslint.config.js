@@ -220,33 +220,20 @@ export default tseslint.config(
   // 1. Consume API contract types (snake_case) directly as props
   // 2. Build API-compatible response objects to send back to backend
   // These are tightly coupled with the HITL WebSocket/hook layer
+  // ADR-0091 Phase 6.1: RemediationApprovalDialog now clean, removed from override
   {
     files: [
       '**/components/Admin/AgentApprovalDialog.tsx',
       '**/components/Admin/ClarificationDialog.tsx',
-      '**/components/Admin/RemediationApprovalDialog.tsx',
     ],
     rules: {
       'no-restricted-syntax': 'off',
     },
   },
-  // Override for Admin alert/remediation components - API boundary layer
-  // These components directly consume backend Alert, Recommendation, Remediation types
-  // Full camelCase migration requires RTK Query transformResponse (tracked in ADR-0091 Phase 5)
-  {
-    files: [
-      '**/components/Admin/AIRecommendationCard.tsx',
-      '**/components/Admin/AdminDashboard.tsx',
-      '**/components/Admin/AgentApprovalAuditLog.tsx',
-      '**/components/Admin/AlertDetailPanel.tsx',
-      '**/components/Admin/AlertGroupsPanel.tsx',
-      '**/components/Admin/AlertsPanel.tsx',
-      '**/components/Admin/BatchApprovalPanel.tsx',
-    ],
-    rules: {
-      'no-restricted-syntax': 'off',
-    },
-  },
+  // ADR-0091 Phase 6.1 (2026-01-06): Admin alert/remediation components are now clean
+  // Removed override for: AIRecommendationCard, AdminDashboard, AgentApprovalAuditLog,
+  // AlertDetailPanel, AlertGroupsPanel, AlertsPanel, BatchApprovalPanel
+  // All now use camelCase via RTK Query transforms
   // ADR-0091 Phase 6: Component overrides for snake_case property access
   // RTK Query transformResponse is applied to core endpoints.
   // These overrides remain until component code is updated to use camelCase property access.
@@ -270,19 +257,21 @@ export default tseslint.config(
   // - conversation/*.tsx - All camelCase ✓
   {
     files: [
-      // API Boundary Components - intentionally access snake_case from raw API responses
-      // These transform data at the boundary (e.g., transformExecution in WorkflowsPage)
-      '**/layout/*.tsx', // StudioShellLayout uses Admin HITL types (snake_case callbacks)
+      // API Boundary Components - intentionally use snake_case at system boundaries:
+      // - Feature flag names (backend-defined, e.g., "kb_focus", "mobile_drawer")
+      // - API request bodies (e.g., refresh_token in logout request)
+      // - External API params (e.g., Keycloak post_logout_redirect_uri)
+      // - JWT token fields in tests (Keycloak standard: preferred_username, realm_access)
+      '**/layout/*.tsx',
       '**/pages/*.tsx', // Pages access raw API responses before transformation
     ],
     rules: {
       'no-restricted-syntax': 'off',
     },
   },
-  // ADR-0091 Phase 6 Status:
-  // - Transform functions: COMPLETE (transformSnakeToCamel, transformCamelToSnake)
-  // - RTK Query transforms: COMPLETE (core endpoints have transformResponse)
-  // - Component updates: COMPLETE (16 component directories migrated)
-  // - ESLint cleanup: COMPLETE (16 directories removed from override)
-  // - Remaining overrides: layout/*.tsx, pages/*.tsx (API boundary components)
+  // ADR-0091 Status:
+  // - Phase 5: COMPLETE (transform functions)
+  // - Phase 6: COMPLETE (16 component directories migrated to camelCase)
+  // - Phase 10: COMPLETE (HITL dialog components migrated to camelCase)
+  // - Remaining overrides: layout/*.tsx (UserMenuDropdown), pages/*.tsx (API boundary)
 );
