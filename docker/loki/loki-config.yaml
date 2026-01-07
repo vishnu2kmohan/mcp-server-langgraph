@@ -114,6 +114,13 @@ limits_config:
   per_stream_rate_limit_burst: 15MB
   # Allow unstructured metadata
   allow_structured_metadata: true
+  # Stream cardinality limits to prevent high-cardinality label explosion
+  # A "stream" is a unique combination of labels. High-cardinality labels (like trace_id)
+  # can create millions of streams, exhausting memory and causing 429 errors.
+  # These limits protect against misconfigured label extraction.
+  # See: https://grafana.com/docs/loki/latest/best-practices/#use-static-labels
+  max_streams_per_user: 5000        # Per-user limit (test environment)
+  max_global_streams_per_user: 10000  # Global limit across all users
 
 # Compactor for TSDB
 compactor:

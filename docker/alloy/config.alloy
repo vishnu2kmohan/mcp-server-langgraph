@@ -138,12 +138,10 @@ otelcol.processor.attributes "observability_labels" {
     action = "insert"
   }
 
-  // Extract trace_id for trace correlation
-  action {
-    key    = "loki.attribute.labels"
-    value  = "trace_id"
-    action = "insert"
-  }
+  // NOTE: trace_id and span_id are NOT extracted as labels to avoid cardinality explosion.
+  // They remain as structured log fields for correlation via JSON queries:
+  //   {service="mcp-server"} | json | trace_id="abc123"
+  // See: https://grafana.com/docs/loki/latest/best-practices/
 
   // Extract model_family for LLM metrics (bounded by get_model_family)
   action {
@@ -311,24 +309,29 @@ loki.process "json_logs" {
   forward_to = [loki.write.loki.receiver]
 
   // Stage 1: Parse JSON logs (common for our services)
+  // NOTE: trace_id and span_id are parsed but NOT converted to labels (see Stage 2).
+  // They remain as structured log fields to avoid cardinality explosion.
+  // Query with: {service="mcp-server"} | json | trace_id="abc123"
   stage.json {
     expressions = {
       level     = "level",
       message   = "message",
       timestamp = "timestamp",
       logger    = "logger",
-      trace_id  = "trace_id",
-      span_id   = "span_id",
+      // trace_id and span_id are parsed for structured log queries but NOT as labels
+      // to prevent unbounded cardinality (each request creates unique IDs)
     }
   }
 
-  // Stage 2: Extract labels from parsed JSON
+  // Stage 2: Extract BOUNDED labels from parsed JSON
+  // IMPORTANT: Only low-cardinality fields should be labels.
+  // High-cardinality fields (trace_id, span_id, request_id, etc.) should remain
+  // as structured log fields and be queried via LogQL JSON filtering.
   stage.labels {
     values = {
-      level    = "",
-      logger   = "",
-      trace_id = "",
-      span_id  = "",
+      level  = "",
+      logger = "",
+      // DO NOT add trace_id or span_id here - they have unbounded cardinality!
     }
   }
 

@@ -39,8 +39,11 @@ loki:
       reject_old_samples: true
       reject_old_samples_max_age: 168h  # 7 days
       max_entries_limit_per_query: 5000
-      max_streams_per_user: 0  # No limit
-      max_global_streams_per_user: 10000
+      # Stream cardinality limits to prevent high-cardinality label explosion
+      # A stream is a unique combination of labels. High-cardinality labels
+      # (like trace_id, span_id) can create millions of streams.
+      max_streams_per_user: 5000  # Per-user limit (was 0 = unlimited)
+      max_global_streams_per_user: 10000  # Global limit across all users
       ingestion_rate_mb: 10
       ingestion_burst_size_mb: 20
       per_stream_rate_limit: 10MB
