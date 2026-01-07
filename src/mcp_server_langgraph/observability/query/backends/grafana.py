@@ -191,6 +191,7 @@ class GrafanaAlertingClient(AlertingQueryClient):
             base_url=self.base_url,
             headers=headers,
             auth=auth,
+            follow_redirects=True,
             timeout=httpx.Timeout(30.0),
         )
 

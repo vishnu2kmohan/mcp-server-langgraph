@@ -265,6 +265,19 @@ class TempoClient:
         await self._ensure_initialized()
         assert self.client is not None
 
+        # Default time range: last hour (prevents unbounded searches and matches search_by_attribute behavior)
+        if not start:
+            start = datetime.now(UTC) - timedelta(hours=1)
+        if not end:
+            end = datetime.now(UTC)
+
+        forced_match_all = False
+        # Tempo search is filter-driven; when callers request "recent traces" with
+        # no filters, use a TraceQL match-all query as a best-effort default.
+        if query is None and service_name is None and operation_name is None and not tags:
+            query = "{ }"
+            forced_match_all = True
+
         # Build search parameters
         params: dict[str, Any] = {"limit": limit}
 
@@ -353,6 +366,27 @@ class TempoClient:
                 raise
 
             except httpx.HTTPError as e:
+                # Some Tempo versions reject match-all TraceQL queries. If we
+                # auto-inserted the match-all query, retry once without `q`.
+                if forced_match_all and isinstance(e, httpx.HTTPStatusError) and e.response.status_code == 400:
+                    try:
+                        fallback_params = {k: v for k, v in params.items() if k != "q"}
+                        fallback = await self.client.get(url, params=fallback_params)
+                        fallback.raise_for_status()
+                        data = fallback.json()
+
+                        traces = []
+                        for trace_data in data.get("traces", []):
+                            trace = self._parse_trace_summary(trace_data)
+                            if trace:
+                                traces.append(trace)
+
+                        breaker.state.on_success()
+                        return TraceSearchResult(traces=traces, total_traces=len(traces))
+                    except Exception:
+                        # Fall through to original error
+                        pass
+
                 logger.exception(f"Failed to search traces: {e}")
                 raise
 

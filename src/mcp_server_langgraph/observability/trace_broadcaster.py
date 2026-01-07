@@ -165,7 +165,9 @@ class TraceBroadcaster:
         """
         if filter_.service_name and span.get("service_name") != filter_.service_name:
             return False
-        if filter_.operation_name and span.get("operation_name") != filter_.operation_name:
+        # Payloads use "name" (TraceSpanPayload) but some sources may use "operation_name"
+        span_name = span.get("name") or span.get("operation_name")
+        if filter_.operation_name and span_name != filter_.operation_name:
             return False
         if filter_.trace_id and span.get("trace_id") != filter_.trace_id:
             return False

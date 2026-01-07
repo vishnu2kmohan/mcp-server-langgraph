@@ -230,9 +230,11 @@ class LokiLoggingClient(LoggingQueryClient):
         Uses the attribute as a label selector. For JSON field matching,
         callers should use search_logs() with a custom LogQL query.
         """
-        # Use attribute as a label selector (Loki requires at least one label)
-        # This matches logs where the attribute is indexed as a label
-        logql = f'{{{attribute}="{value}"}}'
+        # Loki label names follow Prometheus label rules (no dots). OTEL semantic
+        # attributes commonly use dot notation (e.g., session.id). Map dotted
+        # attributes to underscore labels (session_id) as used by our Alloy config.
+        label_key = attribute.replace(".", "_")
+        logql = f'{{{label_key}="{value}"}}'
 
         return await self.search_logs(
             query=logql,
@@ -260,28 +262,41 @@ class LokiLoggingClient(LoggingQueryClient):
         level: LogLevel | None = None,
     ) -> str:
         """Build a LogQL query from parameters."""
-        # Start with stream selector
-        labels = []
-        if service_name:
-            labels.append(f'service_name="{service_name}"')
+        # If caller already provided a LogQL expression, use it verbatim.
+        if text_query and (text_query.startswith("{") or "|" in text_query):
+            return text_query
 
-        # Loki requires at least one label selector - use catch-all if no filters
-        # Match any job (common label in Alloy/Promtail configurations)
-        stream_selector = "{" + ", ".join(labels) + "}" if labels else '{job=~".+"}'
+        # Stream selector (labels live on the stream, not the log line).
+        # In our Alloy pipeline, Docker logs are labeled with `service`, `container`, etc.
+        # Use `{}` as a safe default selector to avoid depending on a specific label key.
+        label_matchers: list[str] = []
+
+        # Service filter: prefer Docker Compose `service` label.
+        if service_name:
+            label_matchers.append(f'service="{service_name}"')
+
+        # Level filter: prefer stream label extracted by Alloy's loki.process stage.
+        if level:
+            level_value = level.value
+            # Alloy normalizes WARNING -> "warning" (not "warn")
+            if level_value == LogLevel.WARN.value:
+                label_matchers.append('level=~"warn|warning"')
+            elif level_value == LogLevel.FATAL.value:
+                # Python CRITICAL often maps to "critical"
+                label_matchers.append('level=~"fatal|critical"')
+            else:
+                label_matchers.append(f'level="{level_value}"')
+
+        # Loki requires at least one matcher in the stream selector. Use a
+        # catch-all matcher on a label we always set in the Alloy docker
+        # discovery pipeline (`container`).
+        stream_selector = "{" + ", ".join(label_matchers) + "}" if label_matchers else '{container=~".+"}'
 
         # Build pipeline
         pipeline = []
 
-        # Level filter (Loki levels: debug, info, warn, error, fatal)
-        if level:
-            level_value = level.value
-            pipeline.append(f'|= `"level":"{level_value}"`')
-
         # Text search
         if text_query:
-            # Check if it's already a LogQL query
-            if text_query.startswith("{") or "|" in text_query:
-                return text_query
             # Simple text filter
             pipeline.append(f"|~ `{text_query}`")
 
@@ -298,7 +313,13 @@ class LokiLoggingClient(LoggingQueryClient):
 
         for stream in results:
             labels = stream.get("stream", {})
-            service_name = labels.get("service_name", labels.get("job", "unknown"))
+            service_name = (
+                labels.get("service_name")
+                or labels.get("service")
+                or labels.get("job")
+                or labels.get("container")
+                or "unknown"
+            )
 
             for value in stream.get("values", []):
                 timestamp_ns, message = value[0], value[1]
@@ -306,8 +327,17 @@ class LokiLoggingClient(LoggingQueryClient):
                 # Parse timestamp (nanoseconds)
                 timestamp = datetime.fromtimestamp(int(timestamp_ns) / 1e9, tz=UTC)
 
-                # Try to extract level from message (JSON or text)
-                level = self._extract_level(message)
+                # Prefer stream label for level if available (Alloy extracts it)
+                level_label = str(labels.get("level", "")).lower()
+                normalized_level = level_label
+                if normalized_level == "warning":
+                    normalized_level = "warn"
+                elif normalized_level == "critical":
+                    normalized_level = "fatal"
+                try:
+                    level = LogLevel(normalized_level) if normalized_level else self._extract_level(message)
+                except ValueError:
+                    level = self._extract_level(message)
 
                 # Try to extract trace correlation
                 trace_id, span_id = self._extract_trace_context(message, labels)

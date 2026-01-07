@@ -57,19 +57,26 @@ def span_to_broadcast_dict(span: ReadableSpan) -> dict[str, Any]:
     if span.parent is not None:
         parent_span_id = format(span.parent.span_id, "016x")
 
+    # OTEL SDK uses nanoseconds since epoch for start/end time.
+    # The frontend protocol expects milliseconds since epoch.
+    start_time_ms = int(span.start_time / 1_000_000) if span.start_time else 0
+    end_time_ms = int(span.end_time / 1_000_000) if span.end_time else start_time_ms
+
     # Calculate duration in milliseconds
     duration_ns = (span.end_time - span.start_time) if span.end_time and span.start_time else 0
-    duration_ms = duration_ns / 1_000_000  # nanoseconds to milliseconds
+    duration_ms = int(duration_ns / 1_000_000)  # nanoseconds -> milliseconds
 
     # Get service name from resource attributes
     service_name = "unknown"
     if span.resource and span.resource.attributes:
         service_name = str(span.resource.attributes.get("service.name", "unknown"))
 
-    # Get status
-    status = "UNSET"
-    if span.status:
-        status = span.status.status_code.name
+    # Get status (protocol expects: ok|error|unset)
+    status = "unset"
+    if span.status and getattr(span.status, "status_code", None) is not None:
+        status = span.status.status_code.name.lower()
+        if status not in ("ok", "error", "unset"):
+            status = "unset"
 
     # Convert attributes to dict (handle BoundedAttributes)
     attributes: dict[str, Any] = dict(span.attributes) if span.attributes else {}
@@ -80,8 +87,8 @@ def span_to_broadcast_dict(span: ReadableSpan) -> dict[str, Any]:
         "parent_span_id": parent_span_id,
         "name": span.name,
         "service_name": service_name,
-        "start_time": span.start_time,
-        "end_time": span.end_time,
+        "start_time": start_time_ms,
+        "end_time": end_time_ms,
         "duration_ms": duration_ms,
         "status": status,
         "attributes": attributes,

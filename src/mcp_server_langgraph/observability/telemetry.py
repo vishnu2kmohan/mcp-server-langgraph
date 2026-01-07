@@ -307,6 +307,19 @@ class ObservabilityConfig:
             console_exporter = ConsoleSpanExporter()
             provider.add_span_processor(BatchSpanProcessor(console_exporter))
 
+        # Real-time trace streaming for Studio DevTools (/api/v1/ws/traces)
+        # Best-effort: failures should not affect core tracing/export.
+        try:
+            from mcp_server_langgraph.observability.broadcasting_span_processor import (
+                BroadcastingSpanProcessor,
+            )
+            from mcp_server_langgraph.websocket.registry import get_trace_broadcaster
+
+            provider.add_span_processor(BroadcastingSpanProcessor(broadcaster=get_trace_broadcaster()))
+        except Exception:
+            # Graceful degradation if WebSocket components aren't available/initialized
+            pass
+
         trace.set_tracer_provider(provider)
 
         self.tracer_provider = provider  # Store provider for shutdown
@@ -544,13 +557,37 @@ class ObservabilityConfig:
                                 Set to True for production deployments with persistent storage.
                                 Leave False for serverless, containers, or read-only environments.
         """
-        # Check if logging is already configured (idempotent guard)
         root_logger = logging.getLogger()
-        if root_logger.handlers:
-            # Logging already configured - skip to avoid duplicate handlers
+
+        # Idempotent guard: if logging is already configured with our JSON formatter,
+        # don't clobber handlers (e.g., when embedded) but still ensure DevTools streaming
+        # is enabled for StudioShell.
+        has_json_formatter = any(
+            isinstance(getattr(handler, "formatter", None), CustomJSONFormatter) for handler in root_logger.handlers
+        )
+        if root_logger.handlers and has_json_formatter:
+            # Ensure DevTools console handler is attached (safe to add once)
+            try:
+                from mcp_server_langgraph.middleware.devtools_emitter import DevToolsLoggingHandler
+
+                if not any(isinstance(h, DevToolsLoggingHandler) for h in root_logger.handlers):
+                    devtools_handler = DevToolsLoggingHandler()
+                    devtools_handler.setLevel(logging.INFO)
+                    # Reuse the first handler's formatter if available for consistency
+                    existing_formatter = getattr(root_logger.handlers[0], "formatter", None)
+                    if existing_formatter is not None:
+                        devtools_handler.setFormatter(existing_formatter)
+                    root_logger.addHandler(devtools_handler)
+            except Exception:
+                # Graceful degradation - DevTools console streaming is optional
+                pass
+
+            # Apply QUIET_LOGS path-based filtering to uvicorn/starlette access loggers
+            setup_quiet_logging()
+
             self.logger = logging.getLogger(self.service_name)
             if OBSERVABILITY_VERBOSE:
-                print("✓ Logging already configured, reusing existing setup")
+                print("✓ Logging already configured, ensured DevTools handler")
             return
 
         # Instrument logging to include trace context
@@ -646,7 +683,10 @@ class ObservabilityConfig:
             pass
 
         # Configure root logger with effective log level
-        logging.basicConfig(level=effective_log_level, handlers=handlers)
+        # NOTE: Uvicorn configures root handlers by default. Use force=True so we
+        # reliably switch to structured JSON logs for the Alloy→Loki pipeline and
+        # attach the DevTools streaming handler.
+        logging.basicConfig(level=effective_log_level, handlers=handlers, force=True)
 
         # Apply QUIET_LOGS path-based filtering to uvicorn/starlette access loggers
         # This reduces log noise from health checks, metrics, and static assets
