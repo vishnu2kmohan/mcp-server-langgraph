@@ -1,3 +1,7 @@
+# Synced from: monitoring/prometheus/rules/websocket-reconnection-alerts.yml
+# Namespace for Mimir ruler compatibility
+namespace: websocket-reconnection
+
 groups:
   # WebSocket Reconnection Alert Rules
   # These alerts monitor frontend WebSocket connection stability and fire when

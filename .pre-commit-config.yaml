@@ -1187,6 +1187,43 @@ repos:
       Run ./scripts/sync-grafana-dashboards.sh to sync if out of date.\n\n\
       Created: 2025-01-07 (dashboard consolidation)\n\
       See: scripts/sync-grafana-dashboards.sh\n"
+  - id: check-mimir-rules-sync
+    name: Check Mimir Alert Rules Sync
+    entry: ./scripts/sync-mimir-rules.sh --check
+    language: script
+    files: ^(monitoring/prometheus/rules/.*\.y(a)?ml|docker/mimir/rules/.*\.yaml)$
+    pass_filenames: false
+    always_run: false
+    stages:
+    - pre-push
+    description: "Ensures Prometheus/Mimir alert rules are synchronized:\n\n\
+      Canonical: monitoring/prometheus/rules/ (source of truth)\n\
+      Test Env:  docker/mimir/rules/ (synced copy for Mimir ruler)\n\n\
+      Run ./scripts/sync-mimir-rules.sh to sync if out of date.\n\n\
+      Created: 2026-01-07 (alert rules consolidation)\n\
+      See: scripts/sync-mimir-rules.sh\n"
+  - id: validate-alert-rules
+    name: Validate Prometheus/Mimir Alert Rules
+    entry: uv run --frozen python -u scripts/validators/validate_alert_rules.py
+    language: system
+    files: ^(monitoring/prometheus/rules/.*\.y(a)?ml|docker/mimir/rules/.*\.yaml)$
+    pass_filenames: true
+    always_run: false
+    stages:
+    - pre-commit
+    description: "Validates Prometheus/Mimir alert rules for quality and consistency:\n\n\
+      Checks:\n\
+      1. No duplicate alert names across all files\n\
+      2. All alerts have required severity label\n\
+      3. All alerts have summary/description annotation\n\
+      4. Critical alerts have runbook_url (warning only)\n\
+      5. No hardcoded Grafana URLs (use {{ grafana_url }} template)\n\n\
+      Prevents:\n\
+      - Duplicate alert names causing conflicts\n\
+      - Incomplete alerts missing required metadata\n\
+      - Hardcoded URLs that break across environments\n\n\
+      Created: 2026-01-07 (alert consolidation initiative)\n\
+      See: scripts/validators/validate_alert_rules.py\n"
   - id: validate-keycloak-realm
     name: Validate Keycloak Realm Configuration
     entry: uv run --frozen python -u scripts/validation/validate_keycloak_realm.py

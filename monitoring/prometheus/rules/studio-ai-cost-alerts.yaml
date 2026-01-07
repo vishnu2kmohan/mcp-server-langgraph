@@ -1,0 +1,262 @@
+# Prometheus Alerting Rules for Studio AI Cost Budget
+# Reference: ADR-0084 - StudioOrchestrator Unified AI Intelligence Pattern
+# Deploy to: Prometheus/Alertmanager
+#
+# Metrics Used:
+#   - studio_ai_cost_dollars: Counter for AI cost by category/task_type/model
+#   - studio_ai_session_cost_current: Gauge for current session cost
+#   - studio_ai_session_cost_limit: Gauge for session cost limit
+#   - studio_ai_requests_total: Counter for requests by category/task_type/success
+#   - studio_ai_request_duration_seconds: Histogram for request latency
+#
+# Usage:
+#   1. Copy to Prometheus rules directory
+#   2. Add to prometheus.yml under rule_files
+#   3. Reload Prometheus: curl -X POST http://prometheus:9090/-/reload
+#
+groups:
+  - name: studio_ai.cost_budget
+    interval: 1m
+    rules:
+      # Session Cost Approaching Limit (Warning at 75%)
+      - alert: StudioAISessionCostWarning
+        expr: |
+          (
+            sum by (user_id, session_id) (studio_ai_session_cost_current)
+            /
+            sum by (user_id, session_id) (studio_ai_session_cost_limit)
+          ) > 0.75
+        for: 2m
+        labels:
+          severity: warning
+          team: platform
+          category: cost
+        annotations:
+          summary: "Session {{ $labels.session_id }} approaching cost limit"
+          description: |
+            User {{ $labels.user_id }} session {{ $labels.session_id }} has used {{ $value | humanizePercentage }} of its AI cost budget.
+
+            Current cost: ${{ with printf "studio_ai_session_cost_current{user_id='%s', session_id='%s'}" $labels.user_id $labels.session_id | query }}{{ . | first | value | printf "%.4f" }}{{ end }}
+            Limit: ${{ with printf "studio_ai_session_cost_limit{user_id='%s', session_id='%s'}" $labels.user_id $labels.session_id | query }}{{ . | first | value | printf "%.2f" }}{{ end }}
+
+            Possible actions:
+            - Context optimization may reduce costs
+            - Consider completing current task before starting new ones
+          runbook_url: "https://docs/runbooks/STUDIO_AI_COST.md#session-cost-warning"
+          dashboard_url: "{{ grafana_url }}/d/studio-ai-intelligence?var-session={{ $labels.session_id }}"
+
+      # Session Cost Critical (90%)
+      - alert: StudioAISessionCostCritical
+        expr: |
+          (
+            sum by (user_id, session_id) (studio_ai_session_cost_current)
+            /
+            sum by (user_id, session_id) (studio_ai_session_cost_limit)
+          ) > 0.90
+        for: 1m
+        labels:
+          severity: critical
+          team: platform
+          category: cost
+        annotations:
+          summary: "Session {{ $labels.session_id }} near cost limit - AI features may be throttled"
+          description: |
+            User {{ $labels.user_id }} session {{ $labels.session_id }} has used {{ $value | humanizePercentage }} of its AI cost budget.
+
+            AI features will be throttled or disabled at 100% to prevent overspend.
+
+            Immediate actions:
+            1. Complete current task
+            2. Use context optimization to reduce token usage
+            3. Start a new session if needed
+          runbook_url: "https://docs/runbooks/STUDIO_AI_COST.md#session-cost-critical"
+          dashboard_url: "{{ grafana_url }}/d/studio-ai-intelligence?var-session={{ $labels.session_id }}"
+
+      # Daily Cost Spike (Unusual cost increase)
+      - alert: StudioAIDailyCostSpike
+        expr: |
+          sum(increase(studio_ai_cost_dollars[1h])) >
+          (sum(increase(studio_ai_cost_dollars[24h])) / 24 * 3)
+        for: 15m
+        labels:
+          severity: warning
+          team: platform
+          category: cost
+        annotations:
+          summary: "Studio AI cost spike detected"
+          description: |
+            Studio AI costs in the last hour are {{ $value | humanize }} higher than the 24h average.
+
+            This may indicate:
+            - Increased user activity
+            - Expensive model usage
+            - Runaway automation
+            - Potential abuse
+
+            Review:
+            1. Check per-user cost breakdown
+            2. Identify high-cost task types
+            3. Review model selection patterns
+          runbook_url: "https://docs/runbooks/STUDIO_AI_COST.md#cost-spike"
+          dashboard_url: "{{ grafana_url }}/d/studio-ai-intelligence"
+
+      # Per-Category Cost Anomaly
+      - alert: StudioAICategoryCostAnomaly
+        expr: |
+          sum by (category) (increase(studio_ai_cost_dollars[1h]))
+          >
+          sum by (category) (increase(studio_ai_cost_dollars[24h] offset 1d)) / 24 * 5
+        for: 30m
+        labels:
+          severity: warning
+          team: platform
+          category: cost
+        annotations:
+          summary: "Unusual cost for {{ $labels.category }} category"
+          description: |
+            The {{ $labels.category }} intelligence category has 5x higher costs than normal.
+
+            Current hourly cost: ${{ $value | printf "%.4f" }}
+
+            Investigate:
+            1. Check if this correlates with increased usage
+            2. Review task types within category
+            3. Check for model selection issues
+          runbook_url: "https://docs/runbooks/STUDIO_AI_COST.md#category-anomaly"
+          dashboard_url: "{{ grafana_url }}/d/studio-ai-intelligence?var-category={{ $labels.category }}"
+
+  - name: studio_ai.performance
+    interval: 1m
+    rules:
+      # High Latency Alert
+      - alert: StudioAIHighLatency
+        expr: |
+          histogram_quantile(0.95,
+            sum by (category, le) (rate(studio_ai_request_duration_seconds_bucket[5m]))
+          ) > 5
+        for: 10m
+        labels:
+          severity: warning
+          team: platform
+          category: performance
+        annotations:
+          summary: "High latency for {{ $labels.category }} intelligence"
+          description: |
+            P95 latency for {{ $labels.category }} is {{ $value | humanizeDuration }} (threshold: 5s).
+
+            Possible causes:
+            - LLM provider latency issues
+            - Complex analysis tasks
+            - Resource contention
+
+            Actions:
+            1. Check LLM provider status
+            2. Review task complexity distribution
+            3. Consider caching strategies
+          runbook_url: "https://docs/runbooks/STUDIO_AI_PERFORMANCE.md#high-latency"
+          dashboard_url: "{{ grafana_url }}/d/studio-ai-intelligence?var-category={{ $labels.category }}"
+
+      # High Error Rate
+      - alert: StudioAIHighErrorRate
+        expr: |
+          (
+            sum by (category) (rate(studio_ai_requests_total{success="false"}[5m]))
+            /
+            sum by (category) (rate(studio_ai_requests_total[5m]))
+          ) > 0.1
+        for: 5m
+        labels:
+          severity: warning
+          team: platform
+          category: reliability
+        annotations:
+          summary: "High error rate for {{ $labels.category }} intelligence"
+          description: |
+            Error rate for {{ $labels.category }} is {{ $value | humanizePercentage }} (threshold: 10%).
+
+            Check:
+            1. LLM provider health
+            2. Feature flag configuration
+            3. Circuit breaker status
+            4. Recent deployments
+          runbook_url: "https://docs/runbooks/STUDIO_AI_PERFORMANCE.md#high-error-rate"
+          dashboard_url: "{{ grafana_url }}/d/studio-ai-intelligence?var-category={{ $labels.category }}"
+
+      # Circuit Breaker Open
+      - alert: StudioAICircuitBreakerOpen
+        expr: |
+          studio_ai_circuit_breaker_state{state="open"} == 1
+        for: 1m
+        labels:
+          severity: critical
+          team: platform
+          category: reliability
+        annotations:
+          summary: "Circuit breaker open for {{ $labels.category }} intelligence"
+          description: |
+            The circuit breaker for {{ $labels.category }} intelligence is open.
+
+            This means the feature is temporarily disabled due to repeated failures.
+
+            Immediate actions:
+            1. Check LLM provider status
+            2. Review error logs
+            3. Consider manual intervention if needed
+
+            The circuit breaker will attempt to recover after the cooldown period.
+          runbook_url: "https://docs/runbooks/STUDIO_AI_PERFORMANCE.md#circuit-breaker"
+          dashboard_url: "{{ grafana_url }}/d/studio-ai-intelligence?var-category={{ $labels.category }}"
+
+  - name: studio_ai.fallback
+    interval: 1m
+    rules:
+      # High Fallback Rate
+      - alert: StudioAIHighFallbackRate
+        expr: |
+          (
+            sum by (category) (rate(studio_ai_fallback_total[5m]))
+            /
+            sum by (category) (rate(studio_ai_requests_total[5m]))
+          ) > 0.2
+        for: 10m
+        labels:
+          severity: warning
+          team: platform
+          category: reliability
+        annotations:
+          summary: "High fallback rate for {{ $labels.category }} intelligence"
+          description: |
+            {{ $value | humanizePercentage }} of {{ $labels.category }} requests are falling back to heuristics.
+
+            Fallbacks indicate LLM calls are failing and the system is using non-AI alternatives.
+
+            Investigate:
+            1. LLM provider availability
+            2. Rate limiting issues
+            3. Token budget exhaustion
+          runbook_url: "https://docs/runbooks/STUDIO_AI_PERFORMANCE.md#high-fallback-rate"
+          dashboard_url: "{{ grafana_url }}/d/studio-ai-intelligence?var-category={{ $labels.category }}"
+
+      # Fallback Reason Concentration
+      - alert: StudioAIFallbackReasonConcentration
+        expr: |
+          (
+            max by (reason) (sum by (reason) (increase(studio_ai_fallback_total[1h])))
+            /
+            sum(increase(studio_ai_fallback_total[1h]))
+          ) > 0.8
+        for: 30m
+        labels:
+          severity: info
+          team: platform
+          category: reliability
+        annotations:
+          summary: "Most fallbacks due to {{ $labels.reason }}"
+          description: |
+            {{ $value | humanizePercentage }} of fallbacks are caused by {{ $labels.reason }}.
+
+            This concentration suggests a specific issue rather than general instability.
+
+            Focus investigation on this specific reason.
+          runbook_url: "https://docs/runbooks/STUDIO_AI_PERFORMANCE.md#fallback-reasons"
+          dashboard_url: "{{ grafana_url }}/d/studio-ai-intelligence"

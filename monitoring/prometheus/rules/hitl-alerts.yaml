@@ -1,0 +1,339 @@
+groups:
+- name: hitl.intervention_rate
+  interval: 1m
+  rules:
+  - alert: HITLInterventionRateHigh
+    expr: |
+      (
+        sum by (agent_name) (rate(agent_hitl_request_count_total[5m]))
+        /
+        sum by (agent_name) (rate(agent_task_total[5m]))
+      ) > 0.3
+    for: 10m
+    labels:
+      severity: warning
+      team: platform
+    annotations:
+      summary: High HITL intervention rate for {{ $labels.agent_name }}
+      description: |
+        Agent {{ $labels.agent_name }} is requiring human intervention for {{ $value | humanizePercentage }} of tasks.
+        This exceeds the 30% threshold and indicates the agent may need tuning.
+
+        Possible causes:
+        - Confidence threshold may be too high for this agent's task type
+        - Agent prompts may need refinement
+        - Task complexity exceeds agent capability
+
+        Actions:
+        1. Review agent configuration and prompts
+        2. Consider adjusting confidence threshold
+        3. Analyze rejected decisions for patterns
+      runbook_url: https://docs/runbooks/HITL_OPERATIONS.md#high-intervention-rate
+      dashboard_url: '{{ grafana_url }}/d/hitl-metrics?var-agent={{ $labels.agent_name
+        }}'
+  - alert: HITLInterventionRateCritical
+    expr: |
+      (
+        sum by (agent_name) (rate(agent_hitl_request_count_total[5m]))
+        /
+        sum by (agent_name) (rate(agent_task_total[5m]))
+      ) > 0.5
+    for: 5m
+    labels:
+      severity: critical
+      team: platform
+    annotations:
+      summary: Critical HITL intervention rate for {{ $labels.agent_name }}
+      description: |
+        Agent {{ $labels.agent_name }} requires human intervention for {{ $value | humanizePercentage }} of tasks.
+        This is above 50% and significantly impacts automation effectiveness.
+
+        Immediate action required:
+        1. Consider temporarily disabling this agent
+        2. Review recent changes to agent configuration
+        3. Check for data quality issues in inputs
+      runbook_url: https://docs/runbooks/HITL_OPERATIONS.md#critical-intervention-rate
+      dashboard_url: '{{ grafana_url }}/d/langgraph-agent/overview'
+- name: hitl.response_time
+  interval: 1m
+  rules:
+  - alert: HITLResponseTimeSlow
+    expr: |
+      histogram_quantile(0.95, sum by (le, request_type) (rate(agent_hitl_response_latency_bucket[15m])))
+      > 300
+    for: 15m
+    labels:
+      severity: warning
+      team: platform
+    annotations:
+      summary: 'Slow HITL response times (p95: {{ $value | humanizeDuration }})'
+      description: |
+        95th percentile HITL response time is {{ $value | humanizeDuration }}, exceeding 5 minute threshold.
+        Request type: {{ $labels.request_type }}
+
+        This indicates:
+        - Users may be missing approval requests
+        - Push notifications may not be reaching users
+        - Users may be overwhelmed with approval requests
+
+        Actions:
+        1. Check push notification delivery status
+        2. Review user activity patterns
+        3. Consider adjusting auto-approve thresholds
+      runbook_url: https://docs/runbooks/HITL_OPERATIONS.md#slow-response-time
+      dashboard_url: '{{ grafana_url }}/d/llm-performance/llm-performance'
+  - alert: HITLResponseTimeVerySlow
+    expr: |
+      histogram_quantile(0.95, sum by (le, request_type) (rate(agent_hitl_response_latency_bucket[15m])))
+      > 1800
+    for: 10m
+    labels:
+      severity: critical
+      team: platform
+    annotations:
+      summary: 'Critical HITL response time (p95: {{ $value | humanizeDuration }})'
+      description: |
+        95th percentile HITL response time is {{ $value | humanizeDuration }}, exceeding 30 minute threshold.
+        Agents are blocked waiting for human decisions.
+
+        Immediate action:
+        1. Check for pending requests without responses
+        2. Verify user notification systems are working
+        3. Consider escalating stale requests
+      runbook_url: https://docs/runbooks/HITL_OPERATIONS.md#critical-response-time
+      dashboard_url: '{{ grafana_url }}/d/llm-performance/llm-performance'
+- name: hitl.queue
+  interval: 30s
+  rules:
+  - alert: HITLQueueBacklog
+    expr: agent_hitl_pending_count > 10
+    for: 5m
+    labels:
+      severity: warning
+      team: platform
+    annotations:
+      summary: 'HITL request queue backlog: {{ $value }} pending'
+      description: |
+        {{ $value }} HITL requests are pending human review.
+        Request type: {{ $labels.request_type }}
+
+        This indicates:
+        - Users may be away or unavailable
+        - Too many agents requiring approval simultaneously
+        - Possible notification delivery issues
+
+        Actions:
+        1. Review pending request ages
+        2. Check for stuck or abandoned sessions
+        3. Consider batch approval options
+      runbook_url: https://docs/runbooks/HITL_OPERATIONS.md#queue-backlog
+      dashboard_url: '{{ grafana_url }}/d/langgraph-agent/overview'
+  - alert: HITLQueueBacklogCritical
+    expr: agent_hitl_pending_count > 25
+    for: 2m
+    labels:
+      severity: critical
+      team: platform
+    annotations:
+      summary: 'Critical HITL queue backlog: {{ $value }} pending!'
+      description: |
+        {{ $value }} HITL requests are pending, exceeding critical threshold.
+        Multiple agents may be blocked waiting for approvals.
+
+        Immediate action:
+        1. Identify oldest pending requests
+        2. Consider auto-timeout for stale requests
+        3. Notify on-call personnel
+      runbook_url: https://docs/runbooks/HITL_OPERATIONS.md#critical-queue-backlog
+      dashboard_url: '{{ grafana_url }}/d/langgraph-agent/overview'
+- name: hitl.confidence
+  interval: 5m
+  rules:
+  - alert: HITLLowConfidenceTrend
+    expr: |
+      avg_over_time(
+        histogram_quantile(0.5, sum by (le, agent_name) (rate(agent_hitl_trigger_confidence_bucket[1h])))
+      [1h]) < 0.5
+    for: 30m
+    labels:
+      severity: info
+      team: platform
+    annotations:
+      summary: Low confidence trend for {{ $labels.agent_name }}
+      description: |
+        Median trigger confidence for {{ $labels.agent_name }} is {{ $value | printf "%.2f" }}.
+        This is below 50% and indicates systematic confidence issues.
+
+        Possible causes:
+        - Agent may be operating on unfamiliar task types
+        - Input data quality may have degraded
+        - Model performance may have drifted
+
+        Actions:
+        1. Review recent task distributions
+        2. Check for changes in input patterns
+        3. Consider retraining or prompt refinement
+      runbook_url: https://docs/runbooks/HITL_OPERATIONS.md#low-confidence-trend
+  - alert: HITLVeryLowConfidence
+    expr: |
+      histogram_quantile(0.1, sum by (le, agent_name) (rate(agent_hitl_trigger_confidence_bucket[1h])))
+      < 0.3
+    for: 1h
+    labels:
+      severity: warning
+      team: platform
+    annotations:
+      summary: Very low confidence p10 for {{ $labels.agent_name }}
+      description: |
+        10th percentile confidence for {{ $labels.agent_name }} is {{ $value | printf "%.2f" }}.
+        Many tasks are triggering HITL with very low confidence.
+
+        This indicates potential model or prompt issues requiring investigation.
+      runbook_url: https://docs/runbooks/HITL_OPERATIONS.md#very-low-confidence
+      dashboard_url: '{{ grafana_url }}/d/langgraph-agent/overview'
+- name: hitl.decisions
+  interval: 1m
+  rules:
+  - alert: HITLHighRejectionRate
+    expr: |
+      (
+        sum by (agent_name) (rate(agent_hitl_decision_count_total{decision="rejected"}[1h]))
+        /
+        sum by (agent_name) (rate(agent_hitl_decision_count_total[1h]))
+      ) > 0.4
+    for: 30m
+    labels:
+      severity: warning
+      team: platform
+    annotations:
+      summary: High HITL rejection rate for {{ $labels.agent_name }}
+      description: |
+        {{ $value | humanizePercentage }} of HITL requests for {{ $labels.agent_name }} are being rejected.
+        This exceeds the 40% threshold.
+
+        High rejection rates indicate:
+        - Agent may be making poor decisions
+        - User expectations may not align with agent behavior
+        - Confidence threshold may be too low (passing bad decisions through)
+
+        Actions:
+        1. Analyze rejection reasons
+        2. Review agent prompts and decision logic
+        3. Consider raising confidence threshold
+      runbook_url: https://docs/runbooks/HITL_OPERATIONS.md#high-rejection-rate
+      dashboard_url: '{{ grafana_url }}/d/langgraph-agent/overview'
+  - alert: HITLHighTimeoutRate
+    expr: |
+      (
+        sum by (agent_name) (rate(agent_hitl_decision_count_total{decision="timeout"}[1h]))
+        /
+        sum by (agent_name) (rate(agent_hitl_decision_count_total[1h]))
+      ) > 0.2
+    for: 1h
+    labels:
+      severity: warning
+      team: platform
+    annotations:
+      summary: High HITL timeout rate for {{ $labels.agent_name }}
+      description: |
+        {{ $value | humanizePercentage }} of HITL requests for {{ $labels.agent_name }} are timing out.
+
+        This indicates:
+        - Users may not be receiving or responding to notifications
+        - Timeout duration may be too short
+        - Users may be ignoring certain types of requests
+
+        Actions:
+        1. Review notification delivery metrics
+        2. Consider extending timeout duration
+        3. Analyze timeout patterns by time of day
+      runbook_url: https://docs/runbooks/HITL_OPERATIONS.md#high-timeout-rate
+      dashboard_url: '{{ grafana_url }}/d/langgraph-agent/overview'
+  - alert: HITLLowApprovalRate
+    expr: |
+      (
+        sum by (agent_name) (rate(agent_hitl_decision_count_total{decision="approved"}[1h]))
+        /
+        sum by (agent_name) (rate(agent_hitl_decision_count_total[1h]))
+      ) < 0.5
+    for: 1h
+    labels:
+      severity: info
+      team: platform
+    annotations:
+      summary: Low approval rate for {{ $labels.agent_name }}
+      description: |
+        Only {{ $value | humanizePercentage }} of HITL requests for {{ $labels.agent_name }} are being approved.
+        This may indicate the agent needs significant tuning.
+- name: hitl.trigger_reasons
+  interval: 5m
+  rules:
+  - alert: HITLDestructiveActionVolume
+    expr: |
+      sum by (agent_name) (rate(agent_hitl_request_count_total{trigger_reason="destructive_action"}[1h])) > 0.1
+    for: 30m
+    labels:
+      severity: info
+      team: platform
+    annotations:
+      summary: Elevated destructive action approvals for {{ $labels.agent_name }}
+      description: |
+        {{ $labels.agent_name }} is generating {{ $value | humanize }}/s destructive action approval requests.
+
+        This is expected for high-risk operations but warrants monitoring.
+  - alert: HITLExternalAPIVolume
+    expr: |
+      sum by (agent_name) (rate(agent_hitl_request_count_total{trigger_reason="external_api"}[1h])) > 0.5
+    for: 30m
+    labels:
+      severity: info
+      team: platform
+    annotations:
+      summary: High volume of external API approvals for {{ $labels.agent_name }}
+      description: |
+        {{ $labels.agent_name }} is requesting {{ $value | humanize }}/s external API approvals.
+
+        Consider:
+        - Pre-approving trusted external APIs
+        - Reviewing which APIs require approval
+        - Adjusting HITL policy for this agent
+- name: hitl.meta
+  interval: 5m
+  rules:
+  - alert: HITLMetricsCardinalityHigh
+    expr: count({__name__=~"agent_hitl_.*"}) > 5000
+    for: 1h
+    labels:
+      severity: warning
+      team: platform
+    annotations:
+      summary: High cardinality in HITL metrics
+      description: |
+        HITL metrics have {{ $value }} unique time series, exceeding 5,000 threshold.
+
+        Check for:
+        - High cardinality in agent_name labels
+        - Unusual trigger_reason values
+        - Dynamic request_id in labels (should not be a label)
+      runbook_url: https://docs/monitoring/METRICS_CARDINALITY.md#hitl-metrics
+      dashboard_url: '{{ grafana_url }}/d/langgraph-agent/overview'
+  - alert: HITLNoActivity
+    expr: |
+      sum(rate(agent_hitl_request_count_total[1h])) == 0
+      and
+      sum(agent_task_total) > 0
+    for: 4h
+    labels:
+      severity: info
+      team: platform
+    annotations:
+      summary: No HITL activity despite active agent tasks
+      description: |
+        No HITL requests have been generated in the last hour despite active agent tasks.
+
+        This may indicate:
+        - HITL feature is disabled
+        - Confidence thresholds are set very low (auto-approving everything)
+        - All agents operating with high confidence
+
+        This is informational - no action required unless unexpected.

@@ -1,0 +1,567 @@
+groups:
+- name: slo.recording_rules
+  interval: 30s
+  rules:
+  - record: slo:error_budget:remaining_percent
+    expr: |
+      1 - (
+        sum(rate(http_requests_total{job="mcp-server-langgraph",status=~"5.."}[30d]))
+        / sum(rate(http_requests_total{job="mcp-server-langgraph"}[30d]))
+      ) / (1 - 0.999)
+  - record: slo:error_budget:burn_rate_1h
+    expr: |
+      sum(rate(http_requests_total{job="mcp-server-langgraph",status=~"5.."}[1h]))
+      / sum(rate(http_requests_total{job="mcp-server-langgraph"}[1h]))
+      / 0.001
+  - record: slo:error_budget:burn_rate_6h
+    expr: |
+      sum(rate(http_requests_total{job="mcp-server-langgraph",status=~"5.."}[6h]))
+      / sum(rate(http_requests_total{job="mcp-server-langgraph"}[6h]))
+      / 0.001
+  - record: slo:availability:ratio_1h
+    expr: |
+      sum(rate(http_requests_total{job="mcp-server-langgraph",status!~"5.."}[1h]))
+      / sum(rate(http_requests_total{job="mcp-server-langgraph"}[1h]))
+  - record: slo:availability:ratio_24h
+    expr: |
+      sum(rate(http_requests_total{job="mcp-server-langgraph",status!~"5.."}[24h]))
+      / sum(rate(http_requests_total{job="mcp-server-langgraph"}[24h]))
+  - record: slo:latency:p95_seconds
+    expr: |
+      histogram_quantile(0.95,
+        sum(rate(http_request_duration_seconds_bucket{job="mcp-server-langgraph"}[5m])) by (le)
+      )
+  - record: slo:latency:p99_seconds
+    expr: |
+      histogram_quantile(0.99,
+        sum(rate(http_request_duration_seconds_bucket{job="mcp-server-langgraph"}[5m])) by (le)
+      )
+- name: slo.multiwindow_multiburn
+  interval: 30s
+  rules:
+  - alert: SLOBudgetBurnCritical
+    expr: |
+      (
+        slo:error_budget:burn_rate_1h > 14.4
+        and
+        slo:error_budget:burn_rate_6h > 14.4
+      )
+    for: 2m
+    labels:
+      severity: critical
+      slo: availability
+      window: fast
+    annotations:
+      summary: Critical SLO burn rate - immediate action required
+      description: |
+        Error budget is being consumed at {{ $value | printf "%.1f" }}x the sustainable rate.
+        At this rate, the entire 30-day budget will be exhausted in {{ printf "%.1f" (30 / $value) }} days.
+      runbook_url: |-
+        https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/monitoring/runbooks/sla-alerts.md#slobudgetburncritical
+      dashboard_url: '{{ grafana_url }}/d/slo/slo-dashboard'
+  - alert: SLOBudgetBurnHigh
+    expr: |
+      (
+        slo:error_budget:burn_rate_1h > 6
+        and
+        slo:error_budget:burn_rate_6h > 6
+      )
+    for: 5m
+    labels:
+      severity: warning
+      slo: availability
+      window: medium
+    annotations:
+      summary: High SLO burn rate - investigation needed
+      description: |
+        Error budget is being consumed at {{ $value | printf "%.1f" }}x the sustainable rate.
+        Investigate recent deployments or dependency issues.
+      runbook_url: 'https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/monitoring/runbooks/sla-alerts.md#slobudgetburnhigh'
+      dashboard_url: '{{ grafana_url }}/d/langgraph-agent/overview'
+  - alert: SLOBudgetBurnElevated
+    expr: |
+      (
+        slo:error_budget:burn_rate_6h > 3
+      )
+    for: 30m
+    labels:
+      severity: info
+      slo: availability
+      window: slow
+    annotations:
+      summary: Elevated SLO burn rate - monitor closely
+      description: |
+        Error budget consumption is elevated. Review error trends and plan remediation.
+- name: slo.latency
+  interval: 30s
+  rules:
+  - alert: SLOLatencyP95Breach
+    expr: |
+      slo:latency:p95_seconds > 0.5
+    for: 5m
+    labels:
+      severity: critical
+      slo: latency
+      percentile: p95
+    annotations:
+      summary: P95 latency exceeds 500ms SLO
+      description: |
+        P95 latency is {{ $value | humanizeDuration }}, exceeding the 500ms SLO target.
+        Check for slow database queries, LLM provider issues, or resource contention.
+      runbook_url: |-
+        https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/monitoring/runbooks/sla-alerts.md#slolatencyp95breach
+      dashboard_url: '{{ grafana_url }}/d/latency/latency-dashboard'
+  - alert: SLOLatencyP99Breach
+    expr: |
+      slo:latency:p99_seconds > 2.0
+    for: 5m
+    labels:
+      severity: warning
+      slo: latency
+      percentile: p99
+    annotations:
+      summary: P99 latency exceeds 2000ms threshold
+      description: |
+        P99 latency is {{ $value | humanizeDuration }}, indicating tail latency issues.
+        Review slow LLM calls or complex request patterns.
+      runbook_url: 'https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/monitoring/runbooks/sla-alerts.md#slolatencyp99breach'
+      dashboard_url: '{{ grafana_url }}/d/llm-performance/llm-performance'
+  - alert: SLOLatencyDegrading
+    expr: |
+      deriv(slo:latency:p95_seconds[30m]) > 0.001
+    for: 15m
+    labels:
+      severity: info
+      slo: latency
+      type: trend
+    annotations:
+      summary: Latency trending upward
+      description: P95 latency is showing an upward trend. Investigate before it breaches
+        SLO.
+- name: slo.error_budget
+  interval: 5m
+  rules:
+  - alert: SLOErrorBudgetExhausted
+    expr: |
+      slo:error_budget:remaining_percent < 0
+    labels:
+      severity: critical
+      slo: error_budget
+    annotations:
+      summary: Error budget exhausted
+      description: |
+        The 30-day error budget has been fully consumed.
+        Availability is below the 99.9% SLO target.
+        Consider freezing deployments until stability is restored.
+      runbook_url: |-
+        https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/monitoring/runbooks/sla-alerts.md#sloerrorbudgetexhausted
+      dashboard_url: '{{ grafana_url }}/d/slo/slo-dashboard'
+  - alert: SLOErrorBudgetLow
+    expr: |
+      slo:error_budget:remaining_percent < 0.25
+      and
+      slo:error_budget:remaining_percent >= 0
+    for: 10m
+    labels:
+      severity: warning
+      slo: error_budget
+    annotations:
+      summary: Error budget below 25%
+      description: |
+        Only {{ $value | humanizePercentage }} of the 30-day error budget remains.
+        Consider risk-reduction measures for upcoming changes.
+      runbook_url: 'https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/monitoring/runbooks/sla-alerts.md#sloerrorbudgetlow'
+      dashboard_url: '{{ grafana_url }}/d/langgraph-agent/overview'
+  - alert: SLOErrorBudgetHalfConsumed
+    expr: |
+      slo:error_budget:remaining_percent < 0.5
+      and
+      slo:error_budget:remaining_percent >= 0.25
+    for: 1h
+    labels:
+      severity: info
+      slo: error_budget
+    annotations:
+      summary: Error budget 50% consumed
+      description: |
+        {{ $value | humanizePercentage }} of error budget remains for this 30-day window.
+- name: slo.saturation
+  interval: 30s
+  rules:
+  - alert: SLOCPUSaturation
+    expr: |
+      (
+        sum(rate(container_cpu_usage_seconds_total{pod=~"mcp-server-langgraph-.*"}[5m]))
+        / sum(kube_pod_container_resource_limits{pod=~"mcp-server-langgraph-.*",resource="cpu"})
+      ) > 0.85
+    for: 10m
+    labels:
+      severity: warning
+      slo: saturation
+      resource: cpu
+    annotations:
+      summary: High CPU saturation (>85%)
+      description: |
+        CPU utilization is at {{ $value | humanizePercentage }}.
+        This may impact latency SLO. Consider scaling horizontally.
+      runbook_url: 'https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/monitoring/runbooks/sla-alerts.md#slocpusaturation'
+      dashboard_url: '{{ grafana_url }}/d/langgraph-agent/overview'
+  - alert: SLOMemorySaturation
+    expr: |
+      (
+        sum(container_memory_working_set_bytes{pod=~"mcp-server-langgraph-.*"})
+        / sum(kube_pod_container_resource_limits{pod=~"mcp-server-langgraph-.*",resource="memory"})
+      ) > 0.85
+    for: 10m
+    labels:
+      severity: warning
+      slo: saturation
+      resource: memory
+    annotations:
+      summary: High memory saturation (>85%)
+      description: |
+        Memory utilization is at {{ $value | humanizePercentage }}.
+        Risk of OOM events affecting availability SLO.
+      runbook_url: 'https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/monitoring/runbooks/sla-alerts.md#slomemorysaturation'
+      dashboard_url: '{{ grafana_url }}/d/langgraph-agent/overview'
+  - alert: SLOConnectionPoolSaturation
+    expr: |
+      (
+        sum(pg_stat_activity_count{datname="langgraph"})
+        / sum(pg_settings_max_connections{})
+      ) > 0.80
+    for: 5m
+    labels:
+      severity: warning
+      slo: saturation
+      resource: database_connections
+    annotations:
+      summary: Database connection pool near saturation
+      description: |
+        {{ $value | humanizePercentage }} of PostgreSQL connections in use.
+        May cause request queueing and latency increases.
+      runbook_url: 'https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/monitoring/runbooks/sla-alerts.md#sloconnectionpoolsaturation'
+      dashboard_url: '{{ grafana_url }}/d/langgraph-agent/overview'
+- name: slo.resilience
+  interval: 30s
+  rules:
+  - record: slo:resilience:circuit_breaker_open_ratio
+    expr: |
+      sum(circuit_breaker_state{service=~"redis|keycloak|openfga|postgres"} == 1)
+      / count(circuit_breaker_state{service=~"redis|keycloak|openfga|postgres"})
+  - record: slo:resilience:retry_exhaustion_rate_5m
+    expr: |
+      sum(rate(retry_exhausted_total[5m]))
+  - record: slo:resilience:http_pool_utilization
+    expr: |
+      http_pool_utilization
+  - record: slo:resilience:llm_adaptive_bulkhead_at_floor
+    expr: |
+      sum(adaptive_bulkhead_limit <= 2)
+  - alert: SLOResilienceCircuitBreakerImpact
+    expr: |
+      slo:resilience:circuit_breaker_open_ratio > 0
+    for: 2m
+    labels:
+      severity: critical
+      slo: availability
+      resilience_pattern: circuit_breaker
+    annotations:
+      summary: Circuit breaker open - availability SLO at risk
+      description: |
+        {{ $value | humanizePercentage }} of critical service circuit breakers are OPEN.
+        This directly impacts the 99.9% availability SLO as requests to these
+        services are failing fast.
+
+        Open circuit breakers: Check circuit_breaker_state{} metric.
+      runbook_url: https://docs/runbooks/RESILIENCE_OPERATIONS.md#circuit-breaker-open
+      dashboard_url: '{{ grafana_url }}/d/resilience-patterns'
+  - alert: SLOResilienceRetryExhaustion
+    expr: |
+      slo:resilience:retry_exhaustion_rate_5m > 0.5
+    for: 5m
+    labels:
+      severity: warning
+      slo: availability
+      resilience_pattern: retry
+    annotations:
+      summary: Retry exhaustion affecting availability
+      description: |
+        Retry exhaustion rate is {{ $value | humanize }}/s.
+        Operations are failing after all retry attempts, indicating persistent
+        issues that may impact the availability SLO.
+      runbook_url: https://docs/runbooks/RESILIENCE_OPERATIONS.md#high-retry-exhaustion
+      dashboard_url: '{{ grafana_url }}/d/langgraph-agent/overview'
+  - alert: SLOResilienceHTTPPoolSaturation
+    expr: |
+      slo:resilience:http_pool_utilization > 0.85
+    for: 5m
+    labels:
+      severity: warning
+      slo: saturation
+      resilience_pattern: connection_pool
+    annotations:
+      summary: HTTP connection pool saturation impacting SLO
+      description: |
+        HTTP connection pool is at {{ $value | humanizePercentage }} capacity.
+        This may cause request queueing, increasing latency and potentially
+        impacting both latency and availability SLOs.
+      runbook_url: https://docs/runbooks/RESILIENCE_OPERATIONS.md#http-pool-exhaustion
+      dashboard_url: '{{ grafana_url }}/d/langgraph-agent/overview'
+  - alert: SLOResilienceLLMProviderDegraded
+    expr: |
+      slo:resilience:llm_adaptive_bulkhead_at_floor > 0
+    for: 10m
+    labels:
+      severity: warning
+      slo: latency
+      resilience_pattern: adaptive_bulkhead
+    annotations:
+      summary: LLM provider degraded - latency SLO at risk
+      description: |
+        {{ $value }} LLM providers have adaptive bulkheads at minimum capacity.
+        This indicates rate limiting or errors from LLM providers, which may
+        increase queue times and impact the latency SLO.
+      runbook_url: https://docs/runbooks/RESILIENCE_OPERATIONS.md#adaptive-bulkhead-at-floor
+      dashboard_url: '{{ grafana_url }}/d/llm-performance/llm-performance'
+  - record: slo:resilience:health_score
+    expr: |
+      (
+        (1 - clamp_max(slo:resilience:circuit_breaker_open_ratio, 1)) * 0.4
+        + (1 - clamp_max(slo:resilience:retry_exhaustion_rate_5m / 1, 1)) * 0.3
+        + (1 - clamp_max(slo:resilience:http_pool_utilization, 1)) * 0.2
+        + (1 - clamp_max(slo:resilience:llm_adaptive_bulkhead_at_floor / 6, 1)) * 0.1
+      )
+  - alert: SLOResilienceHealthDegraded
+    expr: |
+      slo:resilience:health_score < 0.7
+    for: 5m
+    labels:
+      severity: warning
+      slo: availability
+      resilience_pattern: composite
+    annotations:
+      summary: Resilience health score degraded
+      description: |
+        Overall resilience health score is {{ $value | humanizePercentage }}.
+        Multiple resilience patterns are indicating stress, increasing the
+        risk of SLO breaches. Review circuit breakers, retry rates, and
+        connection pools.
+      runbook_url: 'https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/monitoring/runbooks/resilience-alerts.md#sloresiliencehealthdegraded'
+      dashboard_url: '{{ grafana_url }}/d/resilience-patterns'
+- name: slo.push_notifications
+  interval: 30s
+  rules:
+  - record: slo:push:delivery_success_ratio_5m
+    expr: |
+      sum(rate(push_notifications_sent_total{status="success"}[5m]))
+      / sum(rate(push_notifications_sent_total[5m]))
+  - record: slo:push:delivery_success_ratio_1h
+    expr: |
+      sum(rate(push_notifications_sent_total{status="success"}[1h]))
+      / sum(rate(push_notifications_sent_total[1h]))
+  - record: slo:push:delivery_success_ratio_24h
+    expr: |
+      sum(rate(push_notifications_sent_total{status="success"}[24h]))
+      / sum(rate(push_notifications_sent_total[24h]))
+  - record: slo:push:latency_p95_seconds
+    expr: |
+      histogram_quantile(0.95,
+        sum(rate(push_notifications_latency_seconds_bucket[5m])) by (le)
+      )
+  - record: slo:push:expired_subscription_rate_1h
+    expr: |
+      sum(rate(push_subscriptions_expired_total[1h]))
+  - alert: SLOPushDeliveryBreach
+    expr: |
+      slo:push:delivery_success_ratio_1h < 0.995
+    for: 5m
+    labels:
+      severity: warning
+      slo: push_delivery
+      target: 99.5%
+    annotations:
+      summary: Push notification delivery below 99.5% SLO
+      description: |
+        Push notification delivery success rate is {{ $value | humanizePercentage }},
+        below the 99.5% SLO target.
+
+        Check for:
+        - Expired push subscriptions
+        - VAPID key configuration issues
+        - Network connectivity to push services
+      runbook_url: https://docs/runbooks/push-notification-delivery
+      dashboard_url: '{{ grafana_url }}/d/alert-dashboard'
+  - alert: SLOPushDeliveryCritical
+    expr: |
+      slo:push:delivery_success_ratio_1h < 0.90
+    for: 10m
+    labels:
+      severity: critical
+      slo: push_delivery
+      target: 99.5%
+    annotations:
+      summary: Critical push notification delivery failures
+      description: |
+        Push notification delivery success rate is {{ $value | humanizePercentage }},
+        well below the 99.5% SLO target. Admins may not receive critical alerts.
+
+        Immediate action required:
+        1. Check push service connectivity
+        2. Verify VAPID keys are valid
+        3. Check for mass subscription expiry
+      runbook_url: https://docs/runbooks/push-notification-critical
+      dashboard_url: '{{ grafana_url }}/d/langgraph-agent/overview'
+  - alert: SLOPushLatencyHigh
+    expr: |
+      slo:push:latency_p95_seconds > 2.0
+    for: 5m
+    labels:
+      severity: warning
+      slo: push_latency
+    annotations:
+      summary: Push notification latency exceeds 2s
+      description: |
+        P95 push notification delivery latency is {{ $value | humanizeDuration }}.
+        Critical alerts may be delayed to admin devices.
+      runbook_url: 'https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/monitoring/runbooks/sla-alerts.md#slopushlatencyhigh'
+      dashboard_url: '{{ grafana_url }}/d/llm-performance/llm-performance'
+  - alert: SLOPushSubscriptionExpiry
+    expr: |
+      slo:push:expired_subscription_rate_1h > 10
+    for: 15m
+    labels:
+      severity: info
+      slo: push_subscriptions
+    annotations:
+      summary: High push subscription expiration rate
+      description: |
+        {{ $value | humanize }} push subscriptions expired in the last hour.
+        Users may need to re-subscribe to push notifications.
+- name: slo.cleanup_jobs
+  interval: 1m
+  rules:
+  - record: slo:cleanup:last_run_age_seconds
+    expr: |
+      time() - max(push_cleanup_last_run_timestamp_seconds)
+  - record: slo:cleanup:failure_rate_1h
+    expr: |
+      sum(rate(push_cleanup_runs_total{status="failure"}[1h]))
+      / sum(rate(push_cleanup_runs_total[1h]))
+  - record: slo:cleanup:subscriptions_cleaned_rate_1h
+    expr: |
+      sum(rate(push_cleanup_subscriptions_cleaned_total[1h]))
+  - alert: SLOCleanupJobStale
+    expr: |
+      slo:cleanup:last_run_age_seconds > 7200
+    for: 5m
+    labels:
+      severity: warning
+      slo: cleanup_job
+      component: push_subscriptions
+    annotations:
+      summary: Push subscription cleanup job stale
+      description: |
+        The push subscription cleanup job hasn't run in {{ $value | humanizeDuration }}.
+        Expected interval is 1 hour.
+
+        Check:
+        - Background task scheduler
+        - Application health
+        - Resource availability
+      runbook_url: https://docs/runbooks/cleanup-job-stale
+      dashboard_url: '{{ grafana_url }}/d/langgraph-agent/overview'
+  - alert: SLOCleanupJobFailures
+    expr: |
+      slo:cleanup:failure_rate_1h > 0.1
+    for: 10m
+    labels:
+      severity: warning
+      slo: cleanup_job
+      component: push_subscriptions
+    annotations:
+      summary: Push subscription cleanup job failures
+      description: |
+        Cleanup job failure rate is {{ $value | humanizePercentage }}.
+        Stale subscriptions may accumulate, impacting performance.
+      runbook_url: 'https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/monitoring/runbooks/sla-alerts.md#slocleanupjobfailures'
+      dashboard_url: '{{ grafana_url }}/d/langgraph-agent/overview'
+  - alert: SLOCleanupJobDead
+    expr: |
+      slo:cleanup:last_run_age_seconds > 86400
+    for: 5m
+    labels:
+      severity: critical
+      slo: cleanup_job
+      component: push_subscriptions
+    annotations:
+      summary: Push subscription cleanup job dead
+      description: |
+        The cleanup job hasn't run in over 24 hours.
+        This may indicate a critical failure in the background task system.
+      runbook_url: https://docs/runbooks/cleanup-job-dead
+      dashboard_url: '{{ grafana_url }}/d/langgraph-agent/overview'
+- name: slo.ai_remediation
+  interval: 30s
+  rules:
+  - record: slo:ai:recommendation_acceptance_rate_24h
+    expr: |
+      sum(rate(remediation_feedback_total{action="approved"}[24h]))
+      / sum(rate(remediation_feedback_total[24h]))
+  - record: slo:ai:recommendation_generation_latency_p95
+    expr: |
+      histogram_quantile(0.95,
+        sum(rate(ai_recommendation_latency_seconds_bucket[5m])) by (le)
+      )
+  - record: slo:ai:recommendation_error_rate_1h
+    expr: |
+      sum(rate(ai_recommendation_total{status="error"}[1h]))
+      / sum(rate(ai_recommendation_total[1h]))
+  - alert: SLOAIAcceptanceRateLow
+    expr: |
+      slo:ai:recommendation_acceptance_rate_24h < 0.5
+      and
+      sum(rate(remediation_feedback_total[24h])) > 0.001
+    for: 1h
+    labels:
+      severity: info
+      slo: ai_quality
+      component: remediation
+    annotations:
+      summary: AI recommendation acceptance rate below 50%
+      description: |
+        AI recommendation acceptance rate is {{ $value | humanizePercentage }}.
+        Consider reviewing rejection patterns to improve recommendation quality.
+
+        Check the rejection reasons in the feedback store for patterns.
+      dashboard_url: '{{ grafana_url }}/d/alert-dashboard'
+  - alert: SLOAIRecommendationErrors
+    expr: |
+      slo:ai:recommendation_error_rate_1h > 0.1
+    for: 10m
+    labels:
+      severity: warning
+      slo: ai_quality
+      component: recommendation
+    annotations:
+      summary: High AI recommendation generation error rate
+      description: |
+        {{ $value | humanizePercentage }} of AI recommendation requests are failing.
+        Check LLM provider connectivity and rate limits.
+      runbook_url: 'https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/monitoring/runbooks/sla-alerts.md#sloairecommendationerrors'
+      dashboard_url: '{{ grafana_url }}/d/langgraph-agent/overview'
+  - alert: SLOAIRecommendationSlow
+    expr: |
+      slo:ai:recommendation_generation_latency_p95 > 30
+    for: 5m
+    labels:
+      severity: warning
+      slo: ai_latency
+      component: recommendation
+    annotations:
+      summary: AI recommendation generation slow (>30s)
+      description: |
+        P95 AI recommendation generation latency is {{ $value | humanizeDuration }}.
+        This may delay remediation for critical alerts.
+      runbook_url: 'https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/monitoring/runbooks/sla-alerts.md#sloairecommendationslow'
+      dashboard_url: '{{ grafana_url }}/d/llm-performance/llm-performance'

@@ -1,3 +1,7 @@
+# Synced from: monitoring/prometheus/rules/streaming-sla-alerts.yml
+# Namespace for Mimir ruler compatibility
+namespace: streaming-sla
+
 groups:
   # LLM Streaming SLA Alert Rules
   # These alerts monitor streaming performance metrics and fire when SLA thresholds are breached

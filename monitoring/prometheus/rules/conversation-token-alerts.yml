@@ -46,7 +46,7 @@ groups:
             2. Consider implementing sliding window or summarization
             3. Check for runaway multi-turn conversations
           runbook_url: "https://docs/runbooks/CONVERSATION_TOKENS.md#high-token-usage"
-          dashboard_url: "https://grafana/d/conversation-token-usage"
+          dashboard_url: "{{ grafana_url }}/d/conversation-token-usage"
 
       # Critical Token Usage (near context window limit)
       - alert: ConversationTokenUsageCritical
@@ -74,7 +74,7 @@ groups:
             3. Enable conversation compaction if disabled
             4. Consider session resets for affected users
           runbook_url: "https://docs/runbooks/CONVERSATION_TOKENS.md#critical-token-usage"
-          dashboard_url: "https://grafana/d/conversation-token-usage"
+          dashboard_url: "{{ grafana_url }}/d/conversation-token-usage"
 
       # Message Count Spike (unusual conversation length)
       - alert: ConversationMessageCountSpike
@@ -104,7 +104,7 @@ groups:
             2. Check for automated/bot traffic
             3. Consider session limits
           runbook_url: "https://docs/runbooks/CONVERSATION_TOKENS.md#message-count-spike"
-          dashboard_url: "https://grafana/d/conversation-token-usage"
+          dashboard_url: "{{ grafana_url }}/d/conversation-token-usage"
 
       # High System Message Percentage (unusual configuration)
       - alert: ConversationSystemMessageRatioHigh
@@ -135,7 +135,7 @@ groups:
             2. Check dynamic context injection patterns
             3. Audit prompt template usage
           runbook_url: "https://docs/runbooks/CONVERSATION_TOKENS.md#system-message-ratio"
-          dashboard_url: "https://grafana/d/conversation-token-usage"
+          dashboard_url: "{{ grafana_url }}/d/conversation-token-usage"
 
       # Unbalanced User/Assistant Ratio (conversation flow issue)
       - alert: ConversationRoleImbalance
@@ -163,7 +163,7 @@ groups:
 
             This is informational; investigate if persistent.
           runbook_url: "https://docs/runbooks/CONVERSATION_TOKENS.md#role-imbalance"
-          dashboard_url: "https://grafana/d/conversation-token-usage"
+          dashboard_url: "{{ grafana_url }}/d/conversation-token-usage"
 
       # No Conversation Activity (potential outage indicator)
       - alert: ConversationNoActivity
@@ -191,7 +191,7 @@ groups:
             2. Review authentication status
             3. Check LLM provider connectivity
           runbook_url: "https://docs/runbooks/CONVERSATION_TOKENS.md#no-activity"
-          dashboard_url: "https://grafana/d/conversation-token-usage"
+          dashboard_url: "{{ grafana_url }}/d/conversation-token-usage"
 
   - name: conversation_recording_rules
     interval: 30s

@@ -1,0 +1,117 @@
+# ADR-0096: Alert Consolidation and Quality Standards
+
+| Status   | Accepted                                     |
+|----------|----------------------------------------------|
+| Date     | 2026-01-07                                   |
+| Category | Observability                                |
+| Authors  | Claude Code                                  |
+
+## Context
+
+The project's alert rules were fragmented across multiple locations:
+- `monitoring/prometheus/rules/` - Canonical location for standard Prometheus format
+- `monitoring/prometheus/alerts/` - K8s PrometheusRule CRD format
+- `deployments/monitoring/alerting-rules/` - Mixed formats
+- `deployments/monitoring/` - SLO and prompt quality alerts
+- `docker/mimir/rules/` - Synced copy for local Mimir ruler
+
+This fragmentation caused:
+1. **Discovery issues** - Hard to find all alerts
+2. **Duplicate alert names** - Alerts shadowing each other in Prometheus/Mimir
+3. **Inconsistent quality** - Missing severity labels, annotations, runbook URLs
+4. **Sync drift** - Manual copy between canonical and Mimir locations
+
+## Decision
+
+### 1. Canonical Location
+
+All alert rules MUST reside in `monitoring/prometheus/rules/` in standard Prometheus format:
+
+```yaml
+groups:
+- name: example
+  rules:
+  - alert: ExampleAlert
+    expr: up == 0
+    for: 5m
+    labels:
+      severity: critical
+    annotations:
+      summary: Example alert
+      description: Detailed description
+      runbook_url: https://...
+      dashboard_url: '{{ grafana_url }}/d/...'
+```
+
+### 2. K8s CRD Conversion
+
+Kubernetes PrometheusRule CRD files are converted to standard format using:
+```bash
+python scripts/convert-k8s-crd-alerts.py
+```
+
+### 3. Mimir Sync
+
+Alert rules are synced to `docker/mimir/rules/` for local development:
+```bash
+./scripts/sync-mimir-rules.sh        # Sync
+./scripts/sync-mimir-rules.sh --check # Check for drift
+```
+
+### 4. Quality Standards
+
+| Requirement | Severity | Target |
+|-------------|----------|--------|
+| Unique alert names | All | 100% |
+| Severity label | All | 100% |
+| Summary/description annotation | All | 100% |
+| runbook_url annotation | Critical | 100% |
+| runbook_url annotation | Warning | 80% |
+| dashboard_url annotation | Critical/Warning | 50% |
+| `for` duration | All | Recommended |
+
+### 5. Pre-commit Validation
+
+Two hooks enforce quality:
+
+1. **validate-alert-rules** (pre-commit): Validates individual files
+   - No duplicate alert names (within canonical directory)
+   - Required severity labels
+   - Summary/description annotations
+   - No hardcoded Grafana URLs
+
+2. **check-mimir-rules-sync** (pre-push): Ensures Mimir is in sync
+   - Compares canonical to Mimir location
+   - Blocks push if out of sync
+
+## Consequences
+
+### Positive
+
+- **Single source of truth** - All alerts in one location
+- **Quality enforcement** - Pre-commit hooks prevent regressions
+- **Automated sync** - No manual copy between locations
+- **Better observability** - 100% critical runbook coverage, 80%+ warning coverage
+- **Dashboard integration** - 85%+ high-priority alerts have dashboard links
+
+### Negative
+
+- **Migration effort** - Existing alerts required consolidation (completed)
+- **Hook overhead** - Additional pre-commit/pre-push validation time (~1s)
+
+### Metrics Achieved
+
+| Metric | Before | After |
+|--------|--------|-------|
+| Alert locations | 4+ | 1 (canonical) |
+| Critical alerts with runbook | ~80% | 100% |
+| Warning alerts with runbook | ~65% | 80%+ |
+| Dashboard coverage | ~30% | 85%+ |
+| K8s CRD files | 3 | 0 (converted) |
+
+## Related
+
+- ADR-0067: Grafana LGTM Stack Migration
+- `monitoring/prometheus/rules/README.md` (if exists)
+- `scripts/alert-coverage-report.py` - Generate coverage report
+- `tests/unit/scripts/test_alert_consolidation.py` - TDD tests

@@ -338,6 +338,195 @@ class TestDashboardUIDUniqueness:
             )
 
 
+class TestDocumentationDashboardPaths:
+    """Tests to ensure documentation references valid dashboard paths."""
+
+    def test_adr_dashboard_references_exist(self) -> None:
+        """All dashboard paths referenced in ADRs must exist.
+
+        This test validates that documentation doesn't reference dashboards
+        that have been moved or renamed.
+        """
+        import re
+
+        adr_dir = Path(__file__).parent.parent.parent.parent / "adr"
+        dashboards_dir = Path(__file__).parent.parent.parent.parent / "monitoring" / "grafana" / "dashboards"
+
+        if not adr_dir.exists():
+            pytest.skip("ADR directory not found")
+        if not dashboards_dir.exists():
+            pytest.skip("Dashboards directory not found")
+
+        # Pattern to match dashboard paths in docs
+        pattern = re.compile(r"monitoring/grafana/dashboards/([^\s`\"']+\.json)")
+
+        missing_refs: list[tuple[str, str]] = []
+
+        for adr_file in adr_dir.glob("*.md"):
+            content = adr_file.read_text()
+            for match in pattern.finditer(content):
+                rel_path = match.group(1)
+                full_path = dashboards_dir / rel_path
+                if not full_path.exists():
+                    missing_refs.append((str(adr_file.name), f"monitoring/grafana/dashboards/{rel_path}"))
+
+        if missing_refs:
+            msg = "\n".join(f"  {adr}: {path}" for adr, path in missing_refs)
+            pytest.fail(
+                f"Found {len(missing_refs)} documentation references to non-existent dashboards:\n{msg}\n\n"
+                "Update the documentation to reference the correct dashboard paths."
+            )
+
+    def test_compliance_docs_dashboard_references_exist(self) -> None:
+        """All dashboard paths in COMPLIANCE.md must exist.
+
+        Internal documentation must reference valid dashboard paths.
+        """
+        import re
+
+        compliance_file = Path(__file__).parent.parent.parent.parent / "docs-internal" / "COMPLIANCE.md"
+        dashboards_dir = Path(__file__).parent.parent.parent.parent / "monitoring" / "grafana" / "dashboards"
+
+        if not compliance_file.exists():
+            pytest.skip("COMPLIANCE.md not found")
+        if not dashboards_dir.exists():
+            pytest.skip("Dashboards directory not found")
+
+        pattern = re.compile(r"monitoring/grafana/dashboards/([^\s`\"'\)]+\.json)")
+
+        content = compliance_file.read_text()
+        missing_refs: list[str] = []
+
+        for match in pattern.finditer(content):
+            rel_path = match.group(1)
+            full_path = dashboards_dir / rel_path
+            if not full_path.exists():
+                missing_refs.append(f"monitoring/grafana/dashboards/{rel_path}")
+
+        # Deduplicate
+        missing_refs = list(set(missing_refs))
+
+        if missing_refs:
+            msg = "\n".join(f"  {path}" for path in sorted(missing_refs))
+            pytest.fail(
+                f"Found {len(missing_refs)} references to non-existent dashboards in COMPLIANCE.md:\n{msg}\n\n"
+                "Update docs-internal/COMPLIANCE.md to reference correct dashboard paths with folder structure."
+            )
+
+    def test_docs_internal_dashboard_references_exist(self) -> None:
+        """All dashboard paths in docs-internal/ must exist.
+
+        Scans all markdown files in docs-internal/ for dashboard path references
+        and validates they exist in the dashboards directory.
+
+        Excludes:
+        - grafana-dashboard-audit-report.md (historical audit, documents past state)
+        """
+        import re
+
+        docs_internal_dir = Path(__file__).parent.parent.parent.parent / "docs-internal"
+        dashboards_dir = Path(__file__).parent.parent.parent.parent / "monitoring" / "grafana" / "dashboards"
+
+        if not docs_internal_dir.exists():
+            pytest.skip("docs-internal directory not found")
+        if not dashboards_dir.exists():
+            pytest.skip("Dashboards directory not found")
+
+        # Files to exclude (historical reports that document past state)
+        excluded_files = {
+            "grafana-dashboard-audit-report.md",
+        }
+
+        pattern = re.compile(r"monitoring/grafana/dashboards/([^\s`\"'\)\]]+\.json)")
+
+        missing_refs: list[tuple[str, str]] = []
+
+        for md_file in docs_internal_dir.rglob("*.md"):
+            if md_file.name in excluded_files:
+                continue
+
+            content = md_file.read_text()
+            for match in pattern.finditer(content):
+                rel_path = match.group(1)
+                full_path = dashboards_dir / rel_path
+                if not full_path.exists():
+                    relative_doc = md_file.relative_to(docs_internal_dir)
+                    missing_refs.append((str(relative_doc), f"monitoring/grafana/dashboards/{rel_path}"))
+
+        # Deduplicate while preserving file info
+        seen = set()
+        unique_refs = []
+        for doc, path in missing_refs:
+            key = (doc, path)
+            if key not in seen:
+                seen.add(key)
+                unique_refs.append((doc, path))
+
+        if unique_refs:
+            msg = "\n".join(f"  {doc}: {path}" for doc, path in sorted(unique_refs))
+            pytest.fail(
+                f"Found {len(unique_refs)} references to non-existent dashboards in docs-internal/:\n{msg}\n\n"
+                "Update the documentation to reference correct dashboard paths with folder structure."
+            )
+
+
+class TestAlertDashboardURLConsistency:
+    """Tests to ensure alert dashboard URLs use consistent patterns."""
+
+    def test_alert_dashboard_urls_use_template_pattern(self) -> None:
+        """All alert dashboard_url annotations should use consistent pattern.
+
+        Dashboard URLs in Prometheus alerts should use a template-friendly pattern:
+        - Pattern: {{ grafana_url }}/d/<dashboard-uid>
+        - This allows environment-specific URL configuration
+
+        Note: We check for consistency and document which files need updating.
+        """
+        import re
+
+        prometheus_dir = Path(__file__).parent.parent.parent.parent / "monitoring" / "prometheus"
+
+        if not prometheus_dir.exists():
+            pytest.skip("Prometheus directory not found")
+
+        # Pattern to find hardcoded Grafana URLs
+        hardcoded_pattern = re.compile(r'dashboard_url:\s*["\']https?://[^"\']+["\']')
+        template_pattern = re.compile(r'dashboard_url:\s*["\']?\{\{\s*grafana_url\s*\}\}')
+
+        hardcoded_files: dict[str, list[int]] = {}
+
+        for alert_file in prometheus_dir.rglob("*.yaml"):
+            content = alert_file.read_text()
+            lines = content.split("\n")
+
+            for i, line in enumerate(lines, 1):
+                if hardcoded_pattern.search(line) and not template_pattern.search(line):
+                    rel_path = str(alert_file.relative_to(prometheus_dir.parent.parent))
+                    if rel_path not in hardcoded_files:
+                        hardcoded_files[rel_path] = []
+                    hardcoded_files[rel_path].append(i)
+
+        for alert_file in prometheus_dir.rglob("*.yml"):
+            content = alert_file.read_text()
+            lines = content.split("\n")
+
+            for i, line in enumerate(lines, 1):
+                if hardcoded_pattern.search(line) and not template_pattern.search(line):
+                    rel_path = str(alert_file.relative_to(prometheus_dir.parent.parent))
+                    if rel_path not in hardcoded_files:
+                        hardcoded_files[rel_path] = []
+                    hardcoded_files[rel_path].append(i)
+
+        if hardcoded_files:
+            msg = "\n".join(f"  {path}: lines {lines}" for path, lines in sorted(hardcoded_files.items()))
+            pytest.fail(
+                f"Found {len(hardcoded_files)} alert files with hardcoded Grafana URLs:\n{msg}\n\n"
+                "Alert dashboard_url annotations should use the pattern:\n"
+                '  dashboard_url: "{{ grafana_url }}/d/<dashboard-uid>"\n\n'
+                "This allows environment-specific configuration via Alertmanager templates."
+            )
+
+
 class TestSyncGrafanaDashboardsIntegration:
     """Integration tests using actual project directories."""
 

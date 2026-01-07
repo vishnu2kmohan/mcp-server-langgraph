@@ -1,7 +1,3 @@
-# Synced from: monitoring/prometheus/rules/resilience-alerts.yaml
-# Namespace for Mimir ruler compatibility
-namespace: resilience
-
 groups:
 - name: resilience.circuit_breaker
   interval: 30s

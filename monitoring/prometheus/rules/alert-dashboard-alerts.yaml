@@ -1,0 +1,266 @@
+groups:
+- name: alerts.ai_recommendation
+  interval: 30s
+  rules:
+  - alert: AIRecommendationFailureRateHigh
+    expr: |
+      rate(alerts_recommendation_failed[5m]) /
+      (rate(alerts_recommendation_generated[5m]) + rate(alerts_recommendation_failed[5m]) + 0.001) > 0.2
+    for: 5m
+    labels:
+      severity: warning
+      team: platform
+    annotations:
+      summary: High AI recommendation failure rate ({{ $value | humanizePercentage
+        }})
+      description: |
+        AI recommendation generation is failing at {{ $value | humanizePercentage }}.
+        This may indicate issues with the LLM provider or prompt configuration.
+
+        Investigate:
+        1. Check LiteLLM configuration and API keys
+        2. Review LLM provider status pages
+        3. Check recommendation service logs
+
+        Impact: Admins may not receive AI-powered root cause analysis for alerts.
+      runbook_url: https://docs/runbooks/ALERT_REMEDIATION.md#ai-recommendation-not-loading
+      dashboard_url: '{{ grafana_url }}/d/alert-dashboard'
+  - alert: AIRecommendationGenerationSlow
+    expr: histogram_quantile(0.95, rate(alerts_recommendation_duration_bucket[5m]))
+      > 10
+    for: 5m
+    labels:
+      severity: warning
+      team: platform
+    annotations:
+      summary: 'AI recommendation generation slow (p95: {{ $value | humanizeDuration
+        }})'
+      description: |
+        AI recommendation p95 latency is {{ $value | humanizeDuration }}, exceeding 10s threshold.
+        This may indicate LLM provider latency issues or complex prompts.
+
+        Investigate:
+        1. Check LLM provider response times
+        2. Review recent prompt changes
+        3. Consider using a faster model for recommendations
+      runbook_url: https://docs/runbooks/ALERT_REMEDIATION.md#ai-recommendation-not-loading
+      dashboard_url: '{{ grafana_url }}/d/llm-performance/llm-performance'
+  - alert: AIRecommendationCacheHitRateLow
+    expr: |
+      rate(alerts_recommendation_cache_hits[5m]) /
+      (rate(alerts_recommendation_cache_hits[5m]) + rate(alerts_recommendation_cache_misses[5m]) + 0.001) < 0.3
+    for: 15m
+    labels:
+      severity: info
+      team: platform
+    annotations:
+      summary: Low AI recommendation cache hit rate ({{ $value | humanizePercentage
+        }})
+      description: |
+        AI recommendation cache hit rate is {{ $value | humanizePercentage }}.
+        Many requests are resulting in LLM calls rather than cached responses.
+
+        This may indicate:
+        - High volume of new/unique alerts
+        - Cache TTL too short
+        - Normal behavior during incident escalation
+- name: alerts.rate_limiting
+  interval: 30s
+  rules:
+  - alert: AlertRateLimitExceededHigh
+    expr: rate(alerts_rate_limit_exceeded[5m]) > 0.5
+    for: 5m
+    labels:
+      severity: warning
+      team: platform
+    annotations:
+      summary: Alert API rate limit frequently exceeded ({{ $value | humanize }}/s)
+      description: |
+        Alert API endpoints are hitting rate limits at {{ $value | humanize }}/s.
+        Affected endpoint: {{ $labels.endpoint }}
+
+        This may indicate:
+        - Automation hammering the API
+        - Legitimate high demand during incident
+        - Rate limits configured too low
+
+        Consider:
+        - Reviewing client request patterns
+        - Adjusting RATE_LIMIT_RECOMMENDATION_GET_RPM (current: 60)
+        - Adjusting RATE_LIMIT_RECOMMENDATION_REGENERATE_RPM (current: 20)
+      runbook_url: https://docs/runbooks/ALERT_REMEDIATION.md#troubleshooting
+      dashboard_url: '{{ grafana_url }}/d/langgraph-agent/overview'
+- name: alerts.remediation
+  interval: 30s
+  rules:
+  - alert: RemediationExecutionFailureRateHigh
+    expr: |
+      rate(alerts_remediation_execution_failed[5m]) /
+      (rate(alerts_remediation_execution_success[5m]) + rate(alerts_remediation_execution_failed[5m]) + 0.001) > 0.3
+    for: 5m
+    labels:
+      severity: warning
+      team: platform
+    annotations:
+      summary: High remediation execution failure rate ({{ $value | humanizePercentage
+        }})
+      description: |
+        Approved remediations are failing at {{ $value | humanizePercentage }}.
+
+        Investigate:
+        1. Check remediation command validation
+        2. Verify RBAC permissions for remediation service account
+        3. Review executor logs for specific errors
+
+        Impact: Automated remediation may not be effective.
+      runbook_url: https://docs/runbooks/ALERT_REMEDIATION.md#remediation-execution-failed
+      dashboard_url: '{{ grafana_url }}/d/langgraph-agent/overview'
+  - alert: RemediationCommandsBlockedHigh
+    expr: rate(alerts_remediation_command_blocked[5m]) > 0.1
+    for: 5m
+    labels:
+      severity: info
+      team: platform
+    annotations:
+      summary: Remediation commands being blocked ({{ $value | humanize }}/s)
+      description: |
+        Remediation commands are being blocked by security validation.
+        Reason: {{ $labels.reason }}
+
+        This may indicate:
+        - AI generating dangerous commands
+        - Overly restrictive security rules
+        - Misconfigured allowed command prefixes
+
+        Review: Check command validation rules in the executor.
+  - alert: RemediationExecutionSlow
+    expr: |-
+      histogram_quantile(0.95, rate(alerts_remediation_execution_duration_bucket[5m])) > 60
+    for: 5m
+    labels:
+      severity: warning
+      team: platform
+    annotations:
+      summary: 'Remediation execution slow (p95: {{ $value | humanizeDuration }})'
+      description: |
+        Remediation command execution p95 latency is {{ $value | humanizeDuration }}.
+        This exceeds the 60s warning threshold.
+
+        Investigate:
+        - Check if commands are timing out
+        - Review command complexity
+        - Consider breaking into smaller steps
+      dashboard_url: '{{ grafana_url }}/d/llm-performance/llm-performance'
+  - alert: RemediationRejectionRateHigh
+    expr: |
+      rate(alerts_remediation_rejected[5m]) /
+      (rate(alerts_remediation_approved[5m]) + rate(alerts_remediation_rejected[5m]) + 0.001) > 0.5
+    for: 30m
+    labels:
+      severity: info
+      team: platform
+    annotations:
+      summary: High remediation rejection rate ({{ $value | humanizePercentage }})
+      description: |
+        Admins are rejecting {{ $value | humanizePercentage }} of remediation recommendations.
+
+        This may indicate:
+        - AI recommendations not matching admin expectations
+        - Training needed on remediation workflow
+        - Overly aggressive AI suggestions
+- name: alerts.websocket
+  interval: 30s
+  rules:
+  - alert: AlertWebSocketNoConnections
+    expr: alerts_websocket_connections == 0
+    for: 30m
+    labels:
+      severity: info
+      team: platform
+    annotations:
+      summary: No admin WebSocket connections for alerts
+      description: |
+        No admin users are connected to the alert WebSocket stream.
+        This means alerts are not being displayed in real-time.
+
+        This may be normal during off-hours, but verify:
+        - Admin dashboard is accessible
+        - WebSocket endpoint is healthy
+        - No authentication issues
+  - alert: AlertWebSocketConnectionsHigh
+    expr: alerts_websocket_connections > 50
+    for: 5m
+    labels:
+      severity: warning
+      team: platform
+    annotations:
+      summary: Unusually high alert WebSocket connections ({{ $value }})
+      description: |
+        {{ $value }} WebSocket connections to the alert stream.
+        This is above the expected threshold of 50 concurrent admin connections.
+
+        Investigate:
+        - Check for connection leaks (clients not disconnecting)
+        - Verify expected admin user count
+        - Review for potential DoS
+      dashboard_url: '{{ grafana_url }}/d/langgraph-agent/overview'
+- name: alerts.volume
+  interval: 30s
+  rules:
+  - alert: AlertVolumeHigh
+    expr: rate(alerts_received[5m]) > 1
+    for: 5m
+    labels:
+      severity: warning
+      team: platform
+    annotations:
+      summary: High alert volume ({{ $value | humanize }}/s)
+      description: |
+        Receiving alerts at {{ $value | humanize }}/s.
+        Severity breakdown:
+        - Critical: {{ with query "rate(alerts_received{severity='critical'}[5m])" }}{{ . | first | value | humanize }}/s{{ end }}
+        - Warning: {{ with query "rate(alerts_received{severity='warning'}[5m])" }}{{ . | first | value | humanize }}/s{{ end }}
+
+        High alert volume may indicate:
+        - Infrastructure instability
+        - Alert rule misconfiguration (too sensitive)
+        - Cascading failures
+      runbook_url: https://docs/runbooks/ALERT_REMEDIATION.md
+      dashboard_url: '{{ grafana_url }}/d/langgraph-agent/overview'
+  - alert: AlertFilterRateHigh
+    expr: |
+      rate(alerts_filtered[5m]) /
+      (rate(alerts_received[5m]) + 0.001) > 0.7
+    for: 15m
+    labels:
+      severity: info
+      team: platform
+    annotations:
+      summary: Many alerts being filtered ({{ $value | humanizePercentage }})
+      description: |
+        {{ $value | humanizePercentage }} of incoming alerts are being filtered out.
+        This is expected behavior for info-level alerts.
+
+        Reason breakdown:
+        {{ range query "topk(3, rate(alerts_filtered[5m]))" }}
+        - {{ .Labels.reason }}: {{ .Value | humanize }}/s
+        {{ end }}
+- name: alerts.broadcast
+  interval: 30s
+  rules:
+  - alert: AlertBroadcastNoRecipients
+    expr: |
+      rate(alerts_broadcast[5m]) > 0 and alerts_websocket_connections == 0
+    for: 5m
+    labels:
+      severity: warning
+      team: platform
+    annotations:
+      summary: Alerts being broadcast but no WebSocket recipients
+      description: |
+        Alerts are being broadcast at {{ with query "rate(alerts_broadcast[5m])" }}{{ . | first | value | humanize }}/s{{ end }},
+        but there are no connected admin WebSocket clients to receive them.
+
+        Alerts are still being stored and can be viewed on dashboard refresh,
+        but real-time notifications are not reaching any admins.
+      dashboard_url: '{{ grafana_url }}/d/langgraph-agent/overview'
