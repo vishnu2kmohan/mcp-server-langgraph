@@ -24,7 +24,10 @@ Authorization:
     All endpoints require authentication. Chat sessions are user-owned resources.
 """
 
+from __future__ import annotations
+
 from collections.abc import AsyncIterator
+from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Annotated, Any, Literal
 from uuid import uuid4
 
@@ -35,10 +38,11 @@ from opentelemetry import trace
 from pydantic import BaseModel, Field
 
 from mcp_server_langgraph.auth.dependencies import get_current_user
+from mcp_server_langgraph.core.agent import create_agent_graph
 from mcp_server_langgraph.core.config import settings
 
 if TYPE_CHECKING:
-    pass
+    from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
 
 # Note: Cost tracking is now handled automatically by CostTrackingCallback
 # registered in llm/factory.py. No manual record_usage() calls needed here.
@@ -92,6 +96,15 @@ class ChatCompletionRequest(BaseModel):
     enable_thinking: bool = Field(
         default=True,
         description="Whether to enable extended thinking for supported models. Set to False to disable thinking even on models that support it.",
+    )
+    # Knowledge Base focus mode (Perplexity-style context retrieval control)
+    kb_focus: Literal["all", "kb_only", "web_only", "none"] = Field(
+        default="all",
+        description="Knowledge Base focus mode controlling context retrieval strategy. "
+        "'all' = use both KB and web search (default), "
+        "'kb_only' = only use KB/vector store for context, "
+        "'web_only' = only use web search for context, "
+        "'none' = disable context augmentation.",
     )
 
 
@@ -210,6 +223,36 @@ def model_supports_thinking(model_name: str) -> bool:
     return any(pattern in model_lower for pattern in thinking_patterns)
 
 
+# ==============================================================================
+# Dynamic Context Configuration
+# ==============================================================================
+
+# Supported embedding providers for DynamicContextLoader
+# Reference: src/mcp_server_langgraph/core/dynamic_context_loader.py
+SUPPORTED_EMBEDDING_PROVIDERS = frozenset(
+    {
+        "google_vertex",  # VertexAIEmbeddings (GCP WIF auth)
+        "google",  # GoogleGenerativeAIEmbeddings (API key auth)
+        "openai",  # OpenAIEmbeddings
+        "local",  # SentenceTransformer (no auth needed)
+        "huggingface",  # HuggingFaceEmbeddings
+    }
+)
+
+
+@dataclass
+class DynamicContextConfigResult:
+    """Result of dynamic context configuration validation.
+
+    Used by validate_dynamic_context_config() to report configuration status
+    before attempting to initialize DynamicContextLoader.
+    """
+
+    is_valid: bool = False
+    missing_config: list[str] = field(default_factory=list)
+    guidance: str | None = None
+
+
 # Service Interface
 
 
@@ -230,6 +273,65 @@ class ChatService:
     async def get_history(self, session_id: str) -> list[dict[str, Any]] | None:
         """Get chat history for a session. Returns None if not found."""
         raise NotImplementedError
+
+
+def _build_langgraph_messages(
+    messages: list[dict[str, Any]],
+    record_metrics: bool = True,
+) -> list[HumanMessage | AIMessage | SystemMessage]:
+    """Build properly role-mapped LangChain messages for LangGraph.
+
+    Converts a list of chat message dicts to LangChain message objects.
+    This is used by both _stream_via_langgraph and _stream_via_llm_factory
+    to ensure consistent role mapping.
+
+    Also records token usage metrics for monitoring (Phase 4.1).
+
+    Args:
+        messages: List of chat messages with 'role' and 'content' keys
+        record_metrics: Whether to record token usage metrics (default: True)
+
+    Returns:
+        List of LangChain message objects (HumanMessage, AIMessage, SystemMessage)
+    """
+    from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
+
+    from mcp_server_langgraph.observability.telemetry import metrics
+
+    langchain_messages: list[HumanMessage | AIMessage | SystemMessage] = []
+    role_counts = {"system": 0, "user": 0, "assistant": 0}
+    total_chars = 0
+
+    for msg in messages:
+        role = msg.get("role", "user")
+        content = msg.get("content", "")
+        total_chars += len(content)
+
+        if role == "system":
+            langchain_messages.append(SystemMessage(content=content))
+            role_counts["system"] += 1
+        elif role == "assistant":
+            langchain_messages.append(AIMessage(content=content))
+            role_counts["assistant"] += 1
+        else:
+            langchain_messages.append(HumanMessage(content=content))
+            role_counts["user"] += 1
+
+    # Record metrics for monitoring token usage (Phase 4.1)
+    if record_metrics and langchain_messages:
+        # Record message count histogram
+        metrics.conversation_message_count.record(len(langchain_messages))
+
+        # Estimate tokens (rough: ~4 chars per token)
+        estimated_tokens = total_chars // 4
+        metrics.conversation_token_estimate.record(estimated_tokens)
+
+        # Record by role
+        for role, count in role_counts.items():
+            if count > 0:
+                metrics.conversation_by_role.add(count, {"role": role})
+
+    return langchain_messages
 
 
 class ChatServiceImpl(ChatService):
@@ -293,6 +395,31 @@ class ChatServiceImpl(ChatService):
         return self._llm_factory
 
     @property
+    def langgraph_agent(self) -> Any | None:
+        """Get the LangGraph agent, lazily initializing if needed.
+
+        This enables DynamicContextLoader integration with Connected Chat.
+        The agent graph is built with settings from core.config which respects
+        the enable_dynamic_context_loading feature flag.
+
+        Returns:
+            Compiled LangGraph agent with DynamicContextLoader if enabled,
+            or None if initialization fails.
+        """
+        if self._langgraph_agent is None:
+            try:
+                from mcp_server_langgraph.observability.telemetry import logger
+
+                self._langgraph_agent = create_agent_graph()
+                logger.info("LangGraph agent lazily initialized for ChatServiceImpl")
+            except Exception as e:
+                from mcp_server_langgraph.observability.telemetry import logger
+
+                logger.warning(f"Failed to initialize LangGraph agent: {e}")
+                # Return None - caller should fallback to LLM factory
+        return self._langgraph_agent
+
+    @property
     def router_agent(self) -> Any | None:
         """Get the router agent, lazily initializing if needed."""
         if self._router_agent is None:
@@ -302,6 +429,69 @@ class ChatServiceImpl(ChatService):
 
                 self._router_agent = RouterAgent(llm_factory=self.llm_factory)
         return self._router_agent
+
+    def validate_dynamic_context_config(self) -> DynamicContextConfigResult:
+        """Validate configuration required for dynamic context loading.
+
+        Performs preflight checks before attempting to initialize DynamicContextLoader.
+        Checks Qdrant URL, embedding provider, and required credentials.
+
+        Returns:
+            DynamicContextConfigResult with validation status and guidance.
+        """
+        # If dynamic context loading is disabled, return valid (no validation needed)
+        if not settings.enable_dynamic_context_loading:
+            return DynamicContextConfigResult(is_valid=True)
+
+        missing: list[str] = []
+        guidance_parts: list[str] = []
+
+        # Check Qdrant configuration
+        if not settings.qdrant_url:
+            missing.append("qdrant_url")
+            guidance_parts.append(
+                "Qdrant URL is required for dynamic context loading. "
+                "Set QDRANT_URL environment variable or qdrant_url in settings."
+            )
+
+        # Check embedding provider is supported
+        provider = settings.embedding_provider
+        if provider not in SUPPORTED_EMBEDDING_PROVIDERS:
+            missing.append("embedding_provider")
+            supported_list = ", ".join(sorted(SUPPORTED_EMBEDDING_PROVIDERS))
+            guidance_parts.append(
+                f"Unsupported embedding provider '{provider}'. "
+                f"Supported providers: {supported_list}. "
+                "google_vertex (recommended for GCP) uses Workload Identity Federation."
+            )
+
+        # Check provider-specific credentials
+        if provider == "google":
+            # GoogleGenerativeAIEmbeddings requires API key
+            if not getattr(settings, "google_api_key", None):
+                missing.append("google_api_key")
+                guidance_parts.append(
+                    "Google embedding provider requires GOOGLE_API_KEY. "
+                    "Set GOOGLE_API_KEY environment variable or use google_vertex "
+                    "provider with GCP Workload Identity Federation (no API key needed)."
+                )
+        elif provider == "openai":
+            # OpenAI embeddings require API key
+            if not getattr(settings, "openai_api_key", None):
+                missing.append("openai_api_key")
+                guidance_parts.append(
+                    "OpenAI embedding provider requires OPENAI_API_KEY. Set OPENAI_API_KEY environment variable."
+                )
+
+        # Build result
+        if missing:
+            return DynamicContextConfigResult(
+                is_valid=False,
+                missing_config=missing,
+                guidance=" ".join(guidance_parts),
+            )
+
+        return DynamicContextConfigResult(is_valid=True, guidance="")
 
     def _get_current_trace_id(self) -> str | None:
         """Get the current OpenTelemetry trace ID for observability correlation.
@@ -615,7 +805,7 @@ class ChatServiceImpl(ChatService):
         Yields:
             dict: Delta content dictionaries with optional thinking
         """
-        from langchain_core.messages import HumanMessage, SystemMessage
+        from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
 
         from mcp_server_langgraph.api.v1.mcp_bridge import ChatError
 
@@ -626,6 +816,8 @@ class ChatServiceImpl(ChatService):
             content = msg.get("content", "")
             if role == "system":
                 langchain_messages.append(SystemMessage(content=content))
+            elif role == "assistant":
+                langchain_messages.append(AIMessage(content=content))
             else:
                 langchain_messages.append(HumanMessage(content=content))
 
@@ -670,26 +862,26 @@ class ChatServiceImpl(ChatService):
         - current_node: Currently executing node ID
         - delta.content: Streaming content from LLM
         """
-        from langchain_core.messages import HumanMessage
 
         from mcp_server_langgraph.observability.telemetry import logger
 
-        agent = self._langgraph_agent
+        agent = self.langgraph_agent  # Uses lazy initialization property
         if not agent or not hasattr(agent, "astream_events"):
             raise ValueError("LangGraph agent not configured or doesn't support astream_events")
 
-        # Build initial state from messages
-        last_user_message = ""
-        for msg in reversed(messages):
-            if msg.get("role") == "user":
-                last_user_message = msg.get("content", "")
-                break
+        # Build initial state from messages - use full conversation history
+        # with proper role mapping (Phase 4.1 fix)
+        langgraph_messages = _build_langgraph_messages(messages)
+
+        # Extract kb_focus from kwargs (default: "all" per ADR-0094)
+        kb_focus = kwargs.pop("kb_focus", "all")
 
         initial_state = {
-            "messages": [HumanMessage(content=last_user_message)],
+            "messages": langgraph_messages,
             "next_action": "",
             "user_id": kwargs.get("user_id"),
             "request_id": session_id,
+            "kb_focus": kb_focus,
         }
 
         config = {"configurable": {"thread_id": session_id}}
@@ -753,6 +945,18 @@ class ChatServiceImpl(ChatService):
                             "langgraph_edge": {
                                 "from": node_name,
                                 "to": trigger,
+                            }
+                        }
+
+                # Handle custom events (e.g., dynamic context loaded)
+                elif event_type == "on_custom":
+                    event_name = event.get("name", "")
+                    if event_name == "dynamic_context_loaded":
+                        data = event.get("data", {})
+                        yield {
+                            "context_loaded": {
+                                "refs_count": data.get("refs_count", 0),
+                                "tokens_loaded": data.get("tokens_loaded", 0),
                             }
                         }
 
@@ -883,13 +1087,21 @@ class ChatServiceImpl(ChatService):
                 }
 
         # Try LangGraph agent if requested (via routing or explicit flag) and configured
-        if use_langgraph and self._langgraph_agent is not None:
+        # Uses langgraph_agent property which lazily initializes if needed
+        if use_langgraph and self.langgraph_agent is not None:
             try:
                 async for chunk in self._stream_via_langgraph(session_id, messages, **kwargs):
                     yield chunk
                 return
             except Exception as e:
                 logger.warning(f"LangGraph streaming failed, falling back: {e}")
+                # Emit context_unavailable notice for fail-soft visibility
+                yield {
+                    "context_unavailable": {
+                        "reason": str(e),
+                        "fallback": "llm_factory",
+                    }
+                }
 
         # Try MCP agent if configured
         if self.mcp_bridge and self.mcp_bridge.is_configured:
@@ -990,6 +1202,7 @@ async def create_completion(
             reasoning_effort=request.reasoning_effort,
             enable_thinking=request.enable_thinking,
             user_id=user_id,
+            kb_focus=request.kb_focus,  # ADR-0094: KB Focus Mode for non-stream path
         )
         return ChatCompletionResponse(**response)
     except MCPElicitationRequiredError as e:
@@ -1035,6 +1248,7 @@ async def create_stream(
             resource_uris=request.resource_uris,
             reasoning_effort=request.reasoning_effort,
             enable_thinking=request.enable_thinking,
+            kb_focus=request.kb_focus,
             user_id=user_id,
         ):
             # Format as SSE

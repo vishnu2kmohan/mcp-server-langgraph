@@ -211,7 +211,6 @@ except ImportError:
 from mcp_server_langgraph.api.v1.ai_ux import (
     DisclosureAnalyzeRequest,
     DisclosureAnalyzeResponse,
-    DisclosureLevel,
     EmptyStateActionType,
     EmptyStateSuggestion,
     EmptyStateSuggestionsRequest,
@@ -1496,41 +1495,42 @@ Analyze the user's expertise level and recommend an appropriate disclosure level
         advanced_features = ["workflows", "mcp", "agents", "traces"]
         advanced_usage = sum(feature_usage.get(f, 0) for f in advanced_features)
 
-        # Determine current and recommended levels (use string values for ADR-0091)
+        # Determine current and recommended levels
+        # ADR-0091 Phase 9: Use string literals directly (DisclosureLevelStr type)
         if total_usage < 10:
-            current_level = DisclosureLevel.BEGINNER.value
-            recommended_level = DisclosureLevel.BEGINNER.value
+            current_level = "beginner"
+            recommended_level = "beginner"
             confidence = 0.9
         elif total_usage < 50:
-            current_level = DisclosureLevel.BEGINNER.value
+            current_level = "beginner"
             if advanced_usage > 5:
-                recommended_level = DisclosureLevel.INTERMEDIATE.value
+                recommended_level = "intermediate"
                 confidence = 0.75
             else:
-                recommended_level = DisclosureLevel.BEGINNER.value
+                recommended_level = "beginner"
                 confidence = 0.85
         elif total_usage < 200:
-            current_level = DisclosureLevel.INTERMEDIATE.value
+            current_level = "intermediate"
             if advanced_usage > 20:
-                recommended_level = DisclosureLevel.ADVANCED.value
+                recommended_level = "advanced"
                 confidence = 0.8
             else:
-                recommended_level = DisclosureLevel.INTERMEDIATE.value
+                recommended_level = "intermediate"
                 confidence = 0.85
         else:
-            current_level = DisclosureLevel.ADVANCED.value
+            current_level = "advanced"
             if advanced_usage > 100:
-                recommended_level = DisclosureLevel.EXPERT.value
+                recommended_level = "expert"
                 confidence = 0.7
             else:
-                recommended_level = DisclosureLevel.ADVANCED.value
+                recommended_level = "advanced"
                 confidence = 0.8
 
         # Determine unlock features
         unlock_features: list[str] = []
-        if recommended_level in [DisclosureLevel.INTERMEDIATE.value, DisclosureLevel.ADVANCED.value]:
+        if recommended_level in ["intermediate", "advanced"]:
             unlock_features.extend(["workflows", "traces"])
-        if recommended_level in [DisclosureLevel.ADVANCED.value, DisclosureLevel.EXPERT.value]:
+        if recommended_level in ["advanced", "expert"]:
             unlock_features.extend(["mcp", "agents", "workflow_builder"])
 
         # Generate personalized message (empty string if no upgrade, per ADR-0091)

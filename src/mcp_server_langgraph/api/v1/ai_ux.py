@@ -23,7 +23,7 @@ from enum import Enum
 from typing import TYPE_CHECKING, Annotated, Any, Literal
 
 from fastapi import APIRouter, Depends
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 from mcp_server_langgraph.auth.dependencies import get_current_user
 
@@ -323,32 +323,79 @@ class ErrorAnalyzeResponse(BaseModel):
 
 
 # Legacy models kept for backward compatibility (deprecated)
+# These models will be removed in v4.0 (scheduled: 2025-06-01)
 class ErrorInfo(BaseModel):
-    """Information about an error (deprecated - use ErrorAnalyzeRequest instead)."""
+    """Information about an error.
+
+    .. deprecated:: 3.0
+        Use :class:`ErrorAnalyzeRequest` instead. This class will be removed in v4.0.
+    """
 
     message: str
     name: str = "Error"
     stack_trace: str | None = None
 
+    @model_validator(mode="after")
+    def _emit_deprecation_warning(self) -> "ErrorInfo":
+        warnings.warn(
+            "ErrorInfo is deprecated. Use ErrorAnalyzeRequest instead. This class will be removed in v4.0 (2025-06-01).",
+            DeprecationWarning,
+            stacklevel=3,
+        )
+        return self
+
 
 class UserContext(BaseModel):
-    """User context for error analysis (deprecated)."""
+    """User context for error analysis.
+
+    .. deprecated:: 3.0
+        Use ``ErrorAnalyzeRequest.context`` dict instead. This class will be removed in v4.0.
+    """
 
     persona: str | None = None
     session_id: str | None = None
     recent_actions: list[str] = Field(default_factory=list)
 
+    @model_validator(mode="after")
+    def _emit_deprecation_warning(self) -> "UserContext":
+        warnings.warn(
+            "UserContext is deprecated. Use ErrorAnalyzeRequest.context dict instead. "
+            "This class will be removed in v4.0 (2025-06-01).",
+            DeprecationWarning,
+            stacklevel=3,
+        )
+        return self
+
 
 class ErrorClassification(BaseModel):
-    """Error classification result (deprecated)."""
+    """Error classification result.
+
+    .. deprecated:: 3.0
+        Use :class:`ErrorAnalyzeResponse` with ``error_type`` field instead.
+        This class will be removed in v4.0.
+    """
 
     category: ErrorCategory
     subcategory: str = "general"
     confidence: float = Field(ge=0, le=1)
 
+    @model_validator(mode="after")
+    def _emit_deprecation_warning(self) -> "ErrorClassification":
+        warnings.warn(
+            "ErrorClassification is deprecated. Use ErrorAnalyzeResponse.error_type instead. "
+            "This class will be removed in v4.0 (2025-06-01).",
+            DeprecationWarning,
+            stacklevel=3,
+        )
+        return self
+
 
 class RecoverySuggestion(BaseModel):
-    """A recovery suggestion for an error (deprecated - use RecoveryStep instead)."""
+    """A recovery suggestion for an error.
+
+    .. deprecated:: 3.0
+        Use :class:`RecoveryStep` instead. This class will be removed in v4.0.
+    """
 
     action: SuggestionAction
     label: str
@@ -356,13 +403,35 @@ class RecoverySuggestion(BaseModel):
     estimated_success: float = Field(ge=0, le=1, default=0.7)
     wait_time: int | None = None
 
+    @model_validator(mode="after")
+    def _emit_deprecation_warning(self) -> "RecoverySuggestion":
+        warnings.warn(
+            "RecoverySuggestion is deprecated. Use RecoveryStep instead. This class will be removed in v4.0 (2025-06-01).",
+            DeprecationWarning,
+            stacklevel=3,
+        )
+        return self
+
 
 class SimilarIssue(BaseModel):
-    """A similar resolved issue (deprecated)."""
+    """A similar resolved issue.
+
+    .. deprecated:: 3.0
+        Not used in aligned ADR-0091 schema. This class will be removed in v4.0.
+    """
 
     id: str
     resolution: str
     success_rate: float = Field(ge=0, le=1)
+
+    @model_validator(mode="after")
+    def _emit_deprecation_warning(self) -> "SimilarIssue":
+        warnings.warn(
+            "SimilarIssue is deprecated and not used in the aligned schema. This class will be removed in v4.0 (2025-06-01).",
+            DeprecationWarning,
+            stacklevel=3,
+        )
+        return self
 
 
 # =============================================================================
@@ -476,8 +545,13 @@ class MetricsInsightsResponse(BaseModel):
 
 
 # Legacy models kept for backward compatibility (deprecated)
+# These models will be removed in v4.0 (scheduled: 2025-06-01)
 class LegacyMetricInsight(BaseModel):
-    """A single metric insight (deprecated - use MetricInsight instead)."""
+    """A single metric insight.
+
+    .. deprecated:: 3.0
+        Use :class:`MetricInsight` instead. This class will be removed in v4.0.
+    """
 
     type: str  # 'anomaly' | 'trend' | 'pattern'
     dimension: str  # HEART dimension
@@ -487,15 +561,38 @@ class LegacyMetricInsight(BaseModel):
     suggested_actions: list[str] = Field(default_factory=list)
     detected_at: str | None = None
 
+    @model_validator(mode="after")
+    def _emit_deprecation_warning(self) -> "LegacyMetricInsight":
+        warnings.warn(
+            "LegacyMetricInsight is deprecated. Use MetricInsight instead. This class will be removed in v4.0 (2025-06-01).",
+            DeprecationWarning,
+            stacklevel=3,
+        )
+        return self
+
 
 class MetricPrediction(BaseModel):
-    """A metric prediction (deprecated - not used in aligned schema)."""
+    """A metric prediction.
+
+    .. deprecated:: 3.0
+        Not used in aligned ADR-0091 schema. This class will be removed in v4.0.
+    """
 
     metric: str
     current: float
     predicted: float
     confidence: float = Field(ge=0, le=1)
     drivers: list[str] = Field(default_factory=list)
+
+    @model_validator(mode="after")
+    def _emit_deprecation_warning(self) -> "MetricPrediction":
+        warnings.warn(
+            "MetricPrediction is deprecated and not used in the aligned schema. "
+            "This class will be removed in v4.0 (2025-06-01).",
+            DeprecationWarning,
+            stacklevel=3,
+        )
+        return self
 
 
 # =============================================================================
