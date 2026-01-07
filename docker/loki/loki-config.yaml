@@ -19,6 +19,9 @@ server:
   http_listen_port: 3100
   grpc_listen_port: 9096
   log_level: warn
+  # JSON-structured logging for LGTM stack integration (Loki/Alloy parsing)
+  # Reference: https://grafana.com/docs/loki/latest/configure/#server
+  log_format: json
 
 common:
   instance_addr: 127.0.0.1

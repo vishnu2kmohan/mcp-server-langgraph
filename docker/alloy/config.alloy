@@ -11,10 +11,12 @@
 // =============================================================================
 // LOGGING CONFIGURATION
 // =============================================================================
+// JSON-structured logging for LGTM stack integration (Loki/Alloy parsing)
+// Reference: https://grafana.com/docs/alloy/latest/reference/config-blocks/logging/
 
 logging {
   level  = "warn"
-  format = "logfmt"
+  format = "json"
 }
 
 // =============================================================================
