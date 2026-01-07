@@ -2,32 +2,56 @@
 
 This directory contains pre-built Grafana dashboards for monitoring the MCP Server with LangGraph.
 
-## Folder Structure (v2.2.0)
+## Folder Structure (v2.3.0)
 
-Dashboards are organized into logical folders for easier navigation:
+Dashboards are organized into 8 logical folders (36 dashboards total):
 
 ```
 dashboards/
-├── Overview/              # Main overview dashboard
-│   └── langgraph-agent.json
-├── Application/           # Application-specific dashboards
+├── AI/                    # AI/ML observability (5 dashboards)
+│   ├── ai-recommendation-quality.json
+│   ├── ai-suggestions.json
+│   ├── ai-ux-metrics.json
+│   ├── llm-observability-dashboard.json
+│   └── studio-ai-intelligence.json
+├── Application/           # Core application metrics (14 dashboards)
+│   ├── alert-dashboard.json
+│   ├── conversation-token-usage.json
+│   ├── cost-monitoring.json
+│   ├── hitl-metrics.json
 │   ├── llm-performance.json
+│   ├── multi-agent-cost-tracking.json
+│   ├── orchestrator-metrics.json
+│   ├── orchestrator-status.json
+│   ├── prompt-metrics-dashboard.json
+│   ├── push-analytics.json
+│   ├── session-lifecycle-dashboard.json
 │   ├── skills-agents.json
-│   └── unified-api.json
-├── Auth/                  # Authentication & Authorization
+│   ├── unified-api.json
+│   └── visual-verification.json
+├── Auth/                  # Authentication & Authorization (4 dashboards)
 │   ├── authentication.json
-│   ├── openfga.json
 │   ├── keycloak.json
+│   ├── openfga.json
 │   └── security.json
-├── Infrastructure/        # Infrastructure monitoring
+├── Compliance/            # Audit & Compliance (3 dashboards)
+│   ├── audit-compliance.json
+│   ├── sla-monitoring.json
+│   └── soc2-compliance.json
+├── Infrastructure/        # Infrastructure metrics (5 dashboards)
 │   ├── lgtm-stack.json
 │   ├── postgresql.json
-│   ├── redis-sessions.json
 │   ├── qdrant.json
+│   ├── redis-sessions.json
 │   └── traefik.json
-└── Compliance/            # Compliance & SLA
-    ├── sla-monitoring.json
-    └── soc2-compliance.json (includes GDPR metrics)
+├── Overview/              # High-level overview (1 dashboard)
+│   └── langgraph-agent.json
+├── Resilience/            # SRE golden signals (2 dashboards)
+│   ├── golden-signals-dashboard.json
+│   └── resilience-patterns.json
+└── WebSocket/             # Real-time streaming (2 dashboards)
+    ├── llm-streaming.json
+    └── websocket-telemetry.json
 ```
 
 > **Note**: The separate `builder.json` and `playground.json` dashboards have been consolidated
