@@ -92,6 +92,10 @@ ruler:
       store: inmemory
 
 limits_config:
+  # Retention period for TSDB schema (compactor deletes data older than this)
+  # Must be set here for compactor.retention_enabled to take effect
+  # Reference: https://grafana.com/docs/loki/latest/operations/storage/retention/
+  retention_period: 168h  # 7 days
   # Disable metric aggregation - pattern ingester metrics require a remote write URL
   # which isn't needed for test environments. The pattern_ingester.enabled is still
   # required for Loki 3.x to avoid "empty ring" errors, but aggregation can be off.
