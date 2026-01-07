@@ -1606,6 +1606,23 @@ services:
       # Disable login form to enforce SSO for UI users
       # API access uses basic auth with admin credentials (see MCP server config)
       - GF_AUTH_DISABLE_LOGIN_FORM=true
+      # ======================================================================
+      # Session Token Rotation (prevents "token needs to be rotated" errors)
+      # ======================================================================
+      # Rotate tokens every 10 minutes to prevent stale session issues
+      - GF_AUTH_TOKEN_ROTATION_INTERVAL_MINUTES=10
+      # Maximum inactive lifetime before forcing re-authentication
+      - GF_AUTH_LOGIN_MAXIMUM_INACTIVE_LIFETIME_DURATION=30m
+      # Maximum lifetime for login tokens (absolute expiry)
+      - GF_AUTH_LOGIN_MAXIMUM_LIFETIME_DURATION=8h
+      # ======================================================================
+      # Grafana Live Configuration (WebSocket real-time features)
+      # ======================================================================
+      # Enable Grafana Live for real-time dashboard updates and streaming
+      # Session token rotation settings above prevent stale session 401 errors
+      - GF_LIVE_MAX_CONNECTIONS=100
+      # Allow all origins for WebSocket connections in test environment
+      - GF_LIVE_ALLOWED_ORIGINS=*
     volumes:
       - grafana-data:/var/lib/grafana  # Named volume prevents SQLite locking issues
       - ./monitoring/grafana/datasources.yml:/etc/grafana/provisioning/datasources/datasources.yml:ro
