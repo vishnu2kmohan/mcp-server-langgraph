@@ -1001,9 +1001,8 @@ class TestRunbookFileExistence:
                                                 f"{rel_path}: {alert_name} -> #{anchor} (missing in {runbook_path})"
                                             )
 
-        # Track known issues as technical debt - prevent regression
-        # As runbook sections are added, reduce this threshold to 0
-        known_missing_anchors = 10  # TODO: Reduce to 0 as anchors are added
+        # All runbook anchors should exist - no known missing anchors
+        known_missing_anchors = 0
 
         if len(runbook_anchor_issues) > known_missing_anchors:
             pytest.fail(

@@ -266,7 +266,7 @@ groups:
         annotations:
           summary: "MCP Server is down"
           description: "MCP Server has been down for more than 2 minutes."
-          runbook_url: "https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/monitoring/runbooks/langgraph-agent-health.md#servicedown"
+          runbook_url: "https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/monitoring/runbooks/langgraph-agent-health.md#mcpserverdown"
 
       # Keycloak down
       - alert: KeycloakDown

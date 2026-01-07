@@ -210,3 +210,83 @@ severity: warning
 ### Escalation
 - **On-call SRE**: Slack #sre-oncall
 - **Performance Team**: For persistent issues
+
+---
+
+## MCPServerDown
+
+### Alert Definition
+```yaml
+alert: MCPServerDown
+expr: up{job=~".*mcp.*server.*"} == 0
+for: 2m
+severity: critical
+```
+
+### Severity
+**CRITICAL** - Immediate response required
+
+### Impact
+- MCP Server functionality completely unavailable
+- All API endpoints unreachable
+- Agent interactions blocked
+- Downstream services may experience failures
+
+### Diagnosis
+
+1. **Check MCP Server pod/container status**
+   ```bash
+   # Kubernetes
+   kubectl get pods -l app=mcp-server-langgraph -n mcp-server
+   kubectl describe pod -l app=mcp-server-langgraph -n mcp-server
+
+   # Docker Compose
+   docker compose ps mcp-server-langgraph
+   docker compose logs mcp-server-langgraph --tail=100
+   ```
+
+2. **Check health endpoints**
+   ```bash
+   curl http://mcp-server:8000/health/live
+   curl http://mcp-server:8000/health/ready
+   ```
+
+3. **Check recent events and logs**
+   ```bash
+   kubectl get events -n mcp-server --sort-by='.lastTimestamp' | tail -20
+   kubectl logs -l app=mcp-server-langgraph -n mcp-server --tail=200
+   ```
+
+4. **Check dependencies**
+   - PostgreSQL: `kubectl get pods -l app=postgres -n mcp-server`
+   - Redis: `kubectl get pods -l app=redis -n mcp-server`
+   - Keycloak: `curl -k https://keycloak:8443/health`
+
+### Resolution
+
+1. **If pod is CrashLoopBackOff**
+   - Check logs for startup errors
+   - Verify all environment variables are set
+   - Check secret mounting (API keys, database credentials)
+
+2. **If pod is Pending**
+   - Check node resources
+   - Verify PVC claims are bound
+   - Check for scheduling constraints
+
+3. **If pod is OOMKilled**
+   - Increase memory limits
+   - Check for memory leaks in recent deployments
+
+4. **Quick recovery**
+   ```bash
+   # Kubernetes
+   kubectl rollout restart deployment/mcp-server-langgraph -n mcp-server
+
+   # Docker Compose
+   docker compose restart mcp-server-langgraph
+   ```
+
+### Escalation
+- **On-call SRE**: Slack #sre-oncall
+- **Service Owner**: @mcp-server-team
