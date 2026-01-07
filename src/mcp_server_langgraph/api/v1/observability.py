@@ -624,8 +624,8 @@ class ObservabilityServiceImpl(ObservabilityService):
         latency_p99 = None
 
         try:
-            # Query requests_total
-            requests_result = await self.metrics.query_instant("requests_total")
+            # Total requests across all endpoints/methods/statuses
+            requests_result = await self.metrics.query_instant("sum(http_requests_total)")
             if requests_result.series:
                 val = requests_result.series[0].latest_value
                 if val is not None:
@@ -634,8 +634,8 @@ class ObservabilityServiceImpl(ObservabilityService):
             logger.debug("Failed to query requests_total: %s", e)
 
         try:
-            # Query errors_total
-            errors_result = await self.metrics.query_instant("errors_total")
+            # Total 5xx responses
+            errors_result = await self.metrics.query_instant('sum(http_requests_total{status=~"5.."})')
             if errors_result.series:
                 val = errors_result.series[0].latest_value
                 if val is not None:
@@ -644,17 +644,28 @@ class ObservabilityServiceImpl(ObservabilityService):
             logger.debug("Failed to query errors_total: %s", e)
 
         try:
-            # Query average latency (try histogram_quantile or avg)
-            latency_result = await self.metrics.query_instant(
-                "histogram_quantile(0.5, sum(rate(http_request_duration_seconds_bucket[5m])) by (le))"
+            # Mean latency over last 5m (seconds -> ms)
+            mean_latency = await self.metrics.query_instant(
+                "sum(rate(http_request_duration_seconds_sum[5m])) / sum(rate(http_request_duration_seconds_count[5m]))"
             )
-            if latency_result.series:
-                val = latency_result.series[0].latest_value
+            if mean_latency.series:
+                val = mean_latency.series[0].latest_value
                 if val is not None:
-                    avg_latency_ms = val * 1000  # Convert seconds to ms
-                    latency_p50 = val
+                    avg_latency_ms = float(val) * 1000.0
         except Exception as e:
             logger.debug("Failed to query avg latency: %s", e)
+
+        try:
+            # P50 latency (seconds)
+            p50_result = await self.metrics.query_instant(
+                "histogram_quantile(0.5, sum(rate(http_request_duration_seconds_bucket[5m])) by (le))"
+            )
+            if p50_result.series:
+                val = p50_result.series[0].latest_value
+                if val is not None:
+                    latency_p50 = float(val)
+        except Exception as e:
+            logger.debug("Failed to query p50 latency: %s", e)
 
         try:
             # Query p99 latency
@@ -664,8 +675,8 @@ class ObservabilityServiceImpl(ObservabilityService):
             if p99_result.series:
                 val = p99_result.series[0].latest_value
                 if val is not None:
-                    p99_latency_ms = val * 1000  # Convert seconds to ms
-                    latency_p99 = val
+                    p99_latency_ms = float(val) * 1000.0  # Convert seconds to ms
+                    latency_p99 = float(val)
         except Exception as e:
             logger.debug("Failed to query p99 latency: %s", e)
 
@@ -677,7 +688,7 @@ class ObservabilityServiceImpl(ObservabilityService):
             if p95_result.series:
                 val = p95_result.series[0].latest_value
                 if val is not None:
-                    latency_p95 = val
+                    latency_p95 = float(val)
         except Exception as e:
             logger.debug("Failed to query p95 latency: %s", e)
 
@@ -692,8 +703,8 @@ class ObservabilityServiceImpl(ObservabilityService):
             logger.debug("Failed to query tokens_used: %s", e)
 
         try:
-            # Query active_sessions (gauge metric)
-            sessions_result = await self.metrics.query_instant("active_sessions")
+            # Active sessions (sum across backends)
+            sessions_result = await self.metrics.query_instant("sum(auth_sessions_active)")
             if sessions_result.series:
                 val = sessions_result.series[0].latest_value
                 if val is not None:

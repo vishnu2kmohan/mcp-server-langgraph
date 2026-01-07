@@ -356,7 +356,7 @@ async def oauth2_login(
         key="oauth2_code_verifier",
         value=code_verifier,
         httponly=True,
-        secure=settings.environment != "development",
+        secure=settings.environment not in ("development", "test"),
         samesite="lax",
         max_age=600,  # 10 minutes
     )
@@ -364,7 +364,7 @@ async def oauth2_login(
         key="oauth2_state",
         value=state,
         httponly=True,
-        secure=settings.environment != "development",
+        secure=settings.environment not in ("development", "test"),
         samesite="lax",
         max_age=600,  # 10 minutes
     )
@@ -372,7 +372,7 @@ async def oauth2_login(
         key="oauth2_redirect_uri",
         value=actual_redirect_uri,
         httponly=True,
-        secure=settings.environment != "development",
+        secure=settings.environment not in ("development", "test"),
         samesite="lax",
         max_age=600,  # 10 minutes
     )

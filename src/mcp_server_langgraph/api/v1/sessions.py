@@ -1911,7 +1911,9 @@ async def get_session_trace(
 
     if tempo_client is not None:
         try:
-            result = await tempo_client.search_traces(tags={"session.id": session_id})
+            # Use TraceQL attribute search for OTEL semantic attributes (Tempo tag search
+            # does not reliably match dotted OTEL attribute names).
+            result = await tempo_client.search_by_attribute(attribute="session.id", value=session_id)
             if result and result.traces:
                 # Map first trace's spans to TraceStep
                 trace = result.traces[0]
