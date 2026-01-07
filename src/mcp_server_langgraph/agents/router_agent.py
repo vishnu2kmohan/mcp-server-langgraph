@@ -184,29 +184,27 @@ class RouterAgent:
         Returns:
             RouterOutput with classification and recommendations
         """
+        from langchain_core.messages import HumanMessage, SystemMessage
+
         try:
-            # Build messages for classification
+            # Build messages for classification using LangChain message types
             # Use dynamic template with available tools injected at runtime
             system_prompt = get_orchestration_router_prompt(available_tools=tools_available or [])
-            messages = [
-                {"role": "system", "content": system_prompt},
-                {"role": "user", "content": message},
+            langchain_messages = [
+                SystemMessage(content=system_prompt),
+                HumanMessage(content=message),
             ]
 
-            # Build kwargs
-            kwargs: dict[str, Any] = {"messages": messages}
+            # Build kwargs for ainvoke
+            kwargs: dict[str, Any] = {}
             if self.model_id:
                 kwargs["model"] = self.model_id
 
-            # Call LLM for classification
-            response = await self.llm_factory.create_completion(**kwargs)
+            # Call LLM for classification using ainvoke (returns AIMessage)
+            response = await self.llm_factory.ainvoke(langchain_messages, **kwargs)
 
-            # Extract content
-            content = ""
-            if hasattr(response, "choices") and response.choices:
-                choice = response.choices[0]
-                if hasattr(choice, "message") and hasattr(choice.message, "content"):
-                    content = choice.message.content or ""
+            # Extract content from AIMessage
+            content = response.content or ""
 
             # Parse JSON response
             try:

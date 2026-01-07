@@ -6,6 +6,13 @@ with maximum iteration limits, termination condition evaluation,
 continue-on-error option, and iteration state tracking.
 
 Reference: Google ADK LoopAgent pattern
+
+Naming Note:
+    LoopAgent is named "Agent" rather than "Orchestrator" to maintain
+    terminology parity with Google ADK's LoopAgent pattern. Internally,
+    it extends BaseOrchestrator since it coordinates iteration execution,
+    but the public name follows Google ADK conventions for consistency
+    with developers familiar with that framework.
 """
 
 from __future__ import annotations
@@ -73,6 +80,10 @@ class LoopAgent(BaseOrchestrator[LoopTask, LoopIterationResult]):
 
     Implements the LoopAgent pattern from Google ADK for running
     a task repeatedly until a condition is met or max iterations reached.
+
+    Note:
+        This class is named "LoopAgent" (not "LoopOrchestrator") to match
+        Google ADK terminology. It extends BaseOrchestrator internally.
 
     Args:
         max_iterations: Maximum number of iterations (required)

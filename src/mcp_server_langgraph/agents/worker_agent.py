@@ -94,6 +94,8 @@ class WorkerAgent(BaseAgent):
         Returns:
             AgentResult with content, success status, and model info
         """
+        from langchain_core.messages import HumanMessage, SystemMessage
+
         # Check for cancellation before starting
         if cancel_event and cancel_event.is_set():
             return AgentResult(
@@ -103,10 +105,57 @@ class WorkerAgent(BaseAgent):
             )
 
         try:
-            # Build completion kwargs
-            kwargs: dict[str, Any] = {
-                "messages": [{"role": "user", "content": request.message}],
-            }
+            # Resolve capabilities if provider is set (ADR-0092)
+            resolved_capabilities = None
+            if self.capability_provider is not None:
+                resolved_capabilities = await self._resolve_capabilities(request)
+
+            # Build LangChain messages
+            langchain_messages = []
+
+            # Inject memory context as SystemMessage if available
+            if resolved_capabilities and resolved_capabilities.memory:
+                memory = resolved_capabilities.memory
+                memory_parts = []
+
+                # Add relevant memories
+                if memory.relevant_memories:
+                    for mem in memory.relevant_memories:
+                        memory_parts.append(str(mem))
+
+                # Add working memory summary
+                if memory.working_memory:
+                    for key, value in memory.working_memory.items():
+                        memory_parts.append(f"{key}: {value}")
+
+                if memory_parts:
+                    memory_content = "\n".join(memory_parts)
+                    langchain_messages.append(SystemMessage(content=f"Context from memory:\n{memory_content}"))
+
+            # Add user message
+            langchain_messages.append(HumanMessage(content=request.message))
+
+            # Build kwargs for ainvoke
+            kwargs: dict[str, Any] = {}
+
+            # Add resolved tools if available
+            if resolved_capabilities and resolved_capabilities.tools:
+                # Convert ToolSpec to LangChain tools
+                langchain_tools = []
+                for tool_spec in resolved_capabilities.tools:
+                    if tool_spec.callable is not None:
+                        # Create a structured tool from callable
+                        from langchain_core.tools import StructuredTool
+
+                        langchain_tool = StructuredTool.from_function(
+                            func=tool_spec.callable,
+                            name=tool_spec.name,
+                            description=tool_spec.description,
+                        )
+                        langchain_tools.append(langchain_tool)
+
+                if langchain_tools:
+                    kwargs["tools"] = langchain_tools
 
             # Add model override if specified
             if self.model_id:
@@ -129,26 +178,24 @@ class WorkerAgent(BaseAgent):
                 )
                 kwargs.update(thinking_params)
 
-            # Execute LLM call with timeout
+            # Execute LLM call with timeout using ainvoke (returns AIMessage)
             response = await asyncio.wait_for(
-                self.llm_factory.create_completion(**kwargs),
+                self.llm_factory.ainvoke(langchain_messages, **kwargs),
                 timeout=request.timeout_seconds,
             )
 
-            # Extract response content
-            content = ""
-            model_used = getattr(response, "model", self.model_id or "")
+            # Extract response content from AIMessage
+            content = response.content or ""
 
-            if hasattr(response, "choices") and response.choices:
-                choice = response.choices[0]
-                if hasattr(choice, "message") and hasattr(choice.message, "content"):
-                    content = choice.message.content or ""
+            # Extract model info from response metadata if available
+            model_used = self.model_id or ""
+            if hasattr(response, "response_metadata") and response.response_metadata:
+                model_used = response.response_metadata.get("model", model_used)
 
-                # Extract thinking content if available
-                if hasattr(choice.message, "thinking"):
-                    thinking_content = choice.message.thinking
-                if hasattr(choice.message, "thinking_tokens"):
-                    thinking_tokens = choice.message.thinking_tokens
+            # Extract thinking content if available (from additional_kwargs or response_metadata)
+            if hasattr(response, "additional_kwargs") and response.additional_kwargs:
+                thinking_content = response.additional_kwargs.get("thinking")
+                thinking_tokens = response.additional_kwargs.get("thinking_tokens", 0)
 
             return AgentResult(
                 content=content,
