@@ -658,6 +658,9 @@ module = [
     "langchain_openai.*",  # OpenAI embeddings (separate package from langchain)
     "langchain_huggingface.*",  # HuggingFace embeddings (separate package from langchain)
     "langchain_google_vertexai.*",  # Vertex AI embeddings (optional dependency)
+    "qrcode.*",  # QR code generation (optional dependency for device auth)
+    "pywebpush.*",  # Web push notifications (optional dependency)
+    "jsonschema.*",  # JSON Schema validation (missing type stubs)
 ]
 ignore_missing_imports = true
 # Disable additional strict checks for third-party libraries
@@ -673,6 +676,9 @@ module = [
     "mcp_server_langgraph.observability.query.backends.cloudlogging",
     "mcp_server_langgraph.observability.query.backends.cloudtrace",
     "mcp_server_langgraph.observability.query.backends.cloudmonitoring",
+    # LangGraph StateGraph type stubs produce different error codes depending on
+    # whether --ignore-missing-imports is used. Use both codes and suppress warning.
+    "mcp_server_langgraph.api.v1.ai_ux_graph",
 ]
 warn_unused_ignores = false
 

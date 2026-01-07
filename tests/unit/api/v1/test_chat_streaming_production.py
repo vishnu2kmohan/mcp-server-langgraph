@@ -11,7 +11,7 @@ These tests validate:
 """
 
 import gc
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -75,11 +75,14 @@ class TestLLMFactoryStreamingProductionWiring:
         gc.collect()
 
     @pytest.mark.asyncio
-    async def test_create_stream_uses_llm_factory_when_flag_enabled(self) -> None:
+    async def test_create_stream_uses_llm_factory(self) -> None:
         """
-        GIVEN enable_llm_factory_streaming=True
-        WHEN create_stream is called (and MCP not configured)
-        THEN it should use _stream_via_llm_factory instead of _stream_via_litellm
+        GIVEN an LLMFactory instance
+        WHEN create_stream is called
+        THEN it should use LLMFactory.astream() (the only streaming path)
+
+        Note: After removing _stream_via_litellm, LLMFactory.astream() is the only
+        streaming path. No feature flag check is needed.
         """
         from mcp_server_langgraph.api.v1.chat import ChatServiceImpl
 
@@ -95,17 +98,13 @@ class TestLLMFactoryStreamingProductionWiring:
 
         messages = [{"role": "user", "content": "Hi"}]
 
-        # Mock the feature flag
-        with patch("mcp_server_langgraph.api.v1.chat.feature_flags") as mock_flags:
-            mock_flags.enable_llm_factory_streaming = True
+        chunks = []
+        async for chunk in service.create_stream("session-1", messages):
+            chunks.append(chunk)
 
-            chunks = []
-            async for chunk in service.create_stream("session-1", messages):
-                chunks.append(chunk)
-
-            # Should have received chunks from llm_factory
-            assert len(chunks) >= 1
-            assert any("delta" in c for c in chunks)
+        # Should have received chunks from llm_factory
+        assert len(chunks) >= 1
+        assert any("delta" in c for c in chunks)
 
     @pytest.mark.asyncio
     async def test_create_stream_always_uses_llm_factory(self) -> None:
@@ -193,6 +192,9 @@ class TestStreamingCostTracking:
         GIVEN a streaming response that completes successfully
         WHEN the stream ends
         THEN usage should be recorded for cost tracking
+
+        Note: LLMFactory.astream() is now the only streaming path, so no feature
+        flag check is needed.
         """
         from mcp_server_langgraph.api.v1.chat import ChatServiceImpl
 
@@ -213,14 +215,11 @@ class TestStreamingCostTracking:
 
         messages = [{"role": "user", "content": "Hi"}]
 
-        with patch("mcp_server_langgraph.api.v1.chat.feature_flags") as mock_flags:
-            mock_flags.enable_llm_factory_streaming = True
+        async for _ in service.create_stream("session-1", messages):
+            pass
 
-            async for _ in service.create_stream("session-1", messages):
-                pass
-
-            # The factory should handle cost tracking internally
-            # This test validates the integration point exists
+        # The factory should handle cost tracking internally
+        # This test validates the integration point exists
 
     def test_stream_chunk_has_usage_fields(self) -> None:
         """
