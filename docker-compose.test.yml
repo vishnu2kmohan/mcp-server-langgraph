@@ -1133,8 +1133,8 @@ services:
       sh -c "
       echo 'Waiting for dependencies to be ready...' &&
       sleep 5 &&
-      echo 'Starting MCP server...' &&
-      uvicorn mcp_server_langgraph.mcp.server_streamable:app --host 0.0.0.0 --port 8000
+      echo 'Starting MCP server with JSON access logs...' &&
+      uvicorn mcp_server_langgraph.mcp.server_streamable:app --host 0.0.0.0 --port 8000 --log-config /app/uvicorn-log-config.yaml
       "
     depends_on:
       postgres-test:
@@ -1411,6 +1411,8 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock:ro
       # Mount GCP ADC credentials for Vertex AI (local development only)
       - ~/.config/gcloud/application_default_credentials.json:/app/.config/gcloud/application_default_credentials.json:ro
+      # Uvicorn JSON logging configuration for LGTM stack integration
+      - ./docker/uvicorn-log-config.yaml:/app/uvicorn-log-config.yaml:ro
     healthcheck:
       # Use /health/live to avoid 307 redirect (/health -> /health/ due to sub-app mount)
       test: ["CMD", "curl", "-f", "http://localhost:8000/health/live"]
