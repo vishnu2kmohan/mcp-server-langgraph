@@ -1,29 +1,43 @@
 {{- if .Values.grafana.enabled }}
+{{- /*
+  Folder-based dashboard ConfigMaps for Grafana sidecar provisioning.
+  Each folder becomes a separate ConfigMap with grafana_folder annotation.
+  The sidecar uses folderAnnotation to organize dashboards into folders.
+
+  Dashboard Structure (36 dashboards across 8 folders):
+    AI/          - AI/ML observability (5 dashboards)
+    Application/ - Application metrics (14 dashboards)
+    Auth/        - Authentication & authorization (4 dashboards)
+    Compliance/  - Audit & compliance (3 dashboards)
+    Infrastructure/ - Infrastructure metrics (5 dashboards)
+    Overview/    - High-level overview (1 dashboard)
+    Resilience/  - SRE golden signals (2 dashboards)
+    WebSocket/   - Real-time streaming (2 dashboards)
+
+  Sync: ./scripts/sync-grafana-dashboards.sh
+  Canonical: monitoring/grafana/dashboards/
+*/ -}}
+
+{{- $folders := list "AI" "Application" "Auth" "Compliance" "Infrastructure" "Overview" "Resilience" "WebSocket" }}
+{{- range $folder := $folders }}
+{{- $dashboards := $.Files.Glob (printf "dashboards/%s/*.json" $folder) }}
+{{- if $dashboards }}
+---
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: grafana-dashboards
-  namespace: {{ .Release.Namespace }}
+  name: {{ include "mcp-server-langgraph.fullname" $ }}-dashboards-{{ $folder | lower }}
+  namespace: {{ $.Release.Namespace }}
   labels:
-    {{- include "mcp-server-langgraph.labels" . | nindent 4 }}
+    {{- include "mcp-server-langgraph.labels" $ | nindent 4 }}
     grafana_dashboard: "1"
+  annotations:
+    grafana_folder: {{ $folder | quote }}
 data:
-  authentication.json: |
-{{ .Files.Get "dashboards/authentication.json" | indent 4 }}
-  keycloak.json: |
-{{ .Files.Get "dashboards/keycloak.json" | indent 4 }}
-  langgraph-agent.json: |
-{{ .Files.Get "dashboards/langgraph-agent.json" | indent 4 }}
-  llm-performance.json: |
-{{ .Files.Get "dashboards/llm-performance.json" | indent 4 }}
-  openfga.json: |
-{{ .Files.Get "dashboards/openfga.json" | indent 4 }}
-  redis-sessions.json: |
-{{ .Files.Get "dashboards/redis-sessions.json" | indent 4 }}
-  security.json: |
-{{ .Files.Get "dashboards/security.json" | indent 4 }}
-  sla-monitoring.json: |
-{{ .Files.Get "dashboards/sla-monitoring.json" | indent 4 }}
-  soc2-compliance.json: |
-{{ .Files.Get "dashboards/soc2-compliance.json" | indent 4 }}
+  {{- range $path, $_ := $dashboards }}
+  {{ base $path }}: |
+{{ $.Files.Get $path | indent 4 }}
+  {{- end }}
+{{- end }}
+{{- end }}
 {{- end }}

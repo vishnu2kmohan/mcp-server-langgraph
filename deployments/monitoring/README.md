@@ -1,59 +1,27 @@
 # Monitoring Assets
 
-This directory contains Grafana dashboards, alerting rules, and Helm values for the observability stack.
+This directory contains alerting rules and Helm values for the observability stack.
 
-## Grafana Dashboards
+## Dashboard Location
 
-### Golden Signals Dashboard (`golden-signals-dashboard.json`)
+**Grafana dashboards have been consolidated to `monitoring/grafana/dashboards/`.**
 
-The primary operational dashboard following the Google SRE Golden Signals methodology:
+The canonical location for all 36 dashboards is now organized by folder:
 
-- **Latency**: Request duration percentiles (p50, p95, p99)
-- **Traffic**: Request rate by endpoint and status code
-- **Errors**: Error rates and types
-- **Saturation**: Resource utilization metrics
+| Folder | Dashboards | Description |
+|--------|------------|-------------|
+| AI/ | 5 | AI/ML observability, suggestions, UX metrics |
+| Application/ | 14 | Core application metrics, costs, HITL |
+| Auth/ | 4 | Authentication, Keycloak, OpenFGA, security |
+| Compliance/ | 3 | SOC2, SLA, audit compliance |
+| Infrastructure/ | 5 | PostgreSQL, Redis, Qdrant, Traefik, LGTM |
+| Overview/ | 1 | High-level LangGraph agent overview |
+| Resilience/ | 2 | Golden signals, resilience patterns |
+| WebSocket/ | 2 | LLM streaming, WebSocket telemetry |
 
-**UID**: `golden-signals`
-
-### Session Lifecycle Dashboard (`session-lifecycle-dashboard.json`)
-
-Tracks user session activity using `session.start` and `session.end` events:
-
-- **Session Overview**: Total sessions started/ended, active session estimates
-- **Session Activity Timeline**: Sessions over time with 5-minute granularity
-- **User Activity**: Top users by session count, sessions per user
-- **Session Health**: Timeout rate, error rate, clean logout rate
-
-**Metrics Used**:
-- `session_events_total{event="session.start"}`
-- `session_events_total{event="session.end", reason="..."}`
-
-**Labels**:
-- `event`: Either `session.start` or `session.end`
-- `reason`: End reason (`revoked`, `timeout`, `error`) - only for `session.end`
-- `user_id`: Optional user identifier
-- `session_id`: Optional session identifier
-
-**UID**: `session-lifecycle`
-
-### LLM Observability Dashboard (`llm-observability-dashboard.json`)
-
-Monitors LLM API usage with bounded cardinality labels:
-
-- **LLM Request Rate**: Requests per second by model family
-- **Error Rate**: LLM API errors by type
-- **Latency P95**: 95th percentile response time
-- **Token Throughput**: Input/output token rates
-- **Model Family Breakdown**: Usage by model family (gpt, claude, gemini)
-- **Operation Type Breakdown**: Usage by operation (chat, completion, embedding)
-- **Status Breakdown**: Success vs error rates
-
-**Bounded Labels** (prevent cardinality explosion):
-- `model_family`: Normalized model family (e.g., `gpt`, `claude`, `gemini`)
-- `operation`: Operation type (e.g., `chat`, `completion`, `embedding`)
-- `status`: Either `success` or `error`
-
-**UID**: `llm-observability`
+**Sync Script**: `./scripts/sync-grafana-dashboards.sh`
+**Validation**: `uv run python scripts/validation/validate_grafana_dashboards.py`
+**Auto-fix**: `uv run python scripts/validation/fix_grafana_dashboards.py`
 
 ## SLO Alerts (`slo-alerts.yaml`)
 
@@ -73,19 +41,6 @@ Configuration for the Grafana Loki logging stack.
 
 Configuration for Kubecost cost monitoring.
 
-## Validation
-
-Validate dashboard JSON files:
-
-```bash
-make validate-dashboards
-```
-
-This checks:
-1. Valid JSON syntax
-2. Required dashboard fields (panels, title, uid)
-3. Panel structure validation
-
 ## Importing Dashboards
 
 ### Via Grafana UI
@@ -100,25 +55,17 @@ This checks:
 
 ```bash
 curl -X POST -H "Content-Type: application/json" \
-  -d @deployments/monitoring/session-lifecycle-dashboard.json \
+  -d @monitoring/grafana/dashboards/Application/session-lifecycle-dashboard.json \
   http://admin:admin@localhost:3000/api/dashboards/db
 ```
 
 ### Via Kubernetes ConfigMap
 
-Dashboards can be auto-provisioned by adding them to a ConfigMap:
+Dashboards are auto-provisioned via Grafana sidecar using ConfigMaps with:
+- Label: `grafana_dashboard: "1"`
+- Annotation: `grafana_folder: "<FolderName>"`
 
-```yaml
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: grafana-dashboards
-  labels:
-    grafana_dashboard: "1"
-data:
-  session-lifecycle.json: |
-    <dashboard JSON content>
-```
+The Helm chart generates folder-specific ConfigMaps automatically.
 
 ## Metrics Reference
 

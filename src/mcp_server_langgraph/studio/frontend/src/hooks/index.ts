@@ -187,8 +187,6 @@ export { useBackgroundSync } from "./useBackgroundSync";
 // Feature Hooks
 // =============================================================================
 
-export { useTierLimits } from "./useTierLimits";
-
 export { useHeartMetricsTracker } from "./useHeartMetricsTracker";
 
 export { useHeartDashboard } from "./useHeartDashboard";
@@ -236,13 +234,6 @@ export type {
 } from "./useAIEmptyState";
 
 // Sprint 3 AI-Powered Hooks (Stubs - Implementation Planned)
-export { useAIDisclosure } from "./useAIDisclosure";
-export type {
-  AIDisclosureAnalysis,
-  UseAIDisclosureOptions,
-  UseAIDisclosureResult,
-} from "./useAIDisclosure";
-
 export { useAIErrorRecovery } from "./useAIErrorRecovery";
 export type {
   AIErrorAnalysis,

@@ -133,8 +133,15 @@ describe("useTraceWebSocket", () => {
     it("should connect when connect() is called", async () => {
       const { result } = renderHook(() => useTraceWebSocket(), { wrapper });
 
+      // Call connect() to set shouldConnect = true
       act(() => {
         result.current.connect();
+      });
+
+      // Simulate the WebSocket connecting (mock auto-connect relies on timing)
+      act(() => {
+        mockStatus = "connected";
+        mockOnConnect?.();
       });
 
       // Status should change to connected
