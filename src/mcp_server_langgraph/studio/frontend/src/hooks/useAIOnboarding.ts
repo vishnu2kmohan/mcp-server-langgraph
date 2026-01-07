@@ -33,10 +33,29 @@
  * ```
  */
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { useSelector } from "react-redux";
 import { selectCurrentSession } from "../store/slices/sessionSlice";
 import { usePersonalizeOnboardingMutation } from "../api";
+import { sessionStore } from "../utils/storage";
+
+// =============================================================================
+// Constants for Deduplication
+// =============================================================================
+
+/**
+ * Stable empty array constant to prevent reference changes in dependency arrays.
+ * Using inline `[]` creates a new array on every render, causing unnecessary
+ * useCallback/useEffect re-evaluations.
+ */
+const EMPTY_ARRAY: readonly string[] = Object.freeze([]);
+
+/**
+ * Session storage key for tracking if personalization was already fetched.
+ * This provides cross-remount deduplication protection.
+ * Uses the sessionStore utility for consistent storage abstraction.
+ */
+const SESSION_STORAGE_KEY = "studio-ai-onboarding-fetched";
 
 /**
  * Onboarding path step from AI backend
@@ -132,6 +151,31 @@ function _inferExperienceLevel(
 }
 
 /**
+ * Check if personalization was already fetched in this session.
+ * Uses sessionStore utility for cross-remount deduplication.
+ */
+function wasAlreadyFetched(userId: string | undefined): boolean {
+  const key = `${SESSION_STORAGE_KEY}-${userId || "anonymous"}`;
+  return sessionStore.get<boolean>(key, false) === true;
+}
+
+/**
+ * Mark personalization as fetched for this session.
+ */
+function markAsFetched(userId: string | undefined): void {
+  const key = `${SESSION_STORAGE_KEY}-${userId || "anonymous"}`;
+  sessionStore.set(key, true);
+}
+
+/**
+ * Clear the fetched flag (for manual refresh).
+ */
+function clearFetchedFlag(userId: string | undefined): void {
+  const key = `${SESSION_STORAGE_KEY}-${userId || "anonymous"}`;
+  sessionStore.remove(key);
+}
+
+/**
  * Hook for AI-powered onboarding personalization.
  *
  * @param options - Hook options
@@ -142,11 +186,28 @@ export function useAIOnboarding(
 ): UseAIOnboardingResult {
   const {
     userId,
-    initialActions = [],
+    initialActions,
     signupContext,
     enabled = true,
     timeoutMs: _timeoutMs, // Kept for API compatibility
   } = options;
+
+  // Memoize initialActions to prevent reference changes causing refetches
+  // Use stable EMPTY_ARRAY when no actions provided
+  const stableInitialActions = useMemo(
+    () => initialActions ?? EMPTY_ARRAY,
+    // Use JSON.stringify for deep comparison of array contents
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [JSON.stringify(initialActions)],
+  );
+
+  // Memoize signupContext to prevent reference changes
+  const stableSignupContext = useMemo(
+    () => signupContext,
+    // Use JSON.stringify for deep comparison of object contents
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [JSON.stringify(signupContext)],
+  );
 
   // RTK Query mutation
   const [personalizeOnboarding, { isLoading: isMutationLoading }] =
@@ -165,7 +226,12 @@ export function useAIOnboarding(
   );
   const [isLoading, setIsLoading] = useState(enabled);
   const [error, setError] = useState<Error | null>(null);
+
+  // Ref to track if fetch was triggered in this hook instance
   const hasFetchedRef = useRef(false);
+
+  // Check if already fetched in sessionStorage (survives remounts)
+  const wasSessionFetched = useRef(wasAlreadyFetched(userId));
 
   /**
    * Fetch personalization from AI backend via RTK Query
@@ -182,11 +248,11 @@ export function useAIOnboarding(
     try {
       const data = await personalizeOnboarding({
         user_id: userId || "anonymous",
-        initial_actions: initialActions,
-        signup_context: signupContext
+        initial_actions: stableInitialActions as string[],
+        signup_context: stableSignupContext
           ? {
-              referrer: signupContext.referrer,
-              utm_source: signupContext.utm_source,
+              referrer: stableSignupContext.referrer,
+              utm_source: stableSignupContext.utm_source,
             }
           : undefined,
       }).unwrap();
@@ -206,6 +272,9 @@ export function useAIOnboarding(
       );
       setSkipSteps(data.skip_steps || []);
       setPersonaPrediction(data.persona_prediction ?? null);
+
+      // Mark as fetched in sessionStorage for cross-remount deduplication
+      markAsFetched(userId);
     } catch (err) {
       const errorToSet =
         err instanceof Error
@@ -224,26 +293,45 @@ export function useAIOnboarding(
       setIsLoading(false);
       hasFetchedRef.current = true;
     }
-  }, [userId, initialActions, signupContext, personalizeOnboarding]);
+  }, [
+    userId,
+    stableInitialActions,
+    stableSignupContext,
+    personalizeOnboarding,
+  ]);
 
   /**
-   * Refresh personalization
+   * Refresh personalization (manual trigger).
+   * Clears the session storage flag to allow a fresh fetch.
    */
   const refresh = useCallback(() => {
+    // Clear the session flag to allow re-fetch
+    clearFetchedFlag(userId);
+    wasSessionFetched.current = false;
+    hasFetchedRef.current = false;
     fetchPersonalization();
-  }, [fetchPersonalization]);
+  }, [fetchPersonalization, userId]);
 
-  // Initial fetch on mount
+  // Initial fetch on mount (with multi-layer deduplication)
   useEffect(() => {
     if (!enabled) {
       setIsLoading(false);
       return;
     }
 
-    // Only fetch once per hook instance
-    if (!hasFetchedRef.current) {
-      fetchPersonalization();
+    // Layer 1: Check if already fetched in this hook instance
+    if (hasFetchedRef.current) {
+      return;
     }
+
+    // Layer 2: Check if already fetched in this browser session
+    // (survives component remounts)
+    if (wasSessionFetched.current) {
+      setIsLoading(false);
+      return;
+    }
+
+    fetchPersonalization();
   }, [enabled, fetchPersonalization]);
 
   return {
