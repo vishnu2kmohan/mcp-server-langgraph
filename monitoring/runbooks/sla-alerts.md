@@ -321,3 +321,96 @@ Monthly downtime budget for 99.9% SLA has been exhausted.
 
 ### Escalation
 Escalate to VP Engineering.
+
+---
+
+## SLOBudgetBurnElevated
+
+### Description
+Error budget consumption is elevated (>3x sustainable rate over slow window).
+
+### Impact
+**Info** - Budget consumption higher than expected but not critical.
+
+### Resolution
+1. Review error trends
+2. Plan remediation for identified issues
+3. Monitor closely for escalation
+
+### Escalation
+Create monitoring ticket for tracking.
+
+---
+
+## SLOLatencyDegrading
+
+### Description
+P95 latency is showing an upward trend.
+
+### Impact
+**Info** - Early warning before SLO breach.
+
+### Resolution
+1. Investigate latency trend source
+2. Check for gradual resource exhaustion
+3. Review recent code changes
+4. Proactively address before breach
+
+### Escalation
+Create performance investigation ticket.
+
+---
+
+## SLOErrorBudgetHalfConsumed
+
+### Description
+Error budget is 50% consumed for the current window.
+
+### Impact
+**Info** - Half of error budget remains.
+
+### Resolution
+1. Review current error rate trends
+2. Assess risk of upcoming changes
+3. Consider postponing risky deployments
+
+### Escalation
+Notify engineering lead for awareness.
+
+---
+
+## SLOPushSubscriptionExpiry
+
+### Description
+High rate of push notification subscription expirations.
+
+### Impact
+**Info** - Users may miss notifications until re-subscribing.
+
+### Resolution
+1. Review subscription expiration patterns
+2. Check for browser/device issues
+3. Consider implementing subscription renewal reminders
+4. Monitor user re-subscription rates
+
+### Escalation
+Create user experience improvement ticket.
+
+---
+
+## SLOAIAcceptanceRateLow
+
+### Description
+AI recommendation acceptance rate is below 50%.
+
+### Impact
+**Info** - AI suggestions may not be meeting user expectations.
+
+### Resolution
+1. Review rejection patterns in feedback store
+2. Analyze rejected recommendation categories
+3. Consider prompt improvements
+4. Review recommendation relevance
+
+### Escalation
+Create AI quality improvement ticket.

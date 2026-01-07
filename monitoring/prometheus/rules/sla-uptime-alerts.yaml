@@ -37,6 +37,7 @@ groups:
       summary: SLA uptime at risk
       description: |-
         System uptime {{ $value | humanizePercentage }} is approaching SLA threshold (99.9%). Current value is between 99.9% and 99.95%.
+      runbook_url: 'https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/monitoring/runbooks/sla-uptime-alerts.md#slauptimeatrisk'
       dashboard_url: '{{ grafana_url }}/d/langgraph-agent/overview'
 - name: sla_response_time
   interval: 5m
@@ -74,6 +75,7 @@ groups:
       summary: SLA response time at risk (p95)
       description: |-
         API p95 response time {{ $value | humanizeDuration }} is approaching SLA threshold of 500ms.
+      runbook_url: 'https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/monitoring/runbooks/sla-uptime-alerts.md#slaresponsetimeatrisk'
       dashboard_url: '{{ grafana_url }}/d/langgraph-agent/overview'
   - alert: SLAResponseTimeP99Breach
     expr: |
@@ -90,6 +92,7 @@ groups:
       summary: P99 response time degraded
       description: API p99 response time {{ $value | humanizeDuration }} exceeds 1000ms
         threshold.
+      runbook_url: 'https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/monitoring/runbooks/sla-uptime-alerts.md#slaresponsetimep99breach'
       dashboard_url: '{{ grafana_url }}/d/langgraph-agent/overview'
 - name: sla_error_rate
   interval: 5m
@@ -129,6 +132,7 @@ groups:
       summary: SLA error rate at risk
       description: |-
         API error rate {{ $value | humanizePercentage }} is approaching SLA threshold of 1%.
+      runbook_url: 'https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/monitoring/runbooks/sla-uptime-alerts.md#slaerrorrateatrisk'
       dashboard_url: '{{ grafana_url }}/d/langgraph-agent/overview'
 - name: sla_throughput
   interval: 5m
@@ -150,6 +154,7 @@ groups:
       summary: System throughput degraded
       description: |-
         Current throughput {{ $value | humanize }}rps is less than 50% of the 7-day average.
+      runbook_url: 'https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/monitoring/runbooks/sla-uptime-alerts.md#slathroughputdegraded'
       dashboard_url: '{{ grafana_url }}/d/langgraph-agent/overview'
 - name: sla_monthly_budget
   interval: 1h
@@ -217,6 +222,7 @@ groups:
       summary: Overall SLA compliance score low
       description: |-
         Composite SLA compliance score {{ $value | humanizePercentage }} is below 95% threshold.
+      runbook_url: 'https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/monitoring/runbooks/sla-uptime-alerts.md#slacompliancescorelow'
       dashboard_url: '{{ grafana_url }}/d/langgraph-agent/overview'
 - name: sla_forecasting
   interval: 1h
@@ -237,6 +243,7 @@ groups:
       summary: Projected SLA breach in 24 hours
       description: |-
         Based on current trend, uptime is projected to fall below 99.9% SLA threshold within 24 hours. Projected value: {{ $value | humanizePercentage }}.
+      runbook_url: 'https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/monitoring/runbooks/sla-uptime-alerts.md#slaprojectedbreach'
       dashboard: '{{ grafana_url }}/d/sla/sla-forecast-dashboard'
 - name: sla_dependencies
   interval: 5m
@@ -273,6 +280,7 @@ groups:
       summary: Dependency {{ $labels.job }} performance degraded
       description: |-
         Dependency {{ $labels.job }} p95 response time {{ $value | humanizeDuration }} exceeds 200ms threshold.
+      runbook_url: 'https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/monitoring/runbooks/sla-uptime-alerts.md#sladependencydegraded'
       dashboard_url: '{{ grafana_url }}/d/langgraph-agent/overview'
 - name: sla_resource_exhaustion
   interval: 5m
@@ -289,6 +297,7 @@ groups:
       summary: High CPU utilization impacting SLA
       description: CPU utilization {{ $value | humanizePercentage }} may impact response
         time SLA.
+      runbook_url: 'https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/monitoring/runbooks/sla-uptime-alerts.md#slaresourcecpuhigh'
       dashboard_url: '{{ grafana_url }}/d/langgraph-agent/overview'
   - alert: SLAResourceMemoryHigh
     expr: |
@@ -306,4 +315,5 @@ groups:
       summary: High memory utilization impacting SLA
       description: |-
         Memory utilization {{ $value | humanizePercentage }} may impact system stability and SLA.
+      runbook_url: 'https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/monitoring/runbooks/sla-uptime-alerts.md#slaresourcememoryhigh'
       dashboard_url: '{{ grafana_url }}/d/langgraph-agent/overview'

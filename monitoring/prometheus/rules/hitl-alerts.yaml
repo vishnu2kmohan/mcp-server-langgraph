@@ -265,6 +265,7 @@ groups:
       description: |
         Only {{ $value | humanizePercentage }} of HITL requests for {{ $labels.agent_name }} are being approved.
         This may indicate the agent needs significant tuning.
+      runbook_url: 'https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/monitoring/runbooks/hitl-alerts.md#hitllowapprovalrate'
 - name: hitl.trigger_reasons
   interval: 5m
   rules:
@@ -281,6 +282,7 @@ groups:
         {{ $labels.agent_name }} is generating {{ $value | humanize }}/s destructive action approval requests.
 
         This is expected for high-risk operations but warrants monitoring.
+      runbook_url: 'https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/monitoring/runbooks/hitl-alerts.md#hitldestructiveactionvolume'
   - alert: HITLExternalAPIVolume
     expr: |
       sum by (agent_name) (rate(agent_hitl_request_count_total{trigger_reason="external_api"}[1h])) > 0.5
@@ -297,6 +299,7 @@ groups:
         - Pre-approving trusted external APIs
         - Reviewing which APIs require approval
         - Adjusting HITL policy for this agent
+      runbook_url: 'https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/monitoring/runbooks/hitl-alerts.md#hitlexternalapivolume'
 - name: hitl.meta
   interval: 5m
   rules:
@@ -337,3 +340,4 @@ groups:
         - All agents operating with high confidence
 
         This is informational - no action required unless unexpected.
+      runbook_url: 'https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/monitoring/runbooks/hitl-alerts.md#hitlnoactivity'

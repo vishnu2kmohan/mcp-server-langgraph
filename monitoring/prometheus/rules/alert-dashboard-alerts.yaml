@@ -64,6 +64,7 @@ groups:
         - High volume of new/unique alerts
         - Cache TTL too short
         - Normal behavior during incident escalation
+      runbook_url: 'https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/monitoring/runbooks/alert-dashboard-alerts.md#airecommendationcachehitratelow'
 - name: alerts.rate_limiting
   interval: 30s
   rules:
@@ -133,6 +134,7 @@ groups:
         - Misconfigured allowed command prefixes
 
         Review: Check command validation rules in the executor.
+      runbook_url: 'https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/monitoring/runbooks/alert-dashboard-alerts.md#remediationcommandsblockedhigh'
   - alert: RemediationExecutionSlow
     expr: |-
       histogram_quantile(0.95, rate(alerts_remediation_execution_duration_bucket[5m])) > 60
@@ -150,6 +152,7 @@ groups:
         - Check if commands are timing out
         - Review command complexity
         - Consider breaking into smaller steps
+      runbook_url: 'https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/monitoring/runbooks/alert-dashboard-alerts.md#remediationexecutionslow'
       dashboard_url: '{{ grafana_url }}/d/llm-performance/llm-performance'
   - alert: RemediationRejectionRateHigh
     expr: |
@@ -168,6 +171,7 @@ groups:
         - AI recommendations not matching admin expectations
         - Training needed on remediation workflow
         - Overly aggressive AI suggestions
+      runbook_url: 'https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/monitoring/runbooks/alert-dashboard-alerts.md#remediationrejectionratehigh'
 - name: alerts.websocket
   interval: 30s
   rules:
@@ -187,6 +191,7 @@ groups:
         - Admin dashboard is accessible
         - WebSocket endpoint is healthy
         - No authentication issues
+      runbook_url: 'https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/monitoring/runbooks/alert-dashboard-alerts.md#alertwebsocketnoconnections'
   - alert: AlertWebSocketConnectionsHigh
     expr: alerts_websocket_connections > 50
     for: 5m
@@ -203,6 +208,7 @@ groups:
         - Check for connection leaks (clients not disconnecting)
         - Verify expected admin user count
         - Review for potential DoS
+      runbook_url: 'https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/monitoring/runbooks/alert-dashboard-alerts.md#alertwebsocketconnectionshigh'
       dashboard_url: '{{ grafana_url }}/d/langgraph-agent/overview'
 - name: alerts.volume
   interval: 30s
@@ -245,6 +251,7 @@ groups:
         {{ range query "topk(3, rate(alerts_filtered[5m]))" }}
         - {{ .Labels.reason }}: {{ .Value | humanize }}/s
         {{ end }}
+      runbook_url: 'https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/monitoring/runbooks/alert-dashboard-alerts.md#alertfilterratehigh'
 - name: alerts.broadcast
   interval: 30s
   rules:
@@ -263,4 +270,5 @@ groups:
 
         Alerts are still being stored and can be viewed on dashboard refresh,
         but real-time notifications are not reaching any admins.
+      runbook_url: 'https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/monitoring/runbooks/alert-dashboard-alerts.md#alertbroadcastnorecipients'
       dashboard_url: '{{ grafana_url }}/d/langgraph-agent/overview'

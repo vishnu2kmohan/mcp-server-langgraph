@@ -46,6 +46,7 @@ groups:
       summary: 'Circuit breaker recovering: {{ $labels.service }}'
       description: Circuit breaker for {{ $labels.service }} is half-open, testing
         recovery.
+      runbook_url: 'https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/monitoring/runbooks/resilience-alerts.md#circuitbreakerrecovering'
   - alert: CircuitBreakerFlapping
     expr: rate(circuit_breaker_state_changes_total[5m]) > 0.1
     for: 10m
@@ -92,6 +93,7 @@ groups:
       description: |
         Function {{ $labels.function }} is successfully recovering from transient errors.
         This is working as expected but indicates underlying instability.
+      runbook_url: 'https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/monitoring/runbooks/resilience-alerts.md#transienterrorselevated'
 - name: resilience.timeout
   interval: 30s
   rules:
@@ -146,6 +148,7 @@ groups:
       description: |
         {{ $value }} requests queued waiting for {{ $labels.resource_type }} bulkhead.
         This indicates request volume exceeds processing capacity.
+      runbook_url: 'https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/monitoring/runbooks/resilience-alerts.md#bulkheadqueuedeepening'
       dashboard_url: '{{ grafana_url }}/d/langgraph-agent/overview'
 - name: resilience.adaptive_bulkhead
   interval: 30s
@@ -195,6 +198,7 @@ groups:
       description: |
         {{ $labels.provider }} concurrency limit is adjusting frequently.
         Direction: {{ $labels.direction }}
+      runbook_url: 'https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/monitoring/runbooks/resilience-alerts.md#adaptivebulkheadunstable'
 - name: resilience.rate_limit
   interval: 30s
   rules:
@@ -224,6 +228,7 @@ groups:
       description: |
         p95 wait time for {{ $labels.provider }} rate limit tokens is {{ $value | humanizeDuration }}.
         This may impact user experience.
+      runbook_url: 'https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/monitoring/runbooks/resilience-alerts.md#ratelimitwaittimehigh'
       dashboard_url: '{{ grafana_url }}/d/langgraph-agent/overview'
 - name: resilience.fallback
   interval: 30s
@@ -241,6 +246,7 @@ groups:
         Fallback type: {{ $labels.fallback_type }}
 
         Primary service is unavailable but graceful degradation is working.
+      runbook_url: 'https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/monitoring/runbooks/resilience-alerts.md#fallbackactivated'
   - alert: FallbackUsageSustained
     expr: rate(fallback_used_total[5m]) > 0.1
     for: 15m
@@ -252,6 +258,7 @@ groups:
       description: |
         {{ $labels.function }} has been using fallback for 15+ minutes.
         This indicates prolonged primary service outage.
+      runbook_url: 'https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/monitoring/runbooks/resilience-alerts.md#fallbackusagesustained'
       dashboard_url: '{{ grafana_url }}/d/langgraph-agent/overview'
 - name: resilience.http_pool
   interval: 30s
@@ -333,3 +340,4 @@ groups:
         This may indicate label explosion from dynamic values.
 
         Check for dynamic function names or exception types being introduced.
+      runbook_url: 'https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/monitoring/runbooks/resilience-alerts.md#resiliencemetricscardinalitygrowth'

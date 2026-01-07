@@ -1,7 +1,3 @@
-# Synced from: monitoring/prometheus/rules/slo-alerts.yaml
-# Namespace for Mimir ruler compatibility
-namespace: slo
-
 groups:
 - name: slo.recording_rules
   interval: 30s
@@ -96,6 +92,7 @@ groups:
       summary: Elevated SLO burn rate - monitor closely
       description: |
         Error budget consumption is elevated. Review error trends and plan remediation.
+      runbook_url: 'https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/monitoring/runbooks/sla-alerts.md#slobudgetburnelevated'
 - name: slo.latency
   interval: 30s
   rules:
@@ -142,6 +139,7 @@ groups:
       summary: Latency trending upward
       description: P95 latency is showing an upward trend. Investigate before it breaches
         SLO.
+      runbook_url: 'https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/monitoring/runbooks/sla-alerts.md#slolatencydegrading'
 - name: slo.error_budget
   interval: 5m
   rules:
@@ -189,6 +187,7 @@ groups:
       summary: Error budget 50% consumed
       description: |
         {{ $value | humanizePercentage }} of error budget remains for this 30-day window.
+      runbook_url: 'https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/monitoring/runbooks/sla-alerts.md#sloerrorbudgethalfconsumed'
 - name: slo.saturation
   interval: 30s
   rules:
@@ -442,6 +441,7 @@ groups:
       description: |
         {{ $value | humanize }} push subscriptions expired in the last hour.
         Users may need to re-subscribe to push notifications.
+      runbook_url: 'https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/monitoring/runbooks/sla-alerts.md#slopushsubscriptionexpiry'
 - name: slo.cleanup_jobs
   interval: 1m
   rules:
@@ -538,6 +538,7 @@ groups:
         Consider reviewing rejection patterns to improve recommendation quality.
 
         Check the rejection reasons in the feedback store for patterns.
+      runbook_url: 'https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/monitoring/runbooks/sla-alerts.md#sloaiacceptanceratelow'
       dashboard_url: '{{ grafana_url }}/d/alert-dashboard'
   - alert: SLOAIRecommendationErrors
     expr: |

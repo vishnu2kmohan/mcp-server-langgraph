@@ -1,7 +1,3 @@
-# Synced from: monitoring/prometheus/rules/slo-recording-rules.yaml
-# Namespace for Mimir ruler compatibility
-namespace: slo-recording
-
 groups:
   # SLO Recording Rules for MCP Server with LangGraph
   # These rules pre-compute SLI (Service Level Indicator) metrics for efficient SLO tracking

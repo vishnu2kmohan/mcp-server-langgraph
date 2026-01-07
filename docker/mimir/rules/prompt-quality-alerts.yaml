@@ -1,7 +1,3 @@
-# Synced from: monitoring/prometheus/rules/prompt-quality-alerts.yaml
-# Namespace for Mimir ruler compatibility
-namespace: prompt-quality
-
 groups:
 - name: prompt.recording_rules
   interval: 30s

@@ -1,7 +1,3 @@
-# Synced from: monitoring/prometheus/rules/langgraph-agent-alerts.yaml
-# Namespace for Mimir ruler compatibility
-namespace: langgraph-agent
-
 groups:
 - name: langgraph_agent.critical
   interval: 30s
