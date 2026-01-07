@@ -1,0 +1,61 @@
+# Uvicorn Logging Configuration for JSON-Structured Logs
+# =======================================================
+# This configuration enables JSON-structured logging for uvicorn,
+# ensuring all application logs (including access logs) are parseable
+# by the LGTM stack (Loki/Alloy).
+#
+# Usage:
+#   uvicorn app:app --log-config /path/to/uvicorn-log-config.yaml
+#
+# Reference:
+#   - https://www.uvicorn.org/settings/#logging
+#   - https://docs.python.org/3/library/logging.config.html#logging-config-dictschema
+
+version: 1
+disable_existing_loggers: false
+
+formatters:
+  json:
+    (): mcp_server_langgraph.observability.json_logger.CustomJSONFormatter
+    service_name: mcp-server-langgraph
+    include_hostname: true
+
+  access_json:
+    (): mcp_server_langgraph.observability.json_logger.CustomJSONFormatter
+    service_name: mcp-server-langgraph
+    include_hostname: true
+
+handlers:
+  console:
+    class: logging.StreamHandler
+    formatter: json
+    stream: ext://sys.stdout
+
+  access_console:
+    class: logging.StreamHandler
+    formatter: access_json
+    stream: ext://sys.stdout
+
+loggers:
+  uvicorn:
+    level: INFO
+    handlers:
+      - console
+    propagate: false
+
+  uvicorn.error:
+    level: INFO
+    handlers:
+      - console
+    propagate: false
+
+  uvicorn.access:
+    level: INFO
+    handlers:
+      - access_console
+    propagate: false
+
+root:
+  level: INFO
+  handlers:
+    - console
